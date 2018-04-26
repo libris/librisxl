@@ -355,4 +355,16 @@ class Whelk {
             elastic.bulkIndex(holdDocs, "hold", this)
         }
     }
+
+    void embellish(Document document, boolean filterOutNonChipTerms = true) {
+        List externalRefs = document.getExternalRefs()
+        List convertedExternalLinks = JsonLd.expandLinks(externalRefs,
+                (Map) jsonld.getDisplayData().get(JsonLd.CONTEXT_KEY))
+        Map referencedData = bulkLoad(convertedExternalLinks)
+        Map referencedData2 = new HashMap()
+        for (Object key : referencedData.keySet()) {
+            referencedData2.put(key, ((Document) referencedData.get(key)).data)
+        }
+        jsonld.embellish(document.data, referencedData2, filterOutNonChipTerms)
+    }
 }

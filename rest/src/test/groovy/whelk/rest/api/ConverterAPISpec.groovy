@@ -38,7 +38,8 @@ class ConverterAPISpec extends Specification {
             void setHeader(String h, String v) { headers.put(h, v) }
             String getHeader(String h) { headers.get(h) }
         }
-        converterApi = new ConverterAPI(new MarcFrameConverter())
+        converterApi = new ConverterAPI(
+                marcFrameConverter: new MarcFrameConverter())
         converterApi.init()
     }
 
@@ -73,10 +74,13 @@ class ConverterAPISpec extends Specification {
         {
           "@graph": [
             {
+              "@type": "Record",
               "@id": "http://libris.kb.se/bib/0000000",
+              "recordStatus": "marc:CorrectedOrRevised",
               "$ABOUT_KEY": {"@id": "http://127.0.0.1:5000/000000000000000#it"}
             },
             {
+              "@type": "Instance",
               "@id": "http://127.0.0.1:5000/000000000000000#it",
               "instanceOf": {"@type": "Text"}
             }

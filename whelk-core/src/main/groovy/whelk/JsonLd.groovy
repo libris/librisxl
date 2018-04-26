@@ -330,6 +330,37 @@ class JsonLd {
     }
 
 
+    //==== Utils ====
+
+    boolean softMerge(Map<String, Object> obj, Map<String, Object> into) {
+        if (obj == null || into == null) {
+            return false
+        }
+        for (String key : obj.keySet()) {
+            if (key == TYPE_KEY) {
+                def objType = obj[TYPE_KEY]
+                def intoType = into[TYPE_KEY]
+                // TODO: handle if type is List ...
+                if (objType instanceof Collection
+                    || intoType instanceof Collection) {
+                    return false
+                }
+                if (objType instanceof String && intoType instanceof String
+                    && !isSubClassOf((String) objType, (String) intoType)) {
+                    return false
+                }
+            } else {
+                def val = obj[key]
+                def intoval = into[key]
+                if (intoval && val != intoval) {
+                    return false
+                }
+            }
+        }
+        into.putAll(obj)
+        return true
+    }
+
     //==== Class-hierarchies ====
 
     void getSuperClasses(String type, List<String> result) {

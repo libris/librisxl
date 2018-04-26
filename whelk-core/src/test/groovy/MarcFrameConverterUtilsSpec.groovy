@@ -8,7 +8,7 @@ class MarcFrameConverterUtilsSpec extends Specification {
 
     def "should extract #token from #uri"() {
         expect:
-        MarcSimpleFieldHandler.extractToken(tplt, uri) == token
+        ConversionPart.extractToken(tplt, '{_}', uri) == token
         where:
         tplt            | uri               | token
         "/item/{_}"     | "/item/thing"     | "thing"
@@ -73,6 +73,7 @@ class MarcFrameConverterUtilsSpec extends Specification {
             d: [about: 'c', link: 'stuff4'],
             e: [about: 'c', link: 'stuff5'],
         ]
+        def pendingKeys = Util.getSortedPendingKeys(pendingResources)
         def entity = [
             stuff1: [
                 label: 'A',
@@ -93,7 +94,8 @@ class MarcFrameConverterUtilsSpec extends Specification {
             ]
         ]
         when:
-        def (ok, amap) = newMarcFieldHandler().buildAboutMap((String) null, pendingResources, entity)
+        def (ok, amap) = newMarcFieldHandler().buildAboutMap(
+                pendingResources, pendingKeys, entity, (String) null)
         then:
         ok
         amap.a*.label == ['A']
@@ -101,6 +103,27 @@ class MarcFrameConverterUtilsSpec extends Specification {
         amap.c*.label == ['C', 'C']
         amap.d*.label == ['D1', 'D2', 'D3']
         amap.e*.label == ['E']
+    }
+
+    def "should get keys sorted by dependency from pendingResources"() {
+        given:
+        def pendingResources = [
+            'b2': [about: 'a', link: 'b2', resourceType: 'B"'],
+            'c': [about: 'd', link: 'c', resourceType: 'C'],
+            'a': [link: 'a', resourceType: 'A'],
+            'b1': [about: 'a', link: 'b1', resourceType: 'B1'],
+            'd': [about: 'b1', link: 'c', resourceType: 'C'],
+        ]
+        expect:
+        Util.getPendingDeps(pendingResources) == [
+            'a': [],
+            'b1': ['a'],
+            'b2': ['a'],
+            'd': ['b1', 'a'],
+            'c': ['d', 'b1', 'a'],
+        ]
+        and:
+        Util.getSortedPendingKeys(pendingResources) == ['a', 'b1', 'b2', 'd', 'c']
     }
 
     def "should order and group subfields"() {
@@ -153,6 +176,27 @@ class MarcFrameConverterUtilsSpec extends Specification {
          '[0:2]'    | [[0, 2]]
          '[0]'      | [[0, 1]]
          '[0] [1] [2:4]'  | [[0, 1], [1, 2], [2,4]]
+    }
+
+    def "should get keys sorted by dependency from pendingResources"() {
+        given:
+        def pendingResources = [
+            'b2': [about: 'a', link: 'b2', resourceType: 'B"'],
+            'c': [about: 'd', link: 'c', resourceType: 'C'],
+            'a': [link: 'a', resourceType: 'A'],
+            'b1': [about: 'a', link: 'b1', resourceType: 'B1'],
+            'd': [about: 'b1', link: 'c', resourceType: 'C'],
+        ]
+        expect:
+        Util.getPendingDeps(pendingResources) == [
+            'a': [],
+            'b1': ['a'],
+            'b2': ['a'],
+            'd': ['b1', 'a'],
+            'c': ['d', 'b1', 'a'],
+        ]
+        and:
+        Util.getSortedPendingKeys(pendingResources) == ['a', 'b1', 'b2', 'd', 'c']
     }
 
     def newMarcFieldHandler() {

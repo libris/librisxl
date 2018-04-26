@@ -455,6 +455,68 @@ class JsonLdSpec extends Specification {
         assert JsonLd.frame(mainId, input) == output
     }
 
+    def "should soft merge"() {
+        setup:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+
+        when:
+        def obj = ['@type': 'Publication']
+        def into = ['@type': 'ProvisionActivity']
+        then:
+        ld.isSubClassOf(obj['@type'], into['@type'])
+        ld.softMerge(obj, into) == true
+        and:
+        into['@type'] == 'Publication'
+
+        when:
+        obj = ['@type': 'ProvisionActivity']
+        into = ['@type': 'Publication']
+        then:
+        ld.softMerge(obj, into) == false
+        and:
+        into['@type'] == 'Publication'
+
+        when:
+        obj = ['@type': 'Publication', date: '1978']
+        into = ['@type': 'ProvisionActivity', date: '1978']
+        then:
+        ld.softMerge(obj, into) == true
+        and:
+        into == ['@type': 'Publication', date: '1978']
+
+        when:
+        obj = ['@type': 'Publication', date: '1978', label: 'Primary']
+        into = ['@type': 'ProvisionActivity', date: '1978']
+        then:
+        ld.softMerge(obj, into) == true
+        and:
+        into == ['@type': 'Publication', date: '1978', label: 'Primary']
+
+        when:
+        obj = ['@type': 'Publication', date: '1978-01-01']
+        into = ['@type': 'ProvisionActivity', date: '1978']
+        then:
+        ld.softMerge(obj, into) == false
+        and:
+        into == ['@type': 'ProvisionActivity', date: '1978']
+
+        when:
+        obj = ['@type': 'Publication', date: '1978-01-01']
+        into = ['@type': 'ProvisionActivity', date: '1978']
+        then:
+        ld.softMerge(obj, into) == false
+        and:
+        into == ['@type': 'ProvisionActivity', date: '1978']
+
+        when:
+        obj = ['@type': 'Publication', date: '1978']
+        into = ['@type': 'ProvisionActivity', date: ['1978', '1980']]
+        then:
+        ld.softMerge(obj, into) == false
+        and:
+        into == ['@type': 'ProvisionActivity', date: ['1978', '1980']]
+    }
+
     static String readFile(String filename) {
         return JsonLdSpec.class.getClassLoader()
             .getResourceAsStream(filename).getText("UTF-8")

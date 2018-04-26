@@ -10,8 +10,6 @@
 
   "pendingResources": {
     "?record": {
-      "about": "?thing",
-      "TODO:link": "meta",
       "resourceType": "Record",
       "uriTemplate": "http://libris.kb.se/{marcType}/{controlNumber}",
       "matchUriTokens": {
@@ -274,6 +272,7 @@
       "$f": {"property": "date"},
       "$g": {"addProperty": "comment"},
       "$h": {"property": "marc:mediaTerm"},
+      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
       "$k": {"addProperty": "qualifier"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
       "$m": {"addProperty": "musicPerformanceMedium"},
@@ -1032,37 +1031,20 @@
     },
 
     "classification-ddc": {
-      "NOTE:resourceType": "ClassificationDdc",
-      "match": [
-        {
-          "when": "i1=0 & $2 =~ ^full$",
-          "$2": {"property": "edition"}
-        },
-        {
-          "when": "i1=1 & $2 =~ ^abridged$",
-          "$2": {"property": "edition"}
-        },
-        {
-          "NOTE": "Given a $2, ignore i1 on convert and set i1=7 on revert",
-          "when": "$2",
-          "i1": {"marcDefault": "7"},
-          "$2": {"property": "edition"}
-        }
-      ],
+      "resourceType": "ClassificationDdc",
       "i1": {
+        "NOTE": "i1=7 will be reverted to i1=' '",
         "property": "edition",
+        "marcDefault": " ",
         "tokenMap": {
           "0": "full",
           "1": "abridged",
-          "7": null
-        },
-        "definedElsewhereToken": "7"
+          "7": "other",
+          " ": "other"
+        }
       },
       "$a": {"property": "code", "required": true},
-      "$2": {
-        "requires-i1": "7",
-        "property": "edition"
-      }
+      "$2": {"property": "editionEnumeration"}
     },
 
     "termid": {
@@ -1318,16 +1300,6 @@
 
     "relation_from_w": {
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
-    },
-
-    "record_from_w": {
-      "$w": {
-        "addLink": "describedBy",
-        "resourceType": "Record",
-        "property": "controlNumber",
-        "uriTemplate": "http://libris.kb.se/bib/{_}",
-        "matchUriToken": "^\\d{1,14}$"
-      }
     }
 
   },
@@ -1345,6 +1317,12 @@
           "controlNumber": "^\\d{1,14}$"
         }
       },
+      "_:provision": {
+        "about": "?thing",
+        "link": "primaryProvisionActivity",
+        "resourceType": "PrimaryProvisionActivity",
+        "embedded": true
+      },
       "?work": {
         "about": "?thing",
         "link": "instanceOf",
@@ -1355,134 +1333,210 @@
 
     "postProcessing": [
       {
-        "type": "FoldLinkedProperty",
-        "statusFlag": "marc:publicationStatus",
-        "statusFlagValue": "marc:SingleKnownDateProbableDate",
-        "sourceProperty": "marc:publishedYear",
+        "type": "RestructOnMatchFlag",
+        "sourceLink": "primaryProvisionActivity",
+        "overwriteType": "PrimaryProvisionActivity",
+        "valueProperties": ["date", "otherDate"],
         "matchValuePattern": "^[0-9u]{4}$",
-        "property": "date",
-        "defaultLink": "publication",
-        "typeLinkMap": {
-          "Manuscript": "manufacture"
+        "nullValue": "9999",
+        "flagProperty": "marc:publicationStatus",
+        "flagMatch": {
+          "marc:SingleKnownDateProbableDate": {
+            "mergeFirstLink": "publication",
+            "resourceType": "PrimaryPublication"
+          },
+          "marc:InclusiveDatesOfCollection": {
+            "mergeFirstLink": "production",
+            "resourceType": "PrimaryProduction"
+          },
+          "marc:RangeOfYearsOfBulkOfCollection": {
+            "mergeFirstLink": "production",
+            "resourceType": "PrimaryBulkProduction",
+            "remapProperty": {"date": "startDate", "otherDate": "endDate"}
+          },
+          "marc:ContinuingResourceCurrentlyPublished": {
+            "mergeFirstLink": "publication",
+            "resourceType": "CurrentPublicationPeriod",
+            "remapProperty": {"date": "startDate", "otherDate": null}
+          },
+          "marc:ContinuingResourceCeasedPublication": {
+            "mergeFirstLink": "publication",
+            "resourceType": "CeasedPublicationPeriod",
+            "remapProperty": {"date": "startDate", "otherDate": "endDate"}
+          },
+          "marc:ContinuingResourceStatusUnknown": {
+            "mergeFirstLink": "publication",
+            "resourceType": "PublicationPeriod",
+            "remapProperty": {"date": "startDate", "otherDate": "endDate"},
+            "keepFlag": true
+          },
+          "marc:PublicationDateAndCopyrightDate": {
+            "mergeFirstLink": "publication",
+            "resourceType": "PrimaryPublication",
+            "remapProperty": {"otherDate": "copyrightDate"}
+          },
+          "marc:DateOfDistributionReleaseIssueAndProductionRecordingSessionWhenDifferent": {
+            "mergeFirstLink": "production",
+            "resourceType": "marc:DistributionAndProduction",
+            "remapProperty": {"date": "marc:distributionDate", "otherDate": "marc:productionDate"}
+          }
         },
-        "_name": "fold publication date",
         "_spec": [
           {
+            "name":  "NOOP",
             "source": {
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear": "1977"
+              "primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:QuestionableDate",
+                "date": "1977",
+                "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+              }
             },
-            "result": {
-              "publication": [ {"date": "1977"} ]
-            }
+            "result": "source",
+            "back": "source"
           },
           {
             "source": {
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear": "1977",
-              "publication": [ {"@type": "Publication", "date": "1977"} ]
+              "primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "date": "1977",
+                "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+              }
             },
             "result": {
-              "publication": [ {"@type": "Publication", "date": "1977"} ]
-            }
+              "publication": [
+                {
+                  "@type": "PrimaryPublication",
+                  "date": "1977",
+                  "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+                }
+              ]
+            },
+            "back": "both"
           },
           {
             "source": {
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear": "1977",
+              "primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "date": "1977"
+              },
+              "publication": [ {"@type": "Publication", "date": "1977"} ]
+            },
+            "result": {
+              "publication": [ {"@type": "PrimaryPublication", "date": "1977"} ]
+            },
+            "back": "both"
+          },
+          {
+            "source": {
+              "primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "date": "1977"
+              },
               "publication": [ {"@type": "Publication", "date": "ca 1977"} ]
             },
             "result": {
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear": "1977",
+              "publication": [
+                {"@type": "PrimaryPublication", "date": "1977"},
+                {"@type": "Publication", "date": "ca 1977"}
+              ]
+            },
+            "back": "both"
+          },
+          {
+            "source": {
+              "publication": [ {"@type": "Publication", "date": "1977"} ]
+            },
+            "result": {
+              "publication": [ {"@type": "Publication", "date": "1977"} ]
+            }
+          },
+          {
+            "TODO:source": {
+              "@type": "ManuscriptText",
+              "primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "date": "1977"
+              }
+            },
+            "TODO:result": {
+              "@type": "ManuscriptText",
+              "production": [ {
+                "@type": "PrimaryPublication",
+                "date": "1977"
+              } ]
+            },
+            "back": "both"
+          },
+          {
+            "source": {
+              "primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "date": "1977"
+              },
+              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
+            },
+            "result": {
+              "publication": [
+                {"@type": "PrimaryPublication", "date": "1977"},
+                {"@type": "Publication", "date": ["1977", "1978"]}
+              ]
+            },
+            "back": "both"
+          },
+          {
+            "source": {
+              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
+            },
+            "result": {
+              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
+            }
+          },
+          {
+            "source": {
+              "primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
+                "date": "1977",
+                "otherDate": "9999",
+                "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+              }
+            },
+            "result": {
               "publication": [
                 {
-                  "@type": "Publication",
-                  "date": "ca 1977"
+                  "@type": "CurrentPublicationPeriod",
+                  "startDate": "1977",
+                  "country": [ {"@id": "https://id.kb.se/country/sw"} ]
                 }
               ]
-            }
+            },
+            "back": "both"
           },
           {
             "source": {
-              "@type": "ManuscriptText",
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear": "1977"
+              "primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
+                "date": "1977",
+                "otherDate": "2017"
+              }
             },
             "result": {
-              "@type": "ManuscriptText",
-              "manufacture": [ {"date": "1977"} ]
-            }
-          },
-          {
-            "source": {
-              "publication": [ {"@type": "Publication", "date": "1977"} ]
+              "publication": [
+                {
+                  "@type": "CeasedPublicationPeriod",
+                  "startDate": "1977",
+                  "endDate": "2017"
+                }
+              ]
             },
-            "result": {
-              "publication": [ {"@type": "Publication", "date": "1977"} ]
-            }
-          },
-          {
-            "source": {
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear": "1977",
-              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
-            },
-            "result": {
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear": "1977",
-              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
-            }
-          },
-          {
-            "source": {
-              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
-            },
-            "result": {
-              "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
-            }
-          }
-        ]
-      },
-      {
-        "type": "FoldJoinedProperties",
-        "statusFlag": "marc:publicationStatus",
-        "statusFlagValue": "marc:ContinuingResourceCurrentlyPublished",
-        "sourceProperties": ["marc:publishedYear", "marc:otherYear"],
-        "matchValuePattern": "^[0-9u]{4}$",
-        "property": "temporalCoverage",
-        "separator": "-",
-        "_spec": [
-          {
-            "source": {
-              "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
-              "marc:publishedYear": "1977",
-              "marc:otherYear": "9999"
-            },
-            "result": {
-              "temporalCoverage": "1977-"
-            }
-          }
-        ]
-      },
-      {
-        "type": "FoldJoinedProperties",
-        "statusFlag": "marc:publicationStatus",
-        "statusFlagValue": "marc:ContinuingResourceCeasedPublication",
-        "sourceProperties": ["marc:publishedYear", "marc:otherYear"],
-        "matchValuePattern": "^[0-9u]{4}$",
-        "property": "temporalCoverage",
-        "separator": "-",
-        "_spec": [
-          {
-            "source": {
-              "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
-              "marc:publishedYear": "1977",
-              "marc:otherYear": "2017"
-            },
-            "result": {
-              "temporalCoverage": "1977-2017"
-            }
+            "back": "both"
           }
         ]
       }
@@ -2426,7 +2480,7 @@
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/SoundTapeWidthType-{_}",
-        "matchUriToken": "^[_lmop]$"
+          "matchUriToken": "^[_lmop]$"
         },
         "[8]": {
           "addLink": "soundCharacteristic",
@@ -2441,7 +2495,7 @@
         },
         "[10]": {
           "TODO": "Depending on value of tokenMap, map to appliedMaterial or baseMaterial?",
-          "link": "marc:soundKindOfMaterial",
+          "link": "baseMaterial",
           "uriTemplate": "https://id.kb.se/marc/SoundKindOfMaterialType-{_}",
           "matchUriToken": "^[_abcgilmprsw]$"
         },
@@ -2557,27 +2611,27 @@
         "parseDateTime": "yyMMdd", "timeZone": "CET"
       },
       "[6]": {
+        "aboutEntity": "_:provision",
         "property": "marc:publicationStatus",
-        "tokenMap": "PublicationStatusType"
+        "tokenMap": "PublicationStatusType",
+        "NOTE": "See postProcessing."
       },
       "[7:11]": {
-        "TODO:addLink": "provisionActivity",
-        "TODO:resourceType": "ProvisionActivity",
-        "TODO:embedded": "true",
-        "TODO:pendingResources": {
-          "_:publication": {"addLink": "publication", "resourceType": "Publication", "embedded": true}
-        },
+        "aboutEntity": "_:provision",
         "TODO:appendToExistingEntity": "If entity provisionActivity already exists don't create new provisionActivity",
-        "property": "marc:publishedYear",
-        "fixedDefault": "    "
+        "property": "date",
+        "fixedDefault": "    ",
+        "NOTE": "See postProcessing."
       },
       "[11:15]": {
-        "property": "marc:otherYear",
-        "fixedDefault": "    "
+        "aboutEntity": "_:provision",
+        "property": "otherDate",
+        "fixedDefault": "    ",
+        "NOTE": "See postProcessing."
       },
       "[15:18]": {
-        "TODO:addLink": "provisionActivity, see [7:11]",
-        "addLink": "publicationCountry",
+        "aboutEntity": "_:provision",
+        "addLink": "country",
         "uriTemplate": "https://id.kb.se/country/{_}",
         "TODO:linkedEntity": {
           "link": "place",
@@ -2586,7 +2640,8 @@
             "resourceType": "Country",
             "uriTemplate": "https://id.kb.se/country/{_}"
           }
-        }
+        },
+        "NOTE": "See postProcessing."
       },
       "[35:38]": {
         "aboutEntity": "?work",
@@ -2933,9 +2988,12 @@
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear":  "1977",
-              "publicationCountry": [{"@id": "https://id.kb.se/country/sw"}],
+              "primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "date": "1977",
+                "country": [{"@id": "https://id.kb.se/country/sw"}]
+              },
               "instanceOf": {
                 "@type": "Text",
                 "language": [{"@id": "https://id.kb.se/language/swe"}],
@@ -2956,9 +3014,12 @@
             "created": "2016-04-20T00:00:00.0+02:00",
             "marc:catalogingSource": {"@id": "https://id.kb.se/marc/CatalogingSourceType-c"},
             "mainEntity": {
-              "marc:publishedYear": "1995",
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "publicationCountry": [{"@id": "https://id.kb.se/country/fr"}],
+              "primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "date": "1995",
+                "country": [{"@id": "https://id.kb.se/country/fr"}]
+              },
               "instanceOf": {
                 "@type": "Text",
                 "genreForm": {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
@@ -2978,9 +3039,12 @@
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
-              "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-              "marc:publishedYear":  "1977",
-              "publicationCountry": [{"@id": "https://id.kb.se/country/sw"}],
+              "primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "date": "1977",
+                "country": [{"@id": "https://id.kb.se/country/sw"}]
+              },
               "instanceOf": {
                 "@type": "Text",
                 "language": [{"@id": "https://id.kb.se/language/swe"}],
@@ -3098,7 +3162,7 @@
       "$a": {"property": "value"},
       "$b": {"link": "source", "resourceType": "Source", "property": "label"},
       "$d": {"property": "date"},
-      "$i": {"addLink": "note"},
+      "$i": {"addProperty": "note"},
       "$z": {"addProperty": "marc:hiddenValue"}
     },
     "018": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore"},
@@ -3486,7 +3550,7 @@
       "$b": {"addProperty": "marc:geographicClassificationAreaCode"},
       "$c": {"addProperty": "marc:geographicClassificationSubareaCode"},
       "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
-      "$1": {"addProperty": "marc:realWorldObjectURI"},
+      "$1": {"addProperty": "marc:rwoURI"},
       "$2": {"property": "marc:placeCodeSource"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "_spec": [
@@ -3638,7 +3702,9 @@
         {
           "when": "$a =~ ^http://dbpedia\\.org/.+",
           "aboutEntity": "?thing",
-          "$a": {"addLink": "sameAs", "uriTemplate": "{+_}"}
+          "$a": {"addLink": "sameAs", "uriTemplate": "{+_}"},
+          "$6": null,
+          "$8": null
         },
         {
           "when": null,
@@ -3894,8 +3960,8 @@
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"},
+      "$6": {"property": "marc:bib041-fieldref", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 2},
+      "$8": {"property": "marc:bib041-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 0},
       "TODO": "add _spec?"
     },
     "042": {
@@ -4161,11 +4227,10 @@
     "082": {
       "aboutEntity": "?work",
       "addLink": "classification",
-      "resourceType": "ClassificationDdc",
       "match": [
         {
-          "include": ["classification-ddc"],
           "when": "i2=4 & $q",
+          "include": ["classification-ddc"],
           "$q": {
             "requires-i2": "4",
             "link": "source",
@@ -4182,8 +4247,7 @@
         "link": "source",
         "resourceType": "Source",
         "uriTemplate": "http://id.loc.gov/vocabulary/organizations/{_}",
-        "definedElsewhereToken": "4",
-        "marcDefault": " ",
+        "marcDefault": "4",
         "property": "code",
         "tokenMap": {
           "0": "dlc"
@@ -4197,25 +4261,7 @@
       "_spec": [
         {
           "source": {
-            "082": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "158.1"}
-            ]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "classification": [
-                {
-                  "@type": "ClassificationDdc",
-                  "code": "158.1",
-                  "edition": "full"
-                }
-              ]
-            }
-          }}
-        },
-        {
-          "source": {
-            "082": {"ind1": "7", "ind2": "0", "subfields": [
+            "082": {"ind1": "0", "ind2": "0", "subfields": [
               {"a": "158.1"},
               {"2": "23"}
             ]}},
@@ -4226,7 +4272,8 @@
                 {
                   "@type": "ClassificationDdc",
                   "code": "158.1",
-                  "edition": "23",
+                  "editionEnumeration": "23",
+                  "edition": "full",
                   "source": {
                     "@type": "Source",
                     "@id": "http://id.loc.gov/vocabulary/organizations/dlc",
@@ -4239,33 +4286,14 @@
         },
         {
           "source": {
-            "082": {"ind1": "7", "ind2": "4", "subfields": [
+            "082": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "158.1"},
-              {"2": "23/swe"},
-              {"q": "KB"}
+              {"2": "23"}
             ]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "classification": [
-                {
-                  "@type": "ClassificationDdc",
-                  "code": "158.1",
-                  "edition": "23/swe",
-                  "source": {
-                    "@type": "Source",
-                    "label": "KB"
-                  }
-                }
-              ]
-            }
-          }}
-        },
-        {
-          "source": {
+          "normalized": {
             "082": {"ind1": "0", "ind2": "4", "subfields": [
               {"a": "158.1"},
-              {"q": "KB"}
+              {"2": "23"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -4273,28 +4301,108 @@
               "classification": [
                 {
                   "@type": "ClassificationDdc",
-                  "edition": "full",
                   "code": "158.1",
+                  "editionEnumeration": "23",
+                  "edition": "full"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "082": {"ind1": " ", "ind2": "4", "subfields": [
+              {"a": "158.1"},
+              {"2": "23/swe"},
+              {"q": "L"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
+                  "code": "158.1",
+                  "edition": "other",
+                  "editionEnumeration": "23/swe",
                   "source": {
                     "@type": "Source",
-                    "label": "KB"
+                    "label": "L"
                   }
                 }
               ]
             }
           }}
-        }
-      ],
-      "_spec": [
+        },
+        {
+          "source": {
+            "082": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "808"},
+              {"b": ".066"},
+              {"2": "21"}
+            ]}},
+          "normalized": {
+            "082": {"ind1": " ", "ind2": "4", "subfields": [
+              {"a": "808"},
+              {"b": ".066"},
+              {"2": "21"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
+                  "code": "808",
+                  "edition": "other",
+                  "editionEnumeration": "21",
+                  "itemPortion": ".066"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "082": {"ind1": "7", "ind2": "4", "subfields": [
+              {"a": "158.1"},
+              {"2": "23"},
+              {"q": "L"}
+            ]}},
+          "normalized": {
+            "082": {"ind1": " ", "ind2": "4", "subfields": [
+              {"a": "158.1"},
+              {"2": "23"},
+              {"q": "L"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
+                  "editionEnumeration": "23",
+                  "edition": "other",
+                  "code": "158.1",
+                  "source": {
+                    "@type": "Source",
+                    "label": "L"
+                  }
+                }
+              ]
+            }
+          }}
+        },
         {
           "source": {
             "082": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "344.485074"}
+              {"a": "344.485"},
+              {"2": "15"}
             ]}},
           "normalized": {
-            "082": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "344.485074"},
-              {"2": "abridged"}
+            "082": {"ind1": "1", "ind2": "4", "subfields": [
+              {"a": "344.485"},
+              {"2": "15"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -4303,55 +4411,8 @@
                 {
                   "@type": "ClassificationDdc",
                   "edition": "abridged",
-                  "code": "344.485074"
-                }
-              ]
-            }
-          }}
-        },
-        {
-          "source": {
-            "082": {"ind1": "7", "ind2": " ", "subfields": [
-              {"a": "344.485074"},
-              {"2": "abridged"}
-            ]}},
-          "normalized": {
-            "082": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "344.485074"},
-              {"2": "abridged"}
-            ]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "classification": [
-                {
-                  "@type": "ClassificationDdc",
-                  "edition": "abridged",
-                  "code": "344.485074"
-                }
-              ]
-            }
-          }}
-        },
-        {
-          "source": {
-            "082": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "344.485074"},
-              {"2": "23/swe"}
-            ]}},
-          "normalized": {
-            "082": {"ind1": "7", "ind2": " ", "subfields": [
-              {"a": "344.485074"},
-              {"2": "23/swe"}
-            ]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "classification": [
-                {
-                  "@type": "ClassificationDdc",
-                  "edition": "23/swe",
-                  "code": "344.485074"
+                  "editionEnumeration": "15",
+                  "code": "344.485"
                 }
               ]
             }
@@ -4362,7 +4423,6 @@
     "083": {
       "aboutEntity": "?work",
       "addLink": "additionalClassificationDdc",
-      "resourceType": "ClassificationDdc",
       "include": ["classification-ddc"],
       "$c": {"ignored": true, "NOTE:record-count": 1, "NOTE:local": "Används normalt ej"},
       "$m": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Används normalt ej"},
@@ -4375,11 +4435,6 @@
           "source": {
             "083": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "158.1"}
-            ]}},
-          "normalized": {
-            "083": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "158.1"},
-              {"2": "full"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -4401,15 +4456,21 @@
               {"q": "KB"},
               {"2": "23/nor"}
             ]}},
-          "TODO:result": {"mainEntity": {
-            "FIXME": "How to do with languages other than 'swe'",
+          "normalized": {
+            "083": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "598.0994"},
+              {"q": "KB"},
+              {"2": "23/nor"}
+            ]}},
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "additionalClassification": [
+              "additionalClassificationDdc": [
                 {
                   "@type": "ClassificationDdc",
                   "code": "598.0994",
-                  "edition": "23/nor",
+                  "edition": "other",
+                  "editionEnumeration": "23/nor",
                   "source": {
                     "@type": "Source",
                     "label": "KB"
@@ -5560,9 +5621,12 @@
       },
       "$a": {"property": "editionStatement", "punctuationChars": "/"},
       "$b": {"property": "editionStatementRemainder"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"},
+      "$3": {
+        "link": "marc:editionStatement-appliesTo", "resourceType": "Resource", "property": "label",
+        "NOTE": "Qualified with related property to avoid collision when put directly on top-level resource!"
+      },
+      "$6": {"property": "marc:bib250-fieldref", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 2},
+      "$8": {"property": "marc:bib250-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 0},
       "_spec": [
         {
           "source": {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "New ed."}, {"b": "2. pr."}]}},
@@ -5663,8 +5727,8 @@
       "$e": {"aboutNew": "_:manufacture", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:;", "surroundingChars" : "()"},
       "$f": {"about": "_:manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :", "punctuationChars": ",:;)"},
       "$g": {"about": "_:manufacture", "property": "date", "leadingPunctuation": ",", "punctuationChars": ",:;"},
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"},
+      "$6": {"about": "_:publication", "property": "marc:fieldref"},
+      "$8": {"about": "_:publication", "property": "marc:groupid"},
       "_spec": [
         {
           "source": [
@@ -6188,12 +6252,13 @@
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
+        "TODO:groupId": "#part-$seq",
         "embedded": true
       },
       "pendingResources": {
         "_:extent": {"addLink": "extent", "resourceType": "Extent"}
       },
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$3": {"about": "_:extent", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$a": {
         "about": "_:extent",
         "property": "label",
@@ -6228,8 +6293,8 @@
         "about": "_:extent",
         "property": "marc:sizeOfUnit"
       },
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"}
+      "$6": {"about": "_:extent", "property": "marc:fieldref"},
+      "$8": {"about": "_:extent", "property": "marc:groupid"}
     },
 
     "306": {},
@@ -6316,6 +6381,11 @@
     },
 
     "340": {
+      "linkSubsequentRepeated": {
+        "addLink": "hasPart",
+        "resourceType": "Instance",
+        "groupId": "#part-$seq"
+      },
       "aboutEntity": "?thing",
       "$a": {
         "TODO": "Add the separate lists used for cataloging, as enumerations",
@@ -6386,7 +6456,10 @@
       },
       "$0": { "NOTE:ignored": "true" },
       "TODO:subfield$2": "Source (NR)",
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$3": {
+        "link": "appliesTo", "resourceType": "Resource", "property": "label",
+        "NOTE": "record-count: 0. If this would appear, we unconditionally expect it ONLY to be used in subsequent 340 (see linkSubsequentRepeated)."
+      },
       "TODO:subfield$6": "Linkage (NR)",
       "$g": {
         "NOTE": "New subfield",
@@ -6398,36 +6471,45 @@
     "342": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "343": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "344": {
-      "addLink": "soundCharacteristic",
-      "resourceType": "SoundCharacteristic",
       "NOTE:record-count": 0,
-      "$a": {"addProperty": "marc:typeOfRecording"},
-      "$b": {"addProperty": "marc:recordingMedium"},
-      "$c": {"addProperty": "marc:playingSpeed"},
-      "$d": {"addProperty": "marc:grooveCharacteristics"},
-      "$e": {"addProperty": "marc:trackConfig"},
-      "$f": {"addProperty": "marc:tapeConfig"},
-      "$g": {"addProperty": "marc:playbackChannels"},
-      "$h": {"addProperty": "marc:playbackCharacteristic"},
-      "$2": {"property": "marc:source"},
+      "linkSubsequentRepeated": {
+        "addLink": "hasPart",
+        "resourceType": "Instance",
+        "groupId": "#part-$seq"
+      },
+      "$a": {"addLink": "soundCharacteristic", "resourceType": "RecordingMethod", "property": "label"},
+      "$b": {"addLink": "soundCharacteristic", "resourceType": "RecordingMedium", "property": "label"},
+      "$c": {"addLink": "soundCharacteristic", "resourceType": "PlayingSpeed", "property": "label"},
+      "$d": {"addLink": "soundCharacteristic", "resourceType": "GrooveCharacteristic", "property": "label"},
+      "$e": {"addLink": "soundCharacteristic", "resourceType": "TrackConfig", "property": "label"},
+      "$f": {"addLink": "soundCharacteristic", "resourceType": "TapeConfig", "property": "label"},
+      "$g": {"addLink": "soundCharacteristic", "resourceType": "PlaybackChannels", "property": "label"},
+      "$h": {"addLink": "soundCharacteristic", "resourceType": "PlaybackCharacteristic", "property": "label"},
+      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "345": {
-      "addLink": "projectionCharacteristic",
-      "resourceType": "ProjectionCharacteristic",
       "NOTE:record-count": 0,
-      "$a": {"addProperty": "marc:presentationFormat"},
-      "$b": {"addProperty": "marc:projectionSpeed"},
-      "$2": {"property": "marc:source"},
+      "linkSubsequentRepeated": {
+        "addLink": "hasPart",
+        "resourceType": "Instance",
+        "groupId": "#part-$seq"
+      },
+      "$a": {"addLink": "projectionCharacteristic", "resourceType": "PresentationFormat", "property": "label"},
+      "$b": {"addLink": "projectionCharacteristic", "resourceType": "ProjectionSpeed", "property": "label"},
+      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "346": {
-      "addLink": "videoCharacteristic",
-      "resourceType": "VideoCharacteristic",
       "NOTE:record-count": 0,
-      "$a": {"addProperty": "marc:videoFormat"},
-      "$b": {"addProperty": "marc:broadcastStandard"},
-      "$2": {"property": "marc:source"},
+      "linkSubsequentRepeated": {
+        "addLink": "hasPart",
+        "resourceType": "Instance",
+        "groupId": "#part-$seq"
+      },
+      "$a": {"addLink": "videoCharacteristic", "resourceType": "VideoFormat", "property": "label"},
+      "$b": {"addLink": "videoCharacteristic", "resourceType": "BroadcastStandard", "property": "label"},
+      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "347": {
@@ -6435,6 +6517,7 @@
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
+        "TODO:groupId": "#part-$seq",
         "embedded": true
       },
       "$a": {"addLink": "digitalCharacteristic", "resourceType": "FileType", "property": "label"},
@@ -6444,8 +6527,11 @@
       "$e": {"addLink": "digitalCharacteristic", "resourceType": "RegionalEncoding", "property": "label"},
       "$f": {"addLink": "digitalCharacteristic", "resourceType": "EncodedBitrate", "property": "label"},
       "$0": {"TODO:ignored": "true???"},
-      "TODO:$2": "Source (NR)",
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
+      "$3": {
+        "link": "appliesTo", "resourceType": "Resource", "property": "label",
+        "NOTE": "record-count: 0. If this would appear, we unconditionally expect it ONLY to be used in subsequent 347 (see linkSubsequentRepeated)."
+      }
     },
     "348": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "musicFormat", "NOTE": "Not in generated marcframe"},
     "351": {
@@ -7735,7 +7821,7 @@
                 {
                   "@type": "Person",
                   "familyName": "Lindgren",
-                "givenName": "Astrid",
+                  "givenName": "Astrid",
                   "lifeSpan": "1907-2002",
                   "inScheme": {
                     "@id" : "https://id.kb.se/term/mesh",
@@ -8346,53 +8432,218 @@
       ]
     },
     "630": {
-      "TOOO:i1": {},
-      "TOOO:i2": {},
-      "inherit": "130",
+      "include": ["subjectbase", "titledetails", "i1-nonfiling"],
       "aboutEntity": "?work",
-      "link": null,
-      "addLink": "subject", "resourceType": "Work",
+      "aboutAlias": "_:work",
+      "addLink": "subject",
+      "resourceType": "Work",
+      "pendingResources": {
+        "_:term": {
+          "addLink": "termComponentList",
+          "resourceType": "Work",
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
+        },
+        "_:title": {
+          "about": "_:term", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
+      },
+      "$a": {"about": "_:title", "property": "mainTitle"},
+      "$d": {"property": "date"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "_spec": [
         {
-          "source": {
-            "630": {"ind1": " ", "ind2": "0", "subfields":[
-              {"a": "Talmud"},
-              {"p": "Bava meẓia"}]
-            }
+          "source": {"630": {"ind1": " ", "ind2": "0",
+            "subfields": [{"a": "Talmud"}, {"p": "Bava meẓia"}]}
           },
-          "TODO:result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "subject": [
-                {
-                  "@type": "Topic",
-                  "@id": "http://id.loc.gov/authorities/names/n81048431.html"
-                }
-              ],
-              "prefLabel": "Talmud--Bava meẓia",
-              "inScheme": {
-                "@id": "http://id.loc.gov/authorities/names",
-                "@type": "ConceptScheme",
-                "code": "lcsh"
-              },
-                "@type": "ComplexSubject",
-              "termComponentList": [
-                {
-                  "@type": "Topic",
-                  "prefLabel": "Talmud"
-                },
-                {
-                  "@type": "PartName",
-                  "prefLabel": "Bava meẓia"
-                }
-              ]
+          "result":{
+            "mainEntity": {
+              "instanceOf" : {
+                "@type" : "Text",
+                "subject" : [ {
+                  "@type" : "Work",
+                  "hasTitle" : [ {
+                    "@type" : "Title",
+                    "mainTitle" : "Talmud",
+                    "partName" : [ "Bava meẓia" ],
+                    "marc:nonfilingChars" : " "
+                  } ],
+                  "inScheme" : {
+                    "@id" : "https://id.kb.se/term/lcsh",
+                    "@type" : "ConceptScheme",
+                    "code" : "lcsh"
+                  }
+                } ]
+              }
             }
-          }}
+          }
+        },
+        {
+          "source": {"630": {"ind1": "0", "ind2": "7", "subfields": [
+            {"a": "Koranen"},
+            {"x": "kommentarer"},
+            {"x": "historia"},
+            {"2": "sao"}
+          ]}},
+          "result":{
+            "mainEntity": {
+              "instanceOf" : {
+                "@type" : "Text",
+                "subject" : [ {
+                  "@type" : "ComplexSubject",
+                  "inScheme" : {
+                    "@id" : "https://id.kb.se/term/sao",
+                    "@type" : "ConceptScheme",
+                    "code" : "sao"
+                  },
+                  "termComponentList" : [ {
+                    "@type" : "Work",
+                    "hasTitle" : [ {
+                      "@type" : "Title",
+                      "mainTitle" : "Koranen"
+                    } ]
+                  }, {
+                    "@type" : "TopicSubdivision",
+                    "prefLabel" : "kommentarer"
+                  }, {
+                    "@type" : "TopicSubdivision",
+                    "prefLabel" : "historia"
+                  } ]
+                } ]
+              }
+            }
+          }
+        },
+        {
+          "source": {"630": {"ind1": "0", "ind2": "0", "subfields": [
+            {"a": "Bible"},
+            {"p": "Prophets"},
+            {"x": "Commentaries"},
+            {"x": "Early works to 1800"}
+          ]}},
+          "result":{
+            "mainEntity": {
+              "instanceOf" : {
+                "@type" : "Text",
+                "subject" : [ {
+                  "@type" : "ComplexSubject",
+                  "inScheme" : {
+                    "@id" : "https://id.kb.se/term/lcsh",
+                    "@type" : "ConceptScheme",
+                    "code" : "lcsh"
+                  },
+                  "termComponentList" : [ {
+                    "@type" : "Work",
+                    "hasTitle" : [ {
+                      "@type" : "Title",
+                      "mainTitle" : "Bible",
+                      "partName" : [ "Prophets" ]
+                    } ]
+                  }, {
+                    "@type" : "TopicSubdivision",
+                    "prefLabel" : "Commentaries"
+                  }, {
+                    "@type" : "TopicSubdivision",
+                    "prefLabel" : "Early works to 1800"
+                  } ]
+                } ]
+              }
+            }
+          }
+        },
+        {
+          "source": {"630": {"ind1": "0", "ind2": "4", "subfields": [
+            {"a": "Knýtlinga saga"},
+            {"d": "(1979)"}
+          ]}},
+          "result":{
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "subject": [{
+                  "@type": "Work",
+                  "date": "(1979)",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Knýtlinga saga"
+                  }]
+                }]
+              }
+            }
+          }
+        },
+        {
+          "source": {"630": {"ind1": "0", "ind2": "4", "subfields": [
+            {"a": "Bible."},
+            {"p": "N.T."},
+            {"p": "Galatians VI, 10"},
+            {"v": "Sermons."}
+          ]}},
+          "result":{
+            "mainEntity": {
+              "instanceOf" : {
+                "@type" : "Text",
+                "subject" : [ {
+                  "@type" : "ComplexSubject",
+                  "termComponentList" : [ {
+                    "@type" : "Work",
+                    "hasTitle" : [ {
+                      "@type" : "Title",
+                      "mainTitle" : "Bible.",
+                      "partName" : [ "N.T.", "Galatians VI, 10" ]
+                    } ]
+                  }, {
+                    "@type" : "GenreForm",
+                    "prefLabel" : "Sermons."
+                  } ]
+                } ]
+              }
+            }
+          }
+        },
+        {
+          "source": {"630": {"ind1": "0", "ind2": "6", "subfields": [
+            {"a": "Bible."},
+            {"p": "A.T."},
+            {"x": "Critique textuelle"},
+            {"v": "Pâeriodiques."}
+          ]}},
+          "result":{
+            "mainEntity": {
+              "instanceOf" : {
+                "@type" : "Text",
+                "subject" : [ {
+                  "@type" : "ComplexSubject",
+                  "inScheme" : {
+                    "@id" : "https://id.kb.se/term/rvm",
+                    "@type" : "ConceptScheme",
+                    "code" : "rvm"
+                  },
+                  "termComponentList" : [ {
+                    "@type" : "Work",
+                    "hasTitle" : [ {
+                      "@type" : "Title",
+                      "mainTitle" : "Bible.",
+                      "partName" : [ "A.T." ]
+                    } ]
+                  }, {
+                    "@type" : "TopicSubdivision",
+                    "prefLabel" : "Critique textuelle"
+                  }, {
+                    "@type" : "GenreForm",
+                    "prefLabel" : "Pâeriodiques."
+                  } ]
+                } ]
+              }
+            }
+          }
         }
       ]
     },
+
     "647": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
     "648": {
       "include": ["subjectbase"],
@@ -8710,6 +8961,44 @@
               ]
             }
           }}
+        },
+        {
+          "source": {
+            "650": {"ind1": " ", "ind2": "7", "subfields": [
+              {"a": "Vitryssar"},
+              {"x": "vardagsliv"},
+              {"x": "traditioner"},
+              {"z": "Ryssland"},
+              {"2": "sao"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [{
+                "@id": "https://id.kb.se/term/sao/Vitryssar--vardagsliv--traditioner--Ryssland",
+                "@type": "ComplexSubject",
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/sao",
+                  "@type": "ConceptScheme",
+                  "code": "sao"
+                },
+                "prefLabel": "Vitryssar--vardagsliv--traditioner--Ryssland",
+                "termComponentList": [{
+                  "@type": "Topic",
+                  "prefLabel": "Vitryssar"
+                }, {
+                  "@type": "TopicSubdivision",
+                  "prefLabel": "vardagsliv"
+                },{
+                  "@type": "TopicSubdivision",
+                  "prefLabel": "traditioner"
+                },{
+                  "@type": "Geographic",
+                  "prefLabel": "Ryssland"
+                }]
+              }]
+            }
+          }}
         }
       ]
     },
@@ -9008,19 +9297,19 @@
       "match": [
         {
           "when": "$t & i1=0 & i2=2",
-          "include": ["hasPartPerson", "agentdataPerson", "titledetails"]
+          "include": ["hasPartPerson", "agentdataPerson", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$t & i1=1 & i2=2",
-          "include": ["hasPartPerson", "agentdataNameOfPerson", "titledetails"]
+          "include": ["hasPartPerson", "agentdataNameOfPerson", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$t & i1=3 & i2=2",
-          "include": ["hasPartFamily", "agentdataFamily", "titledetails"]
+          "include": ["hasPartFamily", "agentdataFamily", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$t & i2=2",
-          "include": ["hasPartPerson", "agentdataPerson", "titledetails"]
+          "include": ["hasPartPerson", "agentdataPerson", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$t & i1=0",
@@ -9069,23 +9358,37 @@
       ],
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
-      "subfieldOrder": " i a b c q d j e u 4 t g m n p r s l k f o",
+      "subfieldOrder": "8 6 i a b c q d j g u t m n r p k l s f o x e 4 1 0",
       "_spec": [
         {
-          "source": {"700": {"ind1": "1", "ind2": " ", "subfields": [ {"a": "Pietilä, Tuulikki"}, {"d": "1917-"}]}
+          "source": {"700": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Lindman, Mervi"},
+            {"d": "1971-"},
+            {"4": "ill"},
+            {"4": "9pu"}
+          ]}
           },
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "contribution": [
-                {
-                  "@type": "Contribution",
-                  "agent": {"@type": "Person",
-                    "familyName":  "Pietilä",
-                    "givenName":  "Tuulikki",
-                    "lifeSpan":  "1917-"}
-                }
-              ]
+              "contribution": [{
+                "@type": "Contribution",
+                "agent": {
+                  "@type": "Person",
+                  "familyName": "Lindman",
+                  "givenName": "Mervi",
+                  "lifeSpan": "1971-"
+                },
+                "role": [{
+                  "@id": "https://id.kb.se/relator/ill",
+                  "@type": "Role",
+                  "code": "ill"
+                }, {
+                  "@id": "https://id.kb.se/relator/9pu",
+                  "@type": "Role",
+                  "code": "9pu"
+                }]
+              }]
             }
           }}
         },
@@ -9094,8 +9397,8 @@
             "700": {"ind1": "1", "ind2": " ", "subfields": [
               {"i": "Parafraserar"},
               {"a": "Jansson, Tove"},
-              {"e": "Skapad av"},
-              {"t": "Anteckningar från en ö"}
+              {"t": "Anteckningar från en ö"},
+              {"e": "Skapad av"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9127,7 +9430,8 @@
           "source": {
             "700": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "Jansson, Tove"},
-              {"t": "Anteckningar från en ö"}
+              {"t": "Anteckningar från en ö"},
+              {"4": "aut"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9144,7 +9448,12 @@
                     "contribution": [
                       {
                         "@type": "PrimaryContribution",
-                        "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
+                        "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"},
+                        "role": [{
+                          "@id": "https://id.kb.se/relator/aut",
+                          "@type": "Role",
+                          "code": "aut"
+                        }]
                       }
                     ]
                   }
@@ -9159,8 +9468,9 @@
               {"a": "Munro, Alice"},
               {"d": "1931-"},
               {"t": "Progress of love."},
+              {"k": "Urval"},
               {"l": "Svenska."},
-              {"k": "Urval"}
+              {"4": "aut"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9182,7 +9492,12 @@
                     "contribution": [
                       {
                         "@type": "PrimaryContribution",
-                        "agent": {"@type": "Person", "familyName":  "Munro", "givenName":  "Alice", "lifeSpan":  "1931-"}
+                        "agent": {"@type": "Person", "familyName":  "Munro", "givenName":  "Alice", "lifeSpan":  "1931-"},
+                        "role": [{
+                          "@id": "https://id.kb.se/relator/aut",
+                          "@type": "Role",
+                          "code": "aut"
+                        }]
                       }
                     ]
                   }
@@ -9196,7 +9511,8 @@
             "700": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Cyprianus av Kartago,"},
               {"d": "1914-1987"},
-              {"t": "De idolorum vanitate."}
+              {"t": "De idolorum vanitate."},
+              {"4": "ill"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9217,7 +9533,12 @@
                           "@type": "Person",
                           "name":  "Cyprianus av Kartago,",
                           "lifeSpan": "1914-1987"
-                        }
+                        },
+                        "role": [{
+                          "@id": "https://id.kb.se/relator/ill",
+                          "@type": "Role",
+                          "code": "ill"
+                        }]
                       }
                     ]
                   }
@@ -9232,7 +9553,8 @@
               {"a": "Schubert, Franz"},
               {"d": "1797-1828"},
               {"t": "Neue Ausgabe sämtlicher Werke"},
-              {"x": "99-0014962-9"}
+              {"x": "99-0014962-9"},
+              {"4": "aut"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9255,7 +9577,12 @@
                         "@type": "Person",
                         "familyName":  "Schubert",
                         "givenName":  "Franz",
-                        "lifeSpan":  "1797-1828"}
+                        "lifeSpan":  "1797-1828"},
+                      "role": [{
+                        "@id": "https://id.kb.se/relator/aut",
+                        "@type": "Role",
+                        "code": "aut"
+                      }]
                     }
                   ]
                 }
@@ -9266,7 +9593,8 @@
         {
           "source": {
             "700": {"ind1": "1", "ind2": "2", "subfields": [
-              {"a": "Jansson, Tove"}
+              {"a": "Jansson, Tove"},
+              {"4": "aut"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9277,7 +9605,12 @@
                   "contribution": [
                     {
                       "@type": "PrimaryContribution",
-                      "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
+                      "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"},
+                      "role": [{
+                        "@id": "https://id.kb.se/relator/aut",
+                        "@type": "Role",
+                        "code": "aut"
+                      }]
                     }
                   ]
                 }
@@ -9320,7 +9653,8 @@
         {
           "source": {
             "700": {"ind1": "3", "ind2": "2", "subfields": [
-              {"a": "Family X."}
+              {"a": "Family X."},
+              {"4": "ctb"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9331,7 +9665,12 @@
                   "contribution": [
                     {
                       "@type": "PrimaryContribution",
-                      "agent": {"@type": "Family", "name":  "Family X."}
+                      "agent": {"@type": "Family", "name":  "Family X."},
+                      "role": [{
+                        "@id": "https://id.kb.se/relator/ctb",
+                        "@type": "Role",
+                        "code": "ctb"
+                      }]
                     }
                   ]
                 }
@@ -9342,7 +9681,8 @@
         {
           "source": {
             "700": {"ind1": "0", "ind2": "2", "subfields": [
-              {"a": "Tove Jansson"}
+              {"a": "Tove Jansson"},
+              {"4": "aut"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9353,7 +9693,12 @@
                   "contribution": [
                     {
                       "@type": "PrimaryContribution",
-                      "agent": {"@type": "Person", "name":  "Tove Jansson"}
+                      "agent": {"@type": "Person", "name":  "Tove Jansson"},
+                      "role": [{
+                        "@id": "https://id.kb.se/relator/aut",
+                        "@type": "Role",
+                        "code": "aut"
+                      }]
                     }
                   ]
                 }
@@ -9404,12 +9749,57 @@
         },
         {
           "source": [
-            {"700": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Breitholtz, Lennart,"}, {"d": "1909-1998"}, {"4": "edt"}]}},
-            {"700": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Breitholtz, Lennart,"}, {"d": "1909-1998"}, {"4": "oth"}]}}
+            {"700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Hindemith, Paul,"},
+              {"d": "1895-1963"},
+              {"t": "Kvartett,"},
+              {"m": "stråkar,"},
+              {"n": "nr 4, op. 22"},
+              {"4": "cmp"},
+              {"0": "111111111111"}
+            ]}}
           ],
-          "TODO:result": {"mainEntity": {
+          "normalized": [
+            {"700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Hindemith, Paul"},
+              {"d": "1895-1963"},
+              {"t": "Kvartett,"},
+              {"m": "stråkar,"},
+              {"n": "nr 4, op. 22"},
+              {"4": "cmp"},
+              {"0": "111111111111"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
             "instanceOf": {
-              "@type": "Text"
+              "@type": "Text",
+              "relationship" : [ {
+                "@type" : "Relationship",
+                "entity" : {
+                  "@type" : "Work",
+                  "contribution" : [ {
+                    "@type" : "PrimaryContribution",
+                    "agent" : {
+                      "@type" : "Person",
+                      "familyName" : "Hindemith",
+                      "givenName" : "Paul",
+                      "lifeSpan" : "1895-1963"
+                    },
+                    "role" : [ {
+                      "@id" : "https://id.kb.se/relator/cmp",
+                      "@type" : "Role",
+                      "code" : "cmp"
+                    } ]
+                  } ],
+                  "hasTitle" : [ {
+                    "@type" : "Title",
+                    "mainTitle" : "Kvartett,",
+                    "partNumber" : [ "nr 4, op. 22" ]
+                  } ],
+                  "marc:uri" : [ "111111111111" ],
+                  "musicMedium" : [ "stråkar," ]
+                }
+              } ]
             }
           }}
         }
@@ -9493,7 +9883,7 @@
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
 
-      "subfieldOrder": "i a b c d g u e 4 t m n p r s l k f o x",
+      "subfieldOrder": "6 i a b d c g u t n m r p k l s f o x e 4 1 0",
       "TOOO:i2": "How to map when no $t?",
       "_spec": [
         {
@@ -9501,7 +9891,8 @@
             "710": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "National Fire Protection Association."},
               {"t": "National electrical code (1993)"},
-              {"x": "1111-1111"}
+              {"x": "1111-1111"},
+              {"4": "oth"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9523,7 +9914,12 @@
                       {
                         "@type": "PrimaryContribution",
                         "agent":
-                          {"@type": "Jurisdiction", "name": "National Fire Protection Association."}
+                        {"@type": "Jurisdiction", "name": "National Fire Protection Association."},
+                        "role": [{
+                          "@id": "https://id.kb.se/relator/oth",
+                          "@type": "Role",
+                          "code": "oth"
+                        }]
                       }
                     ]
                   }
@@ -9575,6 +9971,7 @@
           "source": {
             "710": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Nationell gammaldags organisation."},
+              {"4": "oth"},
               {"t": "Handlingar 1920-1950"},
               {"n": "10"}
             ]}},
@@ -9582,7 +9979,8 @@
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Nationell gammaldags organisation."},
               {"t": "Handlingar 1920-1950"},
-              {"n": "10"}
+              {"n": "10"},
+              {"4": "oth"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9601,7 +9999,12 @@
                       {
                         "@type": "PrimaryContribution",
                         "agent":
-                        {"@type": "Organization", "name": "Nationell gammaldags organisation."}
+                        {"@type": "Organization", "name": "Nationell gammaldags organisation."},
+                        "role": [{
+                          "@id": "https://id.kb.se/relator/oth",
+                          "@type": "Role",
+                          "code": "oth"
+                        }]
                       }
                     ]
                   }
@@ -9615,7 +10018,8 @@
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "National Fire Protection Association."},
               {"t": "National electrical code (1993)"},
-              {"n": "42"}
+              {"n": "42"},
+              {"4": "aut"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9634,7 +10038,12 @@
                       {
                         "@type": "PrimaryContribution",
                         "agent":
-                          {"@type": "Organization", "name": "National Fire Protection Association."}
+                          {"@type": "Organization", "name": "National Fire Protection Association."},
+                        "role": [{
+                          "@id": "https://id.kb.se/relator/aut",
+                          "@type": "Role",
+                          "code": "aut"
+                        }]
                       }
                     ]
                   }
@@ -9648,9 +10057,9 @@
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "International Council of Nurses."},
               {"b": "Quinquennial Meeting"},
-              {"n": "(1st :"},
               {"d": "1904"},
               {"c": "Berlin, Germany)"},
+              {"n": "(1st :"},
               {"e": "author."}
             ]}},
           "result": {"mainEntity": {
@@ -9710,6 +10119,7 @@
               {"a": "Umeå universitet."},
               {"b": "Institutionen för ABM."},
               {"b": "Kulturgeografi"},
+              {"4": "fnd"},
               {"n": "101"}
             ]}},
           "normalized": {
@@ -9717,7 +10127,8 @@
               {"a": "Umeå universitet."},
               {"b": "Institutionen för ABM."},
               {"b": "Kulturgeografi"},
-              {"n": "101"}
+              {"n": "101"},
+              {"4": "fnd"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9733,7 +10144,42 @@
                       "@type": "Organization",
                       "name": "Umeå universitet."
                     }
-                  }
+                  },
+                  "role": [{
+                    "@id": "https://id.kb.se/relator/fnd",
+                    "@type": "Role",
+                    "code": "fnd"
+                  }]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "710": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Palmblad & C."},
+              {"4": "prt"},
+              {"4": "oth"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "Contribution",
+                  "agent":
+                  {"@type": "Jurisdiction", "name": "Palmblad & C."},
+                  "role": [
+                    {
+                      "@id": "https://id.kb.se/relator/prt",
+                      "@type": "Role",
+                      "code": "prt"
+                    }, {
+                      "@id": "https://id.kb.se/relator/oth",
+                      "@type": "Role",
+                      "code": "oth"
+                    }]
                 }
               ]
             }
@@ -9819,8 +10265,9 @@
             "710": {"ind1": "1", "ind2": "2", "subfields": [
               {"a": "Sverige."},
               {"t": "Lagen om vissa kommunala befogenheter"},
+              {"n": "9"},
               {"x": "2222-2222"},
-              {"n": "9"}
+              {"4": "oth"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9842,7 +10289,12 @@
                       "@type": "PrimaryContribution",
                       "agent": {
                         "@type": "Jurisdiction",
-                        "name":  "Sverige."}
+                        "name":  "Sverige."},
+                      "role": [{
+                        "@id": "https://id.kb.se/relator/oth",
+                        "@type": "Role",
+                        "code": "oth"
+                      }]
                     }
                   ]
                 }
@@ -9855,7 +10307,8 @@
             "710": {"ind1": "2", "ind2": "2", "subfields": [
               {"a": "Arbetsmarknadsverket."},
               {"t": "Arbetsmiljölagen"},
-              {"n": "9"}
+              {"n": "9"},
+              {"4": "oth"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9873,7 +10326,12 @@
                       "@type": "PrimaryContribution",
                       "agent": {
                         "@type": "Organization",
-                        "name":  "Arbetsmarknadsverket."}
+                        "name":  "Arbetsmarknadsverket."},
+                      "role": [{
+                        "@id": "https://id.kb.se/relator/oth",
+                        "@type": "Role",
+                        "code": "oth"
+                      }]
                     }
                   ]
                 }
@@ -9886,13 +10344,15 @@
             "710": {"ind1": "0", "ind2": "2", "subfields": [
               {"a": "Namngalen organisation."},
               {"t": "Söderbykyrka"},
-              {"n": "9"}
+              {"n": "9"},
+              {"4": "oth"}
             ]}},
           "normalized": {
             "710": {"ind1": "2", "ind2": "2", "subfields": [
               {"a": "Namngalen organisation."},
               {"t": "Söderbykyrka"},
-              {"n": "9"}
+              {"n": "9"},
+              {"4": "oth"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9910,7 +10370,12 @@
                       "@type": "PrimaryContribution",
                       "agent": {
                         "@type": "Organization",
-                        "name":  "Namngalen organisation."}
+                        "name":  "Namngalen organisation."},
+                      "role": [{
+                        "@id": "https://id.kb.se/relator/oth",
+                        "@type": "Role",
+                        "code": "oth"
+                      }]
                     }
                   ]
                 }
@@ -10001,7 +10466,7 @@
       ],
       "i1": {"marcDefault": "2"},
       "$6": {"property": "marc:fieldref"},
-      "subfieldOrder": "i a n d c e g u j 4 t n s l k f x",
+      "subfieldOrder": "6 i a q d g c e u t n p k l s f x j 4 1 0",
       "_spec": [
         {
           "source": {
@@ -10027,12 +10492,12 @@
           "source": {
             "711": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Olympic Games."},
-              {"n": "21st :"},
               {"d": "1976:"},
               {"c": "Montréal, Québec)."},
               {"e": "Organizing Committee."},
               {"e": "Arts and Culture Program."},
               {"e": "Visual Arts Section."},
+              {"n": "21st :"},
               {"j": "author."}
             ]}},
           "result": {"mainEntity": {
@@ -10070,6 +10535,16 @@
               {"c": "Basilica di San Pietro in Vaticano)."},
               {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
               {"i": "Facsimile (manifestation):"},
+              {"x": "1111-1111"}
+            ]}},
+          "normalized": {
+            "711": {"ind1": "2", "ind2": "2", "subfields": [
+              {"i": "Facsimile (manifestation):"},
+              {"a": "Vatican Council"},
+              {"d": "1962-1965 :"},
+              {"c": "Basilica di San Pietro in Vaticano)."},
+              {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
+              {"n": "(2nd :"},
               {"x": "1111-1111"}
             ]}},
           "result": {"mainEntity": {
@@ -10470,19 +10945,113 @@
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
 
-    "760": {"aboutEntity": "?work", "NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "subseriesOf"},
-    "762": {"aboutEntity": "?work","NOTE:domainIncludes": "Serial", "inherit": "772", "addLink": "hasSubseries"},
+    "760": {
+      "aboutEntity": "?thing",
+      "NOTE:domainIncludes": "Serial",
+      "inherit": "772",
+      "addLink": "hasSeries",
+      "resourceType": "Instance",
+      "$a": {"about": "_:instanceOfContribution", "link": "agent", "resourceType": "Agent", "property": "label", "TODO:targetMatch": "1xx"},
+      "$b": {"property": "editionStatement", "TODO:targetMatch": "250"},
+      "$c": {"about": "_:instanceTitle", "property": "qualifier", "NOTE:marc-repeatable": false},
+      "$d": {"property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
+      "$g": {"addProperty": "part"},
+      "$h": {"link": "extent", "resourceType": "Extent", "property": "label"},
+      "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
+      "$i": {"about": "_:instanceOf", "addProperty": "marc:displayText"},
+      "$k": null,
+      "$m": {"property": "marc:materialSpecificDetails"},
+      "$n": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$o": {"ignored": true, "NOTE:LC": "ignore"},
+      "$r": null,
+      "$s": {"about": "_:instanceTitle", "property": "mainTitle", "TODO:targetMatch": "240"},
+      "$t": {"about": "_:title", "property": "mainTitle", "TODO:targetMatch": "222, 245"},
+      "$u": null,
+      "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "TODO:targetMatch": "022"},
+      "$y": {"addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
+      "$z": null,
+      "$w": {"about": "_:describedBy", "property": "controlNumber", "uriTemplate": "http://libris.kb.se/bib/{_}", "matchUriToken": "^\\d{1,14}$"
+      },
+      "_spec": [
+        {
+          "source": {"760": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Publikation"},
+            {"x": "1401-9612"}
+          ]}},
+          "normalized": {"760": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Publikation"},
+            {"x": "1401-9612"}
+          ]}},
+          "result": {"mainEntity": {
+              "hasSeries": [{
+                  "@type": "Instance",
+                  "marc:toDisplayNote": true,
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Publikation"
+                  }],
+                  "identifiedBy": [{
+                    "@type": "ISSN",
+                    "value": "1401-9612"
+                  }]
+              }]
+          }}
+        }
+      ]
+    },
+    "762": {
+      "aboutEntity": "?thing",
+      "NOTE:domainIncludes": "Serial",
+      "inherit": "760",
+      "addLink": "hasSubseries",
+      "_spec": [
+        {
+          "source": {"762": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Rätt fart"},
+            {"w": "9823877"}
+          ]}},
+          "normalized": {"762": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Rätt fart"},
+            {"w": "9823877"}
+          ]}},
+          "result": {"mainEntity": {
+              "hasSubseries": [{
+                  "@type": "Instance",
+                  "marc:toDisplayNote": true,
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Rätt fart"
+                  }],
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "9823877"
+                  }]
+              }]
+          }}
+        }
+      ]
+    },
     "765": {"inherit": "772", "addLink": "translationOf"},
     "767": {"inherit": "772", "addLink": "translation"},
     "770": {"inherit": "772", "addLink": "supplement"},
     "772": {
-      "include": "record_from_w",
+      "aboutEntity": "?work",
       "addLink": "supplementTo",
       "resourceType": "Work",
-      "aboutAlias": "_:supplementTo",
       "pendingResources": {
+        "_:work": {
+          "link": "expressionOf",
+          "resourceType": "Work"
+        },
+        "_:instanceOf": {
+          "link": "instanceOf",
+          "resourceType": "Work"
+        },
+        "_:hasInstance": {
+          "link": "hasInstance",
+          "resourceType": "Instance"
+        },
         "_:contribution": {
-          "about": "_:supplementTo",
           "addLink": "contribution",
           "resourceType": "PrimaryContribution",
           "embedded": true
@@ -10495,8 +11064,46 @@
         "_:title": {
           "addLink": "hasTitle", "resourceType": "Title",
           "embedded": true
-        }
+        },
+        "_:hasInstanceTitle": {
+          "about": "_:hasInstance",
+          "addLink": "hasTitle",
+          "resourceType": "Title",
+          "embedded": true
+        },
+        "_:workTitle": {
+          "about": "_:work",
+          "addLink": "hasTitle",
+          "resourceType": "Title",
+          "embedded": true
+        },
+        "_:instanceOfContribution": {
+          "about": "_:instanceOf",
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution",
+          "embedded": true
+        },
+        "_:instanceTitle": {
+          "about": "_:instanceOf",
+          "addLink": "hasTitle",
+          "resourceType": "Title"
+        },
+        "_:provisionActivity": {
+          "about": "_:hasInstance",
+          "link": "provisionActivity",
+          "resourceType": "ProvisionActivity"
+        },
+      "_:hasInstanceDescribedBy": {
+          "about": "_:hasInstance",
+          "addLink": "describedBy",
+          "resourceType": "Record"
+        },
+        "_:describedBy": {
+            "addLink": "describedBy",
+            "resourceType": "Record"
+          }
       },
+
       "i1": {
         "property": "marc:toDisplayNote",
         "tokenMap": {
@@ -10506,34 +11113,32 @@
         "marcDefault": 0
       },
       "TOOO:i2": {},
-      "$a": {
-        "about": "_:agent",
-        "property": "name",
-        "TODO:targetMatch": "1xx"
-      },
-      "$b": {"property": "editionStatement", "TODO:targetMatch": "250"},
-      "$c": {"about": "_:title", "addProperty": "qualifier", "NOTE:marc-repeatable": false},
-      "$d": {"property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
-      "$g": {"addProperty": "part"},
-      "$h": {"link": "extent", "resourceType": "Extent", "property": "label"},
+      "$a": {"about": "_:agent", "property": "label", "TODO:targetMatch": "1xx"},
+      "$b": {"about": "_:hasInstance", "property": "editionStatement", "TODO:targetMatch": "250"},
+      "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false},
+      "$d": {"about": "_:hasInstance", "property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
+      "$g": {"about": "_:hasInstance", "addProperty": "part"},
+      "$h": {"about": "_:hasInstance", "link": "extent", "resourceType": "Extent", "property": "label"},
       "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
       "$i": {"addProperty": "marc:displayText"},
-      "$k": {"addProperty": "seriesStatement", "TODO:targetMatch": "4xx, 8xx"},
-      "$m": {"property": "marc:materialSpecificDetails"},
-      "$n": {"addProperty": "note"},
+      "$k": {"about": "_:hasInstance", "addProperty": "seriesStatement", "TODO:targetMatch": "4xx, 8xx"},
+      "$m": {"about": "_:hasInstance", "property": "marc:materialSpecificDetails"},
+      "$n": {"about": "_:hasInstance", "addLink": "hasNote", "resourceType": "Note", "property": "label"},
       "$o": {"ignored": true, "NOTE:subfield-count": 0},
-      "$r": {"addLink": "identifiedBy", "resourceType": "ReportNumber", "property": "value", "TODO:targetMatch": "088"},
-      "$s": {"about": "_:title", "property": "mainTitle", "TODO:targetMatch": "240"},
-      "$t": {"about": "_:title", "property": "title", "TODO:targetMatch": "222, 245"},
-      "$u": {"addLink": "identifiedBy", "resourceType": "STRN", "property": "value", "TODO:targetMatch": "027"},
+      "$r": {"about": "_:hasInstance", "addLink": "identifiedBy", "resourceType": "ReportNumber", "property": "value", "TODO:targetMatch": "088"},
+      "$s": {"about": "_:workTitle", "property": "mainTitle", "TODO:targetMatch": "240"},
+      "$t": {"about": "_:hasInstanceTitle", "property": "mainTitle", "TODO:targetMatch": "222, 245"},
+      "$u": {"about": "_:hasInstance", "addLink": "identifiedBy", "resourceType": "STRN", "property": "value", "TODO:targetMatch": "027"},
       "$x": {
         "TODO:targetMatch": "022",
-        "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"
+        "about": "_:hasInstance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"
       },
-      "$y": {"addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
+      "$y": {"about": "_:hasInstance", "addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
       "$z": {
         "TODO:targetMatch": "020",
-        "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"
+        "about": "_:hasInstance", "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"
+      },
+      "$w": {"about": "_:hasInstanceDescribedBy", "property": "controlNumber", "uriTemplate": "http://libris.kb.se/bib/{_}", "matchUriToken": "^\\d{1,14}$"
       },
       "$6": {"property": "marc:fieldref"},
       "$7": {"property": "marc:controlSubfield"},
@@ -10550,50 +11155,67 @@
             {"z": "00-0-000000-0"}
           ]}},
           "result": {"mainEntity": {
-            "supplementTo": [
-              {
-                "@type": "Work",
-                "hasTitle": [{
-                  "@type": "Title",
-                  "mainTitle": "Main Thing"
-                }],
-                "identifiedBy": [{
-                  "@type": "ISBN",
-                  "value": "00-0-000000-0"
-                }]
-              }
-            ]
+            "instanceOf": {
+            "@type": "Text",
+            "supplementTo": [{
+              "@type": "Work",
+              "expressionOf": {
+                  "@type": "Work",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Main Thing"
+                  }]
+                },
+              "hasInstance": {
+                  "@type": "Instance",
+                  "identifiedBy": [{
+                      "@type": "ISBN",
+                      "value": "00-0-000000-0"
+                  }]  
+                }
+            }]
+            }
           }}
         },
         {
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
             {"7": "p1"},
             {"a": "Beckmann, Max"},
-            {"t": "Briefec"}
+            {"t": "Briefec"},
+            {"w": "000"}
           ]}},
           "normalized": {"772": {"ind1": "0", "ind2": " ", "subfields": [
             {"7": "p1"},
             {"a": "Beckmann, Max"},
-            {"t": "Briefec"}
+            {"t": "Briefec"},
+            {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "supplementTo": [
-              {
-                "@type": "Work",
-                "hasTitle": [{
-                  "@type": "Title",
-                  "title": "Briefec"
-                }],
-                "marc:controlSubfield": "p1",
-                "contribution": [{
+            "instanceOf": {
+              "@type": "Text",
+              "supplementTo": [{
+                  "@type": "Work",
+                  "hasInstance": {
+                    "@type": "Instance",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Briefec"
+                    }],
+                    "describedBy": [{
+                      "@type": "Record",
+                      "controlNumber": "000"
+                    }]
+                  },
+                  "marc:controlSubfield": "p1",
+                  "contribution": [{
                   "@type": "PrimaryContribution",
                   "agent": [{
                     "@type": "Agent",
-                    "name": "Beckmann, Max"
+                    "label": "Beckmann, Max"
                   }]
                 }]
-              }
-            ]
+              }]
+            }
           }}
         }
       ]
@@ -10603,8 +11225,8 @@
       "addLink": "isPartOf",
       "resourceType": "Aggregate",
       "$c": null,
-      "$p": {"link": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210"},
-      "$q": {"property": "marc:enumerationAndFirstPage"}
+      "$p": {"about": "_:hasInstance", "link": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore"},
+      "$q": {"about": "_:hasInstance", "property": "marc:enumerationAndFirstPage", "NOTE:LC":"ignore"}
     },
     "774": {
       "inherit": "772",
@@ -10618,12 +11240,90 @@
       "TODO:note": "uncommon",
       "addLink": "otherEdition",
       "$e": {"addLink": "language", "NOTE:marc-repeatable": false, "resourceType": "Language", "property": "label", "TODO:inherit": "008:[35:38]"},
-      "$f": {"addLink": "publicationCountry", "resourceType": "Country",  "NOTE:marc-repeatable": false, "property": "code", "TODO:inherit": "008:[15:18]"}
+      "$f": {"about": "_:provisionActivity", "link": "place", "resourceType": "Place", "property": "code", "NOTE:marc-repeatable": false, "TODO:inherit": "008:[15:18]"}
     },
     "776": {
+      "NOTE": "We deviate from BF2 as we do not link from the Work with hasInstance.",
       "inherit": "772",
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instanceOf",
       "addLink": "otherPhysicalFormat",
-      "resourceType": "Instance"
+      "resourceType": "Instance",
+      "i2": {"link": null, "marcDefault": "8"},
+      "$b": {"property": "editionStatement"},
+      "$d": {"property": "provisionActivityStatement"},
+      "$g": {"addProperty": "part"},
+      "$h": {"link": "extent", "resourceType": "Extent", "property": "label"},
+      "$k": {"addProperty": "seriesStatement"},
+      "$m": {"property": "marc:materialSpecificDetails"},
+      "$n": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$r": {"addLink": "identifiedBy", "resourceType": "ReportNumber", "property": "value"},
+      "$t": {"about": "_:title", "property": "mainTitle"},
+      "$u": {"addLink": "identifiedBy", "resourceType": "STRN", "property": "value"},
+      "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"},
+      "$y": {"addLink": "identifiedBy", "resourceType": "CODEN", "property": "value"},
+      "$z": {"addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"},
+      "$w": {"about": "_:describedBy", "property": "controlNumber", "uriTemplate": "http://libris.kb.se/bib/{_}", "matchUriToken": "^\\d{1,14}$"
+      },
+      "_spec": [
+        {
+          "source": {"776": {"ind1": "0", "ind2": "8", "subfields": [
+            {"i": "Print"},
+            {"t": "War of Words: Dutch Pro-Boer Propaganda and the South African War (1899-1902)"},
+            {"z": "978-90-8964-412-1"}
+          ]}},
+          "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [
+            {"i": "Print"},
+            {"t": "War of Words: Dutch Pro-Boer Propaganda and the South African War (1899-1902)"},
+            {"z": "978-90-8964-412-1"}
+          ]}},
+          "result": {"mainEntity": {
+              "otherPhysicalFormat": [{
+                  "@type": "Instance",
+                  "marc:toDisplayNote": true,
+                  "marc:displayText": ["Print"],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "War of Words: Dutch Pro-Boer Propaganda and the South African War (1899-1902)"
+                  }],
+                  "identifiedBy": [{
+                    "@type": "ISBN",
+                    "value": "978-90-8964-412-1"
+                  }]
+              }]
+          }}
+        },
+        {
+          "source": {"776": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Hemmets journal (Online)"},
+            {"x": "2002-9659"},
+            {"w": "22176030"}
+          ]}},
+          "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [
+            {"t": "Hemmets journal (Online)"},
+            {"x": "2002-9659"},
+            {"w": "22176030"}
+          ]}},
+          "result": {"mainEntity": {
+              "otherPhysicalFormat": [{
+                  "@type": "Instance",
+                  "marc:toDisplayNote": true,
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Hemmets journal (Online)"
+                  }],
+                  "identifiedBy": [{
+                    "@type": "ISSN",
+                    "value": "2002-9659"
+                  }],
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "22176030"
+                  }]
+              }]
+          }}
+        }
+      ]
     },
     "777": {
       "inherit": "772",
@@ -10631,7 +11331,6 @@
     },
     "780": {
       "inherit": "772",
-      "aboutEntity": "?work",
       "addLink": "precededBy",
       "resourceType": "Work",
       "match": [
@@ -10653,16 +11352,17 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "continues": [
-                {
-                  "@type": "Work",
-                  "marc:toDisplayNote": true,
+              "continues": [{
+                "@type": "Work",
+                "marc:toDisplayNote": true,
+                "hasInstance": {
+                  "@type": "Instance",
                   "hasTitle": [{
                     "@type": "Title",
-                    "title": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"
+                    "mainTitle": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"
                   }]
                 }
-              ]
+              }]
             }
           }}
         },
@@ -10676,13 +11376,15 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "precededBy": [
-                {
+              "precededBy": [{
                   "@type": "Work",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "title": "Bulletin mensuel"
-                  }]
+                  "hasInstance": {
+                    "@type": "Instance",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Bulletin mensuel"
+                    }]
+                  }
                 }
               ]
             }
@@ -10692,7 +11394,6 @@
     },
     "785": {
       "inherit": "780",
-      "aboutEntity": "?work",
       "addLink": "succeededBy",
       "resourceType": "Work",
       "match": [
@@ -10716,27 +11417,27 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "continuedBy": [
-                {
-                  "@type": "Work",
+              "continuedBy": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
                   "hasTitle": [{
-                    "@type": "Title",
-                    "title": "Naysprayer"
+                      "@type": "Title",
+                      "mainTitle": "Naysprayer"
                   }],
                   "identifiedBy": [{
-                    "@type" : "ISSN",
-                    "value" : "1937-6545"
-                  }],
-                  "marc:toDisplayNote": true
-                }
-              ]
+                      "@type" : "ISSN",
+                      "value" : "1937-6545"
+                  }]
+                },
+                "marc:toDisplayNote": true
+              }]
             }
           }}
         }
       ]
     },
     "786": {
-      "aboutEntity": "?work",
       "inherit": "772",
       "addLink": "dataSource",
       "resourceType": "Dataset"
@@ -11193,8 +11894,8 @@
       "$d": {"about": "_:work", "addProperty": "legalDate"},
       "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"about": "_:work", "addProperty": "marc:uri"},
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"},
+      "$6": {"about": "_:title", "property": "marc:fieldref"},
+      "$8": {"about": "_:title", "property": "marc:groupid"},
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
       "subfieldorder": "3 a d g h s m n p l r k f o v w x",
       "_spec": [
@@ -11363,7 +12064,7 @@
       },
       "match": [
         {"when": "i2=0", "addLink": "associatedMedia", "resourceType": "MediaObject"},
-        {"when": "i2=1", "addLink": "otherPhysicalFormat", "resourceType": "Electronic"},
+        {"when": "i2=1", "addLink": "marc:versionOfResource", "resourceType": "Electronic"},
         {"when": "i2=2", "addLink": "isPrimaryTopicOf", "resourceType": "Document"},
         {"when": "i2=8", "addLink": "relatedTo", "resourceType": "Document"}
       ],
@@ -11380,7 +12081,7 @@
       "$u": {"addProperty": "uri"},
       "$x": {"addProperty": "cataloguersNote"},
       "$y": {"addProperty": "marc:linkText"},
-      "$z": {"addProperty": "note"},
+      "$z": {"addProperty": "marc:copyNote"},
       "TODO": "subfieldOrder",
       "_spec": [
         {
@@ -11425,6 +12126,21 @@
               "@type": "MediaObject",
               "uri": ["http://www.framtidsstudier.se/filebank/files/20051201$133251$fil$048Ti3PL2UIwRJQEBbDG.pdf"],
               "marc:electronicLocatorType": "http"}]
+          }}
+        },
+        {
+          "source": {
+            "856": {"ind1": "4", "ind2": "1", "subfields": [
+              {"u": "http://www.vr.se/tvarsnitt"},
+              {"z": "Tidskriftens webbplats"}
+            ]}},
+          "result": {"mainEntity": {
+            "marc:versionOfResource": [{
+              "@type": "Electronic",
+              "marc:electronicLocatorType": "http",
+              "marc:copyNote": ["Tidskriftens webbplats"],
+              "uri": ["http://www.vr.se/tvarsnitt"]
+            }]
           }}
         }
       ]
@@ -11537,7 +12253,7 @@
     "976": {
       "aboutEntity": "?work",
       "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{code}",
-      "addLink": "classification",
+      "addLink": "marc:hasBib976",
       "resourceType": "Classification",
       "i2": {
         "link": "inScheme", "resourceType": "ConceptScheme",
@@ -11559,7 +12275,7 @@
       "?thing": {
         "about": "?record",
         "link": "mainEntity",
-        "resourceType": "Concept",
+        "resourceType": "Identity",
         "fragmentId": "it",
         "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}",
         "matchUriTokens": {
@@ -11596,7 +12312,7 @@
             "mainEntity": { }
           },
           "addOnRevert": {
-            "mainEntity": {"@type": "Concept"}
+            "mainEntity": {"@type": "Identity"}
           }
         }
       ]
@@ -11779,7 +12495,7 @@
           "source": {"040": {"ind1":" ","ind2":" ", "subfields": [{"f":"barn"}]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "inScheme":  {
                 "@type": "ConceptScheme",
                 "@id": "https://id.kb.se/term/barn",
@@ -11810,7 +12526,7 @@
           "source":
             {"043": {"ind1": " ", "ind2": " ", "subfields": [{"a": "e-sw---v"}, {"a": "e-xr---"}]}},
           "result": {"mainEntity": {
-            "@type": "Concept",
+            "@type": "Identity",
             "nationality": [
               {"@id" : "https://id.kb.se/nationality/e-sw---v"},
               {"@id" : "https://id.kb.se/nationality/e-xr---"}
@@ -11912,7 +12628,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "closeMatch": [{
                 "@type": "ClassificationDdc",
                 "code":  "085",
@@ -12671,7 +13387,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "fieldOfActivity": [
                 {
                   "@type": "FieldOfActivity",
@@ -12709,7 +13425,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasOccupation": [
                 {
                   "@type": "Occupation",
@@ -12737,7 +13453,7 @@
           ]}},
         "result": {
           "mainEntity": {
-            "@type": "Concept",
+            "@type": "Identity",
             "hasTypeOfFamily": [
                     {
                       "@type": "TypeOfFamily",
@@ -12832,7 +13548,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Person",
                 "familyName":  "Singh", "givenName":  "Bhagat",
@@ -12852,7 +13568,7 @@
           ],
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Person",
@@ -12876,7 +13592,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Person",
                 "name":  "Alexander",
@@ -12894,7 +13610,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Family",
                 "name":  "Family X"
@@ -12911,7 +13627,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -12942,7 +13658,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Person",
                 "familyName":  "Singh", "givenName":  "Bhagat",
@@ -12959,7 +13675,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -12984,7 +13700,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13014,7 +13730,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13105,7 +13821,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Jurisdiction",
                 "isPartOf": {
@@ -13129,7 +13845,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13154,7 +13870,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13184,7 +13900,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13214,7 +13930,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13240,7 +13956,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13272,7 +13988,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Jurisdiction",
                 "marc:subordinateUnit": ["Estudios Territoriales, Oficina de"],
@@ -13292,7 +14008,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Organization",
                 "marc:subordinateUnit": ["Europaparlamentet"],
@@ -13325,7 +14041,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Organization",
                 "marc:subordinateUnit": ["General Assembly", "Special Session", "Preparatory Committee of the Whole"],
@@ -13346,7 +14062,7 @@
           ],
           "FIXME:revert-result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Organization",
@@ -13396,7 +14112,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [
                 {
                   "@type": "Work",
@@ -13423,7 +14139,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Meeting",
                 "name": "International Population Conference",
@@ -13565,7 +14281,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "seeAlso": [ {
                 "@type": "Family",
                 "name": "Horn Family"
@@ -13581,7 +14297,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "seeAlso": [ {
                 "@type": "Person",
                 "familyName": "Oats",
@@ -13606,7 +14322,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "relatedTo": [
                 {
                   "@type": "Work",
@@ -13639,7 +14355,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "relatedTo": [{
                 "@type": "Work",
                 "contribution": [ {
@@ -13758,7 +14474,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "seeAlso": [{
                 "@type": "Organization",
                 "name": "Oklahoma Council on Juvenile Delinquency",
@@ -13774,7 +14490,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "seeAlso": [{
                 "@type": "Organization",
                 "name": "Five Pieces (reportagegrupp)"}]
@@ -13790,7 +14506,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "seeAlso": [{
                 "@type": "Jurisdiction",
                 "marc:controlSubfield": "a",
@@ -13839,7 +14555,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "seeAlso": [{
                 "@type": "Meeting",
                 "marc:controlSubfield" : "a",
@@ -13857,7 +14573,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "relatedTo": [{
                 "@type": "Work",
                 "hasTitle": [{
@@ -13937,7 +14653,7 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "relatedTo": [{
                 "@type": "Work",
                 "hasTitle": [{
@@ -13982,7 +14698,7 @@
           ],
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "inScheme": {
                 "@id": "https://id.kb.se/term/sao",
                 "@type": "ConceptScheme",
@@ -14002,7 +14718,7 @@
           ],
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "inScheme": {
                 "@id": "https://id.kb.se/term/sao",
                 "@type": "ConceptScheme",
@@ -14318,7 +15034,7 @@
           },
           "result": {
             "mainEntity": {
-              "@type": "Concept",
+              "@type": "Identity",
               "closeMatch": [
                 {
                   "@id": "http://id.loc.gov/authorities/label/Archaeology",
@@ -14897,8 +15613,11 @@
       "NOTE:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 8 poster. Remove i1 when revert",
       "i1": {"ignored": true,"marcDefault": " "},
       "$a": {"property": "custodialHistory"},
-      "FIXME:not-directly-on-top:$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "FIXME:not-directly-on-top:$8": {"property": "marc:groupid"},
+      "$3": {
+        "link": "marc:custodialHistory-appliesTo", "resourceType": "Resource", "property": "label",
+        "NOTE": "Qualified with related property to avoid collision when put directly on top-level resource!"
+      },
+      "$8": {"property": "marc:hold561-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
       "_spec": [
         {
           "source": {"561": {"ind1": "0", "ind2": " ","subfields": [{"a": "xxx"}]}},
@@ -15023,8 +15742,8 @@
       "i2": {"property": "marc:shelvingOrder", "marcDefault": " "},
       "$2": {"property": "marc:sourceOfClassificationOrShelfMarkScheme"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"},
+      "$6": {"property": "marc:fieldref", "NOTE": "This is the ONLY allowed mapping to this property on the top-level resource (works since 'linkEveryIfRepeated' is in place)."},
+      "$8": {"property": "marc:groupid", "NOTE": "This is the ONLY allowed mapping to this property on the top-level resource (works since 'linkEveryIfRepeated' is in place)."},
       "$9": {"addProperty": "organizationalUnit"},
       "$a": {"property": "location"},
       "$b": {
@@ -15112,6 +15831,23 @@
               ]
             }
           }
+        },
+        {
+          "TODO": "a revert-only case",
+          "jsonLd": {
+            "mainEntity": {
+              "@type": "Item",
+              "copyNumber": "1",
+              "heldBy": {"@id": "https://libris.kb.se/library/H"},
+              "shelfControlNumber": "65.465",
+              "physicalLocation": ["MAG"]
+            }
+          },
+          "resultMarc": {"852": {
+            "ind1": " ",
+            "ind2": " ",
+            "subfields": [{"b": "H"}, {"c": "MAG"}, {"j": "65.465"}, {"t": "1"}]
+          }}
         }
       ]
     },

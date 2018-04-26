@@ -16,21 +16,18 @@ import javax.servlet.http.HttpServletResponse
 @Log
 class ConverterAPI extends HttpServlet {
 
+    Whelk whelk
     MarcFrameConverter marcFrameConverter
 
     public ConverterAPI() {
         // Do nothing - only here for Tomcat to have something to call
     }
 
-    public ConverterAPI(MarcFrameConverter marcFrameConverter) {
-        this.marcFrameConverter = marcFrameConverter
-    }
-
     @Override
     void init() {
         log.info("Starting converterAPI")
         if (!marcFrameConverter) {
-            Whelk whelk = Whelk.createLoadedCoreWhelk()
+            whelk = Whelk.createLoadedCoreWhelk()
             marcFrameConverter = whelk.createMarcFrameConverter()
         }
         log.info("Started ...")
@@ -67,7 +64,11 @@ class ConverterAPI extends HttpServlet {
             String jsonText = Tools.normalizeString(request.getInputStream().getText("UTF-8"))
             Map json = marcFrameConverter.mapper.readValue(jsonText, Map)
             log.info("Constructed document. Converting to $requestedContentType")
-            json = marcFrameConverter.runRevert(json)
+            Document doc = new Document(json)
+            if (whelk) {
+                whelk.embellish(doc)
+            }
+            json = marcFrameConverter.runRevert(doc.data)
             def framedText = marcFrameConverter.mapper.writeValueAsString(json)
             HttpTools.sendResponse(response, framedText, requestedContentType)
         }

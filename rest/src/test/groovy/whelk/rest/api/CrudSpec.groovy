@@ -560,7 +560,7 @@ class CrudSpec extends Specification {
                                     "@type": "Work",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "Ting"]]]]
+                                            ["code": "Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -622,7 +622,7 @@ class CrudSpec extends Specification {
                                     "@type": "Item",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S", "@id":"https://libris.kb.se/library/S"]]]]
+                                            ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -678,7 +678,7 @@ class CrudSpec extends Specification {
                                     "@type": "Work",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S"]]]]
+                                            ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -743,7 +743,7 @@ class CrudSpec extends Specification {
                                     "@type": "Instance",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S"]]]]
+                                            ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -874,7 +874,7 @@ class CrudSpec extends Specification {
                                     "@type": "Item",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S"]]]]
+                                            ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -931,7 +931,7 @@ class CrudSpec extends Specification {
                                     "@type": "Instance",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S"]]]]
+                                            ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -993,7 +993,7 @@ class CrudSpec extends Specification {
                                     "@type": "Item",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "Ting"]]]]
+                                            ["code": "Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -1061,7 +1061,7 @@ class CrudSpec extends Specification {
                                     "@type": "Work",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S"]]]]
+                                            ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -1126,7 +1126,7 @@ class CrudSpec extends Specification {
                                     "@type": "Work",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S"]]]]
+                                            ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -1188,7 +1188,7 @@ class CrudSpec extends Specification {
                                     "@type": "Item",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S", "@id":"https://libris.kb.se/library/S"]]]]
+                                            ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -1252,7 +1252,7 @@ class CrudSpec extends Specification {
                                     "@type": "Item",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S", "@id":"https://libris.kb.se/library/S"]]]]
+                                            ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -1662,7 +1662,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
+                                              ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -1672,7 +1672,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
+                                              ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -1735,7 +1735,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S", "@id":"https://libris.kb.se/library/S"]]]]
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -1745,7 +1745,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
+                                              ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -1808,7 +1808,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "Ting"]]]]
+                                              ["code": "Ting"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -1818,7 +1818,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "Ting"]]]]
+                                              ["code": "Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -1881,7 +1881,7 @@ class CrudSpec extends Specification {
                                       "@type": "Instance",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "Ting"]]]]
+                                              ["code": "Ting"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -1891,7 +1891,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "Ting"]]]]
+                                              ["code": "Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -1954,7 +1954,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "Foo", "@id":"https://libris.kb.se/library/Foo"]]]]
+                                              ["code": "Foo", "@id":"https://libris.kb.se/library/Foo"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -1964,7 +1964,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "Foo", "@id":"https://libris.kb.se/library/Foo"]]]]
+                                              ["code": "Foo", "@id":"https://libris.kb.se/library/Foo"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2035,7 +2035,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
+                                              ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2098,7 +2098,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2169,7 +2169,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2232,7 +2232,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
+                                              ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2242,7 +2242,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
+                                              ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2309,7 +2309,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2319,7 +2319,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2389,7 +2389,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2399,7 +2399,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2465,7 +2465,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2475,7 +2475,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2533,7 +2533,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2543,7 +2543,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2605,7 +2605,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S", "@id":"https://libris.kb.se/library/S"]]]]
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2615,7 +2615,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "S", "@id":"https://libris.kb.se/library/S"]]]]
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2767,7 +2767,7 @@ class CrudSpec extends Specification {
                                  "@type": "Item",
                                  "contains": "some new data",
                                  "heldBy":
-                                         ["notation": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]
+                                         ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]
         ]
         request.getPathInfo() >> {
             "/1234"
@@ -2812,7 +2812,7 @@ class CrudSpec extends Specification {
                                 "@type": "Work",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "Ting"]]]]
+                                        ["code": "Ting"]]]]
 
         request.getPathInfo() >> {
             "/1234"
@@ -2857,7 +2857,7 @@ class CrudSpec extends Specification {
                                 "@type": "Item",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "Ting"]]]]
+                                        ["code": "Ting"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -2938,7 +2938,7 @@ class CrudSpec extends Specification {
                                 "@type": "Item",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "Ting", "@id":"https://libris.kb.se/library/S"]]]]
+                                        ["code": "Ting", "@id":"https://libris.kb.se/library/S"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -2988,7 +2988,7 @@ class CrudSpec extends Specification {
                                 "@type": "Instance",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "S", "@id":"https://libris.kb.se/library/S"]]]]
+                                        ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -3038,7 +3038,7 @@ class CrudSpec extends Specification {
                                 "@type": "Work",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "S"]]]]
+                                        ["code": "S"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -3090,7 +3090,7 @@ class CrudSpec extends Specification {
                                 "@type": "Work",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "S"]]]]
+                                        ["code": "S"]]]]
         request.getPathInfo() >> {
             redirectId
         }
@@ -3140,7 +3140,7 @@ class CrudSpec extends Specification {
                                 "@type": "Work",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "S", "@id":"https://libris.kb.se/library/S"]]]]
+                                        ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -3184,7 +3184,7 @@ class CrudSpec extends Specification {
                                 "@type": "Instance",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "Ting"]]]]
+                                        ["code": "Ting"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -3234,7 +3234,7 @@ class CrudSpec extends Specification {
                                 "@type": "Instance",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
+                                        ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -3278,7 +3278,7 @@ class CrudSpec extends Specification {
                                 "@type": "Item",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "Ting", "@id":"https://libris.kb.se/library/S"]]]]
+                                        ["code": "Ting", "@id":"https://libris.kb.se/library/S"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -3325,7 +3325,7 @@ class CrudSpec extends Specification {
                                 "@type": "Item",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "Ting", "@id":"https://libris.kb.se/library/S"]]]]
+                                        ["code": "Ting", "@id":"https://libris.kb.se/library/S"]]]]
         request.getPathInfo() >> {
             "/1234"
         }

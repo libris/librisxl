@@ -28,8 +28,12 @@
             <param-value>POST, PUT, DELETE</param-value>
         </init-param>
         <init-param>
+            <param-name>whitelistedPostEndpoints</param-name>
+            <param-value>/_convert</param-value>
+        </init-param>
+        <init-param>
             <param-name>mockAuthentication</param-name>
-            <param-value>true</param-value>
+            <param-value>false</param-value>
         </init-param>
     </filter>
 
