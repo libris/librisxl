@@ -861,7 +861,6 @@ class ConversionPart {
     MarcRuleSet ruleSet
     String aboutEntityName
     Map tokenMap
-    String tokenMapName // TODO: remove in columns in favour of @type+code/uriTemplate ?
     Map reverseTokenMap
     boolean embedded = false
 
@@ -886,19 +885,20 @@ class ConversionPart {
         return key
     }
 
+    Map lookupTokenMap(def tokenMap, Map tokenMaps) {
+        if (tokenMap instanceof String) {
+            assert tokenMaps.containsKey(tokenMap)
+            return (Map) tokenMaps[tokenMap]
+        } else {
+            return (Map) tokenMap
+        }
+    }
+
     void setTokenMap(BaseMarcFieldHandler fieldHandler, Map dfn) {
-        def tokenMap = dfn.tokenMap
+        tokenMap = lookupTokenMap(dfn.tokenMap, fieldHandler.tokenMaps)
         if (tokenMap) {
-            if (tokenMap instanceof String)
-                tokenMapName = tokenMap
             reverseTokenMap = [:]
-            if (tokenMap instanceof String) {
-                assert fieldHandler.tokenMaps.containsKey(tokenMap)
-                this.tokenMap = (Map) fieldHandler.tokenMaps[tokenMap]
-            } else {
-                this.tokenMap = (Map) tokenMap
-            }
-            this.tokenMap.each { k, v ->
+            tokenMap.each { k, v ->
                 if (v != null) {
                     reverseTokenMap[v] = k
                 }
@@ -2323,6 +2323,7 @@ class MarcSubFieldHandler extends ConversionPart {
     String resourceType
     String subUriTemplate
     Pattern matchUriToken = null
+    Map<String, String> uriTokenMap
     Pattern splitValuePattern
     List<String> splitValueProperties
     String rejoin
@@ -2367,6 +2368,7 @@ class MarcSubFieldHandler extends ConversionPart {
         if (subDfn.matchUriToken) {
             matchUriToken = Pattern.compile(subDfn.matchUriToken)
         }
+        uriTokenMap = lookupTokenMap(subDfn.uriTokenMap, fieldHandler.tokenMaps)
 
         repeatProperty = subDfn.containsKey('addProperty')
         property = propTerm(subDfn.property ?: subDfn.addProperty, repeatProperty)
@@ -2427,15 +2429,16 @@ class MarcSubFieldHandler extends ConversionPart {
         if (link) {
             String entId = null
 
-            if (subUriTemplate &&
-                (matchUriToken == null ||
-                 matchUriToken.matcher((String) subVal).matches())) {
+            def uriToken = uriTokenMap ? uriTokenMap[subVal] : subVal
+            if (subUriTemplate && uriToken
+                && (matchUriToken == null
+                    || matchUriToken.matcher((String) subVal).matches())) {
                 try {
                     entId = subUriTemplate == UNESCAPED_URI_SLOT ?
-                        subVal : fromTemplate(subUriTemplate).expand(["_": subVal])
+                        uriToken : fromTemplate(subUriTemplate).expand(["_": uriToken])
                 } catch (IllegalArgumentException|IndexOutOfBoundsException e) {
                     // Bad characters in what should have been a proper URI path ('+' expansion).
-                    ; // NOTE: We just drop the attempt here if the uriTemplate fails...
+                    ; // NOTE: We just drop the attempt here if the uriTemplate fails.
                 }
             }
             def newEnt = newEntity(state, resourceType, entId)
