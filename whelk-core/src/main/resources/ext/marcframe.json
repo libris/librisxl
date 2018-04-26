@@ -40,6 +40,24 @@
         "6": "rvm",
         "7": null
       },
+      "kbschemes": {
+        "sao": "sao",
+        "SAO": "sao",
+        "saogf": "saogf",
+        "SAOGF": "saogf",
+        "barn": "barn",
+        "Barn": "barn",
+        "barngf": "barngf",
+        "BarnGF": "barngf",
+        "sgp": "sgp",
+        "SGP": "sgp",
+        "gmgpc": "gmgpc",
+        "gmgpc//swe": "gmgpc",
+        "gmgpc/swe": "gmgpc",
+        "gmgpc-swe": "gmgpc",
+        "GMGPC": "gmgpc",
+        "GMGPC//SWE": "gmgpc"
+      },
       "sequenceStatus": {
         "2": "marc:InBetweenInSequence",
         "3": "marc:LatestInSequence"
@@ -1115,11 +1133,11 @@
       "IMPORTANT": "Ensure all usages map $a to their own need (and use termComponentList with absorbSingle and required). Must be combined with i2 and $2 in subjectbase, to preserve the data (for revert to match here).",
       "match": [
         {
-          "when": "i2=7 & $2=sao",
+          "when": "i2=7 & $2 =~ ^(?i)sao$",
           "include": ["termbase_with_id"]
         },
         {
-          "when": "i2=7 & $2=saogf",
+          "when": "i2=7 & $2 =~ ^(?i)saogf$",
           "include": ["termbase_with_id"]
         },
         {
@@ -1205,6 +1223,7 @@
         "link": "inScheme",
         "uriTemplate": "https://id.kb.se/term/{_}",
         "resourceType": "ConceptScheme",
+        "uriTokenMap": "kbschemes",
         "property": "code"
       }
     },
@@ -7812,7 +7831,6 @@
                   "givenName": "Astrid",
                   "lifeSpan": "1907-2002",
                   "inScheme": {
-                    "@id" : "https://id.kb.se/term/kao",
                     "@type": "ConceptScheme",
                     "code": "kao"
                   }
@@ -8703,7 +8721,6 @@
                 {
                   "@type": "Temporal",
                   "inScheme": {
-                    "@id": "https://id.kb.se/term/fast",
                     "@type": "ConceptScheme",
                     "code": "fast"
                   },
@@ -8758,6 +8775,28 @@
                     "@id": "https://id.kb.se/term/sao",
                     "@type": "ConceptScheme",
                     "code": "sao"
+                  },
+                  "prefLabel": "Fysik"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"650": {"ind1": " ", "ind2": "7",
+            "subfields": [{"a": "Fysik"}, {"2": "SAO"}]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@id": "https://id.kb.se/term/sao/Fysik",
+                  "@type": "Topic",
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/sao",
+                    "@type": "ConceptScheme",
+                    "code": "SAO"
                   },
                   "prefLabel": "Fysik"
                 }
@@ -8917,7 +8956,6 @@
                 {
                   "@type": "Topic",
                   "inScheme": {
-                    "@id": "https://id.kb.se/term/agrovoc",
                     "@type": "ConceptScheme",
                     "code": "agrovoc"
                   },
@@ -12486,16 +12524,8 @@
         "aboutEntity": "?thing",
         "link": "inScheme", "resourceType": "ConceptScheme",
         "TODO:set-link-to?": "inCollection if . = sgp?",
-        "TODO:uriMap?": "if token is unknown: make bnode scheme and keep code",
         "uriTemplate": "https://id.kb.se/term/{_}",
-        "tokenMap": {
-            "sao": "sao",
-            "saogf": "saogf",
-            "barn": "barn",
-            "barngf": "barngf",
-            "sgp": "sgp",
-            "gmgpc//swe": "gmgpc-swe"
-        },
+        "uriTokenMap": "kbschemes",
         "property": "code"
       },
       "$6": {"property": "marc:fieldref"},
@@ -12509,6 +12539,18 @@
                 "@type": "ConceptScheme",
                 "@id": "https://id.kb.se/term/barn",
                 "code": "barn"
+              }
+            }
+          }
+        },
+        {
+          "source": {"040": {"ind1":" ","ind2":" ", "subfields": [{"f":"fast"}]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "inScheme":  {
+                "@type": "ConceptScheme",
+                "code": "fast"
               }
             }
           }
@@ -15222,33 +15264,6 @@
               "marc:holdingType": "marc:MultipartItemHolding",
               "mainEntity": {
                 "itemOf": {"issuanceType": "Monograph"}
-              }
-            }
-          }
-        ]
-      },
-      {
-        "TODO": "ExpandSimpleItem",
-        "_spec": [
-          {
-            "source": {
-              "@type": "Item",
-              "heldBy": {"@id": "/org/1"},
-              "itemOf": {"@id": "/bib/0"},
-              "shelfMark": "Hc.01/DR"
-            },
-            "result": {
-              "@type": "Record",
-              "mainEntity": {
-                "@type": "Item",
-                "itemOf": {"@id": "/bib/0"},
-                "heldBy": {"@id": "/org/1"},
-                "hasComponent": [
-                  {
-                    "@type": "Item",
-                    "shelfMark": "Hc.01/DR"
-                  }
-                ]
               }
             }
           }
