@@ -399,7 +399,9 @@
 
     "hasPartData": {
       "include": ["hasPartDataSansLabelledRole"],
-      "$e": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"}
+      "$e": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"},
+      "$6": {"about": "_:contribution", "property": "marc:fieldref"},
+      "$8": {"about": "_:contribution", "property": "marc:groupid"}
     },
 
     "hasPartPerson": {
@@ -653,7 +655,9 @@
 
     "relationshipData": {
       "include": ["relationshipDataSansLabelledRole"],
-      "$e": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"}
+      "$e": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"},
+      "$6": {"about": "_:contribution", "property": "marc:fieldref"},
+      "$8": {"about": "_:contribution", "property": "marc:groupid"}
     },
 
     "hasRelationshipPerson": {
@@ -821,7 +825,9 @@
         "_:agent": {"link": "agent", "resourceType": "Organization", "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-      }
+      },
+      "$6": {"about": "_:contribution", "property": "marc:fieldref"},
+      "$8": {"about": "_:contribution", "property": "marc:groupid"}
     },
 
     "contributionJurisdiction": {
@@ -832,7 +838,9 @@
         "_:agent": {"link": "agent", "resourceType": "Jurisdiction", "required": true},
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-      }
+      },
+      "$6": {"about": "_:contribution", "property": "marc:fieldref"},
+      "$8": {"about": "_:contribution", "property": "marc:groupid"}
     },
 
     "contributionData": {
@@ -3719,8 +3727,8 @@
       "$a": {"property": "value"},
       "TODO:a": "extract value from parantheses and source as rdfs:label",
       "$z": {"addProperty": "marc:hiddenValue"},
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"addProperty": "marc:groupid"},
+      "$6": {"property": "marc:bib035-fieldref", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
+      "$8": {"addProperty": "marc:bib035-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
       "_spec": [
         {
           "name": "interpret dbpedia URI as sameAs of instance",
@@ -7749,9 +7757,9 @@
           "required": true
         }
       },
-      "$n": {"addProperty": "partNumber", "punctuationChars": ","},
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"},
+      "$n": {"about": "_:agent", "addProperty": "partNumber", "punctuationChars": ","},
+      "$6": {"about": "_:agent", "property": "marc:fieldref"},
+      "$8": {"about": "_:agent", "property": "marc:groupid"},
       "_spec": [
 
         {
@@ -8157,8 +8165,8 @@
         },
         "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
       },
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"},
+      "$6": {"about": "_:agent", "property": "marc:fieldref"},
+      "$8": {"about": "_:agent", "property": "marc:groupid"},
       "$n": {"about": "_:agent", "addProperty": "marc:numeration", "punctuationChars": ","},
       "_spec": [
         {
@@ -9365,8 +9373,6 @@
           "$0": {"about": "_:agent", "addProperty": "marc:uri"}
         }
       ],
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"},
       "subfieldOrder": "8 6 i a b c q d j g u t m n r p k l s f o x e 4 1 0",
       "_spec": [
         {
@@ -9888,9 +9894,6 @@
       ],
 
       "i1": {"marcDefault": "2"},
-
-      "$6": {"property": "marc:fieldref"},
-      "$8": {"property": "marc:groupid"},
 
       "subfieldOrder": "6 i a b d c g u t n m r p k l s f o x e 4 1 0",
       "TOOO:i2": "How to map when no $t?",
@@ -12470,7 +12473,7 @@
     },
     "031": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "034": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac - not used for titles"},
-    "035" : {"inherit": "bib"},
+    "035" : {"inherit": "bib", "$6": null, "$8": null},
     "040" : {
       "inherit": "bib",
       "TODO": "if no $f, drop entire record (or mark as obsolete)",
@@ -15548,6 +15551,8 @@
       "inherit": "bib",
       "aboutEntity": null,
       "NOTE:local": "Fältet förekommer normalt inte i beståndsposter, men kan användas för dubblettkontroll/länkning vid postexport till lokalt system.",
+      "$6": {"property": "marc:hold035-fieldref", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
+      "$8": {"addProperty": "marc:hold035-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
       "$9": null
     },
     "040": {"ignored": true, "NOTE:record-count": 4, "NOTE:local": "ANVÄNDS NORMALT EJ I BESTÅNDSFORMATET"}, 
