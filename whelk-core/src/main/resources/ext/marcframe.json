@@ -12260,20 +12260,13 @@
     },
 
     "976": {
+      "Note:local": "Librisdefinierat fält. Fältet är avsett för maskinell uppdatering och förekommer normalt endast i äldre poster konverterade från ett ursprungligt LIBRISIII-format, respektive i de MTM-poster som maskinellt har lästs in från Bibliotekstjänst.",
       "aboutEntity": "?work",
-      "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{code}",
       "addLink": "marc:hasBib976",
-      "resourceType": "Classification",
-      "i2": {
-        "link": "inScheme", "resourceType": "ConceptScheme",
-        "uriTemplate": "https://id.kb.se/term/{+_}",
-        "property": "code",
-        "tokenMap": {"0": "sab/6", "1": "sab/5", "2": "sab"},
-        "TODO": "proper code for sab förkortad"
-      },
-      "$a": {"property": "code"},
-      "$b": {"property": "prefLabel"},
-      "TODO": "ta bort? automatiskt pålagda - ska gå att få fram via 084.broader"
+      "resourceType": "marc:Bib976",
+      "i2": {"property": "marc:bib976-i2"},
+      "$a": {"property": "marc:bib976-a"},
+      "$b": {"property": "marc:bib976-b"}
     }
 
   },
