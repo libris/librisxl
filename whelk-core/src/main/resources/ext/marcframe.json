@@ -3174,7 +3174,7 @@
       "$a": {"property": "value"},
       "$b": {"link": "source", "resourceType": "Source", "property": "label"},
       "$d": {"property": "date"},
-      "$i": {"addProperty": "note"},
+      "$i": {"addProperty": "comment"},
       "$z": {"addProperty": "marc:hiddenValue"}
     },
     "018": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore"},
@@ -3849,7 +3849,7 @@
       "$c": {"addProperty": "acquisitionTerms"},
       "$f": {"addProperty": "marc:formOfIssue"},
       "$g": {"addProperty": "marc:additionalFormatCharacteristics"},
-      "$n": {"addProperty": "note"},
+      "$n": {"addProperty": "comment"},
       "$6": {"property": "marc:fieldref"},
       "TODO": "_spec"
     },
@@ -6936,7 +6936,7 @@
       "$b": {"property": "degree"},
       "$c": {"link": "grantingInstitution", "resourceType": "Agent", "property": "label"},
       "$d": {"property": "date"},
-      "$g": {"addProperty": "note"},
+      "$g": {"addProperty": "comment"},
       "$o": {"addLink": "identifiedBy", "resourceType": "DissertationIdentifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
@@ -7308,7 +7308,7 @@
       "$e": {"property": "marc:physicalDescriptionOfReproduction"},
       "$f": {"addProperty": "seriesStatement"},
       "$m": {"addProperty": "marc:datesAndOrSequentialDesignationOfIssuesReproduced"},
-      "$n": {"addProperty": "note"},
+      "$n": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
       "$7": {"TODO:fixedField": "fixedLengthDataElementsOfReproduction"},
