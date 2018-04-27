@@ -14801,7 +14801,7 @@
       "addLink": "sourceConsulted",
       "embedded": true,
       "resourceType": "SourceData",
-      "$a": {"property": "citationSource"},
+      "$a": {"property": "label"},
       "$b": {"property": "citationNote"},
       "$u": {"addProperty": "uri"},
       "$6": {"property": "marc:fieldref"},
