@@ -4,6 +4,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.Document;
+import whelk.util.LegacyIntegrationTools;
+
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -161,6 +163,13 @@ public class ApixCatServlet extends HttpServlet
             return;
         }
 
+        String realCollection = LegacyIntegrationTools.determineLegacyCollection(incomingDocument, Utils.s_whelk.getJsonld());
+        if (!collection.equals(realCollection))
+        {
+            Utils.send200Response(response, Xml.formatApixErrorResponse("MARC category failure. The record was supposed to be " + collection + ", but was " + realCollection, ApixCatServlet.ERROR_CONVERSION_FAILED));
+            return;
+        }
+
         if (id.equalsIgnoreCase("new"))
         {
             Utils.s_whelk.createDocument(incomingDocument, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false);
@@ -168,7 +177,8 @@ public class ApixCatServlet extends HttpServlet
             Utils.send201Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
         } else // save/overwrite existing
         {
-            incomingDocument.setId(id);
+            incomingDocument.deepReplaceId( Document.getBASE_URI().resolve(id).toString() );
+            System.out.println("Will now attempt update with:\n\n" + incomingDocument.getDataAsString() + "\n");
             Utils.s_whelk.storeAtomicUpdate(id, false, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(),
                     (Document doc) ->
                     {
