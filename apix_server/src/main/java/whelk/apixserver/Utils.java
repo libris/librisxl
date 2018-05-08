@@ -82,22 +82,29 @@ public class Utils
             if (marcRecord.getControlfields("001").size() == 0)
                 marcRecord.addField(marcRecord.createControlfield("001", generatedId));
 
-            // If this is a holding record, 004 needs to contain the correct bib id to link with
-            if (itemOfSystemId != null && expectedCollection.equals("hold"))
-            {
-                List<Controlfield> cfs = (List<Controlfield>) marcRecord.getControlfields("004");
-
-                if (cfs.isEmpty())
-                    marcRecord.addField(marcRecord.createControlfield("004", String.valueOf(itemOfSystemId)), MarcFieldComparator.strictSorted);
-                else if (!String.valueOf(itemOfSystemId).equals(cfs.get(0).getData()))
-                {
-                    s_logger.error("Cannot accept incoming marc hold record. Marc field 004 did not match the bibid the holding was for.");
-                    return null;
-                }
-            }
-
             Map convertedData = s_toJsonLdConverter.convert(MarcJSONConverter.toJSONMap(marcRecord), generatedId);
             Document document = new Document(convertedData);
+
+            if (expectedCollection.equals("hold"))
+            {
+                // Construct resource URIs from the system ID.
+                String bibThingId = null;
+                if ( 14 < itemOfSystemId.length() && itemOfSystemId.length() < 17) // XL system id
+                {
+                    bibThingId = Document.getBASE_URI().resolve(itemOfSystemId).toString()+"#it";
+                }
+                else if (itemOfSystemId.matches("^\\d+$"))
+                {
+                    bibThingId = "http://libris.kb.se/resource/bib/" + itemOfSystemId;
+                }
+                if (bibThingId == null)
+                {
+                    s_logger.error("Cannot accept incoming marc hold record, bad associated Bib-ID: " + itemOfSystemId);
+                    return null;
+                }
+
+                document.setHoldingFor(bibThingId);
+            }
 
             String contentClassifiedAsCollection = LegacyIntegrationTools.determineLegacyCollection(document, s_whelk.getJsonld());
 

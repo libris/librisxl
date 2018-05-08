@@ -207,8 +207,6 @@ public class ApixCatServlet extends HttpServlet
             return;
         }
 
-        //System.out.println("Will now attempt HOLD WRITE with:\n\n" + incomingDocument.getDataAsString() + "\n");
-
         Utils.s_whelk.createDocument(incomingDocument, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), "hold", false);
         s_logger.info("Successful new (hold on bib) on : " + incomingDocument.getShortId());
         Utils.send201Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
