@@ -22,6 +22,7 @@ class Parameters
     private boolean enrichMulDup = false;
     private boolean verbose = false;
     private boolean replaceHold = false;
+    private boolean replaceBib = false;
 
     Path getPath() { return path; }
     INPUT_FORMAT getFormat() { return format; }
@@ -33,6 +34,7 @@ class Parameters
     boolean getEnrichMulDup() { return enrichMulDup; }
     boolean getVerbose() { return verbose; }
     boolean getReplaceHold() { return replaceHold; }
+    boolean getReplaceBib() { return replaceBib; }
 
     enum INPUT_FORMAT
     {
@@ -142,7 +144,9 @@ class Parameters
         System.err.println("");
         System.err.println("--verbose     Verbose logging.");
         System.err.println("");
-        System.err.println("--replaceHold If this flag is set, holding records (only) will be replaced instead of merged.");
+        System.err.println("--replaceBib  If this flag is set, bibliographic records will be replaced instead of merged.");
+        System.err.println("");
+        System.err.println("--replaceHold If this flag is set, holding records will be replaced instead of merged.");
     }
 
     private void interpretBinaryParameter(String parameter, String value)
@@ -225,6 +229,9 @@ class Parameters
                 break;
             case "--replaceHold":
                 replaceHold = true;
+                break;
+            case "--replaceBib":
+                replaceBib = true;
                 break;
             default:
                 throw new IllegalArgumentException(parameter);
