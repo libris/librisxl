@@ -165,6 +165,18 @@ class MarcFrameConverterUtilsSpec extends Specification {
         then:
         subfields3*.code == [['a'], ['d'], ['l', 'f'], ['q']]
 
+        and:
+        def subfields4 = MarcFieldHandler.orderAndGroupSubfields(
+                [
+                    'a': subHandler(field, 'a', [:]),
+                    'c': subHandler(field, 'c', [:]),
+                    'q': subHandler(field, 'q', [:]),
+                    'z': subHandler(field, 'z', [:]),
+                ],
+                'a q c z')
+        then:
+        subfields4*.code == [['a'], ['q'], ['c'], ['z']]
+
     }
 
     def "should parse col-numbers from col-key"() {

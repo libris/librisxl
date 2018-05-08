@@ -1830,11 +1830,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         Closure getOrder = {
             [order.get(it.code, order['...']), !it.code.isNumber(), it.code]
         }
-        // Only the first subfield in a group is used to determine the order of the group
+        // Only the highest subfield of a group is used to determine the order of the group.
         return subfields.values().groupBy {
             it.about ?: it.fieldHandler.aboutAlias ?: it.code
         }.entrySet().sort {
-            getOrder(it.value[0])
+            getOrder(it.value.sort(getOrder)[0])
         }.collect {
             it.value.sort(getOrder)
         }
