@@ -286,6 +286,10 @@ class Document {
             return
         }
 
+        if (get(thingIdPath) == identifier && get(thingIdPath2) == identifier) {
+            return
+        }
+
         if (preparePath(thingSameAsPath, ArrayList)) {
             List sameAsList = get(thingSameAsPath)
             def idObject = ["@id": identifier]

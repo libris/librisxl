@@ -1592,14 +1592,6 @@ class PostgreSQLComponent {
      * (for example: type:ISBN, value:1234, graphIndex:1 -> ksjndfkjwbr3k)
      */
     public List<String> getSystemIDsByTypedID(String idType, String idValue, int graphIndex) {
-
-        // Validate input
-        if (!idType.matches("[A-Za-z]+"))
-            return []
-        if (!idValue.matches("^(-[A-Za-z\\d():]|[A-Za-z\\d():])+\$")) // A-Z, 0-9, (), : and SINGLE hyphens
-            return []
-        // graphIndex is already a strongly typed int.
-
         Connection connection
         PreparedStatement preparedStatement
         ResultSet rs

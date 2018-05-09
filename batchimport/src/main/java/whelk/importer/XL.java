@@ -82,7 +82,7 @@ class XL
 
         if (duplicateIDs.size() == 0) // No coinciding documents, simple import
         {
-            resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId);
+            resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, null);
 
             if (collection.equals("bib"))
                 importedBibRecords.inc();
@@ -91,18 +91,26 @@ class XL
         }
         else if (duplicateIDs.size() == 1) // Enrich ("merge") or replace
         {
-            if (collection.equals("bib")) // Only merge allowed for bib
+            if (collection.equals("bib"))
             {
-                resultingResourceId = enrichRecord((String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId);
-                enrichedBibRecords.inc();
+                if ( m_parameters.getReplaceBib() )
+                {
+                    String idToReplace = duplicateIDs.iterator().next();
+                    resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, idToReplace);
+                    importedBibRecords.inc();
+                }
+                else // Merge bib
+                {
+                    resultingResourceId = enrichRecord((String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId);
+                    enrichedBibRecords.inc();
+                }
             }
             else // collection = hold
             {
                 if ( m_parameters.getReplaceHold() ) // Replace hold
                 {
-                    for (String id : duplicateIDs)
-                        m_whelk.remove(id, IMPORT_SYSTEM_CODE, null);
-                    resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId);
+                    String idToReplace = duplicateIDs.iterator().next();
+                    resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, idToReplace);
                     importedHoldRecords.inc();
                 }
                 else // Merge hold
@@ -143,7 +151,7 @@ class XL
         return resultingResourceId;
     }
 
-    private String importNewRecord(MarcRecord marcRecord, String collection, String relatedWithBibResourceId)
+    private String importNewRecord(MarcRecord marcRecord, String collection, String relatedWithBibResourceId, String replaceSystemId)
     {
         // Delete any existing 001 fields
         String generatedId = IdGenerator.generate();
@@ -164,7 +172,32 @@ class XL
         if (!m_parameters.getReadOnly())
         {
             rdfDoc.setRecordStatus(PRELIMINARY_STATUS);
-            m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, null, collection, false);
+
+            // Doing a replace (but preserving old IDs)
+            if (replaceSystemId != null)
+            {
+                m_whelk.getStorage().storeAtomicUpdate(replaceSystemId, false, IMPORT_SYSTEM_CODE, null,
+                        (Document doc) ->
+                {
+                    List<String> recordIDs = doc.getRecordIdentifiers();
+                    List<String> thingIDs = doc.getThingIdentifiers();
+
+                    doc.data = rdfDoc.data;
+
+                    // The mainID must remain unaffected.
+                    doc.deepPromoteId(recordIDs.get(0));
+
+                    for (String recordID : recordIDs)
+                        doc.addRecordIdentifier(recordID);
+                    for (String thingID : thingIDs)
+                        doc.addThingIdentifier(thingID);
+                });
+            }
+            else
+            {
+                // Doing simple "new"
+                m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, null, collection, false);
+            }
         }
         else
         {
