@@ -183,15 +183,21 @@ class XL
                     List<String> thingIDs = doc.getThingIdentifiers();
 
                     doc.data = rdfDoc.data;
+
+                    // The mainID must remain unaffected.
+                    doc.deepPromoteId(recordIDs.get(0));
+
                     for (String recordID : recordIDs)
                         doc.addRecordIdentifier(recordID);
                     for (String thingID : thingIDs)
                         doc.addThingIdentifier(thingID);
                 });
             }
-
-            // Doing simple "new"
-            m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, null, collection, false);
+            else
+            {
+                // Doing simple "new"
+                m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, null, collection, false);
+            }
         }
         else
         {
