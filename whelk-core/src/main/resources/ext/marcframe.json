@@ -9016,6 +9016,53 @@
               }]
             }
           }}
+        },
+        {
+          "source": { "650": {
+            "subfields": [
+              {"a": "Matematik"},
+              {"x": "lågstadiet"},
+              {"x": "mellanstadiet"},
+              {"y": "1960-talet"},
+              {"v": "läromedel"}
+            ],
+            "ind1": " ",
+            "ind2": "4"
+          }
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "ComplexSubject",
+                  "termComponentList": [
+                    {
+                      "@type": "Topic",
+                      "prefLabel": "Matematik"
+                    },
+                    {
+                      "@type": "TopicSubdivision",
+                      "prefLabel": "lågstadiet"
+                    },
+                    {
+                      "@type": "TopicSubdivision",
+                      "prefLabel": "mellanstadiet"
+                    },
+                    {
+                      "@type": "Temporal",
+                      "prefLabel": "1960-talet"
+                    },
+                    {
+                      "@type": "GenreForm",
+                      "prefLabel": "läromedel"
+                    }
+                  ],
+                  "prefLabel": "Matematik--lågstadiet--mellanstadiet--1960-talet--läromedel"
+                }
+              ]
+            }
+          }}
         }
       ]
     },
