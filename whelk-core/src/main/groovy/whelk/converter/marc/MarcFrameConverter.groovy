@@ -2171,14 +2171,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     @CompileStatic(SKIP)
     def revertOne(Map state, Map data, Map topEntity, Map currentEntity, Map<String, List> aboutMap = null,
                     List<MatchRule> usedMatchRules) {
-
-        MatchRule usedMatchRule = usedMatchRules ? usedMatchRules?.last() : null
-
-        def i1Entities = ind1?.about ? aboutMap[ind1.about] : [currentEntity]
-        def i2Entities = ind2?.about ? aboutMap[ind2.about] : [currentEntity]
-
-        def i1 = usedMatchRules.findResult { it.ind1 } ?: ind1 ? i1Entities.findResult { ind1.revert(state, data, it) } : ' '
-        def i2 = usedMatchRules.findResult { it.ind2 } ?: ind2 ? i2Entities.findResult { ind2.revert(state, data, it) } : ' '
+        String i1 = usedMatchRules.findResult { it.ind1 } ?: revertIndicator(ind1, state, data, currentEntity, aboutMap)
+        String i2 = usedMatchRules.findResult { it.ind2 } ?: revertIndicator(ind2, state, data, currentEntity, aboutMap)
 
         def subs = []
         def failedRequired = false
@@ -2299,6 +2293,17 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             return null
         }
 
+    }
+
+    private String revertIndicator(MarcSubFieldHandler indHandler,
+            Map state, Map data, Map currentEntity,
+            Map<String, List> aboutMap) {
+        def entities = indHandler?.about ? aboutMap[indHandler.about] : [currentEntity]
+        if (!indHandler) {
+            return ' '
+        }
+        def v = entities?.findResult { indHandler.revert(state, data, (Map) it) }
+        return (String) (v instanceof List ? ((List) v)[0] : v)
     }
 
 }
