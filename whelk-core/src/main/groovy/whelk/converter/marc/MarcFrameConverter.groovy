@@ -1830,11 +1830,14 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         Closure getOrder = {
             [order.get(it.code, order['...']), !it.code.isNumber(), it.code]
         }
-        // Only the first subfield in a group is used to determine the order of the group
+        // Only the highest subfield of a group is used to determine the order of the group.
+        Set<String> aboutGroups = subfields.values().findResults {
+            it.newAbout ? it.about : null
+        }
         return subfields.values().groupBy {
-            it.about ?: it.fieldHandler.aboutAlias ?: it.code
+            it.about in aboutGroups ? it.about : it.code
         }.entrySet().sort {
-            getOrder(it.value[0])
+            getOrder(it.value.sort(getOrder)[0])
         }.collect {
             it.value.sort(getOrder)
         }
@@ -2171,14 +2174,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     @CompileStatic(SKIP)
     def revertOne(Map state, Map data, Map topEntity, Map currentEntity, Map<String, List> aboutMap = null,
                     List<MatchRule> usedMatchRules) {
-
-        MatchRule usedMatchRule = usedMatchRules ? usedMatchRules?.last() : null
-
-        def i1Entities = ind1?.about ? aboutMap[ind1.about] : [currentEntity]
-        def i2Entities = ind2?.about ? aboutMap[ind2.about] : [currentEntity]
-
-        def i1 = usedMatchRules.findResult { it.ind1 } ?: ind1 ? i1Entities.findResult { ind1.revert(state, data, it) } : ' '
-        def i2 = usedMatchRules.findResult { it.ind2 } ?: ind2 ? i2Entities.findResult { ind2.revert(state, data, it) } : ' '
+        String i1 = usedMatchRules.findResult { it.ind1 } ?: revertIndicator(ind1, state, data, currentEntity, aboutMap)
+        String i2 = usedMatchRules.findResult { it.ind2 } ?: revertIndicator(ind2, state, data, currentEntity, aboutMap)
 
         def subs = []
         def failedRequired = false
@@ -2186,6 +2183,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def usedEntities = new HashSet()
 
         def prevAdded = null
+
+        // NOTE: Within a field, only *one* positioned term is supported.
+        def firstRelPos = null
+        Map sortedByItemPos = [:]
 
         orderedAndGroupedSubfields.each { subhandlers ->
 
@@ -2241,26 +2242,31 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     //subs << ['DEBUG:blockedSinceRevertedBy': selectedEntity._revertedBy]
                 }
 
-                def value = subhandler.revert(state, data, selectedEntity)
+                List result = subhandler.revertWithSourcePosition(state, data, selectedEntity)
 
                 def justAdded = null
 
-                if (value instanceof List) {
-                    value.each { v ->
-                        if (!usedMatchRules || usedMatchRules.every { it.matchValue(code, v) }) {
-                            def sub = [(code): v]
-                            subs << sub
-                            justAdded = [code, sub]
+                if (result != null) {
+                    result.each {
+                        def (vs, pos) = it
+                        if (!(vs instanceof List)) {
+                            vs = [vs]
+                        }
+                        for (v in vs.flatten()) {
+                            if (subhandler.itemPos == 'rest') {
+                                if (firstRelPos == null)
+                                    firstRelPos = pos
+                                sortedByItemPos[subhandler.code] = pos
+                            }
+                            if (!usedMatchRules || usedMatchRules.every { it.matchValue(code, v) }) {
+                                def sub = [(code): v]
+                                subs << sub
+                                justAdded = [code, sub]
+                            }
                         }
                     }
                     if (subhandler.required && !justAdded) {
                         failedRequired = true
-                    }
-                } else if (value != null) {
-                    if (!usedMatchRules || usedMatchRules.every { it.matchValue(code, value) }) {
-                        def sub = [(code): value]
-                        subs << sub
-                        justAdded = [code, sub]
                     }
                 } else {
                     if (subhandler.required || subhandler.requiresI1 || subhandler.requiresI2) {
@@ -2284,6 +2290,13 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         if (!failedRequired && i1 != null && i2 != null && subs.size()) {
+            if (sortedByItemPos.size()) {
+                subs.sort {
+                    def entry = it.entrySet()[0]
+                    def relPos = sortedByItemPos[entry.key]
+                    [relPos ? firstRelPos : subs.indexOf(it), relPos]
+                }
+            }
             def field = [ind1: i1, ind2: i2, subfields: subs]
 
             if (usedMatchRules && !usedMatchRules.every { it.matches(field) }) {
@@ -2299,6 +2312,17 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             return null
         }
 
+    }
+
+    private String revertIndicator(MarcSubFieldHandler indHandler,
+            Map state, Map data, Map currentEntity,
+            Map<String, List> aboutMap) {
+        def entities = indHandler?.about ? aboutMap[indHandler.about] : [currentEntity]
+        if (!indHandler) {
+            return ' '
+        }
+        def v = entities?.findResult { indHandler.revert(state, data, (Map) it) }
+        return (String) (v instanceof List ? ((List) v)[0] : v)
     }
 
 }
@@ -2506,29 +2530,38 @@ class MarcSubFieldHandler extends ConversionPart {
     }
 
     @CompileStatic(SKIP)
-    def revert(Map state, Map data, Map currentEntity) {
+    List revert(Map state, Map data, Map currentEntity) {
+        List result = revertWithSourcePosition(state, data, currentEntity)
+        if (result == null)
+            return null
+        return result.collect { it[0] }
+    }
+
+    @CompileStatic(SKIP)
+    List revertWithSourcePosition(Map state, Map data, Map currentEntity) {
         currentEntity = aboutEntityName ? getEntity(state, data) : currentEntity
         if (currentEntity == null)
             return null
 
         def entities = link ? currentEntity[link] : [currentEntity]
         if (entities == null) {
-            return marcDefault ?: null
+            return marcDefault ? [marcDefault] : null
         }
         if (entities instanceof Map) {
             entities = [entities]
         }
 
-        def values = []
+        List values = []
 
-        boolean rest = false
+        int i = 0
         for (entity in entities) {
-            if (!rest) {
-                rest = true
+            i++
+            if (i == 1) {
                 if (itemPos == "rest")
                     continue
-            } else if (itemPos == "first")
+            } else if (itemPos == "first") {
                 break
+            }
 
             String entityId = entity['@id']
             def propertyValue = property ? entity[property] : null
@@ -2564,7 +2597,7 @@ class MarcSubFieldHandler extends ConversionPart {
                     }
                 }
                 if (vs.size() == splitValueProperties.size() && !allEmpty) {
-                    values << vs.join(rejoin)
+                    values << [vs.join(rejoin), i]
                     continue
                 }
             }
@@ -2588,16 +2621,14 @@ class MarcSubFieldHandler extends ConversionPart {
             }
 
             if (value != null) {
-                values << value
+                values << [value, i]
             } else if (marcDefault) {
-                values << marcDefault
+                values << [marcDefault, i]
             }
         }
 
         if (values.size() == 0)
             return null
-        else if (values.size() == 1)
-            return values[0]
         else
             return values
     }
