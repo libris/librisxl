@@ -14677,13 +14677,14 @@
         }
       ],
       "$h": {"ignored": true},
-      "subfieldOrder": "w i a n d c e g j 4 t n s l k f v x y z",
+      "subfieldOrder": "w i a q d g c e j 4 t n p k l s f v x y z 0",
       "_spec": [
         {
           "source": {
             "511": {"ind1": "2", "ind2": " ", "subfields": [
               {"w": "a"},
-              {"a": "Colloque européen de droit rural"}
+              {"a": "Colloque européen de droit rural"},
+              {"0": "00000"}
             ]}},
           "result": {
             "mainEntity": {
@@ -14691,7 +14692,8 @@
               "seeAlso": [{
                 "@type": "Meeting",
                 "marc:controlSubfield" : "a",
-                "name": "Colloque européen de droit rural"
+                "name": "Colloque européen de droit rural",
+                "marc:recordControlNumber": ["00000"]
               }]
             }
           }
@@ -14701,7 +14703,8 @@
             "511": {"ind1": "2", "ind2": " ", "subfields": [
               {"w": "a"},
               {"a": "AIC Seminar."},
-              {"t": "Proceedings"}
+              {"t": "Proceedings"},
+              {"0": "00000"}
             ]}},
           "result": {
             "mainEntity": {
@@ -14719,7 +14722,8 @@
                     "@type": "Meeting",
                     "name": "AIC Seminar."
                   }
-                } ]
+                } ],
+                "marc:recordControlNumber": ["00000"]
               }]
             }
           }
