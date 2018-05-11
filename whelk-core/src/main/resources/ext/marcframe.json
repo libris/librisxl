@@ -14534,14 +14534,14 @@
         }
       ],
       "$h": {"ignored": true},
-      "FIXME:subfieldOrder": "Not working correctly. Have added 'normalized' just to make the revert pass",
-      "subfieldOrder": "w i a b c d g  e 4 t m n p r s l k f o v x y z",
+      "subfieldOrder": "w i a b d c g e 4 t m n r p k l s f o v x y z 0",
       "_spec": [
         {
           "source": {
             "510": {"ind1": "2", "ind2": " ", "subfields": [
               {"w": "b"},
-              {"a": "Oklahoma Council on Juvenile Delinquency"}
+              {"a": "Oklahoma Council on Juvenile Delinquency"},
+              {"0": "00000"}
             ]}},
           "result": {
             "mainEntity": {
@@ -14549,7 +14549,8 @@
               "seeAlso": [{
                 "@type": "Organization",
                 "name": "Oklahoma Council on Juvenile Delinquency",
-                "marc:controlSubfield": "b"
+                "marc:controlSubfield": "b",
+                "marc:recordControlNumber": ["00000"]
               }]
             }
           }
@@ -14557,14 +14558,16 @@
         {
           "source": {
             "510": {"ind1": "2", "ind2": " ", "subfields": [
-              {"a": "Five Pieces (reportagegrupp)"}
+              {"a": "Five Pieces (reportagegrupp)"},
+              {"0": "00000"}
             ]}},
           "result": {
             "mainEntity": {
               "@type": "Identity",
               "seeAlso": [{
                 "@type": "Organization",
-                "name": "Five Pieces (reportagegrupp)"}]
+                "name": "Five Pieces (reportagegrupp)",
+                "marc:recordControlNumber": ["00000"]}]
             }
           }
         },
@@ -14573,7 +14576,8 @@
             "510": {"ind1": "1", "ind2": " ", "subfields": [
               {"w": "a"},
               {"a": "Maryland."},
-              {"b": "Air Quality Programs"}
+              {"b": "Air Quality Programs"},
+              {"0": "00000"}
             ]}},
           "result": {
             "mainEntity": {
@@ -14585,7 +14589,64 @@
                 "isPartOf": {
                   "@type": "Jurisdiction",
                   "name": "Maryland."
-                }
+                },
+                "marc:recordControlNumber": ["00000"]
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "510": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Sverige."},
+              {"t": "Insiderstrafflagen"},
+              {"0": "00000"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "relatedTo": [{
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Jurisdiction",
+                    "name": "Sverige."
+                  }
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Insiderstrafflagen"
+                }],
+                "marc:recordControlNumber": ["00000"]
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "510": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Svenska kyrkan."},
+              {"t": "Evangelieboken"},
+              {"0": "00000"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "relatedTo": [{
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Organization",
+                    "name": "Svenska kyrkan."
+                  }
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Evangelieboken"
+                }],
+                "marc:recordControlNumber": ["00000"]
               }]
             }
           }
