@@ -14778,14 +14778,15 @@
       "TODO:$5": {},
       "$6": {"property": "marc:fieldref"},
       "TODO:$8": {},
-      "subfieldOrder": "w a",
+      "subfieldOrder": "w i a g d t m n r p k l s f o v x y z 0 1",
       "_spec": [
         {
           "source": {
             "530": {"ind1": " ", "ind2": "0", "subfields": [
               {"w": "g"},
               {"a": "Vedas"},
-              {"x": "Criticism, interpretation, etc."}
+              {"x": "Criticism, interpretation, etc."},
+              {"0": "00000"}
             ]}},
           "result": {
             "mainEntity": {
@@ -14797,7 +14798,8 @@
                   "mainTitle": "Vedas"
                 }],
                 "marc:controlSubfield": "g",
-                "marc:generalSubdivision": ["Criticism, interpretation, etc."]
+                "marc:generalSubdivision": ["Criticism, interpretation, etc."],
+                "marc:recordControlNumber": ["00000"]
               }]
             }
           }
