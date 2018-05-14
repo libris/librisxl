@@ -2801,30 +2801,30 @@ class MatchRule {
         if (onRevert == null) {
             return true
         } else {
-            matchObjectSpec(onRevert, entity)
+            objectContains(entity, onRevert)
         }
     }
 
     @CompileStatic(SKIP)
-    static boolean matchObjectSpec(spec, obj) {
-        if (spec instanceof List) {
-            return spec.every {
-                matchObjectSpec(it, obj)
+    static boolean objectContains(obj, pattern) {
+        if (pattern instanceof List) {
+            return pattern.every {
+                objectContains(obj, it)
             }
         }
-        if (spec instanceof Map) {
+        if (pattern instanceof Map) {
             if (!(obj instanceof Map)) {
                 return false
             }
             def map = (Map) obj
-            for (Map.Entry entry : ((Map) spec).entrySet()) {
+            for (Map.Entry entry : ((Map) pattern).entrySet()) {
                 if (!map.containsKey(entry.key)) {
                     return false
                 }
-                return matchObjectSpec(entry.value, map[entry.key])
+                return objectContains(map[entry.key], entry.value)
             }
         } else {
-            return obj.equals(spec)
+            return obj.equals(pattern)
         }
     }
 }
