@@ -14828,11 +14828,12 @@
       "resourceType": "Topic",
       "$a": {"property": "prefLabel"},
       "$0": {"addProperty": "marc:recordControlNumber"},
+      "subfieldOrder": "w i a x 0 1",
       "_spec": [
         {
           "source": [
             {"040": {"ind1": " ", "ind2": " ", "subfields": [{"f":"sao"}]}},
-            {"550": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Other"}]}}
+            {"550": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Other"}, {"0": "00000"}]}}
           ],
           "result": {
             "mainEntity": {
@@ -14842,8 +14843,11 @@
                 "@type": "ConceptScheme",
                 "code": "sao"
               },
-              "related": [
-                {"@type": "Topic", "@id": "https://id.kb.se/term/sao/Other", "prefLabel":  "Other"}
+              "related": [{
+                "@type": "Topic",
+                "@id": "https://id.kb.se/term/sao/Other",
+                "prefLabel":  "Other",
+                "marc:recordControlNumber": ["00000"]}
               ]
             }
           }
@@ -14852,7 +14856,12 @@
           "source": [
             {"040": {"ind1": " ", "ind2": " ", "subfields": [{"f":"sao"}]}},
             {"550": {"ind1": " ", "ind2": " ",
-              "subfields": [{"a": "Commedia dell`arte"}, {"w": "g"}]}}
+              "subfields": [{"a": "Commedia dell`arte"}, {"w": "g"}, {"0": "00000"}]}}
+          ],
+          "normalized": [
+            {"040": {"ind1": " ", "ind2": " ", "subfields": [{"f":"sao"}]}},
+            {"550": {"ind1": " ", "ind2": " ",
+              "subfields": [{"w": "g"}, {"a": "Commedia dell`arte"}, {"0": "00000"}]}}
           ],
           "result": {
             "mainEntity": {
@@ -14865,7 +14874,9 @@
               "broader": [
                 {"@type": "Topic",
                   "@id": "https://id.kb.se/term/sao/Commedia%20dell%60arte",
-                  "prefLabel":  "Commedia dell`arte"}
+                  "prefLabel":  "Commedia dell`arte",
+                  "marc:recordControlNumber": ["00000"]
+                }
               ]
             }
           }
