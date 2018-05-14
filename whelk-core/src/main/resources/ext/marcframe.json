@@ -8155,6 +8155,7 @@
         }
       ],
       "addLink": "subject",
+      "resourceType": "Identity",
       "pendingResources": {
         "_:agent": {
           "addLink": "termComponentList",
@@ -8324,6 +8325,8 @@
     "611": {
       "aboutEntity": "?work",
       "i1": {"marcDefault": "2"},
+      "addLink": "subject",
+      "resourceType": "Identity",
       "match": [
         {
           "when": "$t",
@@ -8344,13 +8347,11 @@
             "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Meeting", "required": true},
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
-          "addLink": "subject",
           "$t": {"about": "_:title", "property": "mainTitle"}
         },
         {
           "when": null,
           "include": ["agentdataMeeting", "subjectbase"],
-          "addLink": "subject",
           "resourceType": "Meeting",
           "aboutAlias": "_:agent",
           "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
@@ -8666,6 +8667,7 @@
       "include": ["subjectbase"],
       "aboutEntity": "?work",
       "addLink": "subject",
+      "resourceType": "Identity",
       "pendingResources": {
         "_:term": {
           "addLink": "termComponentList",
