@@ -729,7 +729,7 @@
       "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
       "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
       "$z": {"about": "_:work", "property": "marc:geographicSubdivision"},
-      "$0": {"about": "_:work", "addProperty": "marc:uri"}
+      "$0": {"about": "_:work", "addProperty": "marc:recordControlNumber"}
     },
 
     "hasRelatedToPerson": {
@@ -14316,27 +14316,30 @@
           "pendingResources": {
             "_:agent": {"addLink": "seeAlso", "resourceType": "Family", "required": true}
           },
-          "include": ["agentData", "agentdataFamily"]
+          "include": ["agentData", "agentdataFamily"],
+          "$0": {"about": "_:agent", "addProperty": "marc:recordControlNumber"}
         },
         {
           "when": null,
           "include": ["seeAlsoPerson", "agentdataNameOfPerson"]
         }
       ],
-      "subfieldOrder": "w i a b c q d j e 4 t g m n p r s l k f o v x y z",
+      "subfieldOrder": "w i a b c q d j e 4 g t m n r p k l s f o v x y z 0",
       "$h": {"ignored": true},
       "_spec": [
         {
           "source": {
             "500": {"ind1": "3", "ind2": " ", "subfields": [
-              {"a": "Horn Family"}
+              {"a": "Horn Family"},
+              {"0": "00000"}
             ]}},
           "result": {
             "mainEntity": {
               "@type": "Identity",
               "seeAlso": [ {
                 "@type": "Family",
-                "name": "Horn Family"
+                "name": "Horn Family",
+                "marc:recordControlNumber": ["00000"]
               } ]
             }
           }
@@ -14345,7 +14348,8 @@
           "source": {
             "500": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "Oats, Joyce Carol"},
-              {"d": "1938-"}
+              {"d": "1938-"},
+              {"0": "00000"}
             ]}},
           "result": {
             "mainEntity": {
@@ -14354,7 +14358,8 @@
                 "@type": "Person",
                 "familyName": "Oats",
                 "givenName": "Joyce Carol",
-                "lifeSpan": "1938-"
+                "lifeSpan": "1938-",
+                "marc:recordControlNumber": ["00000"]
               } ]
             }
           }
@@ -14364,13 +14369,15 @@
             "500": {"ind1": " ", "ind2": " ", "subfields": [
               {"a": "Lindgren, Astrid"},
               {"d": "1907-2002"},
-              {"t": "Lillebror och Karlsson på taket"}
+              {"t": "Lillebror och Karlsson på taket"},
+              {"0": "00000"}
             ]}},
           "normalized": {
             "500": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "Lindgren, Astrid"},
               {"d": "1907-2002"},
-              {"t": "Lillebror och Karlsson på taket"}
+              {"t": "Lillebror och Karlsson på taket"},
+              {"0": "00000"}
             ]}},
           "result": {
             "mainEntity": {
@@ -14390,7 +14397,8 @@
                       "givenName": "Astrid",
                       "lifeSpan": "1907-2002"
                     }
-                  }]
+                  }],
+                  "marc:recordControlNumber": ["00000"]
                 }
               ]
             }
@@ -14403,7 +14411,17 @@
               {"d": "1845-1924."},
               {"t": "Ballades,"},
               {"n": "op. 19"},
-              {"m": "piano"}
+              {"m": "piano"},
+              {"0": "00000"}
+            ]}},
+          "normalized": {
+            "500": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Fauré, Gabriel"},
+              {"d": "1845-1924."},
+              {"t": "Ballades,"},
+              {"m": "piano"},
+              {"n": "op. 19"},
+              {"0": "00000"}
             ]}},
           "result": {
             "mainEntity": {
@@ -14424,6 +14442,7 @@
                   "mainTitle": "Ballades,",
                   "partNumber": ["op. 19"]
                 }],
+                "marc:recordControlNumber": ["00000"],
                 "musicMedium": ["piano"]
               }]
             }
@@ -14515,14 +14534,14 @@
         }
       ],
       "$h": {"ignored": true},
-      "FIXME:subfieldOrder": "Not working correctly. Have added 'normalized' just to make the revert pass",
-      "subfieldOrder": "w i a b c d g  e 4 t m n p r s l k f o v x y z",
+      "subfieldOrder": "w i a b d c g e 4 t m n r p k l s f o v x y z 0",
       "_spec": [
         {
           "source": {
             "510": {"ind1": "2", "ind2": " ", "subfields": [
               {"w": "b"},
-              {"a": "Oklahoma Council on Juvenile Delinquency"}
+              {"a": "Oklahoma Council on Juvenile Delinquency"},
+              {"0": "00000"}
             ]}},
           "result": {
             "mainEntity": {
@@ -14530,7 +14549,8 @@
               "seeAlso": [{
                 "@type": "Organization",
                 "name": "Oklahoma Council on Juvenile Delinquency",
-                "marc:controlSubfield": "b"
+                "marc:controlSubfield": "b",
+                "marc:recordControlNumber": ["00000"]
               }]
             }
           }
@@ -14538,14 +14558,16 @@
         {
           "source": {
             "510": {"ind1": "2", "ind2": " ", "subfields": [
-              {"a": "Five Pieces (reportagegrupp)"}
+              {"a": "Five Pieces (reportagegrupp)"},
+              {"0": "00000"}
             ]}},
           "result": {
             "mainEntity": {
               "@type": "Identity",
               "seeAlso": [{
                 "@type": "Organization",
-                "name": "Five Pieces (reportagegrupp)"}]
+                "name": "Five Pieces (reportagegrupp)",
+                "marc:recordControlNumber": ["00000"]}]
             }
           }
         },
@@ -14554,7 +14576,8 @@
             "510": {"ind1": "1", "ind2": " ", "subfields": [
               {"w": "a"},
               {"a": "Maryland."},
-              {"b": "Air Quality Programs"}
+              {"b": "Air Quality Programs"},
+              {"0": "00000"}
             ]}},
           "result": {
             "mainEntity": {
@@ -14566,7 +14589,64 @@
                 "isPartOf": {
                   "@type": "Jurisdiction",
                   "name": "Maryland."
-                }
+                },
+                "marc:recordControlNumber": ["00000"]
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "510": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Sverige."},
+              {"t": "Insiderstrafflagen"},
+              {"0": "00000"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "relatedTo": [{
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Jurisdiction",
+                    "name": "Sverige."
+                  }
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Insiderstrafflagen"
+                }],
+                "marc:recordControlNumber": ["00000"]
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "510": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Svenska kyrkan."},
+              {"t": "Evangelieboken"},
+              {"0": "00000"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "relatedTo": [{
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Organization",
+                    "name": "Svenska kyrkan."
+                  }
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Evangelieboken"
+                }],
+                "marc:recordControlNumber": ["00000"]
               }]
             }
           }
@@ -14597,13 +14677,14 @@
         }
       ],
       "$h": {"ignored": true},
-      "subfieldOrder": "w i a n d c e g j 4 t n s l k f v x y z",
+      "subfieldOrder": "w i a q d g c e j 4 t n p k l s f v x y z 0",
       "_spec": [
         {
           "source": {
             "511": {"ind1": "2", "ind2": " ", "subfields": [
               {"w": "a"},
-              {"a": "Colloque européen de droit rural"}
+              {"a": "Colloque européen de droit rural"},
+              {"0": "00000"}
             ]}},
           "result": {
             "mainEntity": {
@@ -14611,7 +14692,8 @@
               "seeAlso": [{
                 "@type": "Meeting",
                 "marc:controlSubfield" : "a",
-                "name": "Colloque européen de droit rural"
+                "name": "Colloque européen de droit rural",
+                "marc:recordControlNumber": ["00000"]
               }]
             }
           }
@@ -14621,7 +14703,8 @@
             "511": {"ind1": "2", "ind2": " ", "subfields": [
               {"w": "a"},
               {"a": "AIC Seminar."},
-              {"t": "Proceedings"}
+              {"t": "Proceedings"},
+              {"0": "00000"}
             ]}},
           "result": {
             "mainEntity": {
@@ -14639,7 +14722,8 @@
                     "@type": "Meeting",
                     "name": "AIC Seminar."
                   }
-                } ]
+                } ],
+                "marc:recordControlNumber": ["00000"]
               }]
             }
           }
@@ -14694,14 +14778,15 @@
       "TODO:$5": {},
       "$6": {"property": "marc:fieldref"},
       "TODO:$8": {},
-      "subfieldOrder": "w a",
+      "subfieldOrder": "w i a g d t m n r p k l s f o v x y z 0 1",
       "_spec": [
         {
           "source": {
             "530": {"ind1": " ", "ind2": "0", "subfields": [
               {"w": "g"},
               {"a": "Vedas"},
-              {"x": "Criticism, interpretation, etc."}
+              {"x": "Criticism, interpretation, etc."},
+              {"0": "00000"}
             ]}},
           "result": {
             "mainEntity": {
@@ -14713,7 +14798,8 @@
                   "mainTitle": "Vedas"
                 }],
                 "marc:controlSubfield": "g",
-                "marc:generalSubdivision": ["Criticism, interpretation, etc."]
+                "marc:generalSubdivision": ["Criticism, interpretation, etc."],
+                "marc:recordControlNumber": ["00000"]
               }]
             }
           }
@@ -14742,11 +14828,12 @@
       "resourceType": "Topic",
       "$a": {"property": "prefLabel"},
       "$0": {"addProperty": "marc:recordControlNumber"},
+      "subfieldOrder": "w i a x 0 1",
       "_spec": [
         {
           "source": [
             {"040": {"ind1": " ", "ind2": " ", "subfields": [{"f":"sao"}]}},
-            {"550": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Other"}]}}
+            {"550": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Other"}, {"0": "00000"}]}}
           ],
           "result": {
             "mainEntity": {
@@ -14756,8 +14843,11 @@
                 "@type": "ConceptScheme",
                 "code": "sao"
               },
-              "related": [
-                {"@type": "Topic", "@id": "https://id.kb.se/term/sao/Other", "prefLabel":  "Other"}
+              "related": [{
+                "@type": "Topic",
+                "@id": "https://id.kb.se/term/sao/Other",
+                "prefLabel":  "Other",
+                "marc:recordControlNumber": ["00000"]}
               ]
             }
           }
@@ -14766,7 +14856,12 @@
           "source": [
             {"040": {"ind1": " ", "ind2": " ", "subfields": [{"f":"sao"}]}},
             {"550": {"ind1": " ", "ind2": " ",
-              "subfields": [{"a": "Commedia dell`arte"}, {"w": "g"}]}}
+              "subfields": [{"a": "Commedia dell`arte"}, {"w": "g"}, {"0": "00000"}]}}
+          ],
+          "normalized": [
+            {"040": {"ind1": " ", "ind2": " ", "subfields": [{"f":"sao"}]}},
+            {"550": {"ind1": " ", "ind2": " ",
+              "subfields": [{"w": "g"}, {"a": "Commedia dell`arte"}, {"0": "00000"}]}}
           ],
           "result": {
             "mainEntity": {
@@ -14779,7 +14874,9 @@
               "broader": [
                 {"@type": "Topic",
                   "@id": "https://id.kb.se/term/sao/Commedia%20dell%60arte",
-                  "prefLabel":  "Commedia dell`arte"}
+                  "prefLabel":  "Commedia dell`arte",
+                  "marc:recordControlNumber": ["00000"]
+                }
               ]
             }
           }
