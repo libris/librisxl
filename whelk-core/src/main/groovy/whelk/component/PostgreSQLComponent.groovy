@@ -1590,6 +1590,7 @@ class PostgreSQLComponent {
     /**
      * List all system IDs that match a given typed id and graph index
      * (for example: type:ISBN, value:1234, graphIndex:1 -> ksjndfkjwbr3k)
+     * If type is passed as null, all types will match.
      */
     public List<String> getSystemIDsByTypedID(String idType, String idValue, int graphIndex) {
         Connection connection
@@ -1599,7 +1600,11 @@ class PostgreSQLComponent {
             String query = "SELECT id FROM lddb WHERE data#>'{@graph," + graphIndex + ",identifiedBy}' @> ?"
             connection = getConnection()
             preparedStatement = connection.prepareStatement(query)
-            preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + idValue + "\"}]", java.sql.Types.OTHER)
+
+            if (idType != null)
+                preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + idValue + "\"}]", java.sql.Types.OTHER)
+            else
+                preparedStatement.setObject(1, "[{\"value\": \"" + idValue + "\"}]", java.sql.Types.OTHER)
 
             rs = preparedStatement.executeQuery()
             List<String> results = []
