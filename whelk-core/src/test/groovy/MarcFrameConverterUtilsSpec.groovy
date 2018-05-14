@@ -133,7 +133,7 @@ class MarcFrameConverterUtilsSpec extends Specification {
         when:
         def subfields = MarcFieldHandler.orderAndGroupSubfields(
                 [
-                    'a': subHandler(field, 'a', [about: 'agent']),
+                    'a': subHandler(field, 'a', [aboutNew: 'agent']),
                     'd': subHandler(field, 'd', [about: 'agent']),
                     't': subHandler(field, 't', [about: 'title']),
                 ],
@@ -144,7 +144,7 @@ class MarcFrameConverterUtilsSpec extends Specification {
         and:
         def subfields2 = MarcFieldHandler.orderAndGroupSubfields(
                 [
-                    'a': subHandler(field, 'a', [about: 'agent']),
+                    'a': subHandler(field, 'a', [aboutNew: 'agent']),
                     'p': subHandler(field, 'p', [about: 'place']),
                     '4': subHandler(field, '4', [about: 'agent']),
                 ],
@@ -157,7 +157,7 @@ class MarcFrameConverterUtilsSpec extends Specification {
                 [
                     'a': subHandler(field, 'a', [about: 'title']),
                     'd': subHandler(field, 'd', [:]),
-                    'f': subHandler(field, 'f', [about: 'work']),
+                    'f': subHandler(field, 'f', [aboutNew: 'work']),
                     'q': subHandler(field, 'q', [:]),
                     'l': subHandler(field, 'l', [about: 'work']),
                 ],
