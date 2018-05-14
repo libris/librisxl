@@ -2148,7 +2148,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                         assert it instanceof Map, "Error reverting ${fieldId} - expected object, got: ${it}"
                         if (uriTemplateBase) {
                             if (!it['@id'] || !it['@id'].startsWith(uriTemplateBase)) {
-                                return false
+                                boolean aliasMatchesBase = Util.asList(it['sameAs']).any {
+                                    it.get('@id')?.startsWith(uriTemplateBase)
+                                }
+                                if (!aliasMatchesBase) {
+                                    return false
+                                }
                             }
                         }
                         return isInstanceOf(it, useLink.resourceType)
