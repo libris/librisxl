@@ -211,6 +211,16 @@ class MarcFrameConverterUtilsSpec extends Specification {
         Util.getSortedPendingKeys(pendingResources) == ['a', 'b1', 'b2', 'd', 'c']
     }
 
+    def "should match object spec"() {
+        given:
+        def spec = [link: [key: "value"]]
+        def obj1 = [link: [key: "value"]]
+        def obj2 = [link: [key: "other"]]
+        expect:
+        MatchRule.matchObjectSpec(spec, obj1)
+        !MatchRule.matchObjectSpec(spec, obj2)
+    }
+
     def newMarcFieldHandler() {
         new MarcFieldHandler(new MarcRuleSet(new MarcConversion(null, [:], [:]), 'blip'), 'xxx', [:])
     }

@@ -1143,14 +1143,9 @@
           "include": ["termbase_with_id"]
         },
         {
-          "when": "i2=7 & $2=kao",
-          "include": ["termbase"]
-        },
-        {
           "when": "i2=0",
           "include": ["termbase"],
-          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}",
-          "FIXME": "Match on uriTemplate on revert!"
+          "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
         },
         {
           "when": "i2=1",
@@ -1159,24 +1154,40 @@
         },
 
         {
-          "when": null,
+          "when": {
+            "onRevert": {"inScheme": {"code": "lcsh"}},
+            "then": {"ind2": "0"}
+          },
+          "include": ["termbase"]
+        },
+        {
+          "when": {
+            "onRevert": {"inScheme": {"code": "mesh"}},
+            "then": {"ind2": "2"}
+          },
           "include": ["termbase"],
-          "TODO": "The uses of i2 below would be preferable before this, but the $2 are redunant (and don't work properly anyway). But matching just i2 actually sets its value..."
+          "TODO:uriTemplate": "https://id.nlm.nih.gov/mesh/{prefLabel}",
+          "NOTE": "beta sparql endpoint. Do not use yet (labels don't match)..."
         },
         {
-          "when": "i2=2 & $2=mesh",
+          "when": {
+            "onRevert": {"inScheme": {"code": "nal"}},
+            "then": {"ind2": "3"}
+          },
           "include": ["termbase"]
         },
         {
-          "when": "i2=3 & $2=nal",
+          "when": {
+            "onRevert": {"inScheme": {"code": "csh"}},
+            "then": {"ind2": "5"}
+          },
           "include": ["termbase"]
         },
         {
-          "when": "i2=5 & $2=csh",
-          "include": ["termbase"]
-        },
-        {
-          "when": "i2=6 & $2=rvm",
+          "when": {
+            "onRevert": {"inScheme": {"code": "rvm"}},
+            "then": {"ind2": "6"}
+          },
           "include": ["termbase"]
         },
         {
@@ -1186,13 +1197,6 @@
         {
           "when": null,
           "include": ["termbase"]
-        },
-
-        {
-          "TODO:when": "i2=2",
-          "include": ["termbase"],
-          "uriTemplate": "https://id.nlm.nih.gov/mesh/{prefLabel}",
-          "NOTE": "beta sparql endpoint. Do not use yet (labels don't match)..."
         }
       ]
     },

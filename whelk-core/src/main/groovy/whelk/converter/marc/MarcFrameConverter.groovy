@@ -1879,6 +1879,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         for (rule in matchRules) {
+            if (rule.onRevert)
+                continue
             def matchHandler = rule.getHandler(aboutEntity, value)
             if (matchHandler) {
                 return matchHandler.convert(state, value)
@@ -2174,6 +2176,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     @CompileStatic(SKIP)
     def revertOne(Map state, Map data, Map topEntity, Map currentEntity, Map<String, List> aboutMap = null,
                     List<MatchRule> usedMatchRules) {
+        if (usedMatchRules.any { !it.acceptRevert(currentEntity) }) {
+            return null
+        }
+
         String i1 = usedMatchRules.findResult { it.ind1 } ?: revertIndicator(ind1, state, data, currentEntity, aboutMap)
         String i2 = usedMatchRules.findResult { it.ind2 } ?: revertIndicator(ind2, state, data, currentEntity, aboutMap)
 
@@ -2658,6 +2664,7 @@ class MatchRule {
 
     MarcFieldHandler handler
     boolean whenAll = true
+    Map onRevert = null
     List<Closure> whenTests = []
 
     // TODO: change to use parsedWhen results to also do the revert check?
@@ -2676,8 +2683,19 @@ class MatchRule {
     }
 
     MatchRule(MarcFieldHandler parent, Map dfn, Map<String, Map> ruleWhenMap) {
-        String when = dfn.remove('when')
-        parseWhen(parent.fieldId, when)
+        def when = dfn.remove('when')
+        if (when instanceof String) {
+            parseWhen(parent.fieldId, (String) when)
+        } else if (when instanceof Map) {
+            onRevert = (Map) when['onRevert']
+            if (onRevert) {
+                Map then = (Map) when['then']
+                if (then) {
+                    if (then.ind1) ind1 = then.ind1
+                    if (then.ind2) ind2 = then.ind2
+                }
+            }
+        }
         String inherit = dfn.remove('inherit-match')
         if (inherit) {
             dfn = ruleWhenMap[inherit] + dfn
@@ -2767,9 +2785,43 @@ class MatchRule {
     }
 
     boolean matches(value) {
+        if (onRevert) {
+            // If this passes acceptRevert, we're good.
+            return true
+        }
         return whenAll ? whenTests.every { it(value) } : whenTests.any { it(value) }
     }
 
+    boolean acceptRevert(Map entity) {
+        if (onRevert == null) {
+            return true
+        } else {
+            matchObjectSpec(onRevert, entity)
+        }
+    }
+
+    @CompileStatic(SKIP)
+    static boolean matchObjectSpec(spec, obj) {
+        if (spec instanceof List) {
+            return spec.every {
+                matchObjectSpec(it, obj)
+            }
+        }
+        if (spec instanceof Map) {
+            if (!(obj instanceof Map)) {
+                return false
+            }
+            def map = (Map) obj
+            for (Map.Entry entry : ((Map) spec).entrySet()) {
+                if (!map.containsKey(entry.key)) {
+                    return false
+                }
+                return matchObjectSpec(entry.value, map[entry.key])
+            }
+        } else {
+            return obj.equals(spec)
+        }
+    }
 }
 
 @CompileStatic
