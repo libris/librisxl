@@ -6993,7 +6993,7 @@
       "subfieldOrder": "a t r g u",
       "TODO": "No $a if i2=0",
       "$a": {"property": "label"},
-      "$t": {"aboutNew": "_:tocEntry", "property": "title"},
+      "$t": {"aboutNew": "_:tocEntry", "property": "label"},
       "$r": {"about": "_:tocEntry", "property": "responsibilityStatement"},
       "$g": {"about": "_:tocEntry", "addProperty": "comment"},
       "$u": {"about": "_:tocEntry", "addProperty": "uri"},
@@ -7017,13 +7017,13 @@
                 "hasPart": [
                   {
                     "@type": "ToCEntry",
-                    "title": "Enoralehu",
+                    "label": "Enoralehu",
                     "responsibilityStatement": "(Gigi)",
                     "comment": ["(3:52) --"]
                   },
                   {
                     "@type": "ToCEntry",
-                    "title": "Leroy",
+                    "label": "Leroy",
                     "responsibilityStatement": "(Tweak & Tony Allen)",
                     "comment": ["(5:47) --"]
                   }
