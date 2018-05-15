@@ -12214,6 +12214,12 @@
           "result": {"mainEntity": {
             "electronicLocator": [{"@type": "Document", "uri": ["http://example.com/doc.pdf"]}]
           }}
+        },
+        {
+          "source": {"856": {"ind1": "4", "ind2": "8", "subfields": [{"u": "http://example.com/doc.pdf"}]}},
+          "result": {"mainEntity": {
+            "relatedTo": [{"@type": "Document", "uri": ["http://example.com/doc.pdf"], "marc:electronicLocatorType": "http"}]
+          }}
         }
       ]
     },
