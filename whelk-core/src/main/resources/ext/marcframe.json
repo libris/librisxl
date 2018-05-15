@@ -12112,7 +12112,7 @@
     "856": {
       "TODO:defaultLink": "electronicLocater and @type:Resource OK as default?",
       "addLink": "electronicLocator",
-      "resourceType": "Resource",
+      "resourceType": "Document",
       "embedded": true,
       "i1": {
         "property": "marc:electronicLocatorType",
@@ -12161,7 +12161,7 @@
             {"2": "http"}
           ]}},
           "result": {"mainEntity": {
-            "electronicLocator": [{"@type": "Resource", "uri": ["http://www-spires.slac.stanford.edu/spires/find/hep?cnum=C96-05-30"], "marc:electronicLocatorType": "http"}]
+            "electronicLocator": [{"@type": "Document", "uri": ["http://www-spires.slac.stanford.edu/spires/find/hep?cnum=C96-05-30"], "marc:electronicLocatorType": "http"}]
           }}
         },
         {
@@ -12206,6 +12206,13 @@
               "marc:copyNote": ["Tidskriftens webbplats"],
               "uri": ["http://www.vr.se/tvarsnitt"]
             }]
+          }}
+        },
+        {
+          "source": {"856": {"ind1": " ", "ind2": " ", "subfields": [{"u": "http://example.com/doc.pdf"}]}},
+          "normalized": {"856": {"ind1": "4", "ind2": " ", "subfields": [{"u": "http://example.com/doc.pdf"}]}},
+          "result": {"mainEntity": {
+            "electronicLocator": [{"@type": "Document", "uri": ["http://example.com/doc.pdf"]}]
           }}
         }
       ]
