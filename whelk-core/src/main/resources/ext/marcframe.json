@@ -3865,7 +3865,7 @@
 
     "040": {
       "aboutEntity": "?record",
-      "$a": {"link": "descriptionCreator", "resourceType": "Organization", "property": "name"},
+      "$a": {"link": "descriptionCreator", "resourceType": "Library", "uriTemplate": "https://libris.kb.se/library/{_}", "property": "sigel"},
       "$b": {
         "link": "descriptionLanguage",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
@@ -3887,7 +3887,7 @@
               "@type": "LibrisIIINumber",
               "value": "9927672551"
             }],
-            "descriptionCreator": {"@type": "Organization", "name": "Js"},
+            "descriptionCreator": {"@id": "https://libris.kb.se/library/Js", "@type": "Library", "sigel": "Js"},
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text"
