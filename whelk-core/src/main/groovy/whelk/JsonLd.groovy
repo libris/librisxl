@@ -257,18 +257,6 @@ class JsonLd {
             }
         }
 
-        if (jsonLd.containsKey(JSONLD_ALT_ID_KEY)) {
-            jsonLd.get(JSONLD_ALT_ID_KEY).each {
-                if (!((Map)it).containsKey(ID_KEY)) {
-                    return
-                }
-
-                def id = ((Map)it).get(ID_KEY)
-                if (!result.contains(id)) {
-                    result << id
-                }
-            }
-        }
         return result
     }
 
@@ -306,7 +294,9 @@ class JsonLd {
             return refs
         } else {
             item.each { key, value ->
-                refs << getRefs(value)
+                if (key != JSONLD_ALT_ID_KEY) {
+                    refs << getRefs(value)
+                }
             }
         }
 
