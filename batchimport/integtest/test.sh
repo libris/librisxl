@@ -51,9 +51,12 @@ newBibResourceId=$(psql -qAt whelk_dev <<< "select data from lddb where changedI
 if [ $newBibResourceId != $bibResourceId ]; then
     fail "Bib-replace altered the ID!"
 fi
-
-
+mainTitle=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'batch import' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["hasTitle"]|.[0]|.["mainTitle"]')
+expect="\"Polisbilen får INTE ett larm\""
+if [ "$mainTitle" != "$expect" ]; then
+    fail "Data was not replaced!"
+fi
 
 popd
-#cleanup
+cleanup
 echo $OUTCOME
