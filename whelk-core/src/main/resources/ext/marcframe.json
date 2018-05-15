@@ -3871,7 +3871,7 @@
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$c": {"link": "marc:transcribingAgency", "resourceType": "Organization", "property": "name"},
-      "$d": {"link": "descriptionUpgrader", "resourceType": "Organization", "property": "name"},
+      "$d": {"link": "descriptionUpgrader", "resourceType": "Library", "property": "sigel"},
       "$e": {"addLink": "descriptionConventions", "NOTE:marc-repeatable": false, "resourceType": "DescriptionConventions", "property": "code"},
       "$6": {"property": "marc:fieldref"},
       "NOTE:$9": {"property": "license", "NOTE": "Removed after bibliographic review"},
