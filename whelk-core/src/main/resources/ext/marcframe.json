@@ -5279,6 +5279,7 @@
         "matchUriToken": "^\\d{1,14}$"
       },
       "$6": {"property": "marc:fieldref"},
+      "subfieldOrder": "6 a g d m n r p k l s f o 1 0",
       "_spec": [
         {
           "source": {
@@ -5416,7 +5417,7 @@
       "onRevertPrefer": "246",
       "embedded": true,
       "aboutAlias": "_:title",
-      "subfieldOrder": "a n p h ... b c",
+      "subfieldOrder": "6 a n p h b c f g s",
       "$c": {
         "aboutEntity": "?thing", "property": "responsibilityStatement",
         "leadingPunctuation": "/", "trailingPunctuation": ".",
@@ -5759,6 +5760,7 @@
       "$g": {"about": "_:manufacture", "property": "date", "leadingPunctuation": ",", "punctuationChars": ",:;"},
       "$6": {"about": "_:publication", "property": "marc:fieldref"},
       "$8": {"about": "_:publication", "property": "marc:groupid"},
+      "subfieldOrder": "6 3 ...",
       "_spec": [
         {
           "source": [
@@ -6892,6 +6894,7 @@
       "$0": {"about": "_:seriesinstance", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
+      "subfieldOrder": "6 a x v 9",
       "_spec": [
         {
           "source": {"490": {"ind1": "0", "ind2": " ", "subfields": [
@@ -7767,7 +7770,7 @@
           "resourceType": "Person"
         }
       ],
-      "subfieldOrder": "a b c q d j u e 4 t g m n p r s l k f o v x y z",
+      "subfieldOrder": "6 a b c q d j g u t m n r p k l s f o x z y v 2 e 4 0",
       "addLink": "subject",
       "pendingResources": {
         "_:agent": {
@@ -7806,6 +7809,12 @@
               {"c": "Chief,"},
               {"d": "-1877"},
               {"c": "(Spirit)"}]}},
+          "normalized": {
+            "600": {"ind1": "0", "ind2": "0", "subfields": [
+              {"a": "Black Foot"},
+              {"c": "Chief,"},
+              {"c": "(Spirit)"},
+              {"d": "-1877"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8031,11 +8040,11 @@
               {"y": "21st century."}]}},
           "normalized": {
             "600": {"ind1": "1", "ind2": "0", "subfields": [
-              {"a": "Scarlatti, Domenico"},
+              {"a": "Scarlatti, Domenico,"},
               {"d": "1685-1757"},
               {"t": "Sonatas,"},
-              {"n": "K. 492"},
               {"m": "harpsichord"},
+              {"n": "K. 492"},
               {"r": "D major;"},
               {"y": "21st century."}]}},
           "result": {"mainEntity": {
@@ -8190,6 +8199,7 @@
       "$6": {"about": "_:agent", "property": "marc:fieldref"},
       "$8": {"about": "_:agent", "property": "marc:groupid"},
       "$n": {"about": "_:agent", "addProperty": "marc:numeration", "punctuationChars": ","},
+      "subfieldOrder": "6 a b n d c g u t m r p k l s f o x z y v 2 e 4 0",
       "_spec": [
         {
           "source": {
@@ -8197,6 +8207,13 @@
               {"a": "Kungl. biblioteket"},
               {"x": "samlingar"},
               {"n": "14"},
+              {"2": "sao"}
+            ]}},
+          "normalized": {
+            "610": {"ind1": "2", "ind2": "7", "subfields": [
+              {"a": "Kungl. biblioteket"},
+              {"n": "14"},
+              {"x": "samlingar"},
               {"2": "sao"}
             ]}},
           "result": {"mainEntity": {
@@ -8227,8 +8244,15 @@
               {"d": "(1792 :"},
               {"c": "Gävle)"},
               {"n": "15"},
-              {"2": "sao"}]}
-          },
+              {"2": "sao"}]}},
+          "normalized": {
+            "610": {"ind1": "1", "ind2": "7", "subfields": [
+              {"a": "Sverige"},
+              {"b": "Riksdagen"},
+              {"n": "15"},
+              {"d": "(1792 :"},
+              {"c": "Gävle)"},
+              {"2": "sao"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8262,8 +8286,13 @@
               {"a": "United States"},
               {"t": "Act to Extend the Expiration Date of Section 252 of the Energy Policy and Conservation Act (1982 July 19)"},
               {"n": "4"},
-              {"v": "catalogs"}]}
-          },
+              {"v": "catalogs"}]}},
+          "normalized": {
+            "610": {"ind1": "1", "ind2": "4", "subfields": [
+              {"a": "United States"},
+              {"n": "4"},
+              {"t": "Act to Extend the Expiration Date of Section 252 of the Energy Policy and Conservation Act (1982 July 19)"},
+              {"v": "catalogs"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8301,16 +8330,14 @@
               {"k": " Manuscript."},
               {"t": "Egentitel"},
               {"n": "Fond 1209"},
-              {"p": "Pomestnyĭ prikaz"}]}
-          },
+              {"p": "Pomestnyĭ prikaz"}]}},
           "normalized": {
             "610": {"ind1": "2", "ind2": "7", "subfields":[
               {"a": "Rossiĭskiĭ gosudarstvennyĭ arkhiv drevnikh aktov."},
-              {"k": "Manuscript."},
-              {"t": "Egentitel"},
               {"n": "Fond 1209"},
-              {"p": "Pomestnyĭ prikaz"}]}
-          },
+              {"t": "Egentitel"},
+              {"p": "Pomestnyĭ prikaz"},
+              {"k": "Manuscript."}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8382,6 +8409,7 @@
         }
       ],
       "$6": {"property": "marc:fieldref"},
+      "subfieldOrder": "6 a q d g c e u t n p k l s f x z y v 2 j 4 1 0",
       "_spec": [
         {
           "source": {
@@ -8428,6 +8456,16 @@
               {"d": "1962-1965 :"},
               {"c": "Basilica di San Pietro in Vaticano)."},
               {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
+              {"l": "Italian"}]
+            }
+          },
+          "normalized": {
+            "611": {"ind1": "2", "ind2": "0", "subfields":[
+              {"a": "Vatican Council"},
+              {"d": "1962-1965 :"},
+              {"c": "Basilica di San Pietro in Vaticano)."},
+              {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
+              {"n": "(2nd :"},
               {"l": "Italian"}]
             }
           },
@@ -8493,6 +8531,7 @@
       "$d": {"property": "date"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
+      "subfieldOrder": "6 a g d m n p k l s f o x z y v 2 e 4 1 0",
       "_spec": [
         {
           "source": {"630": {"ind1": " ", "ind2": "0",
@@ -8700,6 +8739,7 @@
       },
       "$a": {"about": "_:term", "property": "prefLabel"},
       "$8": {"property": "marc:groupid"},
+      "subfieldOrder": "8 6 a x z y v 0 2 4 1",
       "_spec": [
         {
           "source": {"648": {"ind1": " ", "ind2": "7",
@@ -8773,6 +8813,7 @@
       },
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
+      "subfieldOrder": "8 6 a x z y v 0 2 4 1",
       "_spec": [
         {
           "source": {"650": {"ind1": " ", "ind2": "7",
@@ -9107,6 +9148,7 @@
       "i1": null,
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
+      "subfieldOrder": "8 6 a x z y v 0 2 4 1",
       "_spec": [
         {
           "source": {
@@ -9267,6 +9309,7 @@
       },
       "$a": {"about": "_:topic", "property": "prefLabel"},
       "$8": {"property": "marc:groupid"},
+      "subfieldOrder": "8 6 a x z y v 0 2 1",
       "_spec": [
         {
           "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Deckare"}, {"2": "saogf"}]}},
@@ -10786,11 +10829,16 @@
       "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"about": "_:work", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
+      "subfieldOrder": "6 i a d m n r p k l s f o 1 0",
       "_spec": [
         {
           "source": {"730": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "Abyss (Motion picture : 1989)"},
             {"i": "Novelization of (work)"}
+          ]}},
+          "normalized": {"730": {"ind1": "0", "ind2": " ", "subfields": [
+            {"i": "Novelization of (work)"},
+            {"a": "Abyss (Motion picture : 1989)"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -11226,6 +11274,7 @@
       "$7": {"property": "marc:controlSubfield"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "partNumber"},
+      "subfieldorder": "6 7 i a t b c d h g k x z w 9",
       "_spec": [
         {
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
@@ -11555,7 +11604,7 @@
           }
         }
       ],
-      "subfieldorder": "3 a d g h s m n p l r k f o v w x",
+      "subfieldorder": "6 a b c q d j g u t m n r p k l s f o x v w 9 e 4 1 0",
       "_spec": [
         {
           "source": {"800": {"ind1": "1", "ind2": " ", "subfields": [
@@ -11737,6 +11786,7 @@
         }
       ],
       "i1": {"marcDefault": "2"},
+      "subfieldorder": "6 a b d c g u t n m r p k l s f o x v w 9 e 4 0",
       "_spec": [
         {
           "source": {"810": {"ind1": "2", "ind2": " ", "subfields": [
@@ -11899,6 +11949,7 @@
         },
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
+      "subfieldorder": "6 a q d g c e u t n p k l s f x v w 9 j 4 0",
       "_spec": [
         {
           "source": {"811": {"ind1": "2", "ind2": " ", "subfields": [
@@ -11906,6 +11957,12 @@
             {"n": "(2nd:"},
             {"d": "1962-1964)"},
             {"t": "Decretum de presbyterorum ministerio et vita."}
+          ]}},
+          "normalized": {"811": {"ind1": "2", "ind2": " ", "subfields": [
+            {"a": "Vatican Council"},
+            {"d": "1962-1964)"},
+            {"t": "Decretum de presbyterorum ministerio et vita."},
+            {"n": "(2nd:"}
           ]}},
           "result": {"mainEntity": {
             "seriesMembership": [
@@ -11979,7 +12036,7 @@
       "$6": {"about": "_:title", "property": "marc:fieldref"},
       "$8": {"about": "_:title", "property": "marc:groupid"},
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
-      "subfieldorder": "3 a d g h s m n p l r k f o v w x",
+      "subfieldorder": "6 a d m n r p k l s f o x v w 9 1 0",
       "_spec": [
         {
           "source": {"830": {"ind1": " ", "ind2": "0", "subfields": [
@@ -12048,8 +12105,8 @@
           ]}},
           "normalized": {"830": {"ind1": " ", "ind2": "4", "subfields": [
             {"a": "Studies on the texts of the desert of Judah"},
-            {"v": "101"},
-            {"x": "0169-9962"}
+            {"x": "0169-9962"},
+            {"v": "101"}
           ]}},
           "result": {"mainEntity": {
             "seriesMembership": [
