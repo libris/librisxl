@@ -136,8 +136,8 @@ class LegacyMarcAPI extends HttpServlet {
             response.setContentType("application/octet-stream")
             response.setHeader("Content-Disposition", "attachment; filename=\"libris_marc_" + rootDocument.getShortId() + "\"")
             def writer = (profile.getProperty("format", "ISO2709").equalsIgnoreCase("MARCXML"))?
-                    new MarcXmlRecordWriter(response.getOutputStream(), profile.getProperty("characterencoding")):
-                    new Iso2709MarcRecordWriter(response.getOutputStream(), profile.getProperty("characterencoding"))
+                    new MarcXmlRecordWriter(response.getOutputStream(), "UTF-8"):
+                    new Iso2709MarcRecordWriter(response.getOutputStream(), "UTF-8")
             for (MarcRecord record : result) {
                 writer.writeRecord(record)
             }
