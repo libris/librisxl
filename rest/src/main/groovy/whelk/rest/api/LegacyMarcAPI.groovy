@@ -5,6 +5,7 @@ import groovy.xml.XmlUtil
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter
 import se.kb.libris.util.marc.io.MarcXmlRecordReader
+import se.kb.libris.util.marc.io.MarcXmlRecordWriter
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
@@ -103,7 +104,8 @@ class LegacyMarcAPI extends HttpServlet {
             }
             id = LegacyIntegrationTools.fixUri(id)
             library = LegacyIntegrationTools.fixUri(library)
-            Document rootDocument = getDocument(id)
+            String systemId = whelk.storage.getSystemIdByIri(id)
+            Document rootDocument = whelk.storage.loadEmbellished(systemId, whelk.getJsonld())
             if (rootDocument == null) {
                 String message = "The supplied \"id\"-parameter must refer to an existing bibliographic record."
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, message)
@@ -124,19 +126,21 @@ class LegacyMarcAPI extends HttpServlet {
                 profileString = defaultProfileString
             }
 
+            //System.out.println("Using profile: " + profileString)
+            //System.out.println("Will now export: " + rootDocument.data)
+
             File tempFile = File.createTempFile("profile", ".tmp")
             tempFile.write(profileString)
             ExportProfile profile = new ExportProfile(tempFile)
             tempFile.delete()
 
-            // Embellish data
-            whelk.embellish(rootDocument, false)
-
             Vector<MarcRecord> result = compileVirtualMarcRecord(profile, rootDocument)
 
             response.setContentType("application/octet-stream")
             response.setHeader("Content-Disposition", "attachment; filename=\"libris_marc_" + rootDocument.getShortId() + "\"")
-            Iso2709MarcRecordWriter writer = new Iso2709MarcRecordWriter(response.getOutputStream(), "UTF-8")
+            def writer = (profile.getProperty("format", "ISO2709").equalsIgnoreCase("MARCXML"))?
+                    new MarcXmlRecordWriter(response.getOutputStream(), profile.getProperty("characterencoding")):
+                    new Iso2709MarcRecordWriter(response.getOutputStream(), profile.getProperty("characterencoding"))
             for (MarcRecord record : result) {
                 writer.writeRecord(record)
             }
@@ -153,8 +157,8 @@ class LegacyMarcAPI extends HttpServlet {
 
         List auth_ids = []
         xmlRecord.datafield.subfield.each {
-            if (it.@code.text().equals("0") && (it.text().startsWith("https://id.kb.se/") || it.text().startsWith("https://libris.kb.se/"))) {
-                auth_ids.add(it.text())
+            if ( it.@code.text().equals("0") ) {
+                auth_ids.add(it.text().replaceAll("#it", ""))
             }
         }
 
