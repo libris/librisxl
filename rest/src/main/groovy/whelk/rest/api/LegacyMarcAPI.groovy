@@ -143,7 +143,7 @@ class LegacyMarcAPI extends HttpServlet {
             }
             response.getOutputStream().close()
         } catch (Throwable e) {
-            log("Failed handling _compilemarc request: ", e)
+            log.error("Failed handling _compilemarc request: ", e)
             throw e
         }
     }
