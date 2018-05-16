@@ -4592,7 +4592,7 @@
       "include": ["contributiondata"],
       "$0": {"about": "_:agent", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
-      "subfieldOrder": "a b c q d j g u e 4 t n p l k f",
+      "subfieldOrder": "6 a b c q d j g u e t n p l k f 4 1 0",
       "_spec": [
         {
           "source": {
@@ -4781,7 +4781,7 @@
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
 
-      "subfieldOrder": "a b n d c g u e 4 k", "NOTE:notInLibris": "t p l k f",
+      "subfieldOrder": "6 a b n d c g u e 4 k 1 0", "NOTE:notInLibris": "t p l k f",
 
       "$0": {"about": "_:agent", "addProperty": "marc:uri"},
       "$k": {"addProperty": "qualifier", "NOTE": "not allowed but used in the wild"},
@@ -5001,7 +5001,7 @@
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "FIXME": "Change subfield order in specs. Bug in orderedAndGroupedSubfields",
-      "subfieldOrder": "a q n d g e u c j 4 t p l k f",
+      "subfieldOrder": "6 a q n d g c e u j 4 t p l k f 1 0",
       "TODO:$j": "",
       "_spec": [
         {
@@ -5045,6 +5045,14 @@
               {"e": "Delegation from Sweden"},
               {"c": "Paris, France"}
             ]}},
+          "normalized": {
+            "111": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "World Peace Conference"},
+              {"n": "1st"},
+              {"d": "1959"},
+              {"c": "Paris, France"},
+              {"e": "Delegation from Sweden"}
+            ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -5072,6 +5080,15 @@
               {"d": "1981"},
               {"e": "2nd"},
               {"c": "Cincinatti, Ohio"},
+              {"j": "author"},
+              {"4": "aut"}
+            ]}},
+          "normalized": {
+            "111": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Conference on Occupational Health Issues Affecting Secretarial and Clerical Personnel"},
+              {"d": "1981"},
+              {"c": "Cincinatti, Ohio"},
+              {"e": "2nd"},
               {"j": "author"},
               {"4": "aut"}
             ]}},
