@@ -125,10 +125,7 @@ class LegacyMarcAPI extends HttpServlet {
                 log.warn("Bad client request to LegacyMarcAPI: " + message)
                 profileString = defaultProfileString
             }
-
-            //System.out.println("Using profile: " + profileString)
-            //System.out.println("Will now export: " + rootDocument.data)
-
+            
             File tempFile = File.createTempFile("profile", ".tmp")
             tempFile.write(profileString)
             ExportProfile profile = new ExportProfile(tempFile)
