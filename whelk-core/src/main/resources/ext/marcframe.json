@@ -3858,15 +3858,37 @@
     "037": {
       "addLink": "acquisitionSource",
       "resourceType": "AcquisitionSource",
-      "TODO:i1": "'2': Intervening, '3': Current/Latest",
+      "i1": {"ignored": true, "marcDefault": " "},
       "$a": {"link": "identifiedBy", "resourceType": "StockNumber", "property": "value"},
-      "$b": {"property": "marc:sourceOfStockNumberAcquisition"},
+      "$b": {"property": "label"},
       "$c": {"addProperty": "acquisitionTerms"},
       "$f": {"addProperty": "marc:formOfIssue"},
       "$g": {"addProperty": "marc:additionalFormatCharacteristics"},
       "$n": {"addProperty": "comment"},
       "$6": {"property": "marc:fieldref"},
-      "TODO": "_spec"
+      "_spec": [
+        {
+          "source": [
+            {"037": {"ind1": " ", "ind2": " ", "subfields": [{"a": "10.1002/9783527617128"},{"b": "Wiley InterScience"},{"n": "http://www3.interscience.wiley.com"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "acquisitionSource": [{
+                "@type": "AcquisitionSource",
+                "identifiedBy": {
+                  "@type": "StockNumber",
+                  "value": "10.1002/9783527617128"
+                },
+                "label": "Wiley InterScience",
+                "comment": ["http://www3.interscience.wiley.com"]
+              }],
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        }
+      ]
     },
 
     "038": {
