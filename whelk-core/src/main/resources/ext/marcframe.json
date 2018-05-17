@@ -3550,12 +3550,12 @@
       "addLink": "capture",
       "i1": {
         "TODO": "align with subfieldproperty instead of separate list, also make sure repeatable.",
-        "property": "typeOfDateInSubfield-a",
+        "property": "marc:typeOfDateInSubfield-a",
         "tokenMap": {
-          " ": "noDateInformation",
-          "0": "singleDate",
-          "1": "multipleSingleDates",
-          "2": "rangeOfDates"
+          " ": "marc:noDateInformation",
+          "0": "marc:singleDate",
+          "1": "marc:multipleSingleDates",
+          "2": "marc:rangeOfDates"
         }
       },
       "i2": {
@@ -3592,7 +3592,7 @@
                     "date": ["198407--"],
                     "marc:geographicClassificationAreaCode": ["5754"],
                     "marc:geographicClassificationSubareaCode": ["L7"],
-                    "typeOfDateInSubfield-a": "singleDate"
+                    "marc:typeOfDateInSubfield-a": "marc:singleDate"
                   }
                 ]
               }
@@ -4103,8 +4103,8 @@
       "i2": {
         "property": "marc:i2sourceOfCode",
         "tokenMap": {
-          " ": "MARCMusicalCompositionCode",
-          "7": "sourceSpecifiedInSubfield2"
+          " ": "marc:MARCMusicalCompositionCode",
+          "7": "marc:sourceSpecifiedInSubfield2"
         }
       },
       "$a": {"addProperty": "marc:formOfMusicalCompositionCode"},
@@ -4118,8 +4118,8 @@
       "i2": {
         "property": "marc:i2sourceOfCode",
         "tokenMap": {
-          " ": "MARCCode",
-          "7": "sourceSpecifiedInSubfield2"
+          " ": "marc:MARCCode",
+          "7": "marc:sourceSpecifiedInSubfield2"
         }
       },
       "$a": {"addProperty": "marc:performerOrEnsemble"},
@@ -7137,11 +7137,11 @@
         "marcDefault": "0",
         "property": "marc:coverageOrLocationInSource",
         "tokenMap": {
-          "0": "coverageUnknown",
-          "1": "coverageComplete",
-          "2": "coverageIsSelective",
-          "3": "locationInSourceNotGiven",
-          "4": "locationInSourceGiven"
+          "0": "marc:coverageUnknown",
+          "1": "marc:coverageComplete",
+          "2": "marc:coverageIsSelective",
+          "3": "marc:locationInSourceNotGiven",
+          "4": "marc:locationInSourceGiven"
         }
       },
       "$a": {"link": "hasTitle", "resourceType": "Title", "property": "label"},
