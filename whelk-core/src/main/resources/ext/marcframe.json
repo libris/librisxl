@@ -13346,9 +13346,18 @@
       ]
     },
     "151" : {
-      "include": "termbase_with_id",
+      "include": ["abouttermbase", "termid"],
       "aboutType": "Geographic",
-      "$a": {"property": "prefLabel"},
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "Geographic",
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
+        }
+      },
+      "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
       "_spec": [
         {
           "source": {
@@ -13358,9 +13367,15 @@
             ]}},
           "result": {
             "mainEntity": {
-              "@type": "Geographic",
-              "@id": "http://libris.kb.se/resource/auth/140482",
-              "prefLabel": "Irak--Babylon (övergiven stad)"
+              "@type": "ComplexSubject",
+              "prefLabel": "Irak--Babylon (övergiven stad)",
+              "termComponentList": [ {
+                "@type": "Geographic",
+                "prefLabel": "Irak"
+              }, {
+                "@type": "Geographic",
+                "prefLabel": "Babylon (övergiven stad)"
+              } ]
             }
           }
         },
