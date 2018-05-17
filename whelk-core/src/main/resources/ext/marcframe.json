@@ -4168,7 +4168,16 @@
       "$b": {"property": "itemPortion", "ignored": true}
     },
     "061": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
-    "066": {"ignored": true, "NOTE:record-count": 4905, "NOTE:LC": "ignore", "NOTE:local": "ANVÄNDS F.N. EJ"},
+    "066": {
+      "NOTE:record-count": 4905,
+      "NOTE:LC": "ignore",
+      "NOTE:local": "ANVÄNDS F.N. EJ",
+      "addLink": "marc:hasCharacterSetsPresent",
+      "resourceType": "marc:CharacterSetsPresent",
+      "$a": {"property": "marc:primaryG0CharacterSet"},
+      "$b": {"property": "marc:primaryG1CharacterSet"},
+      "$c": {"addProperty": "marc:alternateG0OrG1CharacterSet"}   
+    },
     "070": {
       "aboutEntity": "?work",
       "link": "classification",
