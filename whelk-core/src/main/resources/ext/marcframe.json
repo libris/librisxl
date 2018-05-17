@@ -12221,7 +12221,7 @@
       "$x": {"addProperty": "cataloguersNote"},
       "$y": {"addProperty": "marc:linkText"},
       "$z": {"addProperty": "marc:copyNote"},
-      "TODO": "subfieldOrder",
+      "subfieldOrder": "6 8 3 a f m u x y z ...",
       "_spec": [
         {
           "source": {"856": {"ind1": "4", "ind2": "2", "subfields": [{"u": "http://example.org/review"}]}},
@@ -16031,6 +16031,7 @@
         "TODO:property": "change to comment?"
       },
       "repeatable": true,
+      "subfieldOrder": "5 3 8 b c k h j d g i l m p q t u x z 9",
       "_spec": [
         {
           "source": {"852": {
@@ -16139,7 +16140,8 @@
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "marc:organizationalUnit"},
-      "repeatable": true
+      "repeatable": true,
+      "subfieldOrder": "8 a x z 2 9"
     },
     "867": {
       "addLink": "marc:hasTextualHoldingsSupplementaryMaterial",
