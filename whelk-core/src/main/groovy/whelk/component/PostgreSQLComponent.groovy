@@ -64,7 +64,7 @@ class PostgreSQLComponent {
                      LOAD_ID_FROM_ALTERNATE, INSERT_IDENTIFIERS,
                      LOAD_RECORD_IDENTIFIERS, LOAD_THING_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
                      GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, GET_DEPENDENCIES, GET_DEPENDERS,
-                     GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE
+                     GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE, GET_COLLECTION_BY_SYSTEM_ID
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String GET_DEPENDENCIES_OF_TYPE, GET_DEPENDERS_OF_TYPE
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
@@ -199,6 +199,7 @@ class PostgreSQLComponent {
                       "WHERE t1.iri = ? AND t2.mainid = true;"
         GET_ID_TYPE = "SELECT graphindex, mainid FROM $idTableName " +
                       "WHERE iri = ?"
+        GET_COLLECTION_BY_SYSTEM_ID = "SELECT collection FROM lddb where id = ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
@@ -1365,6 +1366,35 @@ class PostgreSQLComponent {
             jsonld.embellish(document.data, referencedData, false)
             cacheEmbellishedDocument(id, document, connection)
             return document
+        }
+        finally {
+            try {resultSet.close()} catch (Exception e) { /* ignore */ }
+            try {selectStatement.close()} catch (Exception e) { /* ignore */}
+        }
+    }
+
+    String getCollectionBySystemID(String id) {
+        Connection connection = getConnection()
+        try {
+            return getCollectionBySystemID(id, connection)
+        } finally {
+            connection.close()
+        }
+    }
+
+    String getCollectionBySystemID(String id, Connection connection) {
+        PreparedStatement selectStatement
+        ResultSet resultSet
+
+        try {
+            selectStatement = connection.prepareStatement(GET_COLLECTION_BY_SYSTEM_ID)
+            selectStatement.setString(1, id)
+            resultSet = selectStatement.executeQuery()
+
+            if (resultSet.next()) {
+                return resultSet.getString("collection")
+            }
+            return null
         }
         finally {
             try {resultSet.close()} catch (Exception e) { /* ignore */ }
