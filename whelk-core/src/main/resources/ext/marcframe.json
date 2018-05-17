@@ -3548,7 +3548,16 @@
       "TODO:revert": "To ensure 033 and 518 will not be mixed up when reverting",
       "aboutEntity": "?work",
       "addLink": "capture",
-      "TODO:i1": {"NOTE": "0: one, 1: multiple, 2: interval"},
+      "i1": {
+        "TODO": "align with subfieldproperty instead of separate list, also make sure repeatable.",
+        "property": "typeOfDateInSubfield-a",
+        "tokenMap": {
+          " ": "noDateInformation",
+          "0": "singleDate",
+          "1": "multipleSingleDates",
+          "2": "rangeOfDates"
+        }
+      },
       "i2": {
         "property": "@type",
         "overwrite": true,
@@ -3566,12 +3575,13 @@
       "$b": {"addProperty": "marc:geographicClassificationAreaCode"},
       "$c": {"addProperty": "marc:geographicClassificationSubareaCode"},
       "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
+      "$0": {"addProperty": "marc:recordControlNumber", "NOTE:local": "Används ej"},
       "$1": {"addProperty": "marc:rwoURI"},
       "$2": {"property": "marc:placeCodeSource"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "_spec": [
         {
-          "source": [{"033": {"ind1": " ", "ind2": "0", "subfields": [{"a": "198407--"}, {"b": "5754"}, {"c": "L7"}]}}],
+          "source": [{"033": {"ind1": "0", "ind2": "0", "subfields": [{"a": "198407--"}, {"b": "5754"}, {"c": "L7"}]}}],
           "result": {
             "mainEntity": {
               "instanceOf": {
@@ -3581,7 +3591,8 @@
                     "@type": "RecordingCapture",
                     "date": ["198407--"],
                     "marc:geographicClassificationAreaCode": ["5754"],
-                    "marc:geographicClassificationSubareaCode": ["L7"]
+                    "marc:geographicClassificationSubareaCode": ["L7"],
+                    "typeOfDateInSubfield-a": "singleDate"
                   }
                 ]
               }
