@@ -13348,7 +13348,36 @@
     "151" : {
       "include": "termbase_with_id",
       "aboutType": "Geographic",
-      "$a": {"property": "prefLabel"}
+      "$a": {"property": "prefLabel"},
+      "_spec": [
+        {
+          "source": {
+            "151": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Irak"},
+              {"z": "Babylon (övergiven stad)"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Geographic",
+              "@id": "http://libris.kb.se/resource/auth/140482",
+              "prefLabel": "Irak--Babylon (övergiven stad)"
+            }
+          }
+        },
+        {
+          "source": {
+            "151": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Irak"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Geographic",
+              "@id": "http://libris.kb.se/resource/auth/140482",
+              "prefLabel": "Irak"
+            }
+          }
+        }
+      ]
     },
     "155" : {
       "include": "termbase_with_id",
