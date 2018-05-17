@@ -6353,13 +6353,40 @@
         "groupId": "#workpart-$seq",
         "TODO": "sync groupId with other appropriate ?work hasPart"
       },
+      "match": [
+        {
+          "when": "$a & $b & $2=rdacontent",
+          "pendingResources": {
+            "_:contentType": {
+              "addLink": "contentType",
+              "resourceType": "ContentType",
+              "uriTemplate": "http://id.kb.se/term/rda/content{/code}"
+            }
+          }
+        },
+        {
+          "when": "$2=rdacontent",
+          "pendingResources": {
+            "_:contentType": {
+              "addLink": "contentType",
+              "resourceType": "ContentType",
+              "uriTemplate": "http://id.kb.se/term/rda/content{/code,label}"
+            }
+          }
+        }
+      ],
       "pendingResources": {
-        "_:contentType": {"addLink": "contentType", "resourceType": "ContentType"}
+        "_:contentType": {
+          "addLink": "contentType",
+          "resourceType": "ContentType"
+        }
       },
       "$a": {"about": "_:contentType", "property": "label"},
       "$b": {"about": "_:contentType", "property": "code"},
-      "$2": {"about": "_:contentType", "property": "termGroup"},
-      "$8": {"about": "_:contentType", "property": "marc:groupid"}
+      "$2": {"about": "_:contentType", "property": "termGroup", "marcDefault": "rdacontent"},
+      "TODO?:$2": {"about": "_:contentType", "addLink": "inCollection", "resourceType": "ConceptCollection", "property": "code"},
+      "$8": {"about": "_:contentType", "property": "marc:groupid"},
+      "$3": {"about": "_:contentType", "link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "337": {
       "linkSubsequentRepeated": {
@@ -6367,14 +6394,40 @@
         "resourceType": "Instance",
         "groupId": "#part-$seq"
       },
+      "match": [
+        {
+          "when": "$a & $b & $2=rdamedia",
+          "pendingResources": {
+            "_:mediaType": {
+              "addLink": "mediaType",
+              "resourceType": "MediaType",
+              "uriTemplate": "http://id.kb.se/term/rda/media{/code}"
+            }
+          }
+        },
+        {
+          "when": "$2=rdacarrier",
+          "pendingResources": {
+            "_:mediaType": {
+              "addLink": "mediaType",
+              "resourceType": "MediaType",
+              "uriTemplate": "http://id.kb.se/term/rda/media{/code,label}"
+            }
+          }
+        }
+      ],
       "pendingResources": {
-        "_:mediaType": {"addLink": "mediaType", "resourceType": "MediaType"}
+        "_:mediaType": {
+          "addLink": "mediaType",
+          "resourceType": "MediaType"
+        }
       },
       "aboutEntity": "?thing",
       "$a": {"about": "_:mediaType", "property": "label"},
       "$b": {"about": "_:mediaType", "property": "code"},
-      "$2": {"about": "_:mediaType", "property": "termGroup"},
-      "$8": {"about": "_:mediaType", "property": "marc:groupid"}
+      "$2": {"about": "_:mediaType", "property": "termGroup", "marcDefault": "rdamedia"},
+      "$8": {"about": "_:mediaType", "property": "marc:groupid"},
+      "$3": {"about": "_:mediaType", "link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "338": {
       "linkSubsequentRepeated": {
@@ -6382,14 +6435,56 @@
         "resourceType": "Instance",
         "groupId": "#part-$seq"
       },
+      "match": [
+        {
+          "when": "$a & $b & $2=rdacarrier",
+          "pendingResources": {
+            "_:carrierType": {
+              "addLink": "carrierType",
+              "resourceType": "CarrierType",
+              "uriTemplate": "http://id.kb.se/term/rda/carrier{/code}"
+            }
+          }
+        },
+        {
+          "when": "$2=rdacarrier",
+          "pendingResources": {
+            "_:carrierType": {
+              "addLink": "carrierType",
+              "resourceType": "CarrierType",
+              "uriTemplate": "http://id.kb.se/term/rda/carrier{/code,label}"
+            }
+          }
+        }
+      ],
       "pendingResources": {
-        "_:carrierType": {"addLink": "carrierType", "resourceType": "CarrierType"}
+        "_:carrierType": {
+          "addLink": "carrierType",
+          "resourceType": "CarrierType"
+        }
       },
       "$a": {"about": "_:carrierType", "property": "label"},
       "$b": {"about": "_:carrierType", "property": "code"},
-      "$2": {"about": "_:carrierType", "property": "termGroup"},
+      "$2": {"about": "_:carrierType", "property": "termGroup", "marcDefault": "rdacarrier"},
       "$8": {"about": "_:carrierType", "property": "marc:groupid"},
+      "$3": {"about": "_:carrierType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "_spec": [
+        {
+          "source": {
+            "338": {"ind1": " ", "ind2": " ", "subfields": [{"b": "nc"}, {"2": "rdacarrier"}]}
+          },
+          "result": {
+            "mainEntity": {
+                "carrierType": [
+                  {
+                    "@id": "http://id.kb.se/term/rda/carrier/nc",
+                    "@type": "CarrierType",
+                    "code": "nc"
+                  }
+                ]
+            }
+          }
+        },
         {
           "source": {
             "338": {"ind1": " ", "ind2": " ", "subfields": [{"a": "volume"}, {"b": "nc"}, {"2": "rdacarrier"}]}
@@ -6398,10 +6493,43 @@
             "mainEntity": {
                 "carrierType": [
                   {
+                    "@id": "http://id.kb.se/term/rda/carrier/nc",
+                    "@type": "CarrierType",
+                    "code": "nc",
+                    "label": "volume"
+                  }
+                ]
+            }
+          }
+        },
+        {
+          "source": {
+            "338": {"ind1": " ", "ind2": " ", "subfields": [{"a": "volume"}, {"2": "rdacarrier"}]}
+          },
+          "result": {
+            "mainEntity": {
+                "carrierType": [
+                  {
+                    "@id": "http://id.kb.se/term/rda/carrier/volume",
+                    "@type": "CarrierType",
+                    "label": "volume"
+                  }
+                ]
+            }
+          }
+        },
+        {
+          "source": {
+            "338": {"ind1": " ", "ind2": " ", "subfields": [{"a": "volume"}, {"b": "nc"}, {"2": "otherlist"}]}
+          },
+          "result": {
+            "mainEntity": {
+                "carrierType": [
+                  {
                     "@type": "CarrierType",
                     "code": "nc",
                     "label": "volume",
-                    "termGroup": "rdacarrier"
+                    "termGroup": "otherlist"
                   }
                 ]
             }
