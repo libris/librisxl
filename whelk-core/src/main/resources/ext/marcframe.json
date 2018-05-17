@@ -4097,11 +4097,13 @@
     "047": {
       "NOTE:local":"ANVÄNDS NORMALT EJ",
       "aboutEntity": "?work",
+      "TODO": "Make genreForm",
       "addLink": "marc:hasFormOfMusicalCompositionCode",
       "resourceType": "marc:FormOfMusicalCompositionCode",
       "i2": {
-        "TODO:link": null,
+        "property": "marc:i2sourceOfCode",
         "tokenMap": {
+          " ": "MARCMusicalCompositionCode",
           "7": "sourceSpecifiedInSubfield2"
         }
       },
@@ -4113,7 +4115,13 @@
       "aboutEntity": "?work",
       "addLink": "marc:hasNumberOfInstrumentsOrVoicesCode",
       "resourceType": "marc:NumberOfInstrumentsOrVoicesCode",
-      "i2": {"property": "marc:sourceOfCode"},
+      "i2": {
+        "property": "marc:i2sourceOfCode",
+        "tokenMap": {
+          " ": "MARCCode",
+          "7": "sourceSpecifiedInSubfield2"
+        }
+      },
       "$a": {"addProperty": "marc:performerOrEnsemble"},
       "$b": {"addProperty": "marc:soloist"},
       "$2": {"property": "marc:sourceOfCode"},
