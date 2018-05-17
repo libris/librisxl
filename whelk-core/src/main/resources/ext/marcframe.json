@@ -7125,8 +7125,9 @@
     "510": {
       "addLink": "indexedIn",
       "resourceType": "Instance",
-      "TODO:i1": {
-        "link": null,
+      "i1": {
+        "marcDefault": "0",
+        "property": "marc:coverageOrLocationInSource",
         "tokenMap": {
           "0": "coverageUnknown",
           "1": "coverageComplete",
