@@ -7663,10 +7663,43 @@
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "marc:PublicationsAboutDescribedMaterialsNote",
-      "i1": {"ignored": true, "NOTE:LC": "nac"},
+      "i1": {
+        "NOTE:LC": "nac",
+        "property": "marc:displayConstantController",
+        "marcDefault": "8",
+        "tokenMap": {
+          " ": "marc:publications"
+        }
+      },
       "$a": {"property": "label"},
-      "$z": {"addproperty": "isbn"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$z": {"addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "source": [
+            {"581": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Walde, Otto: Bielkeättens insatser i svensk bibliofili. Särtryck ur Nordisk Tidskrift för Bok- och Biblioteksväsen. Uppsala, 1940."}]}},
+            {"581": {"ind1": "8", "ind2": " ", "subfields": [{"a": "Wallner, Bo: Wilhelm Stenhammar och hans tid. D. 1. Stockholm : Norstedt, 1991. S. 318"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "hasNote": [
+                {
+                "@type": "marc:PublicationsAboutDescribedMaterialsNote",
+                "label": "Walde, Otto: Bielkeättens insatser i svensk bibliofili. Särtryck ur Nordisk Tidskrift för Bok- och Biblioteksväsen. Uppsala, 1940.",
+                "marc:displayConstantController": "marc:publications"
+              },
+              {
+              "@type": "marc:PublicationsAboutDescribedMaterialsNote",
+              "label": "Wallner, Bo: Wilhelm Stenhammar och hans tid. D. 1. Stockholm : Norstedt, 1991. S. 318"
+            }
+            ],
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        }
+      ]
     },
     "583": {
       "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
