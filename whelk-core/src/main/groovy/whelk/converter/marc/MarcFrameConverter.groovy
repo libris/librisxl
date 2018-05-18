@@ -1900,7 +1900,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def unhandled = new HashSet()
 
-        def localEntities = [:]
+        Map<String, Map> localEntities = [:]
 
         if (aboutAlias) {
             localEntities[aboutAlias] = entity
@@ -1988,9 +1988,17 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         // If absorbSingle && only one item: merge it with parent.
-        localEntities.keySet().each {
-            if (it == aboutAlias) return
-            def pending = (Map) pendingResources[it]
+        localEntities.each { String localKey, Map localEntity ->
+            if (localKey == aboutAlias) return
+            def pending = (Map) pendingResources[localKey]
+
+            if (pending.uriTemplate && !localEntity.containsKey('@id')) {
+                def uri = fromTemplate((String) pending.uriTemplate).expand((Map) localEntity)
+                if (uri) {
+                    localEntity['@id'] = uri
+                }
+            }
+
             if (pending.absorbSingle) {
                 def link = (String) (pending.link ?: pending.addLink)
                 def parent = (Map) (pending.about ? localEntities[pending.about] : entity)
