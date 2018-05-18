@@ -9136,6 +9136,65 @@
               ]
             }
           }}
+        },
+        {
+          "source": {
+            "650": {
+              "ind1": " ",
+              "ind2": "7",
+              "subfields": [
+                {"a": "1"},
+                {"x": "A"},
+                {"x": "B"},
+                {"y": "C"},
+                {"x": "A"},
+                {"x": "C"},
+                {"2": "BNB"}
+              ]
+            }
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "ComplexSubject",
+                  "termComponentList": [
+                    {
+                      "@type": "Topic",
+                      "prefLabel": "1"
+                    },
+                    {
+                      "@type": "TopicSubdivision",
+                      "prefLabel": "A"
+                    },
+                    {
+                      "@type": "TopicSubdivision",
+                      "prefLabel": "B"
+                    },
+                    {
+                      "@type": "Temporal",
+                      "prefLabel": "C"
+                    },
+                    {
+                      "@type": "TopicSubdivision",
+                      "prefLabel": "A"
+                    },
+                    {
+                      "@type": "TopicSubdivision",
+                      "prefLabel": "C"
+                    }
+                  ],
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "@id": "https://id.kb.se/term/BNB",
+                    "code": "BNB"
+                  },
+                  "prefLabel": "1--A--B--C--A--C"
+                }
+              ]
+            }}
+          }
         }
       ]
     },
