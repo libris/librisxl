@@ -4155,17 +4155,19 @@
       "addLink": "marc:hasGeographicClassification",
       "resourceType": "marc:GeographicClassification",
       "i1": {
-        "TODO:link": null,
+        "property": "marc:i1codeSource",
         "tokenMap": {
-          "": "uSDeptOfDefenseClassification",
-          "0": "US Dept of Defense-klassifikation (obsolet, använd ind 1 = 1)",
-          "1": "U.S. Dept. of Defense-klassification",
-          "7": "sourceSpecifiedInSubfield2"
+          " ": "marc:LibraryOfCongressClassification",
+          "0": "marc:usDeptOfDefenseClassificationObsolete",
+          "1": "marc:usDeptOfDefenseClassification",
+          "7": "marc:sourceSpecifiedInSubfield2"
         }
       },
       "$a": {"property": "marc:geographicClassificationAreaCode"},
       "$b": {"addProperty": "marc:geographicClassificationSubareaCode"},
       "$d": {"addProperty": "marc:populatedPlaceName"},
+      "$0": {"property": "marc:recordControlNumber"},
+      "$1": {"property": "marc:rwoURI"},
       "$2": {"property": "marc:codeSource"}
     },
     "055": {
