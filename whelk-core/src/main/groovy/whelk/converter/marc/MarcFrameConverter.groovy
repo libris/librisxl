@@ -1900,7 +1900,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def unhandled = new HashSet()
 
-        def localEntities = [:]
+        Map<String, Map> localEntities = [:]
 
         if (aboutAlias) {
             localEntities[aboutAlias] = entity
@@ -1988,9 +1988,17 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         // If absorbSingle && only one item: merge it with parent.
-        localEntities.keySet().each {
-            if (it == aboutAlias) return
-            def pending = (Map) pendingResources[it]
+        localEntities.each { String localKey, Map localEntity ->
+            if (localKey == aboutAlias) return
+            def pending = (Map) pendingResources[localKey]
+
+            if (pending.uriTemplate && !localEntity.containsKey('@id')) {
+                def uri = fromTemplate((String) pending.uriTemplate).expand((Map) localEntity)
+                if (uri) {
+                    localEntity['@id'] = uri
+                }
+            }
+
             if (pending.absorbSingle) {
                 def link = (String) (pending.link ?: pending.addLink)
                 def parent = (Map) (pending.about ? localEntities[pending.about] : entity)
@@ -2196,7 +2204,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def prevAdded = null
 
         // NOTE: Within a field, only *one* positioned term is supported.
-        def firstRelPos = null
+        Integer firstRelPos = null
         Map sortedByItemPos = [:]
 
         orderedAndGroupedSubfields.each { subhandlers ->
@@ -2264,16 +2272,20 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                             vs = [vs]
                         }
                         for (v in vs.flatten()) {
+                            if (usedMatchRules?.any { !it.matchValue(code, v) }) {
+                                continue
+                            }
+                            Map sub = [(code): v]
+
                             if (subhandler.itemPos == 'rest') {
-                                if (firstRelPos == null)
+                                if (firstRelPos == null) {
                                     firstRelPos = pos
-                                sortedByItemPos[subhandler.code] = pos
+                                }
+                                sortedByItemPos[System.identityHashCode(sub)] = pos
                             }
-                            if (!usedMatchRules || usedMatchRules.every { it.matchValue(code, v) }) {
-                                def sub = [(code): v]
-                                subs << sub
-                                justAdded = [code, sub]
-                            }
+
+                            subs << sub
+                            justAdded = [code, sub]
                         }
                     }
                     if (subhandler.required && !justAdded) {
@@ -2303,9 +2315,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         if (!failedRequired && i1 != null && i2 != null && subs.size()) {
             if (sortedByItemPos.size()) {
                 subs.sort {
-                    def entry = it.entrySet()[0]
-                    def relPos = sortedByItemPos[entry.key]
-                    [relPos ? firstRelPos : subs.indexOf(it), relPos]
+                    def relPos = sortedByItemPos[System.identityHashCode(it)]
+                    [relPos != null ? firstRelPos : subs.indexOf(it), relPos]
                 }
             }
             def field = [ind1: i1, ind2: i2, subfields: subs]

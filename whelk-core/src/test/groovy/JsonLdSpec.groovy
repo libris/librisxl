@@ -62,7 +62,7 @@ class JsonLdSpec extends Specification {
                                 ['@graph': [['@id': '/quux',
                                              'some': 'value']]],
                                 ['@graph': ['@id': '/some_id']]]]
-        Set expected = ['/foo', '/baz', '/quux', '/some_id']
+        Set expected = ['/foo', '/quux', '/some_id']
 
         expect:
         assert JsonLd.getLocalObjects(input) == expected

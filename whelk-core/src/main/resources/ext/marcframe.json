@@ -4168,7 +4168,16 @@
       "$b": {"property": "itemPortion", "ignored": true}
     },
     "061": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
-    "066": {"ignored": true, "NOTE:record-count": 4905, "NOTE:LC": "ignore", "NOTE:local": "ANVÄNDS F.N. EJ"},
+    "066": {
+      "NOTE:record-count": 4905,
+      "NOTE:LC": "ignore",
+      "NOTE:local": "ANVÄNDS F.N. EJ",
+      "addLink": "marc:hasCharacterSetsPresent",
+      "resourceType": "marc:CharacterSetsPresent",
+      "$a": {"property": "marc:primaryG0CharacterSet"},
+      "$b": {"property": "marc:primaryG1CharacterSet"},
+      "$c": {"addProperty": "marc:alternateG0OrG1CharacterSet"}   
+    },
     "070": {
       "aboutEntity": "?work",
       "link": "classification",
@@ -4592,7 +4601,7 @@
       "include": ["contributiondata"],
       "$0": {"about": "_:agent", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
-      "subfieldOrder": "a b c q d j g u e 4 t n p l k f",
+      "subfieldOrder": "6 a b c q d j g u e t n p l k f 4 1 0",
       "_spec": [
         {
           "source": {
@@ -4781,7 +4790,7 @@
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
 
-      "subfieldOrder": "a b n d c g u e 4 k", "NOTE:notInLibris": "t p l k f",
+      "subfieldOrder": "6 a b n d c g u e 4 k 1 0", "NOTE:notInLibris": "t p l k f",
 
       "$0": {"about": "_:agent", "addProperty": "marc:uri"},
       "$k": {"addProperty": "qualifier", "NOTE": "not allowed but used in the wild"},
@@ -5001,7 +5010,7 @@
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "FIXME": "Change subfield order in specs. Bug in orderedAndGroupedSubfields",
-      "subfieldOrder": "a q n d g e u c j 4 t p l k f",
+      "subfieldOrder": "6 a q n d g c e u j 4 t p l k f 1 0",
       "TODO:$j": "",
       "_spec": [
         {
@@ -5045,6 +5054,14 @@
               {"e": "Delegation from Sweden"},
               {"c": "Paris, France"}
             ]}},
+          "normalized": {
+            "111": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "World Peace Conference"},
+              {"n": "1st"},
+              {"d": "1959"},
+              {"c": "Paris, France"},
+              {"e": "Delegation from Sweden"}
+            ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -5072,6 +5089,15 @@
               {"d": "1981"},
               {"e": "2nd"},
               {"c": "Cincinatti, Ohio"},
+              {"j": "author"},
+              {"4": "aut"}
+            ]}},
+          "normalized": {
+            "111": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Conference on Occupational Health Issues Affecting Secretarial and Clerical Personnel"},
+              {"d": "1981"},
+              {"c": "Cincinatti, Ohio"},
+              {"e": "2nd"},
               {"j": "author"},
               {"4": "aut"}
             ]}},
@@ -5262,6 +5288,7 @@
         "matchUriToken": "^\\d{1,14}$"
       },
       "$6": {"property": "marc:fieldref"},
+      "subfieldOrder": "6 a g d m n r p k l s f o 1 0",
       "_spec": [
         {
           "source": {
@@ -5399,7 +5426,7 @@
       "onRevertPrefer": "246",
       "embedded": true,
       "aboutAlias": "_:title",
-      "subfieldOrder": "a n p h ... b c",
+      "subfieldOrder": "6 a n p h b c f g s",
       "$c": {
         "aboutEntity": "?thing", "property": "responsibilityStatement",
         "leadingPunctuation": "/", "trailingPunctuation": ".",
@@ -5742,6 +5769,7 @@
       "$g": {"about": "_:manufacture", "property": "date", "leadingPunctuation": ",", "punctuationChars": ",:;"},
       "$6": {"about": "_:publication", "property": "marc:fieldref"},
       "$8": {"about": "_:publication", "property": "marc:groupid"},
+      "subfieldOrder": "6 3 ...",
       "_spec": [
         {
           "source": [
@@ -6344,13 +6372,40 @@
         "groupId": "#workpart-$seq",
         "TODO": "sync groupId with other appropriate ?work hasPart"
       },
+      "match": [
+        {
+          "when": "$a & $b & $2=rdacontent",
+          "pendingResources": {
+            "_:contentType": {
+              "addLink": "contentType",
+              "resourceType": "ContentType",
+              "uriTemplate": "http://id.kb.se/term/rda/content{/code}"
+            }
+          }
+        },
+        {
+          "when": "$2=rdacontent",
+          "pendingResources": {
+            "_:contentType": {
+              "addLink": "contentType",
+              "resourceType": "ContentType",
+              "uriTemplate": "http://id.kb.se/term/rda/content{/code,label}"
+            }
+          }
+        }
+      ],
       "pendingResources": {
-        "_:contentType": {"addLink": "contentType", "resourceType": "ContentType"}
+        "_:contentType": {
+          "addLink": "contentType",
+          "resourceType": "ContentType"
+        }
       },
       "$a": {"about": "_:contentType", "property": "label"},
       "$b": {"about": "_:contentType", "property": "code"},
-      "$2": {"about": "_:contentType", "property": "termGroup"},
-      "$8": {"about": "_:contentType", "property": "marc:groupid"}
+      "$2": {"about": "_:contentType", "property": "termGroup", "marcDefault": "rdacontent"},
+      "TODO?:$2": {"about": "_:contentType", "addLink": "inCollection", "resourceType": "ConceptCollection", "property": "code"},
+      "$8": {"about": "_:contentType", "property": "marc:groupid"},
+      "$3": {"about": "_:contentType", "link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "337": {
       "linkSubsequentRepeated": {
@@ -6358,14 +6413,40 @@
         "resourceType": "Instance",
         "groupId": "#part-$seq"
       },
+      "match": [
+        {
+          "when": "$a & $b & $2=rdamedia",
+          "pendingResources": {
+            "_:mediaType": {
+              "addLink": "mediaType",
+              "resourceType": "MediaType",
+              "uriTemplate": "http://id.kb.se/term/rda/media{/code}"
+            }
+          }
+        },
+        {
+          "when": "$2=rdacarrier",
+          "pendingResources": {
+            "_:mediaType": {
+              "addLink": "mediaType",
+              "resourceType": "MediaType",
+              "uriTemplate": "http://id.kb.se/term/rda/media{/code,label}"
+            }
+          }
+        }
+      ],
       "pendingResources": {
-        "_:mediaType": {"addLink": "mediaType", "resourceType": "MediaType"}
+        "_:mediaType": {
+          "addLink": "mediaType",
+          "resourceType": "MediaType"
+        }
       },
       "aboutEntity": "?thing",
       "$a": {"about": "_:mediaType", "property": "label"},
       "$b": {"about": "_:mediaType", "property": "code"},
-      "$2": {"about": "_:mediaType", "property": "termGroup"},
-      "$8": {"about": "_:mediaType", "property": "marc:groupid"}
+      "$2": {"about": "_:mediaType", "property": "termGroup", "marcDefault": "rdamedia"},
+      "$8": {"about": "_:mediaType", "property": "marc:groupid"},
+      "$3": {"about": "_:mediaType", "link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
     "338": {
       "linkSubsequentRepeated": {
@@ -6373,14 +6454,56 @@
         "resourceType": "Instance",
         "groupId": "#part-$seq"
       },
+      "match": [
+        {
+          "when": "$a & $b & $2=rdacarrier",
+          "pendingResources": {
+            "_:carrierType": {
+              "addLink": "carrierType",
+              "resourceType": "CarrierType",
+              "uriTemplate": "http://id.kb.se/term/rda/carrier{/code}"
+            }
+          }
+        },
+        {
+          "when": "$2=rdacarrier",
+          "pendingResources": {
+            "_:carrierType": {
+              "addLink": "carrierType",
+              "resourceType": "CarrierType",
+              "uriTemplate": "http://id.kb.se/term/rda/carrier{/code,label}"
+            }
+          }
+        }
+      ],
       "pendingResources": {
-        "_:carrierType": {"addLink": "carrierType", "resourceType": "CarrierType"}
+        "_:carrierType": {
+          "addLink": "carrierType",
+          "resourceType": "CarrierType"
+        }
       },
       "$a": {"about": "_:carrierType", "property": "label"},
       "$b": {"about": "_:carrierType", "property": "code"},
-      "$2": {"about": "_:carrierType", "property": "termGroup"},
+      "$2": {"about": "_:carrierType", "property": "termGroup", "marcDefault": "rdacarrier"},
       "$8": {"about": "_:carrierType", "property": "marc:groupid"},
+      "$3": {"about": "_:carrierType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "_spec": [
+        {
+          "source": {
+            "338": {"ind1": " ", "ind2": " ", "subfields": [{"b": "nc"}, {"2": "rdacarrier"}]}
+          },
+          "result": {
+            "mainEntity": {
+                "carrierType": [
+                  {
+                    "@id": "http://id.kb.se/term/rda/carrier/nc",
+                    "@type": "CarrierType",
+                    "code": "nc"
+                  }
+                ]
+            }
+          }
+        },
         {
           "source": {
             "338": {"ind1": " ", "ind2": " ", "subfields": [{"a": "volume"}, {"b": "nc"}, {"2": "rdacarrier"}]}
@@ -6389,10 +6512,43 @@
             "mainEntity": {
                 "carrierType": [
                   {
+                    "@id": "http://id.kb.se/term/rda/carrier/nc",
+                    "@type": "CarrierType",
+                    "code": "nc",
+                    "label": "volume"
+                  }
+                ]
+            }
+          }
+        },
+        {
+          "source": {
+            "338": {"ind1": " ", "ind2": " ", "subfields": [{"a": "volume"}, {"2": "rdacarrier"}]}
+          },
+          "result": {
+            "mainEntity": {
+                "carrierType": [
+                  {
+                    "@id": "http://id.kb.se/term/rda/carrier/volume",
+                    "@type": "CarrierType",
+                    "label": "volume"
+                  }
+                ]
+            }
+          }
+        },
+        {
+          "source": {
+            "338": {"ind1": " ", "ind2": " ", "subfields": [{"a": "volume"}, {"b": "nc"}, {"2": "otherlist"}]}
+          },
+          "result": {
+            "mainEntity": {
+                "carrierType": [
+                  {
                     "@type": "CarrierType",
                     "code": "nc",
                     "label": "volume",
-                    "termGroup": "rdacarrier"
+                    "termGroup": "otherlist"
                   }
                 ]
             }
@@ -6875,6 +7031,7 @@
       "$0": {"about": "_:seriesinstance", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
+      "subfieldOrder": "6 a x v 9",
       "_spec": [
         {
           "source": {"490": {"ind1": "0", "ind2": " ", "subfields": [
@@ -7750,7 +7907,7 @@
           "resourceType": "Person"
         }
       ],
-      "subfieldOrder": "a b c q d j u e 4 t g m n p r s l k f o v x y z",
+      "subfieldOrder": "6 a b c q d j g u t m n r p k l s f o x z y v 2 e 4 0",
       "addLink": "subject",
       "pendingResources": {
         "_:agent": {
@@ -7789,6 +7946,12 @@
               {"c": "Chief,"},
               {"d": "-1877"},
               {"c": "(Spirit)"}]}},
+          "normalized": {
+            "600": {"ind1": "0", "ind2": "0", "subfields": [
+              {"a": "Black Foot"},
+              {"c": "Chief,"},
+              {"c": "(Spirit)"},
+              {"d": "-1877"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8014,11 +8177,11 @@
               {"y": "21st century."}]}},
           "normalized": {
             "600": {"ind1": "1", "ind2": "0", "subfields": [
-              {"a": "Scarlatti, Domenico"},
+              {"a": "Scarlatti, Domenico,"},
               {"d": "1685-1757"},
               {"t": "Sonatas,"},
-              {"n": "K. 492"},
               {"m": "harpsichord"},
+              {"n": "K. 492"},
               {"r": "D major;"},
               {"y": "21st century."}]}},
           "result": {"mainEntity": {
@@ -8173,6 +8336,7 @@
       "$6": {"about": "_:agent", "property": "marc:fieldref"},
       "$8": {"about": "_:agent", "property": "marc:groupid"},
       "$n": {"about": "_:agent", "addProperty": "marc:numeration", "punctuationChars": ","},
+      "subfieldOrder": "6 a b n d c g u t m r p k l s f o x z y v 2 e 4 0",
       "_spec": [
         {
           "source": {
@@ -8180,6 +8344,13 @@
               {"a": "Kungl. biblioteket"},
               {"x": "samlingar"},
               {"n": "14"},
+              {"2": "sao"}
+            ]}},
+          "normalized": {
+            "610": {"ind1": "2", "ind2": "7", "subfields": [
+              {"a": "Kungl. biblioteket"},
+              {"n": "14"},
+              {"x": "samlingar"},
               {"2": "sao"}
             ]}},
           "result": {"mainEntity": {
@@ -8210,8 +8381,15 @@
               {"d": "(1792 :"},
               {"c": "Gävle)"},
               {"n": "15"},
-              {"2": "sao"}]}
-          },
+              {"2": "sao"}]}},
+          "normalized": {
+            "610": {"ind1": "1", "ind2": "7", "subfields": [
+              {"a": "Sverige"},
+              {"b": "Riksdagen"},
+              {"n": "15"},
+              {"d": "(1792 :"},
+              {"c": "Gävle)"},
+              {"2": "sao"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8245,8 +8423,13 @@
               {"a": "United States"},
               {"t": "Act to Extend the Expiration Date of Section 252 of the Energy Policy and Conservation Act (1982 July 19)"},
               {"n": "4"},
-              {"v": "catalogs"}]}
-          },
+              {"v": "catalogs"}]}},
+          "normalized": {
+            "610": {"ind1": "1", "ind2": "4", "subfields": [
+              {"a": "United States"},
+              {"n": "4"},
+              {"t": "Act to Extend the Expiration Date of Section 252 of the Energy Policy and Conservation Act (1982 July 19)"},
+              {"v": "catalogs"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8284,16 +8467,14 @@
               {"k": " Manuscript."},
               {"t": "Egentitel"},
               {"n": "Fond 1209"},
-              {"p": "Pomestnyĭ prikaz"}]}
-          },
+              {"p": "Pomestnyĭ prikaz"}]}},
           "normalized": {
             "610": {"ind1": "2", "ind2": "7", "subfields":[
               {"a": "Rossiĭskiĭ gosudarstvennyĭ arkhiv drevnikh aktov."},
-              {"k": "Manuscript."},
-              {"t": "Egentitel"},
               {"n": "Fond 1209"},
-              {"p": "Pomestnyĭ prikaz"}]}
-          },
+              {"t": "Egentitel"},
+              {"p": "Pomestnyĭ prikaz"},
+              {"k": "Manuscript."}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8365,6 +8546,7 @@
         }
       ],
       "$6": {"property": "marc:fieldref"},
+      "subfieldOrder": "6 a q d g c e u t n p k l s f x z y v 2 j 4 1 0",
       "_spec": [
         {
           "source": {
@@ -8411,6 +8593,16 @@
               {"d": "1962-1965 :"},
               {"c": "Basilica di San Pietro in Vaticano)."},
               {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
+              {"l": "Italian"}]
+            }
+          },
+          "normalized": {
+            "611": {"ind1": "2", "ind2": "0", "subfields":[
+              {"a": "Vatican Council"},
+              {"d": "1962-1965 :"},
+              {"c": "Basilica di San Pietro in Vaticano)."},
+              {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
+              {"n": "(2nd :"},
               {"l": "Italian"}]
             }
           },
@@ -8476,6 +8668,7 @@
       "$d": {"property": "date"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
+      "subfieldOrder": "6 a g d m n p k l s f o x z y v 2 e 4 1 0",
       "_spec": [
         {
           "source": {"630": {"ind1": " ", "ind2": "0",
@@ -8683,6 +8876,7 @@
       },
       "$a": {"about": "_:term", "property": "prefLabel"},
       "$8": {"property": "marc:groupid"},
+      "subfieldOrder": "8 6 a x z y v 0 2 4 1",
       "_spec": [
         {
           "source": {"648": {"ind1": " ", "ind2": "7",
@@ -8756,6 +8950,7 @@
       },
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
+      "subfieldOrder": "8 6 a x z y v 0 2 4 1",
       "_spec": [
         {
           "source": {"650": {"ind1": " ", "ind2": "7",
@@ -9069,6 +9264,65 @@
               ]
             }
           }}
+        },
+        {
+          "source": {
+            "650": {
+              "ind1": " ",
+              "ind2": "7",
+              "subfields": [
+                {"a": "1"},
+                {"x": "A"},
+                {"x": "B"},
+                {"y": "C"},
+                {"x": "A"},
+                {"x": "C"},
+                {"2": "BNB"}
+              ]
+            }
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "ComplexSubject",
+                  "termComponentList": [
+                    {
+                      "@type": "Topic",
+                      "prefLabel": "1"
+                    },
+                    {
+                      "@type": "TopicSubdivision",
+                      "prefLabel": "A"
+                    },
+                    {
+                      "@type": "TopicSubdivision",
+                      "prefLabel": "B"
+                    },
+                    {
+                      "@type": "Temporal",
+                      "prefLabel": "C"
+                    },
+                    {
+                      "@type": "TopicSubdivision",
+                      "prefLabel": "A"
+                    },
+                    {
+                      "@type": "TopicSubdivision",
+                      "prefLabel": "C"
+                    }
+                  ],
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "@id": "https://id.kb.se/term/BNB",
+                    "code": "BNB"
+                  },
+                  "prefLabel": "1--A--B--C--A--C"
+                }
+              ]
+            }}
+          }
         }
       ]
     },
@@ -9090,6 +9344,7 @@
       "i1": null,
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
+      "subfieldOrder": "8 6 a x z y v 0 2 4 1",
       "_spec": [
         {
           "source": {
@@ -9250,6 +9505,7 @@
       },
       "$a": {"about": "_:topic", "property": "prefLabel"},
       "$8": {"property": "marc:groupid"},
+      "subfieldOrder": "8 6 a x z y v 0 2 1",
       "_spec": [
         {
           "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Deckare"}, {"2": "saogf"}]}},
@@ -10769,11 +11025,16 @@
       "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"about": "_:work", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
+      "subfieldOrder": "6 i a d m n r p k l s f o 1 0",
       "_spec": [
         {
           "source": {"730": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "Abyss (Motion picture : 1989)"},
             {"i": "Novelization of (work)"}
+          ]}},
+          "normalized": {"730": {"ind1": "0", "ind2": " ", "subfields": [
+            {"i": "Novelization of (work)"},
+            {"a": "Abyss (Motion picture : 1989)"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -11209,6 +11470,7 @@
       "$7": {"property": "marc:controlSubfield"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "partNumber"},
+      "subfieldorder": "6 7 i a t b c d h g k x z w 9",
       "_spec": [
         {
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
@@ -11538,7 +11800,7 @@
           }
         }
       ],
-      "subfieldorder": "3 a d g h s m n p l r k f o v w x",
+      "subfieldorder": "6 a b c q d j g u t m n r p k l s f o x v w 9 e 4 1 0",
       "_spec": [
         {
           "source": {"800": {"ind1": "1", "ind2": " ", "subfields": [
@@ -11720,6 +11982,7 @@
         }
       ],
       "i1": {"marcDefault": "2"},
+      "subfieldorder": "6 a b d c g u t n m r p k l s f o x v w 9 e 4 0",
       "_spec": [
         {
           "source": {"810": {"ind1": "2", "ind2": " ", "subfields": [
@@ -11882,6 +12145,7 @@
         },
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
+      "subfieldorder": "6 a q d g c e u t n p k l s f x v w 9 j 4 0",
       "_spec": [
         {
           "source": {"811": {"ind1": "2", "ind2": " ", "subfields": [
@@ -11889,6 +12153,12 @@
             {"n": "(2nd:"},
             {"d": "1962-1964)"},
             {"t": "Decretum de presbyterorum ministerio et vita."}
+          ]}},
+          "normalized": {"811": {"ind1": "2", "ind2": " ", "subfields": [
+            {"a": "Vatican Council"},
+            {"d": "1962-1964)"},
+            {"t": "Decretum de presbyterorum ministerio et vita."},
+            {"n": "(2nd:"}
           ]}},
           "result": {"mainEntity": {
             "seriesMembership": [
@@ -11962,7 +12232,7 @@
       "$6": {"about": "_:title", "property": "marc:fieldref"},
       "$8": {"about": "_:title", "property": "marc:groupid"},
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
-      "subfieldorder": "3 a d g h s m n p l r k f o v w x",
+      "subfieldorder": "6 a d m n r p k l s f o x v w 9 1 0",
       "_spec": [
         {
           "source": {"830": {"ind1": " ", "ind2": "0", "subfields": [
@@ -12031,8 +12301,8 @@
           ]}},
           "normalized": {"830": {"ind1": " ", "ind2": "4", "subfields": [
             {"a": "Studies on the texts of the desert of Judah"},
-            {"v": "101"},
-            {"x": "0169-9962"}
+            {"x": "0169-9962"},
+            {"v": "101"}
           ]}},
           "result": {"mainEntity": {
             "seriesMembership": [
@@ -12147,7 +12417,7 @@
       "$x": {"addProperty": "cataloguersNote"},
       "$y": {"addProperty": "marc:linkText"},
       "$z": {"addProperty": "marc:copyNote"},
-      "TODO": "subfieldOrder",
+      "subfieldOrder": "6 8 3 a f m u x y z ...",
       "_spec": [
         {
           "source": {"856": {"ind1": "4", "ind2": "2", "subfields": [{"u": "http://example.org/review"}]}},
@@ -16025,6 +16295,7 @@
         "TODO:property": "change to comment?"
       },
       "repeatable": true,
+      "subfieldOrder": "5 3 8 b c k h j d g i l m p q t u x z 9",
       "_spec": [
         {
           "source": {"852": {
@@ -16133,7 +16404,8 @@
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "marc:organizationalUnit"},
-      "repeatable": true
+      "repeatable": true,
+      "subfieldOrder": "8 a x z 2 9"
     },
     "867": {
       "addLink": "marc:hasTextualHoldingsSupplementaryMaterial",
@@ -16332,7 +16604,8 @@
       "$7": {"addProperty": "marc:hasHold949-7"},
       "$8": {"addProperty": "marc:hasHold949-8"},
       "$9": {"addProperty": "marc:hasHold949-9"},
-      "repeatable": true
+      "repeatable": true,
+      "subfieldOrder": "5 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 6 a b c d e f g h i j k l m n o p q r s t u v w x y z ..."
     },
     "951": {
       "addLink": "marc:hasHold951",
