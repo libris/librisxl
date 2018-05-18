@@ -13616,9 +13616,77 @@
       ]
     },
     "151" : {
-      "include": "termbase_with_id",
+      "include": ["abouttermbase", "termid"],
       "aboutType": "Geographic",
-      "$a": {"property": "prefLabel"}
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "Geographic",
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
+        }
+      },
+      "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
+      "_spec": [
+        {
+          "source": {
+            "151": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Irak"},
+              {"z": "Babylon (övergiven stad)"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "ComplexSubject",
+              "prefLabel": "Irak--Babylon (övergiven stad)",
+              "termComponentList": [ {
+                "@type": "Geographic",
+                "prefLabel": "Irak"
+              }, {
+                "@type": "Geographic",
+                "prefLabel": "Babylon (övergiven stad)"
+              } ]
+            }
+          }
+        },
+        {
+          "source": {
+            "151": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Grekland"},
+              {"z": "Athen"},
+              {"z": "Kerameikos"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "ComplexSubject",
+              "prefLabel": "Grekland--Athen--Kerameikos",
+              "termComponentList": [ {
+                "@type": "Geographic",
+                "prefLabel": "Grekland"
+              }, {
+                "@type": "Geographic",
+                "prefLabel": "Athen"
+              }, {
+                "@type": "Geographic",
+                "prefLabel": "Kerameikos"
+              } ]
+            }
+          }
+        },
+        {
+          "source": {
+            "151": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Irak"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Geographic",
+              "@id": "http://libris.kb.se/resource/auth/140482",
+              "prefLabel": "Irak"
+            }
+          }
+        }
+      ]
     },
     "155" : {
       "include": "termbase_with_id",
