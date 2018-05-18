@@ -43,7 +43,22 @@
       "sequenceStatus": {
         "2": "marc:InBetweenInSequence",
         "3": "marc:LatestInSequence"
-      }
+      },
+      "marcThesaurus": {
+          "0": "marc:libraryOfCongressSubjectHeadingsNameAuthorityFile",
+          "1": "marc:lcSubjectHeadingsForChildrensLiterature",
+          "2": "marc:medicalSubjectHeadingsNlmNameAuthorityFile",
+          "3": "marc:nationalAgriculturalLibrarySubjectAuthorityFile",
+          "4": "marc:sourceNotSpecified",
+          "5": "marc:canadianSubjectHeadingsNlcNameAuthorityFile",
+          "6": "marc:repertoireDeVedettesMatiere",
+          "7": "marc:sourceSpecifiedInSubfield2"
+        },
+        "marcNameForm": {
+          "0": "marc:invertedName",
+          "1": "marc:jurisdictionName",
+          "2": "marc:nameInDirectOrder"
+        }
     },
 
     {
@@ -3946,7 +3961,13 @@
           },  
         "marcDefault": " "
       },
-      "TODO:i2": {},
+      "i2": {
+        "property": "marc:languageCode",
+        "marcDefault": " ",
+        "tokenMap": {
+          "7": "marc:sourceSpecifiedInSubfield2"
+        }
+      },
       "TODO:pending": "Merge entities from pending in similar fields (like bib 520)?",
       "pendingResources": {
         "_:accompaniedMaterial": {"link": "accompaniedBy", "resourceType": "Work"},
@@ -7511,10 +7532,10 @@
       "addLink": "marc:hasImmediateSourceOfAcquisitionNote",
       "resourceType": "marc:ImmediateSourceOfAcquisitionNote",
       "i1": {
-        "TODO:link": null,
+        "property": "marc:isPrivate",
         "tokenMap": {
-          "0": "private",
-          "1": "notPrivate"
+          "0": true,
+          "1": false
         }
       },
       "$a": {"property": "label"},
@@ -7600,7 +7621,7 @@
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "marc:CumulativeIndexFindingAidsNote",
-      "TODO:i1": {"marcDefault": "8"},
+      "i1": {"marcDefault": "8", "TODO": "OK?"},
       "$a": {"property": "label"},
       "$c": {"property": "marc:degreeOfControl", "NOTE": "concatenate with $a", "NOTE:record-count": 2}
     },
@@ -7709,7 +7730,14 @@
       "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
       "addLink": "hasNote",
       "resourceType": "marc:ActionNote",
-      "TODO:i1": "0 = Sekretessbelagd information. filtrera bort GDPR",
+      "i1": {
+        "NOTE": "0 = Sekretessbelagd information. filtrera bort GDPR",
+        "property": "marc:isPrivate",
+        "tokenMap": {
+          "0": true,
+          "1": false
+        }
+      },
       "$a": {"property": "label"},
       "$b": {"addProperty": "marc:actionIdentification"},
       "$x": {"addProperty": "marc:cataloguersNote", "TODO": "ignore?"},
@@ -13625,7 +13653,14 @@
     ]
   },
     "377": {
-      "TODO:i2": {},
+      "i2": {
+        "property": "marc:languageCode",
+        "tokenMap": {
+          "1": "marc:ISO-639-2B",
+          "2": "marc:sourceSpecifiedInSubfield2",
+          "7": "marc:sourceSpecifiedInSubfield2"
+        }
+      },
       "aboutEntity": "?thing",
       "aboutType": "Agent",
       "addLink": "associatedLanguage", "resourceType": "Language",
@@ -13909,7 +13944,7 @@
       ]
     },
     "410": {
-      "TODO:i2": null,
+      "i2": {"marcDefault": " "},
       "TODO:role": "Add e and 4 when no work",
       "subfieldOrder": "w i a b c d g  e 4 t m n p r s l k f o v x y z",
       "match": [
@@ -15090,25 +15125,12 @@
       "addLink": "marc:hasEstablishedHeadingLinkingEntryCorporateName",
       "resourceType": "marc:EstablishedHeadingLinkingEntryCorporateName",
       "i1": {
-        "TODO:link": null,
-        "tokenMap": {
-          "0": "invertedName",
-          "1": "jurisdictionName",
-          "2": "nameInDirectOrder"
-        }
+        "property": "marc:nameForm",
+        "tokenMap": "marcNameForm"
       },
       "i2": {
-        "TODO:link": null,
-        "tokenMap": {
-          "0": "libraryOfCongressSubjectHeadingsNameAuthorityFile",
-          "1": "lcSubjectHeadingsForChildrenSLiterature",
-          "2": "medicalSubjectHeadingsNlmNameAuthorityFile",
-          "3": "nationalAgriculturalLibrarySubjectAuthorityFile",
-          "4": "sourceNotSpecified",
-          "5": "canadianSubjectHeadingsNlcNameAuthorityFile",
-          "6": "rpertoireDeVedettesMatire",
-          "7": "sourceSpecifiedInSubfield2"
-        }
+        "property": "marc:thesaurus",
+        "tokenMap": "marcThesaurus"
       },
       "$a": {"property": "marc:corporateNameOrJurisdictionNameAsEntryElement"},
       "$b": {"addProperty": "marc:subordinateUnit"},
@@ -15143,25 +15165,12 @@
       "addLink": "marc:hasEstablishedHeadingLinkingEntryMeetingName",
       "resourceType": "marc:EstablishedHeadingLinkingEntryMeetingName",
       "i1": {
-        "TODO:link": null,
-        "tokenMap": {
-          "0": "invertedName",
-          "1": "jurisdictionName",
-          "2": "nameInDirectOrder"
-        }
+        "property": "marc:nameForm",
+        "tokenMap": "marcNameForm"
       },
       "i2": {
-        "TODO:link": null,
-        "tokenMap": {
-          "0": "libraryOfCongressSubjectHeadingsNameAuthorityFile",
-          "1": "lcSubjectHeadingsForChildrenSLiterature",
-          "2": "medicalSubjectHeadingsNlmNameAuthorityFile",
-          "3": "nationalAgriculturalLibrarySubjectAuthorityFile",
-          "4": "sourceNotSpecified",
-          "5": "canadianSubjectHeadingsNlcNameAuthorityFile",
-          "6": "rpertoireDeVedettesMatire",
-          "7": "sourceSpecifiedInSubfield2"
-        }
+        "property": "marc:thesaurus",
+        "tokenMap": "marcThesaurus"
       },
       "$a": {"property": "marc:meetingNameOrJurisdictionNameAsEntryElement"},
       "$c": {"addProperty": "marc:locationOfMeeting"},
@@ -15194,17 +15203,8 @@
       "addLink": "marc:hasEstablishedHeadingLinkingEntryUniformTitle",
       "resourceType": "marc:EstablishedHeadingLinkingEntryUniformTitle",
       "i2": {
-        "link": null,
-        "tokenMap": {
-          "0": "libraryOfCongressSubjectHeadingsNameAuthorityFile",
-          "1": "lcSubjectHeadingsForChildrenSLiterature",
-          "2": "medicalSubjectHeadingsNlmNameAuthorityFile",
-          "3": "nationalAgriculturalLibrarySubjectAuthorityFile",
-          "4": "sourceNotSpecified",
-          "5": "canadianSubjectHeadingsNlcNameAuthorityFile",
-          "6": "rpertoireDeVedettesMatire",
-          "7": "sourceSpecifiedInSubfield2"
-        }
+        "property": "marc:thesaurus",
+        "tokenMap": "marcThesaurus"
       },
       "$a": {"property": "marc:uniformTitle"},
       "$d": {"addProperty": "marc:dateOfTreatySigning"},
@@ -15236,18 +15236,9 @@
     "748": {
       "addLink": "marc:hasEstablishedHeadingLinkingEntryChronologicalTerm",
       "resourceType": "marc:EstablishedHeadingLinkingEntryChronologicalTerm",
-      "TODO:i2": {
-        "link": null,
-        "tokenMap": {
-          "0": "LCSH/LC authority files",
-          "1": "LCSH for children's literature",
-          "2": "MeSH/NLM authority files",
-          "3": "NAL subject authority file",
-          "4": "System ej specificerat",
-          "5": "Canadian SH/ NLC authority file",
-          "6": "Répertoire des vedettes-matière/NLC",
-          "7": "System specificerat i $2"
-        }
+      "i2": {
+        "property": "marc:thesaurus",
+        "tokenMap": "marcThesaurus"
       },
       "$a": {"property": "marc:chronologicalTerm"},
       "$i": {"ignored": true},
@@ -15355,7 +15346,6 @@
       "aboutEntity": null,
       "addLink": "relatedTo",
       "resourceType": "Document",
-      "TODO:i1": {},
       "match": [
         {"when": "i2=0", "addLink": "describedBy"},
         {"when": "i2=1", "addLink": "describedBy"},
@@ -15847,7 +15837,14 @@
     "538": {"inherit": "bib", "$5": null},
     "541": {
       "groupId": "?example-$seq",
-      "TODO:i1": "0 = Sekretessbelagd information. Används f.n. ej. = ca 5000 poster",
+      "i1": {
+        "NOTE": "0 = Sekretessbelagd information. Används f.n. ej. = ca 5000 poster",
+        "property": "marc:isPrivate",
+        "tokenMap": {
+          "0": true,
+          "1": false
+        }
+      },
       "addLink": "immediateAcquisition", "resourceType": "ImmediateAcquisition",
       "$a": {"addProperty": "marc:sourceOfAcquisition"},
       "$b": {"property": "marc:address"},
@@ -15906,7 +15903,14 @@
     "583": {
       "addLink": "marc:hasActionNote",
       "resourceType": "marc:ActionNote",
-      "TODO:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 1 post",
+      "i1": {
+        "NOTE": "0 = Sekretessbelagd information. Används f.n. ej. = 1 post",
+        "property": "marc:isPrivate",
+        "tokenMap": {
+          "0": true,
+          "1": false
+        }
+      },
       "$a": {"property": "label"},
       "$b": {"addProperty": "marc:actionIdentification"},
       "$x": {"addProperty": "marc:cataloguersNote", "TODO": "ignore?"},
