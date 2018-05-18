@@ -3648,8 +3648,7 @@
       "i1": {"ignored": "true", "marcDefault": "1"},
       "i2": {
         "ignored": "true",
-        "link": "marc:ringType",
-        "uriTemplate": "{+_}",
+        "property": "marc:ringType",
         "marcDefault": " ",
         "tokenMap": {"0": "marc:OuterRing", "1": "marc:ExcludingRing"}
       },
@@ -3952,13 +3951,12 @@
         "resourceType": "Work",
         "embedded": true
       },
-      "TODO:i1": {
-        "link": "languageNote",
-        "resourceType": "Work",
+      "i1": {
+        "property": "marc:languageNote",
         "tokenMap": {
-          "0": "itemNotATranslationDoesNotIncludeATranslation",
-          "1": "itemIsOrIncludesATranslation"
-          },  
+          "0": "marc:itemNotATranslationDoesNotIncludeATranslation",
+          "1": "marc:itemIsOrIncludesATranslation"
+          },
         "marcDefault": " "
       },
       "i2": {
@@ -4096,9 +4094,9 @@
       "i1": {
         "property": "marc:typeOfTimePeriod",
         "tokenMap": {
-          "0": "singleDateTime",
-          "1": "multipleSingleDatesTimes",
-          "2": "rangeOfDatesTimes"
+          "0": "marc:singleDateTime",
+          "1": "marc:multipleSingleDatesTimes",
+          "2": "marc:rangeOfDatesTimes"
         }
       },
       "$a": {"addProperty": "marc:timePeriodCode"},
@@ -5567,8 +5565,7 @@
       "addLink": "hasTitle",
       "embedded": true,
       "i1": {
-        "link": "marc:searchControl",
-        "uriTemplate": "{+_}",
+        "property": "marc:searchControl",
         "tokenMap": {
           "0": "marc:NoteNoAddedEntry",
           "1": "marc:NoteAddedEntry",
@@ -5613,9 +5610,7 @@
               "@type": "CaptionTitle",
               "mainTitle": "Newspaper index",
               "coverage": "January 1982-",
-              "marc:searchControl" : {
-                "@id" : "marc:NoteAddedEntry"
-              }
+              "marc:searchControl": "marc:NoteAddedEntry"
             }]
           }}
         },
@@ -5632,9 +5627,7 @@
               "typeNote": "At head of title:",
               "mainTitle": "Science and public affairs",
               "coverage": "January 1970-April 1974",
-              "marc:searchControl" : {
-                "@id" : "marc:NoteAddedEntry"
-              }
+              "marc:searchControl": "marc:NoteAddedEntry"
             }]
           }}
         }
@@ -8861,8 +8854,7 @@
       },
       "$a": {"about": "_:topic", "property": "prefLabel"},
       "i1": {
-        "link": "marc:subjectLevel",
-        "uriTemplate": "{+_}",
+        "property": "marc:subjectLevel",
         "marcDefault": " ",
         "tokenMap": {
           "0": "marc:Unspecified",
@@ -8938,7 +8930,7 @@
               "subject": [
                 {
                   "@type": "Topic",
-                  "marc:subjectLevel": {"@id": "marc:Secondary"},
+                  "marc:subjectLevel": "marc:Secondary",
                   "prefLabel": "Health services for the aged"
                 }
               ]
@@ -8973,7 +8965,7 @@
               "subject": [
                 {
                   "@type": "Topic",
-                  "marc:subjectLevel": {"@id": "marc:Secondary"},
+                  "marc:subjectLevel": "marc:Secondary",
                   "prefLabel": "Something secondary"
                 }
               ]
