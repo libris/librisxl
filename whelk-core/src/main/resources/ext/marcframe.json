@@ -4176,25 +4176,26 @@
       "addLink": "marc:hasClassificationNumbersAssignedInCanada",
       "resourceType": "marc:ClassificationNumbersAssignedInCanada",
       "i1": {
-        "TODO:link": null,
+        "property": "marc:existenceInLacCollection",
+        "marcDefault": " ",
         "tokenMap": {
-          "0": "workHeldByLac",
-          "1": "workNotHeldByLac"
+          "0": true,
+          "1": false
         }
       },
       "i2": {
-        "TODO:link": null,
+        "property": "marc:typeCompletenessSourceOfClassCallNumber",
         "tokenMap": {
-          "0": "lcBasedCallNumberAssignedByLac",
-          "1": "completeLcClassNumberAssignedByLac",
-          "2": "incompleteLcClassNumberAssignedByLac",
-          "3": "lcBasedCallNumberAssignedByTheContributingLibrary",
-          "4": "completeLcClassNumberAssignedByTheContributingLibrary",
-          "5": "incompleteLcClassNumberAssignedByTheContributingLibrary",
-          "6": "otherCallNumberAssignedByLac",
-          "7": "otherClassNumberAssignedByLac",
-          "8": "otherCallNumberAssignedByTheContributingLibrary",
-          "9": "otherClassNumberAssignedByTheContributingLibrary"
+          "0": "marc:lcBasedCallNumberAssignedByLac",
+          "1": "marc:completeLcClassNumberAssignedByLac",
+          "2": "marc:incompleteLcClassNumberAssignedByLac",
+          "3": "marc:lcBasedCallNumberAssignedByTheContributingLibrary",
+          "4": "marc:completeLcClassNumberAssignedByTheContributingLibrary",
+          "5": "marc:incompleteLcClassNumberAssignedByTheContributingLibrary",
+          "6": "marc:otherCallNumberAssignedByLac",
+          "7": "marc:otherClassNumberAssignedByLac",
+          "8": "marc:otherCallNumberAssignedByTheContributingLibrary",
+          "9": "marc:otherClassNumberAssignedByTheContributingLibrary"
         }
       },
       "$a": {"property": "marc:classificationNumber"},
