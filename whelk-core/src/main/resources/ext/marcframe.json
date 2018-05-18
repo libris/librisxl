@@ -9348,6 +9348,22 @@
       "_spec": [
         {
           "source": {
+            "651": {"ind1": " ", "ind2": "4", "subfields":[
+              {"a": "Förenta staterna"}]
+            }
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [{
+                "@type": "Geographic",
+                "prefLabel": "Förenta staterna"
+              }]
+            }
+          }}
+        },
+        {
+          "source": {
             "651": {"ind1": " ", "ind2": "7", "subfields":[
               {"a": "Sydafrika"},
               {"z": "Västra Kapprovinsen"},
@@ -15243,12 +15259,84 @@
     "551": {
       "include": ["termbase", "relation_from_w"],
       "resourceType": "Geographic",
-      "uriTemplate": "https://id.kb.se/place/{prefLabel}"
+      "uriTemplate": "https://id.kb.se/place/{prefLabel}",
+      "$a": {"property": "prefLabel"},
+      "_spec": [
+        {
+          "source": {
+            "551": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Tanzania"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "related": [{
+                "@id": "https://id.kb.se/place/Tanzania",
+                "@type": "Geographic",
+                "prefLabel": "Tanzania"
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "551": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Montenegro"},
+              {"w": "h"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "narrower": [{
+                "@id": "https://id.kb.se/place/Montenegro",
+                "@type": "Geographic",
+                "prefLabel": "Montenegro"
+              }]
+            }
+          }
+        }
+      ]
     },
     "555": {
       "include": ["termbase", "relation_from_w"],
       "resourceType": "GenreForm",
-      "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}"
+      "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
+      "$a": {"property": "prefLabel"},
+      "_spec": [
+        {
+          "source": {
+            "555": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Konstmusik"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "related": [{
+                "@id": "https://id.kb.se/term/saogf/Konstmusik",
+                "@type": "GenreForm",
+                "prefLabel": "Konstmusik"
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "555": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Datorspel"},
+              {"w": "g"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "broader": [{
+                "@id": "https://id.kb.se/term/saogf/Datorspel",
+                "@type": "GenreForm",
+                "prefLabel": "Datorspel"
+              }]
+            }
+          }
+        }
+      ]
     },
     "562": {"ignored": true, "NOTE:record-count": 0},
     "580": {
