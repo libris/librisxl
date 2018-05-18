@@ -4616,10 +4616,11 @@
       "addLink": "marc:hasGovernmentDocumentClassificationNumber",
       "resourceType": "marc:GovernmentDocumentClassificationNumber",
       "i1": {
-        "TODO:link": null,
+        "propert": "marc:numberSource",
         "tokenMap": {
-          "0": "superintendentOfDocumentsClassificationSystem",
-          "1": "governmentOfCanadaPublicationsOutlineOfClassification"
+          " ": "marc:sourceSpecifiedInSubfield2",
+          "0": "marc:superintendentOfDocumentsClassificationSystem",
+          "1": "marc:governmentOfCanadaPublicationsOutlineOfClassification"
         }
       },
       "$a": {"property": "marc:classificationNumber"},
