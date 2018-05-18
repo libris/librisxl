@@ -4206,7 +4206,7 @@
       "aboutEntity": "?work",
       "addLink": "classification",
       "resourceType": "ClassificationNlm",
-      "i1": {"property": "marc:existenceInNlmCollection"},
+      "i1": {"property": "marc:existenceInNlmCollection", "marcDefault": " ", "tokenMap": {"0": true, "1": false}},
       "i2": {"property": "marc:assignedByNlm", "tokenMap": {"0": true, "4": false}},
       "$a": {"property": "code"},
       "$b": {"property": "itemPortion", "ignored": true}
