@@ -588,7 +588,7 @@
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "TODO:alternative $a": {"addProperty": "altLabel"},
-      "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"},
+      "$i": {"about": "_:agent", "addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"},
       "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
       "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
       "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
@@ -14636,6 +14636,16 @@
         {
           "source": {
             "500": {"ind1": "1", "ind2": " ", "subfields": [
+              {"w": "i"},
+              {"a": "Oats, Joyce Carol"},
+              {"d": "1938-"},
+              {"i": "Folkbiblioteksform:"},
+              {"0": "00000"}
+            ]}},
+          "normalized": {
+            "500": {"ind1": "1", "ind2": " ", "subfields": [
+              {"w": "i"},
+              {"i": "Folkbiblioteksform:"},
               {"a": "Oats, Joyce Carol"},
               {"d": "1938-"},
               {"0": "00000"}
@@ -14643,13 +14653,42 @@
           "result": {
             "mainEntity": {
               "@type": "Identity",
-              "seeAlso": [ {
+              "seeAlso": [{
                 "@type": "Person",
                 "familyName": "Oats",
                 "givenName": "Joyce Carol",
                 "lifeSpan": "1938-",
+                "marc:controlSubfield": "i",
+                "marc:relatedAs": [{
+                  "@type": "Relation",
+                  "label": "Folkbiblioteksform:"
+                }],
                 "marc:recordControlNumber": ["00000"]
-              } ]
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "500": {"ind1": "0", "ind2": " ", "subfields": [
+              {"i": "Familjemedlen:"},
+              {"a": "Muminpappan"},
+              {"c": "(fiktiv gestalt)"},
+              {"0": "00000"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "seeAlso": [{
+                "@type": "Person",
+                "marc:recordControlNumber": ["00000"],
+                "marc:relatedAs": [{
+                  "@type": "Relation",
+                  "label": "Familjemedlen:"
+                }],
+                "marc:titlesAndOtherWordsAssociatedWithAName": ["(fiktiv gestalt)"],
+                "name": "Muminpappan"
+              }]
             }
           }
         },
@@ -14690,6 +14729,42 @@
                   "marc:recordControlNumber": ["00000"]
                 }
               ]
+            }
+          }
+        },
+        {
+          "source": {
+            "500": {"ind1": "1", "ind2": " ", "subfields": [
+              {"w": "i"},
+              {"i": "D. 2 i romanserien:"},
+              {"a": "Olsson-Hultgren, Solveig"},
+              {"d": "1958- ."},
+              {"t": "Arbetets döttrar"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "relatedTo": [{
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Person",
+                    "familyName": "Olsson-Hultgren",
+                    "givenName": "Solveig",
+                    "lifeSpan": "1958- ."
+                  }
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Arbetets döttrar"
+                }],
+                "marc:controlSubfield": "i",
+                "marc:relatedAs": [{
+                  "@type": "Relation",
+                  "label": "D. 2 i romanserien:"
+                }]
+              }]
             }
           }
         },
@@ -14866,6 +14941,15 @@
               {"w": "a"},
               {"a": "Maryland."},
               {"b": "Air Quality Programs"},
+              {"i": "En relationsbeskrivning"},
+              {"0": "00000"}
+            ]}},
+          "normalized": {
+            "510": {"ind1": "1", "ind2": " ", "subfields": [
+              {"w": "a"},
+              {"i": "En relationsbeskrivning"},
+              {"a": "Maryland."},
+              {"b": "Air Quality Programs"},
               {"0": "00000"}
             ]}},
           "result": {
@@ -14879,7 +14963,11 @@
                   "@type": "Jurisdiction",
                   "name": "Maryland."
                 },
-                "marc:recordControlNumber": ["00000"]
+                "marc:recordControlNumber": ["00000"],
+                "marc:relatedAs": [{
+                  "@type": "Relation",
+                  "label": "En relationsbeskrivning"
+                }]
               }]
             }
           }
@@ -14887,6 +14975,7 @@
         {
           "source": {
             "510": {"ind1": "1", "ind2": " ", "subfields": [
+              {"i": "En relationsbeskrivning"},
               {"a": "Sverige."},
               {"t": "Insiderstrafflagen"},
               {"0": "00000"}
@@ -14907,7 +14996,11 @@
                   "@type": "Title",
                   "mainTitle": "Insiderstrafflagen"
                 }],
-                "marc:recordControlNumber": ["00000"]
+                "marc:recordControlNumber": ["00000"],
+                "marc:relatedAs": [{
+                  "@type": "Relation",
+                  "label": "En relationsbeskrivning"
+                }]
               }]
             }
           }
@@ -14972,6 +15065,7 @@
           "source": {
             "511": {"ind1": "2", "ind2": " ", "subfields": [
               {"w": "a"},
+              {"i": "En relationsbeskrivning"},
               {"a": "Colloque européen de droit rural"},
               {"0": "00000"}
             ]}},
@@ -14982,6 +15076,10 @@
                 "@type": "Meeting",
                 "marc:controlSubfield" : "a",
                 "name": "Colloque européen de droit rural",
+                "marc:relatedAs": [{
+                  "@type": "Relation",
+                  "label": "En relationsbeskrivning"
+                }],
                 "marc:recordControlNumber": ["00000"]
               }]
             }
@@ -14991,6 +15089,7 @@
           "source": {
             "511": {"ind1": "2", "ind2": " ", "subfields": [
               {"w": "a"},
+              {"i": "En relationsbeskrivning"},
               {"a": "AIC Seminar."},
               {"t": "Proceedings"},
               {"0": "00000"}
@@ -15012,7 +15111,11 @@
                     "name": "AIC Seminar."
                   }
                 } ],
-                "marc:recordControlNumber": ["00000"]
+                "marc:recordControlNumber": ["00000"],
+                "marc:relatedAs": [{
+                  "@type": "Relation",
+                  "label": "En relationsbeskrivning"
+                }]
               }]
             }
           }
@@ -15056,6 +15159,7 @@
       "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"property": "legalDate"},
       "$g": {"addProperty": "marc:miscellaneousInformation"},
+      "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"},
       "$t": {"property": "marc:titleOfAWork"},
       "$v": {"addProperty": "marc:formSubdivision"},
       "$w": {"property": "marc:controlSubfield"},
@@ -15073,6 +15177,7 @@
           "source": {
             "530": {"ind1": " ", "ind2": "0", "subfields": [
               {"w": "g"},
+              {"i": "En relationsbeskrivning"},
               {"a": "Vedas"},
               {"x": "Criticism, interpretation, etc."},
               {"0": "00000"}
@@ -15088,7 +15193,11 @@
                 }],
                 "marc:controlSubfield": "g",
                 "marc:generalSubdivision": ["Criticism, interpretation, etc."],
-                "marc:recordControlNumber": ["00000"]
+                "marc:recordControlNumber": ["00000"],
+                "marc:relatedAs": [{
+                  "@type": "Relation",
+                  "label": "En relationsbeskrivning"
+                }]
               }]
             }
           }
