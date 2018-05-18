@@ -9,7 +9,7 @@ import whelk.util.Tools
 @Log
 class ElasticReindexer {
 
-    static final int BATCH_SIZE = 500
+    static final int BATCH_SIZE = 1000
     Whelk whelk
 
     long startTime
