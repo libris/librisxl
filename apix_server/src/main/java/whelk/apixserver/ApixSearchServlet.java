@@ -65,6 +65,14 @@ public class ApixSearchServlet extends HttpServlet
             }
         }
 
+        Iterator<String> it = results.iterator();
+        while (it.hasNext())
+        {
+            String systemID = it.next();
+            if (!Utils.s_whelk.getStorage().getCollectionBySystemID(systemID).equals("bib"))
+                it.remove();
+        }
+
         return results;
     }
 }

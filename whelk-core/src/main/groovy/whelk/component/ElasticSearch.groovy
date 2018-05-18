@@ -191,11 +191,13 @@ class ElasticSearch {
             List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
             Map referencedData = whelk.bulkLoad(convertedExternalLinks)
                     .collectEntries { id, doc -> [id, doc.data] }
-            whelk.jsonld.embellish(document.data, referencedData, false)
+            whelk.jsonld.embellish(document.data, referencedData, true)
         }
 
         log.debug("Framing ${document.getShortId()}")
         Document copy = document.clone()
+        boolean chipsify = false
+        copy.data['@graph'] = copy.data['@graph'].collect { whelk.jsonld.toCard(it, chipsify) }
 
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = document.getThingIdentifiers()
