@@ -13382,6 +13382,30 @@
         {
           "source": {
             "151": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Grekland"},
+              {"z": "Athen"},
+              {"z": "Kerameikos"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "ComplexSubject",
+              "prefLabel": "Grekland--Athen--Kerameikos",
+              "termComponentList": [ {
+                "@type": "Geographic",
+                "prefLabel": "Grekland"
+              }, {
+                "@type": "Geographic",
+                "prefLabel": "Athen"
+              }, {
+                "@type": "Geographic",
+                "prefLabel": "Kerameikos"
+              } ]
+            }
+          }
+        },
+        {
+          "source": {
+            "151": {"ind1": " ", "ind2": " ", "subfields": [
               {"a": "Irak"}
             ]}},
           "result": {
