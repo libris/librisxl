@@ -11291,7 +11291,7 @@
           "0": true,
           "1": false
         },
-        "marcDefault": 0
+        "marcDefault": "0"
       },
       "TOOO:i2": {},
       "$a": {"about": "_:agent", "property": "label", "TODO:targetMatch": "1xx"},
@@ -11524,7 +11524,7 @@
         {"when": "i2=6", "addLink": "absorbedInPart"},
         {"when": "i2=7", "addLink": "separatedFrom"}
       ],
-      "i2": {"marcDefault": 0},
+      "i2": {"marcDefault": "0"},
       "_spec": [
         {
           "source": {"780": {"ind1": "0", "ind2": "0", "subfields": [
@@ -11588,7 +11588,7 @@
         {"when": "i2=7", "addLink": "mergedToForm"},
         {"when": "i2=8", "addLink": "continuedBy"}
       ],
-      "i2": {"marcDefault": 0},
+      "i2": {"marcDefault": "0"},
       "_spec": [
         {
           "source": {"785": {"ind1": "0", "ind2": "0", "subfields": [
