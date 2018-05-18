@@ -4133,7 +4133,7 @@
       "aboutEntity": "?work",
       "addLink": "classification",
       "resourceType": "ClassificationLcc",
-      "i1": {"property": "marc:existenceInLCCollection"},
+      "i1": {"property": "marc:existenceInLCCollection", "marcDefault": " ", "tokenMap": {"0": true, "1": false}},
       "i2": {"property": "marc:assignedByLC", "tokenMap": {"0": true, "4": false}},
       "$a": {"property": "code", "TODO:repeatable": true},
       "$b": {"property": "itemPortion"},
