@@ -7250,14 +7250,14 @@
       "i1": {
         "marcDefault": " ",
         "NOTE:LC": "nac",
-        "property": "typeNote",
+        "property": "marc:summaryType",
         "tokenMap": {
-          "0": "subject",
-          "1": "review",
-          "2": "scopeAndContent",
-          "3": "abstract",
-          "4": "contentAdvice",
-          "8": "noDisplayConstantGenerated"
+          "0": "marc:Subject",
+          "1": "marc:Review",
+          "2": "marc:ScopeAndContent",
+          "3": "marc:Abstract",
+          "4": "marc:ContentAdvice",
+          "8": "marc:NoDisplayConstantGenerated"
         }
       },
       "$a": {"property": "label"},
@@ -7313,15 +7313,15 @@
       "resourceType": "IntendedAudience",
       "i1": {
         "marcDefault": " ",
-        "property": "typeNote",
+        "property": "marc:audienceType",
         "tokenMap": {
           " ": null,
-          "0": "readingGradeLevel",
-          "1": "interestAgeLevel",
-          "2": "interestGradeLevel",
-          "3": "specialAudienceCharacteristics",
-          "4": "motivationInterestLevel",
-          "8": "noDisplayConstantGenerated"
+          "0": "marc:ReadingGradeLevel",
+          "1": "marc:InterestAgeLevel",
+          "2": "marc:InterestGradeLevel",
+          "3": "marc:SpecialAudienceCharacteristics",
+          "4": "marc:MotivationInterestLevel",
+          "8": "marc:NoDisplayConstantGenerated"
         }
       },
       "$a": {"property": "label"},
