@@ -45,19 +45,19 @@
         "3": "marc:LatestInSequence"
       },
       "marcThesaurus": {
-          "0": "marc:libraryOfCongressSubjectHeadingsNameAuthorityFile",
-          "1": "marc:lcSubjectHeadingsForChildrensLiterature",
-          "2": "marc:medicalSubjectHeadingsNlmNameAuthorityFile",
-          "3": "marc:nationalAgriculturalLibrarySubjectAuthorityFile",
-          "4": "marc:sourceNotSpecified",
-          "5": "marc:canadianSubjectHeadingsNlcNameAuthorityFile",
-          "6": "marc:repertoireDeVedettesMatiere",
-          "7": "marc:sourceSpecifiedInSubfield2"
+          "0": "marc:LibraryOfCongressSubjectHeadingsNameAuthorityFile",
+          "1": "marc:LcSubjectHeadingsForChildrensLiterature",
+          "2": "marc:MedicalSubjectHeadingsNlmNameAuthorityFile",
+          "3": "marc:NationalAgriculturalLibrarySubjectAuthorityFile",
+          "4": "marc:SourceNotSpecified",
+          "5": "marc:CanadianSubjectHeadingsNlcNameAuthorityFile",
+          "6": "marc:RepertoireDeVedettesMatiere",
+          "7": "marc:SourceSpecifiedInSubfield2"
         },
         "marcNameForm": {
-          "0": "marc:invertedName",
-          "1": "marc:jurisdictionName",
-          "2": "marc:nameInDirectOrder"
+          "0": "marc:InvertedName",
+          "1": "marc:JurisdictionName",
+          "2": "marc:NameInDirectOrder"
         }
     },
 
@@ -3565,12 +3565,12 @@
       "addLink": "capture",
       "i1": {
         "TODO": "align with subfieldproperty instead of separate list, also make sure repeatable.",
-        "property": "marc:typeOfDateInSubfield-a",
+        "property": "marc:typeOfDate",
         "tokenMap": {
-          " ": "marc:noDateInformation",
-          "0": "marc:singleDate",
-          "1": "marc:multipleSingleDates",
-          "2": "marc:rangeOfDates"
+          " ": "marc:NoDateInformation",
+          "0": "marc:SingleDate",
+          "1": "marc:MultipleSingleDates",
+          "2": "marc:RangeOfDates"
         }
       },
       "i2": {
@@ -3607,7 +3607,7 @@
                     "date": ["198407--"],
                     "marc:geographicClassificationAreaCode": ["5754"],
                     "marc:geographicClassificationSubareaCode": ["L7"],
-                    "marc:typeOfDateInSubfield-a": "marc:singleDate"
+                    "marc:typeOfDate": "marc:SingleDate"
                   }
                 ]
               }
@@ -3954,8 +3954,8 @@
       "i1": {
         "property": "marc:languageNote",
         "tokenMap": {
-          "0": "marc:itemNotATranslationDoesNotIncludeATranslation",
-          "1": "marc:itemIsOrIncludesATranslation"
+          "0": "marc:ItemNotATranslationDoesNotIncludeATranslation",
+          "1": "marc:ItemIsOrIncludesATranslation"
           },
         "marcDefault": " "
       },
@@ -3963,7 +3963,7 @@
         "property": "marc:languageCode",
         "marcDefault": " ",
         "tokenMap": {
-          "7": "marc:sourceSpecifiedInSubfield2"
+          "7": "marc:SourceSpecifiedInSubfield2"
         }
       },
       "TODO:pending": "Merge entities from pending in similar fields (like bib 520)?",
@@ -4094,9 +4094,9 @@
       "i1": {
         "property": "marc:typeOfTimePeriod",
         "tokenMap": {
-          "0": "marc:singleDateTime",
-          "1": "marc:multipleSingleDatesTimes",
-          "2": "marc:rangeOfDatesTimes"
+          "0": "marc:SingleDateTime",
+          "1": "marc:MultipleSingleDatesTimes",
+          "2": "marc:RangeOfDatesTimes"
         }
       },
       "$a": {"addProperty": "marc:timePeriodCode"},
@@ -4123,7 +4123,7 @@
         "property": "marc:i2sourceOfCode",
         "tokenMap": {
           " ": "marc:MARCMusicalCompositionCode",
-          "7": "marc:sourceSpecifiedInSubfield2"
+          "7": "marc:SourceSpecifiedInSubfield2"
         }
       },
       "$a": {"addProperty": "marc:formOfMusicalCompositionCode"},
@@ -4138,7 +4138,7 @@
         "property": "marc:i2sourceOfCode",
         "tokenMap": {
           " ": "marc:MARCCode",
-          "7": "marc:sourceSpecifiedInSubfield2"
+          "7": "marc:SourceSpecifiedInSubfield2"
         }
       },
       "$a": {"addProperty": "marc:performerOrEnsemble"},
@@ -4177,9 +4177,9 @@
         "property": "marc:i1codeSource",
         "tokenMap": {
           " ": "marc:LibraryOfCongressClassification",
-          "0": "marc:usDeptOfDefenseClassificationObsolete",
-          "1": "marc:usDeptOfDefenseClassification",
-          "7": "marc:sourceSpecifiedInSubfield2"
+          "0": "marc:UsDeptOfDefenseClassificationObsolete",
+          "1": "marc:UsDeptOfDefenseClassification",
+          "7": "marc:SourceSpecifiedInSubfield2"
         }
       },
       "$a": {"property": "marc:geographicClassificationAreaCode"},
@@ -4205,16 +4205,16 @@
       "i2": {
         "property": "marc:typeCompletenessSourceOfClassCallNumber",
         "tokenMap": {
-          "0": "marc:lcBasedCallNumberAssignedByLac",
-          "1": "marc:completeLcClassNumberAssignedByLac",
-          "2": "marc:incompleteLcClassNumberAssignedByLac",
-          "3": "marc:lcBasedCallNumberAssignedByTheContributingLibrary",
-          "4": "marc:completeLcClassNumberAssignedByTheContributingLibrary",
-          "5": "marc:incompleteLcClassNumberAssignedByTheContributingLibrary",
-          "6": "marc:otherCallNumberAssignedByLac",
-          "7": "marc:otherClassNumberAssignedByLac",
-          "8": "marc:otherCallNumberAssignedByTheContributingLibrary",
-          "9": "marc:otherClassNumberAssignedByTheContributingLibrary"
+          "0": "marc:LcBasedCallNumberAssignedByLac",
+          "1": "marc:CompleteLcClassNumberAssignedByLac",
+          "2": "marc:IncompleteLcClassNumberAssignedByLac",
+          "3": "marc:LcBasedCallNumberAssignedByTheContributingLibrary",
+          "4": "marc:CompleteLcClassNumberAssignedByTheContributingLibrary",
+          "5": "marc:IncompleteLcClassNumberAssignedByTheContributingLibrary",
+          "6": "marc:OtherCallNumberAssignedByLac",
+          "7": "marc:OtherClassNumberAssignedByLac",
+          "8": "marc:OtherCallNumberAssignedByTheContributingLibrary",
+          "9": "marc:OtherClassNumberAssignedByTheContributingLibrary"
         }
       },
       "$a": {"property": "marc:classificationNumber"},
@@ -4637,9 +4637,9 @@
       "i1": {
         "propert": "marc:numberSource",
         "tokenMap": {
-          " ": "marc:sourceSpecifiedInSubfield2",
-          "0": "marc:superintendentOfDocumentsClassificationSystem",
-          "1": "marc:governmentOfCanadaPublicationsOutlineOfClassification"
+          " ": "marc:SourceSpecifiedInSubfield2",
+          "0": "marc:SuperintendentOfDocumentsClassificationSystem",
+          "1": "marc:GovernmentOfCanadaPublicationsOutlineOfClassification"
         }
       },
       "$a": {"property": "marc:classificationNumber"},
@@ -7155,11 +7155,11 @@
         "marcDefault": "0",
         "property": "marc:coverageOrLocationInSource",
         "tokenMap": {
-          "0": "marc:coverageUnknown",
-          "1": "marc:coverageComplete",
-          "2": "marc:coverageIsSelective",
-          "3": "marc:locationInSourceNotGiven",
-          "4": "marc:locationInSourceGiven"
+          "0": "marc:CoverageUnknown",
+          "1": "marc:CoverageComplete",
+          "2": "marc:CoverageIsSelective",
+          "3": "marc:LocationInSourceNotGiven",
+          "4": "marc:LocationInSourceGiven"
         }
       },
       "$a": {"link": "hasTitle", "resourceType": "Title", "property": "label"},
@@ -7277,7 +7277,7 @@
               "summary": [
                 {
                   "@type": "Summary",
-                  "typeNote" : "scopeAndContent",
+                  "marc:summaryType" : "marc:ScopeAndContent",
                   "source": [
                     {"@type": "Source", "uri": ["http://example.org/thing-page"]},
                     {"@type": "Source", "uri": ["http://example.org/another-thing-page"]}
@@ -7686,7 +7686,7 @@
         "property": "marc:displayConstantController",
         "marcDefault": "8",
         "tokenMap": {
-          " ": "marc:publications"
+          " ": "marc:Publications"
         }
       },
       "$a": {"property": "label"},
@@ -7704,7 +7704,7 @@
                 {
                 "@type": "marc:PublicationsAboutDescribedMaterialsNote",
                 "label": "Walde, Otto: Bielkeättens insatser i svensk bibliofili. Särtryck ur Nordisk Tidskrift för Bok- och Biblioteksväsen. Uppsala, 1940.",
-                "marc:displayConstantController": "marc:publications"
+                "marc:displayConstantController": "marc:Publications"
               },
               {
               "@type": "marc:PublicationsAboutDescribedMaterialsNote",
@@ -13649,8 +13649,8 @@
         "property": "marc:languageCode",
         "tokenMap": {
           "1": "marc:ISO-639-2B",
-          "2": "marc:sourceSpecifiedInSubfield2",
-          "7": "marc:sourceSpecifiedInSubfield2"
+          "2": "marc:SourceSpecifiedInSubfield2",
+          "7": "marc:SourceSpecifiedInSubfield2"
         }
       },
       "aboutEntity": "?thing",
