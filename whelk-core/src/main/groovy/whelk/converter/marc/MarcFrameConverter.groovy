@@ -2204,7 +2204,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def prevAdded = null
 
         // NOTE: Within a field, only *one* positioned term is supported.
-        Integer firstRelPos = null
+        Map firstRelPosSubfield = null
         Map sortedByItemPos = [:]
 
         orderedAndGroupedSubfields.each { subhandlers ->
@@ -2278,8 +2278,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                             Map sub = [(code): v]
 
                             if (subhandler.itemPos == 'rest') {
-                                if (firstRelPos == null) {
-                                    firstRelPos = pos
+                                if (firstRelPosSubfield == null) {
+                                    firstRelPosSubfield = sub
                                 }
                                 sortedByItemPos[System.identityHashCode(sub)] = pos
                             }
@@ -2314,9 +2314,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         if (!failedRequired && i1 != null && i2 != null && subs.size()) {
             if (sortedByItemPos.size()) {
+                int relPosStart = subs.indexOf(firstRelPosSubfield)
                 subs.sort {
                     def relPos = sortedByItemPos[System.identityHashCode(it)]
-                    [relPos != null ? firstRelPos : subs.indexOf(it), relPos]
+                    [relPos != null ? relPosStart : subs.indexOf(it), relPos]
                 }
             }
             def field = [ind1: i1, ind2: i2, subfields: subs]
