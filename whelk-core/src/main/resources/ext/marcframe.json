@@ -8277,7 +8277,7 @@
               {"y": "21st century."}]}},
           "normalized": {
             "600": {"ind1": "1", "ind2": "0", "subfields": [
-              {"a": "Scarlatti, Domenico,"},
+              {"a": "Scarlatti, Domenico"},
               {"d": "1685-1757"},
               {"t": "Sonatas,"},
               {"m": "harpsichord"},
