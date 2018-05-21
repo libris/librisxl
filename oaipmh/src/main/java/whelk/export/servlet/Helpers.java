@@ -93,7 +93,7 @@ public class Helpers
         if (untilDateTime != null)
         {
             if (includeDependenciesInTimeInterval)
-                selectSQL += " AND lddb.depMinModified <= ? ";
+                selectSQL += " AND lddb.depMaxModified <= ? ";
             else
                 selectSQL += " AND lddb.modified <= ? ";
         }
@@ -136,7 +136,7 @@ public class Helpers
         if (untilDateTime != null)
         {
             if (includeDependenciesInTimeInterval)
-                selectSQL += " AND lddb.depMinModified <= ? ";
+                selectSQL += " AND lddb.depMaxModified <= ? ";
             else
                 selectSQL += " AND lddb.modified <= ? ";
         }
