@@ -1146,7 +1146,7 @@
           "include": ["termbase_with_id"]
         },
         {
-          "when": "i2=7 & $2=gmgpc",
+          "when": "i2=7 & $2=gmgpc//swe",
           "include": ["termbase_with_id"]
         },
         {
@@ -9663,18 +9663,18 @@
           }}
         },
         {
-          "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Postkartor"}, {"2": "gmgpc"}]}},
+          "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Postkartor"}, {"2": "gmgpc//swe"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "genreForm": [
                 {
                   "@type": "GenreForm",
-                  "@id": "https://id.kb.se/term/gmgpc/Postkartor",
+                  "@id": "https://id.kb.se/term/gmgpc%2F%2Fswe/Postkartor",
                   "inScheme": {
                     "@type": "ConceptScheme",
-                    "@id": "https://id.kb.se/term/gmgpc",
-                    "code": "gmgpc"
+                    "@id": "https://id.kb.se/term/gmgpc%2F%2Fswe",
+                    "code": "gmgpc//swe"
                   },
                   "prefLabel": "Postkartor"
                 }
