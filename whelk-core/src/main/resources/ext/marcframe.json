@@ -1075,7 +1075,7 @@
     },
 
     "termid": {
-      "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{prefLabel}"
+      "uriTemplate": "https://id.kb.se/term/{inScheme.code}/{prefLabel}"
     },
 
     "termcomplexsubjectHead": {
@@ -1146,7 +1146,7 @@
           "include": ["termbase_with_id"]
         },
         {
-          "when": "i2=7 & $2=gmgpc",
+          "when": "i2=7 & $2=gmgpc//swe",
           "include": ["termbase_with_id"]
         },
         {
@@ -4583,7 +4583,7 @@
             "link": "inScheme",
             "resourceType": "ConceptScheme",
             "property": "code",
-            "uriTemplate": "https://id.kb.se/term/{+_}/",
+            "uriTemplate": "https://id.kb.se/term/{_}/",
             "uriTemplateDefaults": {"inScheme.code": "kssb"},
             "splitValuePattern": "(\\w+)(?:/(5|6|7|8))?",
             "splitValueProperties": ["code", "version"],
@@ -4616,7 +4616,7 @@
                   "@type": "Classification",
                   "code": "Fut.021(x)",
                   "inScheme": {
-                    "@id": "https://id.kb.se/term/kssb/5/",
+                    "@id": "https://id.kb.se/term/kssb%2F5/",
                     "@type": "ConceptScheme",
                     "code": "kssb",
                     "version": "5"
@@ -9663,18 +9663,18 @@
           }}
         },
         {
-          "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Postkartor"}, {"2": "gmgpc"}]}},
+          "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Postkartor"}, {"2": "gmgpc//swe"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "genreForm": [
                 {
                   "@type": "GenreForm",
-                  "@id": "https://id.kb.se/term/gmgpc/Postkartor",
+                  "@id": "https://id.kb.se/term/gmgpc%2F%2Fswe/Postkartor",
                   "inScheme": {
                     "@type": "ConceptScheme",
-                    "@id": "https://id.kb.se/term/gmgpc",
-                    "code": "gmgpc"
+                    "@id": "https://id.kb.se/term/gmgpc%2F%2Fswe",
+                    "code": "gmgpc//swe"
                   },
                   "prefLabel": "Postkartor"
                 }
@@ -12935,14 +12935,6 @@
         "TODO:set-link-to?": "inCollection if . = sgp?",
         "TODO:uriMap?": "if token is unknown: make bnode scheme and keep code",
         "uriTemplate": "https://id.kb.se/term/{_}",
-        "tokenMap": {
-            "sao": "sao",
-            "saogf": "saogf",
-            "barn": "barn",
-            "barngf": "barngf",
-            "sgp": "sgp",
-            "gmgpc//swe": "gmgpc-swe"
-        },
         "property": "code"
       },
       "$6": {"property": "marc:fieldref"},
@@ -13035,7 +13027,7 @@
       "resourceType": "Topic",
       "$a": {"property": "prefLabel"},
       "$z": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "code"},
-      "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{prefLabel}"
+      "uriTemplate": "https://id.kb.se/term/{inScheme.code}/{prefLabel}"
     },
     "075": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "080": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
