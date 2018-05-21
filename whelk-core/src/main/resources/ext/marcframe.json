@@ -1052,6 +1052,13 @@
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Family", "required": true}
           }
+        },
+        {
+          "when": null,
+          "include": "agentdataNameOfPerson",
+          "pendingResources": {
+            "_:agent": {"link": "agent", "resourceType": "Person", "required": true}
+          }
         }
       ],
       "$a": {"required": true}
@@ -6073,7 +6080,8 @@
               "264": {
                 "ind1": " ", "ind2": "1",
                 "subfields": [
-                  {"a": "Lund :"}, {"b": "Svenska Clartésektionen ,"}, {"c": "1924-"}
+                  {"a": "Lund :"}, {"b": "Svenska Clartésektionen ,"}, {"c": "1924-"},
+                  {"3": "Sammanfattad utgivningstid"}
                 ]
               }
             },
@@ -6275,6 +6283,7 @@
       "$a": {"aboutNew": "_:part", "link": "place", "resourceType": "Place", "property": "label", "leadingPunctuation": " ;"},
       "$b": {"aboutAltNew": "_:part", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :"},
       "$c": {"property": "date", "leadingPunctuation": ","},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
@@ -7088,6 +7097,7 @@
       "NOTE:remove?$l": {"link": "callno", "resourceType": "Concept", "property": "code"},
       "$x": {"about": "_:seriesinstance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"about": "_:seriesinstance", "addProperty": "marc:uri"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
       "subfieldOrder": "6 a x v 9",
@@ -7412,6 +7422,7 @@
       "$b": {"property": "marc:expansionOfSummaryNote"},
       "$c": {"property": "marc:assigningSource"},
       "$u": {"addLink": "source", "resourceType": "Source", "addProperty": "uri"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "_spec": [
@@ -7627,6 +7638,7 @@
       "$b": {"ignored": true, "NOTE:LC": "nac"},
       "$c": {"about": "_:source", "property": "label"},
       "$u": {"addProperty": "uri"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "_spec": [
         {
           "source": {
@@ -10239,6 +10251,49 @@
                   "musicMedium" : [ "stråkar," ]
                 }
               } ]
+            }
+          }}
+        },
+        {
+          "name": "handle no given ind1",
+          "source": [
+            {
+              "700": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [{"a": "Bartha, Imre"}, {"4": "trl"}]
+              }
+            }
+          ],
+          "normalized": [
+            {
+              "700": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [{"a": "Bartha, Imre"}, {"4": "trl"}]
+              }
+            }
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [
+                {
+                  "@type": "Contribution",
+                  "agent": {
+                    "@type": "Person",
+                    "familyName": "Bartha",
+                    "givenName": "Imre"
+                  },
+                  "role": [
+                    {
+                      "@type": "Role",
+                      "@id": "https://id.kb.se/relator/trl",
+                      "code": "trl"
+                    }
+                  ]
+                }
+              ]
             }
           }}
         }
