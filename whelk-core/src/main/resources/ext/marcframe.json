@@ -1075,7 +1075,7 @@
     },
 
     "termid": {
-      "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{prefLabel}"
+      "uriTemplate": "https://id.kb.se/term/{inScheme.code}/{prefLabel}"
     },
 
     "termcomplexsubjectHead": {
@@ -4583,7 +4583,7 @@
             "link": "inScheme",
             "resourceType": "ConceptScheme",
             "property": "code",
-            "uriTemplate": "https://id.kb.se/term/{+_}/",
+            "uriTemplate": "https://id.kb.se/term/{_}/",
             "uriTemplateDefaults": {"inScheme.code": "kssb"},
             "splitValuePattern": "(\\w+)(?:/(5|6|7|8))?",
             "splitValueProperties": ["code", "version"],
@@ -4616,7 +4616,7 @@
                   "@type": "Classification",
                   "code": "Fut.021(x)",
                   "inScheme": {
-                    "@id": "https://id.kb.se/term/kssb/5/",
+                    "@id": "https://id.kb.se/term/kssb%2F5/",
                     "@type": "ConceptScheme",
                     "code": "kssb",
                     "version": "5"
@@ -13035,7 +13035,7 @@
       "resourceType": "Topic",
       "$a": {"property": "prefLabel"},
       "$z": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "code"},
-      "uriTemplate": "https://id.kb.se/term/{+inScheme.code}/{prefLabel}"
+      "uriTemplate": "https://id.kb.se/term/{inScheme.code}/{prefLabel}"
     },
     "075": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "080": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
