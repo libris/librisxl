@@ -12935,14 +12935,6 @@
         "TODO:set-link-to?": "inCollection if . = sgp?",
         "TODO:uriMap?": "if token is unknown: make bnode scheme and keep code",
         "uriTemplate": "https://id.kb.se/term/{_}",
-        "tokenMap": {
-            "sao": "sao",
-            "saogf": "saogf",
-            "barn": "barn",
-            "barngf": "barngf",
-            "sgp": "sgp",
-            "gmgpc//swe": "gmgpc-swe"
-        },
         "property": "code"
       },
       "$6": {"property": "marc:fieldref"},
