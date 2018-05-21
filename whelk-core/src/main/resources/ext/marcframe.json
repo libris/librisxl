@@ -12677,44 +12677,82 @@
     "880": {
       "addLink": "marc:hasBib880",
       "resourceType": "marc:Bib880",
+      "pendingResources": {"_:group": {"addLink": "marc:partList"}},
       "i1": {"property": "marc:bib880-i1"},
       "i2": {"property": "marc:bib880-i2"},
-      "$a": {"addProperty": "marc:bib880-a"},
-      "$b": {"addProperty": "marc:bib880-b"},
-      "$c": {"addProperty": "marc:bib880-c"},
-      "$d": {"addProperty": "marc:bib880-d"},
-      "$e": {"addProperty": "marc:bib880-e"},
-      "$f": {"addProperty": "marc:bib880-f"},
-      "$g": {"addProperty": "marc:bib880-g"},
-      "$h": {"addProperty": "marc:bib880-h"},
-      "$i": {"addProperty": "marc:bib880-i"},
-      "$j": {"addProperty": "marc:bib880-j"},
-      "$k": {"addProperty": "marc:bib880-k"},
-      "$l": {"addProperty": "marc:bib880-l"},
-      "$m": {"addProperty": "marc:bib880-m"},
-      "$n": {"addProperty": "marc:bib880-n"},
-      "$o": {"addProperty": "marc:bib880-o"},
-      "$p": {"addProperty": "marc:bib880-p"},
-      "$q": {"addProperty": "marc:bib880-q"},
-      "$r": {"addProperty": "marc:bib880-r"},
-      "$s": {"addProperty": "marc:bib880-s"},
-      "$t": {"addProperty": "marc:bib880-t"},
-      "$u": {"addProperty": "marc:bib880-u"},
-      "$v": {"addProperty": "marc:bib880-v"},
-      "$w": {"addProperty": "marc:bib880-w"},
-      "$x": {"addProperty": "marc:bib880-x"},
-      "$y": {"addProperty": "marc:bib880-y"},
-      "$z": {"addProperty": "marc:bib880-z"},
-      "$0": {"addProperty": "marc:bib880-0"},
-      "$1": {"addProperty": "marc:bib880-1"},
-      "$2": {"addProperty": "marc:bib880-2"},
-      "$3": {"addProperty": "marc:bib880-3"},
-      "$4": {"addProperty": "marc:bib880-4"},
-      "$5": {"addProperty": "marc:bib880-5"},
-      "$6": {"addProperty": "marc:fieldref"},
-      "$7": {"addProperty": "marc:bib880-7"},
-      "$8": {"addProperty": "marc:bib880-8"},
-      "$9": {"addProperty": "marc:bib880-9"}
+      "$a": {"aboutNew": "_:group", "property": "marc:bib880-a"},
+      "$b": {"aboutNew": "_:group", "property": "marc:bib880-b"},
+      "$c": {"aboutNew": "_:group", "property": "marc:bib880-c"},
+      "$d": {"aboutNew": "_:group", "property": "marc:bib880-d"},
+      "$e": {"aboutNew": "_:group", "property": "marc:bib880-e"},
+      "$f": {"aboutNew": "_:group", "property": "marc:bib880-f"},
+      "$g": {"aboutNew": "_:group", "property": "marc:bib880-g"},
+      "$h": {"aboutNew": "_:group", "property": "marc:bib880-h"},
+      "$i": {"aboutNew": "_:group", "property": "marc:bib880-i"},
+      "$j": {"aboutNew": "_:group", "property": "marc:bib880-j"},
+      "$k": {"aboutNew": "_:group", "property": "marc:bib880-k"},
+      "$l": {"aboutNew": "_:group", "property": "marc:bib880-l"},
+      "$m": {"aboutNew": "_:group", "property": "marc:bib880-m"},
+      "$n": {"aboutNew": "_:group", "property": "marc:bib880-n"},
+      "$o": {"aboutNew": "_:group", "property": "marc:bib880-o"},
+      "$p": {"aboutNew": "_:group", "property": "marc:bib880-p"},
+      "$q": {"aboutNew": "_:group", "property": "marc:bib880-q"},
+      "$r": {"aboutNew": "_:group", "property": "marc:bib880-r"},
+      "$s": {"aboutNew": "_:group", "property": "marc:bib880-s"},
+      "$t": {"aboutNew": "_:group", "property": "marc:bib880-t"},
+      "$u": {"aboutNew": "_:group", "property": "marc:bib880-u"},
+      "$v": {"aboutNew": "_:group", "property": "marc:bib880-v"},
+      "$w": {"aboutNew": "_:group", "property": "marc:bib880-w"},
+      "$x": {"aboutNew": "_:group", "property": "marc:bib880-x"},
+      "$y": {"aboutNew": "_:group", "property": "marc:bib880-y"},
+      "$z": {"aboutNew": "_:group", "property": "marc:bib880-z"},
+      "$0": {"aboutNew": "_:group", "property": "marc:bib880-0"},
+      "$1": {"aboutNew": "_:group", "property": "marc:bib880-1"},
+      "$2": {"aboutNew": "_:group", "property": "marc:bib880-2"},
+      "$3": {"aboutNew": "_:group", "property": "marc:bib880-3"},
+      "$4": {"aboutNew": "_:group", "property": "marc:bib880-4"},
+      "$5": {"aboutNew": "_:group", "property": "marc:bib880-5"},
+      "$6": {"aboutNew": "_:group", "property": "marc:fieldref"},
+      "$7": {"aboutNew": "_:group", "property": "marc:bib880-7"},
+      "$8": {"aboutNew": "_:group", "property": "marc:bib880-8"},
+      "$9": {"aboutNew": "_:group", "property": "marc:bib880-9"},
+      "_spec": [
+        {
+          "source": {
+            "880": {
+              "ind1": " ",
+              "ind2": " ",
+              "subfields": [
+                {"6": "260-04/$1"},
+                {"a": "香港 :"},
+                {"b": "明报月刊出版社 ;"},
+                {"a": "新加坡 :"},
+                {"b": "新加坡青年书局,"},
+                {"c": "2009."}
+              ]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasBib880": [
+                {
+                  "@type": "marc:Bib880",
+                  "marc:bib880-i1": " ",
+                  "marc:bib880-i2": " ",
+                  "marc:partList": [
+                    {"marc:fieldref": "260-04/$1"},
+                    {"marc:bib880-a": "香港 :"},
+                    {"marc:bib880-b": "明报月刊出版社 ;"},
+                    {"marc:bib880-a": "新加坡 :"},
+                    {"marc:bib880-b": "新加坡青年书局,"},
+                    {"marc:bib880-c": "2009."}
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "882": {},
     "883": {},
@@ -12724,45 +12762,80 @@
     "886": {
       "addLink": "marc:hasForeignMARCInformationField",
       "resourceType": "marc:ForeignMARCInformationField",
+      "pendingResources": {"_:group": {"addLink": "marc:partList"}},
       "i1": {"property": "marc:foreignMarcSubfield-i1"},
       "TODO:addLink": "quotedMARC", "datatype": "XMLLiteral", "$_": {},
-      "$a": {"addProperty": "marc:foreignMarcSubfield-a"},
-      "$b": {"addProperty": "marc:foreignMarcSubfield-b"},
-      "$c": {"addProperty": "marc:foreignMarcSubfield-c"},
-      "$d": {"addProperty": "marc:foreignMarcSubfield-d"},
-      "$e": {"addProperty": "marc:foreignMarcSubfield-e"},
-      "$f": {"addProperty": "marc:foreignMarcSubfield-f"},
-      "$g": {"addProperty": "marc:foreignMarcSubfield-g"},
-      "$h": {"addProperty": "marc:foreignMarcSubfield-h"},
-      "$i": {"addProperty": "marc:foreignMarcSubfield-i"},
-      "$j": {"addProperty": "marc:foreignMarcSubfield-j"},
-      "$k": {"addProperty": "marc:foreignMarcSubfield-k"},
-      "$l": {"addProperty": "marc:foreignMarcSubfield-l"},
-      "$m": {"addProperty": "marc:foreignMarcSubfield-m"},
-      "$n": {"addProperty": "marc:foreignMarcSubfield-n"},
-      "$o": {"addProperty": "marc:foreignMarcSubfield-o"},
-      "$p": {"addProperty": "marc:foreignMarcSubfield-p"},
-      "$q": {"addProperty": "marc:foreignMarcSubfield-q"},
-      "$r": {"addProperty": "marc:foreignMarcSubfield-r"},
-      "$s": {"addProperty": "marc:foreignMarcSubfield-s"},
-      "$t": {"addProperty": "marc:foreignMarcSubfield-t"},
-      "$u": {"addProperty": "marc:foreignMarcSubfield-u"},
-      "$v": {"addProperty": "marc:foreignMarcSubfield-v"},
-      "$w": {"addProperty": "marc:foreignMarcSubfield-w"},
-      "$x": {"addProperty": "marc:foreignMarcSubfield-x"},
-      "$y": {"addProperty": "marc:foreignMarcSubfield-y"},
-      "$z": {"addProperty": "marc:foreignMarcSubfield-z"},
-      "$0": {"addProperty": "marc:foreignMarcSubfield-0"},
-      "$1": {"addProperty": "marc:foreignMarcSubfield-1"},
-      "$2": {"addProperty": "marc:foreignMarcSubfield-2"},
-      "$3": {"addProperty": "marc:foreignMarcSubfield-3"},
-      "$4": {"addProperty": "marc:foreignMarcSubfield-4"},
-      "$5": {"addProperty": "marc:foreignMarcSubfield-5"},
-      "$6": {"addProperty": "marc:foreignMarcSubfield-6"},
-      "$7": {"addProperty": "marc:foreignMarcSubfield-7"},
-      "$8": {"addProperty": "marc:foreignMarcSubfield-8"},
-      "$9": {"addProperty": "marc:foreignMarcSubfield-9"},
-      "repeatable": true
+      "$a": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-a"},
+      "$b": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-b"},
+      "$c": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-c"},
+      "$d": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-d"},
+      "$e": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-e"},
+      "$f": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-f"},
+      "$g": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-g"},
+      "$h": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-h"},
+      "$i": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-i"},
+      "$j": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-j"},
+      "$k": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-k"},
+      "$l": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-l"},
+      "$m": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-m"},
+      "$n": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-n"},
+      "$o": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-o"},
+      "$p": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-p"},
+      "$q": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-q"},
+      "$r": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-r"},
+      "$s": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-s"},
+      "$t": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-t"},
+      "$u": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-u"},
+      "$v": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-v"},
+      "$w": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-w"},
+      "$x": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-x"},
+      "$y": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-y"},
+      "$z": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-z"},
+      "$0": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-0"},
+      "$1": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-1"},
+      "$2": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-2"},
+      "$3": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-3"},
+      "$4": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-4"},
+      "$5": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-5"},
+      "$6": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-6"},
+      "$7": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-7"},
+      "$8": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-8"},
+      "$9": {"aboutNew": "_:group", "property": "marc:foreignMarcSubfield-9"},
+      "repeatable": true,
+      "_spec": [
+        {
+          "source": {
+            "886": {
+              "subfields": [
+                {"2": "intermrc"},
+                {"a": "917"},
+                {"b": "--"},
+                {"o": "OPL"},
+                {"a": "023090416"}
+              ],
+              "ind1": "2",
+              "ind2": " "
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasForeignMARCInformationField": [
+                {
+                  "@type": "marc:ForeignMARCInformationField",
+                  "marc:foreignMarcSubfield-i1": "2",
+                  "marc:partList": [
+                    {"marc:foreignMarcSubfield-2": "intermrc"},
+                    {"marc:foreignMarcSubfield-a": "917"},
+                    {"marc:foreignMarcSubfield-b": "--"},
+                    {"marc:foreignMarcSubfield-o": "OPL"},
+                    {"marc:foreignMarcSubfield-a": "023090416"}
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "887": {
       "TODO:addLink": "quotedRaw", "$_": {}
