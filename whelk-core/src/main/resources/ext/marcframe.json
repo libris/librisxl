@@ -3194,12 +3194,19 @@
     },
 
     "016": {
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
       "aboutEntity": "?record",
       "addLink": "identifiedBy",
       "embedded": true,
       "resourceType": "Local",
-      "TODO": "No handle of empty i1",
-      "i1": {"marcDefault": "7"},
+      "i1": {
+        "property": "marc:nationalBibliographicAgency",
+        "marcDefault": "7",
+        "tokenMap": {
+          " ": "marc:LAC",
+          "7": "marc:SourceSpecifiedInSubfield2"
+        }
+      },
       "$a": {"property": "value"},
       "$z": {"addProperty": "marc:hiddenValue"},
       "$2": {
