@@ -6824,8 +6824,8 @@
       "$a": {"addProperty": "organizationOfMaterial"},
       "$b": {"addProperty": "pattern"},
       "$c": {"property": "hierarchicalLevel"},
-      "TODO:3": "",
-      "TODO:6": ""
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": {"addProperty": "marc:fieldref"}
     },
     "352": {
       "linkSubsequentRepeated": {
