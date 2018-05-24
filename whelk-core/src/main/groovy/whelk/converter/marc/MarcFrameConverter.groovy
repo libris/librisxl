@@ -2298,14 +2298,15 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
                 if (!failedRequired && justAdded) {
                     usedEntities << selectedEntity
-                    if (prevAdded && justAdded &&  subhandler.leadingPunctuation) {
+                    if (prevAdded && justAdded && subhandler.leadingPunctuation) {
                         def (prevCode, prevSub) = prevAdded
-                        def prevValue = prevSub[prevCode]
-                        def nextLeading = subhandler.leadingPunctuation
-                        if (!nextLeading.startsWith(' ')) {
-                            nextLeading = ' ' + nextLeading
+                        if (!subfields[prevCode].trailingPunctuation) {
+                            def prevValue = prevSub[prevCode]
+                            def nextLeading = subhandler.leadingPunctuation
+                            if (!prevValue.endsWith(nextLeading)) {
+                                prevSub[prevCode] = prevValue + nextLeading
+                            }
                         }
-                        prevSub[prevCode] = prevValue + nextLeading
                     }
                 }
                 if (justAdded) prevAdded = justAdded
