@@ -5737,7 +5737,17 @@
       ]
     },
 
-    "249": {},
+    "249": {
+      "NOTE:Local": "LIBRIS-definierat fält, OBSOLET",
+      "addLink": "marc:hasBib249",
+      "resourceType": "marc:Bib249",
+      "i1": {"property": "marc:sequenceOfWork"},
+      "i2": {"property": "marc:nonfilingChars"},
+      "$a": {"property": "marc:originalTitle"},
+      "$b": {"property": "marc:titleRemainder"},
+      "$n": {"addProperty": "marc:titleNumber"},
+      "$p": {"addProperty": "marc:titlePart"} 
+    },
 
     "250": {
       "aboutEntity": "?thing",
