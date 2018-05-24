@@ -7835,8 +7835,14 @@
       "addLink": "marc:hasOwnershipAndCustodialHistory",
       "resourceType": "marc:OwnershipAndCustodialHistory",
       "i1": {
-        "ignored": true,
-        "marcDefault": " "
+        "property": "marc:privacy",
+        "NOTE:LC": "nac",
+        "TODO": "Filter privacy from imports?",
+        "marcDefault": " ",
+        "tokenMap": {
+          "0": "marc:Private",
+          "1": "marc:NotPrivate"
+        }  
       },
       "$a": {"property": "label"},
       "$u": {"ignored": true},
