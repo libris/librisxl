@@ -7365,7 +7365,12 @@
       "addLink": "hasNote",
       "resourceType": "marc:ParticipantOrPerformerNote",
       "i1": {
-        "marcDefault": "0"
+        "property": "marc:displayConstantController",
+        "marcDefault": "0",
+        "tokenMap": {
+          "0": "marc:NoDisplayConstantGenerated",
+          "1": "marc:Cast"
+        }
       },
       "$a": {"addProperty": "label"},
       "$6": {"property": "marc:fieldref"}
