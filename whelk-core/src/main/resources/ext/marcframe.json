@@ -7121,7 +7121,7 @@
     "490": {
       "include": ["inseries"],
       "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
-      "i1": {"property": "marc:seriesTracingPolicy", "TODO:marcDefault": 0, "TOOO": {"when: 8xx[$t] | 830": "1", "else": "0"}},
+      "i1": {"property": "marc:seriesTracingPolicy", "TODO:marcDefault": 0, "TODO": {"when: 8xx[$t] | 830": "1", "else": "0"}},
       "i2": null,
       "TODO:allowSpillOverOnRevert": "800-830 (solved by groupId?)",
       "$a": {"addProperty": "seriesStatement"},
@@ -9761,11 +9761,11 @@
     },
 
     "656" : {
-      "TOOO:i2": {},
+      "TODO:i2": {},
       "resourceType": "Profession", "ignored": true
     },
     "657" : {
-      "TOOO:i2": {},
+      "TODO:i2": {},
       "resourceType": "FunctionOrRole", "ignored": true
     },
 
@@ -10410,7 +10410,7 @@
       "i1": {"marcDefault": "2"},
 
       "subfieldOrder": "6 i a b d c g u t n m r p k l s f o x e 4 1 0",
-      "TOOO:i2": "How to map when no $t?",
+      "TODO:i2": "How to map when no $t?",
       "_spec": [
         {
           "source": {
@@ -11643,7 +11643,7 @@
         },
         "marcDefault": "0"
       },
-      "TOOO:i2": {},
+      "TODO:i2": {},
       "$a": {"about": "_:agent", "property": "label", "TODO:targetMatch": "1xx"},
       "$b": {"about": "_:hasInstance", "property": "editionStatement", "TODO:targetMatch": "250"},
       "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false},
