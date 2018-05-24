@@ -240,13 +240,7 @@ class XL
                                     throw new TooHighEncodingLevelException();
                             }
 
-                            try
-                            {
-                                enrich( doc, rdfDoc );
-                            } catch (IOException e)
-                            {
-                                throw new UncheckedIOException(e);
-                            }
+                            enrich( doc, rdfDoc );
                         });
             }
             catch (TooHighEncodingLevelException e)
@@ -299,7 +293,6 @@ class XL
     }
 
     private void enrich(Document mutableDocument, Document withDocument)
-            throws IOException
     {
         JsonldSerializer serializer = new JsonldSerializer();
         List<String[]> withTriples = serializer.deserialize(withDocument.data);
@@ -414,8 +407,7 @@ class XL
                     }
                     break;
                 case DUPTYPE_035A:
-                    // Unique id number in another system. The 035a of the post being imported will be checked against
-                    // the @graph,0,systemNumber array of existing posts
+                    // Unique id number in another system.
                     duplicateIDs.addAll(getDuplicatesOn035a(marcRecord));
                     break;
                 case DUPTYPE_LIBRISID:
