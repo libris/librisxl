@@ -7845,9 +7845,10 @@
     },
     "562": {
       "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
-      "addLink": "hasItem",
+      "Note:LC": "nac",
+      "addLink": "marc:hasCopyAndVersionIdentificationNote",
+      "resourceType": "marc:CopyAndVersionIdentificationNote",
       "embedded": true,
-      "resourceType": "Item",
       "$a": {"addProperty": "marc:itemCondition"},
       "$b": {"addProperty": "marc:copyIdentification"},
       "$c": {"addProperty": "marc:versionIdentification"},
@@ -16566,10 +16567,7 @@
     },
     "562": {
       "inherit": "bib",
-      "addLink": "marc:hasCopyAndVersionIdentificationNote",
-      "resourceType": "marc:CopyAndVersionIdentificationNote",
-      "groupId": "?example-$seq",
-      "$a": {"property": "marc:itemCondition"}
+      "groupId": "?example-$seq"
     },
     "563": {
       "addLink": "marc:hasBindingInformation", "embedded": true, "resourceType": "marc:BindingInformationNote",
