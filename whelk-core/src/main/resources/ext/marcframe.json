@@ -7312,7 +7312,6 @@
         "marcDefault": " ",
         "property": "marc:hasRestrictionsOnAccessNote",
         "tokenMap": {
-          " ": false,
           "0": false,
           "1": true
         }
