@@ -3939,7 +3939,7 @@
     },
 
     "038": {
-      "TODO:aboutEntity": "?record",
+      "aboutEntity": "?record",
       "$a": {"link": "metadataLicensor", "resourceType": "Organization", "property": "label"}
     },
 
