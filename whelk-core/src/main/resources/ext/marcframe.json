@@ -343,15 +343,34 @@
       },
       "match": [
         {
+          "when": "$a =~ .+\\.\\s*$ & $h =~ .+:\\s*$",
+          "$a": {"property": "mainTitle", "trailingPunctuation": "."},
+          "$h": {"aboutEntity": "?thing", "property": "marc:mediaTerm", "trailingPunctuation": " :", "surroundingChars": "[]"},
+          "$b": {"property": "subtitle", "required": true, "punctuationChars": "/"}
+        },
+        {
           "when": "$a =~ .+:\\s*$",
           "$a": {"property": "mainTitle", "trailingPunctuation": " :"},
           "$b": {"property": "subtitle", "required": true, "punctuationChars": "/"}
+        },
+
+        {
+          "when": "$a =~ .+\\.\\s*$ & $h =~ .+=\\s*$",
+          "$a": {"property": "mainTitle", "trailingPunctuation": "."},
+          "$h": {"aboutEntity": "?thing", "property": "marc:mediaTerm", "trailingPunctuation": " =", "surroundingChars": "[]"},
+          "$b": {"property": "marc:parallelTitle", "required": true, "punctuationChars": "/"}
+        },
+        {
+          "when": "$h =~ .+=\\s*$",
+          "$h": {"aboutEntity": "?thing", "property": "marc:mediaTerm", "trailingPunctuation": " =", "surroundingChars": "[]"},
+          "$b": {"property": "marc:parallelTitle", "required": true, "punctuationChars": "/"}
         },
         {
           "when": "$a =~ .+=\\s*$",
           "$a": {"property": "mainTitle", "trailingPunctuation": " ="},
           "$b": {"property": "marc:parallelTitle", "required": true, "punctuationChars": "/"}
         },
+
         {
           "when": "$a =~ .+\\.\\s*$",
           "$a": {"property": "mainTitle", "trailingPunctuation": "."},
@@ -361,8 +380,8 @@
       ],
       "$a": {"property": "mainTitle", "punctuationChars": "=:/."},
       "$b": {"property": "titleRemainder", "punctuationChars": "/"},
-      "$n": {"aboutNew": "_:titlePart", "property": "partNumber", "punctuationChars": ","},
-      "$p": {"about": "_:titlePart", "property": "partName", "punctuationChars": "/"}
+      "$n": {"aboutNew": "_:titlePart", "property": "partNumber", "punctuationChars": "=:/,"},
+      "$p": {"about": "_:titlePart", "property": "partName", "punctuationChars": "=:/"}
     },
 
     "agentdetails": {
@@ -5497,7 +5516,8 @@
       "onRevertPrefer": "246",
       "embedded": true,
       "aboutAlias": "_:title",
-      "subfieldOrder": "6 a n p h b c f g s",
+      "NOTE:prescribed-but-uncommon:subfieldOrder": "6 a n p h b c f g s",
+      "subfieldOrder": "6 a h b n p c f g s",
       "$c": {
         "aboutEntity": "?thing", "property": "responsibilityStatement",
         "leadingPunctuation": " /", "trailingPunctuation": ".",
@@ -5505,7 +5525,7 @@
       },
       "$f": {"aboutEntity": "?thing", "property": "marc:inclusiveDates"},
       "$g": {"aboutEntity": "?thing", "property": "marc:bulkDates"},
-      "$h": {"aboutEntity": "?thing", "property": "marc:mediaTerm", "surroundingChars": "[]"},
+      "$h": {"aboutEntity": "?thing", "property": "marc:mediaTerm", "surroundingChars": "[]", "punctuationChars": "=:/."},
       "$s": {"property": "version"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
@@ -5554,11 +5574,11 @@
               "ind1": "1", "ind2": "0",
               "subfields": [
                 {"a": "Allmänna valen 1998."},
-                {"n": "Del 4"},
-                {"p": "Specialundersökningar"},
                 {"h": "[Elektronisk resurs] ="},
-                {"b": "[General elections in 1998. Part 4, Special studies] /"},
-                {"c": "Statistiska centralbyrån"}
+                {"b": "[General elections in 1998. Part 4, Special studies]"},
+                {"n": "Del 4"},
+                {"p": "Specialundersökningar /"},
+                {"c": "Statistiska centralbyrån."}
               ]
             }
           },
@@ -5574,11 +5594,11 @@
                     "partName": "Specialundersökningar"
                   }
                 ],
-                "marc:equalTitle": "[General elections in 1998. Part 4, Special studies]"
+                "marc:parallelTitle": "[General elections in 1998. Part 4, Special studies]"
               }
             ],
             "responsibilityStatement":  "Statistiska centralbyrån",
-            "marc:mediaTerm" : "Elektronisk resurs] ="
+            "marc:mediaTerm" : "Elektronisk resurs"
           }}
         }
       ]

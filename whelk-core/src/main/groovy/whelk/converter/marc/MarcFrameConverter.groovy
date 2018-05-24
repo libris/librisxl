@@ -2601,8 +2601,8 @@ class MarcSubFieldHandler extends ConversionPart {
                 }
             }
 
-            if (checkResourceType && resourceType
-                    && !isInstanceOf(entity, resourceType)) {
+            if (checkResourceType && resourceType &&
+                    !isInstanceOf(entity, resourceType)) {
                 continue
             }
 
@@ -2640,7 +2640,18 @@ class MarcSubFieldHandler extends ConversionPart {
                 value = revertObject(obj)
             }
 
-            if (value && trailingPunctuation) {
+            if (value && surroundingChars) {
+                def (lead, tail) = surroundingChars
+                if (value[0] != lead) {
+                    value = '' + lead + value
+                }
+                if (value[-1] != tail) {
+                    value += tail
+                }
+            }
+
+            if (value && trailingPunctuation &&
+                    !value.endsWith(trailingPunctuation)) {
                 value += trailingPunctuation
             }
 
