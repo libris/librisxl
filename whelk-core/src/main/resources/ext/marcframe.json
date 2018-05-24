@@ -7386,24 +7386,9 @@
 
     "514": {
       "NOTE:LC": "nac",
-      "NOTE:Local": "record-count: 0",
-      "aboutEntity": "?thing",
-      "link": "marc:hasDataQualityNote",
-      "resourceType": "marc:DataQualityNote",
-      "$a": {"property": "marc:attributeAccuracyReport"},
-      "$b": {"addProperty": "marc:attributeAccuracyValue"},
-      "$c": {"addProperty": "marc:attributeAccuracyExplanation"},
-      "$d": {"addProperty": "marc:logicalConsistencyReport"},
-      "$e": {"property": "marc:completenessReport"},
-      "$f": {"property": "marc:horizontalPositionAccuracyReport"},
-      "$g": {"addProperty": "marc:horizontalPositionAccuracyValue"},
-      "$h": {"addProperty": "marc:horizontalPositionAccuracyExplanation"},
-      "$i": {"property": "marc:verticalPositionalAccuracyReport"},
-      "$j": {"addProperty": "marc:verticalPositionalAccuracyValue"},
-      "$k": {"addProperty": "marc:verticalPositionalAccuracyExplanation"},
-      "$m": {"property": "marc:cloudCover"},
-      "$u": {"addProperty": "marc:uniformResourceIdentifier"},
-      "$z": {"addProperty": "marc:displayNote"}
+      "NOTE:Local": "Removed from bibliographic marc-export",
+      "NOTE:record-count": 0,
+      "ignored": true
     },
     "515": {
       "aboutEntity": "?thing",
