@@ -354,7 +354,7 @@
         },
         {
           "when": "$a =~ .+\\.\\s*$",
-          "$a": {"property": "mainTitle", "trailingPunctuation": " ."},
+          "$a": {"property": "mainTitle", "trailingPunctuation": "."},
           "$b": {"property": "marc:equalTitle", "required": true, "punctuationChars": "/"},
           "TODO": "$a and $b represent equal titles"
         }
@@ -5540,7 +5540,7 @@
             "245": {
               "ind1": "1", "ind2": "0",
               "subfields": [
-                {"a": "Allmänna valen 1998 ."},
+                {"a": "Allmänna valen 1998."},
                 {"n": "Del 4,"},
                 {"p": "Specialundersökningar"},
                 {"h": "[Elektronisk resurs] ="},
@@ -5553,7 +5553,7 @@
             "245": {
               "ind1": "1", "ind2": "0",
               "subfields": [
-                {"a": "Allmänna valen 1998 ."},
+                {"a": "Allmänna valen 1998."},
                 {"n": "Del 4"},
                 {"p": "Specialundersökningar"},
                 {"h": "[Elektronisk resurs] ="},
