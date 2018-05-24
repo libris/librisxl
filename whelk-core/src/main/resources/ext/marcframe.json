@@ -7519,9 +7519,13 @@
     "526": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ", "NOTE:LC": "nac"},
 
     "530": {
-      "addLink": "hasInstance",
-      "TODO:a": "Change to a more appropriate name of the property",
-      "$a": {"addProperty": "comment"},
+      "NOTE:local": "Deviating from BF2 since subfield a is a note on the relation, not a note on a new instance",
+      "addLink": "hasNote",
+      "resourceType": "marc:AdditionalPhysicalFormAvailableNote",
+      "$a": {"property": "label"},
+      "$b": {"property": "marc:availabilitySource"},
+      "$d": {"property": "marc:orderNumber"},
+      "$u": {"addProperty": "uri"},
       "$6": {"property": "marc:fieldref"},
       "embedded": true
     },
