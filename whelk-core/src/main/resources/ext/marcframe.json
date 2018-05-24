@@ -7541,13 +7541,13 @@
       "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label", "punctuationChars": ":"},
       "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ","},
       "$d": {"about": "_:event", "property": "date"},
-      "$e": {"property": "marc:physicalDescriptionOfReproduction"},
+      "$e": {"link": "extent", "resourceType": "Extent", "property": "label"},
       "$f": {"addProperty": "seriesStatement"},
       "$m": {"addProperty": "marc:datesAndOrSequentialDesignationOfIssuesReproduced"},
       "$n": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
-      "$7": {"TODO:fixedField": "fixedLengthDataElementsOfReproduction"},
+      "$7": {"property": "marc:fixedLengthDataElementsOfReproduction", "NOTE:LC": "ignore"},
       "_spec": [
         {
           "name": "group properties into nested entities",
