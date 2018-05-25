@@ -3194,12 +3194,19 @@
     },
 
     "016": {
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
       "aboutEntity": "?record",
       "addLink": "identifiedBy",
       "embedded": true,
       "resourceType": "Local",
-      "TODO": "No handle of empty i1",
-      "i1": {"marcDefault": "7"},
+      "i1": {
+        "property": "marc:nationalBibliographicAgency",
+        "marcDefault": "7",
+        "tokenMap": {
+          " ": "marc:LAC",
+          "7": "marc:SourceSpecifiedInSubfield2"
+        }
+      },
       "$a": {"property": "value"},
       "$z": {"addProperty": "marc:hiddenValue"},
       "$2": {
@@ -3932,7 +3939,7 @@
     },
 
     "038": {
-      "TODO:aboutEntity": "?record",
+      "aboutEntity": "?record",
       "$a": {"link": "metadataLicensor", "resourceType": "Organization", "property": "label"}
     },
 
@@ -6817,8 +6824,8 @@
       "$a": {"addProperty": "organizationOfMaterial"},
       "$b": {"addProperty": "pattern"},
       "$c": {"property": "hierarchicalLevel"},
-      "TODO:3": "",
-      "TODO:6": ""
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": {"addProperty": "marc:fieldref"}
     },
     "352": {
       "linkSubsequentRepeated": {
@@ -7121,7 +7128,7 @@
     "490": {
       "include": ["inseries"],
       "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
-      "i1": {"property": "marc:seriesTracingPolicy", "TODO:marcDefault": 0, "TOOO": {"when: 8xx[$t] | 830": "1", "else": "0"}},
+      "i1": {"property": "marc:seriesTracingPolicy", "TODO:marcDefault": 0, "TODO": {"when: 8xx[$t] | 830": "1", "else": "0"}},
       "i2": null,
       "TODO:allowSpillOverOnRevert": "800-830 (solved by groupId?)",
       "$a": {"addProperty": "seriesStatement"},
@@ -7305,7 +7312,6 @@
         "marcDefault": " ",
         "property": "marc:hasRestrictionsOnAccessNote",
         "tokenMap": {
-          " ": false,
           "0": false,
           "1": true
         }
@@ -7353,7 +7359,7 @@
       },
       "$a": {"link": "hasTitle", "resourceType": "Title", "property": "label"},
       "$b": {"property": "marc:coverageOfSource"},
-      "$c": {"property": "marc:locationWithinSource"},
+      "$c": {"link": "hasNote", "resourceType": "Note", "property": "label"},
       "$u": {"addProperty": "uri"},
       "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
@@ -7365,7 +7371,12 @@
       "addLink": "hasNote",
       "resourceType": "marc:ParticipantOrPerformerNote",
       "i1": {
-        "marcDefault": "0"
+        "property": "marc:displayConstantController",
+        "marcDefault": "0",
+        "tokenMap": {
+          "0": "marc:NoDisplayConstantGenerated",
+          "1": "marc:Cast"
+        }
       },
       "$a": {"addProperty": "label"},
       "$6": {"property": "marc:fieldref"}
@@ -7381,24 +7392,9 @@
 
     "514": {
       "NOTE:LC": "nac",
-      "NOTE:Local": "record-count: 0",
-      "aboutEntity": "?thing",
-      "link": "marc:hasDataQualityNote",
-      "resourceType": "marc:DataQualityNote",
-      "$a": {"property": "marc:attributeAccuracyReport"},
-      "$b": {"addProperty": "marc:attributeAccuracyValue"},
-      "$c": {"addProperty": "marc:attributeAccuracyExplanation"},
-      "$d": {"addProperty": "marc:logicalConsistencyReport"},
-      "$e": {"property": "marc:completenessReport"},
-      "$f": {"property": "marc:horizontalPositionAccuracyReport"},
-      "$g": {"addProperty": "marc:horizontalPositionAccuracyValue"},
-      "$h": {"addProperty": "marc:horizontalPositionAccuracyExplanation"},
-      "$i": {"property": "marc:verticalPositionalAccuracyReport"},
-      "$j": {"addProperty": "marc:verticalPositionalAccuracyValue"},
-      "$k": {"addProperty": "marc:verticalPositionalAccuracyExplanation"},
-      "$m": {"property": "marc:cloudCover"},
-      "$u": {"addProperty": "marc:uniformResourceIdentifier"},
-      "$z": {"addProperty": "marc:displayNote"}
+      "NOTE:Local": "Removed from bibliographic marc-export",
+      "NOTE:record-count": 0,
+      "ignored": true
     },
     "515": {
       "aboutEntity": "?thing",
@@ -7830,8 +7826,14 @@
       "addLink": "marc:hasOwnershipAndCustodialHistory",
       "resourceType": "marc:OwnershipAndCustodialHistory",
       "i1": {
-        "ignored": true,
-        "marcDefault": " "
+        "property": "marc:privacy",
+        "NOTE:LC": "nac",
+        "TODO": "Filter privacy from imports?",
+        "marcDefault": " ",
+        "tokenMap": {
+          "0": "marc:Private",
+          "1": "marc:NotPrivate"
+        }  
       },
       "$a": {"property": "label"},
       "$u": {"ignored": true},
@@ -7840,9 +7842,10 @@
     },
     "562": {
       "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
-      "addLink": "hasItem",
+      "Note:LC": "nac",
+      "addLink": "marc:hasCopyAndVersionIdentificationNote",
+      "resourceType": "marc:CopyAndVersionIdentificationNote",
       "embedded": true,
-      "resourceType": "Item",
       "$a": {"addProperty": "marc:itemCondition"},
       "$b": {"addProperty": "marc:copyIdentification"},
       "$c": {"addProperty": "marc:versionIdentification"},
@@ -9761,11 +9764,11 @@
     },
 
     "656" : {
-      "TOOO:i2": {},
+      "TODO:i2": {},
       "resourceType": "Profession", "ignored": true
     },
     "657" : {
-      "TOOO:i2": {},
+      "TODO:i2": {},
       "resourceType": "FunctionOrRole", "ignored": true
     },
 
@@ -10410,7 +10413,7 @@
       "i1": {"marcDefault": "2"},
 
       "subfieldOrder": "6 i a b d c g u t n m r p k l s f o x e 4 1 0",
-      "TOOO:i2": "How to map when no $t?",
+      "TODO:i2": "How to map when no $t?",
       "_spec": [
         {
           "source": {
@@ -11643,7 +11646,7 @@
         },
         "marcDefault": "0"
       },
-      "TOOO:i2": {},
+      "TODO:i2": {},
       "$a": {"about": "_:agent", "property": "label", "TODO:targetMatch": "1xx"},
       "$b": {"about": "_:hasInstance", "property": "editionStatement", "TODO:targetMatch": "250"},
       "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false},
@@ -16561,10 +16564,7 @@
     },
     "562": {
       "inherit": "bib",
-      "addLink": "marc:hasCopyAndVersionIdentificationNote",
-      "resourceType": "marc:CopyAndVersionIdentificationNote",
-      "groupId": "?example-$seq",
-      "$a": {"property": "marc:itemCondition"}
+      "groupId": "?example-$seq"
     },
     "563": {
       "addLink": "marc:hasBindingInformation", "embedded": true, "resourceType": "marc:BindingInformationNote",
