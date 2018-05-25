@@ -11462,7 +11462,7 @@
       "$c": {"addProperty": "marc:taxonomicCategory"},
       "$d": {"addProperty": "marc:commonOrAlternativeName"},
       "$x": {"addProperty": "marc:cataloguersNote"},
-      "$z": {"addProperty": "marc:copyNote"},
+      "$z": {"addProperty": "marc:publicNote"},
       "$2": {"property": "marc:sourceOfTaxonomicIdentification"},
       "$0": {"addProperty": "marc:uri"}
     },
@@ -12624,7 +12624,7 @@
       "$u": {"addProperty": "uri"},
       "$x": {"addProperty": "cataloguersNote"},
       "$y": {"addProperty": "marc:linkText"},
-      "$z": {"addProperty": "marc:copyNote"},
+      "$z": {"addProperty": "marc:publicNote"},
       "subfieldOrder": "6 8 3 a f m u x y z ...",
       "_spec": [
         {
@@ -12681,7 +12681,7 @@
             "marc:versionOfResource": [{
               "@type": "Electronic",
               "marc:electronicLocatorType": "http",
-              "marc:copyNote": ["Tidskriftens webbplats"],
+              "marc:publicNote": ["Tidskriftens webbplats"],
               "uri": ["http://www.vr.se/tvarsnitt"]
             }]
           }}
@@ -16810,7 +16810,7 @@
       "$p": {"property": "marc:pieceDesignation"},
       "$t": {"property": "marc:copyNumber"},
       "$x": {"addProperty": "marc:cataloguersNote"},
-      "$z": {"addProperty": "marc:copyNote"},
+      "$z": {"addProperty": "marc:publicNote"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "marc:organizationalUnit"},
       "repeatable": true
@@ -16826,7 +16826,7 @@
       "i2": {"property": "marc:typeOfNotation"},
       "$a": {"property": "marc:textualString"},
       "$x": {"addProperty": "marc:cataloguersNote"},
-      "$z": {"addProperty": "marc:copyNote"},
+      "$z": {"addProperty": "marc:publicNote"},
       "$2": {"property": "marc:sourceOfNotation"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
@@ -16842,7 +16842,7 @@
       "i2": {"property": "marc:typeOfNotation"},
       "$a": {"property": "marc:textualString"},
       "$x": {"addProperty": "marc:cataloguersNote"},
-      "$z": {"addProperty": "marc:copyNote"},
+      "$z": {"addProperty": "marc:publicNote"},
       "repeatable": true
     },
     "868": {
@@ -16853,7 +16853,7 @@
       "i2": {"property": "marc:typeOfNotation"},
       "$a": {"property": "marc:textualString"},
       "$x": {"addProperty": "marc:cataloguersNote"},
-      "$z": {"addProperty": "marc:copyNote"},
+      "$z": {"addProperty": "marc:publicNote"},
       "repeatable": true
     },
 
@@ -16873,7 +16873,7 @@
       "$r": {"addProperty": "marc:invalidOrCanceledPieceDesignation"},
       "$t": {"property": "marc:copyNumber"},
       "$x": {"addProperty": "marc:cataloguersNote", "TODO": "ignore?"},
-      "$z": {"addProperty": "marc:copyNote"},
+      "$z": {"addProperty": "marc:publicNote"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "marc:organizationalUnit"}
