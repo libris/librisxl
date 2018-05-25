@@ -7461,7 +7461,7 @@
       "aboutEntity": "?work", 
       "addLink": "hasNote",
       "resourceType": "marc:CreationProductionCreditsNote",
-      "$a": {"addProperty": "label"},
+      "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"}
     },
     "510": {
@@ -7499,7 +7499,7 @@
           "1": "marc:Cast"
         }
       },
-      "$a": {"addProperty": "label"},
+      "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"}
     },
     "513": {
@@ -7858,9 +7858,11 @@
     "542": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "544": {
       "aboutEntity": "?thing",
-      "addLink": "hasNote",
+      "addLink": "marc:hasLocationOfOtherArchivalMaterialsNote",
       "resourceType": "marc:LocationOfOtherArchivalMaterialsNote",
-      "$a": {"addProperty": "label"}
+      "NOTE:Local": "Removed from bibliographic marc-export",
+      "i1": {"marcDefault": " "},
+      "$a": {"addProperty": "marc:custodian"}
     },
     "545": {
       "aboutEntity": "?thing",
@@ -14177,7 +14179,7 @@
       "aboutEntity": "?thing",
       "addLink": "fieldOfActivity",
       "resourceType": "FieldOfActivity",
-      "$a": {"addProperty": "label"},
+      "$a": {"property": "label"},
       "TODO": "link if $2 is sao",
       "$2": {"link": "source", "resourceType": "Source", "property": "code"},
       "repeatable": true,
@@ -14194,7 +14196,7 @@
               "fieldOfActivity": [
                 {
                   "@type": "FieldOfActivity",
-                  "label": ["Kriminologi"],
+                  "label": "Kriminologi",
                   "source": {
                     "@type": "Source",
                     "code": "sao"
@@ -14246,7 +14248,7 @@
     },
     "375": {"ignored": true, "NOTE:local": "gender: Struket av MSS 2017-12-12 efter diskussion om persondata i biblioteksregister."},
     "376": {
-      "$a": {"addLink": "hasTypeOfFamily", "resourceType": "TypeOfFamily", "addProperty": "label"},
+      "$a": {"addLink": "hasTypeOfFamily", "resourceType": "TypeOfFamily", "property": "label"},
       "$b": {"addLink": "hasProminentFamilyMember", "resourceType": "Person", "property": "prefLabel"},
     "_spec": [
       {
@@ -14260,7 +14262,7 @@
             "hasTypeOfFamily": [
                     {
                       "@type": "TypeOfFamily",
-                      "label": ["Kungahus"]
+                      "label": "Kungahus"
                     }
                   ]
           }
