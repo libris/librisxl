@@ -7461,7 +7461,7 @@
       "aboutEntity": "?work", 
       "addLink": "hasNote",
       "resourceType": "marc:CreationProductionCreditsNote",
-      "$a": {"addProperty": "label"},
+      "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"}
     },
     "510": {
