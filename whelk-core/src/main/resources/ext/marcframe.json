@@ -14248,7 +14248,7 @@
     },
     "375": {"ignored": true, "NOTE:local": "gender: Struket av MSS 2017-12-12 efter diskussion om persondata i biblioteksregister."},
     "376": {
-      "$a": {"addLink": "hasTypeOfFamily", "resourceType": "TypeOfFamily", "addProperty": "label"},
+      "$a": {"addLink": "hasTypeOfFamily", "resourceType": "TypeOfFamily", "property": "label"},
       "$b": {"addLink": "hasProminentFamilyMember", "resourceType": "Person", "property": "prefLabel"},
     "_spec": [
       {
@@ -14262,7 +14262,7 @@
             "hasTypeOfFamily": [
                     {
                       "@type": "TypeOfFamily",
-                      "label": ["Kungahus"]
+                      "label": "Kungahus"
                     }
                   ]
           }
