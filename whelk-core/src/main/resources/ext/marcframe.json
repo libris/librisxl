@@ -1323,7 +1323,8 @@
           "embedded": true
         }
       },
-      "$v": {"property": "seriesEnumeration"}
+      "$v": {"property": "seriesEnumeration"},
+      "$x": {"about": "_:seriesinstance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"}
     },
 
     "inseries_with_w": {
@@ -1349,7 +1350,6 @@
         }
       },
       "$t": {"about": "_:title", "property": "mainTitle"},
-      "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"about": "_:work", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"}
@@ -7015,7 +7015,6 @@
       "onRevertPrefer": ["490", "800", "810", "811", "830"],
       "include": ["inseries_with_w", "titledetails", "i2-nonfiling"],
       "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
-      "$x": {"about": "_:seriesinstance", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"about": "_:seriesinstance", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
@@ -7047,10 +7046,10 @@
                       "marc:nonfilingChars" : " "
                     }]
                   },
-                  "identifiedBy": {
+                  "identifiedBy": [ {
                     "@type": "ISSN",
                     "value": "0023-5377"
-                  }
+                  } ]
                 }
               }
             ]
@@ -7090,10 +7089,10 @@
                       "marc:nonfilingChars" : " "
                     }]
                   },
-                  "identifiedBy": {
+                  "identifiedBy": [ {
                     "@type": "ISSN",
                     "value": "0589-798X"
-                  }
+                  } ]
                 }
               }
             ]
@@ -7133,10 +7132,10 @@
                       "marc:nonfilingChars" : " "
                     }]
                   },
-                  "identifiedBy": {
+                  "identifiedBy": [ {
                     "@type": "ISSN",
                     "value": "0368-8151"
-                  }
+                  } ]
                 }
               }
             ]
@@ -7164,10 +7163,10 @@
                       "mainTitle": "Sveriges officiella statistik"
                     }]
                   },
-                  "identifiedBy": {
+                  "identifiedBy": [ {
                     "@type": "ISSN",
                     "value": "99-0111480-2"
-                  }
+                  } ]
                 }
               }
             ]
@@ -7201,10 +7200,10 @@
                       "partName" : ["3, Hälso- och sjukvård,"]
                     }]
                   },
-                  "identifiedBy": {
+                  "identifiedBy": [ {
                     "@type": "ISSN",
                     "value": "99-2058355-3"
-                  }
+                  } ]
                 }
               }
             ]
@@ -7235,10 +7234,10 @@
                       "mainTitle": "Kungl. Skogs- och Lantbruksakademiens tidskrift"
                     }]
                   },
-                  "identifiedBy": {
+                  "identifiedBy": [ {
                     "@type": "ISSN",
                     "value": "0023-5350"
-                  }
+                  } ]
                 }
               }
             ]
@@ -7254,7 +7253,6 @@
       "TODO:allowSpillOverOnRevert": "800-830 (solved by groupId?)",
       "$a": {"addProperty": "seriesStatement"},
       "NOTE:remove?$l": {"link": "callno", "resourceType": "Concept", "property": "code"},
-      "$x": {"about": "_:seriesinstance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"about": "_:seriesinstance", "addProperty": "marc:uri"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
@@ -11801,7 +11799,7 @@
       "$7": {"property": "marc:controlSubfield"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "partNumber"},
-      "subfieldorder": "6 7 i a t b c d h g k x z w 9",
+      "subfieldOrder": "6 7 i a t b c d h g k x z w 9",
       "_spec": [
         {
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
@@ -12131,7 +12129,7 @@
           }
         }
       ],
-      "subfieldorder": "6 a b c q d j g u t m n r p k l s f o x v w 9 e 4 1 0",
+      "subfieldOrder": "6 a b c q d j g u t m n r p k l s f o x v w 9 e 4 1 0",
       "_spec": [
         {
           "source": {"800": {"ind1": "1", "ind2": " ", "subfields": [
@@ -12313,7 +12311,7 @@
         }
       ],
       "i1": {"marcDefault": "2"},
-      "subfieldorder": "6 a b d c g u t n m r p k l s f o x v w 9 e 4 0",
+      "subfieldOrder": "6 a b d c g u t n m r p k l s f o x v w 9 e 4 0",
       "_spec": [
         {
           "source": {"810": {"ind1": "2", "ind2": " ", "subfields": [
@@ -12476,7 +12474,7 @@
         },
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
-      "subfieldorder": "6 a q d g c e u t n p k l s f x v w 9 j 4 0",
+      "subfieldOrder": "6 a q d g c e u t n p k l s f x v w 9 j 4 0",
       "_spec": [
         {
           "source": {"811": {"ind1": "2", "ind2": " ", "subfields": [
@@ -12558,12 +12556,11 @@
       "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
       "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
       "$d": {"about": "_:work", "addProperty": "legalDate"},
-      "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
       "$0": {"about": "_:work", "addProperty": "marc:uri"},
       "$6": {"about": "_:title", "property": "marc:fieldref"},
       "$8": {"about": "_:title", "property": "marc:groupid"},
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
-      "subfieldorder": "6 a d m n r p k l s f o x v w 9 1 0",
+      "subfieldOrder": "6 a d m n r p k l s f o x v w 9 1 0",
       "_spec": [
         {
           "source": {"830": {"ind1": " ", "ind2": "0", "subfields": [
@@ -12642,17 +12639,17 @@
                 "seriesEnumeration": "101",
                 "inSeries": {
                   "@type": "Instance",
+                  "identifiedBy": [ {
+                    "@type": "ISSN",
+                    "value": "0169-9962"
+                  } ],
                   "instanceOf": {
                     "@type": "Work",
                     "hasTitle": [{
                       "@type": "Title",
                       "mainTitle": "Studies on the texts of the desert of Judah",
                       "marc:nonfilingChars": "4"
-                    }],
-                    "identifiedBy": {
-                      "@type": "ISSN",
-                      "value": "0169-9962"
-                    }
+                    }]
                   }
                 }
               }
@@ -12679,6 +12676,10 @@
                 "seriesEnumeration": "5.",
                 "inSeries": {
                   "@type": "Instance",
+                  "identifiedBy": [ {
+                    "@type": "ISSN",
+                    "value": "0358-0083"
+                  } ],
                   "instanceOf": {
                     "@type": "Work",
                     "hasTitle": [{
@@ -12686,11 +12687,7 @@
                       "mainTitle": "Migrationsstudier",
                       "partNumber": ["B"],
                       "marc:nonfilingChars": " "
-                    }],
-                    "identifiedBy": {
-                      "@type": "ISSN",
-                      "value": "0358-0083"
-                    }
+                    }]
                   }
                 }
               }
