@@ -118,13 +118,12 @@ class VerboseRevertDataStep extends MarcFramePostProcStepBase {
 }
 
 
-class RestructOnMatchFlagStep extends MarcFramePostProcStepBase {
+class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
 
     String sourceLink
     String overwriteType
-    String nullValue
-    List<String> valueProperties
     String flagProperty
+
     Map<String, FlagMatchRule> flagMatch = [:]
 
     private Map<String, List<FlagMatchRule>> flagMatchByLink = [:]
@@ -153,6 +152,7 @@ class RestructOnMatchFlagStep extends MarcFramePostProcStepBase {
         if (flagRule.resourceType && obj[TYPE] == overwriteType) {
             obj[TYPE] = flagRule.resourceType
         }
+
         if (flagRule.remapProperty) {
             flagRule.remapProperty.each { srcProp, destProp ->
                 def src = obj.remove(srcProp)
@@ -173,8 +173,18 @@ class RestructOnMatchFlagStep extends MarcFramePostProcStepBase {
                 list = thing[flagRule.mergeFirstLink] = []
             }
             boolean mergeOk = false
-            if (ld && list[0]) {
-                mergeOk = ld.softMerge(obj, list[0])
+            def target = list[0]
+            if (ld && target) {
+                boolean targetContainsSomeRemapped =
+                    flagRule.remapProperty.values().any {
+                        def value = target[it]
+                        value && matchValuePattern.matcher(value)
+                    }
+                if ((!flagRule.revertRequiresNo ||
+                        !target.containsKey(flagRule.revertRequiresNo)) &&
+                    targetContainsSomeRemapped) {
+                    mergeOk = ld.softMerge(obj, target)
+                }
             }
             if (!mergeOk) {
                 list.add(0, obj)
@@ -184,56 +194,72 @@ class RestructOnMatchFlagStep extends MarcFramePostProcStepBase {
     }
 
     void unmodify(Map record, Map thing) {
-        flagMatchByLink.each { link, candidates ->
+        flagMatchByLink.each { link, ruleCandidates ->
             def list = thing[link]
-            if (list) {
-                // FIXME: find first obj that matches a flagRule
-                def obj = list[0]
-                if (!(obj instanceof Map))
-                    return
+            if (!list)
+                return
 
-                def flagRule = candidates.find { it.resourceType == obj[TYPE] }
-                if (!flagRule)
-                    return
+            // TODO: find first obj that matches a flagRule?
+            def obj = list[0]
+            if (!(obj instanceof Map))
+                return
+
+            for (FlagMatchRule flagRule : ruleCandidates) {
+                if (flagRule.resourceType != obj[TYPE])
+                    continue
+
+                if (flagRule.keepFlag && !obj.containsKey(flagProperty))
+                    continue
+
+                if (obj.containsKey(flagProperty) &&
+                        obj[flagProperty] != flagRule.flag)
+                    continue
+
+                if (flagRule.revertRequiresNo &&
+                    obj.containsKey(flagRule.revertRequiresNo))
+                    continue
+
+                if (obj[TYPE] != flagRule.resourceType)
+                    continue
+
+                if (!flagRule.remapProperty.values().every {
+                    if (it == null)
+                        return true
+                    def value = obj[it]
+                    value && matchValuePattern.matcher(value)
+                }) {
+                    continue
+                }
 
                 obj = [:] + obj
-                if (obj[TYPE] == flagRule.resourceType) {
-                    obj[TYPE] = overwriteType
-                    obj[flagProperty] = flagRule.flag
+                obj[TYPE] = overwriteType
+                obj[flagProperty] = flagRule.flag
 
-                    if (flagRule.remapProperty) {
-                        flagRule.remapProperty.each { srcProp, destProp ->
-                            if (destProp == null) {
-                                obj[srcProp] = nullValue
-                            } else {
-                                def src = obj.remove(destProp)
-                                if (src) {
-                                    obj[srcProp] = src
-                                }
-                            }
+                flagRule.remapProperty.each { srcProp, destProp ->
+                    if (destProp == null && flagRule.nullValue) {
+                        obj[srcProp] = flagRule.nullValue
+                    } else {
+                        def src = obj.remove(destProp)
+                        if (src) {
+                            obj[srcProp] = src
                         }
                     }
-
-                    if (valueProperties) {
-                        for (prop in valueProperties) {
-                            def value = obj[prop]
-                            if (value && !matchValuePattern.matcher(value))
-                                return
-                        }
-                    }
-
-                    thing[sourceLink] = obj
                 }
+
+                thing[sourceLink] = obj
+                break
             }
         }
     }
 
     class FlagMatchRule {
         String flag
+        Boolean keepFlag
         String resourceType
         String mergeFirstLink
         Map<String, String> remapProperty
-        Boolean keepFlag
+        String revertRequiresNo
+        String nullValue
     }
 
 }

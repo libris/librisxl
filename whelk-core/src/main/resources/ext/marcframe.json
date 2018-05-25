@@ -1376,7 +1376,7 @@
       },
       "_:provision": {
         "about": "?thing",
-        "link": "primaryProvisionActivity",
+        "link": "marc:primaryProvisionActivity",
         "resourceType": "PrimaryProvisionActivity",
         "embedded": true
       },
@@ -1390,62 +1390,76 @@
 
     "postProcessing": [
       {
-        "type": "RestructOnMatchFlag",
-        "sourceLink": "primaryProvisionActivity",
+        "type": "RestructPropertyValuesAndFlag",
+        "sourceLink": "marc:primaryProvisionActivity",
         "overwriteType": "PrimaryProvisionActivity",
-        "valueProperties": ["date", "otherDate"],
-        "matchValuePattern": "^[0-9u]{4}$",
-        "nullValue": "9999",
         "flagProperty": "marc:publicationStatus",
+        "matchValuePattern": "^[0-9u]{4}$",
         "flagMatch": {
+          "marc:PublicationDateAndCopyrightDate": {
+            "mergeFirstLink": "publication",
+            "resourceType": "PrimaryPublication",
+            "remapProperty": {"year": "year", "otherYear": "marc:copyrightYear"}
+          },
           "marc:SingleKnownDateProbableDate": {
             "mergeFirstLink": "publication",
-            "resourceType": "PrimaryPublication"
+            "resourceType": "PrimaryPublication",
+            "remapProperty": {"year": "year", "otherYear": null},
+            "revertRequiresNo": "endYear"
           },
           "marc:InclusiveDatesOfCollection": {
             "mergeFirstLink": "production",
-            "resourceType": "PrimaryProduction"
+            "resourceType": "PrimaryProduction",
+            "remapProperty": {"year": "startYear", "otherYear": "endYear"}
           },
           "marc:RangeOfYearsOfBulkOfCollection": {
             "mergeFirstLink": "production",
             "resourceType": "PrimaryBulkProduction",
-            "remapProperty": {"date": "startDate", "otherDate": "endDate"}
+            "remapProperty": {"year": "startYear", "otherYear": "endYear"}
           },
           "marc:ContinuingResourceCurrentlyPublished": {
             "mergeFirstLink": "publication",
-            "resourceType": "CurrentPublicationPeriod",
-            "remapProperty": {"date": "startDate", "otherDate": null}
+            "resourceType": "PrimaryPublication",
+            "remapProperty": {"year": "startYear", "otherYear": null},
+            "nullValue": "9999",
+            "revertRequiresNo": "endYear"
           },
           "marc:ContinuingResourceCeasedPublication": {
             "mergeFirstLink": "publication",
-            "resourceType": "CeasedPublicationPeriod",
-            "remapProperty": {"date": "startDate", "otherDate": "endDate"}
+            "resourceType": "PrimaryPublication",
+            "remapProperty": {"year": "startYear", "otherYear": "endYear"}
           },
           "marc:ContinuingResourceStatusUnknown": {
             "mergeFirstLink": "publication",
-            "resourceType": "PublicationPeriod",
-            "remapProperty": {"date": "startDate", "otherDate": "endDate"},
+            "resourceType": "PrimaryPublication",
+            "remapProperty": {"year": "startYear", "otherYear": "endYear"},
             "keepFlag": true
           },
-          "marc:PublicationDateAndCopyrightDate": {
+          "marc:MultipleDates": {
             "mergeFirstLink": "publication",
             "resourceType": "PrimaryPublication",
-            "remapProperty": {"otherDate": "copyrightDate"}
+            "remapProperty": {"year": "startYear", "otherYear": "endYear"},
+            "keepFlag": true
+          },
+          "marc:ReprintReissueDateAndOriginalDate": {
+            "mergeFirstLink": "publication",
+            "resourceType": "marc:ReprintReissueAndOriginalPublication",
+            "remapProperty": {"year": "marc:reprintYear", "otherYear": "marc:originalYear"}
           },
           "marc:DateOfDistributionReleaseIssueAndProductionRecordingSessionWhenDifferent": {
-            "mergeFirstLink": "production",
+            "mergeFirstLink": "distribution",
             "resourceType": "marc:DistributionAndProduction",
-            "remapProperty": {"date": "marc:distributionDate", "otherDate": "marc:productionDate"}
+            "remapProperty": {"year": "marc:distributionYear", "otherYear": "marc:productionYear"}
           }
         },
         "_spec": [
           {
             "name":  "NOOP",
             "source": {
-              "primaryProvisionActivity": {
+              "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:QuestionableDate",
-                "date": "1977",
+                "year": "1977",
                 "country": [ {"@id": "https://id.kb.se/country/sw"} ]
               }
             },
@@ -1454,10 +1468,10 @@
           },
           {
             "source": {
-              "primaryProvisionActivity": {
+              "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-                "date": "1977",
+                "year": "1977",
                 "country": [ {"@id": "https://id.kb.se/country/sw"} ]
               }
             },
@@ -1465,7 +1479,7 @@
               "publication": [
                 {
                   "@type": "PrimaryPublication",
-                  "date": "1977",
+                  "year": "1977",
                   "country": [ {"@id": "https://id.kb.se/country/sw"} ]
                 }
               ]
@@ -1474,73 +1488,60 @@
           },
           {
             "source": {
-              "primaryProvisionActivity": {
+              "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-                "date": "1977"
+                "year": "1977"
               },
-              "publication": [ {"@type": "Publication", "date": "1977"} ]
+              "publication": [ {"@type": "Publication", "year": "1977"} ]
             },
             "result": {
-              "publication": [ {"@type": "PrimaryPublication", "date": "1977"} ]
+              "publication": [ {"@type": "PrimaryPublication", "year": "1977"} ]
             },
             "back": "both"
           },
           {
             "source": {
-              "primaryProvisionActivity": {
+              "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-                "date": "1977"
+                "year": "1977"
               },
               "publication": [ {"@type": "Publication", "date": "ca 1977"} ]
             },
             "result": {
               "publication": [
-                {"@type": "PrimaryPublication", "date": "1977"},
+                {"@type": "PrimaryPublication", "year": "1977"},
                 {"@type": "Publication", "date": "ca 1977"}
+              ]
+            },
+            "TODO:desired": {
+              "publication": [
+                {"@type": "PrimaryPublication", "year": "1977", "date": "ca 1977"}
               ]
             },
             "back": "both"
           },
           {
             "source": {
-              "publication": [ {"@type": "Publication", "date": "1977"} ]
+              "publication": [ {"@type": "Publication", "year": "1977"} ]
             },
             "result": {
-              "publication": [ {"@type": "Publication", "date": "1977"} ]
+              "publication": [ {"@type": "Publication", "year": "1977"} ]
             }
           },
           {
-            "TODO:source": {
-              "@type": "ManuscriptText",
-              "primaryProvisionActivity": {
-                "@type": "PrimaryProvisionActivity",
-                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-                "date": "1977"
-              }
-            },
-            "TODO:result": {
-              "@type": "ManuscriptText",
-              "production": [ {
-                "@type": "PrimaryPublication",
-                "date": "1977"
-              } ]
-            },
-            "back": "both"
-          },
-          {
             "source": {
-              "primaryProvisionActivity": {
+              "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-                "date": "1977"
+                "year": "1977"
               },
               "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
             },
             "result": {
               "publication": [
-                {"@type": "PrimaryPublication", "date": "1977"},
+                {"@type": "PrimaryPublication", "year": "1977"},
                 {"@type": "Publication", "date": ["1977", "1978"]}
               ]
             },
@@ -1556,19 +1557,19 @@
           },
           {
             "source": {
-              "primaryProvisionActivity": {
+              "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
-                "date": "1977",
-                "otherDate": "9999",
+                "year": "1977",
+                "otherYear": "9999",
                 "country": [ {"@id": "https://id.kb.se/country/sw"} ]
               }
             },
             "result": {
               "publication": [
                 {
-                  "@type": "CurrentPublicationPeriod",
-                  "startDate": "1977",
+                  "@type": "PrimaryPublication",
+                  "startYear": "1977",
                   "country": [ {"@id": "https://id.kb.se/country/sw"} ]
                 }
               ]
@@ -1577,19 +1578,120 @@
           },
           {
             "source": {
-              "primaryProvisionActivity": {
+              "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
-                "date": "1977",
-                "otherDate": "2017"
+                "year": "1977",
+                "otherYear": "2017"
               }
             },
             "result": {
               "publication": [
                 {
-                  "@type": "CeasedPublicationPeriod",
-                  "startDate": "1977",
-                  "endDate": "2017"
+                  "@type": "PrimaryPublication",
+                  "startYear": "1977",
+                  "endYear": "2017"
+                }
+              ]
+            },
+            "back": "both"
+          },
+          {
+            "source": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
+                "year": "1977",
+                "otherYear": "9999",
+                "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+              },
+              "publication": [ {"@type": "Publication", "startYear": "1977"} ]
+            },
+            "result": {
+              "publication": [
+                {
+                  "@type": "PrimaryPublication",
+                  "startYear": "1977",
+                  "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+                }
+              ]
+            },
+            "back": "both"
+          },
+          {
+            "source": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
+                "year": "1977",
+                "otherYear": "9999",
+                "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+              },
+              "publication": [
+                {"@type": "Publication", "date": "[1977-]"}
+              ]
+            },
+            "result": {
+              "publication": [
+                {
+                  "@type": "PrimaryPublication",
+                  "startYear": "1977",
+                  "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+                },
+                {
+                  "@type": "Publication",
+                  "date": "[1977-]"
+                }
+              ]
+            },
+            "TODO:desired": {
+              "publication": [
+                {
+                  "@type": "PrimaryPublication",
+                  "startYear": "1977",
+                  "date": "[1977-]",
+                  "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+                }
+              ]
+            },
+            "back": "both"
+          },
+          {
+            "source": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
+                "year": "1977",
+                "otherYear": "2017"
+              },
+              "publication": [ {"@type": "Publication", "startYear": "1977", "endYear": "2017"} ]
+            },
+            "result": {
+              "publication": [
+                {
+                  "@type": "PrimaryPublication",
+                  "startYear": "1977",
+                  "endYear": "2017"
+                }
+              ]
+            },
+            "back": "both"
+          },
+          {
+            "source": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:DateOfDistributionReleaseIssueAndProductionRecordingSessionWhenDifferent",
+                "year": "2018",
+                "otherYear": "1996"
+              }
+            },
+            "result": {
+              "distribution": [
+                {
+                  "@type": "marc:DistributionAndProduction",
+                  "marc:distributionYear": "2018",
+                  "marc:productionYear": "1996"
                 }
               ]
             },
@@ -2676,13 +2778,13 @@
       "[7:11]": {
         "aboutEntity": "_:provision",
         "TODO:appendToExistingEntity": "If entity provisionActivity already exists don't create new provisionActivity",
-        "property": "date",
+        "property": "year",
         "fixedDefault": "    ",
         "NOTE": "See postProcessing."
       },
       "[11:15]": {
         "aboutEntity": "_:provision",
-        "property": "otherDate",
+        "property": "otherYear",
         "fixedDefault": "    ",
         "NOTE": "See postProcessing."
       },
@@ -3045,10 +3147,10 @@
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
-              "primaryProvisionActivity": {
+              "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-                "date": "1977",
+                "year": "1977",
                 "country": [{"@id": "https://id.kb.se/country/sw"}]
               },
               "instanceOf": {
@@ -3071,10 +3173,10 @@
             "created": "2016-04-20T00:00:00.0+02:00",
             "marc:catalogingSource": {"@id": "https://id.kb.se/marc/CatalogingSourceType-c"},
             "mainEntity": {
-              "primaryProvisionActivity": {
+              "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-                "date": "1995",
+                "year": "1995",
                 "country": [{"@id": "https://id.kb.se/country/fr"}]
               },
               "instanceOf": {
@@ -3096,10 +3198,10 @@
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
-              "primaryProvisionActivity": {
+              "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
-                "date": "1977",
+                "year": "1977",
                 "country": [{"@id": "https://id.kb.se/country/sw"}]
               },
               "instanceOf": {
@@ -5866,7 +5968,17 @@
       },
       "$a": {"aboutNew": "_:pubPart", "link": "place", "resourceType": "Place", "property": "label", "leadingPunctuation": " ;", "punctuationChars": ",:;"},
       "$b": {"aboutAltNew": "_:pubPart", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :", "punctuationChars": ",:;)"},
-      "$c": {"about": "_:publication", "property": "date", "leadingPunctuation": ",", "punctuationChars": ",;"},
+      "$c": {
+        "about": "_:publication",
+        "property": "date",
+        "castPattern": "^([0-9u]{4})$",
+        "castProperty": "year",
+        "splitValuePattern": "^([0-9u]{4})(?:-([0-9u]{4})?)$",
+        "splitValueProperties": ["startYear", "endYear"],
+        "allowEmpty": true,
+        "rejoin": "-",
+        "leadingPunctuation": ",", "punctuationChars": ",;"
+      },
       "$e": {"aboutNew": "_:manufacture", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:;", "surroundingChars" : "()"},
       "$f": {"about": "_:manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :", "punctuationChars": ",:;)"},
       "$g": {"about": "_:manufacture", "property": "date", "leadingPunctuation": ",", "punctuationChars": ",:;"},
@@ -5887,7 +5999,7 @@
             "publication":[
               {
                 "@type": "Publication",
-                "date": "2012",
+                "year": "2012",
                 "place": {"@type": "Place", "label": "Stockholm"},
                 "agent": {"@type": "Agent", "label": "Litteraturbanken"}
               }
@@ -5911,7 +6023,7 @@
             "publication": [
               {
                 "@type": "Publication",
-                "date": "2012",
+                "year": "2012",
                 "place": {"@type": "Place", "label": "Stockholm"},
                 "agent": {"@type": "Agent", "label": "Litteraturbanken"}
               },
@@ -5961,7 +6073,7 @@
                     "agent":  {"@type": "Agent", "label": "Open University"}
                   }
                 ],
-                "date":  "2002"
+                "year":  "2002"
               }
             ]
           }}
@@ -5999,7 +6111,7 @@
                     "agent":  {"@type": "Agent", "label": "Open University"}
                   }
                 ],
-                "date":  "2002"
+                "year":  "2002"
               }
             ]
           }}
@@ -6035,7 +6147,7 @@
                     "agent":  {"@type": "Agent", "label": "Routledge Falmer"}
                   }
                 ],
-                "date":  "2002"
+                "year":  "2002"
               }
             ]
           }}
@@ -6078,7 +6190,7 @@
                     "agent": {"@type": "Agent", "label": "Wolters Kluwer"}
                   }
                 ],
-                "date": "1996"
+                "year": "1996"
               }
             ],
             "manufacture": [
@@ -6188,41 +6300,41 @@
                     "@type": "Resource",
                     "label": "Sammanfattad utgivningstid"
                   },
-                  "date": "1924-",
+                  "startYear": "1924",
                   "place": {"@type": "Place", "label": "Lund"},
                   "agent": {"@type": "Agent", "label": "Svenska Clartésektionen"}
                 },
                 {
                   "@type": "Publication",
-                  "date": "1924-1925",
+                  "startYear": "1924", "endYear": "1925",
                   "place": {"@type": "Place", "label": "Lund"},
                   "agent": {"@type": "Agent", "label": "Svenska Clartésektionen"}
                 },
                 {
                   "@type": "Publication",
                   "marc:sequenceStatus": "marc:InBetweenInSequence",
-                  "date": "1926-1927",
+                  "startYear": "1926", "endYear": "1927",
                   "place": {"@type": "Place", "label": "Lund"},
                   "agent": {"@type": "Agent", "label": "Svenska Clartéavdelningen"}
                 },
                 {
                   "@type": "Publication",
                   "marc:sequenceStatus": "marc:InBetweenInSequence",
-                  "date": "1928-1931",
+                  "startYear": "1928", "endYear": "1931",
                   "place": {"@type": "Place", "label": "Stockholm"},
                   "agent": {"@type": "Agent", "label": "Svenska Clartéavdelningen"}
                 },
                 {
                   "@type": "Publication",
                   "marc:sequenceStatus": "marc:InBetweenInSequence",
-                  "date": "1932-1953",
+                  "startYear": "1932", "endYear": "1953",
                   "place": {"@type": "Place", "label": "Stockholm"},
                   "agent": {"@type": "Agent", "label": "Svenska Clartéförbundet"}
                 },
                 {
                   "@type": "Publication",
                   "marc:sequenceStatus": "marc:InBetweenInSequence",
-                  "date": "1991-1995",
+                  "startYear": "1991", "endYear": "1995",
                   "place": {"@type": "Place", "label": "Hägersten"},
                   "agent": {"@type": "Agent", "label": "Clarté"}
                 },
@@ -6319,7 +6431,16 @@
       },
       "$a": {"aboutNew": "_:part", "link": "place", "resourceType": "Place", "property": "label", "leadingPunctuation": " ;"},
       "$b": {"aboutAltNew": "_:part", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :"},
-      "$c": {"property": "date", "leadingPunctuation": ","},
+      "$c": {
+        "property": "date",
+        "castPattern": "^([0-9u]{4})$",
+        "castProperty": "year",
+        "splitValuePattern": "^([0-9u]{4})(?:-([0-9u]{4})?)$",
+        "splitValueProperties": ["startYear", "endYear"],
+        "allowEmpty": true,
+        "rejoin": "-",
+        "leadingPunctuation": ","
+      },
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label", "trailingPunctuation": ":"},
       "$6": {"property": "marc:fieldref"},
       "subfieldOrder": "6 3 ...",
@@ -6339,7 +6460,7 @@
                 "@type": "Publication",
                 "place": {"@type": "Place", "label": "Stockholm"},
                 "agent": {"@type": "Agent", "label": "Bonnier"},
-                "date": "1996"
+                "year": "1996"
               }
             ],
             "manufacture": [
@@ -6392,7 +6513,7 @@
                     "agent": {"@type": "Agent", "label": "Wolters Kluwer"}
                   }
                 ],
-                "date": "1996"
+                "year": "1996"
               }
             ]
           }}
