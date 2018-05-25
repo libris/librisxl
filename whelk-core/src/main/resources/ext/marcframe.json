@@ -7499,7 +7499,7 @@
           "1": "marc:Cast"
         }
       },
-      "$a": {"addProperty": "label"},
+      "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"}
     },
     "513": {
