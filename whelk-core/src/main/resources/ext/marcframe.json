@@ -14179,7 +14179,7 @@
       "aboutEntity": "?thing",
       "addLink": "fieldOfActivity",
       "resourceType": "FieldOfActivity",
-      "$a": {"addProperty": "label"},
+      "$a": {"property": "label"},
       "TODO": "link if $2 is sao",
       "$2": {"link": "source", "resourceType": "Source", "property": "code"},
       "repeatable": true,
@@ -14196,7 +14196,7 @@
               "fieldOfActivity": [
                 {
                   "@type": "FieldOfActivity",
-                  "label": ["Kriminologi"],
+                  "label": "Kriminologi",
                   "source": {
                     "@type": "Source",
                     "code": "sao"
