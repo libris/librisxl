@@ -191,8 +191,8 @@ class MarcConversion {
                 props.remove(k)
         def procStep
         switch (stepDfn.type) {
-            case 'RestructOnMatchFlag':
-            procStep = new RestructOnMatchFlagStep(props); break
+            case 'RestructPropertyValuesAndFlag':
+            procStep = new RestructPropertyValuesAndFlagStep(props); break
             case 'MappedProperty':
             procStep = new MappedPropertyStep(props); break
             case 'VerboseRevertData':
@@ -2373,6 +2373,8 @@ class MarcSubFieldHandler extends ConversionPart {
     Pattern matchUriToken = null
     Pattern splitValuePattern
     List<String> splitValueProperties
+    Pattern castPattern
+    String castProperty
     String rejoin
     boolean allowEmpty
     String definedElsewhereToken
@@ -2432,6 +2434,10 @@ class MarcSubFieldHandler extends ConversionPart {
             splitValueProperties = subDfn.splitValueProperties
             rejoin = subDfn.rejoin
             allowEmpty = subDfn.allowEmpty
+        }
+        if (subDfn.castPattern) {
+            castPattern = Pattern.compile(subDfn.castPattern)
+            castProperty = subDfn.castProperty
         }
         marcDefault = subDfn.marcDefault
         definedElsewhereToken = subDfn.definedElsewhereToken
@@ -2493,6 +2499,7 @@ class MarcSubFieldHandler extends ConversionPart {
             ok = true
         }
 
+        def useProperty = this.property
         def didSplit = false
         if (splitValuePattern) {
             def m = splitValuePattern.matcher((String) subVal)
@@ -2509,14 +2516,20 @@ class MarcSubFieldHandler extends ConversionPart {
                 ok = true
             }
         }
-        if (!didSplit && property) {
+        if (!didSplit && castPattern) {
+            def m = castPattern.matcher((String) subVal)
+            if (m) {
+                useProperty = castProperty
+            }
+        }
+        if (!didSplit && useProperty) {
             if (marcDefault == null || subVal != marcDefault) {
                 if (overwrite) {
-                    ent[property] = subVal
+                    ent[useProperty] = subVal
                 } else {
-                    fieldHandler.addValue(ent, property, subVal, repeatProperty)
+                    fieldHandler.addValue(ent, useProperty, subVal, repeatProperty)
                 }
-                fieldHandler.addValue(uriTemplateParams, uriTemplateKeyBase + property, subVal, true)
+                fieldHandler.addValue(uriTemplateParams, uriTemplateKeyBase + useProperty, subVal, true)
             }
             ok = true
         }
@@ -2588,7 +2601,11 @@ class MarcSubFieldHandler extends ConversionPart {
             }
 
             String entityId = entity['@id']
+
             def propertyValue = property ? entity[property] : null
+            if (propertyValue == null && castProperty)
+                propertyValue = entity[castProperty]
+
             boolean checkResourceType = true
 
             boolean extractPropertyFromLinkIfMissing =
@@ -2606,7 +2623,8 @@ class MarcSubFieldHandler extends ConversionPart {
                 continue
             }
 
-            if (splitValueProperties && rejoin) {
+            if (splitValueProperties && rejoin &&
+                (!propertyValue || property in splitValueProperties)) {
                 def vs = []
                 boolean allEmpty = true
                 splitValueProperties.each {
