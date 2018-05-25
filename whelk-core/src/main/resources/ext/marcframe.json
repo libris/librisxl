@@ -11801,7 +11801,7 @@
       "$7": {"property": "marc:controlSubfield"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "partNumber"},
-      "subfieldorder": "6 7 i a t b c d h g k x z w 9",
+      "subfieldOrder": "6 7 i a t b c d h g k x z w 9",
       "_spec": [
         {
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
@@ -12131,7 +12131,7 @@
           }
         }
       ],
-      "subfieldorder": "6 a b c q d j g u t m n r p k l s f o x v w 9 e 4 1 0",
+      "subfieldOrder": "6 a b c q d j g u t m n r p k l s f o x v w 9 e 4 1 0",
       "_spec": [
         {
           "source": {"800": {"ind1": "1", "ind2": " ", "subfields": [
@@ -12313,7 +12313,7 @@
         }
       ],
       "i1": {"marcDefault": "2"},
-      "subfieldorder": "6 a b d c g u t n m r p k l s f o x v w 9 e 4 0",
+      "subfieldOrder": "6 a b d c g u t n m r p k l s f o x v w 9 e 4 0",
       "_spec": [
         {
           "source": {"810": {"ind1": "2", "ind2": " ", "subfields": [
@@ -12476,7 +12476,7 @@
         },
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
-      "subfieldorder": "6 a q d g c e u t n p k l s f x v w 9 j 4 0",
+      "subfieldOrder": "6 a q d g c e u t n p k l s f x v w 9 j 4 0",
       "_spec": [
         {
           "source": {"811": {"ind1": "2", "ind2": " ", "subfields": [
@@ -12563,7 +12563,7 @@
       "$6": {"about": "_:title", "property": "marc:fieldref"},
       "$8": {"about": "_:title", "property": "marc:groupid"},
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
-      "subfieldorder": "6 a d m n r p k l s f o x v w 9 1 0",
+      "subfieldOrder": "6 a d m n r p k l s f o x v w 9 1 0",
       "_spec": [
         {
           "source": {"830": {"ind1": " ", "ind2": "0", "subfields": [
