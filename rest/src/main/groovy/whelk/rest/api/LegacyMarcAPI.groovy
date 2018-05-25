@@ -55,7 +55,6 @@ class LegacyMarcAPI extends HttpServlet {
             "format=ISO2709\n" +
             "status=on\n" +
             "longname=LIBRIS testprofil\n" +
-            //"extrafields=Mtm\\:852,856\n" +
             "biblevel=off\n" +
             "issnhyphenate=off\n" +
             "issndehyphenate=off\n" +
