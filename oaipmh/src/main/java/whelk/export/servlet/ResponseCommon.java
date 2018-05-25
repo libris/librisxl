@@ -249,7 +249,7 @@ public class ResponseCommon
                     continue;
                 if (!OaiPmh.s_whelk.getStorage().getCollectionBySystemID(systemID).equals("auth"))
                     continue;
-                Document auth = OaiPmh.s_whelk.getStorage().load(systemID);
+                Document auth = OaiPmh.s_whelk.getStorage().loadEmbellished(systemID, OaiPmh.s_whelk.getJsonld());
 
                 writer.writeStartElement("auth");
                 writer.writeAttribute("id", auth.getShortId());
