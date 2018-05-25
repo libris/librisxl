@@ -7858,9 +7858,14 @@
     "542": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "544": {
       "aboutEntity": "?thing",
-      "addLink": "hasNote",
+      "addLink": "marc:hasLocationOfOtherArchivalMaterialsNote",
       "resourceType": "marc:LocationOfOtherArchivalMaterialsNote",
-      "$a": {"addProperty": "label"}
+      "NOTE:Local": "Removed from bibliographic marc-export",
+      "i1": {
+        "marcDefault": " "
+        }
+      },
+      "$a": {"addProperty": "marc:custodian"}
     },
     "545": {
       "aboutEntity": "?thing",
