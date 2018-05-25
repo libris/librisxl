@@ -7861,10 +7861,7 @@
       "addLink": "marc:hasLocationOfOtherArchivalMaterialsNote",
       "resourceType": "marc:LocationOfOtherArchivalMaterialsNote",
       "NOTE:Local": "Removed from bibliographic marc-export",
-      "i1": {
-        "marcDefault": " "
-        }
-      },
+      "i1": {"marcDefault": " "},
       "$a": {"addProperty": "marc:custodian"}
     },
     "545": {
