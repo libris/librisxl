@@ -55,7 +55,7 @@ class LegacyMarcAPI extends HttpServlet {
             "format=ISO2709\n" +
             "status=on\n" +
             "longname=LIBRIS testprofil\n" +
-            "extrafields=Mtm\\:852,856\n" +
+            //"extrafields=Mtm\\:852,856\n" +
             "biblevel=off\n" +
             "issnhyphenate=off\n" +
             "issndehyphenate=off\n" +
@@ -125,6 +125,25 @@ class LegacyMarcAPI extends HttpServlet {
                 log.warn("Bad client request to LegacyMarcAPI: " + message)
                 profileString = defaultProfileString
             }
+
+            // This is a hack, to allow holding-information to be included when using the default profile
+            String sigel = LegacyIntegrationTools.uriToLegacySigel(library)
+            if (profileString.contains("extrafields=")) {
+                String[] lines = profileString.split(System.getProperty("line.separator"))
+                StringBuilder sb = new StringBuilder()
+                for (String line : lines) {
+                    sb.append(line)
+                    if (line.startsWith("extrafields=")) {
+                        if (!line.endsWith(";"))
+                            sb.append(";")
+                        sb.append(sigel + ":852,856;")
+                    }
+                    sb.append(System.getProperty("line.separator"))
+                }
+                profileString = sb.toString()
+            }
+            else
+                profileString = "extrafields="+sigel+":852,856;" + System.getProperty("line.separator") + profileString
             
             File tempFile = File.createTempFile("profile", ".tmp")
             tempFile.write(profileString)
