@@ -208,7 +208,7 @@ class Crud extends HttpServlet {
 
         String ifNoneMatch = request.getHeader("If-None-Match")
         if (ifNoneMatch != null && doc != null &&
-                stripQuotes(ifNoneMatch) == doc.getModified()) {
+                cleanEtag(ifNoneMatch) == doc.getModified()) {
             response.setHeader("ETag", "\"${doc.getModified()}\"")
             response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
             response.sendError(HttpServletResponse.SC_NOT_MODIFIED,
@@ -861,7 +861,7 @@ class Crud extends HttpServlet {
                             log.warn("If-Match: ${request.getHeader('If-Match')}")
                             log.warn("Modified: ${_doc.modified}")
 
-                            if (_doc.modified as String != stripQuotes(request.getHeader("If-Match"))) {
+                            if (_doc.modified as String != cleanEtag(request.getHeader("If-Match"))) {
                                 log.debug("PUT performed on stale document.")
 
                                 throw new EtagMissmatchException()
@@ -1095,6 +1095,10 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, wre.message)
         }
 
+    }
+
+    private String cleanEtag(String str) {
+        return stripQuotes(str).replaceAll('-gzip', '')
     }
 
     private String stripQuotes(String str) {
