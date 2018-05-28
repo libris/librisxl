@@ -2,6 +2,7 @@
 
 BATCHIMPORT=/appl/src/librisxl/batchimport
 GRADLE=/opt/gradle/bin/gradle
+GIT=/bin/git
 DEPLOY=/appl/import/lib/
 
 bailout ()
@@ -17,9 +18,13 @@ if [ ! -f $GRADLE ]; then
 	bailout "fatal: install gradle."
 fi
 
+if [ ! -f $GIT ]; then
+	bailout "fatal: install git."
+fi
+
 if [ -d $BATCHIMPORT ]; then
 	cd $BATCHIMPORT
-	git pull
+	$GIT pull
 	if [ $? -ne 0 ]; then
 		bailout "fatal: git pull failed."
 	fi 
