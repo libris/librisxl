@@ -925,7 +925,7 @@ class PostgreSQLComponent {
     }
 
     boolean bulkStore(
-            final List<Document> docs, String changedIn, String changedBy, String collection) {
+            final List<Document> docs, String changedIn, String changedBy, String collection, boolean updateDepMinMax = true) {
         if (!docs || docs.isEmpty()) {
             return true
         }
@@ -946,8 +946,10 @@ class PostgreSQLComponent {
                 batch = rigInsertStatement(batch, doc, changedIn, changedBy, collection, false)
                 batch.addBatch()
                 refreshDerivativeTables(doc, connection, false)
-                for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
-                    updateMinMaxDepModified((String) depender.get(0), connection)
+                if (updateDepMinMax) {
+                    for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
+                        updateMinMaxDepModified((String) depender.get(0), connection)
+                    }
                 }
             }
             batch.executeBatch()
