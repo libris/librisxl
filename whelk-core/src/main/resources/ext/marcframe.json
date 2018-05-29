@@ -11799,7 +11799,7 @@
       "$7": {"property": "marc:controlSubfield"},
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "partNumber"},
-      "subfieldOrder": "6 7 i a t b c d h g k x z w 9",
+      "subfieldOrder": "6 7 i a s t b c d h g k ... x z w 4 8 9",
       "_spec": [
         {
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
@@ -11838,12 +11838,14 @@
             {"7": "p1"},
             {"a": "Beckmann, Max"},
             {"t": "Briefec"},
+            {"d": "provisionActivityStatement"},
             {"w": "000"}
           ]}},
           "normalized": {"772": {"ind1": "0", "ind2": " ", "subfields": [
             {"7": "p1"},
             {"a": "Beckmann, Max"},
             {"t": "Briefec"},
+            {"d": "provisionActivityStatement"},
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
@@ -11857,6 +11859,7 @@
                       "@type": "Title",
                       "mainTitle": "Briefec"
                     }],
+                    "provisionActivityStatement": "provisionActivityStatement",
                     "describedBy": [{
                       "@type": "Record",
                       "controlNumber": "000"
