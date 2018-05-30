@@ -3677,6 +3677,25 @@
       ]
     },
 
+    "029": {
+      "NOTE:Local": "OCLC: Other System Control Number (R)",
+      "aboutEntity": "?record",
+      "addLink": "marc:hasBib029",
+      "resourceType": "marc:Bib029",
+      "i1": {
+        "property": "marc:ind1",
+        "tokenMap": {
+          " ": null,
+          "0": "0",
+          "1": "1"
+        }
+      },
+      "$a": {"property": "marc:a"},
+      "$b": {"property": "marc:b"},
+      "$c": {"property": "marc:c"},
+      "$t": {"property": "marc:t"}
+    },
+
     "030": {
       "include": ["idbase"],
       "resourceType": "CODEN",
