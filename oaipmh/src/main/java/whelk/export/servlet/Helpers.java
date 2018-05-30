@@ -81,7 +81,7 @@ public class Helpers
                 " FROM lddb ";
 
         selectSQL += " LEFT JOIN lddb lddb_attached_holdings ON lddb.data#>>'{@graph,1,@id}' = lddb_attached_holdings.data#>>'{@graph,1,itemOf,@id}' ";
-        selectSQL += " WHERE lddb.collection <> 'definitions' AND lddb_attached_holdings.deleted = false ";
+        selectSQL += " WHERE lddb.collection <> 'definitions' ";
 
         if (fromDateTime != null)
         {
