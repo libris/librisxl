@@ -2658,19 +2658,20 @@ class MarcSubFieldHandler extends ConversionPart {
                 value = revertObject(obj)
             }
 
-            if (value && surroundingChars) {
-                def (lead, tail) = surroundingChars
-                if (value[0] != lead) {
-                    value = '' + lead + value
+            if (value instanceof String && value.size() > 0) {
+                if (surroundingChars) {
+                    def (lead, tail) = surroundingChars
+                    if (value[0] != lead) {
+                        value = '' + lead + value
+                    }
+                    if (value[-1] != tail) {
+                        value += tail
+                    }
                 }
-                if (value[-1] != tail) {
-                    value += tail
+                if (trailingPunctuation &&
+                        !value.endsWith(trailingPunctuation)) {
+                    value += trailingPunctuation
                 }
-            }
-
-            if (value && trailingPunctuation &&
-                    !value.endsWith(trailingPunctuation)) {
-                value += trailingPunctuation
             }
 
             if (value != null) {
