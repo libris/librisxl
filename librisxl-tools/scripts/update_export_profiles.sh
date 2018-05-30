@@ -27,13 +27,23 @@ pushd $TEMP_AREA
 
 query="BEGIN; DELETE FROM lddb__profiles;"
 
+declare -A used_sigels
+
 for profile in *.properties
 do
-
     data=`cat $profile`
-    profile_no_ext=$(echo $profile | cut -d'.' -f 1)
-    query="$query INSERT INTO lddb__profiles (library_id, profile) VALUES ('https://libris.kb.se/library/$profile_no_ext', '$data');"
+    sigel_list=`cat $profile | grep locations | sed -e 's/locations=//' | sed -e 's/ /\n/g'`
+    for var in $sigel_list
+    do
+        profile_no_ext=$(echo $var | cut -d'.' -f 1)
+        if [[ ${used_sigels[$profile_no_ext]} != used ]]; then
+            used_sigels[$profile_no_ext]="used"
+            query="$query INSERT INTO lddb__profiles (library_id, profile) VALUES ('https://libris.kb.se/library/$profile_no_ext', '$data');"
+        fi
+    done
+
 done
+
 popd
 IFS=""
 query="$query COMMIT;"
