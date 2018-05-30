@@ -1332,8 +1332,8 @@
           "embedded": true
         }
       },
-      "$v": {"property": "seriesEnumeration"},
-      "$x": {"about": "_:seriesinstance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"}
+      "$v": {"property": "seriesEnumeration", "leadingPunctuation": " ;"},
+      "$x": {"about": "_:seriesinstance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;", "leadingPunctuation": ","}
     },
 
     "inseries_with_w": {
@@ -7037,8 +7037,8 @@
             {"v": "N.F. 13:7"}
           ]}},
           "normalized": {"830": {"ind1": "0", "ind2": " ", "subfields": [
-            {"a": "Kungl. Svenska vetenskapsakademiens handlingar"},
-            {"x": "0023-5377"},
+            {"a": "Kungl. Svenska vetenskapsakademiens handlingar,"},
+            {"x": "0023-5377 ;"},
             {"v": "N.F. 13:7"}
           ]}},
           "result": {"mainEntity": {
@@ -7076,8 +7076,8 @@
           ]}},
           "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Corpus christianorum"},
-            {"p": "Series Latina"},
-            {"x": "0589-798X"},
+            {"p": "Series Latina,"},
+            {"x": "0589-798X ;"},
             {"v": "156 B"},
             {"9": "156"},
             {"9": "B"}
@@ -7119,8 +7119,8 @@
           ]}},
           "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Lunds universitets årsskrift"},
-            {"p": "Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen"},
-            {"x": "0368-8151"},
+            {"p": "Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen,"},
+            {"x": "0368-8151 ;"},
             {"v": "9:15"},
             {"9": "9"},
             {"9": "15"}
@@ -7157,7 +7157,7 @@
             {"x": "99-0111480-2"}
           ]}},
           "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
-            {"a": "Sveriges officiella statistik"},
+            {"a": "Sveriges officiella statistik,"},
             {"x": "99-0111480-2"}
           ]}},
           "result": {"mainEntity": {
@@ -7191,8 +7191,8 @@
           ]}},
           "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
             {"a": "Stockholms stads statistik"},
-            {"p": "3, Hälso- och sjukvård"},
-            {"x": "99-2058355-3"},
+            {"p": "3, Hälso- och sjukvård,"},
+            {"x": "99-2058355-3 ;"},
             {"v": "2"}
           ]}},
           "result": {"mainEntity": {
@@ -7226,8 +7226,8 @@
             {"v": "nr 7 (2005) årg. 144"}
           ]}},
           "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
-            {"a": "Kungl. Skogs- och Lantbruksakademiens tidskrift"},
-            {"x": "0023-5350"},
+            {"a": "Kungl. Skogs- och Lantbruksakademiens tidskrift,"},
+            {"x": "0023-5350 ;"},
             {"v": "nr 7 (2005) årg. 144"}
           ]}},
           "result": {"mainEntity": {
@@ -12154,7 +12154,7 @@
                     }],
                     "hasTitle": [{
                       "@type": "Title",
-                      "mainTitle": "Sandemo-serien ;"
+                      "mainTitle": "Sandemo-serien"
                     }]
                   }
                 }
@@ -12166,7 +12166,7 @@
           "source": {"800": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "Raymond Feist"},
             {"t": "Demonwar saga."},
-            {"l": "Svenska"},
+            {"l": "Svenska ;"},
             {"v": "v 2"}
           ]}},
           "result": {"mainEntity": {
@@ -12207,6 +12207,14 @@
             {"k": "Selections (Sousa American bicentennial collection);"} ,
             {"v": "v.1."}
           ]}},
+          "normalized": {"800": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Sousa, John Philip,"},
+            {"d": "1854-1932"},
+            {"t": "Marches,"},
+            {"m": "band."},
+            {"k": "Selections (Sousa American bicentennial collection) ;"} ,
+            {"v": "v.1."}
+          ]}},
           "result": {"mainEntity": {
             "seriesMembership": [
               {
@@ -12228,7 +12236,7 @@
                     "hasTitle": [{
                       "@type": "Title",
                       "mainTitle": "Marches",
-                      "marc:formSubheading": ["Selections (Sousa American bicentennial collection);"]
+                      "marc:formSubheading": ["Selections (Sousa American bicentennial collection)"]
                     }],
                     "musicMedium": ["band."]
                   }
@@ -12317,7 +12325,7 @@
           ]}},
           "normalized": {"810": {"ind1": "2", "ind2": " ", "subfields": [
             {"a": "German Institute of Global and Area Studies <Hamburg>"},
-            {"t": "GIGA working papers"},
+            {"t": "GIGA working papers ;"},
             {"v": "v 40"}
           ]}},
           "result": {"mainEntity": {
@@ -12375,7 +12383,7 @@
                     }],
                     "hasTitle": [{
                       "@type": "Title",
-                      "mainTitle": "Bibliografías criticas ;"
+                      "mainTitle": "Bibliografías criticas"
                     }]
                   }
                 }
@@ -12386,7 +12394,7 @@
           "source": {"810": {"ind1": "2", "ind2": " ", "subfields": [
             {"a": "Harvard University."},
             {"b": "Bureau of Business Research."},
-            {"t": "Bulletin"},
+            {"t": "Bulletin ;"},
             {"v": "no. 20."}
           ]}},
           "result": {"mainEntity": {
@@ -12428,7 +12436,7 @@
           "normalized": {"810": {"ind1": "2", "ind2": " ", "subfields": [
             {"a": "Stadtbibliothek."},
             {"c": "Königsberg"},
-            {"t": "Mitteilungen aus der Stadtbibliothek Königsberg"},
+            {"t": "Mitteilungen aus der Stadtbibliothek Königsberg ;"},
             {"v": "4/5."}
           ]}},
           "result": {"mainEntity": {
@@ -12566,7 +12574,7 @@
         {
           "source": {"830": {"ind1": " ", "ind2": "0", "subfields": [
             {"a": "Europarecht (Munich, germany)"},
-            {"p": "Beiheft"},
+            {"p": "Beiheft ;"},
             {"v": "2002/1"}
           ]}},
           "result": {"mainEntity": {
@@ -12614,7 +12622,7 @@
                     "hasTitle": [{
                       "@type": "Title",
                       "mainTitle": "Archiv für Papyrusforschung und verwandte Gebiete",
-                      "partName": ["Ergänzungsband.", "Kleine Reihe ;"]
+                      "partName": ["Ergänzungsband.", "Kleine Reihe"]
                     }]
                   }
                 }
@@ -12629,8 +12637,8 @@
             {"x": "0169-9962"}
           ]}},
           "normalized": {"830": {"ind1": " ", "ind2": "4", "subfields": [
-            {"a": "Studies on the texts of the desert of Judah"},
-            {"x": "0169-9962"},
+            {"a": "Studies on the texts of the desert of Judah,"},
+            {"x": "0169-9962 ;"},
             {"v": "101"}
           ]}},
           "result": {"mainEntity": {
@@ -12666,8 +12674,8 @@
           ]}},
           "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Migrationsstudier,"},
-            {"n": "B"},
-            {"x": "0358-0083"},
+            {"n": "B,"},
+            {"x": "0358-0083 ;"},
             {"v": "5."}
           ]}},
           "result": {"mainEntity": {
