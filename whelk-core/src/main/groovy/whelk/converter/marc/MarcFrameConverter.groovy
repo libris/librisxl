@@ -132,6 +132,7 @@ class MarcConversion {
     boolean keepGroupIds = false
     Map marcTypeMap = [:]
     Map tokenMaps
+    Map defaultPunctuation
 
     private Set missingTerms = [] as Set
     private Set badRepeats = [] as Set
@@ -148,6 +149,8 @@ class MarcConversion {
         this.sharedPostProcSteps = config.postProcessing.collect {
             parsePostProcStep(it)
         }
+
+        defaultPunctuation = config.defaultPunctuation ?: [:]
 
         MARC_CATEGORIES.each { marcCat ->
             def marcRuleSet = new MarcRuleSet(this, marcCat)
@@ -2264,6 +2267,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 List result = subhandler.revertWithSourcePosition(state, data, selectedEntity)
 
                 def justAdded = null
+                String firstAddedValue = null
 
                 if (result != null) {
                     result.each {
@@ -2286,6 +2290,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
                             subs << sub
                             justAdded = [code, sub]
+                            if (firstAddedValue == null) {
+                                firstAddedValue = v
+                            }
                         }
                     }
                     if (subhandler.required && !justAdded) {
@@ -2300,10 +2307,16 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     usedEntities << selectedEntity
                     if (prevAdded && justAdded && subhandler.leadingPunctuation) {
                         def (prevCode, prevSub) = prevAdded
-                        if (!subfields[prevCode].trailingPunctuation) {
+                        MarcSubFieldHandler prevSubHandler = subfields[prevCode]
+                        if (!prevSubHandler.trailingPunctuation) {
                             def prevValue = prevSub[prevCode]
                             def nextLeading = subhandler.leadingPunctuation
-                            if (!prevValue.endsWith(nextLeading)) {
+                            boolean valueSkipsLeading = subhandler.skipLeadingPattern &&
+                                    subhandler.skipLeadingPattern.matcher(firstAddedValue).matches()
+                            boolean prevValueBlocksLeading = prevSubHandler.blockNextLeadingPattern
+                                                                .matcher(prevValue).matches()
+                            if (!valueSkipsLeading && !prevValueBlocksLeading &&
+                                !prevValue.endsWith(nextLeading)) {
                                 prevSub[prevCode] = prevValue + nextLeading
                             }
                         }
@@ -2360,6 +2373,8 @@ class MarcSubFieldHandler extends ConversionPart {
     char[] surroundingChars
     String trailingPunctuation
     String leadingPunctuation
+    Pattern skipLeadingPattern
+    Pattern blockNextLeadingPattern
     String link
     String about
     boolean newAbout
@@ -2390,12 +2405,19 @@ class MarcSubFieldHandler extends ConversionPart {
         this.ruleSet = fieldHandler.ruleSet
         this.fieldHandler = fieldHandler
         this.code = code
+        super.setTokenMap(fieldHandler, subDfn)
         aboutEntityName = subDfn.aboutEntity
+
         trailingPunctuation = subDfn.trailingPunctuation
         leadingPunctuation = subDfn.leadingPunctuation
         punctuationChars = (subDfn.punctuationChars ?: trailingPunctuation?.trim())?.toCharArray()
-        surroundingChars = subDfn.surroundingChars?.toCharArray()
-        super.setTokenMap(fieldHandler, subDfn)
+        surroundingChars = 'surroundingChars' in subDfn ?
+                subDfn.surroundingChars?.toCharArray() :
+                defaultPunctuation.surroundingChars?.toCharArray()
+        skipLeadingPattern = toPattern('skipLeading' in subDfn ?
+                subDfn.skipLeading : defaultPunctuation.skipLeading)
+        blockNextLeadingPattern = toPattern('blockNextLeading' in subDfn ?
+                subDfn.blockNextLeading : defaultPunctuation.blockNextLeading)
 
         if (subDfn.aboutNew) {
             about = subDfn.aboutNew
@@ -2446,6 +2468,14 @@ class MarcSubFieldHandler extends ConversionPart {
         itemPos = subDfn.itemPos
 
         assert !resourceType || link, "Expected link on ${fieldHandler.fieldId}-$code"
+    }
+
+    Map getDefaultPunctuation() {
+        ruleSet.conversion.defaultPunctuation
+    }
+
+    Pattern toPattern(String pattern) {
+        pattern ? Pattern.compile(pattern) : null
     }
 
     boolean convertSubValue(Map state, Map value, def subVal, Map ent,
@@ -2538,7 +2568,7 @@ class MarcSubFieldHandler extends ConversionPart {
     }
 
     String clearChars(String val) {
-        if (val.size() > 2) {
+        if (val.size() > 1) {
             val = val.trim()
             if (punctuationChars) {
                 for (c in punctuationChars) {

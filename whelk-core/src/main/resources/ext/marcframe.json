@@ -8,6 +8,12 @@
     "addLink:identifiedBy (+ NOTE:marc-repeatable: false where link)"
   ],
 
+  "defaultPunctuation": {
+    "punctuationChars": null,
+    "skipLeading": "^\\(.*$",
+    "blockNextLeading": ".*\\S{2,}\\.$|.*[:;]$"
+  },
+
   "pendingResources": {
     "?record": {
       "resourceType": "Record",
