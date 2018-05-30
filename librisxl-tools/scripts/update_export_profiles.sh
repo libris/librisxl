@@ -2,7 +2,7 @@
 # into the XL database.
 
 #!/bin/bash
-set -ue
+set -e
 
 SOURCE_HOST="gosling.libris.kb.se"
 SOURCE_PATH="/appl/export2/profiles"
