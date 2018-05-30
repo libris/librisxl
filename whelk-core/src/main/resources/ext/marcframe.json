@@ -13304,7 +13304,33 @@
     "065": {
       "inherit": "bib:084",
       "aboutEntity": "?thing",
-      "addLink": "broadMatch"
+      "addLink": "broadMatch",
+      "$c": {"property": "marc:explanatoryTerm"},
+      "_spec": [{
+          "source": {
+            "065": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Ykk"},
+              {"c": "musikinspelningar"},
+              {"2": "kssb/8"}
+            ]}},
+          "result": {"mainEntity": {
+            "@type" : "Identity",
+            "broadMatch": [
+              {
+                "@type": "Classification",
+                "code": "Ykk",
+                "marc:explanatoryTerm": "musikinspelningar",
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/kssb%2F8/",
+                  "@type": "ConceptScheme",
+                  "code": "kssb",
+                  "version": "8"
+                }
+              }
+            ]
+          }}
+        }
+      ]
     },
     "066": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore", "NOTE:local": "ANVÄNDS F.N. EJ"},
     "070": {"ignored": true, "NOTE:record-count": 0},
@@ -13358,9 +13384,9 @@
         {
           "source": {
             "083": {"ind1": "0", "ind2": "4", "subfields": [
-              {"z": "1"},
               {"a": "085"},
               {"c": "BroadMatch"},
+              {"z": "1"},
               {"2": "23/swe"}
             ]}},
           "result": {
@@ -13371,6 +13397,23 @@
                 "code":  "085",
                 "marc:explanatoryTerm":  "BroadMatch",
                 "marc:tableIdentificationTableNumber":  "1",
+                "edition":  "23/swe"
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "083": {"ind1": "0", "ind2": "4", "subfields": [
+              {"a": "617.66"},
+              {"2": "23/swe"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "closeMatch": [{
+                "@type": "ClassificationDdc",
+                "code":  "617.66",
                 "edition":  "23/swe"
               }]
             }
@@ -16824,10 +16867,11 @@
         "NOTE": "libris deviates from standard classificationPart (libris use it for all kinds of shelfControlNumber?)"
       },
       "$i": {
-        "addProperty": "availability",
+        "addLink": "availability",
+        "resourceType": "ItemAvailability",
+        "property": "label",
         "TODO:property": "change to copyNote?",
-        "NOTE": "deviates from standard (itemPart)?",
-        "TODO": "optional controlled values (see websearch holdings interface)"
+        "NOTE": "deviates from standard (itemPart)?"
       },
       "$j": {"property": "shelfControlNumber"},
       "$k": {"addProperty": "callNumberPrefix"},
@@ -16841,7 +16885,9 @@
       "$u": {"addProperty": "uri"},
       "$x": {"addProperty": "cataloguersNote"},
       "$z": {
-        "addProperty": "copyNote",
+        "addLink": "hasNote",
+        "resourceType": "CopyNote",
+        "property": "label",
         "TODO:property": "change to comment?"
       },
       "repeatable": true,
