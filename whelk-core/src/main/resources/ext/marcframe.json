@@ -16867,10 +16867,11 @@
         "NOTE": "libris deviates from standard classificationPart (libris use it for all kinds of shelfControlNumber?)"
       },
       "$i": {
-        "addProperty": "availability",
+        "addLink": "availability",
+        "resourceType": "ItemAvailability",
+        "property": "label",
         "TODO:property": "change to copyNote?",
-        "NOTE": "deviates from standard (itemPart)?",
-        "TODO": "optional controlled values (see websearch holdings interface)"
+        "NOTE": "deviates from standard (itemPart)?"
       },
       "$j": {"property": "shelfControlNumber"},
       "$k": {"addProperty": "callNumberPrefix"},
@@ -16884,7 +16885,9 @@
       "$u": {"addProperty": "uri"},
       "$x": {"addProperty": "cataloguersNote"},
       "$z": {
-        "addProperty": "copyNote",
+        "addLink": "hasNote",
+        "resourceType": "CopyNote",
+        "property": "label",
         "TODO:property": "change to comment?"
       },
       "repeatable": true,
