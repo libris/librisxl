@@ -8550,7 +8550,7 @@
       "aboutEntity": "?work",
       "match": [
         {
-          "when": "$b & i1=0 & $t",
+          "when": "$b & i1=2 & $t",
           "include": ["worksubject", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
@@ -8561,7 +8561,7 @@
           }
         },
         {
-          "when": "$b & i1=2 & $t",
+          "when": "$b & i1=0 & $t",
           "include": ["worksubject", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
@@ -8632,6 +8632,10 @@
           "when": "$b",
           "TODO": "Correct modelled? Should it be treated as a Work when there is no $t?",
           "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganizationSubUnit"]
+        },
+        {
+          "when": "i1=2",
+          "include": ["agentdataOrganization", "subjectbase"]
         },
         {
           "when": null,
