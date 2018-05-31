@@ -7538,7 +7538,7 @@
           "4": "marc:LocationInSourceGiven"
         }
       },
-      "$a": {"link": "hasTitle", "resourceType": "Title", "property": "label"},
+      "$a": {"addLink": "hasTitle", "resourceType": "Title", "property": "label", "NOTE:marc-repeatable": false},
       "$b": {"property": "marc:coverageOfSource"},
       "$c": {"addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE:marc-repeatable": false},
       "$u": {"addProperty": "uri"},
@@ -11929,7 +11929,7 @@
       "addLink": "isPartOf",
       "resourceType": "Aggregate",
       "$c": null,
-      "$p": {"about": "_:hasInstance", "link": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore"},
+      "$p": {"about": "_:hasInstance", "addLink": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore", "NOTE:marc-repeatable": false},
       "$q": {"about": "_:hasInstance", "property": "marc:enumerationAndFirstPage", "NOTE:LC":"ignore"}
     },
     "774": {
