@@ -8,6 +8,13 @@
     "addLink:identifiedBy (+ NOTE:marc-repeatable: false where link)"
   ],
 
+  "defaultPunctuation": {
+    "punctuationChars": null,
+    "skipLeading": "^\\(.*$",
+    "blockNextLeading": ".*\\S{2,}\\.$|.*[:;]$",
+    "balanceBrackets": true
+  },
+
   "pendingResources": {
     "?record": {
       "resourceType": "Record",
@@ -307,10 +314,10 @@
       "$h": {"about": "_:work", "property": "marc:mediaTerm"},
 
       "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
-      "$m": {"about": "_:work", "addProperty": "musicMedium"},
+      "$m": {"about": "_:work", "addProperty": "musicMedium", "leadingPunctuation": ","},
       "$o": {"about": "_:work", "property": "version"},
 
-      "$r": {"about": "_:work", "property": "musicKey"},
+      "$r": {"about": "_:work", "property": "musicKey", "leadingPunctuation": ","},
       "$s": {"about": "_:work", "property": "marc:version"}
     },
 
@@ -330,7 +337,7 @@
 
     "titledetails": {
       "include": ["titledetailsSansPartNumber"],
-      "$n": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partNumber", "punctuationChars": ","}
+      "$n": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partNumber", "punctuationChars": ",", "leadingPunctuation": ","}
     },
 
     "structuredtitle": {
@@ -396,7 +403,7 @@
     },
 
     "agentpartnumber": {
-      "$n": {"about": "_:agent", "addProperty": "marc:numeration", "punctuationChars": ","}
+      "$n": {"about": "_:agent", "addProperty": "marc:numeration", "punctuationChars": ",", "leadingPunctuation": ","}
     },
 
     "TODO:hasPlace:includeWhereThisPendingIsUsed": {
@@ -997,12 +1004,12 @@
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
       "$b": {"about": "_:agent", "property": "marc:numeration"},
-      "$c": {"about": "_:agent", "addProperty": "marc:titlesAndOtherWordsAssociatedWithAName"},
+      "$c": {"about": "_:agent", "addProperty": "marc:titlesAndOtherWordsAssociatedWithAName", "leadingPunctuation": ","},
       "$d": {
         "about": "_:agent",
         "property": "lifeSpan",
         "allowEmpty": true,
-        "punctuationChars": ","
+        "leadingPunctuation": ","
       },
       "$g": {"about": "_:agent", "addProperty": "comment"},
       "$j": {"about": "_:agent", "property": "marc:attributionQualifier"},
@@ -1022,11 +1029,10 @@
     },
 
     "agentdataOrganizationJurisdiction": {
+      "include": "agentdataCollectiveDetails",
       "pendingResources": {
         "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
       },
-      "$c": {"about": "_:place", "property": "label"},
-      "$d": {"about": "_:agent", "addProperty": "date"},
       "$g": {"about": "_:agent", "addProperty": "comment"},
       "$u": {"about": "_:agent", "property": "marc:affiliation"},
 
@@ -1035,13 +1041,17 @@
 
     "agentdataMeeting": {
       "NOTE": "Used by: Bib 111, 611, 711, 811, Auth 111, 411, 511",
+      "include": "agentdataCollectiveDetails",
       "$a": {"about": "_:agent", "property": "name", "required": true},
-      "$c": {"about": "_:place", "property": "label"},
-      "$d": {"about": "_:agent", "addProperty": "date"},
       "$e": {"about":"_:agent", "addProperty": "marc:subordinateUnit"},
       "$g": {"about": "_:agent", "addProperty": "comment"},
       "$q": {"about":"_:agent", "property": "additionalName"},
       "$u": {"about": "_:agent", "property": "marc:affiliation"}
+    },
+
+    "agentdataCollectiveDetails": {
+      "$c": {"about": "_:place", "property": "label"},
+      "$d": {"about": "_:agent", "addProperty": "date", "TODO?:leadingPunctuation": ","}
     },
 
     "contributiondata": {
@@ -1323,8 +1333,8 @@
           "embedded": true
         }
       },
-      "$v": {"property": "seriesEnumeration"},
-      "$x": {"about": "_:seriesinstance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"}
+      "$v": {"property": "seriesEnumeration", "leadingPunctuation": " ;"},
+      "$x": {"about": "_:seriesinstance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;", "leadingPunctuation": ","}
     },
 
     "inseries_with_w": {
@@ -4822,11 +4832,6 @@
               {"a": "Jansson, Tove,"},
               {"d": "1914-2001"}
           ]}},
-          "normalized": {
-            "100": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Jansson, Tove"},
-              {"d": "1914-2001"}
-          ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -4887,8 +4892,8 @@
                 {
                   "@type": "PrimaryContribution",
                   "agent": {"@type": "Person",
-                    "marc:numeration": "IV Haakonsson,",
-                    "marc:titlesAndOtherWordsAssociatedWithAName":  ["King of Norway,"],
+                    "marc:numeration": "IV Haakonsson",
+                    "marc:titlesAndOtherWordsAssociatedWithAName":  ["King of Norway"],
                     "name":  "Haakon",
                     "lifeSpan": "1204-1263"
                   },
@@ -4930,6 +4935,12 @@
               {"c": "arkeolog"},
               {"d": "1961-"}
             ]}},
+          "normalized": {
+            "100": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Andersson, Lars,"},
+              {"c": "arkeolog,"},
+              {"d": "1961-"}
+            ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -4949,8 +4960,8 @@
         {
           "source": {
             "100": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "Andersson"},
-              {"c": "arkeolog"},
+              {"a": "Andersson,"},
+              {"c": "arkeolog,"},
               {"d": "1961-"}
             ]}},
           "result": {"mainEntity": {
@@ -5007,7 +5018,7 @@
 
       "$0": {"about": "_:agent", "addProperty": "marc:uri"},
       "$k": {"addProperty": "qualifier", "NOTE": "not allowed but used in the wild"},
-      "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
+      "$n": {"about": "_:agent", "addProperty": "marc:numeration", "punctuationChars": ","},
       "$6": {"property": "marc:fieldref"},
 
       "TODO": [
@@ -5189,7 +5200,7 @@
                       "@type" : "Place",
                       "label": "University of California, Davis"
                     }],
-                    "marc:partNumber": ["(2nd :"]
+                    "marc:numeration": ["(2nd :"]
                   },
                   "role" : [ {
                       "@type": "Role",
@@ -5219,7 +5230,7 @@
       },
       "i1": {"marcDefault": "2"},
       "$0": {"about": "_:agent", "addProperty": "marc:uri"},
-      "$n": {"about": "_:agent", "addProperty": "marc:partNumber", "punctuationChars": ","},
+      "$n": {"about": "_:agent", "addProperty": "marc:numeration", "punctuationChars": ","},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "FIXME": "Change subfield order in specs. Bug in orderedAndGroupedSubfields",
@@ -5285,7 +5296,7 @@
                     "@type": "Meeting",
                     "date": ["1959"],
                     "name": "World Peace Conference",
-                    "marc:partNumber": ["1st"],
+                    "marc:numeration": ["1st"],
                     "place" : [{
                       "@type" : "Place",
                       "label" : "Paris, France"
@@ -6369,6 +6380,43 @@
               ]
             }
           }
+        },
+        {
+          "name": "balance brackets spanning multiple subfields",
+          "source": [
+              {"260": { "ind1": " ", "ind2": " ",
+                  "subfields": [
+                    {"a": "[Florence :"},
+                      {"b": "Gian Stephano di Carlo da Pavia,"},
+                      {"c": "about 1505?]"}
+                  ]
+              }}
+          ],
+          "normalized": [
+            {"264": { "ind1": " ", "ind2": "1",
+                "subfields": [
+                  {"a": "[Florence] :"},
+                  {"b": "Gian Stephano di Carlo da Pavia,"},
+                  {"c": "[about 1505?]"}
+                ]
+            }}
+          ],
+          "result": {"mainEntity": {
+            "publication":[
+              {
+                "@type": "Publication",
+                "date": "[about 1505?]",
+                "place": {
+                  "@type": "Place",
+                  "label": "[Florence]"
+                },
+                "agent": {
+                  "@type": "Agent",
+                  "label": "Gian Stephano di Carlo da Pavia"
+                }
+              }
+            ]
+          }}
         }
       ]
     },
@@ -7041,8 +7089,8 @@
             {"v": "N.F. 13:7"}
           ]}},
           "normalized": {"830": {"ind1": "0", "ind2": " ", "subfields": [
-            {"a": "Kungl. Svenska vetenskapsakademiens handlingar"},
-            {"x": "0023-5377"},
+            {"a": "Kungl. Svenska vetenskapsakademiens handlingar,"},
+            {"x": "0023-5377 ;"},
             {"v": "N.F. 13:7"}
           ]}},
           "result": {"mainEntity": {
@@ -7081,7 +7129,7 @@
           "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Corpus christianorum"},
             {"p": "Series Latina,"},
-            {"x": "0589-798X"},
+            {"x": "0589-798X ;"},
             {"v": "156 B"},
             {"9": "156"},
             {"9": "B"}
@@ -7099,7 +7147,7 @@
                     "hasTitle": [{
                       "@type": "Title",
                       "mainTitle": "Corpus christianorum",
-                      "partName": ["Series Latina,"],
+                      "partName": ["Series Latina"],
                       "marc:nonfilingChars" : " "
                     }]
                   },
@@ -7124,7 +7172,7 @@
           "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Lunds universitets årsskrift"},
             {"p": "Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen,"},
-            {"x": "0368-8151"},
+            {"x": "0368-8151 ;"},
             {"v": "9:15"},
             {"9": "9"},
             {"9": "15"}
@@ -7142,7 +7190,7 @@
                     "hasTitle": [{
                       "@type": "Title",
                       "mainTitle": "Lunds universitets årsskrift",
-                      "partName": ["Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen,"],
+                      "partName": ["Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen"],
                       "marc:nonfilingChars" : " "
                     }]
                   },
@@ -7161,7 +7209,7 @@
             {"x": "99-0111480-2"}
           ]}},
           "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
-            {"a": "Sveriges officiella statistik"},
+            {"a": "Sveriges officiella statistik,"},
             {"x": "99-0111480-2"}
           ]}},
           "result": {"mainEntity": {
@@ -7196,7 +7244,7 @@
           "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
             {"a": "Stockholms stads statistik"},
             {"p": "3, Hälso- och sjukvård,"},
-            {"x": "99-2058355-3"},
+            {"x": "99-2058355-3 ;"},
             {"v": "2"}
           ]}},
           "result": {"mainEntity": {
@@ -7211,7 +7259,7 @@
                     "hasTitle": [{
                       "@type": "Title",
                       "mainTitle": "Stockholms stads statistik",
-                      "partName" : ["3, Hälso- och sjukvård,"]
+                      "partName" : ["3, Hälso- och sjukvård"]
                     }]
                   },
                   "identifiedBy": [ {
@@ -7230,8 +7278,8 @@
             {"v": "nr 7 (2005) årg. 144"}
           ]}},
           "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
-            {"a": "Kungl. Skogs- och Lantbruksakademiens tidskrift"},
-            {"x": "0023-5350"},
+            {"a": "Kungl. Skogs- och Lantbruksakademiens tidskrift,"},
+            {"x": "0023-5350 ;"},
             {"v": "nr 7 (2005) årg. 144"}
           ]}},
           "result": {"mainEntity": {
@@ -7336,7 +7384,7 @@
       "$a": {"property": "label"},
       "$b": {"property": "degree"},
       "$c": {"link": "grantingInstitution", "resourceType": "Agent", "property": "label"},
-      "$d": {"property": "date"},
+      "$d": {"property": "date", "leadingPunctuation": ","},
       "$g": {"addProperty": "comment"},
       "$o": {"addLink": "identifiedBy", "resourceType": "DissertationIdentifier", "property": "value"},
       "$6": {"property": "marc:fieldref"},
@@ -7356,7 +7404,7 @@
                     "date": "2011",
                     "grantingInstitution": {
                       "@type": "Agent",
-                      "label": "Universitetet i Tromsø,"
+                      "label": "Universitetet i Tromsø"
                     },
                     "label": "Diss."
                   }
@@ -8209,7 +8257,7 @@
       "_spec": [
 
         {
-          "source": {"600": {"ind1": "1", "ind2": "4", "subfields": [{"a": "Lindgren, Astrid"}, {"d": "1907-2002"}]}},
+          "source": {"600": {"ind1": "1", "ind2": "4", "subfields": [{"a": "Lindgren, Astrid,"}, {"d": "1907-2002"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8233,9 +8281,9 @@
               {"c": "(Spirit)"}]}},
           "normalized": {
             "600": {"ind1": "0", "ind2": "0", "subfields": [
-              {"a": "Black Foot"},
-              {"c": "Chief,"},
-              {"c": "(Spirit)"},
+              {"a": "Black Foot,"},
+              {"c": "Chief"},
+              {"c": "(Spirit),"},
               {"d": "-1877"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -8244,7 +8292,7 @@
                 {
                   "@type": "Person",
                   "name": "Black Foot",
-                  "marc:titlesAndOtherWordsAssociatedWithAName": ["Chief,", "(Spirit)"],
+                  "marc:titlesAndOtherWordsAssociatedWithAName": ["Chief", "(Spirit)"],
                   "lifeSpan": "-1877",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
@@ -8259,7 +8307,7 @@
 
         {
           "source": {"600": {"ind1": "1", "ind2": "7", "subfields": [
-            {"a": "Lindgren, Astrid"},
+            {"a": "Lindgren, Astrid,"},
             {"d": "1907-2002"},
             {"2": "kao"}]}},
           "result": {"mainEntity": {
@@ -8282,7 +8330,7 @@
           }}
         },
         {
-          "source": {"600": {"ind1": "1", "ind2": "2", "subfields": [{"a": "Lindgren, Astrid"}, {"d": "1907-2002"}]}},
+          "source": {"600": {"ind1": "1", "ind2": "2", "subfields": [{"a": "Lindgren, Astrid,"}, {"d": "1907-2002"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8321,7 +8369,7 @@
                     "@type": "Contribution",
                       "agent": {
                         "@type": "Person",
-                        "name": "Ovid,",
+                        "name": "Ovid",
                         "lifeSpan": "43 B.C.-17 A.D. or 18 A.D."
                     }
                   } ],
@@ -8416,13 +8464,6 @@
               {"x": "Criticism and interpretation"},
               {"x": "History"},
               {"y": "21st century."}]}},
-          "normalized": {
-            "600": {"ind1": "1", "ind2": "0", "subfields": [
-              {"a": "Mangunwijaya, Y. B."},
-              {"d": "1929-1999"},
-              {"x": "Criticism and interpretation"},
-              {"x": "History"},
-              {"y": "21st century."}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8456,17 +8497,8 @@
               {"a": "Scarlatti, Domenico,"},
               {"d": "1685-1757"},
               {"t": "Sonatas,"},
-              {"m": "harpsichord"},
+              {"m": "harpsichord,"},
               {"n": "K. 492,"},
-              {"r": "D major;"},
-              {"y": "21st century."}]}},
-          "normalized": {
-            "600": {"ind1": "1", "ind2": "0", "subfields": [
-              {"a": "Scarlatti, Domenico"},
-              {"d": "1685-1757"},
-              {"t": "Sonatas,"},
-              {"m": "harpsichord"},
-              {"n": "K. 492"},
               {"r": "D major;"},
               {"y": "21st century."}]}},
           "result": {"mainEntity": {
@@ -8495,7 +8527,7 @@
                       "hasTitle": [
                         {
                           "@type": "Title",
-                          "mainTitle": "Sonatas,",
+                          "mainTitle": "Sonatas",
                           "partNumber": ["K. 492"]
                         }
                       ],
@@ -8533,7 +8565,7 @@
           "include": ["worksubject", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
-          "when": "i1=0 & $t",
+          "when": "i1=2 & $t",
           "include": ["worksubject", "subjectOrganization", "agentdataOrganization"]
         },
         {
@@ -8541,7 +8573,7 @@
           "include": ["worksubject", "subjectJurisdiction", "agentdataOrganization"]
         },
         {
-          "when": "i1=2 & $t",
+          "when": "i1=0 & $t",
           "include": ["worksubject", "subjectOrganization", "agentdataOrganization"]
         },
         {
@@ -8621,7 +8653,7 @@
       "$6": {"about": "_:agent", "property": "marc:fieldref"},
       "$8": {"about": "_:agent", "property": "marc:groupid"},
       "$n": {"about": "_:agent", "addProperty": "marc:numeration", "punctuationChars": ","},
-      "subfieldOrder": "6 a b n d c g u t m r p k l s f o x z y v 2 e 4 0",
+      "subfieldOrder": "6 a b d c g u t n m r p k l s f o x z y v 2 e 4 0",
       "_spec": [
         {
           "source": {
@@ -8660,20 +8692,52 @@
         },
         {
           "source": {
+            "610": {
+              "subfields": [
+                {"a": "United States."},
+                {"t": "Constitution."},
+                {"n": "1st Amendment."}
+              ],
+              "ind1": "1",
+              "ind2": "0"
+            }
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type" : "Work",
+                  "contribution" : [ {
+                    "@type" : "Contribution",
+                    "agent" : {
+                      "@type" : "Jurisdiction",
+                      "name" : "United States."
+                    }
+                  } ],
+                  "hasTitle": [ {
+                    "@type": "Title",
+                    "mainTitle": "Constitution.",
+                    "partNumber": ["1st Amendment."]
+                  } ],
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/lcsh",
+                    "@type": "ConceptScheme",
+                    "code": "lcsh"
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
             "610": {"ind1": "1", "ind2": "7", "subfields": [
               {"a": "Sverige"},
               {"b": "Riksdagen"},
               {"d": "(1792 :"},
               {"c": "Gävle)"},
               {"n": "15"},
-              {"2": "sao"}]}},
-          "normalized": {
-            "610": {"ind1": "1", "ind2": "7", "subfields": [
-              {"a": "Sverige"},
-              {"b": "Riksdagen"},
-              {"n": "15"},
-              {"d": "(1792 :"},
-              {"c": "Gävle)"},
               {"2": "sao"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -8706,14 +8770,8 @@
           "source": {
             "610": {"ind1": "1", "ind2": "4", "subfields": [
               {"a": "United States"},
-              {"t": "Act to Extend the Expiration Date of Section 252 of the Energy Policy and Conservation Act (1982 July 19)"},
+              {"t": "Act to Extend the Expiration Date of Section 252 of the Energy Policy and Conservation Act (1982 July 19),"},
               {"n": "4"},
-              {"v": "catalogs"}]}},
-          "normalized": {
-            "610": {"ind1": "1", "ind2": "4", "subfields": [
-              {"a": "United States"},
-              {"n": "4"},
-              {"t": "Act to Extend the Expiration Date of Section 252 of the Energy Policy and Conservation Act (1982 July 19)"},
               {"v": "catalogs"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -8754,10 +8812,10 @@
               {"n": "Fond 1209"},
               {"p": "Pomestnyĭ prikaz"}]}},
           "normalized": {
-            "610": {"ind1": "2", "ind2": "7", "subfields":[
+            "610": {"ind1": "2", "ind2": "0", "subfields":[
               {"a": "Rossiĭskiĭ gosudarstvennyĭ arkhiv drevnikh aktov."},
+              {"t": "Egentitel,"},
               {"n": "Fond 1209"},
-              {"t": "Egentitel"},
               {"p": "Pomestnyĭ prikaz"},
               {"k": "Manuscript."}]}},
           "result": {"mainEntity": {
@@ -8824,7 +8882,7 @@
           "include": ["agentdataMeeting", "subjectbase"],
           "resourceType": "Meeting",
           "aboutAlias": "_:agent",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
+          "$n": {"addProperty": "marc:numeration", "punctuationChars": ","},
           "pendingResources": {
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           }
@@ -9986,7 +10044,7 @@
       "_spec": [
         {
           "source": {"700": {"ind1": "1", "ind2": " ", "subfields": [
-            {"a": "Lindman, Mervi"},
+            {"a": "Lindman, Mervi,"},
             {"d": "1971-"},
             {"4": "ill"},
             {"4": "9pu"}
@@ -10089,7 +10147,7 @@
         {
           "source": {
             "700": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Munro, Alice"},
+              {"a": "Munro, Alice,"},
               {"d": "1931-"},
               {"t": "Progress of love."},
               {"k": "Urval"},
@@ -10155,7 +10213,7 @@
                         "@type": "PrimaryContribution",
                         "agent": {
                           "@type": "Person",
-                          "name":  "Cyprianus av Kartago,",
+                          "name":  "Cyprianus av Kartago",
                           "lifeSpan": "1914-1987"
                         },
                         "role": [{
@@ -10174,7 +10232,7 @@
         {
           "source": {
             "700": {"ind1": "1", "ind2": "2", "subfields": [
-              {"a": "Schubert, Franz"},
+              {"a": "Schubert, Franz,"},
               {"d": "1797-1828"},
               {"t": "Neue Ausgabe sämtlicher Werke"},
               {"x": "99-0014962-9"},
@@ -10333,7 +10391,7 @@
         {
           "source": {
             "700": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Shakespeare, William"},
+              {"a": "Shakespeare, William,"},
               {"d": "1564-1616"},
               {"t": "The new Cambridge Shakespeare"},
               {"x": "99-0463846-2"}
@@ -10383,17 +10441,6 @@
               {"0": "111111111111"}
             ]}}
           ],
-          "normalized": [
-            {"700": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Hindemith, Paul"},
-              {"d": "1895-1963"},
-              {"t": "Kvartett,"},
-              {"m": "stråkar,"},
-              {"n": "nr 4, op. 22"},
-              {"4": "cmp"},
-              {"0": "111111111111"}
-            ]}}
-          ],
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -10417,11 +10464,11 @@
                   } ],
                   "hasTitle" : [ {
                     "@type" : "Title",
-                    "mainTitle" : "Kvartett,",
+                    "mainTitle" : "Kvartett",
                     "partNumber" : [ "nr 4, op. 22" ]
                   } ],
                   "marc:uri" : [ "111111111111" ],
-                  "musicMedium" : [ "stråkar," ]
+                  "musicMedium" : [ "stråkar" ]
                 }
               } ]
             }
@@ -10598,7 +10645,7 @@
               {"a": "Sverige."},
               {"b": "Riksdagen."},
               {"b": "Borgarståndet."},
-              {"t": "Protokoll"},
+              {"t": "Protokoll,"},
               {"n": "9"}
             ]}},
           "result": {"mainEntity": {
@@ -10642,7 +10689,7 @@
           "normalized": {
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Nationell gammaldags organisation."},
-              {"t": "Handlingar 1920-1950"},
+              {"t": "Handlingar 1920-1950,"},
               {"n": "10"},
               {"4": "oth"}
             ]}},
@@ -10681,7 +10728,7 @@
           "source": {
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "National Fire Protection Association."},
-              {"t": "National electrical code (1993)"},
+              {"t": "National electrical code (1993),"},
               {"n": "42"},
               {"4": "aut"}
             ]}},
@@ -10779,18 +10826,10 @@
         },
         {
           "source": {
-            "710": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "Umeå universitet."},
-              {"b": "Institutionen för ABM."},
-              {"b": "Kulturgeografi"},
-              {"4": "fnd"},
-              {"n": "101"}
-            ]}},
-          "normalized": {
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Umeå universitet."},
               {"b": "Institutionen för ABM."},
-              {"b": "Kulturgeografi"},
+              {"b": "Kulturgeografi,"},
               {"n": "101"},
               {"4": "fnd"}
             ]}},
@@ -10928,7 +10967,7 @@
           "source": {
             "710": {"ind1": "1", "ind2": "2", "subfields": [
               {"a": "Sverige."},
-              {"t": "Lagen om vissa kommunala befogenheter"},
+              {"t": "Lagen om vissa kommunala befogenheter,"},
               {"n": "9"},
               {"x": "2222-2222"},
               {"4": "oth"}
@@ -10970,7 +11009,7 @@
           "source": {
             "710": {"ind1": "2", "ind2": "2", "subfields": [
               {"a": "Arbetsmarknadsverket."},
-              {"t": "Arbetsmiljölagen"},
+              {"t": "Arbetsmiljölagen,"},
               {"n": "9"},
               {"4": "oth"}
             ]}},
@@ -11014,7 +11053,7 @@
           "normalized": {
             "710": {"ind1": "2", "ind2": "2", "subfields": [
               {"a": "Namngalen organisation."},
-              {"t": "Söderbykyrka"},
+              {"t": "Söderbykyrka,"},
               {"n": "9"},
               {"4": "oth"}
             ]}},
@@ -11348,7 +11387,6 @@
           "aboutAlias": "_:work",
           "groupId": "#workpart-$seq",
           "$d": {"property": "legalDate"},
-          "$n": {"about": "_:title", "addProperty": "partNumber", "punctuationChars": ","},
           "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"},
           "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"}
         }
@@ -11430,13 +11468,6 @@
             {"n": "GraunWV D:XVIII:11,"},
             {"r": "B♭ minor"}
           ]}},
-          "normalized": {"730": {"ind1": "3", "ind2": "2", "subfields": [
-            {"i": "Container of (work):"},
-            {"a": "Gigue,"},
-            {"m": "harpsichord,"},
-            {"n": "GraunWV D:XVIII:11"},
-            {"r": "B♭ minor"}
-          ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -11445,11 +11476,11 @@
                   "@type": "Work",
                   "hasTitle": [ {
                     "@type": "Title",
-                    "mainTitle": "Gigue,",
+                    "mainTitle": "Gigue",
                     "partNumber": ["GraunWV D:XVIII:11"],
                     "marc:nonfilingChars" : "3"
                   } ],
-                  "musicMedium": ["harpsichord,"],
+                  "musicMedium": ["harpsichord"],
                   "musicKey": "B♭ minor",
                   "marc:relatedAs": [{"@type": "Relation", "label": "Container of (work):"}]
                 }
@@ -12150,7 +12181,7 @@
       "_spec": [
         {
           "source": {"800": {"ind1": "1", "ind2": " ", "subfields": [
-            {"a": "Sandemo, Margit"},
+            {"a": "Sandemo, Margit,"},
             {"d": "1924-"},
             {"t": "Sandemo-serien ;"},
             {"v": "v 4"}
@@ -12175,7 +12206,7 @@
                     }],
                     "hasTitle": [{
                       "@type": "Title",
-                      "mainTitle": "Sandemo-serien ;"
+                      "mainTitle": "Sandemo-serien"
                     }]
                   }
                 }
@@ -12187,7 +12218,7 @@
           "source": {"800": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "Raymond Feist"},
             {"t": "Demonwar saga."},
-            {"l": "Svenska"},
+            {"l": "Svenska ;"},
             {"v": "v 2"}
           ]}},
           "result": {"mainEntity": {
@@ -12221,11 +12252,19 @@
         },
         {
           "source": {"800": {"ind1": "1", "ind2": " ", "subfields": [
-            {"a": "Sousa, John Philip"},
+            {"a": "Sousa, John Philip,"},
             {"d": "1854-1932"},
-            {"t": "Marches"},
+            {"t": "Marches,"},
             {"m": "band."},
             {"k": "Selections (Sousa American bicentennial collection);"} ,
+            {"v": "v.1."}
+          ]}},
+          "normalized": {"800": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Sousa, John Philip,"},
+            {"d": "1854-1932"},
+            {"t": "Marches,"},
+            {"m": "band."},
+            {"k": "Selections (Sousa American bicentennial collection) ;"} ,
             {"v": "v.1."}
           ]}},
           "result": {"mainEntity": {
@@ -12249,7 +12288,7 @@
                     "hasTitle": [{
                       "@type": "Title",
                       "mainTitle": "Marches",
-                      "marc:formSubheading": ["Selections (Sousa American bicentennial collection);"]
+                      "marc:formSubheading": ["Selections (Sousa American bicentennial collection)"]
                     }],
                     "musicMedium": ["band."]
                   }
@@ -12336,6 +12375,11 @@
             {"t": "GIGA working papers"},
             {"v": "v 40"}
           ]}},
+          "normalized": {"810": {"ind1": "2", "ind2": " ", "subfields": [
+            {"a": "German Institute of Global and Area Studies <Hamburg>"},
+            {"t": "GIGA working papers ;"},
+            {"v": "v 40"}
+          ]}},
           "result": {"mainEntity": {
             "seriesMembership": [
               {
@@ -12349,7 +12393,7 @@
                       "@type": "PrimaryContribution",
                       "agent": {
                         "@type": "Organization",
-                        "name": "German Institute of Global and Area Studies <Hamburg>,"
+                        "name": "German Institute of Global and Area Studies <Hamburg>"
                       }
                     }],
                     "hasTitle": [{
@@ -12391,7 +12435,7 @@
                     }],
                     "hasTitle": [{
                       "@type": "Title",
-                      "mainTitle": "Bibliografías criticas ;"
+                      "mainTitle": "Bibliografías criticas"
                     }]
                   }
                 }
@@ -12402,7 +12446,7 @@
           "source": {"810": {"ind1": "2", "ind2": " ", "subfields": [
             {"a": "Harvard University."},
             {"b": "Bureau of Business Research."},
-            {"t": "Bulletin"},
+            {"t": "Bulletin ;"},
             {"v": "no. 20."}
           ]}},
           "result": {"mainEntity": {
@@ -12444,7 +12488,7 @@
           "normalized": {"810": {"ind1": "2", "ind2": " ", "subfields": [
             {"a": "Stadtbibliothek."},
             {"c": "Königsberg"},
-            {"t": "Mitteilungen aus der Stadtbibliothek Königsberg"},
+            {"t": "Mitteilungen aus der Stadtbibliothek Königsberg ;"},
             {"v": "4/5."}
           ]}},
           "result": {"mainEntity": {
@@ -12582,7 +12626,7 @@
         {
           "source": {"830": {"ind1": " ", "ind2": "0", "subfields": [
             {"a": "Europarecht (Munich, germany)"},
-            {"p": "Beiheft"},
+            {"p": "Beiheft ;"},
             {"v": "2002/1"}
           ]}},
           "result": {"mainEntity": {
@@ -12630,7 +12674,7 @@
                     "hasTitle": [{
                       "@type": "Title",
                       "mainTitle": "Archiv für Papyrusforschung und verwandte Gebiete",
-                      "partName": ["Ergänzungsband.", "Kleine Reihe ;"]
+                      "partName": ["Ergänzungsband.", "Kleine Reihe"]
                     }]
                   }
                 }
@@ -12645,8 +12689,8 @@
             {"x": "0169-9962"}
           ]}},
           "normalized": {"830": {"ind1": " ", "ind2": "4", "subfields": [
-            {"a": "Studies on the texts of the desert of Judah"},
-            {"x": "0169-9962"},
+            {"a": "Studies on the texts of the desert of Judah,"},
+            {"x": "0169-9962 ;"},
             {"v": "101"}
           ]}},
           "result": {"mainEntity": {
@@ -12681,9 +12725,9 @@
             {"v": "5."}
           ]}},
           "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "Migrationsstudier"},
-            {"n": "B"},
-            {"x": "0358-0083"},
+            {"a": "Migrationsstudier,"},
+            {"n": "B,"},
+            {"x": "0358-0083 ;"},
             {"v": "5."}
           ]}},
           "result": {"mainEntity": {
@@ -13532,7 +13576,7 @@
         {
           "source": {
             "100": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "Lucifer,"},
+              {"a": "Lucifer"},
               {"t": "Skuggpojken"},
               {"l": "Norska"}
             ]}},
@@ -13547,7 +13591,7 @@
                 {
                   "@type": "PrimaryContribution",
                   "agent": {
-                    "@type": "Person", "name":  "Lucifer,"
+                    "@type": "Person", "name":  "Lucifer"
                   }
                 }
               ],
@@ -13567,7 +13611,7 @@
           "result": {
             "mainEntity": {
               "@type": "Person",
-              "name":  "Sokrates,",
+              "name":  "Sokrates",
               "lifeSpan": "470 eller 469 f.Kr-399 f.Kr."
             }
           }
@@ -13575,7 +13619,7 @@
         {
           "source": {
             "100": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "p'Bitek, Okot"},
+              {"a": "p'Bitek, Okot,"},
               {"d": "1931-1982"}
             ]}},
           "result": {
@@ -13592,14 +13636,14 @@
             "100": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Gustav"},
               {"b": "I,"},
-              {"c": "kung av Sverige"},
+              {"c": "kung av Sverige,"},
               {"d": "1496-1560"}
             ]}},
           "result": {
             "mainEntity": {
               "@type": "Person",
               "name":  "Gustav",
-              "marc:numeration": "I,",
+              "marc:numeration": "I",
               "marc:titlesAndOtherWordsAssociatedWithAName": ["kung av Sverige"],
               "lifeSpan": "1496-1560"
             }
@@ -13615,16 +13659,16 @@
             ]}},
           "normalized": {
             "100": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "Diana"},
-              {"c": "prinsessa av Wales,"},
-              {"c": "(ande)"},
+              {"a": "Diana,"},
+              {"c": "prinsessa av Wales"},
+              {"c": "(ande),"},
               {"d": "1961-1997"}
             ]}},
           "result": {
             "mainEntity": {
               "@type": "Person",
               "name":  "Diana",
-              "marc:titlesAndOtherWordsAssociatedWithAName": ["prinsessa av Wales,", "(ande)"],
+              "marc:titlesAndOtherWordsAssociatedWithAName": ["prinsessa av Wales", "(ande)"],
               "lifeSpan": "1961-1997"
             }
           }
@@ -13633,7 +13677,7 @@
           "source": {
             "100": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "Eliot, T.S."},
-              {"q": "(Thomas Stearns)"},
+              {"q": "(Thomas Stearns),"},
               {"d": "1888-1965"}
             ]}},
           "result": {
@@ -13656,7 +13700,7 @@
           "normalized": {
             "100": {"ind1": "3", "ind2": " ", "subfields": [
               {"a": "Nilssom (släkt:"},
-              {"c": "Krylbo, Sverige)"},
+              {"c": "Krylbo, Sverige),"},
               {"d": "1700-talet"}
             ]}},
           "result": {
@@ -13675,48 +13719,42 @@
         {
           "when": "$b & $t & i1=2",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber"],
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetails"]
         },
         {
           "when": "$b & $t & i1=1",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionJurisdiction", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber"],
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "include": ["pendingContributionJurisdiction", "agentdataOrganizationSubUnit", "titledetails"]
         },
         {
           "when": "$b & $t & i1=0",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetailsSansPartNumber"],
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetails"]
         },
         {
           "when": "$t & i1=2",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetailsSansPartNumber"],
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$t & i1=1",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionJurisdiction", "agentdataOrganization", "titledetailsSansPartNumber"],
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "include": ["pendingContributionJurisdiction", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$t & i1=0",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetailsSansPartNumber"],
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetails"]
         },
 
         {
           "when": "$t",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetailsSansPartNumber"]
+          "include": ["pendingContributionOrganization", "agentdataOrganization", "titledetails"]
         },
         {
           "when": "$b & i1=2",
-          "include": ["agentdataOrganizationSubUnit"],
+          "include": ["agentdataOrganizationSubUnit", "agentpartnumber"],
           "aboutEntity": "?thing",
           "aboutType": "Organization",
           "pendingResources": {
@@ -13725,12 +13763,11 @@
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
           "aboutAlias": "_:agent",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
           "i1": {"marcDefault": "2"}
         },
         {
           "when": "$b & i1=1",
-          "include": ["agentdataOrganizationSubUnit"],
+          "include": ["agentdataOrganizationSubUnit", "agentpartnumber"],
           "aboutEntity": "?thing",
           "aboutType": "Jurisdiction",
           "pendingResources": {
@@ -13738,12 +13775,11 @@
             "_:isPartOf": {"link": "isPartOf", "resourceType": "Jurisdiction"},
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
-          "aboutAlias": "_:agent",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "aboutAlias": "_:agent"
         },
         {
           "when": "$b & i1=0",
-          "include": ["agentdataOrganizationSubUnit"],
+          "include": ["agentdataOrganizationSubUnit", "agentpartnumber"],
           "aboutEntity": "?thing",
           "aboutType": "Organization",
           "pendingResources": {
@@ -13751,11 +13787,11 @@
             "_:isPartOf": {"link": "isPartOf", "resourceType": "Organization"},
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
-          "aboutAlias": "_:agent",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "aboutAlias": "_:agent"
         },
         {
           "when": "i1=0 | i1=2",
+          "include": ["agentdataOrganization", "agentpartnumber"],
           "aboutEntity": "?thing",
           "aboutType": "Organization",
           "pendingResources": {
@@ -13764,25 +13800,23 @@
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
           "aboutAlias": "_:agent",
-          "include": "agentdataOrganization",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","},
           "i1": {"marcDefault": "2"}
         },
         {
           "when": "i1=1",
           "aboutEntity": "?thing",
+          "include": ["agentdataOrganization", "agentpartnumber"],
           "aboutType": "Jurisdiction",
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Jurisdiction"},
             "_:isPartOf": {"link": "isPartOf", "resourceType": "Jurisdiction"},
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
-          "aboutAlias": "_:agent",
-          "include": "agentdataOrganization",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "aboutAlias": "_:agent"
         },
         {
           "when": "$b",
+          "include": ["agentdataOrganization", "agentpartnumber"],
           "aboutEntity": "?thing",
           "aboutType": "Organization",
           "pendingResources": {
@@ -13790,12 +13824,11 @@
             "_:isPartOf": {"link": "isPartOf", "resourceType": "Organization"},
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
-          "aboutAlias": "_:agent",
-          "include": "agentdataOrganization",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "aboutAlias": "_:agent"
         },
         {
           "when": null,
+          "include": ["agentdataOrganization", "agentpartnumber"],
           "aboutEntity": "?thing",
           "aboutType": "Organization",
           "pendingResources": {
@@ -13803,9 +13836,7 @@
             "_:isPartOf": {"link": "isPartOf", "resourceType": "Organization"},
             "_:place": {"addLink": "place", "resourceType": "Place"}
           },
-          "aboutAlias": "_:agent",
-          "include": "agentdataOrganization",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "aboutAlias": "_:agent"
         }
       ],
       "subfieldOrder": "a b n d c g e 4 t p l k f o v x y z",
@@ -13862,7 +13893,7 @@
                 "@type": "Jurisdiction",
                 "name": "Förenta staterna"
               },
-              "marc:partNumber": ["(64: )"],
+              "marc:numeration": ["(64: )"],
               "date": ["1915-1916)"],
               "place": [{
                 "@type": "Place",
@@ -13944,7 +13975,7 @@
           "pendingResources": {"_:agent": {"link": "agent", "resourceType": "Meeting"}},
           "aboutAlias": "_:agent",
           "include": "agentdataMeeting",
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "$n": {"addProperty": "marc:numeration", "punctuationChars": ","}
         }
       ],
       "pendingResources": {
@@ -14410,11 +14441,6 @@
               {"a": "Singh, Bhagat,"},
               {"d": "1921-"}
             ]}},
-          "normalized": {
-            "400": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Singh, Bhagat"},
-              {"d": "1921-"}
-            ]}},
           "result": {
             "mainEntity": {
               "@type": "Identity",
@@ -14465,8 +14491,8 @@
               "hasVariant": [ {
                 "@type": "Person",
                 "name":  "Alexander",
-                "marc:numeration": "III,",
-                "marc:titlesAndOtherWordsAssociatedWithAName": ["kung i Makedonien,"],
+                "marc:numeration": "III",
+                "marc:titlesAndOtherWordsAssociatedWithAName": ["kung i Makedonien"],
                 "lifeSpan": "356 f.Kr.-323 f.Kr"
               } ]
             }
@@ -14490,9 +14516,9 @@
         {
           "source": {
             "400": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Defoe, Daniel"},
+              {"a": "Defoe, Daniel,"},
               {"d": "1551?-1731"},
-              {"t": "The life and most suprizing adventures of Robinson Crusoe, of York,"}
+              {"t": "The life and most suprizing adventures of Robinson Crusoe, of York"}
             ]}},
           "result": {
             "mainEntity": {
@@ -14502,7 +14528,7 @@
                   "@type": "Work",
                   "hasTitle": [{
                     "@type": "Title",
-                    "mainTitle": "The life and most suprizing adventures of Robinson Crusoe, of York,"
+                    "mainTitle": "The life and most suprizing adventures of Robinson Crusoe, of York"
                   }],
                   "contribution": [{
                     "@type": "PrimaryContribution",
@@ -14516,13 +14542,8 @@
         },
         {
           "source": {
-            "400": {"ind1": " ", "ind2": " ", "subfields": [
-              {"a": "Singh, Bhagat,"},
-              {"d": "1921-"}
-            ]}},
-          "normalized": {
             "400": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Singh, Bhagat"},
+              {"a": "Singh, Bhagat,"},
               {"d": "1921-"}
             ]}},
           "result": {
@@ -14960,8 +14981,7 @@
         },
         {
           "when": null,
-          "include": ["variantMeeting", "agentdataMeeting"],
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "include": ["variantMeeting", "agentdataMeeting", "agentpartnumber"]
         }
       ],
       "$h": {"ignored": true},
@@ -15174,7 +15194,7 @@
             "500": {"ind1": "1", "ind2": " ", "subfields": [
               {"w": "i"},
               {"i": "Folkbiblioteksform:"},
-              {"a": "Oats, Joyce Carol"},
+              {"a": "Oats, Joyce Carol,"},
               {"d": "1938-"},
               {"0": "00000"}
             ]}},
@@ -15223,14 +15243,14 @@
         {
           "source": {
             "500": {"ind1": " ", "ind2": " ", "subfields": [
-              {"a": "Lindgren, Astrid"},
+              {"a": "Lindgren, Astrid,"},
               {"d": "1907-2002"},
               {"t": "Lillebror och Karlsson på taket"},
               {"0": "00000"}
             ]}},
           "normalized": {
             "500": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Lindgren, Astrid"},
+              {"a": "Lindgren, Astrid,"},
               {"d": "1907-2002"},
               {"t": "Lillebror och Karlsson på taket"},
               {"0": "00000"}
@@ -15265,7 +15285,7 @@
             "500": {"ind1": "1", "ind2": " ", "subfields": [
               {"w": "i"},
               {"i": "D. 2 i romanserien:"},
-              {"a": "Olsson-Hultgren, Solveig"},
+              {"a": "Olsson-Hultgren, Solveig,"},
               {"d": "1958- ."},
               {"t": "Arbetets döttrar"}
             ]}},
@@ -15308,10 +15328,10 @@
             ]}},
           "normalized": {
             "500": {"ind1": "1", "ind2": " ", "subfields": [
-              {"a": "Fauré, Gabriel"},
+              {"a": "Fauré, Gabriel,"},
               {"d": "1845-1924."},
               {"t": "Ballades,"},
-              {"m": "piano"},
+              {"m": "piano,"},
               {"n": "op. 19"},
               {"0": "00000"}
             ]}},
@@ -15331,7 +15351,7 @@
                 } ],
                 "hasTitle": [{
                   "@type": "Title",
-                  "mainTitle": "Ballades,",
+                  "mainTitle": "Ballades",
                   "partNumber": ["op. 19"]
                 }],
                 "marc:recordControlNumber": ["00000"],
@@ -15392,28 +15412,23 @@
         },
         {
           "when": "$b & i1=2",
-          "include": ["seeAlsoOrganization", "agentdataOrganizationSubUnit"],
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "include": ["seeAlsoOrganization", "agentdataOrganizationSubUnit", "agentpartnumber"]
         },
         {
           "when": "$b & i1=1",
-          "include": ["seeAlsoJurisdiction", "agentdataOrganizationSubUnit"],
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "include": ["seeAlsoJurisdiction", "agentdataOrganizationSubUnit", "agentpartnumber"]
         },
         {
           "when": "$b & i1=0",
-          "include": ["seeAlsoOrganization", "agentdataOrganizationSubUnit"],
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "include": ["seeAlsoOrganization", "agentdataOrganizationSubUnit", "agentpartnumber"]
         },
         {
           "when": "i1=0 | i1=2",
-          "include": ["seeAlsoOrganization", "agentdataOrganization"],
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "include": ["seeAlsoOrganization", "agentdataOrganization", "agentpartnumber"]
         },
         {
           "when": "i1=1",
-          "include": ["seeAlsoJurisdiction", "agentdataOrganization"],
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "include": ["seeAlsoJurisdiction", "agentdataOrganization", "agentpartnumber"]
         },
         {
           "when": "$t",
@@ -15421,8 +15436,7 @@
         },
         {
           "when": null,
-          "include": ["seeAlsoOrganization", "agentdataOrganization"],
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "include": ["seeAlsoOrganization", "agentdataOrganization", "agentpartnumber"]
         }
       ],
       "$h": {"ignored": true},
@@ -15582,8 +15596,7 @@
         },
         {
           "when": null,
-          "include": ["seeAlsoMeeting", "agentdataMeeting"],
-          "$n": {"addProperty": "marc:partNumber", "punctuationChars": ","}
+          "include": ["seeAlsoMeeting", "agentdataMeeting", "agentpartnumber"]
         }
       ],
       "$h": {"ignored": true},
