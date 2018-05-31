@@ -1858,7 +1858,7 @@
       "TODO:repeats": "008",
       "TODO": "Decide if 006 always is hasPart (Work)",
       "TODO:aboutEntity": "?instance",
-      "TODO:addLink": "marc:hasAspect",
+      "TODO:addLink": "marc:additionalWork",
       "TODO:pendingResources": {"_:aspectWork":{"link": "instanceOf"}},
       "aboutEntity": "?work",
       "addLink": "hasPart",
@@ -1866,25 +1866,38 @@
       "[0]": {
         "tokenMap": {
           "a": "Text",
-          "t": "Text",
-          "c": "Audio",
-          "d": "Audio",
+          "t": "ManuscriptText",
+          "c": "NotatedMusic",
+          "d": "ManuscriptNotatedMusic",
           "i": "Audio",
-          "j": "Audio",
+          "j": "Music",
           "e": "Cartography",
-          "f": "Cartography",
-          "g": "Visual",
-          "k": "Visual",
-          "o": "Visual",
-          "r": "Visual",
+          "f": "ManuscriptCartography",
+          "g": "ProjectedImage",
+          "k": "StillImage",
+          "o": "Kit",
+          "r": "Object",
           "m": "Multimedia",
-          "p": "Mixed",
-          "s": "Serial"
+          "p": "MixedMaterial",
+          "s": "marc:SerialWorkTextOrMixedMaterial"
         },
         "TODO:about": "_:aspectWork",
         "property": "@type"
       },
       "tokenTypeMap": "[0]",
+      "baseTypeMap": {
+        "ManuscriptText": "Text",
+        "NotatedMusic": "Audio",
+        "ManuscriptNotatedMusic": "Audio",
+        "Music": "Audio",
+        "ManuscriptCartography": "Cartography",
+        "ProjectedImage": "Visual",
+        "StillImage": "Visual",
+        "Kit": "Visual",
+        "Object": "Visual",
+        "MixedMaterial": "Mixed",
+        "marc:SerialWorkTextOrMixedMaterial": "Serial"
+      },
       "Text": {
         "[1] [2] [3] [4]": {
           "link": "illustrativeContent",
@@ -2155,7 +2168,27 @@
           "matchUriToken": "^[012]$"
         }
       },
-      "repeatable": true
+      "repeatable": true,
+      "_spec": [
+        {
+          "source": [
+            {"006": "t|||||||||||000 0|"}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasPart": [
+                  {
+                    "@type": "ManuscriptText",
+                    "genreForm": {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"}
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
     },
 
     "007": {

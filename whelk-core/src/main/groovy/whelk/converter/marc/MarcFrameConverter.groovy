@@ -1439,6 +1439,7 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
             tokenMap = fieldDfn[tokenMap].tokenMap
         }
         tokenMap.each { token, typeName ->
+            typeName = fieldDfn.baseTypeMap?.get(typeName) ?: typeName
             addHandler(token, fieldDfn[typeName])
             tokenNames[token] = typeName
         }
