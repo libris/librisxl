@@ -7083,12 +7083,12 @@
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
       "_spec": [
         {
-          "source": {"440": {"ind1": "0", "ind2": " ", "subfields": [
+          "source": {"440": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Kungl. Svenska vetenskapsakademiens handlingar,"},
             {"x": "0023-5377"},
             {"v": "N.F. 13:7"}
           ]}},
-          "normalized": {"830": {"ind1": "0", "ind2": " ", "subfields": [
+          "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Kungl. Svenska vetenskapsakademiens handlingar,"},
             {"x": "0023-5377 ;"},
             {"v": "N.F. 13:7"}
@@ -8550,7 +8550,7 @@
       "aboutEntity": "?work",
       "match": [
         {
-          "when": "$b & i1=0 & $t",
+          "when": "$b & i1=2 & $t",
           "include": ["worksubject", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
@@ -8561,7 +8561,7 @@
           }
         },
         {
-          "when": "$b & i1=2 & $t",
+          "when": "$b & i1=0 & $t",
           "include": ["worksubject", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
@@ -8632,6 +8632,10 @@
           "when": "$b",
           "TODO": "Correct modelled? Should it be treated as a Work when there is no $t?",
           "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganizationSubUnit"]
+        },
+        {
+          "when": "i1=2",
+          "include": ["agentdataOrganization", "subjectbase"]
         },
         {
           "when": null,
@@ -15765,7 +15769,16 @@
     "550": {
       "include": ["termbase_with_id", "relation_from_w"],
       "resourceType": "Topic",
-      "$a": {"property": "prefLabel"},
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "Topic",
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
+        }
+      },
+      "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
       "$0": {"addProperty": "marc:recordControlNumber"},
       "subfieldOrder": "w i a x 0 1",
       "_spec": [
@@ -15819,6 +15832,37 @@
               ]
             }
           }
+        },
+        {
+          "source": [
+            {"040": {"ind1": " ", "ind2": " ", "subfields": [{"f":"sao"}]}},
+            {"550": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Other"}, {"x": "form"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "inScheme": {
+                "@id": "https://id.kb.se/term/sao",
+                "@type": "ConceptScheme",
+                "code": "sao"
+              },
+              "related": [ {
+                "@type": "ComplexSubject",
+                "@id": "https://id.kb.se/term/sao/Other--form",
+                "prefLabel" : "Other--form",
+                "termComponentList": [
+                  {
+                    "@type": "Topic",
+                    "prefLabel":  "Other"
+                  },
+                  {
+                    "@type": "TopicSubdivision",
+                    "prefLabel": "form"
+                  }
+                ]
+              } ]
+            }
+          }
         }
       ]
     },
@@ -15826,7 +15870,16 @@
       "include": ["termbase", "relation_from_w"],
       "resourceType": "Geographic",
       "uriTemplate": "https://id.kb.se/place/{prefLabel}",
-      "$a": {"property": "prefLabel"},
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "Geographic",
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
+        }
+      },
+      "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
       "_spec": [
         {
           "source": {
@@ -15867,7 +15920,16 @@
       "include": ["termbase", "relation_from_w"],
       "resourceType": "GenreForm",
       "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
-      "$a": {"property": "prefLabel"},
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "GenreForm",
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
+        }
+      },
+      "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
       "_spec": [
         {
           "source": {

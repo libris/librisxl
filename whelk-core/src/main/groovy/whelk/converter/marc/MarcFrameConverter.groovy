@@ -2113,7 +2113,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         final Map topEntity = getEntity(state, data)
 
-        if (definesDomainEntityType && !isInstanceOf(topEntity, definesDomainEntityType)) {
+        if (!matchedResults && definesDomainEntityType && !isInstanceOf(topEntity, definesDomainEntityType)) {
             return null
         }
 
