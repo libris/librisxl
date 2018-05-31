@@ -93,6 +93,8 @@ class LegacyMarcAPI extends HttpServlet {
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         try {
+            response.setCharacterEncoding("UTF-8")
+
             String library = request.getParameter("library")
             String id = request.getParameter("id")
             if (id == null || library == null) {
