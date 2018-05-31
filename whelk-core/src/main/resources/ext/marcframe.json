@@ -7038,7 +7038,22 @@
       "$3": {"property": null},
       "$6": {"property": null}
     },
-    "386": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "creatorCharacteristic", "TODO": "For imports"},
+    "386": {
+      "NOTE:record-count": 0,
+      "NOTE:Local": "For imports",
+      "aboutEntity": "?work",
+      "addLink": "creatorCharacteristic",
+      "resourceType": "CreatorCharacteristic",
+      "$a": {"addProperty": "label"},
+      "$b": {"addProperty": "marc:creatorContributorCode"},
+      "$m": {"property": "marc:demographicGroupTerm"},
+      "$n": {"property": "marc:demographicGroupCode"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
+      "$1": {"addProperty": "marc:rwoURI"},
+      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": {"property": "marc:fieldref"}
+    },
     "388": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
 
     "400": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
