@@ -3660,7 +3660,15 @@
           "5": "PublisherNumber"
         }
       },
-      "i2": {"marcDefault": "1"},
+      "i2": {
+        "property": "marc:noteAddedEntryController",
+        "marcDefault": "1",
+        "tokenMap": {
+          "0": "marc:NoNoteNoAddedEntry",
+          "2": "marc:NoteNoAddedEntry",
+          "3": "marc:NoNoteAddedEntry"
+        }
+      },
       "$a": {"property": "value"},
       "$b": {
         "link": "agent", "resourceType": "Organization", "property": "name"
@@ -3669,9 +3677,15 @@
       "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
-          "source": {"028": {"ind1": "0", "ind2": " ", "subfields": [{"a": "1"}]}},
+          "source": {"028": {"ind1": "0", "ind2": "1", "subfields": [{"a": "123"}]}},
           "result": {"mainEntity": {
-            "identifiedBy": [{"@type": "AudioIssueNumber", "value": "1"}]
+            "identifiedBy": [{"@type": "AudioIssueNumber", "value": "123"}]
+          }}
+        },
+        {
+          "source": {"028": {"ind1": "1", "ind2": "0", "subfields": [{"a": "321"}]}},
+          "result": {"mainEntity": {
+            "identifiedBy": [{"@type": "MatrixNumber", "value": "321", "marc:noteAddedEntryController": "marc:NoNoteNoAddedEntry"}]
           }}
         }
       ]
@@ -4010,7 +4024,7 @@
       "i1": {"ignored": true, "marcDefault": " "},
       "$a": {"link": "identifiedBy", "resourceType": "StockNumber", "property": "value"},
       "$b": {"property": "label"},
-      "$c": {"addProperty": "acquisitionTerms"},
+      "$c": {"property": "acquisitionTerms", "NOTE:marc-repeatable": true},
       "$f": {"addProperty": "marc:formOfIssue"},
       "$g": {"addProperty": "marc:additionalFormatCharacteristics"},
       "$n": {"addProperty": "comment"},
