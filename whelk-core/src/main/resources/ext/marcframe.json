@@ -7029,14 +7029,14 @@
       "addLink": "marc:hasAudienceCharacteristics",
       "resourceType": "marc:AudienceCharacteristics",
       "$a": {"addProperty": "marc:audienceTerm"},
-      "$b": {"addProperty": "marc:AudienceCode"},
+      "$b": {"addProperty": "marc:audienceCode"},
       "$m": {"property": "marc:demographicGroupTerm"},
       "$n": {"property": "marc:demographicGroupCode"},
-      "$0": {"addProperty": null},
+      "$0": {"addProperty": "marc:recordControlNumber"},
       "$1": {"addProperty": "marc:rwoURI"},
-      "$2": {"property": "marc:source"},
-      "$3": {"property": null},
-      "$6": {"property": null}
+      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": {"property": "marc:fieldref"}
     },
     "386": {
       "NOTE:record-count": 0,
