@@ -130,10 +130,9 @@ public class Main
         {
             System.err.println("Metrics server connection failed. No metrics will be generated.");
         }
-	    if ( verbose )
-        {
+	if ( verbose ) {
             System.err.println("info: All done.");
-        }
+	}
     }
 
     /**
@@ -210,7 +209,9 @@ public class Main
                     if (secondDiff > 0)
                     {
                         long recordsPerSec = recordsBatched / secondDiff;
-                        System.err.println("info: Currently importing " + recordsPerSec + " records / sec. Active threads: " + threadPool.getActiveThreadCount());
+	    		if ( verbose ) {
+                        	System.err.println("info: Currently importing " + recordsPerSec + " records / sec. Active threads: " + threadPool.getActiveThreadCount());
+			}
                     }
                 }
             }
