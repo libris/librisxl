@@ -7083,12 +7083,12 @@
       "$9": {"addProperty": "marc:filingOfSeriesenumeration"},
       "_spec": [
         {
-          "source": {"440": {"ind1": "0", "ind2": " ", "subfields": [
+          "source": {"440": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Kungl. Svenska vetenskapsakademiens handlingar,"},
             {"x": "0023-5377"},
             {"v": "N.F. 13:7"}
           ]}},
-          "normalized": {"830": {"ind1": "0", "ind2": " ", "subfields": [
+          "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Kungl. Svenska vetenskapsakademiens handlingar,"},
             {"x": "0023-5377 ;"},
             {"v": "N.F. 13:7"}
