@@ -11,7 +11,8 @@
   "defaultPunctuation": {
     "punctuationChars": null,
     "skipLeading": "^\\(.*$",
-    "blockNextLeading": ".*\\S{2,}\\.$|.*[:;]$"
+    "blockNextLeading": ".*\\S{2,}\\.$|.*[:;]$",
+    "balanceBrackets": true
   },
 
   "pendingResources": {
@@ -6365,6 +6366,43 @@
               ]
             }
           }
+        },
+        {
+          "name": "balance brackets spanning multiple subfields",
+          "source": [
+              {"260": { "ind1": " ", "ind2": " ",
+                  "subfields": [
+                    {"a": "[Florence :"},
+                      {"b": "Gian Stephano di Carlo da Pavia,"},
+                      {"c": "about 1505?]"}
+                  ]
+              }}
+          ],
+          "normalized": [
+            {"264": { "ind1": " ", "ind2": "1",
+                "subfields": [
+                  {"a": "[Florence] :"},
+                  {"b": "Gian Stephano di Carlo da Pavia,"},
+                  {"c": "[about 1505?]"}
+                ]
+            }}
+          ],
+          "result": {"mainEntity": {
+            "publication":[
+              {
+                "@type": "Publication",
+                "date": "[about 1505?]",
+                "place": {
+                  "@type": "Place",
+                  "label": "[Florence]"
+                },
+                "agent": {
+                  "@type": "Agent",
+                  "label": "Gian Stephano di Carlo da Pavia"
+                }
+              }
+            ]
+          }}
         }
       ]
     },

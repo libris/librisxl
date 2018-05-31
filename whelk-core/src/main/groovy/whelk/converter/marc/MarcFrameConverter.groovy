@@ -2375,6 +2375,7 @@ class MarcSubFieldHandler extends ConversionPart {
     String leadingPunctuation
     Pattern skipLeadingPattern
     Pattern blockNextLeadingPattern
+    boolean balanceBrackets
     String link
     String about
     boolean newAbout
@@ -2410,14 +2411,25 @@ class MarcSubFieldHandler extends ConversionPart {
 
         trailingPunctuation = subDfn.trailingPunctuation
         leadingPunctuation = subDfn.leadingPunctuation
-        punctuationChars = (subDfn.punctuationChars ?: trailingPunctuation?.trim())?.toCharArray()
-        surroundingChars = 'surroundingChars' in subDfn ?
-                subDfn.surroundingChars?.toCharArray() :
-                defaultPunctuation.surroundingChars?.toCharArray()
-        skipLeadingPattern = toPattern('skipLeading' in subDfn ?
-                subDfn.skipLeading : defaultPunctuation.skipLeading)
-        blockNextLeadingPattern = toPattern('blockNextLeading' in subDfn ?
-                subDfn.blockNextLeading : defaultPunctuation.blockNextLeading)
+
+        punctuationChars = (subDfn.containsKey('punctuationChars')
+                            ? subDfn.punctuationChars
+                            : (trailingPunctuation ?:
+                               defaultPunctuation.punctuationChars))?.toCharArray()
+
+        surroundingChars = subDfn.surroundingChars?.toCharArray()
+
+        skipLeadingPattern = toPattern(subDfn.containsKey('skipLeading')
+                                       ? subDfn.skipLeading
+                                       : defaultPunctuation.skipLeading)
+
+        blockNextLeadingPattern = toPattern(subDfn.containsKey('blockNextLeading')
+                                            ? subDfn.blockNextLeading
+                                            : defaultPunctuation.blockNextLeading)
+
+        balanceBrackets = (subDfn.containsKey('balanceBrackets')
+                            ? subDfn.balanceBrackets
+                            : defaultPunctuation.balanceBrackets) == true
 
         if (subDfn.aboutNew) {
             about = subDfn.aboutNew
@@ -2593,6 +2605,18 @@ class MarcSubFieldHandler extends ConversionPart {
                 }
             }
         }
+
+        // Rudimentary mending of broken '[...]' expressions:
+        if (balanceBrackets) {
+            if (val.startsWith('[')) {
+                if (!val.endsWith(']')) {
+                    val += ']'
+                }
+            } else if (val.endsWith(']')) {
+                val = '[' + val
+            }
+        }
+
         return val
     }
 
