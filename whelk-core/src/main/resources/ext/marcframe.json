@@ -4032,7 +4032,7 @@
       "addLink": "acquisitionSource",
       "resourceType": "AcquisitionSource",
       "i1": {"ignored": true, "marcDefault": " "},
-      "$a": {"link": "identifiedBy", "resourceType": "StockNumber", "property": "value"},
+      "$a": {"addLink": "identifiedBy", "resourceType": "StockNumber", "property": "value", "NOTE:marc-repeatable": false},
       "$b": {"property": "label"},
       "$c": {"property": "acquisitionTerms", "NOTE:marc-repeatable": true},
       "$f": {"addProperty": "marc:formOfIssue"},
@@ -4048,10 +4048,10 @@
             "mainEntity": {
               "acquisitionSource": [{
                 "@type": "AcquisitionSource",
-                "identifiedBy": {
+                "identifiedBy": [{
                   "@type": "StockNumber",
                   "value": "10.1002/9783527617128"
-                },
+                }],
                 "label": "Wiley InterScience",
                 "comment": ["http://www3.interscience.wiley.com"]
               }],
@@ -7542,7 +7542,7 @@
       "$b": {"property": "marc:coverageOfSource"},
       "$c": {"link": "hasNote", "resourceType": "Note", "property": "label"},
       "$u": {"addProperty": "uri"},
-      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
+      "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "NOTE:marc-repeatable": false},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$8": {"property": "marc:groupid"}
     },
@@ -11388,7 +11388,7 @@
           "groupId": "#workpart-$seq",
           "$d": {"property": "legalDate"},
           "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"},
-          "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"}
+          "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;", "NOTE:marc-repeatable": false}
         }
       ],
       "pendingResources": {
@@ -11403,7 +11403,7 @@
       "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"about": "_:work","property": "legalDate"},
       "$i": {"addLink": "relation", "resourceType": "Relation", "property": "label"},
-      "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
+      "$x": {"about": "_:work", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;", "NOTE:marc-repeatable": false},
       "$0": {"about": "_:work", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
       "subfieldOrder": "6 i a d m n r p k l s f o 1 0",
@@ -16647,8 +16647,7 @@
     "014": {
       "aboutEntity": "?record",
       "i1": {"property": "marc:typeOfLinkageNumber"},
-      "$a": {"link": "identifiedBy", "resourceType": "LibrisIIINumber", "property": "value"},
-      "repeatable": true
+      "$a": {"addLink": "identifiedBy", "resourceType": "LibrisIIINumber", "property": "value", "NOTE:marc-repeatable": false}
     },
     "016": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
     "017": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
