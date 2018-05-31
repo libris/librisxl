@@ -4032,7 +4032,7 @@
       "addLink": "acquisitionSource",
       "resourceType": "AcquisitionSource",
       "i1": {"ignored": true, "marcDefault": " "},
-      "$a": {"link": "identifiedBy", "resourceType": "StockNumber", "property": "value"},
+      "$a": {"addLink": "identifiedBy", "resourceType": "StockNumber", "property": "value", "NOTE:marc-repeatable": false},
       "$b": {"property": "label"},
       "$c": {"property": "acquisitionTerms", "NOTE:marc-repeatable": true},
       "$f": {"addProperty": "marc:formOfIssue"},
@@ -4048,10 +4048,10 @@
             "mainEntity": {
               "acquisitionSource": [{
                 "@type": "AcquisitionSource",
-                "identifiedBy": {
+                "identifiedBy": [{
                   "@type": "StockNumber",
                   "value": "10.1002/9783527617128"
-                },
+                }],
                 "label": "Wiley InterScience",
                 "comment": ["http://www3.interscience.wiley.com"]
               }],
@@ -7538,11 +7538,11 @@
           "4": "marc:LocationInSourceGiven"
         }
       },
-      "$a": {"link": "hasTitle", "resourceType": "Title", "property": "label"},
+      "$a": {"addLink": "hasTitle", "resourceType": "Title", "property": "label", "NOTE:marc-repeatable": false},
       "$b": {"property": "marc:coverageOfSource"},
-      "$c": {"link": "hasNote", "resourceType": "Note", "property": "label"},
+      "$c": {"addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE:marc-repeatable": false},
       "$u": {"addProperty": "uri"},
-      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
+      "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "NOTE:marc-repeatable": false},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$8": {"property": "marc:groupid"}
     },
@@ -7749,7 +7749,7 @@
       "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label", "punctuationChars": ":"},
       "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ","},
       "$d": {"about": "_:event", "property": "date"},
-      "$e": {"link": "extent", "resourceType": "Extent", "property": "label"},
+      "$e": {"addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
       "$f": {"addProperty": "seriesStatement"},
       "$m": {"addProperty": "marc:datesAndOrSequentialDesignationOfIssuesReproduced"},
       "$n": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
@@ -11392,7 +11392,7 @@
           "groupId": "#workpart-$seq",
           "$d": {"property": "legalDate"},
           "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"},
-          "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"}
+          "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;", "NOTE:marc-repeatable": false}
         }
       ],
       "pendingResources": {
@@ -11407,7 +11407,7 @@
       "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"about": "_:work","property": "legalDate"},
       "$i": {"addLink": "relation", "resourceType": "Relation", "property": "label"},
-      "$x": {"about": "_:work", "link": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;"},
+      "$x": {"about": "_:work", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;", "NOTE:marc-repeatable": false},
       "$0": {"about": "_:work", "addProperty": "marc:uri"},
       "$6": {"property": "marc:fieldref"},
       "subfieldOrder": "6 i a d m n r p k l s f o 1 0",
@@ -11660,7 +11660,7 @@
       "$c": {"about": "_:instanceTitle", "property": "qualifier", "NOTE:marc-repeatable": false},
       "$d": {"property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
       "$g": {"addProperty": "part"},
-      "$h": {"link": "extent", "resourceType": "Extent", "property": "label"},
+      "$h": {"addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
       "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
       "$i": {"about": "_:instanceOf", "addProperty": "marc:displayText"},
       "$k": null,
@@ -11822,7 +11822,7 @@
       "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false},
       "$d": {"about": "_:hasInstance", "property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
       "$g": {"about": "_:hasInstance", "addProperty": "part"},
-      "$h": {"about": "_:hasInstance", "link": "extent", "resourceType": "Extent", "property": "label"},
+      "$h": {"about": "_:hasInstance", "addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
       "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
       "$i": {"addProperty": "marc:displayText"},
       "$k": {"about": "_:hasInstance", "addProperty": "seriesStatement", "TODO:targetMatch": "4xx, 8xx"},
@@ -11933,7 +11933,7 @@
       "addLink": "isPartOf",
       "resourceType": "Aggregate",
       "$c": null,
-      "$p": {"about": "_:hasInstance", "link": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore"},
+      "$p": {"about": "_:hasInstance", "addLink": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore", "NOTE:marc-repeatable": false},
       "$q": {"about": "_:hasInstance", "property": "marc:enumerationAndFirstPage", "NOTE:LC":"ignore"}
     },
     "774": {
@@ -11961,7 +11961,7 @@
       "$b": {"property": "editionStatement"},
       "$d": {"property": "provisionActivityStatement"},
       "$g": {"addProperty": "part"},
-      "$h": {"link": "extent", "resourceType": "Extent", "property": "label"},
+      "$h": {"addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
       "$k": {"addProperty": "seriesStatement"},
       "$m": {"property": "marc:materialSpecificDetails"},
       "$n": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
@@ -16709,8 +16709,7 @@
     "014": {
       "aboutEntity": "?record",
       "i1": {"property": "marc:typeOfLinkageNumber"},
-      "$a": {"link": "identifiedBy", "resourceType": "LibrisIIINumber", "property": "value"},
-      "repeatable": true
+      "$a": {"addLink": "identifiedBy", "resourceType": "LibrisIIINumber", "property": "value", "NOTE:marc-repeatable": false}
     },
     "016": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
     "017": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
