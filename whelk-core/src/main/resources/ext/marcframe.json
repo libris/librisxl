@@ -4281,7 +4281,7 @@
       "i2": {
         "property": "marc:i2sourceOfCode",
         "tokenMap": {
-          " ": "marc:MARCMusicalCompositionCode",
+          " ": "marc:MARCCode",
           "7": "marc:SourceSpecifiedInSubfield2"
         }
       },
