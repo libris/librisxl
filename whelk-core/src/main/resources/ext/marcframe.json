@@ -1854,15 +1854,12 @@
     },
 
     "006": {
-      "TODO:tokenSyncedWith": "typeOfRecord",
-      "TODO:repeats": "008",
-      "TODO": "Decide if 006 always is hasPart (Work)",
-      "TODO:aboutEntity": "?instance",
-      "TODO:addLink": "marc:additionalWork",
-      "TODO:pendingResources": {"_:aspectWork":{"link": "instanceOf"}},
+      "NOTE:repeats": "008",
       "aboutEntity": "?work",
       "addLink": "hasPart",
       "groupId": "#workpart-$seq",
+      "TODO?:addLink": "marc:additionalWork",
+      "TODO?:pendingResources": {"_:otherInstance":{"link": "hasInstance"}},
       "[0]": {
         "tokenMap": {
           "a": "Text",
@@ -1881,7 +1878,6 @@
           "p": "MixedMaterial",
           "s": "marc:SerialWorkTextOrMixedMaterial"
         },
-        "TODO:about": "_:aspectWork",
         "property": "@type"
       },
       "tokenTypeMap": "[0]",
@@ -1912,6 +1908,7 @@
           "matchUriToken": "^[abcdefgj]$"
         },
         "[6]": {
+          "TODO:about": "_:otherInstance",
           "link": "marc:additionalCarrierType",
           "uriTemplate": "https://id.kb.se/marc/BooksItemType-{_}",
           "matchUriToken": "^[abcdfoqrs]$"
@@ -1977,6 +1974,7 @@
           "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
         },
         "[6]": {
+          "TODO:about": "_:otherInstance",
           "link": "marc:additionalCarrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
@@ -2020,6 +2018,7 @@
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
         },
         "[12]": {
+          "TODO:about": "_:otherInstance",
           "link": "marc:additionalCarrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
@@ -2057,6 +2056,7 @@
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
         },
         "[12]": {
+          "TODO:about": "_:otherInstance",
           "link": "marc:additionalCarrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
@@ -2066,11 +2066,13 @@
           "matchUriToken": "^[_abcdfgiklmnopqrstvw]$"
         },
         "[17]": {
+          "TODO:about": "_:otherInstance",
           "link": "marc:technique",
           "uriTemplate": "https://id.kb.se/marc/VisualTechniqueType-{_}",
           "matchUriToken": "^[aclz]$"
         },
         "[6] [7] [8] [9] [10]": {
+          "TODO:about": "_:otherInstance",
           "NOTE": "Undefined in MARC21/Voyager",
           "link": "marc:matter",
           "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}",
@@ -2083,6 +2085,7 @@
           "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
         },
         "[6]": {
+          "TODO:about": "_:otherInstance",
           "link": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ComputerItemType-{_}",
           "matchUriToken": "^[oqs]$"
@@ -2100,6 +2103,7 @@
       "Mixed": {
         "[6] [7]": {
           "NOTE": "Pos 7 Undefined in MARC21/Voyager",
+          "TODO:about": "_:otherInstance",
           "link": "marc:additionalCarrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         }
@@ -2107,18 +2111,21 @@
       "Serial": {
         "[1]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
+          "TODO:about": "_:otherInstance",
           "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsFrequencyType-{_}",
           "matchUriToken": "^[_abcdefghijkmqstw]$"
         },
         "[2]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
+          "TODO:about": "_:otherInstance",
           "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsRegularityType-{_}",
           "matchUriToken": "^[nrx]$"
         },
         "[3]": {
           "TODO:ignore": "Not used in 008. Should we remove this mapping as well?",
+          "TODO:about": "_:otherInstance",
           "link": "marc:issn",
           "uriTemplate": "https://id.kb.se/marc/SerialsISSNType-{_}",
           "matchUriToken": "^[0124_f]$"
@@ -2129,11 +2136,13 @@
           "matchUriToken": "^[dlmnpw]$"
         },
         "[5]": {
+          "TODO:about": "_:otherInstance",
           "link": "marc:originalItem",
           "uriTemplate": "https://id.kb.se/marc/SerialsOriginalItemType-{_}",
           "matchUriToken": "^[abcdefoqs]$"
         },
         "[6]": {
+          "TODO:about": "_:otherInstance",
           "link": "marc:additionalCarrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
