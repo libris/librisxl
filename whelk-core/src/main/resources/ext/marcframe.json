@@ -1876,7 +1876,7 @@
           "r": "Object",
           "m": "Multimedia",
           "p": "MixedMaterial",
-          "s": "marc:SerialWorkTextOrMixedMaterial"
+          "s": "marc:SerialWork"
         },
         "property": "@type"
       },
@@ -1892,7 +1892,7 @@
         "Kit": "Visual",
         "Object": "Visual",
         "MixedMaterial": "Mixed",
-        "marc:SerialWorkTextOrMixedMaterial": "Serial"
+        "marc:SerialWork": "Serial"
       },
       "Text": {
         "[1] [2] [3] [4]": {
