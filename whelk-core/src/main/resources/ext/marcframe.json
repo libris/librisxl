@@ -16031,7 +16031,11 @@
     "673": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "675": {
       "aboutEntity": "?record",
-      "$a": {"link": "sourceConsulted", "resourceType": "SourceDataNotFound", "addProperty": "citationSource"}
+      "addLink": "sourceConsulted",
+      "embedded": true,
+      "NOTE:marc-repeatable": false,
+      "resourceType": "SourceDataNotFound",
+      "$a": {"addProperty": "citationSource"}
     },
     "677": {"ignored": true, "NOTE:record-count": 1},
     "678": {"inherit": "bib:545"},
