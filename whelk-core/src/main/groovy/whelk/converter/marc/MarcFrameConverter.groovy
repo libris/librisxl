@@ -1439,6 +1439,7 @@ class TokenSwitchFieldHandler extends BaseMarcFieldHandler {
             tokenMap = fieldDfn[tokenMap].tokenMap
         }
         tokenMap.each { token, typeName ->
+            typeName = fieldDfn.baseTypeMap?.get(typeName) ?: typeName
             addHandler(token, fieldDfn[typeName])
             tokenNames[token] = typeName
         }
@@ -2178,7 +2179,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     def field = revertOne(state, data, topEntity, it, aboutMap, usedMatchRules)
                     if (field) {
                         if (useLink.subfield) {
-                            field.subfields << useLink.subfield
+                            field.subfields.add(0, useLink.subfield)
                         }
                         results << field
                     }
