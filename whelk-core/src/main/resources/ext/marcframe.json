@@ -15080,6 +15080,7 @@
         }
       },
       "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
+      "onRevertPrefer": ["550"],
       "_spec": [
         {
           "name": "Example from auth 409817",
@@ -15096,7 +15097,7 @@
               }, {
                 "@type" : "Topic",
                 "prefLabel" : "Hållbar odling"
-              } ]
+              }]
             }
           }
         },
@@ -15135,34 +15136,95 @@
             "mainEntity": {
               "@type": "Identity",
               "hasVariant" : [ {
-                "@type" : "ComplexSubject",
-                "prefLabel" : "Afrikansk litteratur--spanskspråkig",
-                "termComponentList" : [ {
-                  "@type" : "Topic",
-                  "prefLabel" : "Afrikansk litteratur"
-                }, {
-                  "@type" : "TopicSubdivision",
-                  "prefLabel" : "spanskspråkig"
-                } ]
-              } ]
+                "@type" : "Topic",
+                "prefLabel" : "Djur som hjälpmedel åt personer med funktionshinder"
+              }]
             }
           }
         }
       ]
     },
     "451": {
-      "addLink": "marc:hasSeeFromTracingGeographicName",
-      "resourceType": "marc:SeeFromTracingGeographicName",
-      "$a": {"property": "marc:geographicName"},
-      "$g": {"ignored": true},
-      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
-      "$v": {"addProperty": "marc:formSubdivision"},
-      "$w": {"property": "marc:controlSubfield"},
-      "$x": {"addProperty": "marc:generalSubdivision"},
-      "$y": {"addProperty": "marc:chronologicalSubdivision"},
-      "$z": {"addProperty": "marc:geographicSubdivision"},
-      "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+      "include": ["termbase_with_id", "relation_from_w"],
+      "addLink": "hasVariant",
+      "resourceType": "Geographic",
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "Geographic",
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
+        }
+      },
+      "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
+      "onRevertPrefer": ["551"],
+      "_spec": [
+        {
+          "name": "Example from auth 395340",
+          "source": [
+            {"451": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Grenadinerna"}]}},
+            {"451": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Saint Vincent and the Grenadines"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "Geographic",
+                "prefLabel" : "Grenadinerna"
+              }, {
+                "@type" : "Geographic",
+                "prefLabel" : "Saint Vincent and the Grenadines"
+              } ]
+            }
+          }
+        },
+        {
+          "name": "Example from auth 380812",
+          "source": {
+            "451": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Clontarf"},
+              {"x": "slaget"},
+              {"y": "1014"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "ComplexSubject",
+                "prefLabel" : "Clontarf--slaget--1014",
+                "termComponentList" : [ {
+                  "@type" : "Geographic",
+                  "prefLabel" : "Clontarf"
+                }, {
+                  "@type" : "TopicSubdivision",
+                  "prefLabel" : "slaget"
+                }, {
+                  "@type" : "Temporal",
+                  "prefLabel" : "1014"
+                } ]
+              } ]
+            }
+          }
+        },
+        {
+          "name": "Example from auth 324827",
+          "source": {
+            "451": {"ind1": " ", "ind2": " ", "subfields": [
+              {"w": "||e"},
+              {"a": "Sardes (övergiven stad)"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "Geographic",
+                "prefLabel" : "Sardes (övergiven stad)"
+              }]
+            }
+          }
+        }
+      ]
     },
     "455": {
       "include": ["termbase_with_id", "relation_from_w"],
@@ -15178,6 +15240,7 @@
         }
       },
       "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
+      "onRevertPrefer": ["555"],
       "_spec": [
         {
           "name": "Example from auth 347758",
