@@ -15839,6 +15839,7 @@
       "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
       "$0": {"addProperty": "marc:recordControlNumber"},
       "subfieldOrder": "w i a x 0 1",
+      "NOTE": "$w comes first since it's hardcoded by computeLinks!",
       "_spec": [
         {
           "source": [
@@ -15958,8 +15959,8 @@
         {
           "source": {
             "551": {"ind1": " ", "ind2": " ", "subfields": [
-              {"a": "Montenegro"},
-              {"w": "h"}
+              {"w": "h"},
+              {"a": "Montenegro"}
             ]}},
           "result": {
             "mainEntity": {
@@ -16008,8 +16009,8 @@
         {
           "source": {
             "555": {"ind1": " ", "ind2": " ", "subfields": [
-              {"a": "Datorspel"},
-              {"w": "g"}
+              {"w": "g"},
+              {"a": "Datorspel"}
             ]}},
           "result": {
             "mainEntity": {
