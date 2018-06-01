@@ -15125,7 +15125,7 @@
       "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
     },
     "450": {
-      "include": ["termbase_with_id", "relation_from_w"],
+      "include": ["termbase"],
       "addLink": "hasVariant",
       "resourceType": "Topic",
       "pendingResources": {
@@ -15137,8 +15137,9 @@
           "absorbSingle": true
         }
       },
+      "subfieldOrder": "w i a ...",
       "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
-      "onRevertPrefer": ["550"],
+      "$w": {"about": "_:topic", "property": "marc:controlSubfield"},
       "_spec": [
         {
           "name": "Example from auth 409817",
@@ -15190,12 +15191,18 @@
               {"a": "Djur som hjälpmedel åt personer med funktionshinder"},
               {"w": "||e"}
             ]}},
+          "normalized": {
+            "450": {"ind1": " ", "ind2": " ", "subfields": [
+              {"w": "||e"},
+              {"a": "Djur som hjälpmedel åt personer med funktionshinder"}
+            ]}},
           "result": {
             "mainEntity": {
               "@type": "Identity",
               "hasVariant" : [ {
                 "@type" : "Topic",
-                "prefLabel" : "Djur som hjälpmedel åt personer med funktionshinder"
+                "prefLabel" : "Djur som hjälpmedel åt personer med funktionshinder",
+                "marc:controlSubfield": "||e"
               }]
             }
           }
@@ -15203,7 +15210,7 @@
       ]
     },
     "451": {
-      "include": ["termbase_with_id", "relation_from_w"],
+      "include": ["termbase"],
       "addLink": "hasVariant",
       "resourceType": "Geographic",
       "pendingResources": {
@@ -15215,8 +15222,9 @@
           "absorbSingle": true
         }
       },
+      "subfieldOrder": "w i a ...",
       "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
-      "onRevertPrefer": ["551"],
+      "$w": {"about": "_:topic", "property": "marc:controlSubfield"},
       "_spec": [
         {
           "name": "Example from auth 395340",
@@ -15277,7 +15285,8 @@
               "@type": "Identity",
               "hasVariant" : [ {
                 "@type" : "Geographic",
-                "prefLabel" : "Sardes (övergiven stad)"
+                "prefLabel" : "Sardes (övergiven stad)",
+                "marc:controlSubfield" : "||e"
               }]
             }
           }
@@ -15285,7 +15294,7 @@
       ]
     },
     "455": {
-      "include": ["termbase_with_id", "relation_from_w"],
+      "include": ["termbase"],
       "addLink": "hasVariant",
       "resourceType": "GenreForm",
       "pendingResources": {
@@ -15297,8 +15306,9 @@
           "absorbSingle": true
         }
       },
+      "subfieldOrder": "w i a ...",
       "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
-      "onRevertPrefer": ["555"],
+      "$w": {"about": "_:topic", "property": "marc:controlSubfield"},
       "_spec": [
         {
           "name": "Example from auth 347758",
@@ -15364,7 +15374,8 @@
               "@type": "Identity",
               "hasVariant" : [ {
                 "@type" : "GenreForm",
-                "prefLabel" : "Grafiska romaner"
+                "prefLabel" : "Grafiska romaner",
+                "marc:controlSubfield" : "||e"
               } ]
             }
           }
