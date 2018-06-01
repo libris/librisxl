@@ -3689,7 +3689,7 @@
           "1": "1"
         }
       },
-      "$a": {"property": "label"},
+      "$a": {"property": "value"},
       "$b": {"property": "marc:systemControlNumber"},
       "$c": {"property": "marc:oaiSetName"},
       "$t": {"property": "marc:contentTypeIdentifier"}
