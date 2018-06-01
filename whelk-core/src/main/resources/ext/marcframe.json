@@ -3679,9 +3679,8 @@
 
     "029": {
       "NOTE:Local": "OCLC: Other System Control Number (R)",
-      "aboutEntity": "?record",
-      "addLink": "marc:hasBib029",
-      "resourceType": "marc:Bib029",
+      "include": ["idbase"],
+      "resourceType": "marc:OCLCOtherSystemControlNumber",
       "i1": {
         "property": "marc:ind1",
         "tokenMap": {
@@ -3690,10 +3689,10 @@
           "1": "1"
         }
       },
-      "$a": {"property": "marc:a"},
-      "$b": {"property": "marc:b"},
-      "$c": {"property": "marc:c"},
-      "$t": {"property": "marc:t"}
+      "$a": {"property": "label"},
+      "$b": {"property": "marc:systemControlNumber"},
+      "$c": {"property": "marc:oaiSetName"},
+      "$t": {"property": "marc:contentTypeIdentifier"}
     },
 
     "030": {
