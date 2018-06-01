@@ -3199,6 +3199,10 @@
           "source": [
             {"008": "900101s1977    sw |||||||||||000 0aswe| "}
           ],
+          "normalized": [
+            {"008": "900101s1977    sw |||||||||||000 0aswe| "},
+            {"041": {"ind1": " ", "ind2": " ", "subfields": [{"a": "swe"}]}}
+          ],
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
@@ -3248,6 +3252,14 @@
             {"008": "900101s1977    sw abcd||e||||000 0aswe| "},
             {"336": {"ind1": " ", "ind2": " ", "subfields": [
               {"a": "just challenging column itemPos"}
+            ]}}
+          ],
+          "normalized": [
+            {"008": "900101s1977    sw abcd||e||||000 0aswe| "},
+            {"041": {"ind1": " ", "ind2": " ", "subfields": [{"a": "swe"}]}},
+            {"336": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "just challenging column itemPos"},
+              {"2": "rdacontent"}
             ]}}
           ],
           "result": {
@@ -12825,12 +12837,11 @@
       "i1": {
         "property": "marc:electronicLocatorType",
         "tokenMap": {
+          " ": null,
           "0": "email",
           "1": "ftp",
           "2": "remoteLoginTelnet",
-          "3": "dialUp",
-          "4": "http",
-          "7": null
+          "3": "dialUp"
         },
         "definedElsewhereToken": "7",
         "marcDefault": "4"
@@ -12845,7 +12856,7 @@
         "if $x=digipic or $y=bild": {"addLink": "depiction"},
         "if $z=Wikipedia|IMDB": {"addLink": "isPrimaryTopicOf"}
       },
-      "$2": {"requires-i1": "7", "property": "marc:electronicLocatorType"},
+      "$2": {"requires-i1": "7", "property": "marc:electronicLocatorType", "marcDefault": "http"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
@@ -12860,7 +12871,7 @@
         {
           "source": {"856": {"ind1": "4", "ind2": "2", "subfields": [{"u": "http://example.org/review"}]}},
           "result": {"mainEntity": {
-            "isPrimaryTopicOf": [{"@type": "Document", "uri": ["http://example.org/review"], "marc:electronicLocatorType": "http"}]
+            "isPrimaryTopicOf": [{"@type": "Document", "uri": ["http://example.org/review"]}]
           }}
         },
         {
@@ -12868,14 +12879,17 @@
             {"u": "http://www-spires.slac.stanford.edu/spires/find/hep?cnum=C96-05-30"},
             {"2": "http"}
           ]}},
+          "normalized": {"856": {"ind1": "4", "ind2": " ", "subfields": [
+            {"u": "http://www-spires.slac.stanford.edu/spires/find/hep?cnum=C96-05-30"}
+          ]}},
           "result": {"mainEntity": {
-            "electronicLocator": [{"@type": "Document", "uri": ["http://www-spires.slac.stanford.edu/spires/find/hep?cnum=C96-05-30"], "marc:electronicLocatorType": "http"}]
+            "electronicLocator": [{"@type": "Document", "uri": ["http://www-spires.slac.stanford.edu/spires/find/hep?cnum=C96-05-30"]}]
           }}
         },
         {
           "source": {"856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.com/doc.pdf"}]}},
           "result": {"mainEntity": {
-            "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"], "marc:electronicLocatorType": "http"}]
+            "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
           }}
         },
         {
@@ -12884,8 +12898,8 @@
             {"856": {"ind1": "4", "ind2": "2", "subfields": [{"u": "http://example.org/page"}]}}
           ],
           "result": {"mainEntity": {
-            "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"], "marc:electronicLocatorType": "http"}],
-            "isPrimaryTopicOf": [{"@type": "Document", "uri": ["http://example.org/page"], "marc:electronicLocatorType": "http"}]
+            "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}],
+            "isPrimaryTopicOf": [{"@type": "Document", "uri": ["http://example.org/page"]}]
           }}
         },
         {
@@ -12897,8 +12911,8 @@
           "result": {"mainEntity": {
             "associatedMedia": [{
               "@type": "MediaObject",
-              "uri": ["http://www.framtidsstudier.se/filebank/files/20051201$133251$fil$048Ti3PL2UIwRJQEBbDG.pdf"],
-              "marc:electronicLocatorType": "http"}]
+              "uri": ["http://www.framtidsstudier.se/filebank/files/20051201$133251$fil$048Ti3PL2UIwRJQEBbDG.pdf"]
+            }]
           }}
         },
         {
@@ -12910,7 +12924,6 @@
           "result": {"mainEntity": {
             "marc:versionOfResource": [{
               "@type": "Electronic",
-              "marc:electronicLocatorType": "http",
               "marc:publicNote": ["Tidskriftens webbplats"],
               "uri": ["http://www.vr.se/tvarsnitt"]
             }]
@@ -12926,7 +12939,7 @@
         {
           "source": {"856": {"ind1": "4", "ind2": "8", "subfields": [{"u": "http://example.com/doc.pdf"}]}},
           "result": {"mainEntity": {
-            "relatedTo": [{"@type": "Document", "uri": ["http://example.com/doc.pdf"], "marc:electronicLocatorType": "http"}]
+            "relatedTo": [{"@type": "Document", "uri": ["http://example.com/doc.pdf"]}]
           }}
         }
       ]
@@ -15826,6 +15839,7 @@
       "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
       "$0": {"addProperty": "marc:recordControlNumber"},
       "subfieldOrder": "w i a x 0 1",
+      "NOTE": "$w comes first since it's hardcoded by computeLinks!",
       "_spec": [
         {
           "source": [
@@ -15945,8 +15959,8 @@
         {
           "source": {
             "551": {"ind1": " ", "ind2": " ", "subfields": [
-              {"a": "Montenegro"},
-              {"w": "h"}
+              {"w": "h"},
+              {"a": "Montenegro"}
             ]}},
           "result": {
             "mainEntity": {
@@ -15995,8 +16009,8 @@
         {
           "source": {
             "555": {"ind1": " ", "ind2": " ", "subfields": [
-              {"a": "Datorspel"},
-              {"w": "g"}
+              {"w": "g"},
+              {"a": "Datorspel"}
             ]}},
           "result": {
             "mainEntity": {

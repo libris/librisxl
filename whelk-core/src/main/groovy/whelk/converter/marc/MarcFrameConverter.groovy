@@ -2179,7 +2179,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     def field = revertOne(state, data, topEntity, it, aboutMap, usedMatchRules)
                     if (field) {
                         if (useLink.subfield) {
-                            field.subfields << useLink.subfield
+                            field.subfields.add(0, useLink.subfield)
                         }
                         results << field
                     }
