@@ -15125,34 +15125,263 @@
       "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
     },
     "450": {
-      "$a": {"addProperty": "altLabel"},
-      "match": [
-        {
-          "when": "$x",
-          "addLink": "replaces",
+      "include": ["termbase"],
+      "addLink": "hasVariant",
+      "resourceType": "Topic",
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
           "resourceType": "Topic",
-          "uriTemplate": "https://id.kb.se/term/sao/{termComponentList.prefLabel*}",
-          "$a": {"addLink": "termComponentList",  "uriTemplate": "https://id.kb.se/term/sao/{_}", "property": "prefLabel"},
-          "$x": {"addLink": "termComponentList",  "property": "prefLabel"}
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
         }
-      ],
-      "TODO": "whatIs w||e"
+      },
+      "subfieldOrder": "w i a ...",
+      "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
+      "$w": {"about": "_:topic", "property": "marc:controlSubfield"},
+      "_spec": [
+        {
+          "name": "Example from auth 409817",
+          "source": [
+            {"450": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Permanent agrokultur"}]}},
+            {"450": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Hållbar odling"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "Topic",
+                "prefLabel" : "Permanent agrokultur"
+              }, {
+                "@type" : "Topic",
+                "prefLabel" : "Hållbar odling"
+              }]
+            }
+          }
+        },
+        {
+          "name": "Example from auth 396917",
+          "source": {
+            "450": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Afrikansk litteratur"},
+              {"x": "spanskspråkig"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "ComplexSubject",
+                "prefLabel" : "Afrikansk litteratur--spanskspråkig",
+                "termComponentList" : [ {
+                  "@type" : "Topic",
+                  "prefLabel" : "Afrikansk litteratur"
+                }, {
+                  "@type" : "TopicSubdivision",
+                  "prefLabel" : "spanskspråkig"
+                } ]
+              } ]
+            }
+          }
+        },
+        {
+          "name": "Example from auth 292735",
+          "source": {
+            "450": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Djur som hjälpmedel åt personer med funktionshinder"},
+              {"w": "||e"}
+            ]}},
+          "normalized": {
+            "450": {"ind1": " ", "ind2": " ", "subfields": [
+              {"w": "||e"},
+              {"a": "Djur som hjälpmedel åt personer med funktionshinder"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "Topic",
+                "prefLabel" : "Djur som hjälpmedel åt personer med funktionshinder",
+                "marc:controlSubfield": "||e"
+              }]
+            }
+          }
+        }
+      ]
     },
     "451": {
-      "addLink": "marc:hasSeeFromTracingGeographicName",
-      "resourceType": "marc:SeeFromTracingGeographicName",
-      "$a": {"property": "marc:geographicName"},
-      "$g": {"ignored": true},
-      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
-      "$v": {"addProperty": "marc:formSubdivision"},
-      "$w": {"property": "marc:controlSubfield"},
-      "$x": {"addProperty": "marc:generalSubdivision"},
-      "$y": {"addProperty": "marc:chronologicalSubdivision"},
-      "$z": {"addProperty": "marc:geographicSubdivision"},
-      "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+      "include": ["termbase"],
+      "addLink": "hasVariant",
+      "resourceType": "Geographic",
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "Geographic",
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
+        }
+      },
+      "subfieldOrder": "w i a ...",
+      "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
+      "$w": {"about": "_:topic", "property": "marc:controlSubfield"},
+      "_spec": [
+        {
+          "name": "Example from auth 395340",
+          "source": [
+            {"451": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Grenadinerna"}]}},
+            {"451": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Saint Vincent and the Grenadines"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "Geographic",
+                "prefLabel" : "Grenadinerna"
+              }, {
+                "@type" : "Geographic",
+                "prefLabel" : "Saint Vincent and the Grenadines"
+              } ]
+            }
+          }
+        },
+        {
+          "name": "Example from auth 380812",
+          "source": {
+            "451": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Clontarf"},
+              {"x": "slaget"},
+              {"y": "1014"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "ComplexSubject",
+                "prefLabel" : "Clontarf--slaget--1014",
+                "termComponentList" : [ {
+                  "@type" : "Geographic",
+                  "prefLabel" : "Clontarf"
+                }, {
+                  "@type" : "TopicSubdivision",
+                  "prefLabel" : "slaget"
+                }, {
+                  "@type" : "Temporal",
+                  "prefLabel" : "1014"
+                } ]
+              } ]
+            }
+          }
+        },
+        {
+          "name": "Example from auth 324827",
+          "source": {
+            "451": {"ind1": " ", "ind2": " ", "subfields": [
+              {"w": "||e"},
+              {"a": "Sardes (övergiven stad)"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "Geographic",
+                "prefLabel" : "Sardes (övergiven stad)",
+                "marc:controlSubfield" : "||e"
+              }]
+            }
+          }
+        }
+      ]
     },
-    "455": {"inherit": "450"},
+    "455": {
+      "include": ["termbase"],
+      "addLink": "hasVariant",
+      "resourceType": "GenreForm",
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "GenreForm",
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
+        }
+      },
+      "subfieldOrder": "w i a ...",
+      "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
+      "$w": {"about": "_:topic", "property": "marc:controlSubfield"},
+      "_spec": [
+        {
+          "name": "Example from auth 347758",
+          "source": [
+            {"455": {"ind1": " ", "ind2": " ", "subfields": [{"a": "CD-böcker"}]}},
+            {"455": {"ind1": " ", "ind2": " ", "subfields": [{"a": "E-ljudböcker"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "GenreForm",
+                "prefLabel" : "CD-böcker"
+              }, {
+                "@type" : "GenreForm",
+                "prefLabel" : "E-ljudböcker"
+              } ]
+            }
+          }
+        },
+        {
+          "name": "Example from auth 367709",
+          "source": [
+            {"455": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Förromantiken"}, {"x": "musikhistoria"}]}},
+            {"455": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Högromantiken"}, {"x": "musikhistoria"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "ComplexSubject",
+                "prefLabel" : "Förromantiken--musikhistoria",
+                "termComponentList" : [ {
+                  "@type" : "GenreForm",
+                  "prefLabel" : "Förromantiken"
+                }, {
+                  "@type" : "TopicSubdivision",
+                  "prefLabel" : "musikhistoria"
+                } ]
+              }, {
+                "@type" : "ComplexSubject",
+                "prefLabel" : "Högromantiken--musikhistoria",
+                "termComponentList" : [ {
+                  "@type" : "GenreForm",
+                  "prefLabel" : "Högromantiken"
+                }, {
+                  "@type" : "TopicSubdivision",
+                  "prefLabel" : "musikhistoria"
+                } ]
+              } ]
+            }
+          }
+        },
+        {
+          "name": "Example from auth 376034",
+          "source": {
+            "455": {"ind1": " ", "ind2": " ", "subfields": [
+              {"w": "||e"},
+              {"a": "Grafiska romaner"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "GenreForm",
+                "prefLabel" : "Grafiska romaner",
+                "marc:controlSubfield" : "||e"
+              } ]
+            }
+          }
+        }
+      ]
+    },
     "462": {"ignored": true, "NOTE:record-count": 0},
     "480": {
       "addLink": "marc:hasSeeFromTracingGeneralSubdivision",
