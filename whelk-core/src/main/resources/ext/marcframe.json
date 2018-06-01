@@ -3199,6 +3199,10 @@
           "source": [
             {"008": "900101s1977    sw |||||||||||000 0aswe| "}
           ],
+          "normalized": [
+            {"008": "900101s1977    sw |||||||||||000 0aswe| "},
+            {"041": {"ind1": " ", "ind2": " ", "subfields": [{"a": "swe"}]}}
+          ],
           "result": {
             "created": "1990-01-01T00:00:00.0+01:00",
             "mainEntity": {
@@ -3248,6 +3252,14 @@
             {"008": "900101s1977    sw abcd||e||||000 0aswe| "},
             {"336": {"ind1": " ", "ind2": " ", "subfields": [
               {"a": "just challenging column itemPos"}
+            ]}}
+          ],
+          "normalized": [
+            {"008": "900101s1977    sw abcd||e||||000 0aswe| "},
+            {"041": {"ind1": " ", "ind2": " ", "subfields": [{"a": "swe"}]}},
+            {"336": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "just challenging column itemPos"},
+              {"2": "rdacontent"}
             ]}}
           ],
           "result": {
