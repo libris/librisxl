@@ -7424,8 +7424,25 @@
       "$6": {"property": "marc:fieldref"}
     },
     "505": {
-      "i1": {"marcDefault": "8", "NOTE:LC": "nac"},
-      "i2": {"marcDefault": " ", "NOTE:LC": "ignore"},
+      "i1": {
+        "NOTE:LC": "nac",
+        "property": "marc:displayConstantController",
+        "marcDefault": "8",
+        "tokenMap": {
+          "0": "marc:Contents",
+          "1": "marc:IncompleteContents",
+          "2": "marc:PartialContents"
+        }
+      },
+      "i2": {
+        "NOTE:LC": "ignore",
+        "TODO": "match tocentry with enhanced, note that data is messy and a strict enforcement can create errors.",
+        "marcDefault": " ",
+        "property": "marc:levelOfContentDesignation",
+        "tokenMap": {
+          "0": "marc:Enhanced"
+        }
+      },
       "aboutEntity": "?thing",
       "addLink": "tableOfContents",
       "resourceType": "TableOfContents",
@@ -7445,7 +7462,7 @@
       "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
-          "source": {"505": {"ind1": "8", "ind2": " ", "subfields": [
+          "source": {"505": {"ind1": "8", "ind2": "0", "subfields": [
             {"a": "Contents:"},
             {"t": "Enoralehu"},
             {"r": "(Gigi)"},
@@ -7459,6 +7476,7 @@
               {
                 "@type": "TableOfContents",
                 "label": "Contents:",
+                "marc:levelOfContentDesignation": "marc:Enhanced",
                 "hasPart": [
                   {
                     "@type": "ToCEntry",
