@@ -16962,7 +16962,6 @@
         "addLink": "availability",
         "resourceType": "ItemAvailability",
         "property": "label",
-        "TODO:property": "change to copyNote?",
         "NOTE": "deviates from standard (itemPart)?"
       },
       "$j": {"property": "shelfControlNumber"},
@@ -16978,9 +16977,8 @@
       "$x": {"addProperty": "cataloguersNote"},
       "$z": {
         "addLink": "hasNote",
-        "resourceType": "CopyNote",
-        "property": "label",
-        "TODO:property": "change to comment?"
+        "resourceType": "Note",
+        "property": "label"
       },
       "repeatable": true,
       "subfieldOrder": "5 3 8 b c k h j d g i l m p q t u x z 9",
