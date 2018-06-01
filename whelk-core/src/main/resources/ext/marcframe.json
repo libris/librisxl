@@ -15067,18 +15067,88 @@
       "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
     },
     "450": {
-      "$a": {"addProperty": "altLabel"},
-      "match": [
-        {
-          "when": "$x",
-          "addLink": "replaces",
+      "include": ["termbase_with_id", "relation_from_w"],
+      "addLink": "hasVariant",
+      "resourceType": "Topic",
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
           "resourceType": "Topic",
-          "uriTemplate": "https://id.kb.se/term/sao/{termComponentList.prefLabel*}",
-          "$a": {"addLink": "termComponentList",  "uriTemplate": "https://id.kb.se/term/sao/{_}", "property": "prefLabel"},
-          "$x": {"addLink": "termComponentList",  "property": "prefLabel"}
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
         }
-      ],
-      "TODO": "whatIs w||e"
+      },
+      "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
+      "_spec": [
+        {
+          "name": "Example from auth 409817",
+          "source": [
+            {"450": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Permanent agrokultur"}]}},
+            {"450": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Hållbar odling"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "Topic",
+                "prefLabel" : "Permanent agrokultur"
+              }, {
+                "@type" : "Topic",
+                "prefLabel" : "Hållbar odling"
+              } ]
+            }
+          }
+        },
+        {
+          "name": "Example from auth 396917",
+          "source": {
+            "450": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Afrikansk litteratur"},
+              {"x": "spanskspråkig"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "ComplexSubject",
+                "prefLabel" : "Afrikansk litteratur--spanskspråkig",
+                "termComponentList" : [ {
+                  "@type" : "Topic",
+                  "prefLabel" : "Afrikansk litteratur"
+                }, {
+                  "@type" : "TopicSubdivision",
+                  "prefLabel" : "spanskspråkig"
+                } ]
+              } ]
+            }
+          }
+        },
+        {
+          "name": "Example from auth 292735",
+          "source": {
+            "450": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Djur som hjälpmedel åt personer med funktionshinder"},
+              {"w": "||e"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "ComplexSubject",
+                "prefLabel" : "Afrikansk litteratur--spanskspråkig",
+                "termComponentList" : [ {
+                  "@type" : "Topic",
+                  "prefLabel" : "Afrikansk litteratur"
+                }, {
+                  "@type" : "TopicSubdivision",
+                  "prefLabel" : "spanskspråkig"
+                } ]
+              } ]
+            }
+          }
+        }
+      ]
     },
     "451": {
       "addLink": "marc:hasSeeFromTracingGeographicName",
@@ -15094,7 +15164,92 @@
       "$4": {"ignored": true},
       "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
     },
-    "455": {"inherit": "450"},
+    "455": {
+      "include": ["termbase_with_id", "relation_from_w"],
+      "addLink": "hasVariant",
+      "resourceType": "GenreForm",
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "GenreForm",
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
+        }
+      },
+      "$a": {"about": "_:topic", "property": "prefLabel", "required": true},
+      "_spec": [
+        {
+          "name": "Example from auth 347758",
+          "source": [
+            {"455": {"ind1": " ", "ind2": " ", "subfields": [{"a": "CD-böcker"}]}},
+            {"455": {"ind1": " ", "ind2": " ", "subfields": [{"a": "E-ljudböcker"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "GenreForm",
+                "prefLabel" : "CD-böcker"
+              }, {
+                "@type" : "GenreForm",
+                "prefLabel" : "E-ljudböcker"
+              } ]
+            }
+          }
+        },
+        {
+          "name": "Example from auth 367709",
+          "source": [
+            {"455": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Förromantiken"}, {"x": "musikhistoria"}]}},
+            {"455": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Högromantiken"}, {"x": "musikhistoria"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "ComplexSubject",
+                "prefLabel" : "Förromantiken--musikhistoria",
+                "termComponentList" : [ {
+                  "@type" : "GenreForm",
+                  "prefLabel" : "Förromantiken"
+                }, {
+                  "@type" : "TopicSubdivision",
+                  "prefLabel" : "musikhistoria"
+                } ]
+              }, {
+                "@type" : "ComplexSubject",
+                "prefLabel" : "Högromantiken--musikhistoria",
+                "termComponentList" : [ {
+                  "@type" : "GenreForm",
+                  "prefLabel" : "Högromantiken"
+                }, {
+                  "@type" : "TopicSubdivision",
+                  "prefLabel" : "musikhistoria"
+                } ]
+              } ]
+            }
+          }
+        },
+        {
+          "name": "Example from auth 376034",
+          "source": {
+            "455": {"ind1": " ", "ind2": " ", "subfields": [
+              {"w": "||e"},
+              {"a": "Grafiska romaner"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "GenreForm",
+                "prefLabel" : "Grafiska romaner"
+              } ]
+            }
+          }
+        }
+      ]
+    },
     "462": {"ignored": true, "NOTE:record-count": 0},
     "480": {
       "addLink": "marc:hasSeeFromTracingGeneralSubdivision",
