@@ -4,6 +4,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.Document;
+import whelk.util.LegacyIntegrationTools;
+
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -120,7 +122,7 @@ public class ApixCatServlet extends HttpServlet
             return;
         }
 
-        Utils.s_whelk.remove(xlShortId, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), collection);
+        Utils.s_whelk.remove(xlShortId, Utils.APIX_SYSTEM_CODE, request.getRemoteUser());
         s_logger.info("Successful delete on: " + xlShortId);
         Utils.send200Response(response, "");
     }
@@ -163,13 +165,13 @@ public class ApixCatServlet extends HttpServlet
 
         if (id.equalsIgnoreCase("new"))
         {
-            Utils.s_whelk.store(incomingDocument, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false);
+            Utils.s_whelk.createDocument(incomingDocument, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false);
             s_logger.info("Successful new on : " + incomingDocument.getShortId());
             Utils.send201Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
         } else // save/overwrite existing
         {
-            incomingDocument.setId(id);
-            Utils.s_whelk.storeAtomicUpdate(id, false, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false,
+            incomingDocument.deepReplaceId( Document.getBASE_URI().resolve(id).toString() );
+            Utils.s_whelk.storeAtomicUpdate(id, false, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(),
                     (Document doc) ->
                     {
                         doc.data = incomingDocument.data;
@@ -205,7 +207,7 @@ public class ApixCatServlet extends HttpServlet
             return;
         }
 
-        Utils.s_whelk.store(incomingDocument, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false);
+        Utils.s_whelk.createDocument(incomingDocument, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), "hold", false);
         s_logger.info("Successful new (hold on bib) on : " + incomingDocument.getShortId());
         Utils.send201Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
     }

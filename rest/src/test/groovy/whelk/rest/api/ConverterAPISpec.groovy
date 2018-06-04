@@ -4,6 +4,7 @@ import spock.lang.Specification
 import spock.lang.Unroll
 
 import static whelk.JsonLd.ABOUT_KEY
+import whelk.converter.marc.MarcFrameConverter
 
 import javax.servlet.ServletInputStream
 import javax.servlet.ServletOutputStream
@@ -37,7 +38,9 @@ class ConverterAPISpec extends Specification {
             void setHeader(String h, String v) { headers.put(h, v) }
             String getHeader(String h) { headers.get(h) }
         }
-        converterApi = new ConverterAPI()
+        converterApi = new ConverterAPI(
+                marcFrameConverter: new MarcFrameConverter())
+        converterApi.init()
     }
 
     def "should convert data"() {
@@ -71,12 +74,15 @@ class ConverterAPISpec extends Specification {
         {
           "@graph": [
             {
+              "@type": "Record",
               "@id": "http://libris.kb.se/bib/0000000",
+              "recordStatus": "marc:CorrectedOrRevised",
               "$ABOUT_KEY": {"@id": "http://127.0.0.1:5000/000000000000000#it"}
             },
             {
+              "@type": "Instance",
               "@id": "http://127.0.0.1:5000/000000000000000#it",
-              "instanceOf": {"@type": "Work"}
+              "instanceOf": {"@type": "Text"}
             }
           ]
         }

@@ -24,7 +24,9 @@ import java.util.*;
 public class AuthenticationFilter implements Filter {
 
     private static final ObjectMapper mapper = new ObjectMapper();
+    private static final String XL_ACTIVE_SIGEL_HEADER = "XL-Active-Sigel";
     private List<String> supportedMethods;
+    private List<String> whitelistedPostEndpoints;
     private boolean mockAuthMode = false;
     private String url = null;
 
@@ -40,24 +42,30 @@ public class AuthenticationFilter implements Filter {
         }
         log.debug("Mock auth mode: " + mockAuthMode);
         supportedMethods = splitInitParameters(initParams);
+        whitelistedPostEndpoints = splitInitParameters(filterConfig.getInitParameter("whitelistedPostEndpoints"));
     }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-        if (!mockAuthMode && supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
+        if (httpRequest.getMethod() == "POST" && whitelistedPostEndpoints.contains(httpRequest.getRequestURI())) {
+            chain.doFilter(request, response);
+        } else if (!mockAuthMode && supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
+            int response_code = 0;
             String json = null;
             try {
                 String token = httpRequest.getHeader("Authorization");
                 if (token == null) {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Invalid accesstoken, Token is: "+token);
+                    response_code = httpResponse.SC_UNAUTHORIZED;
                     return;
                 }
                 log.debug("Verifying token " + token);
                 json = verifyToken(token.replace("Bearer ", ""));
                 if (json == null || json.isEmpty()) {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Access token has expired");
+                    response_code = httpResponse.SC_UNAUTHORIZED;
                     return;
                 }
 
@@ -66,26 +74,42 @@ public class AuthenticationFilter implements Filter {
                 Object message = result.get("message");
                 if (message != null && message.toString().equals("Bearer token is expired.")) {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Access token has expired");
+                    response_code = httpResponse.SC_UNAUTHORIZED;
                     return;
                 }
                 if (message != null && message.toString().equals("Bearer token not found.")) {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Missing access token.");
+                    response_code = httpResponse.SC_UNAUTHORIZED;
                     return;
                 }
 
                 if (!isExpired(result.get("expires_at").toString())) {
-                    request.setAttribute("user", result.get("user"));
+                    HashMap user = (HashMap) result.get("user");
+                    String activeSigel = httpRequest.getHeader(XL_ACTIVE_SIGEL_HEADER);
+                    if (activeSigel != null) {
+                        user.put("active_sigel", activeSigel);
+                    }
+                    request.setAttribute("user", user);
                     chain.doFilter(request, response);
                 }else {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED);
+                    response_code = httpResponse.SC_UNAUTHORIZED;
                 }
             } catch (org.codehaus.jackson.JsonParseException jpe) {
                 log.error("JsonParseException. Failed to parse:" + json, jpe);
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
+                response_code = httpResponse.SC_INTERNAL_SERVER_ERROR;
             } catch (Exception e) {
                 log.error("Exception: " + e);
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
+                response_code = httpResponse.SC_INTERNAL_SERVER_ERROR;
                 e.printStackTrace();
+            } finally {
+                if (response_code != 0) {
+                    String method = httpRequest.getMethod();
+                    String endpoint = httpRequest.getRequestURI();
+                    log.info("Request " + method + " " + endpoint + " blocked: " + response_code);
+                }
             }
         } else {
             if (mockAuthMode) {

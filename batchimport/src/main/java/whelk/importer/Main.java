@@ -12,14 +12,23 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.Templates;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Collections;
+import java.util.Iterator;
 
 public class Main
 {
     private static XL s_librisXl = null;
+
+    private static boolean verbose = false;
+
+    private static List tempfiles = Collections.synchronizedList(new ArrayList<File>());
 
     // Metrics
     private final static String METRICS_PUSHGATEWAY = "metrics.libris.kb.se:9091";
@@ -53,7 +62,7 @@ public class Main
             @Override
             public void uncaughtException(Thread thread, Throwable throwable)
             {
-                System.err.println("PANIC ABORT, unhandled exception:\n");
+                System.err.println("fatal: PANIC ABORT, unhandled exception:\n");
                 throwable.printStackTrace();
                 System.exit(-1);
             }
@@ -71,7 +80,9 @@ public class Main
         }
 
         // Normal importing operations
-		Parameters parameters = new Parameters(args);
+	Parameters parameters = new Parameters(args);
+	verbose = parameters.getVerbose();
+
         s_librisXl = new XL(parameters);
 
         if (parameters.getPath() == null)
@@ -82,7 +93,24 @@ public class Main
             File file = new File(parameters.getPath().toString());
             if (file.isDirectory())
             {
-                for (File subFile : file.listFiles())
+
+                File[] subFiles = file.listFiles();
+                if (subFiles == null)
+                    return;
+
+                // Sort the files in the directory chronologically
+                Arrays.sort(subFiles, new Comparator<File>() {
+                    @Override
+                    public int compare(File o1, File o2) {
+                        if (o1.lastModified() < o2.lastModified())
+                            return -1;
+                        else if (o1.lastModified() > o2.lastModified())
+                            return 1;
+                        return 0;
+                    }
+                });
+
+                for (File subFile : subFiles)
                 {
                     if (!subFile.isDirectory())
                         importFile(subFile.toPath(), parameters);
@@ -94,10 +122,18 @@ public class Main
             }
         }
 
-        PushGateway pg = new PushGateway(METRICS_PUSHGATEWAY);
-        pg.pushAdd(registry, "batch_import");
-
-        System.err.println("All done.");
+        try
+        {
+            PushGateway pg = new PushGateway(METRICS_PUSHGATEWAY);
+            pg.pushAdd(registry, "batch_import");
+        } catch (Throwable e)
+        {
+            System.err.println("Metrics server connection failed. No metrics will be generated.");
+        }
+	    if ( verbose )
+        {
+            System.err.println("info: All done.");
+        }
     }
 
     /**
@@ -106,7 +142,7 @@ public class Main
     private static void importFile(Path path, Parameters parameters)
             throws Exception
     {
-        System.err.println("Importing file: " + path.toString());
+        System.err.println("info: Importing file: " + path.toString());
         try (ExclusiveFile file = new ExclusiveFile(path);
              InputStream fileInStream = file.getInputStream())
         {
@@ -124,9 +160,12 @@ public class Main
         // of marcxml records that the jmarctools.MarcXmlRecordReader can read. The order of the records
         // is also expected to be; one bib record followed by any related holding records, after which
         // comes the next bib record and so on.
-        List<Transformer> transformers = parameters.getTransformers();
-        for (Transformer transformer : transformers)
-            inputStream = transform(transformer, inputStream);
+
+        for (Templates template : parameters.getTemplates())
+        {
+	    inputStream = transform(template.newTransformer(), inputStream);
+            //inputStream = transform(transformer, inputStream);
+        }
 
         int threadCount = 1;
         if (parameters.getRunParallel())
@@ -171,7 +210,7 @@ public class Main
                     if (secondDiff > 0)
                     {
                         long recordsPerSec = recordsBatched / secondDiff;
-                        System.err.println("Currently importing " + recordsPerSec + " records / sec. Active threads: " + threadPool.getActiveThreadCount());
+                        System.err.println("info: Currently importing " + recordsPerSec + " records / sec. Active threads: " + threadPool.getActiveThreadCount());
                     }
                 }
             }
@@ -183,16 +222,48 @@ public class Main
             if (reader != null)
                 reader.close();
             threadPool.joinAll();
+
         }
+
+	inputStream.close();
+	removeTemporaryFiles();
+    }
+
+    private static void removeTemporaryFiles()
+    {
+	synchronized(tempfiles) {
+		Iterator<File> i = tempfiles.iterator();
+		while (i.hasNext()) {
+    			File f = i.next();
+    			f.delete();
+    			i.remove();
+		}
+	}
+
     }
 
     private static void importBatch(List<MarcRecord> batch)
     {
-        try
+        String lastKnownBibDocId = null;
+        for (MarcRecord marcRecord : batch)
         {
-            String lastKnownBibDocId = null;
-            for (MarcRecord marcRecord : batch)
+            try
             {
+		if ( verbose ) {
+			String ids[][] = DigId.digIds(marcRecord);
+			if ( ids != null ) {
+				for (String r[] : ids ) {
+					if ( r != null ) {
+						for (String c : r) {
+							if ( c != null ) {
+								System.out.printf("%s ", c);
+							}
+						}
+					}
+				}
+			}
+			System.out.println();
+		}
                 String resultingId = s_librisXl.importISO2709(
                         marcRecord,
                         lastKnownBibDocId,
@@ -203,10 +274,11 @@ public class Main
                         encounteredMulBibs);
                 if (resultingId != null)
                     lastKnownBibDocId = resultingId;
+            } catch (Exception e)
+            {
+                System.err.println("Failed to convert or write the following MARC post:\n" + marcRecord.toString());
+                throw new RuntimeException(e);
             }
-        } catch (Exception e)
-        {
-            throw new RuntimeException(e);
         }
     }
 
@@ -214,7 +286,7 @@ public class Main
             throws IOException
     {
         File tempFile = File.createTempFile("xlimport", ".tmp");
-        tempFile.deleteOnExit();
+	tempfiles.add(tempFile);
         return tempFile;
     }
 

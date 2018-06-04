@@ -1,0 +1,37 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'application'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven { url "http://repository.codehaus.org/" }
+	maven { url "https://jitpack.io/" }
+}
+
+dependencies {
+
+    compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
+
+    // XL dependencies
+    compile(project(':../whelk-core'))
+
+    // Testing
+    testCompile 'junit:junit:4.12'
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": "transform.Main"
+    }
+
+    from {
+        configurations.compile.collect {
+            it.isDirectory() ? it : project.zipTree(it).matching {
+                exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA','build','.gradle/**','build.gradle','gradle','gradlew','gradlew.bat','test'
+            }
+        }
+    }
+}

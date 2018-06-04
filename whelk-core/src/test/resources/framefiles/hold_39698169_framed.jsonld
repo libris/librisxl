@@ -1,0 +1,49 @@
+{
+  "about": {
+    "acquisitionStatus": {
+      "@id": "/def/enum/content/CurrentlyReceived"
+    },
+    "completeness": {
+      "@id": "/def/enum/content/Complete"
+    },
+    "holdingFor": {
+      "@id": "/resource/bib/16583077"
+    },
+    "generalRetentionPolicy": {
+      "@id": "/def/enum/content/PermanentlyRetained"
+    },
+    "heldBy": {
+      "@type": "Organization",
+      "notation": "Kld1"
+    },
+    "offers": [
+      {
+        "heldBy": [
+          {
+            "@id": "/some?type=Organization&notation=Kld1"
+          }
+        ],
+        "@type": "Offer",
+        "classificationPart": "He.02/VC"
+      }
+    ],
+    "numberOfItems": 1,
+    "copyReport": {
+      "@id": "/def/enum/content/Separate"
+    },
+    "@id": "/resource/hold/39698169",
+    "@type": "HeldMaterial"
+  },
+  "created": "2014-06-12T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/HoldingsLevel4"
+  },
+  "controlNumber": "39698169",
+  "modified": "2014-06-12T11:12:56.0+02:00",
+  "holdingType": {
+    "@id": "/def/enum/record/SinglePartItemHolding"
+  },
+  "date": "1990-11-28T00:00:00.0+01:00",
+  "@id": "/hold/39698169",
+  "@type": "Record"
+}

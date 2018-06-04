@@ -78,7 +78,7 @@ public class ListSets
         writer.writeEndElement(); // set
 
         // Dynamic sigel-sets
-        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
+        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection();
              PreparedStatement preparedStatement = prepareStatement(dbconn);
              ResultSet resultSet = preparedStatement.executeQuery())
         {
@@ -118,8 +118,6 @@ public class ListSets
     private static PreparedStatement prepareStatement(Connection dbconn)
             throws SQLException
     {
-        String tableName = OaiPmh.configuration.getProperty("sqlMaintable");
-
         // Construct the query
 
         // The SELECT DISTINCT is semantically correct, but too slow because postgresql does not handle

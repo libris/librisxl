@@ -84,13 +84,19 @@
                     "type": "nested",
                     "include_in_parent": true,
                     "properties": {
-                        "@type": {
-                            "type": "keyword"
-                        },
+                        "@type": {"type": "keyword"},
                         "value": {
                             "type": "text",
                             "analyzer": "isbn_analyzer"
                         }
+                    }
+                },
+                "hasTitle": {
+                    "type": "nested",
+                    "include_in_parent": true,
+                    "properties": {
+                        "@type": {"type": "keyword"},
+                        "mainTitle": {"type": "text"}
                     }
                 }
             },

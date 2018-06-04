@@ -32,7 +32,11 @@ public class ApixSearchServlet extends HttpServlet
         for (String key : resultingDocumentsMap.keySet())
             resultingDocuments.add(resultingDocumentsMap.get(key));
 
-        Utils.send200Response(response, Xml.formatApixSearchResponse(resultingDocuments));
+        boolean includeHold = false;
+        if (request.getParameter("x-holdings") != null && request.getParameter("x-holdings").equalsIgnoreCase("true"))
+            includeHold = true;
+
+        Utils.send200Response(response, Xml.formatApixSearchResponse(resultingDocuments, includeHold, request.getParameterMap()));
     }
 
     private Set<String> search(HttpServletRequest request)
@@ -56,10 +60,17 @@ public class ApixSearchServlet extends HttpServlet
                 results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISSN", parameterValue.toLowerCase(), 1));
             } else
             {
-                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("NBN", parameterValue, 1));
-                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("Identifier", parameterValue, 1));
-                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("SystemNumber", parameterValue, 0));
+                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID(null, parameterValue, 1));
+                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID(null, parameterValue, 0));
             }
+        }
+
+        Iterator<String> it = results.iterator();
+        while (it.hasNext())
+        {
+            String systemID = it.next();
+            if (!Utils.s_whelk.getStorage().getCollectionBySystemID(systemID).equals("bib"))
+                it.remove();
         }
 
         return results;

@@ -1,4 +1,4 @@
-# Libris-XL
+# Libris XL
 
 ----
 
@@ -16,13 +16,13 @@ The project consists of:
 
 * Applications
     * `apix_export/`
-        Exports data from Libris-XL back to Voyager (the old system).
+        Exports data from Libris XL back to Voyager (the old system).
     * `harvesters/`
         An OAIPMH harvester. Servlet web application.
     * `importers/`
         Java application to load or reindex data into the system.
     * `oaipmh/`
-        Servlet web application. OAIPMH service for LIBRISXL
+        Servlet web application. OAIPMH service for Libris XL
     * `rest/`
         A servlet web application. The REST and other HTTP APIs
 * Tools
@@ -44,23 +44,9 @@ Related external repositories:
 
 1. [Gradle](http://gradle.org/)
 
-    For OS X, install http://brew.sh/, then:
-    ```
-    $ brew install gradle
-    ```
-
-    For Debian, install http://sdkman.io/, then:
-    ```
-    $ sdk install gradle
-    ```
-
-    For Windows, install https://chocolatey.org/, then:
-    ```
-    $ choco install gradle
-    ```
-
-    **NOTE:** Check `gradle -version` and make sure that Groovy version matches
-    `groovyVersion` in `build.gradle`.
+    No setup required. Just use the checked-in
+    [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html)
+    to automatically get the specified version of Gradle and Groovy.
 
 2. [Elasticsearch](http://elasticsearch.org/)
 
@@ -151,14 +137,10 @@ $ vim secret.properties
     whelk=# \q
     ```
 
-2. Create tables
-
-    ```
-    $ psql -U <database user> -h localhost whelk_dev < librisxl-tools/postgresql/tables.sql
-    $ psql -U <database user> -h localhost whelk_dev < librisxl-tools/postgresql/indexes.sql
-    ```
-
 ### Setting up Elasticsearch
+
+TODO: This is now generated! This step can probably be omitted. (See the devops
+repo or the setup-dev-whelk.sh script for details.)
 
 Create index and mappings:
 
@@ -172,77 +154,46 @@ $ curl -XPOST http://localhost:9200/whelk_dev -d@librisxl-tools/elasticsearch/li
 $ choco install curl
 ```
 
+### Import test data
+
+Check out the Devops repository, which is private (ask a team member for access and put it in the same directory as the 'librisxl' repo):
+
+For *NIX:
+```bash
+$ cd devops
+$ pip install -r requirements.txt
+$ fab conf.xl_local app.whelk.reload_example_data:force=True
+```
+
 ### Running
 
-To start the whelk, run the following commands:
+To start the CRUD part of the whelk, run the following commands:
 
 *NIX-systems:
 ```
 $ cd $LIBRISXL/rest
 $ export JAVA_OPTS="-Dfile.encoding=utf-8"
-$ gradle -Dxl.secret.properties=../secret.properties jettyRun
+$ ../gradlew -Dxl.secret.properties=../secret.properties appRun
 ```
 
 Windows:
 ```
 $ cd $LIBRISXL/rest
 $ setx JAVA_OPTS "-Dfile.encoding=utf-8"
-$ gradle -Dxl.secret.properties=../secret.properties jettyRun
+$ ../gradlew.bat -Dxl.secret.properties=../secret.properties appRun
 ```
 
 The system is then available on <http://localhost:8180>.
 
-## Data
-
-### Import definition datasets
-
-Check out the Definitions repository (put it in the same directory as the `librisxl` repo):
-
-```
-$ git clone https://github.com/libris/definitions.git
-```
-
-Follow the instructions in the README to install the necessary dependencies.
-
-Then, run the following to get/create/update datasets:
-
-```
-$ python datasets.py -l
-```
-
-Go back to the importers module and load the resulting resources into the running whelk:
-
-```
-$ cd $LIBRISXL/importers
-$ gradle -Dxl.secret.properties=../secret.properties \
-    -Dargs="defs ../../definitions/build/definitions.jsonld.lines" doRun
-```
-
-### Import MARC test data
-
-Fetches example records directly from the vcopy database
-
-For *NIX:
-```bash
-$ cd $LIBRISXL
-$ java -Dxl.secret.properties=../secret.properties -jar $JAR \
-     defs ../$DEFS_FILE
-
-$ java -Dxl.secret.properties=../secret.properties \
-    -Dxl.mysql.properties=../mysql.properties \
-     -jar build/libs/vcopyImporter.jar \
-     vcopyloadexampledata ../librisxl-tools/scripts/example_records.tsv
-```
-
-**NOTE:**
-On Windows, instead of installing modules through the `requirements.txt`-file, install the modules listed in it separately (apart from psycopg2). Download the psycopg2.whl-file that matches your OS from http://www.lfd.uci.edu/~gohlke/pythonlibs/#psycopg and pip install it.
 
 ## Maintenance
 
-### Automated setup
+### Automated setup using setup-dev-whelk.sh - DEPRECATED - use the above devops-repository method instead.
 
-For convenience, there is a script that automates the above steps
-(with the exception of creating a database user). It's used like this:
+For very specific purposes where you only want to do certain parts of the
+data loading process this script is sometimes useful, but it is not the
+correct, nor the "offical" way of loading example data.
+It's used like this:
 
 ```
 $ ./librisxl-tools/scripts/setup-dev-whelk.sh -n <database name> \
@@ -262,6 +213,24 @@ $ ./librisxl-tools/scripts/setup-dev-whelk.sh -n whelk_dev \
      -C postgres -D whelk -F
 ```
 
+### Development Workflow
+
+If you need to work locally (e.g. in this or the
+"definitions" repo) and perform specific tests, you can use this workflow:
+
+```
+$ (cd ../definitions && .venv/bin/python datasets.py -l)
+$ (cd importers/ && ../gradlew jar -DuseLocalDeps)
+$ ./librisxl-tools/scripts/setup-dev-whelk.sh -n whelk_dev
+```
+
+Important: ensure the name of the whelk (here "whelk_dev") is the same as the
+one configured in your local ./secret.properties config file.
+
+Explanation: Since we don't use -F to force rebuilding data and the importer,
+the first two commands do that. Depending on what you're doing, you can omit
+either one (or both if you're developing in this, the librisxl repo.)
+
 ### Clearing out existing definitions
 
 To clear out any existing definitions (before reloading them), run this script
@@ -274,6 +243,7 @@ $ ./librisxl-tools/scripts/manage-whelk-storage.sh -n whelk_dev --nuke-definitio
 ### New Elasticsearch config
 
 If a new index is to be set up, and unless you run locally in a pristine setup,
+or use the recommended devops-method for loading data
 you need to PUT the config to the index, like:
 
 ```
@@ -296,3 +266,12 @@ all data again (even locally).)
 
 If the MARC conversion process has been updated and needs to be run anew, the only
 option is to reload the data from vcopy using the importers application.
+
+### Statistics
+
+Produce a stats file (here for bib) by running:
+
+```
+$ cd importers && ../gradlew build
+$ RECTYPE=bib && time java -Dxl.secret.properties=../secret.properties -Dxl.mysql.properties=../mysql.properties -jar build/libs/vcopyImporter.jar vcopyjsondump $RECTYPE | grep '^{' | pypy ../librisxl-tools/scripts/get_marc_usage_stats.py $RECTYPE /tmp/usage-stats-$RECTYPE.json
+```

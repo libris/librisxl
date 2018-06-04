@@ -3,21 +3,24 @@ package whelk.actors
 
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
+import whelk.Whelk
 import whelk.util.VCopyToWhelkConverter
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
-import whelk.filter.LinkFinder
 import whelk.importer.MySQLLoader
 import whelk.util.ThreadPool
 
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.sql.Timestamp
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
-/**
- * Created by theodortolstoy on 2017-01-24.
- */
 @Log
+@Deprecated
 class FileDumper implements MySQLLoader.LoadHandler {
 
     BufferedWriter mainTableWriter
@@ -36,23 +39,34 @@ class FileDumper implements MySQLLoader.LoadHandler {
      */
     PostgreSQLComponent postgreSQLComponent
 
+    Whelk whelk
+
     FileDumper() {
         throw new Error("Groovy might let you call implicit default constructors, I will not.")
     }
 
     FileDumper(String exportFileName, PostgreSQLComponent postgres) {
 
-        final int THREAD_COUNT = 4 * Runtime.getRuntime().availableProcessors()
+        final int THREAD_COUNT = getThreadCount()
 
-        postgreSQLComponent = postgres
+        whelk = new Whelk(postgres)
+        whelk.loadCoreData()
         mainTableWriter = Files.newBufferedWriter(Paths.get(exportFileName), Charset.forName("UTF-8"))
         identifiersWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_identifiers"), Charset.forName("UTF-8"))
         dependenciesWriter = Files.newBufferedWriter(Paths.get(exportFileName + "_dependencies"), Charset.forName("UTF-8"))
         threadPool = new ThreadPool(THREAD_COUNT)
         converterPool = new MarcFrameConverter[THREAD_COUNT]
         for (int i = 0; i < THREAD_COUNT; ++i) {
-            LinkFinder lf = new LinkFinder(postgreSQLComponent)
-            converterPool[i] = new MarcFrameConverter(lf)
+            converterPool[i] = whelk.createMarcFrameConverter()
+        }
+    }
+
+    private int getThreadCount() {
+        int procs = Runtime.getRuntime().availableProcessors()
+        if (procs > 1) {
+            return procs - 1
+        } else {
+            return procs
         }
     }
 
@@ -76,19 +90,40 @@ class FileDumper implements MySQLLoader.LoadHandler {
                     log.error("Failed converting document with id: " + rowList.last().bib_id, e)
                 }
                 if (recordMap != null) {
-                    List<String[]> externalDependencies = postgreSQLComponent.calculateDependenciesSystemIDs(recordMap.document)
+                    List<String[]> externalDependencies = whelk.storage.calculateDependenciesSystemIDs(recordMap.document)
                     recordMap["dependencies"] = externalDependencies
-                    recordMap.document.setModified(new Date())
-                    converterPool[threadIndex].linkFinder.replaceSameAsLinksWithPrimaries(recordMap.document.data)
+
+                    String modifiedString = recordMap.document.getModified()
+                    if (modifiedString == null)
+                        modifiedString = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( ZonedDateTime.now(ZoneId.systemDefault()) )
+
+                    ZonedDateTime modifiedZoned = ZonedDateTime.parse(modifiedString, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                    Date modified = Date.from(modifiedZoned.toInstant())
+                    recordMap.document.setModified(modified)
+
+                    recordMap.document.setGenerationProcess('https://id.kb.se/generator/marcframe')
+                    recordMap.document.setGenerationDate(new Date())
+
+                    boolean cacheAuthForever = true
+                    converterPool[threadIndex].linkFinder.normalizeIdentifiers(recordMap.document, cacheAuthForever)
                     if (externalDependencies.size() > 0) {
-                        List<String> dependencyIDsIncludingThis = []
+                        List<String> dependencyIDs = []
                         for (String[] reference : externalDependencies) {
-                            dependencyIDsIncludingThis.add(reference[1])
+                            dependencyIDs.add(reference[1])
                         }
-                        dependencyIDsIncludingThis.add( recordMap.document.getShortId() )
-                        String[] depMinMaxModified = postgreSQLComponent.getMinMaxModified(dependencyIDsIncludingThis)
-                        recordMap["depMinModified"] = depMinMaxModified[0]
-                        recordMap["depMaxModified"] = depMinMaxModified[1]
+                        Tuple2<Timestamp, Timestamp> depMinMaxModified = whelk.storage.getMinMaxModified(dependencyIDs)
+
+                        Instant min = ((Timestamp) depMinMaxModified.get(0)).toInstant()
+                        Instant max = ((Timestamp) depMinMaxModified.get(1)).toInstant()
+                        Instant modifiedInstant = modified.toInstant()
+
+                        if (modifiedInstant.isBefore(min))
+                            min = modifiedInstant
+                        if (modifiedInstant.isAfter(max))
+                            max = modifiedInstant
+
+                        recordMap["depMinModified"] = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( ZonedDateTime.ofInstant(min, ZoneId.systemDefault()) )
+                        recordMap["depMaxModified"] = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( ZonedDateTime.ofInstant(max, ZoneId.systemDefault()) )
                     }
                     else
                         recordMap["depMinModified"] = recordMap["depMaxModified"] = recordMap.document.getModified()

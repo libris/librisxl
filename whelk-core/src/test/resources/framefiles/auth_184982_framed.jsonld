@@ -1,0 +1,93 @@
+{
+  "sameAs": [
+    {
+      "birthYear": "1888",
+      "givenName": "Thomas Stearns",
+      "familyName": "Eliot",
+      "deathYear": "1965",
+      "@type": "Person"
+    }
+  ],
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "focus": {
+    "@id": "/resource/auth/184982",
+    "familyName": "Eliot",
+    "label": "(Thomas Stearns),",
+    "note": [
+      "Amerikansk-brittisk poet, förlagsredaktör, kritiker och dramatiker, nobelpriset i litteratur 1948"
+    ],
+    "birthYear": "1888",
+    "nationality": {
+      "@id": "/def/nationalities/e-uk---"
+    },
+    "givenName": "T. S.",
+    "deathYear": "1965",
+    "@type": "Person"
+  },
+  "modified": "2012-10-02T12:22:39.0+02:00",
+  "closeMatch": [
+    {
+      "@id": "http://dewey.info/class/821.912/e23/"
+    }
+  ],
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "editorialNote": [
+    "Namnformen ändrad från Thomas Stearns Eliot /2003-04-02/S/PL"
+  ],
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "source": [
+    {
+      "@type": "CreativeWork",
+      "label": "The waste land and other poems / T. S. Eliot, 1972"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "LC Auth"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "systemNumber": [
+    "(LIBRIS)9918313846"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=L"
+  },
+  "@id": "/auth/184982",
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "1993-12-08T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "controlNumber": "184982",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "@type": "PersonTerm"
+}

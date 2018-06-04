@@ -13,12 +13,19 @@ class RecordRelationAPI extends HttpServlet {
 
     private Whelk whelk
 
+    RecordRelationAPI() {
+        // Do nothing - only here for Tomcat to have something to call
+    }
+
+    RecordRelationAPI(Whelk whelk) {
+        this.whelk = whelk
+    }
+
     @Override
     void init() {
-        Properties configuration = PropertyLoader.loadProperties("secret")
-        PostgreSQLComponent storage = new PostgreSQLComponent(configuration.getProperty("sqlUrl"),
-                configuration.getProperty("sqlMaintable"))
-        whelk = new Whelk(storage)
+        if (!whelk) {
+            whelk = Whelk.createLoadedCoreWhelk()
+        }
     }
 
     @Override
@@ -45,24 +52,30 @@ class RecordRelationAPI extends HttpServlet {
             return
         }
 
-        List<String> dependencySystemIDs
+        ArrayList<String> result = []
         if (relation == null) {
+            List<Tuple2<String, String>> dependencySystemIDs
             if (reverse)
                 dependencySystemIDs = whelk.storage.getDependers(systemId)
             else
                 dependencySystemIDs = whelk.storage.getDependencies(systemId)
+
+            for (Tuple2<String, String> dependencySystemId : dependencySystemIDs){
+                result.add(Document.getBASE_URI().toString() + dependencySystemId.get(0))
+            }
         }
         else {
+            List<String> dependencySystemIDs
             if (reverse)
                 dependencySystemIDs = whelk.storage.getDependersOfType(systemId, relation)
             else
                 dependencySystemIDs = whelk.storage.getDependenciesOfType(systemId, relation)
+            
+            for (String dependencySystemId : dependencySystemIDs){
+                result.add(Document.getBASE_URI().toString() + dependencySystemId)
+            }
         }
 
-        ArrayList<String> result = []
-        for (String dependencySystemId : dependencySystemIDs){
-            result.add(Document.getBASE_URI().toString() + dependencySystemId)
-        }
 
         String jsonString = PostgreSQLComponent.mapper.writeValueAsString(result)
         response.setContentType("application/json")

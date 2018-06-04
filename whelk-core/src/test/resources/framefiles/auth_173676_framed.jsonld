@@ -1,0 +1,46 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2002-10-31T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "focus": {
+    "@id": "/resource/auth/173676",
+    "@type": [
+      "Authority"
+    ]
+  },
+  "controlNumber": "173676",
+  "modified": "2013-09-15T12:56:12.0+02:00",
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "subjectSubdivision": {
+    "@id": "/def/enum/content/Topical"
+  },
+  "headingMain": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "kindOfRecord": {
+    "@id": "/def/enum/content/SubdivisionRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/auth/173676",
+  "@type": "GeographicalSubdivisionTerm",
+  "prefLabel": "Sverige"
+}

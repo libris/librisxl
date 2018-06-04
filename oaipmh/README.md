@@ -1,1 +1,0 @@
-# Libris-XL OAIPMH

@@ -36,7 +36,7 @@ class Conversiontester implements MySQLLoader.LoadHandler {
         toMarcConverterPool = new JsonLD2MarcConverter[THREAD_COUNT]
         for (int i = 0; i < THREAD_COUNT; ++i) {
             toJsonConverterPool[i] = new MarcFrameConverter()
-            toMarcConverterPool[i] = new JsonLD2MarcConverter()
+            toMarcConverterPool[i] = new JsonLD2MarcConverter(toJsonConverterPool[i])
         }
         this.generateDiffFile = generateDiffFile
     }

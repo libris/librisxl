@@ -1,7 +1,7 @@
 apply plugin: 'java'
-apply plugin: 'jetty'
 apply plugin: 'war'
 apply plugin: 'maven'
+apply from: '../gretty.plugin'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -15,9 +15,7 @@ repositories {
 dependencies {
 
     // XL dependencies
-    compile('../../whelk-core' in project.subprojects*.name?
-            project(':../../whelk-core') :
-            'com.github.libris:whelk-core:0.4.1')
+    compile(project(':../whelk-core'))
 
     def jettyVersion="9.3.6.v20151106"
 
@@ -37,4 +35,8 @@ dependencies {
 
     // Testing
     testCompile 'junit:junit:4.12'
+}
+
+gretty {
+    systemProperties 'xl.secret.properties': System.getProperty("xl.secret.properties")
 }

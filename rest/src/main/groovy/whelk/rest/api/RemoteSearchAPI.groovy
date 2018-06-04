@@ -20,6 +20,7 @@ import java.util.regex.Pattern
 
 @Log
 class RemoteSearchAPI extends HttpServlet {
+
     final static mapper = new ObjectMapper()
 
     String description = "Query API for remote search"
@@ -37,10 +38,33 @@ class RemoteSearchAPI extends HttpServlet {
 
     def urlParams = ["version": "1.1", "operation": "searchRetrieve", "maximumRecords": "10","startRecord": "1"]
 
+    private Whelk whelk
+
+    private Set<String> m_undesirableFields
+
     RemoteSearchAPI() {
+        // Do nothing - only here for Tomcat to have something to call
+    }
+
+    RemoteSearchAPI(Whelk whelk) {
+        this.whelk = whelk
+    }
+
+    @Override
+    void init() {
         log.info("Starting Remote Search API")
         loadMetaProxyInfo(metaProxyInfoUrl)
-        marcFrameConverter = new MarcFrameConverter()
+        if (!whelk) {
+            whelk = Whelk.createLoadedCoreWhelk()
+        }
+        marcFrameConverter = whelk.createMarcFrameConverter()
+
+        m_undesirableFields = new HashSet<>()
+        for (int i = 900; i < 1000; ++i) {
+            m_undesirableFields.add(String.format("%1\$03d", i))
+        }
+
+        log.info("Started ...")
     }
 
     List loadMetaProxyInfo(URL url) {
@@ -77,6 +101,22 @@ class RemoteSearchAPI extends HttpServlet {
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
+
+        // Check that we have kat-rights.
+        boolean hasPermission = false
+        Map userInfo = request.getAttribute("user")
+        if (userInfo != null) {
+            if (userInfo.permissions.any { item ->
+                item.get(whelk.rest.security.AccessControl.KAT_KEY)
+            } || Crud.isSystemUser(userInfo))
+                hasPermission = true
+        }
+
+        if (hasPermission){
+            response.sendError(HttpServletResponse.SC_FORBIDDEN)
+            return
+        }
+
         log.info("Performing remote search ...")
         def query = request.getParameter("q")
         int start = (request.getParameter("start") ?: "0") as int
@@ -193,13 +233,13 @@ class RemoteSearchAPI extends HttpServlet {
                     results = new MetaproxySearchResult(database, numHits)
                     for (docString in docStrings) {
                         def record = MarcXmlRecordReader.fromXml(docString)
-                        // Not always available (and also unreliable)
-                        //id = record.getControlfields("001").get(0).getData()
+
+                        String generatedId = sanitizeMarcAndGenerateNewID(record)
 
                         log.trace("Marcxmlrecordreader for done")
                         def jsonRec = MarcJSONConverter.toJSONString(record)
                         log.trace("Marcjsonconverter for done")
-                        def jsonDoc = marcFrameConverter.convert(mapper.readValue(jsonRec.getBytes("UTF-8"), Map), null, null)
+                        def jsonDoc = marcFrameConverter.convert(mapper.readValue(jsonRec.getBytes("UTF-8"), Map), generatedId)
                         log.trace("Marcframeconverter done")
 
                         results.addHit(new Document(jsonDoc))
@@ -263,5 +303,24 @@ class RemoteSearchAPI extends HttpServlet {
 
     String removeNamespacePrefixes(String xmlStr) {
         return xmlStr.replaceAll("tag0:", "").replaceAll("zs:", "")
+    }
+
+    String sanitizeMarcAndGenerateNewID(MarcRecord marcRecord) {
+        List<Field> mutableFieldList = marcRecord.getFields()
+
+        // Replace any existing 001 fields, TODO: move 001 to 035$a instead?
+        String generatedId = IdGenerator.generate()
+        if (marcRecord.getControlfields("001").size() != 0) {
+            mutableFieldList.remove(marcRecord.getControlfields("001").get(0))
+        }
+        marcRecord.addField(marcRecord.createControlfield("001", generatedId))
+
+        // Remove unwanted marc fields.
+        for (Field field : mutableFieldList) {
+            String fieldNumber = field.getTag()
+            if (m_undesirableFields.contains(fieldNumber))
+                mutableFieldList.remove(field)
+        }
+        return generatedId
     }
 }

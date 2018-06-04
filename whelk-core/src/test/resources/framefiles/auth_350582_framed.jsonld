@@ -1,0 +1,64 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2012-02-09T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "focus": {
+    "familyName": "Sköld",
+    "birthYear": "1974",
+    "nationality": {
+      "@id": "/def/nationalities/e-sw---"
+    },
+    "givenName": "Markus",
+    "@id": "/resource/auth/350582",
+    "@type": "Person"
+  },
+  "controlNumber": "350582",
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "source": [
+    {
+      "@type": "CreativeWork",
+      "label": "Där ute i mörkret, 2012"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "romanization": {
+    "@id": "/def/enum/content/NationalStandard"
+  },
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "modified": "2012-10-01T08:57:51.0+02:00",
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/auth/350582",
+  "@type": "PersonTerm",
+  "subjectSubdivision": {
+    "@id": "/def/enum/content/Topical"
+  }
+}

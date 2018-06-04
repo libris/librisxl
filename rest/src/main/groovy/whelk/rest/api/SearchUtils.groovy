@@ -7,6 +7,7 @@ import whelk.JsonLd
 import whelk.Location
 import whelk.Whelk
 import whelk.component.ElasticSearch
+import whelk.component.PostgreSQLComponent
 import whelk.component.StorageType
 import whelk.exception.WhelkRuntimeException
 import whelk.exception.InvalidQueryException
@@ -30,9 +31,13 @@ class SearchUtils {
     JsonLd ld
     URI vocabUri
 
-    SearchUtils(Whelk whelk, Map displayData, Map vocabData) {
+    SearchUtils(Whelk whelk) {
+        this(whelk.jsonld)
         this.whelk = whelk
-        ld = new JsonLd(displayData, vocabData)
+    }
+
+    SearchUtils(JsonLd jsonld) {
+        this.ld = jsonld
         if (ld.vocabId) {
             vocabUri = new URI(ld.vocabId)
         }
@@ -235,10 +240,13 @@ class SearchUtils {
             items = esResult['items'].collect { ld.toCard(it) }
         }
 
-        items = embellishItems(items)
+        //items = embellishItems(items)
         if (statsTree) {
             stats = buildStats(esResult['aggregations'],
                                makeFindUrl(SearchType.ELASTIC, pageParams))
+            if (!stats) {
+                log.debug("No stats found for query: ${dslQuery}, result: ${esResult}")
+            }
         }
 
         mappings.tail().each { mapping ->
@@ -411,20 +419,19 @@ class SearchUtils {
             return ld.vocabIndex[termKey]
         }
         String fullId = vocabUri ? vocabUri.resolve(id).toString() : id
-        Location loc = whelk.storage.locate(fullId, true)
-        Document doc = loc?.document
+        Document doc = whelk.storage.getDocumentByIri(fullId)
 
         if (doc) {
-            return getEntry(doc.data)
+            return getEntry(doc.data, fullId)
         } else {
             return null
         }
     }
 
     // FIXME move to Document or JsonLd
-    private Map getEntry(Map jsonLd) {
+    private Map getEntry(Map jsonLd, String entryId) {
         // we rely on this convention for the time being.
-        return jsonLd[(JsonLd.GRAPH_KEY)][0]
+        return jsonLd[(JsonLd.GRAPH_KEY)].find { it[JsonLd.ID_KEY] == entryId }
     }
 
     /**

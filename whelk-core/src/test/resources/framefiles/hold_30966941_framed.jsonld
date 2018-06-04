@@ -1,0 +1,81 @@
+{
+  "about": {
+    "holdingFor": {
+      "@id": "/resource/bib/10380624"
+    },
+    "workExample": [
+      {
+        "copyNote": [
+          "Academic Search Elite"
+        ],
+        "@type": "SomeProducts",
+        "description": "2001 to present"
+      }
+    ],
+    "associatedMedia": [
+      {
+        "@id": "http://webproxy.student.hig.se:2048/login?url=http://search.ebscohost.com/direct.asp?db=afh&jid=GZD&scope=site",
+        "@type": "MediaObject",
+        "copyNote": [
+          "Endast för användare inom Högskolan i Gävle",
+          "Academic Search Elite"
+        ]
+      }
+    ],
+    "offers": [
+      {
+        "heldBy": [
+          {
+            "@id": "/some?type=Organization&notation=HigE"
+          }
+        ],
+        "@type": "Offer"
+      }
+    ],
+    "numberOfItems": 1,
+    "heldBy": {
+      "@type": "Organization",
+      "notation": "HigE"
+    },
+    "@id": "/resource/hold/30966941",
+    "@type": "HeldMaterial"
+  },
+  "created": "2015-06-02T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/HoldingsLevel1"
+  },
+  "controlNumber": "30966941",
+  "itemInfoInRecord": {
+    "@id": "/def/enum/record/NoItemInformation"
+  },
+  "holdingType": {
+    "@id": "/def/enum/record/SerialItemHolding"
+  },
+  "_marcUncompleted": [
+    {
+      "035": {
+        "subfields": [
+          {
+            "a": "(EBZ)ebs95982e"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "599": {
+        "subfields": [
+          {
+            "a": "EBZ"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    }
+  ],
+  "modified": "2015-06-04T18:22:07.0+02:00",
+  "@id": "/hold/30966941",
+  "@type": "Record"
+}

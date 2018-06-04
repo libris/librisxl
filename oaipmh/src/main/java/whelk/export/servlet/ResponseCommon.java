@@ -5,7 +5,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.Document;
 import whelk.JsonLd;
-import whelk.component.PostgreSQLComponent;
 import whelk.util.LegacyIntegrationTools;
 
 import javax.servlet.http.HttpServletRequest;
@@ -14,8 +13,6 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
@@ -23,7 +20,7 @@ import java.time.ZonedDateTime;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 public class ResponseCommon
 {
@@ -144,7 +141,7 @@ public class ResponseCommon
     }
 
     public static void emitRecord(ResultSet resultSet, XMLStreamWriter writer, String requestedFormat,
-                                  boolean onlyIdentifiers, boolean embellish)
+                                  boolean onlyIdentifiers, boolean embellish, boolean withDeletedData)
             throws SQLException, XMLStreamException, IOException
     {
         boolean deleted = resultSet.getBoolean("deleted");
@@ -158,16 +155,7 @@ public class ResponseCommon
 
         if (embellish)
         {
-            List externalRefs = document.getExternalRefs();
-            List convertedExternalLinks = JsonLd.expandLinks(externalRefs, (Map) OaiPmh.s_jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()));
-            Map referencedData = OaiPmh.s_whelk.bulkLoad(convertedExternalLinks);
-
-            // The madness
-            Map referencedData2 = new HashMap();
-            for (Object key : referencedData.keySet())
-                referencedData2.put(key, ((Document)referencedData.get(key)).data );
-
-            OaiPmh.s_jsonld.embellish(document.data, referencedData2, false);
+            document = OaiPmh.s_whelk.getStorage().loadEmbellished(document.getShortId(), OaiPmh.s_whelk.getJsonld());
         }
 
         if (!onlyIdentifiers)
@@ -204,7 +192,7 @@ public class ResponseCommon
 
         writer.writeEndElement(); // header
 
-        if (!onlyIdentifiers && !deleted)
+        if (!onlyIdentifiers && (!deleted || withDeletedData))
         {
             writer.writeStartElement("metadata");
             ResponseCommon.writeConvertedDocument(writer, requestedFormat, document);
@@ -213,7 +201,7 @@ public class ResponseCommon
 
         if (!onlyIdentifiers && requestedFormat.contains(OaiPmh.FORMAT_INCLUDE_HOLD_POSTFIX) && dataset.equals("bib"))
         {
-            emitAttachedHoldings(document.getThingIdentifiers(), writer);
+            emitAttachedRecords(document, writer, requestedFormat);
         }
 
         String itemOf = resultSet.getString("itemOf");
@@ -230,10 +218,10 @@ public class ResponseCommon
             writer.writeEndElement(); // record
     }
 
-    private static void emitAttachedHoldings(List<String> itIds, XMLStreamWriter writer)
+    private static void emitAttachedRecords(Document rootDocument, XMLStreamWriter writer, String requestedFormat)
             throws SQLException, XMLStreamException, IOException
     {
-        List<Document> holdings = OaiPmh.s_postgreSqlComponent.getAttachedHoldings(itIds);
+        List<Document> holdings = OaiPmh.s_whelk.getStorage().getAttachedHoldings(rootDocument.getThingIdentifiers());
         writer.writeStartElement("about");
         for (Document holding : holdings)
         {
@@ -247,8 +235,29 @@ public class ResponseCommon
             writer.writeStartElement("holding");
             writer.writeAttribute("sigel", sigel);
             writer.writeAttribute("id", holding.getShortId());
+            ResponseCommon.writeConvertedDocument(writer, requestedFormat, holding);
             writer.writeEndElement(); // holding
         }
+
+        Set<String> refs = JsonLd.getAllReferences(rootDocument.data);
+        for (String ref : refs)
+        {
+            if (ref.startsWith("https://id.kb.se/") || ref.startsWith(Document.getBASE_URI().toString()))
+            {
+                String systemID = OaiPmh.s_whelk.getStorage().getSystemIdByIri(ref);
+                if (systemID == null)
+                    continue;
+                if (!OaiPmh.s_whelk.getStorage().getCollectionBySystemID(systemID).equals("auth"))
+                    continue;
+                Document auth = OaiPmh.s_whelk.getStorage().loadEmbellished(systemID, OaiPmh.s_whelk.getJsonld());
+
+                writer.writeStartElement("auth");
+                writer.writeAttribute("id", auth.getShortId());
+                ResponseCommon.writeConvertedDocument(writer, requestedFormat, auth);
+                writer.writeEndElement(); // auth
+            }
+        }
+
         writer.writeEndElement(); // about
     }
 }

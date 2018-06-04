@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -35,28 +36,18 @@ public class Utils
     static final String APIX_BASEURI = "https://apix.libris.kb.se/apix";
     static final String APIX_SYSTEM_CODE = "APIX";
     static Whelk s_whelk;
-    static JsonLd s_jsonld; // For model driven behaviour
-    private static JsonLD2MarcXMLConverter s_toMarcConverter = new JsonLD2MarcXMLConverter();
-    private static MarcFrameConverter s_toJsonLdConverter = new MarcFrameConverter();
+    private static JsonLD2MarcXMLConverter s_toMarcConverter;
+    private static MarcFrameConverter s_toJsonLdConverter;
     private static final Logger s_logger = LogManager.getLogger(Utils.class);
 
     static
     {
-        Properties configuration = PropertyLoader.loadProperties("secret");
-        PostgreSQLComponent postgreSqlComponent =
-                new PostgreSQLComponent(configuration.getProperty("sqlUrl"), configuration.getProperty("sqlMaintable"));
-        ElasticSearch elasticSearch = new ElasticSearch(
-                configuration.getProperty("elasticHost"),
-                configuration.getProperty("elasticCluster"),
-                configuration.getProperty("elasticIndex"));
-        s_whelk = new Whelk(postgreSqlComponent, elasticSearch);
-        s_whelk.loadCoreData();
-        Map displayData = s_whelk.getDisplayData();
-        Map vocabData = s_whelk.getVocabData();
-        s_jsonld = new JsonLd(displayData, vocabData);
+        s_whelk = Whelk.createLoadedSearchWhelk();
+        s_toJsonLdConverter = s_whelk.createMarcFrameConverter();
+        s_toMarcConverter = new JsonLD2MarcXMLConverter(s_toJsonLdConverter);
     }
 
-    static String convertToMarcXml(Document document) throws TransformerException, IOException
+    static String convertToMarcXml(Document document)
     {
         try
         {
@@ -91,24 +82,31 @@ public class Utils
             if (marcRecord.getControlfields("001").size() == 0)
                 marcRecord.addField(marcRecord.createControlfield("001", generatedId));
 
-            // If this is a holding record, 004 needs to contain the correct bib id to link with
-            if (itemOfSystemId != null && expectedCollection.equals("hold"))
-            {
-                List<Controlfield> cfs = (List<Controlfield>) marcRecord.getControlfields("004");
-
-                if (cfs.isEmpty())
-                    marcRecord.addField(marcRecord.createControlfield("004", String.valueOf(itemOfSystemId)), MarcFieldComparator.strictSorted);
-                else if (!String.valueOf(itemOfSystemId).equals(cfs.get(0).getData()))
-                {
-                    s_logger.error("Cannot accept incoming marc hold record. Marc field 004 did not match the bibid the holding was for.");
-                    return null;
-                }
-            }
-
             Map convertedData = s_toJsonLdConverter.convert(MarcJSONConverter.toJSONMap(marcRecord), generatedId);
             Document document = new Document(convertedData);
 
-            String contentClassifiedAsCollection = LegacyIntegrationTools.determineLegacyCollection(document, s_jsonld);
+            if (expectedCollection.equals("hold"))
+            {
+                // Construct resource URIs from the system ID.
+                String bibThingId = null;
+                if ( 14 < itemOfSystemId.length() && itemOfSystemId.length() < 17) // XL system id
+                {
+                    bibThingId = Document.getBASE_URI().resolve(itemOfSystemId).toString()+"#it";
+                }
+                else if (itemOfSystemId.matches("^\\d+$"))
+                {
+                    bibThingId = "http://libris.kb.se/resource/bib/" + itemOfSystemId;
+                }
+                if (bibThingId == null)
+                {
+                    s_logger.error("Cannot accept incoming marc hold record, bad associated Bib-ID: " + itemOfSystemId);
+                    return null;
+                }
+
+                document.setHoldingFor(bibThingId);
+            }
+
+            String contentClassifiedAsCollection = LegacyIntegrationTools.determineLegacyCollection(document, s_whelk.getJsonld());
 
             if (contentClassifiedAsCollection.equals(expectedCollection))
                 return document;
@@ -126,7 +124,7 @@ public class Utils
         String xlShortId = s_whelk.getStorage().getSystemIdByIri(xlUri);
         if (xlShortId == null)
             return null;
-        Document document = s_whelk.getStorage().load(xlShortId);
+        Document document = s_whelk.getStorage().loadEmbellished(xlShortId, s_whelk.getJsonld());
 
         if (document.getDeleted())
             return null;

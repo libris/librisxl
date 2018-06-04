@@ -1,0 +1,72 @@
+{
+  "about": {
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Review"
+      }
+    ],
+    "publication": [
+      {
+        "providerDate": "2004"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Ronstr%C3%B6m&givenName=Owe&birthYear=1953"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "@type": "Title",
+      "titleValue": "[Recension av: Sjöholm, Carina: Gå på bio]"
+    },
+    "isPartOf": [
+      {
+        "@id": "/some?type=Aggregate&title=Rig&scopeNote=2004%2887%29%3A1%2C%20s.%2041-45"
+      }
+    ],
+    "relation": [
+      {
+        "@id": "/some?type=CreativeWork&linkNote=Recension%20av%3A&controlledLabel=Sj%C3%B6holm%2C%20Carina&title=G%C3%A5%20p%C3%A5%20bio%20%3A%20%20rum%20f%C3%B6r%20dr%C3%B6mmar%20i%20folkhemmets%20Sverige&placePublisherAndDateOfPublication=2003"
+      }
+    ],
+    "@id": "/resource/bib/9461508",
+    "@type": [
+      "Text",
+      "ComponentPart"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SHB"
+    }
+  ],
+  "created": "2004-04-15T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "9461508",
+  "@type": "Record",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "modified": "2004-04-15T16:11:49.0+02:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=SHB"
+  },
+  "@id": "/bib/9461508",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+  }
+}

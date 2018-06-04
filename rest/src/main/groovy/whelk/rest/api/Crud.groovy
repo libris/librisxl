@@ -3,7 +3,6 @@ package whelk.rest.api
 import groovy.util.logging.Log4j2 as Log
 import org.apache.http.entity.ContentType
 import org.codehaus.jackson.map.ObjectMapper
-import org.picocontainer.PicoContainer
 
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
@@ -16,15 +15,11 @@ import whelk.Whelk
 import whelk.IdGenerator
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
-import whelk.converter.FormatConverter
-import whelk.converter.marc.JsonLD2MarcConverter
-import whelk.converter.marc.JsonLD2MarcXMLConverter
 import whelk.exception.InvalidQueryException
 import whelk.exception.ModelValidationException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
-import whelk.exception.WhelkStorageException
 import whelk.rest.api.CrudUtils
 import whelk.rest.api.MimeTypes
 import whelk.rest.api.SearchUtils
@@ -36,9 +31,9 @@ import javax.activation.MimetypesFileTypeMap
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import java.lang.management.ManagementFactory
 
 import static HttpTools.sendResponse
-import static whelk.rest.api.HttpTools.getMajorContentType
 
 /**
  * Handles all GET/PUT/POST/DELETE requests against the backend.
@@ -48,6 +43,8 @@ class Crud extends HttpServlet {
 
     final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
     final static String DOCBASE_URI = "http://libris.kb.se/" // TODO: encapsulate and configure (LXL-260)
+    final static String XL_ACTIVE_SIGEL_HEADER = 'XL-Active-Sigel'
+    final static String EPOCH_START = '1970/1/1'
 
     static final Counter requests = Counter.build()
         .name("api_requests_total").help("Total requests to API.")
@@ -70,8 +67,6 @@ class Crud extends HttpServlet {
         FRAMED, EMBELLISHED, FRAMED_AND_EMBELLISHED, RAW
     }
 
-    static final JsonLD2MarcXMLConverter converter = new JsonLD2MarcXMLConverter();
-
     MimetypesFileTypeMap mimeTypes = new MimetypesFileTypeMap()
 
     final static Map contextHeaders = [
@@ -86,55 +81,35 @@ class Crud extends HttpServlet {
     JsonLd jsonld
 
     SearchUtils search
-    PicoContainer pico
     static final ObjectMapper mapper = new ObjectMapper()
     AccessControl accessControl = new AccessControl()
 
     Crud() {
-        super()
-        log.info("Setting up httpwhelk.")
+        // Do nothing - only here for Tomcat to have something to call
+    }
 
-        Properties props = PropertyLoader.loadProperties("secret")
-
-        // Get a properties pico container, pre-wired with components according to components.properties
-        pico = Whelk.getPreparedComponentsContainer(props)
-
-        pico.addComponent(JsonLD2MarcConverter.class)
-        pico.addComponent(JsonLD2MarcXMLConverter.class)
-        pico.addComponent(ISXNTool.class)
-
-        //pico.as(Characteristics.CACHE, Characteristics.USE_NAMES).addComponent(ApixClientCamel.class)
-        //pico.addComponent(Characteristics.CACHE).addComponent(JsonLdLinkExpander.class)
-
-        pico.start()
+    Crud(Whelk whelk) {
+        this.whelk = whelk
     }
 
     @Override
     void init() {
-        whelk = pico.getComponent(Whelk.class)
-        whelk.loadCoreData()
+        if (!whelk) {
+            whelk = Whelk.createLoadedSearchWhelk()
+        }
         displayData = whelk.displayData
         vocabData = whelk.vocabData
         jsonld = whelk.jsonld
-        search = new SearchUtils(whelk, displayData, vocabData)
+        search = new SearchUtils(whelk)
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response,
                      String dataset) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
-        String callback = queryParameters.remove("callback")
 
         try {
             Map results = search.doSearch(queryParameters, dataset, jsonld)
-            def jsonResult
-
-            if (callback) {
-                jsonResult = callback + "(" +
-                        mapper.writeValueAsString(results) + ");"
-            } else {
-                jsonResult = mapper.writeValueAsString(results)
-            }
-
+            def jsonResult = mapper.writeValueAsString(results)
             sendResponse(response, jsonResult, "application/json")
         } catch (WhelkRuntimeException wse) {
             log.error("Attempted elastic query, but whelk has no " +
@@ -194,14 +169,14 @@ class Crud extends HttpServlet {
         def marcframePath = "/sys/marcframe.json"
         if (request.pathInfo == marcframePath) {
             def responseBody = getClass().classLoader.getResourceAsStream("ext/marcframe.json").getText("utf-8")
-            sendGetResponse(request, response, responseBody, "1970/1/1", marcframePath, "application/json")
+            sendGetResponse(request, response, responseBody, EPOCH_START, marcframePath, "application/json")
             return
         }
 
         def forcedsetPath = "/sys/forcedsetterms.json"
         if (request.pathInfo == forcedsetPath) {
-            String responseBody = mapper.writeValueAsString(jsonld.forcedSetTerms)
-            sendGetResponse(request, response, responseBody, "1970/1/1", forcedsetPath, "application/json")
+            String responseBody = mapper.writeValueAsString(jsonld.repeatableTerms)
+            sendGetResponse(request, response, responseBody, EPOCH_START, forcedsetPath, "application/json")
             return
         }
 
@@ -231,6 +206,16 @@ class Crud extends HttpServlet {
         Document doc = docAndLocation.first
         String loc = docAndLocation.second
 
+        String ifNoneMatch = request.getHeader("If-None-Match")
+        if (ifNoneMatch != null && doc != null &&
+                cleanEtag(ifNoneMatch) == doc.getModified()) {
+            response.setHeader("ETag", "\"${doc.getModified()}\"")
+            response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
+            response.sendError(HttpServletResponse.SC_NOT_MODIFIED,
+                    "Document has not been modified.")
+            return
+        }
+
         if (!doc && !loc) {
             failedRequests.labels("GET", request.getRequestURI(),
                     HttpServletResponse.SC_NOT_FOUND.toString()).inc()
@@ -248,7 +233,7 @@ class Crud extends HttpServlet {
             return
         } else {
             String contentType = CrudUtils.getBestContentType(request)
-            def responseBody = getFormattedResponseBody(doc, path, contentType)
+            def responseBody = getFormattedResponseBody(doc, path, contentType, version != null)
             String modified = doc.getModified()
             response = maybeAddProposal25Headers(response, loc)
             sendGetResponse(request, response, responseBody, modified,
@@ -258,7 +243,7 @@ class Crud extends HttpServlet {
     }
 
     private Object getFormattedResponseBody(Document doc, String path,
-                                            String contentType) {
+                                            String contentType, boolean archivedVersion) {
         FormattingType format = getFormattingType(path, contentType)
         log.debug("Formatting document ${doc.getCompleteId()} with format " +
                 "${format} and content type ${contentType}")
@@ -268,31 +253,25 @@ class Crud extends HttpServlet {
                 result = doc.data
                 break
             case FormattingType.EMBELLISHED:
-                doc = getEmbellishedDocument(doc)
-                result = doc.data
+                if (!archivedVersion)
+                    doc = whelk.storage.loadEmbellished(doc.getShortId(), jsonld)
+                if (doc != null) // FU unit tests
+                    result = doc.data
                 break
             case FormattingType.FRAMED:
                 result = JsonLd.frame(doc.getCompleteId(), doc.data)
                 break
             case FormattingType.FRAMED_AND_EMBELLISHED:
-                doc = getEmbellishedDocument(doc)
-                result = JsonLd.frame(doc.getCompleteId(), doc.data)
+                if (!archivedVersion)
+                    doc = whelk.storage.loadEmbellished(doc.getShortId(), jsonld)
+                if (doc != null) // FU unit tests
+                    result = JsonLd.frame(doc.getCompleteId(), doc.data)
                 break
             default:
                 throw new WhelkRuntimeException("Invalid formatting type: ${format}")
         }
 
         return formatResponseBody(result, contentType)
-    }
-
-    private Document getEmbellishedDocument(Document doc) {
-        List externalRefs = doc.getExternalRefs()
-        List convertedExternalLinks = convertExternalLinks(externalRefs)
-        Map referencedData = getReferencedData(convertedExternalLinks)
-        boolean filterOutNonChipTerms = false
-        doc.embellish(referencedData, jsonld, filterOutNonChipTerms)
-
-        return doc
     }
 
     /**
@@ -480,8 +459,7 @@ class Crud extends HttpServlet {
                                                     String version = null) {
         Tuple2<Document, String> result = new Tuple2(null, null)
 
-        // Document doc = whelk.storage.load(id, version)
-        Document doc = whelk.storage.load(id)
+        Document doc = whelk.storage.load(id, version)
         if (doc) {
             return new Tuple2(doc, null)
         }
@@ -490,15 +468,13 @@ class Crud extends HttpServlet {
         // identifiers table instead
         switch (whelk.storage.getIdType(id)) {
             case IdType.RecordMainId:
-                // doc = whelk.storage.loadDocumentByMainId(id, version)
-                doc = whelk.storage.loadDocumentByMainId(id)
+                doc = whelk.storage.loadDocumentByMainId(id, version)
                 if (doc) {
                     result = new Tuple2(doc, null)
                 }
                 break
             case IdType.ThingMainId:
-                // doc = whelk.storage.loadDocumentByMainId(id, version)
-                doc = whelk.storage.loadDocumentByMainId(id)
+                doc = whelk.storage.loadDocumentByMainId(id, version)
                 if (doc) {
                     String contentLocation = whelk.storage.getRecordId(id)
                     result = new Tuple2(doc, contentLocation)
@@ -569,14 +545,12 @@ class Crud extends HttpServlet {
 
         String etag = modified
 
-        String ifNoneMatch = request.getHeader("If-None-Match")
-        if (ifNoneMatch != null && ifNoneMatch == etag) {
-            response.sendError(HttpServletResponse.SC_NOT_MODIFIED,
-                    "Document has not been modified.")
-            return 
+        if (etag == EPOCH_START) {
+            // For some resources, we want to set the etag to when the system was started
+            response.setHeader("ETag", "\"${ManagementFactory.getRuntimeMXBean().getStartTime()}\"")
+        } else {
+            response.setHeader("ETag", "\"${etag}\"")
         }
-
-        response.setHeader("ETag", etag)
 
         if (path in contextHeaders.collect { it.value }) {
             log.debug("request is for context file. " +
@@ -586,42 +560,6 @@ class Crud extends HttpServlet {
         }
 
         sendResponse(response, responseBody, contentType)
-    }
-
-    Document convertDocumentToAcceptedMediaType(Document document, String path, String acceptHeader, HttpServletResponse response) {
-
-        List<String> accepting = acceptHeader?.split(",").collect {
-            int last = (it.indexOf(';') == -1 ? it.length() : it.indexOf(';'))
-            it.substring(0, last)
-        }
-        log.debug("Accepting $accepting")
-
-        String extensionContentType = (mimeTypes.getContentType(path) == "application/octet-stream" ? null : mimeTypes.getContentType(path))
-        log.debug("mimetype: $extensionContentType")
-        if (!document && path ==~ /(.*\.\w+)/) {
-            log.debug("Found extension in $path")
-            if (!document && extensionContentType) {
-                document = whelk.storage.load(path.substring(1, path.lastIndexOf(".")))
-            }
-            accepting = [extensionContentType]
-        }
-
-        if (document && accepting && !accepting.contains("*/*") && !accepting.contains(document.contentType) && !accepting.contains(getMajorContentType(document.contentType))) {
-            FormatConverter fc = pico.getComponents(FormatConverter.class).find {
-                accepting.contains(it.resultContentType) && it.requiredContentType == document.contentType
-            }
-            if (fc) {
-                log.debug("Found formatconverter for ${fc.resultContentType}")
-                document = fc.convert(document)
-                if (extensionContentType) {
-                    response.setHeader("Content-Location", path)
-                }
-            } else {
-                document = null
-                throw new UnsupportedContentTypeException("No supported types found in $accepting")
-            }
-        }
-        return document
     }
 
     /**
@@ -702,6 +640,8 @@ class Crud extends HttpServlet {
 
         Document newDoc = new Document(requestBody)
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
+        // TODO https://jira.kb.se/browse/LXL-1263
+        newDoc.setControlNumber(newDoc.getShortId())
 
         String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
         if ( !(collection in ["auth", "bib", "hold"]) ) {
@@ -913,11 +853,15 @@ class Crud extends HttpServlet {
                           boolean isUpdate, String httpMethod) {
         try {
             if (doc) {
+                String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
 
                 if (isUpdate) {
-                    whelk.storeAtomicUpdate(doc.getShortId(), false, "xl", null, collection, false, {
+                    whelk.storeAtomicUpdate(doc.getShortId(), false, "xl", activeSigel, {
                         Document _doc ->
-                            if (_doc.modified as String != request.getHeader("If-Match")) {
+                            log.warn("If-Match: ${request.getHeader('If-Match')}")
+                            log.warn("Modified: ${_doc.modified}")
+
+                            if (_doc.modified as String != cleanEtag(request.getHeader("If-Match"))) {
                                 log.debug("PUT performed on stale document.")
 
                                 throw new EtagMissmatchException()
@@ -932,7 +876,7 @@ class Crud extends HttpServlet {
                 }
                 else {
                     log.debug("Saving NEW document ("+ doc.getId() +")")
-                    doc = whelk.store(doc, "xl", null, collection, false)
+                    doc = whelk.createDocument(doc, "xl", activeSigel, collection, false)
                 }
 
                 log.debug("Saving document (${doc.getShortId()})")
@@ -1002,7 +946,7 @@ class Crud extends HttpServlet {
         log.debug("Setting header Location: $locationRef")
 
         response.setHeader("Location", locationRef)
-        response.setHeader("ETag", etag as String)
+        response.setHeader("ETag", "\"${etag as String}\"")
 
         if (newDocument) {
             response.setStatus(HttpServletResponse.SC_CREATED)
@@ -1050,7 +994,7 @@ class Crud extends HttpServlet {
         return false
     }
 
-    boolean isSystemUser(Map userInfo) {
+    static boolean isSystemUser(Map userInfo) {
         if (userInfo.user == "SYSTEM") {
             log.warn("User is SYSTEM. Allowing access to all.")
             return true
@@ -1134,7 +1078,8 @@ class Crud extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "This record may not be deleted, because it is referenced by other records.")
             } else {
                 log.debug("Removing resource at ${doc.getShortId()}")
-                whelk.remove(doc.getShortId(), "xl", null, LegacyIntegrationTools.determineLegacyCollection(doc, jsonld))
+                String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
+                whelk.remove(doc.getShortId(), "xl", activeSigel)
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             }
         } catch (ModelValidationException mve) {
@@ -1150,6 +1095,14 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, wre.message)
         }
 
+    }
+
+    private String cleanEtag(String str) {
+        return stripQuotes(str).replaceAll('-gzip', '')
+    }
+
+    private String stripQuotes(String str) {
+        return str.replaceAll('"', '')
     }
 
 }

@@ -1,0 +1,131 @@
+{
+  "about": {
+    "comment": [
+      "Texthäftet innehåller bl.a. diskografi, biografier på engelska och foton"
+    ],
+    "mediaTerm": "Videoupptagning] :",
+    "classification": [
+      {
+        "@id": "/topic/kssb/8/Ijz%20P%C3%A4rt%2C%20Arvo%2FVC"
+      }
+    ],
+    "composer": [
+      {
+        "@id": "_:b-2"
+      }
+    ],
+    "listOfContents": [
+      "Innehåller dessutom 3 kortfilmer av Dorian Supin med Arvo Pärt : Cecilia (27 min.) ; Your name (28 min.) ; Como cierva sedienta (36 min.)"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Paris"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Ideale Audience",
+        "providerDate": "p 2005"
+      }
+    ],
+    "editor": [
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      }
+    ],
+    "_providerYear": "2005",
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Videorecording"
+      }
+    ],
+    "responsibilityStatement": "[written, directed and filmed] by Dorian Supin ; [edited] by Kadri Kanter ...",
+    "director": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "runningTime": "178",
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/fr"
+      }
+    ],
+    "@id": "/resource/bib/10233308",
+    "identifierAssigner": {
+      "@id": "/some?type=Organization&name=Ideale%20Audience%20%2FJuxtapositions%20TM"
+    },
+    "hasFormat": [
+      {
+        "accompanyingMaterial": "texthäfte (11 s.:ill.)",
+        "otherPhysicalDetails": "ljud, färg",
+        "@type": "Product",
+        "extent": "1 DVD Video (2 tim., 58 min.)"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/mul"
+      }
+    ],
+    "@type": [
+      "ProjectedImage",
+      "Monograph"
+    ],
+    "instanceTitle": {
+      "subtitle": "24 preludes for a fugue",
+      "@type": "Title",
+      "titleValue": "Arvo Pärt"
+    },
+    "videorecordingNumber": "4",
+    "languageNote": [
+      "Textad  på engelska, franska, tyska, italienska, spanska, finska, estniska m.m."
+    ]
+  },
+  "created": "2006-10-06T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "10233308",
+  "modified": "2009-08-18T16:14:23.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "522": {
+        "subfields": [
+          {
+            "a": "Alla regioner  ; bildformat: 4:3 ; ljudformat: Dolby Digital 2.0"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=LMu"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=Lam"
+  },
+  "@id": "/bib/10233308",
+  "@type": "Record"
+}

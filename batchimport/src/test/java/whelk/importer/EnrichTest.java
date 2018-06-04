@@ -6,6 +6,7 @@ import org.junit.*;
 
 import java.io.IOException;
 import java.util.*;
+import whelk.triples.*;
 
 @SuppressWarnings("unchecked")
 public class EnrichTest
@@ -14,7 +15,9 @@ public class EnrichTest
 
     private static final String MAIN_ID = "main id";
 
-    private void testEnrich(String jsonldOriginal, String jsonldIncoming, String jsonldExpectedResult)
+    private void testEnrich(String jsonldOriginal, String jsonldIncoming,
+                            String jsonldExpectedResult,
+                            Map<String, Graph.PREDICATE_RULES> specialRules)
             throws IOException
     {
         Map originalData = s_mapper.readValue(jsonldOriginal, HashMap.class);
@@ -27,12 +30,12 @@ public class EnrichTest
 
         Graph originalGraph = new Graph(originalTriples);
         Graph otherGraph = new Graph(otherTriples);
-        Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
 
         originalGraph.enrichWith(otherGraph, specialRules);
 
         Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), new HashSet<>());
-        JsonldSerializer.normalize(enrichedData, MAIN_ID);
+        boolean deleteUnreferencedData = false;
+        JsonldSerializer.normalize(enrichedData, MAIN_ID, deleteUnreferencedData);
 
         if ( ! rdfEquals( enrichedData, expectedResultData ) )
         {
@@ -95,6 +98,11 @@ public class EnrichTest
                     if ( rdfEquals( (List) entry1, (List) entry2) )
                         existsAMatch = true;
                 }
+                else if (entry1 instanceof String && entry2 instanceof String)
+                {
+                    if ( entry1.equals(entry2) )
+                        existsAMatch = true;
+                }
             }
             if (!existsAMatch)
                 return false;
@@ -120,7 +128,9 @@ public class EnrichTest
                 "    ]\n" +
                 "}\n";
 
-        testEnrich(original, original, original);
+        Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
+
+        testEnrich(original, original, original, specialRules);
     }
 
     @Test
@@ -156,7 +166,75 @@ public class EnrichTest
                 "    ]\n" +
                 "}\n";
 
-        testEnrich(original, incoming, incoming);
+        Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
+        testEnrich(original, incoming, incoming, specialRules);
+    }
+
+    @Test
+    public void testPreferOriginalAsDefault() throws Exception
+    {
+        // Adding another object in the @graph list. Otherwise identical
+
+        String original = "{\n" +
+                "    \"@graph\": [\n" +
+                "        {\n" +
+                "            \"@id\": \"some id\",\n" +
+                "            \"some literal\": \"original value\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}\n";
+
+        String incoming = "{\n" +
+                "    \"@graph\": [\n" +
+                "        {\n" +
+                "            \"@id\": \"some id\",\n" +
+                "            \"some literal\": \"incoming value\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}\n";
+
+        Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
+        testEnrich(original, incoming, original, specialRules);
+    }
+
+    @Test
+    public void testExplicitRuleAggregate() throws Exception
+    {
+        // Adding another object in the @graph list. Otherwise identical
+
+        String original = "{\n" +
+                "    \"@graph\": [\n" +
+                "        {\n" +
+                "            \"@id\": \"some id\",\n" +
+                "            \"some literal\": \"original value\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}\n";
+
+        String incoming = "{\n" +
+                "    \"@graph\": [\n" +
+                "        {\n" +
+                "            \"@id\": \"some id\",\n" +
+                "            \"some literal\": \"incoming value\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}\n";
+
+        String expectedResult = "{\n" +
+                "    \"@graph\": [\n" +
+                "        {\n" +
+                "            \"@id\": \"some id\",\n" +
+                "            \"some literal\": [" +
+                "                \"original value\",\n" +
+                "                \"incoming value\"\n" +
+                "            ]" +
+                "        }\n" +
+                "    ]\n" +
+                "}\n";
+
+        Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
+        specialRules.put("some literal", Graph.PREDICATE_RULES.RULE_AGGREGATE);
+        testEnrich(original, incoming, expectedResult, specialRules);
     }
 
     @Test
@@ -187,7 +265,8 @@ public class EnrichTest
                 "    ]\n" +
                 "}\n";
 
-        testEnrich(original, incoming, incoming);
+        Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
+        testEnrich(original, incoming, incoming, specialRules);
     }
 
     @Test
@@ -233,7 +312,8 @@ public class EnrichTest
                 "    ]\n" +
                 "}\n";
 
-        testEnrich(original, incoming, expectedResult);
+        Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
+        testEnrich(original, incoming, expectedResult, specialRules);
     }
 
     @Test
@@ -269,7 +349,8 @@ public class EnrichTest
                 "    ]\n" +
                 "}\n";
 
-        testEnrich(original, incoming, expectedResult);
+        Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
+        testEnrich(original, incoming, expectedResult, specialRules);
     }
 
     @Test
@@ -304,7 +385,8 @@ public class EnrichTest
                 "    ]\n" +
                 "}\n";
 
-        testEnrich(original, incoming, expectedResult);
+        Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
+        testEnrich(original, incoming, expectedResult, specialRules);
     }
 
     @Test
@@ -352,6 +434,7 @@ public class EnrichTest
                 "    ]\n" +
                 "}\n";
 
-        testEnrich(original, incoming, expectedResult);
+        Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
+        testEnrich(original, incoming, expectedResult, specialRules);
     }
 }

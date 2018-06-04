@@ -12,8 +12,10 @@ import whelk.component.ElasticSearch;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.MarcFrameConverter;
+import whelk.exception.TooHighEncodingLevelException;
 import whelk.util.LegacyIntegrationTools;
 import whelk.util.PropertyLoader;
+import whelk.triples.*;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -22,27 +24,31 @@ import java.util.*;
 
 class XL
 {
+    private static final String ENC_PRELIMINARY_STATUS = "marc:PartialPreliminaryLevel"; // 5
+    private static final String ENC_PREPUBLICATION_STATUS = "marc:PrepublicationLevel";  // 8
+    private static final String ENC_ABBREVIVATED_STATUS = "marc:AbbreviatedLevel";  // 3
+    private static final String ENC_MINMAL_STATUS = "marc:MinimalLevel";  // 7
+
     private Whelk m_whelk;
     private Parameters m_parameters;
     private Properties m_properties;
     private MarcFrameConverter m_marcFrameConverter;
+    private static boolean verbose = false;
 
     // The predicates listed here are those that must always be represented as lists in jsonld, even if the list
     // has only a single member.
-    private Set<String> m_forcedSetTerms;
+    private Set<String> m_repeatableTerms;
 
     private final static String IMPORT_SYSTEM_CODE = "batch import";
 
     XL(Parameters parameters) throws IOException
     {
         m_parameters = parameters;
+        verbose = m_parameters.getVerbose();
         m_properties = PropertyLoader.loadProperties("secret");
-        PostgreSQLComponent storage = new PostgreSQLComponent(m_properties.getProperty("sqlUrl"), m_properties.getProperty("sqlMaintable"));
-        ElasticSearch elastic = new ElasticSearch(m_properties.getProperty("elasticHost"), m_properties.getProperty("elasticCluster"), m_properties.getProperty("elasticIndex"));
-        m_whelk = new Whelk(storage, elastic);
-        m_whelk.loadCoreData();
-        m_forcedSetTerms = new JsonLd(m_whelk.getDisplayData(), m_whelk.getVocabData()).getForcedSetTerms();
-        m_marcFrameConverter = new MarcFrameConverter();
+        m_whelk = Whelk.createLoadedSearchWhelk(m_properties);
+        m_repeatableTerms = m_whelk.getJsonld().getRepeatableTerms();
+        m_marcFrameConverter = m_whelk.createMarcFrameConverter();
     }
 
     /**
@@ -70,24 +76,53 @@ class XL
 
         //System.err.println("Incoming [" + collection + "] document had: " + duplicateIDs.size() + " existing duplicates:\n" + duplicateIDs);
 
+        // If an incoming holding record is marked deleted, attempt to find any duplicates for it in Libris and delete them.
+        if (collection.equals("hold") && incomingMarcRecord.getLeader(5) == 'd')
+        {
+            for (String id : duplicateIDs)
+                m_whelk.remove(id, IMPORT_SYSTEM_CODE, null);
+            return null;
+        }
+
         if (duplicateIDs.size() == 0) // No coinciding documents, simple import
         {
-            resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId);
+            resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, null);
 
             if (collection.equals("bib"))
                 importedBibRecords.inc();
             else
                 importedHoldRecords.inc();
         }
-        else if (duplicateIDs.size() == 1)
+        else if (duplicateIDs.size() == 1) // Enrich ("merge") or replace
         {
-            // Enrich (or "merge")
-            resultingResourceId = enrichRecord( (String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId );
-
             if (collection.equals("bib"))
-                enrichedBibRecords.inc();
-            else
-                enrichedHoldRecords.inc();
+            {
+                if ( m_parameters.getReplaceBib() )
+                {
+                    String idToReplace = duplicateIDs.iterator().next();
+                    resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, idToReplace);
+                    importedBibRecords.inc();
+                }
+                else // Merge bib
+                {
+                    resultingResourceId = enrichRecord((String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId);
+                    enrichedBibRecords.inc();
+                }
+            }
+            else // collection = hold
+            {
+                if ( m_parameters.getReplaceHold() ) // Replace hold
+                {
+                    String idToReplace = duplicateIDs.iterator().next();
+                    resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, idToReplace);
+                    importedHoldRecords.inc();
+                }
+                else // Merge hold
+                {
+                    resultingResourceId = enrichRecord((String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId);
+                    enrichedHoldRecords.inc();
+                }
+            }
         }
         else
         {
@@ -120,7 +155,7 @@ class XL
         return resultingResourceId;
     }
 
-    private String importNewRecord(MarcRecord marcRecord, String collection, String relatedWithBibResourceId)
+    private String importNewRecord(MarcRecord marcRecord, String collection, String relatedWithBibResourceId, String replaceSystemId)
     {
         // Delete any existing 001 fields
         String generatedId = IdGenerator.generate();
@@ -140,11 +175,42 @@ class XL
 
         if (!m_parameters.getReadOnly())
         {
-            m_whelk.store(rdfDoc, IMPORT_SYSTEM_CODE, null, collection, false);
+            rdfDoc.setRecordStatus(ENC_PRELIMINARY_STATUS);
+
+            // Doing a replace (but preserving old IDs)
+            if (replaceSystemId != null)
+            {
+                m_whelk.getStorage().storeAtomicUpdate(replaceSystemId, false, IMPORT_SYSTEM_CODE, null,
+                        (Document doc) ->
+                {
+                    List<String> recordIDs = doc.getRecordIdentifiers();
+                    List<String> thingIDs = doc.getThingIdentifiers();
+
+                    doc.data = rdfDoc.data;
+
+                    // The mainID must remain unaffected.
+                    doc.deepPromoteId(recordIDs.get(0));
+
+                    for (String recordID : recordIDs)
+                        doc.addRecordIdentifier(recordID);
+                    for (String thingID : thingIDs)
+                        doc.addThingIdentifier(thingID);
+                });
+            }
+            else
+            {
+                // Doing simple "new"
+                m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, null, collection, false);
+            }
         }
         else
-            System.out.println("Would now (if --live had been specified) have written the following json-ld to whelk as a new record:\n"
-                    + rdfDoc.getDataAsString());
+        {
+            if ( verbose )
+            {
+                System.out.println("info: Would now (if --live had been specified) have written the following json-ld to whelk as a new record:\n"
+                + rdfDoc.getDataAsString());
+            }
+        }
 
         if (collection.equals("bib"))
             return rdfDoc.getThingIdentifiers().get(0);
@@ -162,37 +228,39 @@ class XL
         {
             try
             {
-                m_whelk.storeAtomicUpdate(ourId, false, IMPORT_SYSTEM_CODE, null, collection, false,
+                m_whelk.storeAtomicUpdate(ourId, false, IMPORT_SYSTEM_CODE, null,
                         (Document doc) ->
                         {
                             if (collection.equals("bib"))
                             {
-                                String encodingLevel = doc.getEncodingLevel();
-                                if (encodingLevel == null || !encodingLevel.equals("marc:PartialPreliminaryLevel"))
+                                String existingEncodingLevel = doc.getEncodingLevel();
+                                String newEncodingLevel = rdfDoc.getEncodingLevel();
+
+                                if (existingEncodingLevel == null || !mayOverwriteExistingEncodingLevel(existingEncodingLevel, newEncodingLevel))
                                     throw new TooHighEncodingLevelException();
                             }
 
-                            try
-                            {
-                                enrich( doc, rdfDoc );
-                            } catch (IOException e)
-                            {
-                                throw new UncheckedIOException(e);
-                            }
+                            enrich( doc, rdfDoc );
                         });
             }
             catch (TooHighEncodingLevelException e)
             {
-                System.out.println("Not enriching id: " + ourId + ", because it no longer has encoding level marc:PartialPreliminaryLevel");
+                if ( verbose )
+                {
+                    System.out.println("info: Not enriching id: " + ourId + ", because it no longer has encoding level marc:PartialPreliminaryLevel");
+                }
             }
         }
         else
         {
             Document doc = m_whelk.getStorage().load( ourId );
             enrich( doc, rdfDoc );
-            System.out.println("Would now (if --live had been specified) have written the following (merged) json-ld to whelk:\n");
-            System.out.println("id:\n" + doc.getShortId());
-            System.out.println("data:\n" + doc.getDataAsString());
+            if ( verbose )
+            {
+                System.out.println("info: Would now (if --live had been specified) have written the following (merged) json-ld to whelk:\n");
+                System.out.println("id:\n" + doc.getShortId());
+                System.out.println("data:\n" + doc.getDataAsString());
+            }
         }
 
         if (collection.equals("bib"))
@@ -200,8 +268,31 @@ class XL
         return null;
     }
 
+    private boolean mayOverwriteExistingEncodingLevel(String existingEncodingLevel, String newEncodingLevel)
+    {
+        switch (newEncodingLevel)
+        {
+            case ENC_PRELIMINARY_STATUS: // 5
+                if (existingEncodingLevel.equals(ENC_PRELIMINARY_STATUS)) // 5
+                    return true;
+                break;
+            case ENC_PREPUBLICATION_STATUS: // 8
+                if (existingEncodingLevel.equals(ENC_PRELIMINARY_STATUS) || existingEncodingLevel.equals(ENC_PREPUBLICATION_STATUS)) // 5 || 8
+                    return true;
+                break;
+            case ENC_ABBREVIVATED_STATUS: // 3
+                if (existingEncodingLevel.equals(ENC_PRELIMINARY_STATUS) || existingEncodingLevel.equals(ENC_PREPUBLICATION_STATUS)) // 5 || 8
+                    return true;
+                break;
+            case ENC_MINMAL_STATUS: // 7
+                if (existingEncodingLevel.equals(ENC_PRELIMINARY_STATUS) || existingEncodingLevel.equals(ENC_PREPUBLICATION_STATUS)) // 5 || 8
+                    return true;
+                break;
+        }
+        return false;
+    }
+
     private void enrich(Document mutableDocument, Document withDocument)
-            throws IOException
     {
         JsonldSerializer serializer = new JsonldSerializer();
         List<String[]> withTriples = serializer.deserialize(withDocument.data);
@@ -213,6 +304,8 @@ class XL
         // This is temporary, these special rules should not be hardcoded here, but rather obtained from (presumably)
         // whelk-core's marcframe.json.
         Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
+        for (String term : m_repeatableTerms)
+            specialRules.put(term, Graph.PREDICATE_RULES.RULE_AGGREGATE);
         specialRules.put("created", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
         specialRules.put("controlNumber", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
         specialRules.put("modified", Graph.PREDICATE_RULES.RULE_PREFER_INCOMING);
@@ -220,8 +313,9 @@ class XL
 
         originalGraph.enrichWith(withGraph, specialRules);
 
-        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), m_forcedSetTerms);
-        JsonldSerializer.normalize(enrichedData, mutableDocument.getShortId());
+        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), m_repeatableTerms);
+        boolean deleteUnreferencedData = true;
+        JsonldSerializer.normalize(enrichedData, mutableDocument.getShortId(), deleteUnreferencedData);
         mutableDocument.data = enrichedData;
     }
 
@@ -278,7 +372,6 @@ class XL
                         String isbn = DigId.grepIsbna( (Datafield) field );
                         if (isbn != null)
                         {
-                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toLowerCase() ));
                             duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toUpperCase() ));
                         }
                     }
@@ -289,7 +382,6 @@ class XL
                         String isbn = DigId.grepIsbnz( (Datafield) field );
                         if (isbn != null)
                         {
-                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toLowerCase() ));
                             duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toUpperCase() ));
                         }
                     }
@@ -300,7 +392,6 @@ class XL
                         String issn = DigId.grepIssn( (Datafield) field, 'a' );
                         if (issn != null)
                         {
-                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.toLowerCase() ));
                             duplicateIDs.addAll(getDuplicatesOnISSN( issn.toUpperCase() ));
                         }
                     }
@@ -311,14 +402,12 @@ class XL
                         String issn = DigId.grepIssn( (Datafield) field, 'z' );
                         if (issn != null)
                         {
-                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.toLowerCase() ));
                             duplicateIDs.addAll(getDuplicatesOnISSN( issn.toUpperCase() ));
                         }
                     }
                     break;
                 case DUPTYPE_035A:
-                    // Unique id number in another system. The 035a of the post being imported will be checked against
-                    // the @graph,0,systemNumber array of existing posts
+                    // Unique id number in another system.
                     duplicateIDs.addAll(getDuplicatesOn035a(marcRecord));
                     break;
                 case DUPTYPE_LIBRISID:
@@ -482,14 +571,21 @@ class XL
     {
         String libraryUri = LegacyIntegrationTools.legacySigelToUri(heldBy);
 
-        String query =
+        // Here be dragons. The always-works query is this:
+        /*String query =
                 "SELECT lddb.id from lddb " +
                 "INNER JOIN lddb__identifiers id1 ON lddb.data#>>'{@graph,1,itemOf,@id}' = id1.iri " +
                 "INNER JOIN lddb__identifiers id2 ON id1.id = id2.id " +
                 "WHERE " +
                 "data#>>'{@graph,1,heldBy,@id}' = ? " +
                 "AND " +
-                "id2.iri = ?";
+                "id2.iri = ?";*/
+
+        // This query REQUIRES that links be on the primary ID only. This works beacuse of link-finding step2, but if
+        // that should ever change this query would break.
+
+        String query = "SELECT id from lddb WHERE data#>>'{@graph,1,heldBy,@id}' = ? AND data#>>'{@graph,1,itemOf,@id}' = ? AND deleted = false";
+
         PreparedStatement statement = connection.prepareStatement(query);
 
         statement.setString(1, libraryUri);
@@ -509,5 +605,5 @@ class XL
         return ids;
     }
 
-    private class TooHighEncodingLevelException extends RuntimeException {}
+    //private class TooHighEncodingLevelException extends RuntimeException {}
 }

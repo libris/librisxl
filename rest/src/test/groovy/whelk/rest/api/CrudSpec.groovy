@@ -14,7 +14,6 @@ import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkRuntimeException
 import whelk.rest.security.AccessControl
 import whelk.util.LegacyIntegrationTools
-import whelk.util.URIWrapper
 
 import javax.servlet.ServletInputStream
 import javax.servlet.ServletOutputStream
@@ -34,7 +33,7 @@ class CrudSpec extends Specification {
     HttpServletRequest request
     HttpServletResponse response
     LegacyIntegrationTools legacyIntegrationTools
-    static final URIWrapper BASE_URI = Document.BASE_URI
+    static final URI BASE_URI = Document.BASE_URI
     private static final ObjectMapper mapper = new ObjectMapper()
 
 
@@ -67,19 +66,15 @@ class CrudSpec extends Specification {
         accessControl = GroovySpy(AccessControl.class)
         whelk = new Whelk()
         whelk.storage = storage
-        whelk.displayData = ['@context': [
-                                 'examplevocab': 'http://example.com',
-                                 'some_term': 'some_value'
-                             ],
-                             'lensGroups': ['chips': [:]]]
+        whelk.contextData = ['@context': [
+                'examplevocab': 'http://example.com',
+                'some_term': 'some_value']]
+        whelk.displayData = ['lensGroups': ['chips': [:]]]
         whelk.vocabData = ['@graph': []]
-        whelk.jsonld = new JsonLd(whelk.displayData, whelk.vocabData)
+        whelk.jsonld = new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData)
         GroovySpy(LegacyIntegrationTools.class, global: true)
-        crud = new Crud()
-        crud.whelk = whelk
-        crud.displayData = whelk.displayData
-        crud.vocabData = whelk.vocabData
-        crud.jsonld = whelk.jsonld
+        crud = new Crud(whelk)
+        crud.init()
         crud.accessControl = accessControl
     }
 
@@ -170,7 +165,7 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(["@graph": [["@id": id, "foo": "bar"]]])
         }
         when:
@@ -193,7 +188,7 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
         storage.loadDocumentByMainId(altId) >> {
@@ -220,10 +215,10 @@ class CrudSpec extends Specification {
         request.getRequestURI() >> {
             id
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return null
         }
         storage.getMainId(_) >> {
@@ -244,10 +239,10 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return null
         }
         storage.getMainId(_) >> {
@@ -268,7 +263,7 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             Document doc = new Document(["@graph": [["@id": id, "foo": "bar"]]])
             doc.deleted = true
             return doc
@@ -308,10 +303,10 @@ class CrudSpec extends Specification {
         request.getRequestURI() >> {
             id
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return null
         }
         storage.getMainId(_) >> {
@@ -333,7 +328,7 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "application/ld+json"
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(["@graph": [["@id": id, "foo": "bar"]]])
         }
         when:
@@ -353,7 +348,7 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(["@graph": [["@id": id, "foo": "bar"]]])
         }
         when:
@@ -373,7 +368,7 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(["@graph": [["@id": id,
                                       "foo": "bar",
                                       "baz": [
@@ -402,7 +397,7 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(["@graph": [["@id": id, "foo": "bar"]]])
         }
         when:
@@ -420,7 +415,7 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return new Document(["@graph": [["@id": id, "foo": "bar"]]])
         }
         when:
@@ -438,7 +433,7 @@ class CrudSpec extends Specification {
         request.getRequestURI() >> { id }
         request.getHeader("Accept") >> { "*/*" }
         request.getHeader("If-None-Match") >> { etag }
-        storage.load(_) >> { return doc }
+        storage.load(_, _) >> { return doc }
         when:
         crud.doGet(request, response)
         then:
@@ -481,7 +476,7 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             Document doc = it.first()
             doc.setModified(new Date())
             return doc
@@ -490,8 +485,7 @@ class CrudSpec extends Specification {
         crud.doPost(request, response)
         then:
         assert response.getStatus() == HttpServletResponse.SC_CREATED
-        // FIXME use BASE_URI instead of hardcoding
-        assert response.getHeader("Location") =~ /^http:\/\/127.0.0.1:5000\/[0-9a-z]{16}$/
+        assert response.getHeader("Location").matches("^" + Document.getBASE_URI().toString() + "[0-9a-z]{16}\$")
     }
 
     def "POST to / should return 400 Bad Request on empty content"() {
@@ -515,7 +509,7 @@ class CrudSpec extends Specification {
         request.getContentType() >> {
             "application/ld+json"
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         when:
@@ -545,7 +539,7 @@ class CrudSpec extends Specification {
         request.getContentType() >> {
             "application/x-www-form-urlencoded"
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
 
@@ -566,7 +560,7 @@ class CrudSpec extends Specification {
                                     "@type": "Work",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "Ting"]]]]
+                                            ["code": "Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -596,16 +590,16 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return null
         }
         storage.getMainId(_) >> {
             return null
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -628,7 +622,7 @@ class CrudSpec extends Specification {
                                     "@type": "Item",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S", "@id":"https://libris.kb.se/library/S"]]]]
+                                            ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -643,6 +637,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -661,7 +658,7 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             return null
         }
         when:
@@ -681,7 +678,7 @@ class CrudSpec extends Specification {
                                     "@type": "Work",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S"]]]]
+                                            ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -696,6 +693,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -714,16 +714,16 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return null
         }
         storage.getMainId(_) >> {
             return null
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             return null
         }
         when:
@@ -743,7 +743,7 @@ class CrudSpec extends Specification {
                                     "@type": "Instance",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S"]]]]
+                                            ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -758,6 +758,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -776,16 +779,16 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return null
         }
         storage.getMainId(_) >> {
             return null
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             return null
         }
         storage.getDependers(_) >> {
@@ -836,17 +839,20 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return null
         }
         storage.getMainId(_) >> {
             return null
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             return null
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -868,7 +874,7 @@ class CrudSpec extends Specification {
                                     "@type": "Item",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S"]]]]
+                                            ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -893,16 +899,16 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return null
         }
         storage.getMainId(_) >> {
             return null
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             return null
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -925,7 +931,7 @@ class CrudSpec extends Specification {
                                     "@type": "Instance",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S"]]]]
+                                            ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -955,16 +961,16 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return null
         }
         storage.getMainId(_) >> {
             return null
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             return null
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -987,7 +993,7 @@ class CrudSpec extends Specification {
                                     "@type": "Item",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "Ting"]]]]
+                                            ["code": "Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -1017,20 +1023,23 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return null
         }
         storage.getMainId(_) >> {
             return null
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         accessControl.checkDocumentToPost(_, _) >> {
             throw new ModelValidationException("Could not validate model.")
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -1052,7 +1061,7 @@ class CrudSpec extends Specification {
                                     "@type": "Work",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S"]]]]
+                                            ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -1067,6 +1076,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -1085,16 +1097,16 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return null
         }
         storage.getMainId(_) >> {
             return null
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             return null
         }
         when:
@@ -1114,7 +1126,7 @@ class CrudSpec extends Specification {
                                     "@type": "Work",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S"]]]]
+                                            ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -1144,16 +1156,16 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return null
         }
         storage.getMainId(_) >> {
             return null
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             return null
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -1176,7 +1188,7 @@ class CrudSpec extends Specification {
                                     "@type": "Item",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S", "@id":"https://libris.kb.se/library/S"]]]]
+                                            ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -1191,6 +1203,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -1209,16 +1224,16 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return null
         }
         storage.getMainId(_) >> {
             return null
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             return null
         }
         when:
@@ -1237,7 +1252,7 @@ class CrudSpec extends Specification {
                                     "@type": "Item",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["notation": "S", "@id":"https://libris.kb.se/library/S"]]]]
+                                            ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -1267,16 +1282,16 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return null
         }
         storage.getMainId(_) >> {
             return null
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             return null
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -1311,7 +1326,7 @@ class CrudSpec extends Specification {
         request.getContentType() >> {
             "application/ld+json"
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         when:
@@ -1341,7 +1356,7 @@ class CrudSpec extends Specification {
         request.getContentType() >> {
             "application/x-www-form-urlencoded"
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
 
@@ -1394,12 +1409,12 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             Document doc = new Document(newContent)
             doc.setModified(modifiedDate)
             doc.setCreated(createdDate)
@@ -1455,7 +1470,7 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
         storage.loadDocumentByMainId(altId) >> {
@@ -1470,7 +1485,7 @@ class CrudSpec extends Specification {
         storage.getIdType(_) >> {
             return IdType.RecordSameAsId
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             Document doc = new Document(newContent)
             doc.setModified(modifiedDate)
             doc.setCreated(createdDate)
@@ -1515,10 +1530,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return null
         }
         storage.getMainId(_) >> {
@@ -1562,10 +1577,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return null
         }
         storage.getMainId(_) >> {
@@ -1613,10 +1628,10 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
-        storage.loadDocumentByMainId(_) >> {
+        storage.loadDocumentByMainId(_, _) >> {
             return new Document(doc)
         }
         storage.getMainId(_) >> {
@@ -1647,7 +1662,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
+                                              ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -1657,7 +1672,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
+                                              ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -1687,12 +1702,12 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -1720,7 +1735,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S", "@id":"https://libris.kb.se/library/S"]]]]
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -1730,7 +1745,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
+                                              ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -1760,12 +1775,12 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -1793,7 +1808,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "Ting"]]]]
+                                              ["code": "Ting"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -1803,7 +1818,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "Ting"]]]]
+                                              ["code": "Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -1833,12 +1848,12 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -1866,7 +1881,7 @@ class CrudSpec extends Specification {
                                       "@type": "Instance",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "Ting"]]]]
+                                              ["code": "Ting"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -1876,7 +1891,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "Ting"]]]]
+                                              ["code": "Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -1906,12 +1921,12 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -1939,7 +1954,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "Foo", "@id":"https://libris.kb.se/library/Foo"]]]]
+                                              ["code": "Foo", "@id":"https://libris.kb.se/library/Foo"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -1949,7 +1964,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "Foo", "@id":"https://libris.kb.se/library/Foo"]]]]
+                                              ["code": "Foo", "@id":"https://libris.kb.se/library/Foo"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -1979,12 +1994,12 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -2020,7 +2035,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
+                                              ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2050,12 +2065,12 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -2083,7 +2098,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2121,12 +2136,12 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -2154,7 +2169,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2187,12 +2202,12 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         when:
@@ -2217,7 +2232,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
+                                              ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2227,7 +2242,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
+                                              ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2242,6 +2257,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "PUT"
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -2260,12 +2278,12 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         when:
@@ -2291,7 +2309,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2301,7 +2319,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2334,13 +2352,16 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -2368,7 +2389,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2378,7 +2399,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2408,12 +2429,12 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         accessControl.checkDocumentToPut(_, _, _) >> {
@@ -2444,7 +2465,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2454,7 +2475,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2480,12 +2501,12 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -2512,7 +2533,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2522,7 +2543,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "S"]]]]
+                                              ["code": "S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2538,6 +2559,9 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "PUT"
         }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
         }
@@ -2552,12 +2576,12 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         when:
@@ -2581,7 +2605,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["notation": "S", "@id":"https://libris.kb.se/library/S"]]]]
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2591,7 +2615,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["notation": "S", "@id":"https://libris.kb.se/library/S"]]]]
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2618,12 +2642,12 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.store(_, _) >> {
+        storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -2658,7 +2682,7 @@ class CrudSpec extends Specification {
                 return ["user": "SYSTEM"]
             }
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(data)
         }
         storage.remove(_, _) >> {
@@ -2689,7 +2713,7 @@ class CrudSpec extends Specification {
                 return ["user": "SYSTEM"]
             }
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
           return null
         }
         when:
@@ -2718,7 +2742,7 @@ class CrudSpec extends Specification {
                 return ["user": "SYSTEM"]
             }
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             def doc = new Document(data)
             doc.deleted = true
             return doc
@@ -2743,7 +2767,7 @@ class CrudSpec extends Specification {
                                  "@type": "Item",
                                  "contains": "some new data",
                                  "heldBy":
-                                         ["notation": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]
+                                         ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]
         ]
         request.getPathInfo() >> {
             "/1234"
@@ -2762,7 +2786,7 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "DELETE"
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(data)
         }
         storage.remove(_, _) >> {
@@ -2788,7 +2812,7 @@ class CrudSpec extends Specification {
                                 "@type": "Work",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "Ting"]]]]
+                                        ["code": "Ting"]]]]
 
         request.getPathInfo() >> {
             "/1234"
@@ -2807,7 +2831,7 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "DELETE"
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(data)
         }
         storage.remove(_, _) >> {
@@ -2833,7 +2857,7 @@ class CrudSpec extends Specification {
                                 "@type": "Item",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "Ting"]]]]
+                                        ["code": "Ting"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -2846,7 +2870,7 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "DELETE"
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(data)
         }
         storage.remove(_, _) >> {
@@ -2885,10 +2909,13 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "DELETE"
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(data)
         }
         storage.remove(_, _) >> {
+            return true
+        }
+        accessControl.isValidActiveSigel(_) >> {
             return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -2911,7 +2938,7 @@ class CrudSpec extends Specification {
                                 "@type": "Item",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "Ting", "@id":"https://libris.kb.se/library/S"]]]]
+                                        ["code": "Ting", "@id":"https://libris.kb.se/library/S"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -2929,7 +2956,7 @@ class CrudSpec extends Specification {
                                      "cataloger": true,
                                      "registrant": false]]]
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(data)
         }
         storage.remove(_, _) >> {
@@ -2937,6 +2964,9 @@ class CrudSpec extends Specification {
         }
         storage.getDependers(_) >> {
             []
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -2958,7 +2988,7 @@ class CrudSpec extends Specification {
                                 "@type": "Instance",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "S", "@id":"https://libris.kb.se/library/S"]]]]
+                                        ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -2976,7 +3006,7 @@ class CrudSpec extends Specification {
                                      "cataloger": true,
                                      "registrant": false]]]
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(data)
         }
         storage.remove(_, _) >> {
@@ -2984,6 +3014,9 @@ class CrudSpec extends Specification {
         }
         storage.getDependers(_) >> {
             []
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -3005,7 +3038,7 @@ class CrudSpec extends Specification {
                                 "@type": "Work",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "S"]]]]
+                                        ["code": "S"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -3023,7 +3056,7 @@ class CrudSpec extends Specification {
                                      "cataloger": true,
                                      "registrant": false]]]
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(data)
         }
         storage.remove(_, _) >> {
@@ -3031,6 +3064,9 @@ class CrudSpec extends Specification {
         }
         storage.getDependers(_) >> {
             []
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -3054,7 +3090,7 @@ class CrudSpec extends Specification {
                                 "@type": "Work",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "S"]]]]
+                                        ["code": "S"]]]]
         request.getPathInfo() >> {
             redirectId
         }
@@ -3072,7 +3108,7 @@ class CrudSpec extends Specification {
                                      "cataloger": true,
                                      "registrant": false]]]
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             return null
         }
         storage.loadDocumentByMainId(redirectId) >> {
@@ -3104,7 +3140,7 @@ class CrudSpec extends Specification {
                                 "@type": "Work",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "S", "@id":"https://libris.kb.se/library/S"]]]]
+                                        ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -3122,7 +3158,7 @@ class CrudSpec extends Specification {
                                      "cataloger": true,
                                      "registrant": false]]]
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(data)
         }
         accessControl.checkDocumentToDelete(_, _, _) >> {
@@ -3148,7 +3184,7 @@ class CrudSpec extends Specification {
                                 "@type": "Instance",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "Ting"]]]]
+                                        ["code": "Ting"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -3166,10 +3202,13 @@ class CrudSpec extends Specification {
                                      "cataloger": true,
                                      "registrant": false]]]
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(data)
         }
         storage.remove(_, _) >> {
+            return true
+        }
+        accessControl.isValidActiveSigel(_) >> {
             return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -3195,7 +3234,7 @@ class CrudSpec extends Specification {
                                 "@type": "Instance",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
+                                        ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -3213,7 +3252,7 @@ class CrudSpec extends Specification {
                                      "cataloger": false,
                                      "registrant": false]]]
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(data)
         }
         storage.remove(_, _) >> {
@@ -3239,7 +3278,7 @@ class CrudSpec extends Specification {
                                 "@type": "Item",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "Ting", "@id":"https://libris.kb.se/library/S"]]]]
+                                        ["code": "Ting", "@id":"https://libris.kb.se/library/S"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -3254,7 +3293,7 @@ class CrudSpec extends Specification {
                                      "cataloger": true,
                                      "registrant": false]]]
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(data)
         }
         storage.remove(_, _) >> {
@@ -3262,6 +3301,9 @@ class CrudSpec extends Specification {
         }
         storage.getDependers(_) >> {
             []
+        }
+        accessControl.isValidActiveSigel(_) >> {
+            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -3283,7 +3325,7 @@ class CrudSpec extends Specification {
                                 "@type": "Item",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["notation": "Ting", "@id":"https://libris.kb.se/library/S"]]]]
+                                        ["code": "Ting", "@id":"https://libris.kb.se/library/S"]]]]
         request.getPathInfo() >> {
             "/1234"
         }
@@ -3301,7 +3343,7 @@ class CrudSpec extends Specification {
                                      "cataloger": false,
                                      "registrant": false]]]
         }
-        storage.load(_) >> {
+        storage.load(_, _) >> {
             new Document(data)
         }
         storage.remove(_, _) >> {

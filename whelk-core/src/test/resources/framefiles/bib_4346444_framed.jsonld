@@ -1,0 +1,189 @@
+{
+  "about": {
+    "comment": [
+      "Nätpublikation",
+      "Titel från titelskärmbild"
+    ],
+    "mediaTerm": "Elektronisk resurs",
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/930/e/"
+      },
+      {
+        "@id": "/topic/kssb/8/Jc%28p%29"
+      },
+      {
+        "@id": "/topic/kssb/7/Kc%28p%29"
+      },
+      {
+        "@id": "/topic/kssb/7/Fbr%28p%29"
+      }
+    ],
+    "associatedMedia": [
+      {
+        "@id": "http://samla.raa.se/xmlui/handle/raa/378",
+        "@type": "MediaObject",
+        "copyNote": [
+          "Fulltext online fritt tillgänglig"
+        ]
+      }
+    ],
+    "regularity": {
+      "@id": "/def/enum/content/Regular"
+    },
+    "frequency": "1 nr/kvartal",
+    "subject": [
+      {
+        "@id": "/topic/_/Forntiden"
+      }
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Vitterhetsakademien",
+        "providerDate": "1906-"
+      }
+    ],
+    "typeOfEntry": {
+      "@id": "/def/enum/content/SuccessiveEntry"
+    },
+    "additionalCarrierType": {
+      "@id": "/def/enum/content/Electronic"
+    },
+    "fileType": "Tidskrift",
+    "unspecifiedContributor": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      }
+    ],
+    "keyTitle": [
+      {
+        "titleQualifier": "(Online)",
+        "@type": "Title",
+        "titleValue": "Fornvännen"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Periodical"
+      }
+    ],
+    "temporalCoverageNote": "1906-",
+    "hasFormat": [
+      {
+        "@id": "/some?type=Electronic"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "frequencyCategory": {
+      "@id": "/def/enum/content/QuarterlyIncludes4NumbersAYear"
+    },
+    "@id": "/resource/bib/4346444",
+    "language": [
+      {
+        "@id": "/def/languages/mul"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "alternateFormat": [
+      {
+        "@id": "/some?type=Product&title=Fornv%C3%A4nnen%20%28Print%29"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "subtitle": "journal of Swedish antiquarian research",
+      "@type": "Title",
+      "titleValue": "Fornvännen"
+    },
+    "issueNumber": [
+      "1906-"
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/issn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "1404-9430"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Serial"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=NB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=DIGI"
+    },
+    {
+      "@id": "/some?type=Organization&notation=RefB"
+    },
+    {
+      "@id": "/some?type=Organization&notation=OSGOK"
+    }
+  ],
+  "created": "2001-08-06T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "4346444",
+  "@type": "Record",
+  "librisIIINumber": [
+    "14049430"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Forntiden"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modified": "2015-06-15T11:43:23.0+02:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/bib/4346444",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+  }
+}

@@ -16,21 +16,34 @@ import javax.servlet.http.HttpServletResponse
 @Log
 class ConverterAPI extends HttpServlet {
 
+    Whelk whelk
     MarcFrameConverter marcFrameConverter
 
     public ConverterAPI() {
-        log.info("Starting converterAPI ...")
-        marcFrameConverter = new MarcFrameConverter()
+        // Do nothing - only here for Tomcat to have something to call
+    }
+
+    @Override
+    void init() {
+        log.info("Starting converterAPI")
+        if (!marcFrameConverter) {
+            whelk = Whelk.createLoadedCoreWhelk()
+            marcFrameConverter = whelk.createMarcFrameConverter()
+        }
         log.info("Started ...")
     }
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
-        response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED)
+        handleConversion(request, response)
     }
 
     @Override
     void doPost(HttpServletRequest request, HttpServletResponse response) {
+        handleConversion(request, response)
+    }
+
+    void handleConversion(HttpServletRequest request, HttpServletResponse response) {
         String ctype = ContentType.parse(request.getContentType()).getMimeType()
         if (ctype != "application/ld+json") {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
@@ -44,14 +57,18 @@ class ConverterAPI extends HttpServlet {
         }
 
         String requestedContentType = request.getParameter("to") ?:
-            ContentType.parse(request.getHeader("Accept")).getMimeType() ?:
-            "application/x-marc-json"
+                ContentType.parse(request.getHeader("Accept")).getMimeType() ?:
+                        "application/x-marc-json"
 
         if (requestedContentType == "application/x-marc-json") {
             String jsonText = Tools.normalizeString(request.getInputStream().getText("UTF-8"))
             Map json = marcFrameConverter.mapper.readValue(jsonText, Map)
             log.info("Constructed document. Converting to $requestedContentType")
-            json = marcFrameConverter.runRevert(json)
+            Document doc = new Document(json)
+            if (whelk) {
+                whelk.embellish(doc)
+            }
+            json = marcFrameConverter.runRevert(doc.data)
             def framedText = marcFrameConverter.mapper.writeValueAsString(json)
             HttpTools.sendResponse(response, framedText, requestedContentType)
         }

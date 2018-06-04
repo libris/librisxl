@@ -1,27 +1,17 @@
-.gradle
+# Tooling
 .DS_Store
-*.properties
-/dep/locgov-*/build
 .*.swp
-/work
-whelkoperator.lck
-/mystuff
-.idea
-build
-.log
-*.iml
-gradle/wrapper/gradle-wrapper.jar
-gradle/wrapper/gradle-wrapper.properties
-gradlew
-gradlew.bat
-target/camel-elasticsearch-test.log
-src/main/resources/version.properties
-src/main/resources/secrets.json
-src/main/resources/logback.xml
-catalina.base_IS_UNDEFINED
 *.*~
-src/main/resources/whelk.json
+.idea
+*.iml
+/.venv
 
-out/artifacts/librisxl/exploded/whelk-0.8.14.x.war/META-INF/MANIFEST.MF
-.venv
-logs
+# Local Config
+/*.properties
+
+# Java/Gradle Artifacts
+/.gradle
+/*/.gradle
+/*/build
+/*/catalina.base_IS_UNDEFINED
+/*/logs

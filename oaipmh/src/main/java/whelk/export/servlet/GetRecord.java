@@ -23,6 +23,7 @@ public class GetRecord
 {
     private final static String IDENTIFIER_PARAM = "identifier";
     private final static String FORMAT_PARAM = "metadataPrefix";
+    private final static String DELETED_DATA_PARAM = "x-withDeletedData";
 
     private static final Counter failedRequests = Counter.build()
             .name("oaipmh_failed_getrecord_requests_total").help("Total failed GetRecord requests.")
@@ -38,7 +39,10 @@ public class GetRecord
         String identifierUri = request.getParameter(IDENTIFIER_PARAM); // required
         String metadataPrefix = request.getParameter(FORMAT_PARAM); // required
 
-        if (ResponseCommon.errorOnExtraParameters(request, response, IDENTIFIER_PARAM, FORMAT_PARAM))
+        // optional and not technically legal OAI-PMH
+        boolean withDeletedData = Boolean.parseBoolean(request.getParameter(DELETED_DATA_PARAM));
+
+        if (ResponseCommon.errorOnExtraParameters(request, response, IDENTIFIER_PARAM, FORMAT_PARAM, DELETED_DATA_PARAM))
             return;
 
         if (metadataPrefix == null)
@@ -66,7 +70,7 @@ public class GetRecord
         }
 
         String id = null;
-        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection();
+        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection();
              PreparedStatement preparedStatement = Helpers.prepareSameAsStatement(dbconn, identifierUri);
              ResultSet resultSet = preparedStatement.executeQuery())
         {
@@ -80,7 +84,7 @@ public class GetRecord
             return;
         }
 
-        try (Connection dbconn = OaiPmh.s_postgreSqlComponent.getConnection())
+        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection())
         {
             dbconn.setAutoCommit(false);
             try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, null, null, null, id, false);
@@ -101,7 +105,8 @@ public class GetRecord
                 ResponseCommon.writeOaiPmhHeader(writer, request, true);
                 writer.writeStartElement("GetRecord");
 
-                ResponseCommon.emitRecord(resultSet, writer, metadataPrefix, false, metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX));
+                ResponseCommon.emitRecord(resultSet, writer, metadataPrefix, false,
+                        metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX), withDeletedData);
 
                 writer.writeEndElement(); // GetRecord
                 ResponseCommon.writeOaiPmhClose(writer, request);

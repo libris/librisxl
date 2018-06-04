@@ -8,8 +8,8 @@ import whelk.exception.ModelValidationException
 
 @Log
 class AccessControl {
-    private static final XLREG_KEY = 'registrant'
-    private static final KAT_KEY = 'cataloger'
+    static final XLREG_KEY = 'registrant'
+    static final KAT_KEY = 'cataloger'
 
     boolean checkDocumentToPost(Document newDoc, Map userPrivileges, JsonLd jsonld) {
         return checkDocument(newDoc, userPrivileges, jsonld)
@@ -48,6 +48,10 @@ class AccessControl {
     }
 
     boolean checkDocument(Document document, Map userPrivileges, JsonLd jsonld) {
+        if (!isValidActiveSigel(userPrivileges)) {
+            return false
+        }
+
         if (document.isHolding(jsonld)) {
             String sigel = document.getSigel()
             if (!sigel) {
@@ -85,6 +89,17 @@ class AccessControl {
     private boolean hasCatalogingPermission(Map userPrivileges) {
         return userPrivileges.permissions.any { item ->
             item.get(KAT_KEY)
+        }
+    }
+
+    boolean isValidActiveSigel(Map userPrivileges) {
+        String activeSigel = userPrivileges.get('active_sigel')
+        if (activeSigel) {
+            userPrivileges.permissions.any { permission ->
+                return permission.code == activeSigel
+            }
+        } else {
+            return false
         }
     }
 }

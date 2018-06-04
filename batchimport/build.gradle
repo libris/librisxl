@@ -14,9 +14,7 @@ repositories {
 dependencies {
 
     // XL dependencies
-    compile('../../whelk-core' in project.subprojects*.name?
-            project(':../../whelk-core') :
-            'com.github.libris:whelk-core:0.4.1')
+    compile(project(':../whelk-core'))
 
     /*
     // local jmarctools
@@ -28,6 +26,8 @@ dependencies {
 
     compile 'io.prometheus:simpleclient:0.0.21'
     compile 'io.prometheus:simpleclient_pushgateway:0.0.21'
+
+    testCompile 'junit:junit:4.12'
 }
 
 mainClassName = 'whelk.importer.Main'

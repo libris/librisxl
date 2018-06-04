@@ -1,0 +1,149 @@
+// Build with:
+//dot -Tpng -o overview.png system_overview.dot
+
+digraph system_overview {
+    rankdir="LR";
+    edge[color="blue"];
+
+    subgraph cluster_components {
+        graph[style=dashed];
+        label="Komponenter";
+
+        lddb [label="Databas"];
+        search [label="Sökmotor"];
+        marc_converter [label="MARC-konverterare"];
+        transform [label="Transformationsskript"];
+    }
+    marc_converter -> {
+        defs
+        model
+    } [color="green"];
+    transform -> {
+        lddb
+        search
+    } [color="red"];
+
+    subgraph cluster_metadata {
+        graph[style=dashed];
+        label="Metadata";
+
+        defs [label="Definitions"];
+        model [label="Datamodell"];
+        help [label="Hjälp"];
+    }
+    defs -> { defs_importer };
+    help -> {
+        viewer
+        model
+        defs
+    } [color="green"];
+
+    subgraph cluster_apis {
+        graph[style=dashed];
+        label="APIer";
+
+        apix [label="APIX"];
+        http_api [label="HTTP-API"]; // subgraph?
+        oaipmh [label="OAI-PMH"];
+        search_api [label="Sök-API"];
+        write_api [label="Skriv-API"];
+        record [label="JSON-LD-poster"];
+    }
+    apix -> {
+        lddb
+        marc_converter
+    };
+    write_api -> { auth };
+    write_api -> { lddb }[color="red"];
+    oaipmh -> {
+        lddb
+        marc_converter
+    } ;
+    search_api -> { search };
+    record -> { lddb };
+
+    subgraph cluster_importers {
+        graph[style=dashed];
+        label="Import";
+
+        import_program [label="Importprogram"];
+        metadata_funnel [label="Metadatatratten"];
+        data_importer [label="Data-importer"];
+        defs_importer [label="Definitions-importer"];
+    }
+    import_program -> {
+        marc_converter
+    };
+    import_program -> {
+        search
+    }[color="red"];
+
+    import_program -> {
+        lddb
+    } [color="red"];
+    data_importer -> {
+        lddb
+        search
+    } [color="red"];
+    defs_importer -> {
+        data_importer
+    };
+    metadata_funnel -> { import_program };
+
+    subgraph cluster_exporters {
+        graph[style=dashed];
+        label="Export";
+
+        batch [label="Batch-export"];
+        export_program [label="Exportprogram"];
+        wdb [label="Wdb (Webbsök)"];
+    }
+    batch -> { export_program };
+    export_program -> {
+        oaipmh
+    };
+    wdb -> { oaipmh };
+
+    subgraph cluster_webservices {
+        graph[style=dashed];
+        label="Webbtjänster";
+
+        viewer [label="Visningsklient"];
+        editor [label="Redigeringsklient"];
+        id [label="id.kb.se"];
+        auth [label="Autentiseringstjänst"];
+        bibdb [label="BibDB"];
+    }
+    viewer -> {
+        search_api
+        record
+    };
+    editor -> {
+        auth
+        viewer
+    };
+    id -> { viewer };
+    auth -> { bibdb };
+
+    /**
+     * LEGEND
+     */
+    subgraph cluster_legend { 
+        style="dotted";
+        node [shape=plaintext]
+        label = "Legend";
+        key [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
+            <tr><td align="right" port="i1">depends on</td></tr>
+            <tr><td align="right" port="i2">writes to</td></tr>
+            <tr><td align="right" port="i3">conforms to</td></tr>
+            </table>>]
+            key2 [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
+            <tr><td port="i1">&nbsp;</td></tr>
+            <tr><td port="i2">&nbsp;</td></tr>
+            <tr><td port="i3">&nbsp;</td></tr>
+            </table>>]
+        key:i1:e -> key2:i1:w [clor=blue]
+        key:i2:e -> key2:i2:w [color=red]
+        key:i3:e -> key2:i3:w [color=green]
+    }
+}

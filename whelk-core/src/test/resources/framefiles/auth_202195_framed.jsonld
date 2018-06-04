@@ -1,0 +1,64 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "1996-01-29T00:00:00.0+01:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "focus": {
+    "familyName": "Darphin",
+    "note": [
+      "Byggnadsantikvarie med inriktning på industriminnesvård. Avdelningen för teknik- och vetenskapshistoria, Kungl. tekniska högskolan (1995)"
+    ],
+    "birthYear": "1948",
+    "nationality": {
+      "@id": "/def/nationalities/e-sw---"
+    },
+    "givenName": "Jean-Paul",
+    "@id": "/resource/auth/202195",
+    "@type": "Person"
+  },
+  "controlNumber": "202195",
+  "personalName": {
+    "@id": "/def/enum/content/DifferentiatedPersonalName"
+  },
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "source": [
+    {
+      "@type": "CreativeWork",
+      "label": "Förf:s: Nymans verkstäder, 1995"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "modified": "2012-10-01T10:20:10.0+02:00",
+  "systemNumber": [
+    "(LIBRIS)9922153106"
+  ],
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=NB"
+  },
+  "@id": "/auth/202195",
+  "@type": "PersonTerm"
+}

@@ -26,30 +26,22 @@ public class Converter
 {
     private final Whelk m_whelk;
     private final JsonLd m_jsonld;
-    private final JsonLD2MarcXMLConverter m_converter = new JsonLD2MarcXMLConverter();
+    private final JsonLD2MarcXMLConverter m_converter;
     private MarcFrameConverter m_toJsonConverter;
     private final Logger s_logger = LogManager.getLogger(this.getClass());
 
     public Converter(Whelk whelk)
     {
         m_whelk = whelk;
-        Map displayData = m_whelk.getDisplayData();
-        Map vocabData = m_whelk.getVocabData();
-        m_jsonld = new JsonLd(displayData, vocabData);
-        LinkFinder lf = new LinkFinder(m_whelk.getStorage());
-        m_toJsonConverter = new MarcFrameConverter(lf);
+        m_jsonld = whelk.getJsonld();
+        m_toJsonConverter = whelk.createMarcFrameConverter();
+        m_converter = new JsonLD2MarcXMLConverter(m_toJsonConverter);
     }
 
     public String makeEmbellishedMarcJSONString(Document document, String collection)
     {
         // First embellish the document to restore a complete MARC record.
-        List externalRefs = document.getExternalRefs();
-        List convertedExternalLinks = JsonLd.expandLinks(externalRefs, (Map) m_jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()));
-        Map referencedData = m_whelk.bulkLoad(convertedExternalLinks);
-        Map referencedData2 = new HashMap();
-        for (Object key : referencedData.keySet())
-            referencedData2.put(key, ((Document)referencedData.get(key)).data );
-        m_jsonld.embellish(document.data, referencedData2);
+        m_whelk.embellish(document);
 
         // Convert to MARCXML
         Map convertedData = m_converter.convert(document.data, document.getShortId());

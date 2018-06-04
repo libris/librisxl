@@ -1,18 +1,17 @@
 package whelk.rest.api
 
 import spock.lang.Ignore
+import spock.lang.Shared
 import spock.lang.Specification
 
+import whelk.JsonLd
 import whelk.rest.api.SearchUtils
 import whelk.rest.api.SearchUtils.SearchType
 import whelk.exception.InvalidQueryException
 
 class SearchUtilsSpec extends Specification {
 
-    void setup() {
-
-    }
-
+    @Shared SearchUtils search = new SearchUtils(new JsonLd([:], [:], [:]))
 
     def "aa"(){
         when:
@@ -32,7 +31,6 @@ class SearchUtilsSpec extends Specification {
         Map expected = ['should': [['prefix': ['@id': url]],
                                    ['prefix': ['sameAs.@id': url]]],
                         'minimum_should_match': 1]
-        SearchUtils search = new SearchUtils(null, null, null)
         then:
         assert search.makeSiteFilter(url) == expected
     }
@@ -43,7 +41,6 @@ class SearchUtilsSpec extends Specification {
         Map expected = ['@type': ['terms': ['field': '@type',
                                             'size' : 10,
                                             'order': ['_count': 'desc']]]]
-        SearchUtils search = new SearchUtils(null, null, null)
         then:
         assert search.buildAggQuery(tree) == expected
     }
@@ -54,7 +51,6 @@ class SearchUtilsSpec extends Specification {
         Map expected = ['@type': ['terms': ['field': '@type',
                                             'size' : 20,
                                             'order': ['_count': 'desc']]]]
-        SearchUtils search = new SearchUtils(null, null, null)
         then:
         assert search.buildAggQuery(tree) == expected
     }
@@ -67,7 +63,6 @@ class SearchUtilsSpec extends Specification {
                 'size' : 2000,
                 'order': ['_term': 'asc']]]]
 
-        SearchUtils search = new SearchUtils(null, null, null)
         then:
         assert search.buildAggQuery(tree) == expected
     }
@@ -80,7 +75,6 @@ class SearchUtilsSpec extends Specification {
                 'size' : 10,
                 'order': ['_count': 'desc']]]]
 
-        SearchUtils search = new SearchUtils(null, null, null)
         then:
         assert search.buildAggQuery(tree) == expected
     }
@@ -104,7 +98,6 @@ class SearchUtilsSpec extends Specification {
                         ]
                 ]
         ]
-        SearchUtils search = new SearchUtils(null, null, null)
         Map actual = search.addSlices([:], aggregate, 'localhost')
         then:
         assert actual
@@ -112,9 +105,7 @@ class SearchUtilsSpec extends Specification {
     }
 
     def "Should make find URL"() {
-        when:
-        SearchUtils search = new SearchUtils(null, null, null)
-        then:
+        expect:
         assert search.makeFindUrl(type, params) == result
         where:
         params                       | type                         | result
@@ -134,9 +125,7 @@ class SearchUtilsSpec extends Specification {
     }
 
     def "Should make find URL with offset"() {
-        when:
-        SearchUtils search = new SearchUtils(null, null, null)
-        then:
+        expect:
         assert search.makeFindUrl(type, params, offset) == result
         where:
         params | offset | type               | result
@@ -145,9 +134,7 @@ class SearchUtilsSpec extends Specification {
     }
 
     def "Should get limit and offset"() {
-        when:
-        SearchUtils search = new SearchUtils(null, null, null)
-        then:
+        expect:
         assert search.getLimitAndOffset(params) == result
         where:
         params                                        | result
@@ -164,7 +151,6 @@ class SearchUtilsSpec extends Specification {
 
     def "Should throw on negative limit"() {
         given:
-        SearchUtils search = new SearchUtils(null, null, null)
 
         when:
         search.getLimitAndOffset(['_limit': '-1'])
@@ -175,7 +161,6 @@ class SearchUtilsSpec extends Specification {
 
     def "Should throw on negative offset"() {
         given:
-        SearchUtils search = new SearchUtils(null, null, null)
 
         when:
         search.getLimitAndOffset(['_offset': '-1'])

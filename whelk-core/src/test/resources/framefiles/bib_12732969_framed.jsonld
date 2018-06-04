@@ -1,0 +1,245 @@
+{
+  "about": {
+    "@id": "/resource/bib/12732969",
+    "mediaTerm": "Elektronisk resurs] :",
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/SingleKnownDateProbableDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "responsibilityStatement": "edited by Kalle Åström, Lars-Erik Persson, Sergei D. Silvestrov.",
+    "additionalCarrierType": {
+      "@id": "/def/enum/content/Electronic"
+    },
+    "series": [
+      {
+        "issn": "2190-5614",
+        "volumeNumberSequentialDesignation": "6",
+        "@type": "Serial",
+        "title": "Springer Proceedings in Mathematics"
+      }
+    ],
+    "_providerYear": "2012",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=%C3%85str%C3%B6m&givenName=Kalle."
+    },
+    "subject": [
+      {
+        "@id": "/topic/lcsh/Mathematics."
+      },
+      {
+        "@id": "/topic/lcsh/Global%20analysis%20%28Mathematics%29."
+      },
+      {
+        "@id": "/topic/lcsh/Engineering%20mathematics."
+      },
+      {
+        "@id": "/topic/_/Mathematics."
+      },
+      {
+        "@id": "/topic/_/Applications%20of%20Mathematics."
+      },
+      {
+        "@id": "/topic/_/Appl.Mathematics%2FComputational%20Methods%20of%20Engineering."
+      },
+      {
+        "@id": "/topic/_/Signal%2C%20Image%20and%20Speech%20Processing."
+      },
+      {
+        "@id": "/topic/_/Analysis."
+      },
+      {
+        "@id": "/topic/_/Mathematics%20Education."
+      }
+    ],
+    "isPrimaryTopicOf": [
+      {
+        "cataloguersNote": [
+          "856other"
+        ],
+        "@id": "http://dx.doi.org/10.1007/978-3-642-20236-0",
+        "@type": "Document",
+        "copyNote": [
+          "Table of Contents / Abstracts"
+        ]
+      }
+    ],
+    "hasFormat": [
+      {
+        "@id": "/some?type=Electronic&imageBitDepth=008"
+      }
+    ],
+    "alternateFormat": [
+      {
+        "@id": "/some?type=Product&linkNote=Printed%20edition%3A&placePublisherAndDateOfPublication=2012."
+      },
+      {
+        "@id": "/some?type=Product&linkNote=Print%20%3A&title=Analysis%20for%20Science%2C%20Engineering%20and%20Beyond&placePublisherAndDateOfPublication=2012."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/gw"
+      }
+    ],
+    "instanceTitle": {
+      "subtitle": "The Tribute Workshop in Honour of Gunnar Sparr held in Lund, May 8-9, 2008",
+      "@type": "Title",
+      "titleValue": "Analysis for Science, Engineering and Beyond"
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "isPartOf": [
+      {
+        "@id": "/some?type=PublicationVolume&uniformTitle=Springer%20Proceedings%20in%20Mathematics%2C&issn=2190-5614&volumeNumber=6"
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "Print",
+        "identifierStatus": "canceledInvalid",
+        "@type": "Identifier",
+        "identifierValue": "978-3-642-20236-0"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/doi"
+        },
+        "@type": "Identifier",
+        "identifierValue": "10.1007/978-3-642-20236-0"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "/some?type=Person&familyName=Persson&givenName=Lars-Erik."
+      },
+      {
+        "@id": "/some?type=Person&familyName=Silvestrov&givenName=Sergei%20D."
+      },
+      {
+        "@id": "/some?type=Organization&name=SpringerLink%20%28Online%20service%29"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Berlin%2C%20Heidelberg"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Springer Berlin Heidelberg",
+        "providerDate": "2012."
+      }
+    ]
+  },
+  "created": "2012-01-04T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/PrepublicationLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "12732969",
+  "modified": "2012-05-23T17:08:16.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/ISBD"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Mathematics."
+          }
+        ],
+        "ind1": "1",
+        "ind2": "4"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Applications of Mathematics."
+          }
+        ],
+        "ind1": "2",
+        "ind2": "4"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Appl.Mathematics/Computational Methods of Engineering."
+          }
+        ],
+        "ind1": "2",
+        "ind2": "4"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Signal, Image and Speech Processing."
+          }
+        ],
+        "ind1": "2",
+        "ind2": "4"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Analysis."
+          }
+        ],
+        "ind1": "2",
+        "ind2": "4"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Mathematics Education."
+          }
+        ],
+        "ind1": "2",
+        "ind2": "4"
+      }
+    }
+  ],
+  "@id": "/bib/12732969",
+  "@type": "Record"
+}

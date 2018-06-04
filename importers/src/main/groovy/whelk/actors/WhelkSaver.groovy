@@ -8,7 +8,6 @@ import whelk.Location
 import whelk.util.VCopyToWhelkConverter
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
-import whelk.filter.LinkFinder
 import whelk.importer.ImportResult
 import whelk.PostgresLoadfileWriter
 import whelk.converter.marc.MarcFrameConverter
@@ -27,14 +26,14 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
     int exceptionsThrown
     String sourceSystem
     Whelk whelk
-    PostgreSQLComponent postgreSQLComponent
+    MarcFrameConverter marcFrameConverter
 
-    WhelkSaver(Whelk w, MarcFrameConverter converter, String sourceSystem, PostgreSQLComponent postgreSQLComponent) {
-        this.postgreSQLComponent = postgreSQLComponent
+    WhelkSaver(Whelk w, String sourceSystem) {
         exceptionsThrown = 0
         this.importResult = new ImportResult()
         this.whelk = w
         this.sourceSystem = sourceSystem
+        marcFrameConverter = whelk.createMarcFrameConverter()
     }
 
     void setLastRecordTimeStamp(Timestamp timestamp) {
@@ -43,10 +42,6 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
     }
 
     void handle(List<List<VCopyToWhelkConverter.VCopyDataRow>> batch) {
-
-        LinkFinder lf = new LinkFinder(postgreSQLComponent)
-
-        MarcFrameConverter marcFrameConverter = new MarcFrameConverter(lf)
 
             for (List<VCopyToWhelkConverter.VCopyDataRow> argument : batch) {
                 try {
@@ -67,9 +62,9 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
                         } else {
                             Document conflictingDocument = whelk.storage.load(doc.getShortId())
                             if (conflictingDocument == null)
-                                whelk.store(doc, sourceSystem, null, record.collection as String, false)
+                                whelk.createDocument(doc, sourceSystem, null, record.collection as String, false)
                             else
-                                whelk.storeAtomicUpdate(doc.getShortId(), false, sourceSystem, null, record.collection as String, false, {
+                                whelk.storeAtomicUpdate(doc.getShortId(), false, sourceSystem, null, {
                                     Document _doc ->
                                         _doc.data = doc.data
                                 })

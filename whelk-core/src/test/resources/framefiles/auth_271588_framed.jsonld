@@ -1,0 +1,231 @@
+{
+  "headingSeries": {
+    "@id": "/def/enum/content/NotAppropriate"
+  },
+  "editorialNote": [
+    "Titel enl. form i Anonymous classics. Den bibliografiska posten kompletteras med titeluppslaget \"Rävsagan (djurepos)\" i 730 + språk. Detta för att samla alla olika versioner av sagan enl. AACR 25.12B. Även som ämnesord i 630. 060612/BUS/EA"
+  ],
+  "language": [
+    {
+      "@id": "/def/languages/swe"
+    }
+  ],
+  "created": "2006-04-11T00:00:00.0+02:00",
+  "headingSubject": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "encLevel": {
+    "@id": "/def/enum/record/CompleteAuthorityRecord"
+  },
+  "level": {
+    "@id": "/def/enum/content/FullyEstablishedHeading"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "271588",
+  "focus": {
+    "@id": "/resource/auth/271588",
+    "@type": "UniformWork",
+    "uniformTitle": "Rävsagan"
+  },
+  "recordUpdate": {
+    "@id": "/def/enum/content/RecordCanBeUsed"
+  },
+  "source": [
+    {
+      "citation": "(Chapbook in verse, 17th c.)",
+      "@type": "CreativeWork",
+      "label": "Anonymous classics, 2. ed."
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Reyncke Fosz : thet är: En skön och nyttigh dicht, full medh wijszheet, godh läro, och lustige exempel: vthi hwilken alle menniskiors wäsende, handel, otroo, list och snillheet affmålat warder, sampt medh thet sedliga förståndet och thenne books bruuk, 1621"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Reinick Fuchs, eller Michel Räf; Thet är: en lustig och nyttig fabel, som, in under räfwens illparighet och behändighet, föreställer menniskornas upförande och förhållande, swek och bedrägeri, hat och afwund, wrede och hämndgirighet, med mera. Thenna boken är upfyld, med sköna historier, wackra figurer, behageliga werser, goda exempel, trogna lärdomar och underwisningar; mycket nyttiga för alla menniskor i thenna fahrliga tiden. Med kongl. maij:ts allernådigsta privilegio. : Stockholm, tryckt af P.J. Nyström, 1746"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Reinike Fuchs, det är en skön och nyttig dikt, full af vishet, god lärdom och lustige exempel :  Från plattyskan på svensk vers öfvers. [1621], 1827"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "Mickel Räfs lustiga historia och bedröfliga ändalykt, 1875"
+    },
+    {
+      "citation": "saga på vers, 1977",
+      "@type": "CreativeWork",
+      "label": "Mickel Räf :"
+    },
+    {
+      "@type": "CreativeWork",
+      "label": "NE"
+    }
+  ],
+  "catalogingRules": {
+    "@id": "/def/enum/content/Aacr2"
+  },
+  "_marcUncompleted": [
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Mickel Räf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Mickel Räfs lustiga historia och bedröfliga ändalykt"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Mickel Räv"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Michel Räf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Reyncke Fosz"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Reinike Fuchs, det är en skön och nyttig dikt, full af vishet, god lärdom och lustige exempel"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "430": {
+        "subfields": [
+          {
+            "a": "Reinick Fuchs"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för tysk version:"
+          },
+          {
+            "a": "Reineke Fuchs"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för dansk version:"
+          },
+          {
+            "a": "Rævebogen"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för nederländsk version:"
+          },
+          {
+            "a": "Reinaert"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för engelsk version:"
+          },
+          {
+            "a": "Reynad the Fox"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    },
+    {
+      "530": {
+        "subfields": [
+          {
+            "i": "Standardtitel för fransk version:"
+          },
+          {
+            "a": "Roman de Renart"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "0"
+      }
+    }
+  ],
+  "headingMain": {
+    "@id": "/def/enum/content/Appropriate"
+  },
+  "modified": "2014-05-07T12:42:20.0+02:00",
+  "kindOfRecord": {
+    "@id": "/def/enum/content/EstablishedHeadingRecord"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/auth/271588",
+  "@type": "WorkTerm"
+}

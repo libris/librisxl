@@ -1,0 +1,122 @@
+{
+  "about": {
+    "comment": [
+      "=Imprim.:= Oelreich. =Ref.:= Bygdén.",
+      "Fraktur"
+    ],
+    "index": {
+      "@id": "/def/enum/content/IndexPresent"
+    },
+    "classification": [
+      {
+        "@id": "/topic/kssb/V"
+      },
+      {
+        "@id": "/topic/kssb/8/Qdfd"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "author": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "attributedTo": {
+      "@id": "_:b-0"
+    },
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "@type": "Title",
+      "titleValue": "Den swenska hofslagaren, eller Kårt dock tydelig underrättelse, huruledes de mäst gångbare häste siukdomar på et säkert och försökt sätt, tilförlåteligen kunna botas och hielpas. Allmänheten til tienst utgifwit, af G.F.B."
+    },
+    "literaryForm": {
+      "@id": "/def/enum/content/NotFictionNotFurtherSpecified"
+    },
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "72 s. =(s. 68-72 opag.).=",
+        "dimensions": "8:o"
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/SB17"
+        },
+        "@type": "Identifier",
+        "identifierValue": "840511a30"
+      }
+    ],
+    "@id": "/resource/bib/2413961",
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Strengn%C3%A4s%2C%20tryckt%20af%20Lars%20Arv.%20Collin.%201762."
+        },
+        "@type": "ProviderEvent",
+        "providerDate": "1762"
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SB17"
+    }
+  ],
+  "created": "1998-02-27T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "2413961",
+  "modified": "2011-09-28T15:53:41.0+02:00",
+  "librisIIINumber": [
+    "9925442176"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "752": {
+        "subfields": [
+          {
+            "a": "Sverige"
+          },
+          {
+            "d": "Strängnäs"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=SB17"
+  },
+  "@id": "/bib/2413961",
+  "@type": "Record"
+}

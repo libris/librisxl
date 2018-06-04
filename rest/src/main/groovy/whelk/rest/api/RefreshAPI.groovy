@@ -26,21 +26,20 @@ class RefreshAPI extends HttpServlet
 {
     public final static mapper = new ObjectMapper()
     private Whelk whelk
-    private JsonLd jsonld
 
-    public RefreshAPI() {
-        Properties secretProperties = PropertyLoader.loadProperties("secret")
-        PostgreSQLComponent postgreSqlComponent = new PostgreSQLComponent(
-                secretProperties.getProperty("sqlUrl"),
-                secretProperties.getProperty("sqlMaintable"))
-        ElasticSearch elasticSearch = new ElasticSearch(
-                (String) secretProperties.get("elasticHost"),
-                (String) secretProperties.get("elasticCluster"),
-                (String) secretProperties.get("elasticIndex"))
+    RefreshAPI() {
+        // Do nothing - only here for Tomcat to have something to call
+    }
 
-        whelk = new Whelk(postgreSqlComponent, elasticSearch)
-        whelk.loadCoreData()
-        jsonld = new JsonLd(whelk.getDisplayData(), whelk.getVocabData())
+    RefreshAPI(Whelk whelk) {
+        this.whelk = whelk
+    }
+
+    @Override
+    void init() {
+        if (!whelk) {
+            whelk = Whelk.createLoadedSearchWhelk()
+        }
     }
 
     @Override
@@ -110,7 +109,7 @@ class RefreshAPI extends HttpServlet
 
     void refreshLoudly(Document doc) {
         boolean minorUpdate = false
-        String collection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
+        String collection = LegacyIntegrationTools.determineLegacyCollection(doc, m_whelk.getJsonld())
         whelk.storeAtomicUpdate(doc.getShortId(), minorUpdate, "xl", "Libris admin", collection, doc.deleted, {
             Document _doc ->
                 _doc.data = doc.data
@@ -119,7 +118,7 @@ class RefreshAPI extends HttpServlet
 
     void refreshQuietly(Document doc) {
         whelk.storage.refreshDerivativeTables(doc)
-        String collection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
+        String collection = LegacyIntegrationTools.determineLegacyCollection(doc, m_whelk.getJsonld())
         whelk.elastic.index(doc, collection, whelk)
         whelk.reindexDependers(doc)
     }

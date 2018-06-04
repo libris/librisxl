@@ -1,0 +1,218 @@
+{
+  "about": {
+    "mediaTerm": "Elektronisk resurs] /",
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/839.726/e22/"
+      },
+      {
+        "@id": "/topic/kssb/8/Hc.01"
+      }
+    ],
+    "series": [
+      {
+        "volumeNumberSequentialDesignation": "31",
+        "@type": "Serial",
+        "title": "August Strindbergs samlade verk : nationalupplaga"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Strindberg&givenName=August&birthYear=1849&deathYear=1912"
+    },
+    "associatedMedia": [
+      {
+        "cataloguersNote": [
+          "856free"
+        ],
+        "@id": "http://litteraturbanken.se/forfattare/StrindbergA/titlar/IHavsbandet/info",
+        "@type": "MediaObject",
+        "copyNote": [
+          "Fritt tillgänglig via Litteraturbanken"
+        ]
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "additionalCarrierType": {
+      "@id": "/def/enum/content/Online"
+    },
+    "fileType": "Text",
+    "editor": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/Novel"
+    },
+    "influencedBy": [
+      {
+        "influencedBy": [
+          {
+            "@id": "/some?type=Person&familyName=Strindberg&givenName=August&birthYear=1849&deathYear=1912"
+          }
+        ],
+        "@type": "UniformWork",
+        "title": "I havsbandet"
+      },
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Uppsala"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "A & W)"
+      }
+    ],
+    "responsibilityStatement": "[August Strindberg] ; texten redigerad och kommenterad av Hans Lindström",
+    "hasFormat": [
+      {
+        "@id": "/some?type=Electronic"
+      },
+      {
+        "@type": "Product",
+        "extent": "214, [1] s."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "@id": "/resource/bib/11911628",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Stockholm"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Almqvist & Wiksell",
+        "providerDate": "1982"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "alternateFormat": [
+      {
+        "@id": "/some?type=Product&linkNote=Originalversion%3A&controlledLabel=Strindberg%2C%20August&title=I%20havsbandet&placePublisherAndDateOfPublication=1982"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "I havsbandet"
+    },
+    "reproduction": [
+      {
+        "provision": [
+          {
+            "providerPlace": [
+              {
+                "@id": "/some?type=Place&label=G%C3%B6teborg"
+              }
+            ],
+            "@type": "ProviderEvent",
+            "providerName": [
+              "Litteraturbanken"
+            ],
+            "providerDate": "[2009?]"
+          }
+        ],
+        "@type": "CreativeWork",
+        "description": "Digitalt faksimil och elektronisk text"
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "Print",
+        "identifierStatus": "canceledInvalid",
+        "@type": "Identifier",
+        "identifierValue": "91-20-06563-9"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=LITT"
+    },
+    {
+      "@id": "/some?type=Organization&notation=DIGI"
+    },
+    {
+      "@id": "/some?type=Organization&notation=SLB"
+    }
+  ],
+  "created": "2010-09-15T00:00:00.0+02:00",
+  "controlNumber": "11911628",
+  "modified": "2015-08-25T14:50:40.0+02:00",
+  "_marcUncompleted": [
+    {
+      "540": {
+        "subfields": [
+          {
+            "a": "Rättigheter för Litteraturbankens texter"
+          },
+          {
+            "u": "http://litteraturbanken.se/om/rattigheter"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "800": {
+        "subfields": [
+          {
+            "a": "Strindberg, August,"
+          },
+          {
+            "d": "1849-1912."
+          },
+          {
+            "t": "Samlade verk."
+          },
+          {
+            "f": "1981 ;"
+          },
+          {
+            "v": "31"
+          },
+          {
+            "w": "8203252"
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      }
+    }
+  ],
+  "@type": "Record",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "@id": "/bib/11911628",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+  }
+}

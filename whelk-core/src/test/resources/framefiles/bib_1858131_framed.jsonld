@@ -1,0 +1,133 @@
+{
+  "about": {
+    "@id": "/resource/bib/1858131",
+    "classification": [
+      {
+        "@id": "/topic/fiaf/2/F%28051%29%20American%20film"
+      },
+      {
+        "@id": "/topic/fiaf/2/F%28051%29%2873%29"
+      }
+    ],
+    "contentType": [
+      {
+        "@id": "/def/enum/content/Periodical"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "typeOfEntry": {
+      "@id": "/def/enum/content/SuccessiveEntry"
+    },
+    "issueNumber": [
+      "Vol. 1-17"
+    ],
+    "temporalCoverageNote": "1975-1992",
+    "responsibilityStatement": "The American Film Institute",
+    "subject": [
+      {
+        "@id": "/topic/sfit/Tidskrifter%2C%20USA"
+      }
+    ],
+    "unspecifiedContributor": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/xxu"
+      }
+    ],
+    "instanceTitle": {
+      "searchElement": false,
+      "subtitle": "journal of the film and television arts",
+      "@type": "Title",
+      "titleValue": "American film"
+    },
+    "keyTitle": [
+      {
+        "@type": "Title",
+        "titleValue": "American film"
+      }
+    ],
+    "abbreviatedTitle": [
+      {
+        "@type": "Title",
+        "titleValue": "Am. film"
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/issn"
+        },
+        "@type": "Identifier",
+        "identifierValue": "0361-4751"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Serial"
+    ],
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Washington%2C%20D.C."
+        },
+        "@type": "ProviderEvent",
+        "providerDate": "1975-1992"
+      }
+    ]
+  },
+  "created": "1994-07-12T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "1858131",
+  "modified": "2005-04-25T13:53:42.0+02:00",
+  "librisIIINumber": [
+    "9919455962"
+  ],
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Tidskrifter, USA"
+          },
+          {
+            "2": "sfit"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=U%2A"
+  },
+  "@id": "/bib/1858131",
+  "@type": "Record"
+}

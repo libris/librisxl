@@ -1,0 +1,70 @@
+{
+  "about": {
+    "comment": [
+      "Replik på Tommy Hammarströms artikel \"Lögnen om Sigismund\" (Förr och nu, 1977:1, s. 53-60)"
+    ],
+    "publication": [
+      {
+        "providerDate": "1977"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "responsibilityStatement": "Aron Andersson",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Andersson&givenName=Aron&birthYear=1919&deathYear=1984"
+    },
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/sw"
+      }
+    ],
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Förr och nu förfalskar historien!"
+    },
+    "isPartOf": [
+      {
+        "@id": "/some?type=Aggregate&title=F%C3%B6rr%20och%20nu&scopeNote=1977%3A2%2C%20s.%2026"
+      }
+    ],
+    "relation": [
+      {
+        "@id": "/some?type=CreativeWork&linkNote=Kommentar%20nr%201%20till%3A&controlledLabel=Hammarstr%C3%B6m%2C%20Tommy&title=L%C3%B6gnen%20om%20Sigismund"
+      }
+    ],
+    "@id": "/resource/bib/8435491",
+    "@type": [
+      "Text",
+      "ComponentPart"
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SHB"
+    }
+  ],
+  "created": "2002-06-07T00:00:00.0+02:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "8435491",
+  "@type": "Record",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "modified": "2004-04-20T14:50:56.0+02:00",
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=SHB"
+  },
+  "@id": "/bib/8435491",
+  "linked": {
+    "@id": "/def/enum/record/RecordHasLinks-Obsolete"
+  }
+}

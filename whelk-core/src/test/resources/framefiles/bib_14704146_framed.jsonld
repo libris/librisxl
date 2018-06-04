@@ -1,0 +1,221 @@
+{
+  "about": {
+    "comment": [
+      "Publication originale: London : Allen & Unwin, 1954."
+    ],
+    "classification": [
+      {
+        "@id": "http://dewey.info/class/823.912/e22/"
+      }
+    ],
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Tolkien&givenName=J.%20R.%20R.&label=%28John%20Ronald%20Reuel%29%2C&birthYear=1892&deathYear=1973"
+    },
+    "subject": [
+      {
+        "@id": "/topic/vmj/Merveilleux/Romans."
+      }
+    ],
+    "index": {
+      "@id": "/def/enum/content/NoIndex"
+    },
+    "festschrift": {
+      "@id": "/def/enum/content/NotAFestschrift"
+    },
+    "hasVersion": [
+      {
+        "@id": "/some?type=Product&edition=50th%20anniversary%20ed."
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/Novel"
+    },
+    "illustrations": {
+      "@id": "/def/enum/content/Map"
+    },
+    "_providerYear": "2005",
+    "titleVariation": [
+      {
+        "partTitle": [
+          "The fellowship of the ring"
+        ],
+        "partNumber": [
+          "Part 1,"
+        ],
+        "titleType": "4",
+        "@type": "Title",
+        "titleValue": "Lord of the rings."
+      },
+      {
+        "partTitle": [
+          "The fellowship of the ring"
+        ],
+        "partNumber": [
+          "Part one,"
+        ],
+        "titleType": "4",
+        "@type": "Title",
+        "titleValue": "Lord of the rings."
+      }
+    ],
+    "responsibilityStatement": "by J.R.R. Tolkien",
+    "hasFormat": [
+      {
+        "otherPhysicalDetails": "ill.",
+        "@type": "Product",
+        "extent": "xxiii, 407 s.",
+        "dimensions": "23 cm"
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/enk"
+      }
+    ],
+    "genre": [
+      {
+        "@id": "/topic/saogf/Sk%C3%B6nlitteratur"
+      },
+      {
+        "@id": "/topic/saogf/Fantasy"
+      }
+    ],
+    "_providerOtherYear": "1954",
+    "@id": "/resource/bib/14704146",
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=London"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "HarperCollins",
+        "providerDate": "2005"
+      }
+    ],
+    "_providerDateStatus": {
+      "@id": "/def/enum/content/ReprintReissueDateOrOriginalDate"
+    },
+    "language": [
+      {
+        "@id": "/def/languages/eng"
+      }
+    ],
+    "summary": [
+      "Litt©♭rature de jeunesse en langue anglaise"
+    ],
+    "confPub": {
+      "@id": "/def/enum/content/NotAConferencePublication"
+    },
+    "instanceTitle": {
+      "subtitle": "being the first part of The lord of the rings",
+      "@type": "Title",
+      "titleValue": "The fellowship of the ring"
+    },
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "hc",
+        "@type": "Identifier",
+        "identifierValue": "0007203543"
+      },
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "hc",
+        "@type": "Identifier",
+        "identifierValue": "9780007203543"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ]
+  },
+  "language": [
+    {
+      "@id": "/def/languages/fre"
+    }
+  ],
+  "created": "2006-02-27T00:00:00.0+01:00",
+  "technicalNote": [
+    "Imported from: ariane2.ulaval.ca:2200/ULAV (Do not remove)"
+  ],
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "14704146",
+  "modified": "2014-11-19T17:03:45.0+01:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "Merveilleux"
+          },
+          {
+            "v": "Romans."
+          },
+          {
+            "2": "vmj"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Skönlitteratur"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "Fantasy"
+          },
+          {
+            "2": "saogf"
+          }
+        ],
+        "ind1": " ",
+        "ind2": "7"
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=CaQQLA"
+  },
+  "systemNumber": [
+    "a1986912"
+  ],
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=CNWLU"
+  },
+  "@id": "/bib/14704146",
+  "@type": "Record"
+}

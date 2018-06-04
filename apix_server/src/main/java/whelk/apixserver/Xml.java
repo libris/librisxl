@@ -4,6 +4,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import whelk.util.LegacyIntegrationTools;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The madness, just to print some xml.
@@ -50,7 +52,7 @@ public class Xml
     public static String formatApixErrorResponse(String message, int code) throws TransformerException
     {
         Document xmlDoc = builder.newDocument();
-        Element apix = xmlDoc.createElement("apix");
+        Element apix = xmlDoc.createElementNS("http://api.libris.kb.se/apix/", "apix");
         xmlDoc.appendChild(apix);
         apix.setAttribute("version", "0.1");
         apix.setAttribute("status", "ERROR");
@@ -68,7 +70,7 @@ public class Xml
     {
         Document xmlDoc = builder.newDocument();
 
-        Element apix = xmlDoc.createElement("apix");
+        Element apix = xmlDoc.createElementNS("http://api.libris.kb.se/apix/", "apix");
         Element marcRecord = builder.parse(new InputSource(new StringReader(marcXmlString))).getDocumentElement();
         xmlDoc.appendChild(apix);
         apix.setAttribute("version", "0.1");
@@ -121,19 +123,29 @@ public class Xml
         return docToString(xmlDoc);
     }
 
-    public static String formatApixSearchResponse(List<whelk.Document> resultingDocuments) throws TransformerException, IOException, SAXException
+    public static String formatApixSearchResponse(List<whelk.Document> resultingDocuments,
+                                                  boolean includeHold, Map<String, String[]> parameterMap)
+            throws TransformerException, IOException, SAXException
     {
         Document xmlDoc = builder.newDocument();
 
-        Element apix = xmlDoc.createElement("apix");
+        Element apix = xmlDoc.createElementNS("http://api.libris.kb.se/apix/", "apix");
         xmlDoc.appendChild(apix);
         apix.setAttribute("version", "0.1");
         apix.setAttribute("status", "OK");
         apix.setAttribute("operation", "SEARCH");
 
         Element query = xmlDoc.createElement("query");
-        // Contents of query node intentionally omitted (for now), as it is extremely unlikely that clients actually examine this
         apix.appendChild(query);
+        for (Object key : parameterMap.keySet())
+        {
+            String parameterName = (String) key;
+            String[] values = parameterMap.get(key);
+
+            Element parameter = xmlDoc.createElement(parameterName);
+            parameter.setTextContent(values[0]);
+            query.appendChild(parameter);
+        }
 
         Element result = xmlDoc.createElement("result");
         apix.appendChild(result);
@@ -142,12 +154,53 @@ public class Xml
         result.appendChild(records);
         for (whelk.Document document : resultingDocuments)
         {
+            Element record = xmlDoc.createElement("record");
+            records.appendChild(record);
+
+            Element metadata = xmlDoc.createElement("metadata");
+            record.appendChild(metadata);
+
+            Element identifier = xmlDoc.createElement("identifier");
+            record.appendChild(identifier);
+            identifier.setTextContent(document.getThingIdentifiers().get(0));
+
+            String collection = LegacyIntegrationTools.determineLegacyCollection(document, Utils.s_whelk.getJsonld());
+            Element url = xmlDoc.createElement("url");
+            record.appendChild(url);
+            url.setTextContent(Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + document.getShortId());
+
             String marcXmlString = Utils.convertToMarcXml(document);
             if (marcXmlString != null)
             {
                 Element marcRecord = builder.parse(new InputSource(new StringReader(marcXmlString))).getDocumentElement();
-                records.appendChild(xmlDoc.importNode(marcRecord, true));
+                metadata.appendChild(xmlDoc.importNode(marcRecord, true));
             }
+
+            if (collection.equals("bib") && includeHold)
+            {
+                Element extra = xmlDoc.createElement("extra");
+                record.appendChild(extra);
+
+                Element holdings = xmlDoc.createElement("holdings");
+                extra.appendChild(holdings);
+
+                List<whelk.Document> attachedHoldings = Utils.s_whelk.getStorage().getAttachedHoldings(document.getThingIdentifiers());
+                for (whelk.Document holdingDocument : attachedHoldings)
+                {
+                    Element holding = xmlDoc.createElement("holding");
+                    holdings.appendChild(holding);
+                    holding.setAttribute("code", holdingDocument.getSigel());
+                    holding.setAttribute("x-mfhd_id", holdingDocument.getShortId());
+
+                    String holdingMarcXmlString = Utils.convertToMarcXml(holdingDocument);
+                    if (holdingMarcXmlString != null)
+                    {
+                        Element holdingMarcXmlRecord = builder.parse(new InputSource(new StringReader(holdingMarcXmlString))).getDocumentElement();
+                        holding.appendChild(xmlDoc.importNode(holdingMarcXmlRecord, true));
+                    }
+                }
+            }
+
         }
 
         return docToString(xmlDoc);

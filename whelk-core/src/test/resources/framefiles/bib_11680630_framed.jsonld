@@ -1,0 +1,243 @@
+{
+  "about": {
+    "manufacture": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=%5BLohkva%20%28Tartumaa%29%5D"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Greif)"
+      }
+    ],
+    "translator": [
+      {
+        "@id": "_:b-0"
+      }
+    ],
+    "identifier": [
+      {
+        "identifierScheme": {
+          "@id": "/def/identifiers/isbn"
+        },
+        "identifierNote": "köites",
+        "@type": "Identifier",
+        "identifierValue": "9789985319291"
+      }
+    ],
+    "classification": [
+      {
+        "@id": "/some?type=Concept&notation=821.113.6-312.4"
+      },
+      {
+        "@id": "/topic/kssb/8/Hccuc.01"
+      }
+    ],
+    "language": [
+      {
+        "@id": "/def/languages/est"
+      }
+    ],
+    "series": [
+      {
+        "volumeNumberSequentialDesignation": "2",
+        "@type": "Serial",
+        "title": "Millenniumi-triloogia"
+      }
+    ],
+    "responsibilityStatement": "Stieg Larsson ; rootsi keelest tõlkinud Kadri Papp ; [toimetanud Kadi-Riin Haasma ; kujundanud Britt Urbla Keller]",
+    "attributedTo": {
+      "@id": "/some?type=Person&familyName=Larsson&givenName=Stieg&birthYear=1954&deathYear=2004"
+    },
+    "@id": "/resource/bib/11680630",
+    "unspecifiedContributor": [
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      }
+    ],
+    "hasFormat": [
+      {
+        "@type": "Product",
+        "extent": "605, [1] lk.",
+        "dimensions": "21 cm."
+      }
+    ],
+    "publicationCountry": [
+      {
+        "@id": "/def/countries/er"
+      }
+    ],
+    "exampleOfWork": {
+      "@id": "/some?type=UniformWork&title=Flickan%20som%20lekte%20med%20elden."
+    },
+    "instanceTitle": {
+      "@type": "Title",
+      "titleValue": "Tüdruk, kes mängis tulega"
+    },
+    "publication": [
+      {
+        "place": {
+          "@id": "/some?type=Place&label=Tallinn"
+        },
+        "@type": "ProviderEvent",
+        "providerName": "Varrak",
+        "providerDate": "2009"
+      }
+    ],
+    "literaryForm": {
+      "@id": "/def/enum/content/Novel"
+    },
+    "genre": [
+      {
+        "@id": "/topic/saogf/ilukirjandus."
+      },
+      {
+        "@id": "/topic/saogf/kriminaalromaanid."
+      }
+    ],
+    "originalLanguage": [
+      {
+        "@id": "/def/languages/swe"
+      }
+    ],
+    "influencedBy": [
+      {
+        "@id": "_:b-0"
+      },
+      {
+        "@id": "_:b-1"
+      },
+      {
+        "@id": "_:b-2"
+      }
+    ],
+    "@type": [
+      "Text",
+      "Monograph"
+    ],
+    "subject": [
+      {
+        "@id": "/topic/udkrb/821"
+      },
+      {
+        "@id": "/topic/_/rootsi."
+      }
+    ]
+  },
+  "bibliography": [
+    {
+      "@id": "/some?type=Organization&notation=SUEC"
+    }
+  ],
+  "language": [
+    {
+      "@id": "/def/languages/est"
+    }
+  ],
+  "created": "2009-11-05T00:00:00.0+01:00",
+  "encLevel": {
+    "@id": "/def/enum/record/MinimalLevel"
+  },
+  "transcribingAgency": {
+    "@id": "/some?type=Organization&name=ErRR"
+  },
+  "catalogingSource": {
+    "@id": "/def/enum/content/CooperativeCatalogingProgram"
+  },
+  "controlNumber": "11680630",
+  "modified": "2012-06-26T11:12:52.0+02:00",
+  "catForm": {
+    "@id": "/def/enum/record/AACR2"
+  },
+  "_marcUncompleted": [
+    {
+      "_unhandled": [
+        "2"
+      ],
+      "080": {
+        "subfields": [
+          {
+            "a": "821.113.6-312.4"
+          },
+          {
+            "2": "est"
+          }
+        ],
+        "ind1": " ",
+        "ind2": " "
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "650": {
+        "subfields": [
+          {
+            "a": "rootsi."
+          }
+        ],
+        "ind1": " ",
+        "ind2": "4"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "ilukirjandus."
+          }
+        ],
+        "ind1": " ",
+        "ind2": "4"
+      }
+    },
+    {
+      "_unhandled": [
+        "ind2"
+      ],
+      "655": {
+        "subfields": [
+          {
+            "a": "kriminaalromaanid."
+          }
+        ],
+        "ind1": " ",
+        "ind2": "4"
+      }
+    },
+    {
+      "800": {
+        "subfields": [
+          {
+            "a": "Larsson, Stieg,"
+          },
+          {
+            "d": "1954-2004."
+          },
+          {
+            "t": "Millennium."
+          },
+          {
+            "l": "Estniska"
+          }
+        ],
+        "ind1": "1",
+        "ind2": " "
+      }
+    }
+  ],
+  "modifyingAgency": {
+    "@id": "/some?type=Organization&name=S"
+  },
+  "originalCatalogingAgency": {
+    "@id": "/some?type=Organization&name=ErRR"
+  },
+  "@id": "/bib/11680630",
+  "@type": "Record"
+}

@@ -3,6 +3,7 @@ package whelk.importer;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.Templates;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -14,20 +15,26 @@ class Parameters
     private Path path;
     private INPUT_FORMAT format;
     private boolean readOnly = true;
-    private List<Transformer> transformers = new ArrayList<>();
+    private List<Templates> templates = new ArrayList<>();
     private List<DUPLICATION_TYPE> dupTypes = new ArrayList<>();
     private String inputEncoding = "UTF-8";
     private boolean parallel = false;
     private boolean enrichMulDup = false;
+    private boolean verbose = false;
+    private boolean replaceHold = false;
+    private boolean replaceBib = false;
 
     Path getPath() { return path; }
     INPUT_FORMAT getFormat() { return format; }
     boolean getReadOnly() { return readOnly; }
-    List<Transformer> getTransformers() { return transformers; }
+    List<Templates> getTemplates() { return templates; }
     List<DUPLICATION_TYPE> getDuplicationTypes() { return dupTypes; }
     String getInputEncoding() { return inputEncoding; }
     boolean getRunParallel() { return parallel; }
     boolean getEnrichMulDup() { return enrichMulDup; }
+    boolean getVerbose() { return verbose; }
+    boolean getReplaceHold() { return replaceHold; }
+    boolean getReplaceBib() { return replaceBib; }
 
     enum INPUT_FORMAT
     {
@@ -134,6 +141,12 @@ class Parameters
         System.err.println("              document, the incoming document is normally ignored/skipped. If this flag is");
         System.err.println("              set however, all found duplicates will be enriched with the information from");
         System.err.println("              the incoming record.");
+        System.err.println("");
+        System.err.println("--verbose     Verbose logging.");
+        System.err.println("");
+        System.err.println("--replaceBib  If this flag is set, bibliographic records will be replaced instead of merged.");
+        System.err.println("");
+        System.err.println("--replaceHold If this flag is set, holding records will be replaced instead of merged.");
     }
 
     private void interpretBinaryParameter(String parameter, String value)
@@ -160,8 +173,7 @@ class Parameters
                 break;
 
             case "--transformer":
-                transformers.add( TransformerFactory.newInstance().newTransformer(
-                        new StreamSource(new File(value))) );
+                templates.add( TransformerFactory.newInstance().newTemplates( new StreamSource(new File(value))) );
                 break;
 
             case "--inEncoding": // Only relevant for non-xml formats. XML files are expected to declare encoding in their header.
@@ -211,6 +223,15 @@ class Parameters
                 break;
             case "--enrichMulDup":
                 enrichMulDup = true;
+                break;
+            case "--verbose":
+                verbose = true;
+                break;
+            case "--replaceHold":
+                replaceHold = true;
+                break;
+            case "--replaceBib":
+                replaceBib = true;
                 break;
             default:
                 throw new IllegalArgumentException(parameter);

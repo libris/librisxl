@@ -95,7 +95,7 @@ for col0 in 'gkor':
         [16], #contentType  (new: genreForm)
     ]
 
-# 006 Digital:
+# 006 Multimedia:
 for col0 in 'm':
     COLSPECS['bib']['006'][col0] = [
         [5], #audience  (new: intendedAudience)
@@ -121,39 +121,233 @@ for col0 in 's':
     ]
 
 
+# 007 Map:
+for col0 in 'a':
+    COLSPECS['bib']['007'][col0] = [
+        # Map
+        [1], # genreForm
+        [3], # colorContent
+        [4], # baseMaterial
+        [5], # generation
+        [6], # generation
+        [7], # polarity
+        [2], # marc:aspect
+    ]
+
+# 007 Electronic:
+for col0 in 'c':
+    COLSPECS['bib']['007'][col0] = [
+        # Electronic
+        [1], # carrierType
+        [3], # colorContent
+        [4], # hasDimensions
+        [5], # soundContent
+        [6], # undefined
+        [9], # marc:fileFormats
+        [10], # marc:qATarget
+        [11], # marc:antecedent
+        [12], # marc:compression
+        [13], # marc:reformattingQuality
+        [2], # marc:fileAspect
+    ]
+
+# 007 Globe:
+for col0 in 'd':
+    COLSPECS['bib']['007'][col0] = [
+        # Globe
+        [1], # genreForm
+        [3], # colorContent
+        [4], # baseMaterial
+        [5], # generation
+        [2], # marc:aspect
+    ]
+
+# 007 Tactile:
+for col0 in 'f':
+    COLSPECS['bib']['007'][col0] = [
+        # Tactile
+        [1], # layout
+        [3], # layout
+        [4], # layout
+        [5], # layout
+        [6], # hasNotation
+        [7], # hasNotation
+        [8], # hasNotation
+        [9], # hasNotation
+    ]
+
+# 007 ProjectedImageInstance:
+for col0 in 'g':
+    COLSPECS['bib']['007'][col0] = [
+        # ProjectedImageInstance
+        [1], # carrierType
+        [3], # colorContent
+        [4], # baseMaterial
+        [5], # soundContent
+        [6], # soundCharacteristic
+        [7], # hasDimensions
+        [8], # mount
+        [2], # marc:projGraphAspect
+    ]
+
+# 007 Microform:
+for col0 in 'h':
+    COLSPECS['bib']['007'][col0] = [
+        # Microform
+        [1], # carrierType
+        [3], # polarity
+        [4], # hasDimensions
+        [5], # reductionRatio
+        [6], # undefined
+        [9], # colorContent
+        [10], # emulsion
+        [11], # generation
+        [12], # baseMaterial
+        [2], # marc:aspect
+    ]
+
+# 007 StillImageInstance:
+for col0 in 'k':
+    COLSPECS['bib']['007'][col0] = [
+        # StillImageInstance
+        [1], # genreForm
+        [3], # colorContent
+        [4], # baseMaterial
+        [5], # mount
+        [2], # marc:nonProjAspect
+    ]
+
+# 007 MovingImageInstance:
+for col0 in 'm':
+    COLSPECS['bib']['007'][col0] = [
+        # MovingImageInstance
+        [1], # carrierType
+        [3], # colorContent
+        [4], # projectionCharacteristic
+        [5], # soundContent
+        [6], # soundCharacteristic
+        [7], # hasDimensions
+        [8], # soundCharacteristic
+        [9], # genreForm
+        [10], # polarity
+        [11], # generation
+        [12], # baseMaterial
+        [13], # marc:motionPicCategories
+        [14], # marc:motionPicColorStock
+        [15], # marc:motionPicDeterioration
+        [16], # marc:motionPicCompleteness
+        [17,23], # marc:timeOfExamination
+        [2], # marc:motionPicAspect
+    ]
+
+# 007 KitInstance:
+for col0 in 'o':
+    COLSPECS['bib']['007'][col0] = [
+        # KitInstance
+        [1], # carrierType
+    ]
+
+# 007 NotatedMusicInstance:
+for col0 in 'q':
+    COLSPECS['bib']['007'][col0] = [
+        # NotatedMusicInstance
+        [1], # carrierType
+    ]
+
+# 007 RemoteSensingImage:
+for col0 in 'r':
+    COLSPECS['bib']['007'][col0] = [
+        # RemoteSensingImage
+        [1], # carrierType
+        [3], # marc:remoteSensImageAltitude
+        [4], # marc:remoteSensImageAttitude
+        [5], # marc:remoteSensImageCloud
+        [6], # marc:remoteSensImageConstruction
+        [7], # marc:remoteSensImageUse
+        [8], # marc:remoteSensImageSensor
+        [9,11], # marc:remoteSensImageData
+    ]
+
+# 007 SoundRecording:
+for col0 in 's':
+    COLSPECS['bib']['007'][col0] = [
+        # SoundRecording
+        [1], # carrierType
+        [3], # soundCharacteristic
+        [4], # soundCharacteristic
+        [5], # soundCharacteristic
+        [6], # hasDimensions
+        [7], # hasDimensions
+        [8], # soundCharacteristic
+        [9], # generation
+        [10], # marc:soundKindOfMaterial
+        [11], # soundCharacteristic
+        [12], # soundCharacteristic
+        [13], # marc:soundCapture
+        [2], # marc:soundAspect
+    ]
+
+# 007 TextInstance:
+for col0 in 't':
+    COLSPECS['bib']['007'][col0] = [
+        # TextInstance
+        [1], # carrierType
+    ]
+
+# 007 VideoRecording:
+for col0 in 'v':
+    COLSPECS['bib']['007'][col0] = [
+        # VideoRecording
+        [1], # carrierType
+        [3], # colorContent
+        [4], # videoCharacteristic
+        [5], # soundContent
+        [6], # soundCharacteristic
+        [7], # hasDimensions
+        [8], # soundCharacteristic
+    ]
+
+
 # 008 Text:
 for rt in 'aht':
     for bl in 'acdm':
         COLSPECS['bib']['008'][rt + bl] = [
-            [18], [19], [20], [21], # marc:illustrations (new: illustrativeContent)
-            [23], #marc:additionalCarrierType  (new: carrierType)
-            [24], [25], [26], [27], #contentType
+            [18], [19], [20], [21], # illustrativeContent
+            [22], # intendedAudience
+            [23], # carrierType
+            [24], [25], [26], [27], # genreForm
+            [28], # genreForm
+            [29], # genreForm
+            [30], # genreForm
+            [31], # supplementaryContent
+            [33], # genreForm
+            [34], # genreForm
 
         ]
 
-# 008 Digital:
+# 008 Multimedia:
 for bl in '9abcdimps':
     COLSPECS['bib']['008']['m' + bl] = [
-        [18],    # marc:frequencyCategory  (UNUSED: remove?)
-        [19],    # marc:regularity                  (UNUSED: remove?)
+        [18], # marc:frequencyCategory
+        [19], # marc:regularity
+        [22], # intendedAudience
+        [23], # carrierType
+        [26], # genreForm
+        [28], # genreForm
     ]
 
 # 008 Cartography:
 for rt in 'ef':
     for bl in '9abcdimps':
         COLSPECS['bib']['008']['m' + bl] = [
-            [18], # marc:relief
-            [19], # marc:relief
-            [20], # marc:relief
-            [21], # marc:relief
-            [22,24], # projection
-            [24], #    marc:primeMeridian          (UNUSED: remove?)
-            [25], # marc:material
+            [18], [19], [20], [21], # marc:relief
+            #[22:24], # projection
+            [24], # marc:primeMeridian
+            [25], # genreForm
             [28], # genreForm
-            [29], #    marc:additionalCarrierType  (new: carrierType)
-            [31], #    marc:index                  (new: supplemantaryContent)
-            [33], #    additionalType
-            [34], #    additionalType              (UNUSED: remove?)
+            [29], # carrierType
+            [31], # supplementaryContent
+            [33], [34], # additionalType
         ]
 
 # 008 Mixed:
@@ -161,22 +355,21 @@ for rts, bls in [('b', '9acdimp'), ('p', 'acdimp')]:
     for rt in rts:
         for bl in bls:
             COLSPECS['bib']['008'][rt + bl] = [
-                [23], #    marc:additionalCarrierType  (new: carrierType)
+                [23], # carrierType
             ]
 
 # 008 Audio:
 for rt in 'cdij':
     for bl in '9abcdimps':
         COLSPECS['bib']['008'][rt + bl] = [
-            [21], #    marc:parts
-            [23], #    marc:additionalCarrierType  (new: carrierType)
-            [24], #    marc:matter                 (new: supplemantaryContent)
-            [25], #    marc:matter                 (new: supplemantaryContent)
-            [26], #    marc:matter                 (new: supplemantaryContent)
-            [27], #    marc:matter                 (new: supplemantaryContent)
-            [28], #    marc:matter                 (new: supplemantaryContent)
-            [29], #    marc:matter                 (new: supplemantaryContent)
-            [33], #    marc:transposition
+            #[18:20], # genreForm
+            [20], # musicFormat
+            [21], # marc:parts
+            [22], # intendedAudience
+            [23], # carrierType
+            [24], [25], [26], [27], [28], [29], # supplementaryContent
+            [30], [31], # genreForm
+            [33], # marc:transposition
         ]
 
 
@@ -185,18 +378,18 @@ for rts, bls in [('aht', '9bips'), ('b', 'bs'), ('p', 'bs')]:
     for rt in rts:
         for bl in bls:
             COLSPECS['bib']['008'][rt + bl] = [
-                [18], #    marc:frequencyCategory      (new: frequency)
-                [19], #    marc:regularity                      (new: frequency)
-                [20], #    marc:issn                              (ta bort? Undefined enl LC)
-                [21], #    contentType                          (new: genreForm)
-                [22], #    marc:originalItem
-                [23], #    marc:additionalCarrierType  (new: carrierType)
-                [24], #    marc:nature                          (new: genreForm)
-                [25], #    marc:contents                       (new: genreForm)
-                [26], #    marc:contents                       (new: genreForm)
-                [27], #    marc:contents                       (new: genreForm)
-                [33], #    marc:alphabet
-                [34], #    marc:typeOfEntry
+            [18], # frequency
+            [19], # frequency
+            [20], # marc:issn
+            [21], # genreForm
+            [22], # marc:originalItem
+            [23], # carrierType
+            [24], # genreForm
+            [25], [26], [27], # genreForm
+            [28], # genreForm
+            [29], # genreForm
+            [33], # marc:alphabet
+            [34], # marc:typeOfEntry
             ]
 
 # 008 Visual:
@@ -204,10 +397,12 @@ for rts, bls in [('gknor', '9abcdimps'), ('p', '9')]:
     for rt in rts:
         for bl in bls:
             COLSPECS['bib']['008'][rt + bl] = [
-                #[18:21]       marc:runningTime            (new duration)
-                [23], [24], [25], [26], [27],       # marc:matter (Undefined enl LC)
-                [29],     # marc:additionalCarrierType  (new: carrierType)
-                [34],     # marc:technique
+                [22], # intendedAudience
+                [23], [24], [25], [26], [27], # marc:matter
+                [28], # genreForm
+                [29], # carrierType
+                [33], # genreForm
+                [34], # marc:technique
             ]
 
 
@@ -448,7 +643,7 @@ class CounterDict:
         if self.floor:
             items = (item for item in items if item[1].total >= self.floor)
         return OrderedDict(sorted(items,
-                                  key=lambda (k, v): v.total, reverse=True))
+                                  key=lambda kv: kv[1].total, reverse=True))
 
 
 def compute_stats(marctype, stats_dest):
