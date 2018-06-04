@@ -178,7 +178,7 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
                 boolean targetContainsSomeRemapped =
                     flagRule.remapProperty.values().any {
                         def value = target[it]
-                        value && matchValuePattern.matcher(value)
+                        value && value instanceof String && matchValuePattern.matcher(value)
                     }
                 if ((!flagRule.revertRequiresNo ||
                         !target.containsKey(flagRule.revertRequiresNo)) &&
