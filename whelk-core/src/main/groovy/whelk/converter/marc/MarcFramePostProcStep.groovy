@@ -226,7 +226,7 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
                     if (it == null)
                         return true
                     def value = obj[it]
-                    value && matchValuePattern.matcher(value)
+                    value && value instanceof String && matchValuePattern.matcher(value)
                 }) {
                     continue
                 }
