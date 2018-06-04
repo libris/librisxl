@@ -5,6 +5,7 @@ import groovy.xml.XmlUtil
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter
 import se.kb.libris.util.marc.io.MarcXmlRecordReader
+import se.kb.libris.util.marc.io.MarcXmlRecordWriter
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
@@ -54,7 +55,6 @@ class LegacyMarcAPI extends HttpServlet {
             "format=ISO2709\n" +
             "status=on\n" +
             "longname=LIBRIS testprofil\n" +
-            "extrafields=Mtm\\:852,856\n" +
             "biblevel=off\n" +
             "issnhyphenate=off\n" +
             "issndehyphenate=off\n" +
@@ -93,6 +93,8 @@ class LegacyMarcAPI extends HttpServlet {
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         try {
+            response.setCharacterEncoding("UTF-8")
+
             String library = request.getParameter("library")
             String id = request.getParameter("id")
             if (id == null || library == null) {
@@ -103,7 +105,8 @@ class LegacyMarcAPI extends HttpServlet {
             }
             id = LegacyIntegrationTools.fixUri(id)
             library = LegacyIntegrationTools.fixUri(library)
-            Document rootDocument = getDocument(id)
+            String systemId = whelk.storage.getSystemIdByIri(id)
+            Document rootDocument = whelk.storage.loadEmbellished(systemId, whelk.getJsonld())
             if (rootDocument == null) {
                 String message = "The supplied \"id\"-parameter must refer to an existing bibliographic record."
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, message)
@@ -124,25 +127,43 @@ class LegacyMarcAPI extends HttpServlet {
                 profileString = defaultProfileString
             }
 
+            // This is a hack, to allow holding-information to be included when using the default profile
+            String sigel = LegacyIntegrationTools.uriToLegacySigel(library)
+            if (profileString.contains("extrafields=")) {
+                String[] lines = profileString.split(System.getProperty("line.separator"))
+                StringBuilder sb = new StringBuilder()
+                for (String line : lines) {
+                    sb.append(line)
+                    if (line.startsWith("extrafields=")) {
+                        if (!line.endsWith(";"))
+                            sb.append(";")
+                        sb.append(sigel + ":852,856;")
+                    }
+                    sb.append(System.getProperty("line.separator"))
+                }
+                profileString = sb.toString()
+            }
+            else
+                profileString = "extrafields="+sigel+":852,856;" + System.getProperty("line.separator") + profileString
+            
             File tempFile = File.createTempFile("profile", ".tmp")
             tempFile.write(profileString)
             ExportProfile profile = new ExportProfile(tempFile)
             tempFile.delete()
 
-            // Embellish data
-            whelk.embellish(rootDocument, false)
-
             Vector<MarcRecord> result = compileVirtualMarcRecord(profile, rootDocument)
 
             response.setContentType("application/octet-stream")
             response.setHeader("Content-Disposition", "attachment; filename=\"libris_marc_" + rootDocument.getShortId() + "\"")
-            Iso2709MarcRecordWriter writer = new Iso2709MarcRecordWriter(response.getOutputStream(), "UTF-8")
+            def writer = (profile.getProperty("format", "ISO2709").equalsIgnoreCase("MARCXML"))?
+                    new MarcXmlRecordWriter(response.getOutputStream(), "UTF-8"):
+                    new Iso2709MarcRecordWriter(response.getOutputStream(), "UTF-8")
             for (MarcRecord record : result) {
                 writer.writeRecord(record)
             }
             response.getOutputStream().close()
         } catch (Throwable e) {
-            log("Failed handling _compilemarc request: ", e)
+            log.error("Failed handling _compilemarc request: ", e)
             throw e
         }
     }
@@ -153,8 +174,8 @@ class LegacyMarcAPI extends HttpServlet {
 
         List auth_ids = []
         xmlRecord.datafield.subfield.each {
-            if (it.@code.text().equals("0") && (it.text().startsWith("https://id.kb.se/") || it.text().startsWith("https://libris.kb.se/"))) {
-                auth_ids.add(it.text())
+            if ( it.@code.text().equals("0") ) {
+                auth_ids.add(it.text().replaceAll("#it", ""))
             }
         }
 

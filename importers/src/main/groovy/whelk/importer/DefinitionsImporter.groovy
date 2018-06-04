@@ -29,7 +29,8 @@ class DefinitionsImporter extends Importer {
             counter++
         }
         println("Created $counter documents from $definitionsFilename in ${(System.currentTimeMillis() - startTime) / 1000} seconds. Now storing to system.")
-        whelk.storage.bulkStore(documentList, "xl", null, collection)
+        boolean updateMinMaxDepModified = false
+        whelk.storage.bulkStore(documentList, "xl", null, collection, updateMinMaxDepModified)
         println("Operation complete. Time elapsed: ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
     }
 

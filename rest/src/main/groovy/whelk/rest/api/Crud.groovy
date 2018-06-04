@@ -207,8 +207,9 @@ class Crud extends HttpServlet {
         String loc = docAndLocation.second
 
         String ifNoneMatch = request.getHeader("If-None-Match")
-        if (ifNoneMatch != null && doc != null && ifNoneMatch == doc.getModified()) {
-            response.setHeader("ETag", doc.getModified())
+        if (ifNoneMatch != null && doc != null &&
+                cleanEtag(ifNoneMatch) == doc.getModified()) {
+            response.setHeader("ETag", "\"${doc.getModified()}\"")
             response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
             response.sendError(HttpServletResponse.SC_NOT_MODIFIED,
                     "Document has not been modified.")
@@ -546,9 +547,9 @@ class Crud extends HttpServlet {
 
         if (etag == EPOCH_START) {
             // For some resources, we want to set the etag to when the system was started
-            response.setHeader("ETag", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
+            response.setHeader("ETag", "\"${ManagementFactory.getRuntimeMXBean().getStartTime()}\"")
         } else {
-            response.setHeader("ETag", etag)
+            response.setHeader("ETag", "\"${etag}\"")
         }
 
         if (path in contextHeaders.collect { it.value }) {
@@ -860,7 +861,7 @@ class Crud extends HttpServlet {
                             log.warn("If-Match: ${request.getHeader('If-Match')}")
                             log.warn("Modified: ${_doc.modified}")
 
-                            if (_doc.modified as String != request.getHeader("If-Match")) {
+                            if (_doc.modified as String != cleanEtag(request.getHeader("If-Match"))) {
                                 log.debug("PUT performed on stale document.")
 
                                 throw new EtagMissmatchException()
@@ -945,7 +946,7 @@ class Crud extends HttpServlet {
         log.debug("Setting header Location: $locationRef")
 
         response.setHeader("Location", locationRef)
-        response.setHeader("ETag", etag as String)
+        response.setHeader("ETag", "\"${etag as String}\"")
 
         if (newDocument) {
             response.setStatus(HttpServletResponse.SC_CREATED)
@@ -1094,6 +1095,14 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, wre.message)
         }
 
+    }
+
+    private String cleanEtag(String str) {
+        return stripQuotes(str).replaceAll('-gzip', '')
+    }
+
+    private String stripQuotes(String str) {
+        return str.replaceAll('"', '')
     }
 
 }

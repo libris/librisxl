@@ -60,10 +60,17 @@ public class ApixSearchServlet extends HttpServlet
                 results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("ISSN", parameterValue.toLowerCase(), 1));
             } else
             {
-                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("NBN", parameterValue, 1));
-                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("Identifier", parameterValue, 1));
-                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID("SystemNumber", parameterValue, 0));
+                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID(null, parameterValue, 1));
+                results.addAll(Utils.s_whelk.getStorage().getSystemIDsByTypedID(null, parameterValue, 0));
             }
+        }
+
+        Iterator<String> it = results.iterator();
+        while (it.hasNext())
+        {
+            String systemID = it.next();
+            if (!Utils.s_whelk.getStorage().getCollectionBySystemID(systemID).equals("bib"))
+                it.remove();
         }
 
         return results;

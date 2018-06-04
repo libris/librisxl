@@ -133,7 +133,7 @@ class MarcFrameConverterUtilsSpec extends Specification {
         when:
         def subfields = MarcFieldHandler.orderAndGroupSubfields(
                 [
-                    'a': subHandler(field, 'a', [about: 'agent']),
+                    'a': subHandler(field, 'a', [aboutNew: 'agent']),
                     'd': subHandler(field, 'd', [about: 'agent']),
                     't': subHandler(field, 't', [about: 'title']),
                 ],
@@ -144,7 +144,7 @@ class MarcFrameConverterUtilsSpec extends Specification {
         and:
         def subfields2 = MarcFieldHandler.orderAndGroupSubfields(
                 [
-                    'a': subHandler(field, 'a', [about: 'agent']),
+                    'a': subHandler(field, 'a', [aboutNew: 'agent']),
                     'p': subHandler(field, 'p', [about: 'place']),
                     '4': subHandler(field, '4', [about: 'agent']),
                 ],
@@ -157,13 +157,25 @@ class MarcFrameConverterUtilsSpec extends Specification {
                 [
                     'a': subHandler(field, 'a', [about: 'title']),
                     'd': subHandler(field, 'd', [:]),
-                    'f': subHandler(field, 'f', [about: 'work']),
+                    'f': subHandler(field, 'f', [aboutNew: 'work']),
                     'q': subHandler(field, 'q', [:]),
                     'l': subHandler(field, 'l', [about: 'work']),
                 ],
                 'a d l f')
         then:
         subfields3*.code == [['a'], ['d'], ['l', 'f'], ['q']]
+
+        and:
+        def subfields4 = MarcFieldHandler.orderAndGroupSubfields(
+                [
+                    'a': subHandler(field, 'a', [:]),
+                    'c': subHandler(field, 'c', [:]),
+                    'q': subHandler(field, 'q', [:]),
+                    'z': subHandler(field, 'z', [:]),
+                ],
+                'a q c z')
+        then:
+        subfields4*.code == [['a'], ['q'], ['c'], ['z']]
 
     }
 
@@ -197,6 +209,16 @@ class MarcFrameConverterUtilsSpec extends Specification {
         ]
         and:
         Util.getSortedPendingKeys(pendingResources) == ['a', 'b1', 'b2', 'd', 'c']
+    }
+
+    def "should check if object contains pattern"() {
+        given:
+        def pattern = [link: [key: "value"]]
+        def obj1 = [link: [key: "value"]]
+        def obj2 = [link: [key: "other"]]
+        expect:
+        MatchRule.objectContains(obj1, pattern)
+        !MatchRule.objectContains(obj2, pattern)
     }
 
     def newMarcFieldHandler() {

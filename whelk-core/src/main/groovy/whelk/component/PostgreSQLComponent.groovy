@@ -64,7 +64,7 @@ class PostgreSQLComponent {
                      LOAD_ID_FROM_ALTERNATE, INSERT_IDENTIFIERS,
                      LOAD_RECORD_IDENTIFIERS, LOAD_THING_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
                      GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, GET_DEPENDENCIES, GET_DEPENDERS,
-                     GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE
+                     GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE, GET_COLLECTION_BY_SYSTEM_ID
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String GET_DEPENDENCIES_OF_TYPE, GET_DEPENDERS_OF_TYPE
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
@@ -199,6 +199,7 @@ class PostgreSQLComponent {
                       "WHERE t1.iri = ? AND t2.mainid = true;"
         GET_ID_TYPE = "SELECT graphindex, mainid FROM $idTableName " +
                       "WHERE iri = ?"
+        GET_COLLECTION_BY_SYSTEM_ID = "SELECT collection FROM lddb where id = ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
@@ -924,7 +925,7 @@ class PostgreSQLComponent {
     }
 
     boolean bulkStore(
-            final List<Document> docs, String changedIn, String changedBy, String collection) {
+            final List<Document> docs, String changedIn, String changedBy, String collection, boolean updateDepMinMax = true) {
         if (!docs || docs.isEmpty()) {
             return true
         }
@@ -945,8 +946,10 @@ class PostgreSQLComponent {
                 batch = rigInsertStatement(batch, doc, changedIn, changedBy, collection, false)
                 batch.addBatch()
                 refreshDerivativeTables(doc, connection, false)
-                for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
-                    updateMinMaxDepModified((String) depender.get(0), connection)
+                if (updateDepMinMax) {
+                    for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
+                        updateMinMaxDepModified((String) depender.get(0), connection)
+                    }
                 }
             }
             batch.executeBatch()
@@ -1372,6 +1375,35 @@ class PostgreSQLComponent {
         }
     }
 
+    String getCollectionBySystemID(String id) {
+        Connection connection = getConnection()
+        try {
+            return getCollectionBySystemID(id, connection)
+        } finally {
+            connection.close()
+        }
+    }
+
+    String getCollectionBySystemID(String id, Connection connection) {
+        PreparedStatement selectStatement
+        ResultSet resultSet
+
+        try {
+            selectStatement = connection.prepareStatement(GET_COLLECTION_BY_SYSTEM_ID)
+            selectStatement.setString(1, id)
+            resultSet = selectStatement.executeQuery()
+
+            if (resultSet.next()) {
+                return resultSet.getString("collection")
+            }
+            return null
+        }
+        finally {
+            try {resultSet.close()} catch (Exception e) { /* ignore */ }
+            try {selectStatement.close()} catch (Exception e) { /* ignore */}
+        }
+    }
+
     Document load(String id, Connection conn = null) {
         return load(id, null, conn)
     }
@@ -1590,6 +1622,7 @@ class PostgreSQLComponent {
     /**
      * List all system IDs that match a given typed id and graph index
      * (for example: type:ISBN, value:1234, graphIndex:1 -> ksjndfkjwbr3k)
+     * If type is passed as null, all types will match.
      */
     public List<String> getSystemIDsByTypedID(String idType, String idValue, int graphIndex) {
         Connection connection
@@ -1599,7 +1632,11 @@ class PostgreSQLComponent {
             String query = "SELECT id FROM lddb WHERE data#>'{@graph," + graphIndex + ",identifiedBy}' @> ?"
             connection = getConnection()
             preparedStatement = connection.prepareStatement(query)
-            preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + idValue + "\"}]", java.sql.Types.OTHER)
+
+            if (idType != null)
+                preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + idValue + "\"}]", java.sql.Types.OTHER)
+            else
+                preparedStatement.setObject(1, "[{\"value\": \"" + idValue + "\"}]", java.sql.Types.OTHER)
 
             rs = preparedStatement.executeQuery()
             List<String> results = []

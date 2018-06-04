@@ -24,7 +24,11 @@ import java.util.*;
 
 class XL
 {
-    private static final String PRELIMINARY_STATUS = "marc:PartialPreliminaryLevel";
+    private static final String ENC_PRELIMINARY_STATUS = "marc:PartialPreliminaryLevel"; // 5
+    private static final String ENC_PREPUBLICATION_STATUS = "marc:PrepublicationLevel";  // 8
+    private static final String ENC_ABBREVIVATED_STATUS = "marc:AbbreviatedLevel";  // 3
+    private static final String ENC_MINMAL_STATUS = "marc:MinimalLevel";  // 7
+
     private Whelk m_whelk;
     private Parameters m_parameters;
     private Properties m_properties;
@@ -171,7 +175,7 @@ class XL
 
         if (!m_parameters.getReadOnly())
         {
-            rdfDoc.setRecordStatus(PRELIMINARY_STATUS);
+            rdfDoc.setRecordStatus(ENC_PRELIMINARY_STATUS);
 
             // Doing a replace (but preserving old IDs)
             if (replaceSystemId != null)
@@ -229,18 +233,14 @@ class XL
                         {
                             if (collection.equals("bib"))
                             {
-                                String encodingLevel = doc.getEncodingLevel();
-                                if (encodingLevel == null || !encodingLevel.equals(PRELIMINARY_STATUS))
+                                String existingEncodingLevel = doc.getEncodingLevel();
+                                String newEncodingLevel = rdfDoc.getEncodingLevel();
+
+                                if (existingEncodingLevel == null || !mayOverwriteExistingEncodingLevel(existingEncodingLevel, newEncodingLevel))
                                     throw new TooHighEncodingLevelException();
                             }
 
-                            try
-                            {
-                                enrich( doc, rdfDoc );
-                            } catch (IOException e)
-                            {
-                                throw new UncheckedIOException(e);
-                            }
+                            enrich( doc, rdfDoc );
                         });
             }
             catch (TooHighEncodingLevelException e)
@@ -268,8 +268,31 @@ class XL
         return null;
     }
 
+    private boolean mayOverwriteExistingEncodingLevel(String existingEncodingLevel, String newEncodingLevel)
+    {
+        switch (newEncodingLevel)
+        {
+            case ENC_PRELIMINARY_STATUS: // 5
+                if (existingEncodingLevel.equals(ENC_PRELIMINARY_STATUS)) // 5
+                    return true;
+                break;
+            case ENC_PREPUBLICATION_STATUS: // 8
+                if (existingEncodingLevel.equals(ENC_PRELIMINARY_STATUS) || existingEncodingLevel.equals(ENC_PREPUBLICATION_STATUS)) // 5 || 8
+                    return true;
+                break;
+            case ENC_ABBREVIVATED_STATUS: // 3
+                if (existingEncodingLevel.equals(ENC_PRELIMINARY_STATUS) || existingEncodingLevel.equals(ENC_PREPUBLICATION_STATUS)) // 5 || 8
+                    return true;
+                break;
+            case ENC_MINMAL_STATUS: // 7
+                if (existingEncodingLevel.equals(ENC_PRELIMINARY_STATUS) || existingEncodingLevel.equals(ENC_PREPUBLICATION_STATUS)) // 5 || 8
+                    return true;
+                break;
+        }
+        return false;
+    }
+
     private void enrich(Document mutableDocument, Document withDocument)
-            throws IOException
     {
         JsonldSerializer serializer = new JsonldSerializer();
         List<String[]> withTriples = serializer.deserialize(withDocument.data);
@@ -384,8 +407,7 @@ class XL
                     }
                     break;
                 case DUPTYPE_035A:
-                    // Unique id number in another system. The 035a of the post being imported will be checked against
-                    // the @graph,0,systemNumber array of existing posts
+                    // Unique id number in another system.
                     duplicateIDs.addAll(getDuplicatesOn035a(marcRecord));
                     break;
                 case DUPTYPE_LIBRISID:

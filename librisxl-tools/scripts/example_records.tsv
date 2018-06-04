@@ -137,6 +137,7 @@ auth/393805	Dillman (w 368)
 auth/183024	Cato, Anders (w 370)
 auth/192570	Kant, Immanuel (w 370)
 
+bib/8257380	Post med tecken-encoding-problem vid export.
 bib/22618427	HLD identifierare med specialtecken '/'
 bib/22196000	Known manual test case for 007:cr...
 bib/11279947	[Akademisk avhandling = Text,Monograph,Thesis] Neural correlates of individual differences in personality and intelligence
@@ -554,6 +555,9 @@ bib/12336898	Kōza shakai hoshōhō (880)
 bib/2511424	Fihrist-i Kitābkhānah-ʼi (880)
 bib/12285892	Tōdai Edo hyaku bakemono.(880)
 bib/11639789	Guoli zhongyang tushuguan tecang xuanlu (880)
+
+bib/8406188	Containing field 249
+bib/9132356	Containing field 249
 
 bib/14609398	I marknadens öga [Elektronisk resurs] - ingår i 1 serie - LiU TESTPOST2
 bib/14215681	I marknadens öga - ingår i 1 serie - LiU TESTPOST2
@@ -1084,6 +1088,27 @@ bib/12767542	ISBN: 9780415624572 - Lnu TESTPOST
 bib/18804323	ISBN: 9789144110080 - Lnu TESTPOST
 bib/13983370	ISBN: 9789187427138 - Lnu TESTPOST
 bib/11438577	ISBN: 9780805853438 - Lnu TESTPOST
+
+
+bib/8928675	BTH TESTPOST
+bib/8953765	BTH TESTPOST
+bib/8257220	BTH TESTPOST
+bib/10236287	BTH TESTPOST
+bib/21967246	BTH TESTPOST
+bib/20883438	BTH TESTPOST
+
+
+bib/21720417	Mo TESTPOST
+bib/19974289	Mo TESTPOST
+bib/22526487	Mo TESTPOST
+bib/21528387	Mo TESTPOST
+bib/19422656	Mo TESTPOST
+bib/20536235	Mo TESTPOST
+bib/20573843	Mo TESTPOST
+bib/11778366	Mo TESTPOST
+bib/21081847	Mo TESTPOST
+bib/20873425	Mo TESTPOST
+bib/21673522	Mo TESTPOST
 
 
 hold/15726821	
