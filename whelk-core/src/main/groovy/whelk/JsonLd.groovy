@@ -41,7 +41,24 @@ class JsonLd {
     static final String APIX_FAILURE_KEY = "apixExportFailedAt"
     static final String ENCODING_LEVEL_KEY = "marc:encLevel"
 
+    static final Set<String> LD_KEYS
+
     static final ObjectMapper mapper = new ObjectMapper()
+
+    static {
+        LD_KEYS = [
+            GRAPH_KEY,
+            CONTEXT_KEY,
+            VOCAB_KEY,
+            ID_KEY,
+            TYPE_KEY,
+            LANGUAGE_KEY,
+            CONTAINER_KEY,
+            SET_KEY,
+            LIST_KEY,
+            REVERSE_KEY
+        ] as Set
+    }
 
     private static Logger log = LogManager.getLogger(JsonLd.class)
 
@@ -321,6 +338,81 @@ class JsonLd {
 
 
     //==== Utils ====
+
+    Set validate(Map obj) {
+        Set<String> errors = new LinkedHashSet<>()
+        doValidate(obj, errors)
+        return errors
+    }
+
+    private void doValidate(Map obj, Set errors) {
+        for (Object keyObj : obj.keySet()) {
+            if (!(keyObj instanceof String)) {
+                errors << "Invalid key: $keyObj"
+                continue
+            }
+
+            String key = (String) keyObj
+            Object value = obj[key]
+
+            if ((key == ID_KEY || key == TYPE_KEY)
+                && !(value instanceof String)) {
+                errors << "Unexpected value of $key: ${value}"
+                continue
+            }
+
+            Map termDfn = vocabIndex[key] instanceof Map ? vocabIndex[key] : null
+            if (!termDfn && key.indexOf(':') > -1) {
+                termDfn = vocabIndex[expand(key)]
+            }
+
+            Map ctxDfn = context[key] instanceof Map ? context[key] : null
+            boolean isVocabTerm = ctxDfn && ctxDfn[TYPE_KEY] == VOCAB_KEY
+
+            if (!termDfn && !LD_KEYS.contains(key)) {
+                errors << "Unknown term: $key"
+            }
+
+            if ((key == TYPE_KEY || isVocabTerm)
+                && !vocabIndex.containsKey((String) value)) {
+                errors << "Unknown vocab value for $key: $value"
+            }
+
+            boolean expectRepeat = key == GRAPH_KEY || key in repeatableTerms
+            boolean isRepeated = value instanceof List
+            if (expectRepeat && !isRepeated) {
+                errors << "Expected $key to be an array."
+            } else if (!expectRepeat && isRepeated) {
+                errors << "Unexpected array for $key."
+            }
+
+            List valueList = isRepeated ? (List) value : null
+            if (valueList && valueList.size() == 0) {
+                continue
+            }
+            Object firstValue = valueList?.getAt(0) ?: value
+            boolean valueIsObject = firstValue instanceof Map
+
+            if (firstValue && termDfn
+                    && termDfn[TYPE_KEY] == 'ObjectProperty') {
+                if (!isVocabTerm && !valueIsObject) {
+                    errors << "Expected value type of $key to be object (value: $value)."
+                } else if (isVocabTerm && valueIsObject) {
+                    errors << "Expected value type of $key to be a vocab string (value: $value)."
+                }
+            }
+
+            if (value instanceof List) {
+                value.each {
+                    if (it instanceof Map) {
+                        doValidate((Map) it, errors)
+                    }
+                }
+            } else if (value instanceof Map) {
+                doValidate((Map) value, errors)
+            }
+        }
+    }
 
     boolean softMerge(Map<String, Object> obj, Map<String, Object> into) {
         if (obj == null || into == null) {
