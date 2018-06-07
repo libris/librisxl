@@ -1682,9 +1682,10 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     @CompileStatic(SKIP)
     def revert(Map state, Map data, Map result) {
         def entity = getEntity(state, data)
-        if (link)
+        if (link) {
             entity = entity[link]
-        if (property) {
+        }
+        if (entity && property) {
             def v = entity[property]
             if (v) {
                 if (dateTimeFormat) {
