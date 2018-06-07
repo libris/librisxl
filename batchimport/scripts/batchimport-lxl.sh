@@ -1,7 +1,8 @@
 #!/bin/bash
 
-HOME=`dirname $0`
+HOME=/appl/import
 TRANSFORMERS=$HOME/transformers
+SCRIPTS=$HOME/scripts
 QUEUES=$HOME/queues
 ETC=$HOME/etc
 ALERT_MAIL="kai.poykio@kb.se"
@@ -49,7 +50,7 @@ cat $ETC/import-lxl.txt|while read QUEUE FLAGS; do
 	FLAGS=`eval echo -n $FLAGS` # expansion of variables in string like $TRANSFORMERS
 
 	if [ ! -f /tmp/import/running/$QUEUE ] && [ `ls -1 $QUEUES/$QUEUE/incoming|wc -l` -ne 0 ]; then
-		( QUEUE=$QUEUE $HOME/single-import-lxl.sh $FLAGS 2>&1 ) &
+		( QUEUE=$QUEUE $SCRIPTS/single-import-lxl.sh $FLAGS 2>&1 ) &
 		sleep 1
 	fi
 done
