@@ -409,10 +409,12 @@ class RemoteSearchAPI extends HttpServlet {
         marcRecord.addField(marcRecord.createControlfield("001", generatedId))
 
         // Remove unwanted marc fields.
-        for (Field field : mutableFieldList) {
+        Iterator<Field> it = mutableFieldList.iterator()
+        while (it.hasNext()) {
+            Field field = it.next()
             String fieldNumber = field.getTag()
             if (m_undesirableFields.contains(fieldNumber))
-                mutableFieldList.remove(field)
+                it.remove()
         }
         return generatedId
     }
