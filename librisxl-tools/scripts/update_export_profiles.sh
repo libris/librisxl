@@ -33,6 +33,12 @@ for profile in *.properties
 do
     data=`cat $profile`
     sigel_list=`cat $profile | grep locations | sed -e 's/locations=//' | sed -e 's/ /\n/g'`
+
+    # Filter out "locations=*"
+    if echo x"$sigel_list" | grep '*' > /dev/null; then
+	continue
+    fi
+
     for var in $sigel_list
     do
         profile_no_ext=$(echo $var | cut -d'.' -f 1)
