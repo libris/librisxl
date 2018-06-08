@@ -1,7 +1,9 @@
 #!/bin/bash
 
-HOME='/appl/import'
-JAR='/appl/src/librisxl/batchimport/build/libs/batchimport.jar' # TODO deploy to libs when ready
+HOME=/appl/import
+JAR=$HOME/lib/batchimport.jar
+SECRET=$HOME/etc/secret.properties.prod
+MAIL=kai.poykio@kb.se
 
 FLAGS="$@"
 
@@ -17,8 +19,7 @@ if [ "$QUEUE" != "" ]; then
 
 		echo $FILE > $RUNNING
 
-		#java -Dxl.secret.properties=$HOME/etc/secret.properties.qa -jar $HOME/lib/batchimport.jar --path=$HOME/queues/$QUEUE/incoming/$FILE --parallel --live $FLAGS
-		java -Xmx4G -Dxl.secret.properties=$HOME/etc/secret.properties.qa -Dlog4j.configurationFile=$HOME/lib/log4j2.xml -jar $JAR --path=$HOME/queues/$QUEUE/incoming/$FILE --parallel --live $FLAGS
+		java -Xmx6G -Dxl.secret.properties=$SECRET -Dlog4j.configurationFile=$HOME/lib/log4j2.xml -jar $JAR --path=$HOME/queues/$QUEUE/incoming/$FILE --parallel --live $FLAGS
 
 		if [ $? -eq 0 ]; then
 
@@ -35,7 +36,7 @@ if [ "$QUEUE" != "" ]; then
 		else 
 			echo "fatal: import-lxl $QUEUE failed."
 			# mail someone
-			mailx -s "batimp failed" kai.poykio@kb.se <<-EOF
+			mailx -s "batchimport failed" $MAIL <<-EOF
 			$QUEUE $FILE	
 EOF
 		fi
