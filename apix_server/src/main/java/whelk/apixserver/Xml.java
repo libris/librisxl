@@ -25,19 +25,7 @@ import java.util.Map;
  */
 public class Xml
 {
-    private static DocumentBuilderFactory docBuildfactory = DocumentBuilderFactory.newInstance();
-    private static DocumentBuilder builder;
     private static TransformerFactory transformerFactory = TransformerFactory.newInstance();
-    static
-    {
-        try
-        {
-            builder = docBuildfactory.newDocumentBuilder();
-        } catch (ParserConfigurationException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
 
     private static String docToString(Document xmlDoc) throws TransformerException
     {
@@ -51,6 +39,7 @@ public class Xml
 
     public static String formatApixErrorResponse(String message, int code) throws TransformerException
     {
+        DocumentBuilder builder = getDocumentBuilder();
         Document xmlDoc = builder.newDocument();
         Element apix = xmlDoc.createElementNS("http://api.libris.kb.se/apix/", "apix");
         xmlDoc.appendChild(apix);
@@ -68,6 +57,7 @@ public class Xml
                                                      List<whelk.Document> attachedHoldings)
             throws TransformerException, IOException, SAXException
     {
+        DocumentBuilder builder = getDocumentBuilder();
         Document xmlDoc = builder.newDocument();
 
         Element apix = xmlDoc.createElementNS("http://api.libris.kb.se/apix/", "apix");
@@ -127,6 +117,7 @@ public class Xml
                                                   boolean includeHold, Map<String, String[]> parameterMap)
             throws TransformerException, IOException, SAXException
     {
+        DocumentBuilder builder = getDocumentBuilder();
         Document xmlDoc = builder.newDocument();
 
         Element apix = xmlDoc.createElementNS("http://api.libris.kb.se/apix/", "apix");
@@ -204,5 +195,16 @@ public class Xml
         }
 
         return docToString(xmlDoc);
+    }
+
+    private static DocumentBuilder getDocumentBuilder() throws RuntimeException {
+        DocumentBuilderFactory docBuildfactory = DocumentBuilderFactory.newInstance();
+        try
+        {
+            return docBuildfactory.newDocumentBuilder();
+        } catch (ParserConfigurationException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 }
