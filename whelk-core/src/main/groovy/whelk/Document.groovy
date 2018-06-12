@@ -77,25 +77,25 @@ class Document {
         return mapper.writeValueAsString(data)
     }
 
-    void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber, LinkedHashMap) }
+    void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber, HashMap) }
 
     String getControlNumber() { get(controlNumberPath) }
 
-    void setGenerationProcess(process) { set(generationProcessPath, process, LinkedHashMap) }
+    void setGenerationProcess(process) { set(generationProcessPath, process, HashMap) }
 
     String getGenerationProcess() { get(generationProcessPath) }
 
-    void setHoldingFor(holdingFor) { set(holdingForPath, holdingFor, LinkedHashMap) }
+    void setHoldingFor(holdingFor) { set(holdingForPath, holdingFor, HashMap) }
 
     String getHoldingFor() { get(holdingForPath) }
 
     String getHeldBy() { get(heldByPath) }
 
-    void setEncodingLevel(encLevel) { set(encLevelPath, encLevel, LinkedHashMap) }
+    void setEncodingLevel(encLevel) { set(encLevelPath, encLevel, HashMap) }
 
     String getEncodingLevel() { get(encLevelPath) }
 
-    void setThingType(thingType) { set(thingTypePath, thingType, LinkedHashMap) }
+    void setThingType(thingType) { set(thingTypePath, thingType, HashMap) }
 
     String getThingType() { get(thingTypePath) }
 
@@ -460,7 +460,10 @@ class Document {
             node = node.get(step)
         }
 
-        node.put(path.get(path.size() - 1), value)
+        if (container instanceof Map)
+            node.put(path.get(path.size() - 1), value)
+        else if (container instanceof List)
+            node.add(path.get(path.size() - 1), value)
         return true
     }
 

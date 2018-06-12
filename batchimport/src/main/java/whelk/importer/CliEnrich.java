@@ -43,7 +43,7 @@ public class CliEnrich
 
         originalGraph.enrichWith(otherGraph, specialRules);
 
-        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), new HashSet<>());
+        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), repeatableTerms);
         boolean deleteUnreferencedData = true;
         JsonldSerializer.normalize(enrichedData, new Document(originalData).getCompleteId(), deleteUnreferencedData);
         System.out.println(mapper.writeValueAsString(enrichedData));
