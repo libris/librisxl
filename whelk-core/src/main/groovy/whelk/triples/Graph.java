@@ -28,7 +28,7 @@ public class Graph
 
     public Graph(List<String[]> triples)
     {
-        m_edgesFromId = new HashMap<>();
+        m_edgesFromId = new LinkedHashMap<>();
 
         for (String[] triple : triples)
         {
