@@ -29,7 +29,7 @@ pushd ../
 java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live
 bibResourceId=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'batch import' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["@id"]')
 itemOf=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'batch import' and collection = 'hold'" | jq '.["@graph"]|.[1].itemOf|.["@id"]')
-if [ $itemOf != $bibResourceId ]; then
+if [ "$itemOf" != "$bibResourceId" ]; then
     fail "Normal import"
 fi
 
