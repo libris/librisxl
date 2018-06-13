@@ -330,7 +330,7 @@ class XL
 
         Map convertedData = m_marcFrameConverter.convert(MarcJSONConverter.toJSONMap(marcRecord), id);
         Document convertedDocument = new Document(convertedData);
-        convertedDocument.deepReplaceId(id);
+        convertedDocument.deepReplaceId(Document.getBASE_URI().toString()+id);
         m_linkfinder.normalizeIdentifiers(convertedDocument);
         return convertedDocument;
     }
