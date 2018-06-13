@@ -40,6 +40,7 @@ class PostgreSQLComponent {
 
     private BasicDataSource connectionPool
     static String driverClass = "org.postgresql.Driver"
+    private static String UNIQUE_VIOLATION = "23505"
 
     public final static ObjectMapper mapper = new ObjectMapper()
 
@@ -1304,6 +1305,14 @@ class PostgreSQLComponent {
             preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), java.sql.Types.OTHER)
             preparedStatement.execute()
         }
+        catch (PSQLException e) {
+            if (UNIQUE_VIOLATION.equals(e.getSQLState())) {
+                // Someone else cached the document before we could,
+                // so we fail silently
+            } else {
+                throw e
+            }
+        }
         finally {
             if (rs != null)
                 rs.close()
@@ -1635,8 +1644,10 @@ class PostgreSQLComponent {
 
             if (idType != null)
                 preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + idValue + "\"}]", java.sql.Types.OTHER)
-            else
-                preparedStatement.setObject(1, "[{\"value\": \"" + idValue + "\"}]", java.sql.Types.OTHER)
+            else {
+                String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
+                preparedStatement.setObject(1, "[{\"value\": \"" + escapedId + "\"}]", java.sql.Types.OTHER)
+            }
 
             rs = preparedStatement.executeQuery()
             List<String> results = []

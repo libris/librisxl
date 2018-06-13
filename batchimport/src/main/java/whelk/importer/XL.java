@@ -13,6 +13,7 @@ import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.MarcFrameConverter;
 import whelk.exception.TooHighEncodingLevelException;
+import whelk.filter.LinkFinder;
 import whelk.util.LegacyIntegrationTools;
 import whelk.util.PropertyLoader;
 import whelk.triples.*;
@@ -30,6 +31,7 @@ class XL
     private static final String ENC_MINMAL_STATUS = "marc:MinimalLevel";  // 7
 
     private Whelk m_whelk;
+    private LinkFinder m_linkfinder;
     private Parameters m_parameters;
     private Properties m_properties;
     private MarcFrameConverter m_marcFrameConverter;
@@ -49,6 +51,7 @@ class XL
         m_whelk = Whelk.createLoadedSearchWhelk(m_properties);
         m_repeatableTerms = m_whelk.getJsonld().getRepeatableTerms();
         m_marcFrameConverter = m_whelk.createMarcFrameConverter();
+        m_linkfinder = new LinkFinder(m_whelk.getStorage());
     }
 
     /**
@@ -327,7 +330,8 @@ class XL
 
         Map convertedData = m_marcFrameConverter.convert(MarcJSONConverter.toJSONMap(marcRecord), id);
         Document convertedDocument = new Document(convertedData);
-        convertedDocument.setId(id);
+        convertedDocument.deepReplaceId(id);
+        m_linkfinder.normalizeIdentifiers(convertedDocument);
         return convertedDocument;
     }
 
