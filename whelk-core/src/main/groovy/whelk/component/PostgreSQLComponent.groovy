@@ -40,6 +40,7 @@ class PostgreSQLComponent {
 
     private BasicDataSource connectionPool
     static String driverClass = "org.postgresql.Driver"
+    private static String UNIQUE_VIOLATION = "23505"
 
     public final static ObjectMapper mapper = new ObjectMapper()
 
@@ -1303,6 +1304,14 @@ class PostgreSQLComponent {
             preparedStatement.setString(1, id)
             preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), java.sql.Types.OTHER)
             preparedStatement.execute()
+        }
+        catch (PSQLException e) {
+            if (UNIQUE_VIOLATION.equals(e.getSQLState())) {
+                // Someone else cached the document before we could,
+                // so we fail silently
+            } else {
+                throw e
+            }
         }
         finally {
             if (rs != null)
