@@ -404,6 +404,9 @@ public class JsonldSerializer
 
         for (Object key : map.keySet())
         {
+            if ( key.equals("sameAs") ) // SameAs-references are never subject to embedding.
+                continue;
+
             Object subobject = map.get(key);
 
             if ( subobject instanceof Map )
