@@ -1642,8 +1642,10 @@ class PostgreSQLComponent {
             connection = getConnection()
             preparedStatement = connection.prepareStatement(query)
 
-            if (idType != null)
-                preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + idValue + "\"}]", java.sql.Types.OTHER)
+            if (idType != null) {
+                String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
+                preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + escapedId + "\"}]", java.sql.Types.OTHER)
+            }
             else {
                 String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
                 preparedStatement.setObject(1, "[{\"value\": \"" + escapedId + "\"}]", java.sql.Types.OTHER)

@@ -460,10 +460,7 @@ class Document {
             node = node.get(step)
         }
 
-        if (container instanceof Map)
-            node.put(path.get(path.size() - 1), value)
-        else if (container instanceof List)
-            node.add(path.get(path.size() - 1), value)
+        node.put(path.get(path.size() - 1), value)
         return true
     }
 
