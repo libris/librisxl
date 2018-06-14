@@ -73,11 +73,12 @@ class RefreshAPI extends HttpServlet
         }
 
         long count = 0
-        for (String id : ids) {
-            String recordId = whelk.storage.getRecordId(id)
+        for (String recordId : ids) {
+            //String recordId = whelk.storage.getRecordId(id)
 
             if (recordId != null) {
-                Document document = whelk.storage.loadDocumentByMainId(recordId)
+                //Document document = whelk.storage.loadDocumentByMainId(recordId)
+                Document document = whelk.storage.load(recordId)
                 if (document != null) {
                     if (loudMode)
                         refreshLoudly(document)
@@ -109,7 +110,7 @@ class RefreshAPI extends HttpServlet
 
     void refreshLoudly(Document doc) {
         boolean minorUpdate = false
-        String collection = LegacyIntegrationTools.determineLegacyCollection(doc, m_whelk.getJsonld())
+        String collection = LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld())
         whelk.storeAtomicUpdate(doc.getShortId(), minorUpdate, "xl", "Libris admin", collection, doc.deleted, {
             Document _doc ->
                 _doc.data = doc.data
@@ -118,7 +119,7 @@ class RefreshAPI extends HttpServlet
 
     void refreshQuietly(Document doc) {
         whelk.storage.refreshDerivativeTables(doc)
-        String collection = LegacyIntegrationTools.determineLegacyCollection(doc, m_whelk.getJsonld())
+        String collection = LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld())
         whelk.elastic.index(doc, collection, whelk)
         whelk.reindexDependers(doc)
     }
