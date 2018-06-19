@@ -4538,9 +4538,9 @@
         "property": "edition",
         "tokenMap": {
           "0": "full",
-          "1": "abridged",
-          " ": "No information provided"
-        }
+          "1": "abridged"
+        },
+        "marcDefault": " "
       },
       "$a": {"property": "code"},
       "$b": {"property": "marc:itemNumber"},
@@ -4556,7 +4556,22 @@
               "instanceOf": {
                 "@type": "Text",
                 "classification": [
-                  {"@type": "ClassificationUdc", "code": "030", "edition": "No information provided"}
+                  {"@type": "ClassificationUdc", "code": "030"}
+                ]
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "080": {"ind1": "0", "ind2": " ", "subfields": [{"a": "030"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "classification": [
+                  {"@type": "ClassificationUdc", "code": "030", "edition": "full"}
                 ]
               }
             }
