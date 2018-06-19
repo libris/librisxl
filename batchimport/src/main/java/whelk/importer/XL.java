@@ -160,19 +160,11 @@ class XL
 
     private String importNewRecord(MarcRecord marcRecord, String collection, String relatedWithBibResourceId, String replaceSystemId)
     {
-        // Delete any existing 001 fields
-        String generatedId = IdGenerator.generate();
-        if (marcRecord.getControlfields("001").size() != 0)
-        {
-            marcRecord.getFields().remove(marcRecord.getControlfields("001").get(0));
-        }
+        String incomingId = IdGenerator.generate();
+        if (replaceSystemId != null)
+            incomingId = replaceSystemId;
 
-        // Always write a new 001. If one existed in the imported post it was moved to 035a.
-        // If it was not (because it was a valid libris id) then it was checked as a duplicate and
-        // duplicateIDs.size would be > 0, and we would not be here.
-        marcRecord.addField(marcRecord.createControlfield("001", generatedId));
-
-        Document rdfDoc = convertToRDF(marcRecord, generatedId);
+        Document rdfDoc = convertToRDF(marcRecord, incomingId);
         if (collection.equals("hold"))
             rdfDoc.setHoldingFor(relatedWithBibResourceId);
 
@@ -324,9 +316,9 @@ class XL
 
     private Document convertToRDF(MarcRecord marcRecord, String id)
     {
-        // The conversion process needs a 001 field to work correctly.
-        if (marcRecord.getControlfields("001").size() == 0)
-            marcRecord.addField(marcRecord.createControlfield("001", id));
+        while (marcRecord.getControlfields("001").size() > 0)
+            marcRecord.getFields().remove(marcRecord.getControlfields("001").get(0));
+        marcRecord.addField(marcRecord.createControlfield("001", id));
 
         Map convertedData = m_marcFrameConverter.convert(MarcJSONConverter.toJSONMap(marcRecord), id);
         Document convertedDocument = new Document(convertedData);
