@@ -3783,11 +3783,11 @@
         "TODO": "align with subfieldproperty instead of separate list, also make sure repeatable.",
         "property": "marc:typeOfDate",
         "tokenMap": {
-          " ": "marc:NoDateInformation",
           "0": "marc:SingleDate",
           "1": "marc:MultipleSingleDates",
           "2": "marc:RangeOfDates"
-        }
+        },
+        "marcDefault": " "
       },
       "i2": {
         "property": "@type",
@@ -4313,11 +4313,47 @@
           "0": "marc:SingleDateTime",
           "1": "marc:MultipleSingleDatesTimes",
           "2": "marc:RangeOfDatesTimes"
-        }
+        },
+        "marcDefault": " "
       },
       "$a": {"addProperty": "marc:timePeriodCode"},
       "$b": {"addProperty": "marc:formatted9999BCThroughCETimePeriod"},
-      "$c": {"addProperty": "marc:formattedPre9999BCTimePeriod"}
+      "$c": {"addProperty": "marc:formattedPre9999BCTimePeriod"},
+      "_spec": [
+        {
+          "source": {
+            "045": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Foo Bar"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "marc:hasTimePeriodOfContent": {
+                  "@type": "marc:TimePeriodOfContent",
+                  "marc:timePeriodCode": ["Foo Bar"]
+                }
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "045": {"ind1": "0", "ind2": " ", "subfields": [{"a": "Foo Bar"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "marc:hasTimePeriodOfContent": {
+                  "@type": "marc:TimePeriodOfContent",
+                  "marc:timePeriodCode": ["Foo Bar"],
+                  "marc:typeOfTimePeriod": "marc:SingleDateTime"
+                }
+              }
+            }
+          }
+        }
+      ]
     },
     "046": {
       "addLink": "marc:hasSpecialCodedDates",
@@ -4431,7 +4467,8 @@
           "7": "marc:OtherClassNumberAssignedByLac",
           "8": "marc:OtherCallNumberAssignedByTheContributingLibrary",
           "9": "marc:OtherClassNumberAssignedByTheContributingLibrary"
-        }
+        },
+        "marcDefault": " "
       },
       "$a": {"property": "marc:classificationNumber"},
       "$b": {"property": "marc:itemNumber"},
@@ -4856,7 +4893,8 @@
           " ": "marc:SourceSpecifiedInSubfield2",
           "0": "marc:SuperintendentOfDocumentsClassificationSystem",
           "1": "marc:GovernmentOfCanadaPublicationsOutlineOfClassification"
-        }
+        },
+        "marcDefault": " "
       },
       "$a": {"property": "marc:classificationNumber"},
       "$z": {"addProperty": "marc:canceledInvalidClassificationNumber"},
@@ -5932,7 +5970,7 @@
       "NOTE:Local": "LIBRIS-definierat fält, OBSOLET",
       "addLink": "marc:hasBib249",
       "resourceType": "marc:Bib249",
-      "i1": {"property": "marc:sequenceOfWork"},
+      "i1": {"property": "marc:sequenceOfWork", "marcDefault": " "},
       "i2": {"property": "marc:nonfilingChars"},
       "$a": {"property": "marc:originalTitle"},
       "$b": {"property": "marc:titleRemainder"},
@@ -7759,9 +7797,31 @@
       "resourceType": "GeographicCoverage",
       "i1": {
         "ignored": true,
-        "NOTE:LC": "nac"
+        "NOTE:LC": "nac",
+        "marcDefault": " "
       },
-      "$a": {"property": "label"}
+      "$a": {"property": "label"},
+      "_spec": [
+        {
+          "source": {"522": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "foo"}
+          ]}},
+          "normalized": {"522": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "foo"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "geographicCoverage": [
+                {
+                  "@type": "GeographicCoverage",
+                  "label": "foo"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "524": {
       "aboutEntity": "?thing",
@@ -13127,7 +13187,7 @@
       "aboutEntity": "?work",
       "addLink": "marc:hasBib976",
       "resourceType": "marc:Bib976",
-      "i2": {"property": "marc:bib976-i2"},
+      "i2": {"property": "marc:bib976-i2", "marcDefault": " "},
       "$a": {"property": "marc:bib976-a"},
       "$b": {"property": "marc:bib976-b"}
     }
@@ -17347,8 +17407,8 @@
       "addLink": "marc:hasEnumerationAndChronologyBasicBibliographicUnit",
       "resourceType": "marc:EnumerationAndChronologyBasicBibliographicUnit",
       "embedded": true,
-      "i1": {"property": "marc:holdingsLevel"},
-      "i2": {"property": "marc:formOfHoldings"},
+      "i1": {"property": "marc:holdingsLevel", "marcDefault": " "},
+      "i2": {"property": "marc:formOfHoldings", "marcDefault": " "},
       "$a": {"property": "marc:firstLevelOfEnumeration"},
       "$b": {"property": "marc:secondLevelOfEnumeration"},
       "$c": {"property": "marc:thirdLevelOfEnumeration"},
@@ -17369,8 +17429,8 @@
       "addLink": "marc:hasTextualHoldingsBasicBibliographicUnit",
       "resourceType": "marc:TextualHoldingsBasicBibliographicUnit",
       "embedded": true,
-      "i1": {"property": "marc:holdingsLevel"},
-      "i2": {"property": "marc:typeOfNotation"},
+      "i1": {"property": "marc:holdingsLevel", "marcDefault": " "},
+      "i2": {"property": "marc:typeOfNotation", "marcDefault": " "},
       "$a": {"property": "marc:textualString"},
       "$x": {"addProperty": "marc:cataloguersNote"},
       "$z": {"addProperty": "marc:publicNote"},
@@ -17385,8 +17445,8 @@
       "addLink": "marc:hasTextualHoldingsSupplementaryMaterial",
       "resourceType": "marc:TextualHoldingsSupplementaryMaterial",
       "embedded": true,
-      "i1": {"property": "marc:holdingsLevel"},
-      "i2": {"property": "marc:typeOfNotation"},
+      "i1": {"property": "marc:holdingsLevel", "marcDefault": " "},
+      "i2": {"property": "marc:typeOfNotation", "marcDefault": " "},
       "$a": {"property": "marc:textualString"},
       "$x": {"addProperty": "marc:cataloguersNote"},
       "$z": {"addProperty": "marc:publicNote"},
@@ -17396,8 +17456,8 @@
       "addLink": "marc:hasTextualHoldingsIndexes",
       "resourceType": "marc:TextualHoldingsIndexes",
       "embedded": true,
-      "i1": {"property": "marc:holdingsLevel"},
-      "i2": {"property": "marc:typeOfNotation"},
+      "i1": {"property": "marc:holdingsLevel", "marcDefault": " "},
+      "i2": {"property": "marc:typeOfNotation", "marcDefault": " "},
       "$a": {"property": "marc:textualString"},
       "$x": {"addProperty": "marc:cataloguersNote"},
       "$z": {"addProperty": "marc:publicNote"},
@@ -17514,8 +17574,8 @@
     "949": {
       "addLink": "marc:hasHold949",
       "resourceType": "marc:Hold949",
-      "i1": {"property": "marc:hasHold949-i1"},
-      "i2": {"property": "marc:hasHold949-i2"},
+      "i1": {"property": "marc:hasHold949-i1", "marcDefault": " "},
+      "i2": {"property": "marc:hasHold949-i2", "marcDefault": " "},
       "$a": {"addProperty": "marc:hasHold949-a"},
       "$b": {"addProperty": "marc:hasHold949-b"},
       "$c": {"addProperty": "marc:hasHold949-c"},
