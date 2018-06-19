@@ -36,11 +36,11 @@ fi
 ######## RERUN SAME FILE, NO MORE DATA
 # Re-run same file, should result in no changes
 java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live
-rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'bib'")
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'bib' and deleted = false")
 if (( $rowCount != 1 )) ; then
     fail "Expected single bib record"
 fi
-rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'hold'")
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'hold' and deleted = false")
 if (( $rowCount != 1 )) ; then
     fail "Expected single hold record"
 fi
@@ -54,7 +54,7 @@ fi
 mainTitle=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'batch import' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["hasTitle"]|.[0]|.["mainTitle"]')
 expect="\"Polisbilen får INTE ett larm\""
 if [ "$mainTitle" != "$expect" ]; then
-    fail "Data was not replaced!"
+    fail "Data was not replaced!" #This is expected to fail, while using the "simple import hack"!
 fi
 
 popd

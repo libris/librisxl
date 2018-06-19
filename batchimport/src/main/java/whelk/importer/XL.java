@@ -100,45 +100,18 @@ class XL
         {
             if (collection.equals("bib"))
             {
-                if ( m_parameters.getReplaceBib() )
-                {
-                    String idToReplace = duplicateIDs.iterator().next();
-                    resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, idToReplace);
-                    importedBibRecords.inc();
-                }
-                else // Merge bib
-                {
-                    resultingResourceId = enrichRecord((String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId);
-                    enrichedBibRecords.inc();
-                }
+                resultingResourceId =  m_whelk.getStorage().load(duplicateIDs.iterator().next()).getThingIdentifiers().get(0);
             }
             else // collection = hold
             {
-                if ( m_parameters.getReplaceHold() ) // Replace hold
-                {
-                    String idToReplace = duplicateIDs.iterator().next();
-                    resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, idToReplace);
-                    importedHoldRecords.inc();
-                }
-                else // Merge hold
-                {
-                    resultingResourceId = enrichRecord((String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId);
-                    enrichedHoldRecords.inc();
-                }
+                m_whelk.remove(duplicateIDs.iterator().next(), IMPORT_SYSTEM_CODE, null);
+                resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, null);
             }
         }
         else
         {
             // Multiple coinciding documents.
             encounteredMulBibs.inc();
-
-            if (m_parameters.getEnrichMulDup())
-            {
-                for (String id : duplicateIDs)
-                {
-                    enrichRecord( id, incomingMarcRecord, collection, relatedWithBibResourceId );
-                }
-            }
 
             if (collection.equals("bib"))
             {
