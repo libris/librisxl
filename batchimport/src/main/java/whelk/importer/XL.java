@@ -178,6 +178,12 @@ class XL
                 m_whelk.getStorage().storeAtomicUpdate(replaceSystemId, false, IMPORT_SYSTEM_CODE, null,
                         (Document doc) ->
                 {
+                    String existingEncodingLevel = doc.getEncodingLevel();
+                    String newEncodingLevel = rdfDoc.getEncodingLevel();
+
+                    if (existingEncodingLevel == null || !mayOverwriteExistingEncodingLevel(existingEncodingLevel, newEncodingLevel))
+                        throw new TooHighEncodingLevelException();
+
                     List<String> recordIDs = doc.getRecordIdentifiers();
                     List<String> thingIDs = doc.getThingIdentifiers();
 
