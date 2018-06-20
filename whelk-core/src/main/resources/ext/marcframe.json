@@ -8261,10 +8261,24 @@
     "586": {
       "NOTE:local": "ANVÄNDS NORMALT EJ",
       "aboutEntity": "?thing",
-      "i1": {"ignored": true},
+      "i1": {"ignored": true, "marcDefault": " "},
       "$a": {"property": "awardsNote"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": [{"586": {"ind1": "0", "ind2": " ", "subfields": [{"a": "EBZ"}]}}],
+          "normalized": [{"586": {"ind1": " ", "ind2": " ", "subfields": [{"a": "EBZ"}]}}],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              },
+              "awardsNote":  "EBZ"
+            }
+          }
+        }
+      ]
     },
     "588": {
       "aboutEntity": "?record",
