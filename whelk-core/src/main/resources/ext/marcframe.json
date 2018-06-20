@@ -9855,6 +9855,19 @@
           }}
         },
         {
+          "source": {"651": {"ind1": "1", "ind2": "4", "subfields":[{"a": "Förenta staterna"}]}},
+          "normalized": {"651": {"ind1": " ", "ind2": "4", "subfields":[{"a": "Förenta staterna"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [{
+                "@type": "Geographic",
+                "prefLabel": "Förenta staterna"
+              }]
+            }
+          }}
+        },
+        {
           "source": {
             "651": {"ind1": " ", "ind2": "7", "subfields":[
               {"a": "Sydafrika"},
