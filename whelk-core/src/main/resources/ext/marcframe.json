@@ -16532,7 +16532,8 @@
       "resourceType": "marc:EstablishedHeadingLinkingEntryUniformTitle",
       "i2": {
         "property": "marc:thesaurus",
-        "tokenMap": "marcThesaurus"
+        "tokenMap": "marcThesaurus",
+        "marcDefault": "4"
       },
       "$a": {"property": "marc:uniformTitle"},
       "$d": {"addProperty": "marc:dateOfTreatySigning"},
@@ -16566,7 +16567,8 @@
       "resourceType": "marc:EstablishedHeadingLinkingEntryChronologicalTerm",
       "i2": {
         "property": "marc:thesaurus",
-        "tokenMap": "marcThesaurus"
+        "tokenMap": "marcThesaurus",
+        "marcDefault": "4"
       },
       "$a": {"property": "marc:chronologicalTerm"},
       "$i": {"ignored": true},
