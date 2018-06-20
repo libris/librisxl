@@ -56,7 +56,6 @@
           "1": "marc:LcSubjectHeadingsForChildrensLiterature",
           "2": "marc:MedicalSubjectHeadingsNlmNameAuthorityFile",
           "3": "marc:NationalAgriculturalLibrarySubjectAuthorityFile",
-          "4": "marc:SourceNotSpecified",
           "5": "marc:CanadianSubjectHeadingsNlcNameAuthorityFile",
           "6": "marc:RepertoireDeVedettesMatiere",
           "7": "marc:SourceSpecifiedInSubfield2"
@@ -16456,7 +16455,8 @@
       },
       "i2": {
         "property": "marc:thesaurus",
-        "tokenMap": "marcThesaurus"
+        "tokenMap": "marcThesaurus",
+        "marcDefault": "4"
       },
       "$a": {"property": "marc:corporateNameOrJurisdictionNameAsEntryElement"},
       "$b": {"addProperty": "marc:subordinateUnit"},
@@ -16497,7 +16497,8 @@
       },
       "i2": {
         "property": "marc:thesaurus",
-        "tokenMap": "marcThesaurus"
+        "tokenMap": "marcThesaurus",
+        "marcDefault": "4"
       },
       "$a": {"property": "marc:meetingNameOrJurisdictionNameAsEntryElement"},
       "$c": {"addProperty": "marc:locationOfMeeting"},
