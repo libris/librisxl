@@ -175,28 +175,38 @@ class XL
             // Doing a replace (but preserving old IDs)
             if (replaceSystemId != null)
             {
-                m_whelk.getStorage().storeAtomicUpdate(replaceSystemId, false, IMPORT_SYSTEM_CODE, null,
-                        (Document doc) ->
+                try
                 {
-                    String existingEncodingLevel = doc.getEncodingLevel();
-                    String newEncodingLevel = rdfDoc.getEncodingLevel();
+                    m_whelk.getStorage().storeAtomicUpdate(replaceSystemId, false, IMPORT_SYSTEM_CODE, null,
+                            (Document doc) ->
+                    {
+                        String existingEncodingLevel = doc.getEncodingLevel();
+                        String newEncodingLevel = rdfDoc.getEncodingLevel();
 
-                    if (existingEncodingLevel == null || !mayOverwriteExistingEncodingLevel(existingEncodingLevel, newEncodingLevel))
-                        throw new TooHighEncodingLevelException();
+                        if (existingEncodingLevel == null || !mayOverwriteExistingEncodingLevel(existingEncodingLevel, newEncodingLevel))
+                            throw new TooHighEncodingLevelException();
 
-                    List<String> recordIDs = doc.getRecordIdentifiers();
-                    List<String> thingIDs = doc.getThingIdentifiers();
+                        List<String> recordIDs = doc.getRecordIdentifiers();
+                        List<String> thingIDs = doc.getThingIdentifiers();
 
-                    doc.data = rdfDoc.data;
+                        doc.data = rdfDoc.data;
 
-                    // The mainID must remain unaffected.
-                    doc.deepPromoteId(recordIDs.get(0));
+                        // The mainID must remain unaffected.
+                        doc.deepPromoteId(recordIDs.get(0));
 
-                    for (String recordID : recordIDs)
-                        doc.addRecordIdentifier(recordID);
-                    for (String thingID : thingIDs)
-                        doc.addThingIdentifier(thingID);
-                });
+                        for (String recordID : recordIDs)
+                            doc.addRecordIdentifier(recordID);
+                        for (String thingID : thingIDs)
+                            doc.addThingIdentifier(thingID);
+                    });
+                }
+                catch (TooHighEncodingLevelException e)
+                {
+                    if ( verbose )
+                    {
+                        System.out.println("info: Not replacing id: " + replaceSystemId + ", because it no longer has encoding level marc:PartialPreliminaryLevel");
+                    }
+                }
             }
             else
             {
