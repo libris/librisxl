@@ -281,6 +281,8 @@ class XL
 
     private boolean mayOverwriteExistingEncodingLevel(String existingEncodingLevel, String newEncodingLevel)
     {
+        if (newEncodingLevel == null || existingEncodingLevel == null)
+            return false;
         switch (newEncodingLevel)
         {
             case ENC_PRELIMINARY_STATUS: // 5
