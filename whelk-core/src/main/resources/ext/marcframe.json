@@ -16451,7 +16451,8 @@
       "resourceType": "marc:EstablishedHeadingLinkingEntryCorporateName",
       "i1": {
         "property": "marc:nameForm",
-        "tokenMap": "marcNameForm"
+        "tokenMap": "marcNameForm",
+        "marcDefault": "2"
       },
       "i2": {
         "property": "marc:thesaurus",
@@ -16491,7 +16492,8 @@
       "resourceType": "marc:EstablishedHeadingLinkingEntryMeetingName",
       "i1": {
         "property": "marc:nameForm",
-        "tokenMap": "marcNameForm"
+        "tokenMap": "marcNameForm",
+        "marcDefault": "2"
       },
       "i2": {
         "property": "marc:thesaurus",
