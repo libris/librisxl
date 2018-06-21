@@ -2,10 +2,10 @@ package whelk.rest.api
 
 import groovy.util.logging.Log4j2
 import groovy.xml.XmlUtil
-import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter
 import se.kb.libris.util.marc.io.MarcXmlRecordReader
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter
+import se.kb.libris.util.marc.*
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
@@ -196,11 +196,23 @@ class LegacyMarcAPI extends HttpServlet {
 
         if (!profile.getProperty("holdtype", "NONE").equalsIgnoreCase("NONE")) {
             for (Document holding : holdingDocuments) {
-                holdings.put(holding.getSigel(), MarcXmlRecordReader.fromXml(toXmlString(holding)))
+                try {
+                    holdings.put(holding.getSigel(), MarcXmlRecordReader.fromXml(toXmlString(holding)))
+                } catch (Exception e) {
+                    log.warn("Failed adding holding record when compiling MARC for " + rootDocument.getShortId(), e)
+                }
             }
         }
 
-        return profile.mergeRecord(MarcXmlRecordReader.fromXml(bibXmlString), holdings, auths)
+        MarcRecord bibRecord = MarcXmlRecordReader.fromXml(bibXmlString)
+
+        // remove any existing 003
+        ListIterator li = bibRecord.listIterator();
+        while (li.hasNext())
+            if (((Field)li.next()).getTag().equals("003"))
+                li.remove()
+
+        return profile.mergeRecord(bibRecord, holdings, auths)
     }
 
     /**
