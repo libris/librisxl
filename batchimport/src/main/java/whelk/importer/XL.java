@@ -188,6 +188,7 @@ class XL
 
                         List<String> recordIDs = doc.getRecordIdentifiers();
                         List<String> thingIDs = doc.getThingIdentifiers();
+                        String controlNumber = doc.getControlNumber();
 
                         doc.data = rdfDoc.data;
 
@@ -198,6 +199,8 @@ class XL
                             doc.addRecordIdentifier(recordID);
                         for (String thingID : thingIDs)
                             doc.addThingIdentifier(thingID);
+                        if (controlNumber != null)
+                            doc.setControlNumber(controlNumber);
                     });
                 }
                 catch (TooHighEncodingLevelException e)
