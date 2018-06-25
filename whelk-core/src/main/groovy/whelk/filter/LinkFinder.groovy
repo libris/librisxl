@@ -100,8 +100,8 @@ class LinkFinder {
             }
         }
 
-        replaceSameAsLinksWithPrimaries(document.data, connection, cacheAuthForever)
         clearReferenceAmbiguities(document)
+        replaceSameAsLinksWithPrimaries(document.data, connection, cacheAuthForever)
     }
 
     private void replaceSameAsLinksWithPrimaries(Map data, Connection connection, boolean cacheAuthForever = false) {
