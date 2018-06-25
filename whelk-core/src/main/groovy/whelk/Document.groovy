@@ -598,21 +598,28 @@ class Document {
             if (nodeId != null && nodeId.startsWith(oldId)) {
                 String expectedNewDerivative = newId + nodeId.substring(oldId.length())
 
-                List sameAsList = (List) node["sameAs"]
-                if (sameAsList == null) {
-                    sameAsList = []
-                    node.put("sameAs", sameAsList)
+                // If this is not a reference (there's data in the object),
+                // move the old @id to a sameAs-list.
+                // If however it's only a reference, then replace it outright.
+                if (node.keySet().size() > 1) {
+                    List sameAsList = (List) node["sameAs"]
+                    if (sameAsList == null) {
+                        sameAsList = []
+                    }
+
+                    boolean alreadyInSameAsList = false
+                    for (int i = 0; i < sameAsList.size(); ++i) {
+                        Map object = (Map) sameAsList.get(i)
+                        String sameAsId = object["@id"]
+                        if (sameAsId.equals(nodeId))
+                            alreadyInSameAsList = true
+                    }
+                    if (!alreadyInSameAsList && nodeId != expectedNewDerivative) {
+                        sameAsList.add(["@id": nodeId])
+                        node.put("sameAs", sameAsList)
+                    }
                 }
 
-                boolean alreadyInSameAsList = false
-                for (int i = 0; i < sameAsList.size(); ++i) {
-                    Map object = (Map) sameAsList.get(i)
-                    String sameAsId = object["@id"]
-                    if (sameAsId.equals(nodeId))
-                        alreadyInSameAsList = true
-                }
-                if (!alreadyInSameAsList)
-                    sameAsList.add( ["@id": nodeId] )
                 node["@id"] = expectedNewDerivative
             }
         }
