@@ -341,6 +341,14 @@ class XL
             marcRecord.getFields().remove(marcRecord.getControlfields("001").get(0));
         marcRecord.addField(marcRecord.createControlfield("001", id));
 
+        // Filter out 887 fields, as the converter cannot/should not handle them
+        Iterator<Field> it = marcRecord.getFields().iterator();
+        while (it.hasNext()){
+            Field field = it.next();
+            if (field.getTag().equals("887"))
+                it.remove();
+        }
+
         Map convertedData = m_marcFrameConverter.convert(MarcJSONConverter.toJSONMap(marcRecord), id);
         Document convertedDocument = new Document(convertedData);
         convertedDocument.deepReplaceId(Document.getBASE_URI().toString()+id);
