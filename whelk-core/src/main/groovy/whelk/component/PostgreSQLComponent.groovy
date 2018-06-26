@@ -759,7 +759,25 @@ class PostgreSQLComponent {
     }
 
     private void saveDependencies(Document doc, Connection connection) {
+        List<Tuple2<String,String>> oldDependencies = getDependencies(doc.getShortId(), connection)
         List dependencies = _calculateDependenciesSystemIDs(doc, connection)
+
+        // Block "re-linking" of hold records from one bib to another
+        // Technically we're blocking removal of an itemOf link.
+        for (Tuple2<String,String> dependency : oldDependencies) {
+            String referencedId = dependency.get(0)
+            String relation = dependency.get(1)
+
+            if (relation.equals(JsonLd.getITEM_OF_KEY())) {
+                boolean stillExists = false
+                for (String[] newDependency : dependencies) {
+                    if (newDependency[0].equals(JsonLd.getITEM_OF_KEY()) && newDependency[1].equals(referencedId))
+                        stillExists = true
+                }
+                if (!stillExists)
+                    throw new RuntimeException("An update of " + doc.getCompleteId() + " MUST NOT drop existing itemOf relations. You tried to drop: " + relation + " -> " + referencedId)
+            }
+        }
 
         // Clear out old dependencies
         PreparedStatement removeDependencies = connection.prepareStatement(DELETE_DEPENDENCIES)

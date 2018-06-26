@@ -40,6 +40,7 @@ class JsonLd {
     static final String ABOUT_KEY = "mainEntity"
     static final String APIX_FAILURE_KEY = "apixExportFailedAt"
     static final String ENCODING_LEVEL_KEY = "marc:encLevel"
+    static final String ITEM_OF_KEY = "itemOf"
 
     static final Set<String> LD_KEYS
 
