@@ -7803,7 +7803,44 @@
       "$a": {"property": "label"},
       "$b": {"link": "source", "resourceType": "Source","property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "name": "With blank indicator 1",
+          "source": {"521": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "foo bar"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text"
+            },
+            "intendedAudience": [
+              {
+                "@type": "IntendedAudience",
+                "label": "foo bar"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "With indicator 1 set to 0",
+          "source": {"521": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Baz"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text"
+            },
+            "intendedAudience": [
+              {
+                "@type": "IntendedAudience",
+                "label": "Baz",
+                "marc:audienceType": "marc:ReadingGradeLevel"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "522": {
       "aboutEntity": "?work",
