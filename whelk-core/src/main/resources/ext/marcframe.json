@@ -9539,16 +9539,21 @@
             "650": {"ind1": "2", "ind2": " ",
               "subfields": [{"a": "Health services for the aged", "v": "periodicals"}]}
           },
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "subject": [
-                {
+              "subject": [{
+                "@type": "ComplexSubject",
+                "marc:subjectLevel": "marc:Secondary",
+                "prefLabel": "Health services for the aged--periodicals",
+                "termComponentList": [{
                   "@type": "Topic",
-                  "marc:subjectLevel": "marc:Secondary",
                   "prefLabel": "Health services for the aged"
-                }
-              ]
+                }, {
+                  "@type": "GenreForm",
+                  "prefLabel": "periodicals"
+                }]
+              }]
             }
           }}
         },
@@ -9557,13 +9562,14 @@
             "650": {"ind1": "0", "ind2": " ",
               "subfields": [{"a": "Geriatrics"}]}
           },
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
                 {
                   "@type": "Topic",
-                  "prefLabel": "Geriatrics"
+                  "prefLabel": "Geriatrics",
+                  "marc:subjectLevel": "marc:Unspecified"
                 }
               ]
             }
