@@ -10042,6 +10042,30 @@
               ]
             }
           }}
+        },
+        {
+          "name": "With blank indicator 2",
+          "source": {
+            "653": {"ind1": " ", "ind2": " ", "subfields":[
+              {"a": "Name of Topic"}]
+            }
+          },
+          "normalized": {
+            "653": {"ind1": " ", "ind2": "0", "subfields":[
+              {"a": "Name of Topic"}]
+            }
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Topic",
+                  "label": "Name of Topic"
+                }
+              ]
+            }
+          }}
         }
       ]
     },
