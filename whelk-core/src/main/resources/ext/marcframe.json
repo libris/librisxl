@@ -9537,7 +9537,11 @@
         {
           "source": {
             "650": {"ind1": "2", "ind2": " ",
-              "subfields": [{"a": "Health services for the aged", "v": "periodicals"}]}
+              "subfields": [{"a": "Health services for the aged"}, {"v": "periodicals"}]}
+          },
+          "normalized": {
+            "650": {"ind1": "2", "ind2": "4",
+              "subfields": [{"a": "Health services for the aged"}, {"v": "periodicals"}]}
           },
           "result": {"mainEntity": {
             "instanceOf": {
@@ -9560,6 +9564,10 @@
         {
           "source": {
             "650": {"ind1": "0", "ind2": " ",
+              "subfields": [{"a": "Geriatrics"}]}
+          },
+          "normalized": {
+            "650": {"ind1": "0", "ind2": "4",
               "subfields": [{"a": "Geriatrics"}]}
           },
           "result": {"mainEntity": {
