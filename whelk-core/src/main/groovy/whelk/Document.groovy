@@ -55,6 +55,7 @@ class Document {
     static final List sigelPath = ["@graph", 1, "heldBy", "@id"]
     static final List generationProcessPath = ["@graph", 0, "generationProcess", "@id"]
     static final List generationDatePath = ["@graph", 0, "generationDate"]
+    static final List descriptionCreatorPath = ["@graph", 0, "descriptionCreator", "@id"]
 
     public Map data = [:]
     public int version = 0
@@ -94,6 +95,10 @@ class Document {
     void setEncodingLevel(encLevel) { set(encLevelPath, encLevel, HashMap) }
 
     String getEncodingLevel() { get(encLevelPath) }
+
+    void setDescriptionCreator(creator) { set(descriptionCreatorPath, creator, HashMap) }
+
+    String getDescriptionCreator() { get(descriptionCreatorPath) }
 
     void setThingType(thingType) { set(thingTypePath, thingType, HashMap) }
 
