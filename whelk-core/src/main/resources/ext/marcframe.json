@@ -16993,6 +16993,39 @@
               "language": [{"@id": "https://id.kb.se/language/swe"}]
             }
           }
+        },
+        {
+          "name": "handle unexpected array value for fixed field",
+          "normalized": {"008": "900101||0000|||||000||swe|901128"},
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "date": [ "1990-11-28T00:00:00.0+01:00" ],
+            "mainEntity": {
+              "language": [{"@id": "https://id.kb.se/language/swe"}]
+            }
+          }
+        },
+        {
+          "name": "handle unexpected object for fixed field",
+          "normalized": {"008": "900101||0000|||||000||swe|000000"},
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "date": {"value": "1990-11-28T00:00:00.0+01:00"},
+            "mainEntity": {
+              "language": [{"@id": "https://id.kb.se/language/swe"}]
+            }
+          }
+        },
+        {
+          "name": "handle unexpected object in unexpected array for fixed field",
+          "normalized": {"008": "900101||0000|||||000||swe|000000"},
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "date": [ {"value": "1990-11-28T00:00:00.0+01:00"} ],
+            "mainEntity": {
+              "language": [{"@id": "https://id.kb.se/language/swe"}]
+            }
+          }
         }
       ]
     },
