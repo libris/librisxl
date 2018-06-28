@@ -177,7 +177,7 @@ class XL
             {
                 try
                 {
-                    m_whelk.getStorage().storeAtomicUpdate(replaceSystemId, false, IMPORT_SYSTEM_CODE, null,
+                    m_whelk.getStorage().storeAtomicUpdate(replaceSystemId, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(),
                             (Document doc) ->
                     {
                         String existingEncodingLevel = doc.getEncodingLevel();
@@ -214,7 +214,7 @@ class XL
             else
             {
                 // Doing simple "new"
-                m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, null, collection, false);
+                m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), collection, false);
             }
         }
         else
@@ -242,7 +242,7 @@ class XL
         {
             try
             {
-                m_whelk.storeAtomicUpdate(ourId, false, IMPORT_SYSTEM_CODE, null,
+                m_whelk.storeAtomicUpdate(ourId, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(),
                         (Document doc) ->
                         {
                             if (collection.equals("bib"))
