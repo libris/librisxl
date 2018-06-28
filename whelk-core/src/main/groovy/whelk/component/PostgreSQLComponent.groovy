@@ -344,6 +344,9 @@ class PostgreSQLComponent {
             Date now = new Date()
             PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
 
+            if (changedBy != null)
+                doc.setDescriptionCreator("https://libris.kb.se/library/" + changedBy)
+
             insert = rigInsertStatement(insert, doc, changedIn, changedBy, collection, deleted)
             insert.executeUpdate()
             connection.commit()

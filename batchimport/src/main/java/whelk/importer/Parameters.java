@@ -23,6 +23,7 @@ class Parameters
     private boolean verbose = false;
     private boolean replaceHold = false;
     private boolean replaceBib = false;
+    private String changedBy = null;
 
     Path getPath() { return path; }
     INPUT_FORMAT getFormat() { return format; }
@@ -35,6 +36,7 @@ class Parameters
     boolean getVerbose() { return verbose; }
     boolean getReplaceHold() { return replaceHold; }
     boolean getReplaceBib() { return replaceBib; }
+    String getChangedBy() { return changedBy; }
 
     enum INPUT_FORMAT
     {
@@ -147,6 +149,8 @@ class Parameters
         System.err.println("--replaceBib  If this flag is set, bibliographic records will be replaced instead of merged.");
         System.err.println("");
         System.err.println("--replaceHold If this flag is set, holding records will be replaced instead of merged.");
+        System.err.println("");
+        System.err.println("--changedBy   A string to use as descriptionCreator (MARC 040) for imported records.");
     }
 
     private void interpretBinaryParameter(String parameter, String value)
@@ -178,6 +182,10 @@ class Parameters
 
             case "--inEncoding": // Only relevant for non-xml formats. XML files are expected to declare encoding in their header.
                 inputEncoding = value;
+                break;
+
+            case "--changedBy":
+                changedBy = value;
                 break;
 
             case "--dupType":
