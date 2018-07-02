@@ -3521,7 +3521,8 @@
       "resourceType": "ISSN",
       "i1": {
         "property": "marc:internationalInterest",
-        "tokenMap": {"0": true, "1": false}, "marcDefault": " "
+        "tokenMap": {"0": true, "1": false},
+        "marcDefault": " "
       },
       "$a": {"property": "value"},
       "$l": {"property": "marc:issnL"},
