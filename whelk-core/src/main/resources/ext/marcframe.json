@@ -17378,6 +17378,7 @@
       "i1": {
         "NOTE": "0 = Sekretessbelagd information. Används f.n. ej. = ca 5000 poster",
         "property": "marc:isPrivate",
+        "marcDefault": " ",
         "tokenMap": {
           "0": true,
           "1": false
@@ -17441,6 +17442,7 @@
       "i1": {
         "NOTE": "0 = Sekretessbelagd information. Används f.n. ej. = 1 post",
         "property": "marc:isPrivate",
+        "marcDefault": " ",
         "tokenMap": {
           "0": true,
           "1": false
@@ -17805,8 +17807,8 @@
     "948": {
       "addLink": "marc:hasHold948",
       "resourceType": "marc:Hold948",
-      "i1": {"property": "marc:hasHold948-i1"},
-      "i2": {"property": "marc:hasHold948-i2"},
+      "i1": {"property": "marc:hasHold948-i1", "marcDefault": " "},
+      "i2": {"property": "marc:hasHold948-i2", "marcDefault": " "},
       "$a": {"addProperty": "marc:hasHold948-a"},
       "$b": {"addProperty": "marc:hasHold948-b"},
       "$c": {"addProperty": "marc:hasHold948-c"},
