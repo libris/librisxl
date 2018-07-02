@@ -5986,7 +5986,7 @@
       "addLink": "marc:hasBib249",
       "resourceType": "marc:Bib249",
       "i1": {"property": "marc:sequenceOfWork", "marcDefault": " "},
-      "i2": {"property": "marc:nonfilingChars"},
+      "i2": {"property": "marc:nonfilingChars", "marcDefault": "0"},
       "$a": {"property": "marc:originalTitle"},
       "$b": {"property": "marc:titleRemainder"},
       "$n": {"addProperty": "marc:titleNumber"},
@@ -8067,6 +8067,7 @@
       "resourceType": "marc:ImmediateSourceOfAcquisitionNote",
       "i1": {
         "property": "marc:isPrivate",
+        "marcDefault": " ",
         "tokenMap": {
           "0": true,
           "1": false
@@ -8082,7 +8083,38 @@
       "$n": {"addProperty": "marc:extent"},
       "$o": {"addProperty": "unit"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"}
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
+      "_spec": [
+        {
+          "name": "With indicator 1 set to 0",
+          "source": {"541": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Foo"}
+          ]}},
+          "result": {"mainEntity": {
+            "marc:hasImmediateSourceOfAcquisitionNote": [
+              {
+                "@type": "marc:ImmediateSourceOfAcquisitionNote",
+                "label": "Foo",
+                "marc:isPrivate": true
+              }
+            ]
+          }}
+        },
+        {
+          "name": "With indicator 1 set to blank",
+          "source": {"541": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Foo"}
+          ]}},
+          "result": {"mainEntity": {
+            "marc:hasImmediateSourceOfAcquisitionNote": [
+              {
+                "@type": "marc:ImmediateSourceOfAcquisitionNote",
+                "label": "Foo"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "542": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "544": {
@@ -8276,6 +8308,7 @@
       "i1": {
         "NOTE": "0 = Sekretessbelagd information. filtrera bort GDPR",
         "property": "marc:isPrivate",
+        "marcDefault": " ",
         "tokenMap": {
           "0": true,
           "1": false
@@ -8284,7 +8317,37 @@
       "$a": {"property": "label"},
       "$b": {"addProperty": "marc:actionIdentification"},
       "$x": {"addProperty": "marc:cataloguersNote", "TODO": "ignore?"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "name": "With indicator 1 set to 1",
+          "source": {"583": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Foo"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasNote": [
+              {
+                "@type": "marc:ActionNote",
+                "label": "Foo",
+                "marc:isPrivate": false
+              }
+            ]
+          }}
+        },
+        {
+          "name": "With no indicator set at all",
+          "source": {"583": {"subfields": [{"a": "Foo"}]}},
+          "normalized": {"583": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Foo"}]}},
+          "result": {"mainEntity": {
+            "hasNote": [
+              {
+                "@type": "marc:ActionNote",
+                "label": "Foo"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "584": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "585": {
