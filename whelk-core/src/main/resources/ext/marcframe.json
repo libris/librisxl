@@ -4405,7 +4405,7 @@
       "addLink": "classification",
       "resourceType": "ClassificationLcc",
       "i1": {"property": "marc:existenceInLCCollection", "marcDefault": " ", "tokenMap": {"0": true, "1": false}},
-      "i2": {"property": "marc:assignedByLC", "tokenMap": {"0": true, "4": false}},
+      "i2": {"property": "marc:assignedByLC", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "code", "TODO:repeatable": true},
       "$b": {"property": "itemPortion"},
       "$6": {"property": "marc:fieldref"}
@@ -4479,7 +4479,7 @@
       "addLink": "classification",
       "resourceType": "ClassificationNlm",
       "i1": {"property": "marc:existenceInNlmCollection", "marcDefault": " ", "tokenMap": {"0": true, "1": false}},
-      "i2": {"property": "marc:assignedByNlm", "tokenMap": {"0": true, "4": false}},
+      "i2": {"property": "marc:assignedByNlm", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "code"},
       "$b": {"property": "itemPortion", "ignored": true}
     },
@@ -13591,7 +13591,7 @@
       "aboutEntity": "?thing",
       "addLink": "classification",
       "resourceType": "ClassificationLcc",
-      "i2": {"property": "marc:assignedByLC", "tokenMap": {"0": true, "4": false}},
+      "i2": {"property": "marc:assignedByLC", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "classificationPortion"},
       "$b": {"property": "spanEnd"},
       "$c": {"property": "marc:explanatoryTerm"}
@@ -14600,9 +14600,8 @@
     "377": {
       "i2": {
         "property": "marc:languageCode",
+        "marcDefault": " ",
         "tokenMap": {
-          "1": "marc:ISO-639-2B",
-          "2": "marc:SourceSpecifiedInSubfield2",
           "7": "marc:SourceSpecifiedInSubfield2"
         }
       },
