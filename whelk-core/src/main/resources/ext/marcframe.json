@@ -7855,9 +7855,26 @@
       "$a": {"property": "label"},
       "_spec": [
         {
-          "source": {"522": {"ind1": "1", "ind2": " ", "subfields": [
+          "source": {"522": {"ind1": "8", "ind2": " ", "subfields": [
             {"a": "foo"}
           ]}},
+          "normalized": {"522": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "foo"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "geographicCoverage": [
+                {
+                  "@type": "GeographicCoverage",
+                  "label": "foo"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"522": {"subfields": [{"a": "foo"}]}},
           "normalized": {"522": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "foo"}
           ]}},
@@ -8368,6 +8385,18 @@
       "_spec": [
         {
           "source": [{"586": {"ind1": "0", "ind2": " ", "subfields": [{"a": "EBZ"}]}}],
+          "normalized": [{"586": {"ind1": " ", "ind2": " ", "subfields": [{"a": "EBZ"}]}}],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              },
+              "awardsNote":  "EBZ"
+            }
+          }
+        },
+        {
+          "source": [{"586": {"subfields": [{"a": "EBZ"}]}}],
           "normalized": [{"586": {"ind1": " ", "ind2": " ", "subfields": [{"a": "EBZ"}]}}],
           "result": {
             "mainEntity": {
@@ -9180,6 +9209,34 @@
         },
         {
           "source": {
+            "611": {"ind1": "0", "ind2": "0", "subfields":[
+              {"a": "Rio (Conference)"}]
+            }
+          },
+          "normalized": {
+            "611": {"ind1": "2", "ind2": "0", "subfields":[
+              {"a": "Rio (Conference)"}]
+            }
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Meeting",
+                  "name": "Rio (Conference)",
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/lcsh",
+                    "@type": "ConceptScheme",
+                    "code": "lcsh"
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
             "611": {"ind1": "2", "ind2": "0", "subfields":[
               {"a": "Vatican Council"},
               {"n": "(2nd :"},
@@ -9964,6 +10021,20 @@
               "subject": [{
                 "@type": "Geographic",
                 "prefLabel": "Förenta staterna"
+              }]
+            }
+          }}
+        },
+        {
+          "name": "Convert without any ind1 defined",
+          "source": {"651": {"ind2": "4", "subfields":[{"a": "Sverige"}]}},
+          "normalized": {"651": {"ind1": " ", "ind2": "4", "subfields":[{"a": "Sverige"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [{
+                "@type": "Geographic",
+                "prefLabel": "Sverige"
               }]
             }
           }}
@@ -17624,7 +17695,51 @@
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "marc:organizationalUnit"},
       "repeatable": true,
-      "subfieldOrder": "8 a x z 2 9"
+      "subfieldOrder": "8 a x z 2 9",
+      "_spec": [
+        {
+          "name": "With indicator 1 set to 1",
+          "source": {"866": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Foo"}
+          ]}},
+          "result": {"mainEntity": {
+            "marc:hasTextualHoldingsBasicBibliographicUnit": [
+              {
+                "@type": "marc:TextualHoldingsBasicBibliographicUnit",
+                "marc:textualString": "Foo",
+                "marc:holdingsLevel": "1"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "With indicator 1 set to blank",
+          "source": {"866": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Foo"}
+          ]}},
+          "result": {"mainEntity": {
+            "marc:hasTextualHoldingsBasicBibliographicUnit": [
+              {
+                "@type": "marc:TextualHoldingsBasicBibliographicUnit",
+                "marc:textualString": "Foo"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "With no indicators set at all",
+          "source": {"866": {"subfields": [{"a": "Foo"}]}},
+          "normalized": {"866": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Foo"}]}},
+          "result": {"mainEntity": {
+            "marc:hasTextualHoldingsBasicBibliographicUnit": [
+              {
+                "@type": "marc:TextualHoldingsBasicBibliographicUnit",
+                "marc:textualString": "Foo"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "867": {
       "addLink": "marc:hasTextualHoldingsSupplementaryMaterial",
