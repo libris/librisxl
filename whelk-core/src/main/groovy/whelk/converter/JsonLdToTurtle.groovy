@@ -1,4 +1,4 @@
-package whelk.plugin
+package whelk.converter
 
 import static org.apache.commons.lang3.StringEscapeUtils.escapeJava
 
@@ -25,6 +25,14 @@ class JsonLdToTurtle {
 
     void write(String s) {
         writer.write(s)
+    }
+
+    void write(Boolean s) {
+        writer.write(s.toString())
+    }
+
+    void write(Number s) {
+        writer.write(s.toString())
     }
 
     void writeln(String s) {
@@ -215,7 +223,8 @@ class JsonLdToTurtle {
             def kdef = context[viaKey]
             def coerceTo = (kdef instanceof Map)? kdef["@type"] : null
             if (coerceTo == "@vocab") {
-                write(refRepr(value, true))
+                write(value instanceof String ?
+                        refRepr(value, true): value)
                 return
             } else if (coerceTo == "@id") {
                 write(refRepr(value))
