@@ -309,9 +309,8 @@ class ImporterMain {
             int i = 0
             for (Document doc : whelk.storage.loadAll(null)) {
                 def id = doc.completeId
-                def data = whelk.jsonld.frame(id, doc.data)
                 System.err.println "[${++i}] $id"
-                serializer.objectToTrig(id, data)
+                serializer.objectToTrig(id, doc.data)
             }
         }
     }
