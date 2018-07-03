@@ -3861,9 +3861,8 @@
           "pendingResources": {"_:scale": {"link": "scale", "resourceType": "marc:OtherCartographicScale"}}
         }
       ],
-      "i1": {"ignored": "true", "marcDefault": "1"},
+      "i1": {"marcDefault": "1"},
       "i2": {
-        "ignored": "true",
         "property": "marc:ringType",
         "marcDefault": " ",
         "tokenMap": {"0": "marc:OuterRing", "1": "marc:ExcludingRing"}
@@ -3916,6 +3915,28 @@
                       "@type": "marc:LinearScale",
                       "marc:constantRatioLinearHorizontalScale": ["110000"]
                     }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "source": [
+            {"034": {"ind1": "1", "ind2": "0", "subfields": [{"b": "11"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "cartographicAttributes": [
+                  {
+                    "@type": "Cartographic",
+                    "scale": {
+                      "@type": "Scale",
+                      "marc:constantRatioLinearHorizontalScale": ["11"]
+                    },
+                    "marc:ringType": "marc:OuterRing"
                   }
                 ]
               }
@@ -4088,7 +4109,7 @@
     "037": {
       "addLink": "acquisitionSource",
       "resourceType": "AcquisitionSource",
-      "i1": {"ignored": true, "marcDefault": " "},
+      "i1": {"marcDefault": " "},
       "$a": {"addLink": "identifiedBy", "resourceType": "StockNumber", "property": "value", "NOTE:marc-repeatable": false},
       "$b": {"property": "label"},
       "$c": {"property": "acquisitionTerms", "NOTE:marc-repeatable": true},
@@ -7848,7 +7869,6 @@
       "addLink": "geographicCoverage",
       "resourceType": "GeographicCoverage",
       "i1": {
-        "ignored": true,
         "NOTE:LC": "nac",
         "marcDefault": " "
       },
@@ -7896,7 +7916,6 @@
       "aboutEntity": "?thing",
       "i1": {
         "marcDefault": "8",
-        "ignored": true,
         "NOTE:LC": "nac"
       },
       "$a": {"property": "preferredCitation"},
@@ -8378,7 +8397,7 @@
     "586": {
       "NOTE:local": "ANVÄNDS NORMALT EJ",
       "aboutEntity": "?thing",
-      "i1": {"ignored": true, "marcDefault": " "},
+      "i1": {"marcDefault": " "},
       "$a": {"property": "awardsNote"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
@@ -17438,7 +17457,7 @@
     "561": {
       "groupId": "?example-$seq",
       "NOTE:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 8 poster. Remove i1 when revert",
-      "i1": {"ignored": true,"marcDefault": " "},
+      "i1": {"marcDefault": " "},
       "$a": {"property": "custodialHistory"},
       "$3": {
         "link": "marc:custodialHistory-appliesTo", "resourceType": "Resource", "property": "label",
