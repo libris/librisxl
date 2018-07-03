@@ -17349,7 +17349,7 @@
     "010": {"ignored": true, "NOTE:record-count": 22, "NOTE:local": "ANVÄNDS NORMALT EJ"},
     "014": {
       "aboutEntity": "?record",
-      "i1": {"property": "marc:typeOfLinkageNumber"},
+      "i1": {"property": "marc:typeOfLinkageNumber", "marcDefault": "1"},
       "$a": {"addLink": "identifiedBy", "resourceType": "LibrisIIINumber", "property": "value", "NOTE:marc-repeatable": false}
     },
     "016": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
