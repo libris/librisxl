@@ -16,6 +16,7 @@ import whelk.PostgresLoadfileWriter
 import whelk.Whelk
 import whelk.actors.StatsMaker
 import whelk.component.PostgreSQLComponent
+import whelk.converter.JsonLdToTurtle
 import whelk.filter.LinkFinder
 import whelk.importer.DefinitionsImporter
 import whelk.reindexer.ElasticReindexer
@@ -292,6 +293,27 @@ class ImporterMain {
         queue.shutdown()
         queue.awaitTermination(7, TimeUnit.DAYS)
         System.err.println("Linkfinding completed. Elapsed time: ${System.currentTimeMillis() - startTime}")
+    }
+
+    @Command(args='FILE')
+    void lddbToTrig(String file) {
+        def whelk = Whelk.createLoadedCoreWhelk(props)
+        def ctx = JsonLdToTurtle.parseContext([
+                '@context': whelk.jsonld.context
+        ])
+        def handleSteam = !file || file == '-' ? { it(System.out) }
+                            : new File(file).&withOutputStream
+        handleSteam { out ->
+            def serializer = new JsonLdToTurtle(ctx, out)
+            serializer.prelude()
+            int i = 0
+            for (Document doc : whelk.storage.loadAll(null)) {
+                def id = doc.completeId
+                def data = whelk.jsonld.frame(id, doc.data)
+                System.err.println "[${++i}] $id"
+                serializer.objectToTrig(id, data)
+            }
+        }
     }
 
     static COMMANDS = getMethods().findAll { it.getAnnotation(Command)
