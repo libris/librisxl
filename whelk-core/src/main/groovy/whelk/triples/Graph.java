@@ -108,6 +108,9 @@ public class Graph
                 }
             }
         }
+
+        while (eliminateNextDuplicateBnode());
+        eliminateDuplicateTriples();
     }
 
     /**
@@ -152,6 +155,74 @@ public class Graph
         }
 
         return result.toString();
+    }
+
+    private boolean eliminateNextDuplicateBnode()
+    {
+        List<String> bnodeIds = new ArrayList<>();
+        for (String subject : m_edgesFromId.keySet())
+            if (subject.startsWith("_:"))
+                bnodeIds.add(subject);
+
+        for (String id1 : bnodeIds)
+        {
+            for (String id2 : bnodeIds)
+            {
+                if (id1.equals(id2))
+                    continue;
+
+                // id1 and id2 must now be examined for subgraph-equality
+                if (hasEquivalentEdges(id1, id2, this, new HashMap<>(), new HashMap<>()))
+                {
+                    replaceReferences(id1, id2);
+                    m_edgesFromId.remove(id1);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private void replaceReferences(String to, String with)
+    {
+        for (String subject : m_edgesFromId.keySet())
+        {
+
+            List<String[]> edges =  m_edgesFromId.get(subject);
+            for (String[] edge : edges)
+            {
+                String object = edge[1];
+                if (object.equals(to))
+                    edge[1] = with;
+            }
+        }
+    }
+
+    private void eliminateDuplicateTriples()
+    {
+        for (String subject : m_edgesFromId.keySet())
+        {
+            List<String[]> edges = m_edgesFromId.get(subject);
+            List<Integer> indexesToRemove = new ArrayList<>();
+            for (int j = 0; j < edges.size(); ++j)
+            {
+                for (int i = edges.size()-1; i > j; --i)
+                {
+                    String[] edge1 = edges.get(i);
+                    String[] edge2 = edges.get(j);
+                    if (edge1[0].equals(edge2[0]) && edge1[1].equals(edge2[1]) && !indexesToRemove.contains(i))
+                    {
+                        indexesToRemove.add(i);
+                    }
+                }
+            }
+
+            Collections.sort(indexesToRemove);
+            Collections.reverse(indexesToRemove);
+            for (Integer indexToRemove : indexesToRemove)
+                edges.remove(indexToRemove.intValue());
+        }
     }
 
     /**

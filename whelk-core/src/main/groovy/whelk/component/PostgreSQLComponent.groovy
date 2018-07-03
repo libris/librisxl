@@ -40,6 +40,7 @@ class PostgreSQLComponent {
 
     private BasicDataSource connectionPool
     static String driverClass = "org.postgresql.Driver"
+    private static String UNIQUE_VIOLATION = "23505"
 
     public final static ObjectMapper mapper = new ObjectMapper()
 
@@ -343,6 +344,9 @@ class PostgreSQLComponent {
             Date now = new Date()
             PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
 
+            if (changedBy != null)
+                doc.setDescriptionCreator("https://libris.kb.se/library/" + changedBy)
+
             insert = rigInsertStatement(insert, doc, changedIn, changedBy, collection, deleted)
             insert.executeUpdate()
             connection.commit()
@@ -508,6 +512,7 @@ class PostgreSQLComponent {
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
                 updateMinMaxDepModified((String) dependerShortId, connection)
+                removeEmbellishedDocument(dependerShortId, connection)
             }
 
             // Update the disappearing record
@@ -533,6 +538,7 @@ class PostgreSQLComponent {
             dependers = getDependers(disappearingSystemID)
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
+                removeEmbellishedDocument(dependerShortId, connection)
                 updateMinMaxDepModified((String) dependerShortId, connection)
                 selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
                 selectStatement.setString(1, dependerShortId)
@@ -621,6 +627,7 @@ class PostgreSQLComponent {
             refreshDerivativeTables(doc, connection, deleted)
             for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
                 updateMinMaxDepModified((String) depender.get(0), connection)
+                removeEmbellishedDocument((String) depender.get(0), connection)
             }
             updateMinMaxDepModified(doc.getShortId(), connection)
             connection.commit()
@@ -949,6 +956,7 @@ class PostgreSQLComponent {
                 if (updateDepMinMax) {
                     for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
                         updateMinMaxDepModified((String) depender.get(0), connection)
+                        removeEmbellishedDocument((String) depender.get(0), connection)
                     }
                 }
             }
@@ -1304,6 +1312,14 @@ class PostgreSQLComponent {
             preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), java.sql.Types.OTHER)
             preparedStatement.execute()
         }
+        catch (PSQLException e) {
+            if (UNIQUE_VIOLATION.equals(e.getSQLState())) {
+                // Someone else cached the document before we could,
+                // so we fail silently
+            } else {
+                throw e
+            }
+        }
         finally {
             if (rs != null)
                 rs.close()
@@ -1633,10 +1649,14 @@ class PostgreSQLComponent {
             connection = getConnection()
             preparedStatement = connection.prepareStatement(query)
 
-            if (idType != null)
-                preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + idValue + "\"}]", java.sql.Types.OTHER)
-            else
-                preparedStatement.setObject(1, "[{\"value\": \"" + idValue + "\"}]", java.sql.Types.OTHER)
+            if (idType != null) {
+                String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
+                preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + escapedId + "\"}]", java.sql.Types.OTHER)
+            }
+            else {
+                String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
+                preparedStatement.setObject(1, "[{\"value\": \"" + escapedId + "\"}]", java.sql.Types.OTHER)
+            }
 
             rs = preparedStatement.executeQuery()
             List<String> results = []

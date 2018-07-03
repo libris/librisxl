@@ -55,6 +55,7 @@ class Document {
     static final List sigelPath = ["@graph", 1, "heldBy", "@id"]
     static final List generationProcessPath = ["@graph", 0, "generationProcess", "@id"]
     static final List generationDatePath = ["@graph", 0, "generationDate"]
+    static final List descriptionCreatorPath = ["@graph", 0, "descriptionCreator", "@id"]
 
     public Map data = [:]
     public int version = 0
@@ -77,25 +78,29 @@ class Document {
         return mapper.writeValueAsString(data)
     }
 
-    void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber, LinkedHashMap) }
+    void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber, HashMap) }
 
     String getControlNumber() { get(controlNumberPath) }
 
-    void setGenerationProcess(process) { set(generationProcessPath, process, LinkedHashMap) }
+    void setGenerationProcess(process) { set(generationProcessPath, process, HashMap) }
 
     String getGenerationProcess() { get(generationProcessPath) }
 
-    void setHoldingFor(holdingFor) { set(holdingForPath, holdingFor, LinkedHashMap) }
+    void setHoldingFor(holdingFor) { set(holdingForPath, holdingFor, HashMap) }
 
     String getHoldingFor() { get(holdingForPath) }
 
     String getHeldBy() { get(heldByPath) }
 
-    void setEncodingLevel(encLevel) { set(encLevelPath, encLevel, LinkedHashMap) }
+    void setEncodingLevel(encLevel) { set(encLevelPath, encLevel, HashMap) }
 
     String getEncodingLevel() { get(encLevelPath) }
 
-    void setThingType(thingType) { set(thingTypePath, thingType, LinkedHashMap) }
+    void setDescriptionCreator(creator) { set(descriptionCreatorPath, creator, HashMap) }
+
+    String getDescriptionCreator() { get(descriptionCreatorPath) }
+
+    void setThingType(thingType) { set(thingTypePath, thingType, HashMap) }
 
     String getThingType() { get(thingTypePath) }
 
@@ -598,21 +603,28 @@ class Document {
             if (nodeId != null && nodeId.startsWith(oldId)) {
                 String expectedNewDerivative = newId + nodeId.substring(oldId.length())
 
-                List sameAsList = (List) node["sameAs"]
-                if (sameAsList == null) {
-                    sameAsList = []
-                    node.put("sameAs", sameAsList)
+                // If this is not a reference (there's data in the object),
+                // move the old @id to a sameAs-list.
+                // If however it's only a reference, then replace it outright.
+                if (node.keySet().size() > 1) {
+                    List sameAsList = (List) node["sameAs"]
+                    if (sameAsList == null) {
+                        sameAsList = []
+                    }
+
+                    boolean alreadyInSameAsList = false
+                    for (int i = 0; i < sameAsList.size(); ++i) {
+                        Map object = (Map) sameAsList.get(i)
+                        String sameAsId = object["@id"]
+                        if (sameAsId.equals(nodeId))
+                            alreadyInSameAsList = true
+                    }
+                    if (!alreadyInSameAsList && nodeId != expectedNewDerivative) {
+                        sameAsList.add(["@id": nodeId])
+                        node.put("sameAs", sameAsList)
+                    }
                 }
 
-                boolean alreadyInSameAsList = false
-                for (int i = 0; i < sameAsList.size(); ++i) {
-                    Map object = (Map) sameAsList.get(i)
-                    String sameAsId = object["@id"]
-                    if (sameAsId.equals(nodeId))
-                        alreadyInSameAsList = true
-                }
-                if (!alreadyInSameAsList)
-                    sameAsList.add( ["@id": nodeId] )
                 node["@id"] = expectedNewDerivative
             }
         }

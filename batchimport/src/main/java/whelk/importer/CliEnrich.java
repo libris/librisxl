@@ -5,7 +5,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.*;
+
+import whelk.Document;
+import whelk.Whelk;
 import whelk.triples.*;
+import whelk.util.PropertyLoader;
 
 public class CliEnrich
 {
@@ -15,19 +19,33 @@ public class CliEnrich
         ObjectMapper mapper = new ObjectMapper();
 
         JsonldSerializer serializer = new JsonldSerializer();
-        List<String[]> otherTriples = serializer.deserialize(mapper.readValue(readFileFully(withFilename), HashMap.class));
-        List<String[]> originalTriples = serializer.deserialize(mapper.readValue(readFileFully(originalFilename), HashMap.class));
+        Map originalData = mapper.readValue(readFileFully(withFilename), HashMap.class);
+        List<String[]> otherTriples = serializer.deserialize(originalData);
+        Map withData = mapper.readValue(readFileFully(originalFilename), HashMap.class);
+        List<String[]> originalTriples = serializer.deserialize(withData);
 
         Graph originalGraph = new Graph(originalTriples);
         Graph otherGraph = new Graph(otherTriples);
 
+        //Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
+
+        Properties properties = PropertyLoader.loadProperties("secret");
+        Whelk whelk = Whelk.createLoadedSearchWhelk(properties);
+        Set<String> repeatableTerms = whelk.getJsonld().getRepeatableTerms();
+
         Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
+        for (String term : repeatableTerms)
+            specialRules.put(term, Graph.PREDICATE_RULES.RULE_AGGREGATE);
+        specialRules.put("created", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
+        specialRules.put("controlNumber", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
+        specialRules.put("modified", Graph.PREDICATE_RULES.RULE_PREFER_INCOMING);
+        specialRules.put("marc:encLevel", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
 
         originalGraph.enrichWith(otherGraph, specialRules);
 
-        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), new HashSet<>());
+        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), repeatableTerms);
         boolean deleteUnreferencedData = true;
-        JsonldSerializer.normalize(enrichedData, "noid", deleteUnreferencedData);
+        JsonldSerializer.normalize(enrichedData, new Document(originalData).getCompleteId(), deleteUnreferencedData);
         System.out.println(mapper.writeValueAsString(enrichedData));
     }
 

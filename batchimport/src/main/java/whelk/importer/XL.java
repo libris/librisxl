@@ -13,6 +13,7 @@ import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.MarcFrameConverter;
 import whelk.exception.TooHighEncodingLevelException;
+import whelk.filter.LinkFinder;
 import whelk.util.LegacyIntegrationTools;
 import whelk.util.PropertyLoader;
 import whelk.triples.*;
@@ -30,6 +31,7 @@ class XL
     private static final String ENC_MINMAL_STATUS = "marc:MinimalLevel";  // 7
 
     private Whelk m_whelk;
+    private LinkFinder m_linkfinder;
     private Parameters m_parameters;
     private Properties m_properties;
     private MarcFrameConverter m_marcFrameConverter;
@@ -49,6 +51,7 @@ class XL
         m_whelk = Whelk.createLoadedSearchWhelk(m_properties);
         m_repeatableTerms = m_whelk.getJsonld().getRepeatableTerms();
         m_marcFrameConverter = m_whelk.createMarcFrameConverter();
+        m_linkfinder = new LinkFinder(m_whelk.getStorage());
     }
 
     /**
@@ -157,19 +160,11 @@ class XL
 
     private String importNewRecord(MarcRecord marcRecord, String collection, String relatedWithBibResourceId, String replaceSystemId)
     {
-        // Delete any existing 001 fields
-        String generatedId = IdGenerator.generate();
-        if (marcRecord.getControlfields("001").size() != 0)
-        {
-            marcRecord.getFields().remove(marcRecord.getControlfields("001").get(0));
-        }
+        String incomingId = IdGenerator.generate();
+        if (replaceSystemId != null)
+            incomingId = replaceSystemId;
 
-        // Always write a new 001. If one existed in the imported post it was moved to 035a.
-        // If it was not (because it was a valid libris id) then it was checked as a duplicate and
-        // duplicateIDs.size would be > 0, and we would not be here.
-        marcRecord.addField(marcRecord.createControlfield("001", generatedId));
-
-        Document rdfDoc = convertToRDF(marcRecord, generatedId);
+        Document rdfDoc = convertToRDF(marcRecord, incomingId);
         if (collection.equals("hold"))
             rdfDoc.setHoldingFor(relatedWithBibResourceId);
 
@@ -180,27 +175,46 @@ class XL
             // Doing a replace (but preserving old IDs)
             if (replaceSystemId != null)
             {
-                m_whelk.getStorage().storeAtomicUpdate(replaceSystemId, false, IMPORT_SYSTEM_CODE, null,
-                        (Document doc) ->
+                try
                 {
-                    List<String> recordIDs = doc.getRecordIdentifiers();
-                    List<String> thingIDs = doc.getThingIdentifiers();
+                    m_whelk.getStorage().storeAtomicUpdate(replaceSystemId, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(),
+                            (Document doc) ->
+                    {
+                        String existingEncodingLevel = doc.getEncodingLevel();
+                        String newEncodingLevel = rdfDoc.getEncodingLevel();
 
-                    doc.data = rdfDoc.data;
+                        if (existingEncodingLevel == null || !mayOverwriteExistingEncodingLevel(existingEncodingLevel, newEncodingLevel))
+                            throw new TooHighEncodingLevelException();
 
-                    // The mainID must remain unaffected.
-                    doc.deepPromoteId(recordIDs.get(0));
+                        List<String> recordIDs = doc.getRecordIdentifiers();
+                        List<String> thingIDs = doc.getThingIdentifiers();
+                        String controlNumber = doc.getControlNumber();
 
-                    for (String recordID : recordIDs)
-                        doc.addRecordIdentifier(recordID);
-                    for (String thingID : thingIDs)
-                        doc.addThingIdentifier(thingID);
-                });
+                        doc.data = rdfDoc.data;
+
+                        // The mainID must remain unaffected.
+                        doc.deepPromoteId(recordIDs.get(0));
+
+                        for (String recordID : recordIDs)
+                            doc.addRecordIdentifier(recordID);
+                        for (String thingID : thingIDs)
+                            doc.addThingIdentifier(thingID);
+                        if (controlNumber != null)
+                            doc.setControlNumber(controlNumber);
+                    });
+                }
+                catch (TooHighEncodingLevelException e)
+                {
+                    if ( verbose )
+                    {
+                        System.out.println("info: Not replacing id: " + replaceSystemId + ", because it no longer has encoding level marc:PartialPreliminaryLevel");
+                    }
+                }
             }
             else
             {
                 // Doing simple "new"
-                m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, null, collection, false);
+                m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), collection, false);
             }
         }
         else
@@ -228,7 +242,7 @@ class XL
         {
             try
             {
-                m_whelk.storeAtomicUpdate(ourId, false, IMPORT_SYSTEM_CODE, null,
+                m_whelk.storeAtomicUpdate(ourId, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(),
                         (Document doc) ->
                         {
                             if (collection.equals("bib"))
@@ -270,6 +284,8 @@ class XL
 
     private boolean mayOverwriteExistingEncodingLevel(String existingEncodingLevel, String newEncodingLevel)
     {
+        if (newEncodingLevel == null || existingEncodingLevel == null)
+            return false;
         switch (newEncodingLevel)
         {
             case ENC_PRELIMINARY_STATUS: // 5
@@ -321,13 +337,22 @@ class XL
 
     private Document convertToRDF(MarcRecord marcRecord, String id)
     {
-        // The conversion process needs a 001 field to work correctly.
-        if (marcRecord.getControlfields("001").size() == 0)
-            marcRecord.addField(marcRecord.createControlfield("001", id));
+        while (marcRecord.getControlfields("001").size() > 0)
+            marcRecord.getFields().remove(marcRecord.getControlfields("001").get(0));
+        marcRecord.addField(marcRecord.createControlfield("001", id));
+
+        // Filter out 887 fields, as the converter cannot/should not handle them
+        Iterator<Field> it = marcRecord.getFields().iterator();
+        while (it.hasNext()){
+            Field field = it.next();
+            if (field.getTag().equals("887"))
+                it.remove();
+        }
 
         Map convertedData = m_marcFrameConverter.convert(MarcJSONConverter.toJSONMap(marcRecord), id);
         Document convertedDocument = new Document(convertedData);
-        convertedDocument.setId(id);
+        convertedDocument.deepReplaceId(Document.getBASE_URI().toString()+id);
+        m_linkfinder.normalizeIdentifiers(convertedDocument);
         return convertedDocument;
     }
 
