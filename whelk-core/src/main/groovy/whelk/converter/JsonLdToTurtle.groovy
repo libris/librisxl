@@ -11,7 +11,7 @@ class JsonLdToTurtle {
     Writer writer
     Map context
     String base
-    Map keys = [id: "@id", value: "@value", type: "@type", lang: "@language"]
+    Map keys = [id: "@id", value: "@value", type: "@type", lang: "@language", graph: "@graph"]
     Map prefixes = [:]
     def uniqueBNodeSuffix = ""
     String bnodeSkolemBase = null
@@ -134,14 +134,16 @@ class JsonLdToTurtle {
             toLiteral(obj, viaKey)
             return Collections.emptyList()
         }
+
         def s = obj[keys.id]
         if (s && obj.size() > 1) {
             write(refRepr(s))
         } else if (level > 0) {
             writeln("[")
-        } else {
+        } else if (!obj.containsKey(keys.graph)) {
             return Collections.emptyList()
         }
+
         def topObjects = []
         def first = true
         obj.each { key, vs ->
@@ -151,9 +153,14 @@ class JsonLdToTurtle {
                 return
             if (term == keys.id || term == "@context")
                 return
-            vs = (vs instanceof List)? vs : vs != null? [vs] : []
+            vs = vs instanceof List ? vs : vs != null ? [vs] : []
             if (!vs) // TODO: && not @list
                 return
+
+            if (term == keys.graph) {
+                topObjects += vs
+                return
+            }
 
             if (revKey) {
                 vs.each {
@@ -188,7 +195,9 @@ class JsonLdToTurtle {
             }
         }
         if (level == 0) {
-            writeln(" .")
+            if (!first) {
+                writeln(" .")
+            }
             writeln()
             topObjects.each {
                 objectToTurtle(it)
