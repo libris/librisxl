@@ -99,8 +99,14 @@ class JsonLdToTurtle {
     }
 
     String toValidTerm(String term) {
-        // TODO: only done to help the sensitive Sesame turtle parser..
-        return term.replaceAll(/%/, /0/).replaceAll(/\./, '')
+        term = term.replaceAll('\u001f', '')
+        if (term.indexOf('://') > -1) {
+            return "<${term}>"
+        }
+        // TODO: hack to pseudo-fix problematic pnames...
+        return term.
+            replaceAll(/%/, /0/).
+            replaceAll(/\./, '')
     }
 
     void toTurtle(obj) {
@@ -173,11 +179,15 @@ class JsonLdToTurtle {
                     writeln(" ;")
                 }
                 first = false
+
                 if (term == "@type") {
                     term = "a"
-                    write(indent + term + " " + vs.collect { termFor(it) }.join(", "))
+                    write(indent + term + " " + vs.collect {
+                        toValidTerm(termFor(it))
+                    }.join(", "))
                     return
                 }
+
                 term = toValidTerm(term)
                 write(indent + term + " ")
                 vs.eachWithIndex { v, i ->
