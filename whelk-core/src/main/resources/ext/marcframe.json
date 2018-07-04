@@ -4527,9 +4527,22 @@
     "071": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
 
     "072": {
+      "onRevertPrefer": ["653"],
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "Concept",
+      "match": [
+        {
+          "when": {
+            "NOTE": "stops here to get i2=0 without $2",
+            "onRevert": {"inScheme": {"code": "NAL"}}
+          }
+        },
+        {
+          "when": "i2=7 & $2",
+          "$2": {"requires-i2": "7", "link": "inScheme", "resourceType": "ConceptScheme", "property": "code"}
+        }
+      ],
       "i2": {
         "link": "inScheme",
         "resourceType": "ConceptScheme",
@@ -4537,11 +4550,74 @@
         "tokenMap": {
           "0": "NAL"
         },
-        "definedElsewhereToken": "7"
+        "definedElsewhereToken": "7",
+        "marcDefault": "7"
       },
       "$a": {"property": "label", "required": true},
       "$x": {"link": "inCollection", "property": "label"},
-      "$2": {"requires-i2": "7", "link": "inScheme", "resourceType": "ConceptScheme", "property": "code"}
+      "_spec": [
+        {
+          "source": {
+            "072": {"ind1": " ", "ind2": "0", "subfields": [
+              {"a": "Token"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "subject": [ {
+                  "@type": "Concept",
+                  "label": "Token",
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "code": "NAL"
+                  }
+                } ]
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "072": {"ind1": " ", "ind2": "7", "subfields": [
+              {"a": "Token"},
+              {"2": "G"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "subject": [ {
+                  "@type": "Concept",
+                  "label": "Token",
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "code": "G"
+                  }
+                } ]
+              }
+            }
+          }
+        },
+        {
+          "name": "i2=7 without $2",
+          "source": {
+            "072": {"ind1": " ", "ind2": "7", "subfields": [
+              {"a": "Token"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "subject": [ {"@type": "Concept", "label": "Token"} ]
+              }
+            }
+          }
+        }
+      ]
     },
 
     "074": {
@@ -5533,6 +5609,18 @@
       "resourceType": "AbbreviatedTitle",
       "aboutAlias": "_:title",
       "embedded": true,
+      "match": [
+        {
+          "when": {
+            "NOTE": "stops here to get i2=_ without $2",
+            "onRevert": {"source": {"code": "issnkey"}}
+          }
+        },
+        {
+          "when": "i2=0 & $2",
+          "$2": {"requires-i2": "0", "link": "source", "resourceType": "Source", "property": "code"}
+        }
+      ],
       "i2": {
         "link": "source",
         "resourceType": "Source",
@@ -5540,13 +5628,8 @@
         "tokenMap": {
           " ": "issnkey"
         },
+        "marcDefault": "0",
         "definedElsewhereToken": "0"
-      },
-      "$2": {
-        "requires-i2": "0",
-        "link": "source",
-        "resourceType": "Source",
-        "property": "code"
       },
       "$a": {"property": "mainTitle"},
       "$b": {"addProperty": "qualifier", "NOTE:marc-repeatable": false},
@@ -5585,6 +5668,19 @@
                 "@type" : "Source",
                 "code" : "issnkey"
               }
+            }]
+          }}
+        },
+        {
+          "name": "i2=0 without $2",
+          "source": {
+            "210": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "No source"}
+            ]}},
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "AbbreviatedTitle",
+              "mainTitle":  "No source"
             }]
           }}
         }
