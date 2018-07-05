@@ -139,18 +139,39 @@ class JsonLdToTurtle {
         writeln("BASE <$iri>")
     }
 
+    boolean isListContainer(String term) {
+        return context[term] instanceof Map &&
+            context[term]['@container'] == '@list'
+    }
+
     def objectToTurtle(obj, level=0, viaKey=null) {
         def indent = INDENT * (level + 1)
+
+        boolean explicitList = '@list' in obj
+
+        if (isListContainer(viaKey)) {
+            obj = ['@list': obj]
+        }
+
         if (!(obj instanceof Map) || obj[keys.value]) {
             toLiteral(obj, viaKey)
             return Collections.emptyList()
         }
 
         def s = obj[keys.id]
+
+        boolean isList = '@list' in obj
+        boolean startedList = isList
+
+        if (explicitList) {
+            write('( ')
+        }
         if (s && obj.size() > 1) {
             write(refRepr(s))
         } else if (level > 0) {
-            writeln("[")
+            if (!isList) {
+                writeln("[")
+            }
         } else {
             if (obj.containsKey(keys.graph)) {
                 if (obj.keySet().any { it[0] != '@' }) {
@@ -163,7 +184,10 @@ class JsonLdToTurtle {
         }
 
         def topObjects = []
+
         def first = true
+        boolean endedList = false
+
         obj.each { key, vs ->
             def term = termFor(key)
             def revKey = (term == null)? revKeyFor(key) : null
@@ -180,6 +204,8 @@ class JsonLdToTurtle {
                 return
             }
 
+            boolean inList = isList || isListContainer(key)
+
             if (revKey) {
                 vs.each {
                     def node = it.clone()
@@ -188,6 +214,10 @@ class JsonLdToTurtle {
                 }
             } else {
                 if (!first) {
+                    if (startedList && !inList && !endedList) {
+                        endedList = true
+                        write(" )")
+                    }
                     writeln(" ;")
                 }
                 first = false
@@ -200,10 +230,21 @@ class JsonLdToTurtle {
                     return
                 }
 
-                term = toValidTerm(term)
-                write(indent + term + " ")
+                if (term != '@list') {
+                    term = toValidTerm(term)
+                    write(indent + term + " ")
+                }
+
                 vs.eachWithIndex { v, i ->
-                    if (i > 0) write(" , ")
+                    if (inList) {
+                        if (!startedList) {
+                            write("(")
+                            startedList = true
+                        }
+                        write(" ")
+                    } else if (i > 0) {
+                        write(" , ")
+                    }
                     if (bnodeSkolemBase && v instanceof Map && !v[keys.id]) {
                         v[keys.id] = s = genSkolemId()
                     }
@@ -216,6 +257,11 @@ class JsonLdToTurtle {
                 }
             }
         }
+
+        if (explicitList || (!isList && startedList) && !endedList) {
+            write(" )")
+        }
+
         if (level == 0) {
             if (!first) {
                 writeln(" .")
@@ -228,7 +274,10 @@ class JsonLdToTurtle {
             return Collections.emptyList()
         } else {
             writeln()
-            write(indent + "]")
+            write(indent)
+            if (!isList) {
+                write("]")
+            }
             return topObjects
         }
     }
