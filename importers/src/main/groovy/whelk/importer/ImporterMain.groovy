@@ -296,7 +296,7 @@ class ImporterMain {
     }
 
     @Command(args='FILE')
-    void lddbToTrig(String file) {
+    void lddbToTrig(String file, String collection) {
         def whelk = Whelk.createLoadedCoreWhelk(props)
         def ctx = JsonLdToTurtle.parseContext([
                 '@context': whelk.jsonld.context
@@ -307,7 +307,7 @@ class ImporterMain {
             def serializer = new JsonLdToTurtle(ctx, out)
             serializer.prelude()
             int i = 0
-            for (Document doc : whelk.storage.loadAll(null)) {
+            for (Document doc : whelk.storage.loadAll(collection)) {
                 def id = doc.completeId
                 System.err.println "[${++i}] $id"
                 serializer.objectToTrig(id, doc.data)
