@@ -95,11 +95,12 @@ class JsonLdToTurtle {
         } else if (useVocab && ref.indexOf("/") == -1) {
             return ":" + ref
         }
+        ref = cleanValue(ref)
         return "<${ref}>"
     }
 
     String toValidTerm(String term) {
-        term = term.replaceAll('\u001f', '')
+        term = cleanValue(term)
         if (term.indexOf('://') > -1) {
             return "<${term}>"
         }
@@ -107,6 +108,10 @@ class JsonLdToTurtle {
         return term.
             replaceAll(/%/, /0/).
             replaceAll(/\./, '')
+    }
+
+    String cleanValue(String v) {
+        return v.replaceAll("\\p{Cntrl}", '')
     }
 
     void toTurtle(obj) {
