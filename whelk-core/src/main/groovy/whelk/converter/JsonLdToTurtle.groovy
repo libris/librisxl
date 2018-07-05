@@ -151,8 +151,15 @@ class JsonLdToTurtle {
             write(refRepr(s))
         } else if (level > 0) {
             writeln("[")
-        } else if (!obj.containsKey(keys.graph)) {
-            return Collections.emptyList()
+        } else {
+            if (obj.containsKey(keys.graph)) {
+                if (obj.keySet().any { it[0] != '@' }) {
+                    // TODO: this is the default graph, described...
+                    write('[]')
+                }
+            } else {
+                return Collections.emptyList()
+            }
         }
 
         def topObjects = []
