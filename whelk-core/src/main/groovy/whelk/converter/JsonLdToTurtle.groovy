@@ -15,11 +15,21 @@ class JsonLdToTurtle {
     Map prefixes = [:]
     def uniqueBNodeSuffix = ""
     String bnodeSkolemBase = null
+    boolean useGraphKeyword
+    boolean markEmptyBnode
+    String emptyMarker = '_:Nothing'
 
-    JsonLdToTurtle(Map context, OutputStream outStream, String base=null) {
+    JsonLdToTurtle(Map context, OutputStream outStream, Map opts = null) {
+        this(context, outStream, opts?.base, opts)
+    }
+
+    JsonLdToTurtle(Map context, OutputStream outStream, String base, Map opts = null) {
         this.context = context.context
         this.prefixes = context.prefixes
         this.base = base
+        this.useGraphKeyword = opts?.useGraphKeyword == true
+        this.markEmptyBnode = opts?.markEmptyBnode == true
+        if ('owl' in prefixes) emptyMarker = 'owl:Nothing'
         writer = new OutputStreamWriter(outStream, "UTF-8")
     }
 
@@ -295,6 +305,11 @@ class JsonLdToTurtle {
             writeln()
             write(indent)
             if (!isList) {
+                // NOTE: hack for e.g. BlazeGraph
+                if (obj.size() == 0 && markEmptyBnode) {
+                    writeln("a $emptyMarker")
+                    write(indent)
+                }
                 write("]")
             }
             return topObjects
@@ -303,7 +318,10 @@ class JsonLdToTurtle {
 
     def objectToTrig(String iri, Map obj) {
         writeln()
-        writeln("GRAPH <$iri> {")
+        if (useGraphKeyword) {
+            write("GRAPH ")
+        }
+        writeln("<$iri> {")
         writeln()
         objectToTurtle(obj)
         writeln("}")
@@ -372,7 +390,8 @@ class JsonLdToTurtle {
 
     static OutputStream toTurtle(context, source, base=null) {
         def bos = new ByteArrayOutputStream()
-        def serializer = new JsonLdToTurtle(context, bos, base)
+        def opts = [base: base]
+        def serializer = new JsonLdToTurtle(context, bos, opts)
         serializer.toTurtle(source)
         return bos
     }

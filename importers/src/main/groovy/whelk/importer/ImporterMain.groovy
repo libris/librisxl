@@ -298,13 +298,16 @@ class ImporterMain {
     @Command(args='FILE')
     void lddbToTrig(String file, String collection) {
         def whelk = Whelk.createLoadedCoreWhelk(props)
+
         def ctx = JsonLdToTurtle.parseContext([
                 '@context': whelk.jsonld.context
         ])
+        def opts = [useGraphKeyword: false, markEmptyBnode: true]
+
         def handleSteam = !file || file == '-' ? { it(System.out) }
                             : new File(file).&withOutputStream
         handleSteam { out ->
-            def serializer = new JsonLdToTurtle(ctx, out)
+            def serializer = new JsonLdToTurtle(ctx, out, opts)
             serializer.prelude()
             int i = 0
             for (Document doc : whelk.storage.loadAll(collection)) {
