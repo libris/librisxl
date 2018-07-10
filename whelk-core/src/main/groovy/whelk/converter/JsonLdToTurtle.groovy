@@ -146,18 +146,35 @@ class JsonLdToTurtle {
             context[term]['@container'] == '@list'
     }
 
+    boolean isLangContainer(String term) {
+        return context[term] instanceof Map &&
+            context[term]['@container'] == '@language'
+    }
+
     def objectToTurtle(obj, level=0, viaKey=null) {
         def indent = INDENT * (level + 1)
 
-        boolean explicitList = '@list' in obj
-
-        if (isListContainer(viaKey)) {
-            obj = ['@list': obj]
+        if (isLangContainer(viaKey) && obj instanceof Map) {
+            boolean first = true
+            obj.each { lang, value ->
+                if (!first) write(' , ')
+                toLiteral(
+                        [(keys.value): value, (keys.lang): lang],
+                        viaKey)
+                first = false
+            }
+            return Collections.emptyList()
         }
 
         if (!(obj instanceof Map) || obj[keys.value]) {
             toLiteral(obj, viaKey)
             return Collections.emptyList()
+        }
+
+        boolean explicitList = '@list' in obj
+
+        if (isListContainer(viaKey)) {
+            obj = ['@list': obj]
         }
 
         def s = obj[keys.id]
@@ -300,7 +317,8 @@ class JsonLdToTurtle {
         def datatype = null
         if (obj instanceof Map) {
             value = obj[keys.value]
-            datatype = obj[keys.datatype]
+            datatype = obj[keys.type]
+            lang = obj[keys.lang]
         } else {
             def kdef = context[viaKey]
             def coerceTo = (kdef instanceof Map)? kdef["@type"] : null
