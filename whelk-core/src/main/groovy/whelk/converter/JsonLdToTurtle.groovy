@@ -95,7 +95,9 @@ class JsonLdToTurtle {
         } else if (useVocab && ref.indexOf("/") == -1) {
             return ":" + ref
         }
-        ref = cleanValue(ref)
+        ref = cleanValue(ref).
+            replaceAll(/ /, '+').
+            replaceAll("\\\\", "\\\\\\\\")
         return "<${ref}>"
     }
 
