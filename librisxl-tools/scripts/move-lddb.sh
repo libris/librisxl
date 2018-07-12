@@ -1,13 +1,27 @@
 #!/bin/bash
-#sourcehost=$1
-dumpfile=$1
-env=$2
-#tohost=localhost
+sourcehost=$1
+destenv=$2
+desthost=$3
 
-#pg_dump -U whelk -h $sourcehost whelk
+if [ -z $sourcehost ] || [ -z $destenv ]; then
+    echo "USAGE: $0 SOURCEHOST DESTENV DESTHOST"
+    exit 1
+fi
 
-replaceid="s!\(\"@id\": \"https://libris\)\(-\w\+\)\?\(.kb.se/[bcdfghjklmnpqrstvwxz0-9]\+\)\>!\1-$env\3!g"
+if [ -z $desthost ]; then
+    handle_sql_dump() {
+        cat -
+    }
+else
+    handle_sql_dump() {
+        psql -h $desthost -U whelk -W whelk
+    }
+fi
 
-cat $dumpfile | sed "$replaceid"
+replaceid="s!\(\(\"@id\": \"\|\t\)https://libris\)\(-\w\+\)\?\(.kb.se/[bcdfghjklmnpqrstvwxz0-9]\+\)\>!\1-$destenv\4!g"
 
-#| psql -U whelk -h $tohost whelk
+#-T lddb__versions
+pg_dump -h $sourcehost -U whelk whelk -W |
+    ( read; cat - |
+    sed "$replaceid" |
+    handle_sql_dump )
