@@ -2614,15 +2614,21 @@ class MarcSubFieldHandler extends ConversionPart {
 
         // Rudimentary mending of broken '[...]' expressions:
         if (balanceBrackets) {
-            if (val.startsWith('[')) {
-                if (!val.endsWith(']')) {
-                    val += ']'
-                }
-            } else if (val.endsWith(']')) {
-                val = '[' + val
-            }
+            val = toBalancedBrackets(val)
         }
 
+        return val
+    }
+
+    static String toBalancedBrackets(String val) {
+        if (val.startsWith('[')) {
+            if (val.indexOf(']') == -1) {
+                val += ']'
+            }
+        } else if (val.endsWith(']') &&
+                    val.indexOf('[') == -1) {
+            val = '[' + val
+        }
         return val
     }
 
