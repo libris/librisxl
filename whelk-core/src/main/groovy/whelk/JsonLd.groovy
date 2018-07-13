@@ -24,6 +24,9 @@ class JsonLd {
     static final String SET_KEY = "@set"
     static final String LIST_KEY = "@list"
     static final String REVERSE_KEY = "@reverse"
+    // JSON-LD 1.1
+    static final String PREFIX_KEY = "@prefix"
+
     static final String THING_KEY = "mainEntity"
     static final String WORK_KEY = "instanceOf"
     static final String RECORD_KEY = "meta"
@@ -40,6 +43,8 @@ class JsonLd {
     static final String ABOUT_KEY = "mainEntity"
     static final String APIX_FAILURE_KEY = "apixExportFailedAt"
     static final String ENCODING_LEVEL_KEY = "marc:encLevel"
+
+    static final List<String> NS_SEPARATORS = ['#', '/', ':']
 
     static final Set<String> LD_KEYS
 
@@ -68,6 +73,7 @@ class JsonLd {
     private Map superClassOf
     private Map<String, Set> subClassesByType
     private String vocabId
+    private Map<String, String> nsToPrefixMap = [:]
 
     /**
      * This includes terms that are declared as either set or list containers
@@ -98,11 +104,13 @@ class JsonLd {
 
         this.displayData = displayData ?: Collections.emptyMap()
 
+        setupPrefixes()
+
         vocabId = context.get(VOCAB_KEY)
 
         vocabIndex = vocabData ?
                 vocabData[GRAPH_KEY].collectEntries {
-                [toTermKey((String)it[ID_KEY]), it]
+                [toTermKey((String) it[ID_KEY]), it]
             }
             : Collections.emptyMap()
 
@@ -111,6 +119,20 @@ class JsonLd {
         generateSubClassesLists()
 
         expandAliasesInLensProperties()
+    }
+
+    private void setupPrefixes() {
+        context.each { String pfx, dfn ->
+            def term = dfn instanceof Map &&
+                       dfn[PREFIX_KEY] == true ? dfn[ID_KEY] : dfn
+            if (term instanceof String) {
+                String ns = (String) term
+                if (NS_SEPARATORS.any { ns.endsWith(it) }) {
+                    nsToPrefixMap[ns] = pfx
+                }
+            }
+        }
+
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
@@ -143,6 +165,26 @@ class JsonLd {
     }
 
     String toTermKey(String termId) {
+        Integer splitPos = NS_SEPARATORS.findResult {
+            int idx = termId.lastIndexOf(it)
+            return idx > -1 ? idx + 1 : null
+        }
+        if (splitPos == null) {
+            return termId
+        }
+
+        String baseNs = termId.substring(0, splitPos)
+        String term = termId.substring(splitPos)
+
+        if (baseNs == vocabId) {
+            return term
+        }
+
+        String pfx = nsToPrefixMap[baseNs]
+        if (pfx) {
+            return pfx + ':' + term
+        }
+
         return termId.replace(vocabId, '')
     }
 
@@ -457,7 +499,7 @@ class JsonLd {
                 if (superClass == null || superClass[ID_KEY] == null) {
                     continue
                 }
-                String superClassType = toTermKey( (String) superClass[ID_KEY] )
+                String superClassType = toTermKey((String) superClass[ID_KEY])
                 result.add(superClassType)
                 getSuperClasses(superClassType, result)
             }
@@ -479,7 +521,7 @@ class JsonLd {
                     continue
                 }
 
-                String superClassType = toTermKey( (String) superClass[ID_KEY] )
+                String superClassType = toTermKey((String) superClass[ID_KEY])
                 if (superClassOf[superClassType] == null)
                     superClassOf[superClassType] = []
                 ((List)superClassOf[superClassType]).add(type)

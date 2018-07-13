@@ -17,7 +17,8 @@ class JsonLdSpec extends Specification {
 
     static final Map CONTEXT_DATA = [
         "@context": [
-            "@vocab": "http://example.org/ns/"
+            "@vocab": "http://example.org/ns/",
+            "pfx": "http://example.org/pfx/"
         ]
     ]
 
@@ -26,7 +27,9 @@ class JsonLdSpec extends Specification {
             ["@id": "http://example.org/ns/ProvisionActivity",
              "subClassOf": [ ["@id": "http://example.org/ns/Event"] ]],
             ["@id": "http://example.org/ns/Publication",
-             "subClassOf": ["@id": "http://example.org/ns/ProvisionActivity"]]
+             "subClassOf": ["@id": "http://example.org/ns/ProvisionActivity"]],
+            ["@id": "http://example.org/pfx/SpecialPublication",
+             "subClassOf": ["@id": "http://example.org/ns/Publication"]]
         ]
     ]
 
@@ -282,12 +285,25 @@ class JsonLdSpec extends Specification {
         props == ['notation', 'label', 'labelByLang', 'note']
     }
 
+    def "get term key from URI"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        expect:
+        ld.toTermKey(uri) == term
+        where:
+        term                        | uri
+        'Publication'               | 'http://example.org/ns/Publication'
+        'pfx:SpecialPublication'    | 'http://example.org/pfx/SpecialPublication'
+    }
+
     def "use vocab to match a subclass to a base class"() {
         given:
         def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
         expect:
         ld.isSubClassOf('Publication', 'ProvisionActivity')
         !ld.isSubClassOf('Work', 'ProvisionActivity')
+        and:
+        ld.isSubClassOf('pfx:SpecialPublication', 'Publication')
     }
 
     def "expand prefixes"() {
