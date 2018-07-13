@@ -276,7 +276,8 @@
       "$a": {
         "property": "value",
         "splitValuePattern": "^(.+?)(?:\\s+\\((.+)\\))?$",
-        "splitValueProperties": ["value", "qualifier"]
+        "splitValueProperties": ["value", "qualifier"],
+        "punctuationChars": ",:;"
       },
       "$q": {"addProperty": "qualifier"},
       "$z": {"addProperty": "marc:hiddenValue"}
@@ -3411,6 +3412,26 @@
           "source": {
             "020": {"ind1": " ", "ind2": " ", "subfields": [
               {"a": "91-0-056322-6 (inb.)"}, {"c": "310:00"} ]}
+          },
+          "normalized": {
+            "020": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "91-0-056322-6"}, {"q": "inb."}, {"c": "310:00"} ]}
+          },
+          "result": {"mainEntity": {
+            "identifiedBy": [
+              {
+                "@type": "ISBN",
+                "value": "91-0-056322-6",
+                "qualifier": "inb.",
+                "acquisitionTerms": "310:00"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {
+            "020": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "91-0-056322-6 (inb.) :"}, {"c": "310:00"} ]}
           },
           "normalized": {
             "020": {"ind1": " ", "ind2": " ", "subfields": [
