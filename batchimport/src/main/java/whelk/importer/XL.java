@@ -512,7 +512,7 @@ class XL
         // Collect additional duplicates with the other ISBN form (if conversion is possible)
         try
         {
-            typedIsbn.convert(otherType);
+            typedIsbn = typedIsbn.convert(otherType);
         } catch (ConvertException ce)
         {
             return duplicateIDs;
