@@ -4,12 +4,13 @@ import io.prometheus.client.Counter;
 import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.utils.isbn.ConvertException;
+import se.kb.libris.utils.isbn.Isbn;
+import se.kb.libris.utils.isbn.IsbnException;
+import se.kb.libris.utils.isbn.IsbnParser;
 import whelk.Document;
 import whelk.IdGenerator;
-import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.component.ElasticSearch;
-import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.MarcFrameConverter;
 import whelk.exception.TooHighEncodingLevelException;
@@ -19,7 +20,6 @@ import whelk.util.PropertyLoader;
 import whelk.triples.*;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.sql.*;
 import java.util.*;
 
@@ -357,7 +357,7 @@ class XL
     }
 
     private Set<String> getDuplicates(MarcRecord marcRecord, String collection, String relatedWithBibResourceId)
-            throws SQLException
+            throws SQLException, IsbnException
     {
         switch (collection)
         {
@@ -383,7 +383,7 @@ class XL
     }
 
     private Set<String> getBibDuplicates(MarcRecord marcRecord)
-            throws SQLException
+            throws SQLException, IsbnException
     {
         Set<String> duplicateIDs = new HashSet<>();
 
@@ -491,18 +491,41 @@ class XL
     }
 
     private List<String> getDuplicatesOnISBN(String isbn)
-            throws SQLException
+            throws SQLException, IsbnException
     {
+        boolean hyphens = false;
         if (isbn == null)
             return new ArrayList<>();
+        Isbn typedIsbn = IsbnParser.parse(isbn);
+        int otherType = typedIsbn.getType() == Isbn.ISBN10 ? Isbn.ISBN13 : Isbn.ISBN10;
 
-        String numericIsbn = isbn.replaceAll("-", "");
+        List<String> duplicateIDs = new ArrayList<>();
+
+        String numericIsbn = typedIsbn.toString(hyphens);
         try(Connection connection = m_whelk.getStorage().getConnection();
             PreparedStatement statement = getOnISBN_ps(connection, numericIsbn);
             ResultSet resultSet = statement.executeQuery())
         {
-            return collectIDs(resultSet);
+            duplicateIDs.addAll( collectIDs(resultSet) );
         }
+
+        // Collect additional duplicates with the other ISBN form (if conversion is possible)
+        try
+        {
+            typedIsbn.convert(otherType);
+        } catch (ConvertException ce)
+        {
+            return duplicateIDs;
+        }
+        numericIsbn = typedIsbn.toString(hyphens);
+        try(Connection connection = m_whelk.getStorage().getConnection();
+            PreparedStatement statement = getOnISBN_ps(connection, numericIsbn);
+            ResultSet resultSet = statement.executeQuery())
+        {
+            duplicateIDs.addAll( collectIDs(resultSet) );
+        }
+
+        return duplicateIDs;
     }
 
     private List<String> getDuplicatesOnISSN(String issn)
