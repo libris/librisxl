@@ -1,6 +1,7 @@
 package whelk.apixserver;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.Document;
@@ -170,6 +171,9 @@ public class ApixCatServlet extends HttpServlet
             Utils.send201Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
         } else // save/overwrite existing
         {
+            if (StringUtils.isNumeric(id) && id.length() < 15) // 'id' is a Voyager ID, reassign it to ensure it is an XL system ID.
+                id = Utils.s_whelk.getStorage().getSystemIdByIri("http://libris.kb.se/" + collection + "/" + id);
+
             incomingDocument.deepReplaceId( Document.getBASE_URI().resolve(id).toString() );
             Utils.s_whelk.storeAtomicUpdate(id, false, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(),
                     (Document doc) ->
