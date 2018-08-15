@@ -6,10 +6,7 @@ import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
 import whelk.Document;
 import whelk.IdGenerator;
-import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.component.ElasticSearch;
-import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.MarcFrameConverter;
 import whelk.exception.TooHighEncodingLevelException;
@@ -19,7 +16,6 @@ import whelk.util.PropertyLoader;
 import whelk.triples.*;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.sql.*;
 import java.util.*;
 
@@ -387,48 +383,37 @@ class XL
     {
         Set<String> duplicateIDs = new HashSet<>();
 
+        // Perform an temporary conversion to use for duplicate checking. This conversion will
+        // then be discarded. The real conversion cannot take place until any duplicates are
+        // found (because the correct ID needs to be known when converting). Chicken and egg problem.
+        Document rdfDoc = convertToRDF(marcRecord, IdGenerator.generate());
+
         for (Parameters.DUPLICATION_TYPE dupType : m_parameters.getDuplicationTypes())
         {
             switch (dupType)
             {
                 case DUPTYPE_ISBNA: // International Standard Book Number (only from subfield A)
-                    for (Field field : marcRecord.getFields("020"))
+                    for (String isbn : rdfDoc.getIsbnValues())
                     {
-                        String isbn = DigId.grepIsbna( (Datafield) field );
-                        if (isbn != null)
-                        {
-                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toUpperCase() ));
-                        }
+                        duplicateIDs.addAll(getDuplicatesOnIsbn( isbn.toUpperCase() ));
                     }
                     break;
                 case DUPTYPE_ISBNZ: // International Standard Book Number (only from subfield Z)
-                    for (Field field : marcRecord.getFields("020"))
+                    for (String isbn : rdfDoc.getIsbnHiddenValues())
                     {
-                        String isbn = DigId.grepIsbnz( (Datafield) field );
-                        if (isbn != null)
-                        {
-                            duplicateIDs.addAll(getDuplicatesOnISBN( isbn.toUpperCase() ));
-                        }
+                        duplicateIDs.addAll(getDuplicatesOnIsbnHidden( isbn.toUpperCase() ));
                     }
                     break;
                 case DUPTYPE_ISSNA: // International Standard Serial Number (only from marc 022_A)
-                    for (Field field : marcRecord.getFields("022"))
+                    for (String issn : rdfDoc.getIssnValues())
                     {
-                        String issn = DigId.grepIssn( (Datafield) field, 'a' );
-                        if (issn != null)
-                        {
-                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.toUpperCase() ));
-                        }
+                            duplicateIDs.addAll(getDuplicatesOnIssn( issn.toUpperCase() ));
                     }
                     break;
                 case DUPTYPE_ISSNZ: // International Standard Serial Number (only from marc 022_Z)
-                    for (Field field : marcRecord.getFields("022"))
+                    for (String issn : rdfDoc.getIssnHiddenValues())
                     {
-                        String issn = DigId.grepIssn( (Datafield) field, 'z' );
-                        if (issn != null)
-                        {
-                            duplicateIDs.addAll(getDuplicatesOnISSN( issn.toUpperCase() ));
-                        }
+                        duplicateIDs.addAll(getDuplicatesOnIssnHidden( issn.toUpperCase() ));
                     }
                     break;
                 case DUPTYPE_035A:
@@ -490,7 +475,7 @@ class XL
         return results;
     }
 
-    private List<String> getDuplicatesOnISBN(String isbn)
+    private List<String> getDuplicatesOnIsbn(String isbn)
             throws SQLException
     {
         if (isbn == null)
@@ -498,21 +483,50 @@ class XL
 
         String numericIsbn = isbn.replaceAll("-", "");
         try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnISBN_ps(connection, numericIsbn);
+            PreparedStatement statement = getOnIsbn_ps(connection, numericIsbn);
             ResultSet resultSet = statement.executeQuery())
         {
             return collectIDs(resultSet);
         }
     }
 
-    private List<String> getDuplicatesOnISSN(String issn)
+    private List<String> getDuplicatesOnIssn(String issn)
             throws SQLException
     {
         if (issn == null)
             return new ArrayList<>();
 
         try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnISSN_ps(connection, issn);
+            PreparedStatement statement = getOnIssn_ps(connection, issn);
+            ResultSet resultSet = statement.executeQuery())
+        {
+            return collectIDs(resultSet);
+        }
+    }
+
+    private List<String> getDuplicatesOnIsbnHidden(String isbn)
+            throws SQLException
+    {
+        if (isbn == null)
+            return new ArrayList<>();
+
+        String numericIsbn = isbn.replaceAll("-", "");
+        try(Connection connection = m_whelk.getStorage().getConnection();
+            PreparedStatement statement = getOnIsbnHidden_ps(connection, numericIsbn);
+            ResultSet resultSet = statement.executeQuery())
+        {
+            return collectIDs(resultSet);
+        }
+    }
+
+    private List<String> getDuplicatesOnIssnHidden(String issn)
+            throws SQLException
+    {
+        if (issn == null)
+            return new ArrayList<>();
+
+        try(Connection connection = m_whelk.getStorage().getConnection();
+            PreparedStatement statement = getOnIssnHidden_ps(connection, issn);
             ResultSet resultSet = statement.executeQuery())
         {
             return collectIDs(resultSet);
@@ -561,13 +575,9 @@ class XL
         return statement;
     }
 
-    private PreparedStatement getOnISBN_ps(Connection connection, String isbn)
+    private PreparedStatement getOnIsbn_ps(Connection connection, String isbn)
             throws SQLException
     {
-        // required to be completely numeric (base 11, 0-9+x).
-        if (!isbn.matches("[\\dxX]+"))
-            isbn = "0";
-
         String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
@@ -576,17 +586,35 @@ class XL
         return  statement;
     }
 
-    private PreparedStatement getOnISSN_ps(Connection connection, String issn)
+    private PreparedStatement getOnIssn_ps(Connection connection, String issn)
             throws SQLException
     {
-        // (base 11, 0-9+x and SINGLE hyphens only).
-        if (!issn.matches("^(-[xX\\d]|[xX\\d])+$"))
-            issn = "0";
-
         String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
         statement.setObject(1, "[{\"@type\": \"ISSN\", \"value\": \"" + issn + "\"}]", java.sql.Types.OTHER);
+
+        return  statement;
+    }
+
+    private PreparedStatement getOnIsbnHidden_ps(Connection connection, String isbn)
+            throws SQLException
+    {
+        String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> ?";
+        PreparedStatement statement =  connection.prepareStatement(query);
+
+        statement.setObject(1, "[{\"@type\": \"ISBN\", \"marc:hiddenValue\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
+
+        return  statement;
+    }
+
+    private PreparedStatement getOnIssnHidden_ps(Connection connection, String issn)
+            throws SQLException
+    {
+        String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> ?";
+        PreparedStatement statement =  connection.prepareStatement(query);
+
+        statement.setObject(1, "[{\"@type\": \"ISSN\", \"marc:hiddenValue\": \"" + issn + "\"}]", java.sql.Types.OTHER);
 
         return  statement;
     }
