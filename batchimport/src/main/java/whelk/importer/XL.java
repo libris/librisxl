@@ -425,6 +425,10 @@ class XL
                     duplicateIDs.addAll(getDuplicatesOnLibrisID(marcRecord, "bib"));
                     break;
             }
+
+            // If duplicates have already been found, do not try any more duplicate types.
+            if (!duplicateIDs.isEmpty())
+                break;
         }
 
         return duplicateIDs;
