@@ -613,7 +613,7 @@ class XL
 
         statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
 
-        return  statement;
+        return statement;
     }
 
     private PreparedStatement getOnIssn_ps(Connection connection, String issn)
@@ -624,7 +624,7 @@ class XL
 
         statement.setObject(1, "[{\"@type\": \"ISSN\", \"value\": \"" + issn + "\"}]", java.sql.Types.OTHER);
 
-        return  statement;
+        return statement;
     }
 
     private PreparedStatement getOnIsbnHidden_ps(Connection connection, String isbn)
@@ -633,9 +633,9 @@ class XL
         String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"ISBN\", \"marc:hiddenValue\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"ISBN\", \"marc:hiddenValue\": [\"" + isbn + "\"]}]", java.sql.Types.OTHER);
 
-        return  statement;
+        return statement;
     }
 
     private PreparedStatement getOnIssnHidden_ps(Connection connection, String issn)
@@ -644,9 +644,9 @@ class XL
         String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"ISSN\", \"marc:hiddenValue\": \"" + issn + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": [\"" + issn + "\"]}]", java.sql.Types.OTHER);
 
-        return  statement;
+        return statement;
     }
 
     private PreparedStatement getOnHeldByHoldingFor_ps(Connection connection, String heldBy, String holdingForId)

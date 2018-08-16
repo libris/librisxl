@@ -159,7 +159,7 @@ class Document {
     List<String> getIsbnValues() { return getTypedIDValues("ISBN", "value") }
     List<String> getIssnValues() { return getTypedIDValues("ISSN", "value") }
     List<String> getIsbnHiddenValues() { return getTypedIDValues("ISBN", "marc:hiddenValue") }
-    List<String> getIssnHiddenValues() { return getTypedIDValues("ISSN", "marc:hiddenValue") }
+    List<String> getIssnHiddenValues() { return getTypedIDValues("ISSN", "marc:canceledIssn") }
 
     private List<String> getTypedIDValues(String typeKey, String valueKey) {
         List<String> values = new ArrayList<>()
@@ -177,8 +177,13 @@ class Document {
                 continue
 
             Object value = map.get(valueKey)
-            if (value != null)
-                values.add( (String) value)
+            if (value != null) {
+                if (value instanceof List)
+                    for (Object object : value)
+                        values.add( (String) object)
+                else
+                    values.add( (String) value)
+            }
         }
         return values
     }
