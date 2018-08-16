@@ -232,7 +232,7 @@ public class ExecuteGui extends JFrame
 
     private class ActionResponse implements ActionListener
     {
-        private Component m_parent;
+        private JFrame m_parent;
         private JFileChooser m_fileChooser = new JFileChooser();
         private File m_currentFile = null;
         private Properties m_envProps = null;
@@ -246,7 +246,7 @@ public class ExecuteGui extends JFrame
         private Document m_lastDocument;
         private boolean m_executeLoud;
 
-        public ActionResponse(Component parent)
+        public ActionResponse(JFrame parent)
         {
             m_parent = parent;
         }
@@ -304,6 +304,7 @@ public class ExecuteGui extends JFrame
                                     Document.setBASE_URI( new URI( (String) m_envProps.get("baseUri")) );
                                     m_whelk.loadCoreData();
                                     m_repeatableTerms = m_whelk.getJsonld().getRepeatableTerms();
+                                    m_parent.setTitle("Libris XL data transform connected with: " + m_envProps.getProperty("sqlUrl"));
                                 } catch (IOException | URISyntaxException ioe)
                                 {
                                     JOptionPane.showMessageDialog(m_parent, ioe.toString());
