@@ -156,6 +156,38 @@ class Document {
      */
     String getId() { return getCompleteId() }
 
+    List<String> getIsbnValues() { return getTypedIDValues("ISBN", "value") }
+    List<String> getIssnValues() { return getTypedIDValues("ISSN", "value") }
+    List<String> getIsbnHiddenValues() { return getTypedIDValues("ISBN", "marc:hiddenValue") }
+    List<String> getIssnHiddenValues() { return getTypedIDValues("ISSN", "marc:canceledIssn") }
+
+    private List<String> getTypedIDValues(String typeKey, String valueKey) {
+        List<String> values = new ArrayList<>()
+        List typedIDs = get(thingTypedIDsPath)
+        for (Object element : typedIDs) {
+            if (!(element instanceof Map))
+                continue
+            Map map = (Map) element
+
+            Object type = map.get("@type")
+            if (type == null)
+                continue
+
+            if (!type.equals(typeKey))
+                continue
+
+            Object value = map.get(valueKey)
+            if (value != null) {
+                if (value instanceof List)
+                    for (Object object : value)
+                        values.add( (String) object)
+                else
+                    values.add( (String) value)
+            }
+        }
+        return values
+    }
+
     void setCreated(Date created) {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(created.toInstant(), ZoneId.systemDefault())
         String formatedCreated = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
