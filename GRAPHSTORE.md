@@ -1,6 +1,54 @@
 # Using a Graph Store
 
+NOTE: this is a work-in-progress. We have not yet set up a final, continuously fed Graph Store upon XL.
+
 In principle, any Graph Store supporting the SPARQL 1.1 Graph Store HTTP Protocol will work.
+
+## Using BlazeGraph
+
+Download the latest blazegraph jar (from: https://sourceforge.net/projects/bigdata/files/bigdata/; see: https://wiki.blazegraph.com/wiki/ for details).
+
+1. Put required configuration and tools to the loading machine and/or server:
+
+    ```
+    scp -r ./librisxl-tools/blazegraph $TARGET:
+    ```
+
+2. Go to the target machine (`ssh $TARGET`).
+
+3. Setup variables for your specific environment:
+
+    ```
+    SOURCE_HOST=pgsql-SOMEDOMAIN
+    DATADIR=/tmp/lddb-loadfiles
+    XL_JSONLD_CONTEXT=https://id.kb.se/context.jsonld
+    ```
+
+4. Create load files:
+
+    ```
+    for coll in definitions auth bib ; do # hold ...
+      echo "Dumping $coll from LDDB"
+      psql -h $SOURCE_HOST -Uwhelk -tc "SELECT data FROM lddb WHERE collection = '$coll' AND deleted = false;" |
+      python ./lddb-to-import.py $DATADIR/$coll
+    done
+
+    curl $XL_JSONLD_CONTEXT -o $DATADIR/context.jsonld
+    ```
+
+5. Load into BlazeGraph:
+
+    ```
+    time java -Xmx32g -cp blazegraph.jar com.bigdata.rdf.store.DataLoader -verbose -durableQueues quads.properties $DATADIR/
+    ```
+
+### Running The SPARQL Service
+
+Start:
+
+    java -server -Xmx4g -Dbigdata.propertyFile=quads.properties -Djetty.overriWebXml=./readonly.xml -jar blazegraph.jar
+
+----
 
 ## Using Sesame
 
