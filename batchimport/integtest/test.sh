@@ -57,6 +57,45 @@ if [ "$mainTitle" != "$expect" ]; then
     fail "Data was not replaced!"
 fi
 
-popd
 cleanup
+######## ISBN 10/13 matching. Batch 2 and 3 contain the same data but with varying forms of the same ISBN.
+java -jar build/libs/batchimport.jar --path=./integtest/batch2.xml --format=xml --live
+java -jar build/libs/batchimport.jar --path=./integtest/batch3.xml --format=xml --dupType=ISBNA --live
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'bib'")
+if (( $rowCount != 1 )) ; then
+    fail "Expected single bib record (after IBSN10/13 test)"
+fi
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'hold'")
+if (( $rowCount != 1 )) ; then
+    fail "Expected single hold record (after IBSN10/13 test)"
+fi
+
+cleanup
+######## ISBN $z (hidden value) matching. Batch 4 contain the same data but with its ISBN in 020$z
+java -jar build/libs/batchimport.jar --path=./integtest/batch4.xml --format=xml --live
+java -jar build/libs/batchimport.jar --path=./integtest/batch4.xml --format=xml --dupType=ISBNZ --live
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'bib'")
+if (( $rowCount != 1 )) ; then
+    fail "Expected single bib record (after IBSN hidden value test)"
+fi
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'hold'")
+if (( $rowCount != 1 )) ; then
+    fail "Expected single hold record (after IBSN hidden value test)"
+fi
+
+cleanup
+######## ISSN $z (hidden value) matching. Batch 4 contain the same data but with its ISSN in 022$z
+java -jar build/libs/batchimport.jar --path=./integtest/batch5.xml --format=xml --live
+java -jar build/libs/batchimport.jar --path=./integtest/batch5.xml --format=xml --dupType=ISSNZ --live
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'bib'")
+if (( $rowCount != 1 )) ; then
+    fail "Expected single bib record (after ISSN hidden value test)"
+fi
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'hold'")
+if (( $rowCount != 1 )) ; then
+    fail "Expected single hold record (after ISSN hidden value test)"
+fi
+
+
+popd
 echo $OUTCOME
