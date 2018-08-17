@@ -204,15 +204,27 @@ public class ResponseCommon
             emitAttachedRecords(document, writer, requestedFormat);
         }
 
+
+        writer.writeStartElement("about");
+
         String itemOf = resultSet.getString("itemOf");
-        if (dataset.equals("hold") && itemOf != null)
+        if ( dataset.equals("hold") && itemOf != null)
         {
-            writer.writeStartElement("about");
             writer.writeStartElement("itemOf");
             writer.writeAttribute("id", itemOf);
             writer.writeEndElement(); // itemOf
-            writer.writeEndElement(); // about
         }
+
+        String changedBy = resultSet.getString("changedBy");
+        if (changedBy == null)
+            changedBy = "unknown";
+
+        writer.writeStartElement("agent");
+        writer.writeAttribute("name", changedBy);
+        writer.writeEndElement(); // agent
+
+        writer.writeEndElement(); // about
+
 
         if (!onlyIdentifiers)
             writer.writeEndElement(); // record
