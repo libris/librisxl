@@ -3,16 +3,10 @@ import sys
 import os
 import re
 
-CONTEXT_PATH = '../context.jsonld'
-
-args = sys.argv[1:]
-
-basepath = args.pop(0) if args else 'data'
-chunksize = int(args.pop(0)) if args else 100 * 1000
 
 outfile = None
 
-def next_outfile(i):
+def next_outfile(basepath, i):
     global outfile
     fpath = "{}-{}.jsonld".format(basepath, i)
     dirname = os.path.dirname(fpath)
@@ -20,7 +14,7 @@ def next_outfile(i):
         os.makedirs(dirname)
     outfile = open(fpath, 'w')
 
-def process_input(line_stream):
+def process_input(line_stream, basepath, chunksize, context_path):
     try:
         for i, line in enumerate(line_stream):
             line = line.strip()
@@ -30,19 +24,19 @@ def process_input(line_stream):
             if i % chunksize == 0:
                 if outfile:
                     print(b']}', file=outfile)
-                next_outfile(i)
+                next_outfile(basepath, i)
                 print(b'{"@graph": [', file=outfile)
             else:
                 print(', ', end="", file=outfile)
 
-            process_record_line(i, line, outfile)
+            process_record_line(i, line, outfile, context_path)
 
         print(b']}', file=outfile)
     finally:
         if outfile:
             outfile.close()
 
-def process_record_line(i, line, outfile):
+def process_record_line(i, line, outfile, context_path):
     # find record id
     for rec_id in re.findall(r'{"@graph": \[{"@id": "([^"]+)', line):
         break
@@ -56,7 +50,7 @@ def process_record_line(i, line, outfile):
     line = b'{{"@id": "{0}", {1}'.format(rec_id, line[1:])
 
     # add context reference
-    line = b'{{"@context": "{0}", {1}'.format(CONTEXT_PATH, line[1:])
+    line = b'{{"@context": "{0}", {1}'.format(context_path, line[1:])
 
     # * Fix broken @id values:
     # Remove Unicode control characters (mostly harmful in terms and ids)
@@ -71,5 +65,12 @@ def process_record_line(i, line, outfile):
 
     print(line, file=outfile)
 
+
 if __name__ == '__main__':
-    process_input(sys.stdin)
+    args = sys.argv[1:]
+
+    basepath = args.pop(0) if args else 'data'
+    chunksize = int(args.pop(0)) if args else 100 * 1000
+    context_path = args.pop(0) if args else 'context.jsonld'
+
+    process_input(sys.stdin, basepath, chunksize, context_path)
