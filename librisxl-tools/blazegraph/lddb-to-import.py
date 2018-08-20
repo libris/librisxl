@@ -3,7 +3,7 @@ import sys
 import os
 import re
 
-CONTEXT_PATH = 'context.jsonld'
+CONTEXT_PATH = '../context.jsonld'
 
 args = sys.argv[1:]
 
@@ -61,6 +61,7 @@ def process_record_line(i, line, outfile):
     # * Fix broken @id values:
     # Remove Unicode control characters (mostly harmful in terms and ids)
     line = re.sub(r'[\x00-\x1F\x7F]', b'', line)
+    line = re.sub(r'\\{2}', br'\\', line)
     # TODO: @id values, replace(' ', '+') and replace('\\', r'\\')
 
     # Add "marker" for blank nodes to cope with BlazeGraph limitation
