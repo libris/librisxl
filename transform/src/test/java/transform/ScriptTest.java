@@ -27,6 +27,22 @@ public class ScriptTest
     }
 
     @Test
+    public void testEmbeddedSet() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "set value0 -> key0,key1";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":{\"key1\" : \"value0\"}" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
     public void testComplexSet() throws Exception
     {
         String data = "{}";
@@ -686,6 +702,22 @@ public class ScriptTest
         String transformed = "" +
                 "{" +
                 "    \"key0\":-1 " +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testSetOnListIndex() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "set value0 -> key0,0 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":[\"value0\"] " +
                 "}";
 
         testScript(data, transformed, script);

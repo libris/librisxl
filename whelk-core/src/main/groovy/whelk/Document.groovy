@@ -434,7 +434,7 @@ class Document {
         // Start at root data node
         Object node = root
 
-        for (int i = 0; i < path.size(); ++i) {
+        for (int i = 0; i < path.size()-1; ++i) {
             Object step = path.get(i)
 
             Type nextReplacementType
@@ -497,7 +497,12 @@ class Document {
             node = node.get(step)
         }
 
-        node.put(path.get(path.size() - 1), value)
+        if ( matchingContainer(container, Map) )
+            node.put(path.get(path.size() - 1), value)
+        else if ( matchingContainer(container, List) )
+            node.add(path.get(path.size() - 1), value)
+        else
+            throw new RuntimeException("Was asked to insert at " + path.get(path.size() - 1) + " in " + node + " and could not match up the container types.")
         return true
     }
 
