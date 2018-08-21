@@ -267,7 +267,11 @@ public class TransformScript
 
         String symbol = symbols.pollFirst();
 
-        if (symbol.equals("("))
+        if (symbol.startsWith("\\") && symbol.length() == 2) // Escaped char
+        {
+            return new LiteralValueOperation(symbol.substring(1));
+        }
+        else if (symbol.equals("("))
         {
             ValueOperation subOp = parseValueStatement(symbols);
             String closingPar = symbols.pollFirst();
