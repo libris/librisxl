@@ -422,14 +422,8 @@ public class TransformScript
             if (value == null)
                 return null;
 
-            Type containerType;
-            if (toPathWithSymbols.get(toPathWithSymbols.size()-1) instanceof String)
-                containerType = HashMap.class;
-            else
-                containerType = ArrayList.class;
-
             Document._removeLeafObject(fromPathWithSymbols, json);
-            Document._set(toPathWithSymbols, value, containerType, json);
+            Document._set(toPathWithSymbols, value, json);
             pruneBranch(fromPathWithSymbols, json);
             return null;
         }
@@ -451,13 +445,7 @@ public class TransformScript
             List<Object> toPath = Arrays.asList( withIntAsInteger(m_toPath.split(",")) );
             List<Object> toPathWithSymbols = insertContextSymbolsIntoPath(toPath, context);
 
-            Type containerType;
-            if (toPathWithSymbols.get(toPathWithSymbols.size()-1) instanceof String)
-                containerType = HashMap.class;
-            else
-                containerType = ArrayList.class;
-
-            Document._set(toPathWithSymbols, m_value.execute(json, context), containerType, json);
+            Document._set(toPathWithSymbols, m_value.execute(json, context), json);
             return null;
         }
     }

@@ -43,6 +43,22 @@ public class ScriptTest
     }
 
     @Test
+    public void testHightListIndexSet() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "set value0 -> key0,1";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":[null,\"value0\"]" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
     public void testComplexSet() throws Exception
     {
         String data = "{}";
