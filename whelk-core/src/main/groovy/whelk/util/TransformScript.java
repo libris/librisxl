@@ -281,6 +281,9 @@ public class TransformScript
         } else if (symbol.equals("*"))
         {
             return new DerefValueOperation(symbols.pollFirst());
+        } else if (symbol.equals("-"))
+        {
+            return new LiteralValueOperation("-" + symbols.pollFirst());
         } else if (symbol.equals("!"))
         {
             return new NotValueOperation(parseValueStatement(symbols));

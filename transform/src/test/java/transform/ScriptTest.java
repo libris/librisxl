@@ -656,6 +656,41 @@ public class ScriptTest
         testScript(data, transformed, script);
     }
 
+    @Test
+    public void testCharEscape() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if \"\\(\" == \"\\(\"" +
+                "  set value0 -> key0 " +
+                "if \"\\(\" == \"\\)\"" +
+                "  set value1 -> key1 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\" " +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testNegativeLiteralValues() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "set -1 -> key0 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":-1 " +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
     private void testScript(String beforeTransformText, String expectedResultText, String transformScript) throws Exception
     {
         Map oldData = mapper.readValue(beforeTransformText, Map.class);
