@@ -4,17 +4,8 @@ import os
 import re
 
 
-outfile = None
-
-def next_outfile(basepath, i):
-    global outfile
-    fpath = "{}-{}.jsonld".format(basepath, i)
-    dirname = os.path.dirname(fpath)
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-    outfile = open(fpath, 'w')
-
 def process_input(line_stream, basepath, chunksize, context_path):
+    outfile = None
     try:
         for i, line in enumerate(line_stream):
             line = line.strip()
@@ -24,7 +15,7 @@ def process_input(line_stream, basepath, chunksize, context_path):
             if i % chunksize == 0:
                 if outfile:
                     print(b']}', file=outfile)
-                next_outfile(basepath, i)
+                outfile = _next_outfile(basepath, i)
                 print(b'{"@graph": [', file=outfile)
             else:
                 print(', ', end="", file=outfile)
@@ -52,18 +43,29 @@ def process_record_line(i, line, outfile, context_path):
     # add context reference
     line = b'{{"@context": "{0}", {1}'.format(context_path, line[1:])
 
-    # * Fix broken @id values:
     # Remove Unicode control characters (mostly harmful in terms and ids)
     line = re.sub(r'[\x00-\x1F\x7F]', b'', line)
+
+    # Fix double escapes from pgsql json dump
     line = re.sub(r'\\{2}', br'\\', line)
+
+    # * Fix broken @id values:
     # TODO: @id values, replace(' ', '+') and replace('\\', r'\\')
 
     # Add "marker" for blank nodes to cope with BlazeGraph limitation
-    line = re.sub(r'{}', b'{"@id": "owl:Nothing"}', line)
+    line = re.sub(r'([\s[]){}([]},]|$)', br'\1{"@id": "owl:Nothing"}\2',
+            line)
     # Or remove empty blank nodes entirely?
     #line = re.sub(r',{}|{},?', '', line)
 
     print(line, file=outfile)
+
+def _next_outfile(basepath, i):
+    fpath = "{}-{}.jsonld".format(basepath, i)
+    dirname = os.path.dirname(fpath)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+    return open(fpath, 'w')
 
 
 if __name__ == '__main__':
