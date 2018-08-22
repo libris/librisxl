@@ -3,66 +3,76 @@ import json
 import sys
 import re
 
-def parse_select(sel_str):
-    steps = []
-    match_rule = None
-    for word in sel_str.strip().split(' '):
-        if match_rule:
-            if match_rule == '=':
-                steps.append(lambda data, word=word: data == word)
-            elif match_rule == '=~':
-                matcher = re.compile(word)
-                steps.append(lambda data: isinstance(data, unicode) and matcher.match(data))
-            match_rule = None
-            continue
 
+class Selector(object):
+
+    def __init__(self, sel_str):
+        steps = []
         match_rule = None
-        if word == '{':
-            parent_steps, test_steps = steps, []
-            steps = test_steps
-        elif word == '}':
-            parent_steps.append(lambda data, steps=test_steps: match_selector(steps, data))
-            steps = parent_steps
-            parent_steps, test_steps = None, None
-        elif word in {'=', '=~'}:
-            match_rule = word
-        elif word.isdigit():
-            steps.append(int(word))
-        else:
-            steps.append(word)
-
-    return steps
-
-def match_selector(selector, data):
-    current = data
-    for i, step in enumerate(selector):
-        if callable(step):
-            if step(current):
+        for word in sel_str.strip().split(' '):
+            if match_rule:
+                if match_rule == '=':
+                    steps.append(lambda data, word=word: data == word)
+                elif match_rule == '=~':
+                    matcher = re.compile(word)
+                    steps.append(lambda data:
+                            isinstance(data, unicode) and matcher.match(data))
+                match_rule = None
                 continue
+
+            match_rule = None
+            if word == '{':
+                parent_steps, test_steps = steps, []
+                steps = test_steps
+            elif word == '}':
+                parent_steps.append(lambda data, steps=test_steps:
+                        self.match_selector(steps, data))
+                steps = parent_steps
+                parent_steps, test_steps = None, None
+            elif word in {'=', '=~'}:
+                match_rule = word
+            elif word.isdigit():
+                steps.append(int(word))
             else:
+                steps.append(word)
+
+        self.steps = steps
+
+    def __call__(self, data):
+        return self.match_selector(self.steps, data)
+
+    @classmethod
+    def match_selector(cls, steps, data):
+        current = data
+        for i, step in enumerate(steps):
+            if callable(step):
+                if step(current):
+                    continue
+                else:
+                    return False
+
+            if isinstance(step, int):
+                current = current[step]
+            else:
+                if isinstance(current, list):
+                    steps_trail = steps[i:]
+                    for item in current:
+                        if cls.match_selector(steps_trail, item):
+                            return item
+
+                    return False
+                else:
+                    current = current.get(step)
+            if current is None:
                 return False
 
-        if isinstance(step, int):
-            current = current[step]
-        else:
-            if isinstance(current, list):
-                selector_trail = selector[i:]
-                for item in current:
-                    if match_selector(selector_trail, item):
-                        return item
+        return current
 
-                return False
-            else:
-                current = current.get(step)
-        if current is None:
-            return False
-
-    return current
 
 if __name__ == '__main__':
     args = sys.argv[1:]
 
-    selector = parse_select(args.pop(0)) if args else None
+    selector = Selector(args.pop(0)) if args else None
     match_count = 0
 
     for i, l in enumerate(sys.stdin):
@@ -78,7 +88,7 @@ if __name__ == '__main__':
             except KeyError:
                 data_id = None
             if selector:
-                result = match_selector(selector, data)
+                result = selector(data)
                 if result:
                     match_count += 1
                     print("Line", i, "id", data_id, "matched on", json.dumps(result))
