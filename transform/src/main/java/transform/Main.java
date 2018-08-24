@@ -270,13 +270,16 @@ public class Main
         ArrayList<Document> batch = new ArrayList<>(BATCH_SIZE);
         for (Document doc : s_whelk.getStorage().loadAll(collection))
         {
-            batch.add(doc);
-            double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000));
-            counter++;
-            if (counter % BATCH_SIZE == 0) {
-                System.err.println("Transforming " + docsPerSec + " documents per second (running average since process start). Total count: " + counter + ".");
-                threadPool.executeOnThread(batch, Main::transformBatch);
-                batch = new ArrayList<>(BATCH_SIZE);
+            if (!doc.getDeleted())
+            {
+                batch.add(doc);
+                double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000));
+                counter++;
+                if (counter % BATCH_SIZE == 0) {
+                    System.err.println("Transforming " + docsPerSec + " documents per second (running average since process start). Total count: " + counter + ".");
+                    threadPool.executeOnThread(batch, Main::transformBatch);
+                    batch = new ArrayList<>(BATCH_SIZE);
+                }
             }
         }
         threadPool.executeOnThread(batch, Main::transformBatch);
