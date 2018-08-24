@@ -47,8 +47,8 @@ public class Main
                             "java -jar transform.jar generate [fromSecret.properties] [toSecret.properties] [collection] [from|to]\n" +
                             "  Generate a diff script between two live environments. The first and second parameters \n" +
                             "  must be paths to secret.properties file for the [from] and [to] environments.\n" +
-                            "  The third parameter should be either \"auth\", \"bib\", \"hold\" or \"definitions\"" +
-                            "  the fourth parameter must be either \"from\" or \"to\". \"from\" means use all records in" +
+                            "  The third parameter should be either \"auth\", \"bib\", \"hold\" or \"definitions\"\n" +
+                            "  the fourth parameter must be either \"from\" or \"to\". \"from\" means use all records in\n" +
                             "  the [from] env and find corresponding records in [to]. \"to\" means vice versa.\n" +
                             "  normally for a new release you want this: \n" +
                             "  java -jar transform.jar generate prodSecret.properties devSecret.properties [collection] to\n\n" +
