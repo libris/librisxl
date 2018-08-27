@@ -23,7 +23,6 @@ cleanup
 
 pushd ../
 
-
 ######## NORMAL IMPORT
 # Check created bib and attached hold
 java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live
@@ -94,6 +93,21 @@ fi
 rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'hold'")
 if (( $rowCount != 1 )) ; then
     fail "Expected single hold record (after ISSN hidden value test)"
+fi
+
+cleanup
+######## Introduce multiple duplicates (without checking) and make sure incoming records afterwards still place their
+# holdings on at least one of the detected duplicates
+java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --live
+java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --live
+java -jar build/libs/batchimport.jar --path=./integtest/batch1.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'bib'")
+if (( $rowCount != 2 )) ; then
+    fail "Expected exactly 2 bib records"
+fi
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'hold'")
+if (( $rowCount != 3 )) ; then
+    fail "Expected exactly 3 hold records"
 fi
 
 
