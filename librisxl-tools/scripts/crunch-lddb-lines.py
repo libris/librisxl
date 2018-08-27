@@ -1,3 +1,16 @@
+"""
+This began as just an example script for running against a stream of JSON lines
+(specifically a PGSQL data dump with double escapes.) Then the Selector utility grew out ouf it...
+
+A*void developing this further*. Mostly, you will get by by using something
+like JQ (https://stedolan.github.io/jq/). Or by basing your own analysis on a
+pattern like the main loop of this script.
+
+Still, for reference, invoke this like:
+
+    $ SOME_PSQL_JSON_STREAM | python crunch-lddb-lines.py '@graph { inScheme @id =~ .*/sao$ } @type = Topic'
+
+"""
 from __future__ import print_function
 import json
 import sys
