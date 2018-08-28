@@ -42,13 +42,15 @@ class ElasticReindexer {
             collections.each { collection ->
                 List<Document> documents = []
                 for (document in whelk.storage.loadAll(collection)) {
-                    documents.add(document)
-                    double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
-                    counter++
-                    if (counter % BATCH_SIZE == 0) {
-                        println("Indexing $docsPerSec documents per second (running average since process start). Total count: $counter.")
-                        threadPool.executeOnThread(new Batch(documents, collection), new BatchHandler())
-                        documents = []
+                    if ( ! document.getDeleted() ) {
+                        documents.add(document)
+                        double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
+                        counter++
+                        if (counter % BATCH_SIZE == 0) {
+                            println("Indexing $docsPerSec documents per second (running average since process start). Total count: $counter.")
+                            threadPool.executeOnThread(new Batch(documents, collection), new BatchHandler())
+                            documents = []
+                        }
                     }
                 }
                 if (documents.size() > 0) {
