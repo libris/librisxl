@@ -27,6 +27,27 @@ public class ScriptTest
     }
 
     @Test
+    public void testBasicFor() throws Exception
+    {
+        String data = "{\"list\":[2,3]}";
+
+        String script = "mode normal " +
+                "let index = 999 " +
+                "for index : list " +
+                "    set * list,index -> key0 " +
+                "set index -> key1 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"list\":[2,3], " +
+                "    \"key0\":2, " +
+                "    \"key1\":999 " +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
     public void testEmbeddedSet() throws Exception
     {
         String data = "{}";

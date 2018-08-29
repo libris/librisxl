@@ -346,7 +346,7 @@ public class TransformScript
     private ForEachOperation parseForEachStatement(LinkedList<String> symbols) throws TransformSyntaxException
     {
         if (symbols.size() < 4)
-            throw new TransformSyntaxException("'FOREACH' must be followed by [identifier ':' pathToList STATEMENT]");
+            throw new TransformSyntaxException("'FOR' must be followed by [identifier ':' pathToList STATEMENT]");
 
         String iteratorSymbol = symbols.pollFirst();
         String colon = symbols.pollFirst();
@@ -354,9 +354,9 @@ public class TransformScript
         if ( iteratorSymbol == null || Character.isDigit(iteratorSymbol.charAt(0)))
             throw new TransformSyntaxException("Expected non-numerical iterator symbol.");
         if (path == null || !isValidPath(path))
-            throw new TransformSyntaxException("'FOREACH' must be followed by [identifier ':' pathToList STATEMENT]");
+            throw new TransformSyntaxException("'FOR' must be followed by [identifier ':' pathToList STATEMENT]");
         if (colon == null || !colon.equals(":"))
-            throw new TransformSyntaxException("'FOREACH' must be followed by [identifier ':' pathToList STATEMENT]");
+            throw new TransformSyntaxException("'FOR' must be followed by [identifier ':' pathToList STATEMENT]");
 
         Operation operations = parseStatement(symbols);
         return new ForEachOperation(path, iteratorSymbol, operations);
@@ -866,12 +866,16 @@ public class TransformScript
             if (listObject instanceof List)
             {
                 List list = (List) listObject;
+                Object eclipsedValue = context.get(m_iteratorSymbol);
                 for (int i = list.size()-1; i > -1; --i) // For each iterator-index (in reverse) do:
                 {
                     context.put(m_iteratorSymbol, i);
                     m_operations.execute(json, context);
                 }
-                context.remove(m_iteratorSymbol);
+                if (eclipsedValue == null)
+                    context.remove(m_iteratorSymbol);
+                else
+                    context.put(m_iteratorSymbol, eclipsedValue);
             }
             return null;
         }
