@@ -37,13 +37,13 @@ Download the latest blazegraph jar (from: https://sourceforge.net/projects/bigda
     # Also, decide whether you want context or just base-context below.
 
     psql -h $SOURCE_HOST -Uwhelk -tc "SELECT data FROM lddb WHERE collection = 'definitions' AND deleted = false;" |
-    python ./lddb-to-import.py $DATADIR/parts/definitions 1000 ../context.jsonld
+      python ./lddb-to-import.py $DATADIR/parts/definitions 1000 ../context.jsonld
     # TODO: Fix display's multiple use of @graph (change @id of lensGroups to e.g. "_graph").
 
     for coll in auth bib hold ; do
       echo "Dumping $coll from LDDB"
       psql -h $SOURCE_HOST -Uwhelk -tc "SELECT data FROM lddb WHERE collection = '$coll' AND deleted = false;" |
-      python ./lddb-to-import.py $DATADIR/parts/$coll 10000 ../base-context.jsonld
+        python ./lddb-to-import.py $DATADIR/parts/$coll 10000 ../base-context.jsonld
     done
     ```
 
