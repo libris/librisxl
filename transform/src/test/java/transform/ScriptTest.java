@@ -206,7 +206,7 @@ public class ScriptTest
         String transformed = "" +
                 "{" +
                 "   \"result0\":3," +
-                "   \"result1\":2" +
+                "   \"result1\":3" +
                 "}";
 
         testScript(data, transformed, script);
@@ -260,6 +260,28 @@ public class ScriptTest
         String transformed = "" +
                 "{" +
                 "    \"key0\":\"value0\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testBasicWhile() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "let i = 0 " +
+                "while (i < 4) " +
+                "{ " +
+                "    set i -> key0 " +
+                "    let i = i + 1" +
+                "} " +
+                "while false set value1 -> \"NOPE\" ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":3" +
                 "}";
 
         testScript(data, transformed, script);

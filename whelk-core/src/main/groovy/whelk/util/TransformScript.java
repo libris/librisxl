@@ -153,6 +153,9 @@ public class TransformScript
             case "IF":
             case "if":
                 return parseIfStatement(symbols);
+            case "WHILE":
+            case "while":
+                return parseWhileStatement(symbols);
             case "SET":
             case "set":
                 return parseSetStatement(symbols);
@@ -368,6 +371,15 @@ public class TransformScript
         return new IfOperation(value, operations);
     }
 
+    private WhileOperation parseWhileStatement(LinkedList<String> symbols) throws TransformSyntaxException
+    {
+        if (symbols.size() < 3)
+            throw new TransformSyntaxException("'WHILE' must be followed by a boolean value or expression.");
+        ValueOperation value = parseValueStatement(symbols);
+        Operation operations = parseStatement(symbols);
+        return new WhileOperation(value, operations);
+    }
+
     private boolean isValidPath(String symbol)
     {
         return !symbol.contains("{") && !symbol.contains("}");
@@ -388,11 +400,9 @@ public class TransformScript
 
         public Object execute(Map json, Map<String, Object> context)
         {
-            Map<String, Object> nextContext = new HashMap<>();
-            nextContext.putAll(context); // inherit scope
             for (Operation operation : m_operations)
             {
-                operation.execute(json, nextContext);
+                operation.execute(json, context);
             }
             return null;
         }
@@ -858,11 +868,10 @@ public class TransformScript
                 List list = (List) listObject;
                 for (int i = list.size()-1; i > -1; --i) // For each iterator-index (in reverse) do:
                 {
-                    Map<String, Object> nextContext = new HashMap<>();
-                    nextContext.putAll(context); // inherit scope
-                    nextContext.put(m_iteratorSymbol, i);
-                    m_operations.execute(json, nextContext);
+                    context.put(m_iteratorSymbol, i);
+                    m_operations.execute(json, context);
                 }
+                context.remove(m_iteratorSymbol);
             }
             return null;
         }
@@ -882,6 +891,25 @@ public class TransformScript
         public Object execute(Map json, Map<String, Object> context)
         {
             if ( (Boolean) m_booleanValue.execute(json, context) )
+                m_operations.execute(json, context);
+            return null;
+        }
+    }
+
+    private class WhileOperation implements Operation
+    {
+        private Operation m_operations;
+        private ValueOperation m_booleanValue;
+
+        public WhileOperation(ValueOperation booleanValue, Operation operations)
+        {
+            m_operations = operations;
+            m_booleanValue = booleanValue;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            while ( (Boolean) m_booleanValue.execute(json, context) )
                 m_operations.execute(json, context);
             return null;
         }
