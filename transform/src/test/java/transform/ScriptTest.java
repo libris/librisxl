@@ -732,6 +732,22 @@ public class ScriptTest
     }
 
     @Test
+    public void testStringTrim() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "set trim \" \n  abcde cde x     \" -> key0 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"abcde cde x\" " +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
     public void testCharEscape() throws Exception
     {
         String data = "{}";

@@ -325,6 +325,10 @@ public class TransformScript
             ValueOperation searchStringParameter = parseValueStatement(symbols);
             ValueOperation replacementStringParameters = parseValueStatement(symbols);
             return new StringReplaceValueOperation(completeStringParameter, searchStringParameter, replacementStringParameters);
+        } else if (symbol.equals("trim"))
+        {
+            ValueOperation completeStringParameter = parseValueStatement(symbols);
+            return new StringTrimValueOperation(completeStringParameter);
         } else
         {
             return new LiteralValueOperation(symbol);
@@ -657,6 +661,29 @@ public class TransformScript
                 throw new RuntimeException("Type mismatch. Cannot call endsWith on non-strings");
 
             return ((String) completeString).endsWith( (String) searchString );
+        }
+    }
+
+    private class StringTrimValueOperation extends ValueOperation
+    {
+        ValueOperation m_completeString;
+
+        public StringTrimValueOperation(ValueOperation completeString)
+        {
+            m_completeString = completeString;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            Object completeString = m_completeString.execute(json, context);
+
+            if (completeString == null) // propagate nulls
+                return null;
+
+            if (!(completeString instanceof String))
+                throw new RuntimeException("Type mismatch. Cannot call time on non-strings");
+
+            return ((String) completeString).trim();
         }
     }
 
