@@ -585,7 +585,7 @@ class XL
     private PreparedStatement getOnId_ps(Connection connection, String id)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb__identifiers WHERE iri = ?";
+        String query = "SELECT id FROM lddb__identifiers WHERE deleted = false AND iri = ?";
         PreparedStatement statement = connection.prepareStatement(query);
         statement.setString(1, id);
         return statement;
@@ -597,7 +597,7 @@ class XL
     private PreparedStatement getOnSystemNumber_ps(Connection connection, String systemNumber)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE data#>'{@graph,0,identifiedBy}' @> ?";
+        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,0,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
         statement.setObject(1, "[{\"@type\": \"SystemNumber\", \"value\": \"" + systemNumber + "\"}]", java.sql.Types.OTHER);
@@ -608,7 +608,7 @@ class XL
     private PreparedStatement getOnIsbn_ps(Connection connection, String isbn)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> ?";
+        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
         statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
@@ -619,7 +619,7 @@ class XL
     private PreparedStatement getOnIssn_ps(Connection connection, String issn)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> ?";
+        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
         statement.setObject(1, "[{\"@type\": \"ISSN\", \"value\": \"" + issn + "\"}]", java.sql.Types.OTHER);
@@ -630,7 +630,7 @@ class XL
     private PreparedStatement getOnIsbnHidden_ps(Connection connection, String isbn)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> ?";
+        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
         statement.setObject(1, "[{\"@type\": \"ISBN\", \"marc:hiddenValue\": [\"" + isbn + "\"]}]", java.sql.Types.OTHER);
@@ -641,7 +641,7 @@ class XL
     private PreparedStatement getOnIssnHidden_ps(Connection connection, String issn)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE data#>'{@graph,1,identifiedBy}' @> ?";
+        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
         statement.setObject(1, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": [\"" + issn + "\"]}]", java.sql.Types.OTHER);
@@ -667,7 +667,7 @@ class XL
         // This query REQUIRES that links be on the primary ID only. This works beacuse of link-finding step2, but if
         // that should ever change this query would break.
 
-        String query = "SELECT id from lddb WHERE data#>>'{@graph,1,heldBy,@id}' = ? AND data#>>'{@graph,1,itemOf,@id}' = ? AND deleted = false";
+        String query = "SELECT id from lddb WHERE deleted = false AND data#>>'{@graph,1,heldBy,@id}' = ? AND data#>>'{@graph,1,itemOf,@id}' = ? AND deleted = false";
 
         PreparedStatement statement = connection.prepareStatement(query);
 
