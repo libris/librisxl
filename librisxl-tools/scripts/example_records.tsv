@@ -136,8 +136,29 @@ auth/167868	Theseus (mytisk gestalt) (w 368)
 auth/393805	Dillman (w 368)
 auth/183024	Cato, Anders (w 370)
 auth/192570	Kant, Immanuel (w 370)
+auth/266570	Lokalt test för att säkerställa att exporten fungerar efter tagit bort mappning till dess ind2 värde (710 ind1=4)
 
-bib/22573494	Afrikas stjärna.
+bib/7241097	Lokalt test för dubletter av 852 fältet
+bib/9684293	Lokalt test för att säkerställa att exporten fungerar efter tagit bort mappning till dess ind1 värde (033 ind1=_)
+bib/21902942	För batch-test
+bib/19509779	För batch-test
+bib/22656664	För batch-test
+bib/22450106	För batch-test
+bib/22697056	För batch-test
+bib/21717469	Post som kraschade i första batchimporten
+bib/22410230	Post som kraschade i första batchimporten
+bib/22421647	Post som kraschade i första batchimporten
+bib/22410099	Post som kraschade i första batchimporten
+bib/22407574	Post som kraschade i första batchimporten
+bib/22573748	Post som kraschade i första batchimporten
+bib/22681744	Post som kraschade i första batchimporten
+bib/22597804	Post som kraschade i första batchimporten
+bib/22661197	Post som kraschade i första batchimporten
+bib/12040835	Post som kraschade i första batchimporten
+bib/22410230	Post som kraschade i första batchimporten
+bib/22330260	Post som kraschade i första batchimporten
+bib/22573494	Post som kraschade i första batchimporten
+bib/22409947	Post som kraschade i första batchimporten
 bib/8257380	Post med tecken-encoding-problem vid export.
 bib/22618427	HLD identifierare med specialtecken '/'
 bib/22196000	Known manual test case for 007:cr...
@@ -984,6 +1005,12 @@ bib/11594365	EB TESTPOST
 
 bib/344480	HIS TESTPOST
 bib/19301621	HIS TESTPOST
+bib/21988347	HIS TESTPOST
+bib/22016705	HIS TESTPOST
+bib/22527762	HIS TESTPOST
+bib/21895247	HIS TESTPOST
+bib/919028	HIS TESTPOST
+bib/22572483	HIS TESTPOST
 
 
 bib/68	AXIELL TESTPOST

@@ -1645,7 +1645,7 @@ class PostgreSQLComponent {
         PreparedStatement preparedStatement
         ResultSet rs
         try {
-            String query = "SELECT id FROM lddb WHERE data#>'{@graph," + graphIndex + ",identifiedBy}' @> ?"
+            String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph," + graphIndex + ",identifiedBy}' @> ?"
             connection = getConnection()
             preparedStatement = connection.prepareStatement(query)
 

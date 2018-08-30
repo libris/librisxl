@@ -56,7 +56,9 @@ class MarcFrameConverterSpec extends Specification {
                 }
                 if (dfn._spec instanceof List) {
                     dfn._spec.eachWithIndex { it, i ->
-                        if (it instanceof Map && it.source && it.result) {
+                        if (it instanceof Map &&
+                            (it.source || it.normalized) &&
+                            it.result) {
                             fieldSpecs << [source: it.source,
                                            normalized: it.normalized,
                                            result: it.result,
@@ -121,7 +123,7 @@ class MarcFrameConverterSpec extends Specification {
         then:
         assertJsonEquals(result, expected)
         where:
-        fieldSpec << fieldSpecs
+        fieldSpec << fieldSpecs.findAll { it.source }
     }
 
     @Requires({ env.mfspec == 'all' })
@@ -141,11 +143,12 @@ class MarcFrameConverterSpec extends Specification {
         when:
         def result = converter.conversion.revert(jsonld)
 
+        def source = fieldSpec.normalized ?: fieldSpec.source
+
         def expected = fieldSpec.tag == '000'
-                ? [leader: fieldSpec.source.leader]
+                ? [leader: source.leader]
                 : deepcopy(marcSkeletons[marcType])
 
-        def source = fieldSpec.normalized ?: fieldSpec.source
         if (source instanceof List) {
             expected.fields += source
             expected.fields.sort { fld -> fld.keySet()[0] }

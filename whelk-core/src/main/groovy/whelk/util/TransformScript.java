@@ -153,6 +153,9 @@ public class TransformScript
             case "IF":
             case "if":
                 return parseIfStatement(symbols);
+            case "WHILE":
+            case "while":
+                return parseWhileStatement(symbols);
             case "SET":
             case "set":
                 return parseSetStatement(symbols);
@@ -267,7 +270,11 @@ public class TransformScript
 
         String symbol = symbols.pollFirst();
 
-        if (symbol.equals("("))
+        if (symbol.startsWith("\\") && symbol.length() == 2) // Escaped char
+        {
+            return new LiteralValueOperation(symbol.substring(1));
+        }
+        else if (symbol.equals("("))
         {
             ValueOperation subOp = parseValueStatement(symbols);
             String closingPar = symbols.pollFirst();
@@ -277,6 +284,9 @@ public class TransformScript
         } else if (symbol.equals("*"))
         {
             return new DerefValueOperation(symbols.pollFirst());
+        } else if (symbol.equals("-"))
+        {
+            return new LiteralValueOperation("-" + symbols.pollFirst());
         } else if (symbol.equals("!"))
         {
             return new NotValueOperation(parseValueStatement(symbols));
@@ -315,6 +325,10 @@ public class TransformScript
             ValueOperation searchStringParameter = parseValueStatement(symbols);
             ValueOperation replacementStringParameters = parseValueStatement(symbols);
             return new StringReplaceValueOperation(completeStringParameter, searchStringParameter, replacementStringParameters);
+        } else if (symbol.equals("trim"))
+        {
+            ValueOperation completeStringParameter = parseValueStatement(symbols);
+            return new StringTrimValueOperation(completeStringParameter);
         } else
         {
             return new LiteralValueOperation(symbol);
@@ -336,7 +350,7 @@ public class TransformScript
     private ForEachOperation parseForEachStatement(LinkedList<String> symbols) throws TransformSyntaxException
     {
         if (symbols.size() < 4)
-            throw new TransformSyntaxException("'FOREACH' must be followed by [identifier ':' pathToList STATEMENT]");
+            throw new TransformSyntaxException("'FOR' must be followed by [identifier ':' pathToList STATEMENT]");
 
         String iteratorSymbol = symbols.pollFirst();
         String colon = symbols.pollFirst();
@@ -344,9 +358,9 @@ public class TransformScript
         if ( iteratorSymbol == null || Character.isDigit(iteratorSymbol.charAt(0)))
             throw new TransformSyntaxException("Expected non-numerical iterator symbol.");
         if (path == null || !isValidPath(path))
-            throw new TransformSyntaxException("'FOREACH' must be followed by [identifier ':' pathToList STATEMENT]");
+            throw new TransformSyntaxException("'FOR' must be followed by [identifier ':' pathToList STATEMENT]");
         if (colon == null || !colon.equals(":"))
-            throw new TransformSyntaxException("'FOREACH' must be followed by [identifier ':' pathToList STATEMENT]");
+            throw new TransformSyntaxException("'FOR' must be followed by [identifier ':' pathToList STATEMENT]");
 
         Operation operations = parseStatement(symbols);
         return new ForEachOperation(path, iteratorSymbol, operations);
@@ -359,6 +373,15 @@ public class TransformScript
         ValueOperation value = parseValueStatement(symbols);
         Operation operations = parseStatement(symbols);
         return new IfOperation(value, operations);
+    }
+
+    private WhileOperation parseWhileStatement(LinkedList<String> symbols) throws TransformSyntaxException
+    {
+        if (symbols.size() < 3)
+            throw new TransformSyntaxException("'WHILE' must be followed by a boolean value or expression.");
+        ValueOperation value = parseValueStatement(symbols);
+        Operation operations = parseStatement(symbols);
+        return new WhileOperation(value, operations);
     }
 
     private boolean isValidPath(String symbol)
@@ -381,11 +404,9 @@ public class TransformScript
 
         public Object execute(Map json, Map<String, Object> context)
         {
-            Map<String, Object> nextContext = new HashMap<>();
-            nextContext.putAll(context); // inherit scope
             for (Operation operation : m_operations)
             {
-                operation.execute(json, nextContext);
+                operation.execute(json, context);
             }
             return null;
         }
@@ -415,14 +436,8 @@ public class TransformScript
             if (value == null)
                 return null;
 
-            Type containerType;
-            if (toPathWithSymbols.get(toPathWithSymbols.size()-1) instanceof String)
-                containerType = HashMap.class;
-            else
-                containerType = ArrayList.class;
-
             Document._removeLeafObject(fromPathWithSymbols, json);
-            Document._set(toPathWithSymbols, value, containerType, json);
+            Document._set(toPathWithSymbols, value, json);
             pruneBranch(fromPathWithSymbols, json);
             return null;
         }
@@ -444,13 +459,7 @@ public class TransformScript
             List<Object> toPath = Arrays.asList( withIntAsInteger(m_toPath.split(",")) );
             List<Object> toPathWithSymbols = insertContextSymbolsIntoPath(toPath, context);
 
-            Type containerType;
-            if (toPathWithSymbols.get(toPathWithSymbols.size()-1) instanceof String)
-                containerType = HashMap.class;
-            else
-                containerType = ArrayList.class;
-
-            Document._set(toPathWithSymbols, m_value.execute(json, context), containerType, json);
+            Document._set(toPathWithSymbols, m_value.execute(json, context), json);
             return null;
         }
     }
@@ -652,6 +661,29 @@ public class TransformScript
                 throw new RuntimeException("Type mismatch. Cannot call endsWith on non-strings");
 
             return ((String) completeString).endsWith( (String) searchString );
+        }
+    }
+
+    private class StringTrimValueOperation extends ValueOperation
+    {
+        ValueOperation m_completeString;
+
+        public StringTrimValueOperation(ValueOperation completeString)
+        {
+            m_completeString = completeString;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            Object completeString = m_completeString.execute(json, context);
+
+            if (completeString == null) // propagate nulls
+                return null;
+
+            if (!(completeString instanceof String))
+                throw new RuntimeException("Type mismatch. Cannot call time on non-strings");
+
+            return ((String) completeString).trim();
         }
     }
 
@@ -861,13 +893,16 @@ public class TransformScript
             if (listObject instanceof List)
             {
                 List list = (List) listObject;
+                Object eclipsedValue = context.get(m_iteratorSymbol);
                 for (int i = list.size()-1; i > -1; --i) // For each iterator-index (in reverse) do:
                 {
-                    Map<String, Object> nextContext = new HashMap<>();
-                    nextContext.putAll(context); // inherit scope
-                    nextContext.put(m_iteratorSymbol, i);
-                    m_operations.execute(json, nextContext);
+                    context.put(m_iteratorSymbol, i);
+                    m_operations.execute(json, context);
                 }
+                if (eclipsedValue == null)
+                    context.remove(m_iteratorSymbol);
+                else
+                    context.put(m_iteratorSymbol, eclipsedValue);
             }
             return null;
         }
@@ -887,6 +922,25 @@ public class TransformScript
         public Object execute(Map json, Map<String, Object> context)
         {
             if ( (Boolean) m_booleanValue.execute(json, context) )
+                m_operations.execute(json, context);
+            return null;
+        }
+    }
+
+    private class WhileOperation implements Operation
+    {
+        private Operation m_operations;
+        private ValueOperation m_booleanValue;
+
+        public WhileOperation(ValueOperation booleanValue, Operation operations)
+        {
+            m_operations = operations;
+            m_booleanValue = booleanValue;
+        }
+
+        public Object execute(Map json, Map<String, Object> context)
+        {
+            while ( (Boolean) m_booleanValue.execute(json, context) )
                 m_operations.execute(json, context);
             return null;
         }

@@ -24,6 +24,9 @@ class JsonLd {
     static final String SET_KEY = "@set"
     static final String LIST_KEY = "@list"
     static final String REVERSE_KEY = "@reverse"
+    // JSON-LD 1.1
+    static final String PREFIX_KEY = "@prefix"
+
     static final String THING_KEY = "mainEntity"
     static final String WORK_KEY = "instanceOf"
     static final String RECORD_KEY = "meta"
@@ -41,7 +44,26 @@ class JsonLd {
     static final String APIX_FAILURE_KEY = "apixExportFailedAt"
     static final String ENCODING_LEVEL_KEY = "marc:encLevel"
 
+    static final List<String> NS_SEPARATORS = ['#', '/', ':']
+
+    static final Set<String> LD_KEYS
+
     static final ObjectMapper mapper = new ObjectMapper()
+
+    static {
+        LD_KEYS = [
+            GRAPH_KEY,
+            CONTEXT_KEY,
+            VOCAB_KEY,
+            ID_KEY,
+            TYPE_KEY,
+            LANGUAGE_KEY,
+            CONTAINER_KEY,
+            SET_KEY,
+            LIST_KEY,
+            REVERSE_KEY
+        ] as Set
+    }
 
     private static Logger log = LogManager.getLogger(JsonLd.class)
 
@@ -51,6 +73,7 @@ class JsonLd {
     private Map superClassOf
     private Map<String, Set> subClassesByType
     private String vocabId
+    private Map<String, String> nsToPrefixMap = [:]
 
     /**
      * This includes terms that are declared as either set or list containers
@@ -81,11 +104,13 @@ class JsonLd {
 
         this.displayData = displayData ?: Collections.emptyMap()
 
+        setupPrefixes()
+
         vocabId = context.get(VOCAB_KEY)
 
         vocabIndex = vocabData ?
                 vocabData[GRAPH_KEY].collectEntries {
-                [toTermKey((String)it[ID_KEY]), it]
+                [toTermKey((String) it[ID_KEY]), it]
             }
             : Collections.emptyMap()
 
@@ -94,6 +119,20 @@ class JsonLd {
         generateSubClassesLists()
 
         expandAliasesInLensProperties()
+    }
+
+    private void setupPrefixes() {
+        context.each { String pfx, dfn ->
+            def term = dfn instanceof Map &&
+                       dfn[PREFIX_KEY] == true ? dfn[ID_KEY] : dfn
+            if (term instanceof String) {
+                String ns = (String) term
+                if (NS_SEPARATORS.any { ns.endsWith(it) }) {
+                    nsToPrefixMap[ns] = pfx
+                }
+            }
+        }
+
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
@@ -126,6 +165,26 @@ class JsonLd {
     }
 
     String toTermKey(String termId) {
+        Integer splitPos = NS_SEPARATORS.findResult {
+            int idx = termId.lastIndexOf(it)
+            return idx > -1 ? idx + 1 : null
+        }
+        if (splitPos == null) {
+            return termId
+        }
+
+        String baseNs = termId.substring(0, splitPos)
+        String term = termId.substring(splitPos)
+
+        if (baseNs == vocabId) {
+            return term
+        }
+
+        String pfx = nsToPrefixMap[baseNs]
+        if (pfx) {
+            return pfx + ':' + term
+        }
+
         return termId.replace(vocabId, '')
     }
 
@@ -322,6 +381,81 @@ class JsonLd {
 
     //==== Utils ====
 
+    Set validate(Map obj) {
+        Set<String> errors = new LinkedHashSet<>()
+        doValidate(obj, errors)
+        return errors
+    }
+
+    private void doValidate(Map obj, Set errors) {
+        for (Object keyObj : obj.keySet()) {
+            if (!(keyObj instanceof String)) {
+                errors << "Invalid key: $keyObj"
+                continue
+            }
+
+            String key = (String) keyObj
+            Object value = obj[key]
+
+            if ((key == ID_KEY || key == TYPE_KEY)
+                && !(value instanceof String)) {
+                errors << "Unexpected value of $key: ${value}"
+                continue
+            }
+
+            Map termDfn = vocabIndex[key] instanceof Map ? vocabIndex[key] : null
+            if (!termDfn && key.indexOf(':') > -1) {
+                termDfn = vocabIndex[expand(key)]
+            }
+
+            Map ctxDfn = context[key] instanceof Map ? context[key] : null
+            boolean isVocabTerm = ctxDfn && ctxDfn[TYPE_KEY] == VOCAB_KEY
+
+            if (!termDfn && !LD_KEYS.contains(key)) {
+                errors << "Unknown term: $key"
+            }
+
+            if ((key == TYPE_KEY || isVocabTerm)
+                && !vocabIndex.containsKey((String) value)) {
+                errors << "Unknown vocab value for $key: $value"
+            }
+
+            boolean expectRepeat = key == GRAPH_KEY || key in repeatableTerms
+            boolean isRepeated = value instanceof List
+            if (expectRepeat && !isRepeated) {
+                errors << "Expected $key to be an array."
+            } else if (!expectRepeat && isRepeated) {
+                errors << "Unexpected array for $key."
+            }
+
+            List valueList = isRepeated ? (List) value : null
+            if (valueList && valueList.size() == 0) {
+                continue
+            }
+            Object firstValue = valueList?.getAt(0) ?: value
+            boolean valueIsObject = firstValue instanceof Map
+
+            if (firstValue && termDfn
+                    && termDfn[TYPE_KEY] == 'ObjectProperty') {
+                if (!isVocabTerm && !valueIsObject) {
+                    errors << "Expected value type of $key to be object (value: $value)."
+                } else if (isVocabTerm && valueIsObject) {
+                    errors << "Expected value type of $key to be a vocab string (value: $value)."
+                }
+            }
+
+            if (value instanceof List) {
+                value.each {
+                    if (it instanceof Map) {
+                        doValidate((Map) it, errors)
+                    }
+                }
+            } else if (value instanceof Map) {
+                doValidate((Map) value, errors)
+            }
+        }
+    }
+
     boolean softMerge(Map<String, Object> obj, Map<String, Object> into) {
         if (obj == null || into == null) {
             return false
@@ -365,7 +499,7 @@ class JsonLd {
                 if (superClass == null || superClass[ID_KEY] == null) {
                     continue
                 }
-                String superClassType = toTermKey( (String) superClass[ID_KEY] )
+                String superClassType = toTermKey((String) superClass[ID_KEY])
                 result.add(superClassType)
                 getSuperClasses(superClassType, result)
             }
@@ -387,7 +521,7 @@ class JsonLd {
                     continue
                 }
 
-                String superClassType = toTermKey( (String) superClass[ID_KEY] )
+                String superClassType = toTermKey((String) superClass[ID_KEY])
                 if (superClassOf[superClassType] == null)
                     superClassOf[superClassType] = []
                 ((List)superClassOf[superClassType]).add(type)

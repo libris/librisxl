@@ -122,6 +122,9 @@ class Parameters
         System.err.println("              combination of duplication types. If a duplicate is found for an incoming");
         System.err.println("              record, that record will be enriched with any additional information in the");
         System.err.println("              incoming record.");
+        System.err.println("              Duplication types are checked in the order they are defined on the command line");
+        System.err.println("              As soon as one duplication type has yielded one or more duplicates, no additional");
+        System.err.println("              types will be checked. (in other words: THE ORDERING OF TYPES MATTER)");
         System.err.println("              Duplication types:");
         System.err.println("                ISBNA     ISBN number, obtained from MARC subfield $a of the incoming record");
         System.err.println("                ISBNZ     ISBN number, obtained from MARC subfield $z of the incoming record");

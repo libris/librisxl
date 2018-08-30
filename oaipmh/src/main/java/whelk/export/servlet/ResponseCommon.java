@@ -204,18 +204,29 @@ public class ResponseCommon
             emitAttachedRecords(document, writer, requestedFormat);
         }
 
-        String itemOf = resultSet.getString("itemOf");
-        if (dataset.equals("hold") && itemOf != null)
-        {
+        if (!onlyIdentifiers) {
             writer.writeStartElement("about");
-            writer.writeStartElement("itemOf");
-            writer.writeAttribute("id", itemOf);
-            writer.writeEndElement(); // itemOf
-            writer.writeEndElement(); // about
-        }
 
-        if (!onlyIdentifiers)
+            String itemOf = resultSet.getString("itemOf");
+            if (dataset.equals("hold") && itemOf != null) {
+                writer.writeStartElement("itemOf");
+                writer.writeAttribute("id", itemOf);
+                writer.writeEndElement(); // itemOf
+            }
+
+            String changedBy = resultSet.getString("changedBy");
+            if (changedBy == null)
+                changedBy = "unknown";
+
+            writer.writeStartElement("agent");
+            writer.writeAttribute("name", changedBy);
+            writer.writeEndElement(); // agent
+
+            writer.writeEndElement(); // about
+
+
             writer.writeEndElement(); // record
+        }
     }
 
     private static void emitAttachedRecords(Document rootDocument, XMLStreamWriter writer, String requestedFormat)

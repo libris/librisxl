@@ -56,7 +56,6 @@
           "1": "marc:LcSubjectHeadingsForChildrensLiterature",
           "2": "marc:MedicalSubjectHeadingsNlmNameAuthorityFile",
           "3": "marc:NationalAgriculturalLibrarySubjectAuthorityFile",
-          "4": "marc:SourceNotSpecified",
           "5": "marc:CanadianSubjectHeadingsNlcNameAuthorityFile",
           "6": "marc:RepertoireDeVedettesMatiere",
           "7": "marc:SourceSpecifiedInSubfield2"
@@ -277,7 +276,8 @@
       "$a": {
         "property": "value",
         "splitValuePattern": "^(.+?)(?:\\s+\\((.+)\\))?$",
-        "splitValueProperties": ["value", "qualifier"]
+        "splitValueProperties": ["value", "qualifier"],
+        "punctuationChars": ",:;"
       },
       "$q": {"addProperty": "qualifier"},
       "$z": {"addProperty": "marc:hiddenValue"}
@@ -3430,6 +3430,26 @@
         },
         {
           "source": {
+            "020": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "91-0-056322-6 (inb.) :"}, {"c": "310:00"} ]}
+          },
+          "normalized": {
+            "020": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "91-0-056322-6"}, {"q": "inb."}, {"c": "310:00"} ]}
+          },
+          "result": {"mainEntity": {
+            "identifiedBy": [
+              {
+                "@type": "ISBN",
+                "value": "91-0-056322-6",
+                "qualifier": "inb.",
+                "acquisitionTerms": "310:00"
+              }
+            ]
+          }}
+        },
+        {
+          "source": {
             "020": {
               "ind1": " ", "ind2": " ",
               "subfields": [{"a": "91-47-07941-X (texth.) (i ringpärm)"}]
@@ -3522,7 +3542,8 @@
       "resourceType": "ISSN",
       "i1": {
         "property": "marc:internationalInterest",
-        "tokenMap": {"0": true, "1": false}, "marcDefault": " "
+        "tokenMap": {"0": true, "1": false},
+        "marcDefault": " "
       },
       "$a": {"property": "value"},
       "$l": {"property": "marc:issnL"},
@@ -3783,11 +3804,11 @@
         "TODO": "align with subfieldproperty instead of separate list, also make sure repeatable.",
         "property": "marc:typeOfDate",
         "tokenMap": {
-          " ": "marc:NoDateInformation",
           "0": "marc:SingleDate",
           "1": "marc:MultipleSingleDates",
           "2": "marc:RangeOfDates"
-        }
+        },
+        "marcDefault": " "
       },
       "i2": {
         "property": "@type",
@@ -3861,9 +3882,8 @@
           "pendingResources": {"_:scale": {"link": "scale", "resourceType": "marc:OtherCartographicScale"}}
         }
       ],
-      "i1": {"ignored": "true", "marcDefault": "1"},
+      "i1": {"marcDefault": "1"},
       "i2": {
-        "ignored": "true",
         "property": "marc:ringType",
         "marcDefault": " ",
         "tokenMap": {"0": "marc:OuterRing", "1": "marc:ExcludingRing"}
@@ -3916,6 +3936,28 @@
                       "@type": "marc:LinearScale",
                       "marc:constantRatioLinearHorizontalScale": ["110000"]
                     }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "source": [
+            {"034": {"ind1": "1", "ind2": "0", "subfields": [{"b": "11"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "cartographicAttributes": [
+                  {
+                    "@type": "Cartographic",
+                    "scale": {
+                      "@type": "Scale",
+                      "marc:constantRatioLinearHorizontalScale": ["11"]
+                    },
+                    "marc:ringType": "marc:OuterRing"
                   }
                 ]
               }
@@ -4088,7 +4130,7 @@
     "037": {
       "addLink": "acquisitionSource",
       "resourceType": "AcquisitionSource",
-      "i1": {"ignored": true, "marcDefault": " "},
+      "i1": {"marcDefault": " "},
       "$a": {"addLink": "identifiedBy", "resourceType": "StockNumber", "property": "value", "NOTE:marc-repeatable": false},
       "$b": {"property": "label"},
       "$c": {"property": "acquisitionTerms", "NOTE:marc-repeatable": true},
@@ -4313,11 +4355,47 @@
           "0": "marc:SingleDateTime",
           "1": "marc:MultipleSingleDatesTimes",
           "2": "marc:RangeOfDatesTimes"
-        }
+        },
+        "marcDefault": " "
       },
       "$a": {"addProperty": "marc:timePeriodCode"},
       "$b": {"addProperty": "marc:formatted9999BCThroughCETimePeriod"},
-      "$c": {"addProperty": "marc:formattedPre9999BCTimePeriod"}
+      "$c": {"addProperty": "marc:formattedPre9999BCTimePeriod"},
+      "_spec": [
+        {
+          "source": {
+            "045": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Foo Bar"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "marc:hasTimePeriodOfContent": {
+                  "@type": "marc:TimePeriodOfContent",
+                  "marc:timePeriodCode": ["Foo Bar"]
+                }
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "045": {"ind1": "0", "ind2": " ", "subfields": [{"a": "Foo Bar"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "marc:hasTimePeriodOfContent": {
+                  "@type": "marc:TimePeriodOfContent",
+                  "marc:timePeriodCode": ["Foo Bar"],
+                  "marc:typeOfTimePeriod": "marc:SingleDateTime"
+                }
+              }
+            }
+          }
+        }
+      ]
     },
     "046": {
       "addLink": "marc:hasSpecialCodedDates",
@@ -4369,7 +4447,7 @@
       "addLink": "classification",
       "resourceType": "ClassificationLcc",
       "i1": {"property": "marc:existenceInLCCollection", "marcDefault": " ", "tokenMap": {"0": true, "1": false}},
-      "i2": {"property": "marc:assignedByLC", "tokenMap": {"0": true, "4": false}},
+      "i2": {"property": "marc:assignedByLC", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "code", "TODO:repeatable": true},
       "$b": {"property": "itemPortion"},
       "$6": {"property": "marc:fieldref"}
@@ -4431,7 +4509,8 @@
           "7": "marc:OtherClassNumberAssignedByLac",
           "8": "marc:OtherCallNumberAssignedByTheContributingLibrary",
           "9": "marc:OtherClassNumberAssignedByTheContributingLibrary"
-        }
+        },
+        "marcDefault": " "
       },
       "$a": {"property": "marc:classificationNumber"},
       "$b": {"property": "marc:itemNumber"},
@@ -4442,7 +4521,7 @@
       "addLink": "classification",
       "resourceType": "ClassificationNlm",
       "i1": {"property": "marc:existenceInNlmCollection", "marcDefault": " ", "tokenMap": {"0": true, "1": false}},
-      "i2": {"property": "marc:assignedByNlm", "tokenMap": {"0": true, "4": false}},
+      "i2": {"property": "marc:assignedByNlm", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "code"},
       "$b": {"property": "itemPortion", "ignored": true}
     },
@@ -4469,9 +4548,22 @@
     "071": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
 
     "072": {
+      "onRevertPrefer": ["653"],
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "Concept",
+      "match": [
+        {
+          "when": {
+            "NOTE": "stops here to get i2=0 without $2",
+            "onRevert": {"inScheme": {"code": "NAL"}}
+          }
+        },
+        {
+          "when": "i2=7 & $2",
+          "$2": {"requires-i2": "7", "link": "inScheme", "resourceType": "ConceptScheme", "property": "code"}
+        }
+      ],
       "i2": {
         "link": "inScheme",
         "resourceType": "ConceptScheme",
@@ -4479,11 +4571,74 @@
         "tokenMap": {
           "0": "NAL"
         },
-        "definedElsewhereToken": "7"
+        "definedElsewhereToken": "7",
+        "marcDefault": "7"
       },
       "$a": {"property": "label", "required": true},
       "$x": {"link": "inCollection", "property": "label"},
-      "$2": {"requires-i2": "7", "link": "inScheme", "resourceType": "ConceptScheme", "property": "code"}
+      "_spec": [
+        {
+          "source": {
+            "072": {"ind1": " ", "ind2": "0", "subfields": [
+              {"a": "Token"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "subject": [ {
+                  "@type": "Concept",
+                  "label": "Token",
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "code": "NAL"
+                  }
+                } ]
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "072": {"ind1": " ", "ind2": "7", "subfields": [
+              {"a": "Token"},
+              {"2": "G"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "subject": [ {
+                  "@type": "Concept",
+                  "label": "Token",
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "code": "G"
+                  }
+                } ]
+              }
+            }
+          }
+        },
+        {
+          "name": "i2=7 without $2",
+          "source": {
+            "072": {"ind1": " ", "ind2": "7", "subfields": [
+              {"a": "Token"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "subject": [ {"@type": "Concept", "label": "Token"} ]
+              }
+            }
+          }
+        }
+      ]
     },
 
     "074": {
@@ -4501,9 +4656,9 @@
         "property": "edition",
         "tokenMap": {
           "0": "full",
-          "1": "abridged",
-          " ": "No information provided"
-        }
+          "1": "abridged"
+        },
+        "marcDefault": " "
       },
       "$a": {"property": "code"},
       "$b": {"property": "marc:itemNumber"},
@@ -4519,7 +4674,22 @@
               "instanceOf": {
                 "@type": "Text",
                 "classification": [
-                  {"@type": "ClassificationUdc", "code": "030", "edition": "No information provided"}
+                  {"@type": "ClassificationUdc", "code": "030"}
+                ]
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "080": {"ind1": "0", "ind2": " ", "subfields": [{"a": "030"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "classification": [
+                  {"@type": "ClassificationUdc", "code": "030", "edition": "full"}
                 ]
               }
             }
@@ -4856,7 +5026,8 @@
           " ": "marc:SourceSpecifiedInSubfield2",
           "0": "marc:SuperintendentOfDocumentsClassificationSystem",
           "1": "marc:GovernmentOfCanadaPublicationsOutlineOfClassification"
-        }
+        },
+        "marcDefault": " "
       },
       "$a": {"property": "marc:classificationNumber"},
       "$z": {"addProperty": "marc:canceledInvalidClassificationNumber"},
@@ -5459,6 +5630,18 @@
       "resourceType": "AbbreviatedTitle",
       "aboutAlias": "_:title",
       "embedded": true,
+      "match": [
+        {
+          "when": {
+            "NOTE": "stops here to get i2=_ without $2",
+            "onRevert": {"source": {"code": "issnkey"}}
+          }
+        },
+        {
+          "when": "i2=0 & $2",
+          "$2": {"requires-i2": "0", "link": "source", "resourceType": "Source", "property": "code"}
+        }
+      ],
       "i2": {
         "link": "source",
         "resourceType": "Source",
@@ -5466,13 +5649,8 @@
         "tokenMap": {
           " ": "issnkey"
         },
+        "marcDefault": "0",
         "definedElsewhereToken": "0"
-      },
-      "$2": {
-        "requires-i2": "0",
-        "link": "source",
-        "resourceType": "Source",
-        "property": "code"
       },
       "$a": {"property": "mainTitle"},
       "$b": {"addProperty": "qualifier", "NOTE:marc-repeatable": false},
@@ -5511,6 +5689,19 @@
                 "@type" : "Source",
                 "code" : "issnkey"
               }
+            }]
+          }}
+        },
+        {
+          "name": "i2=0 without $2",
+          "source": {
+            "210": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "No source"}
+            ]}},
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "AbbreviatedTitle",
+              "mainTitle":  "No source"
             }]
           }}
         }
@@ -5932,8 +6123,8 @@
       "NOTE:Local": "LIBRIS-definierat fält, OBSOLET",
       "addLink": "marc:hasBib249",
       "resourceType": "marc:Bib249",
-      "i1": {"property": "marc:sequenceOfWork"},
-      "i2": {"property": "marc:nonfilingChars"},
+      "i1": {"property": "marc:sequenceOfWork", "marcDefault": " "},
+      "i2": {"property": "marc:nonfilingChars", "marcDefault": "0"},
       "$a": {"property": "marc:originalTitle"},
       "$b": {"property": "marc:titleRemainder"},
       "$n": {"addProperty": "marc:titleNumber"},
@@ -7751,23 +7942,97 @@
       "$a": {"property": "label"},
       "$b": {"link": "source", "resourceType": "Source","property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "name": "With blank indicator 1",
+          "source": {"521": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "foo bar"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text"
+            },
+            "intendedAudience": [
+              {
+                "@type": "IntendedAudience",
+                "label": "foo bar"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "With indicator 1 set to 0",
+          "source": {"521": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Baz"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text"
+            },
+            "intendedAudience": [
+              {
+                "@type": "IntendedAudience",
+                "label": "Baz",
+                "marc:audienceType": "marc:ReadingGradeLevel"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "522": {
       "aboutEntity": "?work",
       "addLink": "geographicCoverage",
       "resourceType": "GeographicCoverage",
       "i1": {
-        "ignored": true,
-        "NOTE:LC": "nac"
+        "NOTE:LC": "nac",
+        "marcDefault": " "
       },
-      "$a": {"property": "label"}
+      "$a": {"property": "label"},
+      "_spec": [
+        {
+          "source": {"522": {"ind1": "8", "ind2": " ", "subfields": [
+            {"a": "foo"}
+          ]}},
+          "normalized": {"522": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "foo"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "geographicCoverage": [
+                {
+                  "@type": "GeographicCoverage",
+                  "label": "foo"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"522": {"subfields": [{"a": "foo"}]}},
+          "normalized": {"522": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "foo"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "geographicCoverage": [
+                {
+                  "@type": "GeographicCoverage",
+                  "label": "foo"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "524": {
       "aboutEntity": "?thing",
       "i1": {
         "marcDefault": "8",
-        "ignored": true,
         "NOTE:LC": "nac"
       },
       "$a": {"property": "preferredCitation"},
@@ -7955,6 +8220,7 @@
       "resourceType": "marc:ImmediateSourceOfAcquisitionNote",
       "i1": {
         "property": "marc:isPrivate",
+        "marcDefault": " ",
         "tokenMap": {
           "0": true,
           "1": false
@@ -7970,7 +8236,38 @@
       "$n": {"addProperty": "marc:extent"},
       "$o": {"addProperty": "unit"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"}
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
+      "_spec": [
+        {
+          "name": "With indicator 1 set to 0",
+          "source": {"541": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Foo"}
+          ]}},
+          "result": {"mainEntity": {
+            "marc:hasImmediateSourceOfAcquisitionNote": [
+              {
+                "@type": "marc:ImmediateSourceOfAcquisitionNote",
+                "label": "Foo",
+                "marc:isPrivate": true
+              }
+            ]
+          }}
+        },
+        {
+          "name": "With indicator 1 set to blank",
+          "source": {"541": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Foo"}
+          ]}},
+          "result": {"mainEntity": {
+            "marc:hasImmediateSourceOfAcquisitionNote": [
+              {
+                "@type": "marc:ImmediateSourceOfAcquisitionNote",
+                "label": "Foo"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "542": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "544": {
@@ -8164,6 +8461,7 @@
       "i1": {
         "NOTE": "0 = Sekretessbelagd information. filtrera bort GDPR",
         "property": "marc:isPrivate",
+        "marcDefault": " ",
         "tokenMap": {
           "0": true,
           "1": false
@@ -8172,7 +8470,37 @@
       "$a": {"property": "label"},
       "$b": {"addProperty": "marc:actionIdentification"},
       "$x": {"addProperty": "marc:cataloguersNote", "TODO": "ignore?"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "name": "With indicator 1 set to 1",
+          "source": {"583": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Foo"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasNote": [
+              {
+                "@type": "marc:ActionNote",
+                "label": "Foo",
+                "marc:isPrivate": false
+              }
+            ]
+          }}
+        },
+        {
+          "name": "With no indicator set at all",
+          "source": {"583": {"subfields": [{"a": "Foo"}]}},
+          "normalized": {"583": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Foo"}]}},
+          "result": {"mainEntity": {
+            "hasNote": [
+              {
+                "@type": "marc:ActionNote",
+                "label": "Foo"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "584": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "585": {
@@ -8186,10 +8514,36 @@
     "586": {
       "NOTE:local": "ANVÄNDS NORMALT EJ",
       "aboutEntity": "?thing",
-      "i1": {"ignored": true},
+      "i1": {"marcDefault": " "},
       "$a": {"property": "awardsNote"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": [{"586": {"ind1": "0", "ind2": " ", "subfields": [{"a": "EBZ"}]}}],
+          "normalized": [{"586": {"ind1": " ", "ind2": " ", "subfields": [{"a": "EBZ"}]}}],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              },
+              "awardsNote":  "EBZ"
+            }
+          }
+        },
+        {
+          "source": [{"586": {"subfields": [{"a": "EBZ"}]}}],
+          "normalized": [{"586": {"ind1": " ", "ind2": " ", "subfields": [{"a": "EBZ"}]}}],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              },
+              "awardsNote":  "EBZ"
+            }
+          }
+        }
+      ]
     },
     "588": {
       "aboutEntity": "?record",
@@ -8991,6 +9345,34 @@
         },
         {
           "source": {
+            "611": {"ind1": "0", "ind2": "0", "subfields":[
+              {"a": "Rio (Conference)"}]
+            }
+          },
+          "normalized": {
+            "611": {"ind1": "2", "ind2": "0", "subfields":[
+              {"a": "Rio (Conference)"}]
+            }
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Meeting",
+                  "name": "Rio (Conference)",
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/lcsh",
+                    "@type": "ConceptScheme",
+                    "code": "lcsh"
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {
             "611": {"ind1": "2", "ind2": "0", "subfields":[
               {"a": "Vatican Council"},
               {"n": "(2nd :"},
@@ -9412,18 +9794,27 @@
         {
           "source": {
             "650": {"ind1": "2", "ind2": " ",
-              "subfields": [{"a": "Health services for the aged", "v": "periodicals"}]}
+              "subfields": [{"a": "Health services for the aged"}, {"v": "periodicals"}]}
           },
-          "TODO:result": {"mainEntity": {
+          "normalized": {
+            "650": {"ind1": "2", "ind2": "4",
+              "subfields": [{"a": "Health services for the aged"}, {"v": "periodicals"}]}
+          },
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "subject": [
-                {
+              "subject": [{
+                "@type": "ComplexSubject",
+                "marc:subjectLevel": "marc:Secondary",
+                "prefLabel": "Health services for the aged--periodicals",
+                "termComponentList": [{
                   "@type": "Topic",
-                  "marc:subjectLevel": "marc:Secondary",
                   "prefLabel": "Health services for the aged"
-                }
-              ]
+                }, {
+                  "@type": "GenreForm",
+                  "prefLabel": "periodicals"
+                }]
+              }]
             }
           }}
         },
@@ -9432,13 +9823,18 @@
             "650": {"ind1": "0", "ind2": " ",
               "subfields": [{"a": "Geriatrics"}]}
           },
-          "TODO:result": {"mainEntity": {
+          "normalized": {
+            "650": {"ind1": "0", "ind2": "4",
+              "subfields": [{"a": "Geriatrics"}]}
+          },
+          "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "subject": [
                 {
                   "@type": "Topic",
-                  "prefLabel": "Geriatrics"
+                  "prefLabel": "Geriatrics",
+                  "marc:subjectLevel": "marc:Unspecified"
                 }
               ]
             }
@@ -9766,6 +10162,33 @@
           }}
         },
         {
+          "name": "Convert without any ind1 defined",
+          "source": {"651": {"ind2": "4", "subfields":[{"a": "Sverige"}]}},
+          "normalized": {"651": {"ind1": " ", "ind2": "4", "subfields":[{"a": "Sverige"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [{
+                "@type": "Geographic",
+                "prefLabel": "Sverige"
+              }]
+            }
+          }}
+        },
+        {
+          "source": {"651": {"ind1": "1", "ind2": "4", "subfields":[{"a": "Förenta staterna"}]}},
+          "normalized": {"651": {"ind1": " ", "ind2": "4", "subfields":[{"a": "Förenta staterna"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [{
+                "@type": "Geographic",
+                "prefLabel": "Förenta staterna"
+              }]
+            }
+          }}
+        },
+        {
           "source": {
             "651": {"ind1": " ", "ind2": "7", "subfields":[
               {"a": "Sydafrika"},
@@ -9894,6 +10317,30 @@
                 {
                   "@type": "Temporal",
                   "label": "Directors"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "With blank indicator 2",
+          "source": {
+            "653": {"ind1": " ", "ind2": " ", "subfields":[
+              {"a": "Name of Topic"}]
+            }
+          },
+          "normalized": {
+            "653": {"ind1": " ", "ind2": "0", "subfields":[
+              {"a": "Name of Topic"}]
+            }
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Topic",
+                  "label": "Name of Topic"
                 }
               ]
             }
@@ -13127,7 +13574,7 @@
       "aboutEntity": "?work",
       "addLink": "marc:hasBib976",
       "resourceType": "marc:Bib976",
-      "i2": {"property": "marc:bib976-i2"},
+      "i2": {"property": "marc:bib976-i2", "marcDefault": " "},
       "$a": {"property": "marc:bib976-a"},
       "$b": {"property": "marc:bib976-b"}
     }
@@ -13414,7 +13861,7 @@
       "aboutEntity": "?thing",
       "addLink": "classification",
       "resourceType": "ClassificationLcc",
-      "i2": {"property": "marc:assignedByLC", "tokenMap": {"0": true, "4": false}},
+      "i2": {"property": "marc:assignedByLC", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "classificationPortion"},
       "$b": {"property": "spanEnd"},
       "$c": {"property": "marc:explanatoryTerm"}
@@ -14423,9 +14870,8 @@
     "377": {
       "i2": {
         "property": "marc:languageCode",
+        "marcDefault": " ",
         "tokenMap": {
-          "1": "marc:ISO-639-2B",
-          "2": "marc:SourceSpecifiedInSubfield2",
           "7": "marc:SourceSpecifiedInSubfield2"
         }
       },
@@ -16349,11 +16795,13 @@
       "resourceType": "marc:EstablishedHeadingLinkingEntryCorporateName",
       "i1": {
         "property": "marc:nameForm",
-        "tokenMap": "marcNameForm"
+        "tokenMap": "marcNameForm",
+        "marcDefault": "2"
       },
       "i2": {
         "property": "marc:thesaurus",
-        "tokenMap": "marcThesaurus"
+        "tokenMap": "marcThesaurus",
+        "marcDefault": "4"
       },
       "$a": {"property": "marc:corporateNameOrJurisdictionNameAsEntryElement"},
       "$b": {"addProperty": "marc:subordinateUnit"},
@@ -16389,11 +16837,13 @@
       "resourceType": "marc:EstablishedHeadingLinkingEntryMeetingName",
       "i1": {
         "property": "marc:nameForm",
-        "tokenMap": "marcNameForm"
+        "tokenMap": "marcNameForm",
+        "marcDefault": "2"
       },
       "i2": {
         "property": "marc:thesaurus",
-        "tokenMap": "marcThesaurus"
+        "tokenMap": "marcThesaurus",
+        "marcDefault": "4"
       },
       "$a": {"property": "marc:meetingNameOrJurisdictionNameAsEntryElement"},
       "$c": {"addProperty": "marc:locationOfMeeting"},
@@ -16427,7 +16877,8 @@
       "resourceType": "marc:EstablishedHeadingLinkingEntryUniformTitle",
       "i2": {
         "property": "marc:thesaurus",
-        "tokenMap": "marcThesaurus"
+        "tokenMap": "marcThesaurus",
+        "marcDefault": "4"
       },
       "$a": {"property": "marc:uniformTitle"},
       "$d": {"addProperty": "marc:dateOfTreatySigning"},
@@ -16461,7 +16912,8 @@
       "resourceType": "marc:EstablishedHeadingLinkingEntryChronologicalTerm",
       "i2": {
         "property": "marc:thesaurus",
-        "tokenMap": "marcThesaurus"
+        "tokenMap": "marcThesaurus",
+        "marcDefault": "4"
       },
       "$a": {"property": "marc:chronologicalTerm"},
       "$i": {"ignored": true},
@@ -16993,6 +17445,39 @@
               "language": [{"@id": "https://id.kb.se/language/swe"}]
             }
           }
+        },
+        {
+          "name": "handle unexpected array value for fixed field",
+          "normalized": {"008": "900101||0000|||||000||swe|901128"},
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "date": [ "1990-11-28T00:00:00.0+01:00" ],
+            "mainEntity": {
+              "language": [{"@id": "https://id.kb.se/language/swe"}]
+            }
+          }
+        },
+        {
+          "name": "handle unexpected object for fixed field",
+          "normalized": {"008": "900101||0000|||||000||swe|000000"},
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "date": {"value": "1990-11-28T00:00:00.0+01:00"},
+            "mainEntity": {
+              "language": [{"@id": "https://id.kb.se/language/swe"}]
+            }
+          }
+        },
+        {
+          "name": "handle unexpected object in unexpected array for fixed field",
+          "normalized": {"008": "900101||0000|||||000||swe|000000"},
+          "result": {
+            "created": "1990-01-01T00:00:00.0+01:00",
+            "date": [ {"value": "1990-11-28T00:00:00.0+01:00"} ],
+            "mainEntity": {
+              "language": [{"@id": "https://id.kb.se/language/swe"}]
+            }
+          }
         }
       ]
     },
@@ -17000,7 +17485,7 @@
     "010": {"ignored": true, "NOTE:record-count": 22, "NOTE:local": "ANVÄNDS NORMALT EJ"},
     "014": {
       "aboutEntity": "?record",
-      "i1": {"property": "marc:typeOfLinkageNumber"},
+      "i1": {"property": "marc:typeOfLinkageNumber", "marcDefault": "1"},
       "$a": {"addLink": "identifiedBy", "resourceType": "LibrisIIINumber", "property": "value", "NOTE:marc-repeatable": false}
     },
     "016": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
@@ -17062,6 +17547,7 @@
       "i1": {
         "NOTE": "0 = Sekretessbelagd information. Används f.n. ej. = ca 5000 poster",
         "property": "marc:isPrivate",
+        "marcDefault": " ",
         "tokenMap": {
           "0": true,
           "1": false
@@ -17088,7 +17574,7 @@
     "561": {
       "groupId": "?example-$seq",
       "NOTE:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 8 poster. Remove i1 when revert",
-      "i1": {"ignored": true,"marcDefault": " "},
+      "i1": {"marcDefault": " "},
       "$a": {"property": "custodialHistory"},
       "$3": {
         "link": "marc:custodialHistory-appliesTo", "resourceType": "Resource", "property": "label",
@@ -17125,6 +17611,7 @@
       "i1": {
         "NOTE": "0 = Sekretessbelagd information. Används f.n. ej. = 1 post",
         "property": "marc:isPrivate",
+        "marcDefault": " ",
         "tokenMap": {
           "0": true,
           "1": false
@@ -17347,8 +17834,8 @@
       "addLink": "marc:hasEnumerationAndChronologyBasicBibliographicUnit",
       "resourceType": "marc:EnumerationAndChronologyBasicBibliographicUnit",
       "embedded": true,
-      "i1": {"property": "marc:holdingsLevel"},
-      "i2": {"property": "marc:formOfHoldings"},
+      "i1": {"property": "marc:holdingsLevel", "marcDefault": " "},
+      "i2": {"property": "marc:formOfHoldings", "marcDefault": " "},
       "$a": {"property": "marc:firstLevelOfEnumeration"},
       "$b": {"property": "marc:secondLevelOfEnumeration"},
       "$c": {"property": "marc:thirdLevelOfEnumeration"},
@@ -17369,8 +17856,8 @@
       "addLink": "marc:hasTextualHoldingsBasicBibliographicUnit",
       "resourceType": "marc:TextualHoldingsBasicBibliographicUnit",
       "embedded": true,
-      "i1": {"property": "marc:holdingsLevel"},
-      "i2": {"property": "marc:typeOfNotation"},
+      "i1": {"property": "marc:holdingsLevel", "marcDefault": " "},
+      "i2": {"property": "marc:typeOfNotation", "marcDefault": " "},
       "$a": {"property": "marc:textualString"},
       "$x": {"addProperty": "marc:cataloguersNote"},
       "$z": {"addProperty": "marc:publicNote"},
@@ -17379,14 +17866,58 @@
       "$8": {"property": "marc:groupid"},
       "$9": {"addProperty": "marc:organizationalUnit"},
       "repeatable": true,
-      "subfieldOrder": "8 a x z 2 9"
+      "subfieldOrder": "8 a x z 2 9",
+      "_spec": [
+        {
+          "name": "With indicator 1 set to 1",
+          "source": {"866": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Foo"}
+          ]}},
+          "result": {"mainEntity": {
+            "marc:hasTextualHoldingsBasicBibliographicUnit": [
+              {
+                "@type": "marc:TextualHoldingsBasicBibliographicUnit",
+                "marc:textualString": "Foo",
+                "marc:holdingsLevel": "1"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "With indicator 1 set to blank",
+          "source": {"866": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Foo"}
+          ]}},
+          "result": {"mainEntity": {
+            "marc:hasTextualHoldingsBasicBibliographicUnit": [
+              {
+                "@type": "marc:TextualHoldingsBasicBibliographicUnit",
+                "marc:textualString": "Foo"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "With no indicators set at all",
+          "source": {"866": {"subfields": [{"a": "Foo"}]}},
+          "normalized": {"866": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Foo"}]}},
+          "result": {"mainEntity": {
+            "marc:hasTextualHoldingsBasicBibliographicUnit": [
+              {
+                "@type": "marc:TextualHoldingsBasicBibliographicUnit",
+                "marc:textualString": "Foo"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "867": {
       "addLink": "marc:hasTextualHoldingsSupplementaryMaterial",
       "resourceType": "marc:TextualHoldingsSupplementaryMaterial",
       "embedded": true,
-      "i1": {"property": "marc:holdingsLevel"},
-      "i2": {"property": "marc:typeOfNotation"},
+      "i1": {"property": "marc:holdingsLevel", "marcDefault": " "},
+      "i2": {"property": "marc:typeOfNotation", "marcDefault": " "},
       "$a": {"property": "marc:textualString"},
       "$x": {"addProperty": "marc:cataloguersNote"},
       "$z": {"addProperty": "marc:publicNote"},
@@ -17396,8 +17927,8 @@
       "addLink": "marc:hasTextualHoldingsIndexes",
       "resourceType": "marc:TextualHoldingsIndexes",
       "embedded": true,
-      "i1": {"property": "marc:holdingsLevel"},
-      "i2": {"property": "marc:typeOfNotation"},
+      "i1": {"property": "marc:holdingsLevel", "marcDefault": " "},
+      "i2": {"property": "marc:typeOfNotation", "marcDefault": " "},
       "$a": {"property": "marc:textualString"},
       "$x": {"addProperty": "marc:cataloguersNote"},
       "$z": {"addProperty": "marc:publicNote"},
@@ -17445,8 +17976,8 @@
     "948": {
       "addLink": "marc:hasHold948",
       "resourceType": "marc:Hold948",
-      "i1": {"property": "marc:hasHold948-i1"},
-      "i2": {"property": "marc:hasHold948-i2"},
+      "i1": {"property": "marc:hasHold948-i1", "marcDefault": " "},
+      "i2": {"property": "marc:hasHold948-i2", "marcDefault": " "},
       "$a": {"addProperty": "marc:hasHold948-a"},
       "$b": {"addProperty": "marc:hasHold948-b"},
       "$c": {"addProperty": "marc:hasHold948-c"},
@@ -17514,8 +18045,8 @@
     "949": {
       "addLink": "marc:hasHold949",
       "resourceType": "marc:Hold949",
-      "i1": {"property": "marc:hasHold949-i1"},
-      "i2": {"property": "marc:hasHold949-i2"},
+      "i1": {"property": "marc:hasHold949-i1", "marcDefault": " "},
+      "i2": {"property": "marc:hasHold949-i2", "marcDefault": " "},
       "$a": {"addProperty": "marc:hasHold949-a"},
       "$b": {"addProperty": "marc:hasHold949-b"},
       "$c": {"addProperty": "marc:hasHold949-c"},

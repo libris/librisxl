@@ -27,6 +27,59 @@ public class ScriptTest
     }
 
     @Test
+    public void testBasicFor() throws Exception
+    {
+        String data = "{\"list\":[2,3]}";
+
+        String script = "mode normal " +
+                "let index = 999 " +
+                "for index : list " +
+                "    set * list,index -> key0 " +
+                "set index -> key1 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"list\":[2,3], " +
+                "    \"key0\":2, " +
+                "    \"key1\":999 " +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testEmbeddedSet() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "set value0 -> key0,key1";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":{\"key1\" : \"value0\"}" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testHightListIndexSet() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "set value0 -> key0,1";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":[null,\"value0\"]" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
     public void testComplexSet() throws Exception
     {
         String data = "{}";
@@ -174,7 +227,7 @@ public class ScriptTest
         String transformed = "" +
                 "{" +
                 "   \"result0\":3," +
-                "   \"result1\":2" +
+                "   \"result1\":3" +
                 "}";
 
         testScript(data, transformed, script);
@@ -228,6 +281,28 @@ public class ScriptTest
         String transformed = "" +
                 "{" +
                 "    \"key0\":\"value0\"" +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testBasicWhile() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "let i = 0 " +
+                "while (i < 4) " +
+                "{ " +
+                "    set i -> key0 " +
+                "    let i = i + 1" +
+                "} " +
+                "while false set value1 -> \"NOPE\" ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":3" +
                 "}";
 
         testScript(data, transformed, script);
@@ -651,6 +726,73 @@ public class ScriptTest
         String transformed = "" +
                 "{" +
                 "    \"key0\":\"abx\" " +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testStringTrim() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "set trim \" \n  abcde cde x     \" -> key0 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"abcde cde x\" " +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testCharEscape() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "if \"\\(\" == \"\\(\"" +
+                "  set value0 -> key0 " +
+                "if \"\\(\" == \"\\)\"" +
+                "  set value1 -> key1 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":\"value0\" " +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testNegativeLiteralValues() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "set -1 -> key0 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":-1 " +
+                "}";
+
+        testScript(data, transformed, script);
+    }
+
+    @Test
+    public void testSetOnListIndex() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "set value0 -> key0,0 ";
+
+        String transformed = "" +
+                "{" +
+                "    \"key0\":[\"value0\"] " +
                 "}";
 
         testScript(data, transformed, script);

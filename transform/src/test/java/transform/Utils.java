@@ -71,6 +71,13 @@ public class Utils
                     if ( entry1.equals(entry2) )
                         existsAMatch = true;
                 }
+                else if (entry1 instanceof Integer && entry2 instanceof Integer)
+                {
+                    if ( entry1.equals(entry2) )
+                        existsAMatch = true;
+                }
+                else if (entry1 == null && entry2 == null)
+                    return true;
             }
             if (!existsAMatch)
                 return false;

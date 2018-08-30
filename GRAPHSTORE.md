@@ -1,6 +1,65 @@
 # Using a Graph Store
 
+NOTE: this is a work-in-progress. We have not yet set up a final, continuously fed Graph Store upon XL.
+
 In principle, any Graph Store supporting the SPARQL 1.1 Graph Store HTTP Protocol will work.
+
+## Using BlazeGraph
+
+Download the latest blazegraph jar (from: https://sourceforge.net/projects/bigdata/files/bigdata/; see: https://wiki.blazegraph.com/wiki/ for details):
+
+    curl -L -O https://sourceforge.net/projects/bigdata/files/bigdata/2.1.4/blazegraph.jar
+
+### Loading LDDB into BlazeGraph
+
+1. Put required configuration and tools to the loading machine and/or server:
+
+    ```
+    scp -r ./librisxl-tools/blazegraph $TARGET:
+    ```
+
+2. Go to the target machine (`ssh $TARGET`).
+
+3. Setup variables for your specific environment:
+
+    ```
+    SOURCE_HOST=pgsql-SOMEDOMAIN
+    DATADIR=/tmp/lddb-loadfiles
+    ```
+
+4. Create load files (see comments for required edits and decisions):
+
+    ```
+    curl https://id-dev.kb.se/context.jsonld -o $DATADIR/context.jsonld
+    curl https://raw.githubusercontent.com/libris/definitions/develop/source/vocab-overlay.jsonld -o $DATADIR/base-context.jsonld
+    # TODO:
+    # Edit to remove @type: xsd:dateTime (fails at times in blazegraph).
+    # Also, decide whether you want context or just base-context below.
+
+    psql -h $SOURCE_HOST -Uwhelk -tc "SELECT data FROM lddb WHERE collection = 'definitions' AND deleted = false;" |
+      python ./lddb-to-import.py $DATADIR/parts/definitions 1000 ../context.jsonld
+    # TODO: Fix display's multiple use of @graph (change @id of lensGroups to e.g. "_graph").
+
+    for coll in auth bib hold ; do
+      echo "Dumping $coll from LDDB"
+      psql -h $SOURCE_HOST -Uwhelk -tc "SELECT data FROM lddb WHERE collection = '$coll' AND deleted = false;" |
+        python ./lddb-to-import.py $DATADIR/parts/$coll 10000 ../base-context.jsonld
+    done
+    ```
+
+5. Load into BlazeGraph:
+
+    ```
+    time java -Xmx32g -cp blazegraph.jar com.bigdata.rdf.store.DataLoader -verbose -durableQueues quads.properties $DATADIR/parts
+    ```
+
+### Running The SPARQL Service
+
+Start:
+
+    java -server -Xmx4g -Dbigdata.propertyFile=quads.properties -Djetty.overriWebXml=readonly.xml -jar blazegraph.jar
+
+----
 
 ## Using Sesame
 

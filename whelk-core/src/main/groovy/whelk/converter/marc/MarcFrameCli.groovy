@@ -23,6 +23,16 @@ for (fpath in fpaths) {
 
     if (cmd == "revert") {
         addJsonLd(converter)
+        if (converter.ld) {
+            System.err.println "Validating JSON-LD ..."
+            def errors = converter.ld.validate(source)
+            if (errors) {
+                System.err.println "JSON-LD validation errors:"
+                errors.each System.err.&println
+            } else {
+                System.err.println "OK"
+            }
+        }
         result = converter.runRevert(source)
     } else {
         def extraData = null

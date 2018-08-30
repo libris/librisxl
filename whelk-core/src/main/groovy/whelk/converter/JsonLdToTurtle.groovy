@@ -1,4 +1,4 @@
-package whelk.plugin
+package whelk.converter
 
 import static org.apache.commons.lang3.StringEscapeUtils.escapeJava
 
@@ -11,20 +11,38 @@ class JsonLdToTurtle {
     Writer writer
     Map context
     String base
-    Map keys = [id: "@id", value: "@value", type: "@type", lang: "@language"]
+    Map keys = [id: "@id", value: "@value", type: "@type", lang: "@language", graph: "@graph"]
     Map prefixes = [:]
     def uniqueBNodeSuffix = ""
     String bnodeSkolemBase = null
+    boolean useGraphKeyword
+    boolean markEmptyBnode
+    String emptyMarker = '_:Nothing'
 
-    JsonLdToTurtle(Map context, OutputStream outStream, String base=null) {
+    JsonLdToTurtle(Map context, OutputStream outStream, Map opts = null) {
+        this(context, outStream, opts?.base, opts)
+    }
+
+    JsonLdToTurtle(Map context, OutputStream outStream, String base, Map opts = null) {
         this.context = context.context
         this.prefixes = context.prefixes
         this.base = base
+        this.useGraphKeyword = opts?.useGraphKeyword == true
+        this.markEmptyBnode = opts?.markEmptyBnode == true
+        if ('owl' in prefixes) emptyMarker = 'owl:Nothing'
         writer = new OutputStreamWriter(outStream, "UTF-8")
     }
 
     void write(String s) {
         writer.write(s)
+    }
+
+    void write(Boolean s) {
+        writer.write(s.toString())
+    }
+
+    void write(Number s) {
+        writer.write(s.toString())
     }
 
     void writeln(String s) {
@@ -87,12 +105,25 @@ class JsonLdToTurtle {
         } else if (useVocab && ref.indexOf("/") == -1) {
             return ":" + ref
         }
+        ref = cleanValue(ref).
+            replaceAll(/ /, '+').
+            replaceAll("\\\\", "\\\\\\\\")
         return "<${ref}>"
     }
 
     String toValidTerm(String term) {
-        // TODO: only done to help the sensitive Sesame turtle parser..
-        return term.replaceAll(/%/, /0/).replaceAll(/\./, '')
+        term = cleanValue(term)
+        if (term.indexOf('://') > -1) {
+            return "<${term}>"
+        }
+        // TODO: hack to pseudo-fix problematic pnames...
+        return term.
+            replaceAll(/%/, /0/).
+            replaceAll(/\./, '')
+    }
+
+    String cleanValue(String v) {
+        return v.replaceAll("\\p{Cntrl}", '')
     }
 
     void toTurtle(obj) {
@@ -120,22 +151,72 @@ class JsonLdToTurtle {
         writeln("BASE <$iri>")
     }
 
+    boolean isListContainer(String term) {
+        return context[term] instanceof Map &&
+            context[term]['@container'] == '@list'
+    }
+
+    boolean isLangContainer(String term) {
+        return context[term] instanceof Map &&
+            context[term]['@container'] == '@language'
+    }
+
     def objectToTurtle(obj, level=0, viaKey=null) {
         def indent = INDENT * (level + 1)
+
+        if (isLangContainer(viaKey) && obj instanceof Map) {
+            boolean first = true
+            obj.each { lang, value ->
+                if (!first) write(' , ')
+                toLiteral(
+                        [(keys.value): value, (keys.lang): lang],
+                        viaKey)
+                first = false
+            }
+            return Collections.emptyList()
+        }
+
         if (!(obj instanceof Map) || obj[keys.value]) {
             toLiteral(obj, viaKey)
             return Collections.emptyList()
         }
+
+        boolean explicitList = '@list' in obj
+
+        if (isListContainer(viaKey)) {
+            obj = ['@list': obj]
+        }
+
         def s = obj[keys.id]
+
+        boolean isList = '@list' in obj
+        boolean startedList = isList
+
+        if (explicitList) {
+            write('( ')
+        }
         if (s && obj.size() > 1) {
             write(refRepr(s))
         } else if (level > 0) {
-            writeln("[")
+            if (!isList) {
+                writeln("[")
+            }
         } else {
-            return Collections.emptyList()
+            if (obj.containsKey(keys.graph)) {
+                if (obj.keySet().any { it[0] != '@' }) {
+                    // TODO: this is the default graph, described...
+                    write('[]')
+                }
+            } else {
+                return Collections.emptyList()
+            }
         }
+
         def topObjects = []
+
         def first = true
+        boolean endedList = false
+
         obj.each { key, vs ->
             def term = termFor(key)
             def revKey = (term == null)? revKeyFor(key) : null
@@ -143,9 +224,16 @@ class JsonLdToTurtle {
                 return
             if (term == keys.id || term == "@context")
                 return
-            vs = (vs instanceof List)? vs : vs != null? [vs] : []
+            vs = vs instanceof List ? vs : vs != null ? [vs] : []
             if (!vs) // TODO: && not @list
                 return
+
+            if (term == keys.graph) {
+                topObjects += vs
+                return
+            }
+
+            boolean inList = isList || isListContainer(key)
 
             if (revKey) {
                 vs.each {
@@ -155,18 +243,37 @@ class JsonLdToTurtle {
                 }
             } else {
                 if (!first) {
+                    if (startedList && !inList && !endedList) {
+                        endedList = true
+                        write(" )")
+                    }
                     writeln(" ;")
                 }
                 first = false
+
                 if (term == "@type") {
                     term = "a"
-                    write(indent + term + " " + vs.collect { termFor(it) }.join(", "))
+                    write(indent + term + " " + vs.collect {
+                        toValidTerm(termFor(it))
+                    }.join(", "))
                     return
                 }
-                term = toValidTerm(term)
-                write(indent + term + " ")
+
+                if (term != '@list') {
+                    term = toValidTerm(term)
+                    write(indent + term + " ")
+                }
+
                 vs.eachWithIndex { v, i ->
-                    if (i > 0) write(" , ")
+                    if (inList) {
+                        if (!startedList) {
+                            write("(")
+                            startedList = true
+                        }
+                        write(" ")
+                    } else if (i > 0) {
+                        write(" , ")
+                    }
                     if (bnodeSkolemBase && v instanceof Map && !v[keys.id]) {
                         v[keys.id] = s = genSkolemId()
                     }
@@ -179,8 +286,15 @@ class JsonLdToTurtle {
                 }
             }
         }
+
+        if (explicitList || (!isList && startedList) && !endedList) {
+            write(" )")
+        }
+
         if (level == 0) {
-            writeln(" .")
+            if (!first) {
+                writeln(" .")
+            }
             writeln()
             topObjects.each {
                 objectToTurtle(it)
@@ -189,14 +303,25 @@ class JsonLdToTurtle {
             return Collections.emptyList()
         } else {
             writeln()
-            write(indent + "]")
+            write(indent)
+            if (!isList) {
+                // NOTE: hack for e.g. BlazeGraph
+                if (obj.size() == 0 && markEmptyBnode) {
+                    writeln("a $emptyMarker")
+                    write(indent)
+                }
+                write("]")
+            }
             return topObjects
         }
     }
 
     def objectToTrig(String iri, Map obj) {
         writeln()
-        writeln("GRAPH <$iri> {")
+        if (useGraphKeyword) {
+            write("GRAPH ")
+        }
+        writeln("<$iri> {")
         writeln()
         objectToTurtle(obj)
         writeln("}")
@@ -210,12 +335,14 @@ class JsonLdToTurtle {
         def datatype = null
         if (obj instanceof Map) {
             value = obj[keys.value]
-            datatype = obj[keys.datatype]
+            datatype = obj[keys.type]
+            lang = obj[keys.lang]
         } else {
             def kdef = context[viaKey]
             def coerceTo = (kdef instanceof Map)? kdef["@type"] : null
             if (coerceTo == "@vocab") {
-                write(refRepr(value, true))
+                write(value instanceof String ?
+                        refRepr(value, true): value)
                 return
             } else if (coerceTo == "@id") {
                 write(refRepr(value))
@@ -263,7 +390,8 @@ class JsonLdToTurtle {
 
     static OutputStream toTurtle(context, source, base=null) {
         def bos = new ByteArrayOutputStream()
-        def serializer = new JsonLdToTurtle(context, bos, base)
+        def opts = [base: base]
+        def serializer = new JsonLdToTurtle(context, bos, opts)
         serializer.toTurtle(source)
         return bos
     }

@@ -180,14 +180,12 @@ class LegacyMarcAPI extends HttpServlet {
         }
 
         def auths = new HashSet<MarcRecord>()
-        if (!profile.getProperty("authtype", "NONE").equalsIgnoreCase("NONE")) {
-            auth_ids.each { String auth_id ->
-                Document authDoc = getDocument(auth_id)
-                if (authDoc != null) {
-                    String xmlString = toXmlString(authDoc)
-                    if (xmlString != null)
-                        auths.add(MarcXmlRecordReader.fromXml(xmlString))
-                }
+        auth_ids.each { String auth_id ->
+            Document authDoc = getDocument(auth_id)
+            if (authDoc != null) {
+                String xmlString = toXmlString(authDoc)
+                if (xmlString != null)
+                    auths.add(MarcXmlRecordReader.fromXml(xmlString))
             }
         }
 

@@ -1690,6 +1690,10 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             if (v) {
                 if (dateTimeFormat) {
                     try {
+                        if (v instanceof List)
+                            v = v[0]
+                        if (!(v instanceof String))
+                            return null
                         def zonedDateTime = parseDate(v)
                         def value = zonedDateTime.format(dateTimeFormat)
                         if (missingCentury) {

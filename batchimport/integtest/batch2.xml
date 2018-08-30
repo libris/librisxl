@@ -7,11 +7,8 @@
     <controlfield tag="005">20170713141440.0</controlfield>
     <controlfield tag="008">170327s2017    sw ||||j     |00| 0|swe d</controlfield>
     <datafield tag="020" ind1=" " ind2=" ">
-      <subfield code="a">978-91-502-2231-9</subfield>
+      <subfield code="a">91-27-10850-3</subfield>
       <subfield code="q">inbunden</subfield>
-    </datafield>
-    <datafield tag="035" ind1=" " ind2=" ">
-      <subfield code="a">(BOKR)9789150222319</subfield>
     </datafield>
     <datafield tag="040" ind1=" " ind2=" ">
       <subfield code="a">BOKR</subfield>
@@ -21,7 +18,7 @@
       <subfield code="4">aut</subfield>
     </datafield>
     <datafield tag="245" ind1="1" ind2="0">
-      <subfield code="a">Polisbilen får INTE ett larm</subfield>
+      <subfield code="a">Polisbilen får ett larm</subfield>
     </datafield>
     <datafield tag="263" ind1=" " ind2=" ">
       <subfield code="a">201709</subfield>
@@ -62,7 +59,7 @@
     <leader>XXXXXax  a22XXXXX1n 4500</leader>
     <controlfield tag="008">170714||0000|||||000||||||000000</controlfield>
     <datafield tag="852" ind1="" ind2="">
-      <subfield code="b">Nyks</subfield>
+      <subfield code="b">Sods</subfield>
     </datafield>
   </record>
 </collection>

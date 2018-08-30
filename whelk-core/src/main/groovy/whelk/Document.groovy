@@ -78,37 +78,37 @@ class Document {
         return mapper.writeValueAsString(data)
     }
 
-    void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber, HashMap) }
+    void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber) }
 
     String getControlNumber() { get(controlNumberPath) }
 
-    void setGenerationProcess(process) { set(generationProcessPath, process, HashMap) }
+    void setGenerationProcess(process) { set(generationProcessPath, process) }
 
     String getGenerationProcess() { get(generationProcessPath) }
 
-    void setHoldingFor(holdingFor) { set(holdingForPath, holdingFor, HashMap) }
+    void setHoldingFor(holdingFor) { set(holdingForPath, holdingFor) }
 
     String getHoldingFor() { get(holdingForPath) }
 
     String getHeldBy() { get(heldByPath) }
 
-    void setEncodingLevel(encLevel) { set(encLevelPath, encLevel, HashMap) }
+    void setEncodingLevel(encLevel) { set(encLevelPath, encLevel) }
 
     String getEncodingLevel() { get(encLevelPath) }
 
-    void setDescriptionCreator(creator) { set(descriptionCreatorPath, creator, HashMap) }
+    void setDescriptionCreator(creator) { set(descriptionCreatorPath, creator) }
 
     String getDescriptionCreator() { get(descriptionCreatorPath) }
 
-    void setThingType(thingType) { set(thingTypePath, thingType, HashMap) }
+    void setThingType(thingType) { set(thingTypePath, thingType) }
 
     String getThingType() { get(thingTypePath) }
 
     String getRecordStatus() { return get(statusPath) }
 
-    void setRecordStatus(status) { set(statusPath, status, HashMap) }
+    void setRecordStatus(status) { set(statusPath, status) }
 
-    void setThingMeta(meta) { set(thingMetaPath, meta, HashMap) }
+    void setThingMeta(meta) { set(thingMetaPath, meta) }
 
     /**
      * Will have base URI prepended if not already there
@@ -117,7 +117,7 @@ class Document {
         if (!id.startsWith(Document.BASE_URI.toString()))
             id = Document.BASE_URI.resolve(id)
 
-        set(recordIdPath, id, LinkedHashMap)
+        set(recordIdPath, id)
     }
 
     /**
@@ -156,10 +156,42 @@ class Document {
      */
     String getId() { return getCompleteId() }
 
+    List<String> getIsbnValues() { return getTypedIDValues("ISBN", "value") }
+    List<String> getIssnValues() { return getTypedIDValues("ISSN", "value") }
+    List<String> getIsbnHiddenValues() { return getTypedIDValues("ISBN", "marc:hiddenValue") }
+    List<String> getIssnHiddenValues() { return getTypedIDValues("ISSN", "marc:canceledIssn") }
+
+    private List<String> getTypedIDValues(String typeKey, String valueKey) {
+        List<String> values = new ArrayList<>()
+        List typedIDs = get(thingTypedIDsPath)
+        for (Object element : typedIDs) {
+            if (!(element instanceof Map))
+                continue
+            Map map = (Map) element
+
+            Object type = map.get("@type")
+            if (type == null)
+                continue
+
+            if (!type.equals(typeKey))
+                continue
+
+            Object value = map.get(valueKey)
+            if (value != null) {
+                if (value instanceof List)
+                    for (Object object : value)
+                        values.add( (String) object)
+                else
+                    values.add( (String) value)
+            }
+        }
+        return values
+    }
+
     void setCreated(Date created) {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(created.toInstant(), ZoneId.systemDefault())
         String formatedCreated = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
-        set(createdPath, formatedCreated, HashMap)
+        set(createdPath, formatedCreated)
         updateRecordStatus()
     }
 
@@ -170,7 +202,7 @@ class Document {
     void setModified(Date modified) {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(modified.toInstant(), ZoneId.systemDefault())
         String formatedModified = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
-        set(modifiedPath, formatedModified, HashMap)
+        set(modifiedPath, formatedModified)
         updateRecordStatus()
     }
 
@@ -179,7 +211,7 @@ class Document {
     void setGenerationDate(Date generationDate) {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(generationDate.toInstant(), ZoneId.systemDefault())
         String formatedGenerationDate = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
-        set(generationDatePath, formatedGenerationDate, HashMap)
+        set(generationDatePath, formatedGenerationDate)
         updateRecordStatus()
     }
 
@@ -187,9 +219,9 @@ class Document {
 
     void setDeleted(boolean newValue) {
         if (newValue)
-            set(statusPath, "marc:Deleted", HashMap)
+            set(statusPath, "marc:Deleted")
         else {
-            set(statusPath, "marc:New", HashMap)
+            set(statusPath, "marc:New")
             updateRecordStatus()
         }
     }
@@ -207,7 +239,7 @@ class Document {
             String modified = getModified()
             String created = getCreated()
             if (modified != null && created != null && !modified.equals(created))
-                set(statusPath, "marc:CorrectedOrRevised", HashMap)
+                set(statusPath, "marc:CorrectedOrRevised")
         }
     }
 
@@ -286,8 +318,8 @@ class Document {
 
     void addThingIdentifier(String identifier) {
         if (get(thingIdPath) == null) {
-            set(thingIdPath2, identifier, HashMap)
-            set(thingIdPath, identifier, HashMap)
+            set(thingIdPath2, identifier)
+            set(thingIdPath, identifier)
             return
         }
 
@@ -295,8 +327,12 @@ class Document {
             return
         }
 
-        if (preparePath(thingSameAsPath, ArrayList)) {
+        if (preparePath(thingSameAsPath)) {
             List sameAsList = get(thingSameAsPath)
+            if (sameAsList == null || !(sameAsList instanceof List)) {
+                set(thingSameAsPath, [])
+                sameAsList = get(thingSameAsPath)
+            }
             def idObject = ["@id": identifier]
             if (!sameAsList.contains(idObject))
                 sameAsList.add(idObject)
@@ -327,7 +363,7 @@ class Document {
             throw new NullPointerException("Attempted to add null-identifier.")
 
         if (get(recordIdPath) == null) {
-            set(recordIdPath, identifier, HashMap)
+            set(recordIdPath, identifier)
             return
         }
 
@@ -335,8 +371,12 @@ class Document {
             return
         }
 
-        if (preparePath(recordSameAsPath, ArrayList)) {
+        if (preparePath(recordSameAsPath)) {
             Object sameAsList = get(recordSameAsPath)
+            if (sameAsList == null || !(sameAsList instanceof List)) {
+                set(recordSameAsPath, [])
+                sameAsList = get(recordSameAsPath)
+            }
             def idObject = ["@id": identifier]
             if (sameAsList.every { it -> it != idObject })
                 sameAsList.add(idObject)
@@ -394,22 +434,19 @@ class Document {
     /**
      * Adds empty structure to the document so that 'path' can be traversed.
      */
-    private boolean preparePath(List path, Type leafType) {
-        return _preparePath(path, leafType, data)
+    private boolean preparePath(List path) {
+        return _preparePath(path, data)
     }
 
-    public static boolean _preparePath(List path, Type leafType, Object root) {
+    public static boolean _preparePath(List path, Object root) {
         // Start at root data node
         Object node = root
 
-        for (int i = 0; i < path.size(); ++i) {
+        for (int i = 0; i < path.size()-1; ++i) {
             Object step = path.get(i)
 
-            Type nextReplacementType
-            if (i < path.size() - 1) // use the next step to determine the type of the next object
-                nextReplacementType = (path.get(i + 1) instanceof Integer) ? ArrayList : HashMap
-            else
-                nextReplacementType = leafType
+            // use the next step to determine the type of the next object
+            Type nextReplacementType = (path.get(i + 1) instanceof Integer) ? ArrayList : HashMap
 
             // Get the next object along the path (candidate)
             Object candidate = null
@@ -448,12 +485,12 @@ class Document {
     /**
      * Set 'value' at 'path'. 'container' should be ArrayList or HashMap depending on if value should reside in a list or an object
      */
-    private boolean set(List path, Object value, Type container) {
-        return _set(path, value, container, data)
+    private boolean set(List path, Object value) {
+        return _set(path, value, data)
     }
 
-    public static boolean _set(List path, Object value, Type container, Object root) {
-        if (!_preparePath(path, container, root))
+    public static boolean _set(List path, Object value, Object root) {
+        if (!_preparePath(path, root))
             return false
 
         // Start at root data node
@@ -465,7 +502,17 @@ class Document {
             node = node.get(step)
         }
 
-        node.put(path.get(path.size() - 1), value)
+        if ( node instanceof Map )
+            node.put(path.get(path.size() - 1), value)
+        else if ( node instanceof List ) {
+            List nodeAsList = (List) node
+            while (nodeAsList.size() < path.get(path.size() - 1))
+                nodeAsList.add(null)
+            nodeAsList.add(path.get(path.size() - 1), value)
+            //node.add(path.get(path.size() - 1), value)
+        }
+        else
+            throw new RuntimeException("Was asked to insert at " + path.get(path.size() - 1) + " in " + node + " and could not match up the container types.")
         return true
     }
 

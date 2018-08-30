@@ -61,6 +61,7 @@ dependencies {
 
     // KB tools
     compile files('lib/jmarctools.jar')
+    compile files('lib/isbntools-1.3.jar')
 
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
@@ -160,6 +161,6 @@ task vocabFromMarcFrame(dependsOn: 'classes', type: JavaExec) {
 task jsonldToTurtle(dependsOn: 'classes', type: JavaExec) {
     description "Convert a JSON-LD file to Turtle (USAGE: -Dargs='<context> <source>')"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.plugin.JsonLdToTurtle'
+    main = 'whelk.converter.JsonLdToTurtle'
     args(System.getProperty('args', "").split() as String[])
 }
