@@ -489,10 +489,21 @@ class XL
         boolean hyphens = false;
         if (isbn == null)
             return new ArrayList<>();
-        Isbn typedIsbn = IsbnParser.parse(isbn);
-        int otherType = typedIsbn.getType() == Isbn.ISBN10 ? Isbn.ISBN13 : Isbn.ISBN10;
 
         List<String> duplicateIDs = new ArrayList<>();
+
+        try(Connection connection = m_whelk.getStorage().getConnection();
+            PreparedStatement statement = getOnIsbn_ps(connection, isbn);
+            ResultSet resultSet = statement.executeQuery())
+        {
+            duplicateIDs.addAll( collectIDs(resultSet) );
+        }
+
+        Isbn typedIsbn = IsbnParser.parse(isbn);
+        if (typedIsbn == null)
+            return duplicateIDs;
+
+        int otherType = typedIsbn.getType() == Isbn.ISBN10 ? Isbn.ISBN13 : Isbn.ISBN10;
 
         String numericIsbn = typedIsbn.toString(hyphens);
         try(Connection connection = m_whelk.getStorage().getConnection();
