@@ -34,8 +34,8 @@ Use `sed 's/\\\\/\\/g'` to convert escaped `psql` output to valid JSON.
 For repetitive processing, consider redirecting the output to a file and processing it locally.
 
 ```bash
-$ psql -h $HOST -Uwhelk -tc "COPY (SELECT data FROM lddb WHERE collection = 'bib' AND deleted = false) TO stdout;" > lddb-bib.jsonld.lines
-$ cat lddb-bib.jsonld.lines | sed 's/\\\\/\\/g' |  ...
+$ psql -h $HOST -Uwhelk -tc "COPY (SELECT data FROM lddb WHERE collection = 'bib' AND deleted = false) TO stdout;" > stg-lddb-bib.json.lines
+$ cat stg-lddb-bib.json.lines | sed 's/\\\\/\\/g' |  ...
 ```
 
 ### Using JQ (and AWK)
@@ -54,14 +54,22 @@ Find and count all authorized ("pre-coordinated") ComplexSubjects:
 $ time psql -h $HOST -Uwhelk -tc "COPY (SELECT data FROM lddb WHERE collection = 'auth' AND deleted = false) TO STDOUT;" | sed 's/\\\\/\\/g' |
     jq '.["@graph"][1] | select(.["@type"] == "ComplexSubject") | .prefLabel' |
     awk '{print NR" "$0}'
+
+1 "Varumärken--juridik och lagstiftning"
+2 "Räkenskaper--historia"
+3 "Skiften--juridik och lagstiftning"
+4 "Substitutionsprincipen--miljöaspekter"
+...
 ```
 
 Count all usages of anonymous ("post-coordinated") ComplexSubjects:
 
 ```bash
-$ cat lddb-bib.jsonld.lines | sed 's/\\\\/\\/g' |
+$ cat stg-lddb-bib.json.lines stg-| sed 's/\\\\/\\/g' |
     jq '.["@graph"][2].subject[]? | select(.["@type"] == "ComplexSubject") | .prefLabel' |
     awk '{printf "\r%s", NR}'
+
+1234...
 ```
 
 Find all ISBN values containing punctuation:
@@ -75,6 +83,12 @@ $ time cat stg-lddb-bib.json.lines |
         .captures[0].string' |
     awk '{ a[$0]++ }
          END { for (k in a) print k": " a[k] }'
+
+"6 ;": 1
+") :": 6
+") ;": 5
+"1 ;": 1
+...
 ```
 
 Count the types of `_marcUncompleted` (including none):
@@ -83,6 +97,8 @@ Count the types of `_marcUncompleted` (including none):
 $ time cat stg-lddb-bib.json.lines | sed 's/\\\\/\\/g' |
     jq -c '.["@graph"][]|._marcUncompleted?|type' |
     awk '{a[$0]++; printf "\r"; for (k in a) printf "%s %s; ", a[k], k }'
+
+28 "array"; 214680 "null"; 27 "object";  ...
 ```
 
 Find and count all `_marcUncompleted` patterns (fields and subfields):
@@ -95,6 +111,12 @@ $ time cat stg-lddb-bib.json.lines | sed 's/\\\\/\\/g' |
            .[] | [keys, ._unhandled]' |
     awk '{ a[$0]++ } END { for (k in a) print a[k]": "k }' |
     sort -nr
+
+31: [["773","_unhandled"],["o"]]
+28: [["945"],null]
+1: [["586","_unhandled"],["ind1"]]
+1: [["024","_unhandled"],"ind1"]
+...
 ```
 
 ### Using Python
