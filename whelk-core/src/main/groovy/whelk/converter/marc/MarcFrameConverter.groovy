@@ -439,12 +439,19 @@ class MarcConversion {
         // Order fields in result by number, not by revertFieldOrder.
         fields.sort { it.keySet()[0] }
 
-        // TODO: how to re-add only partially _unhandled?
-        data._marcUncompleted.each {
-            def field = it.clone()
-            field.remove('_unhandled')
-            fields << field
+        if (data._marcUncompleted) {
+            List<Map> marcUncompleted = data._marcUncompleted instanceof List
+                ? data._marcUncompleted
+                : [data._marcUncompleted]
+
+            // TODO: how to re-add only partially _unhandled?
+            marcUncompleted.each {
+                def field = it.clone()
+                field.remove('_unhandled')
+                fields << field
+            }
         }
+
         return marc
     }
 
