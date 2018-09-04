@@ -10,8 +10,9 @@ querying [JSON in PostgreSQL 9+](https://www.postgresql.org/docs/current/static/
 ## Design
 
 1. Use compact, flat JSON-LD, with PNames only in keys and `@type` values.
-2. Use an outer object with a `@graph` array. This (a "record" in LDDB), and is
-   logically equivalent to a named graph.
+2. Use an outer object with a `@graph` array. This represents a "record" in
+   LDDB, and is logically equivalent to a named graph (albeit it is represented
+   as a default graph).
 3. Put the description of the named graph as item 0 in the array, and its
    `mainEntity` as item 1.
 4. Use `sameAs` as record and entity aliases.
