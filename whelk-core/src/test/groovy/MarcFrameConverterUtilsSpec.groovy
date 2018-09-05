@@ -221,6 +221,25 @@ class MarcFrameConverterUtilsSpec extends Specification {
         !MatchRule.objectContains(obj2, pattern)
     }
 
+    def "should balance brackets"() {
+        expect:
+        MarcSubFieldHandler.toBalancedBrackets(value) == result
+        where:
+        value       | result
+        '[a'        | '[a]'
+        '[a b'      | '[a b]'
+        '[a] b'     | '[a] b'
+        'a]'        | '[a]'
+        'a b]'      | '[a b]'
+        'a [b]'     | 'a [b]'
+        'a]'        | '[a]'
+        '[a] [b]'   | '[a] [b]'
+        'a [b] c'   | 'a [b] c'
+        // TODO: Do we have to support embedded half brackets?
+        //'a [b c'    | 'a [b c]'
+        //'a b] c'    | '[a b] c'
+    }
+
     def newMarcFieldHandler() {
         new MarcFieldHandler(new MarcRuleSet(new MarcConversion(null, [:], [:]), 'blip'), 'xxx', [:])
     }
