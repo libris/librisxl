@@ -6962,7 +6962,7 @@
           }
         },
         {
-          "when": "$2=rdacarrier",
+          "when": "$2=rdamedia",
           "pendingResources": {
             "_:mediaType": {
               "addLink": "mediaType",
@@ -6983,7 +6983,102 @@
       "$b": {"about": "_:mediaType", "property": "code"},
       "$2": {"about": "_:mediaType", "property": "termGroup", "marcDefault": "rdamedia"},
       "$8": {"about": "_:mediaType", "property": "marc:groupid"},
-      "$3": {"about": "_:mediaType", "link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"about": "_:mediaType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "source": [
+            {"337": {"ind1": " ", "ind2": " ", "subfields": [{"a": "audio"}, {"2": "rdamedia"}]}},
+            {"337": {"ind1": " ", "ind2": " ", "subfields": [{"b": "s"}, {"2": "rdamedia"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "mediaType": [
+                {
+                  "@id": "http://id.kb.se/term/rda/media/audio",
+                  "@type": "MediaType",
+                  "label": "audio"
+                }
+              ],
+              "hasPart": [{
+                "@type": "Instance",
+                "mediaType": [
+                  {
+                    "@id": "http://id.kb.se/term/rda/media/s",
+                    "@type": "MediaType",
+                    "code": "s"
+                  }
+                ]
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "337": {"ind1": " ", "ind2": " ", "subfields": [{"a": "audio"}, {"b": "s"}, {"2": "rdamedia"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "mediaType": [
+                {
+                  "@id": "http://id.kb.se/term/rda/media/s",
+                  "@type": "MediaType",
+                  "code": "s",
+                  "label": "audio"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "337": {"ind1": " ", "ind2": " ", "subfields": [{"a": "audio"}, {"2": "rdamedia"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "mediaType": [
+                {
+                  "@id": "http://id.kb.se/term/rda/media/audio",
+                  "@type": "MediaType",
+                  "label": "audio"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "337": {"ind1": " ", "ind2": " ", "subfields": [{"b": "s"}, {"2": "rdamedia"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "mediaType": [
+                {
+                  "@id": "http://id.kb.se/term/rda/media/s",
+                  "@type": "MediaType",
+                  "code": "s"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "337": {"ind1": " ", "ind2": " ", "subfields": [{"a": "audio"}, {"b": "s"}, {"2": "otherlist"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "mediaType": [
+                {
+                  "@type": "MediaType",
+                  "code": "s",
+                  "label": "audio",
+                  "termGroup": "otherlist"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "338": {
       "linkSubsequentRepeated": {
