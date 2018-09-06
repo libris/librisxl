@@ -234,7 +234,7 @@
             "mainEntity": {
               "subject": [
                 {
-                  "@id": "http://id.kb.se/term/sao/Steampunk"
+                  "@id": "https://id.kb.se/term/sao/Steampunk"
                 }
               ]
             }
@@ -243,7 +243,7 @@
             "mainEntity": {
               "subject": [
                 {
-                  "@id": "http://id.kb.se/term/sao/Steampunk"
+                  "@id": "https://id.kb.se/term/sao/Steampunk"
                 }
               ]
             }
@@ -252,8 +252,8 @@
             "mainEntity": {
               "subject": [
                 {
-                  "@id": "http://id.kb.se/term/sao/Steampunk",
-                  "marc:uri": ["http://id.kb.se/term/sao/Steampunk"]
+                  "@id": "https://id.kb.se/term/sao/Steampunk",
+                  "marc:uri": ["https://id.kb.se/term/sao/Steampunk"]
                 }
               ]
             }
@@ -6916,7 +6916,7 @@
             "_:contentType": {
               "addLink": "contentType",
               "resourceType": "ContentType",
-              "uriTemplate": "http://id.kb.se/term/rda/content{/code}"
+              "uriTemplate": "https://id.kb.se/term/rda/content{/code}"
             }
           }
         },
@@ -6926,7 +6926,7 @@
             "_:contentType": {
               "addLink": "contentType",
               "resourceType": "ContentType",
-              "uriTemplate": "http://id.kb.se/term/rda/content{/code,label}"
+              "uriTemplate": "https://id.kb.se/term/rda/content{/code,label}"
             }
           }
         }
@@ -6942,7 +6942,117 @@
       "$2": {"about": "_:contentType", "property": "termGroup", "marcDefault": "rdacontent"},
       "TODO?:$2": {"about": "_:contentType", "addLink": "inCollection", "resourceType": "ConceptCollection", "property": "code"},
       "$8": {"about": "_:contentType", "property": "marc:groupid"},
-      "$3": {"about": "_:contentType", "link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"about": "_:contentType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "source": [
+            {"336": {"ind1": " ", "ind2": " ", "subfields": [{"a": "performed music"}, {"2": "rdacontent"}]}},
+            {"336": {"ind1": " ", "ind2": " ", "subfields": [{"b": "prm"}, {"2": "rdacontent"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentType": [
+                  {
+                    "@id": "https://id.kb.se/term/rda/content/performed%20music",
+                    "@type": "ContentType",
+                    "label": "performed music"
+                  }
+                ],
+                "hasPart": [{
+                  "@type": "Work",
+                  "contentType": [
+                    {
+                      "@id": "https://id.kb.se/term/rda/content/prm",
+                      "@type": "ContentType",
+                      "code": "prm"
+                    }
+                  ]
+                }]
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "336": {"ind1": " ", "ind2": " ", "subfields": [{"a": "performed music"}, {"b": "prm"}, {"2": "rdacontent"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentType": [
+                  {
+                    "@id": "https://id.kb.se/term/rda/content/prm",
+                    "@type": "ContentType",
+                    "code": "prm",
+                    "label": "performed music"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "336": {"ind1": " ", "ind2": " ", "subfields": [{"a": "performed music"}, {"2": "rdacontent"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentType": [
+                  {
+                    "@id": "https://id.kb.se/term/rda/content/performed%20music",
+                    "@type": "ContentType",
+                    "label": "performed music"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "336": {"ind1": " ", "ind2": " ", "subfields": [{"b": "prm"}, {"2": "rdacontent"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentType": [
+                  {
+                    "@id": "https://id.kb.se/term/rda/content/prm",
+                    "@type": "ContentType",
+                    "code": "prm"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "336": {"ind1": " ", "ind2": " ", "subfields": [{"a": "performed music"}, {"b": "prm"}, {"2": "otherlist"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentType": [
+                  {
+                    "@type": "ContentType",
+                    "code": "prm",
+                    "label": "performed music",
+                    "termGroup": "otherlist"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
     },
     "337": {
       "linkSubsequentRepeated": {
@@ -6957,17 +7067,17 @@
             "_:mediaType": {
               "addLink": "mediaType",
               "resourceType": "MediaType",
-              "uriTemplate": "http://id.kb.se/term/rda/media{/code}"
+              "uriTemplate": "https://id.kb.se/term/rda/media{/code}"
             }
           }
         },
         {
-          "when": "$2=rdacarrier",
+          "when": "$2=rdamedia",
           "pendingResources": {
             "_:mediaType": {
               "addLink": "mediaType",
               "resourceType": "MediaType",
-              "uriTemplate": "http://id.kb.se/term/rda/media{/code,label}"
+              "uriTemplate": "https://id.kb.se/term/rda/media{/code,label}"
             }
           }
         }
@@ -6983,7 +7093,102 @@
       "$b": {"about": "_:mediaType", "property": "code"},
       "$2": {"about": "_:mediaType", "property": "termGroup", "marcDefault": "rdamedia"},
       "$8": {"about": "_:mediaType", "property": "marc:groupid"},
-      "$3": {"about": "_:mediaType", "link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"about": "_:mediaType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "source": [
+            {"337": {"ind1": " ", "ind2": " ", "subfields": [{"a": "audio"}, {"2": "rdamedia"}]}},
+            {"337": {"ind1": " ", "ind2": " ", "subfields": [{"b": "s"}, {"2": "rdamedia"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "mediaType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/media/audio",
+                  "@type": "MediaType",
+                  "label": "audio"
+                }
+              ],
+              "hasPart": [{
+                "@type": "Instance",
+                "mediaType": [
+                  {
+                    "@id": "https://id.kb.se/term/rda/media/s",
+                    "@type": "MediaType",
+                    "code": "s"
+                  }
+                ]
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "337": {"ind1": " ", "ind2": " ", "subfields": [{"a": "audio"}, {"b": "s"}, {"2": "rdamedia"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "mediaType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/media/s",
+                  "@type": "MediaType",
+                  "code": "s",
+                  "label": "audio"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "337": {"ind1": " ", "ind2": " ", "subfields": [{"a": "audio"}, {"2": "rdamedia"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "mediaType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/media/audio",
+                  "@type": "MediaType",
+                  "label": "audio"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "337": {"ind1": " ", "ind2": " ", "subfields": [{"b": "s"}, {"2": "rdamedia"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "mediaType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/media/s",
+                  "@type": "MediaType",
+                  "code": "s"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "337": {"ind1": " ", "ind2": " ", "subfields": [{"a": "audio"}, {"b": "s"}, {"2": "otherlist"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "mediaType": [
+                {
+                  "@type": "MediaType",
+                  "code": "s",
+                  "label": "audio",
+                  "termGroup": "otherlist"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "338": {
       "linkSubsequentRepeated": {
@@ -6998,7 +7203,7 @@
             "_:carrierType": {
               "addLink": "carrierType",
               "resourceType": "CarrierType",
-              "uriTemplate": "http://id.kb.se/term/rda/carrier{/code}"
+              "uriTemplate": "https://id.kb.se/term/rda/carrier{/code}"
             }
           }
         },
@@ -7008,7 +7213,7 @@
             "_:carrierType": {
               "addLink": "carrierType",
               "resourceType": "CarrierType",
-              "uriTemplate": "http://id.kb.se/term/rda/carrier{/code,label}"
+              "uriTemplate": "https://id.kb.se/term/rda/carrier{/code,label}"
             }
           }
         }
@@ -7026,6 +7231,33 @@
       "$3": {"about": "_:carrierType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "_spec": [
         {
+          "source": [
+            {"338": {"ind1": " ", "ind2": " ", "subfields": [{"a": "volume"}, {"2": "rdacarrier"}]}},
+            {"338": {"ind1": " ", "ind2": " ", "subfields": [{"b": "nc"}, {"2": "rdacarrier"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "carrierType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/carrier/volume",
+                  "@type": "CarrierType",
+                  "label": "volume"
+                }
+              ],
+              "hasPart": [{
+                "@type": "Instance",
+                "carrierType": [
+                  {
+                    "@id": "https://id.kb.se/term/rda/carrier/nc",
+                    "@type": "CarrierType",
+                    "code": "nc"
+                  }
+                ]
+              }]
+            }
+          }
+        },
+        {
           "source": {
             "338": {"ind1": " ", "ind2": " ", "subfields": [{"b": "nc"}, {"2": "rdacarrier"}]}
           },
@@ -7033,7 +7265,7 @@
             "mainEntity": {
                 "carrierType": [
                   {
-                    "@id": "http://id.kb.se/term/rda/carrier/nc",
+                    "@id": "https://id.kb.se/term/rda/carrier/nc",
                     "@type": "CarrierType",
                     "code": "nc"
                   }
@@ -7049,7 +7281,7 @@
             "mainEntity": {
                 "carrierType": [
                   {
-                    "@id": "http://id.kb.se/term/rda/carrier/nc",
+                    "@id": "https://id.kb.se/term/rda/carrier/nc",
                     "@type": "CarrierType",
                     "code": "nc",
                     "label": "volume"
@@ -7066,7 +7298,7 @@
             "mainEntity": {
                 "carrierType": [
                   {
-                    "@id": "http://id.kb.se/term/rda/carrier/volume",
+                    "@id": "https://id.kb.se/term/rda/carrier/volume",
                     "@type": "CarrierType",
                     "label": "volume"
                   }
