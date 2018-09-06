@@ -6942,7 +6942,117 @@
       "$2": {"about": "_:contentType", "property": "termGroup", "marcDefault": "rdacontent"},
       "TODO?:$2": {"about": "_:contentType", "addLink": "inCollection", "resourceType": "ConceptCollection", "property": "code"},
       "$8": {"about": "_:contentType", "property": "marc:groupid"},
-      "$3": {"about": "_:contentType", "link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"about": "_:contentType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "source": [
+            {"336": {"ind1": " ", "ind2": " ", "subfields": [{"a": "performed music"}, {"2": "rdacontent"}]}},
+            {"336": {"ind1": " ", "ind2": " ", "subfields": [{"b": "prm"}, {"2": "rdacontent"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentType": [
+                  {
+                    "@id": "http://id.kb.se/term/rda/content/performed%20music",
+                    "@type": "ContentType",
+                    "label": "performed music"
+                  }
+                ],
+                "hasPart": [{
+                  "@type": "Work",
+                  "contentType": [
+                    {
+                      "@id": "http://id.kb.se/term/rda/content/prm",
+                      "@type": "ContentType",
+                      "code": "prm"
+                    }
+                  ]
+                }]
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "336": {"ind1": " ", "ind2": " ", "subfields": [{"a": "performed music"}, {"b": "prm"}, {"2": "rdacontent"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentType": [
+                  {
+                    "@id": "http://id.kb.se/term/rda/content/prm",
+                    "@type": "ContentType",
+                    "code": "prm",
+                    "label": "performed music"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "336": {"ind1": " ", "ind2": " ", "subfields": [{"a": "performed music"}, {"2": "rdacontent"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentType": [
+                  {
+                    "@id": "http://id.kb.se/term/rda/content/performed%20music",
+                    "@type": "ContentType",
+                    "label": "performed music"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "336": {"ind1": " ", "ind2": " ", "subfields": [{"b": "prm"}, {"2": "rdacontent"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentType": [
+                  {
+                    "@id": "http://id.kb.se/term/rda/content/prm",
+                    "@type": "ContentType",
+                    "code": "prm"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "336": {"ind1": " ", "ind2": " ", "subfields": [{"a": "performed music"}, {"b": "prm"}, {"2": "otherlist"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentType": [
+                  {
+                    "@type": "ContentType",
+                    "code": "prm",
+                    "label": "performed music",
+                    "termGroup": "otherlist"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
     },
     "337": {
       "linkSubsequentRepeated": {
@@ -7120,6 +7230,33 @@
       "$8": {"about": "_:carrierType", "property": "marc:groupid"},
       "$3": {"about": "_:carrierType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "_spec": [
+        {
+          "source": [
+            {"338": {"ind1": " ", "ind2": " ", "subfields": [{"a": "volume"}, {"2": "rdacarrier"}]}},
+            {"338": {"ind1": " ", "ind2": " ", "subfields": [{"b": "nc"}, {"2": "rdacarrier"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "carrierType": [
+                {
+                  "@id": "http://id.kb.se/term/rda/carrier/volume",
+                  "@type": "CarrierType",
+                  "label": "volume"
+                }
+              ],
+              "hasPart": [{
+                "@type": "Instance",
+                "carrierType": [
+                  {
+                    "@id": "http://id.kb.se/term/rda/carrier/nc",
+                    "@type": "CarrierType",
+                    "code": "nc"
+                  }
+                ]
+              }]
+            }
+          }
+        },
         {
           "source": {
             "338": {"ind1": " ", "ind2": " ", "subfields": [{"b": "nc"}, {"2": "rdacarrier"}]}
