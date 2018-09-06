@@ -234,7 +234,7 @@
             "mainEntity": {
               "subject": [
                 {
-                  "@id": "http://id.kb.se/term/sao/Steampunk"
+                  "@id": "https://id.kb.se/term/sao/Steampunk"
                 }
               ]
             }
@@ -243,7 +243,7 @@
             "mainEntity": {
               "subject": [
                 {
-                  "@id": "http://id.kb.se/term/sao/Steampunk"
+                  "@id": "https://id.kb.se/term/sao/Steampunk"
                 }
               ]
             }
@@ -252,8 +252,8 @@
             "mainEntity": {
               "subject": [
                 {
-                  "@id": "http://id.kb.se/term/sao/Steampunk",
-                  "marc:uri": ["http://id.kb.se/term/sao/Steampunk"]
+                  "@id": "https://id.kb.se/term/sao/Steampunk",
+                  "marc:uri": ["https://id.kb.se/term/sao/Steampunk"]
                 }
               ]
             }
@@ -6916,7 +6916,7 @@
             "_:contentType": {
               "addLink": "contentType",
               "resourceType": "ContentType",
-              "uriTemplate": "http://id.kb.se/term/rda/content{/code}"
+              "uriTemplate": "https://id.kb.se/term/rda/content{/code}"
             }
           }
         },
@@ -6926,7 +6926,7 @@
             "_:contentType": {
               "addLink": "contentType",
               "resourceType": "ContentType",
-              "uriTemplate": "http://id.kb.se/term/rda/content{/code,label}"
+              "uriTemplate": "https://id.kb.se/term/rda/content{/code,label}"
             }
           }
         }
@@ -6955,7 +6955,7 @@
                 "@type": "Text",
                 "contentType": [
                   {
-                    "@id": "http://id.kb.se/term/rda/content/performed%20music",
+                    "@id": "https://id.kb.se/term/rda/content/performed%20music",
                     "@type": "ContentType",
                     "label": "performed music"
                   }
@@ -6964,7 +6964,7 @@
                   "@type": "Work",
                   "contentType": [
                     {
-                      "@id": "http://id.kb.se/term/rda/content/prm",
+                      "@id": "https://id.kb.se/term/rda/content/prm",
                       "@type": "ContentType",
                       "code": "prm"
                     }
@@ -6984,7 +6984,7 @@
                 "@type": "Text",
                 "contentType": [
                   {
-                    "@id": "http://id.kb.se/term/rda/content/prm",
+                    "@id": "https://id.kb.se/term/rda/content/prm",
                     "@type": "ContentType",
                     "code": "prm",
                     "label": "performed music"
@@ -7004,7 +7004,7 @@
                 "@type": "Text",
                 "contentType": [
                   {
-                    "@id": "http://id.kb.se/term/rda/content/performed%20music",
+                    "@id": "https://id.kb.se/term/rda/content/performed%20music",
                     "@type": "ContentType",
                     "label": "performed music"
                   }
@@ -7023,7 +7023,7 @@
                 "@type": "Text",
                 "contentType": [
                   {
-                    "@id": "http://id.kb.se/term/rda/content/prm",
+                    "@id": "https://id.kb.se/term/rda/content/prm",
                     "@type": "ContentType",
                     "code": "prm"
                   }
@@ -7067,7 +7067,7 @@
             "_:mediaType": {
               "addLink": "mediaType",
               "resourceType": "MediaType",
-              "uriTemplate": "http://id.kb.se/term/rda/media{/code}"
+              "uriTemplate": "https://id.kb.se/term/rda/media{/code}"
             }
           }
         },
@@ -7077,7 +7077,7 @@
             "_:mediaType": {
               "addLink": "mediaType",
               "resourceType": "MediaType",
-              "uriTemplate": "http://id.kb.se/term/rda/media{/code,label}"
+              "uriTemplate": "https://id.kb.se/term/rda/media{/code,label}"
             }
           }
         }
@@ -7104,7 +7104,7 @@
             "mainEntity": {
               "mediaType": [
                 {
-                  "@id": "http://id.kb.se/term/rda/media/audio",
+                  "@id": "https://id.kb.se/term/rda/media/audio",
                   "@type": "MediaType",
                   "label": "audio"
                 }
@@ -7113,7 +7113,7 @@
                 "@type": "Instance",
                 "mediaType": [
                   {
-                    "@id": "http://id.kb.se/term/rda/media/s",
+                    "@id": "https://id.kb.se/term/rda/media/s",
                     "@type": "MediaType",
                     "code": "s"
                   }
@@ -7130,7 +7130,7 @@
             "mainEntity": {
               "mediaType": [
                 {
-                  "@id": "http://id.kb.se/term/rda/media/s",
+                  "@id": "https://id.kb.se/term/rda/media/s",
                   "@type": "MediaType",
                   "code": "s",
                   "label": "audio"
@@ -7147,7 +7147,7 @@
             "mainEntity": {
               "mediaType": [
                 {
-                  "@id": "http://id.kb.se/term/rda/media/audio",
+                  "@id": "https://id.kb.se/term/rda/media/audio",
                   "@type": "MediaType",
                   "label": "audio"
                 }
@@ -7163,7 +7163,7 @@
             "mainEntity": {
               "mediaType": [
                 {
-                  "@id": "http://id.kb.se/term/rda/media/s",
+                  "@id": "https://id.kb.se/term/rda/media/s",
                   "@type": "MediaType",
                   "code": "s"
                 }
@@ -7203,7 +7203,7 @@
             "_:carrierType": {
               "addLink": "carrierType",
               "resourceType": "CarrierType",
-              "uriTemplate": "http://id.kb.se/term/rda/carrier{/code}"
+              "uriTemplate": "https://id.kb.se/term/rda/carrier{/code}"
             }
           }
         },
@@ -7213,7 +7213,7 @@
             "_:carrierType": {
               "addLink": "carrierType",
               "resourceType": "CarrierType",
-              "uriTemplate": "http://id.kb.se/term/rda/carrier{/code,label}"
+              "uriTemplate": "https://id.kb.se/term/rda/carrier{/code,label}"
             }
           }
         }
@@ -7239,7 +7239,7 @@
             "mainEntity": {
               "carrierType": [
                 {
-                  "@id": "http://id.kb.se/term/rda/carrier/volume",
+                  "@id": "https://id.kb.se/term/rda/carrier/volume",
                   "@type": "CarrierType",
                   "label": "volume"
                 }
@@ -7248,7 +7248,7 @@
                 "@type": "Instance",
                 "carrierType": [
                   {
-                    "@id": "http://id.kb.se/term/rda/carrier/nc",
+                    "@id": "https://id.kb.se/term/rda/carrier/nc",
                     "@type": "CarrierType",
                     "code": "nc"
                   }
@@ -7265,7 +7265,7 @@
             "mainEntity": {
                 "carrierType": [
                   {
-                    "@id": "http://id.kb.se/term/rda/carrier/nc",
+                    "@id": "https://id.kb.se/term/rda/carrier/nc",
                     "@type": "CarrierType",
                     "code": "nc"
                   }
@@ -7281,7 +7281,7 @@
             "mainEntity": {
                 "carrierType": [
                   {
-                    "@id": "http://id.kb.se/term/rda/carrier/nc",
+                    "@id": "https://id.kb.se/term/rda/carrier/nc",
                     "@type": "CarrierType",
                     "code": "nc",
                     "label": "volume"
@@ -7298,7 +7298,7 @@
             "mainEntity": {
                 "carrierType": [
                   {
-                    "@id": "http://id.kb.se/term/rda/carrier/volume",
+                    "@id": "https://id.kb.se/term/rda/carrier/volume",
                     "@type": "CarrierType",
                     "label": "volume"
                   }
