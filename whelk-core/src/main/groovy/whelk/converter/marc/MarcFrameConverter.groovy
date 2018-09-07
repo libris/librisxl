@@ -1362,11 +1362,6 @@ class MarcFixedFieldHandler {
                 return OK
             if (matchAsDefault && matchAsDefault.matcher(token).matches())
                 return OK
-            boolean isNothing = token.find {
-                it != FIXED_NONE && it != FIXED_UNDEF
-            } == null
-            if (isNothing)
-                return OK
             return super.convert(state, token)
         }
 
@@ -1551,6 +1546,8 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[.n]XX")
 
     static final String COLUMN_STRING_PROPERTY = 'code'
+    static final String UNDEF_VALUE = "|"
+    static final String NONE_VALUE = " "
 
     String property
     String uriTemplate
@@ -1629,6 +1626,13 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                 strValue = (String) value
             }
         }
+
+        boolean isNothing = value.find {
+            it != NONE_VALUE && it != UNDEF_VALUE
+        } == null
+
+        if (isNothing)
+            return OK
 
         if (dateTimeFormat) {
             def givenValue = value
