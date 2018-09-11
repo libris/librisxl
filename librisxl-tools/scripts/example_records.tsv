@@ -138,6 +138,7 @@ auth/183024	Cato, Anders (w 370)
 auth/192570	Kant, Immanuel (w 370)
 auth/266570	Lokalt test för att säkerställa att exporten fungerar efter tagit bort mappning till dess ind2 värde (710 ind1=4)
 
+bib/19980053	Lokalt test för dubletter av 852 fältet
 bib/7241097	Lokalt test för dubletter av 852 fältet
 bib/9684293	Lokalt test för att säkerställa att exporten fungerar efter tagit bort mappning till dess ind1 värde (033 ind1=_)
 bib/21902942	För batch-test
