@@ -43,6 +43,10 @@ public class ApixCatServlet extends HttpServlet
     final static int ERROR_BAD_COLLECTION = 0xff03;
     final static int ERROR_DB_NOT_LIBRIS = 0xff04;
     final static int ERROR_CONVERSION_FAILED = 0xff05;
+    final static String APIX_READ_ROLE = "apix_read";
+    final static String APIX_CREATE_ROLE = "apix_create";
+    final static String APIX_UPDATE_ROLE = "apix_update";
+    final static String APIX_DELETE_ROLE = "apix_delete";
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
@@ -55,6 +59,16 @@ public class ApixCatServlet extends HttpServlet
 
     public void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
+        if (request.getUserPrincipal() == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        if (!(request.isUserInRole(APIX_CREATE_ROLE) || request.isUserInRole(APIX_UPDATE_ROLE))) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
         try { doPut2(request, response); } catch (Exception e)
         {
             s_logger.error("Failed to process PUT request.", e);
@@ -64,6 +78,16 @@ public class ApixCatServlet extends HttpServlet
 
     public void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
+        if (request.getUserPrincipal() == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        if (!request.isUserInRole(APIX_DELETE_ROLE)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
         try { doDelete2(request, response); } catch (Exception e)
         {
             s_logger.error("Failed to process DELETE request.", e);
