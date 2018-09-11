@@ -125,26 +125,26 @@ class LegacyMarcAPI extends HttpServlet {
                 String message = "Could not find a profile for the supplied \"library\"-parameter:" + library + ", using default profile."
                 log.warn("Bad client request to LegacyMarcAPI: " + message)
                 profileString = defaultProfileString
-            }
 
-            // This is a hack, to allow holding-information to be included when using the default profile
-            String sigel = LegacyIntegrationTools.uriToLegacySigel(library)
-            if (profileString.contains("extrafields=")) {
-                String[] lines = profileString.split(System.getProperty("line.separator"))
-                StringBuilder sb = new StringBuilder()
-                for (String line : lines) {
-                    sb.append(line)
-                    if (line.startsWith("extrafields=")) {
-                        if (!line.endsWith(";"))
-                            sb.append(";")
-                        sb.append(sigel + ":852,856;")
+                // This is a hack, to allow holding-information to be included when using the default profile
+                String sigel = LegacyIntegrationTools.uriToLegacySigel(library)
+                if (profileString.contains("extrafields=")) {
+                    String[] lines = profileString.split(System.getProperty("line.separator"))
+                    StringBuilder sb = new StringBuilder()
+                    for (String line : lines) {
+                        sb.append(line)
+                        if (line.startsWith("extrafields=")) {
+                            if (!line.endsWith(";"))
+                                sb.append(";")
+                            sb.append(sigel + ":852,856;")
+                        }
+                        sb.append(System.getProperty("line.separator"))
                     }
-                    sb.append(System.getProperty("line.separator"))
+                    profileString = sb.toString()
                 }
-                profileString = sb.toString()
+                else
+                    profileString = "extrafields="+sigel+":852,856;" + System.getProperty("line.separator") + profileString
             }
-            else
-                profileString = "extrafields="+sigel+":852,856;" + System.getProperty("line.separator") + profileString
             
             File tempFile = File.createTempFile("profile", ".tmp")
             tempFile.write(profileString)
