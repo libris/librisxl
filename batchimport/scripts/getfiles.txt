@@ -1,5 +1,0 @@
-dawson ftp.dawsonbooks.co.uk Libris pgapbj /OR[0-9]*USM|E[0-9]*USM|ERA[0-9]*USM|D[0-9]*USM|M[0-9]*USM
-bokrondellen download.bokinfo.se 5591 &Sy38N4dNJ /output/onix/dag/artdag*xml
-ferdosi ferdosi.com ferdosi_libris Ferdosi@123 F*xml
-ferdosi_info ferdosi.com ferdosiinfo_libris libris@!# Ferdosiinfo_*xml
-#NOtpb ftp.btj.se tpbkb sk67hk43 /tpbkb*
