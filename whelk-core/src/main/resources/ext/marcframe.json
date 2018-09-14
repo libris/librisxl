@@ -1319,7 +1319,7 @@
       "FIXME:embedded:whenGroupIdsAreStrippedFromEmbedded": true,
       "pendingResources": {
         "_:seriesinstance": {
-          "TODO:whenSoftMergeWorks:groupId": "#seriesinstance-$seq",
+          "groupId": "#seriesinstance-$seq",
           "link": "inSeries",
           "resourceType": "Instance"
         },
@@ -7789,10 +7789,9 @@
     },
     "490": {
       "include": ["inseries"],
-      "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
+      "groupId": "#seriesmember-$seq",
       "i1": {"property": "marc:seriesTracingPolicy", "TODO:marcDefault": 0, "TODO": {"when: 8xx[$t] | 830": "1", "else": "0"}},
       "i2": null,
-      "TODO:allowSpillOverOnRevert": "800-830 (solved by groupId?)",
       "$a": {"addProperty": "seriesStatement"},
       "NOTE:remove?$l": {"link": "callno", "resourceType": "Concept", "property": "code"},
       "$0": {"about": "_:seriesinstance", "addProperty": "marc:uri"},
@@ -12892,7 +12891,7 @@
     },
     "800": {
       "include": ["hasSeriesInstance", "titledetails", "contributionRole_4_e"],
-      "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
+      "groupId": "#seriesmember-$seq",
       "pendingResources": {
         "_:agent": {
           "about": "_:contribution",
@@ -13069,7 +13068,7 @@
     },
     "810": {
       "include": ["hasSeriesInstance", "agentdataOrganization", "titledetails", "contributionRole_4_e"],
-      "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
+      "groupId": "#seriesmember-$seq",
       "pendingResources": {
         "_:agent": {
           "about": "_:contribution",
@@ -13264,7 +13263,7 @@
     },
     "811": {
       "include": ["hasSeriesInstance", "agentdataOrganization", "titledetails", "contributionRole_4"],
-      "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
+      "groupId": "#seriesmember-$seq",
       "i1": {"marcDefault": "2"},
       "pendingResources": {
         "_:agent": {
@@ -13354,7 +13353,7 @@
     "830": {
       "onRevertPrefer": ["800", "810", "811"],
       "include": ["inseries_with_w", "titledetails", "i2-nonfiling"],
-      "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
+      "groupId": "#seriesmember-$seq",
       "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
       "$d": {"about": "_:work", "addProperty": "legalDate"},
       "$0": {"about": "_:work", "addProperty": "marc:uri"},
