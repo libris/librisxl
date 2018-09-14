@@ -204,7 +204,14 @@ public class ResponseCommon
             emitAttachedRecords(document, writer, requestedFormat);
         }
 
-        if (!onlyIdentifiers) {
+        /**
+         * Warning: There is a bug here in that <about> should not be visible for ListIdentifiers at all,
+         * and certainly not as a sibling of header (which makes it relate to nothing at all),
+         * but the export-program along with its modified websök-loading routine now expects this.
+         * And so, this must remain broken for the moment being.
+         */
+
+        //if (!onlyIdentifiers) {
             writer.writeStartElement("about");
 
             String itemOf = resultSet.getString("itemOf");
@@ -225,8 +232,9 @@ public class ResponseCommon
             writer.writeEndElement(); // about
 
 
+        if (!onlyIdentifiers)
             writer.writeEndElement(); // record
-        }
+        //}
     }
 
     private static void emitAttachedRecords(Document rootDocument, XMLStreamWriter writer, String requestedFormat)
