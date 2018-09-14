@@ -200,6 +200,10 @@ class MarcConversion {
             procStep = new MappedPropertyStep(props); break
             case 'VerboseRevertData':
             procStep = new VerboseRevertDataStep(props); break
+            case 'ProduceIfMissing':
+            procStep = new ProduceIfMissingStep(props); break
+            case 'SetFlagsByPatterns':
+            procStep = new SetFlagsByPatternsStep(props); break
             default:
             return null
         }
