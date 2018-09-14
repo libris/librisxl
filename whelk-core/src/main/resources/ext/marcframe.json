@@ -1774,6 +1774,31 @@
                 ]
               }
             }
+          },
+          {
+            "name":  "Skip entirely if there is any one item with the expected property (regardless of value)",
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "Some Publications"
+                  },
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {
+                        "@type": "Work",
+                        "hasTitle": [ {"@type": "Title", "mainTitle": "Other Publications"} ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": "source"
           }
         ]
       },
