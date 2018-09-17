@@ -201,10 +201,10 @@ class PostgreSQLComponent {
         GET_ID_TYPE = "SELECT graphindex, mainid FROM $idTableName " +
                       "WHERE iri = ?"
         GET_COLLECTION_BY_SYSTEM_ID = "SELECT collection FROM lddb where id = ?"
-        LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
+        LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? AND deleted = false"
         LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
-                "WHERE modified >= ? AND modified <= ? AND collection = ?"
+                "WHERE modified >= ? AND modified <= ? AND collection = ? AND deleted = false"
         LOAD_RECORD_IDENTIFIERS = "SELECT iri from $idTableName WHERE id = ? AND graphIndex = 0"
         LOAD_THING_IDENTIFIERS = "SELECT iri from $idTableName WHERE id = ? AND graphIndex = 1"
 
