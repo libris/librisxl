@@ -18,7 +18,7 @@ class JsonLD2RdfXml implements FormatConverter {
 
     Map convert(Map originaldata, String id) {
         readContextFromDb()
-        Map framed = JsonLd.frame(id, originaldata)
+        Map framed = JsonLd.frame(Document.BASE_URI.resolve(id).toString(), originaldata)
 
         framed.putAll(m_context)
         String framedString = mapper.writeValueAsString(framed)
