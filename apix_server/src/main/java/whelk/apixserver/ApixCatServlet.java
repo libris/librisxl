@@ -181,20 +181,29 @@ public class ApixCatServlet extends HttpServlet
         String id = parameters[2];
 
         String content = IOUtils.toString(request.getReader());
-        Document incomingDocument = Utils.convertToRDF(content, collection, null);
-        if (incomingDocument == null)
-        {
-            Utils.send200Response(response, Xml.formatApixErrorResponse("Conversion from MARC failed.", ApixCatServlet.ERROR_CONVERSION_FAILED));
-            return;
-        }
+
 
         if (id.equalsIgnoreCase("new"))
         {
+            boolean isUpdate = false;
+            Document incomingDocument = Utils.convertToRDF(content, collection, null, isUpdate);
+            if (incomingDocument == null)
+            {
+                Utils.send200Response(response, Xml.formatApixErrorResponse("Conversion from MARC failed.", ApixCatServlet.ERROR_CONVERSION_FAILED));
+                return;
+            }
             Utils.s_whelk.createDocument(incomingDocument, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false);
             s_logger.info("Successful new on : " + incomingDocument.getShortId());
             Utils.send201Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
         } else // save/overwrite existing
         {
+            boolean isUpdate = true;
+            Document incomingDocument = Utils.convertToRDF(content, collection, null, isUpdate);
+            if (incomingDocument == null)
+            {
+                Utils.send200Response(response, Xml.formatApixErrorResponse("Conversion from MARC failed.", ApixCatServlet.ERROR_CONVERSION_FAILED));
+                return;
+            }
             if (StringUtils.isNumeric(id) && id.length() < 15) // 'id' is a Voyager ID, reassign it to ensure it is an XL system ID.
                 id = Utils.s_whelk.getStorage().getSystemIdByIri("http://libris.kb.se/" + collection + "/" + id);
 
@@ -222,7 +231,7 @@ public class ApixCatServlet extends HttpServlet
         String operator = parameters[3];
 
         String content = IOUtils.toString(request.getReader());
-        Document incomingDocument = Utils.convertToRDF(content, "hold", bibid);
+        Document incomingDocument = Utils.convertToRDF(content, "hold", bibid, false);
         if (incomingDocument == null)
         {
             Utils.send200Response(response, Xml.formatApixErrorResponse("Conversion from MARC failed.", ApixCatServlet.ERROR_CONVERSION_FAILED));
