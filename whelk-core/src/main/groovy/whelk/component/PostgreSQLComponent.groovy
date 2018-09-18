@@ -14,7 +14,6 @@ import org.postgresql.util.PSQLException
 import whelk.Document
 import whelk.IdType
 import whelk.JsonLd
-import whelk.Location
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
 import whelk.filter.LinkFinder
@@ -609,7 +608,7 @@ class PostgreSQLComponent {
             updateAgent.update(doc)
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc)
-            verifyDocumentURIupdates(preUpdateDoc, doc)
+            verifyDocumentIdRetention(preUpdateDoc, doc)
 
             boolean deleted = doc.getDeleted()
 
@@ -674,7 +673,7 @@ class PostgreSQLComponent {
      * Returns if the URIs pointing to 'doc' are acceptable for an update to 'pre_update_doc',
      * otherwise throws.
      */
-    private void verifyDocumentURIupdates(Document preUpdateDoc, Document postUpdateDoc) {
+    private void verifyDocumentIdRetention(Document preUpdateDoc, Document postUpdateDoc) {
 
         // Compile list of all old IDs
         HashSet<String> oldIDs = new HashSet<>()
@@ -703,6 +702,10 @@ class PostgreSQLComponent {
             if ( getSystemIdByIri(id) != null )
                 throw new RuntimeException("An update of " + preUpdateDoc.getCompleteId() + " MUST NOT have URIs that are already in use for other records. The update contained an offending URI: " + id)
         }
+
+        if (!preUpdateDoc.getControlNumber().equals(postUpdateDoc.getControlNumber()))
+            throw new RuntimeException("An update of " + preUpdateDoc.getCompleteId() + " MUST NOT change the controlNumber of the record in question. Existing controlNumber: "
+                    + preUpdateDoc.getControlNumber() + " The rejected new controlNumber: " + postUpdateDoc.getControlNumber())
 
         // We're ok.
         return
