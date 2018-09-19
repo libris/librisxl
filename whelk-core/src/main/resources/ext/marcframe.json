@@ -1319,7 +1319,7 @@
       "FIXME:embedded:whenGroupIdsAreStrippedFromEmbedded": true,
       "pendingResources": {
         "_:seriesinstance": {
-          "TODO:whenSoftMergeWorks:groupId": "#seriesinstance-$seq",
+          "groupId": "#seriesinstance-$seq",
           "link": "inSeries",
           "resourceType": "Instance"
         },
@@ -1706,6 +1706,208 @@
               ]
             },
             "back": "both"
+          }
+        ]
+      },
+      {
+        "type": "ProduceIfMissing",
+        "select": "seriesMembership",
+        "produceMissing": {
+          "property": "seriesStatement",
+          "sourcePath": ["inSeries", "instanceOf", "hasTitle", "mainTitle"]
+        },
+        "_spec": [
+          {
+            "name":  "NOOP",
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "seriesStatement": "CNI Publications",
+                    "@type": "SeriesMembership",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {
+                        "@type": "Work",
+                        "hasTitle": [ {"@type": "Title", "mainTitle": "CNI Publications"} ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": "source"
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {
+                        "@type": "Work",
+                        "hasTitle": [ {"@type": "Title", "mainTitle": "CNI Publications"} ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "CNI Publications",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {
+                        "@type": "Work",
+                        "hasTitle": [ {"@type": "Title", "mainTitle": "CNI Publications"} ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name":  "Skip entirely if there is any one item with the expected property (regardless of value)",
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "Some Publications"
+                  },
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {
+                        "@type": "Work",
+                        "hasTitle": [ {"@type": "Title", "mainTitle": "Other Publications"} ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": "source"
+          }
+        ]
+      },
+      {
+        "type": "SetFlagsByPatterns",
+        "select": "seriesMembership",
+        "match": [
+          {
+            "exists": ["seriesStatement", "inSeries"],
+            "setFlags": {
+              "marc:seriesTracingPolicy": "1"
+            }
+          },
+          {
+            "exists": ["seriesStatement"],
+            "setFlags": {
+              "marc:seriesTracingPolicy": "0"
+            }
+          }
+        ],
+        "_spec": [
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "marc:seriesTracingPolicy": "0",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": "source"
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "marc:seriesTracingPolicy": "1",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "..."
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "marc:seriesTracingPolicy": "0"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            }
           }
         ]
       }
@@ -7789,10 +7991,9 @@
     },
     "490": {
       "include": ["inseries"],
-      "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
-      "i1": {"property": "marc:seriesTracingPolicy", "TODO:marcDefault": 0, "TODO": {"when: 8xx[$t] | 830": "1", "else": "0"}},
+      "groupId": "#seriesmember-$seq",
+      "i1": {"property": "marc:seriesTracingPolicy", "NOTE:marcDefault": 0, "NOTE:postProcessing ": "SetFlagsByPatterns"},
       "i2": null,
-      "TODO:allowSpillOverOnRevert": "800-830 (solved by groupId?)",
       "$a": {"addProperty": "seriesStatement"},
       "NOTE:remove?$l": {"link": "callno", "resourceType": "Concept", "property": "code"},
       "$0": {"about": "_:seriesinstance", "addProperty": "marc:uri"},
@@ -12892,7 +13093,7 @@
     },
     "800": {
       "include": ["hasSeriesInstance", "titledetails", "contributionRole_4_e"],
-      "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
+      "groupId": "#seriesmember-$seq",
       "pendingResources": {
         "_:agent": {
           "about": "_:contribution",
@@ -13069,7 +13270,7 @@
     },
     "810": {
       "include": ["hasSeriesInstance", "agentdataOrganization", "titledetails", "contributionRole_4_e"],
-      "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
+      "groupId": "#seriesmember-$seq",
       "pendingResources": {
         "_:agent": {
           "about": "_:contribution",
@@ -13264,7 +13465,7 @@
     },
     "811": {
       "include": ["hasSeriesInstance", "agentdataOrganization", "titledetails", "contributionRole_4"],
-      "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
+      "groupId": "#seriesmember-$seq",
       "i1": {"marcDefault": "2"},
       "pendingResources": {
         "_:agent": {
@@ -13354,7 +13555,7 @@
     "830": {
       "onRevertPrefer": ["800", "810", "811"],
       "include": ["inseries_with_w", "titledetails", "i2-nonfiling"],
-      "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
+      "groupId": "#seriesmember-$seq",
       "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
       "$d": {"about": "_:work", "addProperty": "legalDate"},
       "$0": {"about": "_:work", "addProperty": "marc:uri"},
