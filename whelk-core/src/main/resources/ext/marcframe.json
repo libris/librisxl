@@ -5953,6 +5953,7 @@
         }
       },
       "TODO": "See also 100$t and 130.",
+      "TODO": "Interpunction ; on $r needs to be analyzed",
       "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"property": "legalDate"},
       "$0": {
@@ -5964,6 +5965,29 @@
       "$6": {"property": "marc:fieldref"},
       "subfieldOrder": "6 a g d m n r p k l s f o 1 0",
       "_spec": [
+        {
+          "source": {
+            "240": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Konsert,"},
+              {"m": "piano, orkester,"},
+              {"n": "nr 24, K.491,"},
+              {"r": "c-moll;"},
+              {"o": "arr. piano (3), 10 h"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Konsert",
+                "partNumber": ["nr 24, K.491"]
+              }],
+              "musicMedium": [{"@type": "MusicMedium", "label": "piano, orkester"}],
+              "musicKey": "c-moll;",
+              "version": "arr. piano (3), 10 h"
+            }
+          }}
+        },
         {
           "source": {
             "240": {"ind1": "0", "ind2": " ", "subfields": [
@@ -9375,7 +9399,10 @@
                           "partNumber": ["K. 492"]
                         }
                       ],
-                      "musicMedium": ["harpsichord"],
+                      "musicMedium": [{
+                        "@type": "MusicMedium",
+                        "label": "harpsichord"
+                      }],
                       "musicKey": "D major;"
                     },
                     {
@@ -11409,7 +11436,10 @@
                     "partNumber" : [ "nr 4, op. 22" ]
                   } ],
                   "marc:uri" : [ "111111111111" ],
-                  "musicMedium" : [ "stråkar" ]
+                  "musicMedium": [{
+                    "@type": "MusicMedium",
+                    "label": "stråkar"
+                  }]
                 }
               } ]
             }
@@ -12421,7 +12451,10 @@
                     "partNumber": ["GraunWV D:XVIII:11"],
                     "marc:nonfilingChars" : "3"
                   } ],
-                  "musicMedium": ["harpsichord"],
+                  "musicMedium": [{
+                    "@type": "MusicMedium",
+                    "label": "harpsichord"
+                  }],
                   "musicKey": "B♭ minor",
                   "marc:relatedAs": [{"@type": "Relation", "label": "Container of (work):"}]
                 }
@@ -13231,7 +13264,10 @@
                       "mainTitle": "Marches",
                       "marc:formSubheading": ["Selections (Sousa American bicentennial collection)"]
                     }],
-                    "musicMedium": ["band."]
+                    "musicMedium": [{
+                      "@type": "MusicMedium",
+                      "label": "band."
+                    }]
                   }
                 }
             }]
@@ -16525,7 +16561,10 @@
                   "partNumber": ["op. 19"]
                 }],
                 "marc:recordControlNumber": ["00000"],
-                "musicMedium": ["piano"]
+                "musicMedium": [{
+                  "@type": "MusicMedium",
+                  "label": "piano"
+                }]
               }]
             }
           }
