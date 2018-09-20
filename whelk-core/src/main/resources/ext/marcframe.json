@@ -314,7 +314,7 @@
       "$h": {"about": "_:work", "property": "marc:mediaTerm"},
 
       "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
-      "$m": {"about": "_:work", "addProperty": "musicMedium", "leadingPunctuation": ","},
+      "$m": {"about": "_:work", "addLink": "musicMedium", "resourceType": "MusicMedium", "property": "label", "leadingPunctuation": ","},
       "$o": {"about": "_:work", "property": "version"},
 
       "$r": {"about": "_:work", "property": "musicKey", "leadingPunctuation": ","},
