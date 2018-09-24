@@ -40,7 +40,7 @@ public class ProfileExport
 
         try(Connection connection = whelk.getStorage().getConnection();
             PreparedStatement preparedStatement = getAllChangedIDsStatement(fromTimeStamp, untilTimeStamp, connection);
-            ResultSet resultSet = preparedStatement.getResultSet())
+            ResultSet resultSet = preparedStatement.executeQuery())
         {
             while (resultSet.next())
             {
@@ -136,7 +136,7 @@ public class ProfileExport
         String sql = "SELECT id, collection, changedBy, created FROM lddb WHERE modified >= ? AND modified <= ?";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setTimestamp(1, from);
-        preparedStatement.setTimestamp(1, until);
+        preparedStatement.setTimestamp(2, until);
         return preparedStatement;
     }
 }
