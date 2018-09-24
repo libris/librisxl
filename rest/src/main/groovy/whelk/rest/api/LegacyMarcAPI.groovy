@@ -12,6 +12,7 @@ import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.JsonLD2MarcXMLConverter
 import whelk.util.LegacyIntegrationTools
+import whelk.util.MarcExport
 import whelk.util.PropertyLoader
 
 import se.kb.libris.export.ExportProfile
@@ -151,7 +152,7 @@ class LegacyMarcAPI extends HttpServlet {
             ExportProfile profile = new ExportProfile(tempFile)
             tempFile.delete()
 
-            Vector<MarcRecord> result = compileVirtualMarcRecord(profile, rootDocument)
+            Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(profile, rootDocument, whelk, toMarcXmlConverter)
 
             response.setContentType("application/octet-stream")
             response.setHeader("Content-Disposition", "attachment; filename=\"libris_marc_" + rootDocument.getShortId() + "\"")
@@ -165,73 +166,6 @@ class LegacyMarcAPI extends HttpServlet {
         } catch (Throwable e) {
             log.error("Failed handling _compilemarc request: ", e)
             throw e
-        }
-    }
-
-    Vector<MarcRecord> compileVirtualMarcRecord(ExportProfile profile, Document rootDocument) {
-        String bibXmlString = toXmlString(rootDocument)
-        def xmlRecord = new XmlSlurper(false, false).parseText(bibXmlString)
-
-        List auth_ids = []
-        xmlRecord.datafield.subfield.each {
-            if ( it.@code.text().equals("0") ) {
-                auth_ids.add(it.text().replaceAll("#it", ""))
-            }
-        }
-
-        def auths = new HashSet<MarcRecord>()
-        auth_ids.each { String auth_id ->
-            Document authDoc = getDocument(auth_id)
-            if (authDoc != null) {
-                String xmlString = toXmlString(authDoc)
-                if (xmlString != null)
-                    auths.add(MarcXmlRecordReader.fromXml(xmlString))
-            }
-        }
-
-        List<Document> holdingDocuments = whelk.storage.getAttachedHoldings(rootDocument.getThingIdentifiers())
-        def holdings = new TreeMap<String, MarcRecord>()
-
-        if (!profile.getProperty("holdtype", "NONE").equalsIgnoreCase("NONE")) {
-            for (Document holding : holdingDocuments) {
-                try {
-                    holdings.put(holding.getSigel(), MarcXmlRecordReader.fromXml(toXmlString(holding)))
-                } catch (Exception e) {
-                    log.warn("Failed adding holding record when compiling MARC for " + rootDocument.getShortId(), e)
-                }
-            }
-        }
-
-        MarcRecord bibRecord = MarcXmlRecordReader.fromXml(bibXmlString)
-
-        // remove any existing 003
-        ListIterator li = bibRecord.listIterator();
-        while (li.hasNext())
-            if (((Field)li.next()).getTag().equals("003"))
-                li.remove()
-
-        return profile.mergeRecord(bibRecord, holdings, auths)
-    }
-
-    /**
-     * Get a document, on any valid ID/sameas for said document
-     */
-    Document getDocument(String idOrSameAs) {
-        String recordId = whelk.storage.getRecordId(idOrSameAs)
-        if (recordId == null)
-            return null
-        return whelk.storage.loadDocumentByMainId(recordId)
-    }
-
-    /**
-     * Make a marc xml string out of a whelk document
-     */
-    String toXmlString(Document doc) {
-        try {
-            return (String) toMarcXmlConverter.convert(doc.data, doc.getShortId()).get(JsonLd.getNON_JSON_CONTENT_KEY())
-        }
-        catch (Exception | Error e) { // Depending on the converter, a variety of problems may arise here
-            return null
         }
     }
 }
