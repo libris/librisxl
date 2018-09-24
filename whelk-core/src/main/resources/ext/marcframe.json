@@ -1776,6 +1776,52 @@
             }
           },
           {
+            "name":  "Series statement comes from the title of the same membership node",
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {"@type": "Work", "hasTitle": [{"@type": "Title", "mainTitle": "A"}]}
+                    }
+                  },
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {"@type": "Work", "hasTitle": [{"@type": "Title", "mainTitle": "B"}]}
+                    }
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "A",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {"@type": "Work", "hasTitle": [{"@type": "Title", "mainTitle": "A"}]}
+                    }
+                  },
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "B",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {"@type": "Work", "hasTitle": [{"@type": "Title", "mainTitle": "B"}]}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
             "name":  "Skip entirely if there is any one item with the expected property (regardless of value)",
             "source": {
               "mainEntity": {

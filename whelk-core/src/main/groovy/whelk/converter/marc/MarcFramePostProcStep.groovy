@@ -297,7 +297,7 @@ class ProduceIfMissingStep extends MarcFramePostProcStepBase {
             // found, we don't know if data is intentionally sparse).
         }
         items.each {
-            def value = findValue(source, produceMissing.sourcePath)
+            def value = findValue(it, produceMissing.sourcePath)
             if (value) {
                 it[produceMissing.property] = value
             }
