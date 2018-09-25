@@ -87,10 +87,12 @@ public class ProfileExport
         }
         else if (collection.equals("hold") && updateShouldBeExported(id, collection, profile, from, until, created))
         {
-            Document changedHoldDocument = m_whelk.getStorage().load(id);
-            String itemOf = changedHoldDocument.getHoldingFor();
-            exportDocument(m_whelk.getStorage().getDocumentByIri(itemOf), profile, output, exportedIDs);
-            // ALSO CHECK VERSIONS, FIND THE PREVIOUS ITEMOF AND EXPORT THAT!
+            List<Document> versions = m_whelk.getStorage().loadAllVersions(id);
+            for (Document version : versions)
+            {
+                String itemOf = version.getHoldingFor();
+                exportDocument(m_whelk.getStorage().getDocumentByIri(itemOf), profile, output, exportedIDs);
+            }
         }
     }
 
