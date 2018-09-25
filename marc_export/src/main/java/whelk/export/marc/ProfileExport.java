@@ -103,7 +103,7 @@ public class ProfileExport
             return false; // Created records not requested
         if (profile.getProperty(collection+"update", "ON").equalsIgnoreCase("OFF"))
             return false; // Updated records not requested
-        Set<String> operators = profile.getSet("collection+operators");
+        Set<String> operators = profile.getSet(collection+"operators");
         if ( !operators.isEmpty() )//&& changedBy != null && !biboperators.contains( changedBy ))
         {
             Set<String> operatorsInInterval = getAllChangedBy(id, from, until);
