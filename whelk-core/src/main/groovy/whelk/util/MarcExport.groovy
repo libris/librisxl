@@ -76,8 +76,7 @@ class MarcExport {
             return (String) toMarcXmlConverter.convert(doc.data, doc.getShortId()).get(JsonLd.getNON_JSON_CONTENT_KEY())
         }
         catch (Exception | Error e) { // Depending on the converter, a variety of problems may arise here
-            System.err.println(e)
-            e.printStackTrace()
+            log.error(e)
             return null
         }
     }

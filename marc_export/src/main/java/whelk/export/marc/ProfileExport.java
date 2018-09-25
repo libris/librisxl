@@ -113,6 +113,8 @@ public class ProfileExport
         }
 
         Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(profile, document, whelk, m_toMarcXmlConverter);
+        if (result == null) // A conversion error will already have been logged. Anything else, and we want to fail fast.
+            return;
         if (profile.getProperty("format", "ISO2709").equalsIgnoreCase("MARCXML"))
         {
             MarcXmlRecordWriter writer = new MarcXmlRecordWriter(output, encoding);
