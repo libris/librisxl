@@ -59,7 +59,7 @@ public class MarcHttpExport extends HttpServlet
 
         try
         {
-            profileExport.exportInto(res.getOutputStream(), profile, whelk, parameterMap.get("from"), parameterMap.get("until"));
+            profileExport.exportInto(res.getOutputStream(), profile, parameterMap.get("from"), parameterMap.get("until"));
         } catch (SQLException se)
         {
             res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

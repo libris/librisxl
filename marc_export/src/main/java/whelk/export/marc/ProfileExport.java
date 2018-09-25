@@ -10,10 +10,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.*;
 import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.Vector;
+import java.util.*;
 
 import se.kb.libris.export.ExportProfile;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
@@ -23,15 +20,17 @@ import whelk.util.MarcExport;
 public class ProfileExport
 {
     private JsonLD2MarcXMLConverter m_toMarcXmlConverter;
+    private Whelk m_whelk;
     public ProfileExport(Whelk whelk)
     {
+        m_whelk = whelk;
         m_toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.createMarcFrameConverter());
     }
 
     /**
      * Export MARC data from 'whelk' affected in between 'from' and 'until' shaped by 'profile' into 'output'.
      */
-    public OutputStream exportInto(OutputStream output, ExportProfile profile, Whelk whelk, String from, String until)
+    public OutputStream exportInto(OutputStream output, ExportProfile profile, String from, String until)
             throws IOException, SQLException
     {
         ZonedDateTime zonedFrom = ZonedDateTime.parse(from);
@@ -39,7 +38,7 @@ public class ProfileExport
         Timestamp fromTimeStamp = new Timestamp(zonedFrom.toInstant().getEpochSecond() * 1000L);
         Timestamp untilTimeStamp = new Timestamp(zonedUntil.toInstant().getEpochSecond() * 1000L);
 
-        try(Connection connection = whelk.getStorage().getConnection();
+        try(Connection connection = m_whelk.getStorage().getConnection();
             PreparedStatement preparedStatement = getAllChangedIDsStatement(fromTimeStamp, untilTimeStamp, connection);
             ResultSet resultSet = preparedStatement.executeQuery())
         {
@@ -47,7 +46,6 @@ public class ProfileExport
             {
                 String id = resultSet.getString("id");
                 String collection = resultSet.getString("collection");
-                String changedBy = resultSet.getString("changedBy");
                 Timestamp createdTime = resultSet.getTimestamp("created");
 
                 boolean created = true;
@@ -55,7 +53,7 @@ public class ProfileExport
                         zonedUntil.toInstant().isAfter(createdTime.toInstant()))
                     created = false;
 
-                exportAffectedDocuments(id, collection, changedBy, created, profile, output, whelk);
+                exportAffectedDocuments(id, collection, created, fromTimeStamp, untilTimeStamp, profile, output);
             }
         }
 
@@ -63,69 +61,66 @@ public class ProfileExport
     }
 
     /**
-     * Export (into output) all documents that are affected by 'id' having been updated by 'changedBy'.
+     * Export (into output) all documents that are affected by 'id' having been updated.
      * 'created' == true means 'id' was created in the chosen interval, false means merely updated.
      */
-    private void exportAffectedDocuments(String id, String collection, String changedBy, boolean created,
-                                                ExportProfile profile, OutputStream output, Whelk whelk)
-            throws IOException
+    private void exportAffectedDocuments(String id, String collection, boolean created, Timestamp from, Timestamp until,
+                                                ExportProfile profile, OutputStream output)
+            throws IOException, SQLException
     {
         TreeSet<String> exportedIDs = new TreeSet<>();
 
-        if (collection.equals("bib"))
+        if (collection.equals("bib") && updateShouldBeExported(id, collection, profile, from, until, created))
         {
-            if (profile.getProperty("bibcreate", "ON").equalsIgnoreCase("OFF") && created)
-                return; // Created records not requested
-            if (profile.getProperty("bibupdate", "ON").equalsIgnoreCase("OFF"))
-                return; // Updated records not requested
-            Set<String> biboperators = profile.getSet("biboperators");
-            if ( !biboperators.isEmpty() && changedBy != null && !biboperators.contains( changedBy ))
-                return; // Updates from this operator/changedBy not requested
-
-            exportDocument(whelk.getStorage().load(id), profile, output, exportedIDs, whelk);
+            exportDocument(m_whelk.getStorage().load(id), profile, output, exportedIDs);
         }
-        else if (collection.equals("auth"))
+        else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created))
         {
-            if (profile.getProperty("authcreate", "ON").equalsIgnoreCase("OFF") && created)
-                return; // Created records not requested
-            if (profile.getProperty("authupdate", "ON").equalsIgnoreCase("OFF"))
-                return; // Updated records not requested
-            Set<String> authoperators = profile.getSet("authoperators");
-            if ( !authoperators.isEmpty() && changedBy != null && !authoperators.contains( changedBy ))
-                return; // Updates from this operator/changedBy not requested
-
-            List<Tuple2<String, String>> dependers = whelk.getStorage().getDependers(id);
+            List<Tuple2<String, String>> dependers = m_whelk.getStorage().getDependers(id);
             for (Tuple2 depender : dependers)
             {
                 String dependerId = (String) depender.getFirst();
-                Document dependerDoc = whelk.getStorage().load(dependerId);
-                String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, whelk.getJsonld());
+                Document dependerDoc = m_whelk.getStorage().load(dependerId);
+                String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, m_whelk.getJsonld());
                 if (dependerCollection.equals("bib"))
-                    exportDocument(dependerDoc, profile, output, exportedIDs, whelk);
+                    exportDocument(dependerDoc, profile, output, exportedIDs);
             }
         }
-        else if (collection.equals("hold"))
+        else if (collection.equals("hold") && updateShouldBeExported(id, collection, profile, from, until, created))
         {
-            if (profile.getProperty("holdcreate", "ON").equalsIgnoreCase("OFF") && created)
-                return; // Created records not requested
-            if (profile.getProperty("holdupdate", "ON").equalsIgnoreCase("OFF"))
-                return; // Updated records not requested
-            Set<String> holdoperators = profile.getSet("holdoperators");
-            if ( !holdoperators.isEmpty() && changedBy != null && !holdoperators.contains( changedBy ))
-                return; // Updates from this operator/changedBy not requested
-
-            Document changedHoldDocument = whelk.getStorage().load(id);
+            Document changedHoldDocument = m_whelk.getStorage().load(id);
             String itemOf = changedHoldDocument.getHoldingFor();
-            exportDocument(whelk.getStorage().getDocumentByIri(itemOf), profile, output, exportedIDs, whelk);
+            exportDocument(m_whelk.getStorage().getDocumentByIri(itemOf), profile, output, exportedIDs);
             // ALSO CHECK VERSIONS, FIND THE PREVIOUS ITEMOF AND EXPORT THAT!
         }
+    }
+
+    private boolean updateShouldBeExported(String id, String collection, ExportProfile profile, Timestamp from, Timestamp until, boolean created)
+            throws SQLException
+    {
+        if (profile.getProperty(collection+"create", "ON").equalsIgnoreCase("OFF") && created)
+            return false; // Created records not requested
+        if (profile.getProperty(collection+"update", "ON").equalsIgnoreCase("OFF"))
+            return false; // Updated records not requested
+        Set<String> operators = profile.getSet("collection+operators");
+        if ( !operators.isEmpty() )//&& changedBy != null && !biboperators.contains( changedBy ))
+        {
+            Set<String> operatorsInInterval = getAllChangedBy(id, from, until);
+            if ( !operatorsInInterval.isEmpty() ) // Ignore setting if there are no changedBy names
+            {
+                operatorsInInterval.retainAll(operators);
+                if (operatorsInInterval.isEmpty()) // The intersection between chosen-operators and operators that changed the record is []
+                    return false; // Updates from this operator/changedBy not requested
+            }
+        }
+        return true;
     }
 
     /**
      * Export document (into output)
      */
     private void exportDocument(Document document, ExportProfile profile, OutputStream output,
-                                       TreeSet<String> exportedIDs, Whelk whelk)
+                                       TreeSet<String> exportedIDs)
             throws IOException
     {
         String systemId = document.getShortId();
@@ -138,7 +133,7 @@ public class ProfileExport
             encoding = "ISO-8859-1";
         }
 
-        Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(profile, document, whelk, m_toMarcXmlConverter);
+        Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(profile, document, m_whelk, m_toMarcXmlConverter);
         if (result == null) // A conversion error will already have been logged. Anything else, and we want to fail fast.
             return;
         if (profile.getProperty("format", "ISO2709").equalsIgnoreCase("MARCXML"))
@@ -161,10 +156,45 @@ public class ProfileExport
     private PreparedStatement getAllChangedIDsStatement(Timestamp from, Timestamp until, Connection connection)
             throws SQLException
     {
-        String sql = "SELECT id, collection, changedBy, created FROM lddb WHERE modified >= ? AND modified <= ?";
+        String sql = "SELECT id, collection, created FROM lddb WHERE modified >= ? AND modified <= ?";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setTimestamp(1, from);
         preparedStatement.setTimestamp(2, until);
+        return preparedStatement;
+    }
+
+    /**
+     * Get all changedBy names for the given id and interval
+     */
+    private Set<String> getAllChangedBy(String id, Timestamp from, Timestamp until)
+            throws SQLException
+    {
+        HashSet<String> result = new HashSet<>();
+        try(Connection connection = m_whelk.getStorage().getConnection();
+            PreparedStatement preparedStatement = getAllChangedByStatement(id, from, until, connection);
+            ResultSet resultSet = preparedStatement.executeQuery())
+        {
+            while (resultSet.next())
+            {
+                Timestamp modified = resultSet.getTimestamp("modified");
+                String changedBy = resultSet.getString("changedBy");
+
+                if (from.toInstant().isBefore(modified.toInstant()) &&
+                        until.toInstant().isAfter(modified.toInstant()))
+                    result.add(changedBy);
+            }
+        }
+        return result;
+    }
+
+    private PreparedStatement getAllChangedByStatement(String id, Timestamp from, Timestamp until, Connection connection)
+            throws SQLException
+    {
+        String sql = "SELECT modified, changedBy FROM lddb__versions WHERE modified >= ? AND modified <= ? AND id = ?";
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        preparedStatement.setTimestamp(1, from);
+        preparedStatement.setTimestamp(2, until);
+        preparedStatement.setString(3, id);
         return preparedStatement;
     }
 }
