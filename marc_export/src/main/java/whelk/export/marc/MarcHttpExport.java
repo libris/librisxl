@@ -57,8 +57,6 @@ public class MarcHttpExport extends HttpServlet
         props.load(new StringReader(body.toString()));
         se.kb.libris.export.ExportProfile profile = new se.kb.libris.export.ExportProfile(props);
 
-        System.err.println(body);
-
         try
         {
             profileExport.exportInto(res.getOutputStream(), profile, whelk, parameterMap.get("from"), parameterMap.get("until"));
