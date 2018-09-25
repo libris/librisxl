@@ -13,7 +13,7 @@ import whelk.converter.marc.JsonLD2MarcXMLConverter
 @Log4j2
 class MarcExport {
     static Vector<MarcRecord> compileVirtualMarcRecord(ExportProfile profile, Document rootDocument,
-                                                       Whelk whelk, JsonLD2MarcXMLConverter toMarcXmlConverter) {
+                                                       Whelk whelk, JsonLD2MarcXMLConverter toMarcXmlConverter, boolean exportOnlyIfHeld = false) {
         String bibXmlString = toXmlString(rootDocument, toMarcXmlConverter)
         def xmlRecord = new XmlSlurper(false, false).parseText(bibXmlString)
 
@@ -37,13 +37,28 @@ class MarcExport {
         List<Document> holdingDocuments = whelk.storage.getAttachedHoldings(rootDocument.getThingIdentifiers())
         def holdings = new TreeMap<String, MarcRecord>()
 
-        if (!profile.getProperty("holdtype", "NONE").equalsIgnoreCase("NONE")) {
-            for (Document holding : holdingDocuments) {
-                try {
-                    holdings.put(holding.getSigel(), MarcXmlRecordReader.fromXml(toXmlString(holding, toMarcXmlConverter)))
-                } catch (Exception e) {
-                    log.warn("Failed adding holding record when compiling MARC for " + rootDocument.getShortId(), e)
+        for (Document holding : holdingDocuments) {
+            try {
+                holdings.put(holding.getSigel(), MarcXmlRecordReader.fromXml(toXmlString(holding, toMarcXmlConverter)))
+            } catch (Exception e) {
+                log.warn("Failed adding holding record when compiling MARC for " + rootDocument.getShortId(), e)
+            }
+        }
+
+        if (exportOnlyIfHeld)
+        {
+            String locations = profile.getProperty("locations", "")
+            HashSet locationSet = new HashSet(locations.split(" ").toList())
+            if ( ! locationSet.contains("*") ) {
+                boolean bibIsHeld = false
+                for (String key : holdings.keySet()) {
+                    if (locationSet.contains(key)) {
+                        bibIsHeld = true
+                        break
+                    }
                 }
+                if (!bibIsHeld)
+                    return []
             }
         }
 

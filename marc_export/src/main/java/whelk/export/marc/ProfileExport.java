@@ -129,7 +129,8 @@ public class ProfileExport
             return;
         exportedIDs.add(systemId);
 
-        Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(profile, document, m_whelk, m_toMarcXmlConverter);
+        boolean exportOnlyIfHeld = true;
+        Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(profile, document, m_whelk, m_toMarcXmlConverter, exportOnlyIfHeld);
         if (result == null) // A conversion error will already have been logged. Anything else, and we want to fail fast.
             return;
 
