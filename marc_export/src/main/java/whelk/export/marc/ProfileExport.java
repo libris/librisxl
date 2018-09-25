@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.sql.*;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.Vector;
 
@@ -73,10 +74,26 @@ public class ProfileExport
 
         if (collection.equals("bib"))
         {
+            if (profile.getProperty("bibcreate", "ON").equalsIgnoreCase("OFF") && created)
+                return; // Created records not requested
+            if (profile.getProperty("bibupdate", "ON").equalsIgnoreCase("OFF"))
+                return; // Updated records not requested
+            Set<String> biboperators = profile.getSet("biboperators");
+            if ( !biboperators.isEmpty() && !biboperators.contains( changedBy ) && changedBy != null)
+                return; // Updates from this operator/changedBy not requested
+
             exportDocument(whelk.getStorage().load(id), profile, output, exportedIDs, whelk);
         }
         else if (collection.equals("auth"))
         {
+            if (profile.getProperty("authcreate", "ON").equalsIgnoreCase("OFF") && created)
+                return; // Created records not requested
+            if (profile.getProperty("authupdate", "ON").equalsIgnoreCase("OFF"))
+                return; // Updated records not requested
+            Set<String> biboperators = profile.getSet("authoperators");
+            if ( !biboperators.isEmpty() && !biboperators.contains( changedBy ) && changedBy != null)
+                return; // Updates from this operator/changedBy not requested
+
             List<Tuple2<String, String>> dependers = whelk.getStorage().getDependers(id);
             for (Tuple2 depender : dependers)
             {
@@ -89,9 +106,18 @@ public class ProfileExport
         }
         else if (collection.equals("hold"))
         {
+            if (profile.getProperty("holdcreate", "ON").equalsIgnoreCase("OFF") && created)
+                return; // Created records not requested
+            if (profile.getProperty("holdupdate", "ON").equalsIgnoreCase("OFF"))
+                return; // Updated records not requested
+            Set<String> biboperators = profile.getSet("holdoperators");
+            if ( !biboperators.isEmpty() && !biboperators.contains( changedBy ) && changedBy != null)
+                return; // Updates from this operator/changedBy not requested
+
             Document changedHoldDocument = whelk.getStorage().load(id);
             String itemOf = changedHoldDocument.getHoldingFor();
             exportDocument(whelk.getStorage().getDocumentByIri(itemOf), profile, output, exportedIDs, whelk);
+            // ALSO CHECK VERSIONS, FIND THE PREVIOUS ITEMOF AND EXPORT THAT!
         }
     }
 
