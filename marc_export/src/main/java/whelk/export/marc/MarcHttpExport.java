@@ -2,6 +2,9 @@ package whelk.export.marc;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter;
+import se.kb.libris.util.marc.io.MarcRecordWriter;
+import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.Whelk;
 
 import javax.servlet.http.HttpServlet;
@@ -57,12 +60,28 @@ public class MarcHttpExport extends HttpServlet
         props.load(new StringReader(body.toString()));
         se.kb.libris.export.ExportProfile profile = new se.kb.libris.export.ExportProfile(props);
 
+        String encoding = profile.getProperty("characterencoding");
+        if (encoding.equals("Latin1Strip")) {
+            encoding = "ISO-8859-1";
+        }
+
+        MarcRecordWriter output = null;
+        if (profile.getProperty("format", "ISO2709").equalsIgnoreCase("MARCXML"))
+            output = new MarcXmlRecordWriter(res.getOutputStream(), encoding);
+        else
+            output = new Iso2709MarcRecordWriter(res.getOutputStream(), encoding);
+
         try
         {
-            profileExport.exportInto(res.getOutputStream(), profile, parameterMap.get("from"), parameterMap.get("until"));
-        } catch (SQLException se)
+            profileExport.exportInto(output, profile, parameterMap.get("from"), parameterMap.get("until"));
+        }
+        catch (SQLException se)
         {
             res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+        finally
+        {
+            output.close();
         }
     }
 }

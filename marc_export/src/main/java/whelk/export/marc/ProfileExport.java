@@ -1,8 +1,7 @@
 package whelk.export.marc;
 import groovy.lang.Tuple2;
 import se.kb.libris.util.marc.MarcRecord;
-import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter;
-import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
+import se.kb.libris.util.marc.io.MarcRecordWriter;
 import whelk.Document;
 import whelk.Whelk;
 
@@ -30,7 +29,7 @@ public class ProfileExport
     /**
      * Export MARC data from 'whelk' affected in between 'from' and 'until' shaped by 'profile' into 'output'.
      */
-    public OutputStream exportInto(OutputStream output, ExportProfile profile, String from, String until)
+    public OutputStream exportInto(MarcRecordWriter output, ExportProfile profile, String from, String until)
             throws IOException, SQLException
     {
         ZonedDateTime zonedFrom = ZonedDateTime.parse(from);
@@ -65,7 +64,7 @@ public class ProfileExport
      * 'created' == true means 'id' was created in the chosen interval, false means merely updated.
      */
     private void exportAffectedDocuments(String id, String collection, boolean created, Timestamp from, Timestamp until,
-                                                ExportProfile profile, OutputStream output)
+                                                ExportProfile profile, MarcRecordWriter output)
             throws IOException, SQLException
     {
         TreeSet<String> exportedIDs = new TreeSet<>();
@@ -119,7 +118,7 @@ public class ProfileExport
     /**
      * Export document (into output)
      */
-    private void exportDocument(Document document, ExportProfile profile, OutputStream output,
+    private void exportDocument(Document document, ExportProfile profile, MarcRecordWriter output,
                                        TreeSet<String> exportedIDs)
             throws IOException
     {
@@ -128,26 +127,12 @@ public class ProfileExport
             return;
         exportedIDs.add(systemId);
 
-        String encoding = profile.getProperty("characterencoding");
-        if (encoding.equals("Latin1Strip")) {
-            encoding = "ISO-8859-1";
-        }
-
         Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(profile, document, m_whelk, m_toMarcXmlConverter);
         if (result == null) // A conversion error will already have been logged. Anything else, and we want to fail fast.
             return;
-        if (profile.getProperty("format", "ISO2709").equalsIgnoreCase("MARCXML"))
-        {
-            MarcXmlRecordWriter writer = new MarcXmlRecordWriter(output, encoding);
-            for (MarcRecord mr : result)
-                writer.writeRecord(mr);
-        }
-        else
-        {
-            Iso2709MarcRecordWriter writer = new Iso2709MarcRecordWriter(output, encoding);
-            for (MarcRecord mr : result)
-                writer.writeRecord(mr);
-        }
+
+        for (MarcRecord mr : result)
+            output.writeRecord(mr);
     }
 
     /**
