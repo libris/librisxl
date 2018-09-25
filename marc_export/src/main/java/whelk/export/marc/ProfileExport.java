@@ -79,7 +79,7 @@ public class ProfileExport
             if (profile.getProperty("bibupdate", "ON").equalsIgnoreCase("OFF"))
                 return; // Updated records not requested
             Set<String> biboperators = profile.getSet("biboperators");
-            if ( !biboperators.isEmpty() && !biboperators.contains( changedBy ) && changedBy != null)
+            if ( !biboperators.isEmpty() && changedBy != null && !biboperators.contains( changedBy ))
                 return; // Updates from this operator/changedBy not requested
 
             exportDocument(whelk.getStorage().load(id), profile, output, exportedIDs, whelk);
@@ -90,8 +90,8 @@ public class ProfileExport
                 return; // Created records not requested
             if (profile.getProperty("authupdate", "ON").equalsIgnoreCase("OFF"))
                 return; // Updated records not requested
-            Set<String> biboperators = profile.getSet("authoperators");
-            if ( !biboperators.isEmpty() && !biboperators.contains( changedBy ) && changedBy != null)
+            Set<String> authoperators = profile.getSet("authoperators");
+            if ( !authoperators.isEmpty() && changedBy != null && !authoperators.contains( changedBy ))
                 return; // Updates from this operator/changedBy not requested
 
             List<Tuple2<String, String>> dependers = whelk.getStorage().getDependers(id);
@@ -110,8 +110,8 @@ public class ProfileExport
                 return; // Created records not requested
             if (profile.getProperty("holdupdate", "ON").equalsIgnoreCase("OFF"))
                 return; // Updated records not requested
-            Set<String> biboperators = profile.getSet("holdoperators");
-            if ( !biboperators.isEmpty() && !biboperators.contains( changedBy ) && changedBy != null)
+            Set<String> holdoperators = profile.getSet("holdoperators");
+            if ( !holdoperators.isEmpty() && changedBy != null && !holdoperators.contains( changedBy ))
                 return; // Updates from this operator/changedBy not requested
 
             Document changedHoldDocument = whelk.getStorage().load(id);
