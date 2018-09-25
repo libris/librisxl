@@ -104,7 +104,7 @@ public class ProfileExport
         if (profile.getProperty(collection+"update", "ON").equalsIgnoreCase("OFF"))
             return false; // Updated records not requested
         Set<String> operators = profile.getSet(collection+"operators");
-        if ( !operators.isEmpty() )//&& changedBy != null && !biboperators.contains( changedBy ))
+        if ( !operators.isEmpty() )
         {
             Set<String> operatorsInInterval = getAllChangedBy(id, from, until);
             if ( !operatorsInInterval.isEmpty() ) // Ignore setting if there are no changedBy names
