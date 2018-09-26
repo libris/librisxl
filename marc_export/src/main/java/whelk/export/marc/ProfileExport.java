@@ -47,10 +47,10 @@ public class ProfileExport
                 String collection = resultSet.getString("collection");
                 Timestamp createdTime = resultSet.getTimestamp("created");
 
-                boolean created = true;
+                boolean created = false;
                 if (zonedFrom.toInstant().isBefore(createdTime.toInstant()) &&
                         zonedUntil.toInstant().isAfter(createdTime.toInstant()))
-                    created = false;
+                    created = true;
 
                 exportAffectedDocuments(id, collection, created, fromTimeStamp, untilTimeStamp, profile, output);
             }
@@ -101,7 +101,7 @@ public class ProfileExport
     {
         if (profile.getProperty(collection+"create", "ON").equalsIgnoreCase("OFF") && created)
             return false; // Created records not requested
-        if (profile.getProperty(collection+"update", "ON").equalsIgnoreCase("OFF"))
+        if (profile.getProperty(collection+"update", "ON").equalsIgnoreCase("OFF") && !created)
             return false; // Updated records not requested
         Set<String> operators = profile.getSet(collection+"operators");
         if ( !operators.isEmpty() )
