@@ -9,10 +9,9 @@ import whelk.util.LegacyIntegrationTools;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
+import javax.xml.stream.*;
 import java.io.IOException;
+import java.io.StringReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
@@ -21,11 +20,13 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import org.apache.cxf.staxutils.StaxUtils;
 
 public class ResponseCommon
 {
     private static final Logger logger = LogManager.getLogger(ResponseCommon.class);
     private static final ObjectMapper mapper = new ObjectMapper();
+    private static final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
 
     /**
      * Send a properly formatted OAI-PMH error response to the requesting harvester.
@@ -76,9 +77,6 @@ public class ResponseCommon
         writer.writeStartDocument("UTF-8", "1.0");
         writer.writeStartElement("OAI-PMH");
         writer.writeDefaultNamespace("http://www.openarchives.org/OAI/2.0/");
-        writer.writeNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance");
-        writer.writeAttribute("http://www.w3.org/2001/XMLSchema-instance", "schemaLocation",
-                "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd");
 
         // Mandatory time element
         writer.writeStartElement("responseDate");
@@ -135,7 +133,7 @@ public class ResponseCommon
 
         // If the format is not XML, it needs to be embedded as CDATA, to not interfere with the response XML format.
         if (formatDescription.isXmlFormat)
-            writer.writeCharacters(convertedText);
+            StaxUtils.copy(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
         else
             writer.writeCData(convertedText);
     }
