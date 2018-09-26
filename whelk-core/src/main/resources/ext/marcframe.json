@@ -119,7 +119,7 @@
         "5": "marc:PartialPreliminaryLevel",
         "7": "marc:MinimalLevel",
         "8": "marc:PrepublicationLevel",
-        "_": "marc:FullLevel",
+        " ": "marc:FullLevel",
         "e": "marc:SystemIdentifiedMarcErrorInABatchloadedRecordLocal",
         "i": "marc:FullLevelInputByOclcParticipantsLocal",
         "j": "marc:DeletedRecordLocal",
@@ -2075,6 +2075,7 @@
             "recordStatus": "marc:CorrectedOrRevised",
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
             "controlNumber": "0000000",
+            "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "@type": "Instance",
               "issuanceType": "Monograph",
@@ -2098,6 +2099,7 @@
               {"@type": "DescriptionConventions", "code": "rda"}
             ],
             "controlNumber": "0000000",
+            "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "@type": "Instance",
               "issuanceType": "Monograph",
@@ -2115,6 +2117,7 @@
             "recordStatus": "marc:CorrectedOrRevised",
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
             "controlNumber": "fffffff",
+            "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "@type": "Instance",
               "issuanceType": "Monograph",
