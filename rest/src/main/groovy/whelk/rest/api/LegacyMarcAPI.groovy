@@ -189,7 +189,7 @@ class LegacyMarcAPI extends HttpServlet {
             }
         }
 
-        List<Document> holdingDocuments = whelk.storage.getAttachedHoldings(rootDocument.getThingIdentifiers())
+        List<Document> holdingDocuments = whelk.storage.getAttachedHoldings(rootDocument.getThingIdentifiers(), whelk.getJsonld())
         def holdings = new TreeMap<String, MarcRecord>()
 
         if (!profile.getProperty("holdtype", "NONE").equalsIgnoreCase("NONE")) {

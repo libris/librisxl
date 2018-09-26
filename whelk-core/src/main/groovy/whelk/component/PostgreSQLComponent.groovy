@@ -1729,9 +1729,10 @@ class PostgreSQLComponent {
     /**
      * Returns a list of holdings documents, for any of the passed thingIdentifiers
      */
-    List<Document> getAttachedHoldings(List<String> thingIdentifiers) {
+    List<Document> getAttachedHoldings(List<String> thingIdentifiers, JsonLd jsonld) {
         // Build the query
-        StringBuilder selectSQL = new StringBuilder("SELECT id,data,created,modified,deleted FROM ")
+
+        StringBuilder selectSQL = new StringBuilder("SELECT id FROM ")
         selectSQL.append(mainTableName)
         selectSQL.append(" WHERE collection = 'hold' AND deleted = false AND (")
         for (int i = 0; i < thingIdentifiers.size(); ++i)
@@ -1761,8 +1762,8 @@ class PostgreSQLComponent {
             rs = preparedStatement.executeQuery()
             List<Document> holdings = []
             while (rs.next()) {
-                Document holding = assembleDocument(rs)
-                holdings.add(holding)
+                String id = rs.getString("id")
+                holdings.add(loadEmbellished(id, jsonld))
             }
             return holdings
         }
