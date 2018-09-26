@@ -1713,8 +1713,19 @@
         "type": "ProduceIfMissing",
         "select": "seriesMembership",
         "produceMissing": {
-          "property": "seriesStatement",
-          "sourcePath": ["inSeries", "instanceOf", "hasTitle", "mainTitle"]
+          "produceProperty": "seriesStatement",
+          "sourcePath": ["inSeries", "instanceOf", "hasTitle"],
+          "showProperties": [
+            "mainTitle",
+            {
+              "property": "partName",
+              "useValueFormat": {"contentFirst": ". ", "contentBefore": ", "}
+            },
+            {
+              "property": "partNumber",
+              "useValueFormat": {"contentBefore": ", "}
+            }
+          ]
         },
         "_spec": [
           {
@@ -1768,6 +1779,42 @@
                       "instanceOf": {
                         "@type": "Work",
                         "hasTitle": [ {"@type": "Title", "mainTitle": "CNI Publications"} ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {
+                        "@type": "Work",
+                        "hasTitle": [ {"@type": "Title", "mainTitle": "T", "partName": "P", "partNumber": "1"} ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "T. P, 1",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {
+                        "@type": "Work",
+                        "hasTitle": [ {"@type": "Title", "mainTitle": "T", "partName": "P", "partNumber": "1"} ]
                       }
                     }
                   }
