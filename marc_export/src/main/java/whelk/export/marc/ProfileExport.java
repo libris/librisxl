@@ -18,6 +18,13 @@ import whelk.util.MarcExport;
 
 public class ProfileExport
 {
+    public enum DELETE_MODE
+    {
+        IGNORE, // Do not export deleted records
+        EXPORT, // Do export deleted record
+        SEND_EMAIL // Do not export deleted records, but send their IDs in an email to be manually deleted
+    }
+
     private JsonLD2MarcXMLConverter m_toMarcXmlConverter;
     private Whelk m_whelk;
     public ProfileExport(Whelk whelk)
@@ -29,7 +36,7 @@ public class ProfileExport
     /**
      * Export MARC data from 'whelk' affected in between 'from' and 'until' shaped by 'profile' into 'output'.
      */
-    public OutputStream exportInto(MarcRecordWriter output, ExportProfile profile, String from, String until)
+    public OutputStream exportInto(MarcRecordWriter output, ExportProfile profile, String from, String until, DELETE_MODE deleteMode)
             throws IOException, SQLException
     {
         ZonedDateTime zonedFrom = ZonedDateTime.parse(from);
@@ -46,13 +53,14 @@ public class ProfileExport
                 String id = resultSet.getString("id");
                 String collection = resultSet.getString("collection");
                 Timestamp createdTime = resultSet.getTimestamp("created");
+                Boolean deleted = resultSet.getBoolean("deleted");
 
                 boolean created = false;
                 if (zonedFrom.toInstant().isBefore(createdTime.toInstant()) &&
                         zonedUntil.toInstant().isAfter(createdTime.toInstant()))
                     created = true;
 
-                exportAffectedDocuments(id, collection, created, fromTimeStamp, untilTimeStamp, profile, output);
+                exportAffectedDocuments(id, collection, created, deleted, fromTimeStamp, untilTimeStamp, profile, output);
             }
         }
 
@@ -63,18 +71,15 @@ public class ProfileExport
      * Export (into output) all documents that are affected by 'id' having been updated.
      * 'created' == true means 'id' was created in the chosen interval, false means merely updated.
      */
-    private void exportAffectedDocuments(String id, String collection, boolean created, Timestamp from, Timestamp until,
-                                                ExportProfile profile, MarcRecordWriter output)
+    private void exportAffectedDocuments(String id, String collection, boolean created, Boolean deleted,Timestamp from,
+                                         Timestamp until, ExportProfile profile, MarcRecordWriter output)
             throws IOException, SQLException
     {
         TreeSet<String> exportedIDs = new TreeSet<>();
 
-        if (collection.equals("bib") && updateShouldBeExported(id, collection, profile, from, until, created))
-        {
-            boolean exportOnlyIfHeld = true;
-            exportDocument(m_whelk.getStorage().load(id), profile, output, exportedIDs, exportOnlyIfHeld);
-        }
-        else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created))
+        if (collection.equals("bib") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
+            exportDocument(m_whelk.getStorage().load(id), profile, output, exportedIDs);
+        else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
         {
             List<Tuple2<String, String>> dependers = m_whelk.getStorage().getDependers(id);
             for (Tuple2 depender : dependers)
@@ -83,21 +88,17 @@ public class ProfileExport
                 Document dependerDoc = m_whelk.getStorage().load(dependerId);
                 String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, m_whelk.getJsonld());
                 if (dependerCollection.equals("bib"))
-                {
-                    boolean exportOnlyIfHeld = true;
-                    exportDocument(dependerDoc, profile, output, exportedIDs, exportOnlyIfHeld);
-                }
+                    exportDocument(dependerDoc, profile, output, exportedIDs);
             }
         }
-        else if (collection.equals("hold") && updateShouldBeExported(id, collection, profile, from, until, created))
+        else if (collection.equals("hold") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
         {
             List<Document> versions = m_whelk.getStorage().loadAllVersions(id);
 
             // Export the new/current itemOf
             Document version = versions.get(0);
             String itemOf = version.getHoldingFor();
-            boolean exportOnlyIfHeld = true;
-            exportDocument(m_whelk.getStorage().getDocumentByIri(itemOf), profile, output, exportedIDs, exportOnlyIfHeld);
+            exportDocument(m_whelk.getStorage().getDocumentByIri(itemOf), profile, output, exportedIDs);
 
             // If the itemOf link was changed, also export the bib that is no longer linked.
             if (versions.size() > 1)
@@ -106,19 +107,21 @@ public class ProfileExport
                 String oldItemOf = oldVersion.getHoldingFor();
                 if (!oldItemOf.equals(itemOf))
                 {
-                    exportOnlyIfHeld = false;
-                    exportDocument(m_whelk.getStorage().getDocumentByIri(oldItemOf), profile, output, exportedIDs, exportOnlyIfHeld);
+                    exportDocument(m_whelk.getStorage().getDocumentByIri(oldItemOf), profile, output, exportedIDs);
                 }
             }
         }
     }
 
-    private boolean updateShouldBeExported(String id, String collection, ExportProfile profile, Timestamp from, Timestamp until, boolean created)
+    private boolean updateShouldBeExported(String id, String collection, ExportProfile profile, Timestamp from,
+                                           Timestamp until, boolean created, Boolean deleted)
             throws SQLException
     {
         if (profile.getProperty(collection+"create", "ON").equalsIgnoreCase("OFF") && created)
             return false; // Created records not requested
         if (profile.getProperty(collection+"update", "ON").equalsIgnoreCase("OFF") && !created)
+            return false; // Updated records not requested
+        if (profile.getProperty(collection+"delete", "ON").equalsIgnoreCase("OFF") && deleted)
             return false; // Updated records not requested
         Set<String> operators = profile.getSet(collection+"operators");
         if ( !operators.isEmpty() )
@@ -131,6 +134,32 @@ public class ProfileExport
                     return false; // Updates from this operator/changedBy not requested
             }
         }
+
+        String locations = profile.getProperty("locations", "");
+        HashSet locationSet = new HashSet(Arrays.asList(locations.split(" ")));
+        if ( ! locationSet.contains("*") )
+        {
+            Document updatedDocument = m_whelk.getStorage().load(id);
+
+            if (collection.equals("bib"))
+            {
+                boolean bibIsHeld = false;
+                List<Document> holdings = m_whelk.getStorage().getAttachedHoldings(updatedDocument.getThingIdentifiers());
+                for (Document holding : holdings)
+                {
+                    if (locationSet.contains(holding.getSigel()))
+                        bibIsHeld = true;
+                }
+                if (!bibIsHeld)
+                    return false;
+            }
+            if (collection.equals("hold"))
+            {
+                if (!locationSet.contains(updatedDocument.getSigel()))
+                    return false;
+            }
+        }
+
         return true;
     }
 
@@ -138,7 +167,7 @@ public class ProfileExport
      * Export document (into output)
      */
     private void exportDocument(Document document, ExportProfile profile, MarcRecordWriter output,
-                                       TreeSet<String> exportedIDs, boolean exportOnlyIfHeld)
+                                       TreeSet<String> exportedIDs)
             throws IOException
     {
         String systemId = document.getShortId();
@@ -146,7 +175,7 @@ public class ProfileExport
             return;
         exportedIDs.add(systemId);
 
-        Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(profile, document, m_whelk, m_toMarcXmlConverter, exportOnlyIfHeld);
+        Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(profile, document, m_whelk, m_toMarcXmlConverter);
         if (result == null) // A conversion error will already have been logged. Anything else, and we want to fail fast.
             return;
 
@@ -160,7 +189,7 @@ public class ProfileExport
     private PreparedStatement getAllChangedIDsStatement(Timestamp from, Timestamp until, Connection connection)
             throws SQLException
     {
-        String sql = "SELECT id, collection, created FROM lddb WHERE modified >= ? AND modified <= ?";
+        String sql = "SELECT id, collection, created, deleted FROM lddb WHERE modified >= ? AND modified <= ?";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setTimestamp(1, from);
         preparedStatement.setTimestamp(2, until);
