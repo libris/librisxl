@@ -75,6 +75,11 @@ public class MarcHttpExport extends HttpServlet
             }
         }
 
+        // Virtual deletion means: If there exists no holding for any of the locations in the profile for a bib record, consider that bib record deleted.
+        boolean doVirtualDeletions = false;
+        if (parameterMap.get("virtualDelete") != null && parameterMap.get("virtualDelete").equalsIgnoreCase("true"))
+            doVirtualDeletions = true;
+
         // Body (export profile)
         StringBuilder body = new StringBuilder();
         BufferedReader reader = req.getReader();
@@ -102,7 +107,7 @@ public class MarcHttpExport extends HttpServlet
 
         try
         {
-            profileExport.exportInto(output, profile, parameterMap.get("from"), parameterMap.get("until"), deleteMode);
+            profileExport.exportInto(output, profile, parameterMap.get("from"), parameterMap.get("until"), deleteMode, doVirtualDeletions);
         }
         catch (SQLException se)
         {

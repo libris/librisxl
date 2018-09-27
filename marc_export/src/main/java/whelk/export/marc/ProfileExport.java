@@ -36,7 +36,8 @@ public class ProfileExport
     /**
      * Export MARC data from 'whelk' affected in between 'from' and 'until' shaped by 'profile' into 'output'.
      */
-    public OutputStream exportInto(MarcRecordWriter output, ExportProfile profile, String from, String until, DELETE_MODE deleteMode)
+    public OutputStream exportInto(MarcRecordWriter output, ExportProfile profile, String from, String until,
+                                   DELETE_MODE deleteMode, boolean doVirtualDeletions)
             throws IOException, SQLException
     {
         ZonedDateTime zonedFrom = ZonedDateTime.parse(from);
@@ -60,7 +61,8 @@ public class ProfileExport
                         zonedUntil.toInstant().isAfter(createdTime.toInstant()))
                     created = true;
 
-                exportAffectedDocuments(id, collection, created, deleted, fromTimeStamp, untilTimeStamp, profile, output, deleteMode);
+                exportAffectedDocuments(id, collection, created, deleted, fromTimeStamp, untilTimeStamp, profile,
+                        output, deleteMode, doVirtualDeletions);
             }
         }
 
@@ -72,13 +74,14 @@ public class ProfileExport
      * 'created' == true means 'id' was created in the chosen interval, false means merely updated.
      */
     private void exportAffectedDocuments(String id, String collection, boolean created, Boolean deleted,Timestamp from,
-                                         Timestamp until, ExportProfile profile, MarcRecordWriter output, DELETE_MODE deleteMode)
+                                         Timestamp until, ExportProfile profile, MarcRecordWriter output,
+                                         DELETE_MODE deleteMode, boolean doVirtualDeletions)
             throws IOException, SQLException
     {
         TreeSet<String> exportedIDs = new TreeSet<>();
 
         if (collection.equals("bib") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
-            exportDocument(m_whelk.getStorage().load(id), profile, output, exportedIDs, deleteMode);
+            exportDocument(m_whelk.getStorage().load(id), profile, output, exportedIDs, deleteMode, doVirtualDeletions);
         else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
         {
             List<Tuple2<String, String>> dependers = m_whelk.getStorage().getDependers(id);
@@ -88,7 +91,7 @@ public class ProfileExport
                 Document dependerDoc = m_whelk.getStorage().load(dependerId);
                 String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, m_whelk.getJsonld());
                 if (dependerCollection.equals("bib"))
-                    exportDocument(dependerDoc, profile, output, exportedIDs, deleteMode);
+                    exportDocument(dependerDoc, profile, output, exportedIDs, deleteMode, doVirtualDeletions);
             }
         }
         else if (collection.equals("hold") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
@@ -98,7 +101,7 @@ public class ProfileExport
             // Export the new/current itemOf
             Document version = versions.get(0);
             String itemOf = version.getHoldingFor();
-            exportDocument(m_whelk.getStorage().getDocumentByIri(itemOf), profile, output, exportedIDs, deleteMode);
+            exportDocument(m_whelk.getStorage().getDocumentByIri(itemOf), profile, output, exportedIDs, deleteMode, doVirtualDeletions);
 
             // If the itemOf link was changed, also export the bib that is no longer linked.
             if (versions.size() > 1)
@@ -107,12 +110,15 @@ public class ProfileExport
                 String oldItemOf = oldVersion.getHoldingFor();
                 if (!oldItemOf.equals(itemOf))
                 {
-                    exportDocument(m_whelk.getStorage().getDocumentByIri(oldItemOf), profile, output, exportedIDs, deleteMode);
+                    exportDocument(m_whelk.getStorage().getDocumentByIri(oldItemOf), profile, output, exportedIDs, deleteMode, doVirtualDeletions);
                 }
             }
         }
     }
 
+    /**
+     * Should an update of 'id' affect the collection of bibs being exported? 'id' may be any collection!
+     */
     private boolean updateShouldBeExported(String id, String collection, ExportProfile profile, Timestamp from,
                                            Timestamp until, boolean created, Boolean deleted)
             throws SQLException
@@ -164,16 +170,31 @@ public class ProfileExport
     }
 
     /**
-     * Export document (into output)
+     * Export bib document (into output)
      */
     private void exportDocument(Document document, ExportProfile profile, MarcRecordWriter output,
-                                       TreeSet<String> exportedIDs, DELETE_MODE deleteMode)
+                                       TreeSet<String> exportedIDs, DELETE_MODE deleteMode, boolean doVirtualDeletions)
             throws IOException
     {
         String systemId = document.getShortId();
         if (exportedIDs.contains(systemId))
             return;
         exportedIDs.add(systemId);
+
+        String locations = profile.getProperty("locations", "");
+        HashSet locationSet = new HashSet(Arrays.asList(locations.split(" ")));
+        if (doVirtualDeletions && !locationSet.contains("*") && deleteMode != DELETE_MODE.IGNORE)
+        {
+            boolean bibIsHeld = false;
+            List<Document> holdings = m_whelk.getStorage().getAttachedHoldings(document.getThingIdentifiers());
+            for (Document holding : holdings)
+            {
+                if (locationSet.contains(holding.getSigel()))
+                    bibIsHeld = true;
+            }
+            if (!bibIsHeld)
+                document.setDeleted(true);
+        }
 
         if (document.getDeleted())
         {
