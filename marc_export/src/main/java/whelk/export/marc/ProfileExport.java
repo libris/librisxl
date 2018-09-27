@@ -60,7 +60,7 @@ public class ProfileExport
                         zonedUntil.toInstant().isAfter(createdTime.toInstant()))
                     created = true;
 
-                exportAffectedDocuments(id, collection, created, deleted, fromTimeStamp, untilTimeStamp, profile, output);
+                exportAffectedDocuments(id, collection, created, deleted, fromTimeStamp, untilTimeStamp, profile, output, deleteMode);
             }
         }
 
@@ -72,13 +72,13 @@ public class ProfileExport
      * 'created' == true means 'id' was created in the chosen interval, false means merely updated.
      */
     private void exportAffectedDocuments(String id, String collection, boolean created, Boolean deleted,Timestamp from,
-                                         Timestamp until, ExportProfile profile, MarcRecordWriter output)
+                                         Timestamp until, ExportProfile profile, MarcRecordWriter output, DELETE_MODE deleteMode)
             throws IOException, SQLException
     {
         TreeSet<String> exportedIDs = new TreeSet<>();
 
         if (collection.equals("bib") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
-            exportDocument(m_whelk.getStorage().load(id), profile, output, exportedIDs);
+            exportDocument(m_whelk.getStorage().load(id), profile, output, exportedIDs, deleteMode);
         else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
         {
             List<Tuple2<String, String>> dependers = m_whelk.getStorage().getDependers(id);
@@ -88,7 +88,7 @@ public class ProfileExport
                 Document dependerDoc = m_whelk.getStorage().load(dependerId);
                 String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, m_whelk.getJsonld());
                 if (dependerCollection.equals("bib"))
-                    exportDocument(dependerDoc, profile, output, exportedIDs);
+                    exportDocument(dependerDoc, profile, output, exportedIDs, deleteMode);
             }
         }
         else if (collection.equals("hold") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
@@ -98,7 +98,7 @@ public class ProfileExport
             // Export the new/current itemOf
             Document version = versions.get(0);
             String itemOf = version.getHoldingFor();
-            exportDocument(m_whelk.getStorage().getDocumentByIri(itemOf), profile, output, exportedIDs);
+            exportDocument(m_whelk.getStorage().getDocumentByIri(itemOf), profile, output, exportedIDs, deleteMode);
 
             // If the itemOf link was changed, also export the bib that is no longer linked.
             if (versions.size() > 1)
@@ -107,7 +107,7 @@ public class ProfileExport
                 String oldItemOf = oldVersion.getHoldingFor();
                 if (!oldItemOf.equals(itemOf))
                 {
-                    exportDocument(m_whelk.getStorage().getDocumentByIri(oldItemOf), profile, output, exportedIDs);
+                    exportDocument(m_whelk.getStorage().getDocumentByIri(oldItemOf), profile, output, exportedIDs, deleteMode);
                 }
             }
         }
@@ -167,13 +167,26 @@ public class ProfileExport
      * Export document (into output)
      */
     private void exportDocument(Document document, ExportProfile profile, MarcRecordWriter output,
-                                       TreeSet<String> exportedIDs)
+                                       TreeSet<String> exportedIDs, DELETE_MODE deleteMode)
             throws IOException
     {
         String systemId = document.getShortId();
         if (exportedIDs.contains(systemId))
             return;
         exportedIDs.add(systemId);
+
+        if (document.getDeleted())
+        {
+            switch (deleteMode)
+            {
+                case IGNORE:
+                    return;
+                case SEND_EMAIL:
+                    throw new RuntimeException("EMAIL/MANUAL-DELETE NOT YET IMPLEMENTED");
+                case EXPORT:
+                    break;
+            }
+        }
 
         Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(profile, document, m_whelk, m_toMarcXmlConverter);
         if (result == null) // A conversion error will already have been logged. Anything else, and we want to fail fast.
