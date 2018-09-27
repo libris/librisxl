@@ -1718,12 +1718,12 @@
           "showProperties": [
             "mainTitle",
             {
-              "property": "partName",
-              "useValueFormat": {"contentFirst": ". ", "contentBefore": ", "}
-            },
-            {
               "property": "partNumber",
               "useValueFormat": {"contentBefore": ", "}
+            },
+            {
+              "property": "partName",
+              "useValueFormat": {"contentBefore": ". "}
             }
           ]
         },
@@ -1809,7 +1809,7 @@
                 "seriesMembership": [
                   {
                     "@type": "SeriesMembership",
-                    "seriesStatement": "T. P, 1",
+                    "seriesStatement": "T, 1. P",
                     "inSeries": {
                       "@type": "Instance",
                       "instanceOf": {
