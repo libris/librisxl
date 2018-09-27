@@ -71,7 +71,8 @@ public class ProfileExport
 
         if (collection.equals("bib") && updateShouldBeExported(id, collection, profile, from, until, created))
         {
-            exportDocument(m_whelk.getStorage().load(id), profile, output, exportedIDs);
+            boolean exportOnlyIfHeld = true;
+            exportDocument(m_whelk.getStorage().load(id), profile, output, exportedIDs, exportOnlyIfHeld);
         }
         else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created))
         {
@@ -82,16 +83,32 @@ public class ProfileExport
                 Document dependerDoc = m_whelk.getStorage().load(dependerId);
                 String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, m_whelk.getJsonld());
                 if (dependerCollection.equals("bib"))
-                    exportDocument(dependerDoc, profile, output, exportedIDs);
+                {
+                    boolean exportOnlyIfHeld = true;
+                    exportDocument(dependerDoc, profile, output, exportedIDs, exportOnlyIfHeld);
+                }
             }
         }
         else if (collection.equals("hold") && updateShouldBeExported(id, collection, profile, from, until, created))
         {
             List<Document> versions = m_whelk.getStorage().loadAllVersions(id);
-            for (Document version : versions)
+
+            // Export the new/current itemOf
+            Document version = versions.get(0);
+            String itemOf = version.getHoldingFor();
+            boolean exportOnlyIfHeld = true;
+            exportDocument(m_whelk.getStorage().getDocumentByIri(itemOf), profile, output, exportedIDs, exportOnlyIfHeld);
+
+            // If the itemOf link was changed, also export the bib that is no longer linked.
+            if (versions.size() > 1)
             {
-                String itemOf = version.getHoldingFor();
-                exportDocument(m_whelk.getStorage().getDocumentByIri(itemOf), profile, output, exportedIDs);
+                Document oldVersion = versions.get(1);
+                String oldItemOf = oldVersion.getHoldingFor();
+                if (!oldItemOf.equals(itemOf))
+                {
+                    exportOnlyIfHeld = false;
+                    exportDocument(m_whelk.getStorage().getDocumentByIri(oldItemOf), profile, output, exportedIDs, exportOnlyIfHeld);
+                }
             }
         }
     }
@@ -121,7 +138,7 @@ public class ProfileExport
      * Export document (into output)
      */
     private void exportDocument(Document document, ExportProfile profile, MarcRecordWriter output,
-                                       TreeSet<String> exportedIDs)
+                                       TreeSet<String> exportedIDs, boolean exportOnlyIfHeld)
             throws IOException
     {
         String systemId = document.getShortId();
@@ -129,7 +146,6 @@ public class ProfileExport
             return;
         exportedIDs.add(systemId);
 
-        boolean exportOnlyIfHeld = true;
         Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(profile, document, m_whelk, m_toMarcXmlConverter, exportOnlyIfHeld);
         if (result == null) // A conversion error will already have been logged. Anything else, and we want to fail fast.
             return;

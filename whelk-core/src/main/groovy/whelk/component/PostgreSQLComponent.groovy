@@ -173,7 +173,7 @@ class PostgreSQLComponent {
                                                       "WHERE iri = ? AND mainid = 't') " +
                                           "AND checksum = ?"
         GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,deleted,created,modified " +
-                "FROM $versionsTableName WHERE id = ? ORDER BY modified"
+                "FROM $versionsTableName WHERE id = ? ORDER BY modified DESC"
         GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID = "SELECT id,data,deleted,created,modified " +
                                                "FROM $versionsTableName " +
                                                "WHERE id = (SELECT id FROM $idTableName " +
