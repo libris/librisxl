@@ -70,7 +70,7 @@ public class Digidaily {
             for (Datafield df: printRecord.getDatafields("776")) {
                 for (Subfield sf: df.getSubfields("w")) {
                     Document dup = Utils.getXlDocument(sf.getData(), "bib");
-                    List<Document> attachedHoldings = Utils.s_whelk.getStorage().getAttachedHoldings(dup.getThingIdentifiers());
+                    List<Document> attachedHoldings = Utils.s_whelk.getStorage().getAttachedHoldings(dup.getThingIdentifiers(), Utils.s_whelk.getJsonld());
                     for (Document attachedHolding : attachedHoldings) {
                         if (attachedHolding.getSigel().equals(sigel)) {
                             if (sf.getData() != null) {
