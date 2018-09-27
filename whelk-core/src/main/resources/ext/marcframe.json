@@ -119,7 +119,7 @@
         "5": "marc:PartialPreliminaryLevel",
         "7": "marc:MinimalLevel",
         "8": "marc:PrepublicationLevel",
-        "_": "marc:FullLevel",
+        " ": "marc:FullLevel",
         "e": "marc:SystemIdentifiedMarcErrorInABatchloadedRecordLocal",
         "i": "marc:FullLevelInputByOclcParticipantsLocal",
         "j": "marc:DeletedRecordLocal",
@@ -1713,8 +1713,19 @@
         "type": "ProduceIfMissing",
         "select": "seriesMembership",
         "produceMissing": {
-          "property": "seriesStatement",
-          "sourcePath": ["inSeries", "instanceOf", "hasTitle", "mainTitle"]
+          "produceProperty": "seriesStatement",
+          "sourcePath": ["inSeries", "instanceOf", "hasTitle"],
+          "showProperties": [
+            "mainTitle",
+            {
+              "property": "partNumber",
+              "useValueFormat": {"contentBefore": ", "}
+            },
+            {
+              "property": "partName",
+              "useValueFormat": {"contentBefore": ". "}
+            }
+          ]
         },
         "_spec": [
           {
@@ -1769,6 +1780,88 @@
                         "@type": "Work",
                         "hasTitle": [ {"@type": "Title", "mainTitle": "CNI Publications"} ]
                       }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {
+                        "@type": "Work",
+                        "hasTitle": [ {"@type": "Title", "mainTitle": "T", "partName": "P", "partNumber": "1"} ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "T, 1. P",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {
+                        "@type": "Work",
+                        "hasTitle": [ {"@type": "Title", "mainTitle": "T", "partName": "P", "partNumber": "1"} ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name":  "Series statement comes from the title of the same membership node",
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {"@type": "Work", "hasTitle": [{"@type": "Title", "mainTitle": "A"}]}
+                    }
+                  },
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {"@type": "Work", "hasTitle": [{"@type": "Title", "mainTitle": "B"}]}
+                    }
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "A",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {"@type": "Work", "hasTitle": [{"@type": "Title", "mainTitle": "A"}]}
+                    }
+                  },
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "B",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {"@type": "Work", "hasTitle": [{"@type": "Title", "mainTitle": "B"}]}
                     }
                   }
                 ]
@@ -1982,6 +2075,7 @@
             "recordStatus": "marc:CorrectedOrRevised",
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
             "controlNumber": "0000000",
+            "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "@type": "Instance",
               "issuanceType": "Monograph",
@@ -2005,6 +2099,7 @@
               {"@type": "DescriptionConventions", "code": "rda"}
             ],
             "controlNumber": "0000000",
+            "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "@type": "Instance",
               "issuanceType": "Monograph",
@@ -2022,6 +2117,7 @@
             "recordStatus": "marc:CorrectedOrRevised",
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
             "controlNumber": "fffffff",
+            "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "@type": "Instance",
               "issuanceType": "Monograph",

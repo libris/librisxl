@@ -140,7 +140,7 @@ public class ProfileExport
                     return false; // Updates from this operator/changedBy not requested
             }
         }
-
+        
         String locations = profile.getProperty("locations", "");
         HashSet locationSet = new HashSet(Arrays.asList(locations.split(" ")));
         if ( ! locationSet.contains("*") )
@@ -150,7 +150,7 @@ public class ProfileExport
             if (collection.equals("bib"))
             {
                 boolean bibIsHeld = false;
-                List<Document> holdings = m_whelk.getStorage().getAttachedHoldings(updatedDocument.getThingIdentifiers());
+                List<Document> holdings = m_whelk.getStorage().getAttachedHoldings(updatedDocument.getThingIdentifiers(), m_whelk.getJsonld());
                 for (Document holding : holdings)
                 {
                     if (locationSet.contains(holding.getSigel()))
@@ -186,7 +186,7 @@ public class ProfileExport
         if (doVirtualDeletions && !locationSet.contains("*") && deleteMode != DELETE_MODE.IGNORE)
         {
             boolean bibIsHeld = false;
-            List<Document> holdings = m_whelk.getStorage().getAttachedHoldings(document.getThingIdentifiers());
+            List<Document> holdings = m_whelk.getStorage().getAttachedHoldings(document.getThingIdentifiers(), m_whelk.getJsonld());
             for (Document holding : holdings)
             {
                 if (locationSet.contains(holding.getSigel()))

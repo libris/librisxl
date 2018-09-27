@@ -175,7 +175,7 @@ public class Xml
                 Element holdings = xmlDoc.createElement("holdings");
                 extra.appendChild(holdings);
 
-                List<whelk.Document> attachedHoldings = Utils.s_whelk.getStorage().getAttachedHoldings(document.getThingIdentifiers());
+                List<whelk.Document> attachedHoldings = Utils.s_whelk.getStorage().getAttachedHoldings(document.getThingIdentifiers(), Utils.s_whelk.getJsonld());
                 for (whelk.Document holdingDocument : attachedHoldings)
                 {
                     Element holding = xmlDoc.createElement("holding");

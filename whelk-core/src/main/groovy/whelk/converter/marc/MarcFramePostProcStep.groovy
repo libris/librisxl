@@ -37,6 +37,47 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
         return findValue(source[path[0]], path.size() > 1 ? path[1..-1] : null)
     }
 
+    static String buildString(Map node, List showProperties) {
+        def result = ""
+        for (prop in showProperties) {
+            def fmt = null
+            if (prop instanceof Map) {
+                fmt = prop.useValueFormat
+                prop = prop.property
+            }
+            def value = node[prop]
+            if (value) {
+                if (!(value instanceof List)) {
+                    value = [value]
+                }
+                def first = true
+                if (fmt?.contentFirst) {
+                    result += fmt.contentFirst
+                }
+                def prevAfter = null
+                value.each {
+                    if (prevAfter) {
+                        result += prevAfter
+                    }
+                    if (fmt?.contentBefore && (!fmt.contentFirst || !first)) {
+                        result += fmt.contentBefore
+                    }
+                    result += it
+                    first = false
+                    prevAfter = fmt?.contentAfter
+                }
+                if (fmt?.contentLast) {
+                    result += fmt.contentLast
+                } else if (prevAfter) {
+                    result += prevAfter
+                }
+            } else if (fmt?.contentNoValue) {
+                result += fmt.contentNoValue
+            }
+        }
+        return result
+    }
+
 }
 
 
@@ -291,15 +332,24 @@ class ProduceIfMissingStep extends MarcFramePostProcStepBase {
     void unmodify(Map record, Map thing) {
         def source = thing[select]
         def items = source instanceof List ? source : source ? [source] : []
-        if (items.any { produceMissing.property in it }) {
+        if (items.any { produceMissing.produceProperty in it }) {
             return
             // Only apply rules in *no* property is found (since if one is
             // found, we don't know if data is intentionally sparse).
         }
         items.each {
-            def value = findValue(source, produceMissing.sourcePath)
+            def value = findValue(it, produceMissing.sourcePath)
             if (value) {
-                it[produceMissing.property] = value
+                // IMPROVE: use produceMissing.multiple to build from all
+                if (value instanceof List) {
+                    value = value[0]
+                }
+                if (produceMissing.showProperties) {
+                    value = buildString(value, produceMissing.showProperties)
+                }
+                if (value) {
+                    it[produceMissing.produceProperty] = value
+                }
             }
         }
     }
