@@ -62,7 +62,7 @@ public class Utils
     /**
      * itemOfSystemId (a fnrgl-string) is only relevant when converting a holding record. Set to null otherwise.
      */
-    static Document convertToRDF(String marcXmlString, String expectedCollection, String itemOfSystemId) throws IOException
+    static Document convertToRDF(String marcXmlString, String expectedCollection, String itemOfSystemId, boolean isUpdate) throws IOException
     {
         try
         {
@@ -70,7 +70,11 @@ public class Utils
             MarcXmlRecordReader reader = new MarcXmlRecordReader(marcXmlInputStream, "/record");
             MarcRecord marcRecord = reader.readRecord();
 
-            String generatedId = IdGenerator.generate();
+            String id = IdGenerator.generate();
+            if (isUpdate)
+            {
+                id = marcRecord.getControlfields("001").get(0).getData();
+            }
 
             // Delete any existing 001 fields (the incoming record is not allowed to decide it's own libris ID).
             if (marcRecord.getControlfields("001").size() != 0)
@@ -80,9 +84,9 @@ public class Utils
 
             // The conversion process needs a 001 field to work correctly.
             if (marcRecord.getControlfields("001").size() == 0)
-                marcRecord.addField(marcRecord.createControlfield("001", generatedId));
+                marcRecord.addField(marcRecord.createControlfield("001", id));
 
-            Map convertedData = s_toJsonLdConverter.convert(MarcJSONConverter.toJSONMap(marcRecord), generatedId);
+            Map convertedData = s_toJsonLdConverter.convert(MarcJSONConverter.toJSONMap(marcRecord), id);
             Document document = new Document(convertedData);
 
             if (expectedCollection.equals("hold"))

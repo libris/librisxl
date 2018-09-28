@@ -8,6 +8,7 @@ import whelk.util.*
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import java.sql.Connection
 
 class RecordRelationAPI extends HttpServlet {
 
@@ -33,6 +34,8 @@ class RecordRelationAPI extends HttpServlet {
         String id = request.getParameter("id")
         String relation = request.getParameter("relation")
         String reverseString = request.getParameter("reverse")
+        String returnMode = request.getParameter("return")
+
 
         boolean reverse = false
         if (reverseString != null && reverseString.equals("true"))
@@ -61,7 +64,7 @@ class RecordRelationAPI extends HttpServlet {
                 dependencySystemIDs = whelk.storage.getDependencies(systemId)
 
             for (Tuple2<String, String> dependencySystemId : dependencySystemIDs){
-                result.add(Document.getBASE_URI().toString() + dependencySystemId.get(0))
+                result.add(dependencySystemId.get(0))
             }
         }
         else {
@@ -72,12 +75,49 @@ class RecordRelationAPI extends HttpServlet {
                 dependencySystemIDs = whelk.storage.getDependenciesOfType(systemId, relation)
             
             for (String dependencySystemId : dependencySystemIDs){
-                result.add(Document.getBASE_URI().toString() + dependencySystemId)
+                result.add(dependencySystemId)
             }
         }
 
+        String jsonString = null
 
-        String jsonString = PostgreSQLComponent.mapper.writeValueAsString(result)
+        if (returnMode == null || returnMode.equals("id")) {
+            List<String> ids = new ArrayList<>(result.size())
+            for (String resultId : result) {
+                ids.add(Document.getBASE_URI().toString() + resultId)
+            }
+            jsonString = PostgreSQLComponent.mapper.writeValueAsString(ids)
+        }
+        else if (returnMode.equals("bare_record")) {
+            List<Map> records = new ArrayList<>(result.size())
+            Connection connection = whelk.storage.getConnection()
+            try {
+                for (String resultId : result) {
+                    records.add( whelk.storage.load(resultId, connection).data )
+                }
+            } finally {
+                connection.close()
+            }
+            jsonString = PostgreSQLComponent.mapper.writeValueAsString(records)
+        }
+        else if (returnMode.equals("embellished_record")) {
+            List<Map> records = new ArrayList<>(result.size())
+            Connection connection = whelk.storage.getConnection()
+            try {
+                for (String resultId : result) {
+                    records.add( whelk.storage.loadEmbellished(resultId, whelk.getJsonld(), connection).data )
+                }
+            } finally {
+                connection.close()
+            }
+            jsonString = PostgreSQLComponent.mapper.writeValueAsString(records)
+        }
+        else {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "The supplied \"return\"-parameter must be either id (default), bare_record or embellished_record.")
+            return
+        }
+
         response.setContentType("application/json")
         response.setHeader("Expires", "0")
         OutputStream out = response.getOutputStream()

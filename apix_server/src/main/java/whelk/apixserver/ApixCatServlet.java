@@ -43,6 +43,10 @@ public class ApixCatServlet extends HttpServlet
     final static int ERROR_BAD_COLLECTION = 0xff03;
     final static int ERROR_DB_NOT_LIBRIS = 0xff04;
     final static int ERROR_CONVERSION_FAILED = 0xff05;
+    final static String APIX_READ_ROLE = "apix_read";
+    final static String APIX_CREATE_ROLE = "apix_create";
+    final static String APIX_UPDATE_ROLE = "apix_update";
+    final static String APIX_DELETE_ROLE = "apix_delete";
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
@@ -55,6 +59,16 @@ public class ApixCatServlet extends HttpServlet
 
     public void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
+        if (request.getUserPrincipal() == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        if (!(request.isUserInRole(APIX_CREATE_ROLE) || request.isUserInRole(APIX_UPDATE_ROLE))) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
         try { doPut2(request, response); } catch (Exception e)
         {
             s_logger.error("Failed to process PUT request.", e);
@@ -64,6 +78,16 @@ public class ApixCatServlet extends HttpServlet
 
     public void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
+        if (request.getUserPrincipal() == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        if (!request.isUserInRole(APIX_DELETE_ROLE)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
         try { doDelete2(request, response); } catch (Exception e)
         {
             s_logger.error("Failed to process DELETE request.", e);
@@ -99,7 +123,7 @@ public class ApixCatServlet extends HttpServlet
         List<Document> attachedHoldings = null;
         if (collection.equals("bib") && request.getParameter("x-holdings") != null && request.getParameter("x-holdings").equalsIgnoreCase("true"))
         {
-            attachedHoldings = Utils.s_whelk.getStorage().getAttachedHoldings(document.getThingIdentifiers());
+            attachedHoldings = Utils.s_whelk.getStorage().getAttachedHoldings(document.getThingIdentifiers(), Utils.s_whelk.getJsonld());
         }
 
         Utils.send200Response(response, Xml.formatApixGetRecordResponse(marcXmlString, document, collection, attachedHoldings));
@@ -157,20 +181,29 @@ public class ApixCatServlet extends HttpServlet
         String id = parameters[2];
 
         String content = IOUtils.toString(request.getReader());
-        Document incomingDocument = Utils.convertToRDF(content, collection, null);
-        if (incomingDocument == null)
-        {
-            Utils.send200Response(response, Xml.formatApixErrorResponse("Conversion from MARC failed.", ApixCatServlet.ERROR_CONVERSION_FAILED));
-            return;
-        }
+
 
         if (id.equalsIgnoreCase("new"))
         {
+            boolean isUpdate = false;
+            Document incomingDocument = Utils.convertToRDF(content, collection, null, isUpdate);
+            if (incomingDocument == null)
+            {
+                Utils.send200Response(response, Xml.formatApixErrorResponse("Conversion from MARC failed.", ApixCatServlet.ERROR_CONVERSION_FAILED));
+                return;
+            }
             Utils.s_whelk.createDocument(incomingDocument, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false);
             s_logger.info("Successful new on : " + incomingDocument.getShortId());
             Utils.send201Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
         } else // save/overwrite existing
         {
+            boolean isUpdate = true;
+            Document incomingDocument = Utils.convertToRDF(content, collection, null, isUpdate);
+            if (incomingDocument == null)
+            {
+                Utils.send200Response(response, Xml.formatApixErrorResponse("Conversion from MARC failed.", ApixCatServlet.ERROR_CONVERSION_FAILED));
+                return;
+            }
             if (StringUtils.isNumeric(id) && id.length() < 15) // 'id' is a Voyager ID, reassign it to ensure it is an XL system ID.
                 id = Utils.s_whelk.getStorage().getSystemIdByIri("http://libris.kb.se/" + collection + "/" + id);
 
@@ -198,7 +231,7 @@ public class ApixCatServlet extends HttpServlet
         String operator = parameters[3];
 
         String content = IOUtils.toString(request.getReader());
-        Document incomingDocument = Utils.convertToRDF(content, "hold", bibid);
+        Document incomingDocument = Utils.convertToRDF(content, "hold", bibid, false);
         if (incomingDocument == null)
         {
             Utils.send200Response(response, Xml.formatApixErrorResponse("Conversion from MARC failed.", ApixCatServlet.ERROR_CONVERSION_FAILED));

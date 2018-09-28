@@ -119,7 +119,7 @@
         "5": "marc:PartialPreliminaryLevel",
         "7": "marc:MinimalLevel",
         "8": "marc:PrepublicationLevel",
-        "_": "marc:FullLevel",
+        " ": "marc:FullLevel",
         "e": "marc:SystemIdentifiedMarcErrorInABatchloadedRecordLocal",
         "i": "marc:FullLevelInputByOclcParticipantsLocal",
         "j": "marc:DeletedRecordLocal",
@@ -234,7 +234,7 @@
             "mainEntity": {
               "subject": [
                 {
-                  "@id": "http://id.kb.se/term/sao/Steampunk"
+                  "@id": "https://id.kb.se/term/sao/Steampunk"
                 }
               ]
             }
@@ -243,7 +243,7 @@
             "mainEntity": {
               "subject": [
                 {
-                  "@id": "http://id.kb.se/term/sao/Steampunk"
+                  "@id": "https://id.kb.se/term/sao/Steampunk"
                 }
               ]
             }
@@ -252,8 +252,8 @@
             "mainEntity": {
               "subject": [
                 {
-                  "@id": "http://id.kb.se/term/sao/Steampunk",
-                  "marc:uri": ["http://id.kb.se/term/sao/Steampunk"]
+                  "@id": "https://id.kb.se/term/sao/Steampunk",
+                  "marc:uri": ["https://id.kb.se/term/sao/Steampunk"]
                 }
               ]
             }
@@ -1319,7 +1319,7 @@
       "FIXME:embedded:whenGroupIdsAreStrippedFromEmbedded": true,
       "pendingResources": {
         "_:seriesinstance": {
-          "TODO:whenSoftMergeWorks:groupId": "#seriesinstance-$seq",
+          "groupId": "#seriesinstance-$seq",
           "link": "inSeries",
           "resourceType": "Instance"
         },
@@ -1708,6 +1708,301 @@
             "back": "both"
           }
         ]
+      },
+      {
+        "type": "ProduceIfMissing",
+        "select": "seriesMembership",
+        "produceMissing": {
+          "produceProperty": "seriesStatement",
+          "sourcePath": ["inSeries", "instanceOf", "hasTitle"],
+          "showProperties": [
+            "mainTitle",
+            {
+              "property": "partNumber",
+              "useValueFormat": {"contentBefore": ", "}
+            },
+            {
+              "property": "partName",
+              "useValueFormat": {"contentBefore": ". "}
+            }
+          ]
+        },
+        "_spec": [
+          {
+            "name":  "NOOP",
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "seriesStatement": "CNI Publications",
+                    "@type": "SeriesMembership",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {
+                        "@type": "Work",
+                        "hasTitle": [ {"@type": "Title", "mainTitle": "CNI Publications"} ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": "source"
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {
+                        "@type": "Work",
+                        "hasTitle": [ {"@type": "Title", "mainTitle": "CNI Publications"} ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "CNI Publications",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {
+                        "@type": "Work",
+                        "hasTitle": [ {"@type": "Title", "mainTitle": "CNI Publications"} ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {
+                        "@type": "Work",
+                        "hasTitle": [ {"@type": "Title", "mainTitle": "T", "partName": "P", "partNumber": "1"} ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "T, 1. P",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {
+                        "@type": "Work",
+                        "hasTitle": [ {"@type": "Title", "mainTitle": "T", "partName": "P", "partNumber": "1"} ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name":  "Series statement comes from the title of the same membership node",
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {"@type": "Work", "hasTitle": [{"@type": "Title", "mainTitle": "A"}]}
+                    }
+                  },
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {"@type": "Work", "hasTitle": [{"@type": "Title", "mainTitle": "B"}]}
+                    }
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "A",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {"@type": "Work", "hasTitle": [{"@type": "Title", "mainTitle": "A"}]}
+                    }
+                  },
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "B",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {"@type": "Work", "hasTitle": [{"@type": "Title", "mainTitle": "B"}]}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name":  "Skip entirely if there is any one item with the expected property (regardless of value)",
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "Some Publications"
+                  },
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {
+                      "@type": "Instance",
+                      "instanceOf": {
+                        "@type": "Work",
+                        "hasTitle": [ {"@type": "Title", "mainTitle": "Other Publications"} ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": "source"
+          }
+        ]
+      },
+      {
+        "type": "SetFlagsByPatterns",
+        "select": "seriesMembership",
+        "match": [
+          {
+            "exists": ["seriesStatement", "inSeries"],
+            "setFlags": {
+              "marc:seriesTracingPolicy": "1"
+            }
+          },
+          {
+            "exists": ["seriesStatement"],
+            "setFlags": {
+              "marc:seriesTracingPolicy": "0"
+            }
+          }
+        ],
+        "_spec": [
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "marc:seriesTracingPolicy": "0",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": "source"
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "marc:seriesTracingPolicy": "1",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "..."
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "marc:seriesTracingPolicy": "0"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            }
+          }
+        ]
       }
     ],
 
@@ -1780,6 +2075,7 @@
             "recordStatus": "marc:CorrectedOrRevised",
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
             "controlNumber": "0000000",
+            "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "@type": "Instance",
               "issuanceType": "Monograph",
@@ -1803,6 +2099,7 @@
               {"@type": "DescriptionConventions", "code": "rda"}
             ],
             "controlNumber": "0000000",
+            "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "@type": "Instance",
               "issuanceType": "Monograph",
@@ -1820,6 +2117,7 @@
             "recordStatus": "marc:CorrectedOrRevised",
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
             "controlNumber": "fffffff",
+            "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "@type": "Instance",
               "issuanceType": "Monograph",
@@ -6916,7 +7214,7 @@
             "_:contentType": {
               "addLink": "contentType",
               "resourceType": "ContentType",
-              "uriTemplate": "http://id.kb.se/term/rda/content{/code}"
+              "uriTemplate": "https://id.kb.se/term/rda/content{/code}"
             }
           }
         },
@@ -6926,7 +7224,7 @@
             "_:contentType": {
               "addLink": "contentType",
               "resourceType": "ContentType",
-              "uriTemplate": "http://id.kb.se/term/rda/content{/code,label}"
+              "uriTemplate": "https://id.kb.se/term/rda/content{/code,label}"
             }
           }
         }
@@ -6942,7 +7240,117 @@
       "$2": {"about": "_:contentType", "property": "termGroup", "marcDefault": "rdacontent"},
       "TODO?:$2": {"about": "_:contentType", "addLink": "inCollection", "resourceType": "ConceptCollection", "property": "code"},
       "$8": {"about": "_:contentType", "property": "marc:groupid"},
-      "$3": {"about": "_:contentType", "link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"about": "_:contentType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "source": [
+            {"336": {"ind1": " ", "ind2": " ", "subfields": [{"a": "performed music"}, {"2": "rdacontent"}]}},
+            {"336": {"ind1": " ", "ind2": " ", "subfields": [{"b": "prm"}, {"2": "rdacontent"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentType": [
+                  {
+                    "@id": "https://id.kb.se/term/rda/content/performed%20music",
+                    "@type": "ContentType",
+                    "label": "performed music"
+                  }
+                ],
+                "hasPart": [{
+                  "@type": "Work",
+                  "contentType": [
+                    {
+                      "@id": "https://id.kb.se/term/rda/content/prm",
+                      "@type": "ContentType",
+                      "code": "prm"
+                    }
+                  ]
+                }]
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "336": {"ind1": " ", "ind2": " ", "subfields": [{"a": "performed music"}, {"b": "prm"}, {"2": "rdacontent"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentType": [
+                  {
+                    "@id": "https://id.kb.se/term/rda/content/prm",
+                    "@type": "ContentType",
+                    "code": "prm",
+                    "label": "performed music"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "336": {"ind1": " ", "ind2": " ", "subfields": [{"a": "performed music"}, {"2": "rdacontent"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentType": [
+                  {
+                    "@id": "https://id.kb.se/term/rda/content/performed%20music",
+                    "@type": "ContentType",
+                    "label": "performed music"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "336": {"ind1": " ", "ind2": " ", "subfields": [{"b": "prm"}, {"2": "rdacontent"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentType": [
+                  {
+                    "@id": "https://id.kb.se/term/rda/content/prm",
+                    "@type": "ContentType",
+                    "code": "prm"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "336": {"ind1": " ", "ind2": " ", "subfields": [{"a": "performed music"}, {"b": "prm"}, {"2": "otherlist"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentType": [
+                  {
+                    "@type": "ContentType",
+                    "code": "prm",
+                    "label": "performed music",
+                    "termGroup": "otherlist"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
     },
     "337": {
       "linkSubsequentRepeated": {
@@ -6957,17 +7365,17 @@
             "_:mediaType": {
               "addLink": "mediaType",
               "resourceType": "MediaType",
-              "uriTemplate": "http://id.kb.se/term/rda/media{/code}"
+              "uriTemplate": "https://id.kb.se/term/rda/media{/code}"
             }
           }
         },
         {
-          "when": "$2=rdacarrier",
+          "when": "$2=rdamedia",
           "pendingResources": {
             "_:mediaType": {
               "addLink": "mediaType",
               "resourceType": "MediaType",
-              "uriTemplate": "http://id.kb.se/term/rda/media{/code,label}"
+              "uriTemplate": "https://id.kb.se/term/rda/media{/code,label}"
             }
           }
         }
@@ -6983,7 +7391,102 @@
       "$b": {"about": "_:mediaType", "property": "code"},
       "$2": {"about": "_:mediaType", "property": "termGroup", "marcDefault": "rdamedia"},
       "$8": {"about": "_:mediaType", "property": "marc:groupid"},
-      "$3": {"about": "_:mediaType", "link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"about": "_:mediaType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "source": [
+            {"337": {"ind1": " ", "ind2": " ", "subfields": [{"a": "audio"}, {"2": "rdamedia"}]}},
+            {"337": {"ind1": " ", "ind2": " ", "subfields": [{"b": "s"}, {"2": "rdamedia"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "mediaType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/media/audio",
+                  "@type": "MediaType",
+                  "label": "audio"
+                }
+              ],
+              "hasPart": [{
+                "@type": "Instance",
+                "mediaType": [
+                  {
+                    "@id": "https://id.kb.se/term/rda/media/s",
+                    "@type": "MediaType",
+                    "code": "s"
+                  }
+                ]
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "337": {"ind1": " ", "ind2": " ", "subfields": [{"a": "audio"}, {"b": "s"}, {"2": "rdamedia"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "mediaType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/media/s",
+                  "@type": "MediaType",
+                  "code": "s",
+                  "label": "audio"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "337": {"ind1": " ", "ind2": " ", "subfields": [{"a": "audio"}, {"2": "rdamedia"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "mediaType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/media/audio",
+                  "@type": "MediaType",
+                  "label": "audio"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "337": {"ind1": " ", "ind2": " ", "subfields": [{"b": "s"}, {"2": "rdamedia"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "mediaType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/media/s",
+                  "@type": "MediaType",
+                  "code": "s"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "source": {
+            "337": {"ind1": " ", "ind2": " ", "subfields": [{"a": "audio"}, {"b": "s"}, {"2": "otherlist"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "mediaType": [
+                {
+                  "@type": "MediaType",
+                  "code": "s",
+                  "label": "audio",
+                  "termGroup": "otherlist"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "338": {
       "linkSubsequentRepeated": {
@@ -6998,7 +7501,7 @@
             "_:carrierType": {
               "addLink": "carrierType",
               "resourceType": "CarrierType",
-              "uriTemplate": "http://id.kb.se/term/rda/carrier{/code}"
+              "uriTemplate": "https://id.kb.se/term/rda/carrier{/code}"
             }
           }
         },
@@ -7008,7 +7511,7 @@
             "_:carrierType": {
               "addLink": "carrierType",
               "resourceType": "CarrierType",
-              "uriTemplate": "http://id.kb.se/term/rda/carrier{/code,label}"
+              "uriTemplate": "https://id.kb.se/term/rda/carrier{/code,label}"
             }
           }
         }
@@ -7026,6 +7529,33 @@
       "$3": {"about": "_:carrierType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "_spec": [
         {
+          "source": [
+            {"338": {"ind1": " ", "ind2": " ", "subfields": [{"a": "volume"}, {"2": "rdacarrier"}]}},
+            {"338": {"ind1": " ", "ind2": " ", "subfields": [{"b": "nc"}, {"2": "rdacarrier"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "carrierType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/carrier/volume",
+                  "@type": "CarrierType",
+                  "label": "volume"
+                }
+              ],
+              "hasPart": [{
+                "@type": "Instance",
+                "carrierType": [
+                  {
+                    "@id": "https://id.kb.se/term/rda/carrier/nc",
+                    "@type": "CarrierType",
+                    "code": "nc"
+                  }
+                ]
+              }]
+            }
+          }
+        },
+        {
           "source": {
             "338": {"ind1": " ", "ind2": " ", "subfields": [{"b": "nc"}, {"2": "rdacarrier"}]}
           },
@@ -7033,7 +7563,7 @@
             "mainEntity": {
                 "carrierType": [
                   {
-                    "@id": "http://id.kb.se/term/rda/carrier/nc",
+                    "@id": "https://id.kb.se/term/rda/carrier/nc",
                     "@type": "CarrierType",
                     "code": "nc"
                   }
@@ -7049,7 +7579,7 @@
             "mainEntity": {
                 "carrierType": [
                   {
-                    "@id": "http://id.kb.se/term/rda/carrier/nc",
+                    "@id": "https://id.kb.se/term/rda/carrier/nc",
                     "@type": "CarrierType",
                     "code": "nc",
                     "label": "volume"
@@ -7066,7 +7596,7 @@
             "mainEntity": {
                 "carrierType": [
                   {
-                    "@id": "http://id.kb.se/term/rda/carrier/volume",
+                    "@id": "https://id.kb.se/term/rda/carrier/volume",
                     "@type": "CarrierType",
                     "label": "volume"
                   }
@@ -7557,10 +8087,9 @@
     },
     "490": {
       "include": ["inseries"],
-      "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
-      "i1": {"property": "marc:seriesTracingPolicy", "TODO:marcDefault": 0, "TODO": {"when: 8xx[$t] | 830": "1", "else": "0"}},
+      "groupId": "#seriesmember-$seq",
+      "i1": {"property": "marc:seriesTracingPolicy", "NOTE:marcDefault": 0, "NOTE:postProcessing ": "SetFlagsByPatterns"},
       "i2": null,
-      "TODO:allowSpillOverOnRevert": "800-830 (solved by groupId?)",
       "$a": {"addProperty": "seriesStatement"},
       "NOTE:remove?$l": {"link": "callno", "resourceType": "Concept", "property": "code"},
       "$0": {"about": "_:seriesinstance", "addProperty": "marc:uri"},
@@ -12660,7 +13189,7 @@
     },
     "800": {
       "include": ["hasSeriesInstance", "titledetails", "contributionRole_4_e"],
-      "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
+      "groupId": "#seriesmember-$seq",
       "pendingResources": {
         "_:agent": {
           "about": "_:contribution",
@@ -12837,7 +13366,7 @@
     },
     "810": {
       "include": ["hasSeriesInstance", "agentdataOrganization", "titledetails", "contributionRole_4_e"],
-      "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
+      "groupId": "#seriesmember-$seq",
       "pendingResources": {
         "_:agent": {
           "about": "_:contribution",
@@ -13032,7 +13561,7 @@
     },
     "811": {
       "include": ["hasSeriesInstance", "agentdataOrganization", "titledetails", "contributionRole_4"],
-      "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
+      "groupId": "#seriesmember-$seq",
       "i1": {"marcDefault": "2"},
       "pendingResources": {
         "_:agent": {
@@ -13122,7 +13651,7 @@
     "830": {
       "onRevertPrefer": ["800", "810", "811"],
       "include": ["inseries_with_w", "titledetails", "i2-nonfiling"],
-      "TODO:whenSoftMergeWorks:groupId": "#seriesmember-$seq",
+      "groupId": "#seriesmember-$seq",
       "$a": {"about": "_:title", "property": "mainTitle", "punctuationChars": ".,=;", "required": true},
       "$d": {"about": "_:work", "addProperty": "legalDate"},
       "$0": {"about": "_:work", "addProperty": "marc:uri"},

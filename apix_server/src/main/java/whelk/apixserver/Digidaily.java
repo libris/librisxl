@@ -70,7 +70,7 @@ public class Digidaily {
             for (Datafield df: printRecord.getDatafields("776")) {
                 for (Subfield sf: df.getSubfields("w")) {
                     Document dup = Utils.getXlDocument(sf.getData(), "bib");
-                    List<Document> attachedHoldings = Utils.s_whelk.getStorage().getAttachedHoldings(dup.getThingIdentifiers());
+                    List<Document> attachedHoldings = Utils.s_whelk.getStorage().getAttachedHoldings(dup.getThingIdentifiers(), Utils.s_whelk.getJsonld());
                     for (Document attachedHolding : attachedHoldings) {
                         if (attachedHolding.getSigel().equals(sigel)) {
                             if (sf.getData() != null) {
@@ -222,11 +222,12 @@ public class Digidaily {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 MarcXmlRecordWriter marcXmlRecordWriter = new MarcXmlRecordWriter(baos);
                 marcXmlRecordWriter.writeRecord(eRecord);
-                bibToBeSaved = Utils.convertToRDF(baos.toString("UTF-8"), "bib", null);
                 if (newbib) {
+                    bibToBeSaved = Utils.convertToRDF(baos.toString("UTF-8"), "bib", null, false);
                     Utils.s_whelk.createDocument(bibToBeSaved, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), "bib", false);
                     out.write(bibToBeSaved.getShortId() + "\tDIGI CREATED\n");
                 } else {
+                    bibToBeSaved = Utils.convertToRDF(baos.toString("UTF-8"), "bib", null, true);
                     Utils.s_whelk.storeAtomicUpdate(bibToBeSaved.getShortId(), false, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(),
                             (Document doc) -> {
                                 doc.data = bibToBeSaved.data;
@@ -261,7 +262,7 @@ public class Digidaily {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     MarcXmlRecordWriter marcXmlRecordWriter = new MarcXmlRecordWriter(baos);
                     marcXmlRecordWriter.writeRecord(eRecord);
-                    Document holdToBeSaved = Utils.convertToRDF(baos.toString("UTF-8"), "hold", null);
+                    Document holdToBeSaved = Utils.convertToRDF(baos.toString("UTF-8"), "hold", null, false);
                     Utils.s_whelk.createDocument(holdToBeSaved, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), "hold", false);
                     out.write(holdToBeSaved.getShortId() + "\tMFHD CREATED\n");
                 }
@@ -290,7 +291,7 @@ public class Digidaily {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     MarcXmlRecordWriter marcXmlRecordWriter = new MarcXmlRecordWriter(baos);
                     marcXmlRecordWriter.writeRecord(eRecord);
-                    Document printBibToBeSaved = Utils.convertToRDF(baos.toString("UTF-8"), "bib", null);
+                    Document printBibToBeSaved = Utils.convertToRDF(baos.toString("UTF-8"), "bib", null, true);
                     Utils.s_whelk.storeAtomicUpdate(printBibToBeSaved.getShortId(), false, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(),
                             (Document doc) -> {
                                 doc.data = printBibToBeSaved.data;

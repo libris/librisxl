@@ -14,7 +14,6 @@ import org.postgresql.util.PSQLException
 import whelk.Document
 import whelk.IdType
 import whelk.JsonLd
-import whelk.Location
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
 import whelk.filter.LinkFinder
@@ -201,10 +200,10 @@ class PostgreSQLComponent {
         GET_ID_TYPE = "SELECT graphindex, mainid FROM $idTableName " +
                       "WHERE iri = ?"
         GET_COLLECTION_BY_SYSTEM_ID = "SELECT collection FROM lddb where id = ?"
-        LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
+        LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? AND deleted = false"
         LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
-                "WHERE modified >= ? AND modified <= ? AND collection = ?"
+                "WHERE modified >= ? AND modified <= ? AND collection = ? AND deleted = false"
         LOAD_RECORD_IDENTIFIERS = "SELECT iri from $idTableName WHERE id = ? AND graphIndex = 0"
         LOAD_THING_IDENTIFIERS = "SELECT iri from $idTableName WHERE id = ? AND graphIndex = 1"
 
@@ -609,7 +608,7 @@ class PostgreSQLComponent {
             updateAgent.update(doc)
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc)
-            verifyDocumentURIupdates(preUpdateDoc, doc)
+            verifyDocumentIdRetention(preUpdateDoc, doc)
 
             boolean deleted = doc.getDeleted()
 
@@ -674,7 +673,7 @@ class PostgreSQLComponent {
      * Returns if the URIs pointing to 'doc' are acceptable for an update to 'pre_update_doc',
      * otherwise throws.
      */
-    private void verifyDocumentURIupdates(Document preUpdateDoc, Document postUpdateDoc) {
+    private void verifyDocumentIdRetention(Document preUpdateDoc, Document postUpdateDoc) {
 
         // Compile list of all old IDs
         HashSet<String> oldIDs = new HashSet<>()
@@ -703,6 +702,10 @@ class PostgreSQLComponent {
             if ( getSystemIdByIri(id) != null )
                 throw new RuntimeException("An update of " + preUpdateDoc.getCompleteId() + " MUST NOT have URIs that are already in use for other records. The update contained an offending URI: " + id)
         }
+
+        if (!preUpdateDoc.getControlNumber().equals(postUpdateDoc.getControlNumber()))
+            throw new RuntimeException("An update of " + preUpdateDoc.getCompleteId() + " MUST NOT change the controlNumber of the record in question. Existing controlNumber: "
+                    + preUpdateDoc.getControlNumber() + " The rejected new controlNumber: " + postUpdateDoc.getControlNumber())
 
         // We're ok.
         return
@@ -1726,9 +1729,10 @@ class PostgreSQLComponent {
     /**
      * Returns a list of holdings documents, for any of the passed thingIdentifiers
      */
-    List<Document> getAttachedHoldings(List<String> thingIdentifiers) {
+    List<Document> getAttachedHoldings(List<String> thingIdentifiers, JsonLd jsonld) {
         // Build the query
-        StringBuilder selectSQL = new StringBuilder("SELECT id,data,created,modified,deleted FROM ")
+
+        StringBuilder selectSQL = new StringBuilder("SELECT id FROM ")
         selectSQL.append(mainTableName)
         selectSQL.append(" WHERE collection = 'hold' AND deleted = false AND (")
         for (int i = 0; i < thingIdentifiers.size(); ++i)
@@ -1758,8 +1762,8 @@ class PostgreSQLComponent {
             rs = preparedStatement.executeQuery()
             List<Document> holdings = []
             while (rs.next()) {
-                Document holding = assembleDocument(rs)
-                holdings.add(holding)
+                String id = rs.getString("id")
+                holdings.add(loadEmbellished(id, jsonld))
             }
             return holdings
         }

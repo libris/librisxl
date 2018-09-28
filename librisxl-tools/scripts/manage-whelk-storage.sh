@@ -134,6 +134,7 @@ if [ "$RECREATE_DB" = true ]; then
 
     psql -h $DBHOST $DBUSER_ARG $WHELKNAME < $TOOLDIR/postgresql/tables.sql
     psql -h $DBHOST $DBUSER_ARG $WHELKNAME < $TOOLDIR/postgresql/indexes.sql
+    psql -h $DBHOST $DBUSER_ARG $WHELKNAME < $TOOLDIR/postgresql/migrations/*.plsql
 
     echo ""
     echo "(Re)creating ElasticSearch database..."

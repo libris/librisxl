@@ -774,7 +774,7 @@ public class ExportProfile {
             bibRecord = hyphenateIsbn(bibRecord);
         }
 
-        if (getProperty("sabtitles", "off").equalsIgnoreCase("ON")) {
+        if (getProperty("sab", "off").equalsIgnoreCase("ON")) {
             bibRecord = addSabTitles(bibRecord);
         }
 

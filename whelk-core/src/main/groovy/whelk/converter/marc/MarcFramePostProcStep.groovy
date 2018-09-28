@@ -16,13 +16,68 @@ interface MarcFramePostProcStep {
 
 
 abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
+
     String type
     Pattern matchValuePattern
     JsonLd ld
+
     void setMatchValuePattern(String pattern) {
         matchValuePattern = Pattern.compile(pattern)
     }
+
     void init() { }
+
+    def findValue(source, List path) {
+        if (!source || !path) {
+            return source
+        }
+        if (source instanceof List) {
+            source = source[0]
+        }
+        return findValue(source[path[0]], path.size() > 1 ? path[1..-1] : null)
+    }
+
+    static String buildString(Map node, List showProperties) {
+        def result = ""
+        for (prop in showProperties) {
+            def fmt = null
+            if (prop instanceof Map) {
+                fmt = prop.useValueFormat
+                prop = prop.property
+            }
+            def value = node[prop]
+            if (value) {
+                if (!(value instanceof List)) {
+                    value = [value]
+                }
+                def first = true
+                if (fmt?.contentFirst) {
+                    result += fmt.contentFirst
+                }
+                def prevAfter = null
+                value.each {
+                    if (prevAfter) {
+                        result += prevAfter
+                    }
+                    if (fmt?.contentBefore && (!fmt.contentFirst || !first)) {
+                        result += fmt.contentBefore
+                    }
+                    result += it
+                    first = false
+                    prevAfter = fmt?.contentAfter
+                }
+                if (fmt?.contentLast) {
+                    result += fmt.contentLast
+                } else if (prevAfter) {
+                    result += prevAfter
+                }
+            } else if (fmt?.contentNoValue) {
+                result += fmt.contentNoValue
+            }
+        }
+        return result
+    }
+
 }
 
 
@@ -71,6 +126,7 @@ class MappedPropertyStep implements MarcFramePostProcStep {
     }
 
 }
+
 
 class VerboseRevertDataStep extends MarcFramePostProcStepBase {
 
@@ -262,4 +318,68 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
         String nullValue
     }
 
+}
+
+
+class ProduceIfMissingStep extends MarcFramePostProcStepBase {
+
+    String select
+    Map produceMissing
+
+    void modify(Map record, Map thing) {
+    }
+
+    void unmodify(Map record, Map thing) {
+        def source = thing[select]
+        def items = source instanceof List ? source : source ? [source] : []
+        if (items.any { produceMissing.produceProperty in it }) {
+            return
+            // Only apply rules in *no* property is found (since if one is
+            // found, we don't know if data is intentionally sparse).
+        }
+        items.each {
+            def value = findValue(it, produceMissing.sourcePath)
+            if (value) {
+                // IMPROVE: use produceMissing.multiple to build from all
+                if (value instanceof List) {
+                    value = value[0]
+                }
+                if (produceMissing.showProperties) {
+                    value = buildString(value, produceMissing.showProperties)
+                }
+                if (value) {
+                    it[produceMissing.produceProperty] = value
+                }
+            }
+        }
+    }
+}
+
+
+class SetFlagsByPatternsStep extends MarcFramePostProcStepBase {
+
+    String select
+    List<Map> match
+    boolean force = false
+
+    void modify(Map record, Map thing) {
+    }
+
+    void unmodify(Map record, Map thing) {
+        def selected = thing[select]
+        def items = selected instanceof List
+                    ? selected : selected ? [selected] : []
+        items.each { item ->
+            for (rule in match) {
+                if (rule.exists.every { item.containsKey(it) }) {
+                    rule.setFlags.each { flag, flagValue ->
+                        if (!item.containsKey(flag) || force) {
+                            item[flag] = flagValue
+                        }
+                    }
+                    break
+                }
+            }
+        }
+    }
 }

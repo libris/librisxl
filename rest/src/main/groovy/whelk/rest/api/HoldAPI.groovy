@@ -66,7 +66,7 @@ class HoldAPI extends HttpServlet {
             return
         }
 
-        List<Document> holdings = whelk.storage.getAttachedHoldings(document.getThingIdentifiers())
+        List<Document> holdings = whelk.storage.getAttachedHoldings(document.getThingIdentifiers(), whelk.getJsonld())
         List<String> holdingIDs = []
         for (Document holding in holdings) {
             if (holding.getHeldBy().equals(library))
