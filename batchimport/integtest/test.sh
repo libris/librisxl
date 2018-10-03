@@ -44,7 +44,7 @@ if (( $rowCount != 1 )) ; then
     fail "Expected single hold record"
 fi
 
-######## REPLACE RECORD. batch1.xml contains the same data but with a changed title for the bib record.
+######## REPLACE RECORD. batch1.xml contains the same data but with a changed title for the bib record and another 035$a
 java -jar build/libs/batchimport.jar --path=./integtest/batch1.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --replaceBib
 newBibResourceId=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'batch import' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["@id"]')
 if [ $newBibResourceId != $bibResourceId ]; then
@@ -54,6 +54,13 @@ mainTitle=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'ba
 expect="\"Polisbilen får INTE ett larm\""
 if [ "$mainTitle" != "$expect" ]; then
     fail "Data was not replaced!"
+fi
+systemNumbers=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'batch import' and collection = 'bib'" | jq '.["@graph"]|.[0]|.["identifiedBy"]|.[]|.["value"]')
+if [[ "$systemNumbers" != *"NEW"* ]]; then
+    fail "Systemnumber was not added!"
+fi
+if [[ "$systemNumbers" != *"OLD"* ]]; then
+    fail "Systemnumber was not retained!"
 fi
 
 cleanup
@@ -109,6 +116,7 @@ rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 
 if (( $rowCount != 3 )) ; then
     fail "Expected exactly 3 hold records"
 fi
+
 
 
 popd
