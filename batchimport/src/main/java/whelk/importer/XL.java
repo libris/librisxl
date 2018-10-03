@@ -1,5 +1,6 @@
 package whelk.importer;
 
+import groovy.lang.Tuple;
 import io.prometheus.client.Counter;
 import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
@@ -189,6 +190,11 @@ class XL
                         List<String> recordIDs = doc.getRecordIdentifiers();
                         List<String> thingIDs = doc.getThingIdentifiers();
                         String controlNumber = doc.getControlNumber();
+                        List<Tuple> typedIDs = doc.getTypedRecordIdentifiers();
+                        List<String> systemNumbers = new ArrayList<>();
+                        for (Tuple tuple : typedIDs)
+                            if (tuple.get(0).equals("SystemNumber"))
+                                systemNumbers.add( (String) tuple.get(1) );
 
                         doc.data = rdfDoc.data;
 
@@ -199,6 +205,8 @@ class XL
                             doc.addRecordIdentifier(recordID);
                         for (String thingID : thingIDs)
                             doc.addThingIdentifier(thingID);
+                        for (String systemNumber : systemNumbers)
+                            doc.addTypedRecordIdentifier("SystemNumber", systemNumber);
                         if (controlNumber != null)
                             doc.setControlNumber(controlNumber);
                     });
