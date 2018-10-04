@@ -1128,7 +1128,7 @@
     "termcomplexsubjectMatch": {
       "$v": {"addLink": "termComponentList",
         "TODO": "use /term/saogf/{_}, but only if $2=sao",
-        "resourceType": "GenreForm",
+        "resourceType": "GenreSubdivision",
         "itemPos": "rest",
         "property": "prefLabel"},
       "$x": {"addLink": "termComponentList",
@@ -1136,12 +1136,12 @@
         "itemPos": "rest",
         "property": "prefLabel"},
       "$y": {"addLink": "termComponentList",
-        "resourceType": "Temporal",
+        "resourceType": "TemporalSubdivision",
         "itemPos": "rest",
         "property": "prefLabel"},
       "$z": {"addLink": "termComponentList",
         "TODO": "use /place/{_}, but only if $2=sao",
-        "resourceType": "Geographic",
+        "resourceType": "GeographicSubdivision",
         "itemPos": "rest",
         "property": "prefLabel"}
     },
@@ -9383,8 +9383,8 @@
                       "marc:titlesAndOtherWordsAssociatedWithAName": ["(Composer)"]
                     },
                     {"@type" : "TopicSubdivision", "prefLabel" : "Travel"},
-                    {"@type" : "Geographic", "prefLabel" : "Morocco"},
-                    {"@type" : "Geographic", "prefLabel" : "Marrakech"}
+                    {"@type" : "GeographicSubdivision", "prefLabel" : "Morocco"},
+                    {"@type" : "GeographicSubdivision", "prefLabel" : "Marrakech"}
                   ],
                   "inScheme": {
                     "@id" : "https://id.kb.se/term/lcsh",
@@ -9419,7 +9419,7 @@
                     },
                     {"@type" : "TopicSubdivision", "prefLabel" : "Criticism and interpretation"},
                     {"@type" : "TopicSubdivision", "prefLabel" : "History"},
-                    {"@type" : "Temporal", "prefLabel" : "21st century."}
+                    {"@type" : "TemporalSubdivision", "prefLabel" : "21st century."}
                   ],
                   "inScheme": {
                     "@id" : "https://id.kb.se/term/lcsh",
@@ -9475,7 +9475,7 @@
                       "musicKey": "D major;"
                     },
                     {
-                      "@type" : "Temporal",
+                      "@type" : "TemporalSubdivision",
                       "prefLabel" : "21st century."
                     }
                   ]
@@ -9739,7 +9739,7 @@
                     } ]
                   },
                   {
-                    "@type" : "GenreForm",
+                    "@type" : "GenreSubdivision",
                     "prefLabel" : "catalogs"
                   }
                 ]
@@ -10126,7 +10126,7 @@
                       "partName" : [ "N.T.", "Galatians VI, 10" ]
                     } ]
                   }, {
-                    "@type" : "GenreForm",
+                    "@type" : "GenreSubdivision",
                     "prefLabel" : "Sermons."
                   } ]
                 } ]
@@ -10163,7 +10163,7 @@
                     "@type" : "TopicSubdivision",
                     "prefLabel" : "Critique textuelle"
                   }, {
-                    "@type" : "GenreForm",
+                    "@type" : "GenreSubdivision",
                     "prefLabel" : "Pâeriodiques."
                   } ]
                 } ]
@@ -10231,6 +10231,39 @@
                     "code": "fast"
                   },
                   "prefLabel": "Since 1500"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "Example from bib 10663632",
+          "source": {"648": {"ind1": " ", "ind2": "7",
+            "subfields": [{"a": "Småland"}, {"v": "barn- och ungdomslitteratur"}, {"2": "barn"}]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "ComplexSubject",
+                  "@id" : "https://id.kb.se/term/barn/Sm%C3%A5land--barn-%20och%20ungdomslitteratur",
+                  "prefLabel": "Småland--barn- och ungdomslitteratur",
+                  "termComponentList": [
+                    {
+                      "@type": "Temporal",
+                      "prefLabel": "Småland"
+                    },
+                    {
+                      "@type": "GenreSubdivision",
+                      "prefLabel": "barn- och ungdomslitteratur"
+                    }
+                  ],
+                  "inScheme": {
+                    "@id" : "https://id.kb.se/term/barn",
+                    "@type": "ConceptScheme",
+                    "code": "barn"
+                  }
                 }
               ]
             }
@@ -10306,7 +10339,7 @@
                       "prefLabel": "Information"
                     },
                     {
-                      "@type": "Temporal",
+                      "@type": "TemporalSubdivision",
                       "prefLabel": "Information Age"
                     }
                   ],
@@ -10340,7 +10373,7 @@
                   "@type": "Topic",
                   "prefLabel": "Health services for the aged"
                 }, {
-                  "@type": "GenreForm",
+                  "@type": "GenreSubdivision",
                   "prefLabel": "periodicals"
                 }]
               }]
@@ -10428,7 +10461,7 @@
                       "prefLabel": "Cardiovascular Physiology"
                     },
                     {
-                      "@type": "GenreForm",
+                      "@type": "GenreSubdivision",
                       "prefLabel": "Congresses."
                     }
                   ],
@@ -10539,7 +10572,7 @@
                   "@type": "TopicSubdivision",
                   "prefLabel": "traditioner"
                 },{
-                  "@type": "Geographic",
+                  "@type": "GeographicSubdivision",
                   "prefLabel": "Ryssland"
                 }]
               }]
@@ -10579,11 +10612,11 @@
                       "prefLabel": "mellanstadiet"
                     },
                     {
-                      "@type": "Temporal",
+                      "@type": "TemporalSubdivision",
                       "prefLabel": "1960-talet"
                     },
                     {
-                      "@type": "GenreForm",
+                      "@type": "GenreSubdivision",
                       "prefLabel": "läromedel"
                     }
                   ],
@@ -10629,7 +10662,7 @@
                       "prefLabel": "B"
                     },
                     {
-                      "@type": "Temporal",
+                      "@type": "TemporalSubdivision",
                       "prefLabel": "C"
                     },
                     {
@@ -10744,7 +10777,7 @@
                       "prefLabel": "Sydafrika"
                     },
                     {
-                      "@type": "Geographic",
+                      "@type": "GeographicSubdivision",
                       "prefLabel": "Västra Kapprovinsen"
                     }
                   ]
@@ -10784,7 +10817,7 @@
                       "prefLabel": "Social life and customs"
                     },
                     {
-                      "@type": "GenreForm",
+                      "@type": "GenreSubdivision",
                       "prefLabel": "Early works to 1800"
                     }
                   ]
@@ -10957,6 +10990,46 @@
                     "code": "gmgpc//swe"
                   },
                   "prefLabel": "Postkartor"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "Example from bib 1357009",
+          "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [
+            {"a": "Trafiklinjekartor"},
+            {"z": "Sverige"},
+            {"y": "1930-talet"},
+            {"2": "gmgpc//swe"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "genreForm": [
+                {
+                  "@id" : "https://id.kb.se/term/gmgpc%2F%2Fswe/Trafiklinjekartor--Sverige--1930-talet",
+                  "@type": "ComplexSubject",
+                  "prefLabel": "Trafiklinjekartor--Sverige--1930-talet",
+                  "inScheme": {
+                    "@id" : "https://id.kb.se/term/gmgpc%2F%2Fswe",
+                    "@type": "ConceptScheme",
+                    "code": "gmgpc//swe"
+                  },
+                  "termComponentList": [
+                    {
+                      "@type": "GenreForm",
+                      "prefLabel": "Trafiklinjekartor"
+                    },
+                    {
+                      "@type": "GeographicSubdivision",
+                      "prefLabel": "Sverige"
+                    },
+                    {
+                      "@type": "TemporalSubdivision",
+                      "prefLabel": "1930-talet"
+                    }
+                  ]
                 }
               ]
             }
@@ -15165,7 +15238,7 @@
                 "@type": "Geographic",
                 "prefLabel": "Irak"
               }, {
-                "@type": "Geographic",
+                "@type": "GeographicSubdivision",
                 "prefLabel": "Babylon (övergiven stad)"
               } ]
             }
@@ -15186,10 +15259,10 @@
                 "@type": "Geographic",
                 "prefLabel": "Grekland"
               }, {
-                "@type": "Geographic",
+                "@type": "GeographicSubdivision",
                 "prefLabel": "Athen"
               }, {
-                "@type": "Geographic",
+                "@type": "GeographicSubdivision",
                 "prefLabel": "Kerameikos"
               } ]
             }
@@ -16241,7 +16314,7 @@
                   "@type" : "TopicSubdivision",
                   "prefLabel" : "slaget"
                 }, {
-                  "@type" : "Temporal",
+                  "@type" : "TemporalSubdivision",
                   "prefLabel" : "1014"
                 } ]
               } ]
@@ -17156,6 +17229,29 @@
                 "@id": "https://id.kb.se/place/Tanzania",
                 "@type": "Geographic",
                 "prefLabel": "Tanzania"
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "551": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Indonesien"}, {"z": "Stora Sundaöarna"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "related": [{
+                "@id" : "https://id.kb.se/place/Indonesien--Stora%20Sunda%C3%B6arna",
+                "@type": "ComplexSubject",
+                "prefLabel" : "Indonesien--Stora Sundaöarna",
+                "termComponentList": [{
+                  "@type": "Geographic",
+                  "prefLabel" : "Indonesien"
+                },{
+                  "@type": "GeographicSubdivision",
+                  "prefLabel": "Stora Sundaöarna"
+                }]
               }]
             }
           }
