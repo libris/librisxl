@@ -41,6 +41,12 @@ public class MarcHttpExport extends HttpServlet
         // Parameters
         HashMap<String, String> parameterMap = new HashMap<>();
         String queryString = req.getQueryString();
+        if (queryString == null)
+        {
+            res.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing required parameters \"from\" and \"until\".");
+            return;
+        }
+
         String[] parameters = queryString.split("&");
         for (String parameter : parameters)
         {

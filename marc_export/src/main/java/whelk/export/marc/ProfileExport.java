@@ -128,7 +128,7 @@ public class ProfileExport
         if (profile.getProperty(collection+"update", "ON").equalsIgnoreCase("OFF") && !created)
             return false; // Updated records not requested
         if (profile.getProperty(collection+"delete", "ON").equalsIgnoreCase("OFF") && deleted)
-            return false; // Updated records not requested
+            return false; // Deleted records not requested
         Set<String> operators = profile.getSet(collection+"operators");
         if ( !operators.isEmpty() )
         {
