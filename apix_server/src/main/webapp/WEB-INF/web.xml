@@ -44,7 +44,45 @@
         <welcome-file>index.xhtml</welcome-file>
     </welcome-file-list>
 
-
+    <security-role>
+        <description/>
+        <role-name>apix_create</role-name>
+    </security-role>
+    <security-role>
+        <description/>
+        <role-name>apix_read</role-name>
+    </security-role>
+    <security-role>
+        <description/>
+        <role-name>apix_update</role-name>
+    </security-role>
+    <security-role>
+        <description/>
+        <role-name>apix_delete</role-name>
+    </security-role>
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Secure</web-resource-name>
+            <url-pattern>/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>apix</role-name>
+            <role-name>apix_create</role-name>
+            <role-name>apix_read</role-name>
+            <role-name>apix_update</role-name>
+            <role-name>apix_delete</role-name>
+        </auth-constraint>
+        <user-data-constraint>
+            <transport-guarantee>NONE</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+    <login-config>
+        <auth-method>BASIC</auth-method>
+        <realm-name>Libris API-X</realm-name>
+    </login-config>
+    <security-role>
+        <role-name>apix</role-name>
+    </security-role>
 
 
 </web-app>

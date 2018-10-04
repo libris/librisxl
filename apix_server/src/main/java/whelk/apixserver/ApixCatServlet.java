@@ -59,7 +59,15 @@ public class ApixCatServlet extends HttpServlet
 
     public void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
+        if (request.getUserPrincipal() == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
 
+        if (!(request.isUserInRole(APIX_CREATE_ROLE) || request.isUserInRole(APIX_UPDATE_ROLE))) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
 
         try { doPut2(request, response); } catch (Exception e)
         {
@@ -70,7 +78,15 @@ public class ApixCatServlet extends HttpServlet
 
     public void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException
     {
+        if (request.getUserPrincipal() == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
 
+        if (!request.isUserInRole(APIX_DELETE_ROLE)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
 
         try { doDelete2(request, response); } catch (Exception e)
         {
