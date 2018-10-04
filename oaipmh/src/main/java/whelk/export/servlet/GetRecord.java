@@ -1,8 +1,5 @@
 package whelk.export.servlet;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import whelk.Document;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.stream.XMLOutputFactory;
@@ -10,12 +7,6 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.sql.*;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 
 import io.prometheus.client.Counter;
 
@@ -99,7 +90,6 @@ public class GetRecord
 
                 // Build the xml response feed
                 XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
-                xmlOutputFactory.setProperty("escapeCharacters", false); // Inline xml must be left untouched.
                 XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
 
                 ResponseCommon.writeOaiPmhHeader(writer, request, true);

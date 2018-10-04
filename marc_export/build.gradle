@@ -9,24 +9,12 @@ targetCompatibility = 1.8
 repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }
-	maven { url "https://jitpack.io/" }
 }
 
 dependencies {
 
     // XL dependencies
     compile(project(':../whelk-core'))
-
-    def jettyVersion="9.3.6.v20151106"
-
-    // Jetty
-    compile "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
-    compile "org.eclipse.jetty:jetty-server:${jettyVersion}"
-    compile "org.eclipse.jetty:jetty-http:${jettyVersion}"
-    compile "org.eclipse.jetty:jetty-io:${jettyVersion}"
-
-    // Necessary for inlining XML into XMLStreamWriter
-    compile group: 'org.apache.cxf', name: 'cxf-core', version: '3.0.2'
 
     // Logging
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
@@ -36,8 +24,10 @@ dependencies {
     compile 'io.prometheus:simpleclient:0.0.21'
     compile 'io.prometheus:simpleclient_servlet:0.0.21'
 
-    // Testing
-    testCompile 'junit:junit:4.12'
+    // Dependencies inherited from classic libris, due to profile handling
+    compile group: 'com.ibm.icu', name: 'icu4j', version: '4.8.1.1'
+    compile group: 'org.dspace', name: 'xoai', version: '3.2.10'
+    compile group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
 }
 
 gretty {

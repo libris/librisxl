@@ -173,7 +173,7 @@ class PostgreSQLComponent {
                                                       "WHERE iri = ? AND mainid = 't') " +
                                           "AND checksum = ?"
         GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,deleted,created,modified " +
-                "FROM $versionsTableName WHERE id = ? ORDER BY modified"
+                "FROM $versionsTableName WHERE id = ? ORDER BY modified DESC"
         GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID = "SELECT id,data,deleted,created,modified " +
                                                "FROM $versionsTableName " +
                                                "WHERE id = (SELECT id FROM $idTableName " +
@@ -239,7 +239,7 @@ class PostgreSQLComponent {
                    "OR data->'@graph' @> ?"
 
         GET_SYSTEMID_BY_IRI = "SELECT id FROM $idTableName WHERE iri = ?"
-        GET_DOCUMENT_BY_IRI = "SELECT data FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
+        GET_DOCUMENT_BY_IRI = "SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
 
         GET_LEGACY_PROFILE = "SELECT profile FROM $profilesTableName WHERE library_id = ?"
      }
@@ -1523,7 +1523,7 @@ class PostgreSQLComponent {
             preparedStatement.setString(1, iri)
             rs = preparedStatement.executeQuery()
             if (rs.next())
-                return new Document(mapper.readValue(rs.getString("data"), Map))
+                return assembleDocument(rs)
             return null
         }
         finally {
