@@ -11,6 +11,13 @@ repositories {
     maven { url "http://repository.codehaus.org/" }
 }
 
+// Don't blame me for this TRAVESTY. It is a necessity because of the versioning of xml-apis (2.0.2 which gradle otherwise chooses is OLDER (and broken) despite the version.)
+configurations.all {
+    resolutionStrategy {
+        force "xml-apis:xml-apis:1.4.01"
+    }
+}
+
 dependencies {
 
     // XL dependencies
