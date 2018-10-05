@@ -81,14 +81,14 @@ public class ProfileExport
         TreeSet<String> exportedIDs = new TreeSet<>();
 
         if (collection.equals("bib") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
-            exportDocument(m_whelk.getStorage().load(id), profile, output, exportedIDs, deleteMode, doVirtualDeletions);
+            exportDocument(m_whelk.getStorage().loadEmbellished(id, m_whelk.getJsonld()), profile, output, exportedIDs, deleteMode, doVirtualDeletions);
         else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
         {
             List<Tuple2<String, String>> dependers = m_whelk.getStorage().getDependers(id);
             for (Tuple2 depender : dependers)
             {
                 String dependerId = (String) depender.getFirst();
-                Document dependerDoc = m_whelk.getStorage().load(dependerId);
+                Document dependerDoc = m_whelk.getStorage().loadEmbellished(dependerId, m_whelk.getJsonld());
                 String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, m_whelk.getJsonld());
                 if (dependerCollection.equals("bib"))
                     exportDocument(dependerDoc, profile, output, exportedIDs, deleteMode, doVirtualDeletions);
@@ -101,7 +101,10 @@ public class ProfileExport
             // Export the new/current itemOf
             Document version = versions.get(0);
             String itemOf = version.getHoldingFor();
-            exportDocument(m_whelk.getStorage().getDocumentByIri(itemOf), profile, output, exportedIDs, deleteMode, doVirtualDeletions);
+            String itemOfSystemId = m_whelk.getStorage().getSystemIdByIri(itemOf);
+            exportDocument(
+                    m_whelk.getStorage().loadEmbellished(itemOfSystemId, m_whelk.getJsonld())
+                    , profile, output, exportedIDs, deleteMode, doVirtualDeletions);
 
             // If the itemOf link was changed, also export the bib that is no longer linked.
             if (versions.size() > 1)
@@ -110,7 +113,10 @@ public class ProfileExport
                 String oldItemOf = oldVersion.getHoldingFor();
                 if (!oldItemOf.equals(itemOf))
                 {
-                    exportDocument(m_whelk.getStorage().getDocumentByIri(oldItemOf), profile, output, exportedIDs, deleteMode, doVirtualDeletions);
+                    String oldItemOfSystemId = m_whelk.getStorage().getSystemIdByIri(oldItemOf);
+                    exportDocument(
+                            m_whelk.getStorage().loadEmbellished(oldItemOfSystemId, m_whelk.getJsonld())
+                            , profile, output, exportedIDs, deleteMode, doVirtualDeletions);
                 }
             }
         }
