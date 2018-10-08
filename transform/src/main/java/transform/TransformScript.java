@@ -5,7 +5,6 @@ import whelk.Document;
 import whelk.JsonLd;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.*;
 
 public class TransformScript
@@ -20,9 +19,23 @@ public class TransformScript
         }
     }
 
+    // Necessary because Booleans are immutable, and booleans can't be passed by reference.
+    public static class DataAlterationState
+    {
+        boolean dataWasAltererd = false;
+        public void setAltered()
+        {
+            dataWasAltererd = true;
+        }
+        public boolean getAltered()
+        {
+            return dataWasAltererd;
+        }
+    }
+
     private interface Operation
     {
-        public Object execute(Map json, Map<String, Object> context);
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState);
     }
 
     /*******************************************************************************************************************
@@ -402,11 +415,11 @@ public class TransformScript
             m_operations = operations;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
             for (Operation operation : m_operations)
             {
-                operation.execute(json, context);
+                operation.execute(json, context, alterationState);
             }
             return null;
         }
@@ -423,7 +436,7 @@ public class TransformScript
             m_toPath = toPath;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
             List<Object> fromPath = Arrays.asList( withIntAsInteger(m_fromPath.split(",")) );
             List<Object> fromPathWithSymbols = insertContextSymbolsIntoPath(fromPath, context);
@@ -439,6 +452,7 @@ public class TransformScript
             Document._removeLeafObject(fromPathWithSymbols, json);
             Document._set(toPathWithSymbols, value, json);
             pruneBranch(fromPathWithSymbols, json);
+            alterationState.setAltered();
             return null;
         }
     }
@@ -454,12 +468,13 @@ public class TransformScript
             m_toPath = toPath;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
             List<Object> toPath = Arrays.asList( withIntAsInteger(m_toPath.split(",")) );
             List<Object> toPathWithSymbols = insertContextSymbolsIntoPath(toPath, context);
 
-            Document._set(toPathWithSymbols, m_value.execute(json, context), json);
+            Document._set(toPathWithSymbols, m_value.execute(json, context, alterationState), json);
+            alterationState.setAltered();
             return null;
         }
     }
@@ -474,9 +489,9 @@ public class TransformScript
             m_name = name;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
-            context.put(m_name, m_valueOp.execute(json, context));
+            context.put(m_name, m_valueOp.execute(json, context, alterationState));
             return null;
         }
     }
@@ -490,9 +505,9 @@ public class TransformScript
             m_subOp = subOperation;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
-            return m_subOp.execute(json, context);
+            return m_subOp.execute(json, context, alterationState);
         }
     }
 
@@ -505,7 +520,7 @@ public class TransformScript
             m_value = value;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
             // The value might be a variable name
             if (m_value instanceof String && context.containsKey(m_value))
@@ -531,7 +546,7 @@ public class TransformScript
             m_path = path;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
             List<Object> path = Arrays.asList( withIntAsInteger(m_path.split(",")) );
             List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
@@ -549,9 +564,9 @@ public class TransformScript
             m_valueOperation = valueOperation;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
-            Object value = m_valueOperation.execute(json, context);
+            Object value = m_valueOperation.execute(json, context, alterationState);
             if ( ! (value instanceof Boolean) )
                 throw new RuntimeException("Type mismatch. Cannot combine logic not (!) with non boolean value: " + value);
             return !((Boolean)value);
@@ -567,9 +582,9 @@ public class TransformScript
             m_value = value;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
-            Object value = m_value.execute(json, context);
+            Object value = m_value.execute(json, context, alterationState);
 
             if (value instanceof List)
                 return ((List) value).size();
@@ -594,11 +609,11 @@ public class TransformScript
             m_endIndex = endIndex;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
-            Object string = m_completeString.execute(json, context);
-            Object startIndex = m_startIndex.execute(json, context);
-            Object endIndex = m_endIndex.execute(json, context);
+            Object string = m_completeString.execute(json, context, alterationState);
+            Object startIndex = m_startIndex.execute(json, context, alterationState);
+            Object endIndex = m_endIndex.execute(json, context, alterationState);
 
             if (string == null || startIndex == null || endIndex == null) // propagate nulls
                 return null;
@@ -623,10 +638,10 @@ public class TransformScript
             m_searchString = searchString;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
-            Object completeString = m_completeString.execute(json, context);
-            Object searchString = m_searchString.execute(json, context);
+            Object completeString = m_completeString.execute(json, context, alterationState);
+            Object searchString = m_searchString.execute(json, context, alterationState);
 
             if (completeString == null || searchString == null) // propagate nulls
                 return null;
@@ -649,10 +664,10 @@ public class TransformScript
             m_searchString = searchString;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
-            Object completeString = m_completeString.execute(json, context);
-            Object searchString = m_searchString.execute(json, context);
+            Object completeString = m_completeString.execute(json, context, alterationState);
+            Object searchString = m_searchString.execute(json, context, alterationState);
 
             if (completeString == null || searchString == null) // propagate nulls
                 return null;
@@ -673,9 +688,9 @@ public class TransformScript
             m_completeString = completeString;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
-            Object completeString = m_completeString.execute(json, context);
+            Object completeString = m_completeString.execute(json, context, alterationState);
 
             if (completeString == null) // propagate nulls
                 return null;
@@ -698,10 +713,10 @@ public class TransformScript
             m_searchString = searchString;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
-            Object completeString = m_completeString.execute(json, context);
-            Object searchString = m_searchString.execute(json, context);
+            Object completeString = m_completeString.execute(json, context, alterationState);
+            Object searchString = m_searchString.execute(json, context, alterationState);
 
             if (completeString == null || searchString == null) // propagate nulls
                 return null;
@@ -724,10 +739,10 @@ public class TransformScript
             m_searchString = searchString;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
-            Object completeString = m_completeString.execute(json, context);
-            Object searchString = m_searchString.execute(json, context);
+            Object completeString = m_completeString.execute(json, context, alterationState);
+            Object searchString = m_searchString.execute(json, context, alterationState);
 
             if (completeString == null || searchString == null) // propagate nulls
                 return null;
@@ -752,11 +767,11 @@ public class TransformScript
             m_replacementString = replacement;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
-            Object completeString = m_originalString.execute(json, context);
-            Object searchString = m_searchString.execute(json, context);
-            Object replacementString = m_replacementString.execute(json, context);
+            Object completeString = m_originalString.execute(json, context, alterationState);
+            Object searchString = m_searchString.execute(json, context, alterationState);
+            Object replacementString = m_replacementString.execute(json, context, alterationState);
 
             if (completeString == null || searchString == null || replacementString == null) // propagate nulls
                 return null;
@@ -781,10 +796,10 @@ public class TransformScript
             m_operator = operator;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
-            Object concreteLeftValue = m_leftOperand.execute(json, context);
-            Object concreteRightValue = m_rightOperand.execute(json, context);
+            Object concreteLeftValue = m_leftOperand.execute(json, context, alterationState);
+            Object concreteRightValue = m_rightOperand.execute(json, context, alterationState);
 
             if (concreteLeftValue == null || concreteRightValue == null)
             {
@@ -860,13 +875,14 @@ public class TransformScript
             m_path = path;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
             List<Object> path = Arrays.asList( withIntAsInteger(m_path.split(",")) );
             List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
 
             Document._removeLeafObject(pathWithSymbols, json);
             pruneBranch(pathWithSymbols, json);
+            alterationState.setAltered();
             return null;
         }
     }
@@ -884,7 +900,7 @@ public class TransformScript
             m_iteratorSymbol = iteratorSymbol;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
             List<Object> path = Arrays.asList( withIntAsInteger(m_listPath.split(",")) );
             List<Object> pathWithSymbols = insertContextSymbolsIntoPath(path, context);
@@ -897,7 +913,7 @@ public class TransformScript
                 for (int i = list.size()-1; i > -1; --i) // For each iterator-index (in reverse) do:
                 {
                     context.put(m_iteratorSymbol, i);
-                    m_operations.execute(json, context);
+                    m_operations.execute(json, context, alterationState);
                 }
                 if (eclipsedValue == null)
                     context.remove(m_iteratorSymbol);
@@ -919,10 +935,10 @@ public class TransformScript
             m_booleanValue = booleanValue;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
-            if ( (Boolean) m_booleanValue.execute(json, context) )
-                m_operations.execute(json, context);
+            if ( (Boolean) m_booleanValue.execute(json, context, alterationState) )
+                m_operations.execute(json, context, alterationState);
             return null;
         }
     }
@@ -938,10 +954,10 @@ public class TransformScript
             m_booleanValue = booleanValue;
         }
 
-        public Object execute(Map json, Map<String, Object> context)
+        public Object execute(Map json, Map<String, Object> context, DataAlterationState alterationState)
         {
-            while ( (Boolean) m_booleanValue.execute(json, context) )
-                m_operations.execute(json, context);
+            while ( (Boolean) m_booleanValue.execute(json, context, alterationState) )
+                m_operations.execute(json, context, alterationState);
             return null;
         }
     }
@@ -1000,7 +1016,7 @@ public class TransformScript
         }
     }
 
-    public String executeOn(String json) throws IOException
+    public String executeOn(String json, DataAlterationState alterationState) throws IOException
     {
         ObjectMapper mapper = new ObjectMapper();
         Map data = mapper.readValue(json, Map.class);
@@ -1010,11 +1026,11 @@ public class TransformScript
         }
 
         HashMap<String, Object> context = new HashMap<>();
-        m_rootStatement.execute(data, context);
+        m_rootStatement.execute(data, context, alterationState);
         return mapper.writeValueAsString(data);
     }
 
-    public Map executeOn(Map data)
+    public Map executeOn(Map data, DataAlterationState alterationState)
     {
         Document doc = new Document(data);
         if (m_modeFramed) {
@@ -1022,7 +1038,7 @@ public class TransformScript
         }
 
         HashMap<String, Object> context = new HashMap<>();
-        m_rootStatement.execute(data, context);
+        m_rootStatement.execute(data, context, alterationState);
         return data;
     }
 

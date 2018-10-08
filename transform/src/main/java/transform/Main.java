@@ -10,6 +10,7 @@ import whelk.component.PostgreSQLComponent;
 import whelk.triples.JsonldSerializer;
 import whelk.util.ThreadPool;
 import whelk.util.TransformScript;
+import whelk.util.TransformScript.DataAlterationState;
 
 import java.io.*;
 import java.net.URI;
@@ -223,7 +224,8 @@ public class Main
         for(String line = jsonReader.readLine(); line != null; line = jsonReader.readLine())
         {
             Map data = mapper.readValue(line, Map.class);
-            Map transformed = script.executeOn(data);
+            DataAlterationState alterationState = new DataAlterationState();
+            Map transformed = script.executeOn(data, alterationState);
             transformed = JsonLd.flatten(transformed);
             JsonldSerializer.normalize(transformed, (String) Document._get(Document.getRecordIdPath(), data), true);
             System.out.println(mapper.writeValueAsString(transformed));
@@ -293,7 +295,10 @@ public class Main
 
             try
             {
-                doc.data = s_script.executeOn(doc.data);
+                DataAlterationState alterationState = new DataAlterationState();
+                doc.data = s_script.executeOn(doc.data, alterationState);
+                if (!alterationState.getAltered())
+                    continue;
 
                 // This should be : doc.data = JsonLd.flatten(doc.data);
                 // but flatten() is unreliable and seems to introduce graph cycles. TODO
