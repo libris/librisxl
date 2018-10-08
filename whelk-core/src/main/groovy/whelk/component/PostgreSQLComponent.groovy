@@ -16,6 +16,7 @@ import whelk.IdType
 import whelk.JsonLd
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
+import whelk.exception.CancelUpdateException
 import whelk.filter.LinkFinder
 
 import java.sql.*
@@ -640,8 +641,11 @@ class PostgreSQLComponent {
                 throw psqle
             }
         } catch (TooHighEncodingLevelException e) {
-            connection.rollback() // KP Not needed?
+            connection.rollback()
             throw e
+        } catch (CancelUpdateException e) {
+            /* An exception the called lambda/clousure can throw to cancel a record update. NOT an indication of an error. */
+            connection.rollback()
         } catch (Exception e) {
             log.error("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
