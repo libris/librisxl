@@ -101,7 +101,7 @@ class WhelkTool {
                     }
 
                     if (!dryRun) {
-                        whelk.storage.storeAtomicUpdate(doc.shortId, true, changedIn, changedBy, {
+                        whelk.storage.storeAtomicUpdate(doc.shortId, !item.loud, changedIn, changedBy, {
                             it.data = doc.data
                             it.setGenerationDate(new Date())
                             it.setGenerationProcess(scriptJobUri)
@@ -195,20 +195,20 @@ class DocumentItem {
     private Whelk whelk
     private boolean needsSaving = false
     private boolean doDelete = false
-    private boolean versioned = true
+    private boolean loud = true
 
     def List getGraph() {
         return doc.data['@graph']
     }
 
-    void scheduleSave(versioned=true) {
+    void scheduleSave(loud=true) {
         needsSaving = true
-        versioned = versioned
+        this.loud = loud
     }
 
-    void scheduleDelete(versioned=true) {
+    void scheduleDelete(loud=true) {
         doDelete = true
-        versioned = versioned
+        this.loud = loud
     }
 
     def getVersions() {
