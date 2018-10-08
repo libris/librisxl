@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse
 
 class MergeAPI extends HttpServlet {
 
+    private final static String[] ALLOWED_CATALOGING_SIGELS = ['SEK']
     private Whelk whelk
 
     MergeAPI() {
@@ -44,6 +45,12 @@ class MergeAPI extends HttpServlet {
 
     @Override
     void doPost(HttpServletRequest request, HttpServletResponse response) {
+        if (!hasPermission(request)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                    "You must be authorized in order to commit merges.")
+            return
+        }
+
         boolean commit = true
         handleRequest(request, response, commit)
     }
@@ -102,20 +109,6 @@ class MergeAPI extends HttpServlet {
         // Make use of merged result
 
         if (commit) {
-            Map userInfo = request.getAttribute("user")
-            boolean hasPermission = false
-            if (userInfo != null) {
-                if (userInfo.permissions.any { item ->
-                    item.get(whelk.rest.security.AccessControl.KAT_KEY)
-                } || Crud.isSystemUser(userInfo))
-                    hasPermission = true
-            }
-            if (!hasPermission) {
-                response.sendError(HttpServletResponse.SC_FORBIDDEN,
-                        "You must be authorized in order to commit merges.")
-                return
-            }
-
             whelk.mergeExisting(remainingID, disappearingID, merged, "xl", null, collection)
             response.setStatus(HttpServletResponse.SC_OK)
             return
@@ -126,6 +119,24 @@ class MergeAPI extends HttpServlet {
             return
         }
     }
+
+    private boolean hasPermission(request) {
+        Map user = request.getAttribute('user')
+        if (!user) {
+            return false
+        }
+        if (Crud.isSystemUser(user)) {
+            return true
+        }
+
+        user.permissions.any { permission ->
+            if (permission.get('code') in ALLOWED_CATALOGING_SIGELS &&
+                    permission.get(whelk.rest.security.AccessControl.KAT_KEY)) {
+                return true
+            }
+        }
+    }
+
 
     private Document merge(Document firstClassDocument, Document secondClassDocument){
         JsonldSerializer serializer = new JsonldSerializer()
