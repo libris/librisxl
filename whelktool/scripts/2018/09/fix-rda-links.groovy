@@ -23,6 +23,9 @@ boolean fixRdaLink(ref) {
 selectByCollection('bib') { data ->
     def (record, instance, work) = data.graph
 
+    if (!isInstanceOf(instance, 'Instance')) {
+        return
+    }
     if (!work) {
         return
     }

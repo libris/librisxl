@@ -149,11 +149,20 @@ class WhelkTool {
         return compiledScripts[scriptPath]
     }
 
+    boolean isInstanceOf(Map entity, String baseType) {
+        def type = entity['@type']
+        if (type == null)
+            return false
+        def types = type instanceof String ? [type] : type
+        return types.any { whelk.jsonld.isSubClassOf(it, baseType) }
+    }
+
     private Bindings createDefaultBindings() {
         Bindings bindings = new SimpleBindings()
         ['graph', 'id', 'type'].each {
             bindings.put(it.toUpperCase(), "@$it" as String)
         }
+        bindings.put("isInstanceOf", this.&isInstanceOf)
         return bindings
     }
 
