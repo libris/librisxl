@@ -140,16 +140,16 @@ class WhelkTool {
         if (!compiledScripts.containsKey(scriptPath)) {
             String scriptSource = new File(scriptFile.parent, scriptPath).getText("UTF-8")
             CompiledScript script = ((Compilable) engine).compile(scriptSource)
-            compiledScripts[scriptPath] = { item ->
-                Bindings bindings = createBindings()
-                bindings.put("data", item)
-                script.eval(bindings)
-            }
+            Bindings bindings = createDefaultBindings()
+            Closure process = null
+            bindings.put("process", { process = it })
+            script.eval(bindings)
+            compiledScripts[scriptPath] = process
         }
         return compiledScripts[scriptPath]
     }
 
-    private Bindings createBindings() {
+    private Bindings createDefaultBindings() {
         Bindings bindings = new SimpleBindings()
         ['graph', 'id', 'type'].each {
             bindings.put(it.toUpperCase(), "@$it" as String)
@@ -158,7 +158,7 @@ class WhelkTool {
     }
 
     private void run() {
-        Bindings bindings = createBindings()
+        Bindings bindings = createDefaultBindings()
         bindings.put("script", this.&compileScript)
         bindings.put("selectByCollection", this.&selectByCollection)
         bindings.put("selectIds", this.&selectIds)
