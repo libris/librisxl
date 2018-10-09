@@ -15,6 +15,8 @@ String fixBalancedBrackets(String s) {
     ['a]','a'],
     ['[a] b]','[a] b'],
     ['[a [b]','a [b]'],
+    ['[a] b', '[a] b'],
+    ['a [b]', 'a [b]'],
     ['[a] [b]', '[a] [b]']
 ].each {
     def (before, after) = it
