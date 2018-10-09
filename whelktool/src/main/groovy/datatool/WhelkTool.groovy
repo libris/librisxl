@@ -94,6 +94,9 @@ class WhelkTool {
                 } else {
                     modifiedCount++
 
+                    doc.setGenerationDate(new Date())
+                    doc.setGenerationProcess(scriptJobUri)
+
                     if (stepWise) {
                         if (!confirmNextStep(inJsonStr, doc)) {
                             break
@@ -103,8 +106,6 @@ class WhelkTool {
                     if (!dryRun) {
                         whelk.storage.storeAtomicUpdate(doc.shortId, !item.loud, changedIn, changedBy, {
                             it.data = doc.data
-                            it.setGenerationDate(new Date())
-                            it.setGenerationProcess(scriptJobUri)
                         })
                     }
                 }
