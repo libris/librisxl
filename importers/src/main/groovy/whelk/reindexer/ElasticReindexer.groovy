@@ -42,7 +42,7 @@ class ElasticReindexer {
             for (collection in whelk.storage.loadCollections()) {
                 boolean includeDeleted = true
                 List<Document> documents = []
-                for (document in whelk.storage.loadAll(collection, includeDeleted, new Date(fromUnixTime))) {
+                for (document in whelk.storage.loadAll(collection, includeDeleted, new Date(fromUnixTime*1000))) {
 
                         documents.add(document)
                         counter++
