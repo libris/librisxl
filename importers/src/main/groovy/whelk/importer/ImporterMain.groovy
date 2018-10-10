@@ -137,6 +137,15 @@ class ImporterMain {
         reindex.reindex(collection)
     }
 
+    @Command(args='[FROM]')
+    void reindexFrom(String from=null) {
+        boolean useCache = true
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props, useCache)
+        def reindex = new ElasticReindexer(whelk)
+        long fromUnixTime = Long.parseLong(from)
+        reindex.reindexFrom(fromUnixTime)
+    }
+
     @Command(args='COLLECTION')
     void benchmark(String collection) {
         log.info("Starting benchmark for collection ${collection ?: 'all'}")
