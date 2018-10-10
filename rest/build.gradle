@@ -85,7 +85,6 @@ dependencies {
     def jettyVersion="8.1.16.v20140903"
 
     // KB libs
-    compile 'com.github.libris:isbntools:e70a5fbedb'
     compile(project(':../whelk-core'))
 
     // Common tools
