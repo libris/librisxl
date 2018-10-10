@@ -79,9 +79,6 @@ class PostgreSQLComponent {
     protected String INSERT_EMBELLISHED_DOCUMENT
     protected String DELETE_EMBELLISHED_DOCUMENT
 
-    // Deprecated
-    protected String LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION
-
     // Query defaults
     static final int DEFAULT_PAGE_SIZE = 50
 
@@ -201,7 +198,7 @@ class PostgreSQLComponent {
         GET_ID_TYPE = "SELECT graphindex, mainid FROM $idTableName " +
                       "WHERE iri = ?"
         GET_COLLECTION_BY_SYSTEM_ID = "SELECT collection FROM lddb where id = ?"
-        LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? AND deleted = false"
+        LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE modified >= ? AND modified <= ? AND collection = ? AND deleted = false"
@@ -1867,10 +1864,6 @@ class PostgreSQLComponent {
         return docList
     }
 
-    Iterable<Document> loadAll(String collection) {
-        return loadAllDocuments(collection, false)
-    }
-
     private Document assembleDocument(ResultSet rs) {
 
         Document doc = new Document(mapper.readValue(rs.getString("data"), Map))
@@ -1928,7 +1921,7 @@ class PostgreSQLComponent {
     }
 
     @CompileStatic(SKIP)
-    private Iterable<Document> loadAllDocuments(String collection, boolean withLinks, Date since = null, Date until = null) {
+    Iterable<Document> loadAll(String collection, boolean includeDeleted = false, Date since = null, Date until = null) {
         log.debug("Load all called with collection: $collection")
         return new Iterable<Document>() {
             Iterator<Document> iterator() {
@@ -1938,19 +1931,16 @@ class PostgreSQLComponent {
                 long untilTS = until?.getTime() ?: PGStatement.DATE_POSITIVE_INFINITY
                 long sinceTS = since?.getTime() ?: 0L
 
+                String sql
                 if (collection) {
-                    if (withLinks) {
-                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION)
-                    } else {
-                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_BY_COLLECTION)
-                    }
+                    sql = LOAD_ALL_DOCUMENTS_BY_COLLECTION
+
                 } else {
-                    if (withLinks) {
-                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_WITH_LINKS + " ORDER BY modified")
-                    } else {
-                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS + " ORDER BY modified")
-                    }
+                    sql = LOAD_ALL_DOCUMENTS
                 }
+                if (!includeDeleted)
+                    sql += " AND deleted = false"
+                loadAllStatement = connection.prepareStatement(sql)
                 loadAllStatement.setFetchSize(100)
                 loadAllStatement.setTimestamp(1, new Timestamp(sinceTS))
                 loadAllStatement.setTimestamp(2, new Timestamp(untilTS))

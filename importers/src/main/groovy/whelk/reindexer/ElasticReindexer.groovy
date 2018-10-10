@@ -33,7 +33,36 @@ class ElasticReindexer {
         this.whelk = w
     }
 
-    synchronized void reindex(String suppliedCollection) {
+    /**
+     * Reindex all changes since a point in time
+     */
+    void reindexFrom(long fromUnixTime) {
+        try {
+            int counter = 0
+            for (collection in whelk.storage.loadCollections()) {
+                boolean includeDeleted = true
+                List<Document> documents = []
+                for (document in whelk.storage.loadAll(collection, includeDeleted, new Date(fromUnixTime))) {
+
+                        documents.add(document)
+                        counter++
+                        if (counter % BATCH_SIZE == 0) {
+                            double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
+                            println("Indexing $docsPerSec documents per second (running average since process start). Total count: $counter.")
+                            whelk.elastic.bulkIndex(documents, collection, whelk)
+                            documents = []
+                        }
+                }
+                if (documents.size() > 0) {
+                    whelk.elastic.bulkIndex(documents, collection, whelk)
+                }
+            }
+        } catch (Throwable e) {
+            println("Reindex failed with:\n" + e.toString() + "\ncallstack:\n" + e.printStackTrace())
+        }
+    }
+
+    void reindex(String suppliedCollection) {
         try {
             int counter = 0
             startTime = System.currentTimeMillis()
@@ -44,9 +73,9 @@ class ElasticReindexer {
                 for (document in whelk.storage.loadAll(collection)) {
                     if ( ! document.getDeleted() ) {
                         documents.add(document)
-                        double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
                         counter++
                         if (counter % BATCH_SIZE == 0) {
+                            double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
                             println("Indexing $docsPerSec documents per second (running average since process start). Total count: $counter.")
                             threadPool.executeOnThread(new Batch(documents, collection), new BatchHandler())
                             documents = []
@@ -75,7 +104,6 @@ class ElasticReindexer {
 
     private class BatchHandler implements ThreadPool.Worker<Batch> {
         void doWork(Batch batch, int threadIndex) {
-            long indexTime = System.currentTimeMillis()
             whelk.elastic.bulkIndex(batch.documents, batch.collection, whelk)
         }
     }
