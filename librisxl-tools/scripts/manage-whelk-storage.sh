@@ -130,7 +130,8 @@ if [ "$RECREATE_DB" = true ]; then
     echo "(Re)creating PostgreSQL database..."
     echo ""
 
-    $TOOLDIR/postgresql/drop-tables-and-indexes-sql.sh | psql -h $DBHOST $DBUSER_ARG $WHELKNAME
+    psql -h $DBHOST $DBUSER_ARG $WHELKNAME -qAt -c 'select $$drop table if exists "$$ || tablename || $$" cascade;$$ from pg_tables where schemaname = $$public$$;' > /tmp/droptables.sql
+    cat /tmp/droptables.sql | psql -h $DBHOST $DBUSER_ARG $WHELKNAME
 
     psql -h $DBHOST $DBUSER_ARG $WHELKNAME < $TOOLDIR/postgresql/tables.sql
     psql -h $DBHOST $DBUSER_ARG $WHELKNAME < $TOOLDIR/postgresql/indexes.sql
