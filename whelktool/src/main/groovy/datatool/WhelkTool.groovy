@@ -49,11 +49,6 @@ class WhelkTool {
 
     WhelkTool(String scriptPath, File reportsDir=null) {
         whelk = Whelk.createLoadedCoreWhelk()
-        System.err.println "Running Whelk against:"
-        System.err.println "  PostgreSQL: ${whelk.storage.connectionPool.url}"
-        System.err.println "  ElasticSearch: ${whelk.elastic?.elasticHosts}"
-        System.err.println "Using script: $scriptPath"
-        System.err.println()
         initScript(scriptPath)
         this.reportsDir = reportsDir
         reportsDir.mkdirs()
@@ -281,11 +276,25 @@ class WhelkTool {
         return bindings
     }
 
-    private void run() {
+    private Bindings createMainBindings() {
         Bindings bindings = createDefaultBindings()
         bindings.put("script", this.&compileScript)
         bindings.put("selectByCollection", this.&selectByCollection)
         bindings.put("load", this.&load)
+        return bindings
+    }
+
+    private void run() {
+        System.err.println "Running Whelk against:"
+        System.err.println "  PostgreSQL: ${whelk.storage.connectionPool.url}"
+        System.err.println "  ElasticSearch: ${whelk.elastic?.elasticHosts}"
+        System.err.println "Using script: $scriptFile"
+        if (dryRun) System.err.println "  dryRun"
+        if (stepWise) System.err.println "  stepWise"
+        if (noThreads) System.err.println "  noThreads"
+        if (limit > -1) System.err.println "  limit: $limit"
+        System.err.println()
+        Bindings bindings = createMainBindings()
         script.eval(bindings)
     }
 
