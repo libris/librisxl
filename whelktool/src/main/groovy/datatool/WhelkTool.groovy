@@ -74,6 +74,87 @@ class WhelkTool {
         return whelk.storage.load(id)?.data
     }
 
+    void selectByIds(Collection<String> ids, Closure process,
+            int batchSize = DEFAULT_BATCH_SIZE) {
+        def uriIdMap = findShortIdsForUris(ids.findAll { it.contains(':') })
+        def shortIds = ids.findResults { it.contains(':') ? uriIdMap[it] : it }
+
+        def idItems = shortIds.collect { "'$it'" }.join(',\n')
+        selectBySqlWhere("id IN ($idItems) AND deleted = false", process,
+                batchSize)
+    }
+
+    Map<String, String> findShortIdsForUris(Collection uris) {
+        def uriIdMap = [:]
+        if (!uris) {
+            return uriIdMap
+        }
+        def uriItems = uris.collect { "'$it'" }.join(',\n')
+        def query = """
+            SELECT id, iri
+            FROM ${whelk.storage.mainTableName}__identifiers
+            WHERE iri IN ($uriItems)
+            """
+        def conn = whelk.storage.getConnection()
+        def stmt = conn.prepareStatement(query)
+        def rs = stmt.executeQuery()
+        while (rs.next()) {
+            uriIdMap[rs.getString("iri")] = rs.getString("id")
+        }
+        return uriIdMap
+    }
+
+    void selectBySqlWhere(String whereClause, Closure process,
+            int batchSize = DEFAULT_BATCH_SIZE) {
+        def query = """
+            SELECT id, data, created, modified, deleted
+            FROM $whelk.storage.mainTableName
+            WHERE $whereClause
+            """
+        def conn = whelk.storage.getConnection()
+        def stmt = conn.prepareStatement(query)
+        def rs = stmt.executeQuery()
+        select(iterateDocuments(rs), process, batchSize)
+    }
+
+    Iterable<Document> iterateDocuments(ResultSet rs) {
+        def conn = rs.statement.connection
+        boolean more = rs.next() // rs starts at "-1"
+        if (!more) {
+            try {
+                //conn.commit()
+                conn.setAutoCommit(true)
+            } finally {
+                conn.close()
+            }
+        }
+        return new Iterable<Document>() {
+            Iterator<Document> iterator() {
+                return new Iterator<Document>() {
+                    @Override
+                    public Document next() {
+                        Document doc = whelk.storage.assembleDocument(rs)
+                        more = rs.next()
+                        if (!more) {
+                            try {
+                                //conn.commit()
+                                conn.setAutoCommit(true)
+                            } finally {
+                                conn.close()
+                            }
+                        }
+                        return doc
+                    }
+
+                    @Override
+                    public boolean hasNext() {
+                        return more
+                    }
+                }
+            }
+        }
+    }
+
     void selectByCollection(String collection, Closure process,
             int batchSize = DEFAULT_BATCH_SIZE) {
         select(whelk.storage.loadAll(collection), process)
@@ -280,6 +361,8 @@ class WhelkTool {
         Bindings bindings = createDefaultBindings()
         bindings.put("script", this.&compileScript)
         bindings.put("selectByCollection", this.&selectByCollection)
+        bindings.put("selectByIds", this.&selectByIds)
+        bindings.put("selectBySqlWhere", this.&selectBySqlWhere)
         bindings.put("load", this.&load)
         return bindings
     }
