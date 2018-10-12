@@ -1,5 +1,11 @@
 package whelk.datatool
 
+import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
+
+import java.sql.ResultSet
+
 import javax.script.ScriptEngineManager
 import javax.script.Bindings
 import javax.script.SimpleBindings
@@ -17,6 +23,7 @@ import whelk.Document
 
 class WhelkTool {
 
+    static final int DEFAULT_BATCH_SIZE = 500
     Whelk whelk
 
     private GroovyScriptEngineImpl engine
@@ -29,22 +36,29 @@ class WhelkTool {
     String changedBy = null
 
     File reportsDir
+    File errorLog
+
     boolean dryRun
+    boolean noThreads = true
     boolean stepWise
+    int limit = -1
+
     private def jsonWriter = new ObjectMapper().writerWithDefaultPrettyPrinter()
 
     Map<String, Closure> compiledScripts = [:]
 
     WhelkTool(String scriptPath, File reportsDir=null) {
         whelk = Whelk.createLoadedCoreWhelk()
-        println "Running Whelk against:"
-        println "  PostgreSQL: ${whelk.storage.connectionPool.url}"
-        println "  ElasticSearch: ${whelk.elastic?.elasticHosts}"
-        println "Using script: $scriptPath"
-        println()
+        System.err.println "Running Whelk against:"
+        System.err.println "  PostgreSQL: ${whelk.storage.connectionPool.url}"
+        System.err.println "  ElasticSearch: ${whelk.elastic?.elasticHosts}"
+        System.err.println "Using script: $scriptPath"
+        System.err.println()
         initScript(scriptPath)
         this.reportsDir = reportsDir
         reportsDir.mkdirs()
+        errorLog = new File(reportsDir, "ERRORS.txt")
+
     }
 
     private void initScript(String scriptPath) {
@@ -53,69 +67,169 @@ class WhelkTool {
         scriptFile = new File(scriptPath)
         String scriptSource = scriptFile.getText("UTF-8")
         script = ((Compilable) engine).compile(scriptSource)
-        scriptJobUri = "https://id.kb.se/generator/globalchanges/${scriptPath}"
+        def segment = '/scripts/'
+        def path = scriptFile.toURI().toString()
+        path = path.substring(path.lastIndexOf(segment) + segment.size())
+        scriptJobUri = "https://id.kb.se/generator/scripts/${path}"
     }
+
+    boolean getUseThreads() { !noThreads && !stepWise }
 
     Map load(String id) {
         return whelk.storage.load(id)?.data
     }
 
-    void selectIds(String[] ids, Closure process) {
-        // FIXME: implement
-    }
-
-    void selectByCollection(String collection, Closure process) {
+    void selectByCollection(String collection, Closure process,
+            int batchSize = DEFAULT_BATCH_SIZE) {
         select(whelk.storage.loadAll(collection), process)
     }
 
-    private void select(Iterable<Document> selection, Closure process) {
-        def i = 0
-        def modifiedCount = 0
-        def deleteCount = 0
+    private void select(Iterable<Document> selection, Closure process,
+            int batchSize = DEFAULT_BATCH_SIZE) {
+        def counter = new Counter()
 
-        //new File(reportsDir, "MODIFIED.txt")
-        //new File(reportsDir, "DELETED.txt")
+        int batchCount = 0
+        Batch batch = new Batch(number: ++batchCount)
+        long startTime = System.currentTimeMillis()
 
-        for (Document doc : selection) {
-            print "\rProcessing $i: ${doc.id} (modified: ${modifiedCount}, deleted: ${deleteCount})"
+        def executorService = useThreads ? createExecutorService(batchSize) : null
 
-            String inJsonStr
-
-            if (stepWise) inJsonStr = jsonWriter.writeValueAsString(doc.data)
-
-            def item = new DocumentItem(doc: doc, whelk: whelk)
-            process(item)
-            if (item.needsSaving) {
-                if (item.doDelete) {
-                    deleteCount++
-                    if (!dryRun) {
-                        whelk.storage.remove(doc.shortId, changedIn, changedBy)
-                    }
-                } else {
-                    modifiedCount++
-
-                    doc.setGenerationDate(new Date())
-                    doc.setGenerationProcess(scriptJobUri)
-
-                    if (stepWise) {
-                        if (!confirmNextStep(inJsonStr, doc)) {
-                            break
-                        }
-                    }
-
-                    if (!dryRun) {
-                        whelk.storage.storeAtomicUpdate(doc.shortId, !item.loud, changedIn, changedBy, {
-                            it.data = doc.data
-                        })
-                    }
-                }
-                if (modifiedCount == 1 || deleteCount == 1) {
-                    storeScriptJob()
+        if (executorService) {
+            Thread.setDefaultUncaughtExceptionHandler {
+                Thread thread, Throwable err ->
+                System.err.println "Uncaught error: $err"
+                executorService.shutdownNow()
+                errorLog.withPrintWriter {
+                    pw.println "Thread: $thread"
+                    pw.println "Error:"
+                    err.printStackTrace pw
+                    pw.flush()
                 }
             }
-            i++
         }
-        println "Processed: ${i} records, modified: ${modifiedCount}."
+
+        for (Document doc : selection) {
+            if (doc.deleted) {
+                continue
+            }
+            counter.countRead()
+            if (limit > -1 && counter.readCount > limit) {
+                break
+            }
+            batch.items << new DocumentItem(number: counter.readCount, doc: doc, whelk: whelk)
+            if (batch.items.size() == batchSize) {
+                def batchToProcess = batch
+                if (executorService) {
+                    executorService.submit {
+                        if (!processBatch(process, batchToProcess, counter)) {
+                            executorService.shutdownNow()
+                        }
+                    }
+                } else {
+                    if (!processBatch(process, batchToProcess, counter)) {
+                        return
+                    }
+                }
+                batch = new Batch(number: ++batchCount)
+            }
+        }
+
+        if (executorService) {
+            executorService.submit {
+                processBatch(process, batch, counter)
+            }
+            executorService.shutdown()
+        } else {
+            processBatch(process, batch, counter)
+        }
+
+        if (!executorService || executorService.awaitTermination(8, TimeUnit.HOURS)) {
+            System.err.println()
+            System.err.println "Processed: $counter.summary."
+        }
+    }
+
+    def createExecutorService(int batchSize) {
+        int cpus = Runtime.getRuntime().availableProcessors()
+        int maxPoolSize = cpus * 4
+        def linkedBlockingDeque = new LinkedBlockingDeque<Runnable>(maxPoolSize)
+        def executorService = new ThreadPoolExecutor(cpus, maxPoolSize,
+                1, TimeUnit.DAYS,
+                linkedBlockingDeque, new ThreadPoolExecutor.CallerRunsPolicy())
+    }
+
+    /**
+     * @return true to continue, false to break.
+     */
+    boolean processBatch(Closure process, Batch batch, def counter) {
+        boolean doContinue = true
+        for (DocumentItem item : batch.items) {
+            if (!useThreads) {
+                System.err.print "\rProcessing $item.number: ${item.doc.id} ($counter.summary)"
+            }
+            try {
+                doContinue = doProcess(process, item, counter)
+            } catch (Throwable err) {
+                System.err.println "Error occurred when processing <$item.doc.completeId>: $err"
+                errorLog.withPrintWriter {
+                    it.println "Stopped at document <$item.doc.completeId>"
+                    it.println "Process status: $counter.summary"
+                    it.println "Error:"
+                    err.printStackTrace it
+                    it.flush()
+                }
+                return false
+            }
+            if (!doContinue) {
+                break
+            }
+        }
+        System.err.println()
+        System.err.println "\rProcessed batch $batch.number ($counter.summary)"
+        return doContinue
+    }
+
+    /**
+     * @return true to continue, false to break.
+     */
+    boolean doProcess(Closure process, DocumentItem item, def counter) {
+        String inJsonStr = stepWise
+            ? jsonWriter.writeValueAsString(item.doc.data)
+            : null
+        counter.countProcessed()
+        process(item)
+        if (item.needsSaving) {
+            if (stepWise && !confirmNextStep(inJsonStr, item.doc)) {
+                return false
+            }
+            if (item.doDelete) {
+                doDeletion(item.doc)
+                counter.countDeleted()
+            } else {
+                doModification(item.doc)
+                counter.countModified()
+            }
+            if (counter.saved == 1) {
+                storeScriptJob()
+            }
+        }
+        return true
+    }
+
+    void doDeletion(Document doc) {
+        if (!dryRun) {
+            whelk.storage.remove(doc.shortId, changedIn, changedBy)
+        }
+    }
+
+    void doModification(Document doc) {
+        doc.setGenerationDate(new Date())
+        doc.setGenerationProcess(scriptJobUri)
+        if (!dryRun) {
+            whelk.storage.storeAtomicUpdate(doc.shortId, !item.loud, changedIn, changedBy, {
+                it.data = doc.data
+            })
+        }
     }
 
     private boolean confirmNextStep(String inJsonStr, Document doc) {
@@ -130,7 +244,7 @@ class WhelkTool {
     }
 
     private void storeScriptJob() {
-        // FIXME: store...
+        // TODO: store description about script job
         // entity[ID] = scriptJobUri
         // entity[TYPE] = 'ScriptJob'
         // entity.created = storage.formatDate(...)
@@ -171,7 +285,6 @@ class WhelkTool {
         Bindings bindings = createDefaultBindings()
         bindings.put("script", this.&compileScript)
         bindings.put("selectByCollection", this.&selectByCollection)
-        bindings.put("selectIds", this.&selectIds)
         bindings.put("load", this.&load)
         script.eval(bindings)
     }
@@ -181,7 +294,9 @@ class WhelkTool {
         cli.h(longOpt: 'help', 'Print this help message')
         cli.r(longOpt:'report', args:1, argName:'REPORT-DIR', 'Directory where reports are written (defaults to "reports")')
         cli.d(longOpt:'dry-run', 'Do not save any modifications')
+        cli.T(longOpt:'no-threads', 'Do not use threads to parallellize batch processing')
         cli.s(longOpt:'step', 'Change one document at a time, prompting to continue')
+        cli.l(longOpt:'limit', args:1, argName:'LIMIT', 'Amount of documents to process.')
 
         def options = cli.parse(args)
         if (options.h) {
@@ -194,6 +309,8 @@ class WhelkTool {
         def tool = new WhelkTool(scriptPath, reportsDir)
         tool.dryRun = options.d
         tool.stepWise = options.s
+        tool.noThreads = options.T
+        tool.limit = options.l ? Integer.parseInt(options.l) : -1
         tool.run()
     }
 
@@ -201,6 +318,7 @@ class WhelkTool {
 
 
 class DocumentItem {
+    int number
     Document doc
     private Whelk whelk
     private boolean needsSaving = false
@@ -217,11 +335,47 @@ class DocumentItem {
     }
 
     void scheduleDelete(loud=true) {
+        needsSaving = true
         doDelete = true
         this.loud = loud
     }
 
     def getVersions() {
         whelk.loadAllVersionsByMainId(doc.shortId)
+    }
+}
+
+
+class Batch {
+    int number
+    List<DocumentItem> items = []
+}
+
+class Counter {
+    int readCount = 0
+    int processedCount = 0
+    int modifiedCount = 0
+    int deleteCount = 0
+
+    int getSaved() { modifiedCount + deleteCount }
+
+    String getSummary() {
+        "read: $readCount, processed: ${processedCount}, modified: ${modifiedCount}, deleted: ${deleteCount}"
+    }
+
+    synchronized void countRead() {
+        readCount++
+    }
+
+    synchronized void countProcessed() {
+        processedCount++
+    }
+
+    synchronized void countModified() {
+        modifiedCount++
+    }
+
+    synchronized void countDeleted() {
+        deleteCount++
     }
 }
