@@ -166,7 +166,6 @@ class WhelkTool {
 
         int batchCount = 0
         Batch batch = new Batch(number: ++batchCount)
-        long startTime = System.currentTimeMillis()
 
         def executorService = useThreads ? createExecutorService(batchSize) : null
 
@@ -444,7 +443,9 @@ class Batch {
     List<DocumentItem> items = []
 }
 
+
 class Counter {
+    long startTime = System.currentTimeMillis()
     int readCount = 0
     int processedCount = 0
     int modifiedCount = 0
@@ -453,7 +454,8 @@ class Counter {
     int getSaved() { modifiedCount + deleteCount }
 
     String getSummary() {
-        "read: $readCount, processed: ${processedCount}, modified: ${modifiedCount}, deleted: ${deleteCount}"
+        double docsPerSec = readCount / ((System.currentTimeMillis() - startTime) / 1000)
+        "read: $readCount, processed: ${processedCount}, modified: ${modifiedCount}, deleted: ${deleteCount} (at ${docsPerSec.round(3)} docs/s)"
     }
 
     synchronized void countRead() {
