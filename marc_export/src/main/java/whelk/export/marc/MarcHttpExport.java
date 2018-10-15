@@ -1,5 +1,8 @@
 package whelk.export.marc;
 
+import io.prometheus.client.Counter;
+import io.prometheus.client.Gauge;
+import io.prometheus.client.Summary;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter;
@@ -29,6 +32,23 @@ public class MarcHttpExport extends HttpServlet
     private ProfileExport profileExport = null;
     private final Logger logger = LogManager.getLogger(this.getClass());
 
+    static final Counter requests = Counter.build()
+        .name("marc_export_api_requests_total").help("Total requests to API.")
+        .register();
+
+    static final Counter failedRequests = Counter.build()
+        .name("marc_export_api_failed_requests_total").help("Total failed requests to API.")
+        .labelNames("reason", "status").register();
+
+    static final Gauge ongoingRequests = Gauge.build()
+        .name("marc_export_api_ongoing_requests_total").help("Total ongoing API requests.")
+        .register();
+
+    static final Summary requestsLatency = Summary.build()
+        .name("marc_export_api_requests_latency_seconds")
+        .help("API request latency in seconds.")
+        .register();
+
     public void init()
     {
         whelk = Whelk.createLoadedCoreWhelk();
@@ -38,11 +58,30 @@ public class MarcHttpExport extends HttpServlet
 
     public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
+        requests.inc();
+        ongoingRequests.inc();
+        Summary.Timer requestTimer = requestsLatency.startTimer();
+
+        try
+        {
+            doPost2(req, res);
+        }
+        finally
+        {
+            ongoingRequests.dec();
+            requestTimer.observeDuration();
+        }
+    }
+
+    private void doPost2(HttpServletRequest req, HttpServletResponse res) throws IOException
+    {
         // Parameters
         HashMap<String, String> parameterMap = new HashMap<>();
         String queryString = req.getQueryString();
         if (queryString == null)
         {
+            failedRequests.labels("Missing required params",
+                    Integer.toString(HttpServletResponse.SC_BAD_REQUEST)).inc();
             res.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing required parameters \"from\" and \"until\".");
             return;
         }
@@ -57,6 +96,8 @@ public class MarcHttpExport extends HttpServlet
         if (parameterMap.get("from") == null || ! isValidZonedDateTime(parameterMap.get("from")) ||
                 parameterMap.get("until") == null || ! isValidZonedDateTime(parameterMap.get("until")))
         {
+            failedRequests.labels("Missing required params",
+                    Integer.toString(HttpServletResponse.SC_BAD_REQUEST)).inc();
             res.sendError(HttpServletResponse.SC_BAD_REQUEST, "Valid \"from\" and \"until\" parameters are required, for example like so: 2018-09-10T00:00:00Z");
             return;
         }
@@ -76,6 +117,8 @@ public class MarcHttpExport extends HttpServlet
                     deleteMode = ProfileExport.DELETE_MODE.SEND_EMAIL;
                     break;
                 default:
+                    failedRequests.labels("Invalid option for 'deleted'",
+                            Integer.toString(HttpServletResponse.SC_BAD_REQUEST)).inc();
                     res.sendError(HttpServletResponse.SC_BAD_REQUEST, "Valid options for \"deleted\" are \"ignore\", \"export\" or \"email\"");
                     return;
             }
@@ -117,6 +160,8 @@ public class MarcHttpExport extends HttpServlet
         }
         catch (SQLException se)
         {
+            failedRequests.labels("Export failed",
+                    Integer.toString(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)).inc();
             res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         finally

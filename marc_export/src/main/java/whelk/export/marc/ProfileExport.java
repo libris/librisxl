@@ -5,6 +5,10 @@ import se.kb.libris.util.marc.io.MarcRecordWriter;
 import whelk.Document;
 import whelk.Whelk;
 
+import io.prometheus.client.Counter;
+import io.prometheus.client.Gauge;
+import io.prometheus.client.Summary;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.*;
@@ -25,6 +29,13 @@ public class ProfileExport
         SEND_EMAIL // Do not export deleted records, but send their IDs in an email to be manually deleted
     }
 
+    private static final Summary totalExportCount = Summary.build().name("marc_export_total_document_count")
+        .help("Number of documents in export response").register();
+    private static final Summary affectedCount = Summary.build().name("marc_export_affected_document_count")
+        .help("Number of affected documents in single document export").register();
+    private static final Summary singleExportLatency = Summary.build().name("marc_export_single_doc_latency_seconds")
+        .help("The time in seconds it takes to export a single 'complete' document")
+        .labelNames("collection").register();
     private JsonLD2MarcXMLConverter m_toMarcXmlConverter;
     private Whelk m_whelk;
     public ProfileExport(Whelk whelk)
@@ -45,6 +56,7 @@ public class ProfileExport
         Timestamp fromTimeStamp = new Timestamp(zonedFrom.toInstant().getEpochSecond() * 1000L);
         Timestamp untilTimeStamp = new Timestamp(zonedUntil.toInstant().getEpochSecond() * 1000L);
 
+        TreeSet<String> exportedIDs = new TreeSet();
         try(Connection connection = m_whelk.getStorage().getConnection();
             PreparedStatement preparedStatement = getAllChangedIDsStatement(fromTimeStamp, untilTimeStamp, connection);
             ResultSet resultSet = preparedStatement.executeQuery())
@@ -61,9 +73,13 @@ public class ProfileExport
                         zonedUntil.toInstant().isAfter(createdTime.toInstant()))
                     created = true;
 
-                exportAffectedDocuments(id, collection, created, deleted, fromTimeStamp, untilTimeStamp, profile,
-                        output, deleteMode, doVirtualDeletions);
+                int affected = exportAffectedDocuments(id, collection, created, deleted, fromTimeStamp,
+                        untilTimeStamp, profile, output, deleteMode, doVirtualDeletions, exportedIDs);
+                affectedCount.observe(affected);
             }
+        }
+        finally {
+            totalExportCount.observe(exportedIDs.size());
         }
 
         return null;
@@ -73,15 +89,37 @@ public class ProfileExport
      * Export (into output) all documents that are affected by 'id' having been updated.
      * 'created' == true means 'id' was created in the chosen interval, false means merely updated.
      */
-    private void exportAffectedDocuments(String id, String collection, boolean created, Boolean deleted,Timestamp from,
+    private int exportAffectedDocuments(String id, String collection, boolean created, Boolean deleted,Timestamp from,
                                          Timestamp until, ExportProfile profile, MarcRecordWriter output,
-                                         DELETE_MODE deleteMode, boolean doVirtualDeletions)
+                                         DELETE_MODE deleteMode, boolean doVirtualDeletions,
+                                         TreeSet<String> exportedIDs)
             throws IOException, SQLException
     {
-        TreeSet<String> exportedIDs = new TreeSet<>();
+        Summary.Timer requestTimer = singleExportLatency.labels(collection).startTimer();
+        try
+        {
+            return exportAffectedDocuments2(id, collection, created, deleted, from, until, profile,
+                    output, deleteMode, doVirtualDeletions, exportedIDs);
+        }
+        finally
+        {
+            requestTimer.observeDuration();
+        }
+    }
+
+    private int exportAffectedDocuments2(String id, String collection, boolean created, Boolean deleted,Timestamp from,
+                                         Timestamp until, ExportProfile profile, MarcRecordWriter output,
+                                         DELETE_MODE deleteMode, boolean doVirtualDeletions,
+                                         TreeSet<String> exportedIDs)
+            throws IOException, SQLException
+    {
+        int oldCount = exportedIDs.size();
 
         if (collection.equals("bib") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
-            exportDocument(m_whelk.getStorage().loadEmbellished(id, m_whelk.getJsonld()), profile, output, exportedIDs, deleteMode, doVirtualDeletions);
+        {
+            exportDocument(m_whelk.getStorage().loadEmbellished(id, m_whelk.getJsonld()), profile,
+                    output, exportedIDs, deleteMode, doVirtualDeletions);
+        }
         else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
         {
             List<Tuple2<String, String>> dependers = m_whelk.getStorage().getDependers(id);
@@ -99,7 +137,15 @@ public class ProfileExport
             List<Document> versions = m_whelk.getStorage().loadAllVersions(id);
 
             // Export the new/current itemOf
-            Document version = versions.get(0);
+            Document version;
+            if (versions.size() > 0)
+            {
+                version = versions.get(0);
+            }
+            else
+            {
+                version = m_whelk.getStorage().load(id);
+            }
             String itemOf = version.getHoldingFor();
             String itemOfSystemId = m_whelk.getStorage().getSystemIdByIri(itemOf);
             exportDocument(
@@ -120,6 +166,7 @@ public class ProfileExport
                 }
             }
         }
+        return exportedIDs.size() - oldCount;
     }
 
     /**
