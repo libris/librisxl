@@ -137,7 +137,15 @@ public class ProfileExport
             List<Document> versions = m_whelk.getStorage().loadAllVersions(id);
 
             // Export the new/current itemOf
-            Document version = versions.get(0);
+            Document version;
+            if (versions.size() > 0)
+            {
+                version = versions.get(0);
+            }
+            else
+            {
+                version = m_whelk.getStorage().load(id);
+            }
             String itemOf = version.getHoldingFor();
             String itemOfSystemId = m_whelk.getStorage().getSystemIdByIri(itemOf);
             exportDocument(
