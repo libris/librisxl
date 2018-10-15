@@ -279,10 +279,10 @@ class WhelkTool {
                 return false
             }
             if (item.doDelete) {
-                doDeletion(item.doc)
+                doDeletion(item)
                 counter.countDeleted()
             } else {
-                doModification(item.doc)
+                doModification(item)
                 counter.countModified()
             }
             if (counter.saved == 1) {
@@ -292,13 +292,14 @@ class WhelkTool {
         return true
     }
 
-    void doDeletion(Document doc) {
+    void doDeletion(DocumentItem item) {
         if (!dryRun) {
-            whelk.storage.remove(doc.shortId, changedIn, changedBy)
+            whelk.storage.remove(item.doc.shortId, changedIn, changedBy)
         }
     }
 
-    void doModification(Document doc) {
+    void doModification(DocumentItem item) {
+        Document doc = item.doc
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
