@@ -42,6 +42,7 @@ class Document {
     static final List thingSameAsPath = ["@graph", 1, "sameAs"]
     static final List thingTypedIDsPath = ["@graph", 1, "identifiedBy"]
     static final List recordIdPath = ["@graph", 0, "@id"]
+    static final List workIdPath = ["@graph", 1, "instanceOf", "@id"]
     static final List thingMetaPath = ["@graph", 1, "meta", "@id"]
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
     static final List recordTypedIDsPath = ["@graph", 0, "identifiedBy"]
@@ -415,6 +416,62 @@ class Document {
             if (typedIDList.every { it -> it != idObject })
                 typedIDList.add(idObject)
         }
+    }
+
+    public String getWorkType() {
+        Object workId = get(workIdPath)
+        if (workId == null)
+            return null
+
+        Map workObject = getEmbedded( (String) workId )
+        if (workObject == null)
+            return null
+
+        String type = workObject.get("@type")
+        if (type != null)
+            return type
+        return null
+    }
+
+    /**
+     * Get the embedded/embellished object for a certain id.
+     * Will return null if there is no object with the requested id in this documents data.
+     */
+    private Map getEmbedded(String id) {
+        List graphList = (List) data.get("@graph")
+        if (graphList == null)
+            return null
+
+        return getEmbedded(id, graphList)
+    }
+
+    private Map getEmbedded(String id, Map localData) {
+        for (Object key : localData.keySet()) {
+            Object object = localData.get(key)
+            if (!(object instanceof Map))
+                return null
+
+            Map map = (Map) object
+            String objId = map.get("@id")
+            if (objId.equals(id))
+                return map
+            else {
+                Map next = getEmbedded(id, map)
+                if (next != null)
+                    return next
+            }
+        }
+        return null
+    }
+
+    private Map getEmbedded(String id, List localData) {
+        for (Object object : localData) {
+            Map map = (Map) object
+            Map candidate = getEmbedded(id, map)
+            if (candidate != null)
+                return candidate
+        }
+        return null
     }
 
     /**

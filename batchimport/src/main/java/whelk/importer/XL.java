@@ -438,6 +438,36 @@ class XL
                     break;
             }
 
+            // Filter the candidates based on instance @type and work @type ("materialtyp").
+            Iterator<String> it = duplicateIDs.iterator();
+            while (it.hasNext())
+            {
+                String candidateID = it.next();
+                Document candidate = m_whelk.getStorage().loadEmbellished(candidateID, m_whelk.getJsonld());
+
+                String incomingInstanceType = rdfDoc.getThingType();
+                String existingInstanceType = candidate.getThingType();
+                String incomingWorkType = rdfDoc.getWorkType();
+                String existingWorkType = candidate.getWorkType();
+
+                // Unrelated work types? -> not a valid match
+                if ( ! m_whelk.getJsonld().isSubClassOf(incomingWorkType, existingWorkType) &&
+                        ! m_whelk.getJsonld().isSubClassOf(existingWorkType, incomingWorkType) )
+                {
+                    it.remove();
+                    continue;
+                }
+
+                // If A is Electronic and B is Instance or vice versa, do not consider documents matching. This is
+                // frail since Electronic is a subtype of Instance.
+                // HERE BE DRAGONS.
+                if ( incomingInstanceType.equals("Electronic") && existingInstanceType.equals("Instance") ||
+                        incomingInstanceType.equals("Instance") && existingInstanceType.equals("Electronic"))
+                {
+                    it.remove();
+                }
+            }
+
             // If duplicates have already been found, do not try any more duplicate types.
             if (!duplicateIDs.isEmpty())
                 break;
