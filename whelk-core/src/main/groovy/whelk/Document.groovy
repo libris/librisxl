@@ -446,17 +446,18 @@ class Document {
     }
 
     private Map getEmbedded(String id, Map localData) {
-        for (Object key : localData.keySet()) {
-            Object object = localData.get(key)
-            if (!(object instanceof Map))
-                return null
+        Map map = (Map) localData
+        String objId = map.get("@id")
+        if (objId.equals(id)) {
+            return map
+        }
+        else {
+            for (Object key : localData.keySet()) {
+                Object object = localData.get(key)
+                if (!(object instanceof Map))
+                    return null
 
-            Map map = (Map) object
-            String objId = map.get("@id")
-            if (objId.equals(id))
-                return map
-            else {
-                Map next = getEmbedded(id, map)
+                Map next = getEmbedded(id, object)
                 if (next != null)
                     return next
             }

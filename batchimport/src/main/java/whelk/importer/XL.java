@@ -450,6 +450,8 @@ class XL
                 String incomingWorkType = rdfDoc.getWorkType();
                 String existingWorkType = candidate.getWorkType();
 
+                System.out.println("***************\nii: " + incomingInstanceType + "\niw: " + incomingWorkType + "\nei: " + existingInstanceType + "\new: " + existingWorkType);
+
                 // Unrelated work types? -> not a valid match
                 if ( ! m_whelk.getJsonld().isSubClassOf(incomingWorkType, existingWorkType) &&
                         ! m_whelk.getJsonld().isSubClassOf(existingWorkType, incomingWorkType) )
