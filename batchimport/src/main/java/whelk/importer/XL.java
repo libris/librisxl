@@ -604,7 +604,7 @@ class XL
     private PreparedStatement getOnId_ps(Connection connection, String id)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb__identifiers WHERE iri = ?";
+        String query = "SELECT lddb__identifiers.id FROM lddb__identifiers JOIN lddb ON lddb__identifiers.id = lddb.id WHERE lddb__identifiers.iri = ? AND lddb.deleted = false";
         PreparedStatement statement = connection.prepareStatement(query);
         statement.setString(1, id);
         return statement;
