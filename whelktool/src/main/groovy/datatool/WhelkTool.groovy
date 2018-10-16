@@ -5,6 +5,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 import java.sql.ResultSet
+import java.sql.SQLException
 
 import javax.script.ScriptEngineManager
 import javax.script.Bindings
@@ -96,10 +97,18 @@ class WhelkTool {
             WHERE iri IN ($uriItems)
             """
         def conn = whelk.storage.getConnection()
-        def stmt = conn.prepareStatement(query)
-        def rs = stmt.executeQuery()
-        while (rs.next()) {
-            uriIdMap[rs.getString("iri")] = rs.getString("id")
+        def stmt
+        def rs
+        try {
+            stmt = conn.prepareStatement(query)
+            rs = stmt.executeQuery()
+            while (rs.next()) {
+                uriIdMap[rs.getString("iri")] = rs.getString("id")
+            }
+        } finally {
+            try { rs?.close() } catch (SQLException e) {}
+            try { stmt?.close() } catch (SQLException e) {}
+            conn.close()
         }
         return uriIdMap
     }
