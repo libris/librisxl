@@ -461,8 +461,8 @@ class XL
                 // If A is Electronic and B is Instance or vice versa, do not consider documents matching. This is
                 // frail since Electronic is a subtype of Instance.
                 // HERE BE DRAGONS.
-                if ( incomingInstanceType.equals("Electronic") && existingInstanceType.equals("Instance") ||
-                        incomingInstanceType.equals("Instance") && existingInstanceType.equals("Electronic"))
+                if ( (incomingInstanceType.equals("Electronic") && existingInstanceType.equals("Instance")) ||
+                        (incomingInstanceType.equals("Instance") && existingInstanceType.equals("Electronic")))
                 {
                     it.remove();
                 }

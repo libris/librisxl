@@ -454,12 +454,18 @@ class Document {
         else {
             for (Object key : localData.keySet()) {
                 Object object = localData.get(key)
-                if (!(object instanceof Map))
+                if ((object instanceof List)) {
+                    Map next = getEmbedded(id, (List) object)
+                    if (next != null)
+                        return next
+                }
+                else if ((object instanceof Map)) {
+                    Map next = getEmbedded(id, (Map) object)
+                    if (next != null)
+                        return next
+                }
+                else
                     return null
-
-                Map next = getEmbedded(id, object)
-                if (next != null)
-                    return next
             }
         }
         return null
