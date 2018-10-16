@@ -23,6 +23,7 @@ cleanup
 
 pushd ../
 
+
 ######## NORMAL IMPORT
 # Check created bib and attached hold
 java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live
@@ -117,6 +118,31 @@ if (( $rowCount != 3 )) ; then
     fail "Expected exactly 3 hold records"
 fi
 
+cleanup
+######## Electronic/Instance should not match. Batch 6 contains the same record, but work type is Multimedia instead of Text
+java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --live
+java -jar build/libs/batchimport.jar --path=./integtest/batch6.xml --format=xml --dupType=ISBNA --live
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'bib'")
+if (( $rowCount != 2 )) ; then
+    fail "Expected 2 bib records after importing Instance and Electronic"
+fi
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'hold'")
+if (( $rowCount != 2 )) ; then
+    fail "Expected 2 bib records after importing Instance and Electronic"
+fi
+
+cleanup
+######## Electronic/Instance should not match. Batch 7 contains the same record, but instance type is electronic
+java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --live
+java -jar build/libs/batchimport.jar --path=./integtest/batch7.xml --format=xml --dupType=ISBNA --live
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'bib'")
+if (( $rowCount != 2 )) ; then
+    fail "Expected 2 bib records after importing Instance and Electronic"
+fi
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'batch import' and collection = 'hold'")
+if (( $rowCount != 2 )) ; then
+    fail "Expected 2 bib records after importing Instance and Electronic"
+fi
 
 
 popd
