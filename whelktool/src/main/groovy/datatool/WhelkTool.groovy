@@ -36,7 +36,7 @@ class WhelkTool {
     String changedIn = "xl"
 
     File reportsDir
-    File errorLog
+    PrintWriter errorLog
 
     boolean dryRun
     boolean noThreads = true
@@ -52,7 +52,7 @@ class WhelkTool {
         initScript(scriptPath)
         this.reportsDir = reportsDir
         reportsDir.mkdirs()
-        errorLog = new File(reportsDir, "ERRORS.txt")
+        errorLog = new PrintWriter(new File(reportsDir, "ERRORS.txt"))
 
     }
 
@@ -181,13 +181,14 @@ class WhelkTool {
             Thread.setDefaultUncaughtExceptionHandler {
                 Thread thread, Throwable err ->
                 System.err.println "Uncaught error: $err"
+
                 executorService.shutdownNow()
-                errorLog.withPrintWriter {
-                    pw.println "Thread: $thread"
-                    pw.println "Error:"
-                    err.printStackTrace pw
-                    pw.flush()
-                }
+
+                errorLog.println "Thread: $thread"
+                errorLog.println "Error:"
+                err.printStackTrace errorLog
+                errprLog.println "-" * 20
+                errorLog.flush()
             }
         }
 
@@ -254,13 +255,12 @@ class WhelkTool {
                 doContinue = doProcess(process, item, counter)
             } catch (Throwable err) {
                 System.err.println "Error occurred when processing <$item.doc.completeId>: $err"
-                errorLog.withPrintWriter {
-                    it.println "Stopped at document <$item.doc.completeId>"
-                    it.println "Process status: $counter.summary"
-                    it.println "Error:"
-                    err.printStackTrace it
-                    it.flush()
-                }
+                errorLog.println "Stopped at document <$item.doc.completeId>"
+                errorLog.println "Process status: $counter.summary"
+                errorLog.println "Error:"
+                err.printStackTrace errorLog
+                errorLog.println "-" * 20
+                errorLog.flush()
                 return false
             }
             if (!doContinue) {
@@ -387,6 +387,13 @@ class WhelkTool {
         System.err.println()
         Bindings bindings = createMainBindings()
         script.eval(bindings)
+        finish()
+    }
+
+    private void finish() {
+        errorLog.flush()
+        errorLog.close()
+        System.err.println "Done!"
     }
 
     static void main(String[] args) {
