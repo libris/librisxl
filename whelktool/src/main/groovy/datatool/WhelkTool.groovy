@@ -460,7 +460,7 @@ class Counter {
     int modifiedCount = 0
     int deleteCount = 0
 
-    int getSaved() { modifiedCount + deleteCount }
+    synchronized int getSaved() { modifiedCount + deleteCount }
 
     String getSummary() {
         double docsPerSec = readCount / ((System.currentTimeMillis() - startTime) / 1000)
