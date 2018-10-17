@@ -79,6 +79,7 @@ class WhelkTool {
 
     void selectByIds(Collection<String> ids, Closure process,
             int batchSize = DEFAULT_BATCH_SIZE) {
+        log "Select by ${ids.size()} IDs"
         def uriIdMap = findShortIdsForUris(ids.findAll { it.contains(':') })
         def shortIds = ids.findResults { it.contains(':') ? uriIdMap[it] : it }
 
@@ -116,6 +117,12 @@ class WhelkTool {
     }
 
     void selectBySqlWhere(String whereClause, Closure process,
+            int batchSize = DEFAULT_BATCH_SIZE) {
+        log "Select by SQL"
+        doSelectBySqlWhere(whereClause, process, batchSize)
+    }
+
+    private void doSelectBySqlWhere(String whereClause, Closure process,
             int batchSize = DEFAULT_BATCH_SIZE) {
         def query = """
             SELECT id, data, created, modified, deleted
@@ -168,13 +175,14 @@ class WhelkTool {
 
     void selectByCollection(String collection, Closure process,
             int batchSize = DEFAULT_BATCH_SIZE) {
+        log "Select by collection: ${collection}"
         select(whelk.storage.loadAll(collection), process)
     }
 
     private void select(Iterable<Document> selection, Closure process,
             int batchSize = DEFAULT_BATCH_SIZE) {
         if (errorDetected) {
-            System.err.println "Error detected, refusing further processing."
+            log "Error detected, refusing further processing."
             return
         }
 
@@ -188,7 +196,7 @@ class WhelkTool {
         if (executorService) {
             Thread.setDefaultUncaughtExceptionHandler {
                 Thread thread, Throwable err ->
-                System.err.println "Uncaught error: $err"
+                log "Uncaught error: $err"
 
                 executorService.shutdownNow()
 
@@ -238,8 +246,8 @@ class WhelkTool {
         }
 
         if (!executorService || executorService.awaitTermination(8, TimeUnit.HOURS)) {
-            System.err.println()
-            System.err.println "Processed: $counter.summary."
+            log "Processed selection: $counter.summary."
+            log()
         }
     }
 
@@ -259,12 +267,12 @@ class WhelkTool {
         boolean doContinue = true
         for (DocumentItem item : batch.items) {
             if (!useThreads) {
-                System.err.print "\rProcessing $item.number: ${item.doc.id} ($counter.summary)"
+                repeat "\rProcessing $item.number: ${item.doc.id} ($counter.summary)"
             }
             try {
                 doContinue = doProcess(process, item, counter)
             } catch (Throwable err) {
-                System.err.println "Error occurred when processing <$item.doc.completeId>: $err"
+                log "Error occurred when processing <$item.doc.completeId>: $err"
                 errorLog.println "Stopped at document <$item.doc.completeId>"
                 errorLog.println "Process status: $counter.summary"
                 errorLog.println "Error:"
@@ -277,8 +285,8 @@ class WhelkTool {
                 break
             }
         }
-        System.err.println()
-        System.err.println "\rProcessed batch $batch.number ($counter.summary)"
+        if (!useThreads) log()
+        log "Processed batch $batch.number ($counter.summary)"
         return doContinue
     }
 
@@ -388,15 +396,15 @@ class WhelkTool {
     }
 
     private void run() {
-        System.err.println "Running Whelk against:"
-        System.err.println "  PostgreSQL: ${whelk.storage.connectionPool.url}"
-        System.err.println "  ElasticSearch: ${whelk.elastic?.elasticHosts}"
-        System.err.println "Using script: $scriptFile"
-        if (dryRun) System.err.println "  dryRun"
-        if (stepWise) System.err.println "  stepWise"
-        if (noThreads) System.err.println "  noThreads"
-        if (limit > -1) System.err.println "  limit: $limit"
-        System.err.println()
+        log "Running Whelk against:"
+        log "  PostgreSQL: ${whelk.storage.connectionPool.url}"
+        log "  ElasticSearch: ${whelk.elastic?.elasticHosts}"
+        log "Using script: $scriptFile"
+        if (dryRun) log "  dryRun"
+        if (stepWise) log "  stepWise"
+        if (noThreads) log "  noThreads"
+        if (limit > -1) log "  limit: $limit"
+        log()
         Bindings bindings = createMainBindings()
         script.eval(bindings)
         finish()
@@ -405,7 +413,19 @@ class WhelkTool {
     private void finish() {
         errorLog.flush()
         errorLog.close()
-        System.err.println "Done!"
+        log "Done!"
+    }
+
+    private void log() {
+        System.err.println()
+    }
+
+    private void log(String msg) {
+        System.err.println(msg)
+    }
+
+    private void repeat(String msg) {
+        System.err.print "\r$msg"
     }
 
     static void main(String[] args) {
