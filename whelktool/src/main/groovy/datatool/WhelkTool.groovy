@@ -84,7 +84,7 @@ class WhelkTool {
         def shortIds = ids.findResults { it.contains(':') ? uriIdMap[it] : it }
 
         def idItems = shortIds.collect { "'$it'" }.join(',\n')
-        selectBySqlWhere("id IN ($idItems) AND deleted = false", process,
+        doSelectBySqlWhere("id IN ($idItems) AND deleted = false", process,
                 batchSize)
     }
 
