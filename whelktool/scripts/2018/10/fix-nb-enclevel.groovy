@@ -6,6 +6,6 @@ selectBySqlWhere('''
     if (record.encodingLevel == 'marc:PartialPreliminaryLevel'
         && record.bibliography?.get(0)?.sigel == 'NB') {
         record.encodingLevel = 'marc:FullLevel'
-        data.scheduleSave()
+        data.scheduleSave(false)
     }
 }
