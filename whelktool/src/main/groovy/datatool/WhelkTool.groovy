@@ -251,7 +251,7 @@ class WhelkTool {
         }
     }
 
-    def createExecutorService(int batchSize) {
+    private def createExecutorService(int batchSize) {
         int cpus = Runtime.getRuntime().availableProcessors()
         int maxPoolSize = cpus * 4
         def linkedBlockingDeque = new LinkedBlockingDeque<Runnable>(maxPoolSize)
@@ -263,7 +263,7 @@ class WhelkTool {
     /**
      * @return true to continue, false to break.
      */
-    boolean processBatch(Closure process, Batch batch, def counter) {
+    private boolean processBatch(Closure process, Batch batch, def counter) {
         boolean doContinue = true
         for (DocumentItem item : batch.items) {
             if (!useThreads) {
@@ -293,7 +293,7 @@ class WhelkTool {
     /**
      * @return true to continue, false to break.
      */
-    boolean doProcess(Closure process, DocumentItem item, def counter) {
+    private boolean doProcess(Closure process, DocumentItem item, def counter) {
         String inJsonStr = stepWise
             ? jsonWriter.writeValueAsString(item.doc.data)
             : null
@@ -315,13 +315,13 @@ class WhelkTool {
         return true
     }
 
-    void doDeletion(DocumentItem item) {
+    private void doDeletion(DocumentItem item) {
         if (!dryRun) {
             whelk.storage.remove(item.doc.shortId, changedIn, scriptJobUri)
         }
     }
 
-    void doModification(DocumentItem item) {
+    private void doModification(DocumentItem item) {
         Document doc = item.doc
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
