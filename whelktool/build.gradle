@@ -1,0 +1,63 @@
+apply plugin: 'java'
+apply plugin: 'groovy'
+apply plugin: 'application'
+
+
+def loadConfiguration() {
+    ext {
+        try {
+            environment = env
+        } catch (MissingPropertyException mpe) {
+            environment = "dev"
+        }
+    }
+    def encoding = hasProperty('file.encoding') ? file.encoding : 'UTF-8'
+    System.setProperty 'file.encoding', encoding
+    System.setProperty 'whelk.environment', environment
+}
+
+loadConfiguration()
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+test.testLogging {
+    showStandardStreams true
+    exceptionFormat "full"
+}
+
+repositories {
+    mavenCentral()
+    maven { url "http://repository.codehaus.org/" }
+    maven { url "https://jitpack.io/" }
+}
+
+dependencies {
+    compile project(':../whelk-core')
+    testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": "whelk.datatool.WhelkTool"
+    }
+
+    from {
+        configurations.compile.collect {
+            it.isDirectory() ? it : project.zipTree(it).matching {
+                exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA','build','.gradle/**','build.gradle','gradle','gradlew','gradlew.bat','test'
+            }
+        }
+    }
+}
+
+task(doRun, dependsOn: "classes", type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    main = "whelk.datatool.WhelkTool"
+    minHeapSize = "1g"
+    maxHeapSize = "4g"
+    systemProperties(
+        'xl.secret.properties': System.getProperty("xl.secret.properties")
+    )
+    args(System.getProperty("args", "").split() as String[])
+}
