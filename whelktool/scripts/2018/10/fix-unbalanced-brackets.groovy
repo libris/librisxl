@@ -28,7 +28,7 @@ SKIP_KEYS = [ID, TYPE] as Set
 
 void findAndFixValuesInData(data, obj) {
     if (obj instanceof List) {
-        obj.eachWithIndex { i, value ->
+        obj.eachWithIndex { value, int i ->
             fixValueInData(data, obj, i, value)
         }
     } else if (obj instanceof Map) {
