@@ -32,6 +32,7 @@ class WhelkTool {
     File scriptFile
     CompiledScript script
     String scriptJobUri
+    private boolean hasStoredScriptJob
 
     String changedIn = "xl"
 
@@ -292,9 +293,7 @@ class WhelkTool {
                 doModification(item)
                 counter.countModified()
             }
-            if (counter.saved == 1) {
-                storeScriptJob()
-            }
+            storeScriptJob()
         }
         return true
     }
@@ -327,12 +326,16 @@ class WhelkTool {
         return answer.toLowerCase() != 'n'
     }
 
-    private void storeScriptJob() {
+    private synchronized void storeScriptJob() {
+        if (hasStoredScriptJob) {
+            return
+        }
         // TODO: store description about script job
         // entity[ID] = scriptJobUri
         // entity[TYPE] = 'ScriptJob'
         // entity.created = storage.formatDate(...)
         // entity.modified = storage.formatDate(...)
+        hasStoredScriptJob = true
     }
 
     private Closure compileScript(String scriptPath) {
