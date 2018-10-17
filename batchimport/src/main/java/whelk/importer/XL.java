@@ -42,7 +42,7 @@ class XL
     // has only a single member.
     private Set<String> m_repeatableTerms;
 
-    private final static String IMPORT_SYSTEM_CODE = "batch import";
+    private final String IMPORT_SYSTEM_CODE;
 
     XL(Parameters parameters) throws IOException
     {
@@ -53,6 +53,10 @@ class XL
         m_repeatableTerms = m_whelk.getJsonld().getRepeatableTerms();
         m_marcFrameConverter = m_whelk.createMarcFrameConverter();
         m_linkfinder = new LinkFinder(m_whelk.getStorage());
+        if (parameters.getChangedIn() != null)
+            IMPORT_SYSTEM_CODE = parameters.getChangedIn();
+        else
+            IMPORT_SYSTEM_CODE = "batch import";
     }
 
     /**
