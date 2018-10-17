@@ -448,7 +448,7 @@ class Document {
     private Map getEmbedded(String id, Map localData) {
         Map map = (Map) localData
         String objId = map.get("@id")
-        if (objId.equals(id)) {
+        if (objId.equals(id) && map.size() > 1) {
             return map
         }
         else {
