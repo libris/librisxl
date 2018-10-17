@@ -68,7 +68,7 @@ class WhelkTool {
         def segment = '/scripts/'
         def path = scriptFile.toURI().toString()
         path = path.substring(path.lastIndexOf(segment) + segment.size())
-        scriptJobUri = "https://id.kb.se/generator/scripts/${path}"
+        scriptJobUri = "https://libris.kb.se/sys/globalchanges/${path}"
     }
 
     boolean getUseThreads() { !noThreads && !stepWise }
