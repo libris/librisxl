@@ -44,6 +44,8 @@ class WhelkTool {
     boolean stepWise
     int limit = -1
 
+    private boolean errorDetected
+
     private def jsonWriter = new ObjectMapper().writerWithDefaultPrettyPrinter()
 
     Map<String, Closure> compiledScripts = [:]
@@ -171,6 +173,11 @@ class WhelkTool {
 
     private void select(Iterable<Document> selection, Closure process,
             int batchSize = DEFAULT_BATCH_SIZE) {
+        if (errorDetected) {
+            System.err.println "Error detected, refusing further processing."
+            return
+        }
+
         def counter = new Counter()
 
         int batchCount = 0
@@ -207,11 +214,13 @@ class WhelkTool {
                 if (executorService) {
                     executorService.submit {
                         if (!processBatch(process, batchToProcess, counter)) {
+                            errorDetected = true
                             executorService.shutdownNow()
                         }
                     }
                 } else {
                     if (!processBatch(process, batchToProcess, counter)) {
+                        errorDetected = true
                         return
                     }
                 }
