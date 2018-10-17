@@ -52,16 +52,6 @@ void fixValueInData(data, container, key, value) {
 }
 
 process { data ->
-    def (record, instance, work) = data.graph
-
-    if (!isInstanceOf(instance, 'Instance')) {
-        return
-    }
-    if (!work) {
-        return
-    }
-    assert work['@id'] == instance.instanceOf['@id']
-
     // Skipping record on the assumption it contains no unbalanced brackets
     data.graph[1..-1].each {
         findAndFixValuesInData(data, it)
