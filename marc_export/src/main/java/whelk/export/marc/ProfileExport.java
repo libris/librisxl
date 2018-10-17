@@ -148,9 +148,10 @@ public class ProfileExport
             }
             String itemOf = version.getHoldingFor();
             String itemOfSystemId = m_whelk.getStorage().getSystemIdByIri(itemOf);
-            exportDocument(
-                    m_whelk.getStorage().loadEmbellished(itemOfSystemId, m_whelk.getJsonld())
-                    , profile, output, exportedIDs, deleteMode, doVirtualDeletions);
+            if (itemOfSystemId != null) // itemOfSystemId _can_ be null, if the bib linked record is deleted (no thing-uri left in the id table)
+                exportDocument(
+                        m_whelk.getStorage().loadEmbellished(itemOfSystemId, m_whelk.getJsonld())
+                        , profile, output, exportedIDs, deleteMode, doVirtualDeletions);
 
             // If the itemOf link was changed, also export the bib that is no longer linked.
             if (versions.size() > 1)
@@ -160,9 +161,10 @@ public class ProfileExport
                 if (!oldItemOf.equals(itemOf))
                 {
                     String oldItemOfSystemId = m_whelk.getStorage().getSystemIdByIri(oldItemOf);
-                    exportDocument(
-                            m_whelk.getStorage().loadEmbellished(oldItemOfSystemId, m_whelk.getJsonld())
-                            , profile, output, exportedIDs, deleteMode, doVirtualDeletions);
+                    if (oldItemOfSystemId != null) // oldItemOfSystemId _can_ be null, if the bib linked record is deleted (no thing-uri left in the id table)
+                        exportDocument(
+                                m_whelk.getStorage().loadEmbellished(oldItemOfSystemId, m_whelk.getJsonld())
+                                , profile, output, exportedIDs, deleteMode, doVirtualDeletions);
                 }
             }
         }

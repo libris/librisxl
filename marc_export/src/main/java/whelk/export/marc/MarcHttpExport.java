@@ -160,6 +160,7 @@ public class MarcHttpExport extends HttpServlet
         }
         catch (SQLException se)
         {
+            logger.error(se);
             failedRequests.labels("Export failed",
                     Integer.toString(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)).inc();
             res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
