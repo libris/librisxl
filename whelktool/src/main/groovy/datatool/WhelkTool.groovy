@@ -303,12 +303,20 @@ class WhelkTool {
             if (stepWise && !confirmNextStep(inJsonStr, item.doc)) {
                 return false
             }
-            if (item.doDelete) {
-                doDeletion(item)
-                counter.countDeleted()
-            } else {
-                doModification(item)
-                counter.countModified()
+            try {
+                if (item.doDelete) {
+                    doDeletion(item)
+                    counter.countDeleted()
+                } else {
+                    doModification(item)
+                    counter.countModified()
+                }
+            } catch (Exception err) {
+                if (item.onError) {
+                    item.onError(err)
+                } else {
+                    throw err
+                }
             }
             storeScriptJob()
         }
@@ -466,20 +474,34 @@ class DocumentItem {
     private boolean needsSaving = false
     private boolean doDelete = false
     private boolean loud = true
+    Closure onError = null
 
     def List getGraph() {
         return doc.data['@graph']
     }
 
-    void scheduleSave(loud=true) {
-        needsSaving = true
-        this.loud = loud
+    void scheduleSave(boolean loud=true) {
+        scheduleSave(loud: true)
     }
 
-    void scheduleDelete(loud=true) {
+    void scheduleSave(Map params) {
+        needsSaving = true
+        set(params)
+    }
+
+    void scheduleDelete(boolean loud=true) {
+        scheduleDelete(loud: true)
+    }
+
+    void scheduleDelete(Map params) {
         needsSaving = true
         doDelete = true
-        this.loud = loud
+        set(params)
+    }
+
+    private void set(Map params) {
+        this.loud = params.get('loud', true)
+        this.onError = params.onError
     }
 
     def getVersions() {
