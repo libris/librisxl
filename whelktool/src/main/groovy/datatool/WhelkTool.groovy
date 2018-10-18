@@ -357,10 +357,12 @@ class WhelkTool {
 
     private Closure compileScript(String scriptPath) {
         if (!compiledScripts.containsKey(scriptPath)) {
-            String scriptSource = new File(scriptFile.parent, scriptPath).getText("UTF-8")
+            File scriptFile = new File(this.scriptFile.parent, scriptPath)
+            String scriptSource = scriptFile.getText("UTF-8")
             CompiledScript script = ((Compilable) engine).compile(scriptSource)
             Bindings bindings = createDefaultBindings()
             Closure process = null
+            bindings.put("scriptDir", scriptFile.parent)
             bindings.put("process", { process = it })
             script.eval(bindings)
             compiledScripts[scriptPath] = process
@@ -387,6 +389,7 @@ class WhelkTool {
 
     private Bindings createMainBindings() {
         Bindings bindings = createDefaultBindings()
+        bindings.put("scriptDir", scriptFile.parent)
         bindings.put("script", this.&compileScript)
         bindings.put("selectByCollection", this.&selectByCollection)
         bindings.put("selectByIds", this.&selectByIds)
