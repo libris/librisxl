@@ -1,8 +1,10 @@
 String fixBalancedBrackets(String s) {
-    if (s.startsWith('[') &&
+    if (s.size() > 1 &&
+            s.startsWith('[') &&
             s.count('[') > s.count(']')) {
         s = s[1..-1]
-    } else if (s.endsWith(']') &&
+    } else if (s.size() > 1 &&
+            s.endsWith(']') &&
             s.count('[') < s.count(']')) {
         s = s[0..-2]
     }
