@@ -308,7 +308,6 @@ class Whelk {
 
     void remove(String id, String changedIn, String changedBy) {
         log.debug "Deleting ${id} from Whelk"
-        Document toBeRemoved = storage.load(id)
         if (storage.remove(id, changedIn, changedBy)) {
             if (elastic) {
                 elastic.remove(id)

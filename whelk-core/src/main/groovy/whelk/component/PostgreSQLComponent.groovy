@@ -1991,6 +1991,8 @@ class PostgreSQLComponent {
             try {
                 storeAtomicUpdate(identifier, false, changedIn, changedBy,
                     { Document doc ->
+                        if(!getDependers(identifier).isEmpty())
+                            throw new RuntimeException("Deleting depended upon records is not allowed.")
                         doc.setDeleted(true)
                         // Add a tombstone marker (without removing anything) perhaps?
                     })
