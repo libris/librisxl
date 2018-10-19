@@ -1985,7 +1985,7 @@ class PostgreSQLComponent {
         }
     }
 
-    boolean remove(String identifier, String changedIn, String changedBy) {
+    void remove(String identifier, String changedIn, String changedBy) {
         if (versioning) {
             log.debug("Marking document with ID ${identifier} as deleted.")
             try {
@@ -1998,13 +1998,11 @@ class PostgreSQLComponent {
                     })
             } catch (Throwable e) {
                 log.warn("Could not mark document with ID ${identifier} as deleted: ${e}")
-                return false
+                throw e
             }
         } else {
             throw new whelk.exception.WhelkException(
-                    "Actually deleting data from lddb is currently not supported, because doing so would" +
-                            "make the APIX-exporter (which will pickup the delete after the fact) not know what to delete in Voyager," +
-                            "which is unacceptable as long as Voyager still lives.")
+                    "Actually deleting data from lddb is currently not supported")
         }
 
         // Clear out dependencies
@@ -2021,8 +2019,6 @@ class PostgreSQLComponent {
         } finally {
             connection.close()
         }
-
-        return true
     }
 
 
