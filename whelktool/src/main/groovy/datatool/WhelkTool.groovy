@@ -53,7 +53,11 @@ class WhelkTool {
     Map<String, Closure> compiledScripts = [:]
 
     WhelkTool(String scriptPath, File reportsDir=null) {
-        whelk = Whelk.createLoadedCoreWhelk()
+        try {
+            whelk = Whelk.createLoadedSearchWhelk()
+        } catch (NullPointerException e) {
+            whelk = Whelk.createLoadedCoreWhelk()
+        }
         initScript(scriptPath)
         this.reportsDir = reportsDir
         reportsDir.mkdirs()
