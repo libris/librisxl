@@ -37,7 +37,9 @@ class WhelkTool {
     String changedIn = "xl"
 
     File reportsDir
+    PrintWriter mainLog
     PrintWriter errorLog
+    Map<String, PrintWriter> reports = [:]
 
     boolean dryRun
     boolean noThreads = true
@@ -55,6 +57,7 @@ class WhelkTool {
         initScript(scriptPath)
         this.reportsDir = reportsDir
         reportsDir.mkdirs()
+        mainLog = new PrintWriter(new File(reportsDir, "MAIN.txt"))
         errorLog = new PrintWriter(new File(reportsDir, "ERRORS.txt"))
 
     }
@@ -246,7 +249,7 @@ class WhelkTool {
         }
 
         if (!executorService || executorService.awaitTermination(8, TimeUnit.HOURS)) {
-            log "Processed selection: $counter.summary."
+            log "Processed selection: ${counter.summary}. Done in ${counter.elapsedSeconds} s."
             log()
         }
     }
@@ -267,7 +270,7 @@ class WhelkTool {
         boolean doContinue = true
         for (DocumentItem item : batch.items) {
             if (!useThreads) {
-                repeat "\rProcessing $item.number: ${item.doc.id} ($counter.summary)"
+                repeat "Processing $item.number: ${item.doc.id} ($counter.summary)"
             }
             try {
                 doContinue = doProcess(process, item, counter)
@@ -303,12 +306,20 @@ class WhelkTool {
             if (stepWise && !confirmNextStep(inJsonStr, item.doc)) {
                 return false
             }
-            if (item.doDelete) {
-                doDeletion(item)
-                counter.countDeleted()
-            } else {
-                doModification(item)
-                counter.countModified()
+            try {
+                if (item.doDelete) {
+                    doDeletion(item)
+                    counter.countDeleted()
+                } else {
+                    doModification(item)
+                    counter.countModified()
+                }
+            } catch (Exception err) {
+                if (item.onError) {
+                    item.onError(err)
+                } else {
+                    throw err
+                }
             }
             storeScriptJob()
         }
@@ -363,6 +374,7 @@ class WhelkTool {
             Bindings bindings = createDefaultBindings()
             Closure process = null
             bindings.put("scriptDir", scriptFile.parent)
+            bindings.put("getReportWriter", this.&getReportWriter)
             bindings.put("process", { process = it })
             script.eval(bindings)
             compiledScripts[scriptPath] = process
@@ -390,6 +402,7 @@ class WhelkTool {
     private Bindings createMainBindings() {
         Bindings bindings = createDefaultBindings()
         bindings.put("scriptDir", scriptFile.parent)
+        bindings.put("getReportWriter", this.&getReportWriter)
         bindings.put("script", this.&compileScript)
         bindings.put("selectByCollection", this.&selectByCollection)
         bindings.put("selectByIds", this.&selectByIds)
@@ -414,20 +427,38 @@ class WhelkTool {
     }
 
     private void finish() {
+        mainLog.flush()
+        mainLog.close()
         errorLog.flush()
         errorLog.close()
+        reports.values().each {
+            it.flush()
+            it.close()
+        }
         log "Done!"
     }
 
+    private PrintWriter getReportWriter(String reportName) {
+        def report = reports[reportName]
+        if (!report) {
+            report = reports[reportName] = new PrintWriter(
+                    new File(reportsDir, reportName))
+        }
+        return report
+    }
+
     private void log() {
+        mainLog.println()
         System.err.println()
     }
 
     private void log(String msg) {
+        mainLog.println(msg)
         System.err.println(msg)
     }
 
     private void repeat(String msg) {
+        mainLog.println(msg)
         System.err.print "\r$msg"
     }
 
@@ -466,20 +497,34 @@ class DocumentItem {
     private boolean needsSaving = false
     private boolean doDelete = false
     private boolean loud = true
+    Closure onError = null
 
     def List getGraph() {
         return doc.data['@graph']
     }
 
-    void scheduleSave(loud=true) {
-        needsSaving = true
-        this.loud = loud
+    void scheduleSave(boolean loud=true) {
+        scheduleSave(loud: true)
     }
 
-    void scheduleDelete(loud=true) {
+    void scheduleSave(Map params) {
+        needsSaving = true
+        set(params)
+    }
+
+    void scheduleDelete(boolean loud=true) {
+        scheduleDelete(loud: true)
+    }
+
+    void scheduleDelete(Map params) {
         needsSaving = true
         doDelete = true
-        this.loud = loud
+        set(params)
+    }
+
+    private void set(Map params) {
+        this.loud = params.get('loud', true)
+        this.onError = params.onError
     }
 
     def getVersions() {
@@ -504,8 +549,12 @@ class Counter {
     synchronized int getSaved() { modifiedCount + deleteCount }
 
     String getSummary() {
-        double docsPerSec = readCount / ((System.currentTimeMillis() - startTime) / 1000)
+        double docsPerSec = readCount / elapsedSeconds
         "read: $readCount, processed: ${processedCount}, modified: ${modifiedCount}, deleted: ${deleteCount} (at ${docsPerSec.round(3)} docs/s)"
+    }
+
+    double getElapsedSeconds() {
+        return (System.currentTimeMillis() - startTime) / 1000
     }
 
     synchronized void countRead() {
