@@ -59,6 +59,20 @@ Start:
 
     java -server -Xmx4g -Dbigdata.propertyFile=quads.properties -Djetty.overriWebXml=readonly.xml -jar blazegraph.jar
 
+### Querying
+
+You can use the web interface, or the endpoint directly (useful e.g. to download large results):
+
+```
+curl -s http://localhost:9999/blazegraph/namespace/kb/sparql \
+     -H 'Content-Type: application/x-www-form-urlencoded' \
+     -H 'Accept: text/tab-separated-values' --data-urlencode 'query=
+
+SELECT ...
+
+'
+```
+
 ----
 
 ## Using Sesame
