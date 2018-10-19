@@ -1,17 +1,25 @@
-brokenBase = 'http://id.kb.se/rda/'
-correctBase = 'https://id.kb.se/rda/'
+brokenBase = 'http://id.kb.se/term/rda/'
+correctBase = 'https://id.kb.se/term/rda/'
 
-rdaTerms = new HashSet()
+correctIdMap = [:]
+
+String findCorrectId(String id) {
+    if (id in correctIdMap) {
+        return correctIdMap[id]
+    }
+    def correctId = correctIdMap[id] = findCanonicalId(id)
+    return correctId
+}
 
 boolean fixRdaLink(ref) {
     def brokenRef = ref.sameAs?.find { it[ID].startsWith(brokenBase) }
     if (brokenRef) {
-        def brokenId = brokenRef.get[ID]
+        def brokenId = brokenRef[ID]
         def fixedId = correctBase + brokenId.substring(brokenBase.size())
-        if (fixedId in rdaTerms || load(fixedId)) {
+        def correctId = findCorrectId(fixedId)
+        if (correctId) {
             ref.clear()
-            ref[ID] = fixedId
-            rdaTerms << fixedId
+            ref[ID] = correctId
         } else { // Not a correct term, but shape of URI is correct
             brokenRef[ID] = fixedId
         }
