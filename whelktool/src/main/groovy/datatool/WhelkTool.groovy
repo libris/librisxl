@@ -80,8 +80,12 @@ class WhelkTool {
 
     boolean getUseThreads() { !noThreads && !stepWise }
 
+    String findCanonicalId(String id) {
+        return whelk.storage.getMainId(id)
+    }
+
     Map load(String id) {
-        return whelk.storage.load(id)?.data
+        return whelk.storage.loadDocumentByMainId(findCanonicalId(id))?.data
     }
 
     void selectByIds(Collection<String> ids, Closure process,
@@ -400,6 +404,8 @@ class WhelkTool {
             bindings.put(it.toUpperCase(), "@$it" as String)
         }
         bindings.put("isInstanceOf", this.&isInstanceOf)
+        bindings.put("findCanonicalId", this.&findCanonicalId)
+        bindings.put("load", this.&load)
         return bindings
     }
 
@@ -411,7 +417,6 @@ class WhelkTool {
         bindings.put("selectByCollection", this.&selectByCollection)
         bindings.put("selectByIds", this.&selectByIds)
         bindings.put("selectBySqlWhere", this.&selectBySqlWhere)
-        bindings.put("load", this.&load)
         return bindings
     }
 
