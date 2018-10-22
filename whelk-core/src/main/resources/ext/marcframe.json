@@ -3704,10 +3704,38 @@
 
     "020": {
       "include": ["idbasequalified"],
-      "resourceType": "ISBN",
+      "resourceType": "Nothing",
+      "TODO": "Nothing should not appear in any results",
       "match": [
         {
+          "when": {
+            "NOTE": "This prevents any identifiedBy + ISBN to map back to $z, only letting just indirectlyIdentifiedBy through.",
+            "onRevert": {"@type": "ISBN"}
+          },
+          "resourceType": "ISBN"
+        },
+        {
+          "when": {
+            "NOTE": "And this reverts indirectlyIdentifiedBy in favour of convert rule before",
+            "onRevert": {"@type": "ISBN"}
+          },
+          "aboutEntity": "?thing",
+          "addLink": "indirectlyIdentifiedBy",
+          "resourceType": "ISBN",
+          "$a": null,
+          "$q": null,
+          "$z": {
+            "property": "value",
+            "splitValuePattern": "^(.+?)(?:\\s+\\((.+)\\))?$",
+            "splitValueProperties": ["value", "qualifier"],
+            "rejoin": " (",
+            "trailingPunctuation": ")",
+            "punctuationChars": ",:;"
+          }
+        },
+        {
           "when": "$a & $z",
+          "resourceType": "ISBN",
           "$z": {
             "aboutEntity": "?thing",
             "addLink": "indirectlyIdentifiedBy",
@@ -3722,19 +3750,11 @@
         },
         {
           "when": "$z",
-          "aboutEntity": "?thing",
-          "addLink": true,
-          "$q": null,
-          "$z": {
-            "aboutEntity": "?thing",
-            "addLink": "indirectlyIdentifiedBy",
-            "property": "value",
-            "splitValuePattern": "^(.+?)(?:\\s+\\((.+)\\))?$",
-            "splitValueProperties": ["value", "qualifier"],
-            "rejoin": " (",
-            "trailingPunctuation": ")",
-            "punctuationChars": ",:;"
-          }
+          "inherit-match": "$a & $z"
+        },
+        {
+          "when": null,
+          "resourceType": "ISBN"
         }
       ],
       "$c": {"property": "acquisitionTerms"},
@@ -3878,6 +3898,119 @@
               {
                 "@type": "ISBN",
                 "value": "(US)"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "indirectlyIdentifiedBy edge case",
+          "source": [
+            {"020": {"ind1":" ", "ind2":" ", "subfields":[
+              {"a":"8888888888888 (epub)"}
+            ]}},
+            {"020": {"ind1":" ", "ind2":" ", "subfields":[
+              {"a":"0000000000000 (epub)"},
+              {"z":"1111111111111 (pbk. : alk. paper)"}
+            ]}},
+            {"020": {"ind1":" ", "ind2":" ", "subfields":[
+              {"z":"2222222222222 (pbk. : alk. paper)"}
+            ]}},
+            {"020": {"ind1":" ", "ind2":" ", "subfields":[
+              {"z":"3333333333333 (pbk. : alk. paper)"},
+              {"z":"4444444444444 (pbk. : alk. paper)"}
+            ]}},
+            {"020": {"ind1":" ", "ind2":" ", "subfields":[
+              {"a":"9999999999999 (epub)"},
+              {"z":"5555555555555 (pbk. : alk. paper)"},
+              {"z":"6666666666666 (pbk. : alk. paper)"}
+            ]}}
+          ],
+          "normalized": [
+            {
+              "020": { "ind1": " ", "ind2": " ",
+                "subfields": [{"a": "8888888888888"}, {"q": "epub"}]}
+            },
+            {
+              "020": { "ind1": " ", "ind2": " ",
+                "subfields": [{"a": "0000000000000"}, {"q": "epub"}]}
+            },
+            {
+              "020": {"ind1": " ", "ind2": " ",
+                "subfields": [{"a": "9999999999999"}, {"q": "epub"}]}
+            },
+            {
+              "020": {"ind1": " ", "ind2": " ",
+                "subfields": [{"z": "1111111111111 (pbk. : alk. paper)"}]}
+            },
+            {
+              "020": {"ind1": " ", "ind2": " ",
+                "subfields": [{"z": "2222222222222 (pbk. : alk. paper)"}]}
+            },
+            {
+              "020": {"ind1": " ", "ind2": " ",
+                "subfields": [{"z": "3333333333333 (pbk. : alk. paper)"}]}
+            },
+            {
+              "020": {"ind1": " ", "ind2": " ",
+                "subfields": [{"z": "4444444444444 (pbk. : alk. paper)"}]}
+            },
+            {
+              "020": {"ind1": " ", "ind2": " ",
+                "subfields": [{"z": "5555555555555 (pbk. : alk. paper)"}]}
+            },
+            {
+              "020": {"ind1": " ", "ind2": " ",
+                "subfields": [{"z": "6666666666666 (pbk. : alk. paper)"}]}
+            }
+          ],
+          "result": {"mainEntity": {
+            "identifiedBy": [
+              {
+                "@type": "ISBN",
+                "value": "8888888888888",
+                "qualifier": "epub"
+              },
+              {
+                "@type": "ISBN",
+                "value": "0000000000000",
+                "qualifier": "epub"
+              },
+              {
+                "@type": "ISBN",
+                "value": "9999999999999",
+                "qualifier": "epub"
+              }
+            ],
+            "indirectlyIdentifiedBy": [
+              {
+                "@type": "ISBN",
+                "value": "1111111111111",
+                "qualifier": "pbk. : alk. paper"
+              },
+              {
+                "@type": "ISBN",
+                "value": "2222222222222",
+                "qualifier": "pbk. : alk. paper"
+              },
+              {
+                "@type": "ISBN",
+                "value": "3333333333333",
+                "qualifier": "pbk. : alk. paper"
+              },
+              {
+                "@type": "ISBN",
+                "value": "4444444444444",
+                "qualifier": "pbk. : alk. paper"
+              },
+              {
+                "@type": "ISBN",
+                "value": "5555555555555",
+                "qualifier": "pbk. : alk. paper"
+              },
+              {
+                "@type": "ISBN",
+                "value": "6666666666666",
+                "qualifier": "pbk. : alk. paper"
               }
             ]
           }}
