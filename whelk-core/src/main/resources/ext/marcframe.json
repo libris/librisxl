@@ -271,7 +271,7 @@
       "embedded": true
     },
 
-    "identifier": {
+    "idbasequalified": {
       "include": ["idbase"],
       "$a": {
         "property": "value",
@@ -279,7 +279,11 @@
         "splitValueProperties": ["value", "qualifier"],
         "punctuationChars": ",:;"
       },
-      "$q": {"addProperty": "qualifier"},
+      "$q": {"addProperty": "qualifier"}
+    },
+
+    "identifier": {
+      "include": ["idbasequalified"],
       "$z": {"addProperty": "marc:hiddenValue"}
     },
 
@@ -3699,8 +3703,40 @@
     "018": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore"},
 
     "020": {
-      "include": ["identifier"],
+      "include": ["idbasequalified"],
       "resourceType": "ISBN",
+      "match": [
+        {
+          "when": "$a & $z",
+          "$z": {
+            "aboutEntity": "?thing",
+            "addLink": "indirectlyIdentifiedBy",
+            "resourceType": "ISBN",
+            "property": "value",
+            "splitValuePattern": "^(.+?)(?:\\s+\\((.+)\\))?$",
+            "splitValueProperties": ["value", "qualifier"],
+            "rejoin": " (",
+            "trailingPunctuation": ")",
+            "punctuationChars": ",:;"
+          }
+        },
+        {
+          "when": "$z",
+          "aboutEntity": "?thing",
+          "addLink": true,
+          "$q": null,
+          "$z": {
+            "aboutEntity": "?thing",
+            "addLink": "indirectlyIdentifiedBy",
+            "property": "value",
+            "splitValuePattern": "^(.+?)(?:\\s+\\((.+)\\))?$",
+            "splitValueProperties": ["value", "qualifier"],
+            "rejoin": " (",
+            "trailingPunctuation": ")",
+            "punctuationChars": ",:;"
+          }
+        }
+      ],
       "$c": {"property": "acquisitionTerms"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
@@ -3783,22 +3819,36 @@
               ]
             }
           },
-          "normalized": {
-            "020": {
-              "ind1":" ", "ind2":" ", "subfields": [
-                {"a": "9781137368331"},
-                {"q": "e-book"},
-                {"z": "9780230274396 (print)"}
-              ]
+          "normalized": [
+            {
+              "020": {
+                "ind1":" ", "ind2":" ", "subfields": [
+                  {"a": "9781137368331"},
+                  {"q": "e-book"}
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1":" ", "ind2":" ", "subfields": [
+                  {"z": "9780230274396 (print)"}
+                ]
+              }
             }
-          },
+          ],
           "result": {"mainEntity": {
             "identifiedBy": [
               {
                 "@type": "ISBN",
-                "marc:hiddenValue": ["9780230274396 (print)"],
-                "qualifier": "e-book",
-                "value": "9781137368331"
+                "value": "9781137368331",
+                "qualifier": "e-book"
+              }
+            ],
+            "indirectlyIdentifiedBy": [
+              {
+                "@type": "ISBN",
+                "value": "9780230274396",
+                "qualifier": "print"
               }
             ]
           }}
@@ -3809,10 +3859,11 @@
               {"z":"9780240811444 (pbk. : alk. paper)"} ]}
           },
           "result": {"mainEntity": {
-            "identifiedBy": [
+            "indirectlyIdentifiedBy": [
               {
                 "@type": "ISBN",
-                "marc:hiddenValue": ["9780240811444 (pbk. : alk. paper)"]
+                "value": "9780240811444",
+                "qualifier": "pbk. : alk. paper"
               }
             ]
           }}
