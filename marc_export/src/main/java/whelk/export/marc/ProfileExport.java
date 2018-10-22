@@ -293,8 +293,9 @@ public class ProfileExport
             throws SQLException
     {
         HashSet<String> result = new HashSet<>();
-        try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement preparedStatement = getAllChangedByStatement(id, from, until, connection);
+        Connection connection = m_whelk.getStorage().getConnection();
+        connection.setAutoCommit(false);
+        try(PreparedStatement preparedStatement = getAllChangedByStatement(id, from, until, connection);
             ResultSet resultSet = preparedStatement.executeQuery())
         {
             while (resultSet.next())
@@ -306,6 +307,9 @@ public class ProfileExport
                         until.toInstant().isAfter(modified.toInstant()))
                     result.add(changedBy);
             }
+        } finally
+        {
+            connection.close();
         }
         return result;
     }
@@ -313,7 +317,6 @@ public class ProfileExport
     private PreparedStatement getAllChangedByStatement(String id, Timestamp from, Timestamp until, Connection connection)
             throws SQLException
     {
-        connection.setAutoCommit(false);
         String sql = "SELECT modified, changedBy FROM lddb__versions WHERE modified >= ? AND modified <= ? AND id = ?";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setFetchSize(100);
