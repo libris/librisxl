@@ -2720,7 +2720,12 @@ class MarcSubFieldHandler extends ConversionPart {
                     }
                 }
                 if (vs.size() == splitValueProperties.size() && !allEmpty) {
-                    values << [vs.join(rejoin), i]
+                    def value = vs.join(rejoin)
+                    if (trailingPunctuation &&
+                            !value.endsWith(trailingPunctuation)) {
+                        value += trailingPunctuation
+                    }
+                    values << [value, i]
                     continue
                 }
             }
