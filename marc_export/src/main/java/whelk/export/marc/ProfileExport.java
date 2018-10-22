@@ -47,16 +47,19 @@ public class ProfileExport
     /**
      * Export MARC data from 'whelk' affected in between 'from' and 'until' shaped by 'profile' into 'output'.
      */
-    public OutputStream exportInto(MarcRecordWriter output, ExportProfile profile, String from, String until,
+    public void exportInto(MarcRecordWriter output, ExportProfile profile, String from, String until,
                                    DELETE_MODE deleteMode, boolean doVirtualDeletions)
             throws IOException, SQLException
     {
+        if (profile.getProperty("status", "ON").equalsIgnoreCase("OFF"))
+            return;
+
         ZonedDateTime zonedFrom = ZonedDateTime.parse(from);
         ZonedDateTime zonedUntil = ZonedDateTime.parse(until);
         Timestamp fromTimeStamp = new Timestamp(zonedFrom.toInstant().getEpochSecond() * 1000L);
         Timestamp untilTimeStamp = new Timestamp(zonedUntil.toInstant().getEpochSecond() * 1000L);
 
-        TreeSet<String> exportedIDs = new TreeSet();
+        TreeSet<String> exportedIDs = new TreeSet<>();
         try(Connection connection = m_whelk.getStorage().getConnection();
             PreparedStatement preparedStatement = getAllChangedIDsStatement(fromTimeStamp, untilTimeStamp, connection);
             ResultSet resultSet = preparedStatement.executeQuery())
@@ -81,8 +84,6 @@ public class ProfileExport
         finally {
             totalExportCount.observe(exportedIDs.size());
         }
-
-        return null;
     }
 
     /**

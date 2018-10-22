@@ -344,6 +344,9 @@ class PostgreSQLComponent {
             if (changedBy != null)
                 doc.setDescriptionCreator("https://libris.kb.se/library/" + changedBy)
 
+            if (linkFinder != null)
+                linkFinder.normalizeIdentifiers(doc, connection)
+
             insert = rigInsertStatement(insert, doc, changedIn, changedBy, collection, deleted)
             insert.executeUpdate()
             connection.commit()
