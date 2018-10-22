@@ -313,8 +313,10 @@ public class ProfileExport
     private PreparedStatement getAllChangedByStatement(String id, Timestamp from, Timestamp until, Connection connection)
             throws SQLException
     {
+        connection.setAutoCommit(false);
         String sql = "SELECT modified, changedBy FROM lddb__versions WHERE modified >= ? AND modified <= ? AND id = ?";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        preparedStatement.setFetchSize(100);
         preparedStatement.setTimestamp(1, from);
         preparedStatement.setTimestamp(2, until);
         preparedStatement.setString(3, id);
