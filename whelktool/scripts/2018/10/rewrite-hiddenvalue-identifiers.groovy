@@ -16,9 +16,7 @@ Map remakeHiddenIdentifier(idStruct, hiddenValue) {
     return remadeId
 }
 
-/* TODO: selectBySqlWhere('''
-''') */
-selectByCollection('bib') { data ->
+selectBySqlWhere(''' data::text LIKE '%"marc:hiddenValue"%' ''') { data ->
     def (record, instance) = data.graph
     if (!isInstanceOf(instance, 'Instance'))
         return
@@ -46,6 +44,6 @@ selectByCollection('bib') { data ->
         if (!instance.identifiedBy) {
             instance.remove('identifiedBy')
         }
-        data.scheduleSave()
+        data.scheduleSave(false)
     }
 }
