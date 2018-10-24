@@ -25,6 +25,7 @@ import whelk.Document
 class WhelkTool {
 
     static final int DEFAULT_BATCH_SIZE = 500
+    static final int DEFAULT_FETCH_SIZE = 100
     Whelk whelk
 
     private GroovyScriptEngineImpl engine
@@ -141,7 +142,9 @@ class WhelkTool {
             WHERE $whereClause
             """
         def conn = whelk.storage.getConnection()
+        conn.setAutoCommit(false)
         def stmt = conn.prepareStatement(query)
+        stmt.setFetchSize(DEFAULT_FETCH_SIZE)
         def rs = stmt.executeQuery()
         select(iterateDocuments(rs), process, batchSize)
     }
@@ -151,7 +154,7 @@ class WhelkTool {
         boolean more = rs.next() // rs starts at "-1"
         if (!more) {
             try {
-                //conn.commit()
+                conn.commit()
                 conn.setAutoCommit(true)
             } finally {
                 conn.close()
@@ -166,7 +169,7 @@ class WhelkTool {
                         more = rs.next()
                         if (!more) {
                             try {
-                                //conn.commit()
+                                conn.commit()
                                 conn.setAutoCommit(true)
                             } finally {
                                 conn.close()
