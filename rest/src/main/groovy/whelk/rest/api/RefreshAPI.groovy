@@ -56,6 +56,7 @@ class RefreshAPI extends HttpServlet
         }
 
         response.setStatus(HttpServletResponse.SC_OK)
+        response.setHeader('Cache-Control', 'no-cache')
         OutputStream out = response.getOutputStream()
 
         Reader reader = request.getReader()

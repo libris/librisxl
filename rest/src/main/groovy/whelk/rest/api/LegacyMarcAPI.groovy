@@ -155,6 +155,7 @@ class LegacyMarcAPI extends HttpServlet {
             Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(profile, rootDocument, whelk, toMarcXmlConverter)
 
             response.setContentType("application/octet-stream")
+            response.setHeader('Cache-Control', 'no-cache')
             response.setHeader("Content-Disposition", "attachment; filename=\"libris_marc_" + rootDocument.getShortId() + "\"")
             def writer = (profile.getProperty("format", "ISO2709").equalsIgnoreCase("MARCXML"))?
                     new MarcXmlRecordWriter(response.getOutputStream(), "UTF-8"):

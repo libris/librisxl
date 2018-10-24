@@ -120,6 +120,7 @@ class RecordRelationAPI extends HttpServlet {
 
         response.setContentType("application/json")
         response.setHeader("Expires", "0")
+        response.setHeader('Cache-Control', 'no-cache')
         OutputStream out = response.getOutputStream()
         out.write(jsonString.getBytes("UTF-8"))
         out.close()
