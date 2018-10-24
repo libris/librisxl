@@ -4658,7 +4658,7 @@
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$c": {"link": "marc:transcribingAgency", "resourceType": "Organization", "property": "name"},
-      "$d": {"link": "descriptionUpgrader", "resourceType": "Library", "property": "sigel"},
+      "$d": {"addLink": "descriptionUpgrader", "resourceType": "Library", "property": "sigel"},
       "$e": {"addLink": "descriptionConventions", "NOTE:marc-repeatable": false, "resourceType": "DescriptionConventions", "property": "code"},
       "$6": {"property": "marc:fieldref"},
       "NOTE:$9": {"property": "license", "NOTE": "Removed after bibliographic review"},
@@ -4675,6 +4675,21 @@
               "value": "9927672551"
             }],
             "descriptionCreator": {"@id": "https://libris.kb.se/library/Js", "@type": "Library", "sigel": "Js"},
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        },
+        {
+          "source": {"040": {"ind1": " ", "ind2": " ", "subfields": [{"a": "DLC"}, {"d": "Kama"}, {"d": "S"}]}},
+          "result": {
+            "descriptionCreator": {"@id": "https://libris.kb.se/library/DLC", "@type": "Library", "sigel": "DLC"},
+            "descriptionUpgrader": [
+              {"@type": "Library", "sigel": "Kama"},
+              {"@type": "Library", "sigel": "S"}
+            ],
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text"
