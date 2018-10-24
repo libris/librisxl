@@ -1942,6 +1942,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         String precedingCode = null
         boolean precedingNewAbout = false
+
         value.subfields.each { Map it ->
             it.each { code, subVal ->
                 def subDfn = (MarcSubFieldHandler) subfields[code as String]
@@ -1965,6 +1966,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
             }
         }
+
+        shallowRemoveEmptyNodes(aboutEntity)
 
         if (constructProperties) {
             constructProperties.each { key, dfn ->
@@ -2035,6 +2038,31 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         return new ConvertResult(unhandled)
+    }
+
+    /**
+     * Remove empty nodes and nodes having just a type. Only does a shallow
+     * sweep in values of the given entity.
+     */
+    void shallowRemoveEmptyNodes(Map entity) {
+        Iterator entryIt = entity.entrySet().iterator()
+        Closure isEmpty = {
+            it instanceof Map && (it.size() == 0 ||
+                    (it.size() == 1 &&
+                     it.containsKey('@type')))
+        }
+        entryIt.each {
+            if (it.value instanceof List) {
+                it.value.removeAll(isEmpty)
+                if (it.value.size() == 0) {
+                    entryIt.remove()
+                }
+            } else if (it.value instanceof Map) {
+                if (isEmpty(it.value)) {
+                    entryIt.remove()
+                }
+            }
+        }
     }
 
     @CompileStatic(SKIP)
