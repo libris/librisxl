@@ -106,6 +106,8 @@ class MergeAPI extends HttpServlet {
 
         Document merged = merge(firstClassDocument, secondClassDocument)
 
+        response.setHeader('Cache-Control', 'no-cache')
+
         // Make use of merged result
 
         if (commit) {
