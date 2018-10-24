@@ -679,7 +679,7 @@ class XL
             String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,indirectlyIdentifiedBy}' @> ?";
             PreparedStatement statement = connection.prepareStatement(query);
 
-            statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": [\"" + isbn + "\"]}]", java.sql.Types.OTHER);
+            statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
 
             return statement;
         } catch (SQLException se)
