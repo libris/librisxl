@@ -41,6 +41,7 @@ class Document {
     static final List thingTypePath = ["@graph", 1, "@type"]
     static final List thingSameAsPath = ["@graph", 1, "sameAs"]
     static final List thingTypedIDsPath = ["@graph", 1, "identifiedBy"]
+    static final List thingIndirectTypedIDsPath = ["@graph", 1, "indirectlyIdentifiedBy"]
     static final List recordIdPath = ["@graph", 0, "@id"]
     static final List workIdPath = ["@graph", 1, "instanceOf", "@id"]
     static final List thingMetaPath = ["@graph", 1, "meta", "@id"]
@@ -157,14 +158,14 @@ class Document {
      */
     String getId() { return getCompleteId() }
 
-    List<String> getIsbnValues() { return getTypedIDValues("ISBN", "value") }
-    List<String> getIssnValues() { return getTypedIDValues("ISSN", "value") }
-    List<String> getIsbnHiddenValues() { return getTypedIDValues("ISBN", "marc:hiddenValue") }
-    List<String> getIssnHiddenValues() { return getTypedIDValues("ISSN", "marc:canceledIssn") }
+    List<String> getIsbnValues() { return getTypedIDValues("ISBN", thingTypedIDsPath, "value") }
+    List<String> getIssnValues() { return getTypedIDValues("ISSN", thingTypedIDsPath, "value") }
+    List<String> getIsbnHiddenValues() { return getTypedIDValues("ISBN", thingIndirectTypedIDsPath, "value") }
+    List<String> getIssnHiddenValues() { return getTypedIDValues("ISSN", thingTypedIDsPath, "marc:canceledIssn") }
 
-    private List<String> getTypedIDValues(String typeKey, String valueKey) {
+    private List<String> getTypedIDValues(String typeKey, List<String> idListPath, String valueKey) {
         List<String> values = new ArrayList<>()
-        List typedIDs = get(thingTypedIDsPath)
+        List typedIDs = get(idListPath)
         for (Object element : typedIDs) {
             if (!(element instanceof Map))
                 continue

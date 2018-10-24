@@ -23,6 +23,7 @@ import whelk.triples.*;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
+import java.util.function.BiFunction;
 
 class XL
 {
@@ -411,13 +412,13 @@ class XL
                 case DUPTYPE_ISBNA: // International Standard Book Number (only from subfield A)
                     for (String isbn : rdfDoc.getIsbnValues())
                     {
-                        duplicateIDs.addAll(getDuplicatesOnIsbn( isbn.toUpperCase() ));
+                        duplicateIDs.addAll(getDuplicatesOnIsbn( isbn.toUpperCase(), this::getOnIsbn_ps ));
                     }
                     break;
                 case DUPTYPE_ISBNZ: // International Standard Book Number (only from subfield Z)
                     for (String isbn : rdfDoc.getIsbnHiddenValues())
                     {
-                        duplicateIDs.addAll(getDuplicatesOnIsbnHidden( isbn.toUpperCase() ));
+                        duplicateIDs.addAll(getDuplicatesOnIsbn( isbn.toUpperCase(), this::getOnIsbnHidden_ps ));
                     }
                     break;
                 case DUPTYPE_ISSNA: // International Standard Serial Number (only from marc 022_A)
@@ -525,7 +526,7 @@ class XL
         return results;
     }
 
-    private List<String> getDuplicatesOnIsbn(String isbn)
+    private List<String> getDuplicatesOnIsbn(String isbn, BiFunction<Connection, String, PreparedStatement> getPreparedStatement)
             throws SQLException, IsbnException
     {
         boolean hyphens = false;
@@ -535,7 +536,7 @@ class XL
         List<String> duplicateIDs = new ArrayList<>();
 
         try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnIsbn_ps(connection, isbn);
+            PreparedStatement statement = getPreparedStatement.apply(connection, isbn);
             ResultSet resultSet = statement.executeQuery())
         {
             duplicateIDs.addAll( collectIDs(resultSet) );
@@ -549,7 +550,7 @@ class XL
 
         String numericIsbn = typedIsbn.toString(hyphens);
         try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnIsbn_ps(connection, numericIsbn);
+            PreparedStatement statement = getPreparedStatement.apply(connection, numericIsbn);
             ResultSet resultSet = statement.executeQuery())
         {
             duplicateIDs.addAll( collectIDs(resultSet) );
@@ -565,7 +566,7 @@ class XL
         }
         numericIsbn = typedIsbn.toString(hyphens);
         try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnIsbn_ps(connection, numericIsbn);
+            PreparedStatement statement = getPreparedStatement.apply(connection, numericIsbn);
             ResultSet resultSet = statement.executeQuery())
         {
             duplicateIDs.addAll( collectIDs(resultSet) );
@@ -582,20 +583,6 @@ class XL
 
         try(Connection connection = m_whelk.getStorage().getConnection();
             PreparedStatement statement = getOnIssn_ps(connection, issn);
-            ResultSet resultSet = statement.executeQuery())
-        {
-            return collectIDs(resultSet);
-        }
-    }
-
-    private List<String> getDuplicatesOnIsbnHidden(String isbn)
-            throws SQLException
-    {
-        if (isbn == null)
-            return new ArrayList<>();
-
-        try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnIsbnHidden_ps(connection, isbn);
             ResultSet resultSet = statement.executeQuery())
         {
             return collectIDs(resultSet);
@@ -659,14 +646,19 @@ class XL
     }
 
     private PreparedStatement getOnIsbn_ps(Connection connection, String isbn)
-            throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
-        PreparedStatement statement =  connection.prepareStatement(query);
+        try
+        {
+            String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
+            PreparedStatement statement = connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
+            statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
 
-        return statement;
+            return statement;
+        } catch (SQLException se)
+        {
+            throw new RuntimeException(se);
+        }
     }
 
     private PreparedStatement getOnIssn_ps(Connection connection, String issn)
@@ -681,14 +673,19 @@ class XL
     }
 
     private PreparedStatement getOnIsbnHidden_ps(Connection connection, String isbn)
-            throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
-        PreparedStatement statement =  connection.prepareStatement(query);
+        try
+        {
+            String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,indirectlyIdentifiedBy}' @> ?";
+            PreparedStatement statement = connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"ISBN\", \"marc:hiddenValue\": [\"" + isbn + "\"]}]", java.sql.Types.OTHER);
+            statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
 
-        return statement;
+            return statement;
+        } catch (SQLException se)
+        {
+            throw new RuntimeException(se);
+        }
     }
 
     private PreparedStatement getOnIssnHidden_ps(Connection connection, String issn)

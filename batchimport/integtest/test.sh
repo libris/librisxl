@@ -145,5 +145,19 @@ if (( $rowCount != 2 )) ; then
 fi
 
 cleanup
+######## ISBN $z 10/13 matching. Batch 4 and 8 contain the same data but with varying forms of the same ISBN in 020$z.
+java -jar build/libs/batchimport.jar --path=./integtest/batch4.xml --format=xml --live --changedIn=importtest
+java -jar build/libs/batchimport.jar --path=./integtest/batch8.xml --format=xml --dupType=ISBNZ --live --changedIn=importtest
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'bib'")
+if (( $rowCount != 1 )) ; then
+    fail "Expected single bib record (after IBSN$z 10/13 test)"
+fi
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'hold'")
+if (( $rowCount != 1 )) ; then
+    fail "Expected single hold record (after IBSN$z 10/13 test)"
+fi
+
+
+cleanup
 popd
 echo $OUTCOME
