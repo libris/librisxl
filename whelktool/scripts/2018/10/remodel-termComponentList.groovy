@@ -19,7 +19,13 @@ boolean changeToSubdivision(it, subdivisionTypes) {
     return changed
 }
 
-process { data ->
+selectBySqlWhere('''
+        data::text LIKE '%"termComponentList"%'
+        ''') { data ->
+    // guard against missing entity
+    if (data.graph.size() < 2) {
+        return
+    }
     // bib
     if (data.graph[1].containsKey('instanceOf')) {
         def (record, instance, work) = data.graph

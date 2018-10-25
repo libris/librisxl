@@ -53,7 +53,7 @@ void fixValueInData(data, container, key, value) {
     }
 }
 
-process { data ->
+selectBySqlWhere(''' collection IN ('auth', 'bib', 'hold') ''') { data ->
     // Skipping record on the assumption it contains no unbalanced brackets
     data.graph[1..-1].each {
         findAndFixValuesInData(data, it)
