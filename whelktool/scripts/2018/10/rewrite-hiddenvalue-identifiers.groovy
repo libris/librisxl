@@ -16,6 +16,10 @@ Map remakeHiddenIdentifier(idStruct, hiddenValue) {
     return remadeId
 }
 
+List asList(o) {
+    return (o instanceof List) ? (List) o : o != null ? [o] : []
+}
+
 selectBySqlWhere(''' data::text LIKE '%"marc:hiddenValue"%' ''') { data ->
     def (record, instance) = data.graph
     if (!isInstanceOf(instance, 'Instance'))
@@ -34,7 +38,7 @@ selectBySqlWhere(''' data::text LIKE '%"marc:hiddenValue"%' ''') { data ->
     def otherIds = instance.get('indirectlyIdentifiedBy', [])
 
     idsWithHidden.each { idStruct ->
-        idStruct.remove(HIDDENVALUE).each {
+        asList(idStruct.remove(HIDDENVALUE)).each {
             def remadeId = remakeHiddenIdentifier(idStruct, it)
             otherIds << remadeId
         }
