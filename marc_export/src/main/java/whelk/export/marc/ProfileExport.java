@@ -237,6 +237,20 @@ public class ProfileExport
             return;
         exportedIDs.add(systemId);
 
+        // TODO (later): Filtering: not just efilter! biblevel (encodingLevel=5) and licensefilter too!
+        if (profile.getProperty("efilter", "OFF").equalsIgnoreCase("ON"))
+        {
+            boolean onlineResource = false;
+            List<Map> carrierTypes = document.getCarrierTypes();
+            for (Map map : carrierTypes)
+            {
+                if ( map.get("@id").equals("https://id.kb.se/marc/OnlineResource") )
+                    onlineResource = true;
+            }
+            if (document.getThingType().equals("Electronic") && onlineResource)
+                return;
+        }
+
         String locations = profile.getProperty("locations", "");
         HashSet locationSet = new HashSet(Arrays.asList(locations.split(" ")));
         if (doVirtualDeletions && !locationSet.contains("*") && deleteMode != DELETE_MODE.IGNORE)

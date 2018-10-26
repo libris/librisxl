@@ -42,6 +42,7 @@ class Document {
     static final List thingSameAsPath = ["@graph", 1, "sameAs"]
     static final List thingTypedIDsPath = ["@graph", 1, "identifiedBy"]
     static final List thingIndirectTypedIDsPath = ["@graph", 1, "indirectlyIdentifiedBy"]
+    static final List thingCarrierTypesPath = ["@graph", 1, "carrierType"]
     static final List recordIdPath = ["@graph", 0, "@id"]
     static final List workIdPath = ["@graph", 1, "instanceOf", "@id"]
     static final List thingMetaPath = ["@graph", 1, "meta", "@id"]
@@ -188,6 +189,10 @@ class Document {
             }
         }
         return values
+    }
+
+    List<Map> getCarrierTypes() {
+        return get(thingCarrierTypesPath)
     }
 
     void setCreated(Date created) {
