@@ -240,17 +240,14 @@ public class ProfileExport
         // TODO (later): Filtering: not just efilter! biblevel (encodingLevel=5) and licensefilter too!
         if (profile.getProperty("efilter", "OFF").equalsIgnoreCase("ON"))
         {
-            boolean electronic = false;
             boolean onlineResource = false;
             List<Map> carrierTypes = document.getCarrierTypes();
             for (Map map : carrierTypes)
             {
-                if ( map.get("@id").equals("https://id.kb.se/marc/Electronic") )
-                    electronic = true;
                 if ( map.get("@id").equals("https://id.kb.se/marc/OnlineResource") )
                     onlineResource = true;
             }
-            if (electronic && onlineResource)
+            if (document.getThingType().equals("Electronic") && onlineResource)
                 return;
         }
 
