@@ -1,0 +1,42 @@
+apply plugin: 'java'
+apply plugin: 'war'
+apply plugin: 'maven'
+apply from: '../gretty.plugin'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven { url "http://repository.codehaus.org/" }
+}
+
+// Don't blame me for this TRAVESTY. It is a necessity because of the versioning of xml-apis (2.0.2 which gradle otherwise chooses is OLDER (and broken) despite the version.)
+configurations.all {
+    resolutionStrategy {
+        force "xml-apis:xml-apis:1.4.01"
+    }
+}
+
+dependencies {
+
+    // XL dependencies
+    compile(project(':../whelk-core'))
+
+    // Logging
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.2'
+
+    // metrics
+    compile 'io.prometheus:simpleclient:0.0.21'
+    compile 'io.prometheus:simpleclient_servlet:0.0.21'
+
+    // Dependencies inherited from classic libris, due to profile handling
+    compile group: 'com.ibm.icu', name: 'icu4j', version: '4.8.1.1'
+    compile group: 'org.dspace', name: 'xoai', version: '3.2.10'
+    compile group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
+}
+
+gretty {
+    systemProperties 'xl.secret.properties': System.getProperty("xl.secret.properties")
+}

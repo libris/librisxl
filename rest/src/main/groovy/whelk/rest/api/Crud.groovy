@@ -947,6 +947,7 @@ class Crud extends HttpServlet {
 
         response.setHeader("Location", locationRef)
         response.setHeader("ETag", "\"${etag as String}\"")
+        response.setHeader('Cache-Control', 'no-cache')
 
         if (newDocument) {
             response.setStatus(HttpServletResponse.SC_CREATED)

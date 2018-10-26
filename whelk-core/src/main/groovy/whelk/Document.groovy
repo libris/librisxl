@@ -41,7 +41,10 @@ class Document {
     static final List thingTypePath = ["@graph", 1, "@type"]
     static final List thingSameAsPath = ["@graph", 1, "sameAs"]
     static final List thingTypedIDsPath = ["@graph", 1, "identifiedBy"]
+    static final List thingIndirectTypedIDsPath = ["@graph", 1, "indirectlyIdentifiedBy"]
+    static final List thingCarrierTypesPath = ["@graph", 1, "carrierType"]
     static final List recordIdPath = ["@graph", 0, "@id"]
+    static final List workIdPath = ["@graph", 1, "instanceOf", "@id"]
     static final List thingMetaPath = ["@graph", 1, "meta", "@id"]
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
     static final List recordTypedIDsPath = ["@graph", 0, "identifiedBy"]
@@ -156,14 +159,14 @@ class Document {
      */
     String getId() { return getCompleteId() }
 
-    List<String> getIsbnValues() { return getTypedIDValues("ISBN", "value") }
-    List<String> getIssnValues() { return getTypedIDValues("ISSN", "value") }
-    List<String> getIsbnHiddenValues() { return getTypedIDValues("ISBN", "marc:hiddenValue") }
-    List<String> getIssnHiddenValues() { return getTypedIDValues("ISSN", "marc:canceledIssn") }
+    List<String> getIsbnValues() { return getTypedIDValues("ISBN", thingTypedIDsPath, "value") }
+    List<String> getIssnValues() { return getTypedIDValues("ISSN", thingTypedIDsPath, "value") }
+    List<String> getIsbnHiddenValues() { return getTypedIDValues("ISBN", thingIndirectTypedIDsPath, "value") }
+    List<String> getIssnHiddenValues() { return getTypedIDValues("ISSN", thingTypedIDsPath, "marc:canceledIssn") }
 
-    private List<String> getTypedIDValues(String typeKey, String valueKey) {
+    private List<String> getTypedIDValues(String typeKey, List<String> idListPath, String valueKey) {
         List<String> values = new ArrayList<>()
-        List typedIDs = get(thingTypedIDsPath)
+        List typedIDs = get(idListPath)
         for (Object element : typedIDs) {
             if (!(element instanceof Map))
                 continue
@@ -186,6 +189,10 @@ class Document {
             }
         }
         return values
+    }
+
+    List<Map> getCarrierTypes() {
+        return get(thingCarrierTypesPath)
     }
 
     void setCreated(Date created) {
@@ -381,6 +388,103 @@ class Document {
             if (sameAsList.every { it -> it != idObject })
                 sameAsList.add(idObject)
         }
+    }
+
+    void addTypedRecordIdentifier(String type, String identifier) {
+        if (identifier == null)
+            throw new NullPointerException("Attempted to add typed null-identifier.")
+
+        if (preparePath(recordTypedIDsPath)) {
+            Object typedIDList = get(recordTypedIDsPath)
+            if (typedIDList == null || !(typedIDList instanceof List)) {
+                set(recordTypedIDsPath, [])
+                typedIDList = get(recordTypedIDsPath)
+            }
+
+            def idObject = ["value": identifier, "@type": type]
+            if (typedIDList.every { it -> it != idObject })
+                typedIDList.add(idObject)
+        }
+    }
+
+    void addTypedThingIdentifier(String type, String identifier) {
+        if (identifier == null)
+            throw new NullPointerException("Attempted to add typed null-identifier.")
+
+        if (preparePath(thingTypedIDsPath)) {
+            Object typedIDList = get(thingTypedIDsPath)
+            if (typedIDList == null || !(typedIDList instanceof List)) {
+                set(thingTypedIDsPath, [])
+                typedIDList = get(thingTypedIDsPath)
+            }
+
+            def idObject = ["value": identifier, "@type": type]
+            if (typedIDList.every { it -> it != idObject })
+                typedIDList.add(idObject)
+        }
+    }
+
+    public String getWorkType() {
+        Object workId = get(workIdPath)
+        if (workId == null)
+            return null
+
+        Map workObject = getEmbedded( (String) workId )
+        if (workObject == null)
+            return null
+
+        String type = workObject.get("@type")
+        if (type != null)
+            return type
+        return null
+    }
+
+    /**
+     * Get the embedded/embellished object for a certain id.
+     * Will return null if there is no object with the requested id in this documents data.
+     */
+    private Map getEmbedded(String id) {
+        List graphList = (List) data.get("@graph")
+        if (graphList == null)
+            return null
+
+        return getEmbedded(id, graphList)
+    }
+
+    private Map getEmbedded(String id, Map localData) {
+        Map map = (Map) localData
+        String objId = map.get("@id")
+        if (objId.equals(id) && map.size() > 1) {
+            return map
+        }
+        else {
+            for (Object key : localData.keySet()) {
+                Object object = localData.get(key)
+                if ((object instanceof List)) {
+                    Map next = getEmbedded(id, (List) object)
+                    if (next != null)
+                        return next
+                }
+                else if ((object instanceof Map)) {
+                    Map next = getEmbedded(id, (Map) object)
+                    if (next != null)
+                        return next
+                }
+                else
+                    return null
+            }
+        }
+        return null
+    }
+
+    private Map getEmbedded(String id, List localData) {
+        for (Object object : localData) {
+            Map map = (Map) object
+            Map candidate = getEmbedded(id, map)
+            if (candidate != null)
+                return candidate
+        }
+        return null
     }
 
     /**

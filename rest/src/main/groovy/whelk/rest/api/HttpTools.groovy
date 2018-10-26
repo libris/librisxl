@@ -24,6 +24,7 @@ class HttpTools {
     }
 
     static void sendResponse(HttpServletResponse response, byte[] data, String contentType, int statusCode = 200) {
+        response.setHeader('Cache-Control', 'no-cache')
         response.setStatus(statusCode)
         if (contentType) {
             response.setContentType(contentType)

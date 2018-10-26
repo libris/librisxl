@@ -5,6 +5,7 @@
 .idea
 *.iml
 /.venv
+Session.vim
 
 # Local Config
 /*.properties

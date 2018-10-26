@@ -1,5 +1,6 @@
 package whelk.importer;
 
+import groovy.lang.Tuple;
 import io.prometheus.client.Counter;
 import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
@@ -22,6 +23,7 @@ import whelk.triples.*;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
+import java.util.function.BiFunction;
 
 class XL
 {
@@ -41,7 +43,7 @@ class XL
     // has only a single member.
     private Set<String> m_repeatableTerms;
 
-    private final static String IMPORT_SYSTEM_CODE = "batch import";
+    private final String IMPORT_SYSTEM_CODE;
 
     XL(Parameters parameters) throws IOException
     {
@@ -52,6 +54,10 @@ class XL
         m_repeatableTerms = m_whelk.getJsonld().getRepeatableTerms();
         m_marcFrameConverter = m_whelk.createMarcFrameConverter();
         m_linkfinder = new LinkFinder(m_whelk.getStorage());
+        if (parameters.getChangedIn() != null)
+            IMPORT_SYSTEM_CODE = parameters.getChangedIn();
+        else
+            IMPORT_SYSTEM_CODE = "batch import";
     }
 
     /**
@@ -189,6 +195,11 @@ class XL
                         List<String> recordIDs = doc.getRecordIdentifiers();
                         List<String> thingIDs = doc.getThingIdentifiers();
                         String controlNumber = doc.getControlNumber();
+                        List<Tuple> typedIDs = doc.getTypedRecordIdentifiers();
+                        List<String> systemNumbers = new ArrayList<>();
+                        for (Tuple tuple : typedIDs)
+                            if (tuple.get(0).equals("SystemNumber"))
+                                systemNumbers.add( (String) tuple.get(1) );
 
                         doc.data = rdfDoc.data;
 
@@ -199,6 +210,8 @@ class XL
                             doc.addRecordIdentifier(recordID);
                         for (String thingID : thingIDs)
                             doc.addThingIdentifier(thingID);
+                        for (String systemNumber : systemNumbers)
+                            doc.addTypedRecordIdentifier("SystemNumber", systemNumber);
                         if (controlNumber != null)
                             doc.setControlNumber(controlNumber);
                     });
@@ -399,13 +412,13 @@ class XL
                 case DUPTYPE_ISBNA: // International Standard Book Number (only from subfield A)
                     for (String isbn : rdfDoc.getIsbnValues())
                     {
-                        duplicateIDs.addAll(getDuplicatesOnIsbn( isbn.toUpperCase() ));
+                        duplicateIDs.addAll(getDuplicatesOnIsbn( isbn.toUpperCase(), this::getOnIsbn_ps ));
                     }
                     break;
                 case DUPTYPE_ISBNZ: // International Standard Book Number (only from subfield Z)
                     for (String isbn : rdfDoc.getIsbnHiddenValues())
                     {
-                        duplicateIDs.addAll(getDuplicatesOnIsbnHidden( isbn.toUpperCase() ));
+                        duplicateIDs.addAll(getDuplicatesOnIsbn( isbn.toUpperCase(), this::getOnIsbnHidden_ps ));
                     }
                     break;
                 case DUPTYPE_ISSNA: // International Standard Serial Number (only from marc 022_A)
@@ -428,6 +441,36 @@ class XL
                     // Assumes the post being imported carries a valid libris id in 001, and "SE-LIBR" or "LIBRIS" in 003
                     duplicateIDs.addAll(getDuplicatesOnLibrisID(marcRecord, "bib"));
                     break;
+            }
+
+            // Filter the candidates based on instance @type and work @type ("materialtyp").
+            Iterator<String> it = duplicateIDs.iterator();
+            while (it.hasNext())
+            {
+                String candidateID = it.next();
+                Document candidate = m_whelk.getStorage().loadEmbellished(candidateID, m_whelk.getJsonld());
+
+                String incomingInstanceType = rdfDoc.getThingType();
+                String existingInstanceType = candidate.getThingType();
+                String incomingWorkType = rdfDoc.getWorkType();
+                String existingWorkType = candidate.getWorkType();
+
+                // Unrelated work types? -> not a valid match
+                if ( ! m_whelk.getJsonld().isSubClassOf(incomingWorkType, existingWorkType) &&
+                        ! m_whelk.getJsonld().isSubClassOf(existingWorkType, incomingWorkType) )
+                {
+                    it.remove();
+                    continue;
+                }
+
+                // If A is Electronic and B is Instance or vice versa, do not consider documents matching. This is
+                // frail since Electronic is a subtype of Instance.
+                // HERE BE DRAGONS.
+                if ( (incomingInstanceType.equals("Electronic") && existingInstanceType.equals("Instance")) ||
+                        (incomingInstanceType.equals("Instance") && existingInstanceType.equals("Electronic")))
+                {
+                    it.remove();
+                }
             }
 
             // If duplicates have already been found, do not try any more duplicate types.
@@ -483,7 +526,7 @@ class XL
         return results;
     }
 
-    private List<String> getDuplicatesOnIsbn(String isbn)
+    private List<String> getDuplicatesOnIsbn(String isbn, BiFunction<Connection, String, PreparedStatement> getPreparedStatement)
             throws SQLException, IsbnException
     {
         boolean hyphens = false;
@@ -493,7 +536,7 @@ class XL
         List<String> duplicateIDs = new ArrayList<>();
 
         try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnIsbn_ps(connection, isbn);
+            PreparedStatement statement = getPreparedStatement.apply(connection, isbn);
             ResultSet resultSet = statement.executeQuery())
         {
             duplicateIDs.addAll( collectIDs(resultSet) );
@@ -507,7 +550,7 @@ class XL
 
         String numericIsbn = typedIsbn.toString(hyphens);
         try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnIsbn_ps(connection, numericIsbn);
+            PreparedStatement statement = getPreparedStatement.apply(connection, numericIsbn);
             ResultSet resultSet = statement.executeQuery())
         {
             duplicateIDs.addAll( collectIDs(resultSet) );
@@ -523,7 +566,7 @@ class XL
         }
         numericIsbn = typedIsbn.toString(hyphens);
         try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnIsbn_ps(connection, numericIsbn);
+            PreparedStatement statement = getPreparedStatement.apply(connection, numericIsbn);
             ResultSet resultSet = statement.executeQuery())
         {
             duplicateIDs.addAll( collectIDs(resultSet) );
@@ -540,20 +583,6 @@ class XL
 
         try(Connection connection = m_whelk.getStorage().getConnection();
             PreparedStatement statement = getOnIssn_ps(connection, issn);
-            ResultSet resultSet = statement.executeQuery())
-        {
-            return collectIDs(resultSet);
-        }
-    }
-
-    private List<String> getDuplicatesOnIsbnHidden(String isbn)
-            throws SQLException
-    {
-        if (isbn == null)
-            return new ArrayList<>();
-
-        try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnIsbnHidden_ps(connection, isbn);
             ResultSet resultSet = statement.executeQuery())
         {
             return collectIDs(resultSet);
@@ -596,7 +625,7 @@ class XL
     private PreparedStatement getOnId_ps(Connection connection, String id)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb__identifiers WHERE iri = ?";
+        String query = "SELECT lddb__identifiers.id FROM lddb__identifiers JOIN lddb ON lddb__identifiers.id = lddb.id WHERE lddb__identifiers.iri = ? AND lddb.deleted = false";
         PreparedStatement statement = connection.prepareStatement(query);
         statement.setString(1, id);
         return statement;
@@ -617,14 +646,19 @@ class XL
     }
 
     private PreparedStatement getOnIsbn_ps(Connection connection, String isbn)
-            throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
-        PreparedStatement statement =  connection.prepareStatement(query);
+        try
+        {
+            String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
+            PreparedStatement statement = connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
+            statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
 
-        return statement;
+            return statement;
+        } catch (SQLException se)
+        {
+            throw new RuntimeException(se);
+        }
     }
 
     private PreparedStatement getOnIssn_ps(Connection connection, String issn)
@@ -639,14 +673,19 @@ class XL
     }
 
     private PreparedStatement getOnIsbnHidden_ps(Connection connection, String isbn)
-            throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
-        PreparedStatement statement =  connection.prepareStatement(query);
+        try
+        {
+            String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,indirectlyIdentifiedBy}' @> ?";
+            PreparedStatement statement = connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"ISBN\", \"marc:hiddenValue\": [\"" + isbn + "\"]}]", java.sql.Types.OTHER);
+            statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
 
-        return statement;
+            return statement;
+        } catch (SQLException se)
+        {
+            throw new RuntimeException(se);
+        }
     }
 
     private PreparedStatement getOnIssnHidden_ps(Connection connection, String issn)

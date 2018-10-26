@@ -49,6 +49,7 @@ class DuplicatesAPI extends HttpServlet {
             }
         }
 
+        response.setHeader('Cache-Control', 'no-cache')
         out.close()
     }
 }

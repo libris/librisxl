@@ -8,6 +8,7 @@ import whelk.Whelk;
 import whelk.triples.JsonldSerializer;
 import whelk.util.ThreadPool;
 import whelk.util.TransformScript;
+import whelk.exception.CancelUpdateException;
 
 import javax.swing.*;
 import java.awt.*;
@@ -432,7 +433,10 @@ public class ExecuteGui extends JFrame
                 {
                     try
                     {
-                        doc.data = script.executeOn(doc.data);
+                        TransformScript.DataAlterationState alterationState = new TransformScript.DataAlterationState();
+                        doc.data = script.executeOn(doc.data, alterationState);
+                        if (!alterationState.getAltered())
+                            throw new CancelUpdateException();
 
                         // This should be : doc.data = JsonLd.flatten(doc.data);
                         // but flatten() is unreliable and seems to introduce graph cycles. TODO
@@ -501,7 +505,8 @@ public class ExecuteGui extends JFrame
                 ExecuteGui parent = (ExecuteGui) m_parent;
                 parent.m_originalRecordArea.setText(formattedOriginal);
                 TransformScript script = new TransformScript(parent.m_scriptTextArea.getText());
-                Map transformedData = script.executeOn(document.data);
+                TransformScript.DataAlterationState alterationState = new TransformScript.DataAlterationState();
+                Map transformedData = script.executeOn(document.data, alterationState);
                 transformedData = JsonLd.flatten(transformedData);
                 JsonldSerializer.normalize(transformedData, document.getCompleteId(), false);
                 String formattedTransformed = m_mapper.writerWithDefaultPrettyPrinter().writeValueAsString(transformedData);

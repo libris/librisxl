@@ -23,7 +23,8 @@ public class ScriptTest
                 "    \"key0\":\"value0\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -44,7 +45,8 @@ public class ScriptTest
                 "    \"key1\":999 " +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -60,7 +62,8 @@ public class ScriptTest
                 "    \"key0\":{\"key1\" : \"value0\"}" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -76,7 +79,8 @@ public class ScriptTest
                 "    \"key0\":[null,\"value0\"]" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -96,7 +100,8 @@ public class ScriptTest
                 "   \"result1\":\"hejbaberiba\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -113,7 +118,23 @@ public class ScriptTest
                 "    \"key0\":\"value0\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
+    }
+
+    @Test
+    public void testBasicLet2() throws Exception
+    {
+        String data = "{}";
+
+        String script = "mode normal " +
+                "let x = 1";
+
+        String transformed = "" +
+                "{}";
+
+        boolean dataShouldBeDirtied = false;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -133,7 +154,8 @@ public class ScriptTest
                 "    \"key2\":\"literal\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -151,7 +173,8 @@ public class ScriptTest
                 "    \"key1\":\"value0\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -174,7 +197,8 @@ public class ScriptTest
                 "    \"key2\":6" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -208,7 +232,8 @@ public class ScriptTest
                 "   \"result2\":9" + // string length "somevalue"
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -230,7 +255,8 @@ public class ScriptTest
                 "   \"result1\":3" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -264,7 +290,8 @@ public class ScriptTest
                 "   \"result2\":9" + // string length "somevalue"
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -283,7 +310,8 @@ public class ScriptTest
                 "    \"key0\":\"value0\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -305,7 +333,8 @@ public class ScriptTest
                 "    \"key0\":3" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -324,7 +353,8 @@ public class ScriptTest
                 "    \"key0\":\"value0\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -343,7 +373,8 @@ public class ScriptTest
                 "    \"key0\":\"value0\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -362,7 +393,8 @@ public class ScriptTest
                 "    \"key0\":\"value0\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -381,7 +413,8 @@ public class ScriptTest
                 "    \"key0\":\"value0\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -403,7 +436,8 @@ public class ScriptTest
                 "    \"key1\":\"value1\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -425,7 +459,8 @@ public class ScriptTest
                 "    \"key1\":\"value1\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -444,7 +479,8 @@ public class ScriptTest
                 "    \"key0\":\"value0\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -463,7 +499,8 @@ public class ScriptTest
                 "    \"key0\":\"value0\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, true);
     }
 
     @Test
@@ -485,7 +522,8 @@ public class ScriptTest
                 "    \"key1\":\"value1\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -504,7 +542,8 @@ public class ScriptTest
                 "    \"key1\":\"value1\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -531,7 +570,8 @@ public class ScriptTest
                 "    \"key0\":\"value0\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -560,7 +600,8 @@ public class ScriptTest
                 "    \"key2\":\"value2\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -579,7 +620,8 @@ public class ScriptTest
                 "    \"key0\":\"value0\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -599,7 +641,8 @@ public class ScriptTest
                 "    \"key1\":\"value1\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -624,7 +667,8 @@ public class ScriptTest
                 "    \"key1\":\"value1\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -640,7 +684,8 @@ public class ScriptTest
                 "    \"key0\":\"bc\"" +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -658,7 +703,8 @@ public class ScriptTest
                 "    \"key1\":false " +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -676,7 +722,8 @@ public class ScriptTest
                 "    \"key1\":false " +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -694,7 +741,8 @@ public class ScriptTest
                 "    \"key1\":false " +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -712,7 +760,8 @@ public class ScriptTest
                 "    \"key1\":1 " +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -728,7 +777,8 @@ public class ScriptTest
                 "    \"key0\":\"abx\" " +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -744,7 +794,8 @@ public class ScriptTest
                 "    \"key0\":\"abcde cde x\" " +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -763,7 +814,8 @@ public class ScriptTest
                 "    \"key0\":\"value0\" " +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -779,7 +831,8 @@ public class ScriptTest
                 "    \"key0\":-1 " +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
     @Test
@@ -795,21 +848,29 @@ public class ScriptTest
                 "    \"key0\":[\"value0\"] " +
                 "}";
 
-        testScript(data, transformed, script);
+        boolean dataShouldBeDirtied = true;
+        testScript(data, transformed, script, dataShouldBeDirtied);
     }
 
-    private void testScript(String beforeTransformText, String expectedResultText, String transformScript) throws Exception
+    private void testScript(String beforeTransformText, String expectedResultText, String transformScript, boolean dataShouldBeDirtied) throws Exception
     {
         Map oldData = mapper.readValue(beforeTransformText, Map.class);
         Map expectedResultData = mapper.readValue(expectedResultText, Map.class);
 
         TransformScript executableScript = new TransformScript(transformScript);
-        Map transformed = executableScript.executeOn(oldData);
+        TransformScript.DataAlterationState alterationState = new TransformScript.DataAlterationState();
+        Map transformed = executableScript.executeOn(oldData, alterationState);
 
         if ( ! Utils.rdfEquals( expectedResultData, transformed ) )
         {
             System.out.println("expected transformation result:\n"+expectedResultData);
             System.out.println("\nactual transformation result:\n"+transformed);
+            Assert.assertTrue( false );
+        }
+
+        if (alterationState.getAltered() != dataShouldBeDirtied)
+        {
+            System.out.println("Alteration state after execution was unexpected:\n"+alterationState.getAltered());
             Assert.assertTrue( false );
         }
     }

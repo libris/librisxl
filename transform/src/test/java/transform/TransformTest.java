@@ -251,7 +251,8 @@ public class TransformTest
         System.err.println("\nResulting script:\n" + transformScript);
 
         TransformScript executableScript = new TransformScript(transformScript);
-        String transformed = executableScript.executeOn(toBeTransformed);
+        TransformScript.DataAlterationState alterationState = new TransformScript.DataAlterationState();
+        String transformed = executableScript.executeOn(toBeTransformed, alterationState);
 
         Map transformedData = mapper.readValue(transformed, Map.class);
         Map expectedData = mapper.readValue(expectedTransformedResult, Map.class);

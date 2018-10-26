@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<collection xmlns="http://www.loc.gov/MARC21/slim">
+  <record type="Bibliographic">
+    <leader>02625cam a22007458i 4500</leader>
+    <controlfield tag="001">20203738</controlfield>
+    <controlfield tag="003">SE-LIBR</controlfield>
+    <controlfield tag="005">20170713141440.0</controlfield>
+    <controlfield tag="008">170327s2017    sw ||||j     |00| 0|swe d</controlfield>
+    <datafield tag="020" ind1=" " ind2=" ">
+      <subfield code="z">91-27-10850-3</subfield>
+      <subfield code="q">inbunden</subfield>
+    </datafield>
+    <datafield tag="040" ind1=" " ind2=" ">
+      <subfield code="a">BOKR</subfield>
+    </datafield>
+    <datafield tag="100" ind1="1" ind2=" ">
+      <subfield code="a">Bently, Peter</subfield>
+      <subfield code="4">aut</subfield>
+    </datafield>
+    <datafield tag="245" ind1="1" ind2="0">
+      <subfield code="a">Polisbilen får INTE ett larm</subfield>
+    </datafield>
+    <datafield tag="263" ind1=" " ind2=" ">
+      <subfield code="a">201709</subfield>
+    </datafield>
+    <datafield tag="264" ind1=" " ind2="1">
+      <subfield code="b">Berghs,</subfield>
+      <subfield code="c">2017</subfield>
+    </datafield>
+    <datafield tag="300" ind1=" " ind2=" ">
+      <subfield code="a">32 sidor :</subfield>
+      <subfield code="b">illustrationer</subfield>
+    </datafield>
+    <datafield tag="336" ind1=" " ind2=" ">
+      <subfield code="b">txt</subfield>
+      <subfield code="2">rdacontent</subfield>
+    </datafield>
+    <datafield tag="337" ind1=" " ind2=" ">
+      <subfield code="b">n</subfield>
+      <subfield code="2">rdamedia</subfield>
+    </datafield>
+    <datafield tag="338" ind1=" " ind2=" ">
+      <subfield code="b">nc</subfield>
+      <subfield code="2">rdacarrier</subfield>
+    </datafield>
+    <datafield tag="599" ind1=" " ind2=" ">
+      <subfield code="a">Maskinellt genererad post. Ändra kod för fullständighetsnivå (leader/17), annars kommer manuellt gjorda ändringar att försvinna.</subfield>
+    </datafield>
+    <datafield tag="700" ind1="1" ind2=" ">
+      <subfield code="a">Lightfoot, Marta</subfield>
+      <subfield code="4">ill</subfield>
+    </datafield>
+    <datafield tag="700" ind1="1" ind2=" ">
+      <subfield code="a">Vidén, Eva</subfield>
+      <subfield code="4">trl</subfield>
+    </datafield>
+  </record>
+  <record type="Holdings">
+    <leader>XXXXXax  a22XXXXX1n 4500</leader>
+    <controlfield tag="008">170714||0000|||||000||||||000000</controlfield>
+    <datafield tag="852" ind1="" ind2="">
+      <subfield code="b">Sods</subfield>
+    </datafield>
+  </record>
+</collection>
