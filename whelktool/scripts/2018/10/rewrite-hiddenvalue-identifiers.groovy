@@ -10,7 +10,7 @@ Map remakeHiddenIdentifier(idStruct, hiddenValue) {
         ? hiddenValue.substring(parenIndex + 1, lastParenIndex).trim()
         : null
     Map remadeId = [(TYPE): idStruct[TYPE], value: (value.trim())]
-    if (idStruct.qualifier) {
+    if (!idStruct.value && idStruct.qualifier) {
         remadeId.qualifier = idStruct.qualifier
     }
     if (qualifier) {
