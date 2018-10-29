@@ -516,7 +516,7 @@ class DocumentItem {
     }
 
     void scheduleSave(boolean loud=true) {
-        scheduleSave(loud: true)
+        scheduleSave(loud: loud)
     }
 
     void scheduleSave(Map params) {
