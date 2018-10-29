@@ -2746,6 +2746,9 @@ class MarcSubFieldHandler extends ConversionPart {
                         allEmpty = false
                     }
                     if (v != null) {
+                        if (v instanceof List) {
+                            v = v.join(', ')
+                        }
                         vs << v
                     }
                 }
