@@ -145,6 +145,19 @@ if (( $rowCount != 2 )) ; then
 fi
 
 cleanup
+######## Electronic/Instance should not match. Batch 9 contains the same record, but instance type is electronic
+java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --live --changedIn=importtest
+java -jar build/libs/batchimport.jar --path=./integtest/batch9.xml --format=xml --dupType=ISBNA --live --changedIn=importtest
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'bib'")
+if (( $rowCount != 2 )) ; then
+    fail "Expected 2 bib records after importing Instance and Electronic"
+fi
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'hold'")
+if (( $rowCount != 2 )) ; then
+    fail "Expected 2 bib records after importing Instance and Electronic"
+fi
+
+cleanup
 ######## ISBN $z 10/13 matching. Batch 4 and 8 contain the same data but with varying forms of the same ISBN in 020$z.
 java -jar build/libs/batchimport.jar --path=./integtest/batch4.xml --format=xml --live --changedIn=importtest
 java -jar build/libs/batchimport.jar --path=./integtest/batch8.xml --format=xml --dupType=ISBNZ --live --changedIn=importtest
