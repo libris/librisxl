@@ -12,6 +12,7 @@ import io.prometheus.client.Summary;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.*;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.*;
 
@@ -154,18 +155,40 @@ public class ProfileExport
                         m_whelk.getStorage().loadEmbellished(itemOfSystemId, m_whelk.getJsonld())
                         , profile, output, exportedIDs, deleteMode, doVirtualDeletions);
 
-            // If the itemOf link was changed, also export the bib that is no longer linked.
+            // If the itemOf link was changed, also export the bib that is no longer linked. Do this for every
+            // version of the holding inside the update interval, and the last one before the interval.
             if (versions.size() > 1)
             {
-                Document oldVersion = versions.get(1);
-                String oldItemOf = oldVersion.getHoldingFor();
-                if (!oldItemOf.equals(itemOf))
+                for (int i = 1; i < versions.size(); ++i)
                 {
-                    String oldItemOfSystemId = m_whelk.getStorage().getSystemIdByIri(oldItemOf);
-                    if (oldItemOfSystemId != null) // oldItemOfSystemId _can_ be null, if the bib linked record is deleted (no thing-uri left in the id table)
-                        exportDocument(
-                                m_whelk.getStorage().loadEmbellished(oldItemOfSystemId, m_whelk.getJsonld())
-                                , profile, output, exportedIDs, deleteMode, doVirtualDeletions);
+                    Document oldVersion = versions.get(i);
+                    String oldItemOf = oldVersion.getHoldingFor();
+                    Instant modified =  ZonedDateTime.parse(oldVersion.getModified()).toInstant();
+
+                    boolean insideInterval = from.toInstant().isBefore(modified) && until.toInstant().isAfter(modified);
+                    if ( insideInterval )
+                    {
+                        if (!oldItemOf.equals(itemOf))
+                        {
+                            String oldItemOfSystemId = m_whelk.getStorage().getSystemIdByIri(oldItemOf);
+                            if (oldItemOfSystemId != null) // oldItemOfSystemId _can_ be null, if the bib linked record is deleted (no thing-uri left in the id table)
+                                exportDocument(
+                                        m_whelk.getStorage().loadEmbellished(oldItemOfSystemId, m_whelk.getJsonld())
+                                        , profile, output, exportedIDs, deleteMode, doVirtualDeletions);
+                        }
+                    }
+                    else
+                    {
+                        if (!oldItemOf.equals(itemOf))
+                        {
+                            String oldItemOfSystemId = m_whelk.getStorage().getSystemIdByIri(oldItemOf);
+                            if (oldItemOfSystemId != null) // oldItemOfSystemId _can_ be null, if the bib linked record is deleted (no thing-uri left in the id table)
+                                exportDocument(
+                                        m_whelk.getStorage().loadEmbellished(oldItemOfSystemId, m_whelk.getJsonld())
+                                        , profile, output, exportedIDs, deleteMode, doVirtualDeletions);
+                            break; // Only one more once outside the interval, then stop.
+                        }
+                    }
                 }
             }
         }
@@ -293,7 +316,7 @@ public class ProfileExport
     private PreparedStatement getAllChangedIDsStatement(Timestamp from, Timestamp until, Connection connection)
             throws SQLException
     {
-        String sql = "SELECT id, collection, created, deleted FROM lddb WHERE modified >= ? AND modified <= ?";
+        String sql = "SELECT id, collection, created, deleted FROM lddb__versions WHERE modified >= ? AND modified <= ?";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setTimestamp(1, from);
         preparedStatement.setTimestamp(2, until);
