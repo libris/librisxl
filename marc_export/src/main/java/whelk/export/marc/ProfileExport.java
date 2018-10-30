@@ -141,7 +141,7 @@ public class ProfileExport
             for (Document version : versions)
             {
                 String itemOf = version.getHoldingFor();
-                Instant modified =  ZonedDateTime.parse(version.getModified()).toInstant();
+                Instant modified = ZonedDateTime.parse(version.getModified()).toInstant();
 
                 if (modified.isAfter(until.toInstant()))
                     continue;
