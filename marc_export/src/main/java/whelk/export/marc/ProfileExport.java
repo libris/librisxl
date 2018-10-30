@@ -138,33 +138,23 @@ public class ProfileExport
         {
             List<Document> versions = m_whelk.getStorage().loadAllVersions(id);
 
-            for (int i = 0; i < versions.size(); ++i)
+            for (Document version : versions)
             {
-                Document oldVersion = versions.get(i);
-                String itemOf = oldVersion.getHoldingFor();
-                Instant modified =  ZonedDateTime.parse(oldVersion.getModified()).toInstant();
+                String itemOf = version.getHoldingFor();
+                Instant modified =  ZonedDateTime.parse(version.getModified()).toInstant();
 
                 if (modified.isAfter(until.toInstant()))
                     continue;
 
+                String itemOfSystemId = m_whelk.getStorage().getSystemIdByIri(itemOf);
+                if (itemOfSystemId != null) // itemOfSystemId _can_ be null, if the bib linked record is deleted (no thing-uri left in the id table)
+                    exportDocument(
+                            m_whelk.getStorage().loadEmbellished(itemOfSystemId, m_whelk.getJsonld())
+                            , profile, output, exportedIDs, deleteMode, doVirtualDeletions);
+
                 boolean insideInterval = from.toInstant().isBefore(modified) && until.toInstant().isAfter(modified);
-                if ( insideInterval )
-                {
-                    String oldItemOfSystemId = m_whelk.getStorage().getSystemIdByIri(itemOf);
-                    if (oldItemOfSystemId != null) // oldItemOfSystemId _can_ be null, if the bib linked record is deleted (no thing-uri left in the id table)
-                        exportDocument(
-                                m_whelk.getStorage().loadEmbellished(oldItemOfSystemId, m_whelk.getJsonld())
-                                , profile, output, exportedIDs, deleteMode, doVirtualDeletions);
-                }
-                else
-                {
-                    String oldItemOfSystemId = m_whelk.getStorage().getSystemIdByIri(itemOf);
-                    if (oldItemOfSystemId != null) // oldItemOfSystemId _can_ be null, if the bib linked record is deleted (no thing-uri left in the id table)
-                        exportDocument(
-                                m_whelk.getStorage().loadEmbellished(oldItemOfSystemId, m_whelk.getJsonld())
-                                , profile, output, exportedIDs, deleteMode, doVirtualDeletions);
+                if ( !insideInterval )
                     break; // Only one more once outside the interval, then stop.
-                }
             }
         }
 
