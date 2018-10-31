@@ -3729,7 +3729,7 @@
             "splitValuePattern": "^(.+?)(?:\\s+\\((.+)\\))?$",
             "splitValueProperties": ["value", "qualifier"],
             "rejoin": " (",
-            "trailingPunctuation": ")",
+            "joinEnd": ")",
             "punctuationChars": ",:;"
           }
         },
@@ -3744,7 +3744,7 @@
             "splitValuePattern": "^(.+?)(?:\\s+\\((.+)\\))?$",
             "splitValueProperties": ["value", "qualifier"],
             "rejoin": " (",
-            "trailingPunctuation": ")",
+            "joinEnd": ")",
             "punctuationChars": ",:;"
           }
         },
@@ -3909,11 +3909,17 @@
               {"a":"8888888888888 (epub)"}
             ]}},
             {"020": {"ind1":" ", "ind2":" ", "subfields":[
+              {"a":"aaaaaaaaaaaaa"}
+            ]}},
+            {"020": {"ind1":" ", "ind2":" ", "subfields":[
               {"a":"0000000000000 (epub)"},
               {"z":"1111111111111 (pbk. : alk. paper)"}
             ]}},
             {"020": {"ind1":" ", "ind2":" ", "subfields":[
               {"z":"2222222222222 (pbk. : alk. paper)"}
+            ]}},
+            {"020": {"ind1":" ", "ind2":" ", "subfields":[
+              {"z":"zzzzzzzzzzzzz"}
             ]}},
             {"020": {"ind1":" ", "ind2":" ", "subfields":[
               {"z":"3333333333333 (pbk. : alk. paper)"},
@@ -3932,6 +3938,10 @@
             },
             {
               "020": { "ind1": " ", "ind2": " ",
+                "subfields": [{"a": "aaaaaaaaaaaaa"}]}
+            },
+            {
+              "020": { "ind1": " ", "ind2": " ",
                 "subfields": [{"a": "0000000000000"}, {"q": "epub"}]}
             },
             {
@@ -3945,6 +3955,10 @@
             {
               "020": {"ind1": " ", "ind2": " ",
                 "subfields": [{"z": "2222222222222 (pbk. : alk. paper)"}]}
+            },
+            {
+              "020": {"ind1": " ", "ind2": " ",
+                "subfields": [{"z": "zzzzzzzzzzzzz"}]}
             },
             {
               "020": {"ind1": " ", "ind2": " ",
@@ -3972,6 +3986,10 @@
               },
               {
                 "@type": "ISBN",
+                "value": "aaaaaaaaaaaaa"
+              },
+              {
+                "@type": "ISBN",
                 "value": "0000000000000",
                 "qualifier": "epub"
               },
@@ -3991,6 +4009,10 @@
                 "@type": "ISBN",
                 "value": "2222222222222",
                 "qualifier": "pbk. : alk. paper"
+              },
+              {
+                "@type": "ISBN",
+                "value": "zzzzzzzzzzzzz"
               },
               {
                 "@type": "ISBN",
