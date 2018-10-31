@@ -2441,6 +2441,7 @@ class MarcSubFieldHandler extends ConversionPart {
     Pattern castPattern
     String castProperty
     String rejoin
+    String joinEnd
     boolean allowEmpty
     String definedElsewhereToken
     String marcDefault
@@ -2516,6 +2517,7 @@ class MarcSubFieldHandler extends ConversionPart {
             splitValuePattern = Pattern.compile(subDfn.splitValuePattern)
             splitValueProperties = subDfn.splitValueProperties
             rejoin = subDfn.rejoin
+            joinEnd = subDfn.joinEnd
             allowEmpty = subDfn.allowEmpty
         }
         if (subDfn.castPattern) {
@@ -2744,14 +2746,16 @@ class MarcSubFieldHandler extends ConversionPart {
                         allEmpty = false
                     }
                     if (v != null) {
+                        if (v instanceof List) {
+                            v = v.join(', ')
+                        }
                         vs << v
                     }
                 }
                 if (vs.size() == splitValueProperties.size() && !allEmpty) {
                     def value = vs.join(rejoin)
-                    if (trailingPunctuation &&
-                            !value.endsWith(trailingPunctuation)) {
-                        value += trailingPunctuation
+                    if (joinEnd && !value.endsWith(joinEnd)) {
+                        value += joinEnd
                     }
                     values << [value, i]
                     continue
