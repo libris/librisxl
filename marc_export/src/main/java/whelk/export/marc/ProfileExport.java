@@ -138,6 +138,12 @@ public class ProfileExport
         {
             List<Document> versions = m_whelk.getStorage().loadAllVersions(id);
 
+            // The 'versions' list is sorted, with the most recent version first.
+            // 1. We iterate through the list, skipping (continue) until we've found a
+            // version inside the update interval.
+            // 2. We keep iterating over versions and check if we're still inside the
+            // interval _after_ each iteration, which means we will pass (export) all
+            // versions inside the interval and exactly one version "before" the interval.
             for (Document version : versions)
             {
                 String itemOf = version.getHoldingFor();
@@ -154,7 +160,7 @@ public class ProfileExport
 
                 boolean insideInterval = from.toInstant().isBefore(modified) && until.toInstant().isAfter(modified);
                 if ( !insideInterval )
-                    break; // Only one more once outside the interval, then stop.
+                    break;
             }
         }
 
