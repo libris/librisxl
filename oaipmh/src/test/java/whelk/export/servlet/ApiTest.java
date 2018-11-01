@@ -22,6 +22,7 @@ public class ApiTest
      * loaded into a database, and the secrets.properties file correctly addresses this database.
      */
 
+    /*
     private static Server s_jettyServer;
 
     @BeforeClass
@@ -142,7 +143,7 @@ public class ApiTest
             String response = TestCommon.httpGet(call);
             validator.validate(new StreamSource(new StringReader(response)));
         }
-    }*/
+    }*
 
     @Test
     public void testNotAllowingUnknownParameters() throws Exception
@@ -246,7 +247,7 @@ public class ApiTest
         String response = TestCommon.httpGet("/oaipmh/?verb=ListRecords&set=bib:S&metadataPrefix=oai_dc");
         Assert.assertTrue( response.contains("bib:Gbg"));
         Assert.assertTrue( response.contains("bib:S"));
-    }*/
+    }*
 
     @Test
     public void testAuthSet() throws Exception
@@ -275,4 +276,5 @@ public class ApiTest
         String response = TestCommon.httpGet("/oaipmh/?verb=ListRecords&metadataPrefix=jsonld&set=hold");
         Assert.assertTrue( response.contains("itemOf id=\"http") );
     }
+    */
 }

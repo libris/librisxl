@@ -46,6 +46,10 @@ class JSONMarcConverter {
                                        datafield.addSubfield(subKey as char, subValue)
                                     }
                                 }
+                            }else if(dataValue instanceof Map) {
+                                dataValue.each {subKey, subValue ->
+                                    datafield.addSubfield(subKey as char, subValue)
+                                }
                             }else {
                                 int ind = 1
                                 if (dataKey.equals("ind1"))

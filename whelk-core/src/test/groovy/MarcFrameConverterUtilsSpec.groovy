@@ -240,6 +240,28 @@ class MarcFrameConverterUtilsSpec extends Specification {
         //'a b] c'    | '[a b] c'
     }
 
+    def "should build strings"() {
+        when:
+        def s = MarcFramePostProcStepBase.buildString(
+            [name: 'N', number: ['P', 'Q']],
+            [
+                'name',
+                [property: 'number', useValueFormat: [
+                    contentFirst: ', ',
+                    contentBefore: ' + ',
+                    contentAfter: ' .',
+                    contentLast: ' ;'
+                ]],
+                'qualifier',
+                [property: 'code', useValueFormat: [
+                    contentNoValue: ' [X]'
+                ]]
+            ]
+        )
+        then:
+        s == "N, P . + Q ; [X]"
+    }
+
     def newMarcFieldHandler() {
         new MarcFieldHandler(new MarcRuleSet(new MarcConversion(null, [:], [:]), 'blip'), 'xxx', [:])
     }

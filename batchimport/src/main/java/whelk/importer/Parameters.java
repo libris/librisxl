@@ -24,6 +24,7 @@ class Parameters
     private boolean replaceHold = false;
     private boolean replaceBib = false;
     private String changedBy = null;
+    private String changedIn = null;
 
     Path getPath() { return path; }
     INPUT_FORMAT getFormat() { return format; }
@@ -37,6 +38,7 @@ class Parameters
     boolean getReplaceHold() { return replaceHold; }
     boolean getReplaceBib() { return replaceBib; }
     String getChangedBy() { return changedBy; }
+    String getChangedIn() { return changedIn; }
 
     enum INPUT_FORMAT
     {
@@ -154,6 +156,7 @@ class Parameters
         System.err.println("--replaceHold If this flag is set, holding records will be replaced instead of merged.");
         System.err.println("");
         System.err.println("--changedBy   A string to use as descriptionCreator (MARC 040) for imported records.");
+        System.err.println("--changedIn   A string to use for the changedIn column, defaults to \"batch import\".");
     }
 
     private void interpretBinaryParameter(String parameter, String value)
@@ -189,6 +192,10 @@ class Parameters
 
             case "--changedBy":
                 changedBy = value;
+                break;
+
+            case "--changedIn":
+                changedIn = value;
                 break;
 
             case "--dupType":

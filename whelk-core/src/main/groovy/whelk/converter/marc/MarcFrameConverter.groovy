@@ -1366,11 +1366,6 @@ class MarcFixedFieldHandler {
                 return OK
             if (matchAsDefault && matchAsDefault.matcher(token).matches())
                 return OK
-            boolean isNothing = token.find {
-                it != FIXED_NONE && it != FIXED_UNDEF
-            } == null
-            if (isNothing)
-                return OK
             return super.convert(state, token)
         }
 
@@ -1555,6 +1550,8 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[.n]XX")
 
     static final String COLUMN_STRING_PROPERTY = 'code'
+    static final String UNDEF_VALUE = "|"
+    static final String NONE_VALUE = " "
 
     String property
     String uriTemplate
@@ -1633,6 +1630,13 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                 strValue = (String) value
             }
         }
+
+        boolean isNothing = value.find {
+            it != NONE_VALUE && it != UNDEF_VALUE
+        } == null
+
+        if (isNothing)
+            return OK
 
         if (dateTimeFormat) {
             def givenValue = value
@@ -1938,6 +1942,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         String precedingCode = null
         boolean precedingNewAbout = false
+
         value.subfields.each { Map it ->
             it.each { code, subVal ->
                 def subDfn = (MarcSubFieldHandler) subfields[code as String]
@@ -1961,6 +1966,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 }
             }
         }
+
+        shallowRemoveEmptyNodes(aboutEntity)
 
         if (constructProperties) {
             constructProperties.each { key, dfn ->
@@ -2031,6 +2038,31 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         return new ConvertResult(unhandled)
+    }
+
+    /**
+     * Remove empty nodes and nodes having just a type. Only does a shallow
+     * sweep in values of the given entity.
+     */
+    void shallowRemoveEmptyNodes(Map entity) {
+        Iterator entryIt = entity.entrySet().iterator()
+        Closure isEmpty = {
+            it instanceof Map && (it.size() == 0 ||
+                    (it.size() == 1 &&
+                     it.containsKey('@type')))
+        }
+        entryIt.each {
+            if (it.value instanceof List) {
+                it.value.removeAll(isEmpty)
+                if (it.value.size() == 0) {
+                    entryIt.remove()
+                }
+            } else if (it.value instanceof Map) {
+                if (isEmpty(it.value)) {
+                    entryIt.remove()
+                }
+            }
+        }
     }
 
     @CompileStatic(SKIP)
@@ -2409,6 +2441,7 @@ class MarcSubFieldHandler extends ConversionPart {
     Pattern castPattern
     String castProperty
     String rejoin
+    String joinEnd
     boolean allowEmpty
     String definedElsewhereToken
     String marcDefault
@@ -2484,6 +2517,7 @@ class MarcSubFieldHandler extends ConversionPart {
             splitValuePattern = Pattern.compile(subDfn.splitValuePattern)
             splitValueProperties = subDfn.splitValueProperties
             rejoin = subDfn.rejoin
+            joinEnd = subDfn.joinEnd
             allowEmpty = subDfn.allowEmpty
         }
         if (subDfn.castPattern) {
@@ -2712,11 +2746,18 @@ class MarcSubFieldHandler extends ConversionPart {
                         allEmpty = false
                     }
                     if (v != null) {
+                        if (v instanceof List) {
+                            v = v.join(', ')
+                        }
                         vs << v
                     }
                 }
                 if (vs.size() == splitValueProperties.size() && !allEmpty) {
-                    values << [vs.join(rejoin), i]
+                    def value = vs.join(rejoin)
+                    if (joinEnd && !value.endsWith(joinEnd)) {
+                        value += joinEnd
+                    }
+                    values << [value, i]
                     continue
                 }
             }

@@ -16,6 +16,7 @@ import whelk.IdType
 import whelk.JsonLd
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
+import whelk.exception.CancelUpdateException
 import whelk.filter.LinkFinder
 
 import java.sql.*
@@ -77,9 +78,6 @@ class PostgreSQLComponent {
     protected String GET_LEGACY_PROFILE
     protected String INSERT_EMBELLISHED_DOCUMENT
     protected String DELETE_EMBELLISHED_DOCUMENT
-
-    // Deprecated
-    protected String LOAD_ALL_DOCUMENTS_WITH_LINKS, LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION
 
     // Query defaults
     static final int DEFAULT_PAGE_SIZE = 50
@@ -173,7 +171,7 @@ class PostgreSQLComponent {
                                                       "WHERE iri = ? AND mainid = 't') " +
                                           "AND checksum = ?"
         GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,deleted,created,modified " +
-                "FROM $versionsTableName WHERE id = ? ORDER BY modified"
+                "FROM $versionsTableName WHERE id = ? ORDER BY modified DESC"
         GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID = "SELECT id,data,deleted,created,modified " +
                                                "FROM $versionsTableName " +
                                                "WHERE id = (SELECT id FROM $idTableName " +
@@ -200,7 +198,7 @@ class PostgreSQLComponent {
         GET_ID_TYPE = "SELECT graphindex, mainid FROM $idTableName " +
                       "WHERE iri = ?"
         GET_COLLECTION_BY_SYSTEM_ID = "SELECT collection FROM lddb where id = ?"
-        LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ? AND deleted = false"
+        LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE modified >= ? AND modified <= ? AND collection = ? AND deleted = false"
@@ -239,7 +237,7 @@ class PostgreSQLComponent {
                    "OR data->'@graph' @> ?"
 
         GET_SYSTEMID_BY_IRI = "SELECT id FROM $idTableName WHERE iri = ?"
-        GET_DOCUMENT_BY_IRI = "SELECT data FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
+        GET_DOCUMENT_BY_IRI = "SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
 
         GET_LEGACY_PROFILE = "SELECT profile FROM $profilesTableName WHERE library_id = ?"
      }
@@ -345,6 +343,9 @@ class PostgreSQLComponent {
 
             if (changedBy != null)
                 doc.setDescriptionCreator("https://libris.kb.se/library/" + changedBy)
+
+            if (linkFinder != null)
+                linkFinder.normalizeIdentifiers(doc, connection)
 
             insert = rigInsertStatement(insert, doc, changedIn, changedBy, collection, deleted)
             insert.executeUpdate()
@@ -640,8 +641,11 @@ class PostgreSQLComponent {
                 throw psqle
             }
         } catch (TooHighEncodingLevelException e) {
-            connection.rollback() // KP Not needed?
+            connection.rollback()
             throw e
+        } catch (CancelUpdateException e) {
+            /* An exception the called lambda/clousure can throw to cancel a record update. NOT an indication of an error. */
+            connection.rollback()
         } catch (Exception e) {
             log.error("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
@@ -1523,7 +1527,7 @@ class PostgreSQLComponent {
             preparedStatement.setString(1, iri)
             rs = preparedStatement.executeQuery()
             if (rs.next())
-                return new Document(mapper.readValue(rs.getString("data"), Map))
+                return assembleDocument(rs)
             return null
         }
         finally {
@@ -1729,9 +1733,10 @@ class PostgreSQLComponent {
     /**
      * Returns a list of holdings documents, for any of the passed thingIdentifiers
      */
-    List<Document> getAttachedHoldings(List<String> thingIdentifiers) {
+    List<Document> getAttachedHoldings(List<String> thingIdentifiers, JsonLd jsonld) {
         // Build the query
-        StringBuilder selectSQL = new StringBuilder("SELECT id,data,created,modified,deleted FROM ")
+
+        StringBuilder selectSQL = new StringBuilder("SELECT id FROM ")
         selectSQL.append(mainTableName)
         selectSQL.append(" WHERE collection = 'hold' AND deleted = false AND (")
         for (int i = 0; i < thingIdentifiers.size(); ++i)
@@ -1761,8 +1766,8 @@ class PostgreSQLComponent {
             rs = preparedStatement.executeQuery()
             List<Document> holdings = []
             while (rs.next()) {
-                Document holding = assembleDocument(rs)
-                holdings.add(holding)
+                String id = rs.getString("id")
+                holdings.add(loadEmbellished(id, jsonld))
             }
             return holdings
         }
@@ -1862,10 +1867,6 @@ class PostgreSQLComponent {
         return docList
     }
 
-    Iterable<Document> loadAll(String collection) {
-        return loadAllDocuments(collection, false)
-    }
-
     private Document assembleDocument(ResultSet rs) {
 
         Document doc = new Document(mapper.readValue(rs.getString("data"), Map))
@@ -1923,7 +1924,7 @@ class PostgreSQLComponent {
     }
 
     @CompileStatic(SKIP)
-    private Iterable<Document> loadAllDocuments(String collection, boolean withLinks, Date since = null, Date until = null) {
+    Iterable<Document> loadAll(String collection, boolean includeDeleted = false, Date since = null, Date until = null) {
         log.debug("Load all called with collection: $collection")
         return new Iterable<Document>() {
             Iterator<Document> iterator() {
@@ -1933,19 +1934,16 @@ class PostgreSQLComponent {
                 long untilTS = until?.getTime() ?: PGStatement.DATE_POSITIVE_INFINITY
                 long sinceTS = since?.getTime() ?: 0L
 
+                String sql
                 if (collection) {
-                    if (withLinks) {
-                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_WITH_LINKS_BY_COLLECTION)
-                    } else {
-                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_BY_COLLECTION)
-                    }
+                    sql = LOAD_ALL_DOCUMENTS_BY_COLLECTION
+
                 } else {
-                    if (withLinks) {
-                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_WITH_LINKS + " ORDER BY modified")
-                    } else {
-                        loadAllStatement = connection.prepareStatement(LOAD_ALL_DOCUMENTS + " ORDER BY modified")
-                    }
+                    sql = LOAD_ALL_DOCUMENTS
                 }
+                if (!includeDeleted)
+                    sql += " AND deleted = false"
+                loadAllStatement = connection.prepareStatement(sql)
                 loadAllStatement.setFetchSize(100)
                 loadAllStatement.setTimestamp(1, new Timestamp(sinceTS))
                 loadAllStatement.setTimestamp(2, new Timestamp(untilTS))
@@ -1990,24 +1988,24 @@ class PostgreSQLComponent {
         }
     }
 
-    boolean remove(String identifier, String changedIn, String changedBy) {
+    void remove(String identifier, String changedIn, String changedBy) {
         if (versioning) {
             log.debug("Marking document with ID ${identifier} as deleted.")
             try {
                 storeAtomicUpdate(identifier, false, changedIn, changedBy,
                     { Document doc ->
+                        if(!getDependers(identifier).isEmpty())
+                            throw new RuntimeException("Deleting depended upon records is not allowed.")
                         doc.setDeleted(true)
                         // Add a tombstone marker (without removing anything) perhaps?
                     })
             } catch (Throwable e) {
                 log.warn("Could not mark document with ID ${identifier} as deleted: ${e}")
-                return false
+                throw e
             }
         } else {
             throw new whelk.exception.WhelkException(
-                    "Actually deleting data from lddb is currently not supported, because doing so would" +
-                            "make the APIX-exporter (which will pickup the delete after the fact) not know what to delete in Voyager," +
-                            "which is unacceptable as long as Voyager still lives.")
+                    "Actually deleting data from lddb is currently not supported")
         }
 
         // Clear out dependencies
@@ -2024,8 +2022,6 @@ class PostgreSQLComponent {
         } finally {
             connection.close()
         }
-
-        return true
     }
 
 

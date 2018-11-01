@@ -82,20 +82,22 @@ class LinkFinder {
     void normalizeIdentifiers(Document document, Connection connection, boolean cacheAuthForever = false) {
 
         // Normalize ISBN and ISSN identifiers. No hyphens and upper case.
-        List typedIDs = document.get(Document.thingTypedIDsPath)
-        for (Object entry: typedIDs) {
-            if (entry instanceof Map) {
-                Map map = (Map) entry
-                String type = map.get("@type")
-                if ( type != null && type.equals("ISBN")) {
-                    String value = map.get("value")
-                    if (value != null)
-                        map.put("value", value.replaceAll("-", "").toUpperCase())
-                }
-                if ( type != null && type.equals("ISSN") ) {
-                    String value = map.get("value")
-                    if (value != null)
-                        map.put("value", value.toUpperCase())
+        for (List<String> path : [Document.thingTypedIDsPath, Document.thingIndirectTypedIDsPath]) {
+            List typedIDs = document.get(path)
+            for (Object entry : typedIDs) {
+                if (entry instanceof Map) {
+                    Map map = (Map) entry
+                    String type = map.get("@type")
+                    if (type != null && type.equals("ISBN")) {
+                        String value = map.get("value")
+                        if (value != null)
+                            map.put("value", value.replaceAll("-", "").toUpperCase())
+                    }
+                    if (type != null && type.equals("ISSN")) {
+                        String value = map.get("value")
+                        if (value != null)
+                            map.put("value", value.toUpperCase())
+                    }
                 }
             }
         }
