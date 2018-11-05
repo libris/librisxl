@@ -691,10 +691,11 @@ class XL
     private PreparedStatement getOnIssnHidden_ps(Connection connection, String issn)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
+        String query = "SELECT id FROM lddb WHERE deleted = false AND ( data#>'{@graph,1,identifiedBy}' @> ? OR data#>'{@graph,1,identifiedBy}' @> ?)";
         PreparedStatement statement =  connection.prepareStatement(query);
 
         statement.setObject(1, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": [\"" + issn + "\"]}]", java.sql.Types.OTHER);
+        statement.setObject(2, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": \"" + issn + "\"}]", java.sql.Types.OTHER);
 
         return statement;
     }
