@@ -508,34 +508,29 @@ class DocumentItem {
     private Whelk whelk
     private boolean needsSaving = false
     private boolean doDelete = false
-    private boolean loud = true
+    private boolean loud = false
     Closure onError = null
 
     def List getGraph() {
         return doc.data['@graph']
     }
 
-    void scheduleSave(boolean loud=true) {
-        scheduleSave(loud: loud)
-    }
-
-    void scheduleSave(Map params) {
+    void scheduleSave(Map params=[:]) {
+        assert params.containsKey('loud') : "Please state if change is loud or not"
         needsSaving = true
         set(params)
     }
 
-    void scheduleDelete(boolean loud=true) {
-        scheduleDelete(loud: true)
-    }
-
-    void scheduleDelete(Map params) {
+    void scheduleDelete(Map params=[:]) {
         needsSaving = true
         doDelete = true
         set(params)
     }
 
     private void set(Map params) {
-        this.loud = params.get('loud', true)
+        if (params.containsKey('loud')) {
+            this.loud = params.loud
+        }
         this.onError = params.onError
     }
 
