@@ -47,7 +47,7 @@ selectByCollection('bib') { data ->
         it.each {
             if (fixRdaLink(it)) {
                 // TODO: when correct, eliminate possible duplicate in List
-                data.scheduleSave()
+                data.scheduleSave(loud: false)
             }
         }
     }
