@@ -47,6 +47,8 @@ class WhelkTool {
     boolean stepWise
     int limit = -1
 
+    boolean allowLoud
+
     private boolean errorDetected
 
     private def jsonWriter = new ObjectMapper().writerWithDefaultPrettyPrinter()
@@ -345,6 +347,9 @@ class WhelkTool {
 
     private void doModification(DocumentItem item) {
         Document doc = item.doc
+        if (item.loud) {
+            assert allowLoud : "Loud changes need to be explicitly allowed"
+        }
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
@@ -432,6 +437,7 @@ class WhelkTool {
         if (stepWise) log "  stepWise"
         if (noThreads) log "  noThreads"
         if (limit > -1) log "  limit: $limit"
+        if (allowLoud) log "  allowLoud"
         log()
         Bindings bindings = createMainBindings()
         script.eval(bindings)
@@ -482,6 +488,7 @@ class WhelkTool {
         cli.T(longOpt:'no-threads', 'Do not use threads to parallellize batch processing')
         cli.s(longOpt:'step', 'Change one document at a time, prompting to continue')
         cli.l(longOpt:'limit', args:1, argName:'LIMIT', 'Amount of documents to process.')
+        cli.a(longOpt:'allow-loud', 'Allow scripts do do loud modifications')
 
         def options = cli.parse(args)
         if (options.h) {
@@ -496,6 +503,7 @@ class WhelkTool {
         tool.stepWise = options.s
         tool.noThreads = options.T
         tool.limit = options.l ? Integer.parseInt(options.l) : -1
+        tool.allowLoud = options.a
         tool.run()
     }
 
