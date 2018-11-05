@@ -430,8 +430,15 @@ class WhelkTool {
 
     private void run() {
         log "Running Whelk against:"
-        log "  PostgreSQL: ${whelk.storage.connectionPool.url}"
-        log "  ElasticSearch: ${whelk.elastic?.elasticHosts}"
+        log "  PostgreSQL:"
+        log "    url:     ${whelk.storage.connectionPool.url}"
+        log "    table:   ${whelk.storage.mainTableName}"
+        if (whelk.elastic) {
+            log "  ElasticSearch:"
+            log "    hosts:   ${whelk.elastic.elasticHosts}"
+            log "    cluster: ${whelk.elastic.elasticCluster}"
+            log "    index:   ${whelk.elastic.defaultIndex}"
+        }
         log "Using script: $scriptFile"
         if (dryRun) log "  dryRun"
         if (stepWise) log "  stepWise"
