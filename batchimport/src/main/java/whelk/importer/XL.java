@@ -189,8 +189,9 @@ class XL
                         String existingEncodingLevel = doc.getEncodingLevel();
                         String newEncodingLevel = rdfDoc.getEncodingLevel();
 
-                        if (existingEncodingLevel == null || !mayOverwriteExistingEncodingLevel(existingEncodingLevel, newEncodingLevel))
-                            throw new TooHighEncodingLevelException();
+                        if (!collection.equals("hold"))
+                            if (existingEncodingLevel == null || !mayOverwriteExistingEncodingLevel(existingEncodingLevel, newEncodingLevel))
+                                throw new TooHighEncodingLevelException();
 
                         List<String> recordIDs = doc.getRecordIdentifiers();
                         List<String> thingIDs = doc.getThingIdentifiers();
