@@ -489,13 +489,13 @@ class WhelkTool {
 
     static void main(String[] args) {
         def cli = new CliBuilder(usage:'whelktool [options] <SCRIPT>')
-        cli.h(longOpt: 'help', 'Print this help message')
-        cli.r(longOpt:'report', args:1, argName:'REPORT-DIR', 'Directory where reports are written (defaults to "reports")')
-        cli.d(longOpt:'dry-run', 'Do not save any modifications')
-        cli.T(longOpt:'no-threads', 'Do not use threads to parallellize batch processing')
-        cli.s(longOpt:'step', 'Change one document at a time, prompting to continue')
+        cli.h(longOpt: 'help', 'Print this help message and exit.')
+        cli.r(longOpt:'report', args:1, argName:'REPORT-DIR', 'Directory where reports are written (defaults to "reports").')
+        cli.d(longOpt:'dry-run', 'Do not save any modifications.')
+        cli.T(longOpt:'no-threads', 'Do not use threads to parallellize batch processing.')
+        cli.s(longOpt:'step', 'Change one document at a time, prompting to continue.')
         cli.l(longOpt:'limit', args:1, argName:'LIMIT', 'Amount of documents to process.')
-        cli.a(longOpt:'allow-loud', 'Allow scripts do do loud modifications')
+        cli.a(longOpt:'allow-loud', 'Allow scripts to do loud modifications.')
 
         def options = cli.parse(args)
         if (options.h) {
