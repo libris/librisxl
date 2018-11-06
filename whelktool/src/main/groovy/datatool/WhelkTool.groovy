@@ -531,7 +531,6 @@ class DocumentItem {
     }
 
     void scheduleSave(Map params=[:]) {
-        assert params.containsKey('loud') : "Please state if change is loud or not"
         needsSaving = true
         set(params)
     }
