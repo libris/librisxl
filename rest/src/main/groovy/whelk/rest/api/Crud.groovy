@@ -650,6 +650,7 @@ class Crud extends HttpServlet {
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Body could not be categorized as auth, bib or hold.")
+            return
         }
 
         // verify user permissions
@@ -805,6 +806,7 @@ class Crud extends HttpServlet {
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Body could not be categorized as auth, bib or hold.")
+            return
         }
 
         boolean isUpdate = true
