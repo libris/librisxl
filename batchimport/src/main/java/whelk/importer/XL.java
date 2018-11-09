@@ -102,35 +102,30 @@ class XL
             else
                 importedHoldRecords.inc();
         }
-        else if (duplicateIDs.size() == 1) // Enrich ("merge") or replace
+        else if (duplicateIDs.size() == 1) // merge, keep or replace
         {
-            if (collection.equals("bib"))
+            // replace
+            if ((m_parameters.getReplaceBib() && collection.equals("bib")) ||
+                    m_parameters.getReplaceHold() && collection.equals("hold"))
             {
-                if ( m_parameters.getReplaceBib() )
-                {
-                    String idToReplace = duplicateIDs.iterator().next();
-                    resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, idToReplace);
-                    importedBibRecords.inc();
-                }
-                else // Merge bib
-                {
-                    resultingResourceId = enrichRecord((String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId);
-                    enrichedBibRecords.inc();
-                }
+                String idToReplace = duplicateIDs.iterator().next();
+                resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, idToReplace);
             }
-            else // collection = hold
+
+            // merge
+            else if ((m_parameters.getMergeBib() && collection.equals("bib")) ||
+                    m_parameters.getMergeHold() && collection.equals("hold"))
             {
-                if ( m_parameters.getReplaceHold() ) // Replace hold
-                {
-                    String idToReplace = duplicateIDs.iterator().next();
-                    resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, idToReplace);
-                    importedHoldRecords.inc();
-                }
-                else // Merge hold
-                {
-                    resultingResourceId = enrichRecord((String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId);
-                    enrichedHoldRecords.inc();
-                }
+                resultingResourceId = enrichRecord((String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId);
+            }
+
+            // Keep existing
+            else
+            {
+                if (collection.equals("bib"))
+                    resultingResourceId = m_whelk.getStorage().getThingId((String) duplicateIDs.toArray()[0]);
+                else
+                    resultingResourceId = null;
             }
         }
         else
