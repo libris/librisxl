@@ -459,33 +459,38 @@ class XL
                     break;
             }
 
-            // Filter the candidates based on instance @type and work @type ("materialtyp").
-            Iterator<String> it = duplicateIDs.iterator();
-            while (it.hasNext())
+            // If the type currently being checked is NOT 001 or 035$a, filter the candidates based on
+            // instance @type and work @type ("materialtyp").
+            if (dupType != Parameters.DUPLICATION_TYPE.DUPTYPE_LIBRISID &&
+                    dupType != Parameters.DUPLICATION_TYPE.DUPTYPE_035A)
             {
-                String candidateID = it.next();
-                Document candidate = m_whelk.getStorage().loadEmbellished(candidateID, m_whelk.getJsonld());
-
-                String incomingInstanceType = rdfDoc.getThingType();
-                String existingInstanceType = candidate.getThingType();
-                String incomingWorkType = rdfDoc.getWorkType();
-                String existingWorkType = candidate.getWorkType();
-
-                // Unrelated work types? -> not a valid match
-                if ( ! m_whelk.getJsonld().isSubClassOf(incomingWorkType, existingWorkType) &&
-                        ! m_whelk.getJsonld().isSubClassOf(existingWorkType, incomingWorkType) )
+                Iterator<String> it = duplicateIDs.iterator();
+                while (it.hasNext())
                 {
-                    it.remove();
-                    continue;
-                }
+                    String candidateID = it.next();
+                    Document candidate = m_whelk.getStorage().loadEmbellished(candidateID, m_whelk.getJsonld());
 
-                // If A is Electronic and B is Instance or vice versa, do not consider documents matching. This is
-                // frail since Electronic is a subtype of Instance.
-                // HERE BE DRAGONS.
-                if ( (incomingInstanceType.equals("Electronic") && existingInstanceType.equals("Instance")) ||
-                        (incomingInstanceType.equals("Instance") && existingInstanceType.equals("Electronic")))
-                {
-                    it.remove();
+                    String incomingInstanceType = rdfDoc.getThingType();
+                    String existingInstanceType = candidate.getThingType();
+                    String incomingWorkType = rdfDoc.getWorkType();
+                    String existingWorkType = candidate.getWorkType();
+
+                    // Unrelated work types? -> not a valid match
+                    if (!m_whelk.getJsonld().isSubClassOf(incomingWorkType, existingWorkType) &&
+                            !m_whelk.getJsonld().isSubClassOf(existingWorkType, incomingWorkType))
+                    {
+                        it.remove();
+                        continue;
+                    }
+
+                    // If A is Electronic and B is Instance or vice versa, do not consider documents matching. This is
+                    // frail since Electronic is a subtype of Instance.
+                    // HERE BE DRAGONS.
+                    if ((incomingInstanceType.equals("Electronic") && existingInstanceType.equals("Instance")) ||
+                            (incomingInstanceType.equals("Instance") && existingInstanceType.equals("Electronic")))
+                    {
+                        it.remove();
+                    }
                 }
             }
 
