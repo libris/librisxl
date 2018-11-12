@@ -33,7 +33,7 @@ import java.util.Properties;
 
 public class Utils
 {
-    static final String APIX_BASEURI = "https://apix.libris.kb.se/apix";
+    static final String APIX_BASEURI = "https://libris.kb.se/apix";
     static final String APIX_SYSTEM_CODE = "APIX";
     static Whelk s_whelk;
     private static JsonLD2MarcXMLConverter s_toMarcConverter;
