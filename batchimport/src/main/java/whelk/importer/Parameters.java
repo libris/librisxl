@@ -23,6 +23,8 @@ class Parameters
     private boolean verbose = false;
     private boolean replaceHold = false;
     private boolean replaceBib = false;
+    private boolean mergeHold = false;
+    private boolean mergeBib = false;
     private String changedBy = null;
     private String changedIn = null;
 
@@ -37,6 +39,8 @@ class Parameters
     boolean getVerbose() { return verbose; }
     boolean getReplaceHold() { return replaceHold; }
     boolean getReplaceBib() { return replaceBib; }
+    boolean getMergeHold() { return mergeHold; }
+    boolean getMergeBib() { return mergeBib; }
     String getChangedBy() { return changedBy; }
     String getChangedIn() { return changedIn; }
 
@@ -78,6 +82,18 @@ class Parameters
         if (format == null)
         {
             printUsage();
+            System.exit(-1);
+        }
+
+        if (replaceBib && mergeBib)
+        {
+            System.err.println("Cannot both replace and merge bib.");
+            System.exit(-1);
+        }
+
+        if (replaceHold && mergeHold)
+        {
+            System.err.println("Cannot both replace and merge hold.");
             System.exit(-1);
         }
     }
@@ -151,9 +167,17 @@ class Parameters
         System.err.println("");
         System.err.println("--verbose     Verbose logging.");
         System.err.println("");
-        System.err.println("--replaceBib  If this flag is set, bibliographic records will be replaced instead of merged.");
+        System.err.println("--replaceBib  If this flag is set, matching bibliographic records will be replaced.");
+        System.err.println("              Mutually exclusive with --mergeBib");
         System.err.println("");
-        System.err.println("--replaceHold If this flag is set, holding records will be replaced instead of merged.");
+        System.err.println("--replaceHold If this flag is set, matching holding records will be replaced.");
+        System.err.println("              Mutually exclusive with --mergeHold");
+        System.err.println("");
+        System.err.println("--mergeBib    If this flag is set, matching bibliographic records will be merged.");
+        System.err.println("              Mutually exclusive with --replaceBib");
+        System.err.println("");
+        System.err.println("--mergeHold   If this flag is set, matching holding records will be merged.");
+        System.err.println("              Mutually exclusive with --replaceHold");
         System.err.println("");
         System.err.println("--changedBy   A string to use as descriptionCreator (MARC 040) for imported records.");
         System.err.println("--changedIn   A string to use for the changedIn column, defaults to \"batch import\".");
@@ -250,6 +274,12 @@ class Parameters
                 break;
             case "--replaceBib":
                 replaceBib = true;
+                break;
+            case "--mergeHold":
+                mergeHold = true;
+                break;
+            case "--mergeBib":
+                mergeBib = true;
                 break;
             default:
                 throw new IllegalArgumentException(parameter);
