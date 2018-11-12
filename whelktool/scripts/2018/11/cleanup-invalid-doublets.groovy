@@ -85,6 +85,13 @@ void fixPrimaryContribs(data, resource) {
         return
 
     Map keptPrimaryContrib = primaryContribs[-1]
+
+    // Fix List-wrapped agent
+    def agent = keptPrimaryContrib.agent
+    if (agent instanceof List && agent.size() == 1) {
+        keptPrimaryContrib.agent = agent[0]
+    }
+
     def unwantedPrimaryContribs = primaryContribs[0..-2] as Set<Map>
     unwantedPrimaryContribs.removeAll {
         if (!similarContribution(it, keptPrimaryContrib)) {
@@ -133,7 +140,7 @@ void fixPrimaryContribs(data, resource) {
     }
 }
 
-//selectByIds(['fzr7zx6r3ns1wc1', '1kcq4vsc3n3kggx', 'cwp4dbhp175mlkm', 'j2v9qsmv0vt1w5k', 'sb4g0lr43fcrz42', 'cvn87b7p1zmsjhf', '4ngs6vng0469nsm']) { data ->
+//selectByIds(['fzr7zx6r3ns1wc1', '1kcq4vsc3n3kggx', 'cwp4dbhp175mlkm', 'j2v9qsmv0vt1w5k', 'sb4g0lr43fcrz42', 'cvn87b7p1zmsjhf', '4ngs6vng0469nsm', 'gqtb6190dcdg0ngd']) { data ->
 selectBySqlWhere('''
     data#>>'{@graph,1,hasTitle}' LIKE '%"Title"%"Title"%'
     OR
