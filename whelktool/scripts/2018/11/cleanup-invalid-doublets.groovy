@@ -73,6 +73,22 @@ boolean similarEntity(Map a, Map b) {
     return nonSimilar == null
 }
 
+/**
+ * Fixes List-wrapped agent on a contribution.
+ * @return Whether the agent object was fixed or not.
+ */
+boolean fixAgentObject(contrib) {
+    def agent = contrib.agent
+    if (agent instanceof List) {
+        if (agent.size() == 1) {
+            contrib.agent = agent[0]
+            return true
+        }
+        return false
+    }
+    return true
+}
+
 void fixPrimaryContribs(data, resource) {
     List<Map> contribs = resource.contribution
     if (!(contribs instanceof List))
@@ -80,17 +96,17 @@ void fixPrimaryContribs(data, resource) {
     if (contribs.size() < 2)
         return
 
+    // Tentatively adjust single-agents-in-lists (won't be saved unless any
+    // doublet is fixed)
+    contribs.each {
+        fixAgentObject(it)
+    }
+
     def primaryContribs = contribs.findAll { it[TYPE] == 'PrimaryContribution' }
     if (!primaryContribs || primaryContribs.size() == 1)
         return
 
     Map keptPrimaryContrib = primaryContribs[-1]
-
-    // Fix List-wrapped agent
-    def agent = keptPrimaryContrib.agent
-    if (agent instanceof List && agent.size() == 1) {
-        keptPrimaryContrib.agent = agent[0]
-    }
 
     def unwantedPrimaryContribs = primaryContribs[0..-2] as Set<Map>
     unwantedPrimaryContribs.removeAll {
@@ -140,7 +156,7 @@ void fixPrimaryContribs(data, resource) {
     }
 }
 
-//selectByIds(['fzr7zx6r3ns1wc1', '1kcq4vsc3n3kggx', 'cwp4dbhp175mlkm', 'j2v9qsmv0vt1w5k', 'sb4g0lr43fcrz42', 'cvn87b7p1zmsjhf', '4ngs6vng0469nsm', 'gqtb6190dcdg0ngd']) { data ->
+//selectByIds(['fzr7zx6r3ns1wc1', '1kcq4vsc3n3kggx', 'cwp4dbhp175mlkm', 'j2v9qsmv0vt1w5k', 'sb4g0lr43fcrz42', 'cvn87b7p1zmsjhf', '4ngs6vng0469nsm', 'gqtb6190dcdg0ngd', 'x6b9v2l2vg7bjll7']) { data ->
 selectBySqlWhere('''
     data#>>'{@graph,1,hasTitle}' LIKE '%"Title"%"Title"%'
     OR
