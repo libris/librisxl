@@ -1,10 +1,5 @@
 leftovers = getReportWriter("titledoublet-leftovers")
 
-void fixDups(data, resource) {
-    fixTitles(data, resource)
-    fixPrimaryContribs(data, resource)
-}
-
 void fixTitles(data, resource) {
     List<Map> titles = resource.hasTitle
 
@@ -156,11 +151,9 @@ void fixPrimaryContribs(data, resource) {
     }
 }
 
-//selectByIds(['fzr7zx6r3ns1wc1', '1kcq4vsc3n3kggx', 'cwp4dbhp175mlkm', 'j2v9qsmv0vt1w5k', 'sb4g0lr43fcrz42', 'cvn87b7p1zmsjhf', '4ngs6vng0469nsm', 'gqtb6190dcdg0ngd', 'x6b9v2l2vg7bjll7']) { data ->
+//selectByIds(['fzr7zx6r3ns1wc1', '1kcq4vsc3n3kggx', 'cwp4dbhp175mlkm', 'j2v9qsmv0vt1w5k', 'sb4g0lr43fcrz42', 'cvn87b7p1zmsjhf', '4ngs6vng0469nsm', 'gqtb6190dcdg0ngd', 'x6b9v2l2vg7bjll7', 'sb459gg42gx6dbx']) { data ->
 selectBySqlWhere('''
     data#>>'{@graph,1,hasTitle}' LIKE '%"Title"%"Title"%'
-    OR
-    data#>>'{@graph,2,hasTitle}' LIKE '%"Title"%"Title"%'
     OR
     data#>>'{@graph,2,contribution}' LIKE '%"PrimaryContribution"%"PrimaryContribution"%'
 ''') { data ->
@@ -173,8 +166,9 @@ selectBySqlWhere('''
         return // TODO: we might still have dup data left ...
     }
 
-    fixDups(data, instance)
+    fixTitles(data, instance)
+
     if (work && isInstanceOf(work, 'Work')) {
-        fixDups(data, work)
+        fixPrimaryContribs(data, work)
     }
 }
