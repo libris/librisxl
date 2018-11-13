@@ -3722,14 +3722,11 @@
           "aboutEntity": "?thing",
           "addLink": "indirectlyIdentifiedBy",
           "resourceType": "ISBN",
+          "subfieldOrder": "z q",
           "$a": null,
-          "$q": null,
+          "$q": {"property": "qualifier"},
           "$z": {
             "property": "value",
-            "splitValuePattern": "^(.+?)(?:\\s+\\((.+)\\))?$",
-            "splitValueProperties": ["value", "qualifier"],
-            "rejoin": " (",
-            "joinEnd": ")",
             "punctuationChars": ",:;"
           }
         },
@@ -3743,14 +3740,22 @@
             "property": "value",
             "splitValuePattern": "^(.+?)(?:\\s+\\((.+)\\))?$",
             "splitValueProperties": ["value", "qualifier"],
-            "rejoin": " (",
-            "joinEnd": ")",
             "punctuationChars": ",:;"
           }
         },
         {
           "when": "$z",
-          "inherit-match": "$a & $z"
+          "aboutEntity": "?thing",
+          "addLink": "indirectlyIdentifiedBy",
+          "resourceType": "ISBN",
+          "$a": null,
+          "$q": {"property": "qualifier"},
+          "$z": {
+            "property": "value",
+            "splitValuePattern": "^(.+?)(?:\\s+\\((.+)\\))?$",
+            "splitValueProperties": ["value", "qualifier"],
+            "punctuationChars": ",:;"
+          }
         },
         {
           "when": null,
@@ -3851,7 +3856,7 @@
             {
               "020": {
                 "ind1":" ", "ind2":" ", "subfields": [
-                  {"z": "9780230274396 (print)"}
+                  {"z": "9780230274396"}, {"q": "print"}
                 ]
               }
             }
@@ -3876,7 +3881,11 @@
         {
           "source": {
             "020": {"ind1":" ", "ind2":" ", "subfields":[
-              {"z":"9780240811444 (pbk. : alk. paper)"} ]}
+              {"z": "9780240811444 (pbk. : alk. paper)"} ]}
+          },
+          "normalized": {
+            "020": {"ind1":" ", "ind2":" ", "subfields":[
+              {"z": "9780240811444"}, {"q": "pbk. : alk. paper"} ]}
           },
           "result": {"mainEntity": {
             "indirectlyIdentifiedBy": [
@@ -3904,6 +3913,7 @@
         },
         {
           "name": "indirectlyIdentifiedBy edge case",
+          "FIXME": "3333333333333 is lost on revert",
           "source": [
             {"020": {"ind1":" ", "ind2":" ", "subfields":[
               {"a":"8888888888888 (epub)"}
@@ -3950,11 +3960,11 @@
             },
             {
               "020": {"ind1": " ", "ind2": " ",
-                "subfields": [{"z": "1111111111111 (pbk. : alk. paper)"}]}
+                "subfields": [{"z": "1111111111111"}, {"q": "pbk. : alk. paper"}]}
             },
             {
               "020": {"ind1": " ", "ind2": " ",
-                "subfields": [{"z": "2222222222222 (pbk. : alk. paper)"}]}
+                "subfields": [{"z": "2222222222222"}, {"q": "pbk. : alk. paper"}]}
             },
             {
               "020": {"ind1": " ", "ind2": " ",
@@ -3962,19 +3972,19 @@
             },
             {
               "020": {"ind1": " ", "ind2": " ",
-                "subfields": [{"z": "3333333333333 (pbk. : alk. paper)"}]}
+                "subfields": [{"z": "3333333333333"}, {"q": "pbk. : alk. paper"}]}
             },
             {
               "020": {"ind1": " ", "ind2": " ",
-                "subfields": [{"z": "4444444444444 (pbk. : alk. paper)"}]}
+                "subfields": [{"z": "4444444444444"}, {"q": "pbk. : alk. paper"}]}
             },
             {
               "020": {"ind1": " ", "ind2": " ",
-                "subfields": [{"z": "5555555555555 (pbk. : alk. paper)"}]}
+                "subfields": [{"z": "5555555555555"}, {"q": "pbk. : alk. paper"}]}
             },
             {
               "020": {"ind1": " ", "ind2": " ",
-                "subfields": [{"z": "6666666666666 (pbk. : alk. paper)"}]}
+                "subfields": [{"z": "6666666666666"}, {"q": "pbk. : alk. paper"}]}
             }
           ],
           "result": {"mainEntity": {
