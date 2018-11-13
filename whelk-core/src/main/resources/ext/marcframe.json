@@ -1409,6 +1409,8 @@
         "overwriteType": "PrimaryProvisionActivity",
         "flagProperty": "marc:publicationStatus",
         "matchValuePattern": "^[0-9u]{4}$",
+        "fuzzyMergeProperty": "date",
+        "fuzzPattern": "[^0-9u]{1,3}",
         "flagMatch": {
           "marc:PublicationDateAndCopyrightDate": {
             "mergeFirstLink": "publication",
@@ -1525,16 +1527,20 @@
             },
             "result": {
               "publication": [
-                {"@type": "PrimaryPublication", "year": "1977"},
-                {"@type": "Publication", "date": "ca 1977"}
-              ]
-            },
-            "TODO:desired": {
-              "publication": [
                 {"@type": "PrimaryPublication", "year": "1977", "date": "ca 1977"}
               ]
             },
-            "back": "both"
+            "back": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "1977",
+                "date": "ca 1977"
+              },
+              "publication": [
+                {"@type": "PrimaryPublication", "year": "1977", "date": "ca 1977"}
+              ]
+            }
           },
           {
             "source": {
@@ -1650,15 +1656,20 @@
                 {
                   "@type": "PrimaryPublication",
                   "startYear": "1977",
+                  "date": "[1977-]",
                   "country": [ {"@id": "https://id.kb.se/country/sw"} ]
-                },
-                {
-                  "@type": "Publication",
-                  "date": "[1977-]"
                 }
               ]
             },
-            "TODO:desired": {
+            "back": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
+                "year": "1977",
+                "otherYear": "9999",
+                "date": "[1977-]",
+                "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+              },
               "publication": [
                 {
                   "@type": "PrimaryPublication",
@@ -1667,8 +1678,7 @@
                   "country": [ {"@id": "https://id.kb.se/country/sw"} ]
                 }
               ]
-            },
-            "back": "both"
+            }
           },
           {
             "source": {

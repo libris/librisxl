@@ -179,10 +179,16 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
     String sourceLink
     String overwriteType
     String flagProperty
+    String fuzzyMergeProperty
+    Pattern fuzzPattern
 
     Map<String, FlagMatchRule> flagMatch = [:]
 
     private Map<String, List<FlagMatchRule>> flagMatchByLink = [:]
+
+    void setFuzzPattern(String pattern) {
+        fuzzPattern = Pattern.compile(pattern)
+    }
 
     void setFlagMatch(Map flagMatch) {
         flagMatch.each { flag, ruleDfn ->
@@ -231,14 +237,21 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
             boolean mergeOk = false
             def target = list[0]
             if (ld && target) {
-                boolean targetContainsSomeRemapped =
-                    flagRule.remapProperty.values().any {
-                        def value = target[it]
-                        value && value instanceof String && matchValuePattern.matcher(value)
-                    }
+                def mappedProperties = flagRule.remapProperty.values()
+                boolean targetContainsSomeRemapped = mappedProperties.any {
+                    def value = target[it]
+                    value && value instanceof String && matchValuePattern.matcher(value)
+                }
+
+                boolean onlyExpectedValuesInFuzzyProperty =
+                    checkOnlyExpectedValuesInFuzzyProperty(target, obj, mappedProperties)
+
                 if ((!flagRule.revertRequiresNo ||
                         !target.containsKey(flagRule.revertRequiresNo)) &&
-                    targetContainsSomeRemapped) {
+                    (targetContainsSomeRemapped ||
+                     (!fuzzyMergeProperty || onlyExpectedValuesInFuzzyProperty)
+                    )
+                   ) {
                     mergeOk = ld.softMerge(obj, target)
                 }
             }
@@ -247,6 +260,30 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
             }
             thing.remove(sourceLink)
         }
+    }
+
+    /**
+     * This compares a fuzzy value with stricter values for fuzzy equivalence
+     * when merging a node. We do so by removing defined "fuzz" from the fuzzy
+     * value, and then remove the stricter values as well. If the result is
+     * empty, the fuzzy value is considered equivalent enough.
+     */
+    boolean checkOnlyExpectedValuesInFuzzyProperty(Map target, Map obj,
+            Iterable<String> strictProperties) {
+        if (fuzzyMergeProperty) {
+            String fuzzyValue = target[fuzzyMergeProperty]
+            if (fuzzyValue) {
+                fuzzyValue = fuzzPattern.matcher(fuzzyValue).replaceAll('')
+                strictProperties.each {
+                    String v = obj[it]
+                    if (v) {
+                        fuzzyValue = fuzzyValue.replaceFirst(Pattern.quote(v), '')
+                    }
+                }
+                return fuzzyValue.trim() == ''
+            }
+        }
+        return false
     }
 
     void unmodify(Map record, Map thing) {
