@@ -8004,7 +8004,7 @@
       "resourceType": "MusicFormat",
       "$a": {"addProperty": "label"},
       "$b": {"addProperty": "code"},
-      "$0": {"addProperty": "marc:recordControlNumber"},
+      "$0": {"addProperty": "marc:uri"},
       "$1": {"addProperty": "marc:rwoURI"},
       "$2": {"link": "source", "resourceType": "Source", "property": "code"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
