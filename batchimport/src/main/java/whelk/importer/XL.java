@@ -5,6 +5,7 @@ import io.prometheus.client.Counter;
 import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.impl.MarcRecordImpl;
 import se.kb.libris.utils.isbn.ConvertException;
 import se.kb.libris.utils.isbn.Isbn;
 import se.kb.libris.utils.isbn.IsbnException;
@@ -123,7 +124,12 @@ class XL
             else
             {
                 if (collection.equals("bib"))
-                    resultingResourceId = m_whelk.getStorage().getThingId((String) duplicateIDs.toArray()[0]);
+                {
+                    String duplicateId = (String) duplicateIDs.toArray()[0];
+                    if (!duplicateId.startsWith(Document.getBASE_URI().toString()))
+                        duplicateId = Document.getBASE_URI().toString() + duplicateId;
+                    resultingResourceId = m_whelk.getStorage().getThingId(duplicateId);
+                }
                 else
                     resultingResourceId = null;
             }
@@ -344,8 +350,9 @@ class XL
         mutableDocument.data = enrichedData;
     }
 
-    private Document convertToRDF(MarcRecord marcRecord, String id)
+    private Document convertToRDF(MarcRecord _marcRecord, String id)
     {
+        MarcRecord marcRecord = cloneMarcRecord(_marcRecord);
         while (marcRecord.getControlfields("001").size() > 0)
             marcRecord.getFields().remove(marcRecord.getControlfields("001").get(0));
         marcRecord.addField(marcRecord.createControlfield("001", id));
@@ -363,6 +370,19 @@ class XL
         convertedDocument.deepReplaceId(Document.getBASE_URI().toString()+id);
         m_linkfinder.normalizeIdentifiers(convertedDocument);
         return convertedDocument;
+    }
+
+    private MarcRecord cloneMarcRecord(MarcRecord original)
+    {
+        MarcRecord clone = new MarcRecordImpl();
+        for (Field f : original.getFields())
+            clone.addField(f);
+        clone.setLeader(original.getLeader());
+        for (Object key : original.getProperties().keySet())
+            clone.setProperty( (String) key, original.getProperties().get(key));
+        clone.setOriginalData(original.getOriginalData());
+
+        return clone;
     }
 
     private Set<String> getDuplicates(MarcRecord marcRecord, String collection, String relatedWithBibResourceId)
