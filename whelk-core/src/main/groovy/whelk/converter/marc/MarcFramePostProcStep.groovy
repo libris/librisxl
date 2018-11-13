@@ -249,8 +249,7 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
                 if ((!flagRule.revertRequiresNo ||
                         !target.containsKey(flagRule.revertRequiresNo)) &&
                     (targetContainsSomeRemapped ||
-                     (!fuzzyMergeProperty || onlyExpectedValuesInFuzzyProperty)
-                    )
+                     onlyExpectedValuesInFuzzyProperty)
                    ) {
                     mergeOk = ld.softMerge(obj, target)
                 }
