@@ -1176,10 +1176,10 @@ class PostgreSQLComponent {
     }
 
     /**
-     * Get the corresponding record main ID for supplied identifier
+     * Get the corresponding record main URI for supplied identifier
      *
-     * Supplied identifier can be either the document ID, the thing ID, or a
-     * sameAs ID.
+     * Supplied identifier can be either the document URI, the thing URI, or a
+     * sameAs URI, BUT NOT A SYSTEM ID.
      *
      */
     String getRecordId(String id) {
@@ -1199,8 +1199,8 @@ class PostgreSQLComponent {
     /**
      * Get the corresponding thing main ID for supplied identifier
      *
-     * Supplied identifier can be either the document ID, the thing ID, or a
-     * sameAs ID.
+     * Supplied identifier can be either the document URI, the thing URI, or a
+     * sameAs URI, BUT NOT A SYSTEM ID.
      *
      */
     String getThingId(String id) {
