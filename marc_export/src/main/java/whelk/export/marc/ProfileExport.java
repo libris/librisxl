@@ -242,10 +242,13 @@ public class ProfileExport
         {
             boolean onlineResource = false;
             List<Map> carrierTypes = document.getCarrierTypes();
-            for (Map map : carrierTypes)
+            if (carrierTypes)
             {
-                if ( map.get("@id").equals("https://id.kb.se/marc/OnlineResource") )
-                    onlineResource = true;
+                for (Map map : carrierTypes)
+                {
+                    if ( map.get("@id").equals("https://id.kb.se/marc/OnlineResource") )
+                        onlineResource = true;
+                }
             }
             if (document.getThingType().equals("Electronic") && onlineResource)
                 return;

@@ -157,6 +157,18 @@ if (( $rowCount != 1 )) ; then
     fail "Expected single hold record (after IBSN$z 10/13 test)"
 fi
 
+cleanup
+# Should match an existing example record (on Voyager-style LIBRIS-ID), and only add the holding
+java -jar build/libs/batchimport.jar --path=./integtest/batch10.xml --format=xml --dupType=LIBRIS-ID --live --changedIn=importtest
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'bib'")
+if (( $rowCount != 0 )) ; then
+    fail "Expected no bib record"
+fi
+rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'hold'")
+if (( $rowCount != 1 )) ; then
+    fail "Expected single hold record"
+fi
+
 
 cleanup
 popd
