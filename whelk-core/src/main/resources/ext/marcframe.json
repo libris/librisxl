@@ -11472,6 +11472,73 @@
           }}
         },
         {
+          "name": "Example from bib 10068187",
+          "source": [
+            {"700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Hayn, Joseph,"}, {"d": "1732-1809."}, {"t": "Trio,"}, {"m": "piano"}, {"m": "flöjt"},
+              {"m": "violoncell,"}, {"n": "Hob. XV:15,"}, {"r": "G-dur"}]}},
+            {"700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Hayn, Joseph,"}, {"d": "1732-1809."}, {"t": "Trio,"}, {"m": "piano"}, {"m": "flöjt"},
+              {"m": "violoncell,"}, {"n": "Hob. XV:16,"}, {"r": "D-dur"}]}},
+            {"700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Hayn, Joseph,"}, {"d": "1732-1809."}, {"t": "Trio,"}, {"m": "piano"}, {"m": "flöjt"},
+              {"m": "violoncell,"}, {"n": "Hob. XV:17,"}, {"r": "F-dur"}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relationship": [{
+                "@type": "Relationship",
+                "entity": {
+                  "@type": "Work",
+                  "contribution": [{
+                    "@type": "PrimaryContribution",
+                    "agent": {"@type": "Person", "familyName": "Hayn", "givenName": "Joseph", "lifeSpan": "1732-1809."}
+                  }],
+                  "hasTitle": [{"@type": "Title", "mainTitle": "Trio", "partNumber": ["Hob. XV:15"]}],
+                  "musicKey": "G-dur",
+                  "musicMedium": [
+                    {"@type": "MusicMedium", "label": "piano"},
+                    {"@type": "MusicMedium", "label": "flöjt"},
+                    {"@type": "MusicMedium", "label": "violoncell"}
+                  ]
+                }
+              }, {
+                "@type": "Relationship",
+                "entity": {
+                  "@type": "Work",
+                  "contribution": [{
+                    "@type": "PrimaryContribution",
+                    "agent": {"@type": "Person", "familyName": "Hayn", "givenName": "Joseph", "lifeSpan": "1732-1809."}
+                  }],
+                  "hasTitle": [{"@type": "Title", "mainTitle": "Trio", "partNumber": ["Hob. XV:16"]}],
+                  "musicKey": "D-dur",
+                  "musicMedium": [
+                    {"@type": "MusicMedium", "label": "piano"},
+                    {"@type": "MusicMedium", "label": "flöjt"},
+                    {"@type": "MusicMedium", "label": "violoncell"}
+                  ]
+                }
+              }, {
+                "@type": "Relationship",
+                "entity": {
+                  "@type": "Work",
+                  "contribution": [{
+                    "@type": "PrimaryContribution",
+                    "agent": {"@type": "Person", "familyName": "Hayn", "givenName": "Joseph", "lifeSpan": "1732-1809."}
+                  }],
+                  "hasTitle": [{"@type": "Title", "mainTitle": "Trio", "partNumber": ["Hob. XV:17"]}],
+                  "musicKey": "F-dur",
+                  "musicMedium": [
+                    {"@type": "MusicMedium", "label": "piano"},
+                    {"@type": "MusicMedium", "label": "flöjt"},
+                    {"@type": "MusicMedium", "label": "violoncell"}]
+                }
+              }]
+            }
+          }}
+        },
+        {
           "source": {
             "700": {"ind1": "1", "ind2": " ", "subfields": [
               {"i": "Parafraserar"},
