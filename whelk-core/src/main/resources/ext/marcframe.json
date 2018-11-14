@@ -1410,7 +1410,8 @@
         "flagProperty": "marc:publicationStatus",
         "matchValuePattern": "^[0-9u]{4}$",
         "fuzzyMergeProperty": "date",
-        "fuzzPattern": "[^0-9u]{1,3}",
+        "fuzzPattern": "[^0-9u]+",
+        "magicValueParts": {"u+": "\\d+"},
         "flagMatch": {
           "marc:PublicationDateAndCopyrightDate": {
             "mergeFirstLink": "publication",
@@ -1517,6 +1518,7 @@
             "back": "both"
           },
           {
+            "name":  "Treating date as 'fuzzy like' year",
             "source": {
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
@@ -1539,6 +1541,33 @@
               },
               "publication": [
                 {"@type": "PrimaryPublication", "year": "1977", "date": "ca 1977"}
+              ]
+            }
+          },
+          {
+            "name":  "Treating fuzzy date like year with magic 'u'",
+            "source": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "197u"
+              },
+              "publication": [ {"@type": "Publication", "date": "likely 1977?"} ]
+            },
+            "result": {
+              "publication": [
+                {"@type": "PrimaryPublication", "year": "197u", "date": "likely 1977?"}
+              ]
+            },
+            "back": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "197u",
+                "date": "likely 1977?"
+              },
+              "publication": [
+                {"@type": "PrimaryPublication", "year": "197u", "date": "likely 1977?"}
               ]
             }
           },

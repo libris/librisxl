@@ -1,5 +1,6 @@
 package whelk.converter.marc
 
+import java.util.regex.Matcher
 import java.util.regex.Pattern
 import groovy.util.logging.Log4j2 as Log
 
@@ -181,6 +182,7 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
     String flagProperty
     String fuzzyMergeProperty
     Pattern fuzzPattern
+    Map magicValueParts
 
     Map<String, FlagMatchRule> flagMatch = [:]
 
@@ -276,7 +278,14 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
                 strictProperties.each {
                     String v = obj[it]
                     if (v) {
-                        fuzzyValue = fuzzyValue.replaceFirst(Pattern.quote(v), '')
+                        // Same as Pattern.quote, but explicit here since we
+                        // toggle parts on again when adding magicValueParts.
+                        def vPattern = /\Q${v}\E/
+                        magicValueParts?.each { part, pattern ->
+                            vPattern = vPattern.replaceAll(part,
+                                    Matcher.quoteReplacement(/\E${pattern}\Q/))
+                        }
+                        fuzzyValue = fuzzyValue.replaceFirst(vPattern, '')
                     }
                 }
                 return fuzzyValue.trim() == ''
