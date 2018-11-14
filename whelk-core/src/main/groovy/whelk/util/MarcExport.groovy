@@ -1,6 +1,7 @@
 package whelk.util
 
 import groovy.util.logging.Log4j2
+import org.postgresql.util.PSQLException
 import se.kb.libris.export.ExportProfile
 import se.kb.libris.util.marc.Field
 import se.kb.libris.util.marc.MarcRecord
@@ -26,7 +27,16 @@ class MarcExport {
 
         def auths = new HashSet<MarcRecord>()
         auth_ids.each { String auth_id ->
-            Document authDoc = getDocument(auth_id, whelk)
+            Document authDoc = null
+            try {
+                authDoc = getDocument(auth_id, whelk)
+            } catch (PSQLException sqe) {
+                // IGNORE.
+                // The expected exception here is:
+                // org.postgresql.util.PSQLException: ERROR: more than one row returned by a subquery used as an expression
+                // See https://jira.kb.se/browse/LXL-1697
+                log.warn("Failed to getDocument() an auth record with URI: $auth_id. Ignoring.")
+            }
             if (authDoc != null) {
                 String xmlString = toXmlString(authDoc, toMarcXmlConverter)
                 if (xmlString != null)

@@ -4680,7 +4680,7 @@
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$c": {"link": "marc:transcribingAgency", "resourceType": "Organization", "property": "name"},
-      "$d": {"link": "descriptionUpgrader", "resourceType": "Library", "property": "sigel"},
+      "$d": {"addLink": "descriptionUpgrader", "resourceType": "Library", "property": "sigel"},
       "$e": {"addLink": "descriptionConventions", "NOTE:marc-repeatable": false, "resourceType": "DescriptionConventions", "property": "code"},
       "$6": {"property": "marc:fieldref"},
       "NOTE:$9": {"property": "license", "NOTE": "Removed after bibliographic review"},
@@ -4697,6 +4697,21 @@
               "value": "9927672551"
             }],
             "descriptionCreator": {"@id": "https://libris.kb.se/library/Js", "@type": "Library", "sigel": "Js"},
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        },
+        {
+          "source": {"040": {"ind1": " ", "ind2": " ", "subfields": [{"a": "DLC"}, {"d": "Kama"}, {"d": "S"}]}},
+          "result": {
+            "descriptionCreator": {"@id": "https://libris.kb.se/library/DLC", "@type": "Library", "sigel": "DLC"},
+            "descriptionUpgrader": [
+              {"@type": "Library", "sigel": "Kama"},
+              {"@type": "Library", "sigel": "S"}
+            ],
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text"
@@ -8007,7 +8022,46 @@
         "NOTE": "record-count: 0. If this would appear, we unconditionally expect it ONLY to be used in subsequent 347 (see linkSubsequentRepeated)."
       }
     },
-    "348": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "musicFormat", "NOTE": "Not in generated marcframe"},
+    "348": {
+      "aboutEntity": "?thing",
+      "addLink": "musicFormat",
+      "resourceType": "MusicFormat",
+      "$a": {"addProperty": "label"},
+      "$b": {"addProperty": "code"},
+      "$0": {"addProperty": "marc:uri"},
+      "$1": {"addProperty": "marc:rwoURI"},
+      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": {"addProperty": "marc:fieldref"},
+      "_spec": [
+        {
+          "source":  [
+            {"348": {"ind1": " ", "ind2": " ", "subfields": [{"a": "vocal score"}, {"b": "code for vocal score"},
+                                                             {"2": "code for source vocabulary"}]}},
+            {"348": {"ind1": " ", "ind2": " ", "subfields": [{"a": "vocal score 2"}, {"a": "piano conductor part"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "musicFormat": [
+                {
+                  "@type": "MusicFormat",
+                  "label": ["vocal score"],
+                  "code": ["code for vocal score"],
+                  "source": {
+                    "@type": "Source",
+                    "code": "code for source vocabulary"
+                  }
+                },
+                {
+                  "@type": "MusicFormat",
+                  "label": ["vocal score 2", "piano conductor part"]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
     "351": {
       "aboutEntity": "?work",
       "addLink": "arrangement",

@@ -5,6 +5,7 @@ import io.prometheus.client.Counter;
 import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.impl.MarcRecordImpl;
 import se.kb.libris.utils.isbn.ConvertException;
 import se.kb.libris.utils.isbn.Isbn;
 import se.kb.libris.utils.isbn.IsbnException;
@@ -102,35 +103,35 @@ class XL
             else
                 importedHoldRecords.inc();
         }
-        else if (duplicateIDs.size() == 1) // Enrich ("merge") or replace
+        else if (duplicateIDs.size() == 1) // merge, keep or replace
         {
-            if (collection.equals("bib"))
+            // replace
+            if ((m_parameters.getReplaceBib() && collection.equals("bib")) ||
+                    m_parameters.getReplaceHold() && collection.equals("hold"))
             {
-                if ( m_parameters.getReplaceBib() )
-                {
-                    String idToReplace = duplicateIDs.iterator().next();
-                    resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, idToReplace);
-                    importedBibRecords.inc();
-                }
-                else // Merge bib
-                {
-                    resultingResourceId = enrichRecord((String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId);
-                    enrichedBibRecords.inc();
-                }
+                String idToReplace = duplicateIDs.iterator().next();
+                resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, idToReplace);
             }
-            else // collection = hold
+
+            // merge
+            else if ((m_parameters.getMergeBib() && collection.equals("bib")) ||
+                    m_parameters.getMergeHold() && collection.equals("hold"))
             {
-                if ( m_parameters.getReplaceHold() ) // Replace hold
+                resultingResourceId = enrichRecord((String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId);
+            }
+
+            // Keep existing
+            else
+            {
+                if (collection.equals("bib"))
                 {
-                    String idToReplace = duplicateIDs.iterator().next();
-                    resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, idToReplace);
-                    importedHoldRecords.inc();
+                    String duplicateId = (String) duplicateIDs.toArray()[0];
+                    if (!duplicateId.startsWith(Document.getBASE_URI().toString()))
+                        duplicateId = Document.getBASE_URI().toString() + duplicateId;
+                    resultingResourceId = m_whelk.getStorage().getThingId(duplicateId);
                 }
-                else // Merge hold
-                {
-                    resultingResourceId = enrichRecord((String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId);
-                    enrichedHoldRecords.inc();
-                }
+                else
+                    resultingResourceId = null;
             }
         }
         else
@@ -189,8 +190,9 @@ class XL
                         String existingEncodingLevel = doc.getEncodingLevel();
                         String newEncodingLevel = rdfDoc.getEncodingLevel();
 
-                        if (existingEncodingLevel == null || !mayOverwriteExistingEncodingLevel(existingEncodingLevel, newEncodingLevel))
-                            throw new TooHighEncodingLevelException();
+                        if (!collection.equals("hold"))
+                            if (existingEncodingLevel == null || !mayOverwriteExistingEncodingLevel(existingEncodingLevel, newEncodingLevel))
+                                throw new TooHighEncodingLevelException();
 
                         List<String> recordIDs = doc.getRecordIdentifiers();
                         List<String> thingIDs = doc.getThingIdentifiers();
@@ -348,8 +350,9 @@ class XL
         mutableDocument.data = enrichedData;
     }
 
-    private Document convertToRDF(MarcRecord marcRecord, String id)
+    private Document convertToRDF(MarcRecord _marcRecord, String id)
     {
+        MarcRecord marcRecord = cloneMarcRecord(_marcRecord);
         while (marcRecord.getControlfields("001").size() > 0)
             marcRecord.getFields().remove(marcRecord.getControlfields("001").get(0));
         marcRecord.addField(marcRecord.createControlfield("001", id));
@@ -367,6 +370,19 @@ class XL
         convertedDocument.deepReplaceId(Document.getBASE_URI().toString()+id);
         m_linkfinder.normalizeIdentifiers(convertedDocument);
         return convertedDocument;
+    }
+
+    private MarcRecord cloneMarcRecord(MarcRecord original)
+    {
+        MarcRecord clone = new MarcRecordImpl();
+        for (Field f : original.getFields())
+            clone.addField(f);
+        clone.setLeader(original.getLeader());
+        for (Object key : original.getProperties().keySet())
+            clone.setProperty( (String) key, original.getProperties().get(key));
+        clone.setOriginalData(original.getOriginalData());
+
+        return clone;
     }
 
     private Set<String> getDuplicates(MarcRecord marcRecord, String collection, String relatedWithBibResourceId)
@@ -443,33 +459,38 @@ class XL
                     break;
             }
 
-            // Filter the candidates based on instance @type and work @type ("materialtyp").
-            Iterator<String> it = duplicateIDs.iterator();
-            while (it.hasNext())
+            // If the type currently being checked is NOT 001 or 035$a, filter the candidates based on
+            // instance @type and work @type ("materialtyp").
+            if (dupType != Parameters.DUPLICATION_TYPE.DUPTYPE_LIBRISID &&
+                    dupType != Parameters.DUPLICATION_TYPE.DUPTYPE_035A)
             {
-                String candidateID = it.next();
-                Document candidate = m_whelk.getStorage().loadEmbellished(candidateID, m_whelk.getJsonld());
-
-                String incomingInstanceType = rdfDoc.getThingType();
-                String existingInstanceType = candidate.getThingType();
-                String incomingWorkType = rdfDoc.getWorkType();
-                String existingWorkType = candidate.getWorkType();
-
-                // Unrelated work types? -> not a valid match
-                if ( ! m_whelk.getJsonld().isSubClassOf(incomingWorkType, existingWorkType) &&
-                        ! m_whelk.getJsonld().isSubClassOf(existingWorkType, incomingWorkType) )
+                Iterator<String> it = duplicateIDs.iterator();
+                while (it.hasNext())
                 {
-                    it.remove();
-                    continue;
-                }
+                    String candidateID = it.next();
+                    Document candidate = m_whelk.getStorage().loadEmbellished(candidateID, m_whelk.getJsonld());
 
-                // If A is Electronic and B is Instance or vice versa, do not consider documents matching. This is
-                // frail since Electronic is a subtype of Instance.
-                // HERE BE DRAGONS.
-                if ( (incomingInstanceType.equals("Electronic") && existingInstanceType.equals("Instance")) ||
-                        (incomingInstanceType.equals("Instance") && existingInstanceType.equals("Electronic")))
-                {
-                    it.remove();
+                    String incomingInstanceType = rdfDoc.getThingType();
+                    String existingInstanceType = candidate.getThingType();
+                    String incomingWorkType = rdfDoc.getWorkType();
+                    String existingWorkType = candidate.getWorkType();
+
+                    // Unrelated work types? -> not a valid match
+                    if (!m_whelk.getJsonld().isSubClassOf(incomingWorkType, existingWorkType) &&
+                            !m_whelk.getJsonld().isSubClassOf(existingWorkType, incomingWorkType))
+                    {
+                        it.remove();
+                        continue;
+                    }
+
+                    // If A is Electronic and B is Instance or vice versa, do not consider documents matching. This is
+                    // frail since Electronic is a subtype of Instance.
+                    // HERE BE DRAGONS.
+                    if ((incomingInstanceType.equals("Electronic") && existingInstanceType.equals("Instance")) ||
+                            (incomingInstanceType.equals("Instance") && existingInstanceType.equals("Electronic")))
+                    {
+                        it.remove();
+                    }
                 }
             }
 
@@ -691,10 +712,11 @@ class XL
     private PreparedStatement getOnIssnHidden_ps(Connection connection, String issn)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
+        String query = "SELECT id FROM lddb WHERE deleted = false AND ( data#>'{@graph,1,identifiedBy}' @> ? OR data#>'{@graph,1,identifiedBy}' @> ?)";
         PreparedStatement statement =  connection.prepareStatement(query);
 
         statement.setObject(1, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": [\"" + issn + "\"]}]", java.sql.Types.OTHER);
+        statement.setObject(2, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": \"" + issn + "\"}]", java.sql.Types.OTHER);
 
         return statement;
     }

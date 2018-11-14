@@ -177,7 +177,7 @@ class MarcConversion {
         if (!key || key == '@type' || !converter.ld)
             return
         def terms = converter.ld.vocabIndex.keySet()
-        String term = converter.ld.expand((String) key)
+        String term = key
         if (!(term in terms)) {
             missingTerms << [term: term, type: type]
         }

@@ -46,7 +46,7 @@ void fixValueInData(data, container, key, value) {
         def fixed = fixBalancedBrackets(value)
         if (fixed != value) {
             container[key] = fixed
-            data.scheduleSave(false)
+            data.scheduleSave(loud: false)
         }
     } else {
         findAndFixValuesInData(data, value)

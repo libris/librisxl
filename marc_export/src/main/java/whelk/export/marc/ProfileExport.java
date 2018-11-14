@@ -130,8 +130,13 @@ public class ProfileExport
                 String dependerId = (String) depender.getFirst();
                 Document dependerDoc = m_whelk.getStorage().loadEmbellished(dependerId, m_whelk.getJsonld());
                 String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, m_whelk.getJsonld());
-                if (dependerCollection.equals("bib"))
-                    exportDocument(dependerDoc, profile, output, exportedIDs, deleteMode, doVirtualDeletions);
+                if (!dependerCollection.equals("bib"))
+                    continue;
+
+                if (!isHeld(dependerDoc, profile))
+                    continue;
+
+                exportDocument(dependerDoc, profile, output, exportedIDs, deleteMode, doVirtualDeletions);
             }
         }
         else if (collection.equals("hold") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
@@ -200,14 +205,7 @@ public class ProfileExport
 
             if (collection.equals("bib"))
             {
-                boolean bibIsHeld = false;
-                List<Document> holdings = m_whelk.getStorage().getAttachedHoldings(updatedDocument.getThingIdentifiers(), m_whelk.getJsonld());
-                for (Document holding : holdings)
-                {
-                    if (locationSet.contains(holding.getSigel()))
-                        bibIsHeld = true;
-                }
-                if (!bibIsHeld)
+                if (!isHeld(updatedDocument, profile))
                     return false;
             }
             if (collection.equals("hold"))
@@ -237,10 +235,13 @@ public class ProfileExport
         {
             boolean onlineResource = false;
             List<Map> carrierTypes = document.getCarrierTypes();
-            for (Map map : carrierTypes)
+            if (carrierTypes != null)
             {
-                if ( map.get("@id").equals("https://id.kb.se/marc/OnlineResource") )
-                    onlineResource = true;
+                for (Map map : carrierTypes)
+                {
+                    if ( map.get("@id").equals("https://id.kb.se/marc/OnlineResource") )
+                        onlineResource = true;
+                }
             }
             if (document.getThingType().equals("Electronic") && onlineResource)
                 return;
@@ -250,14 +251,7 @@ public class ProfileExport
         HashSet locationSet = new HashSet(Arrays.asList(locations.split(" ")));
         if (doVirtualDeletions && !locationSet.contains("*") && deleteMode != DELETE_MODE.IGNORE)
         {
-            boolean bibIsHeld = false;
-            List<Document> holdings = m_whelk.getStorage().getAttachedHoldings(document.getThingIdentifiers(), m_whelk.getJsonld());
-            for (Document holding : holdings)
-            {
-                if (locationSet.contains(holding.getSigel()))
-                    bibIsHeld = true;
-            }
-            if (!bibIsHeld)
+            if (!isHeld(document, profile))
                 document.setDeleted(true);
         }
 
@@ -280,6 +274,19 @@ public class ProfileExport
 
         for (MarcRecord mr : result)
             output.writeRecord(mr);
+    }
+
+    boolean isHeld(Document doc, ExportProfile profile)
+    {
+        String locations = profile.getProperty("locations", "");
+        HashSet locationSet = new HashSet(Arrays.asList(locations.split(" ")));
+        List<Document> holdings = m_whelk.getStorage().getAttachedHoldings(doc.getThingIdentifiers(), m_whelk.getJsonld());
+        for (Document holding : holdings)
+        {
+            if (locationSet.contains(holding.getSigel()))
+                return true;
+        }
+        return false;
     }
 
     /**
