@@ -28,6 +28,9 @@ void findAndFixValuesInData(data, obj) {
             checkValueInData(data, obj, key, value)
         }
     }
+    else {
+        return
+    }
 }
 
 void checkValueInData(data, container, key, value) {
