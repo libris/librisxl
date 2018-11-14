@@ -237,7 +237,7 @@ public class ProfileExport
         {
             boolean onlineResource = false;
             List<Map> carrierTypes = document.getCarrierTypes();
-            if (carrierTypes)
+            if (carrierTypes != null)
             {
                 for (Map map : carrierTypes)
                 {
