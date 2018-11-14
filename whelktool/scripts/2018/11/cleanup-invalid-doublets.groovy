@@ -19,7 +19,7 @@ void fixTitles(data, resource) {
 
     int titlesSize = titles.size()
 
-    titles.removeAll { !it.is(bestTitle) }
+    titles.removeAll { it in regularTitles && !it.is(bestTitle) }
 
     if (titlesSize != titles.size()) {
         data.scheduleSave(loud: false)
