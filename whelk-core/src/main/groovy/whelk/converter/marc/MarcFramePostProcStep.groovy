@@ -274,7 +274,6 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
         if (fuzzyMergeProperty) {
             String fuzzyValue = target[fuzzyMergeProperty]
             if (fuzzyValue) {
-                fuzzyValue = fuzzPattern.matcher(fuzzyValue).replaceAll('')
                 strictProperties.each {
                     String v = obj[it]
                     if (v) {
@@ -288,6 +287,7 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
                         fuzzyValue = fuzzyValue.replaceFirst(vPattern, '')
                     }
                 }
+                fuzzyValue = fuzzPattern.matcher(fuzzyValue).replaceAll('')
                 return fuzzyValue.trim() == ''
             }
         }

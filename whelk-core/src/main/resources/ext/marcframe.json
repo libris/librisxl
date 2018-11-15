@@ -1410,8 +1410,8 @@
         "flagProperty": "marc:publicationStatus",
         "matchValuePattern": "^[0-9u]{4}$",
         "fuzzyMergeProperty": "date",
-        "fuzzPattern": "[^0-9u]+",
-        "magicValueParts": {"u+": "\\d+"},
+        "fuzzPattern": "[^0-9]+",
+        "magicValueParts": {"u": "[0-9uxUX?-]"},
         "flagMatch": {
           "marc:PublicationDateAndCopyrightDate": {
             "mergeFirstLink": "publication",
@@ -1729,6 +1729,45 @@
               ]
             },
             "back": "both"
+          },
+          {
+            "name":  "Treating fuzzy date like startYear plus endYear with magic 'u'",
+            "source": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
+                "year": "197u",
+                "otherYear": "202u"
+              },
+              "publication": [ {"@type": "Publication", "date": "[ca 197?-202-]"} ]
+            },
+            "result": {
+              "publication": [
+                {
+                  "@type": "PrimaryPublication",
+                  "startYear": "197u",
+                  "endYear": "202u",
+                  "date": "[ca 197?-202-]"
+                }
+              ]
+            },
+            "back": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
+                "year": "197u",
+                "otherYear": "202u",
+                "date": "[ca 197?-202-]"
+              },
+              "publication": [
+                {
+                  "@type": "PrimaryPublication",
+                  "startYear": "197u",
+                  "endYear": "202u",
+                  "date": "[ca 197?-202-]"
+                }
+              ]
+            }
           },
           {
             "source": {
