@@ -3,16 +3,16 @@ MUSICMEDIUM_PROPERTY = 'musicMedium'
 
 
 boolean remodelToStructuredValue(term) {
-    def remodelledTerm = []
+    def remodelledTermList = []
 
     //Create musicMedium object and add to list
     term[MUSICMEDIUM_PROPERTY].each {
         def map = [:]
         map << ['@type':MUSICMEDIUM_TYPE]
         map << ['label':it]
-        remodelledTerm << map
+        remodelledTermList << map
     }
-    term[MUSICMEDIUM_PROPERTY] = remodelledTerm
+    term[MUSICMEDIUM_PROPERTY] = remodelledTermList
     return true
 
 }
