@@ -37,7 +37,7 @@ void checkValueInData(data, container, key, value) {
 
     if (key == MUSICMEDIUM_PROPERTY) {
         if (remodelToStructuredValue(container))
-            data.scheduleSave(false)
+            data.scheduleSave()
     }
     else {
         findAndFixValuesInData(data, value)
