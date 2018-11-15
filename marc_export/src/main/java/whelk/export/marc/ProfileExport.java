@@ -239,7 +239,7 @@ public class ProfileExport
             {
                 for (Map map : carrierTypes)
                 {
-                    if ( map.get("@id").equals("https://id.kb.se/marc/OnlineResource") )
+                    if ( map.containsKey("@id") && map.get("@id").equals("https://id.kb.se/marc/OnlineResource") )
                         onlineResource = true;
                 }
             }
