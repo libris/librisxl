@@ -3,18 +3,12 @@ MUSICMEDIUM_PROPERTY = 'musicMedium'
 
 
 boolean remodelToStructuredValue(term) {
-    def remodelledTermList = []
 
     //Create musicMedium object and add to list
-    term[MUSICMEDIUM_PROPERTY].each {
-        def map = [:]
-        map << ['@type':MUSICMEDIUM_TYPE]
-        map << ['label':it]
-        remodelledTermList << map
+    term[MUSICMEDIUM_PROPERTY] = term[MUSICMEDIUM_PROPERTY].collect {
+        ['@type': MUSICMEDIUM_TYPE, 'label': it]
     }
-    term[MUSICMEDIUM_PROPERTY] = remodelledTermList
     return true
-
 }
 
 void findAndFixValuesInData(data, obj) {
@@ -27,9 +21,6 @@ void findAndFixValuesInData(data, obj) {
         obj.each { key, value ->
             checkValueInData(data, obj, key, value)
         }
-    }
-    else {
-        return
     }
 }
 
