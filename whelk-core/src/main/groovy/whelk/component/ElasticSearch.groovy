@@ -72,7 +72,7 @@ class ElasticSearch {
 
     String getIndexName() { defaultIndex }
 
-    String performRequest(String method, String path, String body, String contentType0 = null){
+    Tuple2<Integer, String> performRequest(String method, String path, String body, String contentType0 = null){
 
         // Get an available connection from the pool
         ConnectionPoolEntry httpConnectionEntry
@@ -93,7 +93,7 @@ class ElasticSearch {
             }
         }
 
-        String response = null
+        Tuple2<Integer, String> response = null
 
         try {
             String contentType
@@ -112,7 +112,7 @@ class ElasticSearch {
                 }
 
                 httpConnection.sendRequest(path, method, contentType, body, null, null)
-                response = httpConnection.responseData
+                response = new Tuple2(httpConnection.responseCode, httpConnection.responseData)
                 httpConnection.clearBuffers()
 
                 if (backOffTime == 0)
@@ -140,7 +140,7 @@ class ElasticSearch {
                 "${action}\n${shapedData}\n"
             }.join('')
 
-            String response = performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
+            String response = performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE).second
             Map responseMap = mapper.readValue(response, Map)
             log.info("Bulk indexed ${docs.count{it}} docs in ${responseMap.took} ms")
         }
@@ -162,7 +162,7 @@ class ElasticSearch {
             def response = performRequest('PUT',
                     "/${indexName}/${collection}" +
                             "/${toElasticId(doc.getShortId())}?pipeline=libris",
-                    JsonOutput.toJson(shapedData))
+                    JsonOutput.toJson(shapedData)).second
             //def eString = EntityUtils.toString(response.getEntity())
             Map responseMap = mapper.readValue(response, Map)
             log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${responseMap['_id']} as version ${responseMap['_version']}")
@@ -177,7 +177,7 @@ class ElasticSearch {
         //def query = new NStringEntity(JsonOutput.toJson(dsl), ContentType.APPLICATION_JSON)
         def response = performRequest('POST',
                 "/${indexName}/_delete_by_query?conflicts=proceed",
-                JsonOutput.toJson(dsl))
+                JsonOutput.toJson(dsl)).second
         //def eString = EntityUtils.toString(response.getEntity())
         Map responseMap = mapper.readValue(response, Map)
         log.debug("Response: ${responseMap.deleted} of ${responseMap.total} " +
@@ -215,11 +215,17 @@ class ElasticSearch {
 
     Map query(Map jsonDsl, String collection) {
         def start = System.currentTimeMillis()
-        def response = performRequest('POST',
+        Tuple2<Integer, String> response = performRequest('POST',
                 getQueryUrl(collection),
                 JsonOutput.toJson(jsonDsl))
+        int statusCode = response.first
+        String responseBody = response.second
+        if (statusCode != 200) {
+            log.warn("Unexpected response from ES: ${statusCode} ${responseBody}")
+            return [:]
+        }
         def duration = System.currentTimeMillis() - start
-        Map responseMap = mapper.readValue(response, Map)
+        Map responseMap = mapper.readValue(responseBody, Map)
 
         log.info("ES query took ${duration} (${responseMap.took} server-side)")
 
@@ -253,10 +259,15 @@ class ElasticSearch {
      * E.g. k1=v1&k1=v2&k2=v3 -> (k1=v1 OR k1=v2) AND (k2=v3)
      */
     static Map createJsonDsl(Map queryParameters, int limit=DEFAULT_PAGE_SIZE,
-                             int offset=0) {
+                             int offset=0, String sortBy=null) {
         String queryString = queryParameters.remove('q')?.first()
         def dslQuery = ['from': offset,
                         'size': limit]
+
+        List sortClauses = buildSortClauses(sortBy)
+        if (sortClauses) {
+            dslQuery['sort'] = sortClauses
+        }
 
         List musts = []
         if (queryString == '*') {
@@ -267,7 +278,7 @@ class ElasticSearch {
         }
 
         List reservedParameters = ['q', 'p', 'o', 'value', '_limit',
-                                   '_offset', '_site_base_uri']
+                                   '_offset', '_sort', '_site_base_uri']
 
         def groups = queryParameters.groupBy {p -> getPrefixIfExist(p.key)}
         Map nested = groups.findAll{g -> g.value.size() == 2}
@@ -300,6 +311,20 @@ class ElasticSearch {
         } else {
             return key
         }
+    }
+
+    private static List buildSortClauses(String sortBy) {
+        if (!sortBy) return null
+        List result = []
+        List sortClauses = sortBy.split(',')
+        sortClauses.each { field ->
+            if (field.startsWith('-')) {
+                result << [(field.substring(1)): ['order': 'desc']]
+            } else {
+                result << [(field): ['order': 'asc']]
+            }
+        }
+        return result
     }
 
     /*
