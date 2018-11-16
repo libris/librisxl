@@ -21,7 +21,11 @@ void fixTitles(data, resource) {
         return
 
     def bestTitle = (regularTitles.findAll {
+            it.mainTitle && 'hasPart' in it
+        } ?: regularTitles.findAll {
             it.mainTitle && 'subtitle' in it
+        } ?: regularTitles.findAll {
+            it.mainTitle && 'titleRemainder' in it
         } ?: regularTitles.findAll {
             it.mainTitle && !it.mainTitle.matches('.*[=:/.]\\s*$')
         } ?: regularTitles)[-1]
@@ -169,7 +173,7 @@ void fixPrimaryContribs(data, resource) {
     }
 }
 
-//selectByIds(['fzr7zx6r3ns1wc1', '1kcq4vsc3n3kggx', 'cwp4dbhp175mlkm', 'j2v9qsmv0vt1w5k', 'sb4g0lr43fcrz42', 'cvn87b7p1zmsjhf', '4ngs6vng0469nsm', 'gqtb6190dcdg0ngd', 'x6b9v2l2vg7bjll7', 'sb459gg42gx6dbx']) { data ->
+//selectByIds(['fzr7zx6r3ns1wc1', '1kcq4vsc3n3kggx', 'cwp4dbhp175mlkm', 'j2v9qsmv0vt1w5k', 'sb4g0lr43fcrz42', 'cvn87b7p1zmsjhf', '4ngs6vng0469nsm', 'gqtb6190dcdg0ngd', 'x6b9v2l2vg7bjll7', 'sb459gg42gx6dbx', 'p711p9q1399t0bt', 'g0s5brts55sh4pm', 'xg8nl2p83q7rjfg']) { data ->
 selectBySqlWhere('''
     data#>>'{@graph,1,hasTitle}' LIKE '%"Title"%"Title"%'
     OR
