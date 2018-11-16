@@ -188,11 +188,11 @@ java -jar build/libs/batchimport.jar --path=./integtest/batch11.xml --format=xml
 java -jar build/libs/batchimport.jar --path=./integtest/batch11.xml --format=xml --dupType=EAN --live --changedIn=importtest
 rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'bib'")
 if (( $rowCount != 1 )) ; then
-    fail "Expected single bib record (after IBSN$z 10/13 test)"
+    fail "Expected single bib record (after EAN test)"
 fi
 rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'hold'")
 if (( $rowCount != 1 )) ; then
-    fail "Expected single hold record (after IBSN$z 10/13 test)"
+    fail "Expected single hold record (after EAN test)"
 fi
 
 cleanup
