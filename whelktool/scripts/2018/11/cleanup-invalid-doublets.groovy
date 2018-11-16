@@ -1,5 +1,14 @@
 leftovers = getReportWriter("titledoublet-leftovers")
 
+modifiedLog = System.properties.logModified == 'true' ? getReportWriter("doublets-modified") : null
+currentData = null
+synchronized void logModified(data, Closure cb) {
+    if (!modifiedLog) return
+    if (currentData != data) modifiedLog.println "<${data.graph[0][ID]}>:"
+    cb(modifiedLog)
+    currentData = data
+}
+
 void fixTitles(data, resource) {
     List<Map> titles = resource.hasTitle
 
@@ -23,9 +32,13 @@ void fixTitles(data, resource) {
 
     if (titlesSize != titles.size()) {
         data.scheduleSave(loud: false)
-    }
-
-    if (titles.size() > 1) {
+        logModified(data) { log ->
+            regularTitles.each {
+                def kept = it.is(bestTitle) ? 'KEEP' : 'DROP'
+                log.println "  ${kept}\t${it}"
+            }
+        }
+    } else {
         leftovers.println "<${data.graph[0][ID]}> titles: ${titles.size()}"
     }
 }
@@ -97,6 +110,8 @@ void fixPrimaryContribs(data, resource) {
         fixAgentObject(it)
     }
 
+    int contribsSize = contribs.size()
+
     def primaryContribs = contribs.findAll { it[TYPE] == 'PrimaryContribution' }
     if (!primaryContribs || primaryContribs.size() == 1)
         return
@@ -148,6 +163,9 @@ void fixPrimaryContribs(data, resource) {
             keptPrimaryContrib.agent[ID] = keptAgentId
         }
         data.scheduleSave(loud: false)
+        logModified(data) { log ->
+            log.println "  DROP\t${contribsSize - contribs.size()} contribution objects (${contribs.size()} left)"
+        }
     }
 }
 
