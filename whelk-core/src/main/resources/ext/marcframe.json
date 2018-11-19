@@ -6847,7 +6847,7 @@
         "splitValueProperties": ["startYear", "endYear"],
         "allowEmpty": true,
         "rejoin": "-",
-        "leadingPunctuation": ",", "punctuationChars": ",;"
+        "leadingPunctuation": ",", "punctuationChars": ".,;"
       },
       "$e": {"aboutNew": "_:manufacture", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:;", "surroundingChars" : "()"},
       "$f": {"about": "_:manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :", "punctuationChars": ",:;)"},
@@ -7346,7 +7346,7 @@
         "splitValueProperties": ["startYear", "endYear"],
         "allowEmpty": true,
         "rejoin": "-",
-        "leadingPunctuation": ","
+        "leadingPunctuation": ",", "punctuationChars": ".,;"
       },
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label", "trailingPunctuation": ":"},
       "$6": {"property": "marc:fieldref"},
