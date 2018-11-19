@@ -48,6 +48,7 @@ class SearchUtils {
         String reference = getReservedQueryParameter('o', queryParameters)
         String value = getReservedQueryParameter('value', queryParameters)
         String query = getReservedQueryParameter('q', queryParameters)
+        String sortBy = getReservedQueryParameter('_sort', queryParameters)
         String siteBaseUri = getReservedQueryParameter('_site_base_uri', queryParameters)
 
         Tuple2 limitAndOffset = getLimitAndOffset(queryParameters)
@@ -58,6 +59,7 @@ class SearchUtils {
                           'o': reference,
                           'value': value,
                           'q': query,
+                          '_sort': sortBy,
                           '_limit': limit]
 
         Map results = null
@@ -165,7 +167,8 @@ class SearchUtils {
                                    Map pageParams,
                                    String dataset, String siteBaseUri,
                                    int limit, int offset, JsonLd jsonld) {
-        String query = getReservedQueryParameter('q', queryParameters)
+        String query = pageParams['q']
+        String sortBy = pageParams['_sort']
         log.debug("Querying ElasticSearch")
 
         // Filter out all @types that have (more specific) subclasses that are also in the list
@@ -203,7 +206,7 @@ class SearchUtils {
                      'value': query]
 
         def dslQuery = ElasticSearch.createJsonDsl(queryParameters,
-                                                   limit, offset)
+                                                   limit, offset, sortBy)
 
         // If there was an @type parameter, all subclasses of that type were added as well,
         // let's clean that up and "hide" it from the caller.
@@ -243,7 +246,7 @@ class SearchUtils {
         //items = embellishItems(items)
         if (statsTree) {
             stats = buildStats(esResult['aggregations'],
-                               makeFindUrl(SearchType.ELASTIC, pageParams))
+                               makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)))
             if (!stats) {
                 log.debug("No stats found for query: ${dslQuery}, result: ${esResult}")
             }
@@ -264,6 +267,17 @@ class SearchUtils {
             result['stats'] = stats
         }
 
+        return result
+    }
+
+    private Map stripNonStatsParams(Map incoming) {
+        Map result = [:]
+        List reserved = getReservedParameters()
+        incoming.each { k, v ->
+            if (!reserved.contains(k)) {
+                result[k] = v
+            }
+        }
         return result
     }
 
@@ -665,7 +679,7 @@ class SearchUtils {
     }
 
     private List getReservedParameters() {
-        return ['q', 'p', 'o', 'value', '_limit', '_offset']
+        return ['q', 'p', 'o', 'value', '_limit', '_offset', '_sort']
     }
 
     /*
