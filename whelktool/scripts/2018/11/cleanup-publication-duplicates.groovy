@@ -14,6 +14,8 @@ boolean checkFuzzyDate(obj, target) {
 
 selectBySqlWhere('''
     data#>>'{@graph,1,publication}' LIKE '%"PrimaryPublication"%"Publication"%'
+    OR
+    data#>>'{@graph,1,publication}' LIKE '%"PrimaryPublication"%"PrimaryPublication"%'
 ''') { data ->
     def (record, instance, work) = data.graph
 
@@ -25,6 +27,13 @@ selectBySqlWhere('''
 
     if (!(publications instanceof List) || publications.size() < 2) {
         return
+    }
+
+    // Remove trivial duplicates
+    Set seenPublications = new HashSet()
+    publications.removeAll {
+        boolean justAdded = seenPublications.add(it)
+        return !justAdded
     }
 
     // Merge PrimaryPublication into first fuzzy-date-matching Publication.
