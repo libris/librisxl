@@ -21,28 +21,33 @@ selectBySqlWhere('''
         return
     }
 
-    if (instance.publication.size() < 2) {
+    List publications = instance.publication
+
+    if (!(publications instanceof List) || publications.size() < 2) {
         return
     }
 
-    def obj = instance.publication[0]
-    boolean removeFirst = false
-    instance.publication[1].with {
-        if (checkFuzzyDate(obj, it)) {
-            if (data.whelk.jsonld.softMerge(obj, it)) {
-                data.scheduleSave(loud: false)
-                removeFirst = true
-                if (it.date instanceof String &&
-                    it.date.endsWith('.') &&
-                    it.date[0..-2] == it.year) {
-                    it.remove('date')
+    // Merge PrimaryPublication into first fuzzy-date-matching Publication.
+    def primary = publications[0]
+    if (isInstanceOf(primary, 'PrimaryPublication')) {
+        boolean removeFirst = false
+        publications[1].with {
+            if (checkFuzzyDate(primary, it)) {
+                // If softMerge succeds, the first (primary) has been added to
+                // current it, and shall be removed.
+                if (data.whelk.jsonld.softMerge(primary, it)) {
+                    data.scheduleSave(loud: false)
+                    removeFirst = true
+                    if (it.date instanceof String &&
+                        it.date.endsWith('.') &&
+                        it.date[0..-2] == it.year) {
+                        it.remove('date')
+                    }
                 }
             }
         }
+        if (removeFirst) {
+            publications.remove(0)
+        }
     }
-    if (removeFirst) {
-        instance.publication.remove(0)
-    }
-
-
 }
