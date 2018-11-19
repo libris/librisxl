@@ -32,6 +32,11 @@ selectBySqlWhere('''
             if (data.whelk.jsonld.softMerge(obj, it)) {
                 data.scheduleSave(loud: false)
                 removeFirst = true
+                if (it.date instanceof String &&
+                    it.date.endsWith('.') &&
+                    it.date[0..-2] == it.year) {
+                    it.remove('date')
+                }
             }
         }
     }
