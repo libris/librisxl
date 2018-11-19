@@ -8,7 +8,7 @@ merger = new RestructPropertyValuesAndFlagStep(
 )
 
 boolean checkFuzzyDate(obj, target) {
-    def props = ['year'] // TODO: or startYear, endYear
+    def props =  'startYear' in obj ? ['startYear', 'endYear'] : ['year']
     return merger.checkOnlyExpectedValuesInFuzzyProperty(target, obj, props)
 }
 
