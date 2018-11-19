@@ -47,6 +47,10 @@ selectBySqlWhere('''
                 if (data.whelk.jsonld.softMerge(primary, it)) {
                     data.scheduleSave(loud: false)
                     removeFirst = true
+                    if (it.date instanceof List &&
+                        it.date.size() == 1) {
+                        it.date = it.date[0]
+                    }
                     if (it.date instanceof String &&
                         it.date.endsWith('.') &&
                         it.date[0..-2] == it.year) {
