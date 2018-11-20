@@ -464,6 +464,12 @@ class XL
                     break;
             }
 
+            /* THIS FUNCTIONALITY IS TESTED (AND WAS USED IN PRODUCTION), BUT WAS DISABLED BECAUSE
+               OF UNCERTAINTY IF IT ACTUALLY IMPROVED THINGS. THE RESULT OF USING THIS CODE IS, THAT
+               RECORDS WHERE THE SAME ISBN/ISSN IS (INCORRECTLY) USED FOR MORE THAN ONE PUBLICATION
+               ARE SPLIT INTO SEPRATE RECORDS (GOOD). THERE ARE HOWEVER CERTAIN COMBINATIONS OF TYPES
+               THAT SHOULD NOT BE SPLIT (BAD). NET IMPROVEMENT? INCONCLUSIVE.
+
             // If the type currently being checked is NOT 001 or 035$a, filter the candidates based on
             // instance @type and work @type ("materialtyp").
             if (dupType != Parameters.DUPLICATION_TYPE.DUPTYPE_LIBRISID &&
@@ -498,6 +504,8 @@ class XL
                     }
                 }
             }
+
+            */
 
             // If duplicates have already been found, do not try any more duplicate types.
             if (!duplicateIDs.isEmpty())
