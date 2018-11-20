@@ -275,23 +275,37 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
             String fuzzyValue = target[fuzzyMergeProperty]
             if (fuzzyValue) {
                 strictProperties.each {
-                    String v = obj[it]
-                    if (v) {
-                        // Same as Pattern.quote, but explicit here since we
-                        // toggle parts on again when adding magicValueParts.
-                        def vPattern = /\Q${v}\E/
-                        magicValueParts?.each { part, pattern ->
-                            vPattern = vPattern.replaceAll(part,
-                                    Matcher.quoteReplacement(/\E${pattern}\Q/))
-                        }
-                        fuzzyValue = fuzzyValue.replaceFirst(vPattern, '')
+                    String value = obj[it]
+                    if (value) {
+                        fuzzyValue = removeMatchingValue(fuzzyValue, value,
+                                magicValueParts)
                     }
                 }
                 fuzzyValue = fuzzPattern.matcher(fuzzyValue).replaceAll('')
-                return fuzzyValue.trim() == ''
+                fuzzyValue = fuzzyValue.trim()
+                return fuzzyValue == ''
             }
         }
         return false
+    }
+
+    /**
+     * @param fuzzyValue The value from which to remove other values.
+     * @param value A value to remove.
+     * @param magicValueParts A map of tokens in the value which are to be
+     * treated as magic, represented by regular expressions.
+     */
+    private String removeMatchingValue(String fuzzyValue, String value,
+            Map<String, String> magicValueParts) {
+        // Same as Pattern.quote, but explicit here since we
+        // toggle parts on again when adding magicValueParts.
+        def vPattern = /\Q${value}\E/
+        magicValueParts?.each { part, pattern ->
+            vPattern = vPattern.replaceAll(part,
+                    Matcher.quoteReplacement(/\E${pattern}\Q/))
+        }
+        fuzzyValue = fuzzyValue.replaceFirst(vPattern, '')
+        return fuzzyValue
     }
 
     void unmodify(Map record, Map thing) {
