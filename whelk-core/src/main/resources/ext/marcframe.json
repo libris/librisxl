@@ -1409,6 +1409,9 @@
         "overwriteType": "PrimaryProvisionActivity",
         "flagProperty": "marc:publicationStatus",
         "matchValuePattern": "^[0-9u]{4}$",
+        "fuzzyMergeProperty": "date",
+        "fuzzPattern": "[^0-9]+",
+        "magicValueParts": {"[nu]": "[0-9nuxNUX?-]"},
         "flagMatch": {
           "marc:PublicationDateAndCopyrightDate": {
             "mergeFirstLink": "publication",
@@ -1515,6 +1518,7 @@
             "back": "both"
           },
           {
+            "name":  "Treating date as 'fuzzy like' year",
             "source": {
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
@@ -1525,16 +1529,47 @@
             },
             "result": {
               "publication": [
-                {"@type": "PrimaryPublication", "year": "1977"},
-                {"@type": "Publication", "date": "ca 1977"}
-              ]
-            },
-            "TODO:desired": {
-              "publication": [
                 {"@type": "PrimaryPublication", "year": "1977", "date": "ca 1977"}
               ]
             },
-            "back": "both"
+            "back": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "1977",
+                "date": "ca 1977"
+              },
+              "publication": [
+                {"@type": "PrimaryPublication", "year": "1977", "date": "ca 1977"}
+              ]
+            }
+          },
+          {
+            "name":  "Treating fuzzy date like year with magic 'u'",
+            "source": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "197u"
+              },
+              "publication": [ {"@type": "Publication", "date": "likely 1977?"} ]
+            },
+            "result": {
+              "publication": [
+                {"@type": "PrimaryPublication", "year": "197u", "date": "likely 1977?"}
+              ]
+            },
+            "back": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "197u",
+                "date": "likely 1977?"
+              },
+              "publication": [
+                {"@type": "PrimaryPublication", "year": "197u", "date": "likely 1977?"}
+              ]
+            }
           },
           {
             "source": {
@@ -1650,15 +1685,20 @@
                 {
                   "@type": "PrimaryPublication",
                   "startYear": "1977",
+                  "date": "[1977-]",
                   "country": [ {"@id": "https://id.kb.se/country/sw"} ]
-                },
-                {
-                  "@type": "Publication",
-                  "date": "[1977-]"
                 }
               ]
             },
-            "TODO:desired": {
+            "back": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
+                "year": "1977",
+                "otherYear": "9999",
+                "date": "[1977-]",
+                "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+              },
               "publication": [
                 {
                   "@type": "PrimaryPublication",
@@ -1667,8 +1707,7 @@
                   "country": [ {"@id": "https://id.kb.se/country/sw"} ]
                 }
               ]
-            },
-            "back": "both"
+            }
           },
           {
             "source": {
@@ -1690,6 +1729,45 @@
               ]
             },
             "back": "both"
+          },
+          {
+            "name":  "Treating fuzzy date like startYear plus endYear with magic 'u'",
+            "source": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
+                "year": "197u",
+                "otherYear": "202u"
+              },
+              "publication": [ {"@type": "Publication", "date": "[ca 197?-202-]"} ]
+            },
+            "result": {
+              "publication": [
+                {
+                  "@type": "PrimaryPublication",
+                  "startYear": "197u",
+                  "endYear": "202u",
+                  "date": "[ca 197?-202-]"
+                }
+              ]
+            },
+            "back": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
+                "year": "197u",
+                "otherYear": "202u",
+                "date": "[ca 197?-202-]"
+              },
+              "publication": [
+                {
+                  "@type": "PrimaryPublication",
+                  "startYear": "197u",
+                  "endYear": "202u",
+                  "date": "[ca 197?-202-]"
+                }
+              ]
+            }
           },
           {
             "source": {
@@ -6793,7 +6871,7 @@
         "splitValueProperties": ["startYear", "endYear"],
         "allowEmpty": true,
         "rejoin": "-",
-        "leadingPunctuation": ",", "punctuationChars": ",;"
+        "leadingPunctuation": ",", "punctuationChars": ".,;"
       },
       "$e": {"aboutNew": "_:manufacture", "link": "place", "resourceType": "Place", "property": "label", "punctuationChars": ",:;", "surroundingChars" : "()"},
       "$f": {"about": "_:manufacture", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :", "punctuationChars": ",:;)"},
@@ -7292,7 +7370,7 @@
         "splitValueProperties": ["startYear", "endYear"],
         "allowEmpty": true,
         "rejoin": "-",
-        "leadingPunctuation": ","
+        "leadingPunctuation": ",", "punctuationChars": ".,;"
       },
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label", "trailingPunctuation": ":"},
       "$6": {"property": "marc:fieldref"},

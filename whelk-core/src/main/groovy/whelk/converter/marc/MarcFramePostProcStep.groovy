@@ -1,5 +1,6 @@
 package whelk.converter.marc
 
+import java.util.regex.Matcher
 import java.util.regex.Pattern
 import groovy.util.logging.Log4j2 as Log
 
@@ -179,10 +180,17 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
     String sourceLink
     String overwriteType
     String flagProperty
+    String fuzzyMergeProperty
+    Pattern fuzzPattern
+    Map magicValueParts
 
     Map<String, FlagMatchRule> flagMatch = [:]
 
     private Map<String, List<FlagMatchRule>> flagMatchByLink = [:]
+
+    void setFuzzPattern(String pattern) {
+        fuzzPattern = Pattern.compile(pattern)
+    }
 
     void setFlagMatch(Map flagMatch) {
         flagMatch.each { flag, ruleDfn ->
@@ -231,14 +239,20 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
             boolean mergeOk = false
             def target = list[0]
             if (ld && target) {
-                boolean targetContainsSomeRemapped =
-                    flagRule.remapProperty.values().any {
-                        def value = target[it]
-                        value && value instanceof String && matchValuePattern.matcher(value)
-                    }
+                def mappedProperties = flagRule.remapProperty.values()
+                boolean targetContainsSomeRemapped = mappedProperties.any {
+                    def value = target[it]
+                    value && value instanceof String && matchValuePattern.matcher(value)
+                }
+
+                boolean onlyExpectedValuesInFuzzyProperty =
+                    checkOnlyExpectedValuesInFuzzyProperty(target, obj, mappedProperties)
+
                 if ((!flagRule.revertRequiresNo ||
                         !target.containsKey(flagRule.revertRequiresNo)) &&
-                    targetContainsSomeRemapped) {
+                    (targetContainsSomeRemapped ||
+                     onlyExpectedValuesInFuzzyProperty)
+                   ) {
                     mergeOk = ld.softMerge(obj, target)
                 }
             }
@@ -247,6 +261,51 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
             }
             thing.remove(sourceLink)
         }
+    }
+
+    /**
+     * This compares a fuzzy value with stricter values for fuzzy equivalence
+     * when merging a node. We do so by removing defined "fuzz" from the fuzzy
+     * value, and then remove the stricter values as well. If the result is
+     * empty, the fuzzy value is considered equivalent enough.
+     */
+    boolean checkOnlyExpectedValuesInFuzzyProperty(Map target, Map obj,
+            Iterable<String> strictProperties) {
+        if (fuzzyMergeProperty) {
+            String fuzzyValue = target[fuzzyMergeProperty]
+            if (fuzzyValue) {
+                strictProperties.each {
+                    String value = obj[it]
+                    if (value) {
+                        fuzzyValue = removeMatchingValue(fuzzyValue, value,
+                                magicValueParts)
+                    }
+                }
+                fuzzyValue = fuzzPattern.matcher(fuzzyValue).replaceAll('')
+                fuzzyValue = fuzzyValue.trim()
+                return fuzzyValue == ''
+            }
+        }
+        return false
+    }
+
+    /**
+     * @param fuzzyValue The value from which to remove other values.
+     * @param value A value to remove.
+     * @param magicValueParts A map of tokens in the value which are to be
+     * treated as magic, represented by regular expressions.
+     */
+    private String removeMatchingValue(String fuzzyValue, String value,
+            Map<String, String> magicValueParts) {
+        // Same as Pattern.quote, but explicit here since we
+        // toggle parts on again when adding magicValueParts.
+        def vPattern = /\Q${value}\E/
+        magicValueParts?.each { part, pattern ->
+            vPattern = vPattern.replaceAll(part,
+                    Matcher.quoteReplacement(/\E${pattern}\Q/))
+        }
+        fuzzyValue = fuzzyValue.replaceFirst(vPattern, '')
+        return fuzzyValue
     }
 
     void unmodify(Map record, Map thing) {
