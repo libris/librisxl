@@ -448,11 +448,13 @@ class MarcConversion {
                 ? data._marcUncompleted
                 : [data._marcUncompleted]
 
-            // TODO: how to re-add only partially _unhandled?
             marcUncompleted.each {
-                def field = it.clone()
-                field.remove('_unhandled')
-                fields << field
+                // Only re-add *fully* uncompleted fields. (Saved failed fields
+                // with subfields in unhandled are now excluded to avoid field
+                // duplication).
+                if (!it.containsKey('_unhandled')) {
+                    fields << it.clone()
+                }
             }
         }
 

@@ -201,11 +201,17 @@ class MarcFrameConverterSpec extends Specification {
             controlNumber: "0000000",
             "mainEntity": [
                 "@type": "Instance",
-                "instanceOf": ["@type": "Text"]
+                "instanceOf": [
+                    "@type": "Text",
+                    "contribution": [
+                        ["@type": "PrimaryContribution",
+                         "agent": ["@type": "Person", "name": "X"]]
+                    ]
+                ]
             ],
             _marcUncompleted: [
                 ["008": "020409 | anznnbabn          |EEEEEEEEEEE"],
-                ["100": ["ind1": "0", "subfields": [["?": "?"]]], "_unhandled": ["?"]]
+                ["100": ["ind1": "0", "subfields": [["a": "X"]]], "_unhandled": ["?"]]
             ]
         ]
         when:
@@ -213,9 +219,10 @@ class MarcFrameConverterSpec extends Specification {
         then:
         result.fields == [
             ["001": "0000000"],
-            ["008": "020409 | anznnbabn          |EEEEEEEEEEE"],
-            ["100": ["ind1": "0", "subfields": [["?": "?"]]]]
+            ["100": ["ind1": "0", "ind2": " ", "subfields": [["a": "X"]]]],
+            ["008": "020409 | anznnbabn          |EEEEEEEEEEE"]
         ]
+
     }
 
     def "should accept sameAs-token-URIs on revert"() {
