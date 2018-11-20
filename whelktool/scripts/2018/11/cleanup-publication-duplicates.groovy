@@ -4,7 +4,7 @@ merger = new RestructPropertyValuesAndFlagStep(
     matchValuePattern: '^[0-9u]{4}$',
     fuzzyMergeProperty: "date",
     fuzzPattern: "[^0-9]+",
-    magicValueParts: ["u": "[0-9nuxNUX?-]"]
+    magicValueParts: ["[nu]": "[0-9nuxNUX?-]"]
 )
 
 boolean checkFuzzyDate(obj, target) {
