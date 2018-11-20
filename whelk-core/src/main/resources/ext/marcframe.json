@@ -318,7 +318,7 @@
       "$h": {"about": "_:work", "property": "marc:mediaTerm"},
 
       "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
-      "$m": {"about": "_:work", "addProperty": "musicMedium", "leadingPunctuation": ","},
+      "$m": {"about": "_:work", "addLink": "musicMedium", "resourceType": "MusicMedium", "property": "label", "leadingPunctuation": ","},
       "$o": {"about": "_:work", "property": "version"},
 
       "$r": {"about": "_:work", "property": "musicKey", "leadingPunctuation": ","},
@@ -6270,6 +6270,7 @@
         }
       },
       "TODO": "See also 100$t and 130.",
+      "TODO": "Interpunction ; on $r needs to be analyzed",
       "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"property": "legalDate"},
       "$0": {
@@ -6281,6 +6282,29 @@
       "$6": {"property": "marc:fieldref"},
       "subfieldOrder": "6 a g d m n r p k l s f o 1 0",
       "_spec": [
+        {
+          "source": {
+            "240": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Konsert,"},
+              {"m": "piano, orkester,"},
+              {"n": "nr 24, K.491,"},
+              {"r": "c-moll;"},
+              {"o": "arr. piano (3), 10 h"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Konsert",
+                "partNumber": ["nr 24, K.491"]
+              }],
+              "musicMedium": [{"@type": "MusicMedium", "label": "piano, orkester"}],
+              "musicKey": "c-moll;",
+              "version": "arr. piano (3), 10 h"
+            }
+          }}
+        },
         {
           "source": {
             "240": {"ind1": "0", "ind2": " ", "subfields": [
@@ -9731,7 +9755,10 @@
                           "partNumber": ["K. 492"]
                         }
                       ],
-                      "musicMedium": ["harpsichord"],
+                      "musicMedium": [{
+                        "@type": "MusicMedium",
+                        "label": "harpsichord"
+                      }],
                       "musicKey": "D major;"
                     },
                     {
@@ -11445,6 +11472,73 @@
           }}
         },
         {
+          "name": "Example from bib 10068187",
+          "source": [
+            {"700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Hayn, Joseph,"}, {"d": "1732-1809."}, {"t": "Trio,"}, {"m": "piano"}, {"m": "flöjt"},
+              {"m": "violoncell,"}, {"n": "Hob. XV:15,"}, {"r": "G-dur"}]}},
+            {"700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Hayn, Joseph,"}, {"d": "1732-1809."}, {"t": "Trio,"}, {"m": "piano"}, {"m": "flöjt"},
+              {"m": "violoncell,"}, {"n": "Hob. XV:16,"}, {"r": "D-dur"}]}},
+            {"700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Hayn, Joseph,"}, {"d": "1732-1809."}, {"t": "Trio,"}, {"m": "piano"}, {"m": "flöjt"},
+              {"m": "violoncell,"}, {"n": "Hob. XV:17,"}, {"r": "F-dur"}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relationship": [{
+                "@type": "Relationship",
+                "entity": {
+                  "@type": "Work",
+                  "contribution": [{
+                    "@type": "PrimaryContribution",
+                    "agent": {"@type": "Person", "familyName": "Hayn", "givenName": "Joseph", "lifeSpan": "1732-1809."}
+                  }],
+                  "hasTitle": [{"@type": "Title", "mainTitle": "Trio", "partNumber": ["Hob. XV:15"]}],
+                  "musicKey": "G-dur",
+                  "musicMedium": [
+                    {"@type": "MusicMedium", "label": "piano"},
+                    {"@type": "MusicMedium", "label": "flöjt"},
+                    {"@type": "MusicMedium", "label": "violoncell"}
+                  ]
+                }
+              }, {
+                "@type": "Relationship",
+                "entity": {
+                  "@type": "Work",
+                  "contribution": [{
+                    "@type": "PrimaryContribution",
+                    "agent": {"@type": "Person", "familyName": "Hayn", "givenName": "Joseph", "lifeSpan": "1732-1809."}
+                  }],
+                  "hasTitle": [{"@type": "Title", "mainTitle": "Trio", "partNumber": ["Hob. XV:16"]}],
+                  "musicKey": "D-dur",
+                  "musicMedium": [
+                    {"@type": "MusicMedium", "label": "piano"},
+                    {"@type": "MusicMedium", "label": "flöjt"},
+                    {"@type": "MusicMedium", "label": "violoncell"}
+                  ]
+                }
+              }, {
+                "@type": "Relationship",
+                "entity": {
+                  "@type": "Work",
+                  "contribution": [{
+                    "@type": "PrimaryContribution",
+                    "agent": {"@type": "Person", "familyName": "Hayn", "givenName": "Joseph", "lifeSpan": "1732-1809."}
+                  }],
+                  "hasTitle": [{"@type": "Title", "mainTitle": "Trio", "partNumber": ["Hob. XV:17"]}],
+                  "musicKey": "F-dur",
+                  "musicMedium": [
+                    {"@type": "MusicMedium", "label": "piano"},
+                    {"@type": "MusicMedium", "label": "flöjt"},
+                    {"@type": "MusicMedium", "label": "violoncell"}]
+                }
+              }]
+            }
+          }}
+        },
+        {
           "source": {
             "700": {"ind1": "1", "ind2": " ", "subfields": [
               {"i": "Parafraserar"},
@@ -11838,7 +11932,10 @@
                     "partNumber" : [ "nr 4, op. 22" ]
                   } ],
                   "marc:uri" : [ "111111111111" ],
-                  "musicMedium" : [ "stråkar" ]
+                  "musicMedium": [{
+                    "@type": "MusicMedium",
+                    "label": "stråkar"
+                  }]
                 }
               } ]
             }
@@ -12850,7 +12947,10 @@
                     "partNumber": ["GraunWV D:XVIII:11"],
                     "marc:nonfilingChars" : "3"
                   } ],
-                  "musicMedium": ["harpsichord"],
+                  "musicMedium": [{
+                    "@type": "MusicMedium",
+                    "label": "harpsichord"
+                  }],
                   "musicKey": "B♭ minor",
                   "marc:relatedAs": [{"@type": "Relation", "label": "Container of (work):"}]
                 }
@@ -13660,7 +13760,10 @@
                       "mainTitle": "Marches",
                       "marc:formSubheading": ["Selections (Sousa American bicentennial collection)"]
                     }],
-                    "musicMedium": ["band."]
+                    "musicMedium": [{
+                      "@type": "MusicMedium",
+                      "label": "band."
+                    }]
                   }
                 }
             }]
@@ -16954,7 +17057,10 @@
                   "partNumber": ["op. 19"]
                 }],
                 "marc:recordControlNumber": ["00000"],
-                "musicMedium": ["piano"]
+                "musicMedium": [{
+                  "@type": "MusicMedium",
+                  "label": "piano"
+                }]
               }]
             }
           }

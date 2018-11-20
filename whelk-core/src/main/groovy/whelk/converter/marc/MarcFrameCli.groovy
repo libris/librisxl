@@ -1,7 +1,8 @@
 package whelk.converter.marc
 
+import whelk.Document
 import whelk.JsonLd
-import whelk.component.PostgreSQLComponent
+import whelk.Whelk
 import whelk.filter.LinkFinder
 
 
@@ -16,13 +17,13 @@ if (args.length > 1) {
 }
 
 def converter = new MarcFrameConverter()
+addSystemComponents(converter)
 
 for (fpath in fpaths) {
     def source = converter.mapper.readValue(new File(fpath), Map)
     def result = null
 
     if (cmd == "revert") {
-        addJsonLd(converter)
         if (converter.ld) {
             System.err.println "Validating JSON-LD ..."
             def errors = converter.ld.validate(source)
@@ -37,12 +38,14 @@ for (fpath in fpaths) {
     } else {
         def extraData = null
         if (source.oaipmhSetSpecs) {
-            addLinkFinder(converter)
-            extraData= [oaipmhSetSpecs: source.remove('oaipmhSetSpecs')]
-        } else {
-            addJsonLd(converter)
+            extraData = [oaipmhSetSpecs: source.remove('oaipmhSetSpecs')]
         }
         result = converter.runConvert(source, fpath, extraData)
+        if (converter.linkFinder) {
+            def doc = new Document(result)
+            converter.linkFinder.normalizeIdentifiers(doc)
+            result = doc.data
+        }
     }
 
     if (fpaths.size() > 1)
@@ -56,20 +59,17 @@ for (fpath in fpaths) {
     }
 }
 
-def addLinkFinder(converter) {
-    if (converter.linkFinder)
-        return
-    def whelkname = "whelk_dev"
-    def pgsql = whelkname ?  new PostgreSQLComponent("jdbc:postgresql:$whelkname", "lddb"): null
-    def linkFinder = pgsql ? new LinkFinder(pgsql) : null
-    converter.linkFinder = linkFinder
-    // TODO: add JsonLd with data from psql!
+void addSystemComponents(converter) {
+    if ('xl.secret.properties' in System.properties) {
+        def whelk = Whelk.createLoadedCoreWhelk()
+        converter.linkFinder = new LinkFinder(whelk.storage)
+        converter.ld = whelk.jsonld
+    } else {
+        addJsonLd(converter)
+    }
 }
 
 static void addJsonLd(converter) {
-    if (converter.ld)
-        return
-
     def defsbuild = System.env.defsbuild ?: '../../definitions/build'
 
     def contextFile = new File("$defsbuild/vocab/context.jsonld")
