@@ -2,13 +2,35 @@ MUSICMEDIUM_TYPE = 'MusicMedium'
 MUSICMEDIUM_PROPERTY = 'musicMedium'
 
 
-boolean remodelToStructuredValue(term) {
+boolean remodelToStructuredValue(key, term) {
 
-    //Create musicMedium object and add to list
-    term[MUSICMEDIUM_PROPERTY] = term[MUSICMEDIUM_PROPERTY].collect {
-        ['@type': MUSICMEDIUM_TYPE, 'label': it]
+    boolean shouldRemodelTerm = true
+
+    //Guard against updating definitions data or musicMedium with correct structure (added via the viewer)
+    //musicMedium shall consist of a list of strings, otherwise ignore.
+    if (key != MUSICMEDIUM_PROPERTY || !(term[MUSICMEDIUM_PROPERTY] instanceof List))
+        shouldRemodelTerm = false
+    else {
+        term[MUSICMEDIUM_PROPERTY].each {
+            if (it instanceof Map || it instanceof List) {
+                println("${MUSICMEDIUM_PROPERTY} contains List or Map. Skipping term...")
+                shouldRemodelTerm = false
+            }
+        }
     }
-    return true
+
+    if (shouldRemodelTerm == true) {
+        //Create musicMedium object and add to list
+        term[MUSICMEDIUM_PROPERTY] = term[MUSICMEDIUM_PROPERTY].collect {
+            ['@type': MUSICMEDIUM_TYPE, 'label': it]
+        }
+        return true
+    } else {
+        //Explicitly return false if no updates have been done
+        return false
+    }
+
+
 }
 
 void findAndFixValuesInData(data, obj) {
@@ -26,10 +48,8 @@ void findAndFixValuesInData(data, obj) {
 
 void checkValueInData(data, container, key, value) {
 
-    if (key == MUSICMEDIUM_PROPERTY) {
-        if (remodelToStructuredValue(container))
-            data.scheduleSave()
-    }
+    if (remodelToStructuredValue(key, container))
+        data.scheduleSave()
     else {
         findAndFixValuesInData(data, value)
     }
