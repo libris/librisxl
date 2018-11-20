@@ -270,9 +270,12 @@ class SearchUtils {
         return result
     }
 
+    /*
+     * Return a map without helper params, useful for facet links.
+     */
     private Map stripNonStatsParams(Map incoming) {
         Map result = [:]
-        List reserved = getReservedParameters()
+        List reserved = getReservedAuxParameters()
         incoming.each { k, v ->
             if (!reserved.contains(k)) {
                 result[k] = v
@@ -678,8 +681,18 @@ class SearchUtils {
         return new Tuple2(result, pageParams)
     }
 
+    /*
+     * Return a list of reserved query params
+     */
     private List getReservedParameters() {
-        return ['q', 'p', 'o', 'value', '_limit', '_offset', '_sort']
+        return ['q', 'p', 'o', 'value'] + getReservedAuxParameters()
+    }
+
+    /*
+     * Return a list of reserved helper params
+     */
+    private List getReservedAuxParameters() {
+        return ['_limit', '_offset', '_sort']
     }
 
     /*
