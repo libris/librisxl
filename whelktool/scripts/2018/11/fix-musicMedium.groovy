@@ -19,7 +19,7 @@ boolean remodelToStructuredValue(key, term) {
         }
     }
 
-    if (shouldRemodelTerm == true) {
+    if (shouldRemodelTerm) {
         //Create musicMedium object and add to list
         term[MUSICMEDIUM_PROPERTY] = term[MUSICMEDIUM_PROPERTY].collect {
             ['@type': MUSICMEDIUM_TYPE, 'label': it]
