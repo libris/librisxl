@@ -435,7 +435,17 @@ class SearchUtils {
         if (termKey in ld.vocabIndex) {
             return ld.vocabIndex[termKey]
         }
-        String fullId = vocabUri ? vocabUri.resolve(id).toString() : id
+        String fullId
+        try {
+            if (vocabUri) {
+                fullId = vocabUri.resolve(id).toString()
+            }
+        }
+        catch (java.lang.IllegalArgumentException e) {
+            // Couldn't resolve, which means id isn't a valid IRI.
+            // No need to check the db.
+            return null
+        }
         Document doc = whelk.storage.getDocumentByIri(fullId)
 
         if (doc) {
