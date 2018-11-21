@@ -36,6 +36,10 @@ selectBySqlWhere('''
         return !justAdded
     }
 
+    if (publications.size() == 1) {
+        return
+    }
+
     // Merge PrimaryPublication into first fuzzy-date-matching Publication.
     def primary = publications[0]
     if (isInstanceOf(primary, 'PrimaryPublication')) {
