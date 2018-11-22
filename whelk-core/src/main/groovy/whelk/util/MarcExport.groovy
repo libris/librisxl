@@ -16,6 +16,9 @@ class MarcExport {
     static Vector<MarcRecord> compileVirtualMarcRecord(ExportProfile profile, Document rootDocument,
                                                        Whelk whelk, JsonLD2MarcXMLConverter toMarcXmlConverter) {
         String bibXmlString = toXmlString(rootDocument, toMarcXmlConverter)
+        if (bibXmlString == null)
+            return null
+
         def xmlRecord = new XmlSlurper(false, false).parseText(bibXmlString)
 
         List auth_ids = []
@@ -84,7 +87,7 @@ class MarcExport {
             return (String) toMarcXmlConverter.convert(doc.data, doc.getShortId()).get(JsonLd.getNON_JSON_CONTENT_KEY())
         }
         catch (Exception | Error e) { // Depending on the converter, a variety of problems may arise here
-            log.error(e)
+            log.error("Conversion error for: " + doc.getCompleteId() + " cause: ", e)
             return null
         }
     }
