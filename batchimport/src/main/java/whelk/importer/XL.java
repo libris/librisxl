@@ -5,6 +5,7 @@ import io.prometheus.client.Counter;
 import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.Subfield;
 import se.kb.libris.util.marc.impl.MarcRecordImpl;
 import se.kb.libris.utils.isbn.ConvertException;
 import se.kb.libris.utils.isbn.Isbn;
@@ -457,6 +458,10 @@ class XL
                     // Assumes the post being imported carries a valid libris id in 001, and "SE-LIBR" or "LIBRIS" in 003
                     duplicateIDs.addAll(getDuplicatesOnLibrisID(marcRecord, "bib"));
                     break;
+                case DUPTYPE_EAN:
+                    // Unique id number in another system.
+                    duplicateIDs.addAll(getDuplicatesOnEAN(marcRecord));
+                    break;
             }
 
             /* THIS FUNCTIONALITY IS TESTED (AND WAS USED IN PRODUCTION), BUT WAS DISABLED BECAUSE
@@ -550,6 +555,31 @@ class XL
                 ResultSet resultSet = statement.executeQuery())
             {
                 results.addAll( collectIDs(resultSet) );
+            }
+        }
+        return results;
+    }
+
+    private List<String> getDuplicatesOnEAN(MarcRecord marcRecord)
+            throws SQLException
+    {
+        List<String> results = new ArrayList<>();
+        for (Datafield field : marcRecord.getDatafields("024"))
+        {
+            if (field.getIndicator(0) == '3')
+            {
+                List<Subfield> subfields = field.getSubfields("a");
+                for (Subfield subfield : subfields)
+                {
+                    String incomingEan = subfield.getData();
+
+                    try (Connection connection = m_whelk.getStorage().getConnection();
+                         PreparedStatement statement = getOnEAN_ps(connection, incomingEan);
+                         ResultSet resultSet = statement.executeQuery())
+                    {
+                        results.addAll(collectIDs(resultSet));
+                    }
+                }
             }
         }
         return results;
@@ -725,6 +755,17 @@ class XL
 
         statement.setObject(1, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": [\"" + issn + "\"]}]", java.sql.Types.OTHER);
         statement.setObject(2, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": \"" + issn + "\"}]", java.sql.Types.OTHER);
+
+        return statement;
+    }
+
+    private PreparedStatement getOnEAN_ps(Connection connection, String ean)
+            throws SQLException
+    {
+        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
+        PreparedStatement statement =  connection.prepareStatement(query);
+
+        statement.setObject(1, "[{\"@type\": \"EAN\", \"value\": \"" + ean + "\"}]", java.sql.Types.OTHER);
 
         return statement;
     }

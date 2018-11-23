@@ -47,6 +47,8 @@ class WhelkTool {
     boolean stepWise
     int limit = -1
 
+    boolean allowLoud
+
     private boolean errorDetected
 
     private def jsonWriter = new ObjectMapper().writerWithDefaultPrettyPrinter()
@@ -345,6 +347,9 @@ class WhelkTool {
 
     private void doModification(DocumentItem item) {
         Document doc = item.doc
+        if (item.loud) {
+            assert allowLoud : "Loud changes need to be explicitly allowed"
+        }
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
@@ -425,13 +430,21 @@ class WhelkTool {
 
     private void run() {
         log "Running Whelk against:"
-        log "  PostgreSQL: ${whelk.storage.connectionPool.url}"
-        log "  ElasticSearch: ${whelk.elastic?.elasticHosts}"
+        log "  PostgreSQL:"
+        log "    url:     ${whelk.storage.connectionPool.url}"
+        log "    table:   ${whelk.storage.mainTableName}"
+        if (whelk.elastic) {
+            log "  ElasticSearch:"
+            log "    hosts:   ${whelk.elastic.elasticHosts}"
+            log "    cluster: ${whelk.elastic.elasticCluster}"
+            log "    index:   ${whelk.elastic.defaultIndex}"
+        }
         log "Using script: $scriptFile"
         if (dryRun) log "  dryRun"
         if (stepWise) log "  stepWise"
         if (noThreads) log "  noThreads"
         if (limit > -1) log "  limit: $limit"
+        if (allowLoud) log "  allowLoud"
         log()
         Bindings bindings = createMainBindings()
         script.eval(bindings)
@@ -476,12 +489,13 @@ class WhelkTool {
 
     static void main(String[] args) {
         def cli = new CliBuilder(usage:'whelktool [options] <SCRIPT>')
-        cli.h(longOpt: 'help', 'Print this help message')
-        cli.r(longOpt:'report', args:1, argName:'REPORT-DIR', 'Directory where reports are written (defaults to "reports")')
-        cli.d(longOpt:'dry-run', 'Do not save any modifications')
-        cli.T(longOpt:'no-threads', 'Do not use threads to parallellize batch processing')
-        cli.s(longOpt:'step', 'Change one document at a time, prompting to continue')
+        cli.h(longOpt: 'help', 'Print this help message and exit.')
+        cli.r(longOpt:'report', args:1, argName:'REPORT-DIR', 'Directory where reports are written (defaults to "reports").')
+        cli.d(longOpt:'dry-run', 'Do not save any modifications.')
+        cli.T(longOpt:'no-threads', 'Do not use threads to parallellize batch processing.')
+        cli.s(longOpt:'step', 'Change one document at a time, prompting to continue.')
         cli.l(longOpt:'limit', args:1, argName:'LIMIT', 'Amount of documents to process.')
+        cli.a(longOpt:'allow-loud', 'Allow scripts to do loud modifications.')
 
         def options = cli.parse(args)
         if (options.h) {
@@ -496,6 +510,7 @@ class WhelkTool {
         tool.stepWise = options.s
         tool.noThreads = options.T
         tool.limit = options.l ? Integer.parseInt(options.l) : -1
+        tool.allowLoud = options.a
         tool.run()
     }
 
@@ -508,34 +523,28 @@ class DocumentItem {
     private Whelk whelk
     private boolean needsSaving = false
     private boolean doDelete = false
-    private boolean loud = true
+    private boolean loud = false
     Closure onError = null
 
     def List getGraph() {
         return doc.data['@graph']
     }
 
-    void scheduleSave(boolean loud=true) {
-        scheduleSave(loud: loud)
-    }
-
-    void scheduleSave(Map params) {
+    void scheduleSave(Map params=[:]) {
         needsSaving = true
         set(params)
     }
 
-    void scheduleDelete(boolean loud=true) {
-        scheduleDelete(loud: true)
-    }
-
-    void scheduleDelete(Map params) {
+    void scheduleDelete(Map params=[:]) {
         needsSaving = true
         doDelete = true
         set(params)
     }
 
     private void set(Map params) {
-        this.loud = params.get('loud', true)
+        if (params.containsKey('loud')) {
+            this.loud = params.loud
+        }
         this.onError = params.onError
     }
 

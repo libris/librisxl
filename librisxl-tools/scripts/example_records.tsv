@@ -138,6 +138,15 @@ auth/183024	Cato, Anders (w 370)
 auth/192570	Kant, Immanuel (w 370)
 auth/266570	Lokalt test för att säkerställa att exporten fungerar efter tagit bort mappning till dess ind2 värde (710 ind1=4)
 
+auth/272403	Post med musicMedium
+auth/217108	Post med musicMedium
+auth/221934	Post med musicMedium
+auth/215655	Post med musicMedium
+auth/221957	Post med musicMedium
+auth/218125	Post med musicMedium
+auth/170061	Post med musicMedium
+
+bib/11473514	Lokalt test batchimport
 bib/19980053	Lokalt test för dubletter av 852 fältet
 bib/7241097	Lokalt test för dubletter av 852 fältet
 bib/9684293	Lokalt test för att säkerställa att exporten fungerar efter tagit bort mappning till dess ind1 värde (033 ind1=_)
@@ -657,6 +666,25 @@ bib/13430030	Post med 776
 bib/12430259	Post med 776#s
 bib/11873961	Post med 780
 bib/635468	Post med 762, 780, 785
+
+bib/2289460	Post med musicMedium
+bib/2925344	Post med musicMedium
+bib/13453378	Post med musicMedium
+bib/9683209	Post med musicMedium
+bib/8854674	Post med musicMedium
+bib/7028924	Post med musicMedium
+bib/9209491	Post med musicMedium
+bib/11822352	Post med musicMedium
+bib/12188285	Post med musicMedium
+bib/10068187	Post med musicMedium
+bib/12333901	Post med musicMedium
+bib/9396169	Post med musicMedium
+bib/10232634	Post med musicMedium
+bib/8245324	Post med musicMedium
+bib/3236562	Post med musicMedium
+bib/11541142	Post med musicMedium
+bib/8876724	Post med musicMedium
+bib/12289735	Post med musicMedium
 
 bib/9810559	DU TESTPOST
 bib/11805570	DU TESTPOST
