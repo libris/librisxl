@@ -131,8 +131,15 @@ class WhelkTool {
         return uriIdMap
     }
 
-    void selectBySqlWhere(String whereClause, Closure process,
-            int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
+    void selectBySqlWhere(Map params, String whereClause, Closure process) {
+        selectBySqlWhere(whereClause,
+                params.batchSize ?: DEFAULT_BATCH_SIZE, params.silent,
+                process)
+    }
+
+    void selectBySqlWhere(String whereClause,
+            int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false,
+            Closure process) {
         if (!silent)
             log "Select by SQL"
         doSelectBySqlWhere(whereClause, process, batchSize)
