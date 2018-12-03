@@ -863,7 +863,7 @@ class Crud extends HttpServlet {
                             log.warn("If-Match: ${request.getHeader('If-Match')}")
                             log.warn("Checksum: ${_doc.checksum}")
 
-                            if (_doc.getChecksum() as String != cleanEtag(request.getHeader("If-Match"))) {
+                            if (_doc.getChecksum() != cleanEtag(request.getHeader("If-Match"))) {
                                 log.debug("PUT performed on stale document.")
 
                                 throw new EtagMissmatchException()
