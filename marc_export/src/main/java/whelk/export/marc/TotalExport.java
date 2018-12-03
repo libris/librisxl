@@ -116,31 +116,36 @@ public class TotalExport
 
     private void executeBatch(Batch batch, int threadIndex)
     {
-        Connection connection = m_whelk.getStorage().getConnection();
-        for (String bibUri : batch.bibUrisToConvert)
+        try (Connection connection = m_whelk.getStorage().getConnection())
         {
-            String systemID = m_whelk.getStorage().getSystemIdByIri(bibUri, connection);
-            if (systemID == null)
-                continue;
-
-            Document document = m_whelk.getStorage().loadEmbellished(systemID, m_whelk.getJsonld());
-
-            Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(batch.profile, document, m_whelk, m_toMarcXmlConverter);
-            if (result == null) // A conversion error will already have been logged.
-                continue;
-
-
-            for (MarcRecord mr : result)
+            for (String bibUri : batch.bibUrisToConvert)
             {
-                try
-                {
-                    batch.output.writeRecord(mr);
-                } catch (Exception e)
-                {
-                    throw new RuntimeException(e);
-                }
-            }
+                String systemID = m_whelk.getStorage().getSystemIdByIri(bibUri, connection);
+                if (systemID == null)
+                    continue;
 
+                Document document = m_whelk.getStorage().loadEmbellished(systemID, m_whelk.getJsonld());
+
+                Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(batch.profile, document, m_whelk, m_toMarcXmlConverter);
+                if (result == null) // A conversion error will already have been logged.
+                    continue;
+
+
+                for (MarcRecord mr : result)
+                {
+                    try
+                    {
+                        batch.output.writeRecord(mr);
+                    } catch (Exception e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+            }
+        } catch (SQLException e)
+        {
+            throw new RuntimeException(e);
         }
     }
 
