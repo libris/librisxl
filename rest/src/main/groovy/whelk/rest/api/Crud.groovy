@@ -861,9 +861,9 @@ class Crud extends HttpServlet {
                     whelk.storeAtomicUpdate(doc.getShortId(), false, "xl", activeSigel, {
                         Document _doc ->
                             log.warn("If-Match: ${request.getHeader('If-Match')}")
-                            log.warn("Modified: ${_doc.modified}")
+                            log.warn("Checksum: ${_doc.checksum}")
 
-                            if (_doc.modified as String != cleanEtag(request.getHeader("If-Match"))) {
+                            if (_doc.getChecksum() as String != cleanEtag(request.getHeader("If-Match"))) {
                                 log.debug("PUT performed on stale document.")
 
                                 throw new EtagMissmatchException()
