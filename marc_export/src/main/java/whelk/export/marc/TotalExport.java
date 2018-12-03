@@ -120,6 +120,9 @@ public class TotalExport
         for (String bibUri : batch.bibUrisToConvert)
         {
             String systemID = m_whelk.getStorage().getSystemIdByIri(bibUri, connection);
+            if (systemID == null)
+                continue;
+
             Document document = m_whelk.getStorage().loadEmbellished(systemID, m_whelk.getJsonld());
 
             Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(batch.profile, document, m_whelk, m_toMarcXmlConverter);
