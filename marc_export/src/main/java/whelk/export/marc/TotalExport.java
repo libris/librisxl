@@ -49,12 +49,12 @@ public class TotalExport
     public static void main(String[] args)
             throws IOException, SQLException, InterruptedException
     {
-        if (args.length != 4)
+        if (args.length != 3)
             printUsageAndExit();
 
-        ExportProfile profile = new ExportProfile(new File(args[2]));
-        long size = Long.parseLong(args[3]);
-        long segment = Long.parseLong(args[4]);
+        ExportProfile profile = new ExportProfile(new File(args[0]));
+        long size = Long.parseLong(args[1]);
+        long segment = Long.parseLong(args[2]);
 
         String encoding = profile.getProperty("characterencoding");
         if (encoding.equals("Latin1Strip")) {
@@ -158,7 +158,7 @@ public class TotalExport
             throw new RuntimeException("SQL INJECTION SUSPECTED.");
 
         List<String> libraryUriList = Arrays.asList(locations.split(" "));
-        String stringList = "'" + String.join("', '", libraryUriList) + "'";
+        String stringList = "'https://libris.kb.se/library/" + String.join("', 'https://libris.kb.se/library/", libraryUriList) + "'";
 
         String sql = "SELECT data#>>'{@graph,1,itemOf,@id}' FROM lddb WHERE collection = 'hold' AND data#>>'{@graph,1,heldBy,@id}' IN (£)";
         sql = sql.replace("£", stringList);
