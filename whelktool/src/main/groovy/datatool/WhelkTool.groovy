@@ -92,8 +92,9 @@ class WhelkTool {
     }
 
     void selectByIds(Collection<String> ids, Closure process,
-            int batchSize = DEFAULT_BATCH_SIZE) {
-        log "Select by ${ids.size()} IDs"
+            int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
+        if (!silent)
+            log "Select by ${ids.size()} IDs"
         def uriIdMap = findShortIdsForUris(ids.findAll { it.contains(':') })
         def shortIds = ids.findResults { it.contains(':') ? uriIdMap[it] : it }
 
@@ -130,9 +131,17 @@ class WhelkTool {
         return uriIdMap
     }
 
-    void selectBySqlWhere(String whereClause, Closure process,
-            int batchSize = DEFAULT_BATCH_SIZE) {
-        log "Select by SQL"
+    void selectBySqlWhere(Map params, String whereClause, Closure process) {
+        selectBySqlWhere(whereClause,
+                params.batchSize ?: DEFAULT_BATCH_SIZE, params.silent,
+                process)
+    }
+
+    void selectBySqlWhere(String whereClause,
+            int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false,
+            Closure process) {
+        if (!silent)
+            log "Select by SQL"
         doSelectBySqlWhere(whereClause, process, batchSize)
     }
 
@@ -190,9 +199,10 @@ class WhelkTool {
     }
 
     void selectByCollection(String collection, Closure process,
-            int batchSize = DEFAULT_BATCH_SIZE) {
-        log "Select by collection: ${collection}"
-        select(whelk.storage.loadAll(collection), process)
+            int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
+        if (!silent)
+            log "Select by collection: ${collection}"
+        select(whelk.storage.loadAll(collection), process, batchSize)
     }
 
     private void select(Iterable<Document> selection, Closure process,
