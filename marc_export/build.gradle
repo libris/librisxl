@@ -40,3 +40,17 @@ dependencies {
 gretty {
     systemProperties 'xl.secret.properties': System.getProperty("xl.secret.properties")
 }
+
+jar {
+    manifest {
+        attributes "Main-Class": "whelk.export.marc.TotalExport"
+    }
+
+    from {
+        configurations.compile.collect {
+            it.isDirectory() ? it : project.zipTree(it).matching {
+                exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA','build','.gradle/**','build.gradle','gradle','gradlew','gradlew.bat','test'
+            }
+        }
+    }
+}
