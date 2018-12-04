@@ -12,6 +12,9 @@ import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.util.MarcExport;
 import whelk.util.ThreadPool;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -26,6 +29,8 @@ public class TotalExport
     private final int BATCH_SIZE = 200;
     private JsonLD2MarcXMLConverter m_toMarcXmlConverter;
     private Whelk m_whelk;
+
+    final static Logger log = LogManager.getLogger(TotalExport.class);
 
     public TotalExport(Whelk whelk)
     {
@@ -122,8 +127,10 @@ public class TotalExport
             for (String bibUri : batch.bibUrisToConvert)
             {
                 String systemID = m_whelk.getStorage().getSystemIdByIri(bibUri, connection);
-                if (systemID == null)
+                if (systemID == null) {
+                    log.warn("BibURI " + bibUri + " not found in system, skipping...");
                     continue;
+                }
 
                 Document document = m_whelk.getStorage().loadEmbellished(systemID, m_whelk.getJsonld());
 
