@@ -67,6 +67,7 @@ public class TotalExport
             output = new Iso2709MarcRecordWriter(System.out, encoding);
 
         new TotalExport(Whelk.createLoadedCoreWhelk()).dump(profile, size, segment, output);
+        output.close();
     }
 
     private static void printUsageAndExit()
