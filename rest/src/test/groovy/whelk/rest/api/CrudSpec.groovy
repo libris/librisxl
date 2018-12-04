@@ -429,7 +429,7 @@ class CrudSpec extends Specification {
         def id = BASE_URI.resolve("/1234").toString()
         def doc = new Document(["@graph": [["@id": id]]])
         doc.setModified(new Date())
-        def etag = doc.getModified()
+        def etag = doc.getChecksum()
         request.getRequestURI() >> { id }
         request.getHeader("Accept") >> { "*/*" }
         request.getHeader("If-None-Match") >> { etag }
