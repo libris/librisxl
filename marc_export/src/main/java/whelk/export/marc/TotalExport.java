@@ -143,7 +143,10 @@ public class TotalExport
                 {
                     try
                     {
-                        batch.output.writeRecord(mr);
+                        synchronized (this)
+                        {
+                            batch.output.writeRecord(mr);
+                        }
                     } catch (Exception e)
                     {
                         throw new RuntimeException(e);
