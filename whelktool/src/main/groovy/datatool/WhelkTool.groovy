@@ -366,18 +366,19 @@ class WhelkTool {
         List<Document> versions = whelk.storage.loadAllVersions(item.doc.shortId)
 
         ZonedDateTime restoreTime = ZonedDateTime.parse(item.restoreToTime)
-        Document selectedVersion = versions.get(versions.size()-1)
+
+        // If restoreTime is older than any stored version (we can't go back that far)
+        ZonedDateTime oldestStoredTime = getLatestModification(versions.get(versions.size()-1))
+        if ( restoreTime.isBefore( oldestStoredTime ) ) {
+            errorLog.println("Cannot restore ${item.doc.shortId} to ${restoreTime}, oldest stored version from: ${oldestStoredTime}")
+        }
 
         // Go over the versions, oldest first (in reverse),
         // until you've found the oldest version that is younger than the desired time target.
+        Document selectedVersion = null
         for (int i = versions.size()-1; i > -1; --i) {
             Document version = versions.get(i)
-            ZonedDateTime modified = ZonedDateTime.parse(version.getModified())
-            ZonedDateTime latestModificationTime = modified
-            if (version.getGenerationDate() != null) {
-                ZonedDateTime generation = ZonedDateTime.parse(version.getGenerationDate())
-                latestModificationTime = modified.isAfter(generation) ? modified : generation
-            }
+            ZonedDateTime latestModificationTime = getLatestModification(version)
             if (restoreTime.isAfter(latestModificationTime))
                 selectedVersion = version
         }
@@ -387,6 +388,16 @@ class WhelkTool {
             return true
         }
         return false
+    }
+
+    private ZonedDateTime getLatestModification(Document version) {
+        ZonedDateTime modified = ZonedDateTime.parse(version.getModified())
+        if (version.getGenerationDate() != null) {
+            ZonedDateTime generation = ZonedDateTime.parse(version.getGenerationDate())
+            if (generation.isAfter(modified))
+                return generation
+        }
+        return modified
     }
 
     private void doModification(DocumentItem item) {
