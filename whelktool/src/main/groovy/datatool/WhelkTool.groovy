@@ -1,5 +1,6 @@
 package whelk.datatool
 
+import java.time.ZonedDateTime
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -326,6 +327,10 @@ class WhelkTool {
         counter.countProcessed()
         process(item)
         if (item.needsSaving) {
+            if (item.restoreToTime != null) {
+                if (!doRevertToTime(item))
+                    return true
+            }
             if (stepWise && !confirmNextStep(inJsonStr, item.doc)) {
                 return false
             }
@@ -353,6 +358,47 @@ class WhelkTool {
         if (!dryRun) {
             whelk.storage.remove(item.doc.shortId, changedIn, scriptJobUri)
         }
+    }
+
+    private boolean doRevertToTime(DocumentItem item) {
+
+        // The 'versions' list is sorted, with the most recent version first.
+        List<Document> versions = whelk.storage.loadAllVersions(item.doc.shortId)
+
+        ZonedDateTime restoreTime = ZonedDateTime.parse(item.restoreToTime)
+
+        // If restoreTime is older than any stored version (we can't go back that far)
+        ZonedDateTime oldestStoredTime = getLatestModification(versions.get(versions.size()-1))
+        if ( restoreTime.isBefore( oldestStoredTime ) ) {
+            errorLog.println("Cannot restore ${item.doc.shortId} to ${restoreTime}, oldest stored version from: ${oldestStoredTime}")
+            return false
+        }
+
+        // Go over the versions, oldest first (in reverse),
+        // until you've found the oldest version that is younger than the desired time target.
+        Document selectedVersion = null
+        for (int i = versions.size()-1; i > -1; --i) {
+            Document version = versions.get(i)
+            ZonedDateTime latestModificationTime = getLatestModification(version)
+            if (restoreTime.isAfter(latestModificationTime))
+                selectedVersion = version
+        }
+
+        if (selectedVersion != null) {
+            item.doc.data = selectedVersion.data
+            return true
+        }
+        return false
+    }
+
+    private ZonedDateTime getLatestModification(Document version) {
+        ZonedDateTime modified = ZonedDateTime.parse(version.getModified())
+        if (version.getGenerationDate() != null) {
+            ZonedDateTime generation = ZonedDateTime.parse(version.getGenerationDate())
+            if (generation.isAfter(modified))
+                return generation
+        }
+        return modified
     }
 
     private void doModification(DocumentItem item) {
@@ -534,6 +580,7 @@ class DocumentItem {
     private boolean needsSaving = false
     private boolean doDelete = false
     private boolean loud = false
+    private String restoreToTime = null
     Closure onError = null
 
     def List getGraph() {
@@ -543,6 +590,7 @@ class DocumentItem {
     void scheduleSave(Map params=[:]) {
         needsSaving = true
         set(params)
+        assert (restoreToTime == null)
     }
 
     void scheduleDelete(Map params=[:]) {
@@ -551,9 +599,18 @@ class DocumentItem {
         set(params)
     }
 
+    void scheduleRevertTo(Map params=[:]) {
+        needsSaving = true
+        set(params)
+        assert (restoreToTime != null)
+    }
+
     private void set(Map params) {
         if (params.containsKey('loud')) {
             this.loud = params.loud
+        }
+        if (params.containsKey('time')) {
+            this.restoreToTime = params.time
         }
         this.onError = params.onError
     }
