@@ -371,6 +371,7 @@ class WhelkTool {
         ZonedDateTime oldestStoredTime = getLatestModification(versions.get(versions.size()-1))
         if ( restoreTime.isBefore( oldestStoredTime ) ) {
             errorLog.println("Cannot restore ${item.doc.shortId} to ${restoreTime}, oldest stored version from: ${oldestStoredTime}")
+            return false
         }
 
         // Go over the versions, oldest first (in reverse),
