@@ -17,18 +17,15 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 
 public class TotalExport
 {
     private final int BATCH_SIZE = 200;
     private JsonLD2MarcXMLConverter m_toMarcXmlConverter;
     private Whelk m_whelk;
+    private Set<String> exportedUris = new TreeSet<>();
 
     final static Logger log = LogManager.getLogger(TotalExport.class);
 
@@ -105,6 +102,9 @@ public class TotalExport
             while (resultSet.next())
             {
                 String bibMainEntityUri = resultSet.getString(1);
+                if (exportedUris.contains(bibMainEntityUri))
+                    continue;
+                exportedUris.add(bibMainEntityUri);
                 batch.bibUrisToConvert.add(bibMainEntityUri);
 
                 if (batch.bibUrisToConvert.size() >= BATCH_SIZE)
