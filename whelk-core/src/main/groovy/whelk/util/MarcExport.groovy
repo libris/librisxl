@@ -45,6 +45,13 @@ class MarcExport {
                 if (xmlString != null)
                     auths.add(MarcXmlRecordReader.fromXml(xmlString))
             }
+
+            def it = auths.iterator()
+            while (it.hasNext()) {
+                MarcRecord auth = it.next()
+                if (auth.getFields("001").size() == 0)
+                    it.remove()
+            }
         }
 
         List<Document> holdingDocuments = whelk.storage.getAttachedHoldings(rootDocument.getThingIdentifiers(), whelk.getJsonld())
