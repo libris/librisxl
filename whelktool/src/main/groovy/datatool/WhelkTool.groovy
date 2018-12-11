@@ -230,7 +230,7 @@ class WhelkTool {
                 errorLog.println "Thread: $thread"
                 errorLog.println "Error:"
                 err.printStackTrace errorLog
-                errprLog.println "-" * 20
+                errorLog.println "-" * 20
                 errorLog.flush()
             }
         }
