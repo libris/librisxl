@@ -144,6 +144,8 @@ public class MarcHttpExport extends HttpServlet
         se.kb.libris.export.ExportProfile profile = new se.kb.libris.export.ExportProfile(props);
 
         String encoding = profile.getProperty("characterencoding");
+        if (encoding == null)
+            encoding = "UTF-8";
         if (encoding.equals("Latin1Strip")) {
             encoding = "ISO-8859-1";
         }
