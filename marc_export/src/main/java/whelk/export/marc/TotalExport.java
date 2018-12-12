@@ -179,7 +179,7 @@ public class TotalExport
         List<String> libraryUriList = Arrays.asList(locations.split(" "));
         String stringList = "'https://libris.kb.se/library/" + String.join("', 'https://libris.kb.se/library/", libraryUriList) + "'";
 
-        String sql = "SELECT data#>>'{@graph,1,itemOf,@id}' FROM lddb WHERE collection = 'hold' AND data#>>'{@graph,1,heldBy,@id}' IN (£)";
+        String sql = "SELECT data#>>'{@graph,1,itemOf,@id}' FROM lddb WHERE collection = 'hold' AND data#>>'{@graph,1,heldBy,@id}' IN (£) AND deleted = false";
         sql = sql.replace("£", stringList);
 
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
