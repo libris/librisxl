@@ -189,8 +189,16 @@ class ElasticSearch {
         if (!collection.equals("hold")) {
             List externalRefs = document.getExternalRefs()
             List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
-            Map referencedData = whelk.bulkLoad(convertedExternalLinks)
-                    .collectEntries { id, doc -> [id, doc.data] }
+            Map referencedData = [:]
+            Map externalDocs = whelk.bulkLoad(convertedExternalLinks)
+            externalDocs.each { id, doc ->
+                if (id && doc && doc.hasProperty('data')) {
+                    referencedData[id] = doc.data
+                }
+                else {
+                    log.warn("Could not get external doc ${id} for ${document.getShortId()}, skipping...")
+                }
+            }
             whelk.jsonld.embellish(document.data, referencedData, true)
         }
 
