@@ -356,7 +356,7 @@ class WhelkTool {
 
     private void doDeletion(DocumentItem item) {
         if (!dryRun) {
-            whelk.storage.remove(item.doc.shortId, changedIn, scriptJobUri)
+            whelk.remove(item.doc.shortId, changedIn, scriptJobUri)
         }
     }
 
