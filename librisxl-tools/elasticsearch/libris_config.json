@@ -96,7 +96,14 @@
                     "include_in_parent": true,
                     "properties": {
                         "@type": {"type": "keyword"},
-                        "mainTitle": {"type": "text"}
+                        "mainTitle": {
+                            "type": "text",
+                            "fields": {
+                                "keyword": {
+                                    "type": "keyword"
+                                }
+                            }
+                        }
                     }
                 }
             },
