@@ -21,6 +21,7 @@ class Parameters
     private boolean parallel = false;
     private boolean enrichMulDup = false;
     private boolean verbose = false;
+    private boolean sigelfilter = true;
     private boolean replaceHold = false;
     private boolean replaceBib = false;
     private boolean mergeHold = false;
@@ -37,6 +38,7 @@ class Parameters
     boolean getRunParallel() { return parallel; }
     boolean getEnrichMulDup() { return enrichMulDup; }
     boolean getVerbose() { return verbose; }
+    boolean getSigelFilter() { return sigelfilter; }
     boolean getReplaceHold() { return replaceHold; }
     boolean getReplaceBib() { return replaceBib; }
     boolean getMergeHold() { return mergeHold; }
@@ -156,6 +158,8 @@ class Parameters
         System.err.println("--live        Write to Whelk (without this flag operations against the Whelk are readonly");
         System.err.println("              and results are only printed to stdout).");
         System.err.println("");
+        System.err.println("--nosigelfilter        Load all holdings, no check for allowed sigels.");
+        System.err.println("");
         System.err.println("--parallel    Do document conversion, enrichment and duplicate checking in parallel. Use with");
         System.err.println("              care. Specifically do not use for sources where multiples of the same document");
         System.err.println("              may appear in one batch. If you do, you risk introducing multiples in the");
@@ -272,6 +276,9 @@ class Parameters
                 break;
             case "--verbose":
                 verbose = true;
+                break;
+            case "--nosigelfilter":
+                sigelfilter = false;
                 break;
             case "--replaceHold":
                 replaceHold = true;

@@ -37,7 +37,7 @@ class XL
     private Whelk m_whelk;
     private LinkFinder m_linkfinder;
     private Parameters m_parameters;
-    private Properties m_properties;
+    protected Properties m_properties;
     private MarcFrameConverter m_marcFrameConverter;
     private static boolean verbose = false;
 

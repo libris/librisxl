@@ -4,6 +4,10 @@ import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Counter;
 import io.prometheus.client.exporter.PushGateway;
 import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.Field;
+import se.kb.libris.util.marc.Datafield;
+import se.kb.libris.util.marc.Subfield;
+import se.kb.libris.util.marc.impl.MarcRecordImpl;
 import se.kb.libris.util.marc.io.Iso2709MarcRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
@@ -21,12 +25,21 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.HashSet;
+import java.sql.DriverManager;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.SQLException;
 
 public class Main
 {
     private static XL s_librisXl = null;
 
     private static boolean verbose = false;
+
+    private static boolean sigelfilter = true;
 
     private static List tempfiles = Collections.synchronizedList(new ArrayList<File>());
 
@@ -53,6 +66,8 @@ public class Main
             .name("batchimport_encountered_mulbibs")
             .help("The total number of incoming records with more than one duplicate already in the system.")
             .register(registry);
+
+    private static Set<String> allowedSigels = new HashSet<>(); // Holdings should only be added for registering sigels. Option?
 
     // Abort on unhandled exceptions, including those on worker threads.
     static
@@ -82,8 +97,11 @@ public class Main
         // Normal importing operations
 	Parameters parameters = new Parameters(args);
 	verbose = parameters.getVerbose();
+	sigelfilter = parameters.getSigelFilter();
 
         s_librisXl = new XL(parameters);
+
+	getAllowedSigels(allowedSigels);
 
         if (parameters.getPath() == null)
             importStream(System.in, parameters);
@@ -199,6 +217,31 @@ public class Main
                         recordsInBatch = 0;
                     }
                 }
+
+		if (collection.equals("hold") && sigelfilter) {
+			// Lazy assumption of one datafield '852' and one subfield 'b'
+			// no 852b leads to skipping this holdingrecord
+			// Keep if 852b is contained in allowedSigels.
+			Datafield df = (Datafield) marcRecord.getDatafields("852").get(0);
+			if ( df != null ) {
+				Subfield sf = (Subfield) df.getSubfields("b").get(0);
+				if ( sf != null ) {
+					String sigel = sf.getData();
+					if ( sigel != "" && allowedSigels.contains(sigel)) {
+						if ( verbose ) { System.out.printf("info: Keeping holding, %s\n", sigel); }
+						
+					} else {
+						if ( verbose ) { System.out.printf("info: Skipping holding, %s\n", sigel); }
+						continue;
+					}	
+				} else {
+					continue;
+				}	
+			} else {
+				continue;
+			}
+		}
+
                 batch.add(marcRecord);
                 ++recordsBatched;
                 ++recordsInBatch;
@@ -340,4 +383,57 @@ public class Main
         }
         return new FileInputStream(tmpFile);
     }
+
+	private static void getAllowedSigels(Set sigels) {
+		//get registering sigels from bibdb
+
+		//System.out.println(s_librisXl.m_properties.getProperty("bibdbUrl"));
+		//System.out.println(s_librisXl.m_properties.getProperty("bibdbUser"));
+		//System.out.println(s_librisXl.m_properties.getProperty("bibdbPassword"));
+
+		String query = "select code from libdb_library where alive=1 and libris_reg=1";
+	
+		Connection conn = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+
+		try {
+			Class.forName("com.mysql.cj.jdbc.Driver").newInstance(); // really?
+			conn = DriverManager.getConnection(s_librisXl.m_properties.getProperty("bibdbUrl") + "?user=" + s_librisXl.m_properties.getProperty("bibdbUser") + "&password=" + s_librisXl.m_properties.getProperty("bibdbPassword"));
+
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(query);
+			while (rs.next()) {
+				sigels.add(rs.getString("code"));
+				//System.out.println(rs.getString("code"));
+			}
+        	}
+		catch (Exception e) {
+			e.printStackTrace();
+        	}
+		finally {
+    			if (rs != null) {
+        			try {
+            				rs.close();
+        			}
+				catch (SQLException s) { }
+        			rs = null;
+			}
+
+			if (stmt != null) {
+				try {
+					stmt.close();
+				}
+				catch (SQLException s) { }
+				stmt = null;
+			}
+			if (conn != null) {
+				try {
+					conn.close();
+				}
+				catch (SQLException s) { }
+				stmt = null;
+			}
+		}
+	}
 }
