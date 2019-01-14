@@ -101,7 +101,9 @@ public class Main
 
         s_librisXl = new XL(parameters);
 
-	getAllowedSigels(allowedSigels);
+	if ( sigelfilter ) {
+		getAllowedSigels(allowedSigels);
+	}
 
         if (parameters.getPath() == null)
             importStream(System.in, parameters);
@@ -219,8 +221,8 @@ public class Main
                 }
 
 		if (collection.equals("hold") && sigelfilter) {
-			// Lazy assumption of one datafield '852' and one subfield 'b'
-			// no 852b leads to skipping this holdingrecord
+			// Lazy assumption of one datafield '852' and one subfield 'b'.
+			// No 852b leads to skipping the holdingrecord.
 			// Keep if 852b is contained in allowedSigels.
 			Datafield df = (Datafield) marcRecord.getDatafields("852").get(0);
 			if ( df != null ) {
