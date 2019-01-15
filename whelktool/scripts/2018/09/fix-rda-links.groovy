@@ -56,9 +56,14 @@ boolean fixRdaLink(ref) {
 boolean fixRdaLinks(Map owner, String link, isPart = false) {
     List<Map> references = owner[link]
     boolean fixed = false
+    List<Map> appliedToParts = []
     references?.each {
+        def appliesTo = it.appliesTo
         if (fixRdaLink(it)) {
             fixed = true
+            if (appliesTo) {
+                appliedToParts << [appliedTo: appliesTo, term: it]
+            }
         }
     }
     if (fixed) {
@@ -66,14 +71,38 @@ boolean fixRdaLinks(Map owner, String link, isPart = false) {
         Set seenRefs = new HashSet()
         references.removeAll { !seenRefs.add(it[ID]) }
 
-        // Move to hasPart
+        // Move to hasPart and add appliesTo.label
         def ownerParts = owner.hasPart
-        if (ownerParts && !(ownerParts instanceof List)) {
+        if ((ownerParts || (appliedToParts && !isPart)) &&
+            !(ownerParts instanceof List)) {
             ownerParts = owner.hasPart = ownerParts ? [ownerParts] : []
         }
 
         ownerParts.each {
             fixRdaLinks(it, link, true)
+        }
+
+        appliedToParts.eachWithIndex { it, i ->
+            if (ownerParts && ownerParts.size() < i) {
+                ownerParts << [(TYPE): owner[TYPE]]
+            }
+            def part = i == 0 ? owner : owner.hasPart[i - 1]
+            if (part instanceof Map) {
+                def partRefs = part[link]
+                if (!(partRefs instanceof List)) {
+                    partRefs = part[link] = partRefs ? [partRefs] : []
+                }
+                if (!(it.term in partRefs)) {
+                    partRefs << it.term
+                }
+                if (!part.typeNote) {
+                    def label = it.appliedTo.label
+                    if (label instanceof List && label.size() == 1) {
+                        label = label[0]
+                    }
+                    part.typeNote = label
+                }
+            }
         }
 
         return true
