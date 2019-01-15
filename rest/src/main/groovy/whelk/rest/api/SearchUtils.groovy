@@ -702,7 +702,7 @@ class SearchUtils {
      * Return a list of reserved helper params
      */
     private List getReservedAuxParameters() {
-        return ['_limit', '_offset', '_sort']
+        return ['_limit', '_offset']
     }
 
     /*
