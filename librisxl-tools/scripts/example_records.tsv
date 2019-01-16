@@ -148,6 +148,10 @@ auth/170061	Post med musicMedium
 
 bib/8647590	ComplexSubject, testdata for cleaning exercise.
 bib/8892896	ComplexSubject, testdata for cleaning exercise.
+bib/14838612	ComplexSubject, testdata for cleaning exercise.
+bib/10685832	ComplexSubject, testdata for cleaning exercise.
+bib/16004233	ComplexSubject, testdata for cleaning exercise.
+
 bib/11473514	Lokalt test batchimport
 bib/19980053	Lokalt test för dubletter av 852 fältet
 bib/7241097	Lokalt test för dubletter av 852 fältet
@@ -688,10 +692,6 @@ bib/11541142	Post med musicMedium
 bib/8876724	Post med musicMedium
 bib/12289735	Post med musicMedium
 
-bib/14838612	Testpost med ComplexSubject
-bib/10685832	Testpost med ComplexSubject
-bib/16004233	Testpost med ComplexSubject
-
 bib/9810559	DU TESTPOST
 bib/11805570	DU TESTPOST
 bib/4482210	DU TESTPOST
@@ -1023,8 +1023,8 @@ bib/21717775	SFI-boken LYSSNA! Kurs C och D, CD - BIBCENTRUM TESTPOST
 bib/21189210	Assassin's Creed : Origins - BIBCENTRUM TESTPOST
 
 
-bib/14733245	Mimer "kanalpost"
-bib/18813919	Mimer "kanalpost"
+bib/14733245	Mimer kanalpost
+bib/18813919	Mimer kanalpost
 
 bib/13477270	EB TESTPOST
 bib/13476141	EB TESTPOST
