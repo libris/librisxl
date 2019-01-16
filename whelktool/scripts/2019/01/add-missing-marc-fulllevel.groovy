@@ -27,8 +27,6 @@ selectByCollection('bib') { data ->
         if (shouldSetFullLevel(record)) {
             record.put('encodingLevel', 'marc:FullLevel')
             data.scheduleSave()
-        } else {
-            println("${data.graph[0][ID]} Record does not match conditions. Will not update.")
         }
     }
 }
