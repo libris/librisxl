@@ -1,65 +1,81 @@
+import java.awt.List
+
 TERMS_TO_CHANGE = ["medeltiden", "antiken", "forntiden", "renässansen"]
 COMPLEX_SUBJECT_TYPE = 'ComplexSubject'
 SAO_URI = 'https://id.kb.se/term/sao'
 
 
-boolean updateReference(obj) {
 
-    if (obj['inScheme']['@id'] && obj['inScheme']['@id'] != SAO_URI)
-        return false
+boolean updateReference(work) {
+    def absorbedTerms = []
 
-    if (obj.termComponentList.any{ it['@type'] == 'TemporalSubdivision'}
-            && obj.termComponentList.any{ TERMS_TO_CHANGE.contains(it['prefLabel'])}) {
+    ListIterator iterSubj = work.subject.listIterator()
+    while (iterSubj.hasNext()) {
+        subj = iterSubj.next()
 
-        ListIterator iter = obj.termComponentList.listIterator()
-        def removedTerms = []
+        if (subj['@type'] == COMPLEX_SUBJECT_TYPE && subj['inScheme']['@id'] == SAO_URI) { //&& subj['inScheme'] 
 
-        while(iter.hasNext()) {
-            it = iter.next()
-            if(it['@type'] == 'TemporalSubdivision' && TERMS_TO_CHANGE.contains(it['prefLabel'].toLowerCase())) {
-                removedTerms << it['prefLabel']
-                iter.remove()
-            }
-        }
+            if (subj.termComponentList.any{ it['@type'] == 'TemporalSubdivision'}
+                    && subj.termComponentList.any{ TERMS_TO_CHANGE.contains(it['prefLabel'])}) {
 
-        // Update prefLabel, sameAs and add uri ref
-        if (removedTerms.size() > 0 && obj.termComponentList.size() >= 2) {
-            def prefLabelTerms = []
-            obj.termComponentList.each {
-                prefLabelTerms << it['prefLabel'] ?: it['name']
-            }
+                ListIterator iter = subj.termComponentList.listIterator()
 
-            // Update prefLabel
-            if (obj.prefLabel) {
-                obj.prefLabel = prefLabelTerms.join("--")
-            }
+                while(iter.hasNext()) {
+                    cpx_term = iter.next()
 
-            // Update sameAs uri
-            if (obj.sameAs) {
-                obj.sameAs.each {
-                    def uri = it['@id'].toURL()
-                    def path = uri.getPath();
-                    def segmentToUpdate = path.substring(path.lastIndexOf('/') + 1);
+                    if (cpx_term['@type'] == 'TemporalSubdivision' && TERMS_TO_CHANGE.contains(cpx_term['prefLabel'].toLowerCase())) {
+                        if (!absorbedTerms.contains(cpx_term['prefLabel']))
+                            absorbedTerms << cpx_term['prefLabel']
+                        iter.remove()
 
-                    it['@id'] = it['@id'].replace(segmentToUpdate, obj.prefLabel)
+                    }
                 }
             }
 
-            //lägg till en ny länk till entiteten direkt på subject
-            //OBS!! Detta blir fel. Blir ett @id direkt på subject --> behöver omsluta det med {}
-            removedTerms.each {
-                obj << ['@id': SAO_URI + '/' + it]
+            if (subj.termComponentList.size() == 1) {
+                def prefLabel = subj.termComponentList.get(0)['prefLabel'] ?: subj.termComponentList.get(0)['name']
+
+                if (!absorbedTerms.contains(prefLabel))
+                    absorbedTerms << prefLabel
+
+                iterSubj.remove()
+            } else {
+                def prefLabelTerms = []
+                subj.termComponentList.each {
+                    prefLabelTerms << it['prefLabel'] ?: it['name']
+                }
+
+                // Update prefLabel
+                if (subj.prefLabel) {
+                    subj.prefLabel = prefLabelTerms.join("--")
+                }
+
+                // Update sameAs uri
+                if (subj['sameAs']) {
+                    subj['sameAs'].each {
+                        def newUriTerm = URLEncoder.encode(subj.prefLabel, "UTF-8")
+                        it['@id'] = SAO_URI + '/' + newUriTerm
+                    }
+                }
             }
 
         }
-        //Lägg till nytt @id med uri till termen
-        if (obj.termComponentList.size() <= 1) {
-            obj.termComponentList.each
-            obj << ['@id': SAO_URI + '/' + it]
-        }
     }
-    return true
+
+    if (absorbedTerms.size() > 0) {
+        absorbedTerms.each {
+            work.subject << ['@id': SAO_URI + '/' + URLEncoder.encode(it, "UTF-8")]
+        }
+        return true
+    }
+
+    //TODO:
+    // - %20 in url becomes '+' --> See //libris-qa.kb.se/2ldjczqd5sh4qs5 --> 14838612
+    //Create new prefLabel and sameAs.id --> Not always a local entity. Need to handle @id reference. See //libris-qa.kb.se/3mfmt5wf4l7vfrm --> 16004233
+
 }
+
+
 
 selectBySqlWhere("data::text LIKE '%medeltiden%' or data::text LIKE '%antiken%' " +
         "or data::text LIKE '%forntiden%' or data::text LIKE '%renässansen%'") { data ->
@@ -75,12 +91,10 @@ selectBySqlWhere("data::text LIKE '%medeltiden%' or data::text LIKE '%antiken%' 
         if (!work) return
         assert work['@id'] == instance.instanceOf['@id']
 
-        work.subject.findAll {
-            it['@type'] == COMPLEX_SUBJECT_TYPE
-        }.each {
-            if (updateReference(it)) {
-                data.scheduleSave()
-            }
+        if (updateReference(work)) {
+            data.scheduleSave()
         }
+
+
     }
 }
