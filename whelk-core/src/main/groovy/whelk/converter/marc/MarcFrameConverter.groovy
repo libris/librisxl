@@ -2226,7 +2226,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             useEntities.each {
                 def (boolean requiredOk, Map aboutMap) = buildAboutMap(pendingResources, pendingKeys, it, aboutAlias)
                 if (requiredOk) {
-                    def field = revertOne(state, data, topEntity, it, aboutMap, usedMatchRules)
+                    def field = revertOne(state, data, topEntity, it, aboutMap, usedMatchRules, useLink.groupId ?: this.groupId)
                     if (field) {
                         if (useLink.subfield) {
                             field.subfields.add(0, useLink.subfield)
@@ -2242,7 +2242,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     @CompileStatic(SKIP)
     def revertOne(Map state, Map data, Map topEntity, Map currentEntity, Map<String, List> aboutMap = null,
-                    List<MatchRule> usedMatchRules) {
+                    List<MatchRule> usedMatchRules, String groupId) {
         if (usedMatchRules.any { !it.acceptRevert(currentEntity) }) {
             return null
         }
