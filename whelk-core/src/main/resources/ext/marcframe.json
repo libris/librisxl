@@ -7563,7 +7563,7 @@
       "$2": {"about": "_:contentType", "property": "termGroup", "marcDefault": "rdacontent"},
       "TODO?:$2": {"about": "_:contentType", "addLink": "inCollection", "resourceType": "ConceptCollection", "property": "code"},
       "$8": {"about": "_:contentType", "property": "marc:groupid"},
-      "$3": {"about": "_:contentType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$3": {"property": "typeNote"},
       "_spec": [
         {
           "source": [
@@ -7714,7 +7714,7 @@
       "$b": {"about": "_:mediaType", "property": "code"},
       "$2": {"about": "_:mediaType", "property": "termGroup", "marcDefault": "rdamedia"},
       "$8": {"about": "_:mediaType", "property": "marc:groupid"},
-      "$3": {"about": "_:mediaType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$3": {"property": "typeNote"},
       "_spec": [
         {
           "source": [
@@ -7849,7 +7849,7 @@
       "$b": {"about": "_:carrierType", "property": "code"},
       "$2": {"about": "_:carrierType", "property": "termGroup", "marcDefault": "rdacarrier"},
       "$8": {"about": "_:carrierType", "property": "marc:groupid"},
-      "$3": {"about": "_:carrierType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$3": {"property": "typeNote"},
       "_spec": [
         {
           "source": [
@@ -7941,6 +7941,128 @@
                     "termGroup": "otherlist"
                   }
                 ]
+            }
+          }
+        },
+        {
+          "name": "Full example of a combined textbook and audiobook",
+          "source": [
+            {
+              "336": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"b": "txt"}, {"2": "rdacontent"}, {"3": "Textbok"}
+                ]
+              }
+            },
+            {
+              "336": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"b": "spw"}, {"2": "rdacontent"}, {"3": "Ljudbok"}
+                ]
+              }
+            },
+            {
+              "337": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"b": "n"}, {"2": "rdamedia"}, {"3": "Textbok"}
+                ]
+              }
+            },
+            {
+              "337": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"b": "s"}, {"2": "rdamedia"}, {"3": "Ljudbok"}
+                ]
+              }
+            },
+            {
+              "338": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"b": "nc"}, {"2": "rdacarrier"}, {"3": "Textbok"}
+                ]
+              }
+            },
+            {
+              "338": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"b": "sd"}, {"2": "rdacarrier"}, {"3": "Ljudbok"}
+                ]
+              }
+            }
+          ],
+          "result": {
+            "mainEntity": {
+              "typeNote": "Textbok",
+              "mediaType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/media/n",
+                  "@type": "MediaType",
+                  "code": "n"
+                }
+              ],
+              "carrierType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/carrier/nc",
+                  "@type": "CarrierType",
+                  "code": "nc"
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Instance",
+                  "typeNote": "Ljudbok",
+                  "mediaType": [
+                    {
+                      "@id": "https://id.kb.se/term/rda/media/s",
+                      "@type": "MediaType",
+                      "code": "s"
+                    }
+                  ],
+                  "carrierType": [
+                    {
+                      "@id": "https://id.kb.se/term/rda/carrier/sd",
+                      "@type": "CarrierType",
+                      "code": "sd"
+                    }
+                  ]
+                }
+              ],
+              "instanceOf": {
+                "@type": "Text",
+                "typeNote": "Textbok",
+                "contentType": [
+                  {
+                    "@type": "ContentType",
+                    "code": "txt",
+                    "@id": "https://id.kb.se/term/rda/content/txt"
+                  }
+                ],
+                "hasPart": [
+                  {
+                    "@type": "Work",
+                    "typeNote": "Ljudbok",
+                    "contentType": [
+                      {
+                        "@type": "ContentType",
+                        "code": "spw",
+                        "@id": "https://id.kb.se/term/rda/content/spw"
+                      }
+                    ]
+                  }
+                ]
+              }
             }
           }
         }
