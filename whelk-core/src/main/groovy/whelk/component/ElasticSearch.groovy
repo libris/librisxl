@@ -189,8 +189,16 @@ class ElasticSearch {
         if (!collection.equals("hold")) {
             List externalRefs = document.getExternalRefs()
             List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
-            Map referencedData = whelk.bulkLoad(convertedExternalLinks)
-                    .collectEntries { id, doc -> [id, doc.data] }
+            Map referencedData = [:]
+            Map externalDocs = whelk.bulkLoad(convertedExternalLinks)
+            externalDocs.each { id, doc ->
+                if (id && doc && doc.hasProperty('data')) {
+                    referencedData[id] = doc.data
+                }
+                else {
+                    log.warn("Could not get external doc ${id} for ${document.getShortId()}, skipping...")
+                }
+            }
             whelk.jsonld.embellish(document.data, referencedData, true)
         }
 
@@ -318,13 +326,28 @@ class ElasticSearch {
         List result = []
         List sortClauses = sortBy.split(',')
         sortClauses.each { field ->
-            if (field.startsWith('-')) {
-                result << [(field.substring(1)): ['order': 'desc']]
-            } else {
-                result << [(field): ['order': 'asc']]
-            }
+            result << buildSortClause(field)
         }
         return result
+    }
+
+    private static Map buildSortClause(String fieldParam) {
+        def (String field, String sortOrder) = getFieldAndSortOrder(fieldParam)
+        Map clause = [(field): ['order': sortOrder]]
+        // We only handle .keyword right now, the other is left as placeholder
+        if (field == 'hasTitle.mainTitle' || field == 'hasTitle.mainTitle.keyword') {
+            clause[field]['nested_path'] = 'hasTitle'
+            clause[field]['nested_filter'] = ['term': ['hasTitle.@type': 'Title']]
+        }
+        return clause
+    }
+
+    private static Tuple2<String, String> getFieldAndSortOrder(String field) {
+        if (field.startsWith('-')) {
+            return new Tuple2(field.substring(1), 'desc')
+        } else {
+            return new Tuple2(field, 'asc')
+        }
     }
 
     /*

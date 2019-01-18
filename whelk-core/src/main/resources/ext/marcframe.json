@@ -8174,11 +8174,8 @@
         "about": "_:cartographicobj",
         "property": "count"
       },
-      "$q": {
-        "addLink": "digitalCharacteristic",
-        "resourceType": "EncodingFormat",
-        "property": "label"
-      }
+      "$q": null,
+      "NOTE:$q": {"NOTE:record-count": 0, "TODO": "To enable future imports to EncodingFormat, we need something like onRevertPrefer 347$b to avoid collisions in export."}
     },
     "355": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "357": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},

@@ -208,8 +208,8 @@ class Crud extends HttpServlet {
 
         String ifNoneMatch = request.getHeader("If-None-Match")
         if (ifNoneMatch != null && doc != null &&
-                cleanEtag(ifNoneMatch) == doc.getModified()) {
-            response.setHeader("ETag", "\"${doc.getModified()}\"")
+                cleanEtag(ifNoneMatch) == doc.getChecksum()) {
+            response.setHeader("ETag", "\"${doc.getChecksum()}\"")
             response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
             response.sendError(HttpServletResponse.SC_NOT_MODIFIED,
                     "Document has not been modified.")
@@ -234,9 +234,9 @@ class Crud extends HttpServlet {
         } else {
             String contentType = CrudUtils.getBestContentType(request)
             def responseBody = getFormattedResponseBody(doc, path, contentType, version != null)
-            String modified = doc.getModified()
+            String etag = doc.getChecksum()
             response = maybeAddProposal25Headers(response, loc)
-            sendGetResponse(request, response, responseBody, modified,
+            sendGetResponse(request, response, responseBody, etag,
                     path, contentType)
             return
         }
@@ -683,7 +683,7 @@ class Crud extends HttpServlet {
                                          collection, isUpdate, "POST")
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
-                               savedDoc.getModified() as String)
+                               savedDoc.getChecksum())
         }
     }
 
@@ -814,7 +814,7 @@ class Crud extends HttpServlet {
                                          collection, isUpdate, "PUT")
         if (savedDoc != null) {
             sendUpdateResponse(response, savedDoc.getURI().toString(),
-                               savedDoc.getModified() as String)
+                               savedDoc.getChecksum())
         }
 
     }
@@ -861,9 +861,9 @@ class Crud extends HttpServlet {
                     whelk.storeAtomicUpdate(doc.getShortId(), false, "xl", activeSigel, {
                         Document _doc ->
                             log.warn("If-Match: ${request.getHeader('If-Match')}")
-                            log.warn("Modified: ${_doc.modified}")
+                            log.warn("Checksum: ${_doc.checksum}")
 
-                            if (_doc.modified as String != cleanEtag(request.getHeader("If-Match"))) {
+                            if (_doc.getChecksum() != cleanEtag(request.getHeader("If-Match"))) {
                                 log.debug("PUT performed on stale document.")
 
                                 throw new EtagMissmatchException()

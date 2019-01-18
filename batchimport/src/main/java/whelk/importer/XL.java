@@ -185,7 +185,7 @@ class XL
             {
                 try
                 {
-                    m_whelk.getStorage().storeAtomicUpdate(replaceSystemId, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(),
+                    m_whelk.storeAtomicUpdate(replaceSystemId, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(),
                             (Document doc) ->
                     {
                         String existingEncodingLevel = doc.getEncodingLevel();

@@ -45,6 +45,13 @@ class MarcExport {
                 if (xmlString != null)
                     auths.add(MarcXmlRecordReader.fromXml(xmlString))
             }
+
+            def it = auths.iterator()
+            while (it.hasNext()) {
+                MarcRecord auth = it.next()
+                if (auth.getFields("001").size() == 0)
+                    it.remove()
+            }
         }
 
         List<Document> holdingDocuments = whelk.storage.getAttachedHoldings(rootDocument.getThingIdentifiers(), whelk.getJsonld())
@@ -66,7 +73,12 @@ class MarcExport {
             if (((Field)li.next()).getTag().equals("003"))
                 li.remove()
 
-        return profile.mergeRecord(bibRecord, holdings, auths)
+        try {
+            return profile.mergeRecord(bibRecord, holdings, auths)
+        } catch (Exception e) {
+            log.warn("Failed to mangle marc record through profile: " + rootDocument.getShortId(), e)
+            return null
+        }
     }
 
     /**

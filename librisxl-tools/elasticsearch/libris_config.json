@@ -96,7 +96,14 @@
                     "include_in_parent": true,
                     "properties": {
                         "@type": {"type": "keyword"},
-                        "mainTitle": {"type": "text"}
+                        "mainTitle": {
+                            "type": "text",
+                            "fields": {
+                                "keyword": {
+                                    "type": "keyword"
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -139,7 +146,7 @@
                                     "index": true,
                                     "type": "text"
                                 },
-                                "raw": {
+                                "keyword": {
                                     "index": true,
                                     "type": "keyword"
                                 }
@@ -154,7 +161,7 @@
                     "allLabel_template": {
                         "mapping": {
                             "fields": {
-                                "raw": {
+                                "keyword": {
                                     "index": true,
                                     "type": "keyword"
                                 },
@@ -174,7 +181,7 @@
                     "label_template": {
                         "mapping": {
                             "fields": {
-                                "raw": {
+                                "keyword": {
                                     "index": true,
                                     "type": "keyword"
                                 }
@@ -191,7 +198,7 @@
                     "scheme_template": {
                         "mapping": {
                             "fields": {
-                                "raw": {
+                                "keyword": {
                                     "index": true,
                                     "type": "keyword"
                                 },
@@ -210,7 +217,7 @@
                     "name_template": {
                         "mapping": {
                             "fields": {
-                                "raw": {
+                                "keyword": {
                                     "index": true,
                                     "type": "keyword"
                                 },
@@ -230,7 +237,7 @@
                     "value_template": {
                         "mapping": {
                             "fields": {
-                                "raw": {
+                                "keyword": {
                                     "index": true,
                                     "type": "keyword"
                                 },
@@ -250,7 +257,7 @@
                     "title_template": {
                         "mapping": {
                             "fields": {
-                                "raw": {
+                                "keyword": {
                                     "index": true,
                                     "type": "keyword"
                                 },
@@ -342,7 +349,7 @@
                             "analyzer": "completer",
                             "type": "text",
                             "fields": {
-                                "raw": {
+                                "keyword": {
                                     "index": true,
                                     "type": "keyword"
                                 }
@@ -358,7 +365,7 @@
                     "properties": {
                         "date": {
                             "fields": {
-                                "raw": {
+                                "keyword": {
                                     "index": true,
                                     "type": "keyword"
                                 }
@@ -376,7 +383,7 @@
                             "analyzer": "completer",
                             "type": "text",
                             "fields": {
-                                "raw": {
+                                "keyword": {
                                     "index": true,
                                     "type": "keyword"
                                 }
@@ -390,7 +397,7 @@
                             "analyzer": "completer",
                             "type": "text",
                             "fields": {
-                                "raw": {
+                                "keyword": {
                                     "index": true,
                                     "type": "keyword"
                                 }
