@@ -163,6 +163,7 @@ class LegacyMarcAPI extends HttpServlet {
             for (MarcRecord record : result) {
                 writer.writeRecord(record)
             }
+            writer.close()
             response.getOutputStream().close()
         } catch (Throwable e) {
             log.error("Failed handling _compilemarc request: ", e)
