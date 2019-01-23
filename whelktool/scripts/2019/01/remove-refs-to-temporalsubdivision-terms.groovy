@@ -36,8 +36,14 @@ boolean updateReference(work) {
             }
 
             if (subj.termComponentList.size() == 1) {
-                //TODO: Need to check if it's an @id
-                def prefLabel = subj.termComponentList.get(0)['prefLabel'] ?: subj.termComponentList.get(0)['name']
+                def prefLabel = ""
+
+                if (subj.termComponentList.get(0)['@id']) {
+                    def path = subj.termComponentList.get(0)['@id'].toURL().getPath()
+                    prefLabel = URLDecoder.decode(path.substring(path.lastIndexOf('/') + 1), "UTF-8")
+                } else {
+                    prefLabel = subj.termComponentList.get(0)['prefLabel'] ?: subj.termComponentList.get(0)['name']
+                }
 
                 if (!absorbedTerms.contains(prefLabel))
                     absorbedTerms << prefLabel
