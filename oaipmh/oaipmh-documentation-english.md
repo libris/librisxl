@@ -37,7 +37,7 @@ The Libris OAI-PMH implementation allows one extra parameter which is not a part
 To harvest (from the Libris QA-environment) all bibliographic records (with a list of holding records attached) for which there exists holding records with the sigel `S` and that have been modified between 13/2 and 12:00 14/2 (UTC):
 
 ```
-$ curl "export-qa.libris.kb.se:8080/oaipmh/?verb=ListRecords&metadataPrefix=marcxml_includehold_expanded&from=2018-02-13&until=2018-02-14T12:00:00Z&x-withDeletedData=true&set=bib:S"
+$ curl "https://libris-qa.kb.se/api/oaipmh/?verb=ListRecords&metadataPrefix=marcxml_includehold_expanded&from=2018-02-13&until=2018-02-14T12:00:00Z&x-withDeletedData=true&set=bib:S"
 <?xml version="1.0" encoding="UTF-8"?><OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd"><responseDate>2018-02-15T10:54:18.606Z</responseDate><request verb="ListRecords" metadataPrefix="marcxml_includehold_expanded" from="2018-02-13" until="2018-02-14" x-withDeletedData="true" set="hold:S">http://export-qa.libris.kb.se:8080/oaipmh/</request><ListRecords><record><header><identifier>https://libris-qa.kb.se/pt0pfgtv1hf8p2t</identifier>
 ...
 ```
