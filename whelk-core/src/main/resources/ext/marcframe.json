@@ -13359,13 +13359,15 @@
       "$2": {"property": "marc:sourceOfTerm"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
-
     "760": {
       "aboutEntity": "?thing",
       "NOTE:domainIncludes": "Serial",
       "inherit": "772",
       "addLink": "hasSeries",
       "resourceType": "Instance",
+      "i2": {
+        "marcDefault": " "
+      },
       "$a": {"about": "_:instanceOfContribution", "link": "agent", "resourceType": "Agent", "property": "label", "TODO:targetMatch": "1xx"},
       "$b": {"property": "editionStatement", "TODO:targetMatch": "250"},
       "$c": {"about": "_:instanceTitle", "property": "qualifier", "NOTE:marc-repeatable": false},
@@ -13419,6 +13421,9 @@
       "NOTE:domainIncludes": "Serial",
       "inherit": "760",
       "addLink": "hasSubseries",
+      "i2": {
+        "marcDefault": " "
+      },
       "_spec": [
         {
           "source": {"762": {"ind1": "0", "ind2": " ", "subfields": [
@@ -13446,10 +13451,134 @@
         }
       ]
     },
-    "765": {"inherit": "772", "addLink": "translationOf"},
-    "767": {"inherit": "772", "addLink": "translation"},
-    "770": {"inherit": "772", "addLink": "supplement"},
+    "765": {
+      "inherit": "772",
+      "addLink": "translationOf",
+      "i2": {
+        "marcDefault": " "
+      },
+      "_spec": [
+        {
+          "source": {"767": {"ind1": " ", "ind2": "8", "subfields": [
+            {"t": "Tempelriddaren"},
+            {"w": "000"}
+          ]}},
+          "normalized": {"767": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Tempelriddaren"},
+            {"w": "000"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "translation": [{
+                  "@type": "Work",
+                  "hasInstance": {
+                    "@type": "Instance",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Tempelriddaren"
+                      }],
+                    "describedBy": [{
+                      "@type": "Record",
+                      "controlNumber": "000"
+                    }]
+                  }
+              }]
+            }
+          }}
+        }
+      ]
+    },
+    "767": {
+      "inherit": "772",
+      "addLink": "translation",
+      "i2": {
+        "marcDefault": " "
+      },
+      "_spec": [
+        {
+          "source": {"767": {"ind1": " ", "ind2": "8", "subfields": [
+            {"t": "Finance & development. French. Finances et développement"},
+            {"x": "0430-473X"},
+            {"w": "000"}
+          ]}},
+          "normalized": {"767": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Finance & development. French. Finances et développement"},
+            {"x": "0430-473X"},
+            {"w": "000"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "translation": [{
+                  "@type": "Work",
+                  "hasInstance": {
+                    "@type": "Instance",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Finance & development. French. Finances et développement"
+                      }],
+                    "identifiedBy": [{
+                      "@type": "ISSN",
+                      "value": "0430-473X"
+                      }],
+                    "describedBy": [{
+                      "@type": "Record",
+                      "controlNumber": "000"
+                    }]
+                  }
+              }]
+            }
+          }}
+        }
+      ]
+    },
+    "770": {
+      "inherit": "772",
+      "addLink": "supplement",
+      "i2": {
+        "marcDefault": " "
+      },
+      "_spec": [
+        {
+          "source": {"770": {"ind1": " ", "ind2": "8", "subfields": [
+            {"t": "Journal of cellular biochemistry. Supplement"},
+            {"x": "0733-1959"},
+            {"w": "000"}
+          ]}},
+          "normalized": {"770": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Journal of cellular biochemistry. Supplement"},
+            {"x": "0733-1959"},
+            {"w": "000"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "supplement": [{
+                  "@type": "Work",
+                  "hasInstance": {
+                    "@type": "Instance",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Journal of cellular biochemistry. Supplement"
+                      }],
+                    "identifiedBy": [{
+                      "@type": "ISSN",
+                      "value": "0733-1959"
+                      }],
+                    "describedBy": [{
+                      "@type": "Record",
+                      "controlNumber": "000"
+                    }]
+                  }
+              }]
+            }
+          }}
+        }
+      ]
+    },
     "772": {
+      "NOTE:local": "Observera att fältet även har använts för att på ett enhetligt sätt konvertera delposter till flerbandsverk (med ind. 2 = 0) från ett ursprungligt LIBRISIII-format.",
       "aboutEntity": "?work",
       "addLink": "supplementTo",
       "resourceType": "Work",
@@ -13518,7 +13647,6 @@
             "resourceType": "Record"
           }
       },
-
       "i1": {
         "property": "marc:toDisplayNote",
         "tokenMap": {
@@ -13527,7 +13655,9 @@
         },
         "marcDefault": "0"
       },
-      "TODO:i2": {},
+      "i2": {
+        "marcDefault": "0"
+      },
       "$a": {"about": "_:agent", "property": "label", "TODO:targetMatch": "1xx"},
       "$b": {"about": "_:hasInstance", "property": "editionStatement", "TODO:targetMatch": "250"},
       "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false},
@@ -13566,7 +13696,7 @@
             {"s": "Main Thing"},
             {"z": "00-0-000000-0"}
           ]}},
-          "normalized": {"772": {"ind1": "0", "ind2": " ", "subfields": [
+          "normalized": {"772": {"ind1": "0", "ind2": "0", "subfields": [
             {"s": "Main Thing"},
             {"z": "00-0-000000-0"}
           ]}},
@@ -13594,14 +13724,14 @@
           }}
         },
         {
-          "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
+          "source": {"772": {"ind1": " ", "ind2": "0", "subfields": [
             {"7": "p1"},
             {"a": "Beckmann, Max"},
             {"t": "Briefec"},
             {"d": "provisionActivityStatement"},
             {"w": "000"}
           ]}},
-          "normalized": {"772": {"ind1": "0", "ind2": " ", "subfields": [
+          "normalized": {"772": {"ind1": "0", "ind2": "0", "subfields": [
             {"7": "p1"},
             {"a": "Beckmann, Max"},
             {"t": "Briefec"},
@@ -13652,12 +13782,46 @@
       "addLink": "hasPart",
       "NOTE:domainIncludes": "Serial",
       "FIXME": "this is overeagerly reverted from a hasPart converted from 740; should only be added if issuanceType = 'Serial'...",
-      "resourceType": "Work"
+      "resourceType": "Work",
+      "_spec": [
+        {
+          "source": {"774": {"ind1": " ", "ind2": "8", "subfields": [
+            {"t": "Map of area with highlighted street"},
+            {"w": "000"}
+          ]}},
+          "normalized": {"774": {"ind1": "0", "ind2": "0", "subfields": [
+            {"t": "Map of area with highlighted street"},
+            {"w": "000"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [{
+                  "@type": "Work",
+                  "hasInstance": {
+                    "@type": "Instance",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Map of area with highlighted street"
+                      }],
+                    "describedBy": [{
+                      "@type": "Record",
+                      "controlNumber": "000"
+                    }]
+                  }
+              }]
+            }
+          }}
+        }
+      ]
     },
     "775": {
       "inherit": "772",
       "TODO:note": "uncommon",
       "addLink": "otherEdition",
+      "i2": {
+        "marcDefault": " "
+      },
       "$e": {"addLink": "language", "NOTE:marc-repeatable": false, "resourceType": "Language", "property": "label", "TODO:inherit": "008:[35:38]"},
       "$f": {"about": "_:provisionActivity", "link": "place", "resourceType": "Place", "property": "code", "NOTE:marc-repeatable": false, "TODO:inherit": "008:[15:18]"}
     },
@@ -13746,7 +13910,10 @@
     },
     "777": {
       "inherit": "772",
-      "addLink": "issuedWith"
+      "addLink": "issuedWith",
+      "i2": {
+        "marcDefault": " "
+      }
     },
     "780": {
       "inherit": "772",
@@ -13859,11 +14026,48 @@
     "786": {
       "inherit": "772",
       "addLink": "dataSource",
-      "resourceType": "Dataset"
+      "resourceType": "Dataset",
+      "i2": {
+        "marcDefault": " "
+      }
     },
     "787": {
       "inherit": "772",
-      "addLink": "relatedTo"
+      "addLink": "relatedTo",
+      "i2": {
+        "marcDefault": " "
+      },
+      "_spec": [
+        {
+          "source": {"787": {"ind1": " ", "ind2": "8", "subfields": [
+            {"t": "Empire State report weekly"},
+            {"w": "000"}
+          ]}},
+          "normalized": {"787": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Empire State report weekly"},
+            {"w": "000"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [{
+                  "@type": "Work",
+                  "hasInstance": {
+                    "@type": "Instance",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Empire State report weekly"
+                      }],
+                    "describedBy": [{
+                      "@type": "Record",
+                      "controlNumber": "000"
+                    }]
+                  }
+              }]
+            }
+          }}
+        }
+      ]
     },
     "800": {
       "include": ["hasSeriesInstance", "titledetails", "contributionRole_4_e"],
