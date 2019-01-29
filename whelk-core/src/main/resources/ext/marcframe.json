@@ -6347,8 +6347,7 @@
           "embedded": true
         }
       },
-      "TODO": "See also 100$t and 130.",
-      "TODO": "Interpunction ; on $r needs to be analyzed",
+      "TODO": "[1]See also 100$t and 130. [2]Interpunction ; on $r needs to be analyzed",
       "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"property": "legalDate"},
       "$0": {
