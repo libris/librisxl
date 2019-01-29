@@ -1,4 +1,3 @@
-//import java.awt.List
 import java.net.URI
 
 TERMS_TO_CHANGE = ["medeltiden", "antiken", "forntiden", "renässansen"]
@@ -6,8 +5,13 @@ COMPLEX_SUBJECT_TYPE = 'ComplexSubject'
 SAO_URI = 'https://id.kb.se/term/sao'
 
 
+String termToUri(term) {
+    return SAO_URI + '/' + URLEncoder.encode(term.capitalize(), "UTF-8").replaceAll("\\+", "%20")
+}
+
 boolean updateReference(work) {
-    def absorbedTerms = []
+    def extractedTerms = []
+    def entitiesToMove = []
 
     if (!work.subject)
         return
@@ -27,60 +31,65 @@ boolean updateReference(work) {
                     cpx_term = iter.next()
 
                     if (cpx_term['@type'] == 'TemporalSubdivision' && TERMS_TO_CHANGE.contains(cpx_term['prefLabel'].toLowerCase())) {
-                        if (!absorbedTerms.contains(cpx_term['prefLabel']))
-                            absorbedTerms << cpx_term['prefLabel']
+                        if (!extractedTerms.contains(termToUri(cpx_term['prefLabel']))) {
+                            extractedTerms << termToUri(cpx_term['prefLabel'])
+                        }
                         iter.remove()
-
                     }
                 }
             }
 
+            //Extract remaining entity in ComplexSubject, if only one remains
             if (subj.termComponentList.size() == 1) {
                 def prefLabel = ""
 
                 if (subj.termComponentList.get(0)['@id']) {
-                    def path = subj.termComponentList.get(0)['@id'].toURL().getPath()
-                    prefLabel = URLDecoder.decode(path.substring(path.lastIndexOf('/') + 1), "UTF-8")
+                    if (!extractedTerms.contains(subj.termComponentList.get(0)['@id'])) {
+                        extractedTerms << subj.termComponentList.get(0)['@id']
+                    }
+                } else if (subj.termComponentList.get(0)['prefLabel']) {
+                    prefLabel = subj.termComponentList.get(0)['prefLabel']
                 } else {
-                    prefLabel = subj.termComponentList.get(0)['prefLabel'] ?: subj.termComponentList.get(0)['name']
+                    entitiesToMove << subj.termComponentList.get(0)
                 }
 
-                if (!absorbedTerms.contains(prefLabel))
-                    absorbedTerms << prefLabel
+                if (!prefLabel.isEmpty() && !extractedTerms.contains(termToUri(prefLabel)))
+                    extractedTerms << termToUri(prefLabel)
 
                 iterSubj.remove()
             } else {
+                // Update existing prefLabel and sameAs uri of ComplexSubject
                 def prefLabelTerms = []
 
                 subj.termComponentList.each {
                     if (it['@id']) {
                         def path = it['@id'].toURL().getPath()
-                        //def path = uri.getPath()
                         prefLabelTerms << URLDecoder.decode(path.substring(path.lastIndexOf('/') + 1), "UTF-8")
 
-                    } else {
-                        prefLabelTerms << it['prefLabel'] ?: it['name']
+                    } else if (it['prefLabel']) {
+                        prefLabelTerms << it['prefLabel']
                     }
+                    //TODO: What if there is np termComponentList.prefLabel? When creating subject.prefLabel and uris.
+                    // Should probably not find a ComplexSubject with (main) prefLabel and
+                    // sameAs if main term is Work/Person/Organization etc
+                    //prefLabelTerms << it['prefLabel'] ?: it['name']
                 }
 
-                // Update prefLabel
                 if (subj.prefLabel) {
                     subj.prefLabel = prefLabelTerms.join("--")
                 }
 
-                // Update sameAs uri
                 if (subj['sameAs']) {
-                    subj['sameAs'].each {
-                        def newUriTerm = URLEncoder.encode(subj.prefLabel, "UTF-8").replaceAll("\\+", "%20")
-                        it['@id'] = SAO_URI + '/' + newUriTerm
-                    }
+                    subj['sameAs'].get(0)['@id'] = termToUri(prefLabelTerms.join("--"))
                 }
             }
 
         }
     }
 
-    if (absorbedTerms.size() > 0) {
+
+
+    if (extractedTerms.size() || entitiesToMove.size()) {
         def existingUris = []
 
         work.subject.each {
@@ -89,30 +98,31 @@ boolean updateReference(work) {
             }
         }
 
-        absorbedTerms.each {
-            def newTerm = SAO_URI + '/' + URLEncoder.encode(it.capitalize(), "UTF-8").replaceAll("\\+", "%20")
-            if (!existingUris.contains(newTerm))
-                work.subject << ['@id': newTerm]
+        if (extractedTerms.size()) {
+            extractedTerms.each {
+                if (!existingUris.contains(it))
+                    work.subject << ['@id': it]
+            }
+        }
+
+        if (entitiesToMove.size()) {
+            entitiesToMove.each {
+                work.subject << it
+            }
         }
         return true
     }
-
-    //TODO:
-    // - %20 in url becomes '+' --> See //libris-qa.kb.se/2ldjczqd5sh4qs5 --> 14838612
-    //Done: Create new prefLabel and sameAs.id --> Not always a local entity. Need to handle @id reference. See //libris-qa.kb.se/3mfmt5wf4l7vfrm --> 16004233
-
 }
 
-
-
-selectBySqlWhere("data::text LIKE '%medeltiden%' or data::text LIKE '%antiken%' " +
-        "or data::text LIKE '%forntiden%' or data::text LIKE '%renässansen%'") { data ->
+selectBySqlWhere("data::text LIKE '%termComponentList%' and (data::text LIKE '%medeltiden%' or data::text LIKE '%antiken%' " +
+            "or data::text LIKE '%forntiden%' or data::text LIKE '%renässansen%')") { data ->
 
     // guard against missing entity
     if (data.graph.size() < 2) {
         return
     }
-    // bib and hold --> how about hold??
+    // bib and hold
+
     if (data.graph[1].containsKey('instanceOf')) {
         def (record, instance, work) = data.graph
 
