@@ -11,8 +11,8 @@ PrintWriter scheduledForDeletion = getReportWriter("scheduled-for-deletion")
 File bibIDsFile = new File(scriptDir, BIB_ID_FILE)
 
 selectByIds( bibIDsFile.readLines() ) { bib ->
-    String query = "id in (select id from lddb__dependencies " +
-        "where dependsonid = '${bib.doc.shortId}' and relation = 'itemOf')"
+    String query = "id in (select id from lddb " +
+        "where data#>>'{@graph,1,itemOf,@id}' = '${bib.graph[1][ID]}')"
 
     selectBySqlWhere(query, silent: false) { hold ->
         if (hold.doc.sigel == SIGEL_TO_DELETE) {
