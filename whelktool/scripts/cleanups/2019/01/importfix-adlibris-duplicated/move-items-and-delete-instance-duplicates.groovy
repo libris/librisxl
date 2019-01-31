@@ -2,53 +2,98 @@ PrintWriter failedBibIDs = getReportWriter("failed-to-delete-bibIDs")
 PrintWriter scheduledForChange = getReportWriter("scheduledForChange")
 
 List recordsToKeep = []
-Map<String, Map<String, String>> conflictsByIsbn = [:]
-Map conflictsByBadId = [:]
+Map conflictsByIsbn = [:]
+Map conflictsByOtherId = [:]
+
+boolean verifyIsbnPresent(bib, isbn) {
+    def finder = {
+        def v = it.value.trim()
+        it[TYPE] == 'ISBN' && (v.size() == 13
+                ? v == isbn
+                : isbn[0..-2].contains(v[0..-2]))
+    }
+    assert !bib.graph[1].containsKey('identifiedBy') ||
+        bib.graph[1].identifiedBy.find(finder) ||
+        !bib.graph[1].containsKey('indirectlyIdentifiedBy') ||
+        bib.graph[1].indirectlyIdentifiedBy.find(finder)
+}
 
 new File(scriptDir, "isbn-dubletter.txt").each { row ->
     def (isbn, xlId, sigelCodes) = row.split(/\t/).collect { it.trim() }
     Set sigels = sigelCodes.split(/,/).collect { it.trim() }
+    // Adjust implicit legacy bib id
+    if (xlId.size() < 13) {
+        xlId = "http://libris.kb.se/bib/$xlId" as String
+    }
     def conflict = conflictsByIsbn[isbn]
     if (conflict) {
-        conflict.badId = xlId
-        conflict.misplacedSigels = sigels
-        conflictsByBadId[conflict.badId] = conflict
+        conflict.otherId = xlId
+        conflict.otherSigels = sigels
+        conflictsByOtherId[xlId] = conflict
     } else {
-        conflict = conflictsByIsbn[isbn] = [goodId: xlId, correctSigels: sigels, isbn: isbn]
+        conflict = [someId: xlId, someSigels: sigels, isbn: isbn]
+        conflictsByIsbn[isbn] = conflict
     }
 }
 
-// Select all bad bib records to be deleted
-selectByIds(conflictsByBadId.keySet() as List) { badBib ->
-    def conflict = conflictsByBadId[badBib.doc.shortId]
-    assert !badBib.graph[1].containsKey('identifiedBy') ||
-        badBib.graph[1].identifiedBy?.find {
-            it[TYPE] == 'ISBN' && (it.value.size() == 13
-                    ? it.value == conflict.isbn
-                    : conflict.isbn[0..-2].contains(it.value[0..-2]))
-        }
-    // select all (eventual) hold for the bad bib, and move to good bib
-    // TODO: determine why result are fewer from lddb__dependencies (and how much quicker it really is for larger selections)
-    //selectBySqlWhere("id in (select id from lddb__dependencies where dependsonid = '${badBib.doc.shortId}' and relation = 'itemOf')", silent: false) { hold ->
-    // TODO: match both itemOf and heldBy?
-    selectBySqlWhere("""
-            data#>>'{@graph,1,itemOf,@id}' = '${badBib.graph[1][ID]}'
-    """ , silent: true) { hold ->
-        // TODO: Skip conditional? They may be obsolete...
-        if (hold.doc.sigel in conflict.misplacedSigels) {
-            selectByIds([conflict.goodId]) { goodBib ->
-                def fromId = hold.graph[1].itemOf[ID]
-                def toId = goodBib.graph[1][ID]
-                assert fromId.contains(conflict.badId)
-                assert toId.contains(conflict.goodId)
-                hold.graph[1].itemOf = [(ID): toId]
-                hold.scheduleSave()
-                scheduledForChange.println "CHANGE HOLD $hold.doc.shortId itemOf TO: $toId (FROM: $fromId)"
-            }
+// Select all bad bib records to be deleted.
+selectByIds(conflictsByOtherId.keySet() as List) { otherBib ->
+    def conflict = conflictsByOtherId[otherBib.doc.shortId]
+    if (!conflict) {
+        conflict = otherBib.doc.recordIdentifiers.findResult {
+            conflictsByOtherId[it]
         }
     }
-    badBib.scheduleDelete(onError: { e ->
-            failedBibIDs.println("Failed to delete ${badBib.doc.shortId} due to: $e")
-        })
-    scheduledForChange.println "DELETE BIB $badBib.doc.shortId"
+    verifyIsbnPresent(otherBib, conflict.isbn)
+
+    selectByIds([conflict.someId]) { someBib ->
+        verifyIsbnPresent(someBib, conflict.isbn)
+
+        assert someBib.doc.created != otherBib.doc.created
+        def (goodBib, badBib) = [someBib, otherBib]
+        if (goodBib.doc.created > badBib.doc.created) {
+            (goodBib, badBib) = [badBib, goodBib]
+        }
+        assert goodBib.doc.created < badBib.doc.created
+
+        def toId = goodBib.graph[1][ID]
+        assert toId.contains(goodBib.doc.shortId)
+
+        def goodItemsHeldBy = [:]
+        selectBySqlWhere("""
+                data#>>'{@graph,1,itemOf,@id}' = '${toId}'
+        """ , silent: true) { hold ->
+            goodItemsHeldBy.get(hold.graph[1].heldBy[ID], []) << hold.graph[1][ID]
+        }
+
+        // Select all (eventual) hold for the bad bib, and move to good bib.
+        selectBySqlWhere("""
+                data#>>'{@graph,1,itemOf,@id}' = '${badBib.graph[1][ID]}'
+        """ , silent: true) { hold ->
+            def fromId = hold.graph[1].itemOf[ID]
+            assert fromId.contains(badBib.doc.shortId)
+
+            def itemId = "<${hold.graph[0][ID]}>"
+            if (!hold.graph[1][ID]) {
+                // Sparse holding missing thing id!
+                itemId += " [NO ITEM ID]"
+            }
+            def heldBy = hold.graph[1].heldBy?.get(ID)
+            def goodItems = goodItemsHeldBy[heldBy]
+            if (goodItems) {
+                hold.scheduleDelete()
+                def goodItem = goodItems.collect { "<$it>" }.join(", ")
+                scheduledForChange.println "DELETE HOLD ${itemId} (heldBy <$heldBy> on <$toId> as ${goodItem})"
+            } else {
+                hold.graph[1].itemOf = [(ID): toId]
+                hold.scheduleSave()
+                scheduledForChange.println "CHANGE HOLD ${itemId} itemOf TO: <$toId> (FROM: <$fromId>)"
+            }
+        }
+
+        badBib.scheduleDelete(onError: { e ->
+                failedBibIDs.println("Failed to delete ${badBib.graph[0][ID]} due to: $e")
+            })
+        scheduledForChange.println "DELETE BIB <${badBib.graph[0][ID]}> (kept <${goodBib.graph[0][ID]}>, paired on isbn: $conflict.isbn)"
+    }
 }
