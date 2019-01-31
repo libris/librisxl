@@ -19,8 +19,7 @@ boolean verifyIsbnPresent(bib, isbn) {
 }
 
 new File(scriptDir, "isbn-dubletter.txt").each { row ->
-    def (isbn, xlId, sigelCodes) = row.split(/\t/).collect { it.trim() }
-    Set sigels = sigelCodes.split(/,/).collect { it.trim() }
+    def (isbn, xlId, _sigelCodes) = row.split(/\t/).collect { it.trim() }
     // Adjust implicit legacy bib id
     if (xlId.size() < 13) {
         xlId = "http://libris.kb.se/bib/$xlId" as String
@@ -28,10 +27,9 @@ new File(scriptDir, "isbn-dubletter.txt").each { row ->
     def conflict = conflictsByIsbn[isbn]
     if (conflict) {
         conflict.otherId = xlId
-        conflict.otherSigels = sigels
         conflictsByOtherId[xlId] = conflict
     } else {
-        conflict = [someId: xlId, someSigels: sigels, isbn: isbn]
+        conflict = [someId: xlId, isbn: isbn]
         conflictsByIsbn[isbn] = conflict
     }
 }
