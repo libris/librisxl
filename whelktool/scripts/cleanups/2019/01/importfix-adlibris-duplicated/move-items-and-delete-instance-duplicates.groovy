@@ -72,15 +72,22 @@ selectByIds(conflictsByOtherId.keySet() as List) { otherBib ->
             assert fromId.contains(badBib.doc.shortId)
 
             def itemId = "<${hold.graph[0][ID]}>"
+
+            boolean brokenItem = false
             if (!hold.graph[1][ID]) {
-                // Sparse holding missing thing id!
-                itemId += " [NO ITEM ID]"
+                // Incomplete skeleton item!
+                assert !hold.graph[1][TYPE]
+                assert !hold.graph[1].heldBy
+                brokenItem = true
+                itemId += " [INCOMPLETE ITEM]"
             }
+
             def heldBy = hold.graph[1].heldBy?.get(ID)
             def goodItems = goodItemsHeldBy[heldBy]
-            if (goodItems) {
+
+            if (brokenItem || goodItems) {
                 hold.scheduleDelete()
-                def goodItem = goodItems.collect { "<$it>" }.join(", ")
+                def goodItem = goodItems?.collect { "<$it>" }?.join(", ")
                 scheduledForChange.println "DELETE HOLD ${itemId} (heldBy <$heldBy> on <$toId> as ${goodItem})"
             } else {
                 hold.graph[1].itemOf = [(ID): toId]
