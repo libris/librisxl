@@ -208,8 +208,6 @@
 9789186503277 	 r1fnxq4xp0cv91x4 	 
 9789177797388 	 z7831gt5w9f7lw94 	 Um,Kssb,Tjor,Kusb,Tkb,S,Falk,Leru,Tim,Nodi,Nyks,Edsb,Udd,Hova,Fili,Munf,Skkf,Vara,Ydre,Odes,Tore,Dand,Edet,Krkb,Eksj,Mota,Oxel,Grum,Boln,Moln,No,Sode,Jos,Gall,Tikf,Borb,Tran,Vilh,Gav,Hudi,Safb,Mjob,Lyck,Fage,Vetb,Kas,Khkb,Ockb,Bo,Sfb,Sods,Sten,Savs,Ldsb,Ljus,Trel,Lisb,Pite,Gnes,Mo,Forh,Hena,Ssb,Nore,Bode,Kris
 9789177797388 	 4ds195w92dhtgcdw 	 Dand,Vilh,Lin1
-9781408855935 	 16596493 	 Udd,Um,Gbg,LnuV,Hova,Kusb,Skkf,Jos,G,Gav,BOKR,Lisb,Trel,Mo,Vasb,Nass,Afb,Boln
-9781408855935 	 16755284 	 Um,Sunn,Gbg,Eda,Ksb,Hsd,BOKR,Trel,Mo,Kris,Moln
 9789177810179 	 22148361 	 Q,Um,Gbg,Kusb,Nyks,Jos,G,L,Ldsb,Tkb,Hasb,BOKR,U,Lisb,Kopb,S,Li,Vasb,Grum
 9789177810179 	 nxbksjsklvq9gmj0 	 
 9789188613301 	 22684498 	 Um,Kssb,Sk,Tjor,Kusb,Sbi,Munk,Hofo,Tkb,S,Ocke,Leru,Vasb,Nodi,Nyks,Ubl,Edsb,Udd,Atvi,Fili,Munf,Skkf,Vara,L,Gp,Vald,Tore,Mari,Habo,Edet,Krkb,Mota,Nass,Oxel,Grum,Boln,Jokk,Kld1,Moln,Tanu,Sode,Ksb,Jos,Gall,Kisb,Tikf,Torb,Vilh,Gav,Hudi,Safb,Lyck,Arvk,Vetb,Lule,Q,Ockb,Bo,Arlo,Gbg,Sfb,Hall,Sods,Hsd,Sten,Ldsb,Ljus,BOKR,Trel,Lisb,Gras,Pite,Lin1,Forh,Harj,Hena,Gote,Mo,Lobj
@@ -1190,8 +1188,6 @@
 9788202292553 	 hr5dnfl0fmd6j3n4 	 
 9789188441188 	 21082198 	 Um,Kssb,Sk,Tkb,Hofo,Nodi,Nyks,Udd,Atvi,Fili,Hasb,Nass,Kld1,Moln,Boln,Torb,Jos,Gav,Hudi,Vetb,Lule,Bo,Arlo,Gbg,Sods,Eda,Sten,Sunn,BOKR,Lisb,Lin1,Bode
 9789188441188 	 19px5xxbzst793xh 	 Grum
-9789197907477 	 19301919 	 Um,Kssb,Vagg,Kusb,Aneb,Sbi,Tkb,Hofo,Boxh,S,Leru,Vasb,Nodi,Nyks,Gnos,Ubl,Udd,Bers,Atvi,Nors,L,Hasb,Vald,Odes,Vads,Mari,Habo,Edet,Mota,Nass,Oxel,Hama,No,Boln,Kld1,Hapa,Sode,Ksb,Jos,Tida,Vilh,U,Gav,Kali,Tras,Mjob,Arvk,Hagf,Lule,Bo,Arlo,Gbg,Sfb,Eda,Sods,Hsd,Sten,Savs,Ldsb,Stof,Trel,Pite,Lin1,Fibi,Kisa,Mo,Gote,Kris,Lobj
-9789197907477 	 12442559 	 Um,Sbi,S,Sors,Leru,Vasb,Nyks,Atvi,Vald,Oxel,Over,No,Kld1,Boln,Afb,Ksb,Vilh,Gav,Hudi,Mjob,Arvk,Areb,Arlo,Arje,Bo,Gbg,Mala,Sfb,Stof,Sunn,Ldsb,BOKR,Lisb,Arja,Lin1,Fibi,Hena,Kisa,Vagg,Kris
 9789186389741 	 lvtln2bpjbttzhsv 	 Q,Um,Gbg,L,Hudi,BOKR,S,Kris,Moln
 9789186389741 	 kt7gqp7nhwvn07vn 	 Okb
 9781421523750 	 18419329 	 Um,Vasb,Fibi
