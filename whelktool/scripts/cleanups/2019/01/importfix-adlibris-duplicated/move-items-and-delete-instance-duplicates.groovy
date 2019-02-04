@@ -86,19 +86,19 @@ selectByIds(conflictsByOtherId.keySet() as List) { otherBib ->
             def goodItems = goodItemsHeldBy[heldBy]
 
             if (brokenItem || goodItems) {
-                hold.scheduleDelete()
+                hold.scheduleDelete(loud: true)
                 def goodItem = goodItems?.collect { "<$it>" }?.join(", ")
                 scheduledForChange.println "DELETE HOLD ${itemId} (heldBy <$heldBy> on <$toId> as ${goodItem})"
             } else {
                 hold.graph[1].itemOf = [(ID): toId]
-                hold.scheduleSave()
+                hold.scheduleSave(loud: true)
                 scheduledForChange.println "CHANGE HOLD ${itemId} itemOf TO: <$toId> (FROM: <$fromId>)"
             }
         }
 
         badBib.scheduleDelete(onError: { e ->
                 failedBibIDs.println("Failed to delete ${badBib.graph[0][ID]} due to: $e")
-            })
+            }, loud: true)
         scheduledForChange.println "DELETE BIB <${badBib.graph[0][ID]}> (kept <${goodBib.graph[0][ID]}>, paired on isbn: $conflict.isbn)"
     }
 }
