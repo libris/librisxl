@@ -290,12 +290,25 @@ class ESQuery {
      * Public for test only - don't call outside this class!
      *
      */
+    @CompileStatic(TypeCheckingMode.SKIP)
     public List getFilters(Map<String, String[]> queryParameters) {
         List filters = []
-        // TODO handle nested queries
-        queryParameters.each {k, v ->
-            if (!(k in RESERVED_PARAMS)) {
-                filters << createBoolFilter(k, v)
+
+        // TODO This is copied from the old code and should be rewritten.
+        // We don't have that many nested mappings, so this is way to general.
+        Map groups = queryParameters.groupBy { p -> getPrefixIfExists(p.key) }
+        Map nested = groups.findAll { g -> g.value.size() == 2 }
+        List notNested = (groups - nested).collect { it.value }
+
+        nested.each { key, vals ->
+            filters << createNestedBoolFilter(key, vals)
+        }
+
+        notNested.each { Map m ->
+            m.each {k, v ->
+                if (!(k in RESERVED_PARAMS)) {
+                    filters << createBoolFilter(k, v)
+                }
             }
         }
 
@@ -304,6 +317,26 @@ class ESQuery {
         } else {
             return null
         }
+    }
+
+    private getPrefixIfExists(String key) {
+        if (key.contains('.')) {
+            return key.substring(0, key.indexOf('.'))
+        } else {
+            return key
+        }
+    }
+
+    @CompileStatic(TypeCheckingMode.SKIP)
+    private Map createNestedBoolFilter(String prefix, Map nestedQuery) {
+        Map result = [:]
+
+        Map musts = ['must': nestedQuery.collect { q -> ['match': [(q.key): q.value.first()]] }]
+
+        result << [['nested': ['path': prefix,
+                               'query': ['bool': musts]]]]
+
+        return result
     }
 
     /**
