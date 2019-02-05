@@ -22,8 +22,7 @@ boolean updateReference(work) {
     def extractedTerms = []
     def entitiesToMove = []
 
-    if (!work.subject)
-        return
+    if (!work.subject) return
 
     ListIterator iterSubj = work.subject.listIterator()
     while (iterSubj.hasNext()) {
@@ -37,7 +36,6 @@ boolean updateReference(work) {
 
             while(iter.hasNext()) {
                 cpx_term = iter.next()
-
                 if (cpx_term[TYPE] == TEMPSUB_TYPE && TERMS_TO_CHANGE.contains(cpx_term[PREFLABEL].toLowerCase())) {
                     if (!extractedTerms.contains(termToUri(cpx_term[PREFLABEL]))) {
                         extractedTerms << termToUri(cpx_term[PREFLABEL])
@@ -64,10 +62,16 @@ boolean updateReference(work) {
                         if (!extractedTerms.contains(newUri))
                             extractedTerms << newUri
                     } else {
+                        //Special treatment of geographical local subjects which shall be able to export to bib 651.
+                        //Otherwise follow convert to label to be able to export to bib 653
+                        String keyLabel = 'label'
+                        if (subj.termComponentList.get(0)[TYPE] == 'Geographic') { keyLabel = 'prefLabel' }
+
                         if (!entitiesToMove.size() || entitiesToMove.any{ it[TYPE] != subj.termComponentList.get(0)[TYPE] ||
-                                it['label'] != subj.termComponentList.get(0)[PREFLABEL].capitalize()})
+                                it[keyLabel] != subj.termComponentList.get(0)[PREFLABEL].capitalize()}) {
                             entitiesToMove << [(TYPE): subj.termComponentList.get(0)[TYPE],
-                                               'label': subj.termComponentList.get(0)[PREFLABEL].capitalize()]
+                                               (keyLabel): subj.termComponentList.get(0)[PREFLABEL].capitalize()]
+                        }
                     }
                 } else {
                     entitiesToMove << subj.termComponentList.get(0)
@@ -87,36 +91,30 @@ boolean updateReference(work) {
                         prefLabelTerms << it[PREFLABEL]
                     }
                 }
-
                 if (subj.prefLabel) {
                     subj.prefLabel = prefLabelTerms.join("--")
                 }
-
                 if (subj['sameAs']) {
                     subj['sameAs'].get(0)[ID] = termToUri(prefLabelTerms.join("--"))
                 }
             }
-
         }
     }
 
 
     if (extractedTerms.size() || entitiesToMove.size()) {
         def existingUris = []
-
         work.subject.each {
             if (it[ID]) {
                 existingUris << it[ID]
             }
         }
-
         if (extractedTerms.size()) {
             extractedTerms.each {
                 if (!existingUris.contains(it))
                     work.subject << [(ID): it]
             }
         }
-
         if (entitiesToMove.size()) {
             entitiesToMove.each {
                 work.subject << it
@@ -143,7 +141,5 @@ selectBySqlWhere("data::text LIKE '%termComponentList%' AND (data::text LIKE '%m
         if (updateReference(work)) {
             data.scheduleSave()
         }
-
-
     }
 }
