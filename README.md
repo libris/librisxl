@@ -140,7 +140,7 @@ $ vim secret.properties
 ### Setting up Elasticsearch
 
 TODO: This is now generated! This step can probably be omitted. (See the devops
-repo or the setup-dev-whelk.sh script for details.)
+repo for details.)
 
 Create index and mappings:
 
@@ -188,57 +188,18 @@ The system is then available on <http://localhost:8180>.
 
 ## Maintenance
 
-### Automated setup using setup-dev-whelk.sh - DEPRECATED - use the above devops-repository method instead.
+Everything you would want to do should be covered by the devops repo. This
+section is mostly kept as a reminder of alternate (less preferred) ways.
 
-For very specific purposes where you only want to do certain parts of the
-data loading process this script is sometimes useful, but it is not the
-correct, nor the "offical" way of loading example data.
-It's used like this:
-
-```
-$ ./librisxl-tools/scripts/setup-dev-whelk.sh -n <database name> \
-    [-C <createdb user>] [-D <database user>] [-F]
-```
-
-Where `<database name>` is used both for PostgreSQL and ElasticSearch,
-`<createdb user>` is the user to run `createdb`/`dropdb` as using
-`sudo` (optional), and `<database user>` is the PostgreSQL user (also
-optional). `-F` (also optional) tells the script to rebuild
-everything, which is handy if the different parts have become stale.
-
-E.g.:
-
-```
-$ ./librisxl-tools/scripts/setup-dev-whelk.sh -n whelk_dev \
-     -C postgres -D whelk -F
-```
 
 ### Development Workflow
 
 If you need to work locally (e.g. in this or the
 "definitions" repo) and perform specific tests, you can use this workflow:
 
-```
-$ (cd ../definitions && .venv/bin/python datasets.py -l)
-$ (cd importers/ && ../gradlew jar -DuseLocalDeps)
-$ ./librisxl-tools/scripts/setup-dev-whelk.sh -n whelk_dev
-```
-
-Important: ensure the name of the whelk (here "whelk_dev") is the same as the
-one configured in your local ./secret.properties config file.
-
-Explanation: Since we don't use -F to force rebuilding data and the importer,
-the first two commands do that. Depending on what you're doing, you can omit
-either one (or both if you're developing in this, the librisxl repo.)
-
-### Clearing out existing definitions
-
-To clear out any existing definitions (before reloading them), run this script
-(or see the source for details):
-
-```
-$ ./librisxl-tools/scripts/manage-whelk-storage.sh -n whelk_dev --nuke-definitions
-```
+1. Create and push a branch for your work.
+2. Set the branch in the `conf.xl_local` config in the devops repo.
+3. Use the regular tasks to e.g. reload data.
 
 ### New Elasticsearch config
 

@@ -356,7 +356,7 @@ class WhelkTool {
 
     private void doDeletion(DocumentItem item) {
         if (!dryRun) {
-            whelk.storage.remove(item.doc.shortId, changedIn, scriptJobUri)
+            whelk.remove(item.doc.shortId, changedIn, scriptJobUri)
         }
     }
 
@@ -409,7 +409,7 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            whelk.storage.storeAtomicUpdate(doc.shortId, !item.loud, changedIn, scriptJobUri, {
+            whelk.storeAtomicUpdate(doc.shortId, !item.loud, changedIn, scriptJobUri, {
                 it.data = doc.data
             })
         }

@@ -6347,8 +6347,7 @@
           "embedded": true
         }
       },
-      "TODO": "See also 100$t and 130.",
-      "TODO": "Interpunction ; on $r needs to be analyzed",
+      "TODO": "[1]See also 100$t and 130. [2]Interpunction ; on $r needs to be analyzed",
       "$a": {"about": "_:title", "property": "mainTitle"},
       "$d": {"property": "legalDate"},
       "$0": {
@@ -7560,10 +7559,10 @@
       },
       "$a": {"about": "_:contentType", "property": "label"},
       "$b": {"about": "_:contentType", "property": "code"},
-      "$2": {"about": "_:contentType", "property": "termGroup", "marcDefault": "rdacontent"},
+      "$2": {"about": "_:contentType", "property": "termGroup", "marcDefault": "rdacontent", "supplementary": true},
       "TODO?:$2": {"about": "_:contentType", "addLink": "inCollection", "resourceType": "ConceptCollection", "property": "code"},
-      "$8": {"about": "_:contentType", "property": "marc:groupid"},
-      "$3": {"about": "_:contentType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$8": {"about": "_:contentType", "property": "marc:groupid", "supplementary": true},
+      "$3": {"property": "typeNote", "supplementary": true},
       "_spec": [
         {
           "source": [
@@ -7712,9 +7711,9 @@
       "aboutEntity": "?thing",
       "$a": {"about": "_:mediaType", "property": "label"},
       "$b": {"about": "_:mediaType", "property": "code"},
-      "$2": {"about": "_:mediaType", "property": "termGroup", "marcDefault": "rdamedia"},
-      "$8": {"about": "_:mediaType", "property": "marc:groupid"},
-      "$3": {"about": "_:mediaType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$2": {"about": "_:mediaType", "property": "termGroup", "marcDefault": "rdamedia", "supplementary": true},
+      "$8": {"about": "_:mediaType", "property": "marc:groupid", "supplementary": true},
+      "$3": {"property": "typeNote", "supplementary": true},
       "_spec": [
         {
           "source": [
@@ -7847,9 +7846,9 @@
       },
       "$a": {"about": "_:carrierType", "property": "label"},
       "$b": {"about": "_:carrierType", "property": "code"},
-      "$2": {"about": "_:carrierType", "property": "termGroup", "marcDefault": "rdacarrier"},
-      "$8": {"about": "_:carrierType", "property": "marc:groupid"},
-      "$3": {"about": "_:carrierType", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$2": {"about": "_:carrierType", "property": "termGroup", "marcDefault": "rdacarrier", "supplementary": true},
+      "$8": {"about": "_:carrierType", "property": "marc:groupid", "supplementary": true},
+      "$3": {"property": "typeNote", "supplementary": true},
       "_spec": [
         {
           "source": [
@@ -7941,6 +7940,176 @@
                     "termGroup": "otherlist"
                   }
                 ]
+            }
+          }
+        },
+        {
+          "name": "Full example of a combined textbook and audiobook",
+          "source": [
+            {
+              "336": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"b": "txt"}, {"2": "rdacontent"}, {"3": "Textbok"}
+                ]
+              }
+            },
+            {
+              "336": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"b": "spw"}, {"2": "rdacontent"}, {"3": "Ljudbok"}
+                ]
+              }
+            },
+            {
+              "337": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"b": "n"}, {"2": "rdamedia"}, {"3": "Textbok"}
+                ]
+              }
+            },
+            {
+              "337": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"b": "s"}, {"2": "rdamedia"}, {"3": "Ljudbok"}
+                ]
+              }
+            },
+            {
+              "338": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"b": "nc"}, {"2": "rdacarrier"}, {"3": "Textbok"}
+                ]
+              }
+            },
+            {
+              "338": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"b": "sd"}, {"2": "rdacarrier"}, {"3": "Ljudbok"}
+                ]
+              }
+            }
+          ],
+          "result": {
+            "mainEntity": {
+              "typeNote": "Textbok",
+              "mediaType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/media/n",
+                  "@type": "MediaType",
+                  "code": "n"
+                }
+              ],
+              "carrierType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/carrier/nc",
+                  "@type": "CarrierType",
+                  "code": "nc"
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Instance",
+                  "typeNote": "Ljudbok",
+                  "mediaType": [
+                    {
+                      "@id": "https://id.kb.se/term/rda/media/s",
+                      "@type": "MediaType",
+                      "code": "s"
+                    }
+                  ],
+                  "carrierType": [
+                    {
+                      "@id": "https://id.kb.se/term/rda/carrier/sd",
+                      "@type": "CarrierType",
+                      "code": "sd"
+                    }
+                  ]
+                }
+              ],
+              "instanceOf": {
+                "@type": "Text",
+                "typeNote": "Textbok",
+                "contentType": [
+                  {
+                    "@type": "ContentType",
+                    "code": "txt",
+                    "@id": "https://id.kb.se/term/rda/content/txt"
+                  }
+                ],
+                "hasPart": [
+                  {
+                    "@type": "Work",
+                    "typeNote": "Ljudbok",
+                    "contentType": [
+                      {
+                        "@type": "ContentType",
+                        "code": "spw",
+                        "@id": "https://id.kb.se/term/rda/content/spw"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "Only 338 won't produce incomplete 337",
+          "source": [
+            {
+              "338": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"b": "nc"}, {"2": "rdacarrier"}, {"3": "Textbok"}
+                ]
+              }
+            },
+            {
+              "338": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"b": "sd"}, {"2": "rdacarrier"}, {"3": "Ljudbok"}
+                ]
+              }
+            }
+          ],
+          "result": {
+            "mainEntity": {
+              "typeNote": "Textbok",
+              "carrierType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/carrier/nc",
+                  "@type": "CarrierType",
+                  "code": "nc"
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Instance",
+                  "typeNote": "Ljudbok",
+                  "carrierType": [
+                    {
+                      "@id": "https://id.kb.se/term/rda/carrier/sd",
+                      "@type": "CarrierType",
+                      "code": "sd"
+                    }
+                  ]
+                }
+              ]
             }
           }
         }
@@ -13189,13 +13358,15 @@
       "$2": {"property": "marc:sourceOfTerm"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
-
     "760": {
       "aboutEntity": "?thing",
       "NOTE:domainIncludes": "Serial",
       "inherit": "772",
       "addLink": "hasSeries",
       "resourceType": "Instance",
+      "i2": {
+        "marcDefault": " "
+      },
       "$a": {"about": "_:instanceOfContribution", "link": "agent", "resourceType": "Agent", "property": "label", "TODO:targetMatch": "1xx"},
       "$b": {"property": "editionStatement", "TODO:targetMatch": "250"},
       "$c": {"about": "_:instanceTitle", "property": "qualifier", "NOTE:marc-repeatable": false},
@@ -13249,6 +13420,9 @@
       "NOTE:domainIncludes": "Serial",
       "inherit": "760",
       "addLink": "hasSubseries",
+      "i2": {
+        "marcDefault": " "
+      },
       "_spec": [
         {
           "source": {"762": {"ind1": "0", "ind2": " ", "subfields": [
@@ -13276,10 +13450,134 @@
         }
       ]
     },
-    "765": {"inherit": "772", "addLink": "translationOf"},
-    "767": {"inherit": "772", "addLink": "translation"},
-    "770": {"inherit": "772", "addLink": "supplement"},
+    "765": {
+      "inherit": "772",
+      "addLink": "translationOf",
+      "i2": {
+        "marcDefault": " "
+      },
+      "_spec": [
+        {
+          "source": {"767": {"ind1": " ", "ind2": "8", "subfields": [
+            {"t": "Tempelriddaren"},
+            {"w": "000"}
+          ]}},
+          "normalized": {"767": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Tempelriddaren"},
+            {"w": "000"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "translation": [{
+                  "@type": "Work",
+                  "hasInstance": {
+                    "@type": "Instance",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Tempelriddaren"
+                      }],
+                    "describedBy": [{
+                      "@type": "Record",
+                      "controlNumber": "000"
+                    }]
+                  }
+              }]
+            }
+          }}
+        }
+      ]
+    },
+    "767": {
+      "inherit": "772",
+      "addLink": "translation",
+      "i2": {
+        "marcDefault": " "
+      },
+      "_spec": [
+        {
+          "source": {"767": {"ind1": " ", "ind2": "8", "subfields": [
+            {"t": "Finance & development. French. Finances et développement"},
+            {"x": "0430-473X"},
+            {"w": "000"}
+          ]}},
+          "normalized": {"767": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Finance & development. French. Finances et développement"},
+            {"x": "0430-473X"},
+            {"w": "000"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "translation": [{
+                  "@type": "Work",
+                  "hasInstance": {
+                    "@type": "Instance",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Finance & development. French. Finances et développement"
+                      }],
+                    "identifiedBy": [{
+                      "@type": "ISSN",
+                      "value": "0430-473X"
+                      }],
+                    "describedBy": [{
+                      "@type": "Record",
+                      "controlNumber": "000"
+                    }]
+                  }
+              }]
+            }
+          }}
+        }
+      ]
+    },
+    "770": {
+      "inherit": "772",
+      "addLink": "supplement",
+      "i2": {
+        "marcDefault": " "
+      },
+      "_spec": [
+        {
+          "source": {"770": {"ind1": " ", "ind2": "8", "subfields": [
+            {"t": "Journal of cellular biochemistry. Supplement"},
+            {"x": "0733-1959"},
+            {"w": "000"}
+          ]}},
+          "normalized": {"770": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Journal of cellular biochemistry. Supplement"},
+            {"x": "0733-1959"},
+            {"w": "000"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "supplement": [{
+                  "@type": "Work",
+                  "hasInstance": {
+                    "@type": "Instance",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Journal of cellular biochemistry. Supplement"
+                      }],
+                    "identifiedBy": [{
+                      "@type": "ISSN",
+                      "value": "0733-1959"
+                      }],
+                    "describedBy": [{
+                      "@type": "Record",
+                      "controlNumber": "000"
+                    }]
+                  }
+              }]
+            }
+          }}
+        }
+      ]
+    },
     "772": {
+      "NOTE:local": "Observera att fältet även har använts för att på ett enhetligt sätt konvertera delposter till flerbandsverk (med ind. 2 = 0) från ett ursprungligt LIBRISIII-format.",
       "aboutEntity": "?work",
       "addLink": "supplementTo",
       "resourceType": "Work",
@@ -13348,7 +13646,6 @@
             "resourceType": "Record"
           }
       },
-
       "i1": {
         "property": "marc:toDisplayNote",
         "tokenMap": {
@@ -13357,7 +13654,9 @@
         },
         "marcDefault": "0"
       },
-      "TODO:i2": {},
+      "i2": {
+        "marcDefault": "0"
+      },
       "$a": {"about": "_:agent", "property": "label", "TODO:targetMatch": "1xx"},
       "$b": {"about": "_:hasInstance", "property": "editionStatement", "TODO:targetMatch": "250"},
       "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false},
@@ -13396,7 +13695,7 @@
             {"s": "Main Thing"},
             {"z": "00-0-000000-0"}
           ]}},
-          "normalized": {"772": {"ind1": "0", "ind2": " ", "subfields": [
+          "normalized": {"772": {"ind1": "0", "ind2": "0", "subfields": [
             {"s": "Main Thing"},
             {"z": "00-0-000000-0"}
           ]}},
@@ -13424,14 +13723,14 @@
           }}
         },
         {
-          "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
+          "source": {"772": {"ind1": " ", "ind2": "0", "subfields": [
             {"7": "p1"},
             {"a": "Beckmann, Max"},
             {"t": "Briefec"},
             {"d": "provisionActivityStatement"},
             {"w": "000"}
           ]}},
-          "normalized": {"772": {"ind1": "0", "ind2": " ", "subfields": [
+          "normalized": {"772": {"ind1": "0", "ind2": "0", "subfields": [
             {"7": "p1"},
             {"a": "Beckmann, Max"},
             {"t": "Briefec"},
@@ -13482,12 +13781,46 @@
       "addLink": "hasPart",
       "NOTE:domainIncludes": "Serial",
       "FIXME": "this is overeagerly reverted from a hasPart converted from 740; should only be added if issuanceType = 'Serial'...",
-      "resourceType": "Work"
+      "resourceType": "Work",
+      "_spec": [
+        {
+          "source": {"774": {"ind1": " ", "ind2": "8", "subfields": [
+            {"t": "Map of area with highlighted street"},
+            {"w": "000"}
+          ]}},
+          "normalized": {"774": {"ind1": "0", "ind2": "0", "subfields": [
+            {"t": "Map of area with highlighted street"},
+            {"w": "000"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [{
+                  "@type": "Work",
+                  "hasInstance": {
+                    "@type": "Instance",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Map of area with highlighted street"
+                      }],
+                    "describedBy": [{
+                      "@type": "Record",
+                      "controlNumber": "000"
+                    }]
+                  }
+              }]
+            }
+          }}
+        }
+      ]
     },
     "775": {
       "inherit": "772",
       "TODO:note": "uncommon",
       "addLink": "otherEdition",
+      "i2": {
+        "marcDefault": " "
+      },
       "$e": {"addLink": "language", "NOTE:marc-repeatable": false, "resourceType": "Language", "property": "label", "TODO:inherit": "008:[35:38]"},
       "$f": {"about": "_:provisionActivity", "link": "place", "resourceType": "Place", "property": "code", "NOTE:marc-repeatable": false, "TODO:inherit": "008:[15:18]"}
     },
@@ -13576,7 +13909,10 @@
     },
     "777": {
       "inherit": "772",
-      "addLink": "issuedWith"
+      "addLink": "issuedWith",
+      "i2": {
+        "marcDefault": " "
+      }
     },
     "780": {
       "inherit": "772",
@@ -13689,11 +14025,48 @@
     "786": {
       "inherit": "772",
       "addLink": "dataSource",
-      "resourceType": "Dataset"
+      "resourceType": "Dataset",
+      "i2": {
+        "marcDefault": " "
+      }
     },
     "787": {
       "inherit": "772",
-      "addLink": "relatedTo"
+      "addLink": "relatedTo",
+      "i2": {
+        "marcDefault": " "
+      },
+      "_spec": [
+        {
+          "source": {"787": {"ind1": " ", "ind2": "8", "subfields": [
+            {"t": "Empire State report weekly"},
+            {"w": "000"}
+          ]}},
+          "normalized": {"787": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Empire State report weekly"},
+            {"w": "000"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [{
+                  "@type": "Work",
+                  "hasInstance": {
+                    "@type": "Instance",
+                    "hasTitle": [{
+                      "@type": "Title",
+                      "mainTitle": "Empire State report weekly"
+                      }],
+                    "describedBy": [{
+                      "@type": "Record",
+                      "controlNumber": "000"
+                    }]
+                  }
+              }]
+            }
+          }}
+        }
+      ]
     },
     "800": {
       "include": ["hasSeriesInstance", "titledetails", "contributionRole_4_e"],
@@ -18924,7 +19297,7 @@
       "embedded": true,
       "i1": {"property": "marc:holdingsLevel", "marcDefault": " "},
       "i2": {"property": "marc:typeOfNotation", "marcDefault": " "},
-      "$a": {"property": "marc:textualString"},
+      "$a": {"property": "marc:textualString", "required": true},
       "$x": {"addProperty": "marc:cataloguersNote"},
       "$z": {"addProperty": "marc:publicNote"},
       "$2": {"property": "marc:sourceOfNotation"},
