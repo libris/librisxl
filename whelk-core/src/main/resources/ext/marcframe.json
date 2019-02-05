@@ -1278,7 +1278,7 @@
 
     "subjectbase": {
       "include": ["subjectbaseSansUri"],
-      "$0": {"addProperty": "marc:uri"}
+      "$0": {"addProperty": "marc:uri", "supplementary": true}
     },
 
     "worksubjectData": {
