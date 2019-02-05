@@ -4,18 +4,19 @@ SAO_URI = 'https://id.kb.se/term/sao'
 PREFLABEL = 'prefLabel'
 TEMPSUB_TYPE = 'TemporalSubdivision'
 
-
 String termToUri(term) {
     return SAO_URI + '/' + URLEncoder.encode(term.capitalize(), "UTF-8").replaceAll("\\+", "%20")
 }
-/*
+
 String getIdOfTerm(term) {
+    String uri
     selectBySqlWhere("""
             collection = 'auth' AND data#>>'{@graph,1,@type}' = 'Geographic' AND data#>>'{@graph,1,prefLabel}' = '${term}'
-    """) { data ->
-        return data[1][ID]
+    """) { doc ->
+        uri = doc.graph[1][ID]
     }
-}*/
+    return uri
+}
 
 boolean updateReference(work) {
     def extractedTerms = []
@@ -52,20 +53,21 @@ boolean updateReference(work) {
                         extractedTerms << subj.termComponentList.get(0)[ID]
                     }
                 } else if (subj.termComponentList.get(0)[PREFLABEL]) {
-                    newUri = termToUri(subj.termComponentList.get(0)[PREFLABEL])
-                    if (findCanonicalId(newUri)) {
+                    String newUri
+
+                    if (subj.termComponentList.get(0)[TYPE] == 'Geographic')
+                        newUri = getIdOfTerm(subj.termComponentList.get(0)[PREFLABEL].capitalize())
+                    else
+                        newUri = findCanonicalId(termToUri(subj.termComponentList.get(0)[PREFLABEL].capitalize()))
+
+                    if (newUri) {
                         if (!extractedTerms.contains(newUri))
                             extractedTerms << newUri
-                    } //else if (subj.termComponentList.get(0)[TYPE] == 'Geographic') {
-                        //geoUri = getIdOfTerm(subj.termComponentList.get(0)[PREFLABEL])
-                        //if (!extractedTerms.contains(geoUri))
-                        //    extractedTerms << geoUri
-                    //}
-                    else {
+                    } else {
                         if (!entitiesToMove.size() || entitiesToMove.any{ it[TYPE] != subj.termComponentList.get(0)[TYPE] ||
-                                it['label'] != subj.termComponentList.get(0)[PREFLABEL]})
+                                it['label'] != subj.termComponentList.get(0)[PREFLABEL].capitalize()})
                             entitiesToMove << [(TYPE): subj.termComponentList.get(0)[TYPE],
-                                           'label': subj.termComponentList.get(0)[PREFLABEL]]
+                                               'label': subj.termComponentList.get(0)[PREFLABEL].capitalize()]
                     }
                 } else {
                     entitiesToMove << subj.termComponentList.get(0)
@@ -124,8 +126,8 @@ boolean updateReference(work) {
     }
 }
 
-selectBySqlWhere("data::text LIKE '%termComponentList%' and (data::text LIKE '%medeltiden%' or data::text LIKE '%antiken%' " +
-            "or data::text LIKE '%forntiden%' or data::text LIKE '%renässansen%')") { data ->
+selectBySqlWhere("data::text LIKE '%termComponentList%' AND (data::text LIKE '%medeltiden%' OR data::text LIKE '%antiken%' " +
+            "OR data::text LIKE '%forntiden%' OR data::text LIKE '%renässansen%')") { data ->
 
     // guard against missing entity
     if (data.graph.size() < 2) {
