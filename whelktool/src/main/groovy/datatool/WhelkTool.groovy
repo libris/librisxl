@@ -327,6 +327,9 @@ class WhelkTool {
         counter.countProcessed()
         process(item)
         if (item.needsSaving) {
+            if (item.loud) {
+                assert allowLoud : "Loud changes need to be explicitly allowed"
+            }
             if (item.restoreToTime != null) {
                 if (!doRevertToTime(item))
                     return true
@@ -403,9 +406,6 @@ class WhelkTool {
 
     private void doModification(DocumentItem item) {
         Document doc = item.doc
-        if (item.loud) {
-            assert allowLoud : "Loud changes need to be explicitly allowed"
-        }
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
