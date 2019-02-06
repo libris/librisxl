@@ -50,7 +50,7 @@ class WhelkTool {
 
     boolean allowLoud
 
-    private boolean errorDetected
+    private Throwable errorDetected
 
     private def jsonWriter = new ObjectMapper().writerWithDefaultPrettyPrinter()
 
@@ -249,13 +249,12 @@ class WhelkTool {
                 if (executorService) {
                     executorService.submit {
                         if (!processBatch(process, batchToProcess, counter)) {
-                            errorDetected = true
                             executorService.shutdownNow()
                         }
                     }
                 } else {
                     if (!processBatch(process, batchToProcess, counter)) {
-                        errorDetected = true
+                        log "Aborted selection: ${counter.summary}. Done in ${counter.elapsedSeconds} s."
                         return
                     }
                 }
@@ -306,6 +305,7 @@ class WhelkTool {
                 err.printStackTrace errorLog
                 errorLog.println "-" * 20
                 errorLog.flush()
+                errorDetected = err
                 return false
             }
             if (!doContinue) {
