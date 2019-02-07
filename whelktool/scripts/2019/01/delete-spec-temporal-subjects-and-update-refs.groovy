@@ -1,8 +1,16 @@
-TERMS_TO_CHANGE = ["medeltiden", "antiken", "forntiden", "renässansen"]
 COMPLEX_SUBJECT_TYPE = 'ComplexSubject'
 SAO_URI = 'https://id.kb.se/term/sao'
 PREFLABEL = 'prefLabel'
 TEMPSUB_TYPE = 'TemporalSubdivision'
+SUBJECTS_TO_DELETE = ['pm14bcq70h0qnnr': 'medeltiden',
+                      '53hlst5p58lc91k': 'forntiden',
+                      '64jmtv6q2v2t5b9': 'antiken',
+                      '75knvw8r0qh4c88': 'renässansen']
+
+
+PrintWriter failedAuthIDs = getReportWriter("failed-to-delete-authIDs")
+PrintWriter scheduledForDeletion = getReportWriter("scheduled-for-deletion")
+
 
 String termToUri(term) {
     return SAO_URI + '/' + URLEncoder.encode(term.capitalize(), "UTF-8").replaceAll("\\+", "%20")
@@ -21,6 +29,7 @@ String getIdOfTerm(term) {
 boolean updateReference(work) {
     def extractedTerms = []
     def entitiesToMove = []
+    def termsToChange = SUBJECTS_TO_DELETE.values() as List
 
     if (!work.subject) return
 
@@ -30,13 +39,13 @@ boolean updateReference(work) {
 
         if (subj[TYPE] == COMPLEX_SUBJECT_TYPE && subj['inScheme'] && subj['inScheme'][ID] == SAO_URI
             && subj.termComponentList.any{ it[TYPE] == TEMPSUB_TYPE} &&
-                subj.termComponentList.any{ TERMS_TO_CHANGE.contains(it[PREFLABEL])}) {
+                subj.termComponentList.any{ termsToChange.contains(it[PREFLABEL])}) {
 
             ListIterator iter = subj.termComponentList.listIterator()
 
             while(iter.hasNext()) {
                 cpx_term = iter.next()
-                if (cpx_term[TYPE] == TEMPSUB_TYPE && TERMS_TO_CHANGE.contains(cpx_term[PREFLABEL].toLowerCase())) {
+                if (cpx_term[TYPE] == TEMPSUB_TYPE && termsToChange.contains(cpx_term[PREFLABEL].toLowerCase())) {
                     if (!extractedTerms.contains(termToUri(cpx_term[PREFLABEL]))) {
                         extractedTerms << termToUri(cpx_term[PREFLABEL])
                     }
@@ -124,8 +133,21 @@ boolean updateReference(work) {
     }
 }
 
-selectBySqlWhere("data::text LIKE '%termComponentList%' AND (data::text LIKE '%medeltiden%' OR data::text LIKE '%antiken%' " +
-            "OR data::text LIKE '%forntiden%' OR data::text LIKE '%renässansen%')") { data ->
+//Remove Temporal Subjects 'Medeltiden', 'Forntiden', 'Antiken' and 'Renässansen'
+selectByIds( SUBJECTS_TO_DELETE.keySet() as List ) { auth ->
+    if (SUBJECTS_TO_DELETE[auth.doc.shortId].capitalize() == auth.graph[1]['prefLabel']
+        && auth.graph[1][TYPE] == 'Temporal') {
+        scheduledForDeletion.println("${auth.doc.getURI()}")
+        auth.scheduleDelete(onError: { e ->
+            failedAuthIDs.println("Failed to delete ${auth.doc.shortId} due to: $e")
+        })
+    }
+}
+
+selectBySqlWhere('''
+        data::text LIKE '%termComponentList%' AND (data::text LIKE '%medeltiden%' OR data::text LIKE '%antiken%' 
+        OR data::text LIKE '%forntiden%' OR data::text LIKE '%renässansen%')
+    ''') { data ->
 
     // guard against missing entity
     if (data.graph.size() < 2) {
