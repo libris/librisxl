@@ -8226,7 +8226,7 @@
       "$h": {"addLink": "soundCharacteristic", "resourceType": "PlaybackCharacteristic", "property": "label"},
       "$0": {"about": "_:soundCharacteristic", "addProperty": "marc:uri"},
       "$2": {"about": "_:soundCharacteristic", "link": "source", "resourceType": "Source", "property": "code"},
-      "$3": {"about": "_:soundCharacteristic", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$3": {"property": "typeNote", "supplementary": true},
       "$6": {"about": "_:soundCharacteristic", "property": "marc:fieldref"},
       "_spec": [
         {
@@ -8313,7 +8313,7 @@
       "$b": {"addLink": "projectionCharacteristic", "resourceType": "ProjectionSpeed", "property": "label"},
       "$0": {"about": "_:projectionCharacteristic", "addProperty": "marc:uri"},
       "$2": {"about": "_:projectionCharacteristic", "link": "source", "resourceType": "Source", "property": "code"},
-      "$3": {"about": "_:projectionCharacteristic", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$3": {"property": "typeNote", "supplementary": true},
       "$6": {"about": "_:projectionCharacteristic", "property": "marc:fieldref"},
       "_spec": [
         {
@@ -8367,7 +8367,7 @@
       "$b": {"addLink": "videoCharacteristic", "resourceType": "BroadcastStandard", "property": "label"},
       "$0": {"about": "_:videoCharacteristic", "addProperty": "marc:uri"},
       "$2": {"about": "_:videoCharacteristic", "link": "source", "resourceType": "Source", "property": "code"},
-      "$3": {"about": "_:videoCharacteristic", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$3": {"property": "typeNote", "supplementary": true},
       "$6": {"about": "_:videoCharacteristic", "property": "marc:fieldref"},
       "_spec": [
         {
@@ -8432,10 +8432,7 @@
       "$f": {"addLink": "digitalCharacteristic", "resourceType": "EncodedBitrate", "property": "label"},
       "$0": {"about": "_:digitalCharacteristic", "addProperty": "marc:uri"},
       "$2": {"about": "_:digitalCharacteristic", "link": "source", "resourceType": "Source", "property": "code"},
-      "$3": {
-        "about": "_:digitalCharacteristic", "link": "appliesTo", "resourceType": "Resource", "property": "label",
-        "NOTE": "record-count: 0. If this would appear, we unconditionally expect it ONLY to be used in subsequent 347 (see linkSubsequentRepeated)."
-      },
+      "$3": {"property": "typeNote", "supplementary": true},
       "$6": {"about": "_:digitalCharacteristic", "property": "marc:fieldref"},
       "_spec": [
         {
