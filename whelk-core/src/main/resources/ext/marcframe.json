@@ -2494,7 +2494,8 @@
           "TODO:about": "_:otherInstance",
           "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsFrequencyType-{_}",
-          "matchUriToken": "^[_abcdefghijkmqstw]$"
+          "matchUriToken": "^[abcdefghijkmqstwz]$",
+          "fixedDefault": "u"
         },
         "[2]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
@@ -3481,7 +3482,9 @@
         "[18]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
           "addLink": "frequency",
-          "uriTemplate": "https://id.kb.se/marc/SerialsFrequencyType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SerialsFrequencyType-{_}",
+          "matchUriToken": "^[abcdefghijkmqstwz]$",
+          "fixedDefault": "u"
         },
         "[19]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",

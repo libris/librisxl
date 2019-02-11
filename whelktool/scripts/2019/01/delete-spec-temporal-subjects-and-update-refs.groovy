@@ -76,7 +76,7 @@ boolean updateReference(work) {
                         String keyLabel = 'label'
                         if (subj.termComponentList.get(0)[TYPE] == 'Geographic') { keyLabel = 'prefLabel' }
 
-                        if (!entitiesToMove.size() || entitiesToMove.any{ it[TYPE] != subj.termComponentList.get(0)[TYPE] ||
+                        if (entitiesToMove.empty || entitiesToMove.any{ it[TYPE] != subj.termComponentList.get(0)[TYPE] &&
                                 it[keyLabel] != subj.termComponentList.get(0)[PREFLABEL].capitalize()}) {
                             entitiesToMove << [(TYPE): subj.termComponentList.get(0)[TYPE],
                                                (keyLabel): subj.termComponentList.get(0)[PREFLABEL].capitalize()]
@@ -111,7 +111,7 @@ boolean updateReference(work) {
     }
 
 
-    if (extractedTerms.size() || entitiesToMove.size()) {
+    if (!extractedTerms.empty || !entitiesToMove.empty) {
         def existingUris = []
         work.subject.each {
             if (it[ID]) {
