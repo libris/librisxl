@@ -19,7 +19,7 @@ String termToUri(term) {
 String getIdOfTerm(term) {
     String uri
     selectBySqlWhere("""
-            collection = 'auth' AND data#>>'{@graph,1,@type}' = 'Geographic' AND data#>>'{@graph,1,prefLabel}' = '${term}'
+            collection = 'auth' AND data#>>'{@graph,1,@type}' = 'Geographic' AND data#>>'{@graph,1,prefLabel}' = '${term.capitalize()}'
     """) { doc ->
         uri = doc.graph[1][ID]
     }
@@ -39,7 +39,7 @@ boolean updateReference(work) {
 
         if (subj[TYPE] == COMPLEX_SUBJECT_TYPE && subj['inScheme'] && subj['inScheme'][ID] == SAO_URI
             && subj.termComponentList.any{ it[TYPE] == TEMPSUB_TYPE}
-                && subj.termComponentList.any{ termsToChange.contains(it[PREFLABEL])}) {
+                && subj.termComponentList.any{ termsToChange.contains(it[PREFLABEL]?.toLowerCase())}) {
 
             ListIterator iter = subj.termComponentList.listIterator()
 
@@ -63,9 +63,9 @@ boolean updateReference(work) {
                     String newUri
 
                     if (subj.termComponentList.get(0)[TYPE] == 'Geographic')
-                        newUri = getIdOfTerm(subj.termComponentList.get(0)[PREFLABEL].capitalize())
+                        newUri = getIdOfTerm(subj.termComponentList.get(0)[PREFLABEL])
                     else
-                        newUri = findCanonicalId(termToUri(subj.termComponentList.get(0)[PREFLABEL].capitalize()))
+                        newUri = findCanonicalId(termToUri(subj.termComponentList.get(0)[PREFLABEL]))
 
                     if (newUri) {
                         if (!extractedTerms.contains(newUri))
@@ -135,7 +135,7 @@ boolean updateReference(work) {
 
 //Remove Temporal Subjects 'Medeltiden', 'Forntiden', 'Antiken' and 'Renässansen'
 selectByIds( SUBJECTS_TO_DELETE.keySet() as List ) { auth ->
-    if (SUBJECTS_TO_DELETE[auth.doc.shortId].capitalize() == auth.graph[1]['prefLabel']
+    if (SUBJECTS_TO_DELETE[auth.doc.shortId] == auth.graph[1]['prefLabel'].toLowerCase()
         && auth.graph[1][TYPE] == 'Temporal') {
         scheduledForDeletion.println("${auth.doc.getURI()}")
         auth.scheduleDelete(onError: { e ->
