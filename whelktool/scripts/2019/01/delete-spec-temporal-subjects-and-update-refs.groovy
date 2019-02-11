@@ -38,8 +38,8 @@ boolean updateReference(work) {
         subj = iterSubj.next()
 
         if (subj[TYPE] == COMPLEX_SUBJECT_TYPE && subj['inScheme'] && subj['inScheme'][ID] == SAO_URI
-            && subj.termComponentList.any{ it[TYPE] == TEMPSUB_TYPE} &&
-                subj.termComponentList.any{ termsToChange.contains(it[PREFLABEL])}) {
+            && subj.termComponentList.any{ it[TYPE] == TEMPSUB_TYPE}
+                && subj.termComponentList.any{ termsToChange.contains(it[PREFLABEL])}) {
 
             ListIterator iter = subj.termComponentList.listIterator()
 
