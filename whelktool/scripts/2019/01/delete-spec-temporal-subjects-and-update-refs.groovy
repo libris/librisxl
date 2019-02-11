@@ -145,7 +145,8 @@ selectByIds( SUBJECTS_TO_DELETE.keySet() as List ) { auth ->
 }
 
 selectBySqlWhere('''
-        data::text LIKE '%termComponentList%' AND (data::text LIKE '%medeltiden%' OR data::text LIKE '%antiken%' 
+        collection in ('bib', 'hold') AND data::text LIKE '%termComponentList%' 
+        AND (data::text LIKE '%medeltiden%' OR data::text LIKE '%antiken%' 
         OR data::text LIKE '%forntiden%' OR data::text LIKE '%renässansen%')
     ''') { data ->
 
