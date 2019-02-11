@@ -297,7 +297,7 @@ class ESQuery {
         // TODO This is copied from the old code and should be rewritten.
         // We don't have that many nested mappings, so this is way to general.
         Map groups = queryParameters.groupBy { p -> getPrefixIfExists(p.key) }
-        Map nested = groups.findAll { g -> g.value.size() == 2 }
+        Map nested = getNestedParams(groups)
         List notNested = (groups - nested).collect { it.value }
 
         nested.each { key, vals ->
@@ -325,6 +325,17 @@ class ESQuery {
         } else {
             return key
         }
+    }
+
+    @CompileStatic(TypeCheckingMode.SKIP)
+    private Map getNestedParams(Map groups) {
+        // TODO We hardcode `identifiedBy` here, since that's currently the only
+        // type of search in the client where we need nesting.
+        Map nested = groups.findAll { g ->
+            g.key == 'identifiedBy' &&
+            g.value.size() == 2
+        }
+        return nested
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
