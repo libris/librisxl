@@ -307,7 +307,7 @@ class ESQuery {
         notNested.each { Map m ->
             m.each {k, v ->
                 if (!(k in RESERVED_PARAMS)) {
-                    filters << createBoolFilter(k, v)
+                    filters << createBoolFilter(k, v as String[])
                 }
             }
         }
