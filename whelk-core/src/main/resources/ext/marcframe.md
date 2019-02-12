@@ -25,7 +25,7 @@ There are also certain postprocessing steps which can handle particular fields, 
 
 This is a list of keys in Marcframe which control certain functionality like repetition, grouping, inclusion of patterns etc. 
 
-`about` enables shortforms of more complicated or nested entitites.
+`about` enables shortforms of more complicated or nested entitites. Used with pendingResource.
 
 `aboutAlias` used to include an about form.
 
@@ -33,7 +33,7 @@ This is a list of keys in Marcframe which control certain functionality like rep
 
 `aboutType` -
 
-`addLink` Is used when the entities (classes) are repeatable. If the entity can only occur once use `link`. The repetition of MARC21 fields is stated either in Libris Formathandbok or LC MARC21 specification.
+`addLink` Is used when the entities (classes) are repeatable. If the entity can only occur once use `link`. The repetition of MARC21 fields is stated either in [Libris Formathandbok](https://www.kb.se/katalogisering/Formathandboken) or [LC MARC21 specification](https://www.loc.gov/marc/).
 
 `addProperty`(R) and `property` (NR) is used to define whether a property is repeatable or not.
 
@@ -55,13 +55,13 @@ This is a list of keys in Marcframe which control certain functionality like rep
 
 `splitValueProperties` defines the properties which the separated strings groups should map to. [Example: value, qualifier].
 
- `pendingResource` makes it possible to create an hierarchical structure of entities.
+`pendingResource` makes it possible to create an hierarchical structure of entities.
 
-`required: true` is used for the conversion to MARC21 to know if a field should be conversed if certain subfields are missing. It could also be reversed with `supplementary: true` which tells that the occurence of certain fields is not enough to convert it with a full meaning. [Example: `$a` is often required, `$2` is often supplementary].
+`required: true` is used in the conversion to MARC21. A required subfield is mandatory for the field to convert. If several subfields could be considered useful to surmise meaning but they are not all required, you could instead use the `supplementary: true` for the fields which can not standalone. [Example: `$a` is often required, `$2` is often supplementary].
 
 `resourceType` the entity which is created through the link or addlink.
 
-`spec` used to verify indata and outdata is as expected. Can be specified with `source` (indata) and `normalized` (outdata), if normalize exists it is expecting to look like the source. In the spec we also define how the expect JSON-LD form looks like. If you make several testcases you can name them to let others know if there is a particular scenario or deviation you are testing.
+`spec` used to verify indata and outdata as MARC21 conforms to expected forms. Can be specified with `source` (indata) and `normalized` (outdata), if normalize is absent it is by default expected to look like the incoming MARC21 source. In the spec we also define how our expected JSON-LD form looks like. If you make several testcases you can name them to let others know if there is a particular scenario or deviation you are testing.
 
 `subfieldOrder` used to specify subfield order in conversion to MARC21. If subfield order is absent alphabetical order is applied. [Example: `“a q c z”`].
 
@@ -123,6 +123,8 @@ So in total a 020 mapping could look like this.
 ```
 
 ### Example 2. BIB 100
+
+Match and When shows conditions for mapping depending on indicator value or presence of subfields.
 ```
     "100" : {
       "match": [
@@ -180,12 +182,13 @@ So in total a 020 mapping could look like this.
     }
 ```
 
+
 ## Sources for mapping
 
 
 - [BIBFRAME 2 conversion specifications](https://www.loc.gov/bibframe/)
 - [Libris Formathandbok](https://www.kb.se/katalogisering/Formathandboken)
-- [LC:s MARC21 specification](https://www.loc.gov/marc/)
+- [LC MARC21 specification](https://www.loc.gov/marc/)
 - [OCLC](https://www.oclc.org/bibformats/en.html)
 - Translations and configuration files from old Libris systems.
 - Statistics about field occurence.
