@@ -26,6 +26,45 @@ String getIdOfTerm(term) {
     return uri
 }
 
+List extractRemainingTerm(termComponentList) {
+    List listOfEntities = []
+    if (termComponentList.get(0)[ID]) {
+        listOfEntities << termComponentList.get(0)[ID]
+    } else if (termComponentList.get(0)[PREFLABEL]) {
+        String newUri
+
+        if (termComponentList.get(0)[TYPE] == 'Geographic')
+            newUri = getIdOfTerm(termComponentList.get(0)[PREFLABEL])
+        else
+            newUri = findCanonicalId(termToUri(termComponentList.get(0)[PREFLABEL]))
+
+        if (newUri)
+            listOfEntities << newUri
+    }
+    return listOfEntities
+}
+
+void setPrefLabelAndSameAs(subj) {
+    def prefLabelTerms = []
+
+    subj.termComponentList.each {
+        if (it[ID]) {
+            doc = load(it[ID])
+            if (doc && doc[GRAPH][1].containsKey(PREFLABEL)) {
+                prefLabelTerms << doc[GRAPH][1].prefLabel
+            }
+        } else if (it[PREFLABEL]) {
+            prefLabelTerms << it[PREFLABEL]
+        }
+    }
+    if (subj.prefLabel) {
+        subj.prefLabel = prefLabelTerms.join("--")
+    }
+    if (subj['sameAs']) {
+        subj['sameAs'].get(0)[ID] = termToUri(prefLabelTerms.join("--"))
+    }
+}
+
 boolean updateReference(work) {
     def extractedTerms = []
     def entitiesToMove = []
@@ -55,57 +94,32 @@ boolean updateReference(work) {
 
             //Extract remaining entity in ComplexSubject, if only one remains
             if (subj.termComponentList.size() == 1) {
-                if (subj.termComponentList.get(0)[ID]) {
-                    if (!extractedTerms.contains(subj.termComponentList.get(0)[ID])) {
-                        extractedTerms << subj.termComponentList.get(0)[ID]
+                def termsToMove = extractRemainingTerm(subj.termComponentList)
+                if(termsToMove) {
+                    termsToMove.each {
+                        if (!extractedTerms.contains(it)) {
+                            extractedTerms << it
+                        }
                     }
                 } else if (subj.termComponentList.get(0)[PREFLABEL]) {
-                    String newUri
+                    //Special treatment of geographical local subjects which shall be able to export to bib 651.
+                    //Otherwise follow convert to label to be able to export to bib 653
+                    String keyLabel = 'label'
+                    if (subj.termComponentList.get(0)[TYPE] == 'Geographic') { keyLabel = 'prefLabel' }
 
-                    if (subj.termComponentList.get(0)[TYPE] == 'Geographic')
-                        newUri = getIdOfTerm(subj.termComponentList.get(0)[PREFLABEL])
-                    else
-                        newUri = findCanonicalId(termToUri(subj.termComponentList.get(0)[PREFLABEL]))
-
-                    if (newUri) {
-                        if (!extractedTerms.contains(newUri))
-                            extractedTerms << newUri
-                    } else {
-                        //Special treatment of geographical local subjects which shall be able to export to bib 651.
-                        //Otherwise follow convert to label to be able to export to bib 653
-                        String keyLabel = 'label'
-                        if (subj.termComponentList.get(0)[TYPE] == 'Geographic') { keyLabel = 'prefLabel' }
-
-                        if (entitiesToMove.empty || entitiesToMove.any{ it[TYPE] != subj.termComponentList.get(0)[TYPE] &&
-                                it[keyLabel] != subj.termComponentList.get(0)[PREFLABEL].capitalize()}) {
-                            entitiesToMove << [(TYPE): subj.termComponentList.get(0)[TYPE],
-                                               (keyLabel): subj.termComponentList.get(0)[PREFLABEL].capitalize()]
-                        }
+                    if (entitiesToMove.empty || entitiesToMove.any{ it[TYPE] != subj.termComponentList.get(0)[TYPE] &&
+                            it[keyLabel] != subj.termComponentList.get(0)[PREFLABEL].capitalize()}) {
+                        entitiesToMove << [(TYPE): subj.termComponentList.get(0)[TYPE],
+                                           (keyLabel): subj.termComponentList.get(0)[PREFLABEL].capitalize()]
                     }
                 } else {
                     entitiesToMove << subj.termComponentList.get(0)
                 }
+
                 iterSubj.remove()
             } else {
                 // Update existing prefLabel and sameAs uri of ComplexSubject
-                def prefLabelTerms = []
-
-                subj.termComponentList.each {
-                    if (it[ID]) {
-                        doc = load(it[ID])
-                        if (doc && doc[GRAPH][1].containsKey(PREFLABEL)) {
-                            prefLabelTerms << doc[GRAPH][1].prefLabel
-                        }
-                    } else if (it[PREFLABEL]) {
-                        prefLabelTerms << it[PREFLABEL]
-                    }
-                }
-                if (subj.prefLabel) {
-                    subj.prefLabel = prefLabelTerms.join("--")
-                }
-                if (subj['sameAs']) {
-                    subj['sameAs'].get(0)[ID] = termToUri(prefLabelTerms.join("--"))
-                }
+                setPrefLabelAndSameAs(subj)
             }
         }
     }
@@ -118,13 +132,13 @@ boolean updateReference(work) {
                 existingUris << it[ID]
             }
         }
-        if (extractedTerms.size()) {
+        if (!extractedTerms.empty) {
             extractedTerms.each {
                 if (!existingUris.contains(it))
                     work.subject << [(ID): it]
             }
         }
-        if (entitiesToMove.size()) {
+        if (!entitiesToMove.empty) {
             entitiesToMove.each {
                 work.subject << it
             }
