@@ -1,11 +1,11 @@
 # MARCFRAME
 
-> The purpose of this document is for developers and others who need to understand the mechanisms of MARCFRAME, the configuration file which handles conversion of MARC21 to JSON-LD and the roundtrip JSON-LD to MARC21. The context is the Libris implementation of MARC21, hence the documentation is in Swedish. 
+> The purpose of this document is for developers and others who need to understand the mechanisms of MARCFRAME, the configuration file which handles conversion of MARC21 to JSON-LD and the roundtrip JSON-LD to MARC21. The context is the Libris implementation of MARC21.
 
-## Struktur
-Marcframe är uppbyggd med tre huvudsakliga sektioner. Därutöver även en introducerande del som behandlar återkommande mappningsmönster (patterns) och koppling av koder till termer.
+## Structure
 
-De tre huvudsektionerna kommer ur tre olika MARC21 format. Bibliografiska formatet, Auktoritetsformatet och Beståndsformatet. 
+Marcframe is comprised of mainly three sections which represents three different MARC21 formats, bibliographic, authority and holdings. In addition there is an introductory part which contains reusable patterns mappings of codes to terms.
+
 
 ```
 {
@@ -15,61 +15,59 @@ De tre huvudsektionerna kommer ur tre olika MARC21 format. Bibliografiska format
 }
 ```
 
-För varje sektion finns en kronologisk mappning av förekommande fält och delfält 000-999 till egenskaper och klasser som definieras antingen i vårt vokabulär KBV eller den grupp termer som får ett marc prefix.
+For each section there is a chronological mapping of the fields 000-999 and their subfields to properties and classes which are definied either in the kbv: vocabulary or the group of terms which get a marc: prefix. Marc terms are used where the conversion do not fit in a Bibframe 2 form or the usage has in other ways been ambiguous.
 
-Marc termer får fält eller delfält där konvertering inte passar in i en BF2 form eller att behovet på något sätt är oklart eller att datan är tvetydig i förhållande till fältets betydelse.
+The most common reason for a marc-prefix is LC combining two fields so it is not possible to separate the data making a reconversion impossible, or that they haven't made any attempts to code the information either with nac - no attempt to code, or ignore for things which have no meaning outside MARC21.
 
-Den vanligaste anledningen till marc-prefix är antingen att LC har slagit ihop fält så att de vid en återkonvertering inte går att separeras igen eller att de helt enkelt valt att inte försöka tolka (nac - no attempt to code, eller med en ignore för saker som inte har betydelse utanför MARC21).
+There are also certain postprocessing steps which can handle particular fields, for example date/year which needs to be exported to several fields (E.g. 008 + 264) depending on how they are formatted.
 
-Utöver ovanstående mappningar och mönster finns även postprocessing-steg. Dessa hanterar exempelvis datum/årsangivelse som behöver exporteras till flera fält (ex 008 och 264).
+## Syntax in MARCFRAME
 
-## Syntax i MARCFRAME
+This is a list of keys in Marcframe which control certain functionality like repetition, grouping, inclusion of patterns etc. 
 
-Det finns ett antal funktioner i MARCFRAME som är bra att känna till för de styr funktionalitet som repetition, inkludering av mönster osv. OBS! Dessa exempel är endast för illustration och är inte uppdaterade med aktuell mappning.
+`about` enables shortforms of more complicated or nested entitites.
 
-`about` gör att vi kan skapa kortformer av mer komplicerade eller nästlade entiteter.
+`aboutAlias` used to include an about form.
 
-`aboutAlias` används för att inkludera en about form.
+`aboutEntity` Defines which entity the property is a part of, **thing** means instance in bibliographic data.
 
-`aboutEntity` Talar om vilket ting egenskapen sitter på, **thing** åsyftar instansen i bibliografisk data.
+`aboutType` -
 
-`aboutType` ???
+`addLink` Is used when the entities (classes) are repeatable. If the entity can only occur once use `link`. The repetition of MARC21 fields is stated either in Libris Formathandbok or LC MARC21 specification.
 
-`addLink` Talar om att den kan innehålla repeterande entiteter i det här fallet är repeterbar. Om entiteten endast ska kunna förekomma en gång används `link`. Huruvida ett MARC21 fält är repeterbart eller inte finns angivet i Formathandboken och LoC MARC21 specifikationen. 
+`addProperty`(R) and `property` (NR) is used to define whether a property is repeatable or not.
 
-`addProperty`(R) och `property` (NR) används för att tala om repeterbarhet för egenskaper.
+`embedded` could be set to *true* which means that the entity is a so called structured value and it's value is always embedded locally to the graph and not linked to. In RDF also known as a b-node. The most common types is titles, identifiers and notes.
 
-`embedded` kan vara satt till *true* betyder att entiteten är ett sk strukturerat värde dvs att den bäddas in lokalt i posten utan att länkas till. Den typen av datastruktur kallas i RDF B-noder. De vanligaste typerna av embedded är Titlar, Identifikatorer och Anmärkningar.
+`include` includes the pattern which match the value.
 
-`include` inkluderar det mönster som matchar värdet.
+`inherit` creates an inheritance from the specified field.
 
-`inherit` skapar arv från angivet fält.
+`link` see addLink.
 
-`link` se addLink.
+`match` used for matching values in indicator or occurence of fields with a `when` construction. [See exemple 2, which illustrates matching the right type of agent or work in the **$100** field]
 
-`match` används för att matcha värden i indikatorer eller förekomst av delfält med en `when` konstruktion. Exempel 2. illustrerar att mappa rätt typ av agent eller verk i **$100** fältet beroende på vilken grupp som har det matchande värdet.
+`property` see addProperty.
 
-`property` se addProperty.
+`punctuationChars` states the interpunctuation which is stripped away and restored to the string/subfield in the conversion.
 
-`punctuationChars` talar om att vilken interpunktion som bör tas bort och läggas åter i delfältet.
+`splitValuePattern` the regexp pattern used to separate strings into properties. [Example: identifier with trailing qualifier].
 
-`splitValuePattern` med ett regexp för att i särskilda delfält kunna slita itu textsträngar, Exempel identifikatorer med efterföljande kvalifikatorer.
+`splitValueProperties` defines the properties which the separated strings groups should map to. [Example: value, qualifier].
 
-`splitValueProperties` talar om vilka egenskaper de två separerade grupperna ska hamna i. Exempel value, qualifier.
+ `pendingResource` makes it possible to create an hierarchical structure of entities.
 
- `pendingResource` ger möjlighet att skapa en hierarkisk struktur av entiteter. 
+`required: true` is used for the conversion to MARC21 to know if a field should be conversed if certain subfields are missing. It could also be reversed with `supplementary: true` which tells that the occurence of certain fields is not enough to convert it with a full meaning. [Example: `$a` is often required, `$2` is often supplementary].
 
-`required: true` används för att tala om att ett fält inte ska konverteras till MARC21 om detta fält saknas. Man kan också med `supplementary: true` tala om att endast förekomsten av detta fält inte är tillräckligt för konvertering om det finns flera som kan anses required.
+`resourceType` the entity which is created through the link or addlink.
 
-`resourceType` den entitet som ska skapas vid en addlink eller link.
+`spec` used to verify indata and outdata is as expected. Can be specified with `source` (indata) and `normalized` (outdata), if normalize exists it is expecting to look like the source. In the spec we also define how the expect JSON-LD form looks like. If you make several testcases you can name them to let others know if there is a particular scenario or deviation you are testing.
 
-`spec` används för att verifiera att indata och utdata är som vi förväntar oss finns sedan en spec som visar hur datan ser ut i `source` (indata) och `normalized` (utdata) dvs på utvägen, samt hur JSON-LD formen ska bli. Finns inte normalized med så ska utdatat vara detsamma som indatat, dvs source. Man kan också använda name för att namnge vad som testas.
+`subfieldOrder` used to specify subfield order in conversion to MARC21. If subfield order is absent alphabetical order is applied. [Example: `“a q c z”`].
 
-`subfieldOrder` används för specificera fältordning vid konvertering till MARC21. Exempel `“a q c z”`. Om subfieldorder inte finns så tillämpas alfabetisk ordning.
+`when` see match.
 
-`when` se match.
-
-### Exempel 1. BIB 020
+### Example 1. BIB 020
 ```
     "020": {
       "include": ["identifier"],
@@ -80,7 +78,7 @@ Det finns ett antal funktioner i MARCFRAME som är bra att känna till för de s
       "subfieldOrder": "a q c z"
      }
 ```
-För **020** så finns en `include` vilket betyder att den hämtar ett mönster från nyckeln `“identifier”`
+For **020** there is an `include` which means it picks the pattern from the value `“identifier”`.
 ```
     "identifier": {
       "include": ["idbase"],
@@ -94,7 +92,7 @@ För **020** så finns en `include` vilket betyder att den hämtar ett mönster 
       "$z": {"addProperty": "marc:hiddenValue"}
     },
 ```
-För identifier kan man även se att den inkluderar en idbase,
+For identifier you can also see it includes an idbase.
 ```
     "idbase": {
       "aboutEntity": "?thing",
@@ -102,7 +100,7 @@ För identifier kan man även se att den inkluderar en idbase,
       "embedded": true
     },
 ```
-Så sammantaget ser en 020 mappning ut såhär
+So in total a 020 mapping could look like this.
 ```
     "020": {
       "aboutEntity": "?thing",
@@ -124,7 +122,7 @@ Så sammantaget ser en 020 mappning ut såhär
 }
 ```
 
-### Exempel 2. BIB 100
+### Example 2. BIB 100
 ```
     "100" : {
       "match": [
@@ -182,25 +180,24 @@ Så sammantaget ser en 020 mappning ut såhär
     }
 ```
 
-## Källor för mappning
+## Sources for mapping
 
-Informerande i mappningsarbetet har varit följande källor:
 
-- [BIBFRAME 2 konverteringsspecifikationer](https://www.loc.gov/bibframe/)
+- [BIBFRAME 2 conversion specifications](https://www.loc.gov/bibframe/)
 - [Libris Formathandbok](https://www.kb.se/katalogisering/Formathandboken)
-- [LC:s MARC21 specifikation](https://www.loc.gov/marc/)
+- [LC:s MARC21 specification](https://www.loc.gov/marc/)
 - [OCLC](https://www.oclc.org/bibformats/en.html)
-- Översättningar och konfigurationsfiler från gamla Libris system.
-- Statistik över fältförekomst.
+- Translations and configuration files from old Libris systems.
+- Statistics about field occurence.
 
-I MARCFRAME kan det förekomma anmärkningar från dessa källor.
+In Marcframe there also occurs notes for these.
 
-| Anmärkning | Beskrivning |
+| Note | Description |
 | --- | --- |
-| NOTE: | Generell anmärkning. |
-| NOTE:local | Om användning från Libris formathandbok. |
-| NOTE:LC | Anmärkning som rör Library of Congress MARC specifikation eller BF2 mappning. |
-| NOTE:OCLC | OCLC definierade fält som kan förekomma i importerade poster. |
+| NOTE: | General note. |
+| NOTE:local | About local use from Libris formathandbok. |
+| NOTE:LC | Note concerning Library of Congress MARC specification or BF2 mappning. |
+| NOTE:OCLC | OCLC defined fields which commonly occurs in imported records. |
 
 
 
