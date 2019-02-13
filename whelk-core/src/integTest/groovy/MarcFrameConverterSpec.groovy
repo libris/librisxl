@@ -145,15 +145,15 @@ class MarcFrameConverterSpec extends Specification {
         def result = converter.conversion.revert(jsonld)
 
         def source = fieldSpec.normalized ?: fieldSpec.source
-
-        def expected = fieldSpec.tag == '000'
-                ? [leader: source.leader]
-                : deepcopy(marcSkeletons[marcType])
+        def expected = deepcopy(marcSkeletons[marcType])
 
         if (source instanceof List) {
             expected.fields += source
             expected.fields.sort { fld -> fld.keySet()[0] }
         } else if (source.fields) {
+            if (source.leader) {
+                expected['leader'] = source.leader
+            }
             expected.fields = source.fields
         } else {
             expected.fields << source
