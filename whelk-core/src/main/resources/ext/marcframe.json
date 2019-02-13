@@ -2494,7 +2494,8 @@
           "TODO:about": "_:otherInstance",
           "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsFrequencyType-{_}",
-          "matchUriToken": "^[_abcdefghijkmqstw]$"
+          "matchUriToken": "^[abcdefghijkmqstwz]$",
+          "fixedDefault": "u"
         },
         "[2]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
@@ -3481,7 +3482,9 @@
         "[18]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
           "addLink": "frequency",
-          "uriTemplate": "https://id.kb.se/marc/SerialsFrequencyType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SerialsFrequencyType-{_}",
+          "matchUriToken": "^[abcdefghijkmqstwz]$",
+          "fixedDefault": "u"
         },
         "[19]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
@@ -3598,6 +3601,61 @@
                 "genreForm": [{"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
                               {"@id": "https://id.kb.se/marc/BooksBiographyType-a"}
                 ]
+              }
+            }
+          }
+        },
+        {
+          "name": "export fixedDefault in the absence of frequency in series",
+          "source": {
+            "leader": "     cas a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123d1898    enk ||p|||||||0   ||   | "}]
+          },
+          "normalized": {
+            "leader": "     cas a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123d1898    enku||p|||||||0   ||   | "}]
+          },
+          "result": {
+            "created": "2017-11-23T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Serial",
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [{ "@id": "https://id.kb.se/country/enk" }],
+                "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
+                "year": "1898"
+              },
+              "instanceOf": {
+                "@type": "Text",
+                "genreForm": [{ "@id" : "https://id.kb.se/marc/SerialsTypeOfSerialType-p" }]
+              }
+            }
+          }
+        },
+        {
+          "name": "create uri for frequency in series and export to the same token",
+          "source": {
+            "leader": "     cas a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123d1898    enkz||p|||||||0   ||   | "}]
+          },
+          "result": {
+            "created": "2017-11-23T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Serial",
+              "frequency": [{ "@id": "https://id.kb.se/marc/SerialsFrequencyType-z" }],
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [{ "@id": "https://id.kb.se/country/enk" }],
+                "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
+                "year": "1898"
+              },
+              "instanceOf": {
+                "@type": "Text",
+                "genreForm": [{ "@id" : "https://id.kb.se/marc/SerialsTypeOfSerialType-p" }]
               }
             }
           }
