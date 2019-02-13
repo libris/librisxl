@@ -28,9 +28,10 @@ class ESQuerySpec extends Specification {
         es.getPaginationParams(params) == result
         where:
         params                                        | result
-        ['foo': ['bar']]                              | new Tuple2(0, 0)
+        // Default limit is 50
+        ['foo': ['bar']]                              | new Tuple2(50, 0)
         ['_limit': ['100']]                           | new Tuple2(100, 0)
-        ['_offset': ['10']]                           | new Tuple2(0, 10)
+        ['_offset': ['10']]                           | new Tuple2(50, 10)
         ['_limit': ['100', '200'], '_offset': ['10']] | new Tuple2(100, 10)
     }
 
