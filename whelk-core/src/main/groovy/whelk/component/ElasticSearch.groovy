@@ -27,7 +27,6 @@ class ElasticSearch {
         LongTermHttpConnection connection
     }
 
-    static final int DEFAULT_PAGE_SIZE = 50
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
     static final int CONNECTION_POOL_SIZE = 9
 

@@ -16,6 +16,7 @@ class ESQuery {
     private JsonLd jsonld
     private Set keywordFields
     private static final ObjectMapper mapper = new ObjectMapper()
+    private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
         'q', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri'
     ]
@@ -97,7 +98,7 @@ class ESQuery {
             ]
         ]
 
-        if (limit) {
+        if (limit >= 0) {
             query['size'] = limit
         }
 
@@ -199,7 +200,7 @@ class ESQuery {
      *
      */
     public Tuple2<Integer, Integer> getPaginationParams(Map<String, String[]> queryParameters) {
-        int limit = 0
+        int limit = DEFAULT_PAGE_SIZE
         int offset = 0
         if ('_limit' in queryParameters) {
             String lim = queryParameters.get('_limit')[0]
