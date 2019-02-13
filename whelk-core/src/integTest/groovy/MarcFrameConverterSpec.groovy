@@ -87,12 +87,13 @@ class MarcFrameConverterSpec extends Specification {
     def "should convert field spec for #fieldSpec.marcType #fieldSpec.tag (#fieldSpec.name) [#fieldSpec.i]"() {
         given:
         def marcType = fieldSpec.marcType
-        def marc = fieldSpec.tag == '000'
-                ? [leader: fieldSpec.source.leader]
-                : deepcopy(marcSkeletons[marcType])
+        def marc = deepcopy(marcSkeletons[marcType])
         if (fieldSpec.source instanceof List) {
             marc.fields += fieldSpec.source
         } else if (fieldSpec.source.fields) {
+            if (fieldSpec.source.leader) {
+                marc.leader = fieldSpec.source.leader
+            }
             marc.fields = fieldSpec.source.fields
         } else {
             marc.fields << fieldSpec.source
