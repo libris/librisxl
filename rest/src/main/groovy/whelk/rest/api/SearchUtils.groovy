@@ -174,6 +174,13 @@ class SearchUtils {
         String sortBy = pageParams['_sort']
         log.debug("Querying ElasticSearch")
 
+        // SearcUtils may overwrite the `_limit` query param, and since it's
+        // used for the other searches we overwrite limit here, so we keep it
+        // consistent across search paths
+        //
+        // TODO Only manipulate `_limit` in one place
+        queryParameters['_limit'] = [limit.toString()]
+
         Map esResult = esQuery.doQuery(queryParameters, dataset)
 
         Map stats = null
