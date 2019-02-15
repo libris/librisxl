@@ -26,10 +26,9 @@ String getIdOfTerm(term) {
     return uri
 }
 
-List extractRemainingTerm(termComponentList) {
-    List listOfEntities = []
+String extractRemainingTerm(termComponentList) {
     if (termComponentList.get(0)[ID]) {
-        listOfEntities << termComponentList.get(0)[ID]
+        return termComponentList.get(0)[ID]
     } else if (termComponentList.get(0)[PREFLABEL]) {
         String newUri
 
@@ -39,9 +38,9 @@ List extractRemainingTerm(termComponentList) {
             newUri = findCanonicalId(termToUri(termComponentList.get(0)[PREFLABEL]))
 
         if (newUri)
-            listOfEntities << newUri
+            return newUri
     }
-    return listOfEntities
+    return
 }
 
 void setPrefLabelAndSameAs(subj) {
@@ -94,16 +93,12 @@ boolean updateReference(work) {
 
             //Extract remaining entity in ComplexSubject, if only one remains
             if (subj.termComponentList.size() == 1) {
-                def termsToMove = extractRemainingTerm(subj.termComponentList)
-                if(termsToMove) {
-                    termsToMove.each {
-                        if (!extractedTerms.contains(it)) {
-                            extractedTerms << it
-                        }
-                    }
+                def termToMove = extractRemainingTerm(subj.termComponentList)
+                if(termToMove) {
+                    if (!extractedTerms.contains(termToMove)) { extractedTerms << termToMove }
                 } else if (subj.termComponentList.get(0)[PREFLABEL]) {
                     //Special treatment of geographical local subjects which shall be able to export to bib 651.
-                    //Otherwise follow convert to label to be able to export to bib 653
+                    //Otherwise convert to label to be able to export to bib 653
                     String keyLabel = 'label'
                     if (subj.termComponentList.get(0)[TYPE] == 'Geographic') { keyLabel = 'prefLabel' }
 
