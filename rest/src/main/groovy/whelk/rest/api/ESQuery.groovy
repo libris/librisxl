@@ -358,9 +358,17 @@ class ESQuery {
      * Public for test only - don't call outside this class!
      *
      */
+    @CompileStatic(TypeCheckingMode.SKIP)
     public Map createBoolFilter(String field, String[] vals) {
-        // TODO Should we have `minimum_should_match` here?
-        return ['terms': [(field): vals]]
+        List clauses = []
+        for (val in vals) {
+            clauses.add(['simple_query_string': [
+                'query': val,
+                'fields': [field],
+                'default_operator': 'AND'
+            ]])
+        }
+        return ['bool': ['should': clauses]]
     }
 
     /**
