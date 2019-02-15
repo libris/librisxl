@@ -50,7 +50,7 @@ class WhelkTool {
 
     boolean allowLoud
 
-    private boolean errorDetected
+    private Throwable errorDetected
 
     private def jsonWriter = new ObjectMapper().writerWithDefaultPrettyPrinter()
 
@@ -249,13 +249,12 @@ class WhelkTool {
                 if (executorService) {
                     executorService.submit {
                         if (!processBatch(process, batchToProcess, counter)) {
-                            errorDetected = true
                             executorService.shutdownNow()
                         }
                     }
                 } else {
                     if (!processBatch(process, batchToProcess, counter)) {
-                        errorDetected = true
+                        log "Aborted selection: ${counter.summary}. Done in ${counter.elapsedSeconds} s."
                         return
                     }
                 }
@@ -306,6 +305,7 @@ class WhelkTool {
                 err.printStackTrace errorLog
                 errorLog.println "-" * 20
                 errorLog.flush()
+                errorDetected = err
                 return false
             }
             if (!doContinue) {
@@ -327,6 +327,9 @@ class WhelkTool {
         counter.countProcessed()
         process(item)
         if (item.needsSaving) {
+            if (item.loud) {
+                assert allowLoud : "Loud changes need to be explicitly allowed"
+            }
             if (item.restoreToTime != null) {
                 if (!doRevertToTime(item))
                     return true
@@ -356,7 +359,7 @@ class WhelkTool {
 
     private void doDeletion(DocumentItem item) {
         if (!dryRun) {
-            whelk.storage.remove(item.doc.shortId, changedIn, scriptJobUri)
+            whelk.remove(item.doc.shortId, changedIn, scriptJobUri)
         }
     }
 
@@ -403,13 +406,10 @@ class WhelkTool {
 
     private void doModification(DocumentItem item) {
         Document doc = item.doc
-        if (item.loud) {
-            assert allowLoud : "Loud changes need to be explicitly allowed"
-        }
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            whelk.storage.storeAtomicUpdate(doc.shortId, !item.loud, changedIn, scriptJobUri, {
+            whelk.storeAtomicUpdate(doc.shortId, !item.loud, changedIn, scriptJobUri, {
                 it.data = doc.data
             })
         }

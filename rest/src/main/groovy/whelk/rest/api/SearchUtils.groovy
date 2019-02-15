@@ -6,6 +6,7 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Location
 import whelk.Whelk
+import whelk.rest.api.ESQuery
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.component.StorageType
@@ -29,11 +30,13 @@ class SearchUtils {
 
     Whelk whelk
     JsonLd ld
+    ESQuery esQuery
     URI vocabUri
 
     SearchUtils(Whelk whelk) {
         this(whelk.jsonld)
         this.whelk = whelk
+        this.esQuery = new ESQuery(whelk)
     }
 
     SearchUtils(JsonLd jsonld) {
@@ -171,33 +174,14 @@ class SearchUtils {
         String sortBy = pageParams['_sort']
         log.debug("Querying ElasticSearch")
 
-        // Filter out all @types that have (more specific) subclasses that are also in the list
-        // So for example [Instance, Electronic] should be reduced to just [Electronic].
-        // Afterwards, include all subclasses of the remaining @types
-        String[] types = queryParameters.get('@type')
-        if (types != null) {
-            // Select types to prune
-            Set<String> toBeRemoved = []
-            for (String c1 : types) {
-                ArrayList<String> c1SuperClasses = []
-                jsonld.getSuperClasses(c1, c1SuperClasses)
-                toBeRemoved.addAll(c1SuperClasses)
-            }
-            // Make a new pruned list without the undesired superclasses
-            List<String> prunedTypes = []
-            for (String type : types) {
-                if (!toBeRemoved.contains(type))
-                    prunedTypes.add(type)
-            }
-            // Add all subclasses of the remaining types
-            ArrayList<String> subClasses = []
-            for (String type : prunedTypes) {
-                jsonld.getSubClasses(type, subClasses)
-                subClasses.add(type)
-            }
+        // SearcUtils may overwrite the `_limit` query param, and since it's
+        // used for the other searches we overwrite limit here, so we keep it
+        // consistent across search paths
+        //
+        // TODO Only manipulate `_limit` in one place
+        queryParameters['_limit'] = [limit.toString()]
 
-            queryParameters.put('@type', (String[]) subClasses.toArray())
-        }
+        Map esResult = esQuery.doQuery(queryParameters, dataset)
 
         Map stats = null
         List mappings = []
@@ -205,33 +189,9 @@ class SearchUtils {
                      'predicate': ld.toChip(getVocabEntry('textQuery')),
                      'value': query]
 
-        def dslQuery = ElasticSearch.createJsonDsl(queryParameters,
-                                                   limit, offset, sortBy)
-
-        // If there was an @type parameter, all subclasses of that type were added as well,
-        // let's clean that up and "hide" it from the caller.
-        if (types != null) {
-            queryParameters.put('@type', types)
-        }
-
         Tuple2 mappingsAndPageParams = mapParams(queryParameters)
         mappings.addAll(mappingsAndPageParams.first)
         pageParams << mappingsAndPageParams.second
-
-        if (siteBaseUri) {
-            dslQuery['query']['bool'] << makeSiteFilter(siteBaseUri)
-        }
-
-        // TODO: statsTree may depend on site ({id,libris}.kb.se)
-        String[] statsRepr = queryParameters.get('_statsrepr')
-        Map statsTree = statsRepr ? JsonLd.mapper.readValue(statsRepr[0], Map)
-                        : [(JsonLd.TYPE_KEY): []]
-
-        if (statsTree) {
-            dslQuery['aggs'] = buildAggQuery(statsTree)
-        }
-
-        Map esResult = whelk.elastic.query(dslQuery, dataset)
 
         int total = 0
         if (esResult['totalHits']) {
@@ -244,12 +204,10 @@ class SearchUtils {
         }
 
         //items = embellishItems(items)
-        if (statsTree) {
-            stats = buildStats(esResult['aggregations'],
-                               makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)))
-            if (!stats) {
-                log.debug("No stats found for query: ${dslQuery}, result: ${esResult}")
-            }
+        stats = buildStats(esResult['aggregations'],
+                           makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)))
+        if (!stats) {
+            log.debug("No stats found for query: ${queryParameters}, result: ${esResult}")
         }
 
         mappings.tail().each { mapping ->

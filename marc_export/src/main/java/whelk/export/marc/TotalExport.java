@@ -17,6 +17,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.*;
 import java.util.*;
 
@@ -51,13 +53,10 @@ public class TotalExport
     public static void main(String[] args)
             throws IOException, SQLException, InterruptedException
     {
-        if (args.length != 3)
+        if (args.length != 2 && args.length != 3)
             printUsageAndExit();
 
         ExportProfile profile = new ExportProfile(new File(args[0]));
-        long size = Long.parseLong(args[1]);
-        long segment = Long.parseLong(args[2]);
-
         String encoding = profile.getProperty("characterencoding");
         if (encoding.equals("Latin1Strip")) {
             encoding = "ISO-8859-1";
@@ -68,15 +67,30 @@ public class TotalExport
         else
             output = new Iso2709MarcRecordWriter(System.out, encoding);
 
-        new TotalExport(Whelk.createLoadedCoreWhelk()).dump(profile, size, segment, output);
+        if (args.length == 2)
+        {
+            Path idFilePath = new File(args[1]).toPath();
+            new TotalExport(Whelk.createLoadedCoreWhelk()).dumpSpecific(profile, idFilePath, output);
+        } else if (args.length == 3)
+        {
+            long size = Long.parseLong(args[1]);
+            long segment = Long.parseLong(args[2]);
+
+            new TotalExport(Whelk.createLoadedCoreWhelk()).dump(profile, size, segment, output);
+        }
         output.close();
     }
 
     private static void printUsageAndExit()
     {
-        System.out.println("Usage: java -Dxl.secret.properties=SECRETPROPSFILE -jar marc_export.jar PROFILE-FILE SEGMENT-SIZE SEGMENT");
+        System.out.println("Usage:");
+        System.out.println("");
+        System.out.println("  java -Dxl.secret.properties=SECRETPROPSFILE -jar marc_export.jar PROFILE-FILE ID-FILE");
+        System.out.println("or");
+        System.out.println("  java -Dxl.secret.properties=SECRETPROPSFILE -jar marc_export.jar PROFILE-FILE SEGMENT-SIZE SEGMENT");
         System.out.println("");
         System.out.println("   PROFILE-FILE should be a Java-properties file with the export-profile settings.");
+        System.out.println("   ID-FILE should be a file with IDs to export, containing one URI per row.");
         System.out.println("   SEGMENT-SIZE is the number of records to dump in each segment.");
         System.out.println("   SEGMENT is the number of the segment to be dumped.");
         System.out.println("");
@@ -116,6 +130,33 @@ public class TotalExport
             if (!batch.bibUrisToConvert.isEmpty())
                 threadPool.executeOnThread(batch, this::executeBatch);
         }
+
+        threadPool.joinAll();
+    }
+
+    private void dumpSpecific(ExportProfile profile, Path idFilePath, MarcRecordWriter output)
+            throws IOException, InterruptedException
+    {
+        ThreadPool threadPool = new ThreadPool(4 * Runtime.getRuntime().availableProcessors());
+        Batch batch = new Batch(profile, output);
+
+        List<String> ids = Files.readAllLines(idFilePath);
+
+        for (String id : ids)
+        {
+            if (exportedUris.contains(id))
+                return;
+            exportedUris.add(id);
+            batch.bibUrisToConvert.add(id);
+
+            if (batch.bibUrisToConvert.size() >= BATCH_SIZE)
+            {
+                threadPool.executeOnThread(batch, this::executeBatch);
+                batch = new Batch(profile, output);
+            }
+        }
+        if (!batch.bibUrisToConvert.isEmpty())
+            threadPool.executeOnThread(batch, this::executeBatch);
 
         threadPool.joinAll();
     }

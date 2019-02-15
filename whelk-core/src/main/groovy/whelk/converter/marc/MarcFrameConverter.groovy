@@ -2226,7 +2226,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             useEntities.each {
                 def (boolean requiredOk, Map aboutMap) = buildAboutMap(pendingResources, pendingKeys, it, aboutAlias)
                 if (requiredOk) {
-                    def field = revertOne(state, data, topEntity, it, aboutMap, usedMatchRules)
+                    def field = revertOne(state, data, topEntity, it, aboutMap, usedMatchRules, useLink.groupId ?: this.groupId)
                     if (field) {
                         if (useLink.subfield) {
                             field.subfields.add(0, useLink.subfield)
@@ -2242,7 +2242,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     @CompileStatic(SKIP)
     def revertOne(Map state, Map data, Map topEntity, Map currentEntity, Map<String, List> aboutMap = null,
-                    List<MatchRule> usedMatchRules) {
+                    List<MatchRule> usedMatchRules, String groupId) {
         if (usedMatchRules.any { !it.acceptRevert(currentEntity) }) {
             return null
         }
@@ -2252,6 +2252,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def subs = []
         def failedRequired = false
+        def onlySupplementary = true
 
         def usedEntities = new HashSet()
 
@@ -2373,11 +2374,16 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                         }
                     }
                 }
-                if (justAdded) prevAdded = justAdded
+                if (justAdded) {
+                    if (subhandler.supplementary != true) {
+                        onlySupplementary = false
+                    }
+                    prevAdded = justAdded
+                }
             }
         }
 
-        if (!failedRequired && i1 != null && i2 != null && subs.size()) {
+        if (!failedRequired && i1 != null && i2 != null && subs.size() && !onlySupplementary) {
             if (sortedByItemPos.size()) {
                 int relPosStart = subs.indexOf(firstRelPosSubfield)
                 subs.sort {
@@ -2448,6 +2454,7 @@ class MarcSubFieldHandler extends ConversionPart {
     String definedElsewhereToken
     String marcDefault
     boolean required = false
+    boolean supplementary = false
     String requiresI1
     String requiresI2
     // TODO: itemPos is not used right now. Only supports first/rest.
@@ -2510,6 +2517,9 @@ class MarcSubFieldHandler extends ConversionPart {
         resourceType = typeTerm(subDfn.resourceType)
 
         required = subDfn.required == true
+        supplementary = subDfn.supplementary == true
+        assert !required || !supplementary
+
         overwrite = subDfn.overwrite == true
 
         if (subDfn.splitValuePattern) {

@@ -27,7 +27,6 @@ class ElasticSearch {
         LongTermHttpConnection connection
     }
 
-    static final int DEFAULT_PAGE_SIZE = 50
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
     static final int CONNECTION_POOL_SIZE = 9
 
@@ -71,6 +70,22 @@ class ElasticSearch {
      }
 
     String getIndexName() { defaultIndex }
+
+	/**
+	 * Get ES mappings for associated index
+	 *
+	 */
+	Map getMappings() {
+		Tuple2<Integer, String> res = performRequest('GET', "/${indexName}/_mappings", '')
+		int statusCode = res.first
+		if (statusCode != 200) {
+			log.warn("Got unexpected status code ${statusCode} when getting ES mappings.")
+			return null
+		}
+		String responseBody = res.second
+		Map response =  mapper.readValue(responseBody, Map)
+		return response[(indexName)]['mappings']
+	}
 
     Tuple2<Integer, String> performRequest(String method, String path, String body, String contentType0 = null){
 
@@ -255,132 +270,6 @@ class ElasticSearch {
 
         return "/${indexName}/${maybeCollection}_search"
     }
-
-    // TODO merge with logic in whelk.rest.api.SearchUtils
-    // See Jira ticket LXL-122.
-    /**
-     * Create a DSL query from queryParameters.
-     *
-     * We treat multiple values for one key as an OR clause, which are
-     * then joined with AND.
-     *
-     * E.g. k1=v1&k1=v2&k2=v3 -> (k1=v1 OR k1=v2) AND (k2=v3)
-     */
-    static Map createJsonDsl(Map queryParameters, int limit=DEFAULT_PAGE_SIZE,
-                             int offset=0, String sortBy=null) {
-        String queryString = queryParameters.remove('q')?.first()
-        def dslQuery = ['from': offset,
-                        'size': limit]
-
-        List sortClauses = buildSortClauses(sortBy)
-        if (sortClauses) {
-            dslQuery['sort'] = sortClauses
-        }
-
-        List musts = []
-        if (queryString == '*') {
-            musts << ['match_all': [:]]
-        } else if(queryString) {
-            musts << ['simple_query_string' : ['query': queryString,
-                                                   'default_operator': 'and']]
-        }
-
-        List reservedParameters = ['q', 'p', 'o', 'value', '_limit',
-                                   '_offset', '_sort', '_site_base_uri']
-
-        def groups = queryParameters.groupBy {p -> getPrefixIfExist(p.key)}
-        Map nested = groups.findAll{g -> g.value.size() == 2}
-        List filteredQueryParams = (groups - nested).collect{it.value}
-
-        nested.each { key, vals ->
-            musts << buildESNestedClause(key, vals)
-        }
-
-        filteredQueryParams.each { Map m ->
-            m.each { k, vals ->
-                if (k.startsWith('_') || k in reservedParameters) {
-                    return
-
-
-                }
-                // we assume vals is a String[], since that's that we get
-                // from HttpServletResponse.getParameterMap()
-                musts << buildESShouldClause(k, vals)
-            }
-        }
-
-        dslQuery['query'] = ['bool': ['must': musts]]
-        return dslQuery
-    }
-
-    static getPrefixIfExist(String key) {
-        if (key.contains('.')) {
-            return key.substring(0, key.indexOf('.'))
-        } else {
-            return key
-        }
-    }
-
-    private static List buildSortClauses(String sortBy) {
-        if (!sortBy) return null
-        List result = []
-        List sortClauses = sortBy.split(',')
-        sortClauses.each { field ->
-            result << buildSortClause(field)
-        }
-        return result
-    }
-
-    private static Map buildSortClause(String fieldParam) {
-        def (String field, String sortOrder) = getFieldAndSortOrder(fieldParam)
-        Map clause = [(field): ['order': sortOrder]]
-        // We only handle .keyword right now, the other is left as placeholder
-        if (field == 'hasTitle.mainTitle' || field == 'hasTitle.mainTitle.keyword') {
-            clause[field]['nested_path'] = 'hasTitle'
-            clause[field]['nested_filter'] = ['term': ['hasTitle.@type': 'Title']]
-        }
-        return clause
-    }
-
-    private static Tuple2<String, String> getFieldAndSortOrder(String field) {
-        if (field.startsWith('-')) {
-            return new Tuple2(field.substring(1), 'desc')
-        } else {
-            return new Tuple2(field, 'asc')
-        }
-    }
-
-    /*
-     * Create a 'bool' query for matching at least one of the values.
-     *
-     * E.g. k=v1 OR k=v2 OR ..., with minimum_should_match set to 1.
-     *
-     */
-    private static Map buildESShouldClause(String key, String[] values) {
-        Map result = [:]
-        List shoulds = []
-
-        values.each { v ->
-            shoulds << ['match': [(key): v]]
-        }
-
-        result['should'] = shoulds
-        result['minimum_should_match'] = 1
-        return ['bool': result]
-    }
-
-
-    private static Map buildESNestedClause(String prefix, Map nestedQuery) {
-        Map result = [:]
-
-        def musts = ['must': nestedQuery.collect {q -> ['match': [(q.key):q.value.first()]] } ]
-
-        result << [['nested':['path': prefix,
-                                     'query':['bool':musts]]]]
-
-        return result
-    }
-
 
     static String toElasticId(String id) {
         if (id.contains("/")) {
