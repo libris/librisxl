@@ -71,7 +71,19 @@ class ESQuerySpec extends Specification {
         where:
         params                  | result
         [:]                     | null
-        ['foo': ['bar', 'baz']] | [['bool': ['must': [['terms': ['foo': ['bar', 'baz']]]]]]]
+        ['foo': ['bar', 'baz']] | [['bool': ['must': [
+                                                ['bool': [
+                                                    'should': [
+                                                        ['simple_query_string': ['query': 'bar',
+                                                                                 'fields': ['foo'],
+                                                                                 'default_operator': 'AND']],
+                                                        ['simple_query_string': ['query': 'baz',
+                                                                                 'fields': ['foo'],
+                                                                                 'default_operator': 'AND']]
+                                                    ]
+                                                ]]
+                                            ]]
+                                  ]]
     }
 
     def "should create bool filter"(String key, String[] vals, Map result) {
@@ -79,7 +91,13 @@ class ESQuerySpec extends Specification {
         es.createBoolFilter(key, vals) == result
         where:
         key   | vals           | result
-        'foo' | ['bar', 'baz'] | ['terms': ['foo': ['bar', 'baz']]]
+        'foo' | ['bar', 'baz'] | ['bool': ['should': [
+                                              ['simple_query_string': ['query': 'bar',
+                                                                       'fields': ['foo'],
+                                                                       'default_operator': 'AND']],
+                                              ['simple_query_string': ['query': 'baz',
+                                                                       'fields': ['foo'],
+                                                                       'default_operator': 'AND']]]]]
     }
 
     def "should get agg query"() {
