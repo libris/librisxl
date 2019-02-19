@@ -2502,6 +2502,7 @@
           "TODO:about": "_:otherInstance",
           "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsRegularityType-{_}",
+          "matchUriToken": "^[nrx]$",
           "fixedDefault": "|"
         },
         "[3]": {
@@ -3490,6 +3491,7 @@
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
           "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsRegularityType-{_}",
+          "matchUriToken": "^[nrx]$",
           "fixedDefault": "|"
         },
         "[20]": {
