@@ -6816,10 +6816,35 @@
     },
 
     "256": {
+      "NOTE:LC": "Prior to the definition of this field in 1987, file characteristics were recorded in subfield $a of field 300",
       "aboutEntity": "?thing",
-      "$a": {"link": "digitalCharacteristic", "resourceType": "FileType", "property": "label"}
+      "pendingResources": {
+        "_:digitalCharacteristic": {"addLink": "digitalCharacteristic", "resourceType": "DigitalCharacteristic"}
+      },
+      "$a": {"about": "_:digitalCharacteristic", "link": "hasNote", "resourceType": "Note", "property": "label"},
+      "$6": null,
+      "$8": null,
+      "_spec": [
+        {
+          "source": [
+            {"256": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Computer data (2 files : 800, 1250 records) and programs (3 files : 7260, 3490, 5076 bytes)."}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "digitalCharacteristic": [
+                {
+                  "@type": "DigitalCharacteristic",
+                  "hasNote": {
+                    "@type": "Note",
+                    "label": "Computer data (2 files : 800, 1250 records) and programs (3 files : 7260, 3490, 5076 bytes)."
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
-
     "257": {
       "addLink": "marc:hasCountryOfProducingEntityForArchivalFilms",
       "resourceType": "marc:CountryOfProducingEntityForArchivalFilms",
@@ -7293,7 +7318,8 @@
     "262": {},
     "263": {
       "aboutEntity": "?thing",
-      "$a": {"property": "projectedProvisionDate"}
+      "$a": {"property": "projectedProvisionDate"},
+      "$6": null
     },
 
     "264": {
