@@ -39,23 +39,23 @@ This is a list of keys in Marcframe which control certain functionality like rep
 
 `embedded` could be set to *true* which means that the entity is a so called structured value and it's value is always embedded locally to the graph and not linked to. In RDF also known as a b-node. The most common types is titles, identifiers and notes.
 
+`fixedDefault` a fixed default value in indicators and fixed fields if none exists in the data. Only for conversion from RDF to MARC21.  
+
 `include` includes the pattern which match the value.
 
 `inherit` creates an inheritance from the specified field.
+
+`leadingPunctuation` see punctuationChars.
 
 `link` see addLink.
 
 `match` used for matching values in indicator or occurence of fields with a `when` construction. [See exemple 2, which illustrates matching the right type of agent or work in the **$100** field]
 
+`pendingResource` makes it possible to create an hierarchical structure of entities.
+
 `property` see addProperty.
 
-`punctuationChars` states the interpunctuation which is stripped away and restored to the string/subfield in the conversion.
-
-`splitValuePattern` the regexp pattern used to separate strings into properties. [Example: identifier with trailing qualifier].
-
-`splitValueProperties` defines the properties which the separated strings groups should map to. [Example: value, qualifier].
-
-`pendingResource` makes it possible to create an hierarchical structure of entities.
+`punctuationChars` states the interpunctuation which is stripped away and restored to the string/subfield in the conversion. Variants in usage is leadingPunctuation, trailingPunctuation and surroundingChars.
 
 `required: true` is used in the conversion to MARC21. A required subfield is mandatory for the field to convert. If several subfields could be considered useful to surmise meaning but they are not all required, you could instead use the `supplementary: true` for the fields which can not standalone. [Example: `$a` is often required, `$2` is often supplementary].
 
@@ -63,7 +63,19 @@ This is a list of keys in Marcframe which control certain functionality like rep
 
 `spec` used to verify indata and outdata as MARC21 conforms to expected forms. Can be specified with `source` (indata) and `normalized` (outdata), if normalize is absent it is by default expected to look like the incoming MARC21 source. In the spec we also define how our expected JSON-LD form looks like. If you make several testcases you can name them to let others know if there is a particular scenario or deviation you are testing.
 
+`splitValuePattern` the regexp pattern used to separate strings into properties. [Example: identifier with trailing qualifier].
+
+`splitValueProperties` defines the properties which the separated strings groups should map to. [Example: value, qualifier].
+
 `subfieldOrder` used to specify subfield order in conversion to MARC21. If subfield order is absent alphabetical order is applied. [Example: `“a q c z”`].
+
+`surroundingChars` see punctuationChars.
+
+`tokenmap` used for mapping a list of (mostly) single character values from indicators or fixed fields.
+
+`trailingPunctuation` see punctuationChars.
+
+`uriTemplate` the base used for `matchUriToken` to create a link, usually from a code.
 
 `when` see match.
 
