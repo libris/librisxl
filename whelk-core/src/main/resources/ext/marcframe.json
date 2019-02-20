@@ -8156,6 +8156,7 @@
         "property": "label"
       },
       "$b": {
+        "TODO": "Clash with 300c, see _spec",
         "link": "hasDimensions",
         "resourceType": "Dimensions",
         "property": "label",
@@ -8184,7 +8185,7 @@
         "resourceType": "ReductionRatio",
         "property": "label"
       },
-      "$h": { "ignored": "true" },
+      "$h": null, "NOTE:$h": {"ignored": "location within medium"},
       "$i":
       {
         "addLink": "systemRequirement",
@@ -8216,24 +8217,90 @@
         "resourceType": "Polarity",
         "property": "label"
       },
-      "$0": { "NOTE:ignored": "true" },
+      "$0": null, "NOTE:$0": "nac",
       "TODO:subfield$2": "Source (NR)",
-      "$3": {
-        "link": "appliesTo", "resourceType": "Resource", "property": "label",
-        "NOTE": "record-count: 0. If this would appear, we unconditionally expect it ONLY to be used in subsequent 340 (see linkSubsequentRepeated)."
-      },
+      "$3": null,
+      "NOTE:$3": {"NOTE:LC": "nac", "NOTE:record-count": 0, "NOTE:local": "If this would appear, we unconditionally expect it ONLY to be used in subsequent 340 (see linkSubsequentRepeated)."},
       "TODO:subfield$6": "Linkage (NR)",
       "$g": {
         "NOTE": "New subfield",
         "addLink": "colorContent",
         "resourceType": "ColorContent",
         "property": "label"
-      }
+      },
+      "_spec": [
+        {
+          "name": "Property clash between 300c from 340b. Normalized is recreated error. Consider this a TODO",
+          "source":  [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "film"}]}}
+          ],
+          "normalized":  [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film"},{"c": "film"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "film"},{"b": "film"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "hasDimensions": [
+                {
+                  "@type": "Dimensions",
+                  "label": "film"
+                },
+                {
+                  "@type": "Dimensions",
+                  "label": "film"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unintended successful reconversion to 300c from 340b. Normalized is recreated error. Consider this a TODO",
+          "source":  [
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"a": "film"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "35 mm"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"j": "original"}]}}
+          ],
+          "normalized":  [
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"a": "film"}]}},
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "35 mm"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"j": "original"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "baseMaterial": [
+                {
+                  "@type": "BaseMaterial",
+                  "label": "film"
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Instance",
+                  "hasDimensions": 
+                    {
+                      "@type": "Dimensions",
+                      "label": "35 mm"
+                    }
+                },
+                {
+                  "@type": "Instance",
+                  "generation": [
+                    {
+                      "@type": "Generation",
+                      "label": "original"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "342": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "343": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "344": {
-      "NOTE:record-count": 0,
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
