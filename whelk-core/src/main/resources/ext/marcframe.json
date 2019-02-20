@@ -8250,7 +8250,7 @@
       "$f": {"addLink": "soundCharacteristic", "resourceType": "TapeConfig", "property": "label"},
       "$g": {"addLink": "soundCharacteristic", "resourceType": "PlaybackChannels", "property": "label"},
       "$h": {"addLink": "soundCharacteristic", "resourceType": "PlaybackCharacteristic", "property": "label"},
-      "$0": {"about": "_:soundCharacteristic", "addProperty": "marc:uri", "supplementary": true},
+      "$0": null, "NOTE:$0": "nac",
       "$2": {"about": "_:soundCharacteristic", "link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
       "$3": {"property": "typeNote", "supplementary": true},
       "$6": {"about": "_:soundCharacteristic", "property": "marc:fieldref", "supplementary": true},
@@ -8326,7 +8326,6 @@
       ]
     },
     "345": {
-      "NOTE:record-count": 0,
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
@@ -8337,7 +8336,7 @@
       },
       "$a": {"addLink": "projectionCharacteristic", "resourceType": "PresentationFormat", "property": "label"},
       "$b": {"addLink": "projectionCharacteristic", "resourceType": "ProjectionSpeed", "property": "label"},
-      "$0": {"about": "_:projectionCharacteristic", "addProperty": "marc:uri", "supplementary": true},
+      "$0": null, "NOTE:$0": "nac",
       "$2": {"about": "_:projectionCharacteristic", "link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
       "$3": {"property": "typeNote", "supplementary": true},
       "$6": {"about": "_:projectionCharacteristic", "property": "marc:fieldref", "supplementary": true},
@@ -8379,7 +8378,6 @@
       ]
     },
     "346": {
-      "NOTE:record-count": 0,
       "NOTE": "linkSubsequentRepeated will produce extra instances when repetition of fields is only used for different source,",
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
@@ -8391,7 +8389,7 @@
       },
       "$a": {"addLink": "videoCharacteristic", "resourceType": "VideoFormat", "property": "label"},
       "$b": {"addLink": "videoCharacteristic", "resourceType": "BroadcastStandard", "property": "label"},
-      "$0": {"about": "_:videoCharacteristic", "addProperty": "marc:uri", "supplementary": true},
+      "$0": null, "NOTE:$0": "nac",
       "$2": {"about": "_:videoCharacteristic", "link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
       "$3": {"property": "typeNote", "supplementary": true},
       "$6": {"about": "_:videoCharacteristic", "property": "marc:fieldref", "supplementary": true},
@@ -8456,7 +8454,7 @@
       "$d": {"addLink": "digitalCharacteristic", "resourceType": "Resolution", "property": "label"},
       "$e": {"addLink": "digitalCharacteristic", "resourceType": "RegionalEncoding", "property": "label"},
       "$f": {"addLink": "digitalCharacteristic", "resourceType": "EncodedBitrate", "property": "label"},
-      "$0": {"about": "_:digitalCharacteristic", "addProperty": "marc:uri", "supplementary": true},
+      "$0": null, "NOTE:$0": "nac",
       "$2": {"about": "_:digitalCharacteristic", "link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
       "$3": {"property": "typeNote", "supplementary": true},
       "$6": {"about": "_:digitalCharacteristic", "property": "marc:fieldref", "supplementary": true},
