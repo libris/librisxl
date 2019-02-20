@@ -2502,7 +2502,8 @@
           "TODO:about": "_:otherInstance",
           "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsRegularityType-{_}",
-          "matchUriToken": "^[nrx]$"
+          "matchUriToken": "^[nrx]$",
+          "fixedDefault": "|"
         },
         "[3]": {
           "TODO:ignore": "Not used in 008. Should we remove this mapping as well?",
@@ -3489,7 +3490,9 @@
         "[19]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
           "addLink": "frequency",
-          "uriTemplate": "https://id.kb.se/marc/SerialsRegularityType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SerialsRegularityType-{_}",
+          "matchUriToken": "^[nrx]$",
+          "fixedDefault": "|"
         },
         "[20]": {
           "TODO:ignore": true,
@@ -3609,7 +3612,7 @@
           "name": "export fixedDefault in the absence of frequency in series",
           "source": {
             "leader": "     cas a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123d1898    enk ||p|||||||0   ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123d1898    enk  |p|||||||0   ||   | "}]
           },
           "normalized": {
             "leader": "     cas a        i 4500",
