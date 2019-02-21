@@ -412,6 +412,7 @@ public class Main
         	}
 		catch (Exception e) {
 			e.printStackTrace();
+			System.exit(-1);
         	}
 		finally {
     			if (rs != null) {
