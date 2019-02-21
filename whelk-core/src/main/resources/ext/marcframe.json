@@ -6818,10 +6818,10 @@
     "256": {
       "NOTE:LC": "Prior to the definition of this field in 1987, file characteristics were recorded in subfield $a of field 300",
       "aboutEntity": "?thing",
-      "pendingResources": {
-        "_:digitalCharacteristic": {"addLink": "digitalCharacteristic", "resourceType": "DigitalCharacteristic"}
-      },
-      "$a": {"about": "_:digitalCharacteristic", "link": "hasNote", "resourceType": "Note", "property": "label"},
+      "addLink": "digitalCharacteristic",
+      "resourceType": "DigitalCharacteristic",
+      "repeatable": false,
+      "$a": {"addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE:repeatable": false},
       "$6": null,
       "$8": null,
       "_spec": [
@@ -6834,10 +6834,12 @@
               "digitalCharacteristic": [
                 {
                   "@type": "DigitalCharacteristic",
-                  "hasNote": {
-                    "@type": "Note",
-                    "label": "Computer data (2 files : 800, 1250 records) and programs (3 files : 7260, 3490, 5076 bytes)."
-                  }
+                  "hasNote": [
+                    {
+                      "@type": "Note",
+                      "label": "Computer data (2 files : 800, 1250 records) and programs (3 files : 7260, 3490, 5076 bytes)."
+                    }
+                  ]
                 }
               ]
             }
