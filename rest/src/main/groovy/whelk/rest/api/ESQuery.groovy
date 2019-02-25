@@ -48,7 +48,7 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     Map doQuery(Map<String, String[]> queryParameters, String dataset) {
         Map esQuery = getESQuery(queryParameters)
-        Map esResponse = whelk.elastic.query(esQuery, dataset)
+        Map esResponse = hideKeywordFields(whelk.elastic.query(esQuery, dataset))
         return esResponse
     }
 
@@ -465,5 +465,43 @@ class ESQuery {
             result += getKeywordFieldsFromProperties(properties, currentField)
         }
         return result
+    }
+
+    /**
+     * Hide any `.keyword` field in ES response.
+     *
+     * Since this is an implementation detail, we don't want to leak it to
+     * consumers. We drop the suffix for those cases where the ES mapping
+     * allows.
+     *
+     * Public for test only - don't call outside this class!
+     *
+     */
+    @CompileStatic(TypeCheckingMode.SKIP)
+    public Map hideKeywordFields(Map esResponse) {
+        // no aggs? nothing to do.
+        if (!esResponse.containsKey('aggregations')) {
+            return esResponse
+        }
+
+        Map aggs = esResponse['aggregations']
+        Map newAggs = [:]
+        aggs.each { k, v ->
+            if (k.endsWith('.keyword')) {
+                String strippedKey = k.replaceFirst(/\.keyword$/, '')
+
+                // we only care about actual keyword fields
+                if (strippedKey in keywordFields) {
+                    newAggs[(strippedKey)] = v
+                } else {
+                    newAggs[(k)] = v
+                }
+            } else {
+                newAggs[(k)] = v
+            }
+        }
+
+        esResponse['aggregations'] = newAggs
+        return esResponse
     }
 }
