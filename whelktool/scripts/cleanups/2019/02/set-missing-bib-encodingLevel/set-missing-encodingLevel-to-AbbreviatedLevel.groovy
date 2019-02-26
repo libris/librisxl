@@ -8,18 +8,21 @@
 
 String ENCODING_LEVEL_VALUE = 'marc:AbbreviatedLevel'
 PrintWriter scheduledToSetEncodingLevel = getReportWriter("scheduled-to-set-encodingLevel")
+PrintWriter skippedIncompleteRecords = getReportWriter("skipped-incomplete-records")
 
 selectBySqlWhere("""
         collection = 'bib' AND data#>>'{@graph,0,encodingLevel}' ISNULL
     """) { data ->
     // guard against missing entity
-    if (data.graph.size() < 2)
+    if (data.graph.size() < 2) {
+        incompleteRecords.println("${data.graph[0][ID]}")
         return
+    }
 
     def (record, instance, work) = data.graph
 
     record.put('encodingLevel', ENCODING_LEVEL_VALUE)
-    scheduledToSetEncodingLevel.println("${data.graph[0][ID]}")
+    scheduledToSetEncodingLevel.println("${record[ID]}")
     data.scheduleSave()
 
 }
