@@ -17371,20 +17371,9 @@
         }
       ]
     },
-    "481": {"ignored": true, "NOTE:record-count": 1},
+    "481": {"ignored": true, "NOTE:record-count": 0},
     "482": {"ignored": true, "NOTE:record-count": 0},
-    "485": {
-      "addLink": "marc:hasSeeFromTracingFormSubdivision",
-      "resourceType": "marc:SeeFromTracingFormSubdivision",
-      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
-      "$v": {"addProperty": "marc:formSubdivision"},
-      "$w": {"property": "marc:controlSubfield"},
-      "$x": {"addProperty": "marc:generalSubdivision"},
-      "$y": {"addProperty": "marc:chronologicalSubdivision"},
-      "$z": {"addProperty": "marc:geographicSubdivision"},
-      "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
-    },
+    "485": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "marc:hasSeeFromTracingFormSubdivision"},
 
     "500": {
       "TODO:remnants-of-inherit": "bib:100",
