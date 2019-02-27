@@ -17032,17 +17032,42 @@
     },
     "447": {"ignored": true, "NOTE:record-count": 0},
     "448": {
-      "addLink": "marc:hasSeeFromTracingChronologicalTerm",
-      "resourceType": "marc:SeeFromTracingChronologicalTerm",
-      "$a": {"property": "marc:chronologicalTerm"},
-      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
-      "$v": {"addProperty": "marc:formSubdivision"},
-      "$w": {"property": "marc:controlSubfield"},
-      "$x": {"addProperty": "marc:generalSubdivision"},
-      "$y": {"addProperty": "marc:chronologicalSubdivision"},
-      "$z": {"addProperty": "marc:geographicSubdivision"},
-      "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+      "include": ["termbase"],
+      "addLink": "hasVariant",
+      "resourceType": "Temporal",
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "Temporal",
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
+        }
+      },
+      "subfieldOrder": "w i a x z y v",
+      "$a": {"about": "_:topic", "property": "prefLabel"},
+      "$w": {"about": "_:topic", "property": "marc:controlSubfield"},
+      "_spec": [
+        {
+          "name": "Repeated Temporal",
+          "source": [
+            {"448": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Fjortonhundratalet"}]}},
+            {"448": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Femtonde århundradet"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "Temporal",
+                "prefLabel" : "Fjortonhundratalet"
+              }, {
+                "@type" : "Temporal",
+                "prefLabel" : "Femtonde århundradet"
+              }]
+            }
+          }
+        }
+      ]  
     },
     "450": {
       "include": ["termbase"],
@@ -17304,16 +17329,47 @@
     },
     "462": {"ignored": true, "NOTE:record-count": 0},
     "480": {
-      "addLink": "marc:hasSeeFromTracingGeneralSubdivision",
-      "resourceType": "marc:SeeFromTracingGeneralSubdivision",
+      "addLink": "hasVariant",
+      "resourceType": "TopicSubdivision",
+      "pendingResources": {
+        "_:topicSubdivision": {
+          "addLink": "hasVariant",
+          "resourceType": "TopicSubdivision",
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
+        }
+      },
       "$i": {"addProperty": "marc:referenceInstructionPhrase"},
-      "$v": {"addProperty": "marc:formSubdivision"},
+      "$v": null,
       "$w": {"property": "marc:controlSubfield"},
-      "$x": {"addProperty": "marc:generalSubdivision"},
-      "$y": {"addProperty": "marc:chronologicalSubdivision"},
-      "$z": {"addProperty": "marc:geographicSubdivision"},
-      "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+      "$x": {"about": "_:topicSubdivision", "property": "prefLabel"},
+      "$y": null,
+      "$z": null,
+      "$4": null,
+      "$5": null,
+      "$6": null,
+      "$8": null,
+      "_spec": [
+        {
+          "source": [
+            {"480": {"ind1": " ", "ind2": " ", "subfields": [{"x": "Views on politics and society"}]}},
+            {"480": {"ind1": " ", "ind2": " ", "subfields": [{"x": "Views on society"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "TopicSubdivision",
+                "prefLabel" : "Views on politics and society"
+              }, {
+                "@type" : "TopicSubdivision",
+                "prefLabel" : "Views on society"
+              }]
+            }
+          }
+        }
+      ]
     },
     "481": {"ignored": true, "NOTE:record-count": 1},
     "482": {"ignored": true, "NOTE:record-count": 0},
