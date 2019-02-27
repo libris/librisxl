@@ -208,4 +208,24 @@ class ESQuerySpec extends Specification {
         es.expandTypeParam(simpleQueryParameters, jsonld) == simpleQueryParametersResult
         es.expandTypeParam(simpleQueryParameters2, jsonld) == simpleQueryParametersResult2
     }
+
+    def "should hide keyword fields in ES response"() {
+        when:
+        Map emptyEsResponse = [:]
+        Map emptyExpected = [:]
+        Map esResponse = ['foo': ['bar.keyword.baz': 1,
+                                  'bar.keyword': 2],
+                          'aggregations': ['baz': 3,
+                                           'bar.keyword': 4,
+                                           'foo.keyword.quux': 5]]
+        Map expected = ['foo': ['bar.keyword.baz': 1,
+                                'bar.keyword': 2],
+                        'aggregations': ['baz': 3,
+                                         'bar': 4,
+                                         'foo.keyword.quux': 5]]
+
+        then:
+        emptyExpected == es.hideKeywordFields(emptyEsResponse)
+        expected == es.hideKeywordFields(esResponse)
+    }
 }
