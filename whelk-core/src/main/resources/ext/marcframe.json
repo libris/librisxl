@@ -17340,9 +17340,9 @@
           "absorbSingle": true
         }
       },
-      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
+      "$i": null,
       "$v": null,
-      "$w": {"property": "marc:controlSubfield"},
+      "$w": null,
       "$x": {"about": "_:topicSubdivision", "property": "prefLabel"},
       "$y": null,
       "$z": null,
