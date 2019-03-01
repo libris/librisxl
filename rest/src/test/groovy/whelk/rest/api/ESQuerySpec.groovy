@@ -42,6 +42,7 @@ class ESQuerySpec extends Specification {
         params                  | result
         [:]                     | null
         ['_sort': []]           | null
+        ['_sort': ['']]         | null
         // `bar` has a keyword field in the mappings
         ['_sort': ['foo,-bar']] | [['foo': ['order': 'asc']], ['bar.keyword': ['order': 'desc']]]
         ['_sort': ['hasTitle.mainTitle']] | [['hasTitle.mainTitle': ['order': 'asc',
