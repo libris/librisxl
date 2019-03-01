@@ -225,7 +225,10 @@ class ESQuery {
      */
     public List getSortClauses(Map<String, String[]> queryParameters) {
         if (!('_sort' in queryParameters)) return null
-        if (!(queryParameters.get('_sort').size() > 0)) return null
+        if (!(queryParameters.get('_sort').size() > 0) ||
+                queryParameters.get('_sort')[0] == '') {
+            return null
+        }
 
         List result = []
         String sortParams = queryParameters.get('_sort')[0]
