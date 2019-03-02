@@ -84,8 +84,18 @@ class ElasticSearch {
 		}
 		String responseBody = res.second
 		Map response =  mapper.readValue(responseBody, Map)
-		return response[(indexName)]['mappings']
-	}
+
+        // Since ES aliases return the name of the index rather than the alias,
+        // we don't rely on names here.
+        List<String> keys = response.keySet() as List
+
+        if (keys.size() == 1 && response[(keys[0])].containsKey('mappings')) {
+            return response[(keys[0])]['mappings']
+        } else {
+            log.warn("Couldn't get mappings from ES index ${indexName}, response was ${response}.")
+            return [:]
+        }
+    }
 
     Tuple2<Integer, String> performRequest(String method, String path, String body, String contentType0 = null){
 
