@@ -6817,11 +6817,12 @@
 
     "256": {
       "NOTE:LC": "Prior to the definition of this field in 1987, file characteristics were recorded in subfield $a of field 300",
+      "NOTE:Local": "Until librisxl version 1.7 mapped to digitalCharacteristic",
       "aboutEntity": "?thing",
-      "addLink": "digitalCharacteristic",
-      "resourceType": "DigitalCharacteristic",
+      "addLink": "hasNote",
+      "resourceType": "marc:ComputerFileCharacteristics",
       "repeatable": false,
-      "$a": {"addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE:repeatable": false},
+      "$a": {"property": "label"},
       "$6": null,
       "$8": null,
       "_spec": [
@@ -6831,15 +6832,10 @@
           ],
           "result": {
             "mainEntity": {
-              "digitalCharacteristic": [
+              "hasNote": [
                 {
-                  "@type": "DigitalCharacteristic",
-                  "hasNote": [
-                    {
-                      "@type": "Note",
-                      "label": "Computer data (2 files : 800, 1250 records) and programs (3 files : 7260, 3490, 5076 bytes)."
-                    }
-                  ]
+                  "@type": "marc:ComputerFileCharacteristics",
+                  "label": "Computer data (2 files : 800, 1250 records) and programs (3 files : 7260, 3490, 5076 bytes)."
                 }
               ]
             }
