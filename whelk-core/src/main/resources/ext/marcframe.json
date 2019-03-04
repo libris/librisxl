@@ -6877,10 +6877,33 @@
     },
 
     "256": {
+      "NOTE:LC": "Prior to the definition of this field in 1987, file characteristics were recorded in subfield $a of field 300",
+      "NOTE:Local": "Until librisxl version 1.7 mapped to digitalCharacteristic",
       "aboutEntity": "?thing",
-      "$a": {"link": "digitalCharacteristic", "resourceType": "FileType", "property": "label"}
+      "addLink": "hasNote",
+      "resourceType": "marc:ComputerFileCharacteristics",
+      "repeatable": false,
+      "$a": {"property": "label"},
+      "$6": null,
+      "$8": null,
+      "_spec": [
+        {
+          "source": [
+            {"256": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Computer data (2 files : 800, 1250 records) and programs (3 files : 7260, 3490, 5076 bytes)."}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "hasNote": [
+                {
+                  "@type": "marc:ComputerFileCharacteristics",
+                  "label": "Computer data (2 files : 800, 1250 records) and programs (3 files : 7260, 3490, 5076 bytes)."
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
-
     "257": {
       "addLink": "marc:hasCountryOfProducingEntityForArchivalFilms",
       "resourceType": "marc:CountryOfProducingEntityForArchivalFilms",
@@ -7354,7 +7377,8 @@
     "262": {},
     "263": {
       "aboutEntity": "?thing",
-      "$a": {"property": "projectedProvisionDate"}
+      "$a": {"property": "projectedProvisionDate"},
+      "$6": null
     },
 
     "264": {
@@ -8191,6 +8215,7 @@
         "property": "label"
       },
       "$b": {
+        "TODO": "Clash with 300c, see _spec",
         "link": "hasDimensions",
         "resourceType": "Dimensions",
         "property": "label",
@@ -8219,7 +8244,7 @@
         "resourceType": "ReductionRatio",
         "property": "label"
       },
-      "$h": { "ignored": "true" },
+      "$h": null, "NOTE:$h": {"ignored": "location within medium"},
       "$i":
       {
         "addLink": "systemRequirement",
@@ -8251,28 +8276,97 @@
         "resourceType": "Polarity",
         "property": "label"
       },
-      "$0": { "NOTE:ignored": "true" },
+      "$0": null, "NOTE:$0": "nac",
       "TODO:subfield$2": "Source (NR)",
-      "$3": {
-        "link": "appliesTo", "resourceType": "Resource", "property": "label",
-        "NOTE": "record-count: 0. If this would appear, we unconditionally expect it ONLY to be used in subsequent 340 (see linkSubsequentRepeated)."
-      },
+      "$3": null,
+      "NOTE:$3": {"NOTE:LC": "nac", "NOTE:record-count": 0, "NOTE:local": "If this would appear, we unconditionally expect it ONLY to be used in subsequent 340 (see linkSubsequentRepeated)."},
       "TODO:subfield$6": "Linkage (NR)",
       "$g": {
         "NOTE": "New subfield",
         "addLink": "colorContent",
         "resourceType": "ColorContent",
         "property": "label"
-      }
+      },
+      "_spec": [
+        {
+          "name": "Property clash between 300c from 340b. Normalized is recreated error. Consider this a TODO",
+          "source":  [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "film"}]}}
+          ],
+          "normalized":  [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film"},{"c": "film"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "film"},{"b": "film"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "hasDimensions": [
+                {
+                  "@type": "Dimensions",
+                  "label": "film"
+                },
+                {
+                  "@type": "Dimensions",
+                  "label": "film"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unintended successful reconversion to 300c from 340b. Normalized is recreated error. Consider this a TODO",
+          "source":  [
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"a": "film"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "35 mm"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"j": "original"}]}}
+          ],
+          "normalized":  [
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"a": "film"}]}},
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "35 mm"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"j": "original"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "baseMaterial": [
+                {
+                  "@type": "BaseMaterial",
+                  "label": "film"
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Instance",
+                  "hasDimensions": 
+                    {
+                      "@type": "Dimensions",
+                      "label": "35 mm"
+                    }
+                },
+                {
+                  "@type": "Instance",
+                  "generation": [
+                    {
+                      "@type": "Generation",
+                      "label": "original"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "342": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "343": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "344": {
-      "NOTE:record-count": 0,
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
         "groupId": "#part-$seq"
+      },
+      "pendingResources": {
+        "_:soundCharacteristic": {"addLink": "soundCharacteristic", "resourceType": "SoundCharacteristic"}
       },
       "$a": {"addLink": "soundCharacteristic", "resourceType": "RecordingMethod", "property": "label"},
       "$b": {"addLink": "soundCharacteristic", "resourceType": "RecordingMedium", "property": "label"},
@@ -8282,32 +8376,192 @@
       "$f": {"addLink": "soundCharacteristic", "resourceType": "TapeConfig", "property": "label"},
       "$g": {"addLink": "soundCharacteristic", "resourceType": "PlaybackChannels", "property": "label"},
       "$h": {"addLink": "soundCharacteristic", "resourceType": "PlaybackCharacteristic", "property": "label"},
-      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$0": null, "NOTE:$0": "nac",
+      "$2": {"about": "_:soundCharacteristic", "link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$3": {"property": "typeNote", "supplementary": true},
+      "$6": {"about": "_:soundCharacteristic", "property": "marc:fieldref", "supplementary": true},
+      "_spec": [
+        {
+          "source":  [
+            {"344": {"ind1": " ", "ind2": " ", "subfields": [{"a": "digital"}, {"2": "rdatr"}]}},
+            {"344": {"ind1": " ", "ind2": " ", "subfields": [{"b": "optical"}, {"2": "rdarm"}]}},
+            {"344": {"ind1": " ", "ind2": " ", "subfields": [{"g": "surround"}, {"2": "rdacpc"}]}},
+            {"344": {"ind1": " ", "ind2": " ", "subfields": [{"h": "Dolby Digital 5.1"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "soundCharacteristic": [
+                {
+                  "@type": "RecordingMethod",
+                  "label": "digital"
+                },
+                {
+                  "@type": "SoundCharacteristic",
+                  "source": {
+                    "@type": "Source",
+                    "code": "rdatr"
+                  }
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Instance",
+                  "soundCharacteristic": [
+                    {
+                      "@type": "RecordingMedium",
+                      "label": "optical"
+                    },
+                    {
+                      "@type": "SoundCharacteristic",
+                      "source": {
+                        "@type": "Source",
+                        "code": "rdarm"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "@type": "Instance",
+                  "soundCharacteristic": [
+                    {
+                      "@type": "PlaybackChannels",
+                      "label": "surround"
+                    },
+                    {
+                      "@type": "SoundCharacteristic",
+                      "source": {
+                        "@type": "Source",
+                        "code": "rdacpc"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "@type": "Instance",
+                  "soundCharacteristic": [
+                    {
+                      "@type": "PlaybackCharacteristic",
+                      "label": "Dolby Digital 5.1"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "345": {
-      "NOTE:record-count": 0,
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
         "groupId": "#part-$seq"
+      },
+      "pendingResources": {
+        "_:projectionCharacteristic": {"addLink": "projectionCharacteristic", "resourceType": "ProjectionCharacteristic"}
       },
       "$a": {"addLink": "projectionCharacteristic", "resourceType": "PresentationFormat", "property": "label"},
       "$b": {"addLink": "projectionCharacteristic", "resourceType": "ProjectionSpeed", "property": "label"},
-      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$0": null, "NOTE:$0": "nac",
+      "$2": {"about": "_:projectionCharacteristic", "link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$3": {"property": "typeNote", "supplementary": true},
+      "$6": {"about": "_:projectionCharacteristic", "property": "marc:fieldref", "supplementary": true},
+      "_spec": [
+        {
+          "source":  [
+            {"345": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Cinerama"}, {"2": "rdapf"}]}},
+            {"345": {"ind1": " ", "ind2": " ", "subfields": [{"b": "24fps"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "projectionCharacteristic": [
+                {
+                  "@type": "PresentationFormat",
+                  "label": "Cinerama"
+                },
+                {
+                  "@type": "ProjectionCharacteristic",
+                  "source": {
+                    "@type": "Source",
+                    "code": "rdapf"
+                  }
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Instance",
+                  "projectionCharacteristic": [
+                    {
+                      "@type": "ProjectionSpeed",
+                      "label": "24fps"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "346": {
-      "NOTE:record-count": 0,
+      "NOTE": "linkSubsequentRepeated will produce extra instances when repetition of fields is only used for different source,",
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
         "groupId": "#part-$seq"
       },
+      "pendingResources": {
+        "_:videoCharacteristic": {"addLink": "videoCharacteristic", "resourceType": "VideoCharacteristic"}
+      },
       "$a": {"addLink": "videoCharacteristic", "resourceType": "VideoFormat", "property": "label"},
       "$b": {"addLink": "videoCharacteristic", "resourceType": "BroadcastStandard", "property": "label"},
-      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$0": null, "NOTE:$0": "nac",
+      "$2": {"about": "_:videoCharacteristic", "link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$3": {"property": "typeNote", "supplementary": true},
+      "$6": {"about": "_:videoCharacteristic", "property": "marc:fieldref", "supplementary": true},
+      "_spec": [
+        {
+          "source":  [
+            {"346": {"ind1": " ", "ind2": " ", "subfields": [{"a": "VHS"}, {"2": "rdavf"}]}},
+            {"346": {"ind1": " ", "ind2": " ", "subfields": [{"b": "PAL"}, {"2": "rdabs"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "videoCharacteristic": [
+                {
+                  "@type": "VideoFormat",
+                  "label": "VHS"
+                },
+                {
+                  "@type": "VideoCharacteristic",
+                  "source": {
+                    "@type": "Source",
+                    "code": "rdavf"
+                  }
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Instance",
+                  "videoCharacteristic": [
+                    {
+                      "@type": "BroadcastStandard",
+                      "label": "PAL"
+                    },
+                    {
+                      "@type": "VideoCharacteristic",
+                      "source": {
+                        "@type": "Source",
+                        "code": "rdabs"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "347": {
       "aboutEntity": "?thing",
@@ -8317,18 +8571,64 @@
         "TODO:groupId": "#part-$seq",
         "embedded": true
       },
+      "pendingResources": {
+        "_:digitalCharacteristic": {"addLink": "digitalCharacteristic", "resourceType": "DigitalCharacteristic"}
+      },
       "$a": {"addLink": "digitalCharacteristic", "resourceType": "FileType", "property": "label"},
       "$b": {"addLink": "digitalCharacteristic", "resourceType": "EncodingFormat", "property": "label"},
       "$c": {"addLink": "digitalCharacteristic", "resourceType": "FileSize", "property": "label"},
       "$d": {"addLink": "digitalCharacteristic", "resourceType": "Resolution", "property": "label"},
       "$e": {"addLink": "digitalCharacteristic", "resourceType": "RegionalEncoding", "property": "label"},
       "$f": {"addLink": "digitalCharacteristic", "resourceType": "EncodedBitrate", "property": "label"},
-      "$0": {"TODO:ignored": "true???"},
-      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
-      "$3": {
-        "link": "appliesTo", "resourceType": "Resource", "property": "label",
-        "NOTE": "record-count: 0. If this would appear, we unconditionally expect it ONLY to be used in subsequent 347 (see linkSubsequentRepeated)."
-      }
+      "$0": null, "NOTE:$0": "nac",
+      "$2": {"about": "_:digitalCharacteristic", "link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$3": {"property": "typeNote", "supplementary": true},
+      "$6": {"about": "_:digitalCharacteristic", "property": "marc:fieldref", "supplementary": true},
+      "_spec": [
+        {
+          "source":  [
+            {"347": {"ind1": " ", "ind2": " ", "subfields": [{"a": "text file"}, {"b": "PDF"},
+                                                             {"2": "rdaft"}]}},
+            {"347": {"ind1": " ", "ind2": " ", "subfields": [{"a": "data file"}, {"b": "XML"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "digitalCharacteristic": [
+                {
+                  "@type": "FileType",
+                  "label": "text file"
+                },
+                {
+                  "@type": "EncodingFormat",
+                  "label": "PDF"
+                },
+                {
+                  "@type": "DigitalCharacteristic",
+                  "source": {
+                    "@type": "Source",
+                    "code": "rdaft"
+                  }
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Instance",
+                  "digitalCharacteristic": [
+                    {
+                      "@type": "FileType",
+                      "label": "data file"
+                    },
+                    {
+                      "@type": "EncodingFormat",
+                      "label": "XML"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "348": {
       "aboutEntity": "?thing",
@@ -8340,7 +8640,7 @@
       "$1": {"addProperty": "marc:rwoURI"},
       "$2": {"link": "source", "resourceType": "Source", "property": "code"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"addProperty": "marc:fieldref"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source":  [
@@ -8378,7 +8678,7 @@
       "$b": {"addProperty": "pattern"},
       "$c": {"property": "hierarchicalLevel"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"addProperty": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"}
     },
     "352": {
       "linkSubsequentRepeated": {
