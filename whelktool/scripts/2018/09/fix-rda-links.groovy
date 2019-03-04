@@ -119,7 +119,7 @@ selectBySqlWhere('''
     if (!isInstanceOf(instance, 'Instance')) {
         return
     }
-    if (!work) {
+    if (!work || !instance.instanceOf) {
         return
     }
     assert work['@id'] == instance.instanceOf['@id']
