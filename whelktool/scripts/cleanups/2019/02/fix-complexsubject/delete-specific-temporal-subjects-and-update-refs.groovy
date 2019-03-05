@@ -3,10 +3,14 @@ SAO_URI = 'https://id.kb.se/term/sao'
 PREFLABEL = 'prefLabel'
 TEMPSUB_TYPE = 'TemporalSubdivision'
 SUBJECTS_TO_DELETE = ['pm14bcq70h0qnnr': 'medeltiden',
+                      'dbqt2sfx579q4h9': 'medeltiden',
                       '53hlst5p58lc91k': 'forntiden',
+                      'hftx5wm1424mg1f': 'forntiden',
                       '64jmtv6q2v2t5b9': 'antiken',
+                      'fcrv3tgz3dr0z7r': 'renässansen',
                       '75knvw8r0qh4c88': 'renässansen']
 
+TERMS_TO_UPDATE = ['medeltiden', 'forntiden', 'antiken', 'renässansen']
 
 PrintWriter failedAuthIDs = getReportWriter("failed-to-delete-authIDs")
 PrintWriter scheduledForDeletion = getReportWriter("scheduled-for-deletion")
@@ -67,7 +71,6 @@ void setPrefLabelAndSameAs(subj) {
 boolean updateReference(work) {
     def extractedTerms = []
     def entitiesToMove = []
-    def termsToChange = SUBJECTS_TO_DELETE.values() as List
 
     if (!work.subject) return
 
@@ -77,13 +80,13 @@ boolean updateReference(work) {
 
         if (subj[TYPE] == COMPLEX_SUBJECT_TYPE && subj['inScheme'] && subj['inScheme'][ID] == SAO_URI
                 && subj.termComponentList.any{ it[TYPE] == TEMPSUB_TYPE}
-                && subj.termComponentList.any{ termsToChange.contains(it[PREFLABEL]?.toLowerCase())}) {
+                && subj.termComponentList.any{ TERMS_TO_UPDATE.contains(it[PREFLABEL]?.toLowerCase())}) {
 
             ListIterator iter = subj.termComponentList.listIterator()
 
             while(iter.hasNext()) {
                 cpx_term = iter.next()
-                if (cpx_term[TYPE] == TEMPSUB_TYPE && termsToChange.contains(cpx_term[PREFLABEL].toLowerCase())) {
+                if (cpx_term[TYPE] == TEMPSUB_TYPE && TERMS_TO_UPDATE.contains(cpx_term[PREFLABEL].toLowerCase())) {
                     if (!extractedTerms.contains(termToUri(cpx_term[PREFLABEL]))) {
                         extractedTerms << termToUri(cpx_term[PREFLABEL])
                     }
