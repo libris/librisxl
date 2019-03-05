@@ -8718,8 +8718,37 @@
         "NOTE": "1 = not normalized form; but 0 has been assigned for those too."
       },
       "$a": {"property": "label"},
-      "$z": {"property": "marc:sourceOfInformation"},
-      "$6": {"property": "marc:fieldref"}
+      "$z": {
+        "property": "marc:sourceOfInformation",
+        "NOTE:local": "I tidigare praxis, bland annat använt för att i maskinellt skapade e-tidskriftsposter redovisa de volymer som omfattas av licensbundna avtal, (sådan beståndsinformation redovisas numer i beståndspostens fält 866)"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source":  [
+            {"362": {"ind1": "0", "ind2": " ", "subfields": [{"a": "Bd 1(1962)-6(1967) ; N.F., Bd 1(1968)-"}]}},
+            {"362": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Vol. 1, no 1- (2002-)"}, {"z": "ScienceDirect"}]}}
+          ],
+          "normalized":  [
+            {"362": {"ind1": "0", "ind2": " ", "subfields": [{"a": "Bd 1(1962)-6(1967) ; N.F., Bd 1(1968)-"}]}},
+            {"362": {"ind1": "0", "ind2": " ", "subfields": [{"a": "Vol. 1, no 1- (2002-)"}, {"z": "ScienceDirect"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "hasNumberingOfSerials": [
+                {
+                  "@type": "NumberingOfSerials",
+                  "label": "Bd 1(1962)-6(1967) ; N.F., Bd 1(1968)-"
+                },
+                {
+                  "@type": "NumberingOfSerials",
+                  "label": "Vol. 1, no 1- (2002-)",
+                  "marc:sourceOfInformation": "ScienceDirect"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "363": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "365": {"ignored": true, "NOTE:record-count": 8066, "NOTE:LC": "nac", "NOTE:local": "Avsett för bokhandelns information"},
