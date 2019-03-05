@@ -11727,10 +11727,6 @@
       "$a": {"property": "label"},
       "match": [
         {
-          "when": "i2=0",
-          "resourceType": "Topic"
-        },
-        {
           "when": "i2=1",
           "resourceType": "Person"
         },
@@ -11783,8 +11779,27 @@
               {"a": "Name of Topic"}]
             }
           },
-          "normalized": {
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Topic",
+                  "label": "Name of Topic"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "Change i2=0 to blank (none of our 653s belongs to lcsh)",
+          "source": {
             "653": {"ind1": " ", "ind2": "0", "subfields":[
+              {"a": "Name of Topic"}]
+            }
+          },
+          "normalized": {
+            "653": {"ind1": " ", "ind2": " ", "subfields":[
               {"a": "Name of Topic"}]
             }
           },
