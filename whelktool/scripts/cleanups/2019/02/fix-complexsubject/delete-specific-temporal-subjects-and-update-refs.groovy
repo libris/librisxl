@@ -10,7 +10,7 @@ SUBJECTS_TO_DELETE = ['pm14bcq70h0qnnr': 'medeltiden',
                       'fcrv3tgz3dr0z7r': 'renässansen',
                       '75knvw8r0qh4c88': 'renässansen']
 
-TERMS_TO_UPDATE = (SUBJECTS_TO_DELETE.values() as List).unique()
+TERMS_TO_UPDATE = SUBJECTS_TO_DELETE.values() as Set
 
 PrintWriter failedAuthIDs = getReportWriter("failed-to-delete-authIDs")
 PrintWriter scheduledForDeletion = getReportWriter("scheduled-for-deletion")
