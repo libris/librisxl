@@ -17331,19 +17331,10 @@
     "480": {
       "addLink": "hasVariant",
       "resourceType": "TopicSubdivision",
-      "pendingResources": {
-        "_:topicSubdivision": {
-          "addLink": "hasVariant",
-          "resourceType": "TopicSubdivision",
-          "required": true,
-          "itemPos": "first",
-          "absorbSingle": true
-        }
-      },
       "$i": null,
       "$v": null,
       "$w": null,
-      "$x": {"about": "_:topicSubdivision", "property": "prefLabel"},
+      "$x": {"property": "prefLabel", "required": true},
       "$y": null,
       "$z": null,
       "$4": null,
