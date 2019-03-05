@@ -17044,12 +17044,12 @@
           "absorbSingle": true
         }
       },
-      "subfieldOrder": "w i a x z y v",
+      "subfieldOrder": "w a v x y z",
       "$a": {"about": "_:topic", "property": "prefLabel"},
       "$w": {"about": "_:topic", "property": "marc:controlSubfield"},
       "_spec": [
         {
-          "name": "Repeated Temporal",
+          "name": "Repeated Temporal terms in hasVariant",
           "source": [
             {"448": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Fjortonhundratalet"}]}},
             {"448": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Femtonde århundradet"}]}}
