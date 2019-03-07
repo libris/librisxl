@@ -402,7 +402,7 @@
       "include": ["agentpartnumber"],
       "$f": {"about": "_:agent", "property": "marc:originDate"},
       "$h": {"about": "_:agent", "property": "marc:mediaTerm"},
-      "$l": {"about": "_:agent", "link": "language", "resourceType": "Language", "property": "label"},
+      "$l": {"about": "_:agent", "link": "language", "resourceType": "Language", "property": "label", "infer": true},
       "$o": {"about": "_:agent", "property": "version"},
       "$r": {"about": "_:agent", "property": "marc:musicKey"},
       "$s": {"about": "_:agent", "property": "version"}
@@ -14228,7 +14228,7 @@
       "i2": {
         "marcDefault": " "
       },
-      "$e": {"addLink": "language", "NOTE:marc-repeatable": false, "resourceType": "Language", "property": "label", "TODO:inherit": "008:[35:38]"},
+      "$e": {"addLink": "language", "NOTE:marc-repeatable": false, "resourceType": "Language", "property": "label", "infer": true, "TODO:inherit": "008:[35:38]"},
       "$f": {"about": "_:provisionActivity", "link": "place", "resourceType": "Place", "property": "code", "NOTE:marc-repeatable": false, "TODO:inherit": "008:[15:18]"}
     },
     "776": {
