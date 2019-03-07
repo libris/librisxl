@@ -19618,7 +19618,7 @@
       "$i": {
         "addLink": "availability",
         "resourceType": "ItemAvailability",
-        "property": "label",
+        "property": "label", "infer": true,
         "NOTE": "deviates from standard (itemPart)?"
       },
       "$j": {"property": "shelfControlNumber"},
