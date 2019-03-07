@@ -4,6 +4,8 @@
 
   "keepGroupIds": false,
 
+  "locale": "sv",
+
   "TODO:s": [
     "addLink:identifiedBy (+ NOTE:marc-repeatable: false where link)"
   ],
@@ -317,7 +319,7 @@
       "$f": {"about": "_:work", "property": "originDate"},
       "$h": {"about": "_:work", "property": "marc:mediaTerm"},
 
-      "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
+      "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label", "infer": true},
       "$m": {"about": "_:work", "addLink": "musicMedium", "resourceType": "MusicMedium", "property": "label", "leadingPunctuation": ","},
       "$o": {"about": "_:work", "property": "version"},
 
