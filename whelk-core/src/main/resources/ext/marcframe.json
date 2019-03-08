@@ -11773,7 +11773,7 @@
         },
         {
           "when": "i2=5",
-          "resourceType": "Place"
+          "resourceType": "Geographic"
         },
         {
           "when": "i2=6",
@@ -11815,6 +11815,25 @@
                 {
                   "@type": "Topic",
                   "label": "Name of Topic"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "Geographic subject",
+          "source": {
+            "653": {"ind1": " ", "ind2": "5", "subfields":[
+              {"a": "Stockholm"}]
+            }
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Geographic",
+                  "label": "Stockholm"
                 }
               ]
             }
