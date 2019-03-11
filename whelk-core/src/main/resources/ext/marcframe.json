@@ -6463,6 +6463,30 @@
               "language": {"@type": "Language", "label": "Engelska."}
             }
           }}
+        },
+        {
+          "name": "Verify revert using infer for label from prefLabelByLang[locale]",
+          "normalized": [
+            {"008": "|     |        |  |||||||||||000 ||swe| "},
+            {"240": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "En titel"},
+              {"l": "Svenska"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": [ {
+                "@type": "Title",
+                "mainTitle": "En titel"
+              } ],
+              "language": {
+                "@type": "Language",
+                "@id": "https://id.kb.se/language/swe",
+                "prefLabelByLang": {"sv": "Svenska"}
+              }
+            }
+          }}
         }
       ]
     },
