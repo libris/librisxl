@@ -2736,7 +2736,7 @@ class MarcSubFieldHandler extends ConversionPart {
                 propertyValue = entity[castProperty]
 
             if (propertyValue == null && infer) {
-                for (subProp in ld.superPropertyOf[property]) {
+                for (subProp in ld.getSubProperties(property)) {
                     propertyValue = getPropertyValue(entity, subProp)
                     if (propertyValue)
                         break
