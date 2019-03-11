@@ -74,9 +74,10 @@ class JsonLd {
     private String vocabId
     private Map<String, String> nsToPrefixMap = [:]
 
-    private Map superClassOf
-    private Map superPropertyOf
-    private Map<String, Set> subClassesByType
+    private Map<String, List<String>> superClassOf
+    private Map<String, Set<String>> subClassesByType
+    private Map<String, List<String>> superPropertyOf
+    private Map<String, Set<String>> subPropertiesByType
 
     Map langContainerAlias = [:]
 
@@ -120,8 +121,9 @@ class JsonLd {
             : Collections.emptyMap()
 
         subClassesByType = new HashMap<String, Set>()
-
         superClassOf = generateSubTermLists("subClassOf")
+
+        subPropertiesByType = new HashMap<String, Set>()
         superPropertyOf = generateSubTermLists("subPropertyOf")
 
         buildLangContainerAliasMap()
@@ -548,27 +550,39 @@ class JsonLd {
     }
 
     Set<String> getSubClasses(String type) {
-        Set<String> subClasses = subClassesByType[type]
-        if (subClasses.is(null)) {
-            subClasses = new HashSet<String>()
-            getSubClasses(type, subClasses)
-            subClassesByType[type] = subClasses
-        }
-        return subClasses
+        return getSubTerms(type, superClassOf, subClassesByType)
     }
 
-    void getSubClasses(String type, Collection<String> result) {
+    Set<String> getSubProperties(String type) {
+        return getSubTerms(type, superPropertyOf, subPropertiesByType)
+    }
+
+    private Set<String> getSubTerms(String type,
+            Map<String, List<String>> superTermOf,
+            Map<String, Set<String>> cache) {
+        Set<String> subTerms = cache[type]
+        if (subTerms.is(null)) {
+            subTerms = new HashSet<String>()
+            collectSubTerms(type, superTermOf, subTerms)
+            cache[type] = subTerms
+        }
+        return subTerms
+    }
+
+    private void collectSubTerms(String type,
+            Map<String, List<String>> superTermOf,
+            Collection<String> result) {
         if (type == null)
             return
 
-        List subClasses = (List) (superClassOf[type])
-        if (subClasses == null)
+        List subTerms = (List) (superTermOf[type])
+        if (subTerms == null)
             return
 
-        result.addAll(subClasses)
+        result.addAll(subTerms)
 
-        for (String subClass : subClasses) {
-            getSubClasses(subClass, result)
+        for (String subTerm : subTerms) {
+            collectSubTerms(subTerm, superTermOf, result)
         }
     }
 
