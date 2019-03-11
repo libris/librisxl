@@ -4,6 +4,8 @@
 
   "keepGroupIds": false,
 
+  "locale": "sv",
+
   "TODO:s": [
     "addLink:identifiedBy (+ NOTE:marc-repeatable: false where link)"
   ],
@@ -317,7 +319,7 @@
       "$f": {"about": "_:work", "property": "originDate"},
       "$h": {"about": "_:work", "property": "marc:mediaTerm"},
 
-      "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
+      "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label", "infer": true},
       "$m": {"about": "_:work", "addLink": "musicMedium", "resourceType": "MusicMedium", "property": "label", "leadingPunctuation": ","},
       "$o": {"about": "_:work", "property": "version"},
 
@@ -400,7 +402,7 @@
       "include": ["agentpartnumber"],
       "$f": {"about": "_:agent", "property": "marc:originDate"},
       "$h": {"about": "_:agent", "property": "marc:mediaTerm"},
-      "$l": {"about": "_:agent", "link": "language", "resourceType": "Language", "property": "label"},
+      "$l": {"about": "_:agent", "link": "language", "resourceType": "Language", "property": "label", "infer": true},
       "$o": {"about": "_:agent", "property": "version"},
       "$r": {"about": "_:agent", "property": "marc:musicKey"},
       "$s": {"about": "_:agent", "property": "version"}
@@ -1054,7 +1056,7 @@
     },
 
     "agentdataCollectiveDetails": {
-      "$c": {"about": "_:place", "property": "label"},
+      "$c": {"about": "_:place", "property": "label", "infer": true},
       "$d": {"about": "_:agent", "addProperty": "date", "TODO?:leadingPunctuation": ","}
     },
 
@@ -4469,7 +4471,7 @@
       },
       "$b": {"addProperty": "marc:geographicClassificationAreaCode"},
       "$c": {"addProperty": "marc:geographicClassificationSubareaCode"},
-      "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
+      "$p": {"addLink": "place", "resourceType": "Place", "property": "label", "infer": true},
       "$0": {"addProperty": "marc:recordControlNumber", "NOTE:local": "Används ej"},
       "$1": {"addProperty": "marc:rwoURI"},
       "$2": {"property": "marc:placeCodeSource"},
@@ -4808,7 +4810,7 @@
 
     "038": {
       "aboutEntity": "?record",
-      "$a": {"link": "metadataLicensor", "resourceType": "Organization", "property": "label"}
+      "$a": {"link": "metadataLicensor", "resourceType": "Organization", "property": "label", "infer": true}
     },
 
     "040": {
@@ -6461,6 +6463,30 @@
               "language": {"@type": "Language", "label": "Engelska."}
             }
           }}
+        },
+        {
+          "name": "Verify revert using infer for label from prefLabelByLang[locale]",
+          "normalized": [
+            {"008": "|     |        |  |||||||||||000 ||swe| "},
+            {"240": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "En titel"},
+              {"l": "Svenska"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": [ {
+                "@type": "Title",
+                "mainTitle": "En titel"
+              } ],
+              "language": {
+                "@type": "Language",
+                "@id": "https://id.kb.se/language/swe",
+                "prefLabelByLang": {"sv": "Svenska"}
+              }
+            }
+          }}
         }
       ]
     },
@@ -7444,8 +7470,8 @@
       "pendingResources": {
         "_:part": {"addLink": "hasPart", "resourceType": "ProvisionActivity", "absorbSingle": true}
       },
-      "$a": {"aboutNew": "_:part", "link": "place", "resourceType": "Place", "property": "label", "leadingPunctuation": " ;"},
-      "$b": {"aboutAltNew": "_:part", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :"},
+      "$a": {"aboutNew": "_:part", "link": "place", "resourceType": "Place", "property": "label", "infer": true, "leadingPunctuation": " ;"},
+      "$b": {"aboutAltNew": "_:part", "link": "agent", "resourceType": "Agent", "property": "label", "infer": true, "leadingPunctuation": " :"},
       "$c": {
         "property": "date",
         "castPattern": "^([0-9u]{4})$",
@@ -7642,7 +7668,7 @@
           "resourceType": "ContentType"
         }
       },
-      "$a": {"about": "_:contentType", "property": "label"},
+      "$a": {"about": "_:contentType", "property": "label", "infer": true},
       "$b": {"about": "_:contentType", "property": "code"},
       "$2": {"about": "_:contentType", "property": "termGroup", "marcDefault": "rdacontent", "supplementary": true},
       "TODO?:$2": {"about": "_:contentType", "addLink": "inCollection", "resourceType": "ConceptCollection", "property": "code"},
@@ -7794,7 +7820,7 @@
         }
       },
       "aboutEntity": "?thing",
-      "$a": {"about": "_:mediaType", "property": "label"},
+      "$a": {"about": "_:mediaType", "property": "label", "infer": true},
       "$b": {"about": "_:mediaType", "property": "code"},
       "$2": {"about": "_:mediaType", "property": "termGroup", "marcDefault": "rdamedia", "supplementary": true},
       "$8": {"about": "_:mediaType", "property": "marc:groupid", "supplementary": true},
@@ -7929,7 +7955,7 @@
           "resourceType": "CarrierType"
         }
       },
-      "$a": {"about": "_:carrierType", "property": "label"},
+      "$a": {"about": "_:carrierType", "property": "label", "infer": true},
       "$b": {"about": "_:carrierType", "property": "code"},
       "$2": {"about": "_:carrierType", "property": "termGroup", "marcDefault": "rdacarrier", "supplementary": true},
       "$8": {"about": "_:carrierType", "property": "marc:groupid", "supplementary": true},
@@ -9078,7 +9104,7 @@
       "embedded": true,
       "$a": {"property": "label"},
       "$b": {"property": "degree"},
-      "$c": {"link": "grantingInstitution", "resourceType": "Agent", "property": "label"},
+      "$c": {"link": "grantingInstitution", "resourceType": "Agent", "property": "label", "infer": true},
       "$d": {"property": "date", "leadingPunctuation": ","},
       "$g": {"addProperty": "comment"},
       "$o": {"addLink": "identifiedBy", "resourceType": "DissertationIdentifier", "property": "value"},
@@ -9298,7 +9324,7 @@
       "$a": {"property": "label"},
       "$d": {"addProperty": "date"},
       "$o": {"addProperty": "marc:otherEventInformation"},
-      "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
+      "$p": {"addLink": "place", "resourceType": "Place", "property": "label", "infer": true},
       "$2": {"ignored": true, "NOTE:LC": "nac"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"}
@@ -9515,8 +9541,8 @@
         "_:event": {"addLink": "provisionActivity", "resourceType": "ProvisionActivity"}
       },
       "$a": {"property": "description", "punctuationChars": ":"},
-      "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label", "punctuationChars": ":"},
-      "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ","},
+      "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label" , "punctuationChars": ":"},
+      "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label" , "punctuationChars": ","},
       "$d": {"about": "_:event", "property": "date"},
       "$e": {"addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
       "$f": {"addProperty": "seriesStatement"},
@@ -13472,7 +13498,7 @@
           }
         }
       ],
-      "$a": {"about": "_:agent", "property": "label", "required": true, "punctuationChars": ")"},
+      "$a": {"about": "_:agent", "property": "label", "infer": true, "required": true, "punctuationChars": ")"},
       "_spec": [
         {
           "source": {
@@ -13791,7 +13817,7 @@
       "i2": {
         "marcDefault": " "
       },
-      "$a": {"about": "_:instanceOfContribution", "link": "agent", "resourceType": "Agent", "property": "label", "TODO:targetMatch": "1xx"},
+      "$a": {"about": "_:instanceOfContribution", "link": "agent", "resourceType": "Agent", "property": "label", "infer": true, "TODO:targetMatch": "1xx"},
       "$b": {"property": "editionStatement", "TODO:targetMatch": "250"},
       "$c": {"about": "_:instanceTitle", "property": "qualifier", "NOTE:marc-repeatable": false},
       "$d": {"property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
@@ -14081,7 +14107,7 @@
       "i2": {
         "marcDefault": "0"
       },
-      "$a": {"about": "_:agent", "property": "label", "TODO:targetMatch": "1xx"},
+      "$a": {"about": "_:agent", "property": "label", "infer": true, "TODO:targetMatch": "1xx"},
       "$b": {"about": "_:hasInstance", "property": "editionStatement", "TODO:targetMatch": "250"},
       "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false},
       "$d": {"about": "_:hasInstance", "property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
@@ -14245,7 +14271,7 @@
       "i2": {
         "marcDefault": " "
       },
-      "$e": {"addLink": "language", "NOTE:marc-repeatable": false, "resourceType": "Language", "property": "label", "TODO:inherit": "008:[35:38]"},
+      "$e": {"addLink": "language", "NOTE:marc-repeatable": false, "resourceType": "Language", "property": "label", "infer": true, "TODO:inherit": "008:[35:38]"},
       "$f": {"about": "_:provisionActivity", "link": "place", "resourceType": "Place", "property": "code", "NOTE:marc-repeatable": false, "TODO:inherit": "008:[15:18]"}
     },
     "776": {
@@ -16683,7 +16709,7 @@
     "375": {"ignored": true, "NOTE:local": "gender: Struket av MSS 2017-12-12 efter diskussion om persondata i biblioteksregister."},
     "376": {
       "$a": {"addLink": "hasTypeOfFamily", "resourceType": "TypeOfFamily", "property": "label"},
-      "$b": {"addLink": "hasProminentFamilyMember", "resourceType": "Person", "property": "prefLabel"},
+      "$b": {"addLink": "hasProminentFamilyMember", "resourceType": "Person", "property": "label", "infer": true},
     "_spec": [
       {
         "source": {
@@ -19635,7 +19661,7 @@
       "$i": {
         "addLink": "availability",
         "resourceType": "ItemAvailability",
-        "property": "label",
+        "property": "label", "infer": true,
         "NOTE": "deviates from standard (itemPart)?"
       },
       "$j": {"property": "shelfControlNumber"},
