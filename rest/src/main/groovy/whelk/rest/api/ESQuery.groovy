@@ -155,11 +155,9 @@ class ESQuery {
                     prunedTypes.add(type)
             }
             // Add all subclasses of the remaining types
-            ArrayList<String> subClasses = []
+            Set<String> subClasses = []
             for (String type : prunedTypes) {
-                List<String> result = []
-                jsonld.getSuperClasses('bar', result)
-                jsonld.getSubClasses(type, subClasses)
+                subClasses += jsonld.getSubClasses(type)
                 subClasses.add(type)
             }
 
