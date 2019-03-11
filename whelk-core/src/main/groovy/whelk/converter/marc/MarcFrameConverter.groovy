@@ -2834,7 +2834,7 @@ class MarcSubFieldHandler extends ConversionPart {
     def getPropertyValue(Map entity, String property) {
         def propertyValue = property ? entity[property] : null
         if (propertyValue == null) {
-            def alias = ld.langContainerAlias[property]
+            def alias = ld ? ld.langContainerAlias[property] : null
             propertyValue = alias ? entity[alias] : null
             if (propertyValue instanceof Map) {
                 propertyValue = propertyValue[ruleSet.conversion.locale]
