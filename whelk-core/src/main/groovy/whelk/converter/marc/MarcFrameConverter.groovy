@@ -1780,6 +1780,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     String aboutAlias
     List<String> onRevertPrefer
     Set<String> sharesGroupIdWith = new HashSet<String>()
+    boolean silentRevert
 
     static GENERIC_REL_URI_TEMPLATE = "generic:{_}"
 
@@ -1812,6 +1813,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
         onRevertPrefer = (List<String>) (fieldDfn.onRevertPrefer instanceof String ?
                 [fieldDfn.onRevertPrefer] : fieldDfn.onRevertPrefer)
+
+        silentRevert = fieldDfn.silentRevert == true
 
         computeLinks = (fieldDfn.computeLinks) ? new HashMap(fieldDfn.computeLinks) : [:]
         if (computeLinks) {
@@ -2401,7 +2404,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
 
             // TODO: store reverted input refs instead of tagging input data
-            usedEntities.each { it._revertedBy = baseTag; it._groupId = groupId }
+            usedEntities.each {
+                def revertMark = silentRevert ? '_silentlyRevertedBy' : '_revertedBy'
+                it[revertMark] = baseTag
+                it._groupId = groupId
+            }
             //field._revertedBy = this.tag
             return field
         } else {

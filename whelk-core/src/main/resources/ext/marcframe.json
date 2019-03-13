@@ -4864,6 +4864,7 @@
     },
     "041": {
       "aboutEntity": "?work",
+      "silentRevert": true,
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Work",
@@ -4948,7 +4949,68 @@
       },
       "$6": {"property": "marc:bib041-fieldref", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 2},
       "$8": {"property": "marc:bib041-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 0},
-      "TODO": "add _spec?"
+      "_spec": [
+        {
+          "source": [
+            {"008" : "|     |        |  |||||||||||000 ||swe| "},
+            {"041": { "ind1": " ", "ind2": " ", "subfields": [{"a": "swe"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "language": [{"@id": "https://id.kb.se/language/swe", "code": "swe"}]
+              }
+            }
+          }
+        },
+        {
+          "name": "Produce multiple 041 as well as 730 on revert",
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "language": [
+                  {
+                    "@id": "https://id.kb.se/language/swe",
+                    "@type": "Language",
+                    "code": "swe",
+                    "prefLabelByLang": {"sv": "Svenska"}
+                  }
+                ],
+                "hasPart": [
+                  {
+                    "@type": "Work",
+                    "hasTitle": [
+                      {"@type": "Title", "mainTitle": "A Part"}
+                    ],
+                    "language": [
+                      {
+                        "@id": "https://id.kb.se/language/eng",
+                        "@type": "Language",
+                        "code": "eng",
+                        "prefLabelByLang": {"sv": "English"}
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "normalized": [
+            {"008" : "|     |        |  |||||||||||000 ||swe| "},
+            {"041": { "ind1": " ", "ind2": " ", "subfields": [{"a": "swe"}]}},
+            {"041": {"ind1": " ", "ind2": " ", "subfields": [{"a": "eng"}]}},
+            {
+              "730": {
+                "ind1": "0",
+                "ind2": "2",
+                "subfields": [{"a": "A Part"}, {"l": "English"}]
+              }
+            }
+          ]
+        }
+      ]
     },
     "042": {
       "aboutEntity": "?record",
