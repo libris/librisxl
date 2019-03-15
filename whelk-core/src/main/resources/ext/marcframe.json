@@ -10165,6 +10165,7 @@
         {
           "when": "i1=3",
           "include": ["subjectbase", "agentdataFamily"],
+          "resourceType": "Family",
           "pendingResources": {
             "_:agent": {
               "addLink": "termComponentList",
@@ -10333,7 +10334,33 @@
             }
           }}
         },
-
+        {
+          "name": "Set ind2=4 as default value",
+          "source": {
+            "600": {"ind1": "3", "ind2": " ", "subfields": [
+              {"a": "Bonnier,"},
+              {"c": "släkt"}
+            ]}
+          },
+          "normalized": {
+            "600": {"ind1": "3", "ind2": "4", "subfields": [
+              {"a": "Bonnier,"},
+              {"c": "släkt"}
+            ]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Family",
+                  "name": "Bonnier",
+                  "marc:titlesAndOtherWordsAssociatedWithAName": ["släkt"]
+                }
+              ]
+            }
+          }}
+        },
         {
           "source": {
             "600": {"ind1": "3", "ind2": "0", "subfields": [
