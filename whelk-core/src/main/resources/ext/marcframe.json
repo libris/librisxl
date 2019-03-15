@@ -10335,7 +10335,7 @@
           }}
         },
         {
-          "name": "Set in2=4 as default value",
+          "name": "Set ind2=4 as default value",
           "source": {
             "600": {"ind1": "3", "ind2": " ", "subfields": [
               {"a": "Bonnier,"},
