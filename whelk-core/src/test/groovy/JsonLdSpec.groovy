@@ -29,7 +29,15 @@ class JsonLdSpec extends Specification {
             ["@id": "http://example.org/ns/Publication",
              "subClassOf": ["@id": "http://example.org/ns/ProvisionActivity"]],
             ["@id": "http://example.org/pfx/SpecialPublication",
-             "subClassOf": ["@id": "http://example.org/ns/Publication"]]
+             "subClassOf": ["@id": "http://example.org/ns/Publication"]],
+
+            ["@id": "http://example.org/ns/label", "@type": ["@id": "DatatypeProperty" ]],
+            ["@id": "http://example.org/ns/prefLabel",
+             "subPropertyOf": [ ["@id": "http://example.org/ns/label"] ]],
+            ["@id": "http://example.org/ns/preferredLabel",
+             "subPropertyOf": ["@id": "http://example.org/ns/prefLabel"]],
+            ["@id": "http://example.org/ns/name",
+             "subPropertyOf": ["@id": "http://example.org/ns/label"]]
         ]
     ]
 
@@ -294,6 +302,20 @@ class JsonLdSpec extends Specification {
         term                        | uri
         'Publication'               | 'http://example.org/ns/Publication'
         'pfx:SpecialPublication'    | 'http://example.org/pfx/SpecialPublication'
+    }
+
+    def "use vocab to get subclasses of a base class"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        expect:
+        ld.getSubClasses('ProvisionActivity') == ['Publication', 'pfx:SpecialPublication'] as Set
+    }
+
+    def "use vocab to get subproperties of a base property"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        expect:
+        ld.getSubProperties('label') == ['prefLabel', 'preferredLabel', 'name'] as Set
     }
 
     def "use vocab to match a subclass to a base class"() {

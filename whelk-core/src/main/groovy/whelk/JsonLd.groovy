@@ -70,10 +70,16 @@ class JsonLd {
     Map<String, Map> context = [:]
     Map displayData
     Map vocabIndex
-    private Map superClassOf
-    private Map<String, Set> subClassesByType
+
     private String vocabId
     private Map<String, String> nsToPrefixMap = [:]
+
+    private Map<String, List<String>> superClassOf
+    private Map<String, Set<String>> subClassesByType
+    private Map<String, List<String>> superPropertyOf
+    private Map<String, Set<String>> subPropertiesByType
+
+    Map langContainerAlias = [:]
 
     /**
      * This includes terms that are declared as either set or list containers
@@ -115,8 +121,12 @@ class JsonLd {
             : Collections.emptyMap()
 
         subClassesByType = new HashMap<String, Set>()
+        superClassOf = generateSubTermLists("subClassOf")
 
-        generateSubClassesLists()
+        subPropertiesByType = new HashMap<String, Set>()
+        superPropertyOf = generateSubTermLists("subPropertyOf")
+
+        buildLangContainerAliasMap()
 
         expandAliasesInLensProperties()
     }
@@ -136,20 +146,22 @@ class JsonLd {
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    private void expandAliasesInLensProperties() {
-        Map propAliases = [:]
+    private void buildLangContainerAliasMap() {
         for (ctx in [displayData.get(CONTEXT_KEY), context]) {
             ctx.each { k, v ->
                 if (v instanceof Map && v[CONTAINER_KEY] == LANGUAGE_KEY) {
-                    propAliases[v[ID_KEY]] = k
+                    langContainerAlias[v[ID_KEY]] = k
                 }
             }
         }
+    }
 
+    @TypeChecked(TypeCheckingMode.SKIP)
+    private void expandAliasesInLensProperties() {
         displayData['lensGroups']?.values().each { group ->
             group.get('lenses')?.values().each { lens ->
                 lens['showProperties'] = lens['showProperties'].collect {
-                    def alias = propAliases[it]
+                    def alias = langContainerAlias[it]
                     return alias ? [it, alias] : it
                 }.flatten()
             }
@@ -506,27 +518,28 @@ class JsonLd {
         }
     }
 
-    private generateSubClassesLists() {
-        superClassOf = [:]
+    private Map<String, List<String>> generateSubTermLists(String relationToSuper) {
+        def superTermOf = [:]
         for (String type : vocabIndex.keySet()) {
             def termMap = vocabIndex[type]
-            def superClasses = termMap["subClassOf"]
+            def superTerms = termMap[relationToSuper]
 
             // Make list if not list already.
-            if (!(superClasses instanceof List))
-                superClasses = [superClasses]
+            if (!(superTerms instanceof List))
+                superTerms = [superTerms]
 
-            for (superClass in superClasses) {
-                if (superClass == null || superClass[ID_KEY] == null) {
+            for (superTerm in superTerms) {
+                if (superTerm == null || superTerm[ID_KEY] == null) {
                     continue
                 }
 
-                String superClassType = toTermKey((String) superClass[ID_KEY])
-                if (superClassOf[superClassType] == null)
-                    superClassOf[superClassType] = []
-                ((List)superClassOf[superClassType]).add(type)
+                String superTermType = toTermKey((String) superTerm[ID_KEY])
+                if (superTermOf[superTermType] == null)
+                    superTermOf[superTermType] = []
+                ((List)superTermOf[superTermType]).add(type)
             }
         }
+        return superTermOf
     }
 
     boolean isSubClassOf(String type, String baseType) {
@@ -537,27 +550,39 @@ class JsonLd {
     }
 
     Set<String> getSubClasses(String type) {
-        Set<String> subClasses = subClassesByType[type]
-        if (subClasses.is(null)) {
-            subClasses = new HashSet<String>()
-            getSubClasses(type, subClasses)
-            subClassesByType[type] = subClasses
-        }
-        return subClasses
+        return getSubTerms(type, superClassOf, subClassesByType)
     }
 
-    void getSubClasses(String type, Collection<String> result) {
+    Set<String> getSubProperties(String type) {
+        return getSubTerms(type, superPropertyOf, subPropertiesByType)
+    }
+
+    private Set<String> getSubTerms(String type,
+            Map<String, List<String>> superTermOf,
+            Map<String, Set<String>> cache) {
+        Set<String> subTerms = cache[type]
+        if (subTerms.is(null)) {
+            subTerms = new HashSet<String>()
+            collectSubTerms(type, superTermOf, subTerms)
+            cache[type] = subTerms
+        }
+        return subTerms
+    }
+
+    private void collectSubTerms(String type,
+            Map<String, List<String>> superTermOf,
+            Collection<String> result) {
         if (type == null)
             return
 
-        List subClasses = (List) (superClassOf[type])
-        if (subClasses == null)
+        List subTerms = (List) (superTermOf[type])
+        if (subTerms == null)
             return
 
-        result.addAll(subClasses)
+        result.addAll(subTerms)
 
-        for (String subClass : subClasses) {
-            getSubClasses(subClass, result)
+        for (String subTerm : subTerms) {
+            collectSubTerms(subTerm, superTermOf, result)
         }
     }
 

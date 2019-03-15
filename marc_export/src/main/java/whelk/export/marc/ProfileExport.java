@@ -249,7 +249,7 @@ public class ProfileExport
 
         String locations = profile.getProperty("locations", "");
         HashSet locationSet = new HashSet(Arrays.asList(locations.split(" ")));
-        if (doVirtualDeletions && !locationSet.contains("*") && deleteMode != DELETE_MODE.IGNORE)
+        if (doVirtualDeletions && !locationSet.contains("*"))
         {
             if (!isHeld(document, profile))
                 document.setDeleted(true);

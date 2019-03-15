@@ -4,6 +4,8 @@
 
   "keepGroupIds": false,
 
+  "locale": "sv",
+
   "TODO:s": [
     "addLink:identifiedBy (+ NOTE:marc-repeatable: false where link)"
   ],
@@ -317,7 +319,7 @@
       "$f": {"about": "_:work", "property": "originDate"},
       "$h": {"about": "_:work", "property": "marc:mediaTerm"},
 
-      "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label"},
+      "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label", "infer": true},
       "$m": {"about": "_:work", "addLink": "musicMedium", "resourceType": "MusicMedium", "property": "label", "leadingPunctuation": ","},
       "$o": {"about": "_:work", "property": "version"},
 
@@ -400,7 +402,7 @@
       "include": ["agentpartnumber"],
       "$f": {"about": "_:agent", "property": "marc:originDate"},
       "$h": {"about": "_:agent", "property": "marc:mediaTerm"},
-      "$l": {"about": "_:agent", "link": "language", "resourceType": "Language", "property": "label"},
+      "$l": {"about": "_:agent", "link": "language", "resourceType": "Language", "property": "label", "infer": true},
       "$o": {"about": "_:agent", "property": "version"},
       "$r": {"about": "_:agent", "property": "marc:musicKey"},
       "$s": {"about": "_:agent", "property": "version"}
@@ -1054,7 +1056,7 @@
     },
 
     "agentdataCollectiveDetails": {
-      "$c": {"about": "_:place", "property": "label"},
+      "$c": {"about": "_:place", "property": "label", "infer": true},
       "$d": {"about": "_:agent", "addProperty": "date", "TODO?:leadingPunctuation": ","}
     },
 
@@ -2502,7 +2504,8 @@
           "TODO:about": "_:otherInstance",
           "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsRegularityType-{_}",
-          "matchUriToken": "^[nrx]$"
+          "matchUriToken": "^[nrx]$",
+          "fixedDefault": "|"
         },
         "[3]": {
           "TODO:ignore": "Not used in 008. Should we remove this mapping as well?",
@@ -3489,7 +3492,9 @@
         "[19]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
           "addLink": "frequency",
-          "uriTemplate": "https://id.kb.se/marc/SerialsRegularityType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SerialsRegularityType-{_}",
+          "matchUriToken": "^[nrx]$",
+          "fixedDefault": "|"
         },
         "[20]": {
           "TODO:ignore": true,
@@ -3609,7 +3614,7 @@
           "name": "export fixedDefault in the absence of frequency in series",
           "source": {
             "leader": "     cas a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123d1898    enk ||p|||||||0   ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123d1898    enk  |p|||||||0   ||   | "}]
           },
           "normalized": {
             "leader": "     cas a        i 4500",
@@ -4466,7 +4471,7 @@
       },
       "$b": {"addProperty": "marc:geographicClassificationAreaCode"},
       "$c": {"addProperty": "marc:geographicClassificationSubareaCode"},
-      "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
+      "$p": {"addLink": "place", "resourceType": "Place", "property": "label", "infer": true},
       "$0": {"addProperty": "marc:recordControlNumber", "NOTE:local": "Används ej"},
       "$1": {"addProperty": "marc:rwoURI"},
       "$2": {"property": "marc:placeCodeSource"},
@@ -4805,7 +4810,7 @@
 
     "038": {
       "aboutEntity": "?record",
-      "$a": {"link": "metadataLicensor", "resourceType": "Organization", "property": "label"}
+      "$a": {"link": "metadataLicensor", "resourceType": "Organization", "property": "label", "infer": true}
     },
 
     "040": {
@@ -4859,6 +4864,7 @@
     },
     "041": {
       "aboutEntity": "?work",
+      "silentRevert": true,
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Work",
@@ -4943,7 +4949,68 @@
       },
       "$6": {"property": "marc:bib041-fieldref", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 2},
       "$8": {"property": "marc:bib041-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 0},
-      "TODO": "add _spec?"
+      "_spec": [
+        {
+          "source": [
+            {"008" : "|     |        |  |||||||||||000 ||swe| "},
+            {"041": { "ind1": " ", "ind2": " ", "subfields": [{"a": "swe"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "language": [{"@id": "https://id.kb.se/language/swe", "code": "swe"}]
+              }
+            }
+          }
+        },
+        {
+          "name": "Produce multiple 041 as well as 730 on revert",
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "language": [
+                  {
+                    "@id": "https://id.kb.se/language/swe",
+                    "@type": "Language",
+                    "code": "swe",
+                    "prefLabelByLang": {"sv": "Svenska"}
+                  }
+                ],
+                "hasPart": [
+                  {
+                    "@type": "Work",
+                    "hasTitle": [
+                      {"@type": "Title", "mainTitle": "A Part"}
+                    ],
+                    "language": [
+                      {
+                        "@id": "https://id.kb.se/language/eng",
+                        "@type": "Language",
+                        "code": "eng",
+                        "prefLabelByLang": {"sv": "English"}
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "normalized": [
+            {"008" : "|     |        |  |||||||||||000 ||swe| "},
+            {"041": { "ind1": " ", "ind2": " ", "subfields": [{"a": "swe"}]}},
+            {"041": {"ind1": " ", "ind2": " ", "subfields": [{"a": "eng"}]}},
+            {
+              "730": {
+                "ind1": "0",
+                "ind2": "2",
+                "subfields": [{"a": "A Part"}, {"l": "English"}]
+              }
+            }
+          ]
+        }
+      ]
     },
     "042": {
       "aboutEntity": "?record",
@@ -6458,6 +6525,30 @@
               "language": {"@type": "Language", "label": "Engelska."}
             }
           }}
+        },
+        {
+          "name": "Verify revert using infer for label from prefLabelByLang[locale]",
+          "normalized": [
+            {"008": "|     |        |  |||||||||||000 ||swe| "},
+            {"240": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "En titel"},
+              {"l": "Svenska"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": [ {
+                "@type": "Title",
+                "mainTitle": "En titel"
+              } ],
+              "language": {
+                "@type": "Language",
+                "@id": "https://id.kb.se/language/swe",
+                "prefLabelByLang": {"sv": "Svenska"}
+              }
+            }
+          }}
         }
       ]
     },
@@ -6874,10 +6965,33 @@
     },
 
     "256": {
+      "NOTE:LC": "Prior to the definition of this field in 1987, file characteristics were recorded in subfield $a of field 300",
+      "NOTE:Local": "Until librisxl version 1.7 mapped to digitalCharacteristic",
       "aboutEntity": "?thing",
-      "$a": {"link": "digitalCharacteristic", "resourceType": "FileType", "property": "label"}
+      "addLink": "hasNote",
+      "resourceType": "marc:ComputerFileCharacteristics",
+      "repeatable": false,
+      "$a": {"property": "label"},
+      "$6": null,
+      "$8": null,
+      "_spec": [
+        {
+          "source": [
+            {"256": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Computer data (2 files : 800, 1250 records) and programs (3 files : 7260, 3490, 5076 bytes)."}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "hasNote": [
+                {
+                  "@type": "marc:ComputerFileCharacteristics",
+                  "label": "Computer data (2 files : 800, 1250 records) and programs (3 files : 7260, 3490, 5076 bytes)."
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
-
     "257": {
       "addLink": "marc:hasCountryOfProducingEntityForArchivalFilms",
       "resourceType": "marc:CountryOfProducingEntityForArchivalFilms",
@@ -7351,7 +7465,8 @@
     "262": {},
     "263": {
       "aboutEntity": "?thing",
-      "$a": {"property": "projectedProvisionDate"}
+      "$a": {"property": "projectedProvisionDate"},
+      "$6": null
     },
 
     "264": {
@@ -7417,8 +7532,8 @@
       "pendingResources": {
         "_:part": {"addLink": "hasPart", "resourceType": "ProvisionActivity", "absorbSingle": true}
       },
-      "$a": {"aboutNew": "_:part", "link": "place", "resourceType": "Place", "property": "label", "leadingPunctuation": " ;"},
-      "$b": {"aboutAltNew": "_:part", "link": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :"},
+      "$a": {"aboutNew": "_:part", "link": "place", "resourceType": "Place", "property": "label", "infer": true, "leadingPunctuation": " ;"},
+      "$b": {"aboutAltNew": "_:part", "link": "agent", "resourceType": "Agent", "property": "label", "infer": true, "leadingPunctuation": " :"},
       "$c": {
         "property": "date",
         "castPattern": "^([0-9u]{4})$",
@@ -7615,7 +7730,7 @@
           "resourceType": "ContentType"
         }
       },
-      "$a": {"about": "_:contentType", "property": "label"},
+      "$a": {"about": "_:contentType", "property": "label", "infer": true},
       "$b": {"about": "_:contentType", "property": "code"},
       "$2": {"about": "_:contentType", "property": "termGroup", "marcDefault": "rdacontent", "supplementary": true},
       "TODO?:$2": {"about": "_:contentType", "addLink": "inCollection", "resourceType": "ConceptCollection", "property": "code"},
@@ -7767,7 +7882,7 @@
         }
       },
       "aboutEntity": "?thing",
-      "$a": {"about": "_:mediaType", "property": "label"},
+      "$a": {"about": "_:mediaType", "property": "label", "infer": true},
       "$b": {"about": "_:mediaType", "property": "code"},
       "$2": {"about": "_:mediaType", "property": "termGroup", "marcDefault": "rdamedia", "supplementary": true},
       "$8": {"about": "_:mediaType", "property": "marc:groupid", "supplementary": true},
@@ -7902,7 +8017,7 @@
           "resourceType": "CarrierType"
         }
       },
-      "$a": {"about": "_:carrierType", "property": "label"},
+      "$a": {"about": "_:carrierType", "property": "label", "infer": true},
       "$b": {"about": "_:carrierType", "property": "code"},
       "$2": {"about": "_:carrierType", "property": "termGroup", "marcDefault": "rdacarrier", "supplementary": true},
       "$8": {"about": "_:carrierType", "property": "marc:groupid", "supplementary": true},
@@ -8188,6 +8303,7 @@
         "property": "label"
       },
       "$b": {
+        "TODO": "Clash with 300c, see _spec",
         "link": "hasDimensions",
         "resourceType": "Dimensions",
         "property": "label",
@@ -8216,7 +8332,7 @@
         "resourceType": "ReductionRatio",
         "property": "label"
       },
-      "$h": { "ignored": "true" },
+      "$h": null, "NOTE:$h": {"ignored": "location within medium"},
       "$i":
       {
         "addLink": "systemRequirement",
@@ -8248,28 +8364,97 @@
         "resourceType": "Polarity",
         "property": "label"
       },
-      "$0": { "NOTE:ignored": "true" },
+      "$0": null, "NOTE:$0": "nac",
       "TODO:subfield$2": "Source (NR)",
-      "$3": {
-        "link": "appliesTo", "resourceType": "Resource", "property": "label",
-        "NOTE": "record-count: 0. If this would appear, we unconditionally expect it ONLY to be used in subsequent 340 (see linkSubsequentRepeated)."
-      },
+      "$3": null,
+      "NOTE:$3": {"NOTE:LC": "nac", "NOTE:record-count": 0, "NOTE:local": "If this would appear, we unconditionally expect it ONLY to be used in subsequent 340 (see linkSubsequentRepeated)."},
       "TODO:subfield$6": "Linkage (NR)",
       "$g": {
         "NOTE": "New subfield",
         "addLink": "colorContent",
         "resourceType": "ColorContent",
         "property": "label"
-      }
+      },
+      "_spec": [
+        {
+          "name": "Property clash between 300c from 340b. Normalized is recreated error. Consider this a TODO",
+          "source":  [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "film"}]}}
+          ],
+          "normalized":  [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film"},{"c": "film"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "film"},{"b": "film"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "hasDimensions": [
+                {
+                  "@type": "Dimensions",
+                  "label": "film"
+                },
+                {
+                  "@type": "Dimensions",
+                  "label": "film"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unintended successful reconversion to 300c from 340b. Normalized is recreated error. Consider this a TODO",
+          "source":  [
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"a": "film"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "35 mm"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"j": "original"}]}}
+          ],
+          "normalized":  [
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"a": "film"}]}},
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "35 mm"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"j": "original"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "baseMaterial": [
+                {
+                  "@type": "BaseMaterial",
+                  "label": "film"
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Instance",
+                  "hasDimensions": 
+                    {
+                      "@type": "Dimensions",
+                      "label": "35 mm"
+                    }
+                },
+                {
+                  "@type": "Instance",
+                  "generation": [
+                    {
+                      "@type": "Generation",
+                      "label": "original"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "342": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "343": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "344": {
-      "NOTE:record-count": 0,
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
         "groupId": "#part-$seq"
+      },
+      "pendingResources": {
+        "_:soundCharacteristic": {"addLink": "soundCharacteristic", "resourceType": "SoundCharacteristic"}
       },
       "$a": {"addLink": "soundCharacteristic", "resourceType": "RecordingMethod", "property": "label"},
       "$b": {"addLink": "soundCharacteristic", "resourceType": "RecordingMedium", "property": "label"},
@@ -8279,32 +8464,192 @@
       "$f": {"addLink": "soundCharacteristic", "resourceType": "TapeConfig", "property": "label"},
       "$g": {"addLink": "soundCharacteristic", "resourceType": "PlaybackChannels", "property": "label"},
       "$h": {"addLink": "soundCharacteristic", "resourceType": "PlaybackCharacteristic", "property": "label"},
-      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$0": null, "NOTE:$0": "nac",
+      "$2": {"about": "_:soundCharacteristic", "link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$3": {"property": "typeNote", "supplementary": true},
+      "$6": {"about": "_:soundCharacteristic", "property": "marc:fieldref", "supplementary": true},
+      "_spec": [
+        {
+          "source":  [
+            {"344": {"ind1": " ", "ind2": " ", "subfields": [{"a": "digital"}, {"2": "rdatr"}]}},
+            {"344": {"ind1": " ", "ind2": " ", "subfields": [{"b": "optical"}, {"2": "rdarm"}]}},
+            {"344": {"ind1": " ", "ind2": " ", "subfields": [{"g": "surround"}, {"2": "rdacpc"}]}},
+            {"344": {"ind1": " ", "ind2": " ", "subfields": [{"h": "Dolby Digital 5.1"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "soundCharacteristic": [
+                {
+                  "@type": "RecordingMethod",
+                  "label": "digital"
+                },
+                {
+                  "@type": "SoundCharacteristic",
+                  "source": {
+                    "@type": "Source",
+                    "code": "rdatr"
+                  }
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Instance",
+                  "soundCharacteristic": [
+                    {
+                      "@type": "RecordingMedium",
+                      "label": "optical"
+                    },
+                    {
+                      "@type": "SoundCharacteristic",
+                      "source": {
+                        "@type": "Source",
+                        "code": "rdarm"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "@type": "Instance",
+                  "soundCharacteristic": [
+                    {
+                      "@type": "PlaybackChannels",
+                      "label": "surround"
+                    },
+                    {
+                      "@type": "SoundCharacteristic",
+                      "source": {
+                        "@type": "Source",
+                        "code": "rdacpc"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "@type": "Instance",
+                  "soundCharacteristic": [
+                    {
+                      "@type": "PlaybackCharacteristic",
+                      "label": "Dolby Digital 5.1"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "345": {
-      "NOTE:record-count": 0,
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
         "groupId": "#part-$seq"
+      },
+      "pendingResources": {
+        "_:projectionCharacteristic": {"addLink": "projectionCharacteristic", "resourceType": "ProjectionCharacteristic"}
       },
       "$a": {"addLink": "projectionCharacteristic", "resourceType": "PresentationFormat", "property": "label"},
       "$b": {"addLink": "projectionCharacteristic", "resourceType": "ProjectionSpeed", "property": "label"},
-      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$0": null, "NOTE:$0": "nac",
+      "$2": {"about": "_:projectionCharacteristic", "link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$3": {"property": "typeNote", "supplementary": true},
+      "$6": {"about": "_:projectionCharacteristic", "property": "marc:fieldref", "supplementary": true},
+      "_spec": [
+        {
+          "source":  [
+            {"345": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Cinerama"}, {"2": "rdapf"}]}},
+            {"345": {"ind1": " ", "ind2": " ", "subfields": [{"b": "24fps"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "projectionCharacteristic": [
+                {
+                  "@type": "PresentationFormat",
+                  "label": "Cinerama"
+                },
+                {
+                  "@type": "ProjectionCharacteristic",
+                  "source": {
+                    "@type": "Source",
+                    "code": "rdapf"
+                  }
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Instance",
+                  "projectionCharacteristic": [
+                    {
+                      "@type": "ProjectionSpeed",
+                      "label": "24fps"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "346": {
-      "NOTE:record-count": 0,
+      "NOTE": "linkSubsequentRepeated will produce extra instances when repetition of fields is only used for different source,",
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Instance",
         "groupId": "#part-$seq"
       },
+      "pendingResources": {
+        "_:videoCharacteristic": {"addLink": "videoCharacteristic", "resourceType": "VideoCharacteristic"}
+      },
       "$a": {"addLink": "videoCharacteristic", "resourceType": "VideoFormat", "property": "label"},
       "$b": {"addLink": "videoCharacteristic", "resourceType": "BroadcastStandard", "property": "label"},
-      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$0": null, "NOTE:$0": "nac",
+      "$2": {"about": "_:videoCharacteristic", "link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$3": {"property": "typeNote", "supplementary": true},
+      "$6": {"about": "_:videoCharacteristic", "property": "marc:fieldref", "supplementary": true},
+      "_spec": [
+        {
+          "source":  [
+            {"346": {"ind1": " ", "ind2": " ", "subfields": [{"a": "VHS"}, {"2": "rdavf"}]}},
+            {"346": {"ind1": " ", "ind2": " ", "subfields": [{"b": "PAL"}, {"2": "rdabs"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "videoCharacteristic": [
+                {
+                  "@type": "VideoFormat",
+                  "label": "VHS"
+                },
+                {
+                  "@type": "VideoCharacteristic",
+                  "source": {
+                    "@type": "Source",
+                    "code": "rdavf"
+                  }
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Instance",
+                  "videoCharacteristic": [
+                    {
+                      "@type": "BroadcastStandard",
+                      "label": "PAL"
+                    },
+                    {
+                      "@type": "VideoCharacteristic",
+                      "source": {
+                        "@type": "Source",
+                        "code": "rdabs"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "347": {
       "aboutEntity": "?thing",
@@ -8314,18 +8659,64 @@
         "TODO:groupId": "#part-$seq",
         "embedded": true
       },
+      "pendingResources": {
+        "_:digitalCharacteristic": {"addLink": "digitalCharacteristic", "resourceType": "DigitalCharacteristic"}
+      },
       "$a": {"addLink": "digitalCharacteristic", "resourceType": "FileType", "property": "label"},
       "$b": {"addLink": "digitalCharacteristic", "resourceType": "EncodingFormat", "property": "label"},
       "$c": {"addLink": "digitalCharacteristic", "resourceType": "FileSize", "property": "label"},
       "$d": {"addLink": "digitalCharacteristic", "resourceType": "Resolution", "property": "label"},
       "$e": {"addLink": "digitalCharacteristic", "resourceType": "RegionalEncoding", "property": "label"},
       "$f": {"addLink": "digitalCharacteristic", "resourceType": "EncodedBitrate", "property": "label"},
-      "$0": {"TODO:ignored": "true???"},
-      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
-      "$3": {
-        "link": "appliesTo", "resourceType": "Resource", "property": "label",
-        "NOTE": "record-count: 0. If this would appear, we unconditionally expect it ONLY to be used in subsequent 347 (see linkSubsequentRepeated)."
-      }
+      "$0": null, "NOTE:$0": "nac",
+      "$2": {"about": "_:digitalCharacteristic", "link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$3": {"property": "typeNote", "supplementary": true},
+      "$6": {"about": "_:digitalCharacteristic", "property": "marc:fieldref", "supplementary": true},
+      "_spec": [
+        {
+          "source":  [
+            {"347": {"ind1": " ", "ind2": " ", "subfields": [{"a": "text file"}, {"b": "PDF"},
+                                                             {"2": "rdaft"}]}},
+            {"347": {"ind1": " ", "ind2": " ", "subfields": [{"a": "data file"}, {"b": "XML"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "digitalCharacteristic": [
+                {
+                  "@type": "FileType",
+                  "label": "text file"
+                },
+                {
+                  "@type": "EncodingFormat",
+                  "label": "PDF"
+                },
+                {
+                  "@type": "DigitalCharacteristic",
+                  "source": {
+                    "@type": "Source",
+                    "code": "rdaft"
+                  }
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Instance",
+                  "digitalCharacteristic": [
+                    {
+                      "@type": "FileType",
+                      "label": "data file"
+                    },
+                    {
+                      "@type": "EncodingFormat",
+                      "label": "XML"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "348": {
       "aboutEntity": "?thing",
@@ -8337,7 +8728,7 @@
       "$1": {"addProperty": "marc:rwoURI"},
       "$2": {"link": "source", "resourceType": "Source", "property": "code"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"addProperty": "marc:fieldref"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source":  [
@@ -8375,7 +8766,7 @@
       "$b": {"addProperty": "pattern"},
       "$c": {"property": "hierarchicalLevel"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"addProperty": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"}
     },
     "352": {
       "linkSubsequentRepeated": {
@@ -8415,8 +8806,37 @@
         "NOTE": "1 = not normalized form; but 0 has been assigned for those too."
       },
       "$a": {"property": "label"},
-      "$z": {"property": "marc:sourceOfInformation"},
-      "$6": {"property": "marc:fieldref"}
+      "$z": {
+        "property": "marc:sourceOfInformation",
+        "NOTE:local": "I tidigare praxis, bland annat använt för att i maskinellt skapade e-tidskriftsposter redovisa de volymer som omfattas av licensbundna avtal, (sådan beståndsinformation redovisas numer i beståndspostens fält 866)"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source":  [
+            {"362": {"ind1": "0", "ind2": " ", "subfields": [{"a": "Bd 1(1962)-6(1967) ; N.F., Bd 1(1968)-"}]}},
+            {"362": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Vol. 1, no 1- (2002-)"}, {"z": "ScienceDirect"}]}}
+          ],
+          "normalized":  [
+            {"362": {"ind1": "0", "ind2": " ", "subfields": [{"a": "Bd 1(1962)-6(1967) ; N.F., Bd 1(1968)-"}]}},
+            {"362": {"ind1": "0", "ind2": " ", "subfields": [{"a": "Vol. 1, no 1- (2002-)"}, {"z": "ScienceDirect"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "hasNumberingOfSerials": [
+                {
+                  "@type": "NumberingOfSerials",
+                  "label": "Bd 1(1962)-6(1967) ; N.F., Bd 1(1968)-"
+                },
+                {
+                  "@type": "NumberingOfSerials",
+                  "label": "Vol. 1, no 1- (2002-)",
+                  "marc:sourceOfInformation": "ScienceDirect"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "363": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "365": {"ignored": true, "NOTE:record-count": 8066, "NOTE:LC": "nac", "NOTE:local": "Avsett för bokhandelns information"},
@@ -8746,7 +9166,7 @@
       "embedded": true,
       "$a": {"property": "label"},
       "$b": {"property": "degree"},
-      "$c": {"link": "grantingInstitution", "resourceType": "Agent", "property": "label"},
+      "$c": {"link": "grantingInstitution", "resourceType": "Agent", "property": "label", "infer": true},
       "$d": {"property": "date", "leadingPunctuation": ","},
       "$g": {"addProperty": "comment"},
       "$o": {"addLink": "identifiedBy", "resourceType": "DissertationIdentifier", "property": "value"},
@@ -8966,7 +9386,7 @@
       "$a": {"property": "label"},
       "$d": {"addProperty": "date"},
       "$o": {"addProperty": "marc:otherEventInformation"},
-      "$p": {"addLink": "place", "resourceType": "Place", "property": "label"},
+      "$p": {"addLink": "place", "resourceType": "Place", "property": "label", "infer": true},
       "$2": {"ignored": true, "NOTE:LC": "nac"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"}
@@ -9183,8 +9603,8 @@
         "_:event": {"addLink": "provisionActivity", "resourceType": "ProvisionActivity"}
       },
       "$a": {"property": "description", "punctuationChars": ":"},
-      "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label", "punctuationChars": ":"},
-      "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ","},
+      "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label" , "punctuationChars": ":"},
+      "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label" , "punctuationChars": ","},
       "$d": {"about": "_:event", "property": "date"},
       "$e": {"addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
       "$f": {"addProperty": "seriesStatement"},
@@ -11424,10 +11844,6 @@
       "$a": {"property": "label"},
       "match": [
         {
-          "when": "i2=0",
-          "resourceType": "Topic"
-        },
-        {
           "when": "i2=1",
           "resourceType": "Person"
         },
@@ -11445,7 +11861,7 @@
         },
         {
           "when": "i2=5",
-          "resourceType": "Place"
+          "resourceType": "Geographic"
         },
         {
           "when": "i2=6",
@@ -11480,8 +11896,46 @@
               {"a": "Name of Topic"}]
             }
           },
-          "normalized": {
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Topic",
+                  "label": "Name of Topic"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "Geographic subject",
+          "source": {
+            "653": {"ind1": " ", "ind2": "5", "subfields":[
+              {"a": "Stockholm"}]
+            }
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Geographic",
+                  "label": "Stockholm"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "Change i2=0 to blank (none of our 653s belongs to lcsh)",
+          "source": {
             "653": {"ind1": " ", "ind2": "0", "subfields":[
+              {"a": "Name of Topic"}]
+            }
+          },
+          "normalized": {
+            "653": {"ind1": " ", "ind2": " ", "subfields":[
               {"a": "Name of Topic"}]
             }
           },
@@ -13106,7 +13560,7 @@
           }
         }
       ],
-      "$a": {"about": "_:agent", "property": "label", "required": true, "punctuationChars": ")"},
+      "$a": {"about": "_:agent", "property": "label", "infer": true, "required": true, "punctuationChars": ")"},
       "_spec": [
         {
           "source": {
@@ -13425,7 +13879,7 @@
       "i2": {
         "marcDefault": " "
       },
-      "$a": {"about": "_:instanceOfContribution", "link": "agent", "resourceType": "Agent", "property": "label", "TODO:targetMatch": "1xx"},
+      "$a": {"about": "_:instanceOfContribution", "link": "agent", "resourceType": "Agent", "property": "label", "infer": true, "TODO:targetMatch": "1xx"},
       "$b": {"property": "editionStatement", "TODO:targetMatch": "250"},
       "$c": {"about": "_:instanceTitle", "property": "qualifier", "NOTE:marc-repeatable": false},
       "$d": {"property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
@@ -13715,7 +14169,7 @@
       "i2": {
         "marcDefault": "0"
       },
-      "$a": {"about": "_:agent", "property": "label", "TODO:targetMatch": "1xx"},
+      "$a": {"about": "_:agent", "property": "label", "infer": true, "TODO:targetMatch": "1xx"},
       "$b": {"about": "_:hasInstance", "property": "editionStatement", "TODO:targetMatch": "250"},
       "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false},
       "$d": {"about": "_:hasInstance", "property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
@@ -13879,7 +14333,7 @@
       "i2": {
         "marcDefault": " "
       },
-      "$e": {"addLink": "language", "NOTE:marc-repeatable": false, "resourceType": "Language", "property": "label", "TODO:inherit": "008:[35:38]"},
+      "$e": {"addLink": "language", "NOTE:marc-repeatable": false, "resourceType": "Language", "property": "label", "infer": true, "TODO:inherit": "008:[35:38]"},
       "$f": {"about": "_:provisionActivity", "link": "place", "resourceType": "Place", "property": "code", "NOTE:marc-repeatable": false, "TODO:inherit": "008:[15:18]"}
     },
     "776": {
@@ -16317,7 +16771,7 @@
     "375": {"ignored": true, "NOTE:local": "gender: Struket av MSS 2017-12-12 efter diskussion om persondata i biblioteksregister."},
     "376": {
       "$a": {"addLink": "hasTypeOfFamily", "resourceType": "TypeOfFamily", "property": "label"},
-      "$b": {"addLink": "hasProminentFamilyMember", "resourceType": "Person", "property": "prefLabel"},
+      "$b": {"addLink": "hasProminentFamilyMember", "resourceType": "Person", "property": "label", "infer": true},
     "_spec": [
       {
         "source": {
@@ -17029,17 +17483,42 @@
     },
     "447": {"ignored": true, "NOTE:record-count": 0},
     "448": {
-      "addLink": "marc:hasSeeFromTracingChronologicalTerm",
-      "resourceType": "marc:SeeFromTracingChronologicalTerm",
-      "$a": {"property": "marc:chronologicalTerm"},
-      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
-      "$v": {"addProperty": "marc:formSubdivision"},
-      "$w": {"property": "marc:controlSubfield"},
-      "$x": {"addProperty": "marc:generalSubdivision"},
-      "$y": {"addProperty": "marc:chronologicalSubdivision"},
-      "$z": {"addProperty": "marc:geographicSubdivision"},
-      "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+      "include": ["termbase"],
+      "addLink": "hasVariant",
+      "resourceType": "Temporal",
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "Temporal",
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
+        }
+      },
+      "subfieldOrder": "w a v x y z",
+      "$a": {"about": "_:topic", "property": "prefLabel"},
+      "$w": {"about": "_:topic", "property": "marc:controlSubfield"},
+      "_spec": [
+        {
+          "name": "Repeated Temporal terms in hasVariant",
+          "source": [
+            {"448": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Fjortonhundratalet"}]}},
+            {"448": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Femtonde århundradet"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "Temporal",
+                "prefLabel" : "Fjortonhundratalet"
+              }, {
+                "@type" : "Temporal",
+                "prefLabel" : "Femtonde århundradet"
+              }]
+            }
+          }
+        }
+      ]  
     },
     "450": {
       "include": ["termbase"],
@@ -17301,31 +17780,42 @@
     },
     "462": {"ignored": true, "NOTE:record-count": 0},
     "480": {
-      "addLink": "marc:hasSeeFromTracingGeneralSubdivision",
-      "resourceType": "marc:SeeFromTracingGeneralSubdivision",
-      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
-      "$v": {"addProperty": "marc:formSubdivision"},
-      "$w": {"property": "marc:controlSubfield"},
-      "$x": {"addProperty": "marc:generalSubdivision"},
-      "$y": {"addProperty": "marc:chronologicalSubdivision"},
-      "$z": {"addProperty": "marc:geographicSubdivision"},
-      "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+      "addLink": "hasVariant",
+      "resourceType": "TopicSubdivision",
+      "$i": null,
+      "$v": null,
+      "$w": null,
+      "$x": {"property": "prefLabel", "required": true},
+      "$y": null,
+      "$z": null,
+      "$4": null,
+      "$5": null,
+      "$6": null,
+      "$8": null,
+      "_spec": [
+        {
+          "source": [
+            {"480": {"ind1": " ", "ind2": " ", "subfields": [{"x": "Views on politics and society"}]}},
+            {"480": {"ind1": " ", "ind2": " ", "subfields": [{"x": "Views on society"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "hasVariant" : [ {
+                "@type" : "TopicSubdivision",
+                "prefLabel" : "Views on politics and society"
+              }, {
+                "@type" : "TopicSubdivision",
+                "prefLabel" : "Views on society"
+              }]
+            }
+          }
+        }
+      ]
     },
-    "481": {"ignored": true, "NOTE:record-count": 1},
+    "481": {"ignored": true, "NOTE:record-count": 0},
     "482": {"ignored": true, "NOTE:record-count": 0},
-    "485": {
-      "addLink": "marc:hasSeeFromTracingFormSubdivision",
-      "resourceType": "marc:SeeFromTracingFormSubdivision",
-      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
-      "$v": {"addProperty": "marc:formSubdivision"},
-      "$w": {"property": "marc:controlSubfield"},
-      "$x": {"addProperty": "marc:generalSubdivision"},
-      "$y": {"addProperty": "marc:chronologicalSubdivision"},
-      "$z": {"addProperty": "marc:geographicSubdivision"},
-      "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
-    },
+    "485": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "marc:hasSeeFromTracingFormSubdivision"},
 
     "500": {
       "TODO:remnants-of-inherit": "bib:100",
@@ -19233,7 +19723,7 @@
       "$i": {
         "addLink": "availability",
         "resourceType": "ItemAvailability",
-        "property": "label",
+        "property": "label", "infer": true,
         "NOTE": "deviates from standard (itemPart)?"
       },
       "$j": {"property": "shelfControlNumber"},

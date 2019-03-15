@@ -133,6 +133,7 @@ class MarcConversion {
     Map marcTypeMap = [:]
     Map tokenMaps
     Map defaultPunctuation
+    String locale
 
     private Set missingTerms = [] as Set
     private Set badRepeats = [] as Set
@@ -144,6 +145,7 @@ class MarcConversion {
         this.tokenMaps = tokenMaps
         this.converter = converter
         //this.baseUri = new URI(config.baseUri ?: '/')
+        this.locale = config.locale
         this.keepGroupIds = config.keepGroupIds == true
 
         this.sharedPostProcSteps = config.postProcessing.collect {
@@ -1778,6 +1780,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     String aboutAlias
     List<String> onRevertPrefer
     Set<String> sharesGroupIdWith = new HashSet<String>()
+    boolean silentRevert
 
     static GENERIC_REL_URI_TEMPLATE = "generic:{_}"
 
@@ -1810,6 +1813,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
         onRevertPrefer = (List<String>) (fieldDfn.onRevertPrefer instanceof String ?
                 [fieldDfn.onRevertPrefer] : fieldDfn.onRevertPrefer)
+
+        silentRevert = fieldDfn.silentRevert == true
 
         computeLinks = (fieldDfn.computeLinks) ? new HashMap(fieldDfn.computeLinks) : [:]
         if (computeLinks) {
@@ -2399,7 +2404,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             }
 
             // TODO: store reverted input refs instead of tagging input data
-            usedEntities.each { it._revertedBy = baseTag; it._groupId = groupId }
+            usedEntities.each {
+                def revertMark = silentRevert ? '_silentlyRevertedBy' : '_revertedBy'
+                it[revertMark] = baseTag
+                it._groupId = groupId
+            }
             //field._revertedBy = this.tag
             return field
         } else {
@@ -2441,6 +2450,7 @@ class MarcSubFieldHandler extends ConversionPart {
     String property
     boolean repeatProperty
     boolean overwrite
+    boolean infer
     String resourceType
     String subUriTemplate
     Pattern matchUriToken = null
@@ -2521,6 +2531,8 @@ class MarcSubFieldHandler extends ConversionPart {
         assert !required || !supplementary
 
         overwrite = subDfn.overwrite == true
+
+        infer = subDfn.infer == true
 
         if (subDfn.splitValuePattern) {
             /*TODO: assert subDfn.splitValuePattern=~ /^\^.+\$$/,
@@ -2725,9 +2737,18 @@ class MarcSubFieldHandler extends ConversionPart {
 
             String entityId = entity['@id']
 
-            def propertyValue = property ? entity[property] : null
+            def propertyValue = getPropertyValue(entity, property)
+
             if (propertyValue == null && castProperty)
                 propertyValue = entity[castProperty]
+
+            if (propertyValue == null && infer) {
+                for (subProp in ld.getSubProperties(property)) {
+                    propertyValue = getPropertyValue(entity, subProp)
+                    if (propertyValue)
+                        break
+                }
+            }
 
             boolean checkResourceType = true
 
@@ -2817,6 +2838,17 @@ class MarcSubFieldHandler extends ConversionPart {
             return values
     }
 
+    def getPropertyValue(Map entity, String property) {
+        def propertyValue = property ? entity[property] : null
+        if (propertyValue == null) {
+            def alias = ld ? ld.langContainerAlias[property] : null
+            propertyValue = alias ? entity[alias] : null
+            if (propertyValue instanceof Map) {
+                propertyValue = propertyValue[ruleSet.conversion.locale]
+            }
+        }
+        return propertyValue
+    }
 }
 
 @CompileStatic
