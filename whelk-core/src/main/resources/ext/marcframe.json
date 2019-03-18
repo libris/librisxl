@@ -6528,13 +6528,6 @@
         },
         {
           "name": "Verify revert using infer for label from prefLabelByLang[locale]",
-          "normalized": [
-            {"008": "|     |        |  |||||||||||000 ||swe| "},
-            {"240": {"ind1": "1", "ind2": "0", "subfields": [
-              {"a": "En titel"},
-              {"l": "Svenska"}
-            ]}}
-          ],
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -6548,7 +6541,45 @@
                 "prefLabelByLang": {"sv": "Svenska"}
               }
             }
-          }}
+          }},
+          "normalized": [
+            {"008": "|     |        |  |||||||||||000 ||swe| "},
+            {"240": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "En titel"},
+              {"l": "Svenska"}
+            ]}}
+          ]
+        },
+        {
+          "name": "Verify revert using only one language since $l isn't repeatable.",
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": [ {
+                "@type": "Title",
+                "mainTitle": "Swenglish text"
+              } ],
+              "language": [
+                {
+                  "@type": "Language",
+                  "@id": "https://id.kb.se/language/swe",
+                  "prefLabelByLang": {"sv": "Svenska"}
+                },
+                {
+                  "@type": "Language",
+                  "@id": "https://id.kb.se/language/eng",
+                  "prefLabelByLang": {"sv": "Engelska"}
+                }
+              ]
+            }
+          }},
+          "normalized": [
+            {"008": "|     |        |  |||||||||||000 ||swe| "},
+            {"240": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Swenglish text"},
+              {"l": "Svenska"}
+            ]}}
+          ]
         }
       ]
     },
@@ -8377,14 +8408,10 @@
       },
       "_spec": [
         {
-          "name": "Property clash between 300c from 340b. Normalized is recreated error. Consider this a TODO",
+          "name": "Property clash between 300c from 340b is now averted, due to revert no longer producing multiple non-repeatable subfields.",
           "source":  [
             {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film"}]}},
             {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "film"}]}}
-          ],
-          "normalized":  [
-            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film"},{"c": "film"}]}},
-            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "film"},{"b": "film"}]}}
           ],
           "result": {
             "mainEntity": {
