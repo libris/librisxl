@@ -2336,6 +2336,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                             if (usedMatchRules?.any { !it.matchValue(code, v) }) {
                                 continue
                             }
+                            boolean repeatOk = (subhandler.link && subhandler.repeatable) ||
+                                               (subhandler.property && subhandler.repeatProperty)
+                            if (justAdded && !repeatOk) {
+                                break
+                            }
+
                             Map sub = [(code): v]
 
                             if (subhandler.itemPos == 'rest') {
