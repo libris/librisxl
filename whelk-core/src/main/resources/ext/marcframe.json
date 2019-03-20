@@ -5689,7 +5689,7 @@
           "when": "$2 =~ ^kssb/.+$",
           "$2": {
             "link": "inScheme",
-            "resourceType": "ConceptScheme",
+            "resourceType": "ClassificationScheme",
             "property": "code",
             "uriTemplate": "https://id.kb.se/term/{_}/",
             "uriTemplateDefaults": {"inScheme.code": "kssb"},
@@ -5701,7 +5701,7 @@
       ],
       "$2": {
         "link": "inScheme",
-        "resourceType": "ConceptScheme",
+        "resourceType": "ClassificationScheme",
         "property": "code"
       },
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/classification.html",
@@ -5725,7 +5725,7 @@
                   "code": "Fut.021(x)",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/kssb%2F5/",
-                    "@type": "ConceptScheme",
+                    "@type": "ClassificationScheme",
                     "code": "kssb",
                     "version": "5"
                   }
@@ -15868,7 +15868,7 @@
                 "marc:explanatoryTerm": "musikinspelningar",
                 "inScheme": {
                   "@id": "https://id.kb.se/term/kssb%2F8/",
-                  "@type": "ConceptScheme",
+                  "@type": "ClassificationScheme",
                   "code": "kssb",
                   "version": "8"
                 }
@@ -19569,7 +19569,27 @@
     "084": {
       "inherit": "bib",
       "aboutEntity": "?thing",
-      "NOTE:local": "LIBRIS-definierat beståndsfält."
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "_spec": [
+        {
+          "source": {"084": {"ind1": " ", "ind2": " ","subfields": [{"a": "Ijed"}, {"2": "kssb/8"}]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
+              "classification": [{
+                "@type": "Classification",
+                "code": "Ijed",
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/kssb%2F8/",
+                  "@type": "ClassificationScheme",
+                  "code": "kssb",
+                  "version": "8"
+                }
+              }]
+            }
+          }
+        }
+      ]
     },
 
     "337": {"ignored": true, "NOTE:record-count": 0, "NOTE:": "Media only on work or instance"},
