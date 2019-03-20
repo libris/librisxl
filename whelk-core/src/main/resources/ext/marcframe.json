@@ -1262,7 +1262,7 @@
       "include": ["termbase_with_uri_from_i2"],
       "i2": {
         "link": "inScheme",
-        "resourceType": "ConceptScheme",
+        "resourceType": "TopicScheme",
         "uriTemplate": "https://id.kb.se/term/{_}",
         "property": "code",
         "tokenMap": "thesaurus",
@@ -1273,7 +1273,27 @@
         "requires-i2": "7",
         "link": "inScheme",
         "uriTemplate": "https://id.kb.se/term/{_}",
-        "resourceType": "ConceptScheme",
+        "resourceType": "TopicScheme",
+        "property": "code"
+      }
+    },
+
+    "subjectbaseGenreForm": {
+      "include": ["termbase_with_uri_from_i2"],
+      "i2": {
+        "link": "inScheme",
+        "resourceType": "GenreFormScheme",
+        "uriTemplate": "https://id.kb.se/term/{_}",
+        "property": "code",
+        "tokenMap": "thesaurus",
+        "marcDefault": "4",
+        "definedElsewhereToken": "7"
+      },
+      "$2": {
+        "requires-i2": "7",
+        "link": "inScheme",
+        "uriTemplate": "https://id.kb.se/term/{_}",
+        "resourceType": "GenreFormScheme",
         "property": "code"
       }
     },
@@ -5283,12 +5303,12 @@
         },
         {
           "when": "i2=7 & $2",
-          "$2": {"requires-i2": "7", "link": "inScheme", "resourceType": "ConceptScheme", "property": "code"}
+          "$2": {"requires-i2": "7", "link": "inScheme", "resourceType": "TopicScheme", "property": "code"}
         }
       ],
       "i2": {
         "link": "inScheme",
-        "resourceType": "ConceptScheme",
+        "resourceType": "TopicScheme",
         "property": "code",
         "tokenMap": {
           "0": "NAL"
@@ -5313,7 +5333,7 @@
                   "@type": "Concept",
                   "label": "Token",
                   "inScheme": {
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "NAL"
                   }
                 } ]
@@ -5336,7 +5356,7 @@
                   "@type": "Concept",
                   "label": "Token",
                   "inScheme": {
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "G"
                   }
                 } ]
@@ -10270,7 +10290,7 @@
                   "lifeSpan": "-1877",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "lcsh"
                   }
                 }
@@ -10295,7 +10315,7 @@
                   "lifeSpan": "1907-2002",
                   "inScheme": {
                     "@id" : "https://id.kb.se/term/kao",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "kao"
                   }
                 }
@@ -10316,7 +10336,7 @@
                   "lifeSpan": "1907-2002",
                   "inScheme": {
                     "@id" : "https://id.kb.se/term/mesh",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "mesh"
                   }
                 }
@@ -10349,7 +10369,7 @@
                   } ],
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "lcsh"
                   },
                   "language": {
@@ -10413,7 +10433,7 @@
                   ],
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "lcsh"
                   }
                 }
@@ -10448,7 +10468,7 @@
                   ],
                   "inScheme": {
                     "@id" : "https://id.kb.se/term/lcsh",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "lcsh"
                   }
                 }
@@ -10483,7 +10503,7 @@
                   ],
                   "inScheme": {
                     "@id" : "https://id.kb.se/term/lcsh",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "lcsh"
                   }
                 }
@@ -10509,7 +10529,7 @@
                   "@type": "ComplexSubject",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "lcsh"
                   },
                   "termComponentList" : [
@@ -10689,7 +10709,7 @@
                   ],
                   "inScheme": {
                     "@id": "https://id.kb.se/term/sao",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "sao"
                   }
                 }
@@ -10729,7 +10749,7 @@
                   } ],
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "lcsh"
                   }
                 }
@@ -10765,7 +10785,7 @@
                   }],
                   "inScheme": {
                     "@id": "https://id.kb.se/term/sao",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "sao"
                   }
                 }
@@ -10847,7 +10867,7 @@
                   } ],
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "lcsh"
                   }
                 }
@@ -10927,7 +10947,7 @@
                   }],
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "lcsh"
                   }
                 }
@@ -10955,7 +10975,7 @@
                   "name": "Rio (Conference)",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "lcsh"
                   }
                 }
@@ -11013,7 +11033,7 @@
                   },
                   "inScheme": {
                     "@id" : "https://id.kb.se/term/lcsh",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "lcsh"
                   }
                 }
@@ -11066,7 +11086,7 @@
                   } ],
                   "inScheme" : {
                     "@id" : "https://id.kb.se/term/lcsh",
-                    "@type" : "ConceptScheme",
+                    "@type" : "TopicScheme",
                     "code" : "lcsh"
                   }
                 } ]
@@ -11089,7 +11109,7 @@
                   "@type" : "ComplexSubject",
                   "inScheme" : {
                     "@id" : "https://id.kb.se/term/sao",
-                    "@type" : "ConceptScheme",
+                    "@type" : "TopicScheme",
                     "code" : "sao"
                   },
                   "termComponentList" : [ {
@@ -11125,7 +11145,7 @@
                   "@type" : "ComplexSubject",
                   "inScheme" : {
                     "@id" : "https://id.kb.se/term/lcsh",
-                    "@type" : "ConceptScheme",
+                    "@type" : "TopicScheme",
                     "code" : "lcsh"
                   },
                   "termComponentList" : [ {
@@ -11212,7 +11232,7 @@
                   "@type" : "ComplexSubject",
                   "inScheme" : {
                     "@id" : "https://id.kb.se/term/rvm",
-                    "@type" : "ConceptScheme",
+                    "@type" : "TopicScheme",
                     "code" : "rvm"
                   },
                   "termComponentList" : [ {
@@ -11269,7 +11289,7 @@
                   "@type": "Temporal",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/sao",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "sao"
                   },
                   "prefLabel": "1500-talet"
@@ -11290,7 +11310,7 @@
                   "@type": "Temporal",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/fast",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "fast"
                   },
                   "prefLabel": "Since 1500"
@@ -11324,7 +11344,7 @@
                   ],
                   "inScheme": {
                     "@id" : "https://id.kb.se/term/barn",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "barn"
                   }
                 }
@@ -11375,7 +11395,7 @@
                   "@type": "Topic",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/sao",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "sao"
                   },
                   "prefLabel": "Fysik"
@@ -11408,7 +11428,7 @@
                   ],
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "lcsh"
                   }
                 }
@@ -11497,7 +11517,7 @@
                   "@id": "https://id.kb.se/term/barn/Fysik",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/barn",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "barn"
                   },
                   "prefLabel": "Fysik"
@@ -11530,7 +11550,7 @@
                   ],
                   "inScheme": {
                     "@id": "https://id.kb.se/term/mesh",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "mesh"
                   }
                 }
@@ -11551,7 +11571,7 @@
                   "@type": "Topic",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/agrovoc",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "agrovoc"
                   },
                   "prefLabel": "rye"
@@ -11572,7 +11592,7 @@
                 {
                   "@type": "Topic",
                   "inScheme": {
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "@id": "https://id.kb.se/term/csh",
                     "code": "csh"
                   },
@@ -11594,7 +11614,7 @@
                 {
                   "@type": "Topic",
                   "inScheme": {
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "@id": "https://id.kb.se/term/rvm",
                     "code": "rvm"
                   },
@@ -11621,7 +11641,7 @@
                 "@type": "ComplexSubject",
                 "inScheme": {
                   "@id": "https://id.kb.se/term/sao",
-                  "@type": "ConceptScheme",
+                  "@type": "TopicScheme",
                   "code": "sao"
                 },
                 "prefLabel": "Vitryssar--vardagsliv--traditioner--Ryssland",
@@ -11738,7 +11758,7 @@
                     }
                   ],
                   "inScheme": {
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "@id": "https://id.kb.se/term/BNB",
                     "code": "BNB"
                   },
@@ -11830,7 +11850,7 @@
                   "@id": "https://id.kb.se/term/sao/Sydafrika--V%C3%A4stra%20Kapprovinsen",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/sao",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "sao"
                   },
                   "prefLabel": "Sydafrika--Västra Kapprovinsen",
@@ -11867,7 +11887,7 @@
                   "prefLabel": "Aix-en-Provence (France)--Social life and customs--Early works to 1800",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/lcsh",
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "code": "lcsh"
                   },
                   "termComponentList": [
@@ -12015,7 +12035,7 @@
     },
 
     "655" : {
-      "include": ["subjectbase"],
+      "include": ["subjectbaseGenreForm"],
       "aboutEntity": "?work",
       "addLink": "genreForm",
       "resourceType": "GenreForm",
@@ -12029,6 +12049,7 @@
         }
       },
       "$a": {"about": "_:topic", "property": "prefLabel"},
+      "$0": {"addProperty": "marc:uri", "supplementary": true},
       "$8": {"property": "marc:groupid"},
       "subfieldOrder": "8 6 a x z y v 0 2 1",
       "_spec": [
@@ -12043,7 +12064,7 @@
                   "@id": "https://id.kb.se/term/saogf/Deckare",
                   "inScheme": {
                     "@id": "https://id.kb.se/term/saogf",
-                    "@type": "ConceptScheme",
+                    "@type": "GenreFormScheme",
                     "code": "saogf"
                   },
                   "prefLabel": "Deckare"
@@ -12062,7 +12083,7 @@
                   "@type": "GenreForm",
                   "@id": "https://id.kb.se/term/barngf/Deckare",
                   "inScheme": {
-                    "@type": "ConceptScheme",
+                    "@type": "GenreFormScheme",
                     "@id": "https://id.kb.se/term/barngf",
                     "code": "barngf"
                   },
@@ -12082,7 +12103,7 @@
                   "@type": "GenreForm",
                   "@id": "https://id.kb.se/term/gmgpc%2F%2Fswe/Postkartor",
                   "inScheme": {
-                    "@type": "ConceptScheme",
+                    "@type": "GenreFormScheme",
                     "@id": "https://id.kb.se/term/gmgpc%2F%2Fswe",
                     "code": "gmgpc//swe"
                   },
@@ -12110,7 +12131,7 @@
                   "prefLabel": "Trafiklinjekartor--Sverige--1930-talet",
                   "inScheme": {
                     "@id" : "https://id.kb.se/term/gmgpc%2F%2Fswe",
-                    "@type": "ConceptScheme",
+                    "@type": "GenreFormScheme",
                     "code": "gmgpc//swe"
                   },
                   "termComponentList": [
@@ -12142,7 +12163,7 @@
                   "@type": "GenreForm",
                   "@id": "hhttp://id.loc.gov/authorities/genreForms/gf2014026203.html",
                   "inScheme": {
-                    "@type": "ConceptScheme",
+                    "@type": "GenreFormScheme",
                     "@id": "http://id.loc.gov/authorities/genreForms",
                     "code": "lcgft"
                   },
@@ -19004,7 +19025,7 @@
                   "@type": "Topic",
                   "prefLabel": "Archaeology",
                   "inScheme": {
-                    "@type": "ConceptScheme",
+                    "@type": "TopicScheme",
                     "@id": "https://id.kb.se/term/lcsh",
                     "code": "lcsh"
                   },
@@ -19027,7 +19048,7 @@
       "$0": {"addProperty": "marc:recordControlNumber"}
     },
     "755": {
-      "include": ["subjectbaseSansUri"],
+      "include": ["subjectbaseGenreForm"],
       "i1": null,
       "addLink": "closeMatch",
       "resourceType": "GenreForm",
