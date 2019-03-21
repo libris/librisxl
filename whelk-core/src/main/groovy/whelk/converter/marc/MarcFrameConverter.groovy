@@ -1257,7 +1257,7 @@ class MarcFixedFieldHandler {
                 return
             def colNums = parseColumnNumbers(key)
             colNums.eachWithIndex { Tuple2<Integer, Integer> colNum, int i ->
-                columns << new Column(ruleSet, obj, colNum.first, colNum.second,
+                columns << new Column(this, obj, colNum.first, colNum.second,
                         obj['itemPos'] ?: colNums.size() > 1 ? i : null,
                         obj['fixedDefault'],
                         obj['matchAsDefault'])
@@ -1327,10 +1327,12 @@ class MarcFixedFieldHandler {
         Integer itemPos
         String fixedDefault
         Pattern matchAsDefault
+        MarcFixedFieldHandler fixedFieldHandler
 
-        Column(ruleSet, fieldDfn, int start, int end,
+        Column(MarcFixedFieldHandler fixedFieldHandler, fieldDfn, int start, int end,
                itemPos, fixedDefault, matchAsDefault = null) {
-            super(ruleSet, null, fieldDfn)
+            super(fixedFieldHandler.ruleSet, "$fixedFieldHandler.tag-$start-$end", fieldDfn)
+            this.fixedFieldHandler = fixedFieldHandler
             assert start > -1 && end >= start
             this.start = start
             this.end = end
@@ -1566,6 +1568,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     LocalTime defaultTime
     boolean missingCentury = false
     boolean ignored = false
+    Boolean silentRevert = null
     // TODO: working, but not so useful until capable of merging entities..
     //MarcSimpleFieldHandler linkedHandler
 
@@ -1611,6 +1614,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                 }
             }
         }
+        silentRevert = fieldDfn.silentRevert
         //if (fieldDfn.linkedEntity) {
         //    linkedHandler = new MarcSimpleFieldHandler(ruleSet,
         //            tag + ":linked", fieldDfn.linkedEntity)
@@ -1734,21 +1738,29 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         } else {
             return (entity instanceof List ? entity : [entity]).collect {
                 if (uriTemplate) {
-                    def token = findTokenFromId(it, uriTemplate, matchUriToken)
+                    String token = findTokenFromId(it, uriTemplate, matchUriToken)
                     if (token) {
-                        return revertObject(token)
+                        return revertToken(it, token)
                     }
                     if (it instanceof Map) {
                         for (same in Util.asList(it['sameAs'])) {
                             token = findTokenFromId(same, uriTemplate, matchUriToken)
                             if (token) {
-                                return revertObject(token)
+                                return revertToken(it, token)
                             }
                         }
                     }
                 }
             }
         }
+    }
+
+    protected def revertToken(Map object, String token) {
+        def v = revertObject(token)
+        if (v && silentRevert == false) {
+            object._revertedBy = baseTag
+        }
+        return v
     }
 
     static ZonedDateTime parseDate(String s) {
@@ -1774,6 +1786,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map uriTemplateDefaults
     Map<String, MarcSubFieldHandler> subfields = [:]
     List<List<MarcSubFieldHandler>> orderedAndGroupedSubfields
+    Set requiredCodes
     List<MatchRule> matchRules
     Map<String, Map> pendingResources
     List<String> pendingKeys
@@ -1829,6 +1842,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 addSubfield(m.group(1), obj)
             }
         }
+
+        requiredCodes = subfields.values().findResult { if (it.required) it.code } as Set
 
         completePunctuationRules(subfields.values())
 
@@ -2266,6 +2281,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         // NOTE: Within a field, only *one* positioned term is supported.
         Map firstRelPosSubfield = null
         Map sortedByItemPos = [:]
+        Set succeededCodes = new HashSet()
 
         orderedAndGroupedSubfields.each { subhandlers ->
 
@@ -2316,7 +2332,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                          selectedEntity._revertedBy && (!groupId || selectedEntity._groupId != groupId)) ||
                         selectedEntity._revertedBy == baseTag ||
                         selectedEntity._revertedBy in sharesGroupIdWith) {
-                    failedRequired = true
                     return
                     //subs << ['DEBUG:blockedSinceRevertedBy': selectedEntity._revertedBy]
                 }
@@ -2358,16 +2373,21 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                             }
                         }
                     }
-                    if (subhandler.required && !justAdded) {
+                    if (subhandler.required && !justAdded
+                        && !(code in succeededCodes)) {
                         failedRequired = true
                     }
                 } else {
-                    if (subhandler.required || subhandler.requiresI1 || subhandler.requiresI2) {
+                    if ((subhandler.required || subhandler.requiresI1 ||
+                                subhandler.requiresI2)
+                        && !(code in succeededCodes)) {
                         failedRequired = true
                     }
                 }
                 if (!failedRequired && justAdded) {
                     usedEntities << selectedEntity
+                    succeededCodes << code
+
                     if (prevAdded && justAdded && subhandler.leadingPunctuation) {
                         def (prevCode, prevSub) = prevAdded
                         MarcSubFieldHandler prevSubHandler = subfields[prevCode]
@@ -2392,6 +2412,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     prevAdded = justAdded
                 }
             }
+        }
+
+        if (requiredCodes && !requiredCodes.every { it in succeededCodes }) {
+            failedRequired = true
         }
 
         if (!failedRequired && i1 != null && i2 != null && subs.size() && !onlySupplementary) {
