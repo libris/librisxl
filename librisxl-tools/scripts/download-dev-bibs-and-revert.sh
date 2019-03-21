@@ -1,14 +1,14 @@
 #!/bin/bash
-BIBDUMP=/tmp/lddb-dev-bib-records
 ENV=${1:-dev}
 LIMIT=${2:-1000}
+BIBDUMP=/tmp/lddb-$ENV-bib-records
 
 # Download a temporary dump of (embellished) instance records.
-# Take a couple of minutes.
+# Takes a couple of minutes.
 if [[ ! -d $BIBDUMP ]]; then
     mkdir -p $BIBDUMP
     pushd $BIBDUMP
-    curl -s -HAccept:application/ld+json "https://libris-$ENV.kb.se/find.jsonld?@type=Instance&_limit=$LIMIT" | python -c '
+    curl -s "https://libris-$ENV.kb.se/find.jsonld?@type=Instance&_limit=$LIMIT" | python -c '
 import sys, json
 data = json.load(sys.stdin)
 for item in data["items"]:
