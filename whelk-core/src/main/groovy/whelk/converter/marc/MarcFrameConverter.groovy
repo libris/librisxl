@@ -1786,7 +1786,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map uriTemplateDefaults
     Map<String, MarcSubFieldHandler> subfields = [:]
     List<List<MarcSubFieldHandler>> orderedAndGroupedSubfields
-    Set requiredCodes
     List<MatchRule> matchRules
     Map<String, Map> pendingResources
     List<String> pendingKeys
@@ -1842,8 +1841,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 addSubfield(m.group(1), obj)
             }
         }
-
-        requiredCodes = subfields.values().findResult { if (it.required) it.code } as Set
 
         completePunctuationRules(subfields.values())
 
@@ -2281,6 +2278,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         // NOTE: Within a field, only *one* positioned term is supported.
         Map firstRelPosSubfield = null
         Map sortedByItemPos = [:]
+
+        Set requiredCodes = new HashSet()
         Set succeededCodes = new HashSet()
 
         orderedAndGroupedSubfields.each { subhandlers ->
@@ -2302,6 +2301,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 def code = subhandler.code
                 if (failedRequired)
                     return
+
+                if (subhandler.required) {
+                    requiredCodes << code
+                }
 
                 if (subhandler.requiresI1) {
                     if (i1 == null) {

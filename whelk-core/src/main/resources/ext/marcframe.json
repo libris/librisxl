@@ -2476,11 +2476,13 @@
         "[9]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/ComputerTypeOfFileType-{_}",
-          "matchUriToken": "^[_abcdefghijm]$"
+          "matchUriToken": "^[_abcdefghijm]$",
+          "silentRevert": false
         },
         "[11]": {
           "addLink": "genreForm",
-          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "silentRevert": false
         }
       },
       "Mixed": {
@@ -3394,7 +3396,8 @@
         "[23]": {
           "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
           "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/ComputerItemType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ComputerItemType-{_}",
+          "silentRevert": false
         },
         "[26]": {
           "aboutEntity": "?work",
@@ -3459,7 +3462,8 @@
         "[23]": {
           "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
           "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "silentRevert": false
         }
       },
       "Audio": {
@@ -3487,7 +3491,8 @@
         },
         "[23]": {
           "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "silentRevert": false
         },
         "[24] [25] [26] [27] [28] [29]": {
           "TODO": "Decide if this should be Work or Instance. Compare with Text",
@@ -3540,7 +3545,8 @@
         },
         "[23]": {
           "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "silentRevert": false
         },
         "[24]": {
           "aboutEntity": "?work",
