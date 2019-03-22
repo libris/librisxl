@@ -6538,6 +6538,22 @@
     },
 
     "240": {
+      "match": [
+        {
+          "when": {
+            "NOTE": "Drop undefined language label",
+            "onRevert": {"language": {"@id": "https://id.kb.se/language/und"}}
+          },
+          "$l": null
+        },
+        {
+          "when": {
+            "NOTE": "Drop non-language label",
+            "onRevert": {"language": {"@id": "https://id.kb.se/language/zxx"}}
+          },
+          "$l": null
+        }
+      ],
       "aboutEntity": "?work",
       "aboutAlias": "_:work",
       "include": ["titledetails", "titlesearchelem", "i2-nonfiling"],
@@ -6656,6 +6672,36 @@
             {"240": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "Swenglish text"},
               {"l": "Svenska"}
+            ]}}
+          ]
+        },
+        {
+          "name": "Verify revert skipping non-language",
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": [ {
+                "@type": "Title",
+                "mainTitle": "Instrumental Music"
+              } ],
+              "language": [
+                {
+                  "@id": "https://id.kb.se/language/zxx",
+                  "@type": "Language",
+                  "code": "zxx",
+                  "langCode": "zxx",
+                  "prefLabelByLang": {"sv": "Icke-språkligt medium"}
+                }
+              ]
+            }
+          }},
+          "normalized": [
+            {"008": "|     |        |  |||||||||||000 ||zxx| "},
+            {"041": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "zxx"}
+            ]}},
+            {"240": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Instrumental Music"}
             ]}}
           ]
         }
