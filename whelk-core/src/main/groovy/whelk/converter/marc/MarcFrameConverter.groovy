@@ -3051,6 +3051,11 @@ class MatchRule {
             }
         }
         if (pattern instanceof Map) {
+            if (obj instanceof List) {
+                return obj.any {
+                    objectContains(it, pattern)
+                }
+            }
             if (!(obj instanceof Map)) {
                 return false
             }
