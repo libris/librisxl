@@ -30,6 +30,6 @@ selectBySqlWhere("""
     } else {
         thing['heldBy']['@id'] = NEW_SIGEL
         scheduledForMove.println("${hold.doc.getURI()}")
-        hold.scheduleSave()
+        hold.scheduleSave(loud: true)
     }
 }
