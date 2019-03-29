@@ -180,3 +180,13 @@ task jsonldToTurtle(dependsOn: 'classes', type: JavaExec) {
     main = 'whelk.converter.JsonLdToTurtle'
     args(System.getProperty('args', "").split() as String[])
 }
+
+task dataview(dependsOn: 'classes', type: JavaExec) {
+    description "View JSON-LD data (USAGE: -Dargs='<card|chip|embellish|index> <source>')"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'whelk.util.DataViewCli'
+    systemProperties(
+        'xl.secret.properties': System.getProperty("xl.secret.properties")
+    )
+    args(System.getProperty('args', "").split() as String[])
+}
