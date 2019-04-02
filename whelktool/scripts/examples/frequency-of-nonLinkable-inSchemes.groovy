@@ -11,7 +11,7 @@ PROPERTIES = ['subject', 'genreForm', 'classification']
 
 SCHEMES = [:]
 POTENTIAL_SCHEMES = [:]
-INSCHEMES_WITH_LIST = []
+INSCHEMES_WITH_LIST = [] as Set
 PrintWriter potentialInSchemes = getReportWriter("potential-InSchemes.csv")
 PrintWriter errorInSchemeAsList = getReportWriter("error-inScheme-as-list")
 
@@ -45,8 +45,7 @@ POTENTIAL_SCHEMES.each { k, v ->
     potentialInSchemes.println("${k},${v[0]},${v.tail()}")
 }
 
-def errorsToPrint = INSCHEMES_WITH_LIST as Set
-errorsToPrint.each {
+INSCHEMES_WITH_LIST.each {
     errorInSchemeAsList.println("${it}")
 }
 
