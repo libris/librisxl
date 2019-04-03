@@ -29,6 +29,7 @@
                     "type": "custom"
                 },
                 "softmatcher": {
+                    "type": "standard",
                     "filter": ["lowercase", "ascii_folder", "swedish_snowball"]
                 },
                 "isbn_analyzer": {
