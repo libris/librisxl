@@ -44,6 +44,8 @@ class JsonLd {
     static final String APIX_FAILURE_KEY = "apixExportFailedAt"
     static final String ENCODING_LEVEL_KEY = "marc:encLevel"
 
+    static final String SEARCH_KEY = "_str"
+
     static final List<String> NS_SEPARATORS = ['#', '/', ':']
 
     static final Set<String> LD_KEYS
@@ -71,6 +73,7 @@ class JsonLd {
     Map displayData
     Map vocabIndex
 
+    String locale
     private String vocabId
     private Map<String, String> nsToPrefixMap = [:]
 
@@ -90,8 +93,9 @@ class JsonLd {
     /**
      * Make an instance to incapsulate model driven behaviour.
      */
-    JsonLd(Map contextData, Map displayData, Map vocabData) {
+    JsonLd(Map contextData, Map displayData, Map vocabData, String locale = 'sv') {
         setSupportData(contextData, displayData, vocabData)
+        this.locale = locale
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
@@ -149,7 +153,7 @@ class JsonLd {
     private void buildLangContainerAliasMap() {
         for (ctx in [displayData.get(CONTEXT_KEY), context]) {
             ctx.each { k, v ->
-                if (v instanceof Map && v[CONTAINER_KEY] == LANGUAGE_KEY) {
+                if (isLangContainer(v)) {
                     langContainerAlias[v[ID_KEY]] = k
                 }
             }
@@ -174,6 +178,10 @@ class JsonLd {
 
     boolean isListContainer(dfn) {
         return dfn instanceof Map && dfn[CONTAINER_KEY] == LIST_KEY
+    }
+
+    boolean isLangContainer(dfn) {
+        return dfn instanceof Map && dfn[CONTAINER_KEY] == LANGUAGE_KEY
     }
 
     String toTermKey(String termId) {
@@ -622,7 +630,7 @@ class JsonLd {
         return jsonLd
     }
 
-    Map toCard(Map thing, boolean chipsify = true) {
+    Map toCard(Map thing, boolean chipsify = true, boolean addSearchKey = false) {
         Map result = [:]
 
         Map card = removeProperties(thing, 'cards')
@@ -640,14 +648,32 @@ class JsonLd {
                 if (value instanceof List) {
                     lensValue = value.collect {
                         it instanceof Map
-                        ? toCard((Map) it, chipsify)
+                        ? toCard((Map) it, chipsify, addSearchKey)
                         : it
                     }
                 } else if (value instanceof Map) {
-                    lensValue = toCard((Map) value, chipsify)
+                    lensValue = toCard((Map) value, chipsify, addSearchKey)
                 }
             }
             result[key] = lensValue
+        }
+
+        if (addSearchKey) {
+            List key = makeSearchKeyParts(card)
+            if (key) {
+                // TODO: only if reduceKey ?
+                for (v in result.values()) {
+                    if (v instanceof List && ((List)v).size() == 1) {
+                        v = ((List)v)[0]
+                    }
+                    if (v instanceof Map) {
+                        if (v[SEARCH_KEY]) {
+                            key << ((Map)v).remove(SEARCH_KEY)
+                        }
+                    }
+                }
+                result[SEARCH_KEY] = key.join(' ')
+            }
         }
 
         return result
@@ -668,6 +694,40 @@ class JsonLd {
         } else {
             return object
         }
+    }
+
+    List makeSearchKeyParts(Map object) {
+        Map lensGroups = displayData.get('lensGroups')
+        Map lensGroup = lensGroups.get('chips')
+        Map lens = getLensFor(object, lensGroup)
+        List parts = []
+        def type = object.get(TYPE_KEY)
+        // TODO: a bit too hard-coded...
+        if (type instanceof String && type != 'Identifier' && isSubClassOf(type, 'Identifier')) {
+            parts << type
+        }
+        if (lens) {
+            List propertiesToKeep = (List) lens.get("showProperties")
+            for (prop in propertiesToKeep) {
+                def values = object[prop]
+                if (isLangContainer(context[prop]) && values instanceof Map) {
+                    values = values[locale] // TODO: fallback ?: values['en']
+                }
+                if (!(values instanceof List)) {
+                    values = values ? [values] : []
+                }
+                // TODO: find recursively (up to a point)? For what? Only
+                // StructuredValue? Or if a chip property value is a
+                // StructuredValue? (Use 'tokens' if available...)
+                for (value in values) {
+                    if (value instanceof String) {
+                        // TODO: marc:nonfilingChars?
+                        parts << value
+                    }
+                }
+            }
+        }
+        return parts
     }
 
     private Map removeProperties(Map thing, String lensType) {

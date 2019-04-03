@@ -230,7 +230,8 @@ class ElasticSearch {
 
         log.debug("Framing ${document.getShortId()}")
         boolean chipsify = false
-        copy.data['@graph'] = copy.data['@graph'].collect { whelk.jsonld.toCard(it, chipsify) }
+        boolean addSearchKey = true
+        copy.data['@graph'] = copy.data['@graph'].collect { whelk.jsonld.toCard(it, chipsify, addSearchKey) }
 
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = document.getThingIdentifiers()
