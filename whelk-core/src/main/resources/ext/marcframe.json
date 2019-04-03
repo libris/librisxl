@@ -4550,10 +4550,11 @@
       "$b": {"addProperty": "marc:geographicClassificationAreaCode"},
       "$c": {"addProperty": "marc:geographicClassificationSubareaCode"},
       "$p": {"addLink": "place", "resourceType": "Place", "property": "label", "infer": true},
-      "$0": {"addProperty": "marc:recordControlNumber", "NOTE:local": "Används ej"},
-      "$1": {"addProperty": "marc:rwoURI"},
+      "$0": null,
+      "$1": null,
       "$2": {"property": "marc:placeCodeSource"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": null,
       "_spec": [
         {
           "source": [{"033": {"ind1": "0", "ind2": "0", "subfields": [{"a": "198407--"}, {"b": "5754"}, {"c": "L7"}]}}],
@@ -9538,9 +9539,54 @@
       "$d": {"addProperty": "date"},
       "$o": {"addProperty": "marc:otherEventInformation"},
       "$p": {"addLink": "place", "resourceType": "Place", "property": "label", "infer": true},
-      "$2": {"ignored": true, "NOTE:LC": "nac"},
+      "$0": null,
+      "$1": null,
+      "$2": null,
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "$8": {"property": "marc:groupid"},
+      "_spec": [
+        {
+          "source": [
+            {"518": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Konferens, Stockholm maj, 2008"}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "capture": [
+                {
+                  "@type": "Capture",
+                  "label": "Konferens, Stockholm maj, 2008"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": [
+            {"033": {"ind1": "0", "ind2": " ", "subfields": [{"a": "198407--"},{"b": "5754"},{"c": "L7"}]}},
+            {"518": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Recorded July 1984, London."}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "capture": [
+                {
+                  "@type": "Capture",
+                  "date": [ "198407--" ],
+                  "marc:geographicClassificationAreaCode": [ "5754" ],
+                  "marc:geographicClassificationSubareaCode": [ "L7" ],
+                  "marc:typeOfDate": "marc:SingleDate"
+                },
+                {
+                  "@type": "Capture",
+                  "label": "Recorded July 1984, London."
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
 
     "520": {
