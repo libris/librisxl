@@ -28,6 +28,9 @@
                     "tokenizer": "lowercase",
                     "type": "custom"
                 },
+                "softmatcher": {
+                    "filter": ["lowercase", "ascii_folder", "swedish_snowball"]
+                },
                 "isbn_analyzer": {
                     "tokenizer": "standard",
                     "char_filter": [
@@ -67,6 +70,14 @@
                 "swe_light_stemmer": {
                     "name": "light_swedish",
                     "type": "stemmer"
+                },
+                "swedish_snowball": {
+                    "type": "snowball",
+                    "language": "Swedish"
+                },
+                "ascii_folder": {
+                    "type": "asciifolding",
+                    "preserve_original": true
                 }
             }
         }
@@ -80,6 +91,23 @@
                 "enabled": true
             },
             "properties": {
+                "index": {
+                    "type": "object",
+                    "enabled": false
+                },
+                "meta": {
+                    "properties": {
+                        "created": {
+                          "type": "date"
+                        },
+                        "modified": {
+                          "type": "date"
+                        },
+                        "generationDate": {
+                          "type": "date"
+                        }
+                    }
+                },
                 "identifiedBy": {
                     "type": "nested",
                     "include_in_parent": true,
@@ -88,6 +116,22 @@
                         "value": {
                             "type": "text",
                             "analyzer": "isbn_analyzer"
+                        }
+                    }
+                },
+                "publication": {
+                    "properties": {
+                        "year": {
+                            "fields": {
+                                "keyword": {
+                                    "index": true,
+                                    "type": "keyword"
+                                }
+                            },
+                            "analyzer": "numeric_extractor",
+                            "index": true,
+                            "type": "text",
+                            "fielddata": true
                         }
                     }
                 },
@@ -139,281 +183,23 @@
                     }
                 },
                 {
-                    "notation_template": {
+                    "str_template": {
                         "mapping": {
                             "fields": {
-                                "notation": {
-                                    "index": true,
-                                    "type": "text"
-                                },
-                                "keyword": {
-                                    "index": true,
-                                    "type": "keyword"
-                                }
-                            },
-                            "type": "text"
-                        },
-                        "match": "notation",
-                        "match_mapping_type": "string"
-                    }
-                },
-                {
-                    "allLabel_template": {
-                        "mapping": {
-                            "fields": {
-                                "keyword": {
-                                    "index": true,
-                                    "type": "keyword"
-                                },
-                                "{name}": {
-                                    "index": true,
-                                    "type": "text",
-                                    "boost": 50
-                                }
-                            },
-                            "type": "text"
-                        },
-                        "match": "*Label",
-                        "match_mapping_type": "string"
-                    }
-                },
-                {
-                    "label_template": {
-                        "mapping": {
-                            "fields": {
-                                "keyword": {
-                                    "index": true,
-                                    "type": "keyword"
-                                }
+                              "value": {
+                                "type": "text",
+                                "analyzer": "softmatcher"
+                              }
                             },
                             "type": "text",
                             "index": true,
                             "boost": 50
                         },
-                        "match": "label",
+                        "match": "_str",
                         "match_mapping_type": "string"
-                    }
-                },
-                {
-                    "scheme_template": {
-                        "mapping": {
-                            "fields": {
-                                "keyword": {
-                                    "index": true,
-                                    "type": "keyword"
-                                },
-                                "{name}": {
-                                    "index": true,
-                                    "type": "text"
-                                }
-                            },
-                            "type": "text"
-                        },
-                        "match": "*Scheme",
-                        "match_mapping_type": "string"
-                    }
-                },
-                {
-                    "name_template": {
-                        "mapping": {
-                            "fields": {
-                                "keyword": {
-                                    "index": true,
-                                    "type": "keyword"
-                                },
-                                "{name}": {
-                                    "index": true,
-                                    "type": "text",
-                                    "boost": 50
-                                }
-                            },
-                            "type": "text"
-                        },
-                        "match": "*Name",
-                        "match_mapping_type": "string"
-                    }
-                },
-                {
-                    "value_template": {
-                        "mapping": {
-                            "fields": {
-                                "keyword": {
-                                    "index": true,
-                                    "type": "keyword"
-                                },
-                                "{name}": {
-                                    "index": true,
-                                    "type": "text",
-                                    "boost": 50
-                                }
-                            },
-                            "type": "text"
-                        },
-                        "match": "*Value",
-                        "match_mapping_type": "string"
-                    }
-                },
-                {
-                    "title_template": {
-                        "mapping": {
-                            "fields": {
-                                "keyword": {
-                                    "index": true,
-                                    "type": "keyword"
-                                },
-                                "{name}": {
-                                    "index": true,
-                                    "type": "text",
-                                    "boost": 50
-                                }
-                            },
-                            "type": "text"
-                        },
-                        "match": "*title*",
-                        "match_mapping_type": "string"
-                    }
-                },
-                {
-                    "numberOf_template": {
-                        "mapping": {
-                            "type": "keyword"
-                        },
-                        "match": "numberOf*"
-                    }
-                },
-                {
-                    "unknown_template": {
-                        "mapping": {
-                            "index": true,
-                            "type": "keyword"
-                        },
-                        "match_mapping_type": "string",
-                        "path_match": "unknown.*.subfields.*"
                     }
                 }
             ]
-        },
-        "auth": {
-            "properties": {
-                "altLabel": {
-                    "analyzer": "completer",
-                    "type": "text"
-                },
-                "closeMatch": {
-                    "properties": {
-                        "inScheme": {
-                            "properties": {
-                                "prefLabel": {
-                                    "analyzer": "completer",
-                                    "type": "text"
-                                }
-                            }
-                        }
-                    }
-                },
-                "controlledLabel": {
-                    "analyzer": "completer",
-                    "type": "text",
-                    "boost": 5
-                },
-                "familyName": {
-                    "analyzer": "completer",
-                    "type": "text"
-                },
-                "givenName": {
-                    "analyzer": "completer",
-                    "type": "text"
-                },
-                "hiddenLabel": {
-                    "analyzer": "completer",
-                    "type": "text"
-                },
-                "label": {
-                    "analyzer": "completer",
-                    "type": "text",
-                    "boost": 2
-                },
-                "name": {
-                    "analyzer": "completer",
-                    "type": "text",
-                    "boost": 10
-                },
-                "prefLabel": {
-                    "analyzer": "completer",
-                    "type": "text",
-                    "boost": 10
-                },
-                "sameAs": {
-                    "properties": {
-                        "controlledLabel": {
-                            "analyzer": "completer",
-                            "type": "text",
-                            "fields": {
-                                "keyword": {
-                                    "index": true,
-                                    "type": "keyword"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "bib": {
-            "properties": {
-                "publication": {
-                    "properties": {
-                        "date": {
-                            "fields": {
-                                "keyword": {
-                                    "index": true,
-                                    "type": "keyword"
-                                }
-                            },
-                            "analyzer": "numeric_extractor",
-                            "index": true,
-                            "type": "text",
-                            "fielddata": true
-                        }
-                    }
-                },
-                "attributedTo": {
-                    "properties": {
-                        "controlledLabel": {
-                            "analyzer": "completer",
-                            "type": "text",
-                            "fields": {
-                                "keyword": {
-                                    "index": true,
-                                    "type": "keyword"
-                                }
-                            }
-                        }
-                    }
-                },
-                "influencedBy": {
-                    "properties": {
-                        "controlledLabel": {
-                            "analyzer": "completer",
-                            "type": "text",
-                            "fields": {
-                                "keyword": {
-                                    "index": true,
-                                    "type": "keyword"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "def": {
-            "properties": {
-                "index": {
-                    "type": "object",
-                    "enabled": false
-                }
-            }
         }
     }
 }
