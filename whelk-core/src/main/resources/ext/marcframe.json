@@ -9246,7 +9246,7 @@
           "resourceType": "ToCEntry"
         }
       },
-      "subfieldOrder": "6 a g t r u",
+      "subfieldOrder": "6 a t r g u",
       "NOTE": "No $a if i2=0",
       "$a": {"property": "label"},
       "$g": {"about": "_:tocEntry", "addProperty": "comment"},
@@ -9272,14 +9272,14 @@
           ],
           "normalized": [
             {"505": {"ind1": "8", "ind2": " ", "subfields": [
-              {"g": "Bd. 15"},
               {"t": "Dissertatio de valore absoluto vis centripetae, tendentis ad ambilium ellipseos"},
-              {"r": "(def. Zach. Nordmark)"}
+              {"r": "(def. Zach. Nordmark)"},
+              {"g": "Bd. 15"}
             ]}},
             {"505": {"ind1": "8", "ind2": " ", "subfields": [
-              {"g": "Bd. 16"},
               {"t": "Dissertatio de constructione sectionis conicae vi centripeta tendente ad focum descriptae"},
-              {"r": "(def. Jac. Gust. Klingwall)"}
+              {"r": "(def. Jac. Gust. Klingwall)"},
+              {"g": "Bd. 16"}
             ]}}
           ],
           "result": {"mainEntity": {
@@ -9327,12 +9327,13 @@
             {"g": "(5:47) --"}
           ]}},
           "normalized": {"505": {"ind1": "8", "ind2": " ", "subfields": [
-            {"g": "(3:52) --"},
+
             {"t": "Enoralehu"},
             {"r": "(Gigi)"},
-            {"g": "(5:47) --"},
+            {"g": "(3:52) --"},
             {"t": "Leroy"},
-            {"r": "(Tweak & Tony Allen)"}
+            {"r": "(Tweak & Tony Allen)"},
+            {"g": "(5:47) --"}
           ]}},
           "result": {"mainEntity": {
             "tableOfContents": [
@@ -9341,15 +9342,15 @@
                 "hasPart": [
                   {
                     "@type": "ToCEntry",
-                    "comment": ["(3:52) --"],
                     "label": "Enoralehu",
-                    "responsibilityStatement": "(Gigi)"
+                    "responsibilityStatement": "(Gigi)",
+                    "comment": ["(3:52) --"]
                   },
                   {
                     "@type": "ToCEntry",
-                    "comment": ["(5:47) --"],
                     "label": "Leroy",
-                    "responsibilityStatement": "(Tweak & Tony Allen)"
+                    "responsibilityStatement": "(Tweak & Tony Allen)",
+                    "comment": ["(5:47) --"]
                   }
                 ]
               }
