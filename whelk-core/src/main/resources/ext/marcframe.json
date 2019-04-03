@@ -20023,7 +20023,7 @@
       "embedded": true,
       "i1": {"property": "marc:holdingsLevel", "marcDefault": " "},
       "i2": {"property": "marc:typeOfNotation", "marcDefault": " "},
-      "$a": {"property": "marc:textualString", "required": true},
+      "$a": {"property": "marc:textualString"},
       "$x": {"addProperty": "marc:cataloguersNote"},
       "$z": {"addProperty": "marc:publicNote"},
       "$2": {"property": "marc:sourceOfNotation"},
@@ -20050,14 +20050,33 @@
         },
         {
           "name": "With indicator 1 set to blank",
-          "source": {"866": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "Foo"}
-          ]}},
+          "source": [
+            {"866": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Foo"}]}},
+            {"866": {"ind1": " ", "ind2": " ", "subfields": [{"x": "89-06-16 (inb.)"}]}}
+          ],
           "result": {"mainEntity": {
             "marc:hasTextualHoldingsBasicBibliographicUnit": [
               {
                 "@type": "marc:TextualHoldingsBasicBibliographicUnit",
                 "marc:textualString": "Foo"
+              },
+              {
+                "@type": "marc:TextualHoldingsBasicBibliographicUnit",
+                "marc:cataloguersNote": [ "89-06-16 (inb.)" ]
+              }
+            ]
+          }}
+        },
+        {
+          "name": "With only $x used for statistics",
+          "source": [
+            {"866": {"ind1": " ", "ind2": " ", "subfields": [{"x": "nyfv"}]}}
+          ],
+          "result": {"mainEntity": {
+            "marc:hasTextualHoldingsBasicBibliographicUnit": [
+              {
+                "@type": "marc:TextualHoldingsBasicBibliographicUnit",
+                "marc:cataloguersNote": [ "nyfv" ]
               }
             ]
           }}
