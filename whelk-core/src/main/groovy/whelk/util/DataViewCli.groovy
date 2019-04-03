@@ -4,7 +4,7 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
 
-// TODO: factor out and use MarcFrameCli.addJsonLd?
+// TODO: factor out and use MarcFrameCli.addJsonLd to allow for local data.
 assert 'xl.secret.properties' in System.properties
 
 whelk = Whelk.createLoadedSearchWhelk()
@@ -15,10 +15,11 @@ def COMMANDS = ['card', 'chip', 'embellish', 'index']
 def view(cmd, source) {
     def result
     switch (cmd) {
-        case 'card':
-            break
-        case 'chip':
-            break
+        // TODO: most useful if local data can be loaded (see TODO above).
+        //case 'card':
+        //    break
+        //case 'chip':
+        //    break
         case 'embellish':
             return ld.embellish(source)
         case 'index':

@@ -626,8 +626,7 @@ class JsonLd {
         Map result = [:]
 
         Map card = removeProperties(thing, 'cards')
-        // If result is too small, see if a chip would be bigger, then use
-        // that.
+        // If result is too small, use chip instead.
         // TODO: Support and use extends + super in card defs instead.)
         if (card.size() < 2) {
             card = removeProperties(thing, 'chips')
