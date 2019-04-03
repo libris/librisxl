@@ -210,6 +210,7 @@ class ElasticSearch {
     }
 
     Map getShapeForIndex(Document document, Whelk whelk, String collection) {
+        Document copy = document.clone()
 
         if (!collection.equals("hold")) {
             List externalRefs = document.getExternalRefs()
@@ -224,11 +225,10 @@ class ElasticSearch {
                     log.warn("Could not get external doc ${id} for ${document.getShortId()}, skipping...")
                 }
             }
-            whelk.jsonld.embellish(document.data, referencedData, true)
+            whelk.jsonld.embellish(copy.data, referencedData, true)
         }
 
         log.debug("Framing ${document.getShortId()}")
-        Document copy = document.clone()
         boolean chipsify = false
         copy.data['@graph'] = copy.data['@graph'].collect { whelk.jsonld.toCard(it, chipsify) }
 
