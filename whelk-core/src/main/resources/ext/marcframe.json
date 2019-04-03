@@ -9357,7 +9357,7 @@
           }}
         },
         {
-          "name": "Enhanced - order g t",
+          "name": "Enhanced - order g t, creates faulty entities, because aboutNew on t",
           "source": {"505": {"ind1": "8", "ind2": "0", "subfields": [
             {"g": "Nr. 1."},
             {"t": "Region Neusiedlersee --"},
