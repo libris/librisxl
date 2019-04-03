@@ -622,41 +622,46 @@ class JsonLd {
         return jsonLd
     }
 
-    /**
-     * Convert a post to card.
-     *
-     */
     Map toCard(Map thing, boolean chipsify = true) {
-        Map lensGroups = displayData.get("lensGroups")
-        Map cardLensGroup = lensGroups.get("cards")
         Map result = [:]
 
-        Map card = removeProperties(thing, cardLensGroup)
-        if (chipsify) {
-            card.each {key, value ->
-                result[key] = toChip(value)
-            }
-        } else {
-            return card
+        Map card = removeProperties(thing, 'cards')
+        // If result is too small, use chip instead.
+        // TODO: Support and use extends + super in card defs instead.)
+        if (card.size() < 2) {
+            card = removeProperties(thing, 'chips')
         }
+
+        card.each { key, value ->
+            def lensValue = value
+            if (chipsify) {
+                lensValue = toChip(value)
+            } else {
+                if (value instanceof List) {
+                    lensValue = value.collect {
+                        it instanceof Map
+                        ? toCard((Map) it, chipsify)
+                        : it
+                    }
+                } else if (value instanceof Map) {
+                    lensValue = toCard((Map) value, chipsify)
+                }
+            }
+            result[key] = lensValue
+        }
+
         return result
     }
 
-    /**
-     * Convert a post to chip.
-     *
-     */
     Object toChip(Object object) {
-        Map lensGroups = displayData.get("lensGroups")
-        Map chipLensGroup = lensGroups.get("chips")
-        Map itemsToKeep = [:]
+        Map reduced = [:]
         Map result = [:]
 
         if (object instanceof List) {
             return object.collect { toChip(it) }
         } else if ((object instanceof Map)) {
-            itemsToKeep = removeProperties(object, chipLensGroup)
-            itemsToKeep.each {key, value ->
+            reduced = removeProperties(object, 'chips')
+            reduced.each { key, value ->
                 result[key] = toChip(value)
             }
             return result
@@ -665,20 +670,21 @@ class JsonLd {
         }
     }
 
-    private Map removeProperties(Map thing, Map lensGroup) {
-        Map itemsToKeep = [:]
-
+    private Map removeProperties(Map thing, String lensType) {
+        Map lensGroups = displayData.get('lensGroups')
+        Map lensGroup = lensGroups.get(lensType)
         Map lens = getLensFor(thing, lensGroup)
 
+        Map result = [:]
         if (lens) {
             List propertiesToKeep = (List) lens.get("showProperties")
 
-            thing.each {key, value ->
+            thing.each { key, value ->
                 if (shouldKeep((String) key, (List) propertiesToKeep)) {
-                    itemsToKeep[key] = value
+                    result[key] = value
                 }
             }
-            return itemsToKeep
+            return result
         } else {
             return thing
         }
@@ -719,7 +725,7 @@ class JsonLd {
     }
 
     private static boolean shouldKeep(String key, List propertiesToKeep) {
-        return (key in propertiesToKeep || key.startsWith("@"))
+        return (key == RECORD_KEY || key in propertiesToKeep || key.startsWith("@"))
     }
 
 
