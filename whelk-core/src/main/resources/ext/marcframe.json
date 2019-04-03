@@ -9257,7 +9257,7 @@
       "$8": {"property": "marc:groupid"},
       "_spec": [
         {
-          "name": "Enhanced - Data is encoded with repetitions of the defined subfields, other than subfield $a. TODO: When $g comes first, two ToCEntries has been created; one for comment and one for that which comes after $t",
+          "name": "Enhanced - Data is encoded with repetitions of the defined subfields, other than subfield $a. TODO: When $g comes first, two ToCEntries has been created; one for comment and one for that which comes after $t. Hence revert order is only maintained in converted records with several 505 fields.",
           "source": [
             {"505": {"ind1": "1", "ind2": " ", "subfields": [
               {"g": "Bd. 15"},
@@ -9272,14 +9272,14 @@
           ],
           "normalized": [
             {"505": {"ind1": "8", "ind2": " ", "subfields": [
+              {"g": "Bd. 15"},
               {"t": "Dissertatio de valore absoluto vis centripetae, tendentis ad ambilium ellipseos"},
-              {"r": "(def. Zach. Nordmark)"},
-              {"g": "Bd. 15"}
+              {"r": "(def. Zach. Nordmark)"}
             ]}},
             {"505": {"ind1": "8", "ind2": " ", "subfields": [
+              {"g": "Bd. 16"},
               {"t": "Dissertatio de constructione sectionis conicae vi centripeta tendente ad focum descriptae"},
-              {"r": "(def. Jac. Gust. Klingwall)"},
-              {"g": "Bd. 16"}
+              {"r": "(def. Jac. Gust. Klingwall)"}
             ]}}
           ],
           "result": {"mainEntity": {
@@ -9317,7 +9317,7 @@
           }
         },
         {
-          "name": "Enhanced - Reordered normalized subfields within a field",
+          "name": "Enhanced - order t r g",
           "source": {"505": {"ind1": "8", "ind2": "0", "subfields": [
             {"t": "Enoralehu"},
             {"r": "(Gigi)"},
@@ -9327,7 +9327,6 @@
             {"g": "(5:47) --"}
           ]}},
           "normalized": {"505": {"ind1": "8", "ind2": " ", "subfields": [
-
             {"t": "Enoralehu"},
             {"r": "(Gigi)"},
             {"g": "(3:52) --"},
@@ -9351,6 +9350,52 @@
                     "label": "Leroy",
                     "responsibilityStatement": "(Tweak & Tony Allen)",
                     "comment": ["(5:47) --"]
+                  }
+                ]
+              }
+            ]
+          }}
+        },
+        {
+          "name": "Enhanced - order g t",
+          "source": {"505": {"ind1": "8", "ind2": "0", "subfields": [
+            {"g": "Nr. 1."},
+            {"t": "Region Neusiedlersee --"},
+            {"g": "Nr. 2."},
+            {"t": "Region Rosalia/Lithagebirge --"},
+            {"g": "Nr. 3."},
+            {"t": "Region Mettelburgenland --"}
+          ]}},
+          "normalized": {"505": {"ind1": "8", "ind2": " ", "subfields": [
+            {"g": "Nr. 1."},
+            {"t": "Region Neusiedlersee --"},
+            {"g": "Nr. 2."},
+            {"t": "Region Rosalia/Lithagebirge --"},
+            {"g": "Nr. 3."},
+            {"t": "Region Mettelburgenland --"}
+          ]}},
+          "result": {"mainEntity": {
+            "tableOfContents": [
+              {
+                "@type": "TableOfContents",
+                "hasPart": [
+                  {
+                    "@type": "ToCEntry",
+                    "comment": [ "Nr. 1." ]
+                  },
+                  {
+                    "@type": "ToCEntry",
+                    "label": "Region Neusiedlersee --",
+                    "comment": [ "Nr. 2." ]
+                  },
+                  {
+                    "@type": "ToCEntry",
+                    "label": "Region Rosalia/Lithagebirge --",
+                    "comment": [ "Nr. 3." ]
+                  },
+                  {
+                    "@type": "ToCEntry",
+                    "label": "Region Mettelburgenland --"
                   }
                 ]
               }
