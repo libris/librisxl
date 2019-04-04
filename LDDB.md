@@ -144,4 +144,17 @@ for i, l in enumerate(sys.stdin):
         print(e, file=sys.stderr)
 ```
 
+### Create Json-shapes with statistics
+
+1. See instructions under "In General" to create a local output stream of bib/auth/hold
+2. run the lddb_json_shape.py script (skip normalizing step with sed if that has been done earlier.)
+
+Example for auth collection:
+
+```bash
+$ psql -h $HOST -Uwhelk -tc "COPY (SELECT data FROM lddb WHERE collection = 'auth' AND deleted = false) TO stdout;" > stg-lddb-auth.json.lines
+$ cat stg-lddb-auth.json.lines | sed 's/\\\\/\\/g' |  ...
+$ cat stg-lddb-auth.json.lines | pypy librisxl-tools/scripts/lddb_json_shape.py > shapes-for-your-selection.json
+```
+
 When crunching lots of data, use [PyPy](http://pypy.org/) for speed.
