@@ -4950,6 +4950,7 @@
       },
       "i1": {
         "property": "marc:languageNote",
+        "TODO": "Remove explicit data. Should be set to 1 when translationOf is present. See TODO on that and originalVersion. Equate absence and negation unless distinction is provably useful.",
         "tokenMap": {
           "0": "marc:ItemNotATranslationDoesNotIncludeATranslation",
           "1": "marc:ItemIsOrIncludesATranslation"
@@ -5012,6 +5013,7 @@
       },
       "$h": {
         "about": "_:original",
+        "TODO": "originalVersion isn't normally used like this. This ought to be translationOf.",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
@@ -5022,6 +5024,7 @@
       },
       "$k": {
         "about": "_:translationSource",
+        "TODO": "if $h is mapped to translationOf, this needs to be something else (e.g. translationLanguge)",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
@@ -6551,6 +6554,31 @@
             "NOTE": "Drop non-language label",
             "onRevert": {"language": {"@id": "https://id.kb.se/language/zxx"}}
           },
+          "$l": null
+        },
+        {
+          "when": {
+            "NOTE": "Sign of translation: use language label",
+            "TODO": "remove when translationOf is the sole marker of translation",
+            "onRevert": {"marc:languageNote": "marc:ItemIsOrIncludesATranslation"}
+          }
+        },
+        {
+          "when": {
+            "NOTE": "Sign of translation: use language label",
+            "TODO": "remove when translationOf is the sole marker of translation",
+            "onRevert": {"originalVersion": {}}
+          }
+        },
+        {
+          "when": {
+            "NOTE": "Sign of translation: use language label",
+            "onRevert": {"translationOf": {}}
+          }
+        },
+        {
+          "when": null,
+          "NOTE": "No sign of translation: drop language label",
           "$l": null
         }
       ],
