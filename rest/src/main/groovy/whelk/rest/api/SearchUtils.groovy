@@ -184,7 +184,7 @@ class SearchUtils {
         Map esResult = esQuery.doQuery(queryParameters, dataset)
 
         Map stats = null
-        List mappings = []
+        List<Map> mappings = []
         mappings << ['variable': 'q',
                      'predicate': ld.toChip(getVocabEntry('textQuery')),
                      'value': query]
@@ -210,11 +210,10 @@ class SearchUtils {
             log.debug("No stats found for query: ${queryParameters}, result: ${esResult}")
         }
 
-        mappings.tail().each { mapping ->
-            Map params = pageParams.clone()
-            params.remove(mapping['variable'])
-            mapping['up'] = [(JsonLd.ID_KEY): makeFindUrl(SearchType.ELASTIC,
-                                                          params, offset)]
+        mappings.tail().each { Map mapping ->
+            Map params = removeMappingFromParams(pageParams, mapping)
+            String upUrl = makeFindUrl(SearchType.ELASTIC, params, offset)
+            mapping['up'] = [ (JsonLd.ID_KEY): upUrl ]
         }
 
         Map result = assembleSearchResults(SearchType.ELASTIC,
@@ -226,6 +225,26 @@ class SearchUtils {
         }
 
         return result
+    }
+
+    Map removeMappingFromParams(Map pageParams, Map mapping) {
+        Map params = pageParams.clone()
+        String variable = mapping['variable']
+        def param = params[variable]
+        List values = param instanceof List ? param.clone() : param ? [param] : []
+        if ('object' in mapping) {
+            def value = mapping.object[JsonLd.ID_KEY]
+            values.remove(value)
+        } else if ('value' in mapping) {
+            def value = mapping.value
+            values.remove(value)
+        }
+        if (!values) {
+            params.remove(variable)
+        } else {
+            params[variable] = values
+        }
+        return params
     }
 
     /*

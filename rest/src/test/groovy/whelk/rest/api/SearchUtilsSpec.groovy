@@ -270,4 +270,17 @@ class SearchUtilsSpec extends Specification {
         then:
         thrown InvalidQueryException
     }
+
+    def "should remove a mappning from params"() {
+        expect:
+        search.removeMappingFromParams(params, mapping) == expected
+        where:
+        params                    | mapping                                         | expected
+        [type: 'Thing']           | [variable: 'type', object: ['@id': 'Thing']]    | [:]
+        [type: ['Thing']]         | [variable: 'type', object: ['@id': 'Thing']]    | [:]
+        [type: ['Thing', 'Item']] | [variable: 'type', object: ['@id': 'Thing']]    | [type: ['Item']]
+        [key: 'value']            | [variable: 'type', object: ['@id': 'Thing']]    | [key: 'value']
+        [a: 'A', 'b': 'B']        | [variable: 'a', value: 'A']                     | [b: 'B']
+        [a: ['A', 'a'], 'b': 'B']|  [variable: 'a', value: 'a']                     | [a: ['A'], 'b': 'B']
+    }
 }
