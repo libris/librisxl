@@ -9358,8 +9358,9 @@
       "$6": {"property": "marc:fieldref"}
     },
     "505": {
-      "i1": {"marcDefault": "8", "NOTE:LC": "nac"},
-      "i2": {"marcDefault": " ", "NOTE:LC": "ignore"},
+      "i1": {"marcDefault": "8", "NOTE:LC": "nac (Display constant controller)"},
+      "i2": {"marcDefault": " ", "NOTE:LC": "ignore (Level of content designation)"},
+      "TODO": "LC consider this a work entity in their 1.4 conversion. Interpunctuation:  -- .-- / ", 
       "aboutEntity": "?thing",
       "addLink": "tableOfContents",
       "resourceType": "TableOfContents",
@@ -9369,18 +9370,87 @@
           "resourceType": "ToCEntry"
         }
       },
-      "subfieldOrder": "a t r g u",
-      "TODO": "No $a if i2=0",
+      "subfieldOrder": "6 a t r g u",
+      "NOTE": "No $a if i2=0",
       "$a": {"property": "label"},
-      "$t": {"aboutNew": "_:tocEntry", "property": "label"},
-      "$r": {"about": "_:tocEntry", "property": "responsibilityStatement"},
       "$g": {"about": "_:tocEntry", "addProperty": "comment"},
+      "$r": {"about": "_:tocEntry", "property": "responsibilityStatement"},
+      "$t": {"aboutNew": "_:tocEntry", "property": "label"},
       "$u": {"about": "_:tocEntry", "addProperty": "uri"},
       "$6": {"property": "marc:fieldref"},
+      "$8": {"property": "marc:groupid"},
       "_spec": [
         {
-          "source": {"505": {"ind1": "8", "ind2": " ", "subfields": [
-            {"a": "Contents:"},
+          "name": "Enhanced - Data is encoded with repetitions of the defined subfields, other than subfield $a. TODO: When $g comes first, two ToCEntries has been created; one for comment and one for that which comes after $t. Hence revert order is only maintained in converted records with several 505 fields.",
+          "source": [
+            {"505": {"ind1": "1", "ind2": " ", "subfields": [
+              {"g": "Bd. 15"},
+              {"t": "Dissertatio de valore absoluto vis centripetae, tendentis ad ambilium ellipseos"},
+              {"r": "(def. Zach. Nordmark)"}
+            ]}},
+            {"505": {"ind1": "1", "ind2": " ", "subfields": [
+              {"g": "Bd. 16"},
+              {"t": "Dissertatio de constructione sectionis conicae vi centripeta tendente ad focum descriptae"},
+              {"r": "(def. Jac. Gust. Klingwall)"}
+            ]}}
+          ],
+          "normalized": [
+            {"505": {"ind1": "8", "ind2": " ", "subfields": [
+              {"g": "Bd. 15"},
+              {"t": "Dissertatio de valore absoluto vis centripetae, tendentis ad ambilium ellipseos"},
+              {"r": "(def. Zach. Nordmark)"}
+            ]}},
+            {"505": {"ind1": "8", "ind2": " ", "subfields": [
+              {"g": "Bd. 16"},
+              {"t": "Dissertatio de constructione sectionis conicae vi centripeta tendente ad focum descriptae"},
+              {"r": "(def. Jac. Gust. Klingwall)"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "tableOfContents": [
+              {
+                "@type": "TableOfContents",
+                "hasPart": [
+                  {
+                    "@type": "ToCEntry",
+                    "comment": ["Bd. 15"]
+                  },
+                  {
+                    "@type": "ToCEntry",
+                    "label": "Dissertatio de valore absoluto vis centripetae, tendentis ad ambilium ellipseos",
+                    "responsibilityStatement": "(def. Zach. Nordmark)"
+                  }
+                ]
+              },
+              {
+                "@type": "TableOfContents",
+                "hasPart": [
+                  {
+                    "@type": "ToCEntry",
+                    "comment": ["Bd. 16"]
+                  },
+                  {
+                    "@type": "ToCEntry",
+                    "label": "Dissertatio de constructione sectionis conicae vi centripeta tendente ad focum descriptae",
+                    "responsibilityStatement": "(def. Jac. Gust. Klingwall)"
+                  }
+                ]
+              }
+            ]
+            }
+          }
+        },
+        {
+          "name": "Enhanced - order t r g",
+          "source": {"505": {"ind1": "8", "ind2": "0", "subfields": [
+            {"t": "Enoralehu"},
+            {"r": "(Gigi)"},
+            {"g": "(3:52) --"},
+            {"t": "Leroy"},
+            {"r": "(Tweak & Tony Allen)"},
+            {"g": "(5:47) --"}
+          ]}},
+          "normalized": {"505": {"ind1": "8", "ind2": " ", "subfields": [
             {"t": "Enoralehu"},
             {"r": "(Gigi)"},
             {"g": "(3:52) --"},
@@ -9392,7 +9462,6 @@
             "tableOfContents": [
               {
                 "@type": "TableOfContents",
-                "label": "Contents:",
                 "hasPart": [
                   {
                     "@type": "ToCEntry",
@@ -9410,10 +9479,69 @@
               }
             ]
           }}
+        },
+        {
+          "name": "Enhanced - order g t, creates faulty entities, because aboutNew on t",
+          "source": {"505": {"ind1": "8", "ind2": "0", "subfields": [
+            {"g": "Nr. 1."},
+            {"t": "Region Neusiedlersee --"},
+            {"g": "Nr. 2."},
+            {"t": "Region Rosalia/Lithagebirge --"},
+            {"g": "Nr. 3."},
+            {"t": "Region Mettelburgenland --"}
+          ]}},
+          "normalized": {"505": {"ind1": "8", "ind2": " ", "subfields": [
+            {"g": "Nr. 1."},
+            {"t": "Region Neusiedlersee --"},
+            {"g": "Nr. 2."},
+            {"t": "Region Rosalia/Lithagebirge --"},
+            {"g": "Nr. 3."},
+            {"t": "Region Mettelburgenland --"}
+          ]}},
+          "result": {"mainEntity": {
+            "tableOfContents": [
+              {
+                "@type": "TableOfContents",
+                "hasPart": [
+                  {
+                    "@type": "ToCEntry",
+                    "comment": [ "Nr. 1." ]
+                  },
+                  {
+                    "@type": "ToCEntry",
+                    "label": "Region Neusiedlersee --",
+                    "comment": [ "Nr. 2." ]
+                  },
+                  {
+                    "@type": "ToCEntry",
+                    "label": "Region Rosalia/Lithagebirge --",
+                    "comment": [ "Nr. 3." ]
+                  },
+                  {
+                    "@type": "ToCEntry",
+                    "label": "Region Mettelburgenland --"
+                  }
+                ]
+              }
+            ]
+          }}
+        },
+        {
+          "name": "Basic - All information is recorded in a single occurrence of subfield $a.",
+          "source": {"505": {"ind1": "8", "ind2": " ", "subfields": [
+            {"a": "pt. 1. Carbon -- pt. 2. Nitrogen -- pt. 3. Sulphur -- pt. 4. Metals."}
+          ]}},
+          "result": {"mainEntity": {
+            "tableOfContents": [
+              {
+                "@type": "TableOfContents",
+                "label": "pt. 1. Carbon -- pt. 2. Nitrogen -- pt. 3. Sulphur -- pt. 4. Metals."
+              }
+            ]
+          }}
         }
       ]
     },
-
     "506": {
       "aboutEntity": "?thing",
       "NOTE:local": "ANVÄNDS NORMALT EJ",
