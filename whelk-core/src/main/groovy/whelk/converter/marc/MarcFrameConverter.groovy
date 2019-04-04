@@ -3066,6 +3066,7 @@ class MatchRule {
                 }
                 return objectContains(map[entry.key], entry.value)
             }
+            return true
         } else {
             return obj.equals(pattern)
         }
