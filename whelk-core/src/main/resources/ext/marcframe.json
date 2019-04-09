@@ -6577,7 +6577,7 @@
           }
         },
         {
-          "when": null,
+          "when": {"onRevert": {}},
           "NOTE": "No sign of translation: drop language label",
           "$l": null
         }
@@ -6630,11 +6630,20 @@
           }}
         },
         {
-          "source": {
-            "240": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "Moyen âge"},
-              {"l": "Engelska."}
-            ]}},
+          "source": [
+              {"041": {"ind1": "1", "ind2": " ", "subfields": [
+              ]}},
+              {"240": {"ind1": "0", "ind2": " ", "subfields": [
+                {"a": "Moyen âge"},
+                {"l": "Engelska."}
+              ]}}
+          ],
+          "normalized": [
+              {"240": {"ind1": "0", "ind2": " ", "subfields": [
+                {"a": "Moyen âge"},
+                {"l": "Engelska."}
+              ]}}
+          ],
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -6644,7 +6653,8 @@
                 "marc:searchElement" : false,
                 "marc:nonfilingChars" : " "
               } ],
-              "language": {"@type": "Language", "label": "Engelska."}
+              "language": {"@type": "Language", "label": "Engelska."},
+              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
             }
           }}
         },
@@ -6661,7 +6671,8 @@
                 "@type": "Language",
                 "@id": "https://id.kb.se/language/swe",
                 "prefLabelByLang": {"sv": "Svenska"}
-              }
+              },
+              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
             }
           }},
           "normalized": [
@@ -6692,7 +6703,8 @@
                   "@id": "https://id.kb.se/language/eng",
                   "prefLabelByLang": {"sv": "Engelska"}
                 }
-              ]
+              ],
+              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
             }
           }},
           "normalized": [

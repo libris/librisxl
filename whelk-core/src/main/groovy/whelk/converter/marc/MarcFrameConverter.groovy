@@ -1922,7 +1922,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         for (rule in matchRules) {
-            if (rule.onRevert)
+            if (rule.onRevert != null)
                 continue
             def matchHandler = rule.getHandler(aboutEntity, value)
             if (matchHandler) {
