@@ -6577,6 +6577,14 @@
           }
         },
         {
+          "when": {
+            "NOTE": "Don't infer label if local language label is given",
+            "TODO": "intermediary solution; local language labels are to be removed in favour of linked languages",
+            "onRevert": {"language": {"label": []}}
+          },
+          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label", "infer": false}
+        },
+        {
           "when": {"onRevert": {}},
           "NOTE": "No sign of translation: drop language label",
           "$l": null
@@ -6742,6 +6750,36 @@
             ]}},
             {"240": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "Instrumental Music"}
+            ]}}
+          ]
+        },
+        {
+          "name": "Verify revert using local language with label instead of the (properly) linked with prefLabel (intermediary solution, see TODO)",
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": [ {
+                "@type": "Title",
+                "mainTitle": "En titel"
+              } ],
+              "language": [
+                {
+                  "@type": "Language",
+                  "@id": "https://id.kb.se/language/swe",
+                  "prefLabelByLang": {"sv": "Svenska"}
+                },
+                {
+                  "@type": "Language",
+                  "label": "Svenska & swahili"
+                }
+              ]
+            }
+          }},
+          "normalized": [
+            {"008": "|     |        |  |||||||||||000 ||swe| "},
+            {"240": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "En titel"},
+              {"l": "Svenska & swahili"}
             ]}}
           ]
         }
