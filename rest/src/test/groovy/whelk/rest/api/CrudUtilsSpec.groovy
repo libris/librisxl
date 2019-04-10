@@ -47,6 +47,7 @@ class CrudUtilsSpec extends Specification {
         "text/turtle, application/json;q=0.8"               | null     | "text/turtle"
         "text/turtle;q=0.1, application/json;q=0.8"         | null     | "application/json"
         "*/*, text/turtle;q=0.1, application/json;q=0.8"    | null     | "application/ld+json"
+        "text/turtle, application/signed-exchange;v=b3"     | null     | "text/turtle"
     }
 
     def "Should convert suffix to MIME type"() {
