@@ -4951,6 +4951,7 @@
       },
       "i1": {
         "property": "marc:languageNote",
+        "TODO": "Remove explicit data. Should be set to 1 when translationOf is present. See TODO on that and originalVersion. Equate absence and negation unless distinction is provably useful.",
         "tokenMap": {
           "0": "marc:ItemNotATranslationDoesNotIncludeATranslation",
           "1": "marc:ItemIsOrIncludesATranslation"
@@ -5013,6 +5014,7 @@
       },
       "$h": {
         "about": "_:original",
+        "TODO": "originalVersion isn't normally used like this. This ought to be translationOf.",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
@@ -5023,6 +5025,7 @@
       },
       "$k": {
         "about": "_:translationSource",
+        "TODO": "if $h is mapped to translationOf, this needs to be something else (e.g. translationLanguge)",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
@@ -6553,6 +6556,39 @@
             "onRevert": {"language": {"@id": "https://id.kb.se/language/zxx"}}
           },
           "$l": null
+        },
+        {
+          "when": {
+            "NOTE": "Sign of translation: use language label",
+            "TODO": "remove when translationOf is the sole marker of translation",
+            "onRevert": {"marc:languageNote": "marc:ItemIsOrIncludesATranslation"}
+          }
+        },
+        {
+          "when": {
+            "NOTE": "Sign of translation: use language label",
+            "TODO": "remove when translationOf is the sole marker of translation",
+            "onRevert": {"originalVersion": {}}
+          }
+        },
+        {
+          "when": {
+            "NOTE": "Sign of translation: use language label",
+            "onRevert": {"translationOf": {}}
+          }
+        },
+        {
+          "when": {
+            "NOTE": "Don't infer label if local language label is given",
+            "TODO": "intermediary solution; local language labels are to be removed in favour of linked languages",
+            "onRevert": {"language": {"label": []}}
+          },
+          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label", "infer": false}
+        },
+        {
+          "when": {"onRevert": {}},
+          "NOTE": "No sign of translation: drop language label",
+          "$l": null
         }
       ],
       "aboutEntity": "?work",
@@ -6603,11 +6639,20 @@
           }}
         },
         {
-          "source": {
-            "240": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "Moyen âge"},
-              {"l": "Engelska."}
-            ]}},
+          "source": [
+              {"041": {"ind1": "1", "ind2": " ", "subfields": [
+              ]}},
+              {"240": {"ind1": "0", "ind2": " ", "subfields": [
+                {"a": "Moyen âge"},
+                {"l": "Engelska."}
+              ]}}
+          ],
+          "normalized": [
+              {"240": {"ind1": "0", "ind2": " ", "subfields": [
+                {"a": "Moyen âge"},
+                {"l": "Engelska."}
+              ]}}
+          ],
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -6617,7 +6662,8 @@
                 "marc:searchElement" : false,
                 "marc:nonfilingChars" : " "
               } ],
-              "language": {"@type": "Language", "label": "Engelska."}
+              "language": {"@type": "Language", "label": "Engelska."},
+              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
             }
           }}
         },
@@ -6634,7 +6680,8 @@
                 "@type": "Language",
                 "@id": "https://id.kb.se/language/swe",
                 "prefLabelByLang": {"sv": "Svenska"}
-              }
+              },
+              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
             }
           }},
           "normalized": [
@@ -6665,7 +6712,8 @@
                   "@id": "https://id.kb.se/language/eng",
                   "prefLabelByLang": {"sv": "Engelska"}
                 }
-              ]
+              ],
+              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
             }
           }},
           "normalized": [
@@ -6703,6 +6751,36 @@
             ]}},
             {"240": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "Instrumental Music"}
+            ]}}
+          ]
+        },
+        {
+          "name": "Verify revert using local language with label instead of the (properly) linked with prefLabel (intermediary solution, see TODO)",
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": [ {
+                "@type": "Title",
+                "mainTitle": "En titel"
+              } ],
+              "language": [
+                {
+                  "@type": "Language",
+                  "@id": "https://id.kb.se/language/swe",
+                  "prefLabelByLang": {"sv": "Svenska"}
+                },
+                {
+                  "@type": "Language",
+                  "label": "Svenska & swahili"
+                }
+              ]
+            }
+          }},
+          "normalized": [
+            {"008": "|     |        |  |||||||||||000 ||swe| "},
+            {"240": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "En titel"},
+              {"l": "Svenska & swahili"}
             ]}}
           ]
         }
