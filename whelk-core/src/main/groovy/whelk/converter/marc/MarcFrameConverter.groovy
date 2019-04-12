@@ -1922,7 +1922,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         for (rule in matchRules) {
-            if (rule.onRevert)
+            if (rule.onRevert != null)
                 continue
             def matchHandler = rule.getHandler(aboutEntity, value)
             if (matchHandler) {
@@ -3066,6 +3066,7 @@ class MatchRule {
                 }
                 return objectContains(map[entry.key], entry.value)
             }
+            return true
         } else {
             return obj.equals(pattern)
         }

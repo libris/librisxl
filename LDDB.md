@@ -26,16 +26,16 @@ If the built-in JSON support in PSQL doesn't cut it, read on here.
 Use `psql` and `COPY (...) TO STDOUT`:
 
 ```bash
-$ psql -h $HOST -U $USER -tc "COPY (SELECT ...) TO STDOUT;"
+$ psql -h $HOST -U $USER -tc "COPY (SELECT ...) TO STDOUT;" | sed 's/\\\\/\\/g'
 ```
 
-Use `sed 's/\\\\/\\/g'` to convert escaped `psql` output to valid JSON.
+(The `sed` part converts escaped `psql` output to valid JSON.)
 
 For repetitive processing, consider redirecting the output to a file and processing it locally.
 
 ```bash
-$ psql -h $HOST -Uwhelk -tc "COPY (SELECT data FROM lddb WHERE collection = 'bib' AND deleted = false) TO stdout;" > stg-lddb-bib.json.lines
-$ cat stg-lddb-bib.json.lines | sed 's/\\\\/\\/g' |  ...
+$ psql -h $HOST -Uwhelk -tc "COPY (SELECT data FROM lddb WHERE collection = 'bib' AND deleted = false) TO stdout;" | sed 's/\\\\/\\/g' > stg-lddb-bib.json.lines
+$ cat stg-lddb-bib.json.lines |  ...
 ```
 
 ### Using JQ (and AWK)
@@ -65,7 +65,7 @@ $ time psql -h $HOST -Uwhelk -tc "COPY (SELECT data FROM lddb WHERE collection =
 Count all usages of anonymous ("post-coordinated") ComplexSubjects:
 
 ```bash
-$ cat stg-lddb-bib.json.lines stg-| sed 's/\\\\/\\/g' |
+$ cat stg-lddb-bib.json.lines |
     jq '.["@graph"][2].subject[]? | select(.["@type"] == "ComplexSubject") | .prefLabel' |
     awk '{printf "\r%s", NR}'
 
@@ -76,7 +76,6 @@ Find all ISBN values containing punctuation:
 
 ```bash
 $ time cat stg-lddb-bib.json.lines |
-    sed 's/\\\\/\\/g' |
     jq '.["@graph"][1]?.identifiedBy[]? |
         select(.["@type"] == "ISBN" and .value)? |
         .value | match(".+([^ ] ?[;:,]$|^[;:,])")? |
@@ -94,7 +93,7 @@ $ time cat stg-lddb-bib.json.lines |
 Count the types of `_marcUncompleted` (including none):
 
 ```bash
-$ time cat stg-lddb-bib.json.lines | sed 's/\\\\/\\/g' |
+$ time cat stg-lddb-bib.json.lines |
     jq -c '.["@graph"][]|._marcUncompleted?|type' |
     awk '{a[$0]++; printf "\r"; for (k in a) printf "%s %s; ", a[k], k }'
 
@@ -104,7 +103,7 @@ $ time cat stg-lddb-bib.json.lines | sed 's/\\\\/\\/g' |
 Find and count all `_marcUncompleted` patterns (fields and subfields):
 
 ```bash
-$ time cat stg-lddb-bib.json.lines | sed 's/\\\\/\\/g' |
+$ time cat stg-lddb-bib.json.lines |
     jq -c '.["@graph"][] | select(has("_marcUncompleted"))? |
            ._marcUncompleted |
            if type == "object" then [.] else . end |
@@ -142,6 +141,19 @@ for i, l in enumerate(sys.stdin):
         print("ERROR at", i, "in data:", file=sys.stderr)
         print(l, file=sys.stderr)
         print(e, file=sys.stderr)
+```
+
+### Create Json-shapes with statistics
+
+1. See instructions under "In General" to create a local output stream of bib, auth or hold.
+2. Run the `lddb_json_shape.py` script.
+
+Example for auth collection:
+
+```bash
+$ psql -h $HOST -Uwhelk -tc "COPY (SELECT data FROM lddb WHERE collection = 'auth' AND deleted = false) TO stdout;" | sed 's/\\\\/\\/g' > stg-lddb-auth.json.lines
+$ cat stg-lddb-auth.json.lines |  ...
+$ cat stg-lddb-auth.json.lines | pypy librisxl-tools/scripts/lddb_json_shape.py > shapes-for-your-selection.json
 ```
 
 When crunching lots of data, use [PyPy](http://pypy.org/) for speed.

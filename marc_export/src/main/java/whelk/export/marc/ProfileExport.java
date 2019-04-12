@@ -280,6 +280,9 @@ public class ProfileExport
     {
         String locations = profile.getProperty("locations", "");
         HashSet locationSet = new HashSet(Arrays.asList(locations.split(" ")));
+
+	if ( locationSet.contains("*") ) return true; // KP 190401
+	
         List<Document> holdings = m_whelk.getStorage().getAttachedHoldings(doc.getThingIdentifiers(), m_whelk.getJsonld());
         for (Document holding : holdings)
         {

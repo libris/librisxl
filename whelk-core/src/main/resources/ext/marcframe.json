@@ -4550,10 +4550,11 @@
       "$b": {"addProperty": "marc:geographicClassificationAreaCode"},
       "$c": {"addProperty": "marc:geographicClassificationSubareaCode"},
       "$p": {"addLink": "place", "resourceType": "Place", "property": "label", "infer": true},
-      "$0": {"addProperty": "marc:recordControlNumber", "NOTE:local": "Används ej"},
-      "$1": {"addProperty": "marc:rwoURI"},
+      "$0": null,
+      "$1": null,
       "$2": {"property": "marc:placeCodeSource"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": null,
       "_spec": [
         {
           "source": [{"033": {"ind1": "0", "ind2": "0", "subfields": [{"a": "198407--"}, {"b": "5754"}, {"c": "L7"}]}}],
@@ -4950,6 +4951,7 @@
       },
       "i1": {
         "property": "marc:languageNote",
+        "TODO": "Remove explicit data. Should be set to 1 when translationOf is present. See TODO on that and originalVersion. Equate absence and negation unless distinction is provably useful.",
         "tokenMap": {
           "0": "marc:ItemNotATranslationDoesNotIncludeATranslation",
           "1": "marc:ItemIsOrIncludesATranslation"
@@ -5012,6 +5014,7 @@
       },
       "$h": {
         "about": "_:original",
+        "TODO": "originalVersion isn't normally used like this. This ought to be translationOf.",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
@@ -5022,6 +5025,7 @@
       },
       "$k": {
         "about": "_:translationSource",
+        "TODO": "if $h is mapped to translationOf, this needs to be something else (e.g. translationLanguge)",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
@@ -6552,6 +6556,39 @@
             "onRevert": {"language": {"@id": "https://id.kb.se/language/zxx"}}
           },
           "$l": null
+        },
+        {
+          "when": {
+            "NOTE": "Always use local language label if given",
+            "TODO": "intermediary solution; local language labels are to be removed in favour of linked languages",
+            "onRevert": {"language": {"label": []}}
+          },
+          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label", "infer": false}
+        },
+        {
+          "when": {
+            "NOTE": "Sign of translation: use language label",
+            "TODO": "remove when translationOf is the sole marker of translation",
+            "onRevert": {"marc:languageNote": "marc:ItemIsOrIncludesATranslation"}
+          }
+        },
+        {
+          "when": {
+            "NOTE": "Sign of translation: use language label",
+            "TODO": "remove when translationOf is the sole marker of translation",
+            "onRevert": {"originalVersion": {}}
+          }
+        },
+        {
+          "when": {
+            "NOTE": "Sign of translation: use language label",
+            "onRevert": {"translationOf": {}}
+          }
+        },
+        {
+          "when": {"onRevert": {}},
+          "NOTE": "No sign of translation: drop language label",
+          "$l": null
         }
       ],
       "aboutEntity": "?work",
@@ -6602,11 +6639,20 @@
           }}
         },
         {
-          "source": {
-            "240": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "Moyen âge"},
-              {"l": "Engelska."}
-            ]}},
+          "source": [
+              {"041": {"ind1": "1", "ind2": " ", "subfields": [
+              ]}},
+              {"240": {"ind1": "0", "ind2": " ", "subfields": [
+                {"a": "Moyen âge"},
+                {"l": "Engelska."}
+              ]}}
+          ],
+          "normalized": [
+              {"240": {"ind1": "0", "ind2": " ", "subfields": [
+                {"a": "Moyen âge"},
+                {"l": "Engelska."}
+              ]}}
+          ],
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -6616,7 +6662,8 @@
                 "marc:searchElement" : false,
                 "marc:nonfilingChars" : " "
               } ],
-              "language": {"@type": "Language", "label": "Engelska."}
+              "language": {"@type": "Language", "label": "Engelska."},
+              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
             }
           }}
         },
@@ -6633,7 +6680,8 @@
                 "@type": "Language",
                 "@id": "https://id.kb.se/language/swe",
                 "prefLabelByLang": {"sv": "Svenska"}
-              }
+              },
+              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
             }
           }},
           "normalized": [
@@ -6664,7 +6712,8 @@
                   "@id": "https://id.kb.se/language/eng",
                   "prefLabelByLang": {"sv": "Engelska"}
                 }
-              ]
+              ],
+              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
             }
           }},
           "normalized": [
@@ -6702,6 +6751,36 @@
             ]}},
             {"240": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "Instrumental Music"}
+            ]}}
+          ]
+        },
+        {
+          "name": "Verify revert using local language with label instead of the (properly) linked with prefLabel (intermediary solution, see TODO)",
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": [ {
+                "@type": "Title",
+                "mainTitle": "En titel"
+              } ],
+              "language": [
+                {
+                  "@type": "Language",
+                  "@id": "https://id.kb.se/language/swe",
+                  "prefLabelByLang": {"sv": "Svenska"}
+                },
+                {
+                  "@type": "Language",
+                  "label": "Svenska & swahili"
+                }
+              ]
+            }
+          }},
+          "normalized": [
+            {"008": "|     |        |  |||||||||||000 ||swe| "},
+            {"240": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "En titel"},
+              {"l": "Svenska & swahili"}
             ]}}
           ]
         }
@@ -9358,8 +9437,9 @@
       "$6": {"property": "marc:fieldref"}
     },
     "505": {
-      "i1": {"marcDefault": "8", "NOTE:LC": "nac"},
-      "i2": {"marcDefault": " ", "NOTE:LC": "ignore"},
+      "i1": {"marcDefault": "8", "NOTE:LC": "nac (Display constant controller)"},
+      "i2": {"marcDefault": " ", "NOTE:LC": "ignore (Level of content designation)"},
+      "TODO": "LC consider this a work entity in their 1.4 conversion. Interpunctuation:  -- .-- / ", 
       "aboutEntity": "?thing",
       "addLink": "tableOfContents",
       "resourceType": "TableOfContents",
@@ -9369,18 +9449,87 @@
           "resourceType": "ToCEntry"
         }
       },
-      "subfieldOrder": "a t r g u",
-      "TODO": "No $a if i2=0",
+      "subfieldOrder": "6 a t r g u",
+      "NOTE": "No $a if i2=0",
       "$a": {"property": "label"},
-      "$t": {"aboutNew": "_:tocEntry", "property": "label"},
-      "$r": {"about": "_:tocEntry", "property": "responsibilityStatement"},
       "$g": {"about": "_:tocEntry", "addProperty": "comment"},
+      "$r": {"about": "_:tocEntry", "property": "responsibilityStatement"},
+      "$t": {"aboutNew": "_:tocEntry", "property": "label"},
       "$u": {"about": "_:tocEntry", "addProperty": "uri"},
       "$6": {"property": "marc:fieldref"},
+      "$8": {"property": "marc:groupid"},
       "_spec": [
         {
-          "source": {"505": {"ind1": "8", "ind2": " ", "subfields": [
-            {"a": "Contents:"},
+          "name": "Enhanced - Data is encoded with repetitions of the defined subfields, other than subfield $a. TODO: When $g comes first, two ToCEntries has been created; one for comment and one for that which comes after $t. Hence revert order is only maintained in converted records with several 505 fields.",
+          "source": [
+            {"505": {"ind1": "1", "ind2": " ", "subfields": [
+              {"g": "Bd. 15"},
+              {"t": "Dissertatio de valore absoluto vis centripetae, tendentis ad ambilium ellipseos"},
+              {"r": "(def. Zach. Nordmark)"}
+            ]}},
+            {"505": {"ind1": "1", "ind2": " ", "subfields": [
+              {"g": "Bd. 16"},
+              {"t": "Dissertatio de constructione sectionis conicae vi centripeta tendente ad focum descriptae"},
+              {"r": "(def. Jac. Gust. Klingwall)"}
+            ]}}
+          ],
+          "normalized": [
+            {"505": {"ind1": "8", "ind2": " ", "subfields": [
+              {"g": "Bd. 15"},
+              {"t": "Dissertatio de valore absoluto vis centripetae, tendentis ad ambilium ellipseos"},
+              {"r": "(def. Zach. Nordmark)"}
+            ]}},
+            {"505": {"ind1": "8", "ind2": " ", "subfields": [
+              {"g": "Bd. 16"},
+              {"t": "Dissertatio de constructione sectionis conicae vi centripeta tendente ad focum descriptae"},
+              {"r": "(def. Jac. Gust. Klingwall)"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "tableOfContents": [
+              {
+                "@type": "TableOfContents",
+                "hasPart": [
+                  {
+                    "@type": "ToCEntry",
+                    "comment": ["Bd. 15"]
+                  },
+                  {
+                    "@type": "ToCEntry",
+                    "label": "Dissertatio de valore absoluto vis centripetae, tendentis ad ambilium ellipseos",
+                    "responsibilityStatement": "(def. Zach. Nordmark)"
+                  }
+                ]
+              },
+              {
+                "@type": "TableOfContents",
+                "hasPart": [
+                  {
+                    "@type": "ToCEntry",
+                    "comment": ["Bd. 16"]
+                  },
+                  {
+                    "@type": "ToCEntry",
+                    "label": "Dissertatio de constructione sectionis conicae vi centripeta tendente ad focum descriptae",
+                    "responsibilityStatement": "(def. Jac. Gust. Klingwall)"
+                  }
+                ]
+              }
+            ]
+            }
+          }
+        },
+        {
+          "name": "Enhanced - order t r g",
+          "source": {"505": {"ind1": "8", "ind2": "0", "subfields": [
+            {"t": "Enoralehu"},
+            {"r": "(Gigi)"},
+            {"g": "(3:52) --"},
+            {"t": "Leroy"},
+            {"r": "(Tweak & Tony Allen)"},
+            {"g": "(5:47) --"}
+          ]}},
+          "normalized": {"505": {"ind1": "8", "ind2": " ", "subfields": [
             {"t": "Enoralehu"},
             {"r": "(Gigi)"},
             {"g": "(3:52) --"},
@@ -9392,7 +9541,6 @@
             "tableOfContents": [
               {
                 "@type": "TableOfContents",
-                "label": "Contents:",
                 "hasPart": [
                   {
                     "@type": "ToCEntry",
@@ -9410,10 +9558,69 @@
               }
             ]
           }}
+        },
+        {
+          "name": "Enhanced - order g t, creates faulty entities, because aboutNew on t",
+          "source": {"505": {"ind1": "8", "ind2": "0", "subfields": [
+            {"g": "Nr. 1."},
+            {"t": "Region Neusiedlersee --"},
+            {"g": "Nr. 2."},
+            {"t": "Region Rosalia/Lithagebirge --"},
+            {"g": "Nr. 3."},
+            {"t": "Region Mettelburgenland --"}
+          ]}},
+          "normalized": {"505": {"ind1": "8", "ind2": " ", "subfields": [
+            {"g": "Nr. 1."},
+            {"t": "Region Neusiedlersee --"},
+            {"g": "Nr. 2."},
+            {"t": "Region Rosalia/Lithagebirge --"},
+            {"g": "Nr. 3."},
+            {"t": "Region Mettelburgenland --"}
+          ]}},
+          "result": {"mainEntity": {
+            "tableOfContents": [
+              {
+                "@type": "TableOfContents",
+                "hasPart": [
+                  {
+                    "@type": "ToCEntry",
+                    "comment": [ "Nr. 1." ]
+                  },
+                  {
+                    "@type": "ToCEntry",
+                    "label": "Region Neusiedlersee --",
+                    "comment": [ "Nr. 2." ]
+                  },
+                  {
+                    "@type": "ToCEntry",
+                    "label": "Region Rosalia/Lithagebirge --",
+                    "comment": [ "Nr. 3." ]
+                  },
+                  {
+                    "@type": "ToCEntry",
+                    "label": "Region Mettelburgenland --"
+                  }
+                ]
+              }
+            ]
+          }}
+        },
+        {
+          "name": "Basic - All information is recorded in a single occurrence of subfield $a.",
+          "source": {"505": {"ind1": "8", "ind2": " ", "subfields": [
+            {"a": "pt. 1. Carbon -- pt. 2. Nitrogen -- pt. 3. Sulphur -- pt. 4. Metals."}
+          ]}},
+          "result": {"mainEntity": {
+            "tableOfContents": [
+              {
+                "@type": "TableOfContents",
+                "label": "pt. 1. Carbon -- pt. 2. Nitrogen -- pt. 3. Sulphur -- pt. 4. Metals."
+              }
+            ]
+          }}
         }
       ]
     },
-
     "506": {
       "aboutEntity": "?thing",
       "NOTE:local": "ANVÄNDS NORMALT EJ",
@@ -9538,9 +9745,54 @@
       "$d": {"addProperty": "date"},
       "$o": {"addProperty": "marc:otherEventInformation"},
       "$p": {"addLink": "place", "resourceType": "Place", "property": "label", "infer": true},
-      "$2": {"ignored": true, "NOTE:LC": "nac"},
+      "$0": null,
+      "$1": null,
+      "$2": null,
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "$8": {"property": "marc:groupid"},
+      "_spec": [
+        {
+          "source": [
+            {"518": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Konferens, Stockholm maj, 2008"}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "capture": [
+                {
+                  "@type": "Capture",
+                  "label": "Konferens, Stockholm maj, 2008"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": [
+            {"033": {"ind1": "0", "ind2": " ", "subfields": [{"a": "198407--"},{"b": "5754"},{"c": "L7"}]}},
+            {"518": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Recorded July 1984, London."}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "capture": [
+                {
+                  "@type": "Capture",
+                  "date": [ "198407--" ],
+                  "marc:geographicClassificationAreaCode": [ "5754" ],
+                  "marc:geographicClassificationSubareaCode": [ "L7" ],
+                  "marc:typeOfDate": "marc:SingleDate"
+                },
+                {
+                  "@type": "Capture",
+                  "label": "Recorded July 1984, London."
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
 
     "520": {
@@ -10316,6 +10568,7 @@
         {
           "when": "i1=3",
           "include": ["subjectbase", "agentdataFamily"],
+          "resourceType": "Family",
           "pendingResources": {
             "_:agent": {
               "addLink": "termComponentList",
@@ -10484,7 +10737,33 @@
             }
           }}
         },
-
+        {
+          "name": "Set ind2=4 as default value",
+          "source": {
+            "600": {"ind1": "3", "ind2": " ", "subfields": [
+              {"a": "Bonnier,"},
+              {"c": "släkt"}
+            ]}
+          },
+          "normalized": {
+            "600": {"ind1": "3", "ind2": "4", "subfields": [
+              {"a": "Bonnier,"},
+              {"c": "släkt"}
+            ]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Family",
+                  "name": "Bonnier",
+                  "marc:titlesAndOtherWordsAssociatedWithAName": ["släkt"]
+                }
+              ]
+            }
+          }}
+        },
         {
           "source": {
             "600": {"ind1": "3", "ind2": "0", "subfields": [
@@ -19996,7 +20275,7 @@
       "embedded": true,
       "i1": {"property": "marc:holdingsLevel", "marcDefault": " "},
       "i2": {"property": "marc:typeOfNotation", "marcDefault": " "},
-      "$a": {"property": "marc:textualString", "required": true},
+      "$a": {"property": "marc:textualString"},
       "$x": {"addProperty": "marc:cataloguersNote"},
       "$z": {"addProperty": "marc:publicNote"},
       "$2": {"property": "marc:sourceOfNotation"},
@@ -20023,14 +20302,33 @@
         },
         {
           "name": "With indicator 1 set to blank",
-          "source": {"866": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "Foo"}
-          ]}},
+          "source": [
+            {"866": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Foo"}]}},
+            {"866": {"ind1": " ", "ind2": " ", "subfields": [{"x": "89-06-16 (inb.)"}]}}
+          ],
           "result": {"mainEntity": {
             "marc:hasTextualHoldingsBasicBibliographicUnit": [
               {
                 "@type": "marc:TextualHoldingsBasicBibliographicUnit",
                 "marc:textualString": "Foo"
+              },
+              {
+                "@type": "marc:TextualHoldingsBasicBibliographicUnit",
+                "marc:cataloguersNote": [ "89-06-16 (inb.)" ]
+              }
+            ]
+          }}
+        },
+        {
+          "name": "With only $x used for statistics",
+          "source": [
+            {"866": {"ind1": " ", "ind2": " ", "subfields": [{"x": "nyfv"}]}}
+          ],
+          "result": {"mainEntity": {
+            "marc:hasTextualHoldingsBasicBibliographicUnit": [
+              {
+                "@type": "marc:TextualHoldingsBasicBibliographicUnit",
+                "marc:cataloguersNote": [ "nyfv" ]
               }
             ]
           }}

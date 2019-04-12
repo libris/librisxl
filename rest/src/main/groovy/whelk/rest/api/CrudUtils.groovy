@@ -128,8 +128,11 @@ class CrudUtils {
             if (tokens.size() == 1) {
                 result[tokens[0]] = 1.0
             } else if (tokens.size() == 2) {
-                Float quality = tokens[1].split("=")[1] as Float
-                result[tokens[0]] = quality
+                def (param, value) = tokens[1].split("=")
+                if (param == 'q' && value.isFloat()) {
+                    Float quality = value as Float
+                    result[tokens[0]] = quality
+                }
             }
         }
         String[] sorted = result.keySet() as String[]
