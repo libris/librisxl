@@ -6559,6 +6559,14 @@
         },
         {
           "when": {
+            "NOTE": "Always use local language label if given",
+            "TODO": "intermediary solution; local language labels are to be removed in favour of linked languages",
+            "onRevert": {"language": {"label": []}}
+          },
+          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label", "infer": false}
+        },
+        {
+          "when": {
             "NOTE": "Sign of translation: use language label",
             "TODO": "remove when translationOf is the sole marker of translation",
             "onRevert": {"marc:languageNote": "marc:ItemIsOrIncludesATranslation"}
@@ -6576,14 +6584,6 @@
             "NOTE": "Sign of translation: use language label",
             "onRevert": {"translationOf": {}}
           }
-        },
-        {
-          "when": {
-            "NOTE": "Don't infer label if local language label is given",
-            "TODO": "intermediary solution; local language labels are to be removed in favour of linked languages",
-            "onRevert": {"language": {"label": []}}
-          },
-          "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label", "infer": false}
         },
         {
           "when": {"onRevert": {}},
