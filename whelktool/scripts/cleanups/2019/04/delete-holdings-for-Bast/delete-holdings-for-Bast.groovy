@@ -11,7 +11,8 @@ PrintWriter scheduledForDeletion = getReportWriter("scheduled-for-deletion")
 
 selectBySqlWhere("""
         collection = 'hold' AND
-        data#>>'{@graph,1,heldBy,@id}' = '${SIGEL_TO_DELETE}'
+        data#>>'{@graph,1,heldBy,@id}' = '${SIGEL_TO_DELETE}' AND
+        modified < '2019-04-16'
     """, silent: false) { hold ->
     scheduledForDeletion.println("${hold.doc.getURI()}")
     hold.scheduleDelete(onError: { e ->
