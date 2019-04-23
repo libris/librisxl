@@ -15763,11 +15763,13 @@
         "uriTemplate": "https://id.kb.se/marc/RomanizationType-{_}",
         "matchUriToken": "^[abcdefg]$"
       },
-      "[8]": {
+      "[8]": null,
+      "NOTE:Deprecated[8]": {
         "aboutEntity": "?record",
         "link": "marc:languageOfCatalog",
         "uriTemplate": "https://id.kb.se/marc/LanguageOfCatalogType-{_}",
-        "matchUriToken": "^[bef]$"
+        "matchUriToken": "^[bef]$",
+        "fixedDefault": " "
       },
       "[9]": {
         "aboutEntity": "?record",
@@ -15885,7 +15887,7 @@
             {"008": "011206n| ac|nnaabn          |n aa       "}
           ],
           "normalized": [
-            {"008": "011206|||ac|||aa||          || aa|    ||"}
+            {"008": "011206|| ac|||aa||          || aa|    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -15917,7 +15919,7 @@
             {"008": "020409 | anznnbabn          |n ana      "}
           ],
           "normalized": [
-            {"008": "020409|||a|||||a||          || a|a    ||"}
+            {"008": "020409|| a|||||a||          || a|a    ||"}
           ],
           "result": {
             "@type": "Record",
