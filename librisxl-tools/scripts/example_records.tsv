@@ -146,6 +146,12 @@ auth/221957	Post med musicMedium
 auth/218125	Post med musicMedium
 auth/170061	Post med musicMedium
 
+
+auth/106705	Jurisdiction record with modified set to date of import from Voyager (2018-06-04)
+auth/107030	Jurisdiction record with modified set to date of import from Voyager (2018-06-04)
+auth/214953	Jurisdiction record with modified set to earlier than 2018-06-04
+auth/300670	Jurisdiction record with modified set to earlier than 2018-06-04
+
 bib/8647590	ComplexSubject, testdata for cleaning exercise.
 bib/8892896	ComplexSubject, testdata for cleaning exercise.
 bib/14838612	ComplexSubject, testdata for cleaning exercise.
