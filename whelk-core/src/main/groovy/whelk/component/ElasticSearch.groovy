@@ -225,12 +225,13 @@ class ElasticSearch {
                     log.warn("Could not get external doc ${id} for ${document.getShortId()}, skipping...")
                 }
             }
-            whelk.jsonld.embellish(copy.data, referencedData, true)
+            boolean filterOutNonChipTerms = true // Consider using false here, since cards-in-cards work now.
+            whelk.jsonld.embellish(copy.data, referencedData, filterOutNonChipTerms)
         }
 
         log.debug("Framing ${document.getShortId()}")
         boolean chipsify = false
-        boolean addSearchKey = true
+        boolean addSearchKey = false
         copy.data['@graph'] = copy.data['@graph'].collect { whelk.jsonld.toCard(it, chipsify, addSearchKey) }
 
         copy.setThingMeta(document.getCompleteId())

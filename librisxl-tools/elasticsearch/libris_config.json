@@ -29,7 +29,8 @@
                     "type": "custom"
                 },
                 "softmatcher": {
-                    "type": "standard",
+                    "type": "custom",
+                    "tokenizer": "standard",
                     "filter": ["lowercase", "ascii_folder", "swedish_snowball"]
                 },
                 "isbn_analyzer": {
@@ -187,16 +188,27 @@
                     "str_template": {
                         "mapping": {
                             "fields": {
-                              "value": {
+                              "exact": {
                                 "type": "text",
-                                "analyzer": "softmatcher"
+                                "analyzer": "standard"
                               }
                             },
+                            "analyzer": "softmatcher",
                             "type": "text",
                             "index": true,
                             "boost": 50
                         },
-                        "match": "_str",
+                        "match": "*",
+                        "match_mapping_type": "string"
+                    }
+                },
+                {
+                    "unknown_template": {
+                        "path_match": "_marc*.*.subfields.*",
+                        "mapping": {
+                            "type": "string",
+                            "index": "not_analyzed"
+                        },
                         "match_mapping_type": "string"
                     }
                 }
