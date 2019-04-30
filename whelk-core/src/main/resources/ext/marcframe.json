@@ -15902,7 +15902,41 @@
           }
         },
         {
-          "name": "Ämne - Hästar (71639)",
+          "name": "Organization - Riksarkivet (201454)",
+          "source": [
+            {"008": "011206n| ac|nnaabn          fn ana      "}
+          ],
+          "normalized": [
+            {"008": "011206|| ac|||aa||          f| a|a    ||"}
+          ],
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "encodingLevel": "marc:CompleteAuthorityRecord",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "created": "2001-12-06T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
+            "marc:govtAgency" : {"@id" : "https://id.kb.se/marc/GovtAgencyType-f"},
+            "marc:headingMain": true,
+            "marc:headingSubject" : true,
+            "marc:kindOfRecord" : {"@id" : "https://id.kb.se/marc/KindOfRecordType-a"},
+            "marc:level" : {"@id" : "https://id.kb.se/marc/LevelType-a"},
+            "marc:numberedSeries" : {"code" : "n"},
+            "marc:personalName": {"code" : "n"},
+            "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
+            "marc:reference": {"code": "n"},
+            "marc:subdivision" : {"code" : "n"},
+            "marc:subjectSubdivision": {"code": "n"},
+            "marc:typeOfSeries" : {"code" : "n"},
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Organization"}
+          }
+        },
+        {
+          "name": "Topic - Hästar (71639)",
           "source": [
             {"008": "020409 | anznnbabn          |n ana      "}
           ],
@@ -15931,6 +15965,40 @@
           },
           "addOnRevert": {
             "mainEntity": {"@type": "Topic"}
+          }
+        },
+        {
+          "name": "Work - Antikrists mirakler (340686)",
+          "source": [
+            {"008": "110119nb ac|nnaaba           n aaa      "}
+          ],
+          "normalized": [
+            {"008": "110119|b ac|||aa|a          || aaa    ||"}
+          ],
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "encodingLevel": "marc:CompleteAuthorityRecord",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "created": "2011-01-19T00:00:00.0+01:00",
+            "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatalogingRulesType-c"}],
+            "marc:headingMain": true,
+            "marc:headingSubject": true,
+            "marc:level": {"@id": "https://id.kb.se/marc/LevelType-a"},
+            "marc:numberedSeries" : {"code" : "n"},
+            "marc:kindOfRecord" : {"@id" : "https://id.kb.se/marc/KindOfRecordType-a"},
+            "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
+            "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
+            "marc:reference": {"code": "n"},
+            "marc:romanization": {"@id": "https://id.kb.se/marc/RomanizationType-b"},
+            "marc:subdivision": {"code": "n"},
+            "marc:subjectSubdivision": {"@id": "https://id.kb.se/marc/SubjectSubdivisionType-a"},
+            "marc:typeOfSeries" : {"code" : "n"},
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Work"}
           }
         }
       ]
