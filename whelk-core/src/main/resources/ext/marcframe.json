@@ -15763,8 +15763,8 @@
         "uriTemplate": "https://id.kb.se/marc/RomanizationType-{_}",
         "matchUriToken": "^[abcdefg]$"
       },
-      "[8]": null,
-      "NOTE:Deprecated[8]": {
+      "[8]": {
+        "TODO": "Remove when not in records anymore. Also delete terms from vocab",
         "aboutEntity": "?record",
         "link": "marc:languageOfCatalog",
         "uriTemplate": "https://id.kb.se/marc/LanguageOfCatalogType-{_}",
