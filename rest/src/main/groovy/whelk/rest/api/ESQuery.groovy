@@ -81,10 +81,36 @@ class ESQuery {
 
         queryParameters = maybeResetTypeParam(queryParameters, originalTypeParam)
 
+        // FIXME: use this.jsonld to compute from chips or get from vocab terms
+        // (tagged with display-header)
+        def boostFields = [
+            'prefLabel^100',
+            'code^100',
+            'name^100',
+            'familyName^100', 'givenName^100',
+            'lifeSpan^100', 'birthYear^100', 'deathYear^100',
+            'hasTitle.mainTitle^100', 'title^100',
+            'heldBy.sigel^100',
+        ]
+
         Map queryString = [
-            'simple_query_string': [
-                'query': q,
-                'default_operator':  'AND'
+            'bool': [
+                'should': [
+                    [
+                        'simple_query_string': [
+                            'query': q,
+                            'default_operator':  'AND',
+                            'fields': boostFields,
+                            'quote_field_suffix': ".exact"
+                        ]
+                    ],
+                    [
+                        'simple_query_string': [
+                            'query': q,
+                            'default_operator':  'AND'
+                        ]
+                    ]
+                ]
             ]
         ]
 
