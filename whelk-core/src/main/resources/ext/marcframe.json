@@ -15823,16 +15823,7 @@
         "uriTemplate": "https://id.kb.se/marc/SubjectSubdivisionType-{_}",
         "matchUriToken": "^[abcde]$"
       },
-      "[18]": null,
-      "[19]": null,
-      "[20]": null,
-      "[21]": null,
-      "[22]": null,
-      "[23]": null,
-      "[24]": null,
-      "[25]": null,
-      "[26]": null,
-      "[27]": null,
+      "[18:28]": null,
       "[28]": {
         "aboutEntity": "?record",
         "link": "marc:govtAgency",
@@ -15864,10 +15855,7 @@
         "uriTemplate": "https://id.kb.se/marc/LevelType-{_}",
         "matchUriToken": "^[abcd]$"
       },
-      "[34]": null,
-      "[35]": null,
-      "[36]": null,
-      "[37]": null,
+      "[34:38]": null,
       "[38]": {
         "aboutEntity": "?record",
         "link": "marc:modifiedRecord",
