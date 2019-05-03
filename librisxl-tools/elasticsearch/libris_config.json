@@ -165,16 +165,6 @@
                     }
                 },
                 {
-                    "type_template": {
-                        "mapping": {
-                            "index": true,
-                            "type": "keyword"
-                        },
-                        "match": "@type",
-                        "match_mapping_type": "string"
-                    }
-                },
-                {
                     "id_template": {
                         "mapping": {
                             "index": true,
@@ -185,20 +175,12 @@
                     }
                 },
                 {
-                    "str_template": {
+                    "type_template": {
                         "mapping": {
-                            "fields": {
-                              "exact": {
-                                "type": "text",
-                                "analyzer": "standard"
-                              }
-                            },
-                            "analyzer": "softmatcher",
-                            "type": "text",
                             "index": true,
-                            "boost": 50
+                            "type": "keyword"
                         },
-                        "match": "*",
+                        "match": "@type",
                         "match_mapping_type": "string"
                     }
                 },
@@ -209,6 +191,23 @@
                             "type": "string",
                             "index": "not_analyzed"
                         },
+                        "match_mapping_type": "string"
+                    }
+                },
+                {
+                    "soft_template": {
+                        "mapping": {
+                            "fields": {
+                              "exact": {
+                                "type": "text",
+                                "analyzer": "standard"
+                              }
+                            },
+                            "analyzer": "softmatcher",
+                            "type": "text",
+                            "index": true
+                        },
+                        "match": "*",
                         "match_mapping_type": "string"
                     }
                 }
