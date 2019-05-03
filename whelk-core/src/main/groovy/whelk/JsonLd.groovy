@@ -661,17 +661,6 @@ class JsonLd {
         if (addSearchKey) {
             List key = makeSearchKeyParts(card)
             if (key) {
-                // TODO: only if reduceKey ?
-                for (v in result.values()) {
-                    if (v instanceof List && ((List)v).size() == 1) {
-                        v = ((List)v)[0]
-                    }
-                    if (v instanceof Map) {
-                        if (v[SEARCH_KEY]) {
-                            key << ((Map)v).remove(SEARCH_KEY)
-                        }
-                    }
-                }
                 result[SEARCH_KEY] = key.join(' ')
             }
         }
