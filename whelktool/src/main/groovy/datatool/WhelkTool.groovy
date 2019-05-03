@@ -94,12 +94,16 @@ class WhelkTool {
 
     void selectByIds(Collection<String> ids, Closure process,
             int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
-        if (!silent)
+        if (!silent) {
             log "Select by ${ids.size()} IDs"
+        }
         def uriIdMap = findShortIdsForUris(ids.findAll { it.contains(':') })
         def shortIds = ids.findResults { it.contains(':') ? uriIdMap[it] : it }
 
         def idItems = shortIds.collect { "'$it'" }.join(',\n')
+        if (idItems.isEmpty()) {
+            return
+        }
         doSelectBySqlWhere("id IN ($idItems) AND deleted = false", process,
                 batchSize)
     }
