@@ -18,7 +18,7 @@ class ESQuery {
     private static final ObjectMapper mapper = new ObjectMapper()
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
-        'q', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri'
+        'q', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug'
     ]
 
     ESQuery() {
@@ -49,6 +49,9 @@ class ESQuery {
     Map doQuery(Map<String, String[]> queryParameters, String dataset) {
         Map esQuery = getESQuery(queryParameters)
         Map esResponse = hideKeywordFields(whelk.elastic.query(esQuery, dataset))
+        if ('esQuery' in queryParameters.get('_debug')) {
+            esResponse._debug = [esQuery: esQuery]
+        }
         return esResponse
     }
 
