@@ -49,6 +49,7 @@ file.eachLine { line ->
             //If the sigel holding this item also has a holding on the good instance
             //then delete the holding on the good instance before moving all holdings
             def sigel = hold.graph[1].heldBy[ID]
+            def holdId = hold.graph[0][ID]
 
             try {
                 if (sigelToGoodHoldingMap.containsKey(sigel)) {
@@ -61,7 +62,6 @@ file.eachLine { line ->
 
                 //Move item from bad to good instance
                 hold.graph[1].itemOf = [(ID): fullGoodInstanceId]
-                def holdId = hold.graph[0][ID]
                 hold.scheduleSave(onError: { e ->
                     failedIDs.println("Failed to save ${holdId} due to: $e")
                 }, loud: true)
@@ -70,7 +70,7 @@ file.eachLine { line ->
                         "(FROM: <${badInstanceId}>)"
             } catch (Exception e) {
                 failedIDs.println "Failed to delete ${holdingToDeleteId} due to: $e, not moving" +
-                        "${hold.graph[0][ID]} from ${badInstanceId}"
+                        "${holdId} from ${badInstanceId}"
             }
         }
 
