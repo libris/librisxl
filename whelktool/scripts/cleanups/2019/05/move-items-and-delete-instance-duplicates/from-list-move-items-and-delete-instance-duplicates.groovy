@@ -46,12 +46,12 @@ file.eachLine { line ->
                 collection = 'hold'
         """, silent: true) { hold ->
 
-            //If the sigel holding this item also has a holding on the good instance
-            //then delete the holding on the good instance before moving all holdings
             def sigel = hold.graph[1].heldBy[ID]
             def holdId = hold.graph[0][ID]
 
             try {
+                //If the sigel holding this item also has a holding on the good instance
+                //then delete the holding on the good instance before moving all holdings
                 if (sigelToGoodHoldingMap.containsKey(sigel)) {
                     def holdingToDelete = sigelToGoodHoldingMap.get(sigel)
                     def holdingToDeleteId = holdingToDelete.graph[1][ID]
@@ -81,5 +81,3 @@ file.eachLine { line ->
         scheduledForChange.println "DELETE BIB <${badInstanceId}> (kept <${fullGoodInstanceId}>)"
     }
 }
-
-
