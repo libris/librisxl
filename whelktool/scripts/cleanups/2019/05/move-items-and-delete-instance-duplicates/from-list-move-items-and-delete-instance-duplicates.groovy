@@ -1,7 +1,8 @@
 /*
  * This script moves holdings from one instance to another specified by
- * the file id_lxl-2281_eboksberikning.txt The holdings are moved from
+ * the file id_lxl-2281_eboksberikning.txt. The holdings are moved from
  * the instance in the right column to the instance in the left column.
+ * If the move is successful, the instance in the right column is deleted.
  *
  * See LXL-2380 for more info.
  *
