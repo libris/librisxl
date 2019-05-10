@@ -4,6 +4,28 @@ import sys
 
 
 MAX_STATS = 20
+STATS_FOR_ALL = {
+        # from auth 008
+        "marc:subdivision",
+        "marc:romanization",
+        "marc:languageOfCatalog",
+        "marc:kindOfRecord",
+        "descriptionConventions",
+        "marc:subjectHeading",
+        "marc:typeOfSeries",
+        "marc:numberedSeries",
+        "marc:headingSeries",
+        "marc:subjectSubdivision",
+        "marc:govtAgency",
+        "marc:reference",
+        "marc:recordUpdate",
+        "marc:personalName",
+        "marc:level",
+        "marc:modifiedRecord",
+        "marc:catalogingSource",
+        "marc:headingMain",
+        "marc:headingSubject",
+}
 
 def compute_shape(node, index):
     if len(node) == 1 and '@id' in node:
@@ -29,7 +51,7 @@ def compute_shape(node, index):
 def count_value(k, v, shape):
     stats = shape.setdefault(k, {})
     if isinstance(stats, dict):
-        if len(stats) < MAX_STATS:
+        if k in STATS_FOR_ALL or len(stats) < MAX_STATS:
             stats[v] = stats.setdefault(v, 0) + 1
         else:
             shape[k] = sum(stats.values()) + 1
