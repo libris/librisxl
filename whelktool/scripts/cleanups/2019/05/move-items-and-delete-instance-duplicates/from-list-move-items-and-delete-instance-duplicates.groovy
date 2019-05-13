@@ -30,11 +30,12 @@ file.eachLine { line ->
                 collection = 'hold'
         """, silent: true) { hold ->
             def heldBy = hold.graph[1].heldBy[ID]
+            def holdId = hold.graph[0][ID]
             if (sigelToGoodHoldingMap.containsKey(heldBy)) {
                 info.println("Warning, instance (${goodInstanceId}) has multiple holdings " +
-                        "for the same sigel (${heldBy}) ignoring duplicate item ${hold.graph[0][ID]}")
+                        "for the same sigel (${heldBy}) ignoring duplicate item ${holdId}")
             } else {
-                sigelToGoodHoldingMap.put(heldBy, hold)
+                sigelToGoodHoldingMap.put(heldBy, holdId)
             }
         }
 
@@ -54,11 +55,12 @@ file.eachLine { line ->
                     //If the sigel holding this item also has a holding on the good instance
                     //then delete the holding on the good instance before moving all holdings
                     if (sigelToGoodHoldingMap.containsKey(sigel)) {
-                        def holdingToDelete = sigelToGoodHoldingMap.get(sigel)
-                        def holdingToDeleteId = holdingToDelete.graph[1][ID]
-                        holdingToDelete.scheduleDelete(loud: true)
-                        scheduledForChange.println "For item held by ${sigel}:\n" +
-                                "DELETE HOLD ${holdingToDeleteId} on instance <${goodInstanceId}>)"
+                        def holdingToDeleteId = sigelToGoodHoldingMap.get(sigel)
+                        selectByIds([holdingToDeleteId]) { holdingToDelete ->
+                            holdingToDeleteId.scheduleDelete(loud: true)
+                            scheduledForChange.println "For item held by ${sigel}:\n" +
+                                    "DELETE HOLD ${holdingToDeleteId} on instance <${goodInstanceId}>"
+                        }
                     }
 
                     //Move item from bad to good instance
