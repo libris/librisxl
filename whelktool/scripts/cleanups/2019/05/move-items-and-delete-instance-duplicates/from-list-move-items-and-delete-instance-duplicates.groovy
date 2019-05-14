@@ -26,7 +26,7 @@ file.eachLine { line ->
         def goodInstanceId = {goodBib.graph[1][ID]}
         info.println("Good bib ${goodInstanceId} is a ${goodBib.graph[1][TYPE]}")
         selectBySqlWhere("""
-                data#>>'{@graph,1,itemOf,@id}' = '${goodBibInstanceId}' AND
+                data#>>'{@graph,1,itemOf,@id}' = '${goodInstanceId}' AND
                 collection = 'hold'
         """, silent: true) { hold ->
             def heldBy = hold.graph[1].heldBy[ID]
