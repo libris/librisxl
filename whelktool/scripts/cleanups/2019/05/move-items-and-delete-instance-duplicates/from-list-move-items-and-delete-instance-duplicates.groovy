@@ -23,7 +23,7 @@ file.eachLine { line ->
     def sigelToGoodHoldingMap = [:]
 
     selectByIds([fullGoodBibId]) { goodBib ->
-        def goodInstanceId = {goodBib.graph[1][ID]}
+        def goodInstanceId = goodBib.graph[1][ID]
         info.println("Good bib ${goodInstanceId} is a ${goodBib.graph[1][TYPE]}")
         selectBySqlWhere("""
                 data#>>'{@graph,1,itemOf,@id}' = '${goodInstanceId}' AND
@@ -57,7 +57,7 @@ file.eachLine { line ->
                     if (sigelToGoodHoldingMap.containsKey(sigel)) {
                         def holdingToDeleteId = sigelToGoodHoldingMap.get(sigel)
                         selectByIds([holdingToDeleteId]) { holdingToDelete ->
-                            holdingToDeleteId.scheduleDelete(loud: true)
+                            holdingToDelete.scheduleDelete(loud: true)
                             scheduledForChange.println "For item held by ${sigel}:\n" +
                                     "DELETE HOLD ${holdingToDeleteId} on instance <${goodInstanceId}>"
                         }
