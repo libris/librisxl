@@ -1,4 +1,3 @@
-
 /*
  *
  * This script deletes holdings for Jslu based on file input
