@@ -56,7 +56,7 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map getESQuery(Map<String, String[]> queryParameters0) {
+    Map getESQuery(Map<String, String[]> queryParameters) {
         // Legit params and their uses:
         //   q - simple_query_string
         String q
@@ -72,8 +72,11 @@ class ESQuery {
         //   any k=v param - FILTER query (same key => OR, different key => AND)
         List filters
 
-        def (String[] originalTypeParam, queryParameters) =
-            expandTypeParam(queryParameters0, whelk.jsonld)
+        String[] originalTypeParam = queryParameters.get('@type')
+        if (originalTypeParam != null) {
+            queryParameters.put('@type',
+                    expandTypeParam(originalTypeParam, whelk.jsonld))
+        }
 
         q = getQueryString(queryParameters)
         (limit, offset) = getPaginationParams(queryParameters)
@@ -82,7 +85,9 @@ class ESQuery {
         aggQuery = getAggQuery(queryParameters)
         filters = getFilters(queryParameters)
 
-        queryParameters = maybeResetTypeParam(queryParameters, originalTypeParam)
+        if (originalTypeParam != null) {
+            queryParameters.put('@type', originalTypeParam)
+        }
 
         // FIXME: use this.jsonld to compute from chips or get from vocab terms
         // (tagged with display-header)
@@ -155,54 +160,39 @@ class ESQuery {
     }
 
     /**
-     * Expand `@type` query parameter with subclasses
+     * Expand `@type` query parameter with subclasses.
      *
      * This also removes superclasses, since we only care about the most
      * specific class.
-     *
-     * Public for test only - don't call outside this class!
-     *
      */
-    public Tuple2<String[], Map<String, String[]>> expandTypeParam(Map<String, String[]> queryParameters,
-                                                                   JsonLd jsonld) {
-        // Filter out all @types that have (more specific) subclasses that are also in the list
-        // So for example [Instance, Electronic] should be reduced to just [Electronic].
-        // Afterwards, include all subclasses of the remaining @types
-        String[] types = queryParameters.get('@type')
-        if (types != null) {
-            // Select types to prune
-            Set<String> toBeRemoved = []
-            for (String c1 : types) {
-                ArrayList<String> c1SuperClasses = []
-                jsonld.getSuperClasses(c1, c1SuperClasses)
-                toBeRemoved.addAll(c1SuperClasses)
-            }
-            // Make a new pruned list without the undesired superclasses
-            List<String> prunedTypes = []
-            for (String type : types) {
-                if (!toBeRemoved.contains(type))
-                    prunedTypes.add(type)
-            }
-            // Add all subclasses of the remaining types
-            Set<String> subClasses = []
-            for (String type : prunedTypes) {
-                subClasses += jsonld.getSubClasses(type)
-                subClasses.add(type)
-            }
+    static String[] expandTypeParam(String[] types, JsonLd jsonld) {
+        // Filter out all types that have (more specific) subclasses that are
+        // also in the list.
+        // So for example [Instance, Electronic] should be reduced to just
+        // [Electronic].
+        // Afterwards, include all subclasses of the remaining types.
+        Set<String> subClasses = []
 
-            queryParameters.put('@type', (String[]) subClasses.toArray())
+        // Select types to prune
+        Set<String> toBeRemoved = []
+        for (String c1 : types) {
+            ArrayList<String> c1SuperClasses = []
+            jsonld.getSuperClasses(c1, c1SuperClasses)
+            toBeRemoved.addAll(c1SuperClasses)
+        }
+        // Make a new pruned list without the undesired superclasses
+        List<String> prunedTypes = []
+        for (String type : types) {
+            if (!toBeRemoved.contains(type))
+                prunedTypes.add(type)
+        }
+        // Add all subclasses of the remaining types
+        for (String type : prunedTypes) {
+            subClasses += jsonld.getSubClasses(type)
+            subClasses.add(type)
         }
 
-        return new Tuple2(types, queryParameters)
-    }
-
-    private Map<String, String[]> maybeResetTypeParam(Map<String, String[]> queryParameters,
-                                                      String[] originalTypeParam) {
-        if (originalTypeParam != null) {
-            queryParameters.put('@type', originalTypeParam)
-        }
-
-        return queryParameters
+        return subClasses.toArray()
     }
 
     /**
