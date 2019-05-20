@@ -107,8 +107,17 @@
                         },
                         "generationDate": {
                           "type": "date"
+                        },
+                        "encodingLevel": {
+                          "type": "keyword"
+                        },
+                        "recordStatus": {
+                          "type": "keyword"
                         }
                     }
+                },
+                "issuanceType": {
+                  "type": "keyword"
                 },
                 "identifiedBy": {
                     "type": "nested",
