@@ -21,7 +21,7 @@ class ESQuery {
         'q', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost'
     ]
 
-    private Map<String, List<String>> boostFieldsByType
+    private Map<String, List<String>> boostFieldsByType = [:]
 
     ESQuery() {
         // NOTE: For unit tests only!
