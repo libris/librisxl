@@ -15957,12 +15957,16 @@
         "fixedDefault": "z"
       },
       "[7]": null,
+      "[8]": null,
       "[17]": {
         "aboutEntity": "?record",
         "property": "encodingLevel",
         "tokenMap": "AuthorityEncLevelType"
       },
-      "TODO:[18:19]": "NEW: Punctuation policy",
+      "[18]": {
+        "fixedDefault": " "
+      },
+      "[19]": null,
       "_spec": [
         {
           "originalLeader": "01341cz  a2200397n  4500",
@@ -16012,16 +16016,18 @@
         "matchUriToken": "^[abcdefg]$"
       },
       "[8]": {
+        "TODO": "Remove when not in records anymore. Also delete terms from vocab",
         "aboutEntity": "?record",
         "link": "marc:languageOfCatalog",
         "uriTemplate": "https://id.kb.se/marc/LanguageOfCatalogType-{_}",
-        "matchUriToken": "^[bef]$"
+        "matchUriToken": "^[bef]$",
+        "fixedDefault": " "
       },
       "[9]": {
         "aboutEntity": "?record",
         "link": "marc:kindOfRecord",
         "uriTemplate": "https://id.kb.se/marc/KindOfRecordType-{_}",
-        "matchUriToken": "^[abcdefg]$"
+        "matchUriToken": "^[abdefg]$"
       },
       "[10]": {
         "aboutEntity": "?record",
@@ -16048,6 +16054,16 @@
         "uriTemplate": "https://id.kb.se/marc/NumberedSeriesType-{_}",
         "matchUriToken": "^[abc]$"
       },
+      "[14]": {
+        "aboutEntity": "?record",
+        "property": "marc:headingMain",
+        "tokenMap": {"a": true, "b": false}
+      },
+      "[15]": {
+        "aboutEntity": "?record",
+        "property": "marc:headingSubject",
+        "tokenMap": {"a": true, "b": false}
+      },
       "[16]": {
         "aboutEntity": "?record",
         "property": "marc:headingSeries",
@@ -16059,6 +16075,7 @@
         "uriTemplate": "https://id.kb.se/marc/SubjectSubdivisionType-{_}",
         "matchUriToken": "^[abcde]$"
       },
+      "[18:28]": null,
       "[28]": {
         "aboutEntity": "?record",
         "link": "marc:govtAgency",
@@ -16071,6 +16088,7 @@
         "uriTemplate": "https://id.kb.se/marc/ReferenceType-{_}",
         "matchUriToken": "^[ab]$"
       },
+      "[30]": null,
       "[31]": {
         "aboutEntity": "?record",
         "link": "marc:recordUpdate",
@@ -16089,28 +16107,153 @@
         "uriTemplate": "https://id.kb.se/marc/LevelType-{_}",
         "matchUriToken": "^[abcd]$"
       },
+      "[34:38]": null,
       "[38]": {
         "aboutEntity": "?record",
         "link": "marc:modifiedRecord",
-        "uriTemplate": "https://id.kb.se/marc/ModifiedRecordType-{_}"
+        "uriTemplate": "https://id.kb.se/marc/ModifiedRecordType-{_}",
+        "matchUriToken": "^[sx]$"
       },
       "[39]": {
         "aboutEntity": "?record",
         "link": "marc:catalogingSource",
         "uriTemplate": "https://id.kb.se/marc/CatalogingSourceType-{_}"
       },
-      "[14]": {
-        "aboutEntity": "?record",
-        "property": "marc:headingMain",
-        "tokenMap": {"a": true, "b": false}
-      },
-      "[15]": {
-        "aboutEntity": "?record",
-        "property": "marc:headingSubject",
-        "fixedDefault": "a",
-        "tokenMap": {"a": true, "b": false}
-      },
-      "repeatable": false
+      "repeatable": false,
+      "_spec": [
+        {
+          "name": "Person - Astrid Lindgren (71639)",
+          "source": [
+            {"008": "011206n| ac|nnaabn          |n aa       "}
+          ],
+          "normalized": [
+            {"008": "011206|| ac|||aa||          || aa|    ||"}
+          ],
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "encodingLevel": "marc:CompleteAuthorityRecord",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "created": "2001-12-06T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
+            "marc:headingMain": true,
+            "marc:headingSubject" : true,
+            "marc:kindOfRecord" : {"@id" : "https://id.kb.se/marc/KindOfRecordType-a"},
+            "marc:numberedSeries" : {"code" : "n"},
+            "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
+            "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
+            "marc:reference": {"code": "n"},
+            "marc:subdivision" : {"code" : "n"},
+            "marc:subjectSubdivision": {"code": "n"},
+            "marc:typeOfSeries" : {"code" : "n"},
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Person"}
+          }
+        },
+        {
+          "name": "Organization - Riksarkivet (201454)",
+          "source": [
+            {"008": "011206n| ac|nnaabn          fn ana      "}
+          ],
+          "normalized": [
+            {"008": "011206|| ac|||aa||          f| a|a    ||"}
+          ],
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "encodingLevel": "marc:CompleteAuthorityRecord",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "created": "2001-12-06T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
+            "marc:govtAgency" : {"@id" : "https://id.kb.se/marc/GovtAgencyType-f"},
+            "marc:headingMain": true,
+            "marc:headingSubject" : true,
+            "marc:kindOfRecord" : {"@id" : "https://id.kb.se/marc/KindOfRecordType-a"},
+            "marc:level" : {"@id" : "https://id.kb.se/marc/LevelType-a"},
+            "marc:numberedSeries" : {"code" : "n"},
+            "marc:personalName": {"code" : "n"},
+            "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
+            "marc:reference": {"code": "n"},
+            "marc:subdivision" : {"code" : "n"},
+            "marc:subjectSubdivision": {"code": "n"},
+            "marc:typeOfSeries" : {"code" : "n"},
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Organization"}
+          }
+        },
+        {
+          "name": "Topic - Hästar (71639)",
+          "source": [
+            {"008": "020409 | anznnbabn          |n ana      "}
+          ],
+          "normalized": [
+            {"008": "020409|| a|||||a||          || a|a    ||"}
+          ],
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "encodingLevel": "marc:CompleteAuthorityRecord",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "created": "2002-04-09T00:00:00.0+02:00",
+            "descriptionConventions": [{"code": "n"}],
+            "marc:headingSubject": true,
+            "marc:level": {"@id": "https://id.kb.se/marc/LevelType-a"},
+            "marc:numberedSeries" : {"code" : "n"},
+            "marc:kindOfRecord" : {"@id" : "https://id.kb.se/marc/KindOfRecordType-a"},
+            "marc:personalName": {"code": "n"},
+            "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
+            "marc:reference": {"code": "n"},
+            "marc:subjectSubdivision": {"code": "n"},
+            "marc:subjectHeading": {"code": "z"},
+            "marc:typeOfSeries" : {"code" : "n"},
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Topic"}
+          }
+        },
+        {
+          "name": "Work - Antikrists mirakler (340686)",
+          "source": [
+            {"008": "110119nb ac|nnaaba           n aaa      "}
+          ],
+          "normalized": [
+            {"008": "110119|b ac|||aa|a          || aaa    ||"}
+          ],
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "encodingLevel": "marc:CompleteAuthorityRecord",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "created": "2011-01-19T00:00:00.0+01:00",
+            "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatalogingRulesType-c"}],
+            "marc:headingMain": true,
+            "marc:headingSubject": true,
+            "marc:level": {"@id": "https://id.kb.se/marc/LevelType-a"},
+            "marc:numberedSeries" : {"code" : "n"},
+            "marc:kindOfRecord" : {"@id" : "https://id.kb.se/marc/KindOfRecordType-a"},
+            "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
+            "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
+            "marc:reference": {"code": "n"},
+            "marc:romanization": {"@id": "https://id.kb.se/marc/RomanizationType-b"},
+            "marc:subdivision": {"code": "n"},
+            "marc:subjectSubdivision": {"@id": "https://id.kb.se/marc/SubjectSubdivisionType-a"},
+            "marc:typeOfSeries" : {"code" : "n"},
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Work"}
+          }
+        }
+      ]
     },
 
     "010": {
