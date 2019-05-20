@@ -18,8 +18,10 @@ class ESQuery {
     private static final ObjectMapper mapper = new ObjectMapper()
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
-        'q', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug'
+        'q', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost'
     ]
+
+    private Map<String, List<String>> boostFieldsByType
 
     ESQuery() {
         // NOTE: For unit tests only!
@@ -89,44 +91,39 @@ class ESQuery {
             queryParameters.put('@type', originalTypeParam)
         }
 
-        // FIXME: use this.jsonld to compute from chips or get from vocab terms
-        // (tagged with display-header)
-        def boostFields = [
-            'prefLabel^100',
-            'code^100',
-            'name^100',
-            'familyName^100', 'givenName^100',
-            'lifeSpan^100', 'birthYear^100', 'deathYear^100',
-            'hasTitle.mainTitle^100', 'title^100',
-            'heldBy.sigel^100',
-        ]
-
-        Map queryString = [
-            'bool': [
-                'should': [
-                    [
-                        'simple_query_string': [
-                            'query': q,
-                            'default_operator':  'AND',
-                            'fields': boostFields,
-                            'quote_field_suffix': ".exact"
-                        ]
-                    ],
-                    [
-                        'simple_query_string': [
-                            'query': q,
-                            'default_operator':  'AND'
-                        ]
-                    ]
-                ]
+        Map simpleQuery = [
+            'simple_query_string': [
+                'query': q,
+                'default_operator':  'AND'
             ]
         ]
+
+        Map queryParam = simpleQuery
+
+        String[] boostParam = queryParameters.get('_boost')
+        String boostMode = boostParam ? boostParam[0] : null
+        List boostedFields = getBoostFields(originalTypeParam, boostMode)
+
+        if (boostedFields) {
+            Map boostedQuery = [
+                'simple_query_string': [
+                    'query': q,
+                    'default_operator':  'AND',
+                    'fields': boostedFields,
+                    //'flags': 'OR|AND|NOT|PHRASE|PREFIX|PRECEDENCE|ESCAPE|WHITESPACE',
+                    'quote_field_suffix': ".exact"
+                ]
+            ]
+            queryParam = [
+                'bool': ['should': [boostedQuery, simpleQuery]]
+            ]
+        }
 
         Map query = [
             'query': [
                 'bool': [
                     'must': [
-                        queryString
+                        queryParam
                     ]
                 ]
             ]
@@ -157,6 +154,123 @@ class ESQuery {
         }
 
         return query
+    }
+
+    List<String> getBoostFields(String[] types, String boostMode) {
+        if (boostMode?.indexOf('^') > -1) {
+            return boostMode.tokenize(',')
+        }
+
+        String typeKey = types != null ? types.toUnique().sort().join(',') : ''
+        typeKey += boostMode
+        List<String> boostFields = boostFieldsByType[typeKey]
+        if (boostFields == null) {
+            boostFields = boostFieldsByType[typeKey] =
+                boostMode == 'hardcoded'
+                ? [
+                    'prefLabel^100',
+                    'code^100',
+                    'name^100',
+                    'familyName^100', 'givenName^100',
+                    'lifeSpan^100', 'birthYear^100', 'deathYear^100',
+                    'hasTitle.mainTitle^100', 'title^100',
+                    'heldBy.sigel^100',
+                ]
+                : computeBoostFieldsFromLenses(jsonld, types)
+        }
+        return boostFields
+    }
+
+    @CompileStatic(TypeCheckingMode.SKIP)
+    static List<String> computeBoostFieldsFromLenses(JsonLd jsonld, String[] types) {
+        def boostFields = []
+        def seenKeys = [] as Set
+
+        def chipsLenses = jsonld.displayData.lensGroups?.chips
+        def cardsLenses = jsonld.displayData.lensGroups?.cards
+
+        Closure collectBoostFields = { lens, boost ->
+            [ "$JsonLd.SEARCH_KEY^100" as String ] +
+            lens.showProperties.findResults {
+                if (!(it instanceof String)) {
+                    return
+                }
+                def key = it
+                def termType = jsonld.vocabIndex.get(it)?.get(JsonLd.TYPE_KEY)
+                if (termType == 'ObjectProperty') {
+                    key = "${key}.${JsonLd.SEARCH_KEY}"
+                } else if (jsonld.isLangContainer(jsonld.context[it])) {
+                    key = "${key}.${jsonld.locales[0]}"
+                } else {
+                    // this property is part of the JsonLd.SEARCH_KEY value
+                    // but keep it anyway
+                    //return
+                }
+                if (key in seenKeys) {
+                    return
+                }
+                seenKeys << key
+                return "${key}^$boost" as String
+            }
+        }
+
+        def baseTypes = ['Identity', 'Instance', 'Item']
+
+        def selectedChipsLenses = types
+            ? types.collect {
+                jsonld.getLensFor([(JsonLd.TYPE_KEY): it], chipsLenses)
+            }
+            : chipsLenses?.lenses.values().findAll { lens ->
+                baseTypes.any { jsonld.isSubClassOf(lens.classLensDomain, it) }
+            }
+
+        boostFields += selectedChipsLenses.sum { lens ->
+            int boost = 200
+            collectBoostFields(lens, boost)
+        }
+
+        def selectedCardsLenses = types
+            ? types.collect {
+                jsonld.getLensFor([(JsonLd.TYPE_KEY): it], cardsLenses)
+            }
+            : cardsLenses?.lenses.values().findAll { lens ->
+                baseTypes.any { jsonld.isSubClassOf(lens.classLensDomain, it) }
+            }
+
+        boostFields += selectedCardsLenses.sum { lens ->
+            int boost = 10
+            lens.showProperties.findResults {
+                if (!(it instanceof String)) {
+                    return
+                }
+                def key = it
+                def termType = jsonld.vocabIndex.get(it)?.get(JsonLd.TYPE_KEY)
+                if (termType == 'ObjectProperty') {
+                    def dfn = jsonld.vocabIndex[key]
+
+                    def rangeType = dfn.range ? dfn.range[0] : null
+                    def rangeKey = rangeType ? jsonld.toTermKey(rangeType[JsonLd.ID_KEY]) : null
+                    if (rangeKey &&
+                        jsonld.isSubClassOf(rangeKey, 'QualifiedRole')) {
+                        def chipLens = jsonld.getLensFor([(JsonLd.TYPE_KEY): rangeKey], chipsLenses)
+                        return collectBoostFields(chipLens, boost).collect {
+                            "${key}.$it" as String
+                        }
+                    } else {
+                        key = "${key}.${JsonLd.SEARCH_KEY}" as String
+                    }
+                } else if (jsonld.isLangContainer(jsonld.context[it])) {
+                    key = "${key}.${jsonld.locales[0]}"
+                }
+                if (key in seenKeys) {
+                    return
+                }
+                seenKeys << key
+                return "${key}^$boost" as String
+            }.flatten()
+        }
+
+        return boostFields.unique()
     }
 
     /**
