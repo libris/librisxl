@@ -73,7 +73,7 @@ class JsonLd {
     Map displayData
     Map vocabIndex
 
-    String locale
+    List<String> locales
     private String vocabId
     private Map<String, String> nsToPrefixMap = [:]
 
@@ -93,9 +93,10 @@ class JsonLd {
     /**
      * Make an instance to incapsulate model driven behaviour.
      */
-    JsonLd(Map contextData, Map displayData, Map vocabData, String locale = 'sv') {
+    JsonLd(Map contextData, Map displayData, Map vocabData,
+            List<String> locales = ['sv', 'en']) {
         setSupportData(contextData, displayData, vocabData)
-        this.locale = locale
+        this.locales = locales
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
@@ -700,7 +701,7 @@ class JsonLd {
             for (prop in propertiesToKeep) {
                 def values = object[prop]
                 if (isLangContainer(context[prop]) && values instanceof Map) {
-                    values = values[locale] // TODO: fallback ?: values['en']
+                    values = locales.findResult { values[it] }
                 }
                 if (!(values instanceof List)) {
                     values = values ? [values] : []
