@@ -216,7 +216,7 @@
                             "type": "text",
                             "index": true
                         },
-                        "match": "*",
+                        "match": "_str",
                         "match_mapping_type": "string"
                     }
                 }
