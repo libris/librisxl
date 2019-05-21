@@ -1023,10 +1023,10 @@
       "$u": {"about": "_:agent", "property": "marc:affiliation"}
     },
 
-    "agentdataOrganizationSubUnit": {
+    "agentNameContainingPartOf": {
       "include": "agentdataOrganizationJurisdiction",
       "$a": {"about": "_:isPartOf", "property": "name", "required": true},
-      "$b": {"about": "_:agent", "addProperty": "marc:subordinateUnit", "required": true}
+      "$b": {"about": "_:agent", "addProperty": "name", "required": true}
     },
 
     "agentdataOrganization": {
@@ -6060,7 +6060,7 @@
       "match":[
         {
           "when": "i1=2 & $b",
-          "include": ["agentdataOrganizationSubUnit"],
+          "include": ["agentNameContainingPartOf"],
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Organization", "required": true},
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
@@ -6069,7 +6069,7 @@
         },
         {
           "when": "i1=1 & $b",
-          "include": ["agentdataOrganizationSubUnit"],
+          "include": ["agentNameContainingPartOf"],
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Jurisdiction", "required": true},
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
@@ -6078,7 +6078,7 @@
         },
         {
           "when": "i1=0 & $b",
-          "include": ["agentdataOrganizationSubUnit"],
+          "include": ["agentNameContainingPartOf"],
           "pendingResources": {
             "_:agent": {"link": "agent", "resourceType": "Organization", "required": true},
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
@@ -6133,7 +6133,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Organization",
-                    "marc:subordinateUnit" : ["Norstedts Juridik"],
+                    "name" : ["Norstedts Juridik"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Wolters Kluwer"
@@ -6162,7 +6162,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Jurisdiction",
-                    "marc:subordinateUnit" : ["Kulturdepartementet"],
+                    "name" : ["Kulturdepartementet"],
                     "isPartOf": {
                       "@type": "Jurisdiction",
                       "name": "Sverige."
@@ -6191,7 +6191,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Organization",
-                    "marc:subordinateUnit" : ["Norstedts Juridik"],
+                    "name" : ["Norstedts Juridik"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Wolters Kluwer"
@@ -6223,7 +6223,7 @@
                   "agent": {
                     "@type": "Organization",
                     "date": ["1998 :"],
-                    "marc:subordinateUnit" : ["Conference"],
+                    "name" : ["Conference"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Mujeres Ayudando la Raza (Organization : University of California, Davis)"
@@ -10930,18 +10930,18 @@
       "match": [
         {
           "when": "$b & i1=2 & $t",
-          "include": ["worksubject", "subjectOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["worksubject", "subjectOrganization", "agentNameContainingPartOf"]
         },
         {
           "when": "$b & i1=1 & $t",
-          "include": ["worksubject", "subjectJurisdiction", "agentdataOrganizationSubUnit"],
+          "include": ["worksubject", "subjectJurisdiction", "agentNameContainingPartOf"],
           "pendingResources": {
             "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction", "required": true}
           }
         },
         {
           "when": "$b & i1=0 & $t",
-          "include": ["worksubject", "subjectOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["worksubject", "subjectOrganization", "agentNameContainingPartOf"]
         },
         {
           "when": "i1=2 & $t",
@@ -10957,11 +10957,11 @@
         },
         {
           "when": "$b & $t",
-          "include": ["worksubject", "subjectOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["worksubject", "subjectOrganization", "agentNameContainingPartOf"]
         },
         {
           "when": "$b & i1=0",
-          "include": ["agentdataOrganizationSubUnit", "subjectbase"],
+          "include": ["agentNameContainingPartOf", "subjectbase"],
           "pendingResources": {
             "_:agent": {
               "addLink": "termComponentList",
@@ -10976,7 +10976,7 @@
         },
         {
           "when": "$b & i1=1",
-          "include": ["agentdataOrganizationSubUnit", "subjectbase"],
+          "include": ["agentNameContainingPartOf", "subjectbase"],
           "pendingResources": {
             "_:agent": {
               "addLink": "termComponentList",
@@ -11010,7 +11010,7 @@
         {
           "when": "$b",
           "TODO": "Correct modelled? Should it be treated as a Work when there is no $t?",
-          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentNameContainingPartOf"]
         },
         {
           "when": "i1=2",
@@ -11134,7 +11134,7 @@
                     "name" : "Sverige"
                   },
                   "marc:numeration": ["15"],
-                  "marc:subordinateUnit" : ["Riksdagen"],
+                  "name" : ["Riksdagen"],
                   "place" : [{
                     "@type" : "Place",
                     "label" : "Gävle)"
@@ -13178,7 +13178,7 @@
       "match": [
         {
           "when": "$b & $t & i2=2 & i1=1",
-          "include": ["hasPartJurisdiction", "agentdataOrganizationSubUnit", "titledetails", "contributionRole_4"]
+          "include": ["hasPartJurisdiction", "agentNameContainingPartOf", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$t & i2=2 & i1=1",
@@ -13186,7 +13186,7 @@
         },
         {
           "when": "$b & $t & i1=1",
-          "include": ["hasRelationshipJurisdiction", "agentdataOrganizationSubUnit", "titledetails"]
+          "include": ["hasRelationshipJurisdiction", "agentNameContainingPartOf", "titledetails"]
         },
         {
           "when": "$t & i1=1",
@@ -13194,7 +13194,7 @@
         },
         {
           "when": "$b & $t & i2=2",
-          "include": ["hasPartOrganization", "agentdataOrganizationSubUnit", "titledetails", "contributionRole_4"]
+          "include": ["hasPartOrganization", "agentNameContainingPartOf", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$t & i2=2",
@@ -13202,7 +13202,7 @@
         },
         {
           "when": "$b & $t",
-          "include": ["hasRelationshipOrganization", "agentdataOrganizationSubUnit", "titledetails"]
+          "include": ["hasRelationshipOrganization", "agentNameContainingPartOf", "titledetails"]
         },
         {
           "when": "$t",
@@ -13210,7 +13210,7 @@
         },
         {
           "when": "$b & i1=2",
-          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "agentdetails", "contributionRole_4_e"]
+          "include": ["contributionOrganization", "agentNameContainingPartOf", "agentdetails", "contributionRole_4_e"]
         },
         {
           "when": "i1=2",
@@ -13218,7 +13218,7 @@
         },
         {
           "when": "$b & i1=1",
-          "include": ["contributionJurisdiction", "agentdataOrganizationSubUnit", "agentdetails", "contributionRole_4_e"]
+          "include": ["contributionJurisdiction", "agentNameContainingPartOf", "agentdetails", "contributionRole_4_e"]
         },
         {
           "when": "i1=1",
@@ -13226,7 +13226,7 @@
         },
         {
           "when": "$b & i1=0",
-          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "agentdetails", "contributionRole_4_e"]
+          "include": ["contributionOrganization", "agentNameContainingPartOf", "agentdetails", "contributionRole_4_e"]
         },
         {
           "when": "i1=0",
@@ -13234,7 +13234,7 @@
         },
         {
           "when": "$b",
-          "include": ["contributionOrganization", "agentdataOrganizationSubUnit", "agentdetails", "contributionRole_4_e"]
+          "include": ["contributionOrganization", "agentNameContainingPartOf", "agentdetails", "contributionRole_4_e"]
         },
         {
           "when": null,
@@ -13250,6 +13250,44 @@
       "subfieldOrder": "6 i a b d c g u t n m r p k l s f o x e 4 1 0",
       "TODO:i2": "How to map when no $t?",
       "_spec": [
+        {
+          "name": "Records only containing $b but lacking required $a, should be reverted to $a",
+          "source": {
+            "710": {"ind1": "1", "ind2": " ", "subfields": [
+              {"b": "Överståthållarämbetet"},
+              {"d": "(1796-07-15)"},
+              {"e": "unspecifiedContributor"},
+              {"4": "oth"}
+            ]}},
+          "normalized": {
+            "710": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Överståthållarämbetet"},
+              {"d": "(1796-07-15)"},
+              {"e": "unspecifiedContributor"},
+              {"4": "oth"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution": [{
+                "@type": "Contribution",
+                "agent": {
+                  "@type": "Jurisdiction",
+                  "date": [ "(1796-07-15)" ],
+                  "name": ["Överståthållarämbetet"]
+                },
+                "role": [{
+                  "@type": "Role",
+                  "label": "unspecifiedContributor"
+                },{
+                  "@id": "https://id.kb.se/relator/oth",
+                  "@type": "Role",
+                  "code": "oth"
+                }]
+              }]
+            }
+          }}
+        },
         {
           "source": {
             "710": {"ind1": "1", "ind2": " ", "subfields": [
@@ -13317,7 +13355,7 @@
                             "@type": "Jurisdiction",
                             "name": "Sverige."
                           },
-                          "marc:subordinateUnit" : ["Riksdagen.", "Borgarståndet."]
+                          "name" : ["Riksdagen.", "Borgarståndet."]
                         }
                       }],
                     "hasTitle": [ {
@@ -13434,7 +13472,7 @@
                   "@type": "Contribution",
                   "agent":{
                     "@type": "Organization",
-                    "marc:subordinateUnit" : ["Quinquennial Meeting"],
+                    "name" : ["Quinquennial Meeting"],
                     "date": ["1904"],
                     "marc:numeration": ["(1st :"],
                     "isPartOf": {
@@ -13494,7 +13532,7 @@
                   "@type": "Contribution",
                   "agent":{
                     "@type": "Organization",
-                    "marc:subordinateUnit" : ["Institutionen för ABM.", "Kulturgeografi"],
+                    "name" : ["Institutionen för ABM.", "Kulturgeografi"],
                     "marc:numeration": ["101"],
                     "isPartOf": {
                       "@type": "Organization",
@@ -13601,7 +13639,7 @@
                   "@type": "Contribution",
                   "agent": {
                     "@type": "Organization",
-                    "marc:subordinateUnit" : ["Institutionen för teknikens ekonomi och organisation.",
+                    "name" : ["Institutionen för teknikens ekonomi och organisation.",
                               "Industriell organisation och ekonomi"],
                     "isPartOf": {
                       "@type": "Organization",
@@ -13620,6 +13658,7 @@
           "source": {
             "710": {"ind1": "1", "ind2": "2", "subfields": [
               {"a": "Sverige."},
+              {"b": "Del av"},
               {"t": "Lagen om vissa kommunala befogenheter,"},
               {"n": "9"},
               {"x": "2222-2222"},
@@ -13645,7 +13684,12 @@
                       "@type": "PrimaryContribution",
                       "agent": {
                         "@type": "Jurisdiction",
-                        "name":  "Sverige."},
+                        "isPartOf" : {
+                          "@type" : "Jurisdiction",
+                          "name" : "Sverige."
+                        },
+                        "name" : [ "Del av" ]
+                      },
                       "role": [{
                         "@id": "https://id.kb.se/relator/oth",
                         "@type": "Role",
@@ -13753,7 +13797,7 @@
                   "@type": "Contribution",
                   "agent": {
                     "@type": "Jurisdiction",
-                    "marc:subordinateUnit" : ["Riksdagen.", "Konstitutionsutskottet"],
+                    "name" : ["Riksdagen.", "Konstitutionsutskottet"],
                     "isPartOf": {
                       "@type": "Jurisdiction",
                       "name": "Sverige."
@@ -13765,7 +13809,7 @@
                   "@type": "Contribution",
                   "agent": {
                     "@type": "Jurisdiction",
-                    "marc:subordinateUnit" : ["Regeringen i Bremen-Verden"],
+                    "name" : ["Regeringen i Bremen-Verden"],
                     "isPartOf": {
                       "@type": "Jurisdiction",
                       "name": "Sverige."
@@ -15208,7 +15252,7 @@
           "when": "i1=1",
           "match": [
             {
-              "when": "$b", "include": "agentdataOrganizationSubUnit"
+              "when": "$b", "include": "agentNameContainingPartOf"
             }
           ],
           "include": "agentdataOrganization",
@@ -15226,7 +15270,7 @@
         },
         {
           "when": "$b",
-          "include": "agentdataOrganizationSubUnit"
+          "include": "agentNameContainingPartOf"
         }
       ],
       "i1": {"marcDefault": "2"},
@@ -15289,7 +15333,7 @@
                       "@type": "PrimaryContribution",
                       "agent": {
                         "@type": "Jurisdiction",
-                        "marc:subordinateUnit": ["Universidad nacional.", "Instituto de Literatura Española."],
+                        "name": ["Universidad nacional.", "Instituto de Literatura Española."],
                         "isPartOf": {
                           "@type": "Jurisdiction",
                           "name": "Buenos Aires (Argentina)."
@@ -15325,7 +15369,7 @@
                       "@type": "PrimaryContribution",
                       "agent": {
                         "@type": "Organization",
-                        "marc:subordinateUnit": ["Bureau of Business Research."],
+                        "name": ["Bureau of Business Research."],
                         "isPartOf": {
                           "@type": "Organization",
                           "name": "Harvard University."
@@ -16726,17 +16770,17 @@
         {
           "when": "$b & $t & i1=2",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetails"]
+          "include": ["pendingContributionOrganization", "agentNameContainingPartOf", "titledetails"]
         },
         {
           "when": "$b & $t & i1=1",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionJurisdiction", "agentdataOrganizationSubUnit", "titledetails"]
+          "include": ["pendingContributionJurisdiction", "agentNameContainingPartOf", "titledetails"]
         },
         {
           "when": "$b & $t & i1=0",
           "aboutAlias": "_:work",
-          "include": ["pendingContributionOrganization", "agentdataOrganizationSubUnit", "titledetails"]
+          "include": ["pendingContributionOrganization", "agentNameContainingPartOf", "titledetails"]
         },
         {
           "when": "$t & i1=2",
@@ -16761,7 +16805,7 @@
         },
         {
           "when": "$b & i1=2",
-          "include": ["agentdataOrganizationSubUnit", "agentpartnumber"],
+          "include": ["agentNameContainingPartOf", "agentpartnumber"],
           "aboutEntity": "?thing",
           "aboutType": "Organization",
           "pendingResources": {
@@ -16774,7 +16818,7 @@
         },
         {
           "when": "$b & i1=1",
-          "include": ["agentdataOrganizationSubUnit", "agentpartnumber"],
+          "include": ["agentNameContainingPartOf", "agentpartnumber"],
           "aboutEntity": "?thing",
           "aboutType": "Jurisdiction",
           "pendingResources": {
@@ -16786,7 +16830,7 @@
         },
         {
           "when": "$b & i1=0",
-          "include": ["agentdataOrganizationSubUnit", "agentpartnumber"],
+          "include": ["agentNameContainingPartOf", "agentpartnumber"],
           "aboutEntity": "?thing",
           "aboutType": "Organization",
           "pendingResources": {
@@ -16857,7 +16901,7 @@
           "result": {
             "mainEntity": {
               "@type": "Organization",
-              "marc:subordinateUnit" : ["Regionkommittén"],
+              "name" : ["Regionkommittén"],
               "isPartOf": {
                 "@type": "Organization",
                 "name": "Europeiska unionen"
@@ -16875,7 +16919,7 @@
           "result": {
             "mainEntity": {
               "@type": "Jurisdiction",
-              "marc:subordinateUnit" : ["Armén", "Dalregementet"],
+              "name" : ["Armén", "Dalregementet"],
               "isPartOf": {
                 "@type": "Jurisdiction",
                 "name": "Sverige"
@@ -16895,7 +16939,7 @@
           "result": {
             "mainEntity": {
               "@type": "Jurisdiction",
-              "marc:subordinateUnit" : ["Congress"],
+              "name" : ["Congress"],
               "isPartOf": {
                 "@type": "Jurisdiction",
                 "name": "Förenta staterna"
@@ -17652,17 +17696,17 @@
       "match": [
         {
           "when": "$b & $t & i1=2",
-          "include": ["hasContribution", "variantWorkWithOrganization", "agentdataOrganizationSubUnit", "titledetails"],
+          "include": ["hasContribution", "variantWorkWithOrganization", "agentNameContainingPartOf", "titledetails"],
           "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
         },
         {
           "when": "$b & $t & i1=1",
-          "include": ["hasContribution", "variantWorkWithJurisdiction", "agentdataOrganizationSubUnit", "titledetails"],
+          "include": ["hasContribution", "variantWorkWithJurisdiction", "agentNameContainingPartOf", "titledetails"],
           "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
         },
         {
           "when": "$b & $t & i1=0",
-          "include": ["hasContribution", "variantWorkWithOrganization", "agentdataOrganizationSubUnit", "titledetails"],
+          "include": ["hasContribution", "variantWorkWithOrganization", "agentNameContainingPartOf", "titledetails"],
           "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
         },
         {
@@ -17679,15 +17723,15 @@
         },
         {
           "when": "$b & i1=2",
-          "include": ["variantOrganization", "agentdataOrganizationSubUnit", "agentpartnumber"]
+          "include": ["variantOrganization", "agentNameContainingPartOf", "agentpartnumber"]
         },
         {
           "when": "$b & i1=1",
-          "include": ["variantJurisdiction", "agentdataOrganizationSubUnit", "agentpartnumber"]
+          "include": ["variantJurisdiction", "agentNameContainingPartOf", "agentpartnumber"]
         },
         {
           "when": "$b & i1=0",
-          "include": ["variantOrganization", "agentdataOrganizationSubUnit", "agentpartnumber"]
+          "include": ["variantOrganization", "agentNameContainingPartOf", "agentpartnumber"]
         },
         {
           "when": "i1=0 | i1=2",
@@ -17724,7 +17768,7 @@
                   "@type": "Jurisdiction",
                   "name": "Suède."
                 },
-                "marc:subordinateUnit": ["Direction nationale de la santé et des affaires sociales"],
+                "name": ["Direction nationale de la santé et des affaires sociales"],
                 "marc:relatedAs": [{
                   "@type": "Relation",
                   "label": "Franska:"
@@ -17868,7 +17912,7 @@
                         "@type": "Organization",
                         "name": "Museum of Northern Arizona"
                       },
-                      "marc:subordinateUnit": ["Subunit part of name"]
+                      "name": ["Subunit part of name"]
                     }
                   }]
                 }
@@ -17887,7 +17931,7 @@
               "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Jurisdiction",
-                "marc:subordinateUnit": ["Estudios Territoriales, Oficina de"],
+                "name": ["Estudios Territoriales, Oficina de"],
                 "isPartOf": {
                   "@type": "Jurisdiction",
                   "name": "Honduras"
@@ -17907,7 +17951,7 @@
               "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Organization",
-                "marc:subordinateUnit": ["Europaparlamentet"],
+                "name": ["Europaparlamentet"],
                 "isPartOf": {
                   "@type": "Organization",
                   "name": "Europeiska unionen."
@@ -17940,7 +17984,7 @@
               "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Organization",
-                "marc:subordinateUnit": ["General Assembly", "Special Session", "Preparatory Committee of the Whole"],
+                "name": ["General Assembly", "Special Session", "Preparatory Committee of the Whole"],
                 "marc:numeration": ["(13 :"],
                 "date": ["1986)."],
                 "isPartOf": {
@@ -18662,15 +18706,15 @@
       "match": [
         {
           "when": "$b & $t & i1=2",
-          "include": ["hasContribution", "hasRelatedToOrganization", "agentdataOrganizationSubUnit", "titledetails"]
+          "include": ["hasContribution", "hasRelatedToOrganization", "agentNameContainingPartOf", "titledetails"]
         },
         {
           "when": "$b & $t & i1=1",
-          "include": ["hasContribution", "hasRelatedToJurisdiction", "agentdataOrganizationSubUnit", "titledetails"]
+          "include": ["hasContribution", "hasRelatedToJurisdiction", "agentNameContainingPartOf", "titledetails"]
         },
         {
           "when": "$b & $t & i1=0",
-          "include": ["hasContribution", "hasRelatedToOrganization", "agentdataOrganizationSubUnit", "titledetails"]
+          "include": ["hasContribution", "hasRelatedToOrganization", "agentNameContainingPartOf", "titledetails"]
         },
         {
           "when": "$t & i1=2",
@@ -18686,15 +18730,15 @@
         },
         {
           "when": "$b & i1=2",
-          "include": ["seeAlsoOrganization", "agentdataOrganizationSubUnit", "agentpartnumber"]
+          "include": ["seeAlsoOrganization", "agentNameContainingPartOf", "agentpartnumber"]
         },
         {
           "when": "$b & i1=1",
-          "include": ["seeAlsoJurisdiction", "agentdataOrganizationSubUnit", "agentpartnumber"]
+          "include": ["seeAlsoJurisdiction", "agentNameContainingPartOf", "agentpartnumber"]
         },
         {
           "when": "$b & i1=0",
-          "include": ["seeAlsoOrganization", "agentdataOrganizationSubUnit", "agentpartnumber"]
+          "include": ["seeAlsoOrganization", "agentNameContainingPartOf", "agentpartnumber"]
         },
         {
           "when": "i1=0 | i1=2",
@@ -18774,7 +18818,7 @@
               "seeAlso": [{
                 "@type": "Jurisdiction",
                 "marc:controlSubfield": "a",
-                "marc:subordinateUnit": ["Air Quality Programs"],
+                "name": ["Air Quality Programs"],
                 "isPartOf": {
                   "@type": "Jurisdiction",
                   "name": "Maryland."
