@@ -19745,9 +19745,10 @@
         "aboutEntity": "?record",
         "link": "marc:statistics",
         "uriTemplate": "https://id.kb.se/marc/StatisticsType-{_}",
-        "matchUriToken": "^[_or]$",
+        "matchUriToken": "^[or]$",
         "fixedDefault": " "
       },
+      "[8]": null,
       "[9]": {
         "aboutEntity": "?record",
         "link": "marc:characterCoding",
@@ -19757,7 +19758,8 @@
       "[17]": {
         "aboutEntity": "?record",
         "property": "encodingLevel",
-        "tokenMap": "HoldingEncLevelType"
+        "tokenMap": "HoldingEncLevelType",
+        "fixedDefault": "u"
       },
       "[18]": {
         "aboutEntity": "?record",
@@ -19765,6 +19767,7 @@
         "tokenMap": {"i": true, "n": false},
         "fixedDefault": "n"
       },
+      "[19]": null,
       "[20:24]": {
         "aboutEntity": "?record",
         "property": "marc:entryMap",
@@ -19873,12 +19876,14 @@
       "[20]": {
         "link": "marc:lendingPolicy",
         "uriTemplate": "https://id.kb.se/marc/LendingPolicyType-{_}",
-        "matchUriToken": "^[abcl]$"
+        "matchUriToken": "^[abcl]$",
+        "fixedDefault": "|"
       },
       "[21]": {
         "link": "marc:reproductionPolicy",
         "uriTemplate": "https://id.kb.se/marc/ReproductionPolicyType-{_}",
-        "matchUriToken": "^[ab]$"
+        "matchUriToken": "^[ab]$",
+        "fixedDefault": "|"
       },
       "[22:25]": {
         "addLink": "language",
