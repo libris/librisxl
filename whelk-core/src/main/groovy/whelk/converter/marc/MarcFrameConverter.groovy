@@ -2284,6 +2284,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         orderedAndGroupedSubfields.each { subhandlers ->
 
+            subhandlers.each {
+                if (it.required)
+                    requiredCodes << it.code
+            }
+
             def about = subhandlers[0].about ?: aboutAlias
 
             def subhandlersByEntity
@@ -2301,10 +2306,6 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 def code = subhandler.code
                 if (failedRequired)
                     return
-
-                if (subhandler.required) {
-                    requiredCodes << code
-                }
 
                 if (subhandler.requiresI1) {
                     if (i1 == null) {
