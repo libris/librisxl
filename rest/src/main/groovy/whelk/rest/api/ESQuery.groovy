@@ -190,12 +190,11 @@ class ESQuery {
         def cardsLenses = jsonld.displayData.lensGroups?.cards
 
         Closure collectBoostFields = { lens, boost ->
-            [ "$JsonLd.SEARCH_KEY^100" as String ] +
             lens.showProperties.findResults {
                 if (!(it instanceof String)) {
                     return
                 }
-                def key = it
+                String key = it
                 def termType = jsonld.vocabIndex.get(it)?.get(JsonLd.TYPE_KEY)
                 if (termType == 'ObjectProperty') {
                     key = "${key}.${JsonLd.SEARCH_KEY}"
@@ -213,6 +212,8 @@ class ESQuery {
                 return "${key}^$boost" as String
             }
         }
+
+        boostFields += [ "$JsonLd.SEARCH_KEY^100" as String ]
 
         def baseTypes = ['Identity', 'Instance', 'Item']
 
@@ -243,7 +244,7 @@ class ESQuery {
                 if (!(it instanceof String)) {
                     return
                 }
-                def key = it
+                String key = it
                 def termType = jsonld.vocabIndex.get(it)?.get(JsonLd.TYPE_KEY)
                 if (termType == 'ObjectProperty') {
                     def dfn = jsonld.vocabIndex[key]
@@ -257,7 +258,7 @@ class ESQuery {
                             "${key}.$it" as String
                         }
                     } else {
-                        key = "${key}.${JsonLd.SEARCH_KEY}" as String
+                        key = "${key}.${JsonLd.SEARCH_KEY}"
                     }
                 } else if (jsonld.isLangContainer(jsonld.context[it])) {
                     key = "${key}.${jsonld.locales[0]}"
