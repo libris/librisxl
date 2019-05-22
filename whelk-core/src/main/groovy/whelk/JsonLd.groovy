@@ -631,7 +631,8 @@ class JsonLd {
         return jsonLd
     }
 
-    Map toCard(Map thing, boolean chipsify = true, boolean addSearchKey = false) {
+    Map toCard(Map thing, boolean chipsify = true, boolean addSearchKey = false,
+            boolean reduceKey = false) {
         Map result = [:]
 
         Map card = removeProperties(thing, 'cards')
@@ -641,6 +642,11 @@ class JsonLd {
             card = removeProperties(thing, 'chips')
         }
 
+        def types = thing[TYPE_KEY]
+        if (!(types instanceof List)) types = [types]
+
+        reduceKey = reduceKey ?: { isSubClassOf((String) it, 'StructuredValue') }
+
         card.each { key, value ->
             def lensValue = value
             if (chipsify) {
@@ -649,11 +655,11 @@ class JsonLd {
                 if (value instanceof List) {
                     lensValue = value.collect {
                         it instanceof Map
-                        ? toCard((Map) it, chipsify, addSearchKey)
+                        ? toCard((Map) it, chipsify, addSearchKey, reduceKey)
                         : it
                     }
                 } else if (value instanceof Map) {
-                    lensValue = toCard((Map) value, chipsify, addSearchKey)
+                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduceKey)
                 }
             }
             result[key] = lensValue
@@ -661,6 +667,18 @@ class JsonLd {
 
         if (addSearchKey) {
             List key = makeSearchKeyParts(card)
+            if (reduceKey) {
+                for (v in result.values()) {
+                    if (v instanceof List && ((List)v).size() == 1) {
+                        v = ((List)v)[0]
+                    }
+                    if (v instanceof Map) {
+                        if (v[SEARCH_KEY]) {
+                            key << ((Map)v).remove(SEARCH_KEY)
+                        }
+                    }
+                }
+            }
             if (key) {
                 result[SEARCH_KEY] = key.join(' ')
             }
