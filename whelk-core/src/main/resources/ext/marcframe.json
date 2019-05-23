@@ -16044,7 +16044,8 @@
         "aboutEntity": "?record",
         "link": "marc:subjectHeading",
         "uriTemplate": "https://id.kb.se/marc/SubjectHeadingType-{_}",
-        "matchUriToken": "^[_abcdkrsv]$"
+        "matchUriToken": "^[abcdkrsv]$",
+        "fixedDefault": "|"
       },
       "[12]": {
         "aboutEntity": "?record",
