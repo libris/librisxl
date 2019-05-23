@@ -16029,7 +16029,9 @@
         "aboutEntity": "?record",
         "link": "marc:kindOfRecord",
         "uriTemplate": "https://id.kb.se/marc/KindOfRecordType-{_}",
-        "matchUriToken": "^[abdefg]$"
+        "matchUriToken": "^[abdefg]$",
+        "fixedDefault": "a",
+        "TODO": "Add d as default if type=subdivision to remove this completely."
       },
       "[10]": {
         "aboutEntity": "?record",
@@ -16141,7 +16143,6 @@
             "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
             "marc:headingMain": true,
             "marc:headingSubject" : true,
-            "marc:kindOfRecord" : {"@id" : "https://id.kb.se/marc/KindOfRecordType-a"},
             "marc:numberedSeries" : {"code" : "n"},
             "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
             "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
@@ -16173,7 +16174,6 @@
             "marc:govtAgency" : {"@id" : "https://id.kb.se/marc/GovtAgencyType-f"},
             "marc:headingMain": true,
             "marc:headingSubject" : true,
-            "marc:kindOfRecord" : {"@id" : "https://id.kb.se/marc/KindOfRecordType-a"},
             "marc:level" : {"@id" : "https://id.kb.se/marc/LevelType-a"},
             "marc:numberedSeries" : {"code" : "n"},
             "marc:personalName": {"code" : "n"},
@@ -16206,7 +16206,6 @@
             "marc:headingSubject": true,
             "marc:level": {"@id": "https://id.kb.se/marc/LevelType-a"},
             "marc:numberedSeries" : {"code" : "n"},
-            "marc:kindOfRecord" : {"@id" : "https://id.kb.se/marc/KindOfRecordType-a"},
             "marc:personalName": {"code": "n"},
             "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
             "marc:reference": {"code": "n"},
@@ -16239,7 +16238,6 @@
             "marc:headingSubject": true,
             "marc:level": {"@id": "https://id.kb.se/marc/LevelType-a"},
             "marc:numberedSeries" : {"code" : "n"},
-            "marc:kindOfRecord" : {"@id" : "https://id.kb.se/marc/KindOfRecordType-a"},
             "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
             "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
             "marc:reference": {"code": "n"},
