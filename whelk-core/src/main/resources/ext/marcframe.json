@@ -16051,13 +16051,15 @@
         "aboutEntity": "?record",
         "link": "marc:typeOfSeries",
         "uriTemplate": "https://id.kb.se/marc/TypeOfSeriesType-{_}",
-        "matchUriToken": "^[_abc]$"
+        "matchUriToken": "^[abc]$",
+        "fixedDefault": "n"
       },
       "[13]": {
         "aboutEntity": "?record",
         "link": "marc:numberedSeries",
         "uriTemplate": "https://id.kb.se/marc/NumberedSeriesType-{_}",
-        "matchUriToken": "^[abc]$"
+        "matchUriToken": "^[abc]$",
+        "fixedDefault": "n"
       },
       "[14]": {
         "aboutEntity": "?record",
@@ -16132,7 +16134,7 @@
             {"008": "011206n| ac|nnaabn          |n aa       "}
           ],
           "normalized": [
-            {"008": "011206n| ac|||aa||          || aa|    ||"}
+            {"008": "011206n| ac|nnaa||          || aa|    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -16144,12 +16146,10 @@
             "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
             "marc:headingMain": true,
             "marc:headingSubject" : true,
-            "marc:numberedSeries" : {"code" : "n"},
             "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
             "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
             "marc:reference": {"code": "n"},
             "marc:subjectSubdivision": {"code": "n"},
-            "marc:typeOfSeries" : {"code" : "n"},
             "mainEntity": { }
           },
           "addOnRevert": {
@@ -16162,7 +16162,7 @@
             {"008": "011206n| ac|nnaabn          fn ana      "}
           ],
           "normalized": [
-            {"008": "011206n| ac|||aa||          f| a|a    ||"}
+            {"008": "011206n| ac|nnaa||          f| a|a    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -16176,12 +16176,10 @@
             "marc:headingMain": true,
             "marc:headingSubject" : true,
             "marc:level" : {"@id" : "https://id.kb.se/marc/LevelType-a"},
-            "marc:numberedSeries" : {"code" : "n"},
             "marc:personalName": {"code" : "n"},
             "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
             "marc:reference": {"code": "n"},
             "marc:subjectSubdivision": {"code": "n"},
-            "marc:typeOfSeries" : {"code" : "n"},
             "mainEntity": { }
           },
           "addOnRevert": {
@@ -16194,7 +16192,7 @@
             {"008": "020409 | anznnbabn          |n ana      "}
           ],
           "normalized": [
-            {"008": "020409n| a|||||a||          || a|a    ||"}
+            {"008": "020409n| a||nn|a||          || a|a    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -16206,13 +16204,11 @@
             "descriptionConventions": [{"code": "n"}],
             "marc:headingSubject": true,
             "marc:level": {"@id": "https://id.kb.se/marc/LevelType-a"},
-            "marc:numberedSeries" : {"code" : "n"},
             "marc:personalName": {"code": "n"},
             "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
             "marc:reference": {"code": "n"},
             "marc:subjectSubdivision": {"code": "n"},
             "marc:subjectHeading": {"code": "z"},
-            "marc:typeOfSeries" : {"code" : "n"},
             "mainEntity": { }
           },
           "addOnRevert": {
@@ -16225,7 +16221,7 @@
             {"008": "110119nb ac|nnaaba           n aaa      "}
           ],
           "normalized": [
-            {"008": "110119nb ac|||aa|a          || aaa    ||"}
+            {"008": "110119nb ac|nnaa|a          || aaa    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -16238,13 +16234,11 @@
             "marc:headingMain": true,
             "marc:headingSubject": true,
             "marc:level": {"@id": "https://id.kb.se/marc/LevelType-a"},
-            "marc:numberedSeries" : {"code" : "n"},
             "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
             "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
             "marc:reference": {"code": "n"},
             "marc:romanization": {"@id": "https://id.kb.se/marc/RomanizationType-b"},
             "marc:subjectSubdivision": {"@id": "https://id.kb.se/marc/SubjectSubdivisionType-a"},
-            "marc:typeOfSeries" : {"code" : "n"},
             "mainEntity": { }
           },
           "addOnRevert": {
