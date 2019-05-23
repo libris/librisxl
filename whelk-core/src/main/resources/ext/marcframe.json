@@ -16014,7 +16014,8 @@
         "aboutEntity": "?record",
         "link": "marc:romanization",
         "uriTemplate": "https://id.kb.se/marc/RomanizationType-{_}",
-        "matchUriToken": "^[abcdefg]$"
+        "matchUriToken": "^[abcdefg]$",
+        "fixedDefault": "|"
       },
       "[8]": {
         "TODO": "Remove when not in records anymore. Also delete terms from vocab",
