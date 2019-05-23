@@ -3,15 +3,22 @@ COUNTER = [:]
 PrintWriter FREQUENCY_REPEATED_SUBORDINATEUNIT = getReportWriter("frequency-repeated-subordinateunit-bib.csv")
 
 void countAndLogObjects(data, value) {
-    if (!COUNTER[value.size()]) {
+    int numberOfSubUnits
+
+    if (value instanceof String)
+        numberOfSubUnits = 1
+    else
+        numberOfSubUnits = value.size()
+
+    if (!COUNTER[numberOfSubUnits]) {
         List example_records = [1]
         example_records << data.graph[0][ID]
-        COUNTER << [(value.size()):example_records]
+        COUNTER << [(numberOfSubUnits):example_records]
     }
     else {
-        COUNTER[value.size()][0] += 1
-        if (COUNTER[value.size()].size() < 10) {
-            COUNTER[value.size()] << data.graph[0][ID]
+        COUNTER[numberOfSubUnits][0] += 1
+        if (COUNTER[numberOfSubUnits].size() < 10) {
+            COUNTER[numberOfSubUnits] << data.graph[0][ID]
         }
     }
 }
@@ -32,7 +39,7 @@ void findSubordinatedUnitInData(data, obj) {
 }
 
 selectBySqlWhere('''
-        data::text LIKE '%"marc:subordinateUnit"%' AND collection = 'auth'
+        data::text LIKE '%"marc:subordinateUnit"%' AND collection = 'bib'
         ''') { data ->
 
     // Skipping record
