@@ -16092,7 +16092,8 @@
         "aboutEntity": "?record",
         "link": "marc:govtAgency",
         "uriTemplate": "https://id.kb.se/marc/GovtAgencyType-{_}",
-        "matchUriToken": "^[acfilmosuz]$"
+        "matchUriToken": "^[acfilmosuz]$",
+        "fixedDefault": "|"
       },
       "[29]": {
         "aboutEntity": "?record",
