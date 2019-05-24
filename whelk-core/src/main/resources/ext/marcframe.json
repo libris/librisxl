@@ -16117,7 +16117,9 @@
         "aboutEntity": "?record",
         "link": "marc:personalName",
         "uriTemplate": "https://id.kb.se/marc/PersonalNameType-{_}",
-        "matchUriToken": "^[ab]$"
+        "matchUriToken": "^[ab]$",
+        "fixedDefault": "n",
+        "TODO": "automatic a for person?"
       },
       "[33]": {
         "aboutEntity": "?record",
@@ -16137,7 +16139,8 @@
       "[39]": {
         "aboutEntity": "?record",
         "link": "marc:catalogingSource",
-        "uriTemplate": "https://id.kb.se/marc/CatalogingSourceType-{_}"
+        "uriTemplate": "https://id.kb.se/marc/CatalogingSourceType-{_}",
+        "TODO": "default, token etc, with bib if useful"
       },
       "repeatable": false,
       "_spec": [
@@ -16170,7 +16173,7 @@
             {"008": "011206n| ac|nnaabn          fn ana      "}
           ],
           "normalized": [
-            {"008": "011206n| ac|nnaabn          fn a|a     |"}
+            {"008": "011206n| ac|nnaabn          fn ana     |"}
           ],
           "result": {
             "@type": "Record",
@@ -16181,7 +16184,6 @@
             "created": "2001-12-06T00:00:00.0+01:00",
             "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
             "marc:govtAgency" : {"@id" : "https://id.kb.se/marc/GovtAgencyType-f"},
-            "marc:personalName": {"code" : "n"},
             "mainEntity": { }
           },
           "addOnRevert": {
@@ -16191,10 +16193,10 @@
         {
           "name": "Topic - Hästar (71639)",
           "source": [
-            {"008": "020409 | azznnbabn          |n ana      "}
+            {"008": "020409 | a||nnbabn          |n ana      "}
           ],
           "normalized": [
-            {"008": "020409n| az|nnaabn          |n a|a     |"}
+            {"008": "020409n| az|nnaabn          |n ana     |"}
           ],
           "result": {
             "@type": "Record",
@@ -16203,8 +16205,6 @@
             "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2002-04-09T00:00:00.0+02:00",
-            "marc:personalName": {"code": "n"},
-            "marc:subjectHeading": {"code": "z"},
             "mainEntity": { }
           },
           "addOnRevert": {
