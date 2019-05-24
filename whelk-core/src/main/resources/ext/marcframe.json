@@ -16038,14 +16038,17 @@
         "addLink": "descriptionConventions",
         "NOTE:marc-repeatable": false,
         "uriTemplate": "https://id.kb.se/marc/CatalogingRulesType-{_}",
-        "matchUriToken": "^[_abcd]$"
+        "matchUriToken": "^[abcd]$",
+        "fixedDefault": "z",
+        "TODO": "Add n as default if subjects"
       },
       "[11]": {
         "aboutEntity": "?record",
         "link": "marc:subjectHeading",
         "uriTemplate": "https://id.kb.se/marc/SubjectHeadingType-{_}",
         "matchUriToken": "^[abcdkrsv]$",
-        "fixedDefault": "|"
+        "fixedDefault": "|",
+        "TODO": "Add z as default if subjects"
       },
       "[12]": {
         "aboutEntity": "?record",
@@ -16066,7 +16069,7 @@
         "property": "marc:headingMain",
         "tokenMap": {"a": true, "b": false},
         "fixedDefault": "a",
-        "TODO": "If subTypes of Concept make default b"
+        "TODO": "Add b as default if subject"
       },
       "[15]": {
         "aboutEntity": "?record",
@@ -16188,10 +16191,10 @@
         {
           "name": "Topic - Hästar (71639)",
           "source": [
-            {"008": "020409 | anznnbabn          |n ana      "}
+            {"008": "020409 | azznnbabn          |n ana      "}
           ],
           "normalized": [
-            {"008": "020409n| a||nnaabn          |n a|a     |"}
+            {"008": "020409n| az|nnaabn          |n a|a     |"}
           ],
           "result": {
             "@type": "Record",
@@ -16200,7 +16203,6 @@
             "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2002-04-09T00:00:00.0+02:00",
-            "descriptionConventions": [{"code": "n"}],
             "marc:personalName": {"code": "n"},
             "marc:subjectHeading": {"code": "z"},
             "mainEntity": { }
