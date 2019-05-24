@@ -16120,7 +16120,8 @@
         "aboutEntity": "?record",
         "link": "marc:level",
         "uriTemplate": "https://id.kb.se/marc/LevelType-{_}",
-        "matchUriToken": "^[abcd]$"
+        "matchUriToken": "^[abcd]$",
+        "fixedDefault": "a"
       },
       "[34:38]": null,
       "[38]": {
@@ -16142,7 +16143,7 @@
             {"008": "011206n| ac|nnaabn          |n aa       "}
           ],
           "normalized": [
-            {"008": "011206n| ac|nnaabn          |n aa|    ||"}
+            {"008": "011206n| ac|nnaabn          |n aaa    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -16176,7 +16177,6 @@
             "created": "2001-12-06T00:00:00.0+01:00",
             "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
             "marc:govtAgency" : {"@id" : "https://id.kb.se/marc/GovtAgencyType-f"},
-            "marc:level" : {"@id" : "https://id.kb.se/marc/LevelType-a"},
             "marc:personalName": {"code" : "n"},
             "mainEntity": { }
           },
@@ -16200,7 +16200,6 @@
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2002-04-09T00:00:00.0+02:00",
             "descriptionConventions": [{"code": "n"}],
-            "marc:level": {"@id": "https://id.kb.se/marc/LevelType-a"},
             "marc:personalName": {"code": "n"},
             "marc:subjectHeading": {"code": "z"},
             "mainEntity": { }
@@ -16225,7 +16224,6 @@
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2011-01-19T00:00:00.0+01:00",
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatalogingRulesType-c"}],
-            "marc:level": {"@id": "https://id.kb.se/marc/LevelType-a"},
             "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
             "marc:romanization": {"@id": "https://id.kb.se/marc/RomanizationType-b"},
             "marc:subjectSubdivision": {"@id": "https://id.kb.se/marc/SubjectSubdivisionType-a"},
