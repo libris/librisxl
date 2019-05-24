@@ -16212,10 +16212,10 @@
         {
           "name": "Work - Antikrists mirakler (340686)",
           "source": [
-            {"008": "110119nb ac|nnaaba           n aaa      "}
+            {"008": "110119nb ac|nnaabn           n aaa      "}
           ],
           "normalized": [
-            {"008": "110119nb ac|nnaaba          |n aaa     |"}
+            {"008": "110119nb ac|nnaabn          |n aaa     |"}
           ],
           "result": {
             "@type": "Record",
@@ -16227,7 +16227,6 @@
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatalogingRulesType-c"}],
             "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
             "marc:romanization": {"@id": "https://id.kb.se/marc/RomanizationType-b"},
-            "marc:subjectSubdivision": {"@id": "https://id.kb.se/marc/SubjectSubdivisionType-a"},
             "mainEntity": { }
           },
           "addOnRevert": {
