@@ -16128,7 +16128,8 @@
         "aboutEntity": "?record",
         "link": "marc:modifiedRecord",
         "uriTemplate": "https://id.kb.se/marc/ModifiedRecordType-{_}",
-        "matchUriToken": "^[sx]$"
+        "matchUriToken": "^[sx]$",
+        "fixedDefault": " "
       },
       "[39]": {
         "aboutEntity": "?record",
@@ -16143,7 +16144,7 @@
             {"008": "011206n| ac|nnaabn          |n aa       "}
           ],
           "normalized": [
-            {"008": "011206n| ac|nnaabn          |n aaa    ||"}
+            {"008": "011206n| ac|nnaabn          |n aaa     |"}
           ],
           "result": {
             "@type": "Record",
@@ -16166,7 +16167,7 @@
             {"008": "011206n| ac|nnaabn          fn ana      "}
           ],
           "normalized": [
-            {"008": "011206n| ac|nnaabn          fn a|a    ||"}
+            {"008": "011206n| ac|nnaabn          fn a|a     |"}
           ],
           "result": {
             "@type": "Record",
@@ -16190,7 +16191,7 @@
             {"008": "020409 | anznnbabn          |n ana      "}
           ],
           "normalized": [
-            {"008": "020409n| a||nnaabn          |n a|a    ||"}
+            {"008": "020409n| a||nnaabn          |n a|a     |"}
           ],
           "result": {
             "@type": "Record",
@@ -16214,7 +16215,7 @@
             {"008": "110119nb ac|nnaaba           n aaa      "}
           ],
           "normalized": [
-            {"008": "110119nb ac|nnaaba          |n aaa    ||"}
+            {"008": "110119nb ac|nnaaba          |n aaa     |"}
           ],
           "result": {
             "@type": "Record",
