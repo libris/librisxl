@@ -16099,7 +16099,8 @@
         "aboutEntity": "?record",
         "link": "marc:reference",
         "uriTemplate": "https://id.kb.se/marc/ReferenceType-{_}",
-        "matchUriToken": "^[ab]$"
+        "matchUriToken": "^[ab]$",
+        "fixedDefault": "n"
       },
       "[30]": null,
       "[31]": {
@@ -16140,7 +16141,7 @@
             {"008": "011206n| ac|nnaabn          |n aa       "}
           ],
           "normalized": [
-            {"008": "011206n| ac|nnaabn          || aa|    ||"}
+            {"008": "011206n| ac|nnaabn          |n aa|    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -16152,7 +16153,6 @@
             "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
             "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
             "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
-            "marc:reference": {"code": "n"},
             "mainEntity": { }
           },
           "addOnRevert": {
@@ -16165,7 +16165,7 @@
             {"008": "011206n| ac|nnaabn          fn ana      "}
           ],
           "normalized": [
-            {"008": "011206n| ac|nnaabn          f| a|a    ||"}
+            {"008": "011206n| ac|nnaabn          fn a|a    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -16179,7 +16179,6 @@
             "marc:level" : {"@id" : "https://id.kb.se/marc/LevelType-a"},
             "marc:personalName": {"code" : "n"},
             "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
-            "marc:reference": {"code": "n"},
             "mainEntity": { }
           },
           "addOnRevert": {
@@ -16192,7 +16191,7 @@
             {"008": "020409 | anznnbabn          |n ana      "}
           ],
           "normalized": [
-            {"008": "020409n| a||nnaabn          || a|a    ||"}
+            {"008": "020409n| a||nnaabn          |n a|a    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -16205,7 +16204,6 @@
             "marc:level": {"@id": "https://id.kb.se/marc/LevelType-a"},
             "marc:personalName": {"code": "n"},
             "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
-            "marc:reference": {"code": "n"},
             "marc:subjectHeading": {"code": "z"},
             "mainEntity": { }
           },
@@ -16219,7 +16217,7 @@
             {"008": "110119nb ac|nnaaba           n aaa      "}
           ],
           "normalized": [
-            {"008": "110119nb ac|nnaaba          || aaa    ||"}
+            {"008": "110119nb ac|nnaaba          |n aaa    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -16232,7 +16230,6 @@
             "marc:level": {"@id": "https://id.kb.se/marc/LevelType-a"},
             "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
             "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
-            "marc:reference": {"code": "n"},
             "marc:romanization": {"@id": "https://id.kb.se/marc/RomanizationType-b"},
             "marc:subjectSubdivision": {"@id": "https://id.kb.se/marc/SubjectSubdivisionType-a"},
             "mainEntity": { }
