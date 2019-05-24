@@ -16107,7 +16107,8 @@
         "aboutEntity": "?record",
         "link": "marc:recordUpdate",
         "uriTemplate": "https://id.kb.se/marc/RecordUpdateType-{_}",
-        "matchUriToken": "^[ab]$"
+        "matchUriToken": "^[ab]$",
+        "fixedDefault": "a"
       },
       "[32]": {
         "aboutEntity": "?record",
@@ -16152,7 +16153,6 @@
             "created": "2001-12-06T00:00:00.0+01:00",
             "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
             "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
-            "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
             "mainEntity": { }
           },
           "addOnRevert": {
@@ -16178,7 +16178,6 @@
             "marc:govtAgency" : {"@id" : "https://id.kb.se/marc/GovtAgencyType-f"},
             "marc:level" : {"@id" : "https://id.kb.se/marc/LevelType-a"},
             "marc:personalName": {"code" : "n"},
-            "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
             "mainEntity": { }
           },
           "addOnRevert": {
@@ -16203,7 +16202,6 @@
             "descriptionConventions": [{"code": "n"}],
             "marc:level": {"@id": "https://id.kb.se/marc/LevelType-a"},
             "marc:personalName": {"code": "n"},
-            "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
             "marc:subjectHeading": {"code": "z"},
             "mainEntity": { }
           },
@@ -16229,7 +16227,6 @@
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatalogingRulesType-c"}],
             "marc:level": {"@id": "https://id.kb.se/marc/LevelType-a"},
             "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
-            "marc:recordUpdate": {"@id": "https://id.kb.se/marc/RecordUpdateType-a"},
             "marc:romanization": {"@id": "https://id.kb.se/marc/RomanizationType-b"},
             "marc:subjectSubdivision": {"@id": "https://id.kb.se/marc/SubjectSubdivisionType-a"},
             "mainEntity": { }
