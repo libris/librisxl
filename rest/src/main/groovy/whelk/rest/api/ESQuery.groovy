@@ -105,17 +105,35 @@ class ESQuery {
         List boostedFields = getBoostFields(originalTypeParam, boostMode)
 
         if (boostedFields) {
-            Map boostedQuery = [
+            def softFields = boostedFields.findAll {
+                it.contains(JsonLd.SEARCH_KEY)
+            }
+            def exactFields = boostedFields.findResults {
+                it.replace(JsonLd.SEARCH_KEY, "${JsonLd.SEARCH_KEY}.exact")
+            }
+
+            Map boostedExact = [
                 'simple_query_string': [
                     'query': q,
                     'default_operator':  'AND',
-                    'fields': boostedFields,
-                    //'flags': 'OR|AND|NOT|PHRASE|PREFIX|PRECEDENCE|ESCAPE|WHITESPACE',
+                    'fields': exactFields
+                ]
+            ]
+
+            Map boostedSoft = [
+                'simple_query_string': [
+                    'query': q,
+                    'default_operator':  'AND',
+                    'fields': softFields,
                     'quote_field_suffix': ".exact"
                 ]
             ]
             queryParam = [
-                'bool': ['should': [boostedQuery, simpleQuery]]
+                'bool': ['should': [
+                    boostedExact,
+                    boostedSoft,
+                    simpleQuery
+                ]]
             ]
         }
 
