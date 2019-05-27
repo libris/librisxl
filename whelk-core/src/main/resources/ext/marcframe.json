@@ -502,8 +502,9 @@
     },
 
     "hasPartMeeting": {
-      "include": ["hasPartDataSansLabelledRole", "agentdataMeeting"],
+      "include": ["hasPartDataSansLabelledRole"],
       "pendingResources": {
+        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
         "_:agent": {
           "about": "_:contribution",
           "link": "agent",
@@ -586,7 +587,8 @@
           "link": "agent",
           "resourceType": "Meeting",
           "required": true
-        }
+        },
+        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"}
       }
     },
 
@@ -984,6 +986,13 @@
       }
     },
 
+    "subjectMeeting": {
+      "addLink": "subject",
+      "pendingResources": {
+        "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Meeting", "required": true}
+      }
+    },
+
     "agentdataFamily": {
       "include": "agentdataPersonFamily",
       "$a": {"about": "_:agent", "property": "name", "required": true, "punctuationChars": ")"}
@@ -1045,11 +1054,20 @@
       "TODO::include": "contributionRole_4_e? e and 4. Also for Family och Person. Uses require aboutAlias: _:contribution"
     },
 
+    "meetingContainingPartOf": {
+      "include": "meetingCollectiveDetails",
+      "$a": {"about": "_:isPartOf", "property": "name", "required": true},
+      "$e": {"about": "_:agent", "addProperty": "name", "required": true}
+    },
+
     "agentdataMeeting": {
+      "include": "meetingCollectiveDetails",
+      "$a": { "about": "_:agent", "property": "name", "required": true}
+    },
+
+    "meetingCollectiveDetails": {
       "NOTE": "Used by: Bib 111, 611, 711, 811, Auth 111, 411, 511",
       "include": "agentdataCollectiveDetails",
-      "$a": {"about": "_:agent", "property": "name", "required": true},
-      "$e": {"about":"_:agent", "addProperty": "marc:subordinateUnit"},
       "$g": {"about": "_:agent", "addProperty": "comment"},
       "$q": {"about":"_:agent", "property": "additionalName"},
       "$u": {"about": "_:agent", "property": "marc:affiliation"}
@@ -6258,8 +6276,15 @@
       "include": ["agentdataMeeting", "contributionRole_4_j"],
       "pendingResources": {
         "_:agent": {"link": "agent", "resourceType": "Meeting", "required": true},
-        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"},
+        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"}
       },
+      "match": [
+        {
+          "when": "$e",
+          "include": ["meetingContainingPartOf", "contributionRole_4_j"]
+        }
+      ],
       "i1": {"marcDefault": "2"},
       "$0": {"about": "_:agent", "addProperty": "marc:uri"},
       "$n": {"about": "_:agent", "addProperty": "marc:numeration", "punctuationChars": ","},
@@ -6327,13 +6352,16 @@
                   "agent": {
                     "@type": "Meeting",
                     "date": ["1959"],
-                    "name": "World Peace Conference",
+                    "name" : [ "Delegation from Sweden" ],
+                    "isPartOf": {
+                      "@type": "Meeting",
+                      "name": "World Peace Conference"
+                    },
                     "marc:numeration": ["1st"],
                     "place" : [{
                       "@type" : "Place",
                       "label" : "Paris, France"
-                    }],
-                    "marc:subordinateUnit" : [ "Delegation from Sweden" ]}
+                    }]}
                 }]
             }
           }}
@@ -6360,22 +6388,24 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "contribution": [
-                {
-                  "@type": "PrimaryContribution",
-                  "agent": {
+              "contribution": [{
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Meeting",
+                  "date": ["1981"],
+                  "isPartOf": {
                     "@type": "Meeting",
-                    "date": ["1981"],
-                    "name": "Conference on Occupational Health Issues Affecting Secretarial and Clerical Personnel",
-                    "marc:subordinateUnit": ["2nd"],
-                    "place" : [{
-                      "@type" : "Place",
-                      "label" : "Cincinatti, Ohio"
-                    }]},
-                  "role": [
-                    {"@type": "Role", "label": "author"},
-                    {"@type": "Role", "@id" : "https://id.kb.se/relator/aut", "code": "aut"}]
-                }]
+                    "name": "Conference on Occupational Health Issues Affecting Secretarial and Clerical Personnel"
+                  },
+                  "name": ["2nd"],
+                  "place" : [{
+                    "@type" : "Place",
+                    "label" : "Cincinatti, Ohio"
+                  }]},
+                "role": [
+                  {"@type": "Role", "label": "author"},
+                  {"@type": "Role", "@id" : "https://id.kb.se/relator/aut", "code": "aut"}]
+              }]
             }
           }}
         }
@@ -11238,37 +11268,39 @@
       "i1": {"marcDefault": "2"},
       "addLink": "subject",
       "resourceType": "Identity",
+      "pendingResources": {
+        "_:agent": {
+          "addLink": "termComponentList",
+          "resourceType": "Meeting",
+          "itemPos": "first",
+          "absorbSingle": true,
+          "required": true
+        },
+        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"},
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+      },
       "match": [
         {
+          "when": "$e & $t",
+          "include": ["meetingContainingPartOf", "worksubjectSansPartNumber", "subjectMeeting", "agentpartnumber"]
+        },
+        {
           "when": "$t",
-          "include": ["agentdataMeeting", "subjectbase", "titledetailsSansPartNumber", "agentpartnumber"],
-          "pendingResources": {
-            "_:work": {
-              "addLink": "termComponentList",
-              "resourceType": "Work",
-              "itemPos": "first",
-              "absorbSingle": true,
-              "required": true
-            },
-            "_:title": {
-              "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
-              "embedded": true
-            },
-            "_:contribution": {"about": "_:work", "addLink": "contribution", "resourceType": "Contribution"},
-            "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Meeting", "required": true},
-            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-          },
-          "$t": {"about": "_:title", "property": "mainTitle"}
+          "include": ["agentdataMeeting", "worksubjectSansPartNumber", "subjectMeeting", "agentpartnumber"]
+        },
+        {
+          "when": "$e",
+          "include": ["meetingContainingPartOf", "subjectbase"],
+          "resourceType": "Meeting",
+          "aboutAlias": "_:agent",
+          "$n": {"addProperty": "marc:numeration", "punctuationChars": ","}
         },
         {
           "when": null,
           "include": ["agentdataMeeting", "subjectbase"],
           "resourceType": "Meeting",
           "aboutAlias": "_:agent",
-          "$n": {"addProperty": "marc:numeration", "punctuationChars": ","},
-          "pendingResources": {
-            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
-          }
+          "$n": {"addProperty": "marc:numeration", "punctuationChars": ","}
         }
       ],
       "$6": {"property": "marc:fieldref"},
@@ -11308,6 +11340,68 @@
                   }
                 }
               ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "611": {"ind1": "2", "ind2": "4", "subfields":[
+              {"a": "Exposition universelle"},
+              {"d": "1900"},
+              {"c": "Paris"},
+              {"e": "Österrike-Ungern"}
+            ]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [{
+                "@type": "Meeting",
+                "date": ["1900"],
+                "isPartOf": {
+                  "@type": "Meeting",
+                  "name": "Exposition universelle"
+                },
+                "name": ["Österrike-Ungern"],
+                "place": [{
+                  "@type": "Place",
+                  "label": "Paris"
+                }]
+              }]
+            }
+          }}
+        },
+        {
+          "source": {
+            "611": {"ind1": "2", "ind2": "4", "subfields":[
+              {"a": "Westminster Assembly"},
+              {"d": "1643-1652"},
+              {"e": "Dissenting Brethren."},
+              {"t": "Copy of a remonstrance lately delivered in to the Assembly."}
+            ]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [{
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "Contribution",
+                  "agent": {
+                    "@type": "Meeting",
+                    "date": ["1643-1652"],
+                    "isPartOf": {
+                      "@type": "Meeting",
+                      "name": "Westminster Assembly"
+                    },
+                    "name": ["Dissenting Brethren."]
+                  }
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Copy of a remonstrance lately delivered in to the Assembly."
+                }]
+              }]
             }
           }}
         },
@@ -13831,12 +13925,38 @@
       },
       "match": [
         {
+          "when": "$e & $t & i1=2 & i2=2",
+          "include": ["hasPartMeeting", "meetingContainingPartOf", "titledetailsSansPartNumber", "agentpartnumber", "contributionRole_4_j"],
+          "pendingResources": {
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"}
+          }
+        },
+        {
           "when": "$t & i1=2 & i2=2",
-          "include": ["hasPartMeeting", "titledetailsSansPartNumber", "agentpartnumber", "contributionRole_4_j"]
+          "include": ["hasPartMeeting", "agentdataMeeting", "titledetailsSansPartNumber", "agentpartnumber", "contributionRole_4_j"]
+        },
+        {
+          "when": "$e & $t & i2=2",
+          "include": ["hasPartMeeting", "meetingContainingPartOf", "titledetailsSansPartNumber", "agentpartnumber", "contributionRole_4_j"]
         },
         {
           "when": "$t & i2=2",
           "include": ["hasPartMeeting", "titledetailsSansPartNumber", "agentpartnumber", "contributionRole_4_j"]
+        },
+        {
+          "when": "$e & $t",
+          "include": ["relationshipDataSansLabelledRole", "meetingContainingPartOf", "titledetailsSansPartNumber", "agentpartnumber"],
+          "pendingResources": {
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"},
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Meeting",
+              "required": true
+            },
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          },
+          "$j": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"}
         },
         {
           "when": "$t",
@@ -13851,6 +13971,18 @@
             "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
           },
           "$j": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"}
+        },
+        {
+          "when": "$e",
+          "include": ["meetingContainingPartOf", "agentdetails", "contributionRole_4_j"],
+          "addLink": "contribution",
+          "resourceType": "Contribution",
+          "aboutAlias": "_:contribution",
+          "pendingResources": {
+            "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"},
+            "_:agent": {"link": "agent", "resourceType": "Meeting", "required": true},
+            "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+          }
         },
         {
           "when": null,
@@ -13882,8 +14014,11 @@
                   "@type": "Contribution",
                   "agent": {
                     "@type": "Meeting",
-                    "name": "Mostly Mozart Festival.",
-                    "marc:subordinateUnit": ["Orchestra."]}
+                    "isPartOf": {
+                      "@type": "Meeting",
+                      "name": "Mostly Mozart Festival."
+                    },
+                    "name": ["Orchestra."]}
                 }]
             }
           }}
@@ -13908,14 +14043,17 @@
                   "@type": "Contribution",
                   "agent": {
                     "@type": "Meeting",
-                    "name": "Olympic Games.",
+                    "name": ["Organizing Committee." , "Arts and Culture Program." ,  "Visual Arts Section."],
+                    "isPartOf": {
+                      "@type": "Meeting",
+                      "name": "Olympic Games."
+                    },
                     "place": [{
                       "@type": "Place",
                       "label": "Montréal, Québec)."
                     }],
                     "marc:numeration": ["21st :"],
-                    "date": ["1976:"],
-                    "marc:subordinateUnit": ["Organizing Committee." , "Arts and Culture Program." ,  "Visual Arts Section."]
+                    "date": ["1976:"]
                   },
                   "role": [{
                     "@type": "Role",
@@ -14011,6 +14149,47 @@
                   }
                 }
               ]
+            }
+          }}
+        },
+        {
+          "source": {
+            "711": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Conference on Security and Co-operation in Europe"},
+              {"d": "1992"},
+              {"c": "Helsingfors"},
+              {"e": "Summit"},
+              {"t": "The challenges of change"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relationship": [{
+                "@type": "Relationship",
+                "entity": {
+                  "@type": "Work",
+                  "contribution": [{
+                    "@type": "PrimaryContribution",
+                    "agent": {
+                      "@type": "Meeting",
+                      "date": ["1992"],
+                      "isPartOf": {
+                        "@type": "Meeting",
+                        "name": "Conference on Security and Co-operation in Europe"
+                      },
+                      "name": ["Summit"],
+                      "place": [{
+                        "@type": "Place",
+                        "label": "Helsingfors"
+                      }]
+                    }
+                  }],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "The challenges of change"
+                  }]
+                }
+              }]
             }
           }}
         }
@@ -16997,6 +17176,29 @@
     "111" : {
       "match": [
         {
+          "when": "$e & $t",
+          "include": ["meetingContainingPartOf", "titledetails"],
+          "aboutType": "Work",
+          "aboutAlias": "_:work",
+          "$t": {"property": "title"},
+          "pendingResources": {
+            "_:contribution": {
+              "addLink": "contribution",
+              "resourceType": "PrimaryContribution",
+              "embedded": true
+            },
+            "_:title": {
+              "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+              "embedded": true
+            },
+            "_:agent": {
+              "about": "_:contribution",
+              "link": "agent",
+              "resourceType": "Meeting"
+            }
+          }
+        },
+        {
           "when": "$t",
           "include": ["agentdataMeeting", "titledetails"],
           "aboutType": "Work",
@@ -17020,6 +17222,15 @@
           }
         },
         {
+          "when": "$e",
+          "aboutEntity": "?thing",
+          "aboutType": "Meeting",
+          "pendingResources": {"_:agent": {"link": "agent", "resourceType": "Meeting"}},
+          "aboutAlias": "_:agent",
+          "include": "meetingContainingPartOf",
+          "$n": {"addProperty": "marc:numeration", "punctuationChars": ","}
+        },
+        {
           "when": null,
           "aboutEntity": "?thing",
           "aboutType": "Meeting",
@@ -17030,7 +17241,8 @@
         }
       ],
       "pendingResources": {
-        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+        "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"},
+        "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"}
       },
       "i1": {"marcDefault": "2"},
       "subfieldOrder": "a q n d c g e j 4 t p l k f  v x y z",
@@ -17053,6 +17265,53 @@
               "date":  ["1950-"]
             }
           }
+        },
+        {
+          "source": {
+            "111": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "World Peace Conference"},
+              {"e": "Delegation from Sweden"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Meeting",
+              "isPartOf": {
+                "@type": "Meeting",
+                "name": "World Peace Conference"
+              },
+              "name": ["Delegation from Sweden"]
+            }
+          }
+        },
+        {
+          "source": {
+            "111": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Conference on Security and Co-operation in Europe"},
+              {"d": "1992"},
+              {"c": "Helsingfors"},
+              {"e": "Summit"},
+              {"t": "The challenges of change"}
+            ]}},
+          "result": {"mainEntity": {
+            "@type": "Work",
+            "contribution": [{
+              "@type": "PrimaryContribution",
+              "agent": {
+                "@type": "Meeting",
+                "date": ["1992"],
+                "isPartOf": {
+                  "@type": "Meeting",
+                  "name": "Conference on Security and Co-operation in Europe"
+                },
+                "name": ["Summit"],
+                "place": [{
+                  "@type": "Place",
+                  "label": "Helsingfors"
+                }]
+              }
+            }],
+            "title": "The challenges of change"
+          }}
         }
       ]
     },
@@ -18021,13 +18280,20 @@
     },
     "411": {
       "i1": {"marcDefault": "2"},
-      "TODO:isPartOf": "marc:subordinateUnit",
       "TODO:role": "Add e and 4 when no work",
       "subfieldOrder": "w i a n d c e g j 4 t n s l k f v x y z",
       "match": [
         {
+          "when": "$e & $t",
+          "include": ["variantWorkWithMeeting", "meetingContainingPartOf", "titledetails", "contributionRole_4_j"]
+        },
+        {
           "when": "$t",
           "include": ["variantWorkWithMeeting", "agentdataMeeting", "titledetails", "contributionRole_4_j"]
+        },
+        {
+          "when": "$e",
+          "include": ["variantMeeting", "meetingContainingPartOf", "agentpartnumber"]
         },
         {
           "when": null,
@@ -18079,16 +18345,19 @@
           "result": {
             "mainEntity": {
               "@type": "Identity",
-              "hasVariant": [ {
+              "hasVariant": [{
                 "@type": "Meeting",
-                "name": "International Population Conference",
+                "isPartOf": {
+                  "@type": "Meeting",
+                  "name": "International Population Conference"
+                },
                 "date": ["(1959 :"],
-                "marc:subordinateUnit": ["Arbeitsausschuss des Kongresses"],
+                "name": ["Arbeitsausschuss des Kongresses"],
                 "place": [{
                   "@type": "Place",
                   "label": "Vienna, Austria)."
                 }]
-              } ]
+              }]
             }
           }
         }
@@ -18897,20 +19166,26 @@
     },
     "511": {
       "i1": {"marcDefault": "2"},
-      "TODO:isPartOf": "marc:subordinateUnit",
+      "pendingResources": {
+        "_:contribution": {
+          "about": "_:work",
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution",
+          "embedded": true
+        }
+      },
       "match": [
         {
+          "when": "$e & $t",
+          "include": ["hasRelatedToMeeting", "meetingContainingPartOf", "titledetails", "contributionRole_4_j"]
+        },
+        {
           "when": "$t",
-          "include": ["hasRelatedToMeeting", "agentdataMeeting", "titledetails", "contributionRole_4"],
-          "pendingResources": {
-            "_:contribution": {
-              "about": "_:work",
-              "addLink": "contribution",
-              "resourceType": "PrimaryContribution",
-              "embedded": true
-            }
-          },
-          "$j": {"about": "_:contribution", "addLink": "role", "property": "label"}
+          "include": ["hasRelatedToMeeting", "agentdataMeeting", "titledetails", "contributionRole_4_j"]
+        },
+        {
+          "when": "$e",
+          "include": ["seeAlsoMeeting", "meetingContainingPartOf", "agentpartnumber"]
         },
         {
           "when": null,
@@ -18974,6 +19249,33 @@
                 "marc:relatedAs": [{
                   "@type": "Relation",
                   "label": "En relationsbeskrivning"
+                }]
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "511": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "International Population Conference"},
+              {"d": "(1959 :"},
+              {"c": "Vienna, Austria)."},
+              {"e": "Arbeitsausschuss des Kongresses"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "seeAlso": [{
+                "@type": "Meeting",
+                "date": ["(1959 :"],
+                "isPartOf": {
+                  "@type": "Meeting",
+                  "name": "International Population Conference"
+                },
+                "name": ["Arbeitsausschuss des Kongresses"],
+                "place": [{
+                  "@type": "Place",
+                  "label": "Vienna, Austria)."
                 }]
               }]
             }
