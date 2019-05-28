@@ -10,20 +10,25 @@ import whelk.JsonLd
  */
 class ESQueryLensBoost {
 
+    static int CHIP_BOOST = 200
+    static int STR_BOOST = 100
+    static int CARD_BOOST = 10
+
     JsonLd jsonld
 
     ESQueryLensBoost(JsonLd jsonld) {
         this.jsonld = jsonld
     }
 
+    def getChipsLenses() { jsonld.displayData.lensGroups?.chips }
+
+    def getCardsLenses() { jsonld.displayData.lensGroups?.cards }
+
     List<String> computeBoostFieldsFromLenses(String[] types) {
         def boostFields = []
         def seenKeys = [] as Set
 
-        def chipsLenses = jsonld.displayData.lensGroups?.chips
-        def cardsLenses = jsonld.displayData.lensGroups?.cards
-
-        boostFields += [ "$JsonLd.SEARCH_KEY^100" as String ]
+        boostFields += [ "$JsonLd.SEARCH_KEY^$STR_BOOST" as String ]
 
         def baseTypes = ['Identity', 'Instance', 'Item']
 
@@ -32,8 +37,7 @@ class ESQueryLensBoost {
                 chipsLenses, types, baseTypes, seenKeys)
 
         boostFields += selectedChipsLenses.sum { lens ->
-            int boost = 200
-            collectBoostFields(lens, boost, seenKeys)
+            collectBoostFields(lens, CHIP_BOOST, seenKeys)
         }
 
         // Compute boost for "card" properties.
@@ -41,53 +45,35 @@ class ESQueryLensBoost {
                 cardsLenses, types, baseTypes, seenKeys)
 
         boostFields += selectedCardsLenses.sum { lens ->
-            int boost = 10
             lens.showProperties.findResults {
-                if (!(it instanceof String)) {
-                    return
+                if (it instanceof String) {
+                    return computeCardPropertyBoosts(it, seenKeys)
                 }
-                String key = it
-                def termType = jsonld.vocabIndex.get(it)?.get(JsonLd.TYPE_KEY)
-
-                // Follow the object property range to append chip properties
-                // to the boosted path.
-                if (termType == 'ObjectProperty') {
-                    def dfn = jsonld.vocabIndex[key]
-
-                    def rangeType = dfn.range ? dfn.range[0] : null
-                    def rangeKey = rangeType ? jsonld.toTermKey(rangeType[JsonLd.ID_KEY]) : null
-                    if (rangeKey &&
-                        jsonld.isSubClassOf(rangeKey, 'QualifiedRole')) {
-                        def chipLens = jsonld.getLensFor([(JsonLd.TYPE_KEY): rangeKey], chipsLenses)
-                        return collectBoostFields(chipLens, boost, seenKeys).collect {
-                            "${key}.$it" as String
-                        }
-                    } else {
-                        key = "${key}.${JsonLd.SEARCH_KEY}"
-                    }
-                } else if (jsonld.isLangContainer(jsonld.context[it])) {
-                    key = "${key}.${jsonld.locales[0]}"
-                }
-
-                if (key in seenKeys) {
-                    return
-                }
-                seenKeys << key
-
-                return "${key}^$boost" as String
             }.flatten()
         }
 
         return boostFields.unique()
     }
 
-    List<String> collectBoostFields(lens, boost, seenKeys) {
+    private List<Map> selectLenses(lenses, types, baseTypes, seenKeys) {
+        if (types) {
+            return types.collect {
+                jsonld.getLensFor([(JsonLd.TYPE_KEY): it], lenses)
+            }
+        } else {
+            return lenses?.lenses.values().findAll { lens ->
+                baseTypes.any { jsonld.isSubClassOf(lens.classLensDomain, it) }
+            }
+        }
+    }
+
+    private List<String> collectBoostFields(Map lens, int boost, Set seenKeys) {
         lens.showProperties.findResults {
             if (!(it instanceof String)) {
                 return
             }
             String key = it
-            def termType = jsonld.vocabIndex.get(it)?.get(JsonLd.TYPE_KEY)
+            String termType = jsonld.vocabIndex.get(it)?.get(JsonLd.TYPE_KEY)
             if (termType == 'ObjectProperty') {
                 key = "${key}.${JsonLd.SEARCH_KEY}"
             } else if (jsonld.isLangContainer(jsonld.context[it])) {
@@ -106,16 +92,36 @@ class ESQueryLensBoost {
         }
     }
 
-    private List<Map> selectLenses(lenses, types, baseTypes, seenKeys) {
-        if (types) {
-            return types.collect {
-                jsonld.getLensFor([(JsonLd.TYPE_KEY): it], lenses)
+    private List<String> computeCardPropertyBoosts(String prop, seenKeys) {
+        String key = prop
+        Map dfn = jsonld.vocabIndex[prop]
+
+        // Follow the object property range to append chip properties to the
+        // boosted path.
+        if (dfn && dfn[JsonLd.TYPE_KEY] == 'ObjectProperty') {
+            Map rangeType = dfn.range instanceof List ? dfn.range[0] : dfn.range
+            String rangeKey =
+                rangeType ? jsonld.toTermKey(rangeType[JsonLd.ID_KEY]) : null
+            if (rangeKey && jsonld.isSubClassOf(rangeKey, 'QualifiedRole')) {
+                def obj = [(JsonLd.TYPE_KEY): rangeKey]
+                def rangeChipLens = jsonld.getLensFor(obj, chipsLenses)
+                def rangeChipFields = collectBoostFields(
+                        rangeChipLens, CARD_BOOST, seenKeys)
+
+                return rangeChipFields.collect { "${key}.$it" as String }
+            } else {
+                key = "${key}.${JsonLd.SEARCH_KEY}"
             }
-        } else {
-            return lenses?.lenses.values().findAll { lens ->
-                baseTypes.any { jsonld.isSubClassOf(lens.classLensDomain, it) }
-            }
+        } else if (jsonld.isLangContainer(jsonld.context[prop])) {
+            key = "${key}.${jsonld.locales[0]}"
         }
+
+        if (key in seenKeys) {
+            return []
+        }
+        seenKeys << key
+
+        return [ "${key}^$CARD_BOOST" as String ]
     }
 
 }

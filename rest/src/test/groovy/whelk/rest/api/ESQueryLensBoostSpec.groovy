@@ -9,9 +9,11 @@ class ESQueryLensBoostSpec extends Specification {
 
     def "should compute boost fields from lenses"() {
         given:
+        def ns = 'http://example.org/ns/'
+
         def context = [
             '@context': [
-                '@vocab': 'http://example.org/ns/'
+                '@vocab': ns
             ]
         ]
 
@@ -20,9 +22,11 @@ class ESQueryLensBoostSpec extends Specification {
                 "chips": [
                     "lenses": [
                         "Instance": [
+                            "classLensDomain": "Instance",
                             "showProperties": ["hasTitle", "comment"]
                         ],
                         "Publication": [
+                            "classLensDomain": "Publication",
                             "showProperties": ["agent"]
                         ]
                     ]
@@ -30,6 +34,7 @@ class ESQueryLensBoostSpec extends Specification {
                 "cards": [
                     "lenses": [
                         "Instance": [
+                            "classLensDomain": "Instance",
                             "showProperties": ["hasTitle", "publication"]
                         ]
                     ]
@@ -39,19 +44,17 @@ class ESQueryLensBoostSpec extends Specification {
 
         def vocab = [
             "@graph": [
-                ["@id": "http://example.org/ns/Publication",
-                 "subClassOf": ["@id": "http://example.org/ns/QualifiedRole"]],
-                ["@id": "http://example.org/ns/Title",
-                 "subClassOf": ["@id": "http://example.org/ns/StructuredValue"]],
-                ["@id": "http://example.org/ns/hasTitle",
-                 "@type": "ObjectProperty",
-                 "range": ["@id": "http://example.org/ns/Title"]],
-                ["@id": "http://example.org/ns/publication",
-                 "@type": "ObjectProperty",
-                 "range": ["@id": "http://example.org/ns/Publication"]],
-                ["@id": "http://example.org/ns/agent",
-                 "@type": "ObjectProperty",
-                 "range": ["@id": "http://example.org/ns/Agent"]],
+                ["@id": "${ns}QualifiedRole", "@type": "Class"],
+                ["@id": "${ns}Publication", "@type": "Class",
+                 "subClassOf": ["@id": "${ns}QualifiedRole"]],
+                ["@id": "${ns}Title", "@type": "Class",
+                 "subClassOf": ["@id": "${ns}StructuredValue"]],
+                ["@id": "${ns}hasTitle", "@type": "ObjectProperty",
+                 "range": [["@id": "${ns}Title"]]],
+                ["@id": "${ns}publication", "@type": "ObjectProperty",
+                 "range": [["@id": "${ns}Publication"]]],
+                ["@id": "${ns}agent", "@type": "ObjectProperty",
+                 "range": [["@id": "${ns}Agent"]]],
             ]
         ]
 
@@ -62,7 +65,7 @@ class ESQueryLensBoostSpec extends Specification {
         def boostFields = lensBoost.computeBoostFieldsFromLenses(["Instance"] as String[])
 
         then:
-        boostFields == ['_str^100', 'hasTitle._str^200', 'comment^200', 'publication._str^10']
+        boostFields == ['_str^100', 'hasTitle._str^200', 'comment^200', 'publication.agent._str^10']
     }
 
 }

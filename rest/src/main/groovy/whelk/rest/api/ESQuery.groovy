@@ -100,7 +100,7 @@ class ESQuery {
             ]
         ]
 
-        Map queryParam = simpleQuery
+        Map queryClauses = simpleQuery
 
         String[] boostParam = queryParameters.get('_boost')
         String boostMode = boostParam ? boostParam[0] : null
@@ -131,7 +131,7 @@ class ESQuery {
                 ]
             ]
 
-            queryParam = [
+            queryClauses = [
                 'bool': ['should': [
                     boostedExact,
                     boostedSoft,
@@ -144,7 +144,7 @@ class ESQuery {
             'query': [
                 'bool': [
                     'must': [
-                        queryParam
+                        queryClauses
                     ]
                 ]
             ]
@@ -184,11 +184,11 @@ class ESQuery {
 
         String typeKey = types != null ? types.toUnique().sort().join(',') : ''
         typeKey += boostMode
+
         List<String> boostFields = boostFieldsByType[typeKey]
         if (boostFields == null) {
-            boostFields = boostFieldsByType[typeKey] =
-                boostMode == 'hardcoded'
-                ? [
+            if (boostMode == 'hardcoded') {
+                boostFields = [
                     'prefLabel^100',
                     'code^100',
                     'name^100',
@@ -197,8 +197,12 @@ class ESQuery {
                     'hasTitle.mainTitle^100', 'title^100',
                     'heldBy.sigel^100',
                 ]
-                : lensBoost.computeBoostFieldsFromLenses(types)
+            } else {
+                boostFields = lensBoost.computeBoostFieldsFromLenses(types)
+            }
+            boostFieldsByType[typeKey] = boostFields
         }
+
         return boostFields
     }
 
