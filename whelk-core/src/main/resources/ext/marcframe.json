@@ -5097,16 +5097,11 @@
     "042": {
       "aboutEntity": "?record",
       "TODO": "addLink isPartOfBibliography?",
-      "pendingResources": {
-        "_:bibliography": {
-          "addLink": "bibliography",
-          "resourceType": "Library"
-        }
-      },
       "$a": {"addLink": "descriptionAuthentication", "resourceType": "DescriptionAuthentication", "property": "code"},
       "$9": {
-        "about": "_:bibliography",
-        "uriTemplate": "https://libris.kb.se/library/{_}",
+        "addLink": "bibliography",
+        "TODO:whenLinkable:uriTemplate": "https://libris.kb.se/library/{_}",
+        "resourceType": "Library",
         "property": "sigel"
       },
       "_spec": [
@@ -5117,6 +5112,22 @@
           "result": {
               "bibliography": [
                 {"@type": "Library", "sigel": "NB"}
+              ],
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "042": {"ind1": " ", "ind2": " ", "subfields": [{"9": "NB"}, {"9": "DIGI"}]}
+          },
+          "result": {
+              "bibliography": [
+                {"@type": "Library", "sigel": "NB"},
+                {"@type": "Library", "sigel": "DIGI"}
               ],
             "mainEntity": {
               "instanceOf": {
