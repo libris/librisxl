@@ -15951,6 +15951,39 @@
       }
     },
 
+    "postProcessing": [
+      {
+        "type": "MappedProperty",
+        "_NOTE": "Using @type as a raw value. This is not subclass-aware!",
+        "sourceEntity": "?thing",
+        "sourceProperty": "@type",
+        "targetEntity": "?record",
+        "targetProperty": "marc:headingMain",
+        "valueMap": {
+          "Topic": false,
+          "GenreForm": false,
+          "ComplexSubject": false,
+          "Classification": false
+        },
+        "_spec": [
+          {
+            "name":  "Add headingMain: false to revert auth 008[14] to b",
+            "result": {
+              "mainEntity": {
+                "@type": "Topic"
+              }
+            },
+            "back": {
+              "marc:headingMain": false,
+              "mainEntity": {
+                "@type": "Topic"
+              }
+            }
+          }
+        ]
+      }
+    ],
+
     "000": {
       "inherit": "bib",
       "[6]": {
@@ -16068,8 +16101,7 @@
         "aboutEntity": "?record",
         "property": "marc:headingMain",
         "tokenMap": {"a": true, "b": false},
-        "fixedDefault": "a",
-        "TODO": "Add b as default if subject"
+        "fixedDefault": "a"
       },
       "[15]": {
         "aboutEntity": "?record",
