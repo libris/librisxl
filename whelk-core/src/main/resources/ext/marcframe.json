@@ -16040,7 +16040,7 @@
         "uriTemplate": "https://id.kb.se/marc/CatalogingRulesType-{_}",
         "matchUriToken": "^[abcd]$",
         "fixedDefault": "z",
-        "TODO": "Add n as default if subjects"
+        "TODO": "Add n as default if subjects, could be computed from 040#e"
       },
       "[11]": {
         "aboutEntity": "?record",
@@ -16048,7 +16048,7 @@
         "uriTemplate": "https://id.kb.se/marc/SubjectHeadingType-{_}",
         "matchUriToken": "^[abcdkrsv]$",
         "fixedDefault": "|",
-        "TODO": "Add z as default if subjects"
+        "TODO": "Add z as default if subjects, could be computed from 040#f"
       },
       "[12]": {
         "aboutEntity": "?record",
@@ -16088,7 +16088,8 @@
         "link": "marc:subjectSubdivision",
         "uriTemplate": "https://id.kb.se/marc/SubjectSubdivisionType-{_}",
         "matchUriToken": "^[abcde]$",
-        "fixedDefault": "n"
+        "fixedDefault": "n",
+        "TODO": "calculate from type"
       },
       "[18:28]": null,
       "[28]": {
