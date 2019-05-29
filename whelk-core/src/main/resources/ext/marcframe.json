@@ -19655,7 +19655,7 @@
             "back": {
               "marc:holdingType": "marc:SerialItemHolding",
               "mainEntity": {
-                "itemOf": {"issuanceType": "Monograph"}
+                "itemOf": {"issuanceType": "Serial"}
               }
             }
           },

@@ -281,7 +281,7 @@ class MarcFrameConverterSpec extends Specification {
         }
 
         where:
-        item << postProcStepSpecs.findAll { it.spec.source }
+        item << postProcStepSpecs.findAll { it.spec.result }
     }
 
     private getSpecPiece(spec, pieceKey) {
