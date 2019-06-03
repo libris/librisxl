@@ -116,6 +116,7 @@
       "EncLevelType": {
         "1": "marc:FullLevelMaterialNotExamined",
         "2": "marc:LessThanFullLevelMaterialNotExamined",
+        "3": "marc:AbbreviatedLevel",
         "4": "marc:AbbreviatedLevel",
         "5": "marc:PartialPreliminaryLevel",
         "7": "marc:MinimalLevel",
@@ -126,8 +127,16 @@
         "j": "marc:AbbreviatedLevel",
         "k": "marc:AbbreviatedLevel",
         "l": "marc:AbbreviatedLevel",
-        "m": "marc:AbbreviatedLevel",
-        "3": "marc:AbbreviatedLevel"
+        "m": "marc:AbbreviatedLevel"
+      },
+      "EncLevelType-ReverseOverrides": {
+        "marc:AbbreviatedLevel": "3",
+        "marc:CoreLevel": "3",
+        "marc:FullLevelInputByOclcParticipantsLocal": "3",
+        "marc:DeletedRecordLocal": "3",
+        "marc:LessThanFullLevelInputByOclcParticipantsLocal": "3",
+        "marc:FullLevelInputAddedFromABatchProcessLocal": "3",
+        "marc:LessThanFullLevelInputAddedFromABatchProcessLocal": "3"
       },
       "AuthorityEncLevelType": {
         "n": "marc:CompleteAuthorityRecord",
@@ -2125,7 +2134,8 @@
       "[17]": {
         "aboutEntity": "?record",
         "property": "encodingLevel",
-        "tokenMap": "EncLevelType"
+        "tokenMap": "EncLevelType",
+        "reverseTokenMapOverrides": "EncLevelType-ReverseOverrides"
       },
       "[18]": {
         "aboutEntity": "?record",

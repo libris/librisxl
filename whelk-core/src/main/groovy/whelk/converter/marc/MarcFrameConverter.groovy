@@ -921,6 +921,15 @@ class ConversionPart {
                     reverseTokenMap[v] = k
                 }
             }
+            if (dfn.reverseTokenMapOverrides) {
+                def revMap = dfn.reverseTokenMapOverrides
+                if (revMap instanceof String) {
+                    revMap = fieldHandler.tokenMaps[revMap]
+                }
+                if (revMap instanceof Map) {
+                    reverseTokenMap.putAll(revMap)
+                }
+            }
         }
     }
 
