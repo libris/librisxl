@@ -15,7 +15,7 @@ selectBySqlWhere("""
         data#>>'{@graph,0,encodingLevel}' = 'marc:FullLevelInputAddedFromABatchProcessLocal' OR
         data#>>'{@graph,0,encodingLevel}' = 'marc:LessThanFullLevelInputByOclcParticipantsLocal' OR
         data#>>'{@graph,0,encodingLevel}' = 'marc:DeletedRecordLocal' OR
-        data#>>'{@graph,0,encodingLevel}' = 'marc:CoreLevel'
+        data#>>'{@graph,0,encodingLevel}' = 'marc:SystemIdentifiedMarcErrorInABatchloadedRecordLocal'
     """) { data ->
 
     def (record, instance, work) = data.graph
