@@ -122,7 +122,7 @@
         "7": "marc:MinimalLevel",
         "8": "marc:PrepublicationLevel",
         " ": "marc:FullLevel",
-        "e": "marc:SystemIdentifiedMarcErrorInABatchloadedRecordLocal",
+        "e": "marc:AbbreviatedLevel",
         "i": "marc:AbbreviatedLevel",
         "j": "marc:AbbreviatedLevel",
         "k": "marc:AbbreviatedLevel",
@@ -132,6 +132,7 @@
       "EncLevelType-ReverseOverrides": {
         "marc:AbbreviatedLevel": "3",
         "marc:CoreLevel": "3",
+        "marc:SystemIdentifiedMarcErrorInABatchloadedRecordLocal": "3",
         "marc:FullLevelInputByOclcParticipantsLocal": "3",
         "marc:DeletedRecordLocal": "3",
         "marc:LessThanFullLevelInputByOclcParticipantsLocal": "3",
@@ -2179,7 +2180,7 @@
           }
         },
         {
-          "name": "encodingLevel should revert to 3",
+          "name": "encodingLevel marc:AbbreviatedLevel should revert to 3",
           "originalLeader": "00887cam a2200277 a 4500",
           "source": {"leader": "     cam a       4a 4500", "fields": [{"001": "0000000"}]},
           "normalized": {"leader": "     cam a       3a 4500", "fields": [{"001": "0000000"}]},
@@ -2190,6 +2191,25 @@
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
             "controlNumber": "0000000",
             "encodingLevel": "marc:AbbreviatedLevel",
+            "mainEntity": {
+              "@type": "Instance",
+              "issuanceType": "Monograph",
+              "@id": "http://libris.kb.se/resource/bib/0000000",
+              "instanceOf": {"@type": "Text"}
+            }
+          }
+        },
+        {
+          "name": "Obsolete encodingLevel should revert to 3 (marc:AbbreviatedLevel)",
+          "originalLeader": "00887cam a2200277 a 4500",
+          "normalized": {"leader": "     cam a       3a 4500", "fields": [{"001": "0000000"}]},
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/bib/0000000",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
+            "controlNumber": "0000000",
+            "encodingLevel": "marc:DeletedRecordLocal",
             "mainEntity": {
               "@type": "Instance",
               "issuanceType": "Monograph",
