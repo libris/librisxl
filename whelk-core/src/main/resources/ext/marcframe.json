@@ -15961,13 +15961,17 @@
         "targetProperty": "marc:headingMain",
         "valueMap": {
           "Topic": false,
+          "TopicSubdivision": false,
+          "GeographicSubdivision": false,
+          "TemporalSubdivision": false,
           "GenreForm": false,
+          "GenreSubdivision" : false,
           "ComplexSubject": false,
           "Classification": false
         },
         "_spec": [
           {
-            "name":  "Add headingMain: false to revert auth 008[14] to b",
+            "name":  "Add headingMain: false to revert auth 008[14] for type Topic to b",
             "result": {
               "mainEntity": {
                 "@type": "Topic"
@@ -15977,6 +15981,20 @@
               "marc:headingMain": false,
               "mainEntity": {
                 "@type": "Topic"
+              }
+            }
+          },
+          {
+            "name":  "Add headingMain: false to revert auth 008[14] for type GenreForm to b",
+            "result": {
+              "mainEntity": {
+                "@type": "GenreForm"
+              }
+            },
+            "back": {
+              "marc:headingMain": false,
+              "mainEntity": {
+                "@type": "GenreForm"
               }
             }
           }
@@ -16225,6 +16243,7 @@
         },
         {
           "name": "Topic - Hästar (71639)",
+          "NOTE:normalized": "See postProcessing spec for position 14, marc:headingMain",
           "source": [
             {"008": "020409 | a||nnbabn          |n ana      "}
           ],
