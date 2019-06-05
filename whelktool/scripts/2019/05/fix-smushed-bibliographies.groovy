@@ -18,5 +18,5 @@ selectBySqlWhere("""
         [(TYPE): LIBRARY, sigel: it]
     }
 
-    data.scheduleSave(loud: false)
+    data.scheduleSave(loud: true)
 }
