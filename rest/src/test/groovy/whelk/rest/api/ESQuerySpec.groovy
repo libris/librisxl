@@ -195,19 +195,11 @@ class ESQuerySpec extends Specification {
                                 ['@id': 'bar', '@type': 'Class', 'subClassOf': [['@id': 'foo']]],
                                 ['@id': 'baz', '@type': 'Class', 'subClassOf': [['@id': 'bar']]]]]
         JsonLd jsonld = new JsonLd(context, display, vocab)
-        Map emptyQueryParameters = [:]
-        Tuple2 emptyQueryParametersResult = new Tuple2(null, [:])
-        Map noTypeQueryParameters = ['foo': ['bar']]
-        Tuple2 noTypeQueryParametersResult = new Tuple2(null, ['foo': ['bar']])
-        Map simpleQueryParameters = ['@type': ['bar']]
-        Tuple2 simpleQueryParametersResult = new Tuple2(['bar'], ['@type': ['baz', 'bar']])
-        Map simpleQueryParameters2 = ['@type': ['foo', 'baz']]
-        Tuple2 simpleQueryParametersResult2 = new Tuple2(['foo', 'baz'], ['@type': ['baz']])
+
         then:
-        es.expandTypeParam(emptyQueryParameters, jsonld) == emptyQueryParametersResult
-        es.expandTypeParam(noTypeQueryParameters, jsonld) == noTypeQueryParametersResult
-        es.expandTypeParam(simpleQueryParameters, jsonld) == simpleQueryParametersResult
-        es.expandTypeParam(simpleQueryParameters2, jsonld) == simpleQueryParametersResult2
+        ESQuery.expandTypeParam(null, jsonld) == [] as String[]
+        ESQuery.expandTypeParam(['bar'] as String[], jsonld) == ['baz', 'bar'] as String[]
+        ESQuery.expandTypeParam(['foo', 'baz'] as String[], jsonld) == ['baz'] as String[]
     }
 
     def "should hide keyword fields in ES response"() {

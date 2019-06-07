@@ -224,6 +224,10 @@ class SearchUtils {
             result['stats'] = stats
         }
 
+        if (esResult['_debug']) {
+            result['_debug'] = esResult['_debug']
+        }
+
         return result
     }
 

@@ -96,6 +96,7 @@ auth/208571	Anders Svensson
 auth/213488	Anders Svensson
 auth/7673399	Anders Svensson
 auth/382890	Anders Svensson
+auth/173190	sao - underindelning, i litteraturen
 
 auth/196943	Platon
 auth/184982	Eliot T.S.
@@ -160,6 +161,15 @@ bib/16004233	ComplexSubject, testdata for cleaning exercise.
 bib/112104	ComplexSubject, testdata for cleaning exercise.
 bib/8963263	ComplexSubject, testdata for cleaning exercise.
 bib/10174549	ComplexSubject, testdata for cleaning exercise.
+
+bib/10813149	encodingLevel, testdata for cleaning exercise - delete specific encodingLevels
+bib/10813151	encodingLevel, testdata for cleaning exercise - delete specific encodingLevels
+bib/20903126	encodingLevel, testdata for cleaning exercise - delete specific encodingLevels
+bib/10820529	encodingLevel, testdata for cleaning exercise - delete specific encodingLevels
+bib/2257782	encodingLevel, testdata for cleaning exercise - delete specific encodingLevels
+bib/11182884	encodingLevel, testdata for cleaning exercise - delete specific encodingLevels
+bib/11839503	encodingLevel, testdata for cleaning exercise - delete specific encodingLevels
+bib/13415940	encodingLevel, testdata for cleaning exercise - delete specific encodingLevels
 
 bib/11473514	Lokalt test batchimport
 bib/19980053	Lokalt test för dubletter av 852 fältet
