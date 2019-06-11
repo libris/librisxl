@@ -340,9 +340,6 @@ class ImporterMain {
         def main
         if (cmd.startsWith("vcopy")) {
             main = new ImporterMain("secret", "mysql")
-        } else if (cmd.startsWith("generateEsConfig")) { // No need for secret.properties to generate es config.
-            generateEsConfig(args[1], args[2], args[3], args[4])
-            return
         } else {
             main = new ImporterMain("secret")
         }
