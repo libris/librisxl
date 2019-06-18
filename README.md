@@ -56,7 +56,7 @@ Related external repositories:
     ```
 
     For Debian, follow instructions on
-    https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-repositories.html
+    https://www.elastic.co/guide/en/elasticsearch/reference/current/deb.html
     first, then:
     ```
     apt-get install elasticsearch
