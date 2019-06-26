@@ -172,6 +172,18 @@
         "s": "marc:SingleKnownDateProbableDate",
         "t": "marc:PublicationDateAndCopyrightDate",
         "u": "marc:ContinuingResourceStatusUnknown"
+      },
+      "NonfilingChars": {
+        " ": null,
+        "1": "1",
+        "2": "2",
+        "3": "3",
+        "4": "4",
+        "5": "5",
+        "6": "6",
+        "7": "7",
+        "8": "8",
+        "9": "9"
       }
     },
 
@@ -336,12 +348,21 @@
       "$r": {"about": "_:work", "property": "musicKey", "leadingPunctuation": ","},
       "$s": {"about": "_:work", "property": "marc:version"}
     },
-
     "i1-nonfiling": {
-      "i1": {"about": "_:title", "property": "marc:nonfilingChars", "marcDefault": "0"}
+      "i1": {
+        "about": "_:title",
+        "property": "marc:nonfilingChars",
+        "marcDefault": "0",
+        "tokenMap": "NonfilingChars"
+      }
     },
     "i2-nonfiling": {
-      "i2": {"about": "_:title", "property": "marc:nonfilingChars", "marcDefault": "0"}
+      "i2": {
+        "about": "_:title",
+        "property": "marc:nonfilingChars",
+        "marcDefault": "0",
+        "tokenMap": "NonfilingChars"
+      }
     },
 
     "titledetailsSansPartNumber": {
@@ -6463,6 +6484,13 @@
       "_spec": [
         {
           "source": {
+            "130": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
+              {"d": "(1968)."},
+              {"l": "Spanish."},
+              {"f": "1977."}
+            ]}},
+          "normalized": {
             "130": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
               {"d": "(1968)."},
@@ -6598,6 +6626,22 @@
               "qualifier": ["(Faridabad)"]
             }]
           }}
+        },
+        {
+          "source": {
+            "222": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Plant prot. bull."}
+            ]}},
+          "normalized": {
+            "222": {"ind1": " ", "ind2": "0", "subfields": [
+              {"a": "Plant prot. bull."}
+            ]}},
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "KeyTitle",
+              "mainTitle": "Plant prot. bull."
+            }]
+          }}
         }
       ]
     },
@@ -6709,7 +6753,7 @@
               ]}}
           ],
           "normalized": [
-              {"240": {"ind1": "0", "ind2": " ", "subfields": [
+              {"240": {"ind1": "0", "ind2": "0", "subfields": [
                 {"a": "Moyen âge"},
                 {"l": "Engelska."}
               ]}}
@@ -6720,8 +6764,7 @@
               "hasTitle": [ {
                 "@type": "Title",
                 "mainTitle": "Moyen âge",
-                "marc:searchElement" : false,
-                "marc:nonfilingChars" : " "
+                "marc:searchElement" : false
               } ],
               "language": {"@type": "Language", "label": "Engelska."},
               "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
@@ -6878,6 +6921,13 @@
         },
         {
           "source": {
+            "242": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Annals of chemistry"} ,
+              {"n": "Series C,."},
+              {"p": "Organic chemistry and biochemistry."},
+              {"y": "eng"}
+            ]}},
+          "normalized": {
             "242": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "Annals of chemistry"} ,
               {"n": "Series C,."},
@@ -6917,6 +6967,11 @@
       "_spec": [
         {
           "source": {
+            "243": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Philosophical works"} ,
+              {"k": "Selsections"}
+            ]}},
+          "normalized": {
             "243": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "Philosophical works"} ,
               {"k": "Selsections"}
@@ -6978,6 +7033,10 @@
       "_spec": [
         {
           "source": {
+            "245": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Anteckningar från en ö"}
+            ]}},
+          "normalized": {
             "245": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "Anteckningar från en ö"}
           ]}},
@@ -9163,7 +9222,7 @@
             {"x": "0023-5377"},
             {"v": "N.F. 13:7"}
           ]}},
-          "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
+          "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
             {"a": "Kungl. Svenska vetenskapsakademiens handlingar,"},
             {"x": "0023-5377 ;"},
             {"v": "N.F. 13:7"}
@@ -9179,8 +9238,7 @@
                     "@type": "Work",
                     "hasTitle": [{
                       "@type": "Title",
-                      "mainTitle": "Kungl. Svenska vetenskapsakademiens handlingar",
-                      "marc:nonfilingChars" : " "
+                      "mainTitle": "Kungl. Svenska vetenskapsakademiens handlingar"
                     }]
                   },
                   "identifiedBy": [ {
@@ -9201,7 +9259,7 @@
             {"9": "156"},
             {"9": "B"}
           ]}},
-          "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
+          "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
             {"a": "Corpus christianorum"},
             {"p": "Series Latina,"},
             {"x": "0589-798X ;"},
@@ -9222,8 +9280,7 @@
                     "hasTitle": [{
                       "@type": "Title",
                       "mainTitle": "Corpus christianorum",
-                      "partName": ["Series Latina"],
-                      "marc:nonfilingChars" : " "
+                      "partName": ["Series Latina"]
                     }]
                   },
                   "identifiedBy": [ {
@@ -9244,7 +9301,7 @@
             {"9": "9"},
             {"9": "15"}
           ]}},
-          "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
+          "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
             {"a": "Lunds universitets årsskrift"},
             {"p": "Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen,"},
             {"x": "0368-8151 ;"},
@@ -9265,8 +9322,7 @@
                     "hasTitle": [{
                       "@type": "Title",
                       "mainTitle": "Lunds universitets årsskrift",
-                      "partName": ["Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen"],
-                      "marc:nonfilingChars" : " "
+                      "partName": ["Andra avdelningen, Medicin samt matematiska och naturvetenskapliga ämnen"]
                     }]
                   },
                   "identifiedBy": [ {
@@ -11489,6 +11545,9 @@
           "source": {"630": {"ind1": " ", "ind2": "0",
             "subfields": [{"a": "Talmud"}, {"p": "Bava meẓia"}]}
           },
+          "normalized": {"630": {"ind1": "0", "ind2": "0",
+            "subfields": [{"a": "Talmud"}, {"p": "Bava meẓia"}]}
+          },
           "result":{
             "mainEntity": {
               "instanceOf" : {
@@ -11498,14 +11557,35 @@
                   "hasTitle" : [ {
                     "@type" : "Title",
                     "mainTitle" : "Talmud",
-                    "partName" : [ "Bava meẓia" ],
-                    "marc:nonfilingChars" : " "
+                    "partName" : [ "Bava meẓia" ]
                   } ],
                   "inScheme" : {
                     "@id" : "https://id.kb.se/term/lcsh",
                     "@type" : "ConceptScheme",
                     "code" : "lcsh"
                   }
+                } ]
+              }
+            }
+          }
+        },
+        {
+          "name": "Faulty marc:nonfilingChars with value space should revert to ind1=0",
+          "normalized": {"630": {"ind1": "0", "ind2": "4",
+            "subfields": [{"a": "Bibeln."}, {"p": "Uppenbarelseboken"}]}
+          },
+          "result":{
+            "mainEntity": {
+              "instanceOf" : {
+                "@type" : "Text",
+                "subject" : [ {
+                  "@type" : "Work",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Bibeln.",
+                    "marc:nonfilingChars": " ",
+                    "partName": ["Uppenbarelseboken"]
+                  }]
                 } ]
               }
             }
@@ -14123,7 +14203,7 @@
       "subfieldOrder": "6 i a d m n r p k l s f o 1 0",
       "_spec": [
         {
-          "source": {"730": {"ind1": "0", "ind2": " ", "subfields": [
+          "source": {"730": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Abyss (Motion picture : 1989)"},
             {"i": "Novelization of (work)"}
           ]}},
@@ -14234,7 +14314,7 @@
       "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
-          "source": {"740": {"ind1": "0", "ind2": "2", "subfields": [
+          "source": {"740": {"ind1": " ", "ind2": "2", "subfields": [
             {"a": "Economics library selections"},
             {"n": "Series 1,"},
             {"p": "New books in economics"}
@@ -15648,7 +15728,7 @@
             {"x": "0358-0083 ;"},
             {"v": "5."}
           ]}},
-          "normalized": {"830": {"ind1": " ", "ind2": " ", "subfields": [
+          "normalized": {"830": {"ind1": " ", "ind2": "0", "subfields": [
             {"a": "Migrationsstudier,"},
             {"n": "B,"},
             {"x": "0358-0083 ;"},
@@ -15670,8 +15750,7 @@
                     "hasTitle": [{
                       "@type": "Title",
                       "mainTitle": "Migrationsstudier",
-                      "partNumber": ["B"],
-                      "marc:nonfilingChars": " "
+                      "partNumber": ["B"]
                     }]
                   }
                 }
@@ -17108,9 +17187,55 @@
       ]
     },
     "130" : {
-      "inherit": "bib",
+      "include": ["titledetails", "i2-nonfiling"],
+      "aboutAlias": "_:work",
       "aboutEntity": "?thing", "link": null, "resourceType": null,
-      "aboutType": "Work"
+      "aboutType": "Work",
+      "pendingResources": {
+        "_:title": {
+          "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
+      },
+      "$a": {"about": "_:title", "property": "mainTitle", "required": true},
+      "$d": {"property": "legalDate"},
+      "$0": {"about": "_:work", "addProperty": "marc:uri"},
+      "subfieldOrder": "a d m n r p k l s f o",
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "name": "marc:nonfilingChars with empty string should set ind2 to 0",
+          "normalized": [
+            {"130": {"ind1": " ", "ind2": "0", "subfields": [{"a": "Bibeln"}, {"p": "Uppenbarelseboken"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type" : "Work",
+              "hasTitle" : [ {
+                "@type" : "Title",
+                "mainTitle" : "Bibeln",
+                "partName" : [ "Uppenbarelseboken" ],
+                "marc:nonfilingChars" : " "
+              } ]
+            }
+          }
+        },
+        {
+          "name": "Empty ind2 should not be converted to marc:nonfilingChars with empty string",
+          "source": [ {"130": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Bibeln"}, {"p": "Uppenbarelseboken"}]}}],
+          "normalized": [{"130": {"ind1": " ", "ind2": "0", "subfields": [{"a": "Bibeln"}, {"p": "Uppenbarelseboken"}]}}],
+          "result": {
+            "mainEntity": {
+              "@type" : "Work",
+              "hasTitle" : [ {
+                "@type" : "Title",
+                "mainTitle" : "Bibeln",
+                "partName" : [ "Uppenbarelseboken" ]
+              } ]
+            }
+          }
+        }
+      ]
     },
     "147": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
     "148" : {
@@ -19085,6 +19210,14 @@
       "_spec": [
         {
           "source": {
+            "530": {"ind1": " ", "ind2": " ", "subfields": [
+              {"w": "g"},
+              {"i": "En relationsbeskrivning"},
+              {"a": "Vedas"},
+              {"x": "Criticism, interpretation, etc."},
+              {"0": "00000"}
+            ]}},
+          "normalized": {
             "530": {"ind1": " ", "ind2": "0", "subfields": [
               {"w": "g"},
               {"i": "En relationsbeskrivning"},
