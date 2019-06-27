@@ -48,4 +48,4 @@ Write to Whelk (without this flag operations against the Whelk are readonly, and
 - LIBRIS-ID ID in Libris.
 
 ## Example usage
-    $ java -Dxl.secret.properties=./secret.properties -jar build/libs/lxl_import.jar --format=xml --path=input/adlibrismessedup/ --transformer=transformers/forvarv.xsl --dupType=ISSNA --live
+    $ java -Dxl.secret.properties=./secret.properties -jar build/libs/batchimport.jar --format=xml --path=input/adlibrismessedup/ --transformer=transformers/forvarv.xsl --dupType=ISSNA --live

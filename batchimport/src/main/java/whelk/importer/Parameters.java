@@ -101,7 +101,7 @@ class Parameters
 
     private void printUsage()
     {
-        System.err.println("Usage: java -Dxl.secret.properties=PROPSFILE -jar lxl_import.jar [PARAMETERS] [DATA]");
+        System.err.println("Usage: java -Dxl.secret.properties=PROPSFILE -jar batchimport.jar [PARAMETERS] [DATA]");
         System.err.println("");
         System.err.println("Imports records into Libris XL.");
         System.err.println("");
