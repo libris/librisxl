@@ -1,6 +1,5 @@
 package whelk.rest.api
 
-
 import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
