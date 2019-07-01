@@ -111,7 +111,7 @@ dependencies {
     compile "org.eclipse.jetty:jetty-server:${jettyVersion}"
     // Servlet dependencies
     compile 'com.thetransactioncompany:cors-filter:2.1.2'
-    providedCompile 'javax.servlet:servlet-api:2.5'
+    providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
 
     // metrics
     compile 'io.prometheus:simpleclient:0.0.21'

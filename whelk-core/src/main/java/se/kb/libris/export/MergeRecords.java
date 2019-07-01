@@ -1,9 +1,23 @@
 package se.kb.libris.export;
 
-import java.io.*;
-import java.util.*;
-import se.kb.libris.util.marc.*;
-import se.kb.libris.util.marc.io.*;
+import se.kb.libris.util.marc.Controlfield;
+import se.kb.libris.util.marc.Datafield;
+import se.kb.libris.util.marc.Field;
+import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.Subfield;
+import se.kb.libris.util.marc.io.Iso2709Deserializer;
+import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter;
+import se.kb.libris.util.marc.io.MarcRecordWriter;
+import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
+import se.kb.libris.util.marc.io.StrictIso2709Reader;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 public class MergeRecords {
     public static String format(MarcRecord mr) {

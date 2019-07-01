@@ -1,11 +1,9 @@
 package whelk.rest.api
 
-import javax.servlet.http.HttpServletRequest
-
 import spock.lang.Specification
-
 import whelk.rest.api.CrudUtils
 
+import javax.servlet.http.HttpServletRequest
 
 class CrudUtilsSpec extends Specification {
     HttpServletRequest request

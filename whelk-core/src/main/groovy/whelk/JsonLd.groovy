@@ -3,11 +3,10 @@ package whelk
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import org.codehaus.jackson.map.ObjectMapper
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import whelk.exception.FramingException
-import whelk.exception.ModelValidationException
 
 import java.util.regex.Matcher
 

@@ -6,6 +6,7 @@ import org.apache.commons.collections4.map.LRUMap
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
+import whelk.exception.StorageCreateFailedException
 import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
@@ -119,9 +120,6 @@ class Whelk {
     void loadVocabData() {
         this.vocabData = this.storage.getDocumentByIri(vocabUri).data
     }
-
-    //private long hits = 0
-    //private long misses = 0
 
     Map<String, Document> bulkLoad(List<String> ids) {
         Map result = [:]
@@ -257,7 +255,7 @@ class Whelk {
         List<Tuple2<String, String>> collidingIDs = getIdCollisions(document, detectCollisionsOnTypedIDs)
         if (!collidingIDs.isEmpty()) {
             log.info("Refused initial store of " + document.getShortId() + ". Document considered a duplicate of : " + collidingIDs)
-            throw new whelk.exception.StorageCreateFailedException(document.getShortId(), "Document considered a duplicate of : " + collidingIDs)
+            throw new StorageCreateFailedException(document.getShortId(), "Document considered a duplicate of : " + collidingIDs)
         }
 
         if (storage.createDocument(document, changedIn, changedBy, collection, deleted)) {

@@ -3,11 +3,10 @@ package whelk.rest.api
 import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
-
 import whelk.JsonLd
+import whelk.exception.InvalidQueryException
 import whelk.rest.api.SearchUtils
 import whelk.rest.api.SearchUtils.SearchType
-import whelk.exception.InvalidQueryException
 
 class SearchUtilsSpec extends Specification {
 

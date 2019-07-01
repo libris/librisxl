@@ -1,13 +1,11 @@
 package whelk.rest.api
 
 import groovy.util.logging.Log4j2 as Log
-
 import org.apache.http.entity.ContentType
-import whelk.Whelk
 import whelk.Document
-import whelk.util.Tools
+import whelk.Whelk
 import whelk.converter.marc.MarcFrameConverter
-import whelk.util.PropertyLoader
+import whelk.util.Tools
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest

@@ -6,11 +6,9 @@ import spock.lang.Specification
 import whelk.Document
 import whelk.IdType
 import whelk.JsonLd
-import whelk.Location
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ModelValidationException
-import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkRuntimeException
 import whelk.rest.security.AccessControl
 import whelk.util.LegacyIntegrationTools
@@ -32,7 +30,7 @@ class CrudSpec extends Specification {
     AccessControl accessControl
     HttpServletRequest request
     HttpServletResponse response
-    LegacyIntegrationTools legacyIntegrationTools
+
     static final URI BASE_URI = Document.BASE_URI
     private static final ObjectMapper mapper = new ObjectMapper()
 
@@ -45,19 +43,19 @@ class CrudSpec extends Specification {
             String contentType
             def headers = [:]
 
-            public ServletOutputStream getOutputStream() {
+            ServletOutputStream getOutputStream() {
                 return out
             }
 
-            public void sendError(int sc, String mess) {
+            void sendError(int sc, String mess) {
                 this.status = sc
             }
 
-            public void setHeader(String h, String v) {
+            void setHeader(String h, String v) {
                 headers.put(h, v)
             }
 
-            public String getHeader(String h) {
+            String getHeader(String h) {
                 return headers.get(h)
             }
         }

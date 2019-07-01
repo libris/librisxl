@@ -1,31 +1,24 @@
 package whelk.rest.api
 
 import groovy.util.logging.Log4j2 as Log
-import org.apache.http.entity.ContentType
-import org.codehaus.jackson.map.ObjectMapper
-
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import io.prometheus.client.Summary
-
+import org.apache.http.entity.ContentType
+import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
+import whelk.IdGenerator
 import whelk.IdType
 import whelk.JsonLd
 import whelk.Whelk
-import whelk.IdGenerator
-import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.exception.InvalidQueryException
 import whelk.exception.ModelValidationException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
-import whelk.rest.api.CrudUtils
-import whelk.rest.api.MimeTypes
-import whelk.rest.api.SearchUtils
 import whelk.rest.security.AccessControl
 import whelk.util.LegacyIntegrationTools
-import whelk.util.PropertyLoader
 
 import javax.activation.MimetypesFileTypeMap
 import javax.servlet.http.HttpServlet
@@ -33,7 +26,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.lang.management.ManagementFactory
 
-import static HttpTools.sendResponse
+import static whelk.rest.api.HttpTools.sendResponse
 
 /**
  * Handles all GET/PUT/POST/DELETE requests against the backend.
@@ -42,7 +35,6 @@ import static HttpTools.sendResponse
 class Crud extends HttpServlet {
 
     final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
-    final static String DOCBASE_URI = "http://libris.kb.se/" // TODO: encapsulate and configure (LXL-260)
     final static String XL_ACTIVE_SIGEL_HEADER = 'XL-Active-Sigel'
     final static String EPOCH_START = '1970/1/1'
 
@@ -111,18 +103,18 @@ class Crud extends HttpServlet {
             Map results = search.doSearch(queryParameters, dataset, jsonld)
             def jsonResult = mapper.writeValueAsString(results)
             sendResponse(response, jsonResult, "application/json")
-        } catch (WhelkRuntimeException wse) {
+        } catch (WhelkRuntimeException e) {
             log.error("Attempted elastic query, but whelk has no " +
-                    "elastic component configured.")
+                    "elastic component configured.", e)
             failedRequests.labels("GET", request.getRequestURI(),
                     HttpServletResponse.SC_NOT_IMPLEMENTED.toString()).inc()
             response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED,
                     "Attempted to use elastic for query, but " +
                             "no elastic component is configured.")
             return
-        } catch (InvalidQueryException iqe) {
-            log.error("Invalid query: ${queryParameters}")
-            failedRequests("GET", request.getRequestURI(),
+        } catch (InvalidQueryException e) {
+            log.error("Invalid query: ${queryParameters}", e)
+            failedRequests.labels("GET", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Invalid query, please check the documentation.")
@@ -130,7 +122,7 @@ class Crud extends HttpServlet {
         }
     }
 
-    void displayInfo(response) {
+    void displayInfo(HttpServletResponse response) {
         def info = [:]
         info["system"] = "LIBRISXL"
         info["format"] = "linked-data-api"
@@ -292,10 +284,6 @@ class Crud extends HttpServlet {
         } else {
             throw new UnsupportedContentTypeException("Not implemented.")
         }
-    }
-
-    private List convertExternalLinks(List refs) {
-        return JsonLd.expandLinks(refs, this.displayData[JsonLd.CONTEXT_KEY])
     }
 
     /**
@@ -515,16 +503,6 @@ class Crud extends HttpServlet {
     }
 
     /**
-     * Given a list of IDs, return a map of JSON-LD found in storage.
-     *
-     * Map is of the form ID -> JSON-LD Map.
-     *
-     */
-    Map getReferencedData(List ids) {
-        whelk.bulkLoad(ids).collectEntries { id, doc -> [id, doc.data]  }
-    }
-
-    /**
      * Format and send GET response to client.
      *
      * Sets the necessary headers and picks the best Content-Type to use.
@@ -535,10 +513,10 @@ class Crud extends HttpServlet {
                          Object responseBody, String modified, String path,
                          String contentType) {
         // FIXME remove?
-        String ctheader = contextHeaders.get(path.split("/")[1])
-        if (ctheader) {
+        String ctxHeader = contextHeaders.get(path.split("/")[1])
+        if (ctxHeader) {
             response.setHeader("Link",
-                    "<$ctheader>; " +
+                    "<$ctxHeader>; " +
                             "rel=\"http://www.w3.org/ns/json-ld#context\"; " +
                             "type=\"application/ld+json\"")
         }
@@ -781,7 +759,7 @@ class Crud extends HttpServlet {
             // TODO: 'collection' must also match the collection 'existingDoc'
             // is in.
             boolean allowed = hasPutPermission(updatedDoc, existingDoc,
-                    request.getAttribute("user"))
+                    (Map) request.getAttribute("user"))
             if (!allowed) {
                 failedRequests.labels("PUT", request.getRequestURI(),
                         HttpServletResponse.SC_FORBIDDEN.toString()).inc()
@@ -820,22 +798,14 @@ class Crud extends HttpServlet {
     }
 
     boolean isEmptyInput(Map inputData) {
-        if (!inputData || inputData.size() == 0) {
-            return true
-        } else {
-            return false
-        }
+        return !inputData || inputData.size() == 0
     }
 
     boolean isSupportedContentType(HttpServletRequest request) {
         ContentType contentType = ContentType.parse(request.getContentType())
         String mimeType = contentType.getMimeType()
         // FIXME add additional content types?
-        if (mimeType == "application/ld+json") {
-            return true
-        } else {
-            return false
-        }
+        return mimeType == "application/ld+json"
     }
 
     Map getRequestBody(HttpServletRequest request) {
@@ -1002,6 +972,8 @@ class Crud extends HttpServlet {
             log.warn("User is SYSTEM. Allowing access to all.")
             return true
         }
+
+        return false
     }
 
     @Deprecated

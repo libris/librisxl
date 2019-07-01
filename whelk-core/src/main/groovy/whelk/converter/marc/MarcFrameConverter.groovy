@@ -1011,7 +1011,7 @@ class ConversionPart {
         }
 
         if (!repeatable && value instanceof List && ((List) value).size() == 1) {
-            value = value[0]
+            value = ((List) value)[0]
         }
         obj[key] = value
     }

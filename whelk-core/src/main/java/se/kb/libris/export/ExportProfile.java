@@ -1,12 +1,29 @@
 package se.kb.libris.export;
 
-import java.io.*;
-import java.util.*;
+import se.kb.libris.export.dewey.DeweyMapper;
+import se.kb.libris.util.marc.Controlfield;
+import se.kb.libris.util.marc.Datafield;
+import se.kb.libris.util.marc.Field;
+import se.kb.libris.util.marc.MarcFieldComparator;
+import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.Subfield;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.ListIterator;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import se.kb.libris.export.dewey.DeweyMapper;
-import se.kb.libris.util.marc.*;
 
 public class ExportProfile {
     Properties properties = new Properties();

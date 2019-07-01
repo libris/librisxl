@@ -3,11 +3,7 @@ package whelk.rest.api
 import org.codehaus.jackson.JsonParseException
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
-import whelk.JsonLd
 import whelk.Whelk
-import whelk.component.ElasticSearch
-import whelk.component.PostgreSQLComponent
-import whelk.util.PropertyLoader
 import whelk.util.LegacyIntegrationTools
 
 import javax.servlet.http.HttpServlet

@@ -1,17 +1,12 @@
 package whelk.rest.api
 
 import groovy.util.logging.Log4j2 as Log
-
 import whelk.Document
 import whelk.JsonLd
-import whelk.Location
 import whelk.Whelk
-import whelk.rest.api.ESQuery
-import whelk.component.ElasticSearch
-import whelk.component.PostgreSQLComponent
-import whelk.component.StorageType
-import whelk.exception.WhelkRuntimeException
 import whelk.exception.InvalidQueryException
+import whelk.exception.WhelkRuntimeException
+import whelk.rest.api.ESQuery
 
 @Log
 class SearchUtils {

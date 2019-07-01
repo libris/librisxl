@@ -1,10 +1,18 @@
 package se.kb.libris.export.listener;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.logging.*;
-import oaij.client.*;
+import oaij.client.Identifier;
+import oaij.client.ListIdentifiers;
+import oaij.client.OaiPmhClient;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Properties;
+import java.util.Scanner;
+import java.util.concurrent.BlockingDeque;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 class ListenerThread extends Thread {
     OaiPmhClient client = null;

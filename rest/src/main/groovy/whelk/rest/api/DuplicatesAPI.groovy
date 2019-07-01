@@ -1,11 +1,8 @@
 package whelk.rest.api
 
 import whelk.Document
-import whelk.JsonLd
 import whelk.Whelk
-import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.JsonLD2MarcXMLConverter
-import whelk.util.PropertyLoader
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest

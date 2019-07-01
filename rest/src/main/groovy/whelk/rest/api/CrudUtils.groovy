@@ -1,10 +1,9 @@
 package whelk.rest.api
 
 import groovy.util.logging.Log4j2 as Log
-import javax.servlet.http.HttpServletRequest
-
 import whelk.rest.api.MimeTypes
 
+import javax.servlet.http.HttpServletRequest
 
 @Log
 class CrudUtils {

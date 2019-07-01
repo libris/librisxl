@@ -1,12 +1,12 @@
 package se.kb.libris.export.listener;
 
-import java.util.logging.Logger;
+import oaij.client.Identifier;
+import oaij.client.OaiPmhClient;
+
 import java.util.Properties;
 import java.util.concurrent.BlockingDeque;
 import java.util.logging.Level;
-import oaij.client.Identifier;
-import oaij.client.OaiPmhClient;
-import oaij.client.Record;
+import java.util.logging.Logger;
 
 class BibThread extends Thread {
     Properties configProperties, exportProperties;

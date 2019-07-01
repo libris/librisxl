@@ -6,12 +6,12 @@ package whelk.exception;
 public class StorageCreateFailedException extends RuntimeException {
     String duplicateId = null;
 
-    StorageCreateFailedException(String identifier) {
+    public StorageCreateFailedException(String identifier) {
         super("INSERT of document with id " + identifier + " failed. Document already in database.");
         duplicateId = identifier;
     }
 
-    StorageCreateFailedException(String identifier, String extraInfo) {
+    public StorageCreateFailedException(String identifier, String extraInfo) {
         super("INSERT of document with id " + identifier + " failed. Extra info: " + extraInfo);
         duplicateId = identifier;
     }
