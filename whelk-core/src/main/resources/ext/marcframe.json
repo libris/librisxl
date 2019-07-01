@@ -2101,6 +2101,7 @@
     ],
 
     "000": {
+      "NOTE:[0:5]": "Record length (only applicable in ISO 2709 serialization)",
       "[5]": {
         "aboutEntity": "?record",
         "property": "recordStatus",
@@ -2132,6 +2133,9 @@
         "matchUriToken": "^[a]$",
         "fixedDefault": "a"
       },
+      "NOTE:[10]": "Indicator count (only applicable in ISO 2709 serialization)",
+      "NOTE:[11]": "Subfield code length (only applicable in ISO 2709 serialization)",
+      "NOTE:[12:17]": "Base address of data (only applicable in ISO 2709 serialization)",
       "[17]": {
         "aboutEntity": "?record",
         "property": "encodingLevel",
@@ -16064,23 +16068,46 @@
     ],
 
     "000": {
-      "inherit": "bib",
+      "NOTE:[0:5]": "see bib",
+      "[5]": {
+        "aboutEntity": "?record",
+        "property": "recordStatus",
+        "tokenMap": "StatusType",
+        "TODO": "Filter all but c & n for auth, fallbackdefault c"
+      },
       "[6]": {
+        "NOTE:local": "Posttyp - z - Auktoritetspost",
         "fixedDefault": "z"
       },
       "[7]": null,
       "[8]": null,
+      "[9]": {
+        "NOTE:local": "Teckenuppsättning - a - UCS/Unicode",
+        "fixedDefault": "a"
+      },
+      "NOTE:[10]": "see bib",
+      "NOTE:[11]": "see bib",
+      "NOTE:[12:17]": "see bib",
       "[17]": {
         "aboutEntity": "?record",
         "property": "encodingLevel",
-        "tokenMap": "AuthorityEncLevelType"
+        "tokenMap": "AuthorityEncLevelType",
+        "NOTE:local": "Fullständighetsnivå - n - Fullständig",
+        "TODO:fixedDefault": "n"
       },
       "[18]": {
+        "NOTE:local": "Interpunktionspolicy - # - Ej specificerad",
         "fixedDefault": " "
       },
       "[19]": null,
+      "[20:24]": {
+        "aboutEntity": "?record",
+        "property": "marc:entryMap",
+        "fixedDefault": "4500"
+      },
       "_spec": [
         {
+          "name": "Status Corrected or revised record",
           "originalLeader": "01341cz  a2200397n  4500",
           "source": {
             "leader": "     cz  a       n  4500",
@@ -16092,6 +16119,25 @@
             "controlNumber": "140482",
             "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Identity"}
+          }
+        },
+        {
+          "name": "Status New record",
+          "originalLeader": "01341nz  a2200397n  4500",
+          "source": {
+            "leader": "     nz  a       n  4500",
+            "fields": [{"001": "140482"}]
+          },
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "encodingLevel": "marc:CompleteAuthorityRecord",
+            "recordStatus": "marc:New",
             "mainEntity": { }
           },
           "addOnRevert": {
@@ -19824,6 +19870,7 @@
     ],
 
     "000": {
+      "NOTE:[0:5]": "see bib",
       "[5]": {
         "aboutEntity": "?record",
         "property": "recordStatus",
@@ -19850,6 +19897,9 @@
         "uriTemplate": "https://id.kb.se/marc/CharacterCodingType-{_}",
         "fixedDefault": "a"
       },
+      "NOTE:[10]": "see bib",
+      "NOTE:[11]": "see bib",
+      "NOTE:[12:17]": "see bib",
       "[17]": {
         "aboutEntity": "?record",
         "property": "encodingLevel",
