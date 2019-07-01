@@ -42,6 +42,12 @@ class ConverterAPI extends HttpServlet {
     }
 
     void handleConversion(HttpServletRequest request, HttpServletResponse response) {
+        if (request.getContentType() == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Missing Content-Type")
+            return
+        }
+
         String ctype = ContentType.parse(request.getContentType()).getMimeType()
         if (ctype != "application/ld+json") {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
