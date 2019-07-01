@@ -61,6 +61,10 @@ This is a list of keys in Marcframe which control certain functionality like rep
 
 `resourceType` the entity which is created through the link or addlink.
 
+`silentRevert` This lets a field revert entities without marking them as reverted. That allows for other fields to revert from the same entity. This is akin to the groupId mechanism, but allows for other fields to be more exclusive.
+
+[Example: bib 700$t and 730 are disjoint the former is preferred over the latter for the same entity, but a repeated 041 picks language from either of them without marking as reverted.]
+
 `spec` used to verify indata and outdata as MARC21 conforms to expected forms. Can be specified with `source` (indata) and `normalized` (outdata), if normalize is absent it is by default expected to look like the incoming MARC21 source. In the spec we also define how our expected JSON-LD form looks like. If you make several testcases you can name them to let others know if there is a particular scenario or deviation you are testing.
 
 `splitValuePattern` the regexp pattern used to separate strings into properties. [Example: identifier with trailing qualifier].
