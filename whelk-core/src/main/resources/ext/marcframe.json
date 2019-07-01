@@ -7299,7 +7299,10 @@
         }
       ]
     },
-
+    "251": {
+      "ignored": true,
+      "NOTE:LC": "251 - VERSION INFORMATION (R) nac"
+    },
 
     "254": {
       "Link": "marc:hasMusicalPresentationStatement",
