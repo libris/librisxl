@@ -7316,13 +7316,15 @@
       "TODO:resourceType (to distinguish this 'free form' from 034)?": "marc:CartographicDescription",
       "resourceType": "Cartographic",
       "embedded": true,
+      "NOTE": "Scale sits directly on work in BF2 conversion",
       "$a": {"link": "scale", "resourceType": "Scale", "property": "label"},
       "$b": {"link": "projection", "resourceType": "Projection", "property": "label"},
       "$c": {"property": "coordinates"},
       "$d": {"property": "ascensionAndDeclination"},
       "$e": {"property": "equinox"},
       "$f": {"property": "outerGRing"},
-      "$g": {"property": "exclusionGRing"}
+      "$g": {"property": "exclusionGRing"},
+      "$6": {"property": "marc:fieldref"}
     },
 
     "256": {
