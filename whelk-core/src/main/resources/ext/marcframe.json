@@ -7855,7 +7855,56 @@
     },
 
     "261": {},
-    "262": {},
+    "262": {
+      "aboutEntity": "?thing",
+      "onRevertPrefer": "264",
+      "addLink": "publication",
+      "resourceType": "Publication",
+      "$a": {"addLink": "place", "resourceType": "Place", "property": "label","leadingPunctuation": " ;"},
+      "$b": {"addLink": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :"},
+      "$c": {"addProperty": "date", "leadingPunctuation": ",", "punctuationChars": ".,;"},
+      "$k": null,
+      "$l": null,
+      "$6": null,
+      "_spec": [
+        {
+          "source": [
+            {"262": {"ind1": " ", "ind2": " ", "subfields": [{"a": "plats"},{"b": "agent"},{"c": "datum"}]}}
+          ],
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "1",
+              "subfields": [
+                {"a": "plats :"},
+                {"b": "agent,"},
+                {"c": "datum"}
+              ]
+            }}
+          ],
+          "result": {
+            "mainEntity": {
+              "publication": [
+                {
+                  "@type": "Publication",
+                  "place": [
+                    {
+                      "@type": "Place",
+                      "label": "plats"
+                    }
+                  ],
+                  "agent": [
+                    {
+                      "@type": "Agent",
+                      "label": "agent"
+                    }
+                  ],
+                  "date": ["datum"]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
     "263": {
       "aboutEntity": "?thing",
       "$a": {"property": "projectedProvisionDate"},
