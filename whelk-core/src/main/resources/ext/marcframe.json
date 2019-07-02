@@ -7335,7 +7335,7 @@
       "resourceType": "marc:ComputerFileCharacteristics",
       "repeatable": false,
       "$a": {"property": "label"},
-      "$6": null,
+      "$6": {"property": "marc:fieldref"},
       "$8": null,
       "_spec": [
         {
