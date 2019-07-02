@@ -384,11 +384,11 @@ class CrudSpec extends Specification {
         response.getContentType() == "application/json"
     }
 
-    def "GET /<id>/data.ttl should return 406 Not Acceptable"() {
+    def "GET /<id>/data.ttl should return 404 Not Found"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
-            "{id}/data.ttl".toString()
+            "/${id}/data.ttl".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -399,7 +399,7 @@ class CrudSpec extends Specification {
         when:
         crud.doGet(request, response)
         then:
-        response.getStatus() == HttpServletResponse.SC_NOT_ACCEPTABLE
+        response.getStatus() == HttpServletResponse.SC_NOT_FOUND
     }
 
     def "GET /<id>/data.rdf should return 404 Not Found"() {
