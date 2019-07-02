@@ -7635,19 +7635,19 @@
         {
           "name": "Upprepade utgivarbyten för fortlöpande resurser",
           "source": [
-            {"260": {"ind1": "_", "ind2": "_", "subfields":
+            {"260": {"ind1": " ", "ind2": " ", "subfields":
               [{"3": "Sammanfattad utgivningstid:"}, {"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-"}, {"e": "(Stockholm :"}, {"f": "Fram)"}]}},
-            {"260": {"ind1": "_", "ind2": "_", "subfields":
+            {"260": {"ind1": " ", "ind2": " ", "subfields":
               [{"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-1925"}]}},
-            {"260": {"ind1": "2", "ind2": "_", "subfields":
+            {"260": {"ind1": "2", "ind2": " ", "subfields":
               [{"a": "Lund :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1926-1927"}]}},
-            {"260": {"ind1": "2", "ind2": "_", "subfields":
+            {"260": {"ind1": "2", "ind2": " ", "subfields":
               [{"a": "Stockholm :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1928-1931"}]}},
-            {"260": {"ind1": "2", "ind2": "_", "subfields":
+            {"260": {"ind1": "2", "ind2": " ", "subfields":
               [{"a": "Stockholm :"}, {"b": "Svenska Clartéförbundet,"}, {"c": "1932-1953"}]}},
-            {"260": {"ind1": "2", "ind2": "_", "subfields":
+            {"260": {"ind1": "2", "ind2": " ", "subfields":
               [{"a": "Hägersten :"}, {"b": "Clarté,"}, {"c": "1991-1995"}]}},
-            {"260": {"ind1": "3", "ind2": "_", "subfields":
+            {"260": {"ind1": "3", "ind2": " ", "subfields":
               [{"a": "Stockholm :"}, {"b": "Clarté,"}, {"c": "1953-1991, 1995-"}]}}
           ] ,
           "normalized": [
