@@ -7356,10 +7356,40 @@
       ]
     },
     "257": {
-      "addLink": "marc:hasCountryOfProducingEntityForArchivalFilms",
-      "resourceType": "marc:CountryOfProducingEntityForArchivalFilms",
-      "$a": {"property": "marc:countryOfProducingEntity"},
-      "$2": {"property": null}
+      "aboutEntity": "?thing",
+      "onRevertPrefer": "264",
+      "addLink": "production",
+      "resourceType": "Production",
+      "$a": {"addLink": "place", "resourceType": "Place", "property": "label"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
+      "$1": null,
+      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": [
+            {"257": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Sverige"}]}}
+          ],
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "0", "subfields": [{"a": "Sverige"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "production": [
+                {
+                  "@type": "Production",
+                  "place": [
+                    {
+                      "@type": "Place",
+                      "label": "Sverige"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "258": {
       "NOTE:LC": "nac",
