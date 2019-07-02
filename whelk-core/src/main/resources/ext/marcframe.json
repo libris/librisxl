@@ -7987,7 +7987,38 @@
       ]
     },
 
-    "270": { "ignored": true, "NOTE:LC": "ignore"},
+    "265": {
+      "addLink": "acquisitionSource",
+      "resourceType": "AcquisitionSource",
+      "onRevertPrefer": "037",
+      "$a": {"property": "label"},
+      "$6": null,
+      "_spec": [
+        {
+          "source": [
+            {"265": {"ind1": " ", "ind2": " ", "subfields": [{"a": "source"}]}}
+          ],
+          "normalized": [
+            {"037": {"ind1": " ", "ind2": " ", "subfields": [{"b": "source"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "acquisitionSource": [{
+                "@type": "AcquisitionSource",
+                "label": "source"
+              }],
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "270": {
+      "ignored": true,
+      "NOTE:LC": "270 - ADDRESS (R) ignore"
+    },
 
     "300": {
       "aboutEntity": "?thing",
