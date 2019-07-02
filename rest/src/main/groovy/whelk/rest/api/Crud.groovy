@@ -20,7 +20,6 @@ import whelk.exception.WhelkRuntimeException
 import whelk.rest.security.AccessControl
 import whelk.util.LegacyIntegrationTools
 
-import javax.activation.MimetypesFileTypeMap
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -58,8 +57,6 @@ class Crud extends HttpServlet {
     enum FormattingType {
         FRAMED, EMBELLISHED, FRAMED_AND_EMBELLISHED, RAW
     }
-
-    MimetypesFileTypeMap mimeTypes = new MimetypesFileTypeMap()
 
     final static Map contextHeaders = [
             "bib": "/sys/context/lib.jsonld",
@@ -174,16 +171,20 @@ class Crud extends HttpServlet {
 
         try {
             def path = getRequestPath(request)
-
             handleGetRequest(request, response, path)
-        } catch (UnsupportedContentTypeException ucte) {
+        } catch (UnsupportedContentTypeException e) {
             failedRequests.labels("GET", request.getRequestURI(),
                     response.SC_NOT_ACCEPTABLE.toString()).inc()
-            response.sendError(response.SC_NOT_ACCEPTABLE, ucte.message)
-        } catch (WhelkRuntimeException wrte) {
+            response.sendError(response.SC_NOT_ACCEPTABLE, e.message)
+        } catch (NotFoundException e) {
+            failedRequests.labels("GET", request.getRequestURI(),
+                    response.SC_NOT_FOUND.toString()).inc()
+            response.sendError(response.SC_NOT_FOUND, e.message)
+        }
+        catch (WhelkRuntimeException e) {
             failedRequests.labels("GET", request.getRequestURI(),
                     response.SC_INTERNAL_SERVER_ERROR.toString()).inc()
-            response.sendError(response.SC_INTERNAL_SERVER_ERROR, wrte.message)
+            response.sendError(response.SC_INTERNAL_SERVER_ERROR, e.message)
         }
     }
 
@@ -364,8 +365,7 @@ class Crud extends HttpServlet {
                     break
                 default:
                     // TODO support more file types
-                    throw new WhelkRuntimeException("Bad file ending: " +
-                            "${fileEnding}")
+                    throw new NotFoundException('Bad file ending: ${fileEnding}')
             }
         } else if (view == 'data-view') {
             switch (fileEnding) {
@@ -380,7 +380,7 @@ class Crud extends HttpServlet {
                     break
                 default:
                     // TODO support more file types
-                    throw new WhelkRuntimeException("Bad file ending: ${fileEnding}")
+                    throw new NotFoundException('Bad file ending: ${fileEnding}')
             }
         } else {
             return FormattingType.EMBELLISHED
@@ -1080,4 +1080,9 @@ class Crud extends HttpServlet {
         return str.replaceAll('"', '')
     }
 
+    static class NotFoundException extends RuntimeException {
+        NotFoundException(String msg) {
+            super(msg)
+        }
+    }
 }

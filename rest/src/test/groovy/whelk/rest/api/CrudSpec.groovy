@@ -9,7 +9,6 @@ import whelk.JsonLd
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ModelValidationException
-import whelk.exception.WhelkRuntimeException
 import whelk.rest.security.AccessControl
 import whelk.util.LegacyIntegrationTools
 
@@ -37,6 +36,10 @@ class CrudSpec extends Specification {
 
     void setup() {
         request = GroovyMock(HttpServletRequest.class)
+        request.getRequestURI() >> {
+            request.getPathInfo()
+        }
+
         ServletOutputStream out = GroovyMock(ServletOutputStream.class)
         response = new HttpServletResponseWrapper(GroovyMock(HttpServletResponse.class)) {
             int status = 0
@@ -105,9 +108,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -122,9 +122,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -137,9 +134,6 @@ class CrudSpec extends Specification {
     def "POST to /<id> should return 405 Method Not Allowed"() {
         given:
         request.getPathInfo() >> {
-            "/1234"
-        }
-        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -157,8 +151,8 @@ class CrudSpec extends Specification {
     def "GET /<id> should display requested document if it exists"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getRequestURI() >> {
-            id
+        request.getPathInfo() >> {
+            '/' + id
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -178,10 +172,10 @@ class CrudSpec extends Specification {
         def id = BASE_URI.resolve("/1234").toString()
         def altId = BASE_URI.resolve("/alt_1234").toString()
         request.pathInfo >> {
-            altId
+            '/' + id
         }
-        request.getRequestURI() >> {
-            altId
+        request.getPathInfo() >> {
+            "/${id}".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -210,8 +204,8 @@ class CrudSpec extends Specification {
     def "GET /<id> should return 404 Not Found if document can't be found"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getRequestURI() >> {
-            id
+        request.getPathInfo() >> {
+            '/' + id
         }
         storage.load(_, _) >> {
             return null
@@ -231,8 +225,8 @@ class CrudSpec extends Specification {
     def "GET /<alternate_id> if URI not found should return 404 Not Found"() {
         given:
         def altId = BASE_URI.resolve("/alt_1234").toString()
-        request.getRequestURI() >> {
-            altId
+        request.getPathInfo() >> {
+            '/' + altId
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -255,8 +249,8 @@ class CrudSpec extends Specification {
     def "GET /<id> should return 410 Gone if document is deleted"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getRequestURI() >> {
-            id
+        request.getPathInfo() >> {
+            '/' + id
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -276,7 +270,7 @@ class CrudSpec extends Specification {
     def "GET /<id>?version=1 should display requested document if it exists"() {
         given:
         def id = BASE_URI.resolve("/1234?version=1").toString()
-        request.getRequestURI() >> {
+        request.getPathInfo() >> {
             id
         }
         request.getHeader("Accept") >> {
@@ -295,13 +289,17 @@ class CrudSpec extends Specification {
         response.getContentType() == "application/ld+json"
     }
 
+    //TODO: this doesn't really test anything
     def "GET /<id>?version=1 should return 404 Not Found if document can't be found"() {
         given:
-        def id = BASE_URI.resolve("/1234?version=1").toString()
-        request.getRequestURI() >> {
-            id
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            '/' + id
         }
-        storage.load(_, _) >> {
+        request.getQueryString() >> {
+            return 'version=1'
+        }
+        storage.load(_, _, _) >> {
             return null
         }
         storage.loadDocumentByMainId(_, _) >> {
@@ -320,8 +318,8 @@ class CrudSpec extends Specification {
         // We don't allow this for now
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getRequestURI() >> {
-            "#{id}/data".toString()
+        request.getPathInfo() >> {
+            "/${id}/data".toString()
         }
         request.getHeader("Accept") >> {
             "application/ld+json"
@@ -340,8 +338,8 @@ class CrudSpec extends Specification {
     def "GET /<id>/data.jsonld should display document in JSON-LD format"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getRequestURI() >> {
-            "#{id}/data.jsonld".toString()
+        request.getPathInfo() >> {
+            "/${id}/data".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -360,8 +358,8 @@ class CrudSpec extends Specification {
     def "GET /<id>/data.json should display document in JSON format"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getRequestURI() >> {
-            "#{id}/data.json".toString()
+        request.getPathInfo() >> {
+            "/${id}/data.json".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -386,11 +384,11 @@ class CrudSpec extends Specification {
         response.getContentType() == "application/json"
     }
 
-    def "GET /<id>/data.ttl should return 406 Not Acceptable"() {
+    def "GET /<id>/data.ttl should return 404 Not Found"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getRequestURI() >> {
-            "#{id}/data.ttl".toString()
+        request.getPathInfo() >> {
+            "/${id}/data.ttl".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -401,14 +399,14 @@ class CrudSpec extends Specification {
         when:
         crud.doGet(request, response)
         then:
-        response.getStatus() == HttpServletResponse.SC_NOT_ACCEPTABLE
+        response.getStatus() == HttpServletResponse.SC_NOT_FOUND
     }
 
-    def "GET /<id>/data.rdf should return 406 Not Acceptable"() {
+    def "GET /<id>/data.rdf should return 404 Not Found"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getRequestURI() >> {
-            "#{id}/data.rdf".toString()
+        request.getPathInfo() >> {
+            "/${id}/data.rdf".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -419,7 +417,7 @@ class CrudSpec extends Specification {
         when:
         crud.doGet(request, response)
         then:
-        response.getStatus() == HttpServletResponse.SC_NOT_ACCEPTABLE
+        response.getStatus() == HttpServletResponse.SC_NOT_FOUND
     }
 
     def "GET document with If-None-Match equal to ETag should return 304 Not Modified"() {
@@ -428,7 +426,7 @@ class CrudSpec extends Specification {
         def doc = new Document(["@graph": [["@id": id]]])
         doc.setModified(new Date())
         def etag = doc.getChecksum()
-        request.getRequestURI() >> { id }
+        request.getPathInfo() >> { '/' + id }
         request.getHeader("Accept") >> { "*/*" }
         request.getHeader("If-None-Match") >> { etag }
         storage.load(_, _) >> { return doc }
@@ -452,9 +450,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/"
-        }
-        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -498,9 +493,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
         }
@@ -526,9 +518,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/"
-        }
-        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -566,9 +555,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/"
-        }
-        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -630,9 +616,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
         }
@@ -684,9 +667,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/"
-        }
-        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -749,9 +729,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/"
-        }
-        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -817,9 +794,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
         }
@@ -882,9 +856,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
         }
@@ -937,9 +908,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/"
-        }
-        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -999,9 +967,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/"
-        }
-        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -1069,9 +1034,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
         }
@@ -1134,9 +1096,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
         }
@@ -1194,9 +1153,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/"
-        }
-        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -1260,9 +1216,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
         }
@@ -1315,9 +1268,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/some_id"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1344,9 +1294,6 @@ class CrudSpec extends Specification {
         }
         request.getPathInfo() >> {
             "/some_id"
-        }
-        request.getRequestURI() >> {
-            "/"
         }
         request.getMethod() >> {
             "PUT"
@@ -1385,9 +1332,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/1234"
-        }
-        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -1451,9 +1395,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             altId
         }
-        request.getRequestURI() >> {
-            altId
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1511,9 +1452,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/bad_id"
         }
-        request.getRequestURI() >> {
-            "/bad_id"
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1556,9 +1494,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            id
-        }
-        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -1607,9 +1542,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/some_other_id"
-        }
-        request.getRequestURI() >> {
             "/some_other_id"
         }
         request.getMethod() >> {
@@ -1678,9 +1610,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            id
-        }
-        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -1753,9 +1682,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
-        request.getRequestURI() >> {
-            id
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1824,9 +1750,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            id
-        }
-        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -1899,9 +1822,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
-        request.getRequestURI() >> {
-            id
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1972,9 +1892,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
-        request.getRequestURI() >> {
-            id
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -2041,9 +1958,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            id
-        }
-        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -2114,9 +2028,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
-        request.getRequestURI() >> {
-            id
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -2185,9 +2096,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
-        request.getRequestURI() >> {
-            id
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -2248,9 +2156,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            id
-        }
-        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -2325,9 +2230,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            id
-        }
-        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -2407,9 +2309,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
-        request.getRequestURI() >> {
-            id
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -2483,9 +2382,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
-        request.getRequestURI() >> {
-            id
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -2549,9 +2445,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            id
-        }
-        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -2623,9 +2516,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
-        request.getRequestURI() >> {
-            id
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -2669,9 +2559,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -2700,9 +2587,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/dataset/some_document"
         }
-        request.getRequestURI() >> {
-            "/dataset/some_document"
-        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -2727,9 +2611,6 @@ class CrudSpec extends Specification {
                                 "@type": "Record",
                                 "contains": "some new data"]]]
         request.getPathInfo() >> {
-            "/1234"
-        }
-        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -2768,9 +2649,6 @@ class CrudSpec extends Specification {
                                          ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]
         ]
         request.getPathInfo() >> {
-            "/1234"
-        }
-        request.getRequestURI() >> {
             "/1234"
         }
         request.getAttribute(_) >> {
@@ -2815,9 +2693,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getAttribute(_) >> {
             return ["permissions": [["code": "Ting",
                                      "cataloger": false,
@@ -2859,9 +2734,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getAttribute(_) >> {
             return null
         }
@@ -2891,9 +2763,6 @@ class CrudSpec extends Specification {
                                 "@type": "Item",
                                 "contains": "some new data"]]]
         request.getPathInfo() >> {
-            "/1234"
-        }
-        request.getRequestURI() >> {
             "/1234"
         }
         request.getAttribute(_) >> {
@@ -2938,9 +2807,6 @@ class CrudSpec extends Specification {
                                 "heldBy":
                                         ["code": "Ting", "@id":"https://libris.kb.se/library/S"]]]]
         request.getPathInfo() >> {
-            "/1234"
-        }
-        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -2990,9 +2856,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -3038,9 +2901,6 @@ class CrudSpec extends Specification {
                                 "heldBy":
                                         ["code": "S"]]]]
         request.getPathInfo() >> {
-            "/1234"
-        }
-        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -3092,9 +2952,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             redirectId
         }
-        request.getRequestURI() >> {
-            redirectId
-        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -3142,9 +2999,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -3184,9 +3038,6 @@ class CrudSpec extends Specification {
                                 "heldBy":
                                         ["code": "Ting"]]]]
         request.getPathInfo() >> {
-            "/1234"
-        }
-        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -3236,9 +3087,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -3278,9 +3126,6 @@ class CrudSpec extends Specification {
                                 "heldBy":
                                         ["code": "Ting", "@id":"https://libris.kb.se/library/S"]]]]
         request.getPathInfo() >> {
-            "/1234"
-        }
-        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -3325,9 +3170,6 @@ class CrudSpec extends Specification {
                                 "heldBy":
                                         ["code": "Ting", "@id":"https://libris.kb.se/library/S"]]]]
         request.getPathInfo() >> {
-            "/1234"
-        }
-        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -3409,13 +3251,13 @@ class CrudSpec extends Specification {
         when:
         Crud.getFormattingType('/foo/data.invalid', 'application/ld+json')
         then:
-        thrown WhelkRuntimeException
+        thrown Crud.NotFoundException
     }
 
     def "should throw exception when getting formatting type for invalid file ending, II"() {
         when:
         Crud.getFormattingType('/foo/data-view.invalid', 'application/ld+json')
         then:
-        thrown WhelkRuntimeException
+        thrown Crud.NotFoundException
     }
 }
