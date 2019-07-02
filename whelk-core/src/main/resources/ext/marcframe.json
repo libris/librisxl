@@ -7392,11 +7392,8 @@
       ]
     },
     "258": {
-      "NOTE:LC": "nac",
-      "addLink": "marc:hasPhilatelicIssueDate",
-      "resourceType": "marc:PhilatelicIssueDate",
-      "$a": {"property": "marc:issuingJurisdiction"},
-      "$b": {"property": "marc:denomination"}
+      "ignored": true,
+      "NOTE:LC": "258 - PHILATELIC ISSUE DATE (R) nac"
     },
 
     "260": {
