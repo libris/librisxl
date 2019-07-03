@@ -7356,22 +7356,24 @@
       ]
     },
     "257": {
-      "aboutEntity": "?thing",
       "onRevertPrefer": "264",
-      "addLink": "production",
-      "resourceType": "Production",
-      "$a": {"addLink": "place", "resourceType": "Place", "property": "label"},
-      "$0": {"addProperty": "marc:recordControlNumber"},
+      "aboutEntity": "?thing",
+      "pendingResources": {
+        "_:production": {"addLink": "production", "resourceType": "Production", "embedded": true},
+        "_:prodPlace": {"about": "_:production", "addLink": "place", "resourceType": "Place", "embedded": true}
+      },
+      "$a": {"about": "_:prodPlace", "property": "label"},
+      "$0": {"about": "_:prodPlace", "addProperty": "marc:recordControlNumber"},
       "$1": null,
-      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
-      "$6": {"property": "marc:fieldref"},
+      "$2": {"about": "_:prodPlace", "link": "source", "resourceType": "Source", "property": "code"},
+      "$6": {"about": "_:prodPlace", "property": "marc:fieldref"},
       "_spec": [
         {
           "source": [
-            {"257": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Sverige"}]}}
+            {"257": {"ind1": " ", "ind2": " ", "subfields": [{"0": "http://id.loc.gov/authorities/names/n79021184"},{"a": "Sweden"}]}}
           ],
           "normalized": [
-            {"264": {"ind1": " ", "ind2": "0", "subfields": [{"a": "Sverige"}]}}
+            {"264": {"ind1": " ", "ind2": "0", "subfields": [{"a": "Sweden"}]}}
           ],
           "result": {
             "mainEntity": {
@@ -7381,7 +7383,8 @@
                   "place": [
                     {
                       "@type": "Place",
-                      "label": "Sverige"
+                      "label": "Sweden",
+                      "marc:recordControlNumber": ["http://id.loc.gov/authorities/names/n79021184"]
                     }
                   ]
                 }
