@@ -7305,9 +7305,26 @@
     },
 
     "254": {
-      "Link": "marc:hasMusicalPresentationStatement",
+      "link": "marc:hasMusicalPresentationStatement",
       "resourceType": "marc:MusicalPresentationStatement",
-      "$a": {"property": "marc:musicalPresentationStatement"}
+      "$a": {"property": "label"},
+      "$6": {"property": "marc:fieldref"},
+      "NOTE:LC": "I - note - Note",
+      "_spec": [
+        {
+          "source": [
+            {"254": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Composer's facsimile study score."}]}}
+          ],
+          "result": {"mainEntity": {
+            "marc:hasMusicalPresentationStatement": 
+              {
+                "@type": "marc:MusicalPresentationStatement",
+                "label": "Composer's facsimile study score."
+              }
+            }
+          }
+        }
+      ]
     },
     "255": {
       "NOTE:domainIncludes": "Cartography",
