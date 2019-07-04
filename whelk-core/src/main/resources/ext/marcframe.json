@@ -7374,20 +7374,22 @@
     },
     "257": {
       "onRevertPrefer": "264",
+      "NOTE": "Removing subfields incompatible with 264.",
       "aboutEntity": "?thing",
+      "addLink": "production",
+      "resourceType": "Production", 
       "pendingResources": {
-        "_:production": {"addLink": "production", "resourceType": "Production", "embedded": true},
-        "_:prodPlace": {"about": "_:production", "addLink": "place", "resourceType": "Place", "embedded": true}
+        "_:part": {"addLink": "hasPart", "resourceType": "Production", "absorbSingle": true}
       },
-      "$a": {"about": "_:prodPlace", "property": "label"},
-      "$0": {"about": "_:prodPlace", "addProperty": "marc:recordControlNumber"},
+      "$a": {"about": "_:part", "addLink": "place", "resourceType": "Place","property": "label"},
+      "$0": null,
       "$1": null,
-      "$2": {"about": "_:prodPlace", "link": "source", "resourceType": "Source", "property": "code"},
-      "$6": {"about": "_:prodPlace", "property": "marc:fieldref"},
+      "$2": null,
+      "$6": {"about": "_:part", "property": "marc:fieldref", "supplementary": true},
       "_spec": [
         {
           "source": [
-            {"257": {"ind1": " ", "ind2": " ", "subfields": [{"0": "http://id.loc.gov/authorities/names/n79021184"},{"a": "Sweden"}]}}
+            {"257": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Sweden"}]}}
           ],
           "normalized": [
             {"264": {"ind1": " ", "ind2": "0", "subfields": [{"a": "Sweden"}]}}
@@ -7400,8 +7402,7 @@
                   "place": [
                     {
                       "@type": "Place",
-                      "label": "Sweden",
-                      "marc:recordControlNumber": ["http://id.loc.gov/authorities/names/n79021184"]
+                      "label": "Sweden"
                     }
                   ]
                 }
