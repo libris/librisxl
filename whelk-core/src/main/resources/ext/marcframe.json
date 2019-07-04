@@ -7872,7 +7872,94 @@
       ]
     },
 
-    "261": {},
+    "261": {
+      "onRevertPrefer": "264",
+      "aboutEntity": "?thing",
+      "NOTE:LC": "Also create statement: I - provisionActivityStatement - literal ($abd -- concatenate with blank -- add semicolon between subfields if no other punctuation -- keep order in field)",
+      "pendingResources": {
+        "_:production": {"addLink": "production", "resourceType": "Production", "embedded": true},
+        "_:prodPart": {"about": "_:production", "addLink": "hasPart", "resourceType": "Production", "absorbSingle": true},
+        "_:manufacture": {"addLink": "manufacture", "resourceType": "Manufacture", "embedded": true}
+      },
+      "$a": {"aboutNew": "_:prodPart", "addLink": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :", "punctuationChars": ".,"},
+      "$b": {"aboutAltNew": "_:prodPart", "addLink": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :"},
+      "$d": {"about": "_:production", "addProperty": "date", "leadingPunctuation": ",", "punctuationChars": ".,;"},
+      "$e": {"about": "_:manufacture", "addLink": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ".,;"},
+      "$f": {"about": "_:production", "addLink": "place", "resourceType": "Place", "property": "label","leadingPunctuation": " ;"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "name": "Simple",
+          "source": [
+            {"261": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Coronet Films,"},{"d": "1967."}]}}
+          ],
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "0", "subfields": [{"b": "Coronet Films,"},{"c": "1967"}]}}
+
+          ],
+          "result": {
+            "mainEntity": {
+              "production": [
+                {
+                  "@type": "Production",
+                  "agent": [
+                    {
+                      "@type": "Agent",
+                      "label": "Coronet Films"
+                    }
+                  ],
+                  "date": ["1967"]
+
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "With manufacturer",
+          "source": [
+            {"261": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Boulton-Hawker Films"},{"f": "Hadley, Eng"},{"e": "Made by D.C. Chipperfield."},{"d": "1971"}]}}
+          ],
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "0", "subfields": [{"a": "Hadley, Eng :"}, {"b": "Boulton-Hawker Films,"}, {"c": "1971"}]}},
+            {"264": {"ind1": " ", "ind2": "3", "subfields": [{"b": "Made by D.C. Chipperfield"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "manufacture": [
+                {
+                  "@type": "Manufacture",
+                  "agent": [
+                    {
+                      "@type": "Agent",
+                      "label": "Made by D.C. Chipperfield"
+                    }
+                  ]
+                }
+              ],
+              "production": [
+                {
+                  "@type": "Production",
+                  "date": ["1971"],
+                  "agent": [
+                    {
+                      "@type": "Agent",
+                      "label": "Boulton-Hawker Films"
+                    }
+                  ],
+                  "place": [
+                    {
+                      "@type": "Place",
+                      "label": "Hadley, Eng"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
     "262": {
       "aboutEntity": "?thing",
       "onRevertPrefer": "264",
