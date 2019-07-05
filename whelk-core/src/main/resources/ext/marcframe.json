@@ -8330,9 +8330,31 @@
 
     "310": {
       "aboutEntity": "?thing",
-      "$a": {"addLink": "frequency", "resourceType": "Frequency", "property": "label"},
+      "addLink": "frequency",
+      "resourceType": "Frequency",
+      "NOTE:marc-repeatable": false,
+      "$a": {"property": "label"},
+      "$b": {"property": "date"},
       "$6": {"property": "marc:fieldref"},
-      "TODO:$b": "Compare with 321"
+      "_spec": [
+        {
+          "source": [
+            {"310": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Monthly"},{"b": "1958-"}]}}
+          ],
+          "result": {
+            "mainEntity": 
+            {
+              "frequency": [
+                {
+                  "@type": "Frequency",
+                  "label": "Monthly",
+                  "date": "1958-"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
 
     "321": {
