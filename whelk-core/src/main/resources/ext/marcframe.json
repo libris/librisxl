@@ -9087,12 +9087,13 @@
         "property": "label"
       },
       "$0": null, "NOTE:$0": "nac",
+      "$1": null,
       "TODO:subfield$2": "Source (NR)",
       "$3": null,
       "NOTE:$3": {"NOTE:LC": "nac", "NOTE:record-count": 0, "NOTE:local": "If this would appear, we unconditionally expect it ONLY to be used in subsequent 340 (see linkSubsequentRepeated)."},
       "TODO:subfield$6": "Linkage (NR)",
       "$g": {
-        "NOTE": "New subfield",
+        "NOTE": "New subfield, is on work in BF2",
         "addLink": "colorContent",
         "resourceType": "ColorContent",
         "property": "label"
