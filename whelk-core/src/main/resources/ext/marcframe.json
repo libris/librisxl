@@ -8255,7 +8255,72 @@
       "$8": {"about": "_:extent", "property": "marc:groupid"}
     },
 
-    "306": {},
+    "306": {
+      "addLink": "hasDuration",
+      "resourceType": "Duration",
+      "pendingResources": {
+        "_:durationPart": {
+          "addLink": "hasPart",
+          "resourceType": "Duration",
+          "absorbSingle": true
+        }
+      },
+      "$a": {"aboutNew": "_:durationPart", "property": "value"},
+      "$6": {"about": "_:durationPart", "property": "marc:fieldref"},
+      "_spec": [
+        {
+          "Name": "Simple duration value",
+          "source": [
+            {"306": {"ind1": " ", "ind2": " ", "subfields": [{"a": "003100"}]}}
+          ],
+          "result": {
+            "mainEntity": 
+            {
+              "hasDuration": [
+                {
+                  "@type": "Duration",
+                  "value": "003100"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Name": "Duration in parts",
+          "source": [
+            {"306": {"ind1": " ", "ind2": " ", "subfields": [{"a": "003100"},{"a": "001839"}]}},
+            {"500": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Durations: 31:00 ; 18:39."}]}}
+          ],
+          "result": {
+            "mainEntity": 
+            {
+              "hasDuration": [
+                {
+                  "@type": "Duration",
+                  "hasPart": [
+                    {
+                      "@type": "Duration",
+                      "value": "003100"
+                    },
+                    {
+                      "@type": "Duration",
+                      "value": "001839"
+                    }
+                  ]
+                }
+              ],
+              "hasNote": [
+                {
+                  "@type": "Note",
+                  "label": "Durations: 31:00 ; 18:39."
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+
     "307": { "ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "Används företrädesvis för elektroniska resurser."},
 
     "310": {
