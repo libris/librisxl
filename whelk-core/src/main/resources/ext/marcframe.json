@@ -9164,8 +9164,8 @@
         }
       ]
     },
-    "342": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
-    "343": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "342": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "342 - GEOSPATIAL REFERENCE DATA (R) nac"},
+    "343": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "343 - PLANAR COORDINATE DATA (R) nac"},
     "344": {
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
