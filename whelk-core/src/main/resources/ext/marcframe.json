@@ -9592,19 +9592,134 @@
         }
       ]
     },
-    "363": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
-    "365": {"ignored": true, "NOTE:record-count": 8066, "NOTE:LC": "nac", "NOTE:local": "Avsett för bokhandelns information"},
-    "366": {"ignored": true, "NOTE:record-count": 8066, "NOTE:LC": "nac", "NOTE:local": "Avsett för bokhandelns information"},
-    "370": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
-    "377": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
-    "380": {"ignored": true, "NOTE:record-count": 2, "NOTE:LC": "genreForm", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
-    "381": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
-    "382": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "musicMedium", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
-    "383": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
-    "384": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
-    "385": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "intendedAudience", "TODO": "For imports"},
-    "386": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "creatorCharacteristic", "TODO": "For imports"},
-    "388": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
+    "363": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "363 - NORMALIZED DATE AND SEQUENTIAL DESIGNATION (R) nac"
+    },
+    "365": {
+      "ignored": true,
+      "NOTE:record-count": 8066,
+      "NOTE:LC": "365 - TRADE PRICE (R) nac",
+      "NOTE:local": "Avsett för bokhandelns information"
+    },
+    "366": {
+      "ignored": true,
+      "NOTE:record-count": 8066,
+      "NOTE:LC": "366 - TRADE AVAILABILITY INFORMATION (R) nac",
+      "NOTE:local": "Avsett för bokhandelns information"
+    },
+    "370": {
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "aboutEntity": "?work",
+      "pendingResources": {
+        "_:associated": {
+          "addLink": "marc:hasAssociatedPlace",
+          "resourceType": "Place"
+        },
+        "_:origin": {
+          "addLink": "originPlace",
+          "resourceType": "Place"
+        }
+      },
+      "$c": {"about": "_:associated", "property": "label"},
+      "$f": null,
+      "$g": {"about": "_:origin", "property": "label"},
+      "$s": null,
+      "$t": null,
+      "$u": null,
+      "$v": null,
+      "$0": null,
+      "$1": null,
+      "$2": null,
+      "$3": null,
+      "$4": null,
+      "$6": null,
+      "_spec": [
+         {
+           "source": [
+             {"370": {"ind1": " ", "ind2": " ", "subfields": [{"c": "Sweden"},{"g": "Japan"}]}}
+           ],
+           "result": {
+             "mainEntity": {
+               "instanceOf": {
+                 "@type": "Text",
+                 "marc:hasAssociatedPlace": [
+                   {
+                    "@type": "Place",
+                    "label": "Sweden"
+                    }
+                  ],
+                 "originPlace": [
+                   {
+                     "@type": "Place",
+                     "label": "Japan"
+                   }
+                 ]
+               }
+             }
+           }
+         }
+       ]
+    },
+    "377": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "language",
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "TODO": "For imports"
+    },
+    "380": {
+      "ignored": true,
+      "NOTE:record-count": 2,
+      "NOTE:LC": "genreForm",
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "TODO": "For imports"
+    },
+    "381": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "381 - OTHER DISTINGUISHING CHARACTERISTICS OF WORK OR EXPRESSION (R) nac",
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
+    },
+    "382": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "musicMedium",
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "TODO": "For imports"
+    },
+    "383": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "musicSerialnumber, musicOpusNumber, etc.",
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "TODO": "For imports"
+    },
+    "384": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "musicKey",
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "TODO": "For imports"
+    },
+    "385": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "intendedAudience",
+      "TODO": "For imports"
+    },
+    "386": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "creatorCharacteristic",
+      "TODO": "For imports"},
+    "388": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "388 - TIME PERIOD OF CREATION (R) nac",
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
+    },
 
     "400": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
     "410": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
