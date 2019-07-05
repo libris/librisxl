@@ -8335,7 +8335,7 @@
       "NOTE:marc-repeatable": false,
       "$a": {"property": "label"},
       "$b": {"property": "date"},
-      "$6": {"property": "marc:fieldref"},
+      "$6": {"property": "marc:fieldref", "supplementary": true},
       "_spec": [
         {
           "source": [
@@ -8369,7 +8369,7 @@
       },
       "$a": {"about": "_:frequency", "property": "label"},
       "$b": {"about": "_:frequency", "property": "date"},
-      "$6": {"about": "_:frequency", "property": "marc:fieldref"},
+      "$6": {"about": "_:frequency", "property": "marc:fieldref", "supplementary": true},
       "_spec": [
         {
           "source": [
