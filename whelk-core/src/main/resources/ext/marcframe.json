@@ -8361,8 +8361,50 @@
       "addLink": "replaces",
       "embedded": true,
       "resourceType": "Serial",
-      "$a": {"addLink": "frequency", "resourceType": "Frequency", "property": "label"},
-      "$b": {"property": "date"}
+      "pendingResources": {
+        "_:frequency": {
+          "addLink": "frequency",
+          "resourceType": "Frequency"
+        }
+      },
+      "$a": {"about": "_:frequency", "property": "label"},
+      "$b": {"about": "_:frequency", "property": "date"},
+      "$6": {"about": "_:frequency", "property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": [
+            {"321": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Annual"},{"b": "1981-"}]}},
+            {"321": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Updated irregularly"},{"b": "1984-"}]}}
+          ],
+          "result": {
+            "mainEntity": 
+            {
+              "replaces": [
+                {
+                  "@type": "Serial",
+                  "frequency": [
+                    {
+                      "@type": "Frequency",
+                      "label": "Annual",
+                      "date": "1981-"
+                    }
+                  ]
+                },
+                {
+                  "@type": "Serial",
+                  "frequency": [
+                    {
+                      "@type": "Frequency",
+                      "label": "Updated irregularly",
+                      "date": "1984-"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
 
     "336": {
