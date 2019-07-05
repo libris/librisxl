@@ -9541,8 +9541,13 @@
         "about": "_:cartographicobj",
         "property": "count"
       },
-      "$q": null,
-      "NOTE:$q": {"NOTE:record-count": 0, "TODO": "To enable future imports to EncodingFormat, we need something like onRevertPrefer 347$b to avoid collisions in export."}
+      "$d": null,
+      "$e": null,
+      "$f": null,
+      "$g": null,
+      "$i": null,
+      "NOTE:$q": {"NOTE:record-count": 0, "TODO": "To enable future imports to EncodingFormat, we need something like onRevertPrefer 347$b to avoid collisions in export."},
+      "$6": null
     },
     "355": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
     "357": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
