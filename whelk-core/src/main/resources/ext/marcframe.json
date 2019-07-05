@@ -9164,6 +9164,7 @@
         }
       ]
     },
+    "341": {"ignored": true, "NOTE": "New 2018, terms not in BF2 yet.", "TODO": "W - contentAccessibility - ContentAccessibility"},
     "342": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "342 - GEOSPATIAL REFERENCE DATA (R) nac"},
     "343": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "343 - PLANAR COORDINATE DATA (R) nac"},
     "344": {
