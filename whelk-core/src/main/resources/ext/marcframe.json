@@ -8445,8 +8445,11 @@
       },
       "$a": {"about": "_:contentType", "property": "label", "infer": true},
       "$b": {"about": "_:contentType", "property": "code"},
+      "$0": {"about": "_:contentType", "property": "marc:recordControlNumber"},
+      "$1": null,
       "$2": {"about": "_:contentType", "property": "termGroup", "marcDefault": "rdacontent", "supplementary": true},
       "TODO?:$2": {"about": "_:contentType", "addLink": "inCollection", "resourceType": "ConceptCollection", "property": "code"},
+      "$6": {"about": "_:contentType", "property": "marc:fieldref", "supplementary": true},
       "$8": {"about": "_:contentType", "property": "marc:groupid", "supplementary": true},
       "$3": {"property": "typeNote", "supplementary": true},
       "_spec": [
@@ -8597,7 +8600,10 @@
       "aboutEntity": "?thing",
       "$a": {"about": "_:mediaType", "property": "label", "infer": true},
       "$b": {"about": "_:mediaType", "property": "code"},
+      "$0": {"about": "_:mediaType", "property": "marc:recordControlNumber"},
+      "$1": null,
       "$2": {"about": "_:mediaType", "property": "termGroup", "marcDefault": "rdamedia", "supplementary": true},
+      "$6": {"about": "_:mediaType", "property": "marc:fieldref", "supplementary": true},
       "$8": {"about": "_:mediaType", "property": "marc:groupid", "supplementary": true},
       "$3": {"property": "typeNote", "supplementary": true},
       "_spec": [
@@ -8732,7 +8738,10 @@
       },
       "$a": {"about": "_:carrierType", "property": "label", "infer": true},
       "$b": {"about": "_:carrierType", "property": "code"},
+      "$0": {"about": "_:carrierType", "property": "marc:recordControlNumber"},
+      "$1": null,
       "$2": {"about": "_:carrierType", "property": "termGroup", "marcDefault": "rdacarrier", "supplementary": true},
+      "$6": {"about": "_:carrierType", "property": "marc:fieldref", "supplementary": true},
       "$8": {"about": "_:carrierType", "property": "marc:groupid", "supplementary": true},
       "$3": {"property": "typeNote", "supplementary": true},
       "_spec": [
