@@ -8321,7 +8321,12 @@
       ]
     },
 
-    "307": { "ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "Används företrädesvis för elektroniska resurser."},
+    "307": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "307 - HOURS, ETC. (R) nac",
+      "NOTE:local": "Används företrädesvis för elektroniska resurser."
+    },
 
     "310": {
       "aboutEntity": "?thing",
