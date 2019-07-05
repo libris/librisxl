@@ -9549,8 +9549,8 @@
       "NOTE:$q": {"NOTE:record-count": 0, "TODO": "To enable future imports to EncodingFormat, we need something like onRevertPrefer 347$b to avoid collisions in export."},
       "$6": null
     },
-    "355": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
-    "357": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "355": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "355 - SECURITY CLASSIFICATION CONTROL (R) nac"},
+    "357": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "357 - ORIGINATOR DISSEMINATION CONTROL (NR) nac"},
     "362": {
       "aboutEntity": "?thing",
       "addLink": "hasNumberingOfSerials",
