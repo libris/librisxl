@@ -9477,6 +9477,36 @@
         }
       ]
     },
+    "350": {
+      "onRevertPrefer": "037",
+      "NOTE:LC": "Price (CF, SE) [OBSOLETE, 1993]",
+      "addLink": "acquisitionSource",
+      "resourceType": "AcquisitionSource",
+      "$a": {"property": "acquisitionTerms"},
+      "$b": null,
+      "$6": null,
+      "_spec": [
+         {
+           "source": [
+             {"350": {"ind1": " ", "ind2": " ", "subfields": [{"a": "$0.35"}]}}
+           ],
+           "normalized": [
+             {"037": {"ind1": " ", "ind2": " ", "subfields": [{"c": "$0.35"}]}}
+           ],
+           "result": {
+             "mainEntity": {
+               "acquisitionSource": [{
+                 "@type": "AcquisitionSource",
+                 "acquisitionTerms": "$0.35"
+               }],
+               "instanceOf": {
+                 "@type": "Text"
+               }
+             }
+           }
+         }
+       ]
+     },
     "351": {
       "aboutEntity": "?work",
       "addLink": "arrangement",
