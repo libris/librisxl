@@ -1579,14 +1579,6 @@ class PostgreSQLComponent {
         }
     }
 
-    List<Tuple2<String, String>> getDependencies(String id, Connection connection) {
-        return getDependencyData(id, GET_DEPENDENCIES, connection)
-    }
-
-    List<Tuple2<String, String>> getDependers(String id, Connection connection) {
-        return getDependencyData(id, GET_DEPENDERS, connection)
-    }
-
     private List<Tuple2<String, String>> getDependencyData(String id, String query, Connection connection) {
         PreparedStatement preparedStatement
         ResultSet rs

@@ -5,7 +5,6 @@ import spock.lang.Shared
 import spock.lang.Specification
 import whelk.JsonLd
 import whelk.exception.InvalidQueryException
-import whelk.rest.api.SearchUtils
 import whelk.rest.api.SearchUtils.SearchType
 
 class SearchUtilsSpec extends Specification {
@@ -270,7 +269,7 @@ class SearchUtilsSpec extends Specification {
         thrown InvalidQueryException
     }
 
-    def "should remove a mappning from params"() {
+    def "should remove a mapping from params"() {
         expect:
         search.removeMappingFromParams(params, mapping) == expected
         where:
@@ -281,5 +280,24 @@ class SearchUtilsSpec extends Specification {
         [key: 'value']            | [variable: 'type', object: ['@id': 'Thing']]    | [key: 'value']
         [a: 'A', 'b': 'B']        | [variable: 'a', value: 'A']                     | [b: 'B']
         [a: ['A', 'a'], 'b': 'B']|  [variable: 'a', value: 'a']                     | [a: ['A'], 'b': 'B']
+    }
+
+    def "slicing should work"() {
+        expect:
+        SearchUtils.slice(list, from, to) == expected
+        where:
+        list = ['a', 'b', 'c', 'd', 'e']
+        from | to | expected
+        0    | 1  | ['a']
+        0    | 5  | ['a', 'b', 'c', 'd', 'e']
+        0    | 6  | ['a', 'b', 'c', 'd', 'e']
+        1    | 5  | ['b', 'c', 'd', 'e']
+        2    | 2  | []
+        3    | 2  | []
+        2    | 3  | ['c']
+        5    | 0  | []
+        0    | 3  | ['a', 'b', 'c']
+        -4   | 9  | ['a', 'b', 'c', 'd', 'e']
+        5    | 0  | []
     }
 }

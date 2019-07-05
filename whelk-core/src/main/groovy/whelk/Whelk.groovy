@@ -361,4 +361,24 @@ class Whelk {
         }
         jsonld.embellish(document.data, referencedData2, filterOutNonChipTerms)
     }
+
+    List<String> findIdsLinkingTo(String id) {
+         return storage
+                .getDependers(tryGetSystemId(id))
+                .collect { it.first }
+    }
+
+    private String tryGetSystemId(String id) {
+        String systemId = storage.getSystemIdByThingId(id)
+        if (systemId == null) {
+            systemId = stripBaseUri(id)
+        }
+        return systemId
+    }
+
+    private static String stripBaseUri(String identifier) {
+        return identifier.startsWith(Document.BASE_URI.toString())
+                ? identifier.substring(Document.BASE_URI.toString().length())
+                : identifier
+    }
 }

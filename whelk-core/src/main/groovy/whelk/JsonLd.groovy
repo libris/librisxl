@@ -90,7 +90,7 @@ class JsonLd {
     Set<String> repeatableTerms
 
     /**
-     * Make an instance to incapsulate model driven behaviour.
+     * Make an instance to encapsulate model driven behaviour.
      */
     JsonLd(Map contextData, Map displayData, Map vocabData,
             List<String> locales = ['sv', 'en']) {
@@ -505,6 +505,50 @@ class JsonLd {
         return true
     }
 
+    static List<List<String>> findPaths(Map obj, String key, String value) {
+        List paths = []
+        new DFS().search(obj, { List path, v ->
+            if (value == v && key == path[-1]) {
+                paths << new ArrayList(path)
+            }
+        })
+        return paths
+    }
+
+    private static class DFS {
+        interface Callback {
+            void node(List path, value)
+        }
+
+        List path = []
+        Callback cb
+
+        void search(obj, Callback callback) {
+            cb = callback
+            path = []
+            node(obj)
+        }
+
+        private void node(obj) {
+            cb.node(path, obj)
+            if (obj instanceof Map) {
+                descend(((Map) obj).entrySet().collect({ new Tuple2(it.value, it.key) }))
+            } else if (obj instanceof List) {
+                descend(((List) obj).withIndex())
+            }
+        }
+
+        private void descend(List<Tuple2> nodes) {
+            for (n in nodes) {
+                path << n.second
+                node(n.first)
+                path.remove(path.size()-1)
+            }
+        }
+    }
+
+
+
     //==== Class-hierarchies ====
 
     void getSuperClasses(String type, List<String> result) {
@@ -630,8 +674,12 @@ class JsonLd {
         return jsonLd
     }
 
+    Map toCard(Map thing, List<List> preservePaths) {
+        return toCard(thing, true, false, false, preservePaths)
+    }
+
     Map toCard(Map thing, boolean chipsify = true, boolean addSearchKey = false,
-            boolean reduceKey = false) {
+            boolean reduceKey = false, List<List> preservePaths = []) {
         Map result = [:]
 
         Map card = removeProperties(thing, 'cards')
@@ -641,24 +689,23 @@ class JsonLd {
             card = removeProperties(thing, 'chips')
         }
 
-        def types = thing[TYPE_KEY]
-        if (!(types instanceof List)) types = [types]
+        restorePreserved(card, thing, preservePaths)
 
         reduceKey = reduceKey ?: { isSubClassOf((String) it, 'StructuredValue') }
 
         card.each { key, value ->
             def lensValue = value
             if (chipsify) {
-                lensValue = toChip(value)
+                lensValue = toChip(value, pathRemainders([key], preservePaths))
             } else {
                 if (value instanceof List) {
-                    lensValue = value.collect {
+                    lensValue = ((List) value).withIndex().collect { it, index ->
                         it instanceof Map
-                        ? toCard((Map) it, chipsify, addSearchKey, reduceKey)
+                        ? toCard((Map) it, chipsify, addSearchKey, reduceKey, pathRemainders([index, key], preservePaths))
                         : it
                     }
                 } else if (value instanceof Map) {
-                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduceKey)
+                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduceKey, pathRemainders([key], preservePaths))
                 }
             }
             result[key] = lensValue
@@ -686,16 +733,17 @@ class JsonLd {
         return result
     }
 
-    Object toChip(Object object) {
-        Map reduced = [:]
-        Map result = [:]
-
+    Object toChip(Object object, List<List> preservePaths = []) {
         if (object instanceof List) {
-            return object.collect { toChip(it) }
+            return object.withIndex().collect { it, ix ->
+                toChip(it, pathRemainders([ix], preservePaths))
+            }
         } else if ((object instanceof Map)) {
-            reduced = removeProperties(object, 'chips')
+            Map result = [:]
+            Map reduced = removeProperties(object, 'chips')
+            restorePreserved(reduced, (Map) object, preservePaths)
             reduced.each { key, value ->
-                result[key] = toChip(value)
+                result[key] = toChip(value, pathRemainders([key], preservePaths))
             }
             return result
         } else {
@@ -735,6 +783,23 @@ class JsonLd {
             }
         }
         return parts
+    }
+
+    private static void restorePreserved(Map cardOrChip, Map thing, List<List> preservePaths) {
+        preservePaths.each {
+            if (!it.isEmpty()) {
+                def key = it[0]
+                if (thing.containsKey(key) && !cardOrChip.containsKey(key)) {
+                    cardOrChip[key] = thing[key]
+                }
+            }
+        }
+    }
+
+    private static List<List> pathRemainders(List prefix, List<List> paths) {
+        return paths
+                .findAll{ it.size() >= prefix.size() && it.subList(0, prefix.size()) == prefix }
+                .collect{ it.drop(prefix.size()) }
     }
 
     private Map removeProperties(Map thing, String lensType) {

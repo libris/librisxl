@@ -162,6 +162,12 @@ gretty {
     httpPort = 8180
     contextPath = '/'
     systemProperties 'xl.secret.properties': System.getProperty("xl.secret.properties")
+    afterEvaluate {
+        appRunDebug {
+            debugPort = 5005
+            debugSuspend = false
+        }
+    }
 }
 
 task(groovy, dependsOn: "classes", type: JavaExec) {

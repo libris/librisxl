@@ -1,6 +1,7 @@
 package whelk.rest.api
 
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import groovy.transform.TypeCheckingMode
 import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
@@ -246,7 +247,8 @@ class ESQuery {
      * Public for test only - don't call outside this class!
      *
      */
-    public String getQueryString(Map<String, String[]> queryParameters) {
+    @PackageScope
+    String getQueryString(Map<String, String[]> queryParameters) {
         if ('q' in queryParameters) {
             // 'q' should only occur once, ingore any others
             return queryParameters.get('q')[0]
@@ -261,7 +263,8 @@ class ESQuery {
      * Public for test only - don't call outside this class!
      *
      */
-    public Tuple2<Integer, Integer> getPaginationParams(Map<String, String[]> queryParameters) {
+    @PackageScope
+    Tuple2<Integer, Integer> getPaginationParams(Map<String, String[]> queryParameters) {
         int limit = DEFAULT_PAGE_SIZE
         int offset = 0
         if ('_limit' in queryParameters) {
@@ -285,7 +288,8 @@ class ESQuery {
      * Public for test only - don't call outside this class!
      *
      */
-    public List getSortClauses(Map<String, String[]> queryParameters) {
+    @PackageScope
+    List getSortClauses(Map<String, String[]> queryParameters) {
         if (!('_sort' in queryParameters)) return null
         if (!(queryParameters.get('_sort').size() > 0) ||
                 queryParameters.get('_sort')[0] == '') {
