@@ -7305,7 +7305,7 @@
     },
 
     "254": {
-      "link": "marc:hasMusicalPresentationStatement",
+      "link": "hasNote",
       "resourceType": "marc:MusicalPresentationStatement",
       "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"},
@@ -7316,7 +7316,7 @@
             {"254": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Composer's facsimile study score."}]}}
           ],
           "result": {"mainEntity": {
-            "marc:hasMusicalPresentationStatement": 
+            "hasNote": 
               {
                 "@type": "marc:MusicalPresentationStatement",
                 "label": "Composer's facsimile study score."
