@@ -7299,12 +7299,32 @@
         }
       ]
     },
-
+    "251": {
+      "ignored": true,
+      "NOTE:LC": "251 - VERSION INFORMATION (R) nac"
+    },
 
     "254": {
-      "Link": "marc:hasMusicalPresentationStatement",
+      "link": "hasNote",
       "resourceType": "marc:MusicalPresentationStatement",
-      "$a": {"property": "marc:musicalPresentationStatement"}
+      "$a": {"property": "label"},
+      "$6": {"property": "marc:fieldref"},
+      "NOTE:LC": "I - note - Note",
+      "_spec": [
+        {
+          "source": [
+            {"254": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Composer's facsimile study score."}]}}
+          ],
+          "result": {"mainEntity": {
+            "hasNote": 
+              {
+                "@type": "marc:MusicalPresentationStatement",
+                "label": "Composer's facsimile study score."
+              }
+            }
+          }
+        }
+      ]
     },
     "255": {
       "NOTE:domainIncludes": "Cartography",
@@ -7313,13 +7333,15 @@
       "TODO:resourceType (to distinguish this 'free form' from 034)?": "marc:CartographicDescription",
       "resourceType": "Cartographic",
       "embedded": true,
+      "NOTE": "Scale sits directly on work in BF2 conversion",
       "$a": {"link": "scale", "resourceType": "Scale", "property": "label"},
       "$b": {"link": "projection", "resourceType": "Projection", "property": "label"},
       "$c": {"property": "coordinates"},
       "$d": {"property": "ascensionAndDeclination"},
       "$e": {"property": "equinox"},
       "$f": {"property": "outerGRing"},
-      "$g": {"property": "exclusionGRing"}
+      "$g": {"property": "exclusionGRing"},
+      "$6": {"property": "marc:fieldref"}
     },
 
     "256": {
@@ -7330,7 +7352,7 @@
       "resourceType": "marc:ComputerFileCharacteristics",
       "repeatable": false,
       "$a": {"property": "label"},
-      "$6": null,
+      "$6": {"property": "marc:fieldref"},
       "$8": null,
       "_spec": [
         {
@@ -7351,17 +7373,49 @@
       ]
     },
     "257": {
-      "addLink": "marc:hasCountryOfProducingEntityForArchivalFilms",
-      "resourceType": "marc:CountryOfProducingEntityForArchivalFilms",
-      "$a": {"property": "marc:countryOfProducingEntity"},
-      "$2": {"property": null}
+      "onRevertPrefer": "264",
+      "NOTE": "Removing subfields incompatible with 264.",
+      "aboutEntity": "?thing",
+      "addLink": "production",
+      "resourceType": "Production", 
+      "pendingResources": {
+        "_:part": {"addLink": "hasPart", "resourceType": "Production", "absorbSingle": true}
+      },
+      "$a": {"about": "_:part", "addLink": "place", "resourceType": "Place","property": "label"},
+      "$0": null,
+      "$1": null,
+      "$2": null,
+      "$6": {"about": "_:part", "property": "marc:fieldref", "supplementary": true},
+      "_spec": [
+        {
+          "source": [
+            {"257": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Sweden"}]}}
+          ],
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "0", "subfields": [{"a": "Sweden"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "production": [
+                {
+                  "@type": "Production",
+                  "place": [
+                    {
+                      "@type": "Place",
+                      "label": "Sweden"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "258": {
-      "NOTE:LC": "nac",
-      "addLink": "marc:hasPhilatelicIssueDate",
-      "resourceType": "marc:PhilatelicIssueDate",
-      "$a": {"property": "marc:issuingJurisdiction"},
-      "$b": {"property": "marc:denomination"}
+      "ignored": true,
+      "NOTE:LC": "258 - PHILATELIC ISSUE DATE (R) nac",
+      "NOTE:record-count": 0
     },
 
     "260": {
@@ -7632,19 +7686,19 @@
         {
           "name": "Upprepade utgivarbyten för fortlöpande resurser",
           "source": [
-            {"260": {"ind1": "_", "ind2": "_", "subfields":
+            {"260": {"ind1": " ", "ind2": " ", "subfields":
               [{"3": "Sammanfattad utgivningstid:"}, {"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-"}, {"e": "(Stockholm :"}, {"f": "Fram)"}]}},
-            {"260": {"ind1": "_", "ind2": "_", "subfields":
+            {"260": {"ind1": " ", "ind2": " ", "subfields":
               [{"a": "Lund :"}, {"b": "Svenska Clartésektionen,"}, {"c": "1924-1925"}]}},
-            {"260": {"ind1": "2", "ind2": "_", "subfields":
+            {"260": {"ind1": "2", "ind2": " ", "subfields":
               [{"a": "Lund :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1926-1927"}]}},
-            {"260": {"ind1": "2", "ind2": "_", "subfields":
+            {"260": {"ind1": "2", "ind2": " ", "subfields":
               [{"a": "Stockholm :"}, {"b": "Svenska Clartéavdelningen,"}, {"c": "1928-1931"}]}},
-            {"260": {"ind1": "2", "ind2": "_", "subfields":
+            {"260": {"ind1": "2", "ind2": " ", "subfields":
               [{"a": "Stockholm :"}, {"b": "Svenska Clartéförbundet,"}, {"c": "1932-1953"}]}},
-            {"260": {"ind1": "2", "ind2": "_", "subfields":
+            {"260": {"ind1": "2", "ind2": " ", "subfields":
               [{"a": "Hägersten :"}, {"b": "Clarté,"}, {"c": "1991-1995"}]}},
-            {"260": {"ind1": "3", "ind2": "_", "subfields":
+            {"260": {"ind1": "3", "ind2": " ", "subfields":
               [{"a": "Stockholm :"}, {"b": "Clarté,"}, {"c": "1953-1991, 1995-"}]}}
           ] ,
           "normalized": [
@@ -7819,8 +7873,144 @@
       ]
     },
 
-    "261": {},
-    "262": {},
+    "261": {
+      "onRevertPrefer": "264",
+      "aboutEntity": "?thing",
+      "NOTE:LC": "Also create statement: I - provisionActivityStatement - literal ($abd -- concatenate with blank -- add semicolon between subfields if no other punctuation -- keep order in field)",
+      "pendingResources": {
+        "_:production": {"addLink": "production", "resourceType": "Production", "embedded": true},
+        "_:prodPart": {"about": "_:production", "addLink": "hasPart", "resourceType": "Production", "absorbSingle": true},
+        "_:manufacture": {"addLink": "manufacture", "resourceType": "Manufacture", "embedded": true}
+      },
+      "$a": {"aboutNew": "_:prodPart", "addLink": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :", "punctuationChars": ".,"},
+      "$b": {"aboutAltNew": "_:prodPart", "addLink": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :"},
+      "$d": {"about": "_:production", "addProperty": "date", "leadingPunctuation": ",", "punctuationChars": ".,;"},
+      "$e": {"about": "_:manufacture", "addLink": "agent", "resourceType": "Agent", "property": "label", "punctuationChars": ".,;"},
+      "$f": {"about": "_:production", "addLink": "place", "resourceType": "Place", "property": "label","leadingPunctuation": " ;"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "name": "Simple",
+          "source": [
+            {"261": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Coronet Films,"},{"d": "1967."}]}}
+          ],
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "0", "subfields": [{"b": "Coronet Films,"},{"c": "1967"}]}}
+
+          ],
+          "result": {
+            "mainEntity": {
+              "production": [
+                {
+                  "@type": "Production",
+                  "agent": [
+                    {
+                      "@type": "Agent",
+                      "label": "Coronet Films"
+                    }
+                  ],
+                  "date": ["1967"]
+
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "With manufacturer",
+          "source": [
+            {"261": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Boulton-Hawker Films"},{"f": "Hadley, Eng"},{"e": "Made by D.C. Chipperfield."},{"d": "1971"}]}}
+          ],
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "0", "subfields": [{"a": "Hadley, Eng :"}, {"b": "Boulton-Hawker Films,"}, {"c": "1971"}]}},
+            {"264": {"ind1": " ", "ind2": "3", "subfields": [{"b": "Made by D.C. Chipperfield"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "manufacture": [
+                {
+                  "@type": "Manufacture",
+                  "agent": [
+                    {
+                      "@type": "Agent",
+                      "label": "Made by D.C. Chipperfield"
+                    }
+                  ]
+                }
+              ],
+              "production": [
+                {
+                  "@type": "Production",
+                  "date": ["1971"],
+                  "agent": [
+                    {
+                      "@type": "Agent",
+                      "label": "Boulton-Hawker Films"
+                    }
+                  ],
+                  "place": [
+                    {
+                      "@type": "Place",
+                      "label": "Hadley, Eng"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "262": {
+      "aboutEntity": "?thing",
+      "onRevertPrefer": "264",
+      "addLink": "publication",
+      "resourceType": "Publication",
+      "$a": {"addLink": "place", "resourceType": "Place", "property": "label","leadingPunctuation": " ;"},
+      "$b": {"addLink": "agent", "resourceType": "Agent", "property": "label", "leadingPunctuation": " :"},
+      "$c": {"addProperty": "date", "leadingPunctuation": ",", "punctuationChars": ".,;"},
+      "$k": null,
+      "$l": null,
+      "$6": null,
+      "_spec": [
+        {
+          "source": [
+            {"262": {"ind1": " ", "ind2": " ", "subfields": [{"a": "plats"},{"b": "agent"},{"c": "datum"}]}}
+          ],
+          "normalized": [
+            {"264": {"ind1": " ", "ind2": "1",
+              "subfields": [
+                {"a": "plats :"},
+                {"b": "agent,"},
+                {"c": "datum"}
+              ]
+            }}
+          ],
+          "result": {
+            "mainEntity": {
+              "publication": [
+                {
+                  "@type": "Publication",
+                  "place": [
+                    {
+                      "@type": "Place",
+                      "label": "plats"
+                    }
+                  ],
+                  "agent": [
+                    {
+                      "@type": "Agent",
+                      "label": "agent"
+                    }
+                  ],
+                  "date": ["datum"]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
     "263": {
       "aboutEntity": "?thing",
       "$a": {"property": "projectedProvisionDate"},
@@ -7982,7 +8172,38 @@
       ]
     },
 
-    "270": { "ignored": true, "NOTE:LC": "ignore"},
+    "265": {
+      "addLink": "acquisitionSource",
+      "resourceType": "AcquisitionSource",
+      "onRevertPrefer": "037",
+      "$a": {"property": "label"},
+      "$6": null,
+      "_spec": [
+        {
+          "source": [
+            {"265": {"ind1": " ", "ind2": " ", "subfields": [{"a": "source"}]}}
+          ],
+          "normalized": [
+            {"037": {"ind1": " ", "ind2": " ", "subfields": [{"b": "source"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "acquisitionSource": [{
+                "@type": "AcquisitionSource",
+                "label": "source"
+              }],
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "270": {
+      "ignored": true,
+      "NOTE:LC": "270 - ADDRESS (R) ignore"
+    },
 
     "300": {
       "aboutEntity": "?thing",
