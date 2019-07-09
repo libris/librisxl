@@ -7414,7 +7414,8 @@
     },
     "258": {
       "ignored": true,
-      "NOTE:LC": "258 - PHILATELIC ISSUE DATE (R) nac"
+      "NOTE:LC": "258 - PHILATELIC ISSUE DATE (R) nac",
+      "NOTE:record-count": 0
     },
 
     "260": {
