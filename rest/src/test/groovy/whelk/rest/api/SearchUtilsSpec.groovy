@@ -119,7 +119,6 @@ class SearchUtilsSpec extends Specification {
         // as are 'p', 'o', and 'value'
         ['p': 'foo', 'o': 'bar']     | SearchType.FIND_BY_RELATION  | '/find?p=foo&o=bar'
         ['p': 'foo', 'value': 'bar'] | SearchType.FIND_BY_VALUE     | '/find?p=foo&value=bar'
-        ['o': 'bar']                 | SearchType.FIND_BY_QUOTATION | '/find?o=bar'
     }
 
     def "Should make find URL with offset"() {

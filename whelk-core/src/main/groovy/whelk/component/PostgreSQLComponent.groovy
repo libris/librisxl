@@ -2102,41 +2102,6 @@ class PostgreSQLComponent {
         }
     }
 
-    List<Document> findByQuotation(String identifier, int limit, int offset) {
-        Connection connection = getConnection()
-        PreparedStatement find = connection.prepareStatement(FIND_BY)
-
-        find = rigFindByQuotationStatement(find, identifier, limit, offset)
-
-        try {
-            return executeFindByQuery(find)
-        } finally {
-            connection.close()
-        }
-
-    }
-
-    List<Document> findByQuotation(String identifier) {
-        int limit = DEFAULT_PAGE_SIZE
-        int offset = 0
-
-        findByQuotation(identifier, limit, offset)
-    }
-
-    int countByQuotation(String identifier) {
-        Connection connection = getConnection()
-        PreparedStatement count = connection.prepareStatement(COUNT_BY)
-
-        count = rigCountByQuotationStatement(count, identifier)
-
-        try {
-            return executeCountByQuery(count)
-        } finally {
-            connection.close()
-        }
-
-    }
-
     List<Document> findByValue(String relation, String value, int limit,
                                int offset) {
         Connection connection = getConnection()
@@ -2217,24 +2182,6 @@ class PostgreSQLComponent {
         List refsQuery = [[(relation): [["@id": reference]]]]
 
         return rigCountByStatement(find, refQuery, refsQuery)
-    }
-
-    private PreparedStatement rigFindByQuotationStatement(PreparedStatement find,
-                                                          String identifier,
-                                                          int limit,
-                                                          int offset) {
-        List refQuery = [["@graph": ["@id": identifier]]]
-        List sameAsQuery = [["@graph": [["@sameAs": [["@id": identifier]]]]]]
-
-        return rigFindByStatement(find, refQuery, sameAsQuery, limit, offset)
-    }
-
-    private PreparedStatement rigCountByQuotationStatement(PreparedStatement find,
-                                                           String identifier) {
-        List refQuery = [["@graph": ["@id": identifier]]]
-        List sameAsQuery = [["@graph": [["@sameAs": [["@id": identifier]]]]]]
-
-        return rigCountByStatement(find, refQuery, sameAsQuery)
     }
 
     private PreparedStatement rigFindByValueStatement(PreparedStatement find,

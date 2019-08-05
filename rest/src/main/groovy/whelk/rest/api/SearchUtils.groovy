@@ -19,7 +19,6 @@ class SearchUtils {
     enum SearchType {
         FIND_BY_RELATION,
         FIND_BY_VALUE,
-        FIND_BY_QUOTATION,
         FIND_REVERSE,
         ELASTIC,
         POSTGRES
@@ -65,8 +64,6 @@ class SearchUtils {
             results = findByRelation(relation, reference, limit, offset)
         } else if (relation && value) {
             results = findByValue(relation, value, limit, offset)
-        } else if (reference) {
-            results = findByQuotation(reference, limit, offset)
         } else if (reverseId) {
             results = findReverse(
                     reverseId,
@@ -147,28 +144,6 @@ class SearchUtils {
         List items = docs.collect { ld.toCard(it.data) }
 
         return assembleSearchResults(SearchType.FIND_BY_VALUE,
-                                     items, mappings, pageParams,
-                                     limit, offset, total)
-    }
-
-    private Map findByQuotation(String identifier, int limit, int offset) {
-        log.debug("Calling findByQuotation with o: ${identifier}")
-
-        List<Document> docs = whelk.storage.findByQuotation(identifier,
-                                                            limit, offset)
-
-        List mappings = []
-        mappings << ['variable': 'o',
-                     'predicate': ld.toChip(getVocabEntry('object')),
-                     'value': identifier]
-
-        Map pageParams = ['o': identifier, '_limit': limit]
-
-        int total = whelk.storage.countByQuotation(identifier)
-
-        List items = docs.collect { ld.toCard(it.data) }
-
-        return assembleSearchResults(SearchType.FIND_BY_QUOTATION,
                                      items, mappings, pageParams,
                                      limit, offset, total)
     }
@@ -531,9 +506,6 @@ class SearchUtils {
             case SearchType.FIND_BY_VALUE:
                 result = getValueParams(queryParameters)
                 break
-            case SearchType.FIND_BY_QUOTATION:
-                result = getQuotationParams(queryParameters)
-                break
             case SearchType.FIND_REVERSE:
                 result = getReverseParams(queryParameters)
                 break
@@ -557,14 +529,6 @@ class SearchUtils {
         String relation = queryParameters.remove('p')
         String value = queryParameters.remove('value')
         List initialParams = ["p=${relation}", "value=${value}"]
-        List keys = (queryParameters.keySet() as List).sort()
-
-        return new Tuple2(initialParams, keys)
-    }
-
-    private Tuple2 getQuotationParams(Map queryParameters) {
-        String reference = queryParameters.remove('o')
-        List initialParams = ["o=${reference}"]
         List keys = (queryParameters.keySet() as List).sort()
 
         return new Tuple2(initialParams, keys)
