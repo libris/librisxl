@@ -53,7 +53,6 @@ class SearchUtils {
         int limit = limitAndOffset.first
         int offset = limitAndOffset.second
 
-
         if (object && (relation || value || query || sortBy)) {
             throw new InvalidQueryException("Cannot use 'o' together with other search parameters")
         }
@@ -130,52 +129,6 @@ class SearchUtils {
                 .collect{applyLens(it, id, lens)}
 
         Map pageParams = ['o': id, '_lens': lens, '_limit': limit]
-
-        return assembleSearchResults(SearchType.FIND_REVERSE,
-                items, [], pageParams,
-                limit, offset, total)
-    }
-
-    private static Map formatReverseResult(Document document) {
-        document.setThingMeta(document.getCompleteId())
-        List<String> thingIds = document.getThingIdentifiers()
-        if (thingIds.isEmpty()) {
-            log.warn("Missing mainEntity? In: " + document.getCompleteId())
-            return [:]
-        }
-        return JsonLd.frame(thingIds.get(0), document.data)
-    }
-
-    private Map applyLens(Map framedThing, String preserveId, String lens) {
-        def preservedPaths = JsonLd.findPaths(framedThing, '@id', preserveId)
-        return lens == 'chips'
-                ? ld.toChip(framedThing, preservedPaths)
-                : ld.toCard(framedThing, preservedPaths)
-    }
-
-    @PackageScope
-    static <T> List<T> slice(List<T> list, int fromIx, int toIx) {
-        if (fromIx > list.size() || fromIx > toIx) {
-            return []
-        }
-        return list[(Math.max(0,fromIx)..<Math.min(list.size(), toIx))]
-    }
-
-    private Map findReverse(String id, String lens, int limit, int offset) {
-        lens = lens ? lens : 'cards'
-        log.debug("findReverse. _rev: ${id}, _lens: ${lens}")
-
-        def ids = whelk.findIdsLinkingTo(id)
-        int total = ids.size()
-
-        ids = slice(ids, offset, offset+limit)
-
-        List items = whelk.bulkLoad(ids).values()
-                .collect(SearchUtils.&formatReverseResult)
-                .findAll{ !it.isEmpty() }
-                .collect{applyLens(it, id, lens)}
-
-        Map pageParams = ['_rev': id, '_lens': lens, '_limit': limit]
 
         return assembleSearchResults(SearchType.FIND_REVERSE,
                 items, [], pageParams,
@@ -523,9 +476,6 @@ class SearchUtils {
             case SearchType.FIND_REVERSE:
                 result = getReverseParams(queryParameters)
                 break
-            case SearchType.FIND_REVERSE:
-                result = getReverseParams(queryParameters)
-                break
             case SearchType.ELASTIC:
                 result = getElasticParams(queryParameters)
                 break
@@ -546,15 +496,6 @@ class SearchUtils {
         String id = queryParameters.remove('o')
         String lens = queryParameters.remove('_lens')
         List initialParams = ["o=${id}", "_lens=${lens}"]
-        List keys = (queryParameters.keySet() as List).sort()
-
-        return new Tuple2(initialParams, keys)
-    }
-
-    private Tuple2 getReverseParams(Map queryParameters) {
-        String id = queryParameters.remove('_rev')
-        String lens = queryParameters.remove('_lens')
-        List initialParams = ["_rev=${id}", "_lens=${lens}"]
         List keys = (queryParameters.keySet() as List).sort()
 
         return new Tuple2(initialParams, keys)
