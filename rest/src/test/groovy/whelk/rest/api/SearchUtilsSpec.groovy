@@ -175,8 +175,34 @@ class SearchUtilsSpec extends Specification {
         then:
         assert offsets.prev == 1
         assert offsets.next == 3
-        assert offsets.last == 10
+        assert offsets.last == 9
     }
+
+    def "Should compute offsets, Ib"() {
+        expect:
+        new Offsets(total, limit, offset).last == last
+        where:
+        total | limit | offset | last
+        10    | 1     | 0      | 9
+        10    | 1     | 2      | 9
+        10    | 1     | 9      | 9
+        10    | 1     | 10     | 10
+        10    | 2     | 0      | 8
+        10    | 2     | 8      | 8
+        10    | 2     | 9      | 9
+        10    | 2     | 10     | 10
+        10    | 3     | 0      | 9
+        10    | 3     | 6      | 9
+        10    | 3     | 7      | 7
+        10    | 3     | 8      | 8
+        10    | 3     | 9      | 9
+        10    | 3     | 10     | 10
+        10    | 3     | 11     | 11
+        10    | 5     | 0      | 5
+        10    | 5     | 4      | 5
+        10    | 5     | 6      | 6
+    }
+
 
     def "Should compute offsets, II"() {
         when:

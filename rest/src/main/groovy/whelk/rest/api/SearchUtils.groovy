@@ -763,9 +763,13 @@ class Offsets {
         }
 
         if ((offset + limit) >= total) {
-            this.last =  offset
+            this.last = offset
         } else {
-            this.last = total - (total % limit)
+            if (total % limit == 0) {
+                this.last = total - limit
+            } else {
+                this.last = total - (total % limit)
+            }
         }
     }
 }
