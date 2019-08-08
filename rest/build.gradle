@@ -25,7 +25,7 @@ targetCompatibility = 1.8
 sourceSets {
     main {
         java { srcDirs = [] }
-        groovy { srcDir 'src/main/' }
+        groovy { srcDirs = ['src/main/java', 'src/main/groovy'] }
     }
     test {
         groovy { srcDir 'src/test/groovy/' }
