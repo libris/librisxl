@@ -3,6 +3,7 @@ package whelk.rest.api
 import org.codehaus.jackson.map.ObjectMapper
 import spock.lang.Ignore
 import spock.lang.Specification
+import spock.lang.Unroll
 import whelk.Document
 import whelk.IdType
 import whelk.JsonLd
@@ -17,6 +18,8 @@ import javax.servlet.ServletOutputStream
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpServletResponseWrapper
+
+import static javax.servlet.http.HttpServletResponse.*
 
 /**
  * Created by markus on 2015-10-16.
@@ -40,7 +43,7 @@ class CrudSpec extends Specification {
             request.getPathInfo()
         }
 
-        ServletOutputStream out = GroovyMock(ServletOutputStream.class)
+        CapturingServletOutputStream out = new CapturingServletOutputStream()
         response = new HttpServletResponseWrapper(GroovyMock(HttpServletResponse.class)) {
             int status = 0
             String contentType
@@ -60,6 +63,10 @@ class CrudSpec extends Specification {
 
             String getHeader(String h) {
                 return headers.get(h)
+            }
+
+            String getResponseBody() {
+                return out.asString()
             }
         }
         storage = GroovyMock(PostgreSQLComponent.class)
@@ -434,6 +441,128 @@ class CrudSpec extends Specification {
         crud.doGet(request, response)
         then:
         response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED
+    }
+
+    @Unroll
+    def "GET should return correct contentType"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}${view}${ending}".toString()
+        }
+        request.getHeader("Accept") >> {
+            acceptContentType
+        }
+        storage.load(_, _) >> {
+            new Document(["@graph": [["@id": id, "foo": "bar"]]])
+        }
+        storage.loadEmbellished(_, _) >> {
+            new Document(["@graph": [["@id": id, "foo": "embellished"]]])
+        }
+        crud.doGet(request, response)
+
+        expect:
+        response.getStatus() == status
+        response.getContentType() == responseContentType
+
+        where:
+        view         | ending   | acceptContentType      || responseContentType   | status
+        ''           |''        | '*/*'                  || 'application/ld+json' | SC_OK
+        ''           |''        | 'application/ld+json'  || 'application/ld+json' | SC_OK
+        ''           |''        | 'application/json'     || 'application/json'    | SC_OK
+        ''           |'.jsonld' | '*/*'                  || 'application/ld+json' | SC_OK
+
+        '/data'      |''        | '*/*'                  || 'application/ld+json' | SC_OK
+        '/data'      |''        | 'application/ld+json'  || 'application/ld+json' | SC_OK
+        '/data'      |''        | 'application/json'     || 'application/json'    | SC_OK
+        '/data'      |'.jsonld' | '*/*'                  || 'application/ld+json' | SC_OK
+        '/data'      |'.jsonld' | 'application/json'     || 'application/json'    | SC_OK // TODO: correct? actual content is JSON-LD
+        '/data'      |'.json'   | '*/*'                  || 'application/json'    | SC_OK
+        '/data'      |'.json'   | 'application/json'     || 'application/json'    | SC_OK
+        '/data'      |'.json'   | 'application/ld+json'  || 'application/ld+json' | SC_OK // TODO: correct?
+
+        '/data-view' |''        | '*/*'                  || 'application/ld+json' | SC_OK
+        '/data-view' |''        | 'application/ld+json'  || 'application/ld+json' | SC_OK
+        '/data-view' |''        | 'application/json'     || 'application/json'    | SC_OK
+        '/data-view' |'.jsonld' | '*/*'                  || 'application/ld+json' | SC_OK
+        '/data-view' |'.jsonld' | 'application/ld+json'  || 'application/ld+json' | SC_OK
+        '/data-view' |'.jsonld' | 'application/json'     || 'application/json'    | SC_OK // TODO: correct? actual content is JSON-LD
+        '/data-view' |'.json'   | '*/*'                  || 'application/json'    | SC_OK
+        '/data-view' |'.json'   | 'application/json'     || 'application/json'    | SC_OK
+        '/data-view' |'.json'   | 'application/ld+json'  || 'application/ld+json' | SC_OK // TODO: correct?
+
+        ''           |''        | ''                     || null                  | SC_NOT_ACCEPTABLE
+        ''           |''        | 'text/turtle'          || null                  | SC_NOT_ACCEPTABLE
+        ''           |''        | 'application/rdf+xml'  || null                  | SC_NOT_ACCEPTABLE
+        ''           |''        | 'x/x'                  || null                  | SC_NOT_ACCEPTABLE
+        '/da'        |''        | '*/*'                  || 'application/ld+json' | SC_OK
+    }
+
+    @Unroll
+    def "GET should format response"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}${view}${ending}".toString()
+        }
+        request.getHeader("Accept") >> {
+            acceptContentType
+        }
+        storage.load(_, _) >> {
+            new Document(["@graph": [["@id": id, "foo": "bar"]]])
+        }
+        storage.loadEmbellished(_, _) >> {
+            new Document(["@graph": [["@id": id, "foo": "embellished"]]])
+        }
+        crud.doGet(request, response)
+        String document = response.getResponseBody()
+        println(document)
+
+        expect:
+        response.getStatus() == SC_OK
+        response.getContentType() == responseContentType
+        isEmbellished(document) == embellished
+        isFramed(document) == framed
+
+        where:
+        view         | ending    | acceptContentType      || responseContentType   | embellished | framed
+        ''           | ''        | '*/*'                  || 'application/ld+json' | true        | false
+        ''           | ''        | 'application/ld+json'  || 'application/ld+json' | true        | false
+        ''           | ''        | 'application/json'     || 'application/json'    | true        | true
+
+        '/data'      | ''        | '*/*'                  || 'application/ld+json' | false       | false
+        '/data'      | ''        | 'application/ld+json'  || 'application/ld+json' | false       | false
+        '/data'      | '.jsonld' | '*/*'                  || 'application/ld+json' | false       | false
+        '/data'      | '.jsonld' | 'application/ld+json'  || 'application/ld+json' | false       | false
+        '/data'      | '.jsonld' | 'application/json'     || 'application/json'    | false       | false // TODO: ???
+
+        '/data'      | ''        | 'application/json'     || 'application/json'    | false       | true
+        '/data'      | '.json'   | '*/*'                  || 'application/json'    | false       | true
+        '/data'      | '.json'   | 'application/ld+json'  || 'application/ld+json' | false       | true  // TODO: ???
+
+        '/data-viev' | ''        | '*/*'                  || 'application/ld+json' | true        | false
+        '/data-viev' | ''        | 'application/ld+json'  || 'application/ld+json' | true        | false
+        '/data-viev' | '.jsonld' | '*/*'                  || 'application/ld+json' | true        | false
+        '/data-viev' | '.jsonld' | 'application/ld+json'  || 'application/ld+json' | true        | false
+        '/data-viev' | '.jsonld' | 'application/json'     || 'application/json'    | true        | true  // TODO: ???
+
+        '/data-viev' | ''        | 'application/json'     || 'application/json'    | true        | true
+        '/data-viev' | '.json'   | '*/*'                  || 'application/json'    | true        | true
+        '/data-viev' | '.json'   | 'application/ld+json'  || 'application/ld+json' | true        | false // TODO: ???
+    }
+
+    def isEmbellished(String document) {
+        return document.contains('"foo":"embellished"')
+    }
+
+    def isFramed(String document) {
+        if (document.startsWith('{"@id":')) {
+            return true
+        } else if (document.startsWith('{"@graph":')) {
+            return false
+        } else {
+            throw new RuntimeException("Unrecognized format:" + document)
+        }
     }
 
 
