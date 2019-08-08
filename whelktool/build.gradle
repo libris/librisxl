@@ -33,7 +33,7 @@ repositories {
 }
 
 dependencies {
-    compile project(':../whelk-core')
+    compile project(':whelk-core')
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
 }
 

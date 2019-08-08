@@ -68,7 +68,7 @@ dependencies {
     def groovyVersion = GroovySystem.getVersion()
 
     // LIBRISXL modules
-    compile(project(':../whelk-core'))
+    compile(project(':whelk-core'))
 
     // Common tools
     providedCompile 'javax.servlet:servlet-api:2.5'
