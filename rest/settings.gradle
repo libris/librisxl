@@ -1,1 +1,2 @@
-include ':../whelk-core'
+include ':whelk-core'
+project(':whelk-core').projectDir = new File('../whelk-core')

@@ -21,7 +21,7 @@ configurations.all {
 dependencies {
 
     // XL dependencies
-    compile(project(':../whelk-core'))
+    compile(project(':whelk-core'))
 
     // Logging
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'

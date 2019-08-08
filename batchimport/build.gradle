@@ -21,7 +21,7 @@ configurations.all {
 dependencies {
 
     // XL dependencies
-    compile(project(':../whelk-core'))
+    compile(project(':whelk-core'))
 
     /*
     // local jmarctools

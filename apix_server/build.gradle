@@ -22,7 +22,7 @@ configurations.all {
 dependencies {
 
     // XL dependencies
-    compile(project(':../whelk-core'))
+    compile(project(':whelk-core'))
 
     def jettyVersion="9.3.6.v20151106"
 
