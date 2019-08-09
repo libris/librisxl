@@ -155,4 +155,12 @@ class CrudUtils {
         }
         return result
     }
+
+    static String cleanEtag(String str) {
+        return stripQuotes(str).replaceAll('-gzip', '')
+    }
+
+    private static String stripQuotes(String str) {
+        return str.replaceAll('"', '')
+    }
 }

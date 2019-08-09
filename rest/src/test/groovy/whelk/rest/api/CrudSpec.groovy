@@ -167,6 +167,9 @@ class CrudSpec extends Specification {
         storage.load(_, _) >> {
             new Document(["@graph": [["@id": id, "foo": "bar"]]])
         }
+        storage.loadEmbellished(_, _) >> {
+            new Document(["@graph": [["@id": id, "foo": "bar"]]])
+        }
         when:
         crud.doGet(request, response)
         then:
@@ -3343,55 +3346,6 @@ class CrudSpec extends Specification {
         crud.doDelete(request, response)
         then:
         response.getStatus() == HttpServletResponse.SC_FORBIDDEN
-    }
-
-
-    /*
-     * Utilities tests
-     *
-     */
-
-    def "should get ID from path"() {
-        expect:
-        Crud.getIdFromPath(path) == id
-        where:
-        path                                | id
-        ""                                  | null
-        "/"                                 | null
-        "/foo"                              | "foo"
-        "/foo/data"                         | "foo"
-        "/foo/data.jsonld"                  | "foo"
-        "/foo/data.json"                    | "foo"
-        "/foo/data-view.jsonld"             | "foo"
-        "/foo/data-view.json"               | "foo"
-        "/https://example.com/some/id"      | "https://example.com/some/id"
-        "/https://example.com/some/id/data" | "https://example.com/some/id"
-    }
-
-    def "should get formatting type"() {
-        expect:
-        Crud.getFormattingType(path, contentType) == type
-        where:
-        path                                | contentType | type
-        ""                                  | "application/ld+json" | Crud.FormattingType.EMBELLISHED
-        "/"                                 | "application/ld+json" | Crud.FormattingType.EMBELLISHED
-        "/foo"                              | "application/ld+json" | Crud.FormattingType.EMBELLISHED
-        "/foo"                              | "application/json"    | Crud.FormattingType.FRAMED_AND_EMBELLISHED
-        "/foo/data"                         | "application/ld+json" | Crud.FormattingType.RAW
-        "/foo/data"                         | "application/json"    | Crud.FormattingType.FRAMED
-        "/foo/data.jsonld"                  | "application/ld+json" | Crud.FormattingType.RAW
-        "/foo/data.json"                    | "application/ld+json" | Crud.FormattingType.RAW
-        "/foo/data-view"                    | "application/ld+json" | Crud.FormattingType.EMBELLISHED
-        "/foo/data-view"                    | "application/json"    | Crud.FormattingType.FRAMED_AND_EMBELLISHED
-        "/foo/data-view.jsonld"             | "application/ld+json" | Crud.FormattingType.EMBELLISHED
-        "/foo/data-view.json"               | "application/ld+json" | Crud.FormattingType.EMBELLISHED
-        "/https://example.com/some/id"      | "application/ld+json" | Crud.FormattingType.EMBELLISHED
-        "/https://example.com/some/id/data" | "application/ld+json" | Crud.FormattingType.RAW
-        "/https://example.com/some/id/data" | "application/json"    | Crud.FormattingType.FRAMED
-        "/foo/data"                         | "text/turtle"         | Crud.FormattingType.RAW
-        "/foo/data"                         | "application/rdf+xml" | Crud.FormattingType.RAW
-        "/foo/data-view"                    | "text/turtle"         | Crud.FormattingType.EMBELLISHED
-        "/foo/data-view"                    | "application/rdf+xml" | Crud.FormattingType.EMBELLISHED
     }
 
 }
