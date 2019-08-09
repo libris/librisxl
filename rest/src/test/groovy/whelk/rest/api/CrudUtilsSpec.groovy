@@ -37,10 +37,13 @@ class CrudUtilsSpec extends Specification {
         "application/ld+json"                               | null     | "application/ld+json"
         "*/*"                                               | null     | "application/ld+json"
         "*/*"                                               | "jsonld" | "application/ld+json"
+        "application/ld+json"                               | "jsonld" | "application/ld+json"
+        "application/json"                                  | "jsonld" | "application/json"
+        "*/*"                                               | "json"   | "application/json"
+        "application/ld+json"                               | "json"   | "application/ld+json"
         "*/*"                                               | "ttl"    | "text/turtle"
         "*/*"                                               | "rdf"    | "application/rdf+xml"
         "application/x-octet-stream"                        | null     | null
-        "application/x-octet-stream"                        | "html"   | null
         "text/turtle;q=0.8"                                 | null     | "text/turtle"
         "text/turtle, application/json;q=0.8"               | null     | "text/turtle"
         "text/turtle;q=0.1, application/json;q=0.8"         | null     | "application/json"
@@ -57,7 +60,14 @@ class CrudUtilsSpec extends Specification {
         "json"   | "application/json"
         "rdf"    | "application/rdf+xml"
         "ttl"    | "text/turtle"
-        "html"   | null
+    }
+
+    def "Should throw on invalid suffix"() {
+        when:
+        CrudUtils.getMimeTypeForSuffix('html')
+
+        then:
+        thrown(Crud.NotFoundException)
     }
 
     def "Should find matching MIME type"() {

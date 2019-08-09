@@ -326,96 +326,49 @@ class Crud extends HttpServlet {
     static FormattingType getFormattingType(String path, String contentType) {
         log.debug("Getting formatting type for path ${path}")
         int viewGroup = 3
-        int fileEndingGroup = 5
         def pattern = getPathRegex()
         def matcher = path =~ pattern
         if (matcher.matches()) {
             String view = matcher.group(viewGroup)
-            String fileEnding = matcher.group(fileEndingGroup)
-            return getFormattingTypeForView(view, fileEnding, contentType)
+            return getFormattingTypeForView(view, contentType)
         } else {
             return FormattingType.EMBELLISHED
         }
     }
 
-    private static FormattingType getFormattingTypeForView(String view,
-                                                           String fileEnding,
-                                                           String contentType) {
-        FormattingType result
-
-        if (!view) {
-            result = getFormattingTypeForFancyView(contentType)
-        } else if (view == 'data') {
-            switch (fileEnding) {
-                case 'jsonld':
-                    result = FormattingType.RAW
-                    break
-                case 'json':
-                    result = FormattingType.FRAMED
-                    break
-                case null:
-                    result = getFormattingTypeForSimpleView(contentType)
-                    break
-                default:
-                    // TODO support more file types
-                    throw new NotFoundException('Bad file ending: ${fileEnding}')
-            }
-        } else if (view == 'data-view') {
-            switch (fileEnding) {
-                case 'jsonld':
-                    result = FormattingType.EMBELLISHED
-                    break
-                case 'json':
-                    result = FormattingType.FRAMED_AND_EMBELLISHED
-                    break
-                case null:
-                    result = getFormattingTypeForFancyView(contentType)
-                    break
-                default:
-                    // TODO support more file types
-                    throw new NotFoundException('Bad file ending: ${fileEnding}')
-            }
-        } else {
-            return FormattingType.EMBELLISHED
+    private static FormattingType getFormattingTypeForView(String view, String contentType) {
+        switch (view) {
+            case null:
+                return getFormattingTypeForFancyView(contentType)
+            case 'data':
+                return getFormattingTypeForSimpleView(contentType)
+            case 'data-view':
+                return getFormattingTypeForFancyView(contentType)
+            default:
+                return FormattingType.EMBELLISHED
         }
-
-        return result
     }
 
     private static FormattingType getFormattingTypeForFancyView(String contentType) {
-        FormattingType result
-
         switch (contentType) {
             case MimeTypes.JSONLD:
-                result = FormattingType.EMBELLISHED
-                break
+                return FormattingType.EMBELLISHED
             case MimeTypes.JSON:
-                result = FormattingType.FRAMED_AND_EMBELLISHED
-                break
+                return FormattingType.FRAMED_AND_EMBELLISHED
             default:
-                result = FormattingType.EMBELLISHED
-                break
+                return FormattingType.EMBELLISHED
         }
-
-        return result
     }
 
     private static FormattingType getFormattingTypeForSimpleView(String contentType) {
-        FormattingType result
-
         switch (contentType) {
             case MimeTypes.JSONLD:
-                result = FormattingType.RAW
-                break
+                return FormattingType.RAW
             case MimeTypes.JSON:
-                result = FormattingType.FRAMED
-                break
+                return FormattingType.FRAMED
             default:
-                result = FormattingType.RAW
-                break
+                return FormattingType.RAW
         }
-
-        return result
     }
 
     /**

@@ -1,6 +1,7 @@
 package whelk.rest.api
 
 import groovy.util.logging.Log4j2 as Log
+import org.apache.commons.io.FilenameUtils
 import whelk.rest.api.MimeTypes
 
 import javax.servlet.http.HttpServletRequest
@@ -14,25 +15,28 @@ class CrudUtils {
     ]
 
     static String getBestContentType(HttpServletRequest request) {
-        String suffix
+        return getBestContentType(getAcceptHeader(request), getPathSuffix(request))
+    }
+
+    private static String getPathSuffix(HttpServletRequest request) {
+        return FilenameUtils.getExtension(request.getRequestURI())
+    }
+
+    private static String getAcceptHeader(HttpServletRequest request) {
         String acceptHeader = request.getHeader("Accept")
-        List tokens = request.getRequestURI().tokenize(".")
-        if (tokens.size >= 2) {
-            suffix = tokens[-1]
-        }
 
         /**
          * from w3.org:
          * If no Accept header field is present, then it is assumed that the client accepts all media types.
          */
-        if (acceptHeader == null)
-            return MimeTypes.JSONLD
+        if (acceptHeader == null) {
+            acceptHeader = '*/*'
+        }
 
-        return getBestContentType(acceptHeader, suffix)
+        return acceptHeader
     }
 
     static String getBestContentType(String acceptHeader, String suffix) {
-        // FIXME use suffix
         List acceptedMimeTypes = getMimeTypes(acceptHeader)
         List mimeTypes = sortMimeTypesByQuality(acceptedMimeTypes)
         String suffixMimeType = getMimeTypeForSuffix(suffix)
@@ -57,8 +61,12 @@ class CrudUtils {
             case "ttl":
                 result = MimeTypes.TURTLE
                 break
-            default:
+            case '':
                 break
+            case null:
+                break
+            default:
+                throw new Crud.NotFoundException(suffix)
         }
         return result
     }

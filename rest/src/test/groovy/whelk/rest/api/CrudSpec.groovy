@@ -391,7 +391,7 @@ class CrudSpec extends Specification {
         response.getContentType() == "application/json"
     }
 
-    def "GET /<id>/data.ttl should return 404 Not Found"() {
+    def "GET /<id>/data.ttl should return 406 Not Acceptable"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
@@ -406,10 +406,10 @@ class CrudSpec extends Specification {
         when:
         crud.doGet(request, response)
         then:
-        response.getStatus() == HttpServletResponse.SC_NOT_FOUND
+        response.getStatus() == SC_NOT_ACCEPTABLE
     }
 
-    def "GET /<id>/data.rdf should return 404 Not Found"() {
+    def "GET /<id>/data.rdf should return 406 Not Acceptable"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
@@ -424,7 +424,7 @@ class CrudSpec extends Specification {
         when:
         crud.doGet(request, response)
         then:
-        response.getStatus() == HttpServletResponse.SC_NOT_FOUND
+        response.getStatus() == SC_NOT_ACCEPTABLE
     }
 
     def "GET document with If-None-Match equal to ETag should return 304 Not Modified"() {
@@ -476,7 +476,7 @@ class CrudSpec extends Specification {
         '/data'      |''        | 'application/ld+json'  || 'application/ld+json' | SC_OK
         '/data'      |''        | 'application/json'     || 'application/json'    | SC_OK
         '/data'      |'.jsonld' | '*/*'                  || 'application/ld+json' | SC_OK
-        '/data'      |'.jsonld' | 'application/json'     || 'application/json'    | SC_OK // TODO: correct? actual content is JSON-LD
+        '/data'      |'.jsonld' | 'application/json'     || 'application/json'    | SC_OK // TODO: correct?
         '/data'      |'.json'   | '*/*'                  || 'application/json'    | SC_OK
         '/data'      |'.json'   | 'application/json'     || 'application/json'    | SC_OK
         '/data'      |'.json'   | 'application/ld+json'  || 'application/ld+json' | SC_OK // TODO: correct?
@@ -486,7 +486,7 @@ class CrudSpec extends Specification {
         '/data-view' |''        | 'application/json'     || 'application/json'    | SC_OK
         '/data-view' |'.jsonld' | '*/*'                  || 'application/ld+json' | SC_OK
         '/data-view' |'.jsonld' | 'application/ld+json'  || 'application/ld+json' | SC_OK
-        '/data-view' |'.jsonld' | 'application/json'     || 'application/json'    | SC_OK // TODO: correct? actual content is JSON-LD
+        '/data-view' |'.jsonld' | 'application/json'     || 'application/json'    | SC_OK // TODO: correct?
         '/data-view' |'.json'   | '*/*'                  || 'application/json'    | SC_OK
         '/data-view' |'.json'   | 'application/json'     || 'application/json'    | SC_OK
         '/data-view' |'.json'   | 'application/ld+json'  || 'application/ld+json' | SC_OK // TODO: correct?
@@ -495,6 +495,8 @@ class CrudSpec extends Specification {
         ''           |''        | 'text/turtle'          || null                  | SC_NOT_ACCEPTABLE
         ''           |''        | 'application/rdf+xml'  || null                  | SC_NOT_ACCEPTABLE
         ''           |''        | 'x/x'                  || null                  | SC_NOT_ACCEPTABLE
+        '/data-view' |'.invalid'| '*/*'                  || null                  | SC_NOT_FOUND
+        '/data'      |'.invalid'| '*/*'                  || null                  | SC_NOT_FOUND
         '/da'        |''        | '*/*'                  || 'application/ld+json' | SC_OK
     }
 
@@ -534,21 +536,21 @@ class CrudSpec extends Specification {
         '/data'      | ''        | 'application/ld+json'  || 'application/ld+json' | false       | false
         '/data'      | '.jsonld' | '*/*'                  || 'application/ld+json' | false       | false
         '/data'      | '.jsonld' | 'application/ld+json'  || 'application/ld+json' | false       | false
-        '/data'      | '.jsonld' | 'application/json'     || 'application/json'    | false       | false // TODO: ???
+        '/data'      | '.json'   | 'application/ld+json'  || 'application/ld+json' | false       | false
 
         '/data'      | ''        | 'application/json'     || 'application/json'    | false       | true
         '/data'      | '.json'   | '*/*'                  || 'application/json'    | false       | true
-        '/data'      | '.json'   | 'application/ld+json'  || 'application/ld+json' | false       | true  // TODO: ???
+        '/data'      | '.jsonld' | 'application/json'     || 'application/json'    | false       | true
 
         '/data-viev' | ''        | '*/*'                  || 'application/ld+json' | true        | false
         '/data-viev' | ''        | 'application/ld+json'  || 'application/ld+json' | true        | false
         '/data-viev' | '.jsonld' | '*/*'                  || 'application/ld+json' | true        | false
         '/data-viev' | '.jsonld' | 'application/ld+json'  || 'application/ld+json' | true        | false
-        '/data-viev' | '.jsonld' | 'application/json'     || 'application/json'    | true        | true  // TODO: ???
+        '/data-viev' | '.json'   | 'application/ld+json'  || 'application/ld+json' | true        | false
 
         '/data-viev' | ''        | 'application/json'     || 'application/json'    | true        | true
         '/data-viev' | '.json'   | '*/*'                  || 'application/json'    | true        | true
-        '/data-viev' | '.json'   | 'application/ld+json'  || 'application/ld+json' | true        | false // TODO: ???
+        '/data-viev' | '.jsonld' | 'application/json'     || 'application/json'    | true        | true
     }
 
     def isEmbellished(String document) {
@@ -565,6 +567,22 @@ class CrudSpec extends Specification {
         }
     }
 
+    //TODO: Current URL structure cannot handle ids ending with /data
+    @Ignore
+    def "GET with id ending in /data"() {
+        given:
+        def id = BASE_URI.resolve("/1234/data").toString()
+        request.getPathInfo() >> {
+            "/${id}".toString()
+        }
+        storage.load(id, _) >> {
+            new Document(["@graph": [["@id": id, "foo": "bar"]]])
+        }
+        when:
+        crud.doGet(request, response)
+        then:
+        response.getStatus() == SC_OK
+    }
 
     // Tests for create
     def "POST to / should create document with generated @id"() {
@@ -3362,11 +3380,11 @@ class CrudSpec extends Specification {
         "/foo/data"                         | "application/ld+json" | Crud.FormattingType.RAW
         "/foo/data"                         | "application/json"    | Crud.FormattingType.FRAMED
         "/foo/data.jsonld"                  | "application/ld+json" | Crud.FormattingType.RAW
-        "/foo/data.json"                    | "application/ld+json" | Crud.FormattingType.FRAMED
+        "/foo/data.json"                    | "application/ld+json" | Crud.FormattingType.RAW
         "/foo/data-view"                    | "application/ld+json" | Crud.FormattingType.EMBELLISHED
         "/foo/data-view"                    | "application/json"    | Crud.FormattingType.FRAMED_AND_EMBELLISHED
         "/foo/data-view.jsonld"             | "application/ld+json" | Crud.FormattingType.EMBELLISHED
-        "/foo/data-view.json"               | "application/ld+json" | Crud.FormattingType.FRAMED_AND_EMBELLISHED
+        "/foo/data-view.json"               | "application/ld+json" | Crud.FormattingType.EMBELLISHED
         "/https://example.com/some/id"      | "application/ld+json" | Crud.FormattingType.EMBELLISHED
         "/https://example.com/some/id/data" | "application/ld+json" | Crud.FormattingType.RAW
         "/https://example.com/some/id/data" | "application/json"    | Crud.FormattingType.FRAMED
@@ -3376,17 +3394,4 @@ class CrudSpec extends Specification {
         "/foo/data-view"                    | "application/rdf+xml" | Crud.FormattingType.EMBELLISHED
     }
 
-    def "should throw exception when getting formatting type for invalid file ending, I"() {
-        when:
-        Crud.getFormattingType('/foo/data.invalid', 'application/ld+json')
-        then:
-        thrown Crud.NotFoundException
-    }
-
-    def "should throw exception when getting formatting type for invalid file ending, II"() {
-        when:
-        Crud.getFormattingType('/foo/data-view.invalid', 'application/ld+json')
-        then:
-        thrown Crud.NotFoundException
-    }
 }
