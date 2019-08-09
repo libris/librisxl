@@ -7,6 +7,7 @@ class CrudGetRequest {
     private String resourceId
     private String contentType
     private View view
+    private Lens lens
 
     static CrudGetRequest parse(HttpServletRequest request) {
         return new CrudGetRequest(request)
@@ -20,22 +21,8 @@ class CrudGetRequest {
         if (MimeTypes.JSONLD != contentType && MimeTypes.JSON != contentType) {
             throw new UnsupportedContentTypeException("Content-Type: " + contentType)
         }
-    }
 
-    /**
-     * Parse a CRUD path
-     *
-     * Matches /<id>, /<id>/<view> and /<id>/<view>.<suffix>
-     * where view is 'data' or 'data-view'
-     */
-    private void parsePath(String path) {
-        def matcher = path =~ ~/^\/(.+?)(\/(data|data-view)(\.(\w+))?)?$/
-        if (matcher.matches()) {
-            resourceId = matcher[0][1]
-            view = View.fromString(matcher[0][3])
-        } else {
-            throw new Crud.NotFoundException("Not found:" + path)
-        }
+        lens = parseLens(request)
     }
 
     HttpServletRequest getHttpServletRequest() {
@@ -76,14 +63,47 @@ class CrudGetRequest {
         return getBoolParameter("framed").orElse(contentType == MimeTypes.JSON)
     }
 
+    View getView() {
+        return view
+    }
+
+    Lens getLens() {
+        return lens
+    }
+
+    /**
+     * Parse a CRUD path
+     *
+     * Matches /<id>, /<id>/<view> and /<id>/<view>.<suffix>
+     * where view is 'data' or 'data-view'
+     */
+    private void parsePath(String path) {
+        def matcher = path =~ ~/^\/(.+?)(\/(data|data-view)(\.(\w+))?)?$/
+        if (matcher.matches()) {
+            resourceId = matcher[0][1]
+            view = View.fromString(matcher[0][3])
+        } else {
+            throw new Crud.NotFoundException("Not found:" + path)
+        }
+    }
+
+    private Lens parseLens(HttpServletRequest request) {
+        String lens = request.getParameter('lens')
+        if (lens == null) {
+            return Lens.NONE
+        }
+        try {
+            return Lens.valueOf(lens.toUpperCase())
+        }
+        catch (IllegalArgumentException e) {
+            throw new BadRequestException("Unknown lens:" + lens)
+        }
+    }
+
     private Optional<Boolean> getBoolParameter(String name) {
         return Optional
                 .ofNullable(request.getParameter(name))
                 .map(Boolean.&parseBoolean)
-    }
-
-    View getView() {
-        return view
     }
 
     enum View {
@@ -105,5 +125,9 @@ class CrudGetRequest {
             }
             return RESOURCE
         }
+    }
+
+    enum Lens {
+        CHIP, CARD, TOKEN, NONE
     }
 }

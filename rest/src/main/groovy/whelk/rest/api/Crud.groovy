@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.lang.management.ManagementFactory
 
+import whelk.rest.api.CrudGetRequest.Lens
 import static whelk.rest.api.HttpTools.sendResponse
 
 /**
@@ -173,6 +174,10 @@ class Crud extends HttpServlet {
             failedRequests.labels("GET", request.getRequestURI(),
                     response.SC_NOT_FOUND.toString()).inc()
             response.sendError(response.SC_NOT_FOUND, e.message)
+        } catch (BadRequestException e) {
+            failedRequests.labels("GET", request.getRequestURI(),
+                    response.SC_BAD_REQUEST.toString()).inc()
+            response.sendError(response.SC_BAD_REQUEST, e.message)
         }
         catch (WhelkRuntimeException e) {
             failedRequests.labels("GET", request.getRequestURI(),
@@ -225,16 +230,34 @@ class Crud extends HttpServlet {
     }
 
     private Object getFormattedResponseBody(CrudGetRequest request, Document doc) {
-        log.debug("Formatting document {}. embellished: {}, framed: {}",
-                doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame())
+        log.debug("Formatting document {}. embellished: {}, framed: {}, lens: {}",
+                doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame(), request.getLens())
 
         if (request.shouldEmbellish()) {
             doc = whelk.storage.loadEmbellished(doc.getShortId(), jsonld)
         }
 
-        return request.shouldFrame()
-                ? JsonLd.frame(doc.getCompleteId(), doc.data)
-                : doc.data
+        if (request.getLens() != Lens.NONE) {
+            return applyLens(JsonLd.frame(doc.getCompleteId(), doc.data), request.getLens())
+        }
+        else {
+            return request.shouldFrame()
+                    ? JsonLd.frame(doc.getCompleteId(), doc.data)
+                    : doc.data
+        }
+    }
+
+    private Object applyLens(Object framedThing, Lens lens) {
+        switch (lens) {
+            case Lens.NONE:
+                return framedThing
+            case Lens.CARD:
+                return whelk.jsonld.toCard(framedThing)
+            case Lens.CHIP:
+                return whelk.jsonld.toChip(framedThing)
+            case Lens.TOKEN:
+                throw new WhelkRuntimeException("Not implemented: " + lens)
+        }
     }
 
     /**

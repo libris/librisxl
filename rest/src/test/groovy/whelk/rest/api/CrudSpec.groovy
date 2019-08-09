@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpServletResponseWrapper
 
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
 import static javax.servlet.http.HttpServletResponse.SC_NOT_ACCEPTABLE
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND
 import static javax.servlet.http.HttpServletResponse.SC_OK
@@ -81,7 +82,10 @@ class CrudSpec extends Specification {
         whelk.contextData = ['@context': [
                 'examplevocab': 'http://example.com',
                 'some_term': 'some_value']]
-        whelk.displayData = ['lensGroups': ['chips': [:]]]
+        whelk.displayData = ['lensGroups': [
+                'chips': [lenses: ['Instance' : ['showProperties': ['prop1', 'prop2']]]],
+                'cards': [lenses: ['Instance' : ['showProperties': ['prop1', 'prop2', 'prop3']]]]
+        ]]
         whelk.vocabData = ['@graph': []]
         whelk.jsonld = new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData)
         GroovySpy(LegacyIntegrationTools.class, global: true)
@@ -564,7 +568,7 @@ class CrudSpec extends Specification {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
-            "/${id}${view}${queryString}".toString()
+            "/${id}${view}".toString()
         }
         request.getHeader("Accept") >> {
             acceptCT
@@ -604,6 +608,71 @@ class CrudSpec extends Specification {
 
         'data'       | '?embellished=true&framed=true'  | JSONLD   || JSONLD     | true        | true
         'data-view'  | '?embellished=false&framed=true' | JSONLD   || JSONLD     | false       | true
+
+        // lens implies framed
+        ''           | '?lens=card'                     | JSONLD   || JSONLD     | true        | true
+        ''           | '?lens=card&framed=false'        | JSON     || JSON       | true        | true // TODO: explicitly disallow? (return 400)
+    }
+
+    @Unroll
+    def "GET should use lens parameter"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}${view}".toString()
+        }
+        request.getHeader("Accept") >> {
+            JSONLD
+        }
+        request.getParameter(_) >> {
+            return getParameter(queryString, arguments[0])
+        }
+        Document d = new Document(["@graph": [["@id": "/instance_id",
+                                               "@type": "Instance",
+                                               "prop1": "val1",
+                                               "prop2": "val2",
+                                               "prop3": "val3",
+                                               "prop4": "val4",
+                                              ]]])
+        storage.load(_, _) >> { d }
+        storage.loadEmbellished(_, _) >> { d }
+        crud.doGet(request, response)
+        String document = response.getResponseBody()
+        println(lens)
+        println(document)
+        expect:
+        response.getStatus() == SC_OK
+        response.getContentType() == JSONLD
+        lensUsed(document) == lens
+
+        where:
+        view         | queryString                      | lens
+        ''           | ''                               | 'none'
+        ''           | '?lens=none'                     | 'none'
+        ''           | '?lens=card'                     | 'card'
+        ''           | '?lens=chip'                     | 'chip'
+        //''           | '?lens=token'                    | 'token'
+    }
+
+    def "GET /<id>?lens=invalid should return 400 Bad Request"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}".toString()
+        }
+        request.getHeader("Accept") >> {
+            "*/*"
+        }
+        request.getParameter("lens") >> {
+            "invalid"
+        }
+        storage.load(_, _) >> {
+            return new Document(["@graph": [["@id": id, "foo": "bar"]]])
+        }
+        when:
+        crud.doGet(request, response)
+        then:
+        response.getStatus() == SC_BAD_REQUEST
     }
 
     def getParameter(String queryString, String name) {
@@ -631,6 +700,19 @@ class CrudSpec extends Specification {
         } else {
             throw new RuntimeException("Unrecognized format:" + document)
         }
+    }
+
+    def lensUsed(String document) {
+        if (document.contains('"prop4":"val4"'))
+            return 'none'
+        if (document.contains('"prop3":"val3"'))
+            return 'card'
+        if (document.contains('"prop2":"val2"'))
+            return 'chip'
+        if (document.contains('"prop1":"val1"'))
+            return 'token'
+
+        throw new RuntimeException()
     }
 
     //TODO: Current URL structure cannot handle ids ending with /data
@@ -930,11 +1012,11 @@ class CrudSpec extends Specification {
                                     "@type": "Record",
                                     "contains": "some data",
                                     "creationDate": "2002-01-08T00:00:00.0+01:00"],
-                                   ["@id": "/instance_id",
-                                    "@type": "Instance",
+                                   ["@id": "/item_id",
+                                    "@type": "Item",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["code": "S"]]]]
+                                            ["code": "Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
