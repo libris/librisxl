@@ -65,11 +65,21 @@ class CrudGetRequest {
     }
 
     boolean shouldEmbellish() {
-        return !getVersion().present && view != View.DATA
+        if (getVersion().present) {
+            return false;
+        }
+
+        return getBoolParameter("embellished").orElse(view != View.DATA)
     }
 
     boolean shouldFrame() {
-        return contentType == MimeTypes.JSON
+        return getBoolParameter("framed").orElse(contentType == MimeTypes.JSON)
+    }
+
+    private Optional<Boolean> getBoolParameter(String name) {
+        return Optional
+                .ofNullable(request.getParameter(name))
+                .map(Boolean.&parseBoolean)
     }
 
     View getView() {

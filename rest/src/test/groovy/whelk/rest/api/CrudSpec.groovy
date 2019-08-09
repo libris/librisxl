@@ -19,7 +19,11 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpServletResponseWrapper
 
-import static javax.servlet.http.HttpServletResponse.*
+import static javax.servlet.http.HttpServletResponse.SC_NOT_ACCEPTABLE
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND
+import static javax.servlet.http.HttpServletResponse.SC_OK
+import static whelk.rest.api.MimeTypes.JSON
+import static whelk.rest.api.MimeTypes.JSONLD
 
 /**
  * Created by markus on 2015-10-16.
@@ -521,7 +525,6 @@ class CrudSpec extends Specification {
         }
         crud.doGet(request, response)
         String document = response.getResponseBody()
-        println(document)
 
         expect:
         response.getStatus() == SC_OK
@@ -554,6 +557,66 @@ class CrudSpec extends Specification {
         '/data-view' | ''        | 'application/json'     || 'application/json'    | true        | true
         '/data-view' | '.json'   | '*/*'                  || 'application/json'    | true        | true
         '/data-view' | '.jsonld' | 'application/json'     || 'application/json'    | true        | true
+    }
+
+    @Unroll
+    def "GET should format response according to parameters"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}${view}${queryString}".toString()
+        }
+        request.getHeader("Accept") >> {
+            acceptCT
+        }
+        request.getParameter(_) >> {
+            return getParameter(queryString, arguments[0])
+        }
+        storage.load(_, _) >> {
+            new Document(["@graph": [["@id": id, "foo": "bar"]]])
+        }
+        storage.loadEmbellished(_, _) >> {
+            new Document(["@graph": [["@id": id, "foo": "embellished"]]])
+        }
+
+        crud.doGet(request, response)
+        String document = response.getResponseBody()
+
+        expect:
+
+        response.getStatus() == SC_OK
+        response.getContentType() == responseCT
+        isEmbellished(document) == embellished
+        isFramed(document) == framed
+
+        where:
+        view         | queryString                      | acceptCT || responseCT | embellished | framed
+        ''           | ''                               | JSONLD   || JSONLD     | true        | false
+        ''           | '?version=1'                     | JSONLD   || JSONLD     | false       | false
+        ''           | '?version=1&embellished=true'    | JSONLD   || JSONLD     | false       | false
+        ''           | '?framed=true'                   | JSONLD   || JSONLD     | true        | true
+        ''           | '?embellished=false'             | JSONLD   || JSONLD     | false       | false
+        ''           | '?embellished=false&framed=true' | JSONLD   || JSONLD     | false       | true
+
+        ''           | ''                               | JSON     || JSON       | true        | true
+        ''           | '?framed=false'                  | JSON     || JSON       | true        | false
+        ''           | '?embellished=false'             | JSON     || JSON       | false       | true
+
+        'data'       | '?embellished=true&framed=true'  | JSONLD   || JSONLD     | true        | true
+        'data-view'  | '?embellished=false&framed=true' | JSONLD   || JSONLD     | false       | true
+    }
+
+    def getParameter(String queryString, String name) {
+        if (queryString.startsWith('?')) {
+            queryString = queryString.substring(1)
+        }
+
+        for (String s in queryString.split('&')) {
+            if (s.startsWith(name + '=')) {
+                return s.substring(name.length() + 1)
+            }
+        }
+        return null
     }
 
     def isEmbellished(String document) {
