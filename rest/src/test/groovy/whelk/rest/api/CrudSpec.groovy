@@ -542,15 +542,15 @@ class CrudSpec extends Specification {
         '/data'      | '.json'   | '*/*'                  || 'application/json'    | false       | true
         '/data'      | '.jsonld' | 'application/json'     || 'application/json'    | false       | true
 
-        '/data-viev' | ''        | '*/*'                  || 'application/ld+json' | true        | false
-        '/data-viev' | ''        | 'application/ld+json'  || 'application/ld+json' | true        | false
-        '/data-viev' | '.jsonld' | '*/*'                  || 'application/ld+json' | true        | false
-        '/data-viev' | '.jsonld' | 'application/ld+json'  || 'application/ld+json' | true        | false
-        '/data-viev' | '.json'   | 'application/ld+json'  || 'application/ld+json' | true        | false
+        '/data-view' | ''        | '*/*'                  || 'application/ld+json' | true        | false
+        '/data-view' | ''        | 'application/ld+json'  || 'application/ld+json' | true        | false
+        '/data-view' | '.jsonld' | '*/*'                  || 'application/ld+json' | true        | false
+        '/data-view' | '.jsonld' | 'application/ld+json'  || 'application/ld+json' | true        | false
+        '/data-view' | '.json'   | 'application/ld+json'  || 'application/ld+json' | true        | false
 
-        '/data-viev' | ''        | 'application/json'     || 'application/json'    | true        | true
-        '/data-viev' | '.json'   | '*/*'                  || 'application/json'    | true        | true
-        '/data-viev' | '.jsonld' | 'application/json'     || 'application/json'    | true        | true
+        '/data-view' | ''        | 'application/json'     || 'application/json'    | true        | true
+        '/data-view' | '.json'   | '*/*'                  || 'application/json'    | true        | true
+        '/data-view' | '.jsonld' | 'application/json'     || 'application/json'    | true        | true
     }
 
     def isEmbellished(String document) {
