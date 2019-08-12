@@ -23,7 +23,7 @@ class CrudUtilsSpec extends Specification {
         when:
         String contentType = CrudUtils.getBestContentType(request)
         then:
-        contentType == "application/ld+json"
+        contentType == "application/json"
 
     }
 
@@ -110,22 +110,33 @@ class CrudUtilsSpec extends Specification {
 
     def "Should sort MIME types by quality"() {
         expect:
-        assert CrudUtils.sortMimeTypesByQuality(mimeTypes) == sortedMimeTypes
+        assert CrudUtils.parseAcceptHeader(mimeTypes).collect{ it.toString() } == sortedMimeTypes
         where:
-        mimeTypes                                            | sortedMimeTypes
-        ["*/*", "text/html;q=0.1", "application/json;q=0.8"] | ["*/*", "application/json", "text/html"]
-        [] | []
-        ["text/html;q=0.1"] | ["text/html"]
-        ["application/json", "text/html;q=0.1", "*/*;q=0.1"] | ["application/json", "*/*", "text/html"]
-        ["application/json", "text/html;q=0.2", "*/*;q=0.1"] | ["application/json", "text/html", "*/*"]
+        mimeTypes                                                | sortedMimeTypes
+        "*/*, text/html;q=0.1, application/json;q=0.8"           | ["*/*", "application/json", "text/html"]
+        ''                                                       | []
+        "text/html;q=0.1"                                        | ["text/html"]
+        "application/json, */*;q=0.1, text/html;q=0.1"           | ["application/json", "text/html", "*/*"]
+        "application/json ,  text/html;q=0.1 , */*;q=0.2"        | ["application/json", "*/*", "text/html"]
+        "x/x;p=x;q=1.0;extension-param=ignored"                  | ['x/x; p=x']
+        '*/*, text/*, text/rdf, text/rdf;p=x'                    | ['text/rdf; p=x', 'text/rdf', 'text/*', '*/*']
+        'application/ld+json, application/ld+json;profile="a b"' | ['application/ld+json; profile="a b"', 'application/ld+json']
     }
 
-    def "Should parse accept header into MIME types"() {
-        expect:
-        assert CrudUtils.getMimeTypes(acceptHeader) == mimeTypes
-        where:
-        acceptHeader                                   | mimeTypes
-        "*/*, text/html;q=0.1, application/json;q=0.8" | ["*/*", "text/html;q=0.1", "application/json;q=0.8"]
-        "*/*,                  application/json;q=0.8" | ["*/*", "application/json;q=0.8"]
+    def "Should throw on invalid Accept header"() {
+        when:
+        CrudUtils.parseAcceptHeader("application/ld+json;q=one")
+
+        then:
+        thrown(BadRequestException)
     }
+
+    def "Should throw on invalid Accept header II"() {
+        when:
+        CrudUtils.parseAcceptHeader("ld+json")
+
+        then:
+        thrown(BadRequestException)
+    }
+
 }

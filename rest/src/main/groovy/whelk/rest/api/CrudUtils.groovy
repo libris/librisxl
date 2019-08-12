@@ -1,7 +1,13 @@
 package whelk.rest.api
 
+import com.google.common.collect.ArrayListMultimap
+import com.google.common.collect.ListMultimap
+import com.google.common.net.MediaType
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.io.FilenameUtils
+import org.apache.http.HeaderElement
+import org.apache.http.NameValuePair
+import org.apache.http.message.BasicHeaderValueParser
 import whelk.rest.api.MimeTypes
 
 import javax.servlet.http.HttpServletRequest
@@ -37,8 +43,7 @@ class CrudUtils {
     }
 
     static String getBestContentType(String acceptHeader, String suffix) {
-        List acceptedMimeTypes = getMimeTypes(acceptHeader)
-        List mimeTypes = sortMimeTypesByQuality(acceptedMimeTypes)
+        List mimeTypes = parseAcceptHeader(acceptHeader).collect{ it.toString() }
         String suffixMimeType = getMimeTypeForSuffix(suffix)
         if (findMatchingMimeType(suffixMimeType, mimeTypes)) {
             mimeTypes.add(0, suffixMimeType)
@@ -128,39 +133,87 @@ class CrudUtils {
       }
     }
 
-    static List sortMimeTypesByQuality(List mimeTypes) {
-        Map result = [:]
-        for (String mimeType : mimeTypes) {
-            List tokens = mimeType.tokenize(";")
-            if (tokens.size() == 1) {
-                result[tokens[0]] = 1.0
-            } else if (tokens.size() == 2) {
-                def (param, value) = tokens[1].split("=")
-                if (param == 'q' && value.isFloat()) {
-                    Float quality = value as Float
-                    result[tokens[0]] = quality
-                }
-            }
-        }
-        String[] sorted = result.keySet() as String[]
-        return sorted.sort { a, b ->
-            result[b] <=> result[a] ?: a <=> b
-        }
-    }
-
-    static List getMimeTypes(String acceptHeader) {
-        List result = []
-        for (String token : acceptHeader.tokenize(",")) {
-            result.add(token.trim())
-        }
-        return result
-    }
-
     static String cleanEtag(String str) {
         return stripQuotes(str).replaceAll('-gzip', '')
     }
 
     private static String stripQuotes(String str) {
         return str.replaceAll('"', '')
+    }
+
+    /**
+     * Returns a sorted list of media types accepted by the client
+     */
+    static List<MediaType> parseAcceptHeader(String header) {
+        BasicHeaderValueParser parser = new BasicHeaderValueParser()
+
+        List<AcceptMediaType> mediaTypes = []
+
+        try {
+            for (HeaderElement h : BasicHeaderValueParser.parseElements(header, parser)) {
+                mediaTypes << AcceptMediaType.fromHeaderElement(h)
+            }
+        }
+        catch (Exception e) {
+            throw new BadRequestException("Bad Accept header: " + header)
+        }
+
+        return mediaTypes.sort().collect { it.mediaType }
+    }
+
+    private static class AcceptMediaType implements Comparable<AcceptMediaType> {
+        private MediaType mediaType
+        private float q
+
+        AcceptMediaType(MediaType mediaType, float q) {
+            this.mediaType = mediaType
+            this.q = q
+        }
+
+        @Override
+        String toString() {
+            return "${mediaType} (q:${q})"
+        }
+
+        @Override
+        int compareTo(AcceptMediaType other) {
+            if (q != other.q) {
+                return other.q <=> q
+            }
+            if (mediaType.type() == '*' && other.mediaType.type() != '*') {
+                return 1
+            }
+            if (mediaType.type() != '*' && other.mediaType.type() == '*') {
+                return -1
+            }
+            if (mediaType.type() != mediaType.type()) {
+                return 0
+            }
+            if (mediaType.subtype() == '*' && other.mediaType.subtype() != '*') {
+                return 1
+            }
+            if (mediaType.subtype() != '*' && other.mediaType.subtype() == '*') {
+                return -1
+            }
+            if (mediaType.subtype() != mediaType.subtype()) {
+                return 0
+            }
+            return other.mediaType.parameters().size() <=> mediaType.parameters().size()
+        }
+
+        static AcceptMediaType fromHeaderElement(HeaderElement e) {
+            ListMultimap<String, String> parameters = new ArrayListMultimap<>()
+            float q = 1.0
+            for (NameValuePair p : e.getParameters()) {
+                if ('q' == p.getName()) {
+                    q = Float.parseFloat(p.getValue())
+                    break // ignore 'Accept extension parameters'
+                }
+                parameters.put(p.getName(), p.getValue())
+            }
+
+            MediaType m = MediaType.parse(e.name).withParameters(parameters)
+            return new AcceptMediaType(m, (float) q)
+        }
     }
 }
