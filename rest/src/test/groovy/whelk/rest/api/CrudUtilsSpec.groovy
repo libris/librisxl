@@ -1,7 +1,6 @@
 package whelk.rest.api
 
 import com.google.common.net.MediaType
-import org.apache.jena.shared.NotFoundException
 import spock.lang.Specification
 import whelk.rest.api.CrudUtils
 

@@ -56,10 +56,6 @@ class Crud extends HttpServlet {
         .help("API request latency in seconds.")
         .labelNames("method").register()
 
-    enum FormattingType {
-        FRAMED, EMBELLISHED, FRAMED_AND_EMBELLISHED, RAW
-    }
-
     final static Map contextHeaders = [
             "bib": "/sys/context/lib.jsonld",
             "auth": "/sys/context/lib.jsonld",
@@ -125,7 +121,6 @@ class Crud extends HttpServlet {
         def info = [:]
         info["system"] = "LIBRISXL"
         info["format"] = "linked-data-api"
-        //info["collections"] = whelk.storage.loadCollections()
         sendResponse(response, mapper.writeValueAsString(info), "application/json")
     }
 
@@ -260,7 +255,7 @@ class Crud extends HttpServlet {
                 throw new WhelkRuntimeException("Not implemented: " + lens)
         }
     }
-    
+
     private void setVary(HttpServletResponse response) {
         response.setHeader("Vary", "Accept")
     }
