@@ -216,6 +216,7 @@ class Crud extends HttpServlet {
     }
 
     private void sendNotModified(HttpServletResponse response, Document doc) {
+        setVary(response)
         response.setHeader("ETag", "\"${doc.getChecksum()}\"")
         response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
         response.sendError(HttpServletResponse.SC_NOT_MODIFIED,
@@ -258,6 +259,10 @@ class Crud extends HttpServlet {
             case Lens.TOKEN:
                 throw new WhelkRuntimeException("Not implemented: " + lens)
         }
+    }
+    
+    private void setVary(HttpServletResponse response) {
+        response.setHeader("Vary", "Accept")
     }
 
     /**
@@ -377,6 +382,8 @@ class Crud extends HttpServlet {
                     "Must serve original content-type ($contentType).")
             // FIXME what should happen here?
         }
+
+        setVary(response)
 
         sendResponse(response, responseBody, contentType)
     }
