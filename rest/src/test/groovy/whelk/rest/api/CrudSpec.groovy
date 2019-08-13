@@ -402,7 +402,7 @@ class CrudSpec extends Specification {
         response.getContentType() == "application/json"
     }
 
-    def "GET /<id>/data.ttl should return 406 Not Acceptable"() {
+    def "GET /<id>/data.ttl should return 404 Not Found"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
@@ -417,10 +417,10 @@ class CrudSpec extends Specification {
         when:
         crud.doGet(request, response)
         then:
-        response.getStatus() == SC_NOT_ACCEPTABLE
+        response.getStatus() == SC_NOT_FOUND
     }
 
-    def "GET /<id>/data.rdf should return 406 Not Acceptable"() {
+    def "GET /<id>/data.rdf should return 404 Not Found"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
@@ -435,7 +435,7 @@ class CrudSpec extends Specification {
         when:
         crud.doGet(request, response)
         then:
-        response.getStatus() == SC_NOT_ACCEPTABLE
+        response.getStatus() == SC_NOT_FOUND
     }
 
     def "GET document with If-None-Match equal to ETag should return 304 Not Modified"() {
@@ -487,25 +487,25 @@ class CrudSpec extends Specification {
         '/data'      |''        | 'application/ld+json'  || 'application/ld+json' | SC_OK
         '/data'      |''        | 'application/json'     || 'application/json'    | SC_OK
         '/data'      |'.jsonld' | '*/*'                  || 'application/ld+json' | SC_OK
-        '/data'      |'.jsonld' | 'application/json'     || 'application/json'    | SC_OK // TODO: correct?
+        '/data'      |'.jsonld' | 'application/json'     || 'application/ld+json' | SC_OK
         '/data'      |'.json'   | '*/*'                  || 'application/json'    | SC_OK
         '/data'      |'.json'   | 'application/json'     || 'application/json'    | SC_OK
-        '/data'      |'.json'   | 'application/ld+json'  || 'application/ld+json' | SC_OK // TODO: correct?
+        '/data'      |'.json'   | 'application/ld+json'  || 'application/json'    | SC_OK
 
         '/data-view' |''        | '*/*'                  || 'application/ld+json' | SC_OK
         '/data-view' |''        | 'application/ld+json'  || 'application/ld+json' | SC_OK
         '/data-view' |''        | 'application/json'     || 'application/json'    | SC_OK
         '/data-view' |'.jsonld' | '*/*'                  || 'application/ld+json' | SC_OK
         '/data-view' |'.jsonld' | 'application/ld+json'  || 'application/ld+json' | SC_OK
-        '/data-view' |'.jsonld' | 'application/json'     || 'application/json'    | SC_OK // TODO: correct?
+        '/data-view' |'.jsonld' | 'application/json'     || 'application/ld+json' | SC_OK
         '/data-view' |'.json'   | '*/*'                  || 'application/json'    | SC_OK
         '/data-view' |'.json'   | 'application/json'     || 'application/json'    | SC_OK
-        '/data-view' |'.json'   | 'application/ld+json'  || 'application/ld+json' | SC_OK // TODO: correct?
+        '/data-view' |'.json'   | 'application/ld+json'  || 'application/json'    | SC_OK
 
-        ''           |''        | ''                     || null                  | SC_NOT_ACCEPTABLE
-        ''           |''        | 'text/turtle'          || null                  | SC_NOT_ACCEPTABLE
-        ''           |''        | 'application/rdf+xml'  || null                  | SC_NOT_ACCEPTABLE
-        ''           |''        | 'x/x'                  || null                  | SC_NOT_ACCEPTABLE
+        ''           |''        | ''                     || 'application/ld+json' | SC_OK
+        ''           |''        | 'text/turtle'          || 'application/ld+json' | SC_OK
+        ''           |''        | 'application/rdf+xml'  || 'application/ld+json' | SC_OK
+        ''           |''        | 'x/x'                  || 'application/ld+json' | SC_OK
         '/data-view' |'.invalid'| '*/*'                  || null                  | SC_NOT_FOUND
         '/data'      |'.invalid'| '*/*'                  || null                  | SC_NOT_FOUND
         '/da'        |''        | '*/*'                  || 'application/ld+json' | SC_OK
@@ -546,21 +546,23 @@ class CrudSpec extends Specification {
         '/data'      | ''        | 'application/ld+json'  || 'application/ld+json' | false       | false
         '/data'      | '.jsonld' | '*/*'                  || 'application/ld+json' | false       | false
         '/data'      | '.jsonld' | 'application/ld+json'  || 'application/ld+json' | false       | false
-        '/data'      | '.json'   | 'application/ld+json'  || 'application/ld+json' | false       | false
+        '/data'      | '.jsonld' | 'application/json'     || 'application/ld+json' | false       | false
 
         '/data'      | ''        | 'application/json'     || 'application/json'    | false       | true
         '/data'      | '.json'   | '*/*'                  || 'application/json'    | false       | true
-        '/data'      | '.jsonld' | 'application/json'     || 'application/json'    | false       | true
+        '/data'      | '.json'   | 'application/ld+json'  || 'application/json'    | false       | true
 
         '/data-view' | ''        | '*/*'                  || 'application/ld+json' | true        | false
         '/data-view' | ''        | 'application/ld+json'  || 'application/ld+json' | true        | false
         '/data-view' | '.jsonld' | '*/*'                  || 'application/ld+json' | true        | false
         '/data-view' | '.jsonld' | 'application/ld+json'  || 'application/ld+json' | true        | false
-        '/data-view' | '.json'   | 'application/ld+json'  || 'application/ld+json' | true        | false
+        '/data-view' | '.jsonld' | 'application/json'     || 'application/ld+json' | true        | false
+        '/data-view' | '.jsonld' | 'x/x'                  || 'application/ld+json' | true        | false
 
         '/data-view' | ''        | 'application/json'     || 'application/json'    | true        | true
         '/data-view' | '.json'   | '*/*'                  || 'application/json'    | true        | true
-        '/data-view' | '.jsonld' | 'application/json'     || 'application/json'    | true        | true
+        '/data-view' | '.json'   | 'application/ld+json'  || 'application/json'    | true        | true
+        '/data-view' | '.json'   | 'x/x'                  || 'application/json'    | true        | true
     }
 
     @Unroll

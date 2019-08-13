@@ -16,12 +16,7 @@ class CrudGetRequest {
     private CrudGetRequest(HttpServletRequest request) {
         this.request = request
         parsePath(getPath())
-
         contentType = CrudUtils.getBestContentType(request)
-        if (MimeTypes.JSONLD != contentType && MimeTypes.JSON != contentType) {
-            throw new UnsupportedContentTypeException("Content-Type: " + contentType)
-        }
-
         lens = parseLens(request)
     }
 

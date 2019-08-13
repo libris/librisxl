@@ -8,24 +8,43 @@ import org.apache.commons.io.FilenameUtils
 import org.apache.http.HeaderElement
 import org.apache.http.NameValuePair
 import org.apache.http.message.BasicHeaderValueParser
-import whelk.rest.api.MimeTypes
 
 import javax.servlet.http.HttpServletRequest
 
 @Log
 class CrudUtils {
-    static final List ALLOWED_MIME_TYPES = [ MimeTypes.JSONLD,
-                                             MimeTypes.TURTLE,
-                                             MimeTypes.RDF,
-                                             MimeTypes.JSON
+    final static MediaType JSON = MediaType.parse(MimeTypes.JSON)
+    final static MediaType JSONLD = MediaType.parse(MimeTypes.JSONLD)
+
+    static final Map ALLOWED_MEDIA_TYPES_BY_EXT = [
+            '': [JSONLD, JSON],
+            'jsonld': [JSONLD],
+            'json': [JSON],
     ]
 
     static String getBestContentType(HttpServletRequest request) {
-        return getBestContentType(getAcceptHeader(request), getPathSuffix(request))
+        def header = getAcceptHeader(request)
+        def desired = parseAcceptHeader(header)
+        def allowed = allowedMediaTypes(request)
+
+        MediaType best = getBestMatchingMimeType(allowed, desired)
+
+        if (!best) {
+            throw new UnsupportedContentTypeException(header)
+        }
+
+        return best.toString()
     }
 
-    private static String getPathSuffix(HttpServletRequest request) {
-        return FilenameUtils.getExtension(request.getRequestURI())
+    private static List<MediaType> allowedMediaTypes(HttpServletRequest request) {
+        String extension = FilenameUtils.getExtension(request.getRequestURI())
+
+        if (ALLOWED_MEDIA_TYPES_BY_EXT.containsKey(extension)) {
+            return ALLOWED_MEDIA_TYPES_BY_EXT.get(extension)
+        }
+        else {
+            throw new Crud.NotFoundException('.' + extension)
+        }
     }
 
     private static String getAcceptHeader(HttpServletRequest request) {
@@ -42,95 +61,30 @@ class CrudUtils {
         return acceptHeader
     }
 
-    static String getBestContentType(String acceptHeader, String suffix) {
-        List mimeTypes = parseAcceptHeader(acceptHeader).collect{ it.toString() }
-        String suffixMimeType = getMimeTypeForSuffix(suffix)
-        if (findMatchingMimeType(suffixMimeType, mimeTypes)) {
-            mimeTypes.add(0, suffixMimeType)
-        }
-        return getBestMatchingMimeType(ALLOWED_MIME_TYPES, mimeTypes)
-    }
-
-    static String getMimeTypeForSuffix(String suffix) {
-        String result
-        switch (suffix) {
-            case "jsonld":
-                result = MimeTypes.JSONLD
-                break
-            case "json":
-                result = MimeTypes.JSON
-                break
-            case "rdf":
-                result = MimeTypes.RDF
-                break
-            case "ttl":
-                result = MimeTypes.TURTLE
-                break
-            case '':
-                break
-            case null:
-                break
-            default:
-                throw new Crud.NotFoundException(suffix)
-        }
-        return result
-    }
-
-    static String getBestMatchingMimeType(List allowedMimeTypes,
-                                          List desiredMimeTypes) {
-        for (String desiredMimeType : desiredMimeTypes) {
-            // If we can, we want to serve JSON LD
-            if (desiredMimeType == "*/*") {
-                return MimeTypes.JSONLD
-            } else {
-                for (String allowedMimeType : allowedMimeTypes) {
-                    if (isMatch(desiredMimeType, allowedMimeType)) {
-                        return allowedMimeType
-                    }
+    static MediaType getBestMatchingMimeType(List<MediaType> allowedMimeTypes,
+                                             List<MediaType> desiredMimeTypes) {
+        for (MediaType desired : desiredMimeTypes) {
+            for (MediaType allowed : allowedMimeTypes) {
+                if (allowed.is(desired)) {
+                    return allowed
                 }
+
             }
         }
-        log.debug("No acceptable MIME type found.")
-        return null
-    }
 
-    static String findMatchingMimeType(String soughtMimeType,
-                                       List availableMimeTypes) {
-        for (String availableMimeType : availableMimeTypes) {
-            if (isMatch(soughtMimeType, availableMimeType)) {
-                return availableMimeType
-            }
-        }
-        return null
-    }
+        /**
+         https://tools.ietf.org/html/rfc7231#section-5.3.2
+         "A request without any Accept header field implies that the user agent
+         will accept any media type in response. If the header field is
+         present in a request and none of the available representations for
+         the response have a media type that is listed as acceptable, the
+         origin server can either honor the header field by sending a 406 (Not
+         Acceptable) response or disregard the header field by treating the
+         response as if it is not subject to content negotiation."
 
-    static boolean isMatch(String myMimeType, String yourMimeType) {
-      // If either is null, we consider it a mismatch
-      if (!myMimeType || !yourMimeType) {
-          return false
-      }
-
-      List myTokens = myMimeType.tokenize("/")
-      List yourTokens = yourMimeType.tokenize("/")
-
-      // If we can't parse, we consider it a mismatch
-      if (myTokens.size() != 2 || yourTokens.size() != 2) {
-          return false
-      }
-
-      if (myTokens[0] == yourTokens[0] ||
-          myTokens[0] == "*" ||
-          yourTokens[0] == "*") {
-          if (myTokens[1] == yourTokens[1] ||
-              myTokens[1] == "*" ||
-              yourTokens[1] == "*") {
-              return true
-          } else {
-              return false
-          }
-      } else {
-          return false
-      }
+         => disregard header
+         */
+        return allowedMimeTypes.isEmpty() ? JSONLD : allowedMimeTypes[0]
     }
 
     static String cleanEtag(String str) {
@@ -148,14 +102,8 @@ class CrudUtils {
         BasicHeaderValueParser parser = new BasicHeaderValueParser()
 
         List<AcceptMediaType> mediaTypes = []
-
-        try {
-            for (HeaderElement h : BasicHeaderValueParser.parseElements(header, parser)) {
-                mediaTypes << AcceptMediaType.fromHeaderElement(h)
-            }
-        }
-        catch (Exception e) {
-            throw new BadRequestException("Bad Accept header: " + header)
+        for (HeaderElement h : BasicHeaderValueParser.parseElements(header, parser)) {
+            mediaTypes << AcceptMediaType.fromHeaderElement(h)
         }
 
         return mediaTypes.sort().collect { it.mediaType }
@@ -201,19 +149,33 @@ class CrudUtils {
             return other.mediaType.parameters().size() <=> mediaType.parameters().size()
         }
 
-        static AcceptMediaType fromHeaderElement(HeaderElement e) {
+        static AcceptMediaType fromHeaderElement(HeaderElement element) {
             ListMultimap<String, String> parameters = new ArrayListMultimap<>()
             float q = 1.0
-            for (NameValuePair p : e.getParameters()) {
+            for (NameValuePair p : element.getParameters()) {
                 if ('q' == p.getName()) {
-                    q = Float.parseFloat(p.getValue())
+                    q = parseQ(p.getValue())
                     break // ignore 'Accept extension parameters'
                 }
                 parameters.put(p.getName(), p.getValue())
             }
 
-            MediaType m = MediaType.parse(e.name).withParameters(parameters)
-            return new AcceptMediaType(m, (float) q)
+            try {
+                MediaType m = MediaType.parse(element.name).withParameters(parameters)
+                return new AcceptMediaType(m, q)
+            }
+            catch (IllegalArgumentException e) {
+                throw new BadRequestException('Invalid media type in Accept header': element.toString())
+            }
+        }
+
+        private static float parseQ(String value) {
+            try {
+                return Float.parseFloat(value)
+            }
+            catch (NumberFormatException e) {
+                throw new BadRequestException("Invalid q value in Accept header:" + value)
+            }
         }
     }
 }
