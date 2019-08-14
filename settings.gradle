@@ -1,4 +1,4 @@
 rootProject.name = 'librisxl'
-include('apix_export', 'apix_server', 'batchimport', 'harversters', 'importers',
-        'marc_export', 'oaimph', 'rest', 'transform', 'whelk-core', 'whelktool')
+include('apix_export', 'apix_server', 'batchimport', 'harvesters', 'importers',
+        'marc_export', 'oaipmh', 'rest', 'transform', 'whelk-core', 'whelktool')
 
