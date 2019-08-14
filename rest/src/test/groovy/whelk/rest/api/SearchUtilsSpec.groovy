@@ -113,6 +113,8 @@ class SearchUtilsSpec extends Specification {
         // 'q' is special in that it's never ever a list
         // (which is the caller's responsibility)
         ['q': 'Tove']                | SearchType.ELASTIC           | '/find?q=Tove'
+        ['q': 'Tove Jansson']        | SearchType.ELASTIC           | '/find?q=Tove+Jansson'
+        ['q': 'functions & duties']  | SearchType.ELASTIC           | '/find?q=functions+%26+duties'
         ['a': ['1']]                 | SearchType.ELASTIC           | '/find?q=*&a=1'
         ['a': '1']                   | SearchType.ELASTIC           | '/find?q=*&a=1'
         ['a': ['1', '2']]            | SearchType.ELASTIC           | '/find?q=*&a=1&a=2'
