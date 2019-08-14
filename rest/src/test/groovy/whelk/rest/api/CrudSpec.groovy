@@ -356,7 +356,7 @@ class CrudSpec extends Specification {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
-            "/${id}/data".toString()
+            "/${id}/data.jsonld".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
