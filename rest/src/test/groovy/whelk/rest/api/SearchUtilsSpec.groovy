@@ -106,19 +106,19 @@ class SearchUtilsSpec extends Specification {
         expect:
         assert search.makeFindUrl(type, params) == result
         where:
-        params                       | type                         | result
-        [:]                          | SearchType.ELASTIC           | '/find?q=*'
+        params                         | type                         | result
+        [:]                            | SearchType.ELASTIC           | '/find?q=*'
         // 'q' is special in that it's never ever a list
         // (which is the caller's responsibility)
-        ['q': 'Tove']                | SearchType.ELASTIC           | '/find?q=Tove'
-        ['a': ['1']]                 | SearchType.ELASTIC           | '/find?q=*&a=1'
-        ['a': '1']                   | SearchType.ELASTIC           | '/find?q=*&a=1'
-        ['a': ['1', '2']]            | SearchType.ELASTIC           | '/find?q=*&a=1&a=2'
-        ['a': ['1'], 'b': ['2']]     | SearchType.ELASTIC           | '/find?q=*&a=1&b=2'
-        ['a': null, 'b': ['2']]      | SearchType.ELASTIC           | '/find?q=*&b=2'
+        ['q': 'Tove']                  | SearchType.ELASTIC           | '/find?q=Tove'
+        ['a': ['1']]                   | SearchType.ELASTIC           | '/find?q=*&a=1'
+        ['a': '1']                     | SearchType.ELASTIC           | '/find?q=*&a=1'
+        ['a': ['1', '2']]              | SearchType.ELASTIC           | '/find?q=*&a=1&a=2'
+        ['a': ['1'], 'b': ['2']]       | SearchType.ELASTIC           | '/find?q=*&a=1&b=2'
+        ['a': null, 'b': ['2']]        | SearchType.ELASTIC           | '/find?q=*&b=2'
         // as are 'p', 'o', and 'value'
-        ['p': 'foo', 'o': 'bar']     | SearchType.FIND_BY_RELATION  | '/find?p=foo&o=bar'
-        ['p': 'foo', 'value': 'bar'] | SearchType.FIND_BY_VALUE     | '/find?p=foo&value=bar'
+        ['p': 'foo', 'value': 'bar']   | SearchType.FIND_BY_VALUE     | '/find?p=foo&value=bar'
+        ['o': 'foo', '_lens': 'cards'] | SearchType.FIND_REVERSE      | '/find?o=foo&_lens=cards'
     }
 
     def "Should make find URL with offset"() {

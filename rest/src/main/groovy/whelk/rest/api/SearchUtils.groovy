@@ -17,7 +17,6 @@ class SearchUtils {
     final static int DEFAULT_OFFSET = 0
 
     enum SearchType {
-        FIND_BY_RELATION,
         FIND_BY_VALUE,
         FIND_REVERSE,
         ELASTIC,
@@ -44,29 +43,26 @@ class SearchUtils {
 
     Map doSearch(Map queryParameters, String dataset, JsonLd jsonld) {
         String relation = getReservedQueryParameter('p', queryParameters)
-        String reference = getReservedQueryParameter('o', queryParameters)
+        String object = getReservedQueryParameter('o', queryParameters)
         String value = getReservedQueryParameter('value', queryParameters)
         String query = getReservedQueryParameter('q', queryParameters)
         String sortBy = getReservedQueryParameter('_sort', queryParameters)
-        String reverseId = getReservedQueryParameter('_rev', queryParameters)
         String siteBaseUri = getReservedQueryParameter('_site_base_uri', queryParameters)
 
         Tuple2 limitAndOffset = getLimitAndOffset(queryParameters)
         int limit = limitAndOffset.first
         int offset = limitAndOffset.second
 
-        if (reverseId && (relation || reference || value || query || sortBy)) {
-            throw new InvalidQueryException("Cannot use _rev together with other search parameters")
+        if (object && (relation || value || query || sortBy)) {
+            throw new InvalidQueryException("Cannot use 'o' together with other search parameters")
         }
 
         Map results
-        if (relation && reference) {
-            results = findByRelation(relation, reference, limit, offset)
-        } else if (relation && value) {
+        if (relation && value) {
             results = findByValue(relation, value, limit, offset)
-        } else if (reverseId) {
+        } else if (object) {
             results = findReverse(
-                    reverseId,
+                    object,
                     getReservedQueryParameter('_lens', queryParameters),
                     limit,
                     offset)
@@ -74,7 +70,6 @@ class SearchUtils {
             // If general q-parameter chosen, use elastic for query
             if (whelk.elastic) {
                 Map pageParams = ['p': relation,
-                                  'o': reference,
                                   'value': value,
                                   'q': query,
                                   '_sort': sortBy,
@@ -90,35 +85,6 @@ class SearchUtils {
         }
 
         return results
-    }
-
-    private Map findByRelation(String relation,
-                               String reference,
-                               int limit, int offset) {
-        log.debug("Calling findByRelation with p: ${relation} and " +
-                  "o: ${reference}")
-
-        List<Document> docs = whelk.storage.findByRelation(relation,
-                                                           reference,
-                                                           limit, offset)
-        List mappings = []
-        mappings << ['variable': 'p',
-                     'predicate': ld.toChip(getVocabEntry('predicate')),
-                     'value': relation]
-        mappings << ['variable': 'o',
-                     'predicate': ld.toChip(getVocabEntry('object')),
-                     'value': reference]
-
-        Map pageParams = ['p': relation, 'o': reference,
-                          '_limit': limit]
-
-        int total = whelk.storage.countByRelation(relation, reference)
-
-        List items = docs.collect { ld.toCard(it.data) }
-
-        return assembleSearchResults(SearchType.FIND_BY_RELATION,
-                                     items, mappings, pageParams,
-                                     limit, offset, total)
     }
 
     private Map findByValue(String relation, String value,
@@ -150,7 +116,7 @@ class SearchUtils {
 
     private Map findReverse(String id, String lens, int limit, int offset) {
         lens = lens ? lens : 'cards'
-        log.debug("findReverse. _rev: ${id}, _lens: ${lens}")
+        log.debug("findReverse. o: ${id}, _lens: ${lens}")
 
         def ids = whelk.findIdsLinkingTo(id)
         int total = ids.size()
@@ -162,7 +128,7 @@ class SearchUtils {
                 .findAll{ !it.isEmpty() }
                 .collect{applyLens(it, id, lens)}
 
-        Map pageParams = ['_rev': id, '_lens': lens, '_limit': limit]
+        Map pageParams = ['o': id, '_lens': lens, '_limit': limit]
 
         return assembleSearchResults(SearchType.FIND_REVERSE,
                 items, [], pageParams,
@@ -500,9 +466,6 @@ class SearchUtils {
         Map queryParameters = queryParameters0.clone()
         Tuple2 result
         switch (st) {
-            case SearchType.FIND_BY_RELATION:
-                result = getRelationParams(queryParameters)
-                break
             case SearchType.FIND_BY_VALUE:
                 result = getValueParams(queryParameters)
                 break
@@ -516,15 +479,6 @@ class SearchUtils {
         return result
     }
 
-    private Tuple2 getRelationParams(Map queryParameters) {
-        String relation = queryParameters.remove('p')
-        String reference = queryParameters.remove('o')
-        List initialParams = ["p=${relation}", "o=${reference}"]
-        List keys = (queryParameters.keySet() as List).sort()
-
-        return new Tuple2(initialParams, keys)
-    }
-
     private Tuple2 getValueParams(Map queryParameters) {
         String relation = queryParameters.remove('p')
         String value = queryParameters.remove('value')
@@ -535,9 +489,9 @@ class SearchUtils {
     }
 
     private Tuple2 getReverseParams(Map queryParameters) {
-        String id = queryParameters.remove('_rev')
+        String id = queryParameters.remove('o')
         String lens = queryParameters.remove('_lens')
-        List initialParams = ["_rev=${id}", "_lens=${lens}"]
+        List initialParams = ["o=${id}", "_lens=${lens}"]
         List keys = (queryParameters.keySet() as List).sort()
 
         return new Tuple2(initialParams, keys)
@@ -702,7 +656,7 @@ class SearchUtils {
      * Return a list of reserved query params
      */
     private List getReservedParameters() {
-        return ['q', 'p', 'o', 'value', '_rev'] + getReservedAuxParameters()
+        return ['q', 'p', 'o', 'value'] + getReservedAuxParameters()
     }
 
     /*
