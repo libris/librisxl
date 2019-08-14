@@ -382,17 +382,16 @@ class CrudSpec extends Specification {
             "*/*"
         }
         storage.load(_, _) >> {
-            new Document(["@graph": [["@id": id,
-                                      "foo": "bar",
-                                      "baz": [
-                                        "@id": "examplevocab:"
-                                      ],
-                                      "quux": [
-                                        "@id": "some_term"
-                                      ],
-                                      "bad_ref": [
-                                        "@id": "invalid:ref"
-                                      ]]]])
+            new Document(["@graph": [
+                    ["@id": id,
+                     "foo": "bar",
+                     "baz": ["@id": "examplevocab:"],
+                     "quux": ["@id": "some_term"],
+                     "bad_ref": ["@id": "invalid:ref"],
+                     "mainEntity": ["@id": "main_id"]
+                    ],
+                    ["@id": "main_id"]
+            ]])
         }
         when:
         crud.doGet(request, response)
@@ -464,10 +463,14 @@ class CrudSpec extends Specification {
             acceptContentType
         }
         storage.load(_, _) >> {
-            new Document(["@graph": [["@id": id, "foo": "bar"]]])
+            new Document(["@graph": [
+                    ["@id": id, "mainEntity": ["@id": "main"]],
+                    ["@id": "main", "foo": "bar"]]])
         }
         storage.loadEmbellished(_, _) >> {
-            new Document(["@graph": [["@id": id, "foo": "embellished"]]])
+            new Document(["@graph": [
+                    ["@id": id, "mainEntity": ["@id": "main"]],
+                    ["@id": "main", "foo": "embellished"]]])
         }
         crud.doGet(request, response)
 
@@ -521,10 +524,14 @@ class CrudSpec extends Specification {
             acceptContentType
         }
         storage.load(_, _) >> {
-            new Document(["@graph": [["@id": id, "foo": "bar"]]])
+            new Document(["@graph": [
+                    ["@id": id, "mainEntity": ["@id": "main"]],
+                    ["@id": "main", "foo": "bar"]]])
         }
         storage.loadEmbellished(_, _) >> {
-            new Document(["@graph": [["@id": id, "foo": "embellished"]]])
+            new Document(["@graph": [
+                    ["@id": id, "mainEntity": ["@id": "main"]],
+                    ["@id": "main", "foo": "embellished"]]])
         }
         crud.doGet(request, response)
         String document = response.getResponseBody()
@@ -578,10 +585,14 @@ class CrudSpec extends Specification {
             return getParameter(queryString, arguments[0])
         }
         storage.load(_, _) >> {
-            new Document(["@graph": [["@id": id, "foo": "bar"]]])
+            new Document(["@graph": [
+                    ["@id": id, "mainEntity": ["@id": "main"]],
+                    ["@id": "main", "foo": "bar"]]])
         }
         storage.loadEmbellished(_, _) >> {
-            new Document(["@graph": [["@id": id, "foo": "embellished"]]])
+            new Document(["@graph": [
+                    ["@id": id, "mainEntity": ["@id": "main"]],
+                    ["@id": "main", "foo": "embellished"]]])
         }
 
         crud.doGet(request, response)
@@ -628,7 +639,11 @@ class CrudSpec extends Specification {
         request.getParameter(_) >> {
             return getParameter(queryString, arguments[0])
         }
-        Document d = new Document(["@graph": [["@id": "/instance_id",
+        Document d = new Document(["@graph": [["@id": "record_id",
+                                               "@type": "Record",
+                                               "mainEntity": ["@id": "instance_id"],
+                                              ],
+                                              ["@id": "instance_id",
                                                "@type": "Instance",
                                                "prop1": "val1",
                                                "prop2": "val2",
