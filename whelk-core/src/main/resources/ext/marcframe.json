@@ -8255,22 +8255,156 @@
       "$8": {"about": "_:extent", "property": "marc:groupid"}
     },
 
-    "306": {},
-    "307": { "ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "Används företrädesvis för elektroniska resurser."},
+    "306": {
+      "addLink": "hasDuration",
+      "resourceType": "Duration",
+      "pendingResources": {
+        "_:durationPart": {
+          "addLink": "hasPart",
+          "resourceType": "Duration",
+          "absorbSingle": true
+        }
+      },
+      "$a": {"aboutNew": "_:durationPart", "property": "value"},
+      "$6": {"about": "_:durationPart", "property": "marc:fieldref"},
+      "_spec": [
+        {
+          "Name": "Simple duration value",
+          "source": [
+            {"306": {"ind1": " ", "ind2": " ", "subfields": [{"a": "003100"}]}}
+          ],
+          "result": {
+            "mainEntity": 
+            {
+              "hasDuration": [
+                {
+                  "@type": "Duration",
+                  "value": "003100"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Name": "Duration in parts",
+          "source": [
+            {"306": {"ind1": " ", "ind2": " ", "subfields": [{"a": "003100"},{"a": "001839"}]}},
+            {"500": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Durations: 31:00 ; 18:39."}]}}
+          ],
+          "result": {
+            "mainEntity": 
+            {
+              "hasDuration": [
+                {
+                  "@type": "Duration",
+                  "hasPart": [
+                    {
+                      "@type": "Duration",
+                      "value": "003100"
+                    },
+                    {
+                      "@type": "Duration",
+                      "value": "001839"
+                    }
+                  ]
+                }
+              ],
+              "hasNote": [
+                {
+                  "@type": "Note",
+                  "label": "Durations: 31:00 ; 18:39."
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+
+    "307": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "307 - HOURS, ETC. (R) nac",
+      "NOTE:local": "Används företrädesvis för elektroniska resurser."
+    },
 
     "310": {
       "aboutEntity": "?thing",
-      "$a": {"addLink": "frequency", "resourceType": "Frequency", "property": "label"},
-      "$6": {"property": "marc:fieldref"},
-      "TODO:$b": "Compare with 321"
+      "addLink": "frequency",
+      "resourceType": "Frequency",
+      "NOTE:marc-repeatable": false,
+      "$a": {"property": "label"},
+      "$b": {"property": "date"},
+      "$6": {"property": "marc:fieldref", "supplementary": true},
+      "_spec": [
+        {
+          "source": [
+            {"310": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Monthly"},{"b": "1958-"}]}}
+          ],
+          "result": {
+            "mainEntity": 
+            {
+              "frequency": [
+                {
+                  "@type": "Frequency",
+                  "label": "Monthly",
+                  "date": "1958-"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
 
     "321": {
       "addLink": "replaces",
       "embedded": true,
       "resourceType": "Serial",
-      "$a": {"addLink": "frequency", "resourceType": "Frequency", "property": "label"},
-      "$b": {"property": "date"}
+      "pendingResources": {
+        "_:frequency": {
+          "addLink": "frequency",
+          "resourceType": "Frequency"
+        }
+      },
+      "$a": {"about": "_:frequency", "property": "label"},
+      "$b": {"about": "_:frequency", "property": "date"},
+      "$6": {"about": "_:frequency", "property": "marc:fieldref", "supplementary": true},
+      "_spec": [
+        {
+          "source": [
+            {"321": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Annual"},{"b": "1981-"}]}},
+            {"321": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Updated irregularly"},{"b": "1984-"}]}}
+          ],
+          "result": {
+            "mainEntity": 
+            {
+              "replaces": [
+                {
+                  "@type": "Serial",
+                  "frequency": [
+                    {
+                      "@type": "Frequency",
+                      "label": "Annual",
+                      "date": "1981-"
+                    }
+                  ]
+                },
+                {
+                  "@type": "Serial",
+                  "frequency": [
+                    {
+                      "@type": "Frequency",
+                      "label": "Updated irregularly",
+                      "date": "1984-"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
 
     "336": {
@@ -8311,8 +8445,11 @@
       },
       "$a": {"about": "_:contentType", "property": "label", "infer": true},
       "$b": {"about": "_:contentType", "property": "code"},
+      "$0": {"about": "_:contentType", "property": "marc:recordControlNumber"},
+      "$1": null,
       "$2": {"about": "_:contentType", "property": "termGroup", "marcDefault": "rdacontent", "supplementary": true},
       "TODO?:$2": {"about": "_:contentType", "addLink": "inCollection", "resourceType": "ConceptCollection", "property": "code"},
+      "$6": {"about": "_:contentType", "property": "marc:fieldref", "supplementary": true},
       "$8": {"about": "_:contentType", "property": "marc:groupid", "supplementary": true},
       "$3": {"property": "typeNote", "supplementary": true},
       "_spec": [
@@ -8463,7 +8600,10 @@
       "aboutEntity": "?thing",
       "$a": {"about": "_:mediaType", "property": "label", "infer": true},
       "$b": {"about": "_:mediaType", "property": "code"},
+      "$0": {"about": "_:mediaType", "property": "marc:recordControlNumber"},
+      "$1": null,
       "$2": {"about": "_:mediaType", "property": "termGroup", "marcDefault": "rdamedia", "supplementary": true},
+      "$6": {"about": "_:mediaType", "property": "marc:fieldref", "supplementary": true},
       "$8": {"about": "_:mediaType", "property": "marc:groupid", "supplementary": true},
       "$3": {"property": "typeNote", "supplementary": true},
       "_spec": [
@@ -8598,7 +8738,10 @@
       },
       "$a": {"about": "_:carrierType", "property": "label", "infer": true},
       "$b": {"about": "_:carrierType", "property": "code"},
+      "$0": {"about": "_:carrierType", "property": "marc:recordControlNumber"},
+      "$1": null,
       "$2": {"about": "_:carrierType", "property": "termGroup", "marcDefault": "rdacarrier", "supplementary": true},
+      "$6": {"about": "_:carrierType", "property": "marc:fieldref", "supplementary": true},
       "$8": {"about": "_:carrierType", "property": "marc:groupid", "supplementary": true},
       "$3": {"property": "typeNote", "supplementary": true},
       "_spec": [
@@ -8944,12 +9087,13 @@
         "property": "label"
       },
       "$0": null, "NOTE:$0": "nac",
+      "$1": null,
       "TODO:subfield$2": "Source (NR)",
       "$3": null,
       "NOTE:$3": {"NOTE:LC": "nac", "NOTE:record-count": 0, "NOTE:local": "If this would appear, we unconditionally expect it ONLY to be used in subsequent 340 (see linkSubsequentRepeated)."},
       "TODO:subfield$6": "Linkage (NR)",
       "$g": {
-        "NOTE": "New subfield",
+        "NOTE": "New subfield, is on work in BF2",
         "addLink": "colorContent",
         "resourceType": "ColorContent",
         "property": "label"
@@ -9020,8 +9164,9 @@
         }
       ]
     },
-    "342": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
-    "343": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "341": {"ignored": true, "NOTE": "New 2018, terms not in BF2 yet.", "TODO": "W - contentAccessibility - ContentAccessibility"},
+    "342": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "342 - GEOSPATIAL REFERENCE DATA (R) nac"},
+    "343": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "343 - PLANAR COORDINATE DATA (R) nac"},
     "344": {
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
@@ -9333,6 +9478,36 @@
         }
       ]
     },
+    "350": {
+      "onRevertPrefer": "037",
+      "NOTE:LC": "Price (CF, SE) [OBSOLETE, 1993]",
+      "addLink": "acquisitionSource",
+      "resourceType": "AcquisitionSource",
+      "$a": {"property": "acquisitionTerms"},
+      "$b": null,
+      "$6": null,
+      "_spec": [
+         {
+           "source": [
+             {"350": {"ind1": " ", "ind2": " ", "subfields": [{"a": "$0.35"}]}}
+           ],
+           "normalized": [
+             {"037": {"ind1": " ", "ind2": " ", "subfields": [{"c": "$0.35"}]}}
+           ],
+           "result": {
+             "mainEntity": {
+               "acquisitionSource": [{
+                 "@type": "AcquisitionSource",
+                 "acquisitionTerms": "$0.35"
+               }],
+               "instanceOf": {
+                 "@type": "Text"
+               }
+             }
+           }
+         }
+       ]
+     },
     "351": {
       "aboutEntity": "?work",
       "addLink": "arrangement",
@@ -9367,11 +9542,16 @@
         "about": "_:cartographicobj",
         "property": "count"
       },
-      "$q": null,
-      "NOTE:$q": {"NOTE:record-count": 0, "TODO": "To enable future imports to EncodingFormat, we need something like onRevertPrefer 347$b to avoid collisions in export."}
+      "$d": null,
+      "$e": null,
+      "$f": null,
+      "$g": null,
+      "$i": null,
+      "NOTE:$q": {"NOTE:record-count": 0, "TODO": "To enable future imports to EncodingFormat, we need something like onRevertPrefer 347$b to avoid collisions in export."},
+      "$6": null
     },
-    "355": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
-    "357": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "355": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "355 - SECURITY CLASSIFICATION CONTROL (R) nac"},
+    "357": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "357 - ORIGINATOR DISSEMINATION CONTROL (NR) nac"},
     "362": {
       "aboutEntity": "?thing",
       "addLink": "hasNumberingOfSerials",
@@ -9413,19 +9593,134 @@
         }
       ]
     },
-    "363": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
-    "365": {"ignored": true, "NOTE:record-count": 8066, "NOTE:LC": "nac", "NOTE:local": "Avsett för bokhandelns information"},
-    "366": {"ignored": true, "NOTE:record-count": 8066, "NOTE:LC": "nac", "NOTE:local": "Avsett för bokhandelns information"},
-    "370": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
-    "377": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
-    "380": {"ignored": true, "NOTE:record-count": 2, "NOTE:LC": "genreForm", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
-    "381": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
-    "382": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "musicMedium", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
-    "383": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
-    "384": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
-    "385": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "intendedAudience", "TODO": "For imports"},
-    "386": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "creatorCharacteristic", "TODO": "For imports"},
-    "388": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"},
+    "363": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "363 - NORMALIZED DATE AND SEQUENTIAL DESIGNATION (R) nac"
+    },
+    "365": {
+      "ignored": true,
+      "NOTE:record-count": 8066,
+      "NOTE:LC": "365 - TRADE PRICE (R) nac",
+      "NOTE:local": "Avsett för bokhandelns information"
+    },
+    "366": {
+      "ignored": true,
+      "NOTE:record-count": 8066,
+      "NOTE:LC": "366 - TRADE AVAILABILITY INFORMATION (R) nac",
+      "NOTE:local": "Avsett för bokhandelns information"
+    },
+    "370": {
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "aboutEntity": "?work",
+      "pendingResources": {
+        "_:associated": {
+          "addLink": "marc:hasAssociatedPlace",
+          "resourceType": "Place"
+        },
+        "_:origin": {
+          "addLink": "originPlace",
+          "resourceType": "Place"
+        }
+      },
+      "$c": {"about": "_:associated", "property": "label"},
+      "$f": null,
+      "$g": {"about": "_:origin", "property": "label"},
+      "$s": null,
+      "$t": null,
+      "$u": null,
+      "$v": null,
+      "$0": null,
+      "$1": null,
+      "$2": null,
+      "$3": null,
+      "$4": null,
+      "$6": null,
+      "_spec": [
+         {
+           "source": [
+             {"370": {"ind1": " ", "ind2": " ", "subfields": [{"c": "Sweden"},{"g": "Japan"}]}}
+           ],
+           "result": {
+             "mainEntity": {
+               "instanceOf": {
+                 "@type": "Text",
+                 "marc:hasAssociatedPlace": [
+                   {
+                    "@type": "Place",
+                    "label": "Sweden"
+                    }
+                  ],
+                 "originPlace": [
+                   {
+                     "@type": "Place",
+                     "label": "Japan"
+                   }
+                 ]
+               }
+             }
+           }
+         }
+       ]
+    },
+    "377": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "language",
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "TODO": "For imports"
+    },
+    "380": {
+      "ignored": true,
+      "NOTE:record-count": 2,
+      "NOTE:LC": "genreForm",
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "TODO": "For imports"
+    },
+    "381": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "381 - OTHER DISTINGUISHING CHARACTERISTICS OF WORK OR EXPRESSION (R) nac",
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
+    },
+    "382": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "musicMedium",
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "TODO": "For imports"
+    },
+    "383": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "musicSerialnumber, musicOpusNumber, etc.",
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "TODO": "For imports"
+    },
+    "384": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "musicKey",
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "TODO": "For imports"
+    },
+    "385": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "intendedAudience",
+      "TODO": "For imports"
+    },
+    "386": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "creatorCharacteristic",
+      "TODO": "For imports"},
+    "388": {
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "NOTE:LC": "388 - TIME PERIOD OF CREATION (R) nac",
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
+    },
 
     "400": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
     "410": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
