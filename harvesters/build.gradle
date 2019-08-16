@@ -38,6 +38,8 @@ archivesBaseName = "oaipmhharvester"
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+mainClassName = 'whelk.component.support.JettyServer'
+
 sourceSets {
     main {
         java { srcDirs = [] }
@@ -132,7 +134,6 @@ project.afterEvaluate {
 
         from {
             configurations.executableWarDeps.collect {
-                //it.isDirectory() ? it : project.zipTree(it)
                 it.isDirectory() ? it : project.zipTree(it).matching {
                     exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
                 }

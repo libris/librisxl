@@ -1,6 +1,5 @@
 apply plugin: 'java'
 apply plugin: 'groovy'
-apply plugin: 'application'
 apply plugin: 'war'
 apply plugin: 'jacoco'
 apply from: '../gretty.plugin'

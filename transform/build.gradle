@@ -5,6 +5,8 @@ apply plugin: 'application'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+mainClassName = "transform.Main"
+
 repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }

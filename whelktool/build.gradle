@@ -21,6 +21,8 @@ loadConfiguration()
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+mainClassName = "whelk.datatool.WhelkTool"
+
 test.testLogging {
     showStandardStreams true
     exceptionFormat "full"
