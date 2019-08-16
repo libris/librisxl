@@ -38,7 +38,6 @@ test {
 test {
     systemProperty 'xl.secret.properties', '../secret.properties'
     jacoco {
-        append = false
         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
         classDumpDir = file("$buildDir/jacoco/classpathdumps")
     }
@@ -88,6 +87,7 @@ dependencies {
 
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    compile "org.codehaus.groovy:groovy-dateutil:${groovyVersion}"
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
     compile 'commons-cli:commons-cli:1.2'
     compile 'commons-io:commons-io:2.4'
