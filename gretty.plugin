@@ -14,5 +14,7 @@ repositories {
   jcenter()
 }
 
-if (!project.plugins.findPlugin(org.akhikhl.gretty.GrettyPlugin))
+if (!project.plugins.findPlugin(org.akhikhl.gretty.GrettyPlugin)) {
   project.apply(plugin: org.akhikhl.gretty.GrettyPlugin)
+  project.gretty.servletContainer = 'jetty9.4'
+}

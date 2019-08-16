@@ -81,7 +81,7 @@ buildscript {
 dependencies {
 
     def groovyVersion = GroovySystem.getVersion()
-    def jettyVersion = "8.1.16.v20140903"
+    def jettyVersion = "9.4.20.v20190813"
 
     compile(project(':whelk-core'))
 
