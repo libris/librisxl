@@ -162,13 +162,6 @@ class Crud extends HttpServlet {
             return
         }
 
-        def forcedsetPath = "/sys/forcedsetterms.json"
-        if (request.pathInfo == forcedsetPath) {
-            String responseBody = mapper.writeValueAsString(jsonld.repeatableTerms)
-            sendGetResponse(request, response, responseBody, EPOCH_START, forcedsetPath, "application/json")
-            return
-        }
-
         try {
             def path = getRequestPath(request)
             handleGetRequest(request, response, path)

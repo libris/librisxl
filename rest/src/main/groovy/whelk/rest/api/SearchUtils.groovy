@@ -449,16 +449,20 @@ class SearchUtils {
 
             if (v instanceof List) {
                 v.each { value ->
-                    params << "${k}=${value}"
+                    params << makeParam(k, value)
                 }
             } else {
-                params << "${k}=${v}"
+                params << makeParam(k, v)
             }
         }
         if (offset > 0) {
-            params << "_offset=${offset}"
+            params << makeParam("_offset", offset)
         }
         return "/find?${params.join('&')}"
+    }
+
+    private String makeParam(key, value) {
+        return "${urlEncode(key)}=${urlEncode(value)}"
     }
 
     private Tuple2 getInitialParamsAndKeys(SearchType st,
@@ -482,7 +486,7 @@ class SearchUtils {
     private Tuple2 getValueParams(Map queryParameters) {
         String relation = queryParameters.remove('p')
         String value = queryParameters.remove('value')
-        List initialParams = ["p=${relation}", "value=${value}"]
+        List initialParams = [makeParam('p', relation), makeParam('value', value)]
         List keys = (queryParameters.keySet() as List).sort()
 
         return new Tuple2(initialParams, keys)
@@ -503,7 +507,7 @@ class SearchUtils {
         }
 
         String query = queryParameters.remove('q')
-        List initialParams = ["q=${query}"]
+        List initialParams = [makeParam('q', query)]
         List keys = (queryParameters.keySet() as List).sort()
 
         return new Tuple2(initialParams, keys)
@@ -683,8 +687,10 @@ class SearchUtils {
         }
     }
 
-    private String urlEncode(String input) {
-        return java.net.URLEncoder.encode(input, "UTF-8")
+    private Object urlEncode(Object input) {
+        return input instanceof String
+                ? java.net.URLEncoder.encode(input, "UTF-8")
+                : input
     }
 }
 
