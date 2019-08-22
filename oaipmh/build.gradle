@@ -22,9 +22,9 @@ configurations.all {
 dependencies {
 
     // XL dependencies
-    compile(project(':../whelk-core'))
+    compile(project(':whelk-core'))
 
-    def jettyVersion="9.3.6.v20151106"
+    def jettyVersion = "9.4.20.v20190813"
 
     // Jetty
     compile "org.eclipse.jetty:jetty-webapp:${jettyVersion}"

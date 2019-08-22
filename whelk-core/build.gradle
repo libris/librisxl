@@ -13,7 +13,7 @@ targetCompatibility = 1.8
 sourceSets {
     main {
         java { srcDirs = [] }
-        groovy { srcDir 'src/main/' }
+        groovy { srcDirs = ['src/main/java', 'src/main/groovy'] }
     }
     test {
         groovy { srcDir 'src/test/groovy/' }
@@ -26,7 +26,6 @@ sourceSets {
 
 test {
     jacoco {
-        append = false
         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
         classDumpDir = file("$buildDir/jacoco/classpathdumps")
     }
@@ -38,7 +37,7 @@ test.testLogging {
 }
 
 jacoco {
-    toolVersion = "0.7.6.201602180812"
+    toolVersion = "0.8.2"
     reportsDir = file("$buildDir/coverage_report")
 }
 

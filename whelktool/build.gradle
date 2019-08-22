@@ -21,6 +21,8 @@ loadConfiguration()
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+mainClassName = "whelk.datatool.WhelkTool"
+
 test.testLogging {
     showStandardStreams true
     exceptionFormat "full"
@@ -33,7 +35,7 @@ repositories {
 }
 
 dependencies {
-    compile project(':../whelk-core')
+    compile project(':whelk-core')
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
 }
 

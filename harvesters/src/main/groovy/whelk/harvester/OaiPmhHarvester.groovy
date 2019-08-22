@@ -229,7 +229,7 @@ class OaiPmhHarvester {
         log.trace("Found record with id ${record.identifier} and data: ${record.record}")
         String collection = null
         if (record.deleted) {
-            String systemId = whelk.storage.locate(record.identifier, false)?.id
+            String systemId = null // FIXME locate does not exist - String systemId = whelk.storage.locate(record.identifier, false)?.id
             if (systemId) {
                 MarcRecord marcRecord = MarcXmlRecordReader.fromXml(record.record)
                 log.debug("Delete request for ${record.identifier}. " +
@@ -237,7 +237,7 @@ class OaiPmhHarvester {
                         "Collection is: ${getCollection(marcRecord)}")
                 try {
                     //TODO: Do not hard code ChangedIn parameter
-                    whelk.remove(systemId, 'voyager', null, getCollection(marcRecord))
+                    whelk.remove(systemId, 'voyager', null)
                 } catch (all) {
                     log.error("Could not remove record with ID ${record.identifier}. " +
                             "Located in system as ${systemId}. " +
@@ -331,7 +331,7 @@ class OaiPmhHarvester {
             else
                 mainId = LegacyIntegrationTools.generateId(recordId)
 
-            def extraData = [:]
+            Map<String, List> extraData = [:]
             for (spec in oaiPmhRecord.setSpecs) {
                 List setSpecs = extraData.get("oaipmhSetSpecs", [])
                 setSpecs.add(spec.toString())

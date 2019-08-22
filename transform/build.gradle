@@ -5,6 +5,8 @@ apply plugin: 'application'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+mainClassName = "transform.Main"
+
 repositories {
     mavenCentral()
     maven { url "http://repository.codehaus.org/" }
@@ -16,7 +18,7 @@ dependencies {
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
 
     // XL dependencies
-    compile(project(':../whelk-core'))
+    compile(project(':whelk-core'))
 
     // Testing
     testCompile 'junit:junit:4.12'
