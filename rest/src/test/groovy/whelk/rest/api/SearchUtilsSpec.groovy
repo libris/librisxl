@@ -311,9 +311,15 @@ class SearchUtilsSpec extends Specification {
 
     def "slicing should work"() {
         expect:
+        List<String> list = ['a', 'b', 'c', 'd', 'e']
+        def from = 0
+        def to = 1
+        def expected = ['a']
+
+
         SearchUtils.slice(list, from, to) == expected
+        /*
         where:
-        list = ['a', 'b', 'c', 'd', 'e']
         from | to | expected
         0    | 1  | ['a']
         0    | 5  | ['a', 'b', 'c', 'd', 'e']
@@ -326,5 +332,7 @@ class SearchUtilsSpec extends Specification {
         0    | 3  | ['a', 'b', 'c']
         -4   | 9  | ['a', 'b', 'c', 'd', 'e']
         5    | 0  | []
+
+         */
     }
 }
