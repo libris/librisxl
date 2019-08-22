@@ -1,15 +1,4 @@
 package whelk.harvester
-
-import whelk.Document
-import whelk.Location
-import whelk.Whelk
-
-import spock.lang.Specification
-import groovy.util.logging.Log4j2 as Log
-import whelk.component.PostgreSQLComponent
-import whelk.component.Storage
-import whelk.converter.marc.MarcFrameConverter
-
 /*@Log
 class OaiPmhHarvesterSpec extends Specification {
 

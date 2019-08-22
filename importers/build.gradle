@@ -22,6 +22,8 @@ def loadConfiguration() {
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+mainClassName = "whelk.importer.ImporterMain"
+
 def getGitVersion() {
 	def stdout = new ByteArrayOutputStream()
 	exec {
@@ -33,7 +35,7 @@ def getGitVersion() {
 
 def versionNumber = getGitVersion()
 
-/*sourceSets {
+sourceSets {
     main {
         java { srcDirs = [] }
         groovy { srcDirs = ['src/main/java', 'src/main/groovy'] }
@@ -41,9 +43,7 @@ def versionNumber = getGitVersion()
     test {
         groovy { srcDir 'src/test/groovy/' }
     }
-}*/
-
-
+}
 
 test.testLogging {
     showStandardStreams true
@@ -64,7 +64,6 @@ configurations.all {
 }
 
 dependencies {
-    def activeMQVersion = "5.11.1"
     def groovyVersion = GroovySystem.getVersion()
 
     // LIBRISXL modules
@@ -100,17 +99,9 @@ dependencies {
     testCompile "org.gperfutils:gprof:0.3.0-groovy-2.3"
     testCompile 'cglib:cglib-nodep:3.1'
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
-
-    //executableWarDeps "org.eclipse.jetty:jetty-server:${jettyVersion}"
-    //executableWarDeps "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
-
-    /*executableWarDeps "org.codehaus.groovy:groovy-all:${groovyVersion}"
-    executableWarDeps 'commons-cli:commons-cli:1.2'*/
 }
 
 // Include dependent libraries in archive.
-
-
 jar {
     manifest {
         attributes "Main-Class": "whelk.importer.ImporterMain"
@@ -134,7 +125,6 @@ configurations {
 
 project.afterEvaluate {
     war {
-        //mainClassName = "whelk.vcopyServlet.vcopyImporterServlet"
         archivesBaseName = "vcopyImporter"
 
         from {
@@ -145,7 +135,6 @@ project.afterEvaluate {
                 }
             }
         }
-        //from "$buildDir/classes/main"
 
         def manifestClasspath = configurations.compile.collect {
             "/WEB-INF/lib/${it.getName()}"
@@ -179,7 +168,6 @@ gretty {
         'xl.mysql.properties' : System.getProperty("xl.mysql.properties")
     )
 }
-
 
 task(groovy, dependsOn: "classes", type: JavaExec) {
     description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"

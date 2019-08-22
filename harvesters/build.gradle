@@ -38,6 +38,8 @@ archivesBaseName = "oaipmhharvester"
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+mainClassName = 'whelk.component.support.JettyServer'
+
 sourceSets {
     main {
         java { srcDirs = [] }
@@ -79,12 +81,13 @@ buildscript {
 dependencies {
 
     def groovyVersion = GroovySystem.getVersion()
-    def jettyVersion = "8.1.16.v20140903"
+    def jettyVersion = "9.4.20.v20190813"
 
     compile(project(':whelk-core'))
 
     // Common tools
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    compile "org.codehaus.groovy:groovy-dateutil:${groovyVersion}"
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
     compile 'commons-cli:commons-cli:1.2'
     compile 'commons-io:commons-io:2.4'
@@ -132,7 +135,6 @@ project.afterEvaluate {
 
         from {
             configurations.executableWarDeps.collect {
-                //it.isDirectory() ? it : project.zipTree(it)
                 it.isDirectory() ? it : project.zipTree(it).matching {
                     exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
                 }

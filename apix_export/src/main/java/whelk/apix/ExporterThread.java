@@ -365,7 +365,7 @@ public class ExporterThread extends Thread
                                             String changedBy, String collection, boolean deleted)
             throws IOException, SQLException
     {
-        m_whelk.storeAtomicUpdate(id, true, changedIn, changedBy, collection, deleted,
+        m_whelk.storeAtomicUpdate(id, true, changedIn, changedBy,
                 (Document doc) ->
                 {
                     if (newVoyagerId != null)
@@ -374,7 +374,6 @@ public class ExporterThread extends Thread
                         doc.addThingIdentifier("http://libris.kb.se/resource/" + collection + "/" + newVoyagerId);
                         doc.setControlNumber(newVoyagerId);
                     }
-                    doc.setApixExportFailFlag(failedExport);
                 });
     }
 
