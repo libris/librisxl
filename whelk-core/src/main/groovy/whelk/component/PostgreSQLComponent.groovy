@@ -2129,7 +2129,7 @@ class PostgreSQLComponent {
 
         return result
     }
-    
+
     private PreparedStatement rigFindByValueStatement(PreparedStatement find,
                                                       String relation,
                                                       String value,

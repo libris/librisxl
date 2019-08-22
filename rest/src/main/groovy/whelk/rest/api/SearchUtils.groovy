@@ -46,7 +46,6 @@ class SearchUtils {
         String value = getReservedQueryParameter('value', queryParameters)
         String query = getReservedQueryParameter('q', queryParameters)
         String sortBy = getReservedQueryParameter('_sort', queryParameters)
-        String reverseId = getReservedQueryParameter('_rev', queryParameters)
         String siteBaseUri = getReservedQueryParameter('_site_base_uri', queryParameters)
 
         Tuple2 limitAndOffset = getLimitAndOffset(queryParameters)
@@ -660,7 +659,7 @@ class SearchUtils {
      * Return a list of reserved query params
      */
     private List getReservedParameters() {
-        return ['q', 'p', 'o', 'value', '_rev'] + getReservedAuxParameters()
+        return ['q', 'p', 'o', 'value'] + getReservedAuxParameters()
     }
 
     /*
