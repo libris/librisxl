@@ -190,7 +190,7 @@ class MarcFrameConverterUtilsSpec extends Specification {
          '[0] [1] [2:4]'  | [[0, 1], [1, 2], [2,4]]
     }
 
-    def "should get keys sorted by dependency from pendingResources"() {
+    def "should get keys sorted by dependency from pendingResources2"() {
         given:
         def pendingResources = [
             'b2': [about: 'a', link: 'b2', resourceType: 'B"'],

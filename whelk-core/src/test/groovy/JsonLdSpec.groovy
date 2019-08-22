@@ -1,14 +1,12 @@
 package whelk.util
 
+import org.codehaus.jackson.map.ObjectMapper
+import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Unroll
-import spock.lang.Ignore
-import org.codehaus.jackson.map.*
 import whelk.Document
 import whelk.JsonLd
 import whelk.exception.FramingException
-import whelk.exception.ModelValidationException
-
 
 @Unroll
 class JsonLdSpec extends Specification {
@@ -29,7 +27,15 @@ class JsonLdSpec extends Specification {
             ["@id": "http://example.org/ns/Publication",
              "subClassOf": ["@id": "http://example.org/ns/ProvisionActivity"]],
             ["@id": "http://example.org/pfx/SpecialPublication",
-             "subClassOf": ["@id": "http://example.org/ns/Publication"]]
+             "subClassOf": ["@id": "http://example.org/ns/Publication"]],
+
+            ["@id": "http://example.org/ns/label", "@type": ["@id": "DatatypeProperty" ]],
+            ["@id": "http://example.org/ns/prefLabel",
+             "subPropertyOf": [ ["@id": "http://example.org/ns/label"] ]],
+            ["@id": "http://example.org/ns/preferredLabel",
+             "subPropertyOf": ["@id": "http://example.org/ns/prefLabel"]],
+            ["@id": "http://example.org/ns/name",
+             "subPropertyOf": ["@id": "http://example.org/ns/label"]]
         ]
     ]
 
@@ -296,6 +302,20 @@ class JsonLdSpec extends Specification {
         'pfx:SpecialPublication'    | 'http://example.org/pfx/SpecialPublication'
     }
 
+    def "use vocab to get subclasses of a base class"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        expect:
+        ld.getSubClasses('ProvisionActivity') == ['Publication', 'pfx:SpecialPublication'] as Set
+    }
+
+    def "use vocab to get subproperties of a base property"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        expect:
+        ld.getSubProperties('label') == ['prefLabel', 'preferredLabel', 'name'] as Set
+    }
+
     def "use vocab to match a subclass to a base class"() {
         given:
         def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
@@ -428,7 +448,7 @@ class JsonLdSpec extends Specification {
         "/foo" | nestedGraph  | nestedGraphFramed
     }
 
-    def "should flatten framed jsonld"() {
+    def "should flatten framed jsonld2"() {
         expect:
         assert JsonLd.flatten(input) == output
         where:
@@ -531,6 +551,47 @@ class JsonLdSpec extends Specification {
         ld.softMerge(obj, into) == false
         and:
         into == ['@type': 'ProvisionActivity', date: ['1978', '1980']]
+    }
+
+    def "shouldFindPaths"() {
+        given:
+        Map doc = readMap("preserve-paths/molecular-aspects.jsonld")
+
+        expect:
+        JsonLd.findPaths(doc, key, value) == paths
+        where:
+        key    | value                            || paths
+        '@id'  | 'https://id.kb.se/marc/Document' || [['instanceOf', 'hasPart' , 0, 'genreForm', 0, '@id']]
+        '@type'| "Title"                          || [['hasTitle', 0, '@type'], ['otherPhysicalFormat', 0, 'hasTitle', 0, '@type']]
+        '@type'| "No"                             || []
+        '@type'| 'Place'                          || [['publication', 0, 'hasPart' , 0, 'place', '@type'],
+                                                      ['publication', 0, 'hasPart' , 1, 'place', '@type'],
+                                                      ['publication', 0, 'hasPart' , 2, 'place', '@type'],
+                                                      ['hasReproduction', 0, 'provisionActivity', 0, 'place', 0, '@type']]
+    }
+
+    def "shouldPreservePaths"() {
+        given:
+        Map doc = JsonLd.frame(
+                "http://kblocalhost.kb.se:5000/n602lbw018zh88k#it",
+                readMap("preserve-paths/molecular-aspects.jsonld"))
+
+        def ld = new JsonLd(
+                readMap("preserve-paths/context.jsonld"),
+                readMap("preserve-paths/display-data.jsonld"),
+                readMap("preserve-paths/vocab.jsonld"))
+
+        def preservePaths = ld.findPaths(doc, '@id', 'https://id.kb.se/marc/Document')
+
+        expect:
+        ld.toChip(doc, preservePaths) == readMap("preserve-paths/molecular-aspects-chips.jsonld")
+        ld.toCard(doc, preservePaths) == readMap("preserve-paths/molecular-aspects-cards-chips.jsonld")
+        ld.toCard(doc, false, false, false, preservePaths) ==
+                readMap("preserve-paths/molecular-aspects-cards-cards.jsonld")
+    }
+
+    static Map readMap(String filename) {
+        return mapper.readValue(readFile(filename), Map)
     }
 
     static String readFile(String filename) {

@@ -1,11 +1,10 @@
 package whelk.rest.api
 
 import whelk.Document
-import whelk.JsonLd
 import whelk.Whelk
-import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
-import whelk.triples.*
+import whelk.triples.Graph
+import whelk.triples.JsonldSerializer
 import whelk.util.LegacyIntegrationTools
 
 import javax.servlet.http.HttpServlet

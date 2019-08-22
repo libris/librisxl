@@ -50,7 +50,7 @@ class WhelkTool {
 
     boolean allowLoud
 
-    private boolean errorDetected
+    private Throwable errorDetected
 
     private def jsonWriter = new ObjectMapper().writerWithDefaultPrettyPrinter()
 
@@ -94,12 +94,16 @@ class WhelkTool {
 
     void selectByIds(Collection<String> ids, Closure process,
             int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
-        if (!silent)
+        if (!silent) {
             log "Select by ${ids.size()} IDs"
+        }
         def uriIdMap = findShortIdsForUris(ids.findAll { it.contains(':') })
         def shortIds = ids.findResults { it.contains(':') ? uriIdMap[it] : it }
 
         def idItems = shortIds.collect { "'$it'" }.join(',\n')
+        if (idItems.isEmpty()) {
+            return
+        }
         doSelectBySqlWhere("id IN ($idItems) AND deleted = false", process,
                 batchSize)
     }
@@ -249,13 +253,12 @@ class WhelkTool {
                 if (executorService) {
                     executorService.submit {
                         if (!processBatch(process, batchToProcess, counter)) {
-                            errorDetected = true
                             executorService.shutdownNow()
                         }
                     }
                 } else {
                     if (!processBatch(process, batchToProcess, counter)) {
-                        errorDetected = true
+                        log "Aborted selection: ${counter.summary}. Done in ${counter.elapsedSeconds} s."
                         return
                     }
                 }
@@ -306,6 +309,7 @@ class WhelkTool {
                 err.printStackTrace errorLog
                 errorLog.println "-" * 20
                 errorLog.flush()
+                errorDetected = err
                 return false
             }
             if (!doContinue) {
@@ -327,6 +331,9 @@ class WhelkTool {
         counter.countProcessed()
         process(item)
         if (item.needsSaving) {
+            if (item.loud) {
+                assert allowLoud : "Loud changes need to be explicitly allowed"
+            }
             if (item.restoreToTime != null) {
                 if (!doRevertToTime(item))
                     return true
@@ -356,7 +363,7 @@ class WhelkTool {
 
     private void doDeletion(DocumentItem item) {
         if (!dryRun) {
-            whelk.storage.remove(item.doc.shortId, changedIn, scriptJobUri)
+            whelk.remove(item.doc.shortId, changedIn, scriptJobUri)
         }
     }
 
@@ -403,13 +410,10 @@ class WhelkTool {
 
     private void doModification(DocumentItem item) {
         Document doc = item.doc
-        if (item.loud) {
-            assert allowLoud : "Loud changes need to be explicitly allowed"
-        }
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            whelk.storage.storeAtomicUpdate(doc.shortId, !item.loud, changedIn, scriptJobUri, {
+            whelk.storeAtomicUpdate(doc.shortId, !item.loud, changedIn, scriptJobUri, {
                 it.data = doc.data
             })
         }

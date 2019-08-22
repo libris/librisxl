@@ -3,11 +3,10 @@ package whelk
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import org.codehaus.jackson.map.ObjectMapper
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import whelk.exception.FramingException
-import whelk.exception.ModelValidationException
 
 import java.util.regex.Matcher
 
@@ -44,6 +43,8 @@ class JsonLd {
     static final String APIX_FAILURE_KEY = "apixExportFailedAt"
     static final String ENCODING_LEVEL_KEY = "marc:encLevel"
 
+    static final String SEARCH_KEY = "_str"
+
     static final List<String> NS_SEPARATORS = ['#', '/', ':']
 
     static final Set<String> LD_KEYS
@@ -70,10 +71,17 @@ class JsonLd {
     Map<String, Map> context = [:]
     Map displayData
     Map vocabIndex
-    private Map superClassOf
-    private Map<String, Set> subClassesByType
+
+    List<String> locales
     private String vocabId
     private Map<String, String> nsToPrefixMap = [:]
+
+    private Map<String, List<String>> superClassOf
+    private Map<String, Set<String>> subClassesByType
+    private Map<String, List<String>> superPropertyOf
+    private Map<String, Set<String>> subPropertiesByType
+
+    Map langContainerAlias = [:]
 
     /**
      * This includes terms that are declared as either set or list containers
@@ -82,10 +90,12 @@ class JsonLd {
     Set<String> repeatableTerms
 
     /**
-     * Make an instance to incapsulate model driven behaviour.
+     * Make an instance to encapsulate model driven behaviour.
      */
-    JsonLd(Map contextData, Map displayData, Map vocabData) {
+    JsonLd(Map contextData, Map displayData, Map vocabData,
+            List<String> locales = ['sv', 'en']) {
         setSupportData(contextData, displayData, vocabData)
+        this.locales = locales
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
@@ -115,8 +125,12 @@ class JsonLd {
             : Collections.emptyMap()
 
         subClassesByType = new HashMap<String, Set>()
+        superClassOf = generateSubTermLists("subClassOf")
 
-        generateSubClassesLists()
+        subPropertiesByType = new HashMap<String, Set>()
+        superPropertyOf = generateSubTermLists("subPropertyOf")
+
+        buildLangContainerAliasMap()
 
         expandAliasesInLensProperties()
     }
@@ -136,20 +150,22 @@ class JsonLd {
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    private void expandAliasesInLensProperties() {
-        Map propAliases = [:]
+    private void buildLangContainerAliasMap() {
         for (ctx in [displayData.get(CONTEXT_KEY), context]) {
             ctx.each { k, v ->
-                if (v instanceof Map && v[CONTAINER_KEY] == LANGUAGE_KEY) {
-                    propAliases[v[ID_KEY]] = k
+                if (isLangContainer(v)) {
+                    langContainerAlias[v[ID_KEY]] = k
                 }
             }
         }
+    }
 
+    @TypeChecked(TypeCheckingMode.SKIP)
+    private void expandAliasesInLensProperties() {
         displayData['lensGroups']?.values().each { group ->
             group.get('lenses')?.values().each { lens ->
                 lens['showProperties'] = lens['showProperties'].collect {
-                    def alias = propAliases[it]
+                    def alias = langContainerAlias[it]
                     return alias ? [it, alias] : it
                 }.flatten()
             }
@@ -162,6 +178,10 @@ class JsonLd {
 
     boolean isListContainer(dfn) {
         return dfn instanceof Map && dfn[CONTAINER_KEY] == LIST_KEY
+    }
+
+    boolean isLangContainer(dfn) {
+        return dfn instanceof Map && dfn[CONTAINER_KEY] == LANGUAGE_KEY
     }
 
     String toTermKey(String termId) {
@@ -485,6 +505,50 @@ class JsonLd {
         return true
     }
 
+    static List<List<String>> findPaths(Map obj, String key, String value) {
+        List paths = []
+        new DFS().search(obj, { List path, v ->
+            if (value == v && key == path[-1]) {
+                paths << new ArrayList(path)
+            }
+        })
+        return paths
+    }
+
+    private static class DFS {
+        interface Callback {
+            void node(List path, value)
+        }
+
+        List path = []
+        Callback cb
+
+        void search(obj, Callback callback) {
+            cb = callback
+            path = []
+            node(obj)
+        }
+
+        private void node(obj) {
+            cb.node(path, obj)
+            if (obj instanceof Map) {
+                descend(((Map) obj).entrySet().collect({ new Tuple2(it.value, it.key) }))
+            } else if (obj instanceof List) {
+                descend(((List) obj).withIndex())
+            }
+        }
+
+        private void descend(List<Tuple2> nodes) {
+            for (n in nodes) {
+                path << n.second
+                node(n.first)
+                path.remove(path.size()-1)
+            }
+        }
+    }
+
+
+
     //==== Class-hierarchies ====
 
     void getSuperClasses(String type, List<String> result) {
@@ -506,27 +570,28 @@ class JsonLd {
         }
     }
 
-    private generateSubClassesLists() {
-        superClassOf = [:]
+    private Map<String, List<String>> generateSubTermLists(String relationToSuper) {
+        def superTermOf = [:]
         for (String type : vocabIndex.keySet()) {
             def termMap = vocabIndex[type]
-            def superClasses = termMap["subClassOf"]
+            def superTerms = termMap[relationToSuper]
 
             // Make list if not list already.
-            if (!(superClasses instanceof List))
-                superClasses = [superClasses]
+            if (!(superTerms instanceof List))
+                superTerms = [superTerms]
 
-            for (superClass in superClasses) {
-                if (superClass == null || superClass[ID_KEY] == null) {
+            for (superTerm in superTerms) {
+                if (superTerm == null || superTerm[ID_KEY] == null) {
                     continue
                 }
 
-                String superClassType = toTermKey((String) superClass[ID_KEY])
-                if (superClassOf[superClassType] == null)
-                    superClassOf[superClassType] = []
-                ((List)superClassOf[superClassType]).add(type)
+                String superTermType = toTermKey((String) superTerm[ID_KEY])
+                if (superTermOf[superTermType] == null)
+                    superTermOf[superTermType] = []
+                ((List)superTermOf[superTermType]).add(type)
             }
         }
+        return superTermOf
     }
 
     boolean isSubClassOf(String type, String baseType) {
@@ -537,27 +602,39 @@ class JsonLd {
     }
 
     Set<String> getSubClasses(String type) {
-        Set<String> subClasses = subClassesByType[type]
-        if (subClasses.is(null)) {
-            subClasses = new HashSet<String>()
-            getSubClasses(type, subClasses)
-            subClassesByType[type] = subClasses
-        }
-        return subClasses
+        return getSubTerms(type, superClassOf, subClassesByType)
     }
 
-    void getSubClasses(String type, Collection<String> result) {
+    Set<String> getSubProperties(String type) {
+        return getSubTerms(type, superPropertyOf, subPropertiesByType)
+    }
+
+    private Set<String> getSubTerms(String type,
+            Map<String, List<String>> superTermOf,
+            Map<String, Set<String>> cache) {
+        Set<String> subTerms = cache[type]
+        if (subTerms.is(null)) {
+            subTerms = new HashSet<String>()
+            collectSubTerms(type, superTermOf, subTerms)
+            cache[type] = subTerms
+        }
+        return subTerms
+    }
+
+    private void collectSubTerms(String type,
+            Map<String, List<String>> superTermOf,
+            Collection<String> result) {
         if (type == null)
             return
 
-        List subClasses = (List) (superClassOf[type])
-        if (subClasses == null)
+        List subTerms = (List) (superTermOf[type])
+        if (subTerms == null)
             return
 
-        result.addAll(subClasses)
+        result.addAll(subTerms)
 
-        for (String subClass : subClasses) {
-            getSubClasses(subClass, result)
+        for (String subTerm : subTerms) {
+            collectSubTerms(subTerm, superTermOf, result)
         }
     }
 
@@ -597,42 +674,76 @@ class JsonLd {
         return jsonLd
     }
 
-    /**
-     * Convert a post to card.
-     *
-     */
-    Map toCard(Map thing, boolean chipsify = true) {
-        Map lensGroups = displayData.get("lensGroups")
-        Map cardLensGroup = lensGroups.get("cards")
+    Map toCard(Map thing, List<List> preservePaths) {
+        return toCard(thing, true, false, false, preservePaths)
+    }
+
+    Map toCard(Map thing, boolean chipsify = true, boolean addSearchKey = false,
+            boolean reduceKey = false, List<List> preservePaths = []) {
         Map result = [:]
 
-        Map card = removeProperties(thing, cardLensGroup)
-        if (chipsify) {
-            card.each {key, value ->
-                result[key] = toChip(value)
-            }
-        } else {
-            return card
+        Map card = removeProperties(thing, 'cards')
+        // If result is too small, use chip instead.
+        // TODO: Support and use extends + super in card defs instead.)
+        if (card.size() < 2) {
+            card = removeProperties(thing, 'chips')
         }
+
+        restorePreserved(card, thing, preservePaths)
+
+        reduceKey = reduceKey ?: { isSubClassOf((String) it, 'StructuredValue') }
+
+        card.each { key, value ->
+            def lensValue = value
+            if (chipsify) {
+                lensValue = toChip(value, pathRemainders([key], preservePaths))
+            } else {
+                if (value instanceof List) {
+                    lensValue = ((List) value).withIndex().collect { it, index ->
+                        it instanceof Map
+                        ? toCard((Map) it, chipsify, addSearchKey, reduceKey, pathRemainders([index, key], preservePaths))
+                        : it
+                    }
+                } else if (value instanceof Map) {
+                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduceKey, pathRemainders([key], preservePaths))
+                }
+            }
+            result[key] = lensValue
+        }
+
+        if (addSearchKey) {
+            List key = makeSearchKeyParts(card)
+            if (reduceKey) {
+                for (v in result.values()) {
+                    if (v instanceof List && ((List)v).size() == 1) {
+                        v = ((List)v)[0]
+                    }
+                    if (v instanceof Map) {
+                        if (v[SEARCH_KEY]) {
+                            key << ((Map)v).remove(SEARCH_KEY)
+                        }
+                    }
+                }
+            }
+            if (key) {
+                result[SEARCH_KEY] = key.join(' ')
+            }
+        }
+
         return result
     }
 
-    /**
-     * Convert a post to chip.
-     *
-     */
-    Object toChip(Object object) {
-        Map lensGroups = displayData.get("lensGroups")
-        Map chipLensGroup = lensGroups.get("chips")
-        Map itemsToKeep = [:]
-        Map result = [:]
-
+    Object toChip(Object object, List<List> preservePaths = []) {
         if (object instanceof List) {
-            return object.collect { toChip(it) }
+            return object.withIndex().collect { it, ix ->
+                toChip(it, pathRemainders([ix], preservePaths))
+            }
         } else if ((object instanceof Map)) {
-            itemsToKeep = removeProperties(object, chipLensGroup)
-            itemsToKeep.each {key, value ->
-                result[key] = toChip(value)
+            Map result = [:]
+            Map reduced = removeProperties(object, 'chips')
+            restorePreserved(reduced, (Map) object, preservePaths)
+            reduced.each { key, value ->
+                result[key] = toChip(value, pathRemainders([key], preservePaths))
             }
             return result
         } else {
@@ -640,20 +751,72 @@ class JsonLd {
         }
     }
 
-    private Map removeProperties(Map thing, Map lensGroup) {
-        Map itemsToKeep = [:]
+    List makeSearchKeyParts(Map object) {
+        Map lensGroups = displayData.get('lensGroups')
+        Map lensGroup = lensGroups.get('chips')
+        Map lens = getLensFor(object, lensGroup)
+        List parts = []
+        def type = object.get(TYPE_KEY)
+        // TODO: a bit too hard-coded...
+        if (type instanceof String && type != 'Identifier' && isSubClassOf(type, 'Identifier')) {
+            parts << type
+        }
+        if (lens) {
+            List propertiesToKeep = (List) lens.get("showProperties")
+            for (prop in propertiesToKeep) {
+                def values = object[prop]
+                if (isLangContainer(context[prop]) && values instanceof Map) {
+                    values = locales.findResult { values[it] }
+                }
+                if (!(values instanceof List)) {
+                    values = values ? [values] : []
+                }
+                // TODO: find recursively (up to a point)? For what? Only
+                // StructuredValue? Or if a chip property value is a
+                // StructuredValue? (Use 'tokens' if available...)
+                for (value in values) {
+                    if (value instanceof String) {
+                        // TODO: marc:nonfilingChars?
+                        parts << value
+                    }
+                }
+            }
+        }
+        return parts
+    }
 
+    private static void restorePreserved(Map cardOrChip, Map thing, List<List> preservePaths) {
+        preservePaths.each {
+            if (!it.isEmpty()) {
+                def key = it[0]
+                if (thing.containsKey(key) && !cardOrChip.containsKey(key)) {
+                    cardOrChip[key] = thing[key]
+                }
+            }
+        }
+    }
+
+    private static List<List> pathRemainders(List prefix, List<List> paths) {
+        return paths
+                .findAll{ it.size() >= prefix.size() && it.subList(0, prefix.size()) == prefix }
+                .collect{ it.drop(prefix.size()) }
+    }
+
+    private Map removeProperties(Map thing, String lensType) {
+        Map lensGroups = displayData.get('lensGroups')
+        Map lensGroup = lensGroups.get(lensType)
         Map lens = getLensFor(thing, lensGroup)
 
+        Map result = [:]
         if (lens) {
             List propertiesToKeep = (List) lens.get("showProperties")
 
-            thing.each {key, value ->
+            thing.each { key, value ->
                 if (shouldKeep((String) key, (List) propertiesToKeep)) {
-                    itemsToKeep[key] = value
+                    result[key] = value
                 }
             }
-            return itemsToKeep
+            return result
         } else {
             return thing
         }
@@ -694,7 +857,7 @@ class JsonLd {
     }
 
     private static boolean shouldKeep(String key, List propertiesToKeep) {
-        return (key in propertiesToKeep || key.startsWith("@"))
+        return (key == RECORD_KEY || key in propertiesToKeep || key.startsWith("@"))
     }
 
 

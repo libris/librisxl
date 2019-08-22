@@ -3,7 +3,7 @@ package whelk.rest.api
 import whelk.Document
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
-import whelk.util.*
+import whelk.util.LegacyIntegrationTools
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest

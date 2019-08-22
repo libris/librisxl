@@ -91,7 +91,7 @@ class MappedPropertyStep implements MarcFramePostProcStep {
     String sourceProperty
     String targetEntity
     String targetProperty
-    Map<String, String> valueMap
+    Map<String, Object> valueMap
 
     void init() { }
 
@@ -105,14 +105,17 @@ class MappedPropertyStep implements MarcFramePostProcStep {
         }
 
         def source = sourceEntity == "?record"? record : thing
-        def values = source.get(sourceLink)?.get(sourceProperty)
+        if (sourceLink) {
+            source = source.get(sourceLink)
+        }
+        def values = source?.get(sourceProperty)
         if (values instanceof String) {
             values = [values]
         }
 
         for (value in values) {
             def mapped = valueMap[value]
-            if (mapped) {
+            if (mapped != null) {
                 target[targetProperty] = mapped
                 break
             }

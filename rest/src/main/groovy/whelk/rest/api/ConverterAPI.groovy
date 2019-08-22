@@ -1,13 +1,11 @@
 package whelk.rest.api
 
 import groovy.util.logging.Log4j2 as Log
-
 import org.apache.http.entity.ContentType
-import whelk.Whelk
 import whelk.Document
-import whelk.util.Tools
+import whelk.Whelk
 import whelk.converter.marc.MarcFrameConverter
-import whelk.util.PropertyLoader
+import whelk.util.Tools
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -44,6 +42,12 @@ class ConverterAPI extends HttpServlet {
     }
 
     void handleConversion(HttpServletRequest request, HttpServletResponse response) {
+        if (request.getContentType() == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Missing Content-Type")
+            return
+        }
+
         String ctype = ContentType.parse(request.getContentType()).getMimeType()
         if (ctype != "application/ld+json") {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,

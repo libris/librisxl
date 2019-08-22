@@ -1,21 +1,24 @@
 package whelk.rest.api
 
 import groovy.util.logging.Log4j2 as Log
-import groovy.xml.StreamingMarkupBuilder
 import groovy.util.slurpersupport.GPathResult
+import groovy.xml.StreamingMarkupBuilder
 import org.codehaus.jackson.map.ObjectMapper
+import se.kb.libris.util.marc.Field
+import se.kb.libris.util.marc.MarcRecord
+import se.kb.libris.util.marc.io.MarcXmlRecordReader
+import whelk.Document
+import whelk.IdGenerator
+import whelk.Whelk
+import whelk.converter.MarcJSONConverter
 import whelk.converter.marc.MarcFrameConverter
-import whelk.rest.ServiceServlet
 
-import java.util.concurrent.*
-import javax.servlet.http.*
-
-import whelk.*
-import whelk.component.*
-import se.kb.libris.util.marc.*
-import se.kb.libris.util.marc.io.*
-import whelk.converter.*
-
+import javax.servlet.http.HttpServlet
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import java.util.regex.Pattern
 
 @Log

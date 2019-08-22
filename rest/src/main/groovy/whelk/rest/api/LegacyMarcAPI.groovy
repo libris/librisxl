@@ -1,22 +1,15 @@
 package whelk.rest.api
 
 import groovy.util.logging.Log4j2
-import groovy.xml.XmlUtil
+import se.kb.libris.export.ExportProfile
+import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter
-import se.kb.libris.util.marc.io.MarcXmlRecordReader
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter
-import se.kb.libris.util.marc.*
 import whelk.Document
-import whelk.JsonLd
 import whelk.Whelk
-import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.JsonLD2MarcXMLConverter
 import whelk.util.LegacyIntegrationTools
 import whelk.util.MarcExport
-import whelk.util.PropertyLoader
-
-import se.kb.libris.export.ExportProfile
-import se.kb.libris.export.MergeRecords
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -163,6 +156,7 @@ class LegacyMarcAPI extends HttpServlet {
             for (MarcRecord record : result) {
                 writer.writeRecord(record)
             }
+            writer.close()
             response.getOutputStream().close()
         } catch (Throwable e) {
             log.error("Failed handling _compilemarc request: ", e)

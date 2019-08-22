@@ -96,6 +96,7 @@ auth/208571	Anders Svensson
 auth/213488	Anders Svensson
 auth/7673399	Anders Svensson
 auth/382890	Anders Svensson
+auth/173190	sao - underindelning, i litteraturen
 
 auth/196943	Platon
 auth/184982	Eliot T.S.
@@ -146,8 +147,30 @@ auth/221957	Post med musicMedium
 auth/218125	Post med musicMedium
 auth/170061	Post med musicMedium
 
+
+auth/106705	Jurisdiction record with modified set to date of import from Voyager (2018-06-04)
+auth/107030	Jurisdiction record with modified set to date of import from Voyager (2018-06-04)
+auth/214953	Jurisdiction record with modified set to earlier than 2018-06-04
+auth/300670	Jurisdiction record with modified set to earlier than 2018-06-04
+
 bib/8647590	ComplexSubject, testdata for cleaning exercise.
 bib/8892896	ComplexSubject, testdata for cleaning exercise.
+bib/14838612	ComplexSubject, testdata for cleaning exercise.
+bib/10685832	ComplexSubject, testdata for cleaning exercise.
+bib/16004233	ComplexSubject, testdata for cleaning exercise.
+bib/112104	ComplexSubject, testdata for cleaning exercise.
+bib/8963263	ComplexSubject, testdata for cleaning exercise.
+bib/10174549	ComplexSubject, testdata for cleaning exercise.
+
+bib/10813149	encodingLevel, testdata for cleaning exercise - delete specific encodingLevels
+bib/10813151	encodingLevel, testdata for cleaning exercise - delete specific encodingLevels
+bib/20903126	encodingLevel, testdata for cleaning exercise - delete specific encodingLevels
+bib/10820529	encodingLevel, testdata for cleaning exercise - delete specific encodingLevels
+bib/2257782	encodingLevel, testdata for cleaning exercise - delete specific encodingLevels
+bib/11182884	encodingLevel, testdata for cleaning exercise - delete specific encodingLevels
+bib/11839503	encodingLevel, testdata for cleaning exercise - delete specific encodingLevels
+bib/13415940	encodingLevel, testdata for cleaning exercise - delete specific encodingLevels
+
 bib/11473514	Lokalt test batchimport
 bib/19980053	Lokalt test för dubletter av 852 fältet
 bib/7241097	Lokalt test för dubletter av 852 fältet
@@ -593,6 +616,9 @@ bib/11639789	Guoli zhongyang tushuguan tecang xuanlu (880)
 bib/8406188	Containing field 249
 bib/9132356	Containing field 249
 
+bib/11726455	Innehåller geografiskt okontrollerat ämnesord
+bib/10170677	Innehåller geografiskt okontrollerat ämnesord
+
 bib/14609398	I marknadens öga [Elektronisk resurs] - ingår i 1 serie - LiU TESTPOST2
 bib/14215681	I marknadens öga - ingår i 1 serie - LiU TESTPOST2
 bib/18593126	Swarming European consciousness - ingår i 2 serier - LiU TESTPOST2
@@ -668,6 +694,7 @@ bib/13430030	Post med 776
 bib/12430259	Post med 776#s
 bib/11873961	Post med 780
 bib/635468	Post med 762, 780, 785
+bib/10556107	ost med 700, 600 delfält 0
 
 bib/2289460	Post med musicMedium
 bib/2925344	Post med musicMedium
@@ -1019,8 +1046,8 @@ bib/21717775	SFI-boken LYSSNA! Kurs C och D, CD - BIBCENTRUM TESTPOST
 bib/21189210	Assassin's Creed : Origins - BIBCENTRUM TESTPOST
 
 
-bib/14733245	Mimer "kanalpost"
-bib/18813919	Mimer "kanalpost"
+bib/14733245	Mimer kanalpost
+bib/18813919	Mimer kanalpost
 
 bib/13477270	EB TESTPOST
 bib/13476141	EB TESTPOST

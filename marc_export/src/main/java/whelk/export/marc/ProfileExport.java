@@ -1,28 +1,28 @@
 package whelk.export.marc;
+
 import groovy.lang.Tuple2;
+import io.prometheus.client.Summary;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import se.kb.libris.export.ExportProfile;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.MarcRecordWriter;
 import whelk.Document;
 import whelk.Whelk;
-
-import io.prometheus.client.Counter;
-import io.prometheus.client.Gauge;
-import io.prometheus.client.Summary;
+import whelk.converter.marc.JsonLD2MarcXMLConverter;
+import whelk.util.LegacyIntegrationTools;
+import whelk.util.MarcExport;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.sql.*;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.*;
 
-import se.kb.libris.export.ExportProfile;
-import whelk.converter.marc.JsonLD2MarcXMLConverter;
-import whelk.util.LegacyIntegrationTools;
-import whelk.util.MarcExport;
-
 public class ProfileExport
 {
+    private final Logger logger = LogManager.getLogger(this.getClass());
+
     public enum DELETE_MODE
     {
         IGNORE, // Do not export deleted records
@@ -158,10 +158,15 @@ public class ProfileExport
                     continue;
 
                 String itemOfSystemId = m_whelk.getStorage().getSystemIdByIri(itemOf);
-                if (itemOfSystemId != null) // itemOfSystemId _can_ be null, if the bib linked record is deleted (no thing-uri left in the id table)
+                // itemOfSystemId _can_ be null, if the bib linked record is deleted (no thing-uri left in the id table)
+                if (itemOfSystemId != null) {
                     exportDocument(
                             m_whelk.getStorage().loadEmbellished(itemOfSystemId, m_whelk.getJsonld())
                             , profile, output, exportedIDs, deleteMode, doVirtualDeletions);
+                } else {
+                    logger.info("Not exporting {} ({}) for {} because of missing itemOf systemID", id,
+                            collection, profile.getProperty("name", "unknown"));
+                }
 
                 boolean insideInterval = from.toInstant().isBefore(modified) && until.toInstant().isAfter(modified);
                 if ( !insideInterval )
@@ -179,12 +184,20 @@ public class ProfileExport
                                            Timestamp until, boolean created, Boolean deleted)
             throws SQLException
     {
-        if (profile.getProperty(collection+"create", "ON").equalsIgnoreCase("OFF") && created)
+        String profileName = profile.getProperty("name", "unknown");
+
+        if (profile.getProperty(collection+"create", "ON").equalsIgnoreCase("OFF") && created) {
+            logger.info("Not exporting created {} ({}) for {}", id, collection, profileName);
             return false; // Created records not requested
-        if (profile.getProperty(collection+"update", "ON").equalsIgnoreCase("OFF") && !created)
+        }
+        if (profile.getProperty(collection+"update", "ON").equalsIgnoreCase("OFF") && !created) {
+            logger.info("Not exporting updated {} ({}) for {}", id, collection, profileName);
             return false; // Updated records not requested
-        if (profile.getProperty(collection+"delete", "ON").equalsIgnoreCase("OFF") && deleted)
+        }
+        if (profile.getProperty(collection+"delete", "ON").equalsIgnoreCase("OFF") && deleted) {
+            logger.info("Not exporting deleted {} ({}) for {}", id, collection, profileName);
             return false; // Deleted records not requested
+        }
         Set<String> operators = profile.getSet(collection+"operators");
         if ( !operators.isEmpty() )
         {
@@ -192,11 +205,15 @@ public class ProfileExport
             if ( !operatorsInInterval.isEmpty() ) // Ignore setting if there are no changedBy names
             {
                 operatorsInInterval.retainAll(operators);
-                if (operatorsInInterval.isEmpty()) // The intersection between chosen-operators and operators that changed the record is []
+                // The intersection between chosen-operators and operators that changed the record is []
+                if (operatorsInInterval.isEmpty()) {
+                    logger.info("Not exporting {} ({}) for {} because of operator settings", id, collection,
+                            profileName);
                     return false; // Updates from this operator/changedBy not requested
+                }
             }
         }
-        
+
         String locations = profile.getProperty("locations", "");
         HashSet locationSet = new HashSet(Arrays.asList(locations.split(" ")));
         if ( ! locationSet.contains("*") )
@@ -205,13 +222,15 @@ public class ProfileExport
 
             if (collection.equals("bib"))
             {
-                if (!isHeld(updatedDocument, profile))
+                if (!isHeld(updatedDocument, profile)) {
                     return false;
+                }
             }
             if (collection.equals("hold"))
             {
-                if (!locationSet.contains(updatedDocument.getSigel()))
+                if (!locationSet.contains(updatedDocument.getSigel())) {
                     return false;
+                }
             }
         }
 
@@ -225,6 +244,7 @@ public class ProfileExport
                                        TreeSet<String> exportedIDs, DELETE_MODE deleteMode, boolean doVirtualDeletions)
             throws IOException
     {
+        String profileName = profile.getProperty("name", "unknown");
         String systemId = document.getShortId();
         if (exportedIDs.contains(systemId))
             return;
@@ -243,16 +263,20 @@ public class ProfileExport
                         onlineResource = true;
                 }
             }
-            if (document.getThingType().equals("Electronic") && onlineResource)
+            if (document.getThingType().equals("Electronic") && onlineResource) {
+                logger.info("Not exporting {} for {} because of efilter setting", systemId, profileName);
                 return;
+            }
         }
 
         String locations = profile.getProperty("locations", "");
         HashSet locationSet = new HashSet(Arrays.asList(locations.split(" ")));
-        if (doVirtualDeletions && !locationSet.contains("*") && deleteMode != DELETE_MODE.IGNORE)
+        if (doVirtualDeletions && !locationSet.contains("*"))
         {
-            if (!isHeld(document, profile))
+            if (!isHeld(document, profile)) {
+                logger.info("Not exporting {} for {} because of virtual deletions setting", systemId, profileName);
                 document.setDeleted(true);
+            }
         }
 
         if (document.getDeleted())
@@ -269,8 +293,11 @@ public class ProfileExport
         }
 
         Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(profile, document, m_whelk, m_toMarcXmlConverter);
-        if (result == null) // A conversion error will already have been logged. Anything else, and we want to fail fast.
+        // A conversion error will already have been logged. Anything else, and we want to fail fast.
+        if (result == null) {
+            logger.info("Not exporting {} for {} because of conversion error", systemId, profileName);
             return;
+        }
 
         for (MarcRecord mr : result)
             output.writeRecord(mr);
@@ -280,6 +307,9 @@ public class ProfileExport
     {
         String locations = profile.getProperty("locations", "");
         HashSet locationSet = new HashSet(Arrays.asList(locations.split(" ")));
+
+	if ( locationSet.contains("*") ) return true; // KP 190401
+	
         List<Document> holdings = m_whelk.getStorage().getAttachedHoldings(doc.getThingIdentifiers(), m_whelk.getJsonld());
         for (Document holding : holdings)
         {

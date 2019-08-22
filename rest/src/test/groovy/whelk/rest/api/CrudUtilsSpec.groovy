@@ -1,11 +1,9 @@
 package whelk.rest.api
 
-import javax.servlet.http.HttpServletRequest
-
 import spock.lang.Specification
-
 import whelk.rest.api.CrudUtils
 
+import javax.servlet.http.HttpServletRequest
 
 class CrudUtilsSpec extends Specification {
     HttpServletRequest request
@@ -47,6 +45,7 @@ class CrudUtilsSpec extends Specification {
         "text/turtle, application/json;q=0.8"               | null     | "text/turtle"
         "text/turtle;q=0.1, application/json;q=0.8"         | null     | "application/json"
         "*/*, text/turtle;q=0.1, application/json;q=0.8"    | null     | "application/ld+json"
+        "text/turtle, application/signed-exchange;v=b3"     | null     | "text/turtle"
     }
 
     def "Should convert suffix to MIME type"() {

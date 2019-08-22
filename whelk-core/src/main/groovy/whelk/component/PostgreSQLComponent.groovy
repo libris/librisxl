@@ -1579,14 +1579,6 @@ class PostgreSQLComponent {
         }
     }
 
-    List<Tuple2<String, String>> getDependencies(String id, Connection connection) {
-        return getDependencyData(id, GET_DEPENDENCIES, connection)
-    }
-
-    List<Tuple2<String, String>> getDependers(String id, Connection connection) {
-        return getDependencyData(id, GET_DEPENDERS, connection)
-    }
-
     private List<Tuple2<String, String>> getDependencyData(String id, String query, Connection connection) {
         PreparedStatement preparedStatement
         ResultSet rs
@@ -2076,75 +2068,6 @@ class PostgreSQLComponent {
         return connectionPool.getConnection()
     }
 
-    List<Document> findByRelation(String relation, String reference,
-                                  int limit, int offset) {
-        Connection connection = getConnection()
-        PreparedStatement find = connection.prepareStatement(FIND_BY)
-
-        find = rigFindByRelationStatement(find, relation, reference, limit, offset)
-
-        try {
-            return executeFindByQuery(find)
-        } finally {
-            connection.close()
-        }
-    }
-
-    List<Document> findByRelation(String relation, String reference) {
-        int limit = DEFAULT_PAGE_SIZE
-        int offset = 0
-
-        findByRelation(relation, reference, limit, offset)
-    }
-
-    int countByRelation(String relation, String reference) {
-        Connection connection = getConnection()
-        PreparedStatement count = connection.prepareStatement(COUNT_BY)
-
-        count = rigCountByRelationStatement(count, relation, reference)
-
-        try {
-            return executeCountByQuery(count)
-        } finally {
-            connection.close()
-        }
-    }
-
-    List<Document> findByQuotation(String identifier, int limit, int offset) {
-        Connection connection = getConnection()
-        PreparedStatement find = connection.prepareStatement(FIND_BY)
-
-        find = rigFindByQuotationStatement(find, identifier, limit, offset)
-
-        try {
-            return executeFindByQuery(find)
-        } finally {
-            connection.close()
-        }
-
-    }
-
-    List<Document> findByQuotation(String identifier) {
-        int limit = DEFAULT_PAGE_SIZE
-        int offset = 0
-
-        findByQuotation(identifier, limit, offset)
-    }
-
-    int countByQuotation(String identifier) {
-        Connection connection = getConnection()
-        PreparedStatement count = connection.prepareStatement(COUNT_BY)
-
-        count = rigCountByQuotationStatement(count, identifier)
-
-        try {
-            return executeCountByQuery(count)
-        } finally {
-            connection.close()
-        }
-
-    }
-
     List<Document> findByValue(String relation, String value, int limit,
                                int offset) {
         Connection connection = getConnection()
@@ -2205,44 +2128,6 @@ class PostgreSQLComponent {
         }
 
         return result
-    }
-
-    private PreparedStatement rigFindByRelationStatement(PreparedStatement find,
-                                                         String relation,
-                                                         String reference,
-                                                         int limit,
-                                                         int offset) {
-        List refQuery = [[(relation): ["@id": reference]]]
-        List refsQuery = [[(relation): [["@id": reference]]]]
-
-        return rigFindByStatement(find, refQuery, refsQuery, limit, offset)
-    }
-
-    private PreparedStatement rigCountByRelationStatement(PreparedStatement find,
-                                                          String relation,
-                                                          String reference) {
-        List refQuery = [[(relation): ["@id": reference]]]
-        List refsQuery = [[(relation): [["@id": reference]]]]
-
-        return rigCountByStatement(find, refQuery, refsQuery)
-    }
-
-    private PreparedStatement rigFindByQuotationStatement(PreparedStatement find,
-                                                          String identifier,
-                                                          int limit,
-                                                          int offset) {
-        List refQuery = [["@graph": ["@id": identifier]]]
-        List sameAsQuery = [["@graph": [["@sameAs": [["@id": identifier]]]]]]
-
-        return rigFindByStatement(find, refQuery, sameAsQuery, limit, offset)
-    }
-
-    private PreparedStatement rigCountByQuotationStatement(PreparedStatement find,
-                                                           String identifier) {
-        List refQuery = [["@graph": ["@id": identifier]]]
-        List sameAsQuery = [["@graph": [["@sameAs": [["@id": identifier]]]]]]
-
-        return rigCountByStatement(find, refQuery, sameAsQuery)
     }
 
     private PreparedStatement rigFindByValueStatement(PreparedStatement find,

@@ -203,12 +203,14 @@ the specified bibliographic post.
 
 #### Parameters
 
-* `id` - Bibliographic post ID (e.g. http://libris.kb.se/bib/1234)
+* `id` - Bibliographic post ID (e.g. https://libris-qa.kb.se/s93ns5h436dxqsh or http://libris.kb.se/bib/1234)
 * `library` - Library ID (e.g. https://libris.kb.se/library/SEK)
 
 #### Example
 
 ```
+$ curl -XGET 'https://libris-qa.kb.se/_findhold?id=https://libris-qa.kb.se/s93ns5h436dxqsh&library=https://libris.kb.se/library/SEK'
+["https://libris-qa.kb.se/48h9kp894jm8kzz"]
 $ curl -XGET 'https://libris-qa.kb.se/_findhold?id=http://libris.kb.se/bib/1234&library=https://libris.kb.se/library/SEK'
 ["https://libris-qa.kb.se/48h9kp894jm8kzz"]
 ```
