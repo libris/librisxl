@@ -4,14 +4,18 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import whelk.util.PropertyLoader;
 
-import javax.servlet.*;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
@@ -19,7 +23,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 public class AuthenticationFilter implements Filter {
 
@@ -49,7 +57,7 @@ public class AuthenticationFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-        if (httpRequest.getMethod() == "POST" && whitelistedPostEndpoints.contains(httpRequest.getRequestURI())) {
+        if (httpRequest.getMethod().equals("POST") && whitelistedPostEndpoints.contains(httpRequest.getRequestURI())) {
             chain.doFilter(request, response);
         } else if (!mockAuthMode && supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
             int response_code = 0;
@@ -121,7 +129,7 @@ public class AuthenticationFilter implements Filter {
     }
 
     private Map createDevelopmentUser() {
-        Map emptyUser = new HashMap<String,Object>();
+        Map<String,Object> emptyUser = new HashMap<>();
         emptyUser.put("user", "SYSTEM");
         return emptyUser;
     }
@@ -140,7 +148,7 @@ public class AuthenticationFilter implements Filter {
                     new InputStreamReader(response.getEntity().getContent()));
 
             StringBuffer result = new StringBuffer();
-            String line = "";
+            String line;
             while ((line = rd.readLine()) != null) {
                 result.append(line);
             }
@@ -160,16 +168,6 @@ public class AuthenticationFilter implements Filter {
     public void destroy() {
 
     }
-
-    /*
-    private JSONObject getUserInfo(JSONObject obj) {
-
-        if (obj != null) {
-            return (JSONObject)obj.get("user");
-        }
-        return null;
-    }
-    */
 
     private boolean isExpired(String expires_at) {
         try {

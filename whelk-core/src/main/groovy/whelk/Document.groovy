@@ -36,6 +36,7 @@ class Document {
 
     static final ObjectMapper mapper = new ObjectMapper()
 
+    static final List thingPath = ["@graph", 1]
     static final List thingIdPath = ["@graph", 0, "mainEntity", "@id"]
     static final List thingIdPath2 = ["@graph", 1, "@id"]
     static final List thingTypePath = ["@graph", 1, "@type"]

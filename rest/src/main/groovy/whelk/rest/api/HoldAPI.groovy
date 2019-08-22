@@ -1,11 +1,9 @@
 package whelk.rest.api
 
 import whelk.Document
-import whelk.JsonLd
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.JsonLD2MarcXMLConverter
-import whelk.util.PropertyLoader
 import whelk.util.LegacyIntegrationTools
 
 import javax.servlet.http.HttpServlet
@@ -52,14 +50,14 @@ class HoldAPI extends HttpServlet {
         }
 
         Document document = whelk.storage.loadDocumentByMainId(recordId)
-        String collection = whelk.util.LegacyIntegrationTools.determineLegacyCollection(document, whelk.jsonld)
-        if (!collection.equals("bib")){
+        String collection = LegacyIntegrationTools.determineLegacyCollection(document, whelk.jsonld)
+        if (collection != "bib"){
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "The supplied \"id\"-parameter must refer to an existing bibliographic record.")
             return
         }
 
-        library = whelk.util.LegacyIntegrationTools.legacySigelToUri(library)
+        library = LegacyIntegrationTools.legacySigelToUri(library)
         if (library == null){
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Could not find a profile for the supplied \"library\"-parameter.")

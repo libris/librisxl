@@ -1,0 +1,470 @@
+{
+  "@id": "http://kblocalhost.kb.se:5000/n602lbw018zh88k#it",
+  "@type": "Electronic",
+  "extent": [
+    {
+      "@type": "Extent",
+      "label": "xiv, 244 p."
+    }
+  ],
+  "sameAs": [
+    {
+      "@id": "http://libris.kb.se/resource/bib/12915810"
+    }
+  ],
+  "hasNote": [
+    {
+      "@type": "marc:BibliographyEtcNote",
+      "label": "Includes bibliographies and index."
+    }
+  ],
+  "hasTitle": [
+    {
+      "@type": "Title",
+      "mainTitle": "Molecular aspects of enzyme catalysis",
+      "marc:searchElement": false
+    }
+  ],
+  "instanceOf": {
+    "@id": "http://kblocalhost.kb.se:5000/n602lbw018zh88k#work",
+    "@type": "Text",
+    "hasPart": [
+      {
+        "@type": "Multimedia",
+        "genreForm": [
+          {
+            "@id": "https://id.kb.se/marc/Document"
+          }
+        ],
+        "carrierType": [
+          {
+            "@id": "https://id.kb.se/marc/Online"
+          }
+        ]
+      }
+    ],
+    "subject": [
+      {
+        "@type": "Concept",
+        "label": "PSBZ",
+        "inScheme": {
+          "code": "bicssc",
+          "@type": "ConceptScheme"
+        }
+      },
+      {
+        "@type": "ComplexSubject",
+        "sameAs": [
+          {
+            "@id": "http://id.loc.gov/authorities/label/Enzymes--Regulation."
+          }
+        ],
+        "inScheme": {
+          "@id": "https://id.kb.se/term/lcsh"
+        },
+        "prefLabel": "Enzymes--Regulation.",
+        "termComponentList": [
+          {
+            "@type": "Topic",
+            "prefLabel": "Enzymes"
+          },
+          {
+            "@type": "TopicSubdivision",
+            "prefLabel": "Regulation."
+          }
+        ]
+      },
+      {
+        "@type": "Topic",
+        "sameAs": [
+          {
+            "@id": "http://id.loc.gov/authorities/label/Biological%20control%20systems."
+          }
+        ],
+        "inScheme": {
+          "@id": "https://id.kb.se/term/lcsh"
+        },
+        "prefLabel": "Biological control systems."
+      },
+      {
+        "@type": "Topic",
+        "inScheme": {
+          "@id": "https://id.kb.se/term/mesh"
+        },
+        "prefLabel": "Catalysis."
+      },
+      {
+        "@type": "Topic",
+        "inScheme": {
+          "@id": "https://id.kb.se/term/mesh"
+        },
+        "prefLabel": "Enzymes."
+      },
+      {
+        "@type": "Topic",
+        "inScheme": {
+          "@id": "https://id.kb.se/term/mesh"
+        },
+        "prefLabel": "Enzyme Activation."
+      }
+    ],
+    "summary": [
+      {
+        "@type": "Summary",
+        "label": "Recent expansion in the range and sophistication of techniques in protein science has provided a wealth of new information. This book deals with the latest achievements by the most active researchers in the field of enzyme catalysis. Twenty-eight authors"
+      }
+    ],
+    "language": [
+      {
+        "@id": "https://id.kb.se/language/eng"
+      }
+    ],
+    "genreForm": [
+      {
+        "@id": "https://id.kb.se/marc/Bibliography"
+      },
+      {
+        "@id": "https://id.kb.se/marc/NotFictionNotFurtherSpecified"
+      },
+      {
+        "@type": "GenreForm",
+        "inScheme": {
+          "code": "local",
+          "@type": "ConceptScheme",
+          "sameAs": [
+            {
+              "@id": "https://id.kb.se/term/local"
+            }
+          ]
+        },
+        "prefLabel": "Electronic books."
+      }
+    ],
+    "contribution": [
+      {
+        "@type": "Contribution",
+        "agent": {
+          "@type": "Person",
+          "lifeSpan": "1931-",
+          "givenName": "T.",
+          "familyName": "Fukui",
+          "fullerFormOfName": "(Toshio)"
+        }
+      },
+      {
+        "@type": "Contribution",
+        "agent": {
+          "@type": "Person",
+          "givenName": "Kenji.",
+          "familyName": "Soda"
+        }
+      },
+      {
+        "@type": "Contribution",
+        "agent": {
+          "name": "Wiley InterScience (Online service)",
+          "@type": "Organization"
+        }
+      }
+    ],
+    "classification": [
+      {
+        "code": "QP601",
+        "@type": "ClassificationLcc",
+        "itemPortion": ".M64 1994eb",
+        "marc:existenceInLCCollection": false
+      },
+      {
+        "code": "572/.7",
+        "@type": "ClassificationDdc",
+        "edition": "full",
+        "editionEnumeration": "22"
+      }
+    ],
+    "illustrativeContent": {
+      "@id": "https://id.kb.se/marc/Illustration"
+    }
+  },
+  "carrierType": [
+    {
+      "@id": "https://id.kb.se/marc/OnlineResource"
+    },
+    {
+      "@id": "https://id.kb.se/marc/Online"
+    }
+  ],
+  "publication": [
+    {
+      "year": "1994",
+      "@type": "PrimaryPublication",
+      "country": [
+        {
+          "@id": "https://id.kb.se/country/ja"
+        }
+      ],
+      "hasPart": [
+        {
+          "@type": "Publication",
+          "agent": {
+            "@type": "Agent",
+            "label": "Kodansha"
+          },
+          "place": {
+            "@type": "Place",
+            "label": "Tokyo"
+          }
+        },
+        {
+          "@type": "Publication",
+          "place": {
+            "@type": "Place",
+            "label": "Weinheim"
+          }
+        },
+        {
+          "@type": "Publication",
+          "agent": {
+            "@type": "Agent",
+            "label": "VCH"
+          },
+          "place": {
+            "@type": "Place",
+            "label": "New York"
+          }
+        }
+      ]
+    }
+  ],
+  "colorContent": [
+    {
+      "@id": "https://id.kb.se/marc/Multicolored"
+    }
+  ],
+  "identifiedBy": [
+    {
+      "@type": "ISBN",
+      "value": "9783527615971"
+    },
+    {
+      "@type": "Identifier",
+      "value": "10.1002/9783527615971",
+      "typeNote": "doi"
+    }
+  ],
+  "issuanceType": "Monograph",
+  "hasDimensions": {
+    "@type": "Dimensions",
+    "label": "25 cm."
+  },
+  "marc:mediaTerm": "Elektronisk resurs",
+  "hasReproduction": [
+    {
+      "@type": "Instance",
+      "hasNote": [
+        {
+          "@type": "Note",
+          "label": "Mode of access: World Wide Web."
+        },
+        {
+          "@type": "Note",
+          "label": "System requirements: Web browser."
+        },
+        {
+          "@type": "Note",
+          "label": "Title from title screen (viewed on Feb. 18, 2008)."
+        },
+        {
+          "@type": "Note",
+          "label": "Access may be restricted to users at subscribing institutions."
+        }
+      ],
+      "description": "Electronic reproduction.",
+      "provisionActivity": [
+        {
+          "date": "2008.",
+          "@type": "ProvisionActivity",
+          "agent": [
+            {
+              "@type": "Agent",
+              "label": "Wiley InterScience"
+            }
+          ],
+          "place": [
+            {
+              "@type": "Place",
+              "label": "Hoboken, N.J."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tableOfContents": [
+    {
+      "@type": "TableOfContents",
+      "label": "Cover -- TOC$Contents -- Dedication -- List of Contributors -- Preface -- Frontispiece -- Introduction-New Trends in Enzyme Studies -- CH$1. Advanced Protein Sequencing Techniques -- CH$2. Nuclear Magnetic Resonance Studies on Streptomyces Subtilisin Inhibitor and its Complexes with Proteinases -- CH$3. Subunit Assembly of Oligomeric Enzymes -- CH$4. Affinity Labeling of Nucleotide-Binding Sites -- CH$5. Structure and Function of Aspartate Aminotransferase -- CH$6. Higher Plant Phosphorylases -- CH$7. Tryptophan Synthase -- CH$8. Alanine Racemase: Structure and Functions -- CH$9. Tryptophanase: Structural, Spectral, and Catalytic Properties -- CH$10. Superoxide Dismutase -- CH$11. H+-ATPase: Catalysis and H+ Translocation -- CH$12. Stabilization of Proteases by an Engineered Disulfide Bond -- IDX$Index"
+    },
+    {
+      "@type": "TableOfContents",
+      "label": "http://www.myilibrary.com?id=184294&ref=toc"
+    }
+  ],
+  "isPrimaryTopicOf": [
+    {
+      "uri": [
+        "http://dx.doi.org/10.1002/9783527615971"
+      ],
+      "@type": "Document",
+      "appliesTo": {
+        "@type": "Resource",
+        "label": "John Wiley"
+      },
+      "cataloguersNote": [
+        "856other"
+      ],
+      "marc:publicNote": [
+        "Table of Contents / Abstracts"
+      ]
+    }
+  ],
+  "acquisitionSource": [
+    {
+      "@type": "AcquisitionSource",
+      "label": "Wiley InterScience",
+      "comment": [
+        "http://www3.interscience.wiley.com"
+      ],
+      "identifiedBy": [
+        {
+          "@type": "StockNumber",
+          "value": "10.1002/9783527615971"
+        }
+      ]
+    }
+  ],
+  "otherPhysicalFormat": [
+    {
+      "@type": "Instance",
+      "hasTitle": [
+        {
+          "@type": "Title",
+          "mainTitle": "Molecular aspects of enzyme catalysis",
+          "qualifier": "Original"
+        }
+      ],
+      "identifiedBy": [
+        {
+          "@type": "ISBN",
+          "value": "9783527300174"
+        }
+      ],
+      "marc:displayText": [
+        "Print"
+      ],
+      "marc:toDisplayNote": true
+    }
+  ],
+  "supplementaryContent": {
+    "@id": "https://id.kb.se/marc/IndexPresent"
+  },
+  "indirectlyIdentifiedBy": [
+    {
+      "@type": "ISBN",
+      "value": "9783527300174",
+      "qualifier": "Print"
+    }
+  ],
+  "responsibilityStatement": "edited by Toshio Fukui ; Kenji Soda",
+  "marc:otherPhysicalDetails": "ill.",
+  "meta": {
+    "@id": "http://kblocalhost.kb.se:5000/n602lbw018zh88k",
+    "@type": "Record",
+    "sameAs": [
+      {
+        "@id": "http://libris.kb.se/bib/12915810"
+      }
+    ],
+    "created": "2012-04-23T10:28:44+02:00",
+    "modified": "2017-12-05T11:09:17+01:00",
+    "mainEntity": {
+      "@id": "http://kblocalhost.kb.se:5000/n602lbw018zh88k#it"
+    },
+    "identifiedBy": [
+      {
+        "@type": "SystemNumber",
+        "value": "(OCoLC)212133937",
+        "marc:hiddenValue": [
+          "(OCoLC)294884040"
+        ]
+      }
+    ],
+    "recordStatus": "marc:CorrectedOrRevised",
+    "controlNumber": "12915810",
+    "encodingLevel": "marc:AbbreviatedLevel",
+    "generationDate": "2019-06-18T15:51:08.669+02:00",
+    "_marcUncompleted": [
+      {
+        "887": {
+          "ind1": " ",
+          "ind2": " ",
+          "subfields": [
+            {
+              "a": "ProductForm=DG"
+            },
+            {
+              "2": "onix"
+            }
+          ]
+        },
+        "_unhandled": [
+          "a",
+          "2"
+        ]
+      }
+    ],
+    "generationProcess": {
+      "@id": "https://id.kb.se/generator/marcframe"
+    },
+    "descriptionCreator": {
+      "@id": "https://libris.kb.se/library/DG1"
+    },
+    "descriptionUpgrader": [
+      {
+        "@type": "Library",
+        "sigel": "DG1"
+      },
+      {
+        "@type": "Library",
+        "sigel": "YDXCP"
+      },
+      {
+        "@type": "Library",
+        "sigel": "BTCTA"
+      },
+      {
+        "@type": "Library",
+        "sigel": "OCLNG"
+      },
+      {
+        "@type": "Library",
+        "sigel": "DG1"
+      },
+      {
+        "@type": "Library",
+        "sigel": "OCLCQ"
+      }
+    ],
+    "marc:catalogingSource": {
+      "@id": "https://id.kb.se/marc/CatalogingSourceType-d"
+    },
+    "descriptionConventions": [
+      {
+        "@id": "https://id.kb.se/marc/Aacr2"
+      }
+    ],
+    "marc:transcribingAgency": {
+      "name": "DG1",
+      "@type": "Organization"
+    }
+  }
+}

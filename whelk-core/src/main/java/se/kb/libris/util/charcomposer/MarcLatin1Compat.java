@@ -1,8 +1,9 @@
 package se.kb.libris.util.charcomposer;
 
-import java.util.*;
-import se.kb.libris.util.marc.*;
-import se.kb.libris.util.marc.io.*;
+import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.io.Iso2709Deserializer;
+import se.kb.libris.util.marc.io.Iso2709Serializer;
+import se.kb.libris.util.marc.io.StrictIso2709Reader;
 
 
 /**

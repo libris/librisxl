@@ -1,11 +1,7 @@
 package whelk.rest.api
 
-import spock.lang.Ignore
 import spock.lang.Specification
-
-import whelk.rest.api.ESQuery
 import whelk.JsonLd
-
 
 class ESQuerySpec extends Specification {
     ESQuery es

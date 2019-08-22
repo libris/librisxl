@@ -1,7 +1,12 @@
 package se.kb.libris.util.charcomposer;
 
-import java.util.*;
-import se.kb.libris.util.marc.*;
+import se.kb.libris.util.marc.Controlfield;
+import se.kb.libris.util.marc.Datafield;
+import se.kb.libris.util.marc.Field;
+import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.Subfield;
+
+import java.util.Iterator;
 
 public class ComposeUtil {
     public static void compose(MarcRecord mr, boolean compat) {

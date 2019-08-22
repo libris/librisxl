@@ -1,0 +1,429 @@
+{
+  "@graph": [
+    {
+      "@id": "http://kblocalhost.kb.se:5000/00nj5pg324f356g2",
+      "sameAs": [
+        {
+          "@id": "https://id.kb.se/vocab/display.jsonld"
+        }
+      ],
+      "created": "2019-06-18T15:49:46.132+02:00",
+      "modified": "2019-06-18T15:49:46.132+02:00",
+      "mainEntity": {
+        "@id": "https://id.kb.se/vocab/display"
+      },
+      "recordStatus": "marc:New"
+    },
+    {
+      "@id": "https://id.kb.se/vocab/display"
+    }
+  ],
+  "@context": {
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "marc": "https://id.kb.se/marc/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "@base": "https://id.kb.se/vocab/display",
+    "@vocab": "https://id.kb.se/vocab/",
+    "lenses": {
+      "@reverse": "fresnel:group",
+      "@container": "@index"
+    },
+    "fresnel": "http://www.w3.org/2004/09/fresnel#",
+    "inverseOf": {
+      "@id": "owl:inverseOf",
+      "@type": "@vocab"
+    },
+    "lensGroups": {
+      "@id": "@graph",
+      "@container": "@index"
+    },
+    "noteByLang": {
+      "@id": "note",
+      "@container": "@language"
+    },
+    "labelByLang": {
+      "@id": "label",
+      "@container": "@language"
+    },
+    "titleByLang": {
+      "@id": "title",
+      "@container": "@language"
+    },
+    "commentByLang": {
+      "@id": "comment",
+      "@container": "@language"
+    },
+    "altLabelByLang": {
+      "@id": "altLabel",
+      "@container": "@language"
+    },
+    "showProperties": {
+      "@id": "fresnel:showProperties",
+      "@type": "@vocab",
+      "@container": "@list"
+    },
+    "classLensDomain": {
+      "@type": "@vocab",
+      "@reverse": "displayLens"
+    },
+    "prefLabelByLang": {
+      "@id": "prefLabel",
+      "@container": "@language"
+    },
+    "descriptionByLang": {
+      "@id": "description",
+      "@container": "@language"
+    }
+  },
+  "lensGroups": {
+    "cards": {
+      "@id": "cards",
+      "@type": "fresnel:Group",
+      "lenses": {
+        "ISBN": {
+          "@id": "ISBN-cards",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "value",
+            "qualifier"
+          ],
+          "classLensDomain": "Identifier"
+        },
+        "Work": {
+          "@id": "Work-cards",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "hasTitle",
+            "contribution",
+            "language",
+            "genreForm",
+            "classification",
+            "subject",
+            "isPartOf"
+          ],
+          "classLensDomain": "Work"
+        },
+        "Person": {
+          "@id": "Person-cards",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "familyName",
+            "givenName",
+            "name",
+            "marc:numeration",
+            "marc:titlesAndOtherWordsAssociatedWithAName",
+            "marc:fullerFormName",
+            "lifeSpan",
+            "marc:attributionQualifier",
+            "personTitle",
+            "identifiedBy",
+            "hasVariant",
+            "seeAlso",
+            "nationality"
+          ],
+          "classLensDomain": "Person"
+        },
+        "Record": {
+          "@id": "Record-cards",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "controlNumber",
+            "inDataset",
+            "created",
+            "modified",
+            "identifiedBy",
+            "bibliography",
+            "encodingLevel",
+            "technicalNote",
+            "recordStatus",
+            "descriptionCreator",
+            "descriptionUpgrader",
+            "descriptionLastModifier",
+            "descriptionConventions",
+            "cataloguersNote",
+            "generationDate",
+            "generationProcess"
+          ],
+          "classLensDomain": "Record"
+        },
+        "Concept": {
+          "@id": "Concept-cards",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "prefLabel",
+            "inScheme",
+            "inCollection",
+            "altLabel",
+            "broader",
+            "exactMatch",
+            "closeMatch",
+            "broadMatch",
+            {
+              "inverseOf": "broader"
+            },
+            "hasVariant",
+            "related",
+            "scopeNote",
+            "label",
+            "code",
+            "keyword"
+          ],
+          "classLensDomain": "Concept"
+        },
+        "Library": {
+          "@id": "Library-cards",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "sigel"
+          ],
+          "classLensDomain": "Library"
+        },
+        "Instance": {
+          "@id": "Instance-cards",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "identifiedBy",
+            "issuanceType",
+            "mediaType",
+            "carrierType",
+            "hasTitle",
+            "instanceOf",
+            "responsibilityStatement",
+            "editionStatement",
+            "editionStatementRemainder",
+            "publication",
+            "marc:primaryProvisionActivity",
+            "production",
+            "manufacture",
+            "distribution",
+            "copyright",
+            "copyrightDate",
+            "indirectlyIdentifiedBy",
+            "extent",
+            "hasDimensions",
+            "marc:otherPhysicalDetails",
+            "accompaniedBy",
+            "seriesMembership",
+            {
+              "inverseOf": "itemOf"
+            }
+          ],
+          "classLensDomain": "Instance"
+        },
+        "Language": {
+          "@id": "Language-cards",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "prefLabel",
+            "label",
+            "code"
+          ],
+          "classLensDomain": "Language"
+        },
+        "Resource": {
+          "@id": "Resource-cards",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "title",
+            "prefLabel",
+            "label",
+            "name",
+            "code",
+            "sameAs",
+            "exactMatch",
+            "closeMatch",
+            "broadMatch",
+            "isPartOf",
+            "isDefinedBy"
+          ],
+          "classLensDomain": "Resource"
+        },
+        "StructuredValue": {
+          "@id": "StructuredValue-cards",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "label"
+          ],
+          "classLensDomain": "StructuredValue"
+        }
+      }
+    },
+    "chips": {
+      "@id": "chips",
+      "@type": "fresnel:Group",
+      "lenses": {
+        "Work": {
+          "@id": "Work-chips",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "hasTitle",
+            "language"
+          ],
+          "classLensDomain": "Work"
+        },
+        "Title": {
+          "@id": "Title-chips",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "mainTitle",
+            "title",
+            "subtitle",
+            "titleRemainder",
+            "partNumber",
+            "partName",
+            "hasPart"
+          ],
+          "classLensDomain": "Title"
+        },
+        "Person": {
+          "@id": "Person-chips",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "familyName",
+            "givenName",
+            "name",
+            "marc:numeration",
+            "marc:titlesAndOtherWordsAssociatedWithAName",
+            "marc:fullerFormName",
+            "lifeSpan"
+          ],
+          "classLensDomain": "Person"
+        },
+        "Record": {
+          "@id": "Record-chips",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "controlNumber",
+            "encodingLevel",
+            "inDataset"
+          ],
+          "classLensDomain": "Record"
+        },
+        "Concept": {
+          "@id": "Concept-chips",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "prefLabel",
+            "label",
+            "code",
+            "inScheme",
+            "inCollection"
+          ],
+          "classLensDomain": "Concept"
+        },
+        "Library": {
+          "@id": "Library-chips",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "sigel"
+          ],
+          "classLensDomain": "Library"
+        },
+        "Instance": {
+          "@id": "Instance-chips",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "hasTitle",
+            "provisionActivity"
+          ],
+          "classLensDomain": "Instance"
+        },
+        "Language": {
+          "@id": "Language-chips",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "prefLabel"
+          ],
+          "classLensDomain": "Language"
+        },
+        "Resource": {
+          "@id": "Resource-chips",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "title",
+            "prefLabel",
+            "label",
+            "name",
+            "code",
+            "isPartOf",
+            "isDefinedBy",
+            "uri"
+          ],
+          "classLensDomain": "Resource"
+        },
+        "Identifier": {
+          "@id": "Identifier-chips",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "value",
+            "typeNote",
+            "marc:hiddenValue"
+          ],
+          "classLensDomain": "Identifier"
+        },
+        "Publication": {
+          "@id": "Publication-chips",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "place",
+            "agent",
+            "year",
+            "date"
+          ],
+          "classLensDomain": "Publication"
+        },
+        "Contribution": {
+          "@id": "Contribution-chips",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "agent",
+            "role"
+          ],
+          "classLensDomain": "Contribution"
+        },
+        "Relationship": {
+          "@id": "Relationship-chips",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "entity",
+            "relation"
+          ],
+          "classLensDomain": "Relationship"
+        },
+        "Classification": {
+          "@id": "Classification-chips",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "code",
+            "inScheme",
+            "edition"
+          ],
+          "classLensDomain": "Classification"
+        },
+        "TableOfContents": {
+          "@id": "TableOfContents-chips",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "label"
+          ],
+          "classLensDomain": "TableOfContents"
+        },
+        "ProvisionActivity": {
+          "@id": "ProvisionActivity-chips",
+          "@type": "fresnel:Lens",
+          "showProperties": [
+            "place",
+            "country",
+            "agent",
+            "year",
+            "startYear",
+            "endYear",
+            "date",
+            "marc:publicationStatus"
+          ],
+          "classLensDomain": "ProvisionActivity"
+        }
+      }
+    }
+  }
+}

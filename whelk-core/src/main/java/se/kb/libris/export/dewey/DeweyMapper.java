@@ -5,13 +5,34 @@
 
 package se.kb.libris.export.dewey;
 
-import java.io.*;
+import se.kb.libris.util.marc.Datafield;
+import se.kb.libris.util.marc.MarcFieldComparator;
+import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.Subfield;
+import se.kb.libris.util.marc.impl.MarcRecordImpl;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.Writer;
 import java.net.URL;
 import java.nio.channels.FileChannel;
-import java.util.*;
-import java.util.regex.*;
-import se.kb.libris.util.marc.*;
-import se.kb.libris.util.marc.impl.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *

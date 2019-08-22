@@ -1,9 +1,10 @@
 package se.kb.libris.export;
 
-import java.io.*;
-import java.util.*;
-import se.kb.libris.util.marc.*;
-import se.kb.libris.util.marc.io.*;
+import se.kb.libris.util.marc.Datafield;
+import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.Subfield;
+
+import java.util.Iterator;
 
 public class IsbnHyphenator {
     public static MarcRecord dehyphenate(MarcRecord rec) {
