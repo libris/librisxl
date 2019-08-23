@@ -4404,6 +4404,7 @@
         "TODO:definedElsewhereToken": "7"
       },
       "i2": {"marcDefault": " ", "TODO": "ok to lock as undefined?"},
+      "$d": {"property": "comment"},
       "$2": {
         "TODO:requires-i1": "7 (overwritten by 8)",
         "property": "typeNote",
@@ -4413,14 +4414,15 @@
         {
           "name": "indicator as tokenMap",
           "source": {
-            "024": {"ind1": "3", "ind2": " ", "subfields": [{"a": "1234567890"}]}
+            "024": {"ind1": "3", "ind2": " ", "subfields": [{"a": "1234567890"},{"d": "1"}]}
           },
           "result": {
             "mainEntity": {
               "identifiedBy": [
                 {
                   "@type": "EAN",
-                  "value":  "1234567890"
+                  "value":  "1234567890",
+                  "comment": "1"
                 }
               ]
             }
