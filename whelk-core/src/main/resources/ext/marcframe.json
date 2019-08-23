@@ -4404,7 +4404,7 @@
         "TODO:definedElsewhereToken": "7"
       },
       "i2": {"marcDefault": " ", "TODO": "ok to lock as undefined?"},
-      "$d": {"property": "code"},
+      "$d": {"property": "comment"},
       "$2": {
         "TODO:requires-i1": "7 (overwritten by 8)",
         "property": "typeNote",
@@ -4422,7 +4422,7 @@
                 {
                   "@type": "EAN",
                   "value":  "1234567890",
-                  "code": "1"
+                  "comment": "1"
                 }
               ]
             }
