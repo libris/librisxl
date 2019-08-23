@@ -77,7 +77,7 @@ public class Helpers
     {
         // Construct the query
         String selectSQL = "WITH bib_with_heldby AS (" +
-                " SELECT lddb.id, lddb.data, lddb.collection, lddb.modified, lddb.deleted, lddb.changedBy, lddb.data#>>'{@graph,1,heldBy,@id}' AS sigel, lddb.data#>>'{@graph,1,itemOf,@id}' AS itemOf, lddb_attached_holdings.data#>>'{@graph,1,heldBy,@id}' as heldBy" +
+                " SELECT lddb.id, lddb.data, lddb.collection, lddb.created, lddb.modified, lddb.deleted, lddb.changedBy, lddb.data#>>'{@graph,1,heldBy,@id}' AS sigel, lddb.data#>>'{@graph,1,itemOf,@id}' AS itemOf, lddb_attached_holdings.data#>>'{@graph,1,heldBy,@id}' as heldBy" +
                 " FROM lddb ";
 
         selectSQL += " LEFT JOIN lddb lddb_attached_holdings ON lddb.data#>>'{@graph,1,@id}' = lddb_attached_holdings.data#>>'{@graph,1,itemOf,@id}' ";
@@ -120,7 +120,7 @@ public class Helpers
             throws SQLException
     {
         // Construct the query
-        String selectSQL = "SELECT lddb.id, lddb.data, lddb.collection, lddb.modified, lddb.deleted, lddb.changedBy, lddb.data#>>'{@graph,1,heldBy,@id}' AS sigel, lddb.data#>>'{@graph,1,itemOf,@id}' AS itemOf" +
+        String selectSQL = "SELECT lddb.id, lddb.data, lddb.collection, lddb.created, lddb.modified, lddb.deleted, lddb.changedBy, lddb.data#>>'{@graph,1,heldBy,@id}' AS sigel, lddb.data#>>'{@graph,1,itemOf,@id}' AS itemOf" +
                 " FROM lddb ";
 
         selectSQL += " WHERE lddb.collection <> 'definitions' ";
