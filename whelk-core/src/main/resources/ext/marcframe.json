@@ -1057,7 +1057,7 @@
     "agentdataOrganizationSubUnit": {
       "include": "agentdataOrganizationJurisdiction",
       "$a": {"about": "_:isPartOf", "property": "name", "required": true},
-      "$b": {"about": "_:agent", "addProperty": "marc:subordinateUnit", "required": true}
+      "$b": {"about": "_:agent", "addProperty": "name", "required": true}
     },
 
     "agentdataOrganization": {
@@ -6219,7 +6219,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Organization",
-                    "marc:subordinateUnit" : ["Norstedts Juridik"],
+                    "name" : ["Norstedts Juridik"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Wolters Kluwer"
@@ -6248,7 +6248,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Jurisdiction",
-                    "marc:subordinateUnit" : ["Kulturdepartementet"],
+                    "name" : ["Kulturdepartementet"],
                     "isPartOf": {
                       "@type": "Jurisdiction",
                       "name": "Sverige."
@@ -6277,7 +6277,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Organization",
-                    "marc:subordinateUnit" : ["Norstedts Juridik"],
+                    "name" : ["Norstedts Juridik"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Wolters Kluwer"
@@ -6309,7 +6309,7 @@
                   "agent": {
                     "@type": "Organization",
                     "date": ["1998 :"],
-                    "marc:subordinateUnit" : ["Conference"],
+                    "name" : ["Conference"],
                     "isPartOf": {
                       "@type": "Organization",
                       "name": "Mujeres Ayudando la Raza (Organization : University of California, Davis)"
@@ -11771,7 +11771,7 @@
                     "name" : "Sverige"
                   },
                   "marc:numeration": ["15"],
-                  "marc:subordinateUnit" : ["Riksdagen"],
+                  "name" : ["Riksdagen"],
                   "place" : [{
                     "@type" : "Place",
                     "label" : "Gävle)"
@@ -13978,7 +13978,7 @@
                             "@type": "Jurisdiction",
                             "name": "Sverige."
                           },
-                          "marc:subordinateUnit" : ["Riksdagen.", "Borgarståndet."]
+                          "name" : ["Riksdagen.", "Borgarståndet."]
                         }
                       }],
                     "hasTitle": [ {
@@ -14095,7 +14095,7 @@
                   "@type": "Contribution",
                   "agent":{
                     "@type": "Organization",
-                    "marc:subordinateUnit" : ["Quinquennial Meeting"],
+                    "name" : ["Quinquennial Meeting"],
                     "date": ["1904"],
                     "marc:numeration": ["(1st :"],
                     "isPartOf": {
@@ -14155,7 +14155,7 @@
                   "@type": "Contribution",
                   "agent":{
                     "@type": "Organization",
-                    "marc:subordinateUnit" : ["Institutionen för ABM.", "Kulturgeografi"],
+                    "name" : ["Institutionen för ABM.", "Kulturgeografi"],
                     "marc:numeration": ["101"],
                     "isPartOf": {
                       "@type": "Organization",
@@ -14262,7 +14262,7 @@
                   "@type": "Contribution",
                   "agent": {
                     "@type": "Organization",
-                    "marc:subordinateUnit" : ["Institutionen för teknikens ekonomi och organisation.",
+                    "name" : ["Institutionen för teknikens ekonomi och organisation.",
                               "Industriell organisation och ekonomi"],
                     "isPartOf": {
                       "@type": "Organization",
@@ -14414,7 +14414,7 @@
                   "@type": "Contribution",
                   "agent": {
                     "@type": "Jurisdiction",
-                    "marc:subordinateUnit" : ["Riksdagen.", "Konstitutionsutskottet"],
+                    "name" : ["Riksdagen.", "Konstitutionsutskottet"],
                     "isPartOf": {
                       "@type": "Jurisdiction",
                       "name": "Sverige."
@@ -14426,7 +14426,7 @@
                   "@type": "Contribution",
                   "agent": {
                     "@type": "Jurisdiction",
-                    "marc:subordinateUnit" : ["Regeringen i Bremen-Verden"],
+                    "name" : ["Regeringen i Bremen-Verden"],
                     "isPartOf": {
                       "@type": "Jurisdiction",
                       "name": "Sverige."
@@ -15950,7 +15950,7 @@
                       "@type": "PrimaryContribution",
                       "agent": {
                         "@type": "Jurisdiction",
-                        "marc:subordinateUnit": ["Universidad nacional.", "Instituto de Literatura Española."],
+                        "name": ["Universidad nacional.", "Instituto de Literatura Española."],
                         "isPartOf": {
                           "@type": "Jurisdiction",
                           "name": "Buenos Aires (Argentina)."
@@ -15986,7 +15986,7 @@
                       "@type": "PrimaryContribution",
                       "agent": {
                         "@type": "Organization",
-                        "marc:subordinateUnit": ["Bureau of Business Research."],
+                        "name": ["Bureau of Business Research."],
                         "isPartOf": {
                           "@type": "Organization",
                           "name": "Harvard University."
@@ -17593,7 +17593,7 @@
           "result": {
             "mainEntity": {
               "@type": "Organization",
-              "marc:subordinateUnit" : ["Regionkommittén"],
+              "name" : ["Regionkommittén"],
               "isPartOf": {
                 "@type": "Organization",
                 "name": "Europeiska unionen"
@@ -17611,7 +17611,7 @@
           "result": {
             "mainEntity": {
               "@type": "Jurisdiction",
-              "marc:subordinateUnit" : ["Armén", "Dalregementet"],
+              "name" : ["Armén", "Dalregementet"],
               "isPartOf": {
                 "@type": "Jurisdiction",
                 "name": "Sverige"
@@ -17631,7 +17631,7 @@
           "result": {
             "mainEntity": {
               "@type": "Jurisdiction",
-              "marc:subordinateUnit" : ["Congress"],
+              "name" : ["Congress"],
               "isPartOf": {
                 "@type": "Jurisdiction",
                 "name": "Förenta staterna"
@@ -18506,7 +18506,7 @@
                   "@type": "Jurisdiction",
                   "name": "Suède."
                 },
-                "marc:subordinateUnit": ["Direction nationale de la santé et des affaires sociales"],
+                "name": ["Direction nationale de la santé et des affaires sociales"],
                 "marc:relatedAs": [{
                   "@type": "Relation",
                   "label": "Franska:"
@@ -18650,7 +18650,7 @@
                         "@type": "Organization",
                         "name": "Museum of Northern Arizona"
                       },
-                      "marc:subordinateUnit": ["Subunit part of name"]
+                      "name": ["Subunit part of name"]
                     }
                   }]
                 }
@@ -18669,7 +18669,7 @@
               "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Jurisdiction",
-                "marc:subordinateUnit": ["Estudios Territoriales, Oficina de"],
+                "name": ["Estudios Territoriales, Oficina de"],
                 "isPartOf": {
                   "@type": "Jurisdiction",
                   "name": "Honduras"
@@ -18689,7 +18689,7 @@
               "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Organization",
-                "marc:subordinateUnit": ["Europaparlamentet"],
+                "name": ["Europaparlamentet"],
                 "isPartOf": {
                   "@type": "Organization",
                   "name": "Europeiska unionen."
@@ -18722,7 +18722,7 @@
               "@type": "Identity",
               "hasVariant": [ {
                 "@type": "Organization",
-                "marc:subordinateUnit": ["General Assembly", "Special Session", "Preparatory Committee of the Whole"],
+                "name": ["General Assembly", "Special Session", "Preparatory Committee of the Whole"],
                 "marc:numeration": ["(13 :"],
                 "date": ["1986)."],
                 "isPartOf": {
@@ -19556,7 +19556,7 @@
               "seeAlso": [{
                 "@type": "Jurisdiction",
                 "marc:controlSubfield": "a",
-                "marc:subordinateUnit": ["Air Quality Programs"],
+                "name": ["Air Quality Programs"],
                 "isPartOf": {
                   "@type": "Jurisdiction",
                   "name": "Maryland."
