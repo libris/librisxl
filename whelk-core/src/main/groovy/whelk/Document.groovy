@@ -60,6 +60,7 @@ class Document {
     static final List generationProcessPath = ["@graph", 0, "generationProcess", "@id"]
     static final List generationDatePath = ["@graph", 0, "generationDate"]
     static final List descriptionCreatorPath = ["@graph", 0, "descriptionCreator", "@id"]
+    static final List descriptionLastModifierPath = ["@graph", 0, "descriptionLastModifier", "@id"]
 
     public Map data = [:]
     public int version = 0
@@ -103,6 +104,10 @@ class Document {
     void setDescriptionCreator(creator) { set(descriptionCreatorPath, creator) }
 
     String getDescriptionCreator() { get(descriptionCreatorPath) }
+
+    void setDescriptionLastModifier(creator) { set(descriptionLastModifierPath, creator) }
+
+    String getDescriptionLastModifier() { get(descriptionLastModifierPath) }
 
     void setThingType(thingType) { set(thingTypePath, thingType) }
 

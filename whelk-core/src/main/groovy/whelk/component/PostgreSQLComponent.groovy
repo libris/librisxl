@@ -341,8 +341,11 @@ class PostgreSQLComponent {
             Date now = new Date()
             PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
 
-            if (changedBy != null)
-                doc.setDescriptionCreator("https://libris.kb.se/library/" + changedBy)
+            if (changedBy != null) {
+                String creator = getDescriptionChangerId(changedBy)
+                doc.setDescriptionCreator(creator)
+                doc.setDescriptionLastModifier(creator)
+            }
 
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc, connection)
@@ -610,6 +613,10 @@ class PostgreSQLComponent {
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc)
             verifyDocumentIdRetention(preUpdateDoc, doc)
+
+            if (changedBy != null) {
+                doc.setDescriptionLastModifier(getDescriptionChangerId(changedBy))
+            }
 
             boolean deleted = doc.getDeleted()
 
@@ -2182,5 +2189,10 @@ class PostgreSQLComponent {
     private Date parseDate(String date) {
         ZonedDateTime zdt = ZonedDateTime.parse(date, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
         return Date.from(zdt.toInstant())
+    }
+
+    private String getDescriptionChangerId(String changedBy) {
+        // FIXME: hardcoded
+        return "https://libris.kb.se/library/" + changedBy
     }
 }
