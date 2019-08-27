@@ -10623,9 +10623,9 @@
         "NOTE:LC": "nac"
       },
       "$a": {"property": "preferredCitation"},
-      "$2": {"ignored": true, "NOTE:LC": "nac"},
-      "$3": {"ignored": true, "NOTE:LC": "nac"},
-      "$6": {"ignored": true, "NOTE:LC": "nac"}
+      "$2": null,
+      "$3": null,
+      "$6": null
     },
     "525": {
       "aboutEntity": "?thing",
