@@ -10647,7 +10647,14 @@
       "$6": {"property": "marc:fieldref"},
       "embedded": true
     },
-
+    "532": {
+      "NOTE:local": "Deviating from BF2 since subfield a is a note on the relation, not a note on a new instance",
+      "addLink": "contentAccessibility",
+      "resourceType": "ContentAccessibility",
+      "i1": null,
+      "$a": {"property": "label"},
+      "$6": {"property": "marc:fieldref"}
+    },
     "533": {
       "addLink": "hasReproduction",
       "embedded": true,
