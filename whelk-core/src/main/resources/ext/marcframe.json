@@ -10955,8 +10955,10 @@
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "Note",
+      "i1": null,
       "NOTE:i1": {"ignored": true, "NOTE:lc": "ignore"},
       "$a": {"property": "label"},
+      "$z": null,
       "NOTE:$z": {"ignored": true, "NOTE:lc": "nac"},
       "$6": {"property": "marc:fieldref"}
     },
