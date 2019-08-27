@@ -11080,7 +11080,7 @@
       "$d": null,
       "$e": null,
       "$f": null,
-      "$h": {"addProperty": "marc:jursidiction"},
+      "$h": {"addProperty": "marc:jurisdiction"},
       "$i": null,
       "$j": null,
       "$k": {"addLink": "agent", "resourceType": "Agent", "property": "label"},
