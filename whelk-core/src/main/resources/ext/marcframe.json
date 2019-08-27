@@ -11125,7 +11125,7 @@
         }
       ]
     },
-    "584": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "584": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "584 - ACCUMULATION AND FREQUENCY OF USE NOTE (R) nac"},
     "585": {
       "NOTE:local": "För anmärkning till utställningskataloger används fält 500.",
       "onRevertPrefer": "500",
