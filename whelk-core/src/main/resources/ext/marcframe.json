@@ -11009,8 +11009,8 @@
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
       "$6": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"}
     },
-    "565": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
-    "567": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "565": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "565 - CASE FILE CHARACTERISTICS NOTE (R) nac"},
+    "567": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "567 - METHODOLOGY NOTE (R) nac"},
     "580": {
       "aboutEntity": "?work",
       "addLink": "hasNote",
