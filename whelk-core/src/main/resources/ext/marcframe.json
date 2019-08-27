@@ -14956,8 +14956,11 @@
       "$f": {"addProperty": "marc:citySubsection", "TODO:ignored": "true?"},
       "$g": {"addProperty": "marc:otherNonjurisdictionalGeographicRegionAndFeature"},
       "$h": {"addProperty": "marc:extraterrestrialArea"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
+      "$1": null,
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
-      "$0": {"addProperty": "marc:uri"}
+      "$4": {"addProperty": "marc:relatorCode"},
+      "$6": {"property": "marc:fieldref"}
     },
     "753": {
       "aboutEntity": "?thing",
