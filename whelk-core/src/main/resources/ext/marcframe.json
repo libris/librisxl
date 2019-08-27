@@ -10569,9 +10569,14 @@
       "resourceType": "GeographicCoverage",
       "i1": {
         "NOTE:LC": "nac",
-        "marcDefault": " "
+        "marcDefault": " ",
+        "tokenMap": {
+          " ": null,
+          "8": null
+        }
       },
       "$a": {"property": "label"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {"522": {"ind1": "8", "ind2": " ", "subfields": [
