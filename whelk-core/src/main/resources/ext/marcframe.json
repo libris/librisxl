@@ -10873,7 +10873,7 @@
         }
       ]
     },
-    "542": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "542": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "542 - INFORMATION RELATING TO COPYRIGHT STATUS (R) nac"},
     "544": {
       "aboutEntity": "?thing",
       "addLink": "marc:hasLocationOfOtherArchivalMaterialsNote",
