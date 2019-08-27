@@ -10742,7 +10742,8 @@
       "$e": {"addProperty": "marc:programElementNumber"},
       "$f": {"addProperty": "marc:projectNumber"},
       "$g": {"addProperty": "marc:taskNumber"},
-      "$h": {"addProperty": "marc:workUnitNumber"}
+      "$h": {"addProperty": "marc:workUnitNumber"},
+      "$6": {"property": "marc:fieldref"}
     },
     "538": {
       "aboutEntity": "?thing",
