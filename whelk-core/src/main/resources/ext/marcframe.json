@@ -11033,6 +11033,7 @@
       "$a": {"property": "label"},
       "$z": {"addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": [
