@@ -10766,10 +10766,17 @@
         "_:source": {"link": "source", "resourceType": "Source"}
       },
       "$a": {"property": "label"},
-      "$b": {"ignored": true, "NOTE:LC": "nac"},
-      "$c": {"about": "_:source", "property": "label"},
+      "$b": null,
+      "$c": {"about": "_:source", "property": "label", "NOTE": "FIX COLLISION WITH SUBFIELD 2"},
+      "$d": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$f": {"addProperty": "marc:useAndReproductionRights"},
+      "$g": {"addProperty": "marc:availabilityDate"},
+      "$q": {"property": "marc:supplyingAgency"},
       "$u": {"addProperty": "uri"},
+      "NOTE:$2": {"link": "source", "resourceType": "Source", "property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {
