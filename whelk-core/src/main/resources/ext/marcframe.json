@@ -10459,6 +10459,7 @@
       "$b": {"property": "marc:expansionOfSummaryNote"},
       "$c": {"property": "marc:assigningSource"},
       "$u": {"addLink": "source", "resourceType": "Source", "addProperty": "uri"},
+      "$2": null,
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
