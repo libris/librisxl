@@ -14993,16 +14993,8 @@
       ]
     },
     "754": {
-      "NOTE:LC": "nac",
-      "addLink": "marc:hasAddedEntryTaxonomicIdentification",
-      "resourceType": "marc:AddedEntryTaxonomicIdentification",
-      "$a": {"addProperty": "marc:taxonomicName"},
-      "$c": {"addProperty": "marc:taxonomicCategory"},
-      "$d": {"addProperty": "marc:commonOrAlternativeName"},
-      "$x": {"addProperty": "marc:cataloguersNote"},
-      "$z": {"addProperty": "marc:publicNote"},
-      "$2": {"property": "marc:sourceOfTaxonomicIdentification"},
-      "$0": {"addProperty": "marc:uri"}
+      "NOTE:LC": "754 - ADDED ENTRY--TAXONOMIC IDENTIFICATION (R) nac",
+      "ignored": true
     },
     "755": {
       "addLink": "marc:hasPhysicalCharacteristicsAddedEntryOBSOLETE",
