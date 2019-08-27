@@ -10633,7 +10633,7 @@
       "resourceType": "SupplementaryContent",
       "$a": {"property": "label"}
     },
-    "526": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ", "NOTE:LC": "nac"},
+    "526": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ", "NOTE:LC": "526 - STUDY PROGRAM INFORMATION NOTE (R) nac"},
 
     "530": {
       "NOTE:local": "Deviating from BF2 since subfield a is a note on the relation, not a note on a new instance",
