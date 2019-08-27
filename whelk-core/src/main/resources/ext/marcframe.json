@@ -11132,7 +11132,10 @@
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "Note",
-      "$a": {"property": "label"}
+      "$a": {"property": "label"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
+      "$6": {"property": "marc:fieldref"}
     },
     "586": {
       "NOTE:local": "ANVÄNDS NORMALT EJ",
