@@ -15008,6 +15008,10 @@
       "$2": {"property": "marc:sourceOfTerm"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
     },
+    "758": {
+      "NOTE:LC": "758 - RESOURCE IDENTIFIER (R) nac",
+      "ignored": true
+    },
     "760": {
       "aboutEntity": "?thing",
       "NOTE:domainIncludes": "Serial",
