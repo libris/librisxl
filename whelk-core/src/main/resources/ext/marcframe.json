@@ -10750,6 +10750,7 @@
       "addLink": "marc:hasSystemDetailsNote",
       "resourceType": "marc:SystemDetailsNote",
       "$a": {"property": "marc:systemDetailsNote"},
+      "$i": null,
       "$u": {"addProperty": "marc:uniformResourceIdentifier"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "NOTE:$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
