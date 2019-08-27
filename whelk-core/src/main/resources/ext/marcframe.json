@@ -10631,7 +10631,8 @@
       "aboutEntity": "?thing",
       "link": "supplementaryContent",
       "resourceType": "SupplementaryContent",
-      "$a": {"property": "label"}
+      "$a": {"property": "label"},
+      "$6": {"property": "marc:fieldref"}
     },
     "526": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ", "NOTE:LC": "526 - STUDY PROGRAM INFORMATION NOTE (R) nac"},
 
