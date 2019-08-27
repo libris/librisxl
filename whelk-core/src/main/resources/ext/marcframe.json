@@ -10069,6 +10069,7 @@
     },
     "504": {
       "aboutEntity": "?thing",
+      "NOTE": "Is supplementaryContent in BF conversion 1.5",
       "addLink": "hasNote",
       "resourceType": "marc:BibliographyEtcNote",
       "$a": {"property": "label"},
