@@ -4540,7 +4540,8 @@
       "$d": {"addProperty": "marc:numberOfVolumeOrPart"},
       "$e": {"property": "marc:unparsedFingerprint"},
       "$2": {"link": "source", "resourceType": "Source", "property": "label"},
-      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"}
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
+      "$6": null
     },
     "027": {
       "include": ["identifier"],
