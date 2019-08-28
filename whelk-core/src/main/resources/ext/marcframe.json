@@ -5244,6 +5244,7 @@
     },
     "043": {
       "NOTE:local": "ANVÄNDS NORMALT EJ - Används normalt inte i Bibliografiska formatet, men ska ligga kvar oförändrat i importerade poster.",
+      "NOTE:lc": "Is geographicCoverage in BF2",
       "aboutEntity": "?work",
       "link": "marc:hasGeographicAreaCode",
       "resourceType": "marc:GeographicAreaCode",
