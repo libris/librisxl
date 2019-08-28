@@ -4416,12 +4416,14 @@
         "TODO:definedElsewhereToken": "7"
       },
       "i2": {"marcDefault": " ", "TODO": "ok to lock as undefined?"},
+      "$c": {"property": "acquisitionTerms"},
       "$d": {"property": "comment"},
       "$2": {
         "TODO:requires-i1": "7 (overwritten by 8)",
         "property": "typeNote",
         "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
       },
+      "$6": null,
       "_spec": [
         {
           "name": "indicator as tokenMap",
