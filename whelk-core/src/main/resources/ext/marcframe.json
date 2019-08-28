@@ -5521,7 +5521,12 @@
       "$b": {"property": "itemPortion"},
       "$1": {"property": "marc:rwoURI"}
     },
-    "071": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
+    "071": {
+      "NOTE:LC": "071 - NATIONAL AGRICULTURAL LIBRARY COPY STATEMENT (R) nac",
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
 
     "072": {
       "onRevertPrefer": ["653"],
