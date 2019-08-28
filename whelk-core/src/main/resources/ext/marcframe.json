@@ -5255,7 +5255,7 @@
     },
 
     "044": {
-      "TODO": "map to countrycode",
+      "NOTE:LC": "044 - COUNTRY OF PUBLISHING/PRODUCING ENTITY CODE (NR) nac",
       "link": "marc:hasCountryOfPublishingProducingEntityCode",
       "resourceType": "marc:CountryOfPublishingProducingEntityCode",
       "$a": {"addProperty": "marc:marcCountryCode"},
