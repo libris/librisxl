@@ -5473,7 +5473,28 @@
       "i1": {"property": "marc:existenceInNlmCollection", "marcDefault": " ", "tokenMap": {"0": true, "1": false}},
       "i2": {"property": "marc:assignedByNlm", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "code"},
-      "$b": {"property": "itemPortion", "ignored": true}
+      "$b": {"property": "itemPortion"},
+      "$0": {"property": "marc:recordControlNumber"},
+      "$1": null,
+      "_spec": [
+        {
+          "source": {
+            "060": {"ind1": " ", "ind2": "4", "subfields": [{"a": "W1"},{"b": "JO706M"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "classification": [{
+                  "@type": "ClassificationNlm",
+                  "code": "W1",
+                  "itemPortion": "JO706M"
+                }]
+              }
+            }
+          }
+        }
+      ]
     },
     "061": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
     "066": {
