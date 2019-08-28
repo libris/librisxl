@@ -5496,7 +5496,12 @@
         }
       ]
     },
-    "061": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
+    "061": {
+      "NOTE:LC": "061 - NATIONAL LIBRARY OF MEDICINE COPY STATEMENT (R) nac",
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "066": {
       "NOTE:record-count": 4905,
       "NOTE:LC": "ignore",
