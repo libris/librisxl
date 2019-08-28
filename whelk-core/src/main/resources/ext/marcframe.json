@@ -5374,7 +5374,29 @@
       "i2": {"property": "marc:assignedByLC", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "code", "TODO:repeatable": true},
       "$b": {"property": "itemPortion"},
-      "$6": {"property": "marc:fieldref"}
+      "$0": {"property": "marc:recordControlNumber"},
+      "$1": null,
+      "$3": null,
+      "$6": null,
+      "_spec": [
+        {
+          "source": {
+            "050": {"ind1": " ", "ind2": "4", "subfields": [{"a": "NB933.F44"},{"b": "T6"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "classification": [{
+                  "@type": "ClassificationLcc",
+                  "code": "NB933.F44",
+                  "itemPortion": "T6"
+                }]
+              }
+            }
+          }
+        }
+      ]
     },
 
     "051": {
