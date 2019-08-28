@@ -4964,7 +4964,7 @@
       "$n": {"addProperty": "comment"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
-      "$6": null,
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": [
