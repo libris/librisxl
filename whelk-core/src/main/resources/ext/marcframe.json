@@ -3897,7 +3897,7 @@
       "include": ["idbase"],
       "resourceType": "LCCN",
       "$a": {"property": "value"},
-      "$b": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore"},
+      "$b": null,
       "$z": {"addProperty": "marc:hiddenValue"},
       "$8": {"property": "marc:groupid"},
       "_spec": [
