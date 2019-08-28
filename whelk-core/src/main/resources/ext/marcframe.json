@@ -5325,7 +5325,11 @@
       "$c": {"property": "marc:date1CEDate"},
       "$e": {"property": "marc:date2CEDateFieldMustAlsoContainASubfieldC"},
       "$m": {"property": "marc:beginningOfDateValid"},
-      "$n": {"property": "marc:endOfDateValid"}
+      "$n": {"property": "marc:endOfDateValid"},
+      "$o": null,
+      "$p": null,
+      "$2": null,
+      "$6": null
     },
     "047": {
       "NOTE:local":"ANVÄNDS NORMALT EJ",
