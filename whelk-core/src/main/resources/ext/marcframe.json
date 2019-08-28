@@ -3998,7 +3998,9 @@
       "$b": {"link": "source", "resourceType": "Source", "property": "label"},
       "$d": {"property": "date"},
       "$i": {"addProperty": "comment"},
-      "$z": {"addProperty": "marc:hiddenValue"}
+      "$z": {"addProperty": "marc:hiddenValue"},
+      "$2": null,
+      "$6": null
     },
     "018": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore"},
 
