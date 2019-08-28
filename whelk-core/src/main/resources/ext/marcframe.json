@@ -4602,7 +4602,11 @@
       "$6": null
     },
 
-    "031": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "031": {
+      "NOTE:LC": "031 - MUSICAL INCIPITS INFORMATION (R) nac",
+      "ignored": true, 
+      "NOTE:record-count": 0
+    },
 
     "032": {
       "NOTE:local":"ANVÄNDS NORMALT EJ",
