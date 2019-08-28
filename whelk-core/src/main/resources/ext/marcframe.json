@@ -3919,7 +3919,11 @@
       ]
     },
 
-    "013": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "013": {
+      "NOTE:LC": "013 - PATENT CONTROL INFORMATION (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
 
     "015": {
       "include": ["idbase"],
