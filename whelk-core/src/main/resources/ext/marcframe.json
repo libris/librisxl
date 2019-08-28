@@ -4709,8 +4709,6 @@
         "marcDefault": " ",
         "tokenMap": {"0": "marc:OuterRing", "1": "marc:ExcludingRing"}
       },
-      "$2": {"property": "source"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$a": {
         "about": "_:scale",
         "property": "@type",
@@ -4741,6 +4739,11 @@
       "$x": {"property": "marc:beginningDate"},
       "$y": {"property": "marc:endingDate"},
       "$z": {"property": "marc:nameOfExtraterrestrialBody"},
+      "$0": null,
+      "$1": null,
+      "$2": {"property": "source"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": null,
       "_spec": [
         {
           "source": [
