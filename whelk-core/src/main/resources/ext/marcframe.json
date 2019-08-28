@@ -4962,7 +4962,9 @@
       "$f": {"addProperty": "marc:formOfIssue"},
       "$g": {"addProperty": "marc:additionalFormatCharacteristics"},
       "$n": {"addProperty": "comment"},
-      "$6": {"property": "marc:fieldref"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
+      "$6": null,
       "_spec": [
         {
           "source": [
