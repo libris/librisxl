@@ -3940,6 +3940,7 @@
           "restrictedTo": "http://www.loc.gov/standards/sourcelist/national-bibliography.html"
         }
       },
+      "$6": null,
       "_spec": [
         {
           "source": {"015": {"ind1": " ", "ind2": " ", "subfields": [
