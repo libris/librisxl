@@ -5996,7 +5996,12 @@
       ]
     },
 
-    "085": {"ignored": true, "NOTE:record-count": 21, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
+    "085": {
+      "NOTE:LC": "085 - SYNTHESIZED CLASSIFICATION NUMBER COMPONENTS (R) nac",
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "ignored": true,
+      "NOTE:record-count": 21
+    },
     "086": {
       "TODO": "group with classification",
       "addLink": "marc:hasGovernmentDocumentClassificationNumber",
