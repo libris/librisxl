@@ -4598,7 +4598,8 @@
       "include": ["idbase"],
       "resourceType": "CODEN",
       "$a": {"property": "value"},
-      "$z": {"addProperty": "marc:hiddenValue"}
+      "$z": {"addProperty": "marc:hiddenValue"},
+      "$6": null
     },
 
     "031": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
