@@ -5431,6 +5431,7 @@
       "$2": {"property": "marc:codeSource"}
     },
     "055": {
+      "NOTE:LC": "Is ClassificationLcc in BF2",
       "NOTE:local":"ANVÄNDS NORMALT EJ",
       "aboutEntity": "?work",
       "addLink": "marc:hasClassificationNumbersAssignedInCanada",
@@ -5461,7 +5462,9 @@
       },
       "$a": {"property": "marc:classificationNumber"},
       "$b": {"property": "marc:itemNumber"},
-      "$2": {"property": "marc:sourceOfCallClassNumber"}
+      "$1": null,
+      "$2": {"property": "marc:sourceOfCallClassNumber"},
+      "$6": null
     },
     "060": {
       "aboutEntity": "?work",
