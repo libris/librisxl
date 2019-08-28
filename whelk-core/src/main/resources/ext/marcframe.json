@@ -5410,6 +5410,7 @@
       "$c": {"property": "marc:copyInformation"}
     },
     "052": {
+      "NOTE:LC": "Is GeographicCoverage in BF2",
       "aboutEntity": "?work",
       "addLink": "marc:hasGeographicClassification",
       "resourceType": "marc:GeographicClassification",
