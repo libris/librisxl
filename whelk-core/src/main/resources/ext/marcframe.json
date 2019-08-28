@@ -4949,7 +4949,8 @@
     "036": {
     "include": ["identifier"],
     "resourceType": "StudyNumber",
-    "$b": {"link": "source", "resourceType": "Source", "property": "label"}
+    "$b": {"link": "source", "resourceType": "Source", "property": "label"},
+    "$6": null
     },
     "037": {
       "addLink": "acquisitionSource",
