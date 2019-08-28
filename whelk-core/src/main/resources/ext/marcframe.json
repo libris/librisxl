@@ -4002,7 +4002,11 @@
       "$2": null,
       "$6": null
     },
-    "018": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore"},
+    "018": {
+      "NOTE:LC": "018 - COPYRIGHT ARTICLE-FEE CODE (NR) ignore",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
 
     "020": {
       "include": ["idbasequalified"],
