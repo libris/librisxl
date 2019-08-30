@@ -1,15 +1,16 @@
 package whelk.rest.security
-import groovy.util.logging.Log4j2 as Log
 
+import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
 import whelk.exception.ModelValidationException
 
-
 @Log
 class AccessControl {
     static final XLREG_KEY = 'registrant'
+    static final GLOBALREG_KEY = 'global_registrant'
     static final KAT_KEY = 'cataloger'
+
 
     boolean checkDocumentToPost(Document newDoc, Map userPrivileges, JsonLd jsonld) {
         return checkDocument(newDoc, userPrivileges, jsonld)
@@ -58,7 +59,7 @@ class AccessControl {
                 throw new ModelValidationException('Missing sigel in document.')
             }
 
-            return hasPermissionForSigel(sigel, userPrivileges)
+            return hasGlobalRegistrantPermission(userPrivileges) || hasPermissionForSigel(sigel, userPrivileges)
         } else {
             return hasCatalogingPermission(userPrivileges)
         }
@@ -92,14 +93,24 @@ class AccessControl {
         }
     }
 
+    private boolean hasGlobalRegistrantPermission(Map userPrivileges) {
+        return activeSigelPermissions(userPrivileges)
+                .map({p -> p[GLOBALREG_KEY] == true})
+                .orElse(false)
+    }
+
     boolean isValidActiveSigel(Map userPrivileges) {
+        return activeSigelPermissions(userPrivileges).isPresent()
+    }
+
+    private Optional<Map> activeSigelPermissions(Map userPrivileges) {
         String activeSigel = userPrivileges.get('active_sigel')
+        Map permissions = null
         if (activeSigel) {
-            userPrivileges.permissions.any { permission ->
+            permissions = userPrivileges.permissions.find { permission ->
                 return permission.code == activeSigel
             }
-        } else {
-            return false
         }
+        return Optional.ofNullable(permissions)
     }
 }

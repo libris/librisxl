@@ -1,27 +1,23 @@
 package whelk.export.marc;
+
 import groovy.lang.Tuple2;
+import io.prometheus.client.Summary;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import se.kb.libris.export.ExportProfile;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.MarcRecordWriter;
 import whelk.Document;
 import whelk.Whelk;
-
-import io.prometheus.client.Counter;
-import io.prometheus.client.Gauge;
-import io.prometheus.client.Summary;
+import whelk.converter.marc.JsonLD2MarcXMLConverter;
+import whelk.util.LegacyIntegrationTools;
+import whelk.util.MarcExport;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.sql.*;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.*;
-
-import se.kb.libris.export.ExportProfile;
-import whelk.converter.marc.JsonLD2MarcXMLConverter;
-import whelk.util.LegacyIntegrationTools;
-import whelk.util.MarcExport;
 
 public class ProfileExport
 {

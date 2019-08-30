@@ -2,8 +2,6 @@ package whelk.rest.api
 
 import spock.lang.Specification
 import spock.lang.Unroll
-
-import static whelk.JsonLd.ABOUT_KEY
 import whelk.converter.marc.MarcFrameConverter
 
 import javax.servlet.ServletInputStream
@@ -11,10 +9,11 @@ import javax.servlet.ServletOutputStream
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpServletResponseWrapper
+
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
 import static javax.servlet.http.HttpServletResponse.SC_NOT_ACCEPTABLE
 import static javax.servlet.http.HttpServletResponse.SC_OK
-
+import static whelk.JsonLd.ABOUT_KEY
 
 @Unroll
 class ConverterAPISpec extends Specification {

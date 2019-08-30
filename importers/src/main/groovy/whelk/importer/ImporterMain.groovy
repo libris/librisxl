@@ -10,7 +10,6 @@ import groovy.sql.Sql
 
 import whelk.Conversiontester
 import whelk.Document
-import whelk.ElasticConfigGenerator
 import whelk.MySQLToMarcJSONDumper
 import whelk.PostgresLoadfileWriter
 import whelk.Whelk
@@ -73,23 +72,6 @@ class ImporterMain {
         Conversiontester conversionTester = new Conversiontester(generateDiffFile)
         MySQLLoader.run(conversionTester, sqlQuery, queryParameters, collection, connUrl)
         conversionTester.close()
-    }
-
-    /**
-     * Typical invocation:
-     * java -jar build/libs/vcopyImporter.jar generateEsConfig ../librisxl-tools/elasticsearch/libris_config.json ../../definitions/source/vocab/display.jsonld ../../definitions/build/vocab.jsonld generated_es_config.json
-     */
-    @Command(args='TEMPLATE_FILE_NAME DISPLAY_INFO_FILE_NAME VOCAB_FILE_NAME TO_FILE_NAME')
-    static void generateEsConfig(String templateFileName, String displayInfoFileName, String vocabFileName, String toFileName) {
-        String templateString = new File(templateFileName).text
-        String displayInfoString = new File(displayInfoFileName).text
-        String vocabString = new File(vocabFileName).text
-        String generatedConfig = ElasticConfigGenerator.generateConfigString(
-                templateString,
-                displayInfoString,
-                vocabString)
-
-        new File(toFileName).write(generatedConfig)
     }
 
     @Command(args='TO_FOLDER_NAME')
@@ -358,9 +340,6 @@ class ImporterMain {
         def main
         if (cmd.startsWith("vcopy")) {
             main = new ImporterMain("secret", "mysql")
-        } else if (cmd.startsWith("generateEsConfig")) { // No need for secret.properties to generate es config.
-            generateEsConfig(args[1], args[2], args[3], args[4])
-            return
         } else {
             main = new ImporterMain("secret")
         }

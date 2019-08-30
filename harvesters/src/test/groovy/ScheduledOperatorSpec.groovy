@@ -1,13 +1,12 @@
 package whelk.plugin
 
-import whelk.Whelk
+import spock.lang.Ignore
+import spock.lang.Specification
 import whelk.harvester.HarvestResult
 import whelk.harvester.OaiPmhHarvester
-
-import spock.lang.Specification
 import whelk.servlet.ScheduledJob
 
-
+@Ignore
 class ScheduledOperatorSpec extends Specification {
 
     def "should update state on successful import"() {
@@ -19,7 +18,7 @@ class ScheduledOperatorSpec extends Specification {
         def imports = ["2001-01-01T00:00:00Z", null, "2002-02-02T00:00:00Z"]
         def importer = GroovyMock(OaiPmhHarvester)
         importer.serviceUrl >> "http://example.org/service"
-        importer.doImport(_, _, _, _, _, _) >>> imports.collect {
+        importer.harvest(_, _, _, _, _, _, _) >>> imports.collect {
             new HarvestResult(
                 numberOfDocuments: it? 1 : 0,
                 numberOfDocumentsDeleted: 0,

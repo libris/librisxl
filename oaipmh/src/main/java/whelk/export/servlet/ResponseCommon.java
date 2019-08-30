@@ -16,6 +16,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -154,6 +155,12 @@ public class ResponseCommon
         if (embellish)
         {
             document = OaiPmh.s_whelk.getStorage().loadEmbellished(document.getShortId(), OaiPmh.s_whelk.getJsonld());
+        }
+        else
+        {
+            document.setModified(new Date(resultSet.getTimestamp("modified").getTime()));
+            document.setDeleted(deleted);
+            document.setCreated(new Date(resultSet.getTimestamp("created").getTime()));
         }
 
         if (!onlyIdentifiers)

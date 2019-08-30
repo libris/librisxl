@@ -6,12 +6,9 @@ import spock.lang.Specification
 import whelk.Document
 import whelk.IdType
 import whelk.JsonLd
-import whelk.Location
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ModelValidationException
-import whelk.exception.StorageCreateFailedException
-import whelk.exception.WhelkRuntimeException
 import whelk.rest.security.AccessControl
 import whelk.util.LegacyIntegrationTools
 
@@ -32,32 +29,36 @@ class CrudSpec extends Specification {
     AccessControl accessControl
     HttpServletRequest request
     HttpServletResponse response
-    LegacyIntegrationTools legacyIntegrationTools
+
     static final URI BASE_URI = Document.BASE_URI
     private static final ObjectMapper mapper = new ObjectMapper()
 
 
     void setup() {
         request = GroovyMock(HttpServletRequest.class)
+        request.getRequestURI() >> {
+            request.getPathInfo()
+        }
+
         ServletOutputStream out = GroovyMock(ServletOutputStream.class)
         response = new HttpServletResponseWrapper(GroovyMock(HttpServletResponse.class)) {
             int status = 0
             String contentType
             def headers = [:]
 
-            public ServletOutputStream getOutputStream() {
+            ServletOutputStream getOutputStream() {
                 return out
             }
 
-            public void sendError(int sc, String mess) {
+            void sendError(int sc, String mess) {
                 this.status = sc
             }
 
-            public void setHeader(String h, String v) {
+            void setHeader(String h, String v) {
                 headers.put(h, v)
             }
 
-            public String getHeader(String h) {
+            String getHeader(String h) {
                 return headers.get(h)
             }
         }
@@ -107,9 +108,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -124,9 +122,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -139,9 +134,6 @@ class CrudSpec extends Specification {
     def "POST to /<id> should return 405 Method Not Allowed"() {
         given:
         request.getPathInfo() >> {
-            "/1234"
-        }
-        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -159,8 +151,8 @@ class CrudSpec extends Specification {
     def "GET /<id> should display requested document if it exists"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getRequestURI() >> {
-            id
+        request.getPathInfo() >> {
+            '/' + id
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -180,10 +172,10 @@ class CrudSpec extends Specification {
         def id = BASE_URI.resolve("/1234").toString()
         def altId = BASE_URI.resolve("/alt_1234").toString()
         request.pathInfo >> {
-            altId
+            '/' + id
         }
-        request.getRequestURI() >> {
-            altId
+        request.getPathInfo() >> {
+            "/${id}".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -212,8 +204,8 @@ class CrudSpec extends Specification {
     def "GET /<id> should return 404 Not Found if document can't be found"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getRequestURI() >> {
-            id
+        request.getPathInfo() >> {
+            '/' + id
         }
         storage.load(_, _) >> {
             return null
@@ -233,8 +225,8 @@ class CrudSpec extends Specification {
     def "GET /<alternate_id> if URI not found should return 404 Not Found"() {
         given:
         def altId = BASE_URI.resolve("/alt_1234").toString()
-        request.getRequestURI() >> {
-            altId
+        request.getPathInfo() >> {
+            '/' + altId
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -257,8 +249,8 @@ class CrudSpec extends Specification {
     def "GET /<id> should return 410 Gone if document is deleted"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getRequestURI() >> {
-            id
+        request.getPathInfo() >> {
+            '/' + id
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -278,7 +270,7 @@ class CrudSpec extends Specification {
     def "GET /<id>?version=1 should display requested document if it exists"() {
         given:
         def id = BASE_URI.resolve("/1234?version=1").toString()
-        request.getRequestURI() >> {
+        request.getPathInfo() >> {
             id
         }
         request.getHeader("Accept") >> {
@@ -297,13 +289,17 @@ class CrudSpec extends Specification {
         response.getContentType() == "application/ld+json"
     }
 
+    //TODO: this doesn't really test anything
     def "GET /<id>?version=1 should return 404 Not Found if document can't be found"() {
         given:
-        def id = BASE_URI.resolve("/1234?version=1").toString()
-        request.getRequestURI() >> {
-            id
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            '/' + id
         }
-        storage.load(_, _) >> {
+        request.getQueryString() >> {
+            return 'version=1'
+        }
+        storage.load(_, _, _) >> {
             return null
         }
         storage.loadDocumentByMainId(_, _) >> {
@@ -322,8 +318,8 @@ class CrudSpec extends Specification {
         // We don't allow this for now
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getRequestURI() >> {
-            "#{id}/data".toString()
+        request.getPathInfo() >> {
+            "/${id}/data".toString()
         }
         request.getHeader("Accept") >> {
             "application/ld+json"
@@ -342,8 +338,8 @@ class CrudSpec extends Specification {
     def "GET /<id>/data.jsonld should display document in JSON-LD format"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getRequestURI() >> {
-            "#{id}/data.jsonld".toString()
+        request.getPathInfo() >> {
+            "/${id}/data".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -362,8 +358,8 @@ class CrudSpec extends Specification {
     def "GET /<id>/data.json should display document in JSON format"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getRequestURI() >> {
-            "#{id}/data.json".toString()
+        request.getPathInfo() >> {
+            "/${id}/data.json".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -391,8 +387,8 @@ class CrudSpec extends Specification {
     def "GET /<id>/data.ttl should return 406 Not Acceptable"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getRequestURI() >> {
-            "#{id}/data.ttl".toString()
+        request.getPathInfo() >> {
+            "{id}/data.ttl".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -406,11 +402,11 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_NOT_ACCEPTABLE
     }
 
-    def "GET /<id>/data.rdf should return 406 Not Acceptable"() {
+    def "GET /<id>/data.rdf should return 404 Not Found"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getRequestURI() >> {
-            "#{id}/data.rdf".toString()
+        request.getPathInfo() >> {
+            "/${id}/data.rdf".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -421,7 +417,7 @@ class CrudSpec extends Specification {
         when:
         crud.doGet(request, response)
         then:
-        response.getStatus() == HttpServletResponse.SC_NOT_ACCEPTABLE
+        response.getStatus() == HttpServletResponse.SC_NOT_FOUND
     }
 
     def "GET document with If-None-Match equal to ETag should return 304 Not Modified"() {
@@ -430,7 +426,7 @@ class CrudSpec extends Specification {
         def doc = new Document(["@graph": [["@id": id]]])
         doc.setModified(new Date())
         def etag = doc.getChecksum()
-        request.getRequestURI() >> { id }
+        request.getPathInfo() >> { '/' + id }
         request.getHeader("Accept") >> { "*/*" }
         request.getHeader("If-None-Match") >> { etag }
         storage.load(_, _) >> { return doc }
@@ -454,9 +450,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/"
-        }
-        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -500,9 +493,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
         }
@@ -528,9 +518,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/"
-        }
-        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -570,9 +557,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
         }
@@ -580,7 +564,8 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": false,
                                      "registrant": true],
                                     ["code": "S",
@@ -632,15 +617,10 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
         }
-        accessControl.isValidActiveSigel(_) >> {
-            return true
-        }
+
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
@@ -648,7 +628,8 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": false,
                                      "registrant": true],
                                     ["code": "S",
@@ -688,14 +669,8 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
-        }
-        accessControl.isValidActiveSigel(_) >> {
-            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -704,7 +679,8 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": false,
                                      "registrant": true],
                                     ["code": "S",
@@ -753,14 +729,8 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
-        }
-        accessControl.isValidActiveSigel(_) >> {
-            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -769,7 +739,8 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": true,
                                      "registrant": true],
                                     ["code": "S",
@@ -819,9 +790,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
         }
@@ -829,7 +797,8 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": true,
                                      "registrant": true],
                                     ["code": "S",
@@ -850,9 +819,6 @@ class CrudSpec extends Specification {
         }
         storage.createDocument(_, _) >> {
             return null
-        }
-        accessControl.isValidActiveSigel(_) >> {
-            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -882,9 +848,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/"
-        }
-        request.getRequestURI() >> {
             "/"
         }
         request.getMethod() >> {
@@ -941,9 +904,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
         }
@@ -951,7 +911,8 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": false,
                                      "registrant": true],
                                     ["code": "S",
@@ -1003,9 +964,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
         }
@@ -1013,7 +971,8 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": false,
                                      "registrant": true],
                                     ["code": "S",
@@ -1037,9 +996,6 @@ class CrudSpec extends Specification {
         }
         accessControl.checkDocumentToPost(_, _) >> {
             throw new ModelValidationException("Could not validate model.")
-        }
-        accessControl.isValidActiveSigel(_) >> {
-            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -1071,14 +1027,8 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
-        }
-        accessControl.isValidActiveSigel(_) >> {
-            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -1087,7 +1037,8 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": true,
                                      "registrant": false],
                                     ["code": "S",
@@ -1136,9 +1087,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
         }
@@ -1146,7 +1094,8 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": false,
                                      "registrant": true],
                                     ["code": "S",
@@ -1198,14 +1147,8 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
-        }
-        accessControl.isValidActiveSigel(_) >> {
-            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -1214,7 +1157,8 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": false,
                                      "registrant": false],
                                     ["code": "S",
@@ -1242,6 +1186,130 @@ class CrudSpec extends Specification {
         assert response.getStatus() == HttpServletResponse.SC_CREATED
     }
 
+    def "POST to / should create holding if user has global registrant permission for active sigel"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def postData = ["@graph": [["@id": "/some_id",
+                                    "@type": "Record",
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/work_id",
+                                    "@type": "Item",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(postData)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
+            return "hold"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["active_sigel": "SEK",
+                    "permissions": [["code": "T",
+                                     "cataloger": false,
+                                     "registrant": false],
+                                    ["code": "SEK",
+                                     "cataloger": false,
+                                     "registrant": false,
+                                     "global_registrant": true],
+                                    ]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.load(_, _) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_, _) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
+            return null
+        }
+        storage.createDocument(_, _) >> {
+            return null
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_CREATED
+    }
+
+    def "POST to / should return 403 Forbidden create holding if user is global registrant but not active"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def postData = ["@graph": [["@id": "/some_id",
+                                    "@type": "Record",
+                                    "contains": "some data",
+                                    "creationDate": "2002-01-08T00:00:00.0+01:00"],
+                                   ["@id": "/work_id",
+                                    "@type": "Item",
+                                    "contains": "some new data",
+                                    "heldBy":
+                                            ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(postData)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
+            return "hold"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["active_sigel": "T",
+                    "permissions": [["code": "T",
+                                     "cataloger": false,
+                                     "registrant": false],
+                                    ["code": "SEK",
+                                     "cataloger": false,
+                                     "registrant": false,
+                                     "global_registrant": true],
+                    ]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.load(_, _) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(_, _) >> {
+            return null
+        }
+        storage.getMainId(_) >> {
+            return null
+        }
+        storage.createDocument(_, _) >> {
+            return null
+        }
+        when:
+        crud.doPost(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
     def "POST to / should return 403 Forbidden if missing kat permission for code"() {
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
@@ -1262,9 +1330,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "POST"
         }
@@ -1272,7 +1337,8 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": true,
                                      "registrant": false],
                                     ["code": "S",
@@ -1317,9 +1383,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/some_id"
         }
-        request.getRequestURI() >> {
-            "/"
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1346,9 +1409,6 @@ class CrudSpec extends Specification {
         }
         request.getPathInfo() >> {
             "/some_id"
-        }
-        request.getRequestURI() >> {
-            "/"
         }
         request.getMethod() >> {
             "PUT"
@@ -1387,9 +1447,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/1234"
-        }
-        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -1453,9 +1510,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             altId
         }
-        request.getRequestURI() >> {
-            altId
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1513,9 +1567,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/bad_id"
         }
-        request.getRequestURI() >> {
-            "/bad_id"
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1558,9 +1609,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            id
-        }
-        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -1609,9 +1657,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            "/some_other_id"
-        }
-        request.getRequestURI() >> {
             "/some_other_id"
         }
         request.getMethod() >> {
@@ -1682,9 +1727,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
-        request.getRequestURI() >> {
-            id
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1692,7 +1734,8 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": false,
                                      "registrant": false],
                                     ["code": "S",
@@ -1755,9 +1798,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
-        request.getRequestURI() >> {
-            id
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1765,7 +1805,8 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": false,
                                      "registrant": true],
                                     ["code": "S",
@@ -1826,9 +1867,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            id
-        }
-        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -1901,9 +1939,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
-        request.getRequestURI() >> {
-            id
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1974,9 +2009,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
-        request.getRequestURI() >> {
-            id
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -1984,7 +2016,8 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": true,
                                      "registrant": true],
                                     ["code": "S",
@@ -2045,9 +2078,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
-        request.getRequestURI() >> {
-            id
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -2098,7 +2128,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["code": "S"]]]]
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2114,9 +2144,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            id
-        }
-        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -2169,7 +2196,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["code": "S"]]]]
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2177,7 +2204,9 @@ class CrudSpec extends Specification {
                                       "contains": "some updated data"],
                                      ["@id": "/itemId",
                                       "@type": "Item",
-                                      "contains": "some new other data"]]]
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2185,9 +2214,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            id
-        }
-        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -2252,14 +2278,8 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
-        request.getRequestURI() >> {
-            id
-        }
         request.getMethod() >> {
             "PUT"
-        }
-        accessControl.isValidActiveSigel(_) >> {
-            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -2268,7 +2288,8 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": false,
                                      "registrant": true],
                                     ["code": "S",
@@ -2307,9 +2328,7 @@ class CrudSpec extends Specification {
                                       "contains": "some data"],
                                      ["@id": "/workId",
                                       "@type": "Work",
-                                      "contains": "some other data",
-                                      "heldBy":
-                                              ["code": "S"]]]]
+                                      "contains": "some other data"]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2317,9 +2336,7 @@ class CrudSpec extends Specification {
                                       "contains": "some updated data"],
                                      ["@id": "/workId",
                                       "@type": "Work",
-                                      "contains": "some new other data",
-                                      "heldBy":
-                                              ["code": "S"]]]]
+                                      "contains": "some new other data"]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2327,9 +2344,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            id
-        }
-        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -2342,7 +2356,8 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": false,
                                      "registrant": true],
                                     ["code": "S",
@@ -2359,9 +2374,6 @@ class CrudSpec extends Specification {
         }
         storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
-        }
-        accessControl.isValidActiveSigel(_) >> {
-            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -2389,7 +2401,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["code": "S"]]]]
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2399,7 +2411,7 @@ class CrudSpec extends Specification {
                                       "@type": "Item",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["code": "S"]]]]
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2407,9 +2419,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            id
-        }
-        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -2437,7 +2446,7 @@ class CrudSpec extends Specification {
         storage.createDocument(_, _) >> {
             throw new Exception("This shouldn't happen")
         }
-        accessControl.checkDocumentToPut(_, _, _) >> {
+        accessControl.checkDocumentToPut(_, _, _, _) >> {
             throw new ModelValidationException("Could not validate model.")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -2465,7 +2474,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["code": "S"]]]]
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2475,7 +2484,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["code": "S"]]]]
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2483,9 +2492,6 @@ class CrudSpec extends Specification {
             is
         }
         request.getPathInfo() >> {
-            id
-        }
-        request.getRequestURI() >> {
             id
         }
         request.getMethod() >> {
@@ -2496,7 +2502,7 @@ class CrudSpec extends Specification {
         }
         request.getAttribute(_) >> {
             return ["authorization": [["code": "S",
-                                       "xlreg": false]]]
+                                       "cataloger": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -2510,7 +2516,7 @@ class CrudSpec extends Specification {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
+            return "hold"
         }
         when:
         crud.doPut(request, response)
@@ -2533,7 +2539,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some other data",
                                       "heldBy":
-                                              ["code": "S"]]]]
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         def newContent = ["@graph": [["@id": fullId,
                                       "@type": "Record",
                                       "created": createdDate,
@@ -2543,7 +2549,7 @@ class CrudSpec extends Specification {
                                       "@type": "Work",
                                       "contains": "some new other data",
                                       "heldBy":
-                                              ["code": "S"]]]]
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(newContent)
         }
@@ -2553,23 +2559,18 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
-        request.getRequestURI() >> {
-            id
-        }
         request.getMethod() >> {
             "PUT"
         }
-        accessControl.isValidActiveSigel(_) >> {
-            return true
-        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
+            return "hold"
         }
         request.getContentType() >> {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "S",
+            return ["active_sigel": "S",
+                    "permissions": [["code": "S",
                                      "cataloger": true,
                                      "registrant": false]]]
         }
@@ -2625,9 +2626,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             id
         }
-        request.getRequestURI() >> {
-            id
-        }
         request.getMethod() >> {
             "PUT"
         }
@@ -2660,18 +2658,159 @@ class CrudSpec extends Specification {
     }
 
 
+    def "PUT to /<id> should update holding if user has global registrant permission active"() {
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
+            return "hold"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["active_sigel": "SEK",
+                    "permissions": [["code": "T",
+                                     "cataloger": false,
+                                     "registrant": false],
+                                    ["code": "SEK",
+                                     "cataloger": false,
+                                     "registrant": false,
+                                     "global_registrant": true],
+                    ]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.load(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return doc
+        }
+        storage.createDocument(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_NO_CONTENT
+    }
+
+    def "PUT to /<id> should return 403 Forbidden if user has global registrant permission but not active"() {
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some new other data",
+                                      "heldBy":
+                                              ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
+            return "hold"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["active_sigel": "T",
+                    "permissions": [["code": "T",
+                                     "cataloger": false,
+                                     "registrant": false],
+                                    ["code": "SEK",
+                                     "cataloger": false,
+                                     "registrant": false,
+                                     "global_registrant": true],
+                    ]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.load(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return doc
+        }
+        storage.createDocument(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
     // Tests for delete
 
-    def "DETETE to /<id> should delete document if it exists when user set to SYSTEM"() {
+    def "DELETE to /<id> should delete document if it exists when user set to SYSTEM"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         def data = ["@graph": [["@id": id,
                                 "@type": "Record",
                                 "contains": "some new data"]]]
         request.getPathInfo() >> {
-            "/1234"
-        }
-        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -2702,9 +2841,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/dataset/some_document"
         }
-        request.getRequestURI() >> {
-            "/dataset/some_document"
-        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -2729,9 +2865,6 @@ class CrudSpec extends Specification {
                                 "@type": "Record",
                                 "contains": "some new data"]]]
         request.getPathInfo() >> {
-            "/1234"
-        }
-        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
@@ -2772,11 +2905,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": false,
                                      "registrant": false],
                                     ["code": "S",
@@ -2817,11 +2948,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": false,
                                      "registrant": true],
                                     ["code": "S",
@@ -2861,9 +2990,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getAttribute(_) >> {
             return null
         }
@@ -2895,11 +3021,9 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": true,
                                      "registrant": true],
                                     ["code": "S",
@@ -2913,9 +3037,6 @@ class CrudSpec extends Specification {
             new Document(data)
         }
         storage.remove(_, _) >> {
-            return true
-        }
-        accessControl.isValidActiveSigel(_) >> {
             return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -2942,14 +3063,12 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getMethod() >> {
             "DELETE"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": true,
                                      "registrant": true],
                                     ["code": "S",
@@ -2964,9 +3083,6 @@ class CrudSpec extends Specification {
         }
         storage.getDependers(_) >> {
             []
-        }
-        accessControl.isValidActiveSigel(_) >> {
-            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -2992,14 +3108,12 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getMethod() >> {
             "DELETE"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": true,
                                      "registrant": true],
                                     ["code": "S",
@@ -3014,9 +3128,6 @@ class CrudSpec extends Specification {
         }
         storage.getDependers(_) >> {
             []
-        }
-        accessControl.isValidActiveSigel(_) >> {
-            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -3042,14 +3153,12 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getMethod() >> {
             "DELETE"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": true,
                                      "registrant": true],
                                     ["code": "S",
@@ -3064,9 +3173,6 @@ class CrudSpec extends Specification {
         }
         storage.getDependers(_) >> {
             []
-        }
-        accessControl.isValidActiveSigel(_) >> {
-            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
@@ -3092,9 +3198,6 @@ class CrudSpec extends Specification {
                                 "heldBy":
                                         ["code": "S"]]]]
         request.getPathInfo() >> {
-            redirectId
-        }
-        request.getRequestURI() >> {
             redirectId
         }
         request.getMethod() >> {
@@ -3144,9 +3247,6 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getMethod() >> {
             "DELETE"
         }
@@ -3188,14 +3288,12 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getMethod() >> {
             "DELETE"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": false,
                                      "registrant": false],
                                     ["code": "S",
@@ -3206,9 +3304,6 @@ class CrudSpec extends Specification {
             new Document(data)
         }
         storage.remove(_, _) >> {
-            return true
-        }
-        accessControl.isValidActiveSigel(_) >> {
             return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -3238,14 +3333,12 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getMethod() >> {
             "DELETE"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": false,
                                      "registrant": false],
                                     ["code": "S",
@@ -3278,18 +3371,16 @@ class CrudSpec extends Specification {
                                 "@type": "Item",
                                 "contains": "some new data",
                                 "heldBy":
-                                        ["code": "Ting", "@id":"https://libris.kb.se/library/S"]]]]
+                                        ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
         request.getPathInfo() >> {
-            "/1234"
-        }
-        request.getRequestURI() >> {
             "/1234"
         }
         request.getMethod() >> {
             "DELETE"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "S",
+            return ["active_sigel": "S",
+                    "permissions": [["code": "S",
                                      "cataloger": true,
                                      "registrant": false]]]
         }
@@ -3301,9 +3392,6 @@ class CrudSpec extends Specification {
         }
         storage.getDependers(_) >> {
             []
-        }
-        accessControl.isValidActiveSigel(_) >> {
-            return true
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -3329,14 +3417,12 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             "/1234"
         }
-        request.getRequestURI() >> {
-            "/1234"
-        }
         request.getMethod() >> {
             "DELETE"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
                                      "cataloger": false,
                                      "registrant": false],
                                     ["code": "S",
@@ -3411,13 +3497,13 @@ class CrudSpec extends Specification {
         when:
         Crud.getFormattingType('/foo/data.invalid', 'application/ld+json')
         then:
-        thrown WhelkRuntimeException
+        thrown Crud.NotFoundException
     }
 
     def "should throw exception when getting formatting type for invalid file ending, II"() {
         when:
         Crud.getFormattingType('/foo/data-view.invalid', 'application/ld+json')
         then:
-        thrown WhelkRuntimeException
+        thrown Crud.NotFoundException
     }
 }

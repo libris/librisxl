@@ -1,0 +1,710 @@
+{
+  "@graph": [
+    {
+      "@id": "https://id.kb.se/vocab/Electronic",
+      "@type": "Class",
+      "exactMatch": [
+        {
+          "@id": "http://rdvocab.info/termList/RDAMediaType/1003"
+        }
+      ],
+      "subClassOf": [
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/soundContent"
+          },
+          "someValuesFrom": {
+            "@id": "https://id.kb.se/marc/ComputerSoundType"
+          }
+        },
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/colorContent"
+          },
+          "someValuesFrom": {
+            "@id": "https://id.kb.se/marc/ComputerColorType"
+          }
+        },
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/carrierType"
+          },
+          "someValuesFrom": {
+            "@id": "https://id.kb.se/marc/ComputerMaterialType"
+          }
+        },
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/dimensions"
+          },
+          "someValuesFrom": {
+            "@id": "https://id.kb.se/marc/ComputerDimensionsType"
+          }
+        },
+        {
+          "@id": "https://id.kb.se/vocab/Instance"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "Electronic",
+        "sv": "Elektronisk"
+      },
+      "inCollection": {
+        "@id": "https://id.kb.se/marc/typeFromBib007"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://id.loc.gov/ontologies/bibframe/Electronic"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/Text",
+      "@type": "Class",
+      "exactMatch": [
+        {
+          "@id": "http://rdvocab.info/termList/RDAContentType/1020"
+        }
+      ],
+      "subClassOf": [
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/supplementaryContent"
+          },
+          "someValuesFrom": {
+            "@id": "https://id.kb.se/marc/IndexType"
+          }
+        },
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/contentType"
+          },
+          "someValuesFrom": {
+            "@id": "https://id.kb.se/marc/BooksContentsType"
+          }
+        },
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/genreForm"
+          },
+          "someValuesFrom": [
+            {
+              "@id": "https://id.kb.se/marc/ConferencePublicationType"
+            },
+            {
+              "@id": "https://id.kb.se/marc/BooksFestschriftType"
+            },
+            {
+              "@id": "https://id.kb.se/marc/BooksBiographyType"
+            },
+            {
+              "@id": "https://id.kb.se/marc/GovernmentPublicationType"
+            },
+            {
+              "@id": "https://id.kb.se/marc/BooksLiteraryFormType"
+            }
+          ]
+        },
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/illustrativeContent"
+          },
+          "someValuesFrom": {
+            "@id": "https://id.kb.se/marc/BooksIllustrationsType"
+          }
+        },
+        {
+          "@id": "https://id.kb.se/vocab/Work"
+        },
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/carrierType"
+          },
+          "someValuesFrom": [
+            {
+              "@id": "https://id.kb.se/marc/TextMaterialType"
+            },
+            {
+              "@id": "https://id.kb.se/marc/BooksItemType"
+            }
+          ]
+        },
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/intendedAudience"
+          },
+          "someValuesFrom": {
+            "@id": "https://id.kb.se/marc/AudienceType"
+          }
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "Text",
+        "sv": "Text"
+      },
+      "inCollection": {
+        "@id": "https://id.kb.se/marc/typeOfRecord"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://purl.org/dc/dcmitype/Text"
+        },
+        {
+          "@id": "http://id.loc.gov/ontologies/bibframe/Text"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/Multimedia",
+      "@type": "Class",
+      "subClassOf": [
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/genreForm"
+          },
+          "someValuesFrom": [
+            {
+              "@id": "https://id.kb.se/marc/ComputerTypeOfFileType"
+            },
+            {
+              "@id": "https://id.kb.se/marc/GovernmentPublicationType"
+            }
+          ]
+        },
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/intendedAudience"
+          },
+          "someValuesFrom": {
+            "@id": "https://id.kb.se/marc/AudienceType"
+          }
+        },
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/carrierType"
+          },
+          "someValuesFrom": {
+            "@id": "https://id.kb.se/marc/ComputerItemType"
+          }
+        },
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/contentType"
+          },
+          "someValuesFrom": {
+            "@id": "https://id.kb.se/marc/ComputerTypeOfFileType"
+          }
+        },
+        {
+          "@id": "https://id.kb.se/vocab/Work"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "Software or multimedia",
+        "sv": "Multimedia"
+      },
+      "inCollection": {
+        "@id": "https://id.kb.se/marc/typeOfRecord"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://id.loc.gov/ontologies/bibframe/Multimedia"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/Extent",
+      "@type": "Class",
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/StructuredValue"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "Extent",
+        "sv": "Omfång"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://id.loc.gov/ontologies/bibframe/Extent"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/StructuredValue",
+      "@type": "Class",
+      "closeMatch": [
+        {
+          "@id": "http://www.w3.org/2000/01/rdf-schema#Datatype"
+        }
+      ],
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/Resource"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "sv": "Strukturerat värde"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://schema.org/StructuredValue"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/PrimaryPublication",
+      "@type": "Class",
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/Publication"
+        },
+        {
+          "@id": "https://id.kb.se/vocab/PrimaryProvisionActivity"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "sv": "Primär utgivning"
+      }
+    },
+    {
+      "@id": "https://id.kb.se/vocab/ISBN",
+      "@type": [
+        "Datatype",
+        "Class"
+      ],
+      "label": "ISBN",
+      "comment": "International Standard Book Number.",
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/Identifier"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "ISBN"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://id.loc.gov/ontologies/bibframe/Isbn"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/Dimensions",
+      "@type": "Class",
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/StructuredValue"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "Dimensions",
+        "sv": "Mått"
+      }
+    },
+    {
+      "@id": "https://id.kb.se/vocab/ConceptScheme",
+      "@type": "Class",
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/Source"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "Concept scheme",
+        "sv": "Konceptsystem"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://www.w3.org/2004/02/skos/core#ConceptScheme"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/Source",
+      "@type": "Class",
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/Resource"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "Source",
+        "sv": "Källa"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://id.loc.gov/ontologies/bibframe/Source"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/ComplexSubject",
+      "@type": "Class",
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/Subject"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "Complex Subject",
+        "sv": "Sammansatt term"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://www.loc.gov/mads/rdf/v1#ComplexSubject"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/Subject",
+      "@type": "Class",
+      "abstract": true,
+      "category": {
+        "@id": "https://id.kb.se/marc/auth"
+      },
+      "subClassOf": [
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/inScheme"
+          },
+          "someValuesFrom": {
+            "@id": "https://id.kb.se/vocab/TopicScheme"
+          }
+        },
+        {
+          "@id": "https://id.kb.se/vocab/Concept"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "Subject",
+        "sv": "Ämne"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://www.loc.gov/mads/rdf/v1#MADSType"
+        }
+      ],
+      "foaf:isPrimaryTopicOf": {
+        "@id": "https://en.wikipedia.org/wiki/Index_term"
+      }
+    },
+    {
+      "@id": "https://id.kb.se/vocab/Topic",
+      "@type": "Class",
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/Subject"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "Topic",
+        "sv": "Allmänt ämnesord"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://www.loc.gov/mads/rdf/v1#Topic"
+        },
+        {
+          "@id": "http://id.loc.gov/ontologies/bibframe/Topic"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/GenreForm",
+      "@type": "Class",
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/Concept"
+        },
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/inScheme"
+          },
+          "someValuesFrom": {
+            "@id": "https://id.kb.se/vocab/GenreFormScheme"
+          }
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": [
+          "Genre/form",
+          "Genre/Form"
+        ],
+        "sv": "Genre/form"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://www.loc.gov/mads/rdf/v1#GenreForm"
+        },
+        {
+          "@id": "http://id.loc.gov/ontologies/bibframe/GenreForm"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/ClassificationLcc",
+      "@type": "Class",
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/Classification"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "LCC Classification",
+        "sv": "LC-klassifikation"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://id.loc.gov/ontologies/bibframe/ClassificationLcc"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/Classification",
+      "@type": "Class",
+      "subClassOf": [
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/inScheme"
+          },
+          "someValuesFrom": {
+            "@id": "https://id.kb.se/vocab/ClassificationScheme"
+          }
+        },
+        {
+          "@id": "https://id.kb.se/vocab/Concept"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": [
+          "Classification",
+          "Classification entity"
+        ],
+        "sv": "Klassifikation"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://id.loc.gov/ontologies/bibframe/Classification"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/ClassificationDdc",
+      "@type": "Class",
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/Classification"
+        },
+        {
+          "@type": "Restriction",
+          "hasValue": {
+            "@id": "http://dewey.info/scheme/ddc/"
+          },
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/inScheme"
+          }
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "DDC Classification",
+        "sv": "DDK-klassifikation"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://id.loc.gov/ontologies/bibframe/ClassificationDdc"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/Publication",
+      "@type": "Class",
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/ProvisionActivity"
+        },
+        {
+          "@type": "Restriction",
+          "onProperty": {
+            "@id": "https://id.kb.se/vocab/hasPart"
+          },
+          "someValuesFrom": {
+            "@id": "https://id.kb.se/vocab/Publication"
+          }
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "Publisher",
+        "sv": "Utgivning"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://id.loc.gov/ontologies/bibframe/Publication"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/ProvisionActivity",
+      "@type": "Class",
+      "abstract": true,
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/Event"
+        },
+        {
+          "@id": "https://id.kb.se/vocab/QualifiedRole"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "Provider entity",
+        "sv": "Produktion, utgivning, distribution och/eller tillverkning"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://id.loc.gov/ontologies/bibframe/ProvisionActivity"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/Event",
+      "@type": "Class",
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/Resource"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": [
+          "Event",
+          "Event entity"
+        ],
+        "sv": "Händelse"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://www.w3.org/ns/prov#Activity"
+        },
+        {
+          "@id": "http://schema.org/Event"
+        },
+        {
+          "@id": "http://id.loc.gov/ontologies/bibframe/Event"
+        }
+      ]
+    },
+    {
+      "@id": "https://id.kb.se/vocab/SystemNumber",
+      "@type": "Class",
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/Local"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "System Number",
+        "sv": "Systemnummer"
+      }
+    },
+    {
+      "@id": "https://id.kb.se/vocab/Local",
+      "@type": "Class",
+      "subClassOf": [
+        {
+          "@id": "https://id.kb.se/vocab/Identifier"
+        }
+      ],
+      "isDefinedBy": {
+        "@id": "https://id.kb.se/vocab/"
+      },
+      "labelByLang": {
+        "en": "Local identifier",
+        "sv": "Lokal identifikator"
+      },
+      "equivalentClass": [
+        {
+          "@id": "http://id.loc.gov/ontologies/bibframe/Local"
+        }
+      ]
+    }
+  ]
+}

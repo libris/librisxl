@@ -1,9 +1,8 @@
 package whelk.rest.api
 
 import spock.lang.Specification
-
-import whelk.rest.api.ESQueryLensBoost
 import whelk.JsonLd
+import whelk.rest.api.ESQueryLensBoost
 
 class ESQueryLensBoostSpec extends Specification {
 

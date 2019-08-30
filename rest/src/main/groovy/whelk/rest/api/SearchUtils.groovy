@@ -1,17 +1,13 @@
 package whelk.rest.api
 
-import groovy.util.logging.Log4j2 as Log
 
+import groovy.transform.PackageScope
+import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
-import whelk.Location
 import whelk.Whelk
-import whelk.rest.api.ESQuery
-import whelk.component.ElasticSearch
-import whelk.component.PostgreSQLComponent
-import whelk.component.StorageType
-import whelk.exception.WhelkRuntimeException
 import whelk.exception.InvalidQueryException
+import whelk.exception.WhelkRuntimeException
 
 @Log
 class SearchUtils {
@@ -21,9 +17,8 @@ class SearchUtils {
     final static int DEFAULT_OFFSET = 0
 
     enum SearchType {
-        FIND_BY_RELATION,
         FIND_BY_VALUE,
-        FIND_BY_QUOTATION,
+        FIND_REVERSE,
         ELASTIC,
         POSTGRES
     }
@@ -48,7 +43,7 @@ class SearchUtils {
 
     Map doSearch(Map queryParameters, String dataset, JsonLd jsonld) {
         String relation = getReservedQueryParameter('p', queryParameters)
-        String reference = getReservedQueryParameter('o', queryParameters)
+        String object = getReservedQueryParameter('o', queryParameters)
         String value = getReservedQueryParameter('value', queryParameters)
         String query = getReservedQueryParameter('q', queryParameters)
         String sortBy = getReservedQueryParameter('_sort', queryParameters)
@@ -58,24 +53,28 @@ class SearchUtils {
         int limit = limitAndOffset.first
         int offset = limitAndOffset.second
 
-        Map pageParams = ['p': relation,
-                          'o': reference,
-                          'value': value,
-                          'q': query,
-                          '_sort': sortBy,
-                          '_limit': limit]
+        if (object && (relation || value || query || sortBy)) {
+            throw new InvalidQueryException("Cannot use 'o' together with other search parameters")
+        }
 
-        Map results = null
-
-        if (relation && reference) {
-            results = findByRelation(relation, reference, limit, offset)
-        } else if (relation && value) {
+        Map results
+        if (relation && value) {
             results = findByValue(relation, value, limit, offset)
-        } else if (reference) {
-            results = findByQuotation(reference, limit, offset)
+        } else if (object) {
+            results = findReverse(
+                    object,
+                    getReservedQueryParameter('_lens', queryParameters),
+                    limit,
+                    offset)
         } else { //assumes elastic query
             // If general q-parameter chosen, use elastic for query
             if (whelk.elastic) {
+                Map pageParams = ['p': relation,
+                                  'value': value,
+                                  'q': query,
+                                  '_sort': sortBy,
+                                  '_limit': limit]
+
                 results = queryElasticSearch(queryParameters,
                                              pageParams,
                                              dataset, siteBaseUri,
@@ -86,35 +85,6 @@ class SearchUtils {
         }
 
         return results
-    }
-
-    private Map findByRelation(String relation,
-                               String reference,
-                               int limit, int offset) {
-        log.debug("Calling findByRelation with p: ${relation} and " +
-                  "o: ${reference}")
-
-        List<Document> docs = whelk.storage.findByRelation(relation,
-                                                           reference,
-                                                           limit, offset)
-        List mappings = []
-        mappings << ['variable': 'p',
-                     'predicate': ld.toChip(getVocabEntry('predicate')),
-                     'value': relation]
-        mappings << ['variable': 'o',
-                     'predicate': ld.toChip(getVocabEntry('object')),
-                     'value': reference]
-
-        Map pageParams = ['p': relation, 'o': reference,
-                          '_limit': limit]
-
-        int total = whelk.storage.countByRelation(relation, reference)
-
-        List items = docs.collect { ld.toCard(it.data) }
-
-        return assembleSearchResults(SearchType.FIND_BY_RELATION,
-                                     items, mappings, pageParams,
-                                     limit, offset, total)
     }
 
     private Map findByValue(String relation, String value,
@@ -144,26 +114,50 @@ class SearchUtils {
                                      limit, offset, total)
     }
 
-    private Map findByQuotation(String identifier, int limit, int offset) {
-        log.debug("Calling findByQuotation with o: ${identifier}")
+    private Map findReverse(String id, String lens, int limit, int offset) {
+        lens = lens ? lens : 'cards'
+        log.debug("findReverse. o: ${id}, _lens: ${lens}")
 
-        List<Document> docs = whelk.storage.findByQuotation(identifier,
-                                                            limit, offset)
+        def ids = whelk.findIdsLinkingTo(id)
+        int total = ids.size()
 
-        List mappings = []
-        mappings << ['variable': 'o',
-                     'predicate': ld.toChip(getVocabEntry('object')),
-                     'value': identifier]
+        ids = slice(ids, offset, offset+limit)
 
-        Map pageParams = ['o': identifier, '_limit': limit]
+        List items = whelk.bulkLoad(ids).values()
+                .collect(SearchUtils.&formatReverseResult)
+                .findAll{ !it.isEmpty() }
+                .collect{applyLens(it, id, lens)}
 
-        int total = whelk.storage.countByQuotation(identifier)
+        Map pageParams = ['o': id, '_lens': lens, '_limit': limit]
 
-        List items = docs.collect { ld.toCard(it.data) }
+        return assembleSearchResults(SearchType.FIND_REVERSE,
+                items, [], pageParams,
+                limit, offset, total)
+    }
 
-        return assembleSearchResults(SearchType.FIND_BY_QUOTATION,
-                                     items, mappings, pageParams,
-                                     limit, offset, total)
+    private static Map formatReverseResult(Document document) {
+        document.setThingMeta(document.getCompleteId())
+        List<String> thingIds = document.getThingIdentifiers()
+        if (thingIds.isEmpty()) {
+            log.warn("Missing mainEntity? In: " + document.getCompleteId())
+            return [:]
+        }
+        return JsonLd.frame(thingIds.get(0), document.data)
+    }
+
+    private Map applyLens(Map framedThing, String preserveId, String lens) {
+        def preservedPaths = JsonLd.findPaths(framedThing, '@id', preserveId)
+        return lens == 'chips'
+                ? ld.toChip(framedThing, preservedPaths)
+                : ld.toCard(framedThing, preservedPaths)
+    }
+
+    @PackageScope
+    static <T> List<T> slice(List<T> list, int fromIx, int toIx) {
+        if (fromIx > list.size() || fromIx > toIx) {
+            return []
+        }
+        return list[(Math.max(0,fromIx)..<Math.min(list.size(), toIx))]
     }
 
     private Map queryElasticSearch(Map queryParameters,
@@ -171,10 +165,9 @@ class SearchUtils {
                                    String dataset, String siteBaseUri,
                                    int limit, int offset, JsonLd jsonld) {
         String query = pageParams['q']
-        String sortBy = pageParams['_sort']
         log.debug("Querying ElasticSearch")
 
-        // SearcUtils may overwrite the `_limit` query param, and since it's
+        // SearchUtils may overwrite the `_limit` query param, and since it's
         // used for the other searches we overwrite limit here, so we keep it
         // consistent across search paths
         //
@@ -183,7 +176,6 @@ class SearchUtils {
 
         Map esResult = esQuery.doQuery(queryParameters, dataset)
 
-        Map stats = null
         List<Map> mappings = []
         mappings << ['variable': 'q',
                      'predicate': ld.toChip(getVocabEntry('textQuery')),
@@ -203,8 +195,7 @@ class SearchUtils {
             items = esResult['items'].collect { ld.toCard(it) }
         }
 
-        //items = embellishItems(items)
-        stats = buildStats(esResult['aggregations'],
+        Map stats = buildStats(esResult['aggregations'],
                            makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)))
         if (!stats) {
             log.debug("No stats found for query: ${queryParameters}, result: ${esResult}")
@@ -422,7 +413,7 @@ class SearchUtils {
                 fullId = vocabUri.resolve(id).toString()
             }
         }
-        catch (java.lang.IllegalArgumentException e) {
+        catch (IllegalArgumentException e) {
             // Couldn't resolve, which means id isn't a valid IRI.
             // No need to check the db.
             return null
@@ -458,16 +449,20 @@ class SearchUtils {
 
             if (v instanceof List) {
                 v.each { value ->
-                    params << "${k}=${value}"
+                    params << makeParam(k, value)
                 }
             } else {
-                params << "${k}=${v}"
+                params << makeParam(k, v)
             }
         }
         if (offset > 0) {
-            params << "_offset=${offset}"
+            params << makeParam("_offset", offset)
         }
         return "/find?${params.join('&')}"
+    }
+
+    private String makeParam(key, value) {
+        return "${urlEncode(key)}=${urlEncode(value)}"
     }
 
     private Tuple2 getInitialParamsAndKeys(SearchType st,
@@ -475,14 +470,11 @@ class SearchUtils {
         Map queryParameters = queryParameters0.clone()
         Tuple2 result
         switch (st) {
-            case SearchType.FIND_BY_RELATION:
-                result = getRelationParams(queryParameters)
-                break
             case SearchType.FIND_BY_VALUE:
                 result = getValueParams(queryParameters)
                 break
-            case SearchType.FIND_BY_QUOTATION:
-                result = getQuotationParams(queryParameters)
+            case SearchType.FIND_REVERSE:
+                result = getReverseParams(queryParameters)
                 break
             case SearchType.ELASTIC:
                 result = getElasticParams(queryParameters)
@@ -491,27 +483,19 @@ class SearchUtils {
         return result
     }
 
-    private Tuple2 getRelationParams(Map queryParameters) {
-        String relation = queryParameters.remove('p')
-        String reference = queryParameters.remove('o')
-        List initialParams = ["p=${relation}", "o=${reference}"]
-        List keys = (queryParameters.keySet() as List).sort()
-
-        return new Tuple2(initialParams, keys)
-    }
-
     private Tuple2 getValueParams(Map queryParameters) {
         String relation = queryParameters.remove('p')
         String value = queryParameters.remove('value')
-        List initialParams = ["p=${relation}", "value=${value}"]
+        List initialParams = [makeParam('p', relation), makeParam('value', value)]
         List keys = (queryParameters.keySet() as List).sort()
 
         return new Tuple2(initialParams, keys)
     }
 
-    private Tuple2 getQuotationParams(Map queryParameters) {
-        String reference = queryParameters.remove('o')
-        List initialParams = ["o=${reference}"]
+    private Tuple2 getReverseParams(Map queryParameters) {
+        String id = queryParameters.remove('o')
+        String lens = queryParameters.remove('_lens')
+        List initialParams = ["o=${id}", "_lens=${lens}"]
         List keys = (queryParameters.keySet() as List).sort()
 
         return new Tuple2(initialParams, keys)
@@ -523,7 +507,7 @@ class SearchUtils {
         }
 
         String query = queryParameters.remove('q')
-        List initialParams = ["q=${query}"]
+        List initialParams = [makeParam('q', query)]
         List keys = (queryParameters.keySet() as List).sort()
 
         return new Tuple2(initialParams, keys)
@@ -703,8 +687,10 @@ class SearchUtils {
         }
     }
 
-    private String urlEncode(String input) {
-        return java.net.URLEncoder.encode(input, "UTF-8")
+    private Object urlEncode(Object input) {
+        return input instanceof String
+                ? java.net.URLEncoder.encode(input, "UTF-8")
+                : input
     }
 }
 
@@ -737,9 +723,13 @@ class Offsets {
         }
 
         if ((offset + limit) >= total) {
-            this.last =  offset
+            this.last = offset
         } else {
-            this.last = total - (total % limit)
+            if (total % limit == 0) {
+                this.last = total - limit
+            } else {
+                this.last = total - (total % limit)
+            }
         }
     }
 }

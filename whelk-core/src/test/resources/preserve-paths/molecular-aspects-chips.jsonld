@@ -1,0 +1,35 @@
+{
+  "@id": "http://kblocalhost.kb.se:5000/n602lbw018zh88k#it",
+  "@type": "Electronic",
+  "hasTitle": [
+    {
+      "@type": "Title",
+      "mainTitle": "Molecular aspects of enzyme catalysis"
+    }
+  ],
+  "meta": {
+    "@id": "http://kblocalhost.kb.se:5000/n602lbw018zh88k",
+    "@type": "Record",
+    "controlNumber": "12915810",
+    "encodingLevel": "marc:AbbreviatedLevel"
+  },
+  "instanceOf": {
+    "@id": "http://kblocalhost.kb.se:5000/n602lbw018zh88k#work",
+    "@type": "Text",
+    "language": [
+      {
+        "@id": "https://id.kb.se/language/eng"
+      }
+    ],
+    "hasPart": [
+      {
+        "@type": "Multimedia",
+        "genreForm": [
+          {
+            "@id": "https://id.kb.se/marc/Document"
+          }
+        ]
+      }
+    ]
+  }
+}

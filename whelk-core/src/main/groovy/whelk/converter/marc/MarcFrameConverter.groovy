@@ -1011,7 +1011,7 @@ class ConversionPart {
         }
 
         if (!repeatable && value instanceof List && ((List) value).size() == 1) {
-            value = value[0]
+            value = ((List) value)[0]
         }
         obj[key] = value
     }
@@ -2467,7 +2467,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             return ' '
         }
         def v = entities?.findResult { indHandler.revert(state, data, (Map) it) }
-        return (String) (v instanceof List ? ((List) v)[0] : v)
+        return (String) (v instanceof List ? v.get(0) : v)
     }
 
 }
