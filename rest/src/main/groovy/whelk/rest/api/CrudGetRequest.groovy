@@ -123,6 +123,6 @@ class CrudGetRequest {
     }
 
     enum Lens {
-        CHIP, CARD, TOKEN, NONE
+        CHIP, CARD, NONE
     }
 }

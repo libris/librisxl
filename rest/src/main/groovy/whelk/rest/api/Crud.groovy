@@ -262,8 +262,6 @@ class Crud extends HttpServlet {
                 return whelk.jsonld.toCard(framedThing)
             case Lens.CHIP:
                 return whelk.jsonld.toChip(framedThing)
-            case Lens.TOKEN:
-                throw new WhelkRuntimeException("Not implemented: " + lens)
         }
     }
 

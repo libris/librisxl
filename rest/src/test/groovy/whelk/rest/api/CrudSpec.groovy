@@ -667,7 +667,6 @@ class CrudSpec extends Specification {
         ''           | '?lens=none'                     | 'none'
         ''           | '?lens=card'                     | 'card'
         ''           | '?lens=chip'                     | 'chip'
-        //''           | '?lens=token'                    | 'token'
     }
 
     def "GET /<id>?lens=invalid should return 400 Bad Request"() {
