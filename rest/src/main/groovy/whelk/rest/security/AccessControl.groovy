@@ -32,6 +32,11 @@ class AccessControl {
 				throw new ModelValidationException('Missing sigel in document.')
 			}
 
+            // allow global registrant to correct holdings with missing sigel
+            if (newDocSigel && !oldDocSigel && hasGlobalRegistrantPermission(userPrivileges)) {
+                return true
+            }
+
 			if (!(newDocSigel == oldDocSigel)) {
 				log.warn("Trying to update content with an another sigel, " +
 						 "denying request.")
