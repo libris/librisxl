@@ -4404,6 +4404,7 @@
         "TODO:definedElsewhereToken": "7"
       },
       "i2": {"marcDefault": " ", "TODO": "ok to lock as undefined?"},
+      "$d": {"property": "comment"},
       "$2": {
         "TODO:requires-i1": "7 (overwritten by 8)",
         "property": "typeNote",
@@ -4413,14 +4414,15 @@
         {
           "name": "indicator as tokenMap",
           "source": {
-            "024": {"ind1": "3", "ind2": " ", "subfields": [{"a": "1234567890"}]}
+            "024": {"ind1": "3", "ind2": " ", "subfields": [{"a": "1234567890"},{"d": "1"}]}
           },
           "result": {
             "mainEntity": {
               "identifiedBy": [
                 {
                   "@type": "EAN",
-                  "value":  "1234567890"
+                  "value":  "1234567890",
+                  "comment": "1"
                 }
               ]
             }
@@ -10067,6 +10069,7 @@
     },
     "504": {
       "aboutEntity": "?thing",
+      "NOTE": "Is supplementaryContent in BF conversion 1.5",
       "addLink": "hasNote",
       "resourceType": "marc:BibliographyEtcNote",
       "$a": {"property": "label"},
@@ -10275,15 +10278,18 @@
           "1": true
         }
       },
-      "TODO": "Concatenate $a, $b, $c, $d, $e, $f to label",
+      "TODO": "Concatenate $a, $b, $c, $d, $e, $f, $g, $q to label",
       "$a": {"property": "label"},
       "$b": {"addProperty": "marc:jurisdiction"},
       "$c": {"addProperty": "marc:physicalAccessProvisions"},
       "$d": {"addProperty": "marc:authorizedUsers"},
       "$e": {"addProperty": "marc:authorization"},
       "$f": {"addProperty": "marc:standardizedTerminologyForAccessRestriction"},
+      "$g": {"addProperty": "marc:availabilityDate"},
+      "$q": {"property": "marc:supplyingAgency"},
       "$u": {"addProperty": "uri"},
-      "NOTE:$2": {"ignored": true, "NOTE:LC": "nac"},
+      "$2": null,
+      "NOTE:$2": {"NOTE:LC": "nac"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
       "$6": {"property": "marc:fieldref"}
@@ -10453,6 +10459,7 @@
       "$b": {"property": "marc:expansionOfSummaryNote"},
       "$c": {"property": "marc:assigningSource"},
       "$u": {"addLink": "source", "resourceType": "Source", "addProperty": "uri"},
+      "$2": null,
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
@@ -10562,9 +10569,14 @@
       "resourceType": "GeographicCoverage",
       "i1": {
         "NOTE:LC": "nac",
-        "marcDefault": " "
+        "marcDefault": " ",
+        "tokenMap": {
+          " ": null,
+          "8": null
+        }
       },
       "$a": {"property": "label"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {"522": {"ind1": "8", "ind2": " ", "subfields": [
@@ -10611,17 +10623,18 @@
         "NOTE:LC": "nac"
       },
       "$a": {"property": "preferredCitation"},
-      "$2": {"ignored": true, "NOTE:LC": "nac"},
-      "$3": {"ignored": true, "NOTE:LC": "nac"},
-      "$6": {"ignored": true, "NOTE:LC": "nac"}
+      "$2": null,
+      "$3": null,
+      "$6": null
     },
     "525": {
       "aboutEntity": "?thing",
       "link": "supplementaryContent",
       "resourceType": "SupplementaryContent",
-      "$a": {"property": "label"}
+      "$a": {"property": "label"},
+      "$6": {"property": "marc:fieldref"}
     },
-    "526": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ", "NOTE:LC": "nac"},
+    "526": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ", "NOTE:LC": "526 - STUDY PROGRAM INFORMATION NOTE (R) nac"},
 
     "530": {
       "NOTE:local": "Deviating from BF2 since subfield a is a note on the relation, not a note on a new instance",
@@ -10634,7 +10647,13 @@
       "$6": {"property": "marc:fieldref"},
       "embedded": true
     },
-
+    "532": {
+      "addLink": "contentAccessibility",
+      "resourceType": "ContentAccessibility",
+      "i1": null,
+      "$a": {"property": "label"},
+      "$6": {"property": "marc:fieldref"}
+    },
     "533": {
       "addLink": "hasReproduction",
       "embedded": true,
@@ -10722,13 +10741,15 @@
       "$e": {"addProperty": "marc:programElementNumber"},
       "$f": {"addProperty": "marc:projectNumber"},
       "$g": {"addProperty": "marc:taskNumber"},
-      "$h": {"addProperty": "marc:workUnitNumber"}
+      "$h": {"addProperty": "marc:workUnitNumber"},
+      "$6": {"property": "marc:fieldref"}
     },
     "538": {
       "aboutEntity": "?thing",
       "addLink": "marc:hasSystemDetailsNote",
       "resourceType": "marc:SystemDetailsNote",
       "$a": {"property": "marc:systemDetailsNote"},
+      "$i": null,
       "$u": {"addProperty": "marc:uniformResourceIdentifier"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "NOTE:$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
@@ -10744,10 +10765,17 @@
         "_:source": {"link": "source", "resourceType": "Source"}
       },
       "$a": {"property": "label"},
-      "$b": {"ignored": true, "NOTE:LC": "nac"},
-      "$c": {"about": "_:source", "property": "label"},
+      "$b": null,
+      "$c": {"about": "_:source", "property": "label", "NOTE": "FIX COLLISION WITH SUBFIELD 2"},
+      "$d": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$f": {"addProperty": "marc:useAndReproductionRights"},
+      "$g": {"addProperty": "marc:availabilityDate"},
+      "$q": {"property": "marc:supplyingAgency"},
       "$u": {"addProperty": "uri"},
+      "NOTE:$2": {"link": "source", "resourceType": "Source", "property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {
@@ -10844,7 +10872,7 @@
         }
       ]
     },
-    "542": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "542": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "542 - INFORMATION RELATING TO COPYRIGHT STATUS (R) nac"},
     "544": {
       "aboutEntity": "?thing",
       "addLink": "marc:hasLocationOfOtherArchivalMaterialsNote",
@@ -10926,8 +10954,10 @@
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "Note",
+      "i1": null,
       "NOTE:i1": {"ignored": true, "NOTE:lc": "ignore"},
       "$a": {"property": "label"},
+      "$z": null,
       "NOTE:$z": {"ignored": true, "NOTE:lc": "nac"},
       "$6": {"property": "marc:fieldref"}
     },
@@ -10978,8 +11008,8 @@
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
       "$6": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"}
     },
-    "565": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
-    "567": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "565": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "565 - CASE FILE CHARACTERISTICS NOTE (R) nac"},
+    "567": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "567 - METHODOLOGY NOTE (R) nac"},
     "580": {
       "aboutEntity": "?work",
       "addLink": "hasNote",
@@ -11002,6 +11032,7 @@
       "$a": {"property": "label"},
       "$z": {"addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": [
@@ -11044,8 +11075,24 @@
       },
       "$a": {"property": "label"},
       "$b": {"addProperty": "marc:actionIdentification"},
+      "$c": {"addProperty": "date"},
+      "$d": null,
+      "$e": null,
+      "$f": null,
+      "$h": {"addProperty": "marc:jurisdiction"},
+      "$i": null,
+      "$j": null,
+      "$k": {"addLink": "agent", "resourceType": "Agent", "property": "label"},
+      "$l": {"addLink": "status", "resourceType": "Status", "property": "label"},
+      "$n": null,
+      "$o": null,
+      "$u": {"addProperty": "uri"},
       "$x": {"addProperty": "marc:cataloguersNote", "TODO": "ignore?"},
+      "$z": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$2": {"addLink": "source", "resourceType": "Source", "property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
+      "$6": null,
       "_spec": [
         {
           "name": "With indicator 1 set to 1",
@@ -11077,14 +11124,17 @@
         }
       ]
     },
-    "584": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "584": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "584 - ACCUMULATION AND FREQUENCY OF USE NOTE (R) nac"},
     "585": {
       "NOTE:local": "För anmärkning till utställningskataloger används fält 500.",
       "onRevertPrefer": "500",
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "Note",
-      "$a": {"property": "label"}
+      "$a": {"property": "label"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
+      "$6": {"property": "marc:fieldref"}
     },
     "586": {
       "NOTE:local": "ANVÄNDS NORMALT EJ",
@@ -11125,7 +11175,9 @@
       "addLink": "hasNote",
       "resourceType": "marc:SourceOfDescriptionNote",
       "$a": {"property": "label"},
-      "i1": {"marcDefault": " "}
+      "i1": {"marcDefault": " "},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"}, 
+      "$6": {"property": "marc:fieldref"}
     },
     "590": {"ignored": true, "NOTE:OCLC": "Use for notes pertaining only to the copy of the item located in your institution. Field 590 is not part of the standard MARC21 format." },
     "599": {
@@ -14904,14 +14956,21 @@
       "$f": {"addProperty": "marc:citySubsection", "TODO:ignored": "true?"},
       "$g": {"addProperty": "marc:otherNonjurisdictionalGeographicRegionAndFeature"},
       "$h": {"addProperty": "marc:extraterrestrialArea"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
+      "$1": null,
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
-      "$0": {"addProperty": "marc:uri"}
+      "$4": {"addProperty": "marc:relatorCode"},
+      "$6": {"property": "marc:fieldref"}
     },
     "753": {
       "aboutEntity": "?thing",
       "$a": {"addLink": "systemRequirement", "resourceType": "MachineModel", "property": "label"},
       "$b": {"addLink": "systemRequirement", "resourceType": "ProgrammingLanguage", "property": "label"},
       "$c": {"addLink": "systemRequirement", "resourceType": "OperatingSystem", "property": "label"},
+      "NOTE:$0": "Add linking possibility, for example https://gamemetadata.soe.ucsc.edu/platform",
+      "$1": null,
+      "NOTE:$2": "TODO source, need to be wrapped in correct type.",
+      "$6": null,
       "_spec": [
         {
           "source": {
@@ -14938,28 +14997,18 @@
       ]
     },
     "754": {
-      "NOTE:LC": "nac",
-      "addLink": "marc:hasAddedEntryTaxonomicIdentification",
-      "resourceType": "marc:AddedEntryTaxonomicIdentification",
-      "$a": {"addProperty": "marc:taxonomicName"},
-      "$c": {"addProperty": "marc:taxonomicCategory"},
-      "$d": {"addProperty": "marc:commonOrAlternativeName"},
-      "$x": {"addProperty": "marc:cataloguersNote"},
-      "$z": {"addProperty": "marc:publicNote"},
-      "$2": {"property": "marc:sourceOfTaxonomicIdentification"},
-      "$0": {"addProperty": "marc:uri"}
+      "NOTE:LC": "754 - ADDED ENTRY--TAXONOMIC IDENTIFICATION (R) nac",
+      "ignored": true
     },
-    "755": {
-      "addLink": "marc:hasPhysicalCharacteristicsAddedEntryOBSOLETE",
-      "resourceType": "marc:PhysicalCharacteristicsAddedEntryOBSOLETE",
-      "obsolete": true,
-      "$a": {"property": "marc:accessTerm"},
-      "$v": {"property": "marc:form"},
-      "$x": {"addProperty": "marc:generalSubdivision"},
-      "$y": {"addProperty": "marc:chronologicalSubdivision"},
-      "$z": {"addProperty": "marc:geographicSubdivision"},
-      "$2": {"property": "marc:sourceOfTerm"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+    "755":  {
+      "NOTE:LC": "755 - Established Heading Linking Entry-Genre/Form Term (R)",
+      "NOTE": "missing in BF2 conversion documents",
+      "NOTE:record-count": 0,
+      "ignored": true
+    },
+    "758": {
+      "NOTE:LC": "758 - RESOURCE IDENTIFIER (R) nac",
+      "ignored": true
     },
     "760": {
       "aboutEntity": "?thing",

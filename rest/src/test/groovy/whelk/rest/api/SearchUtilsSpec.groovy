@@ -311,10 +311,12 @@ class SearchUtilsSpec extends Specification {
 
     def "slicing should work"() {
         expect:
-        SearchUtils.slice(list, from, to) == expected
+        List<String> list = ['a', 'b', 'c', 'd', 'e']
+        // Can't call variable 'expected' because 'expected' is declared as Map in test above...
+        // https://github.com/spockframework/spock/issues/880
+        SearchUtils.slice(list, from, to) == expectedSlice
         where:
-        list = ['a', 'b', 'c', 'd', 'e']
-        from | to | expected
+        from | to | expectedSlice
         0    | 1  | ['a']
         0    | 5  | ['a', 'b', 'c', 'd', 'e']
         0    | 6  | ['a', 'b', 'c', 'd', 'e']
@@ -327,4 +329,5 @@ class SearchUtilsSpec extends Specification {
         -4   | 9  | ['a', 'b', 'c', 'd', 'e']
         5    | 0  | []
     }
+
 }

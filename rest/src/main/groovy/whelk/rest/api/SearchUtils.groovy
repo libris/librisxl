@@ -1,5 +1,7 @@
 package whelk.rest.api
 
+import com.google.common.escape.Escaper
+import com.google.common.net.UrlEscapers
 import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
@@ -14,6 +16,10 @@ class SearchUtils {
     final static int DEFAULT_LIMIT = 200
     final static int MAX_LIMIT = 4000
     final static int DEFAULT_OFFSET = 0
+
+    // Use fragment escaper as query and fragment are escaped in the same way.
+    // See https://tools.ietf.org/html/rfc3986#section-3.4
+    private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFragmentEscaper()
 
     enum SearchType {
         FIND_BY_VALUE,
@@ -352,7 +358,7 @@ class SearchUtils {
             Map sliceNode = ['dimension': key.replace(".${JsonLd.ID_KEY}", '')]
             aggregation['buckets'].each { bucket ->
                 String itemId = bucket['key']
-                String searchPageUrl = "${baseUrl}&${key}=${urlEncode(itemId)}"
+                String searchPageUrl = "${baseUrl}&${makeParam(key, itemId)}"
 
                 Map observation = ['totalItems': bucket.getAt('doc_count'),
                                    'view': [(JsonLd.ID_KEY): searchPageUrl],
@@ -461,7 +467,7 @@ class SearchUtils {
     }
 
     private String makeParam(key, value) {
-        return "${urlEncode(key)}=${urlEncode(value)}"
+        return "${escapeQueryParam(key)}=${escapeQueryParam(value)}"
     }
 
     private Tuple2 getInitialParamsAndKeys(SearchType st,
@@ -494,7 +500,7 @@ class SearchUtils {
     private Tuple2 getReverseParams(Map queryParameters) {
         String id = queryParameters.remove('o')
         String lens = queryParameters.remove('_lens')
-        List initialParams = ["o=${id}", "_lens=${lens}"]
+        List initialParams = [makeParam('o', id), makeParam('_lens', lens)]
         List keys = (queryParameters.keySet() as List).sort()
 
         return new Tuple2(initialParams, keys)
@@ -686,9 +692,9 @@ class SearchUtils {
         }
     }
 
-    private Object urlEncode(Object input) {
+    private Object escapeQueryParam(Object input) {
         return input instanceof String
-                ? java.net.URLEncoder.encode(input, "UTF-8")
+                ? QUERY_ESCAPER.escape(input)
                 : input
     }
 }
