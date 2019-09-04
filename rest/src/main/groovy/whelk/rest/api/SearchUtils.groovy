@@ -17,9 +17,7 @@ class SearchUtils {
     final static int MAX_LIMIT = 4000
     final static int DEFAULT_OFFSET = 0
 
-    // Use fragment escaper as query and fragment are escaped in the same way.
-    // See https://tools.ietf.org/html/rfc3986#section-3.4
-    private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFragmentEscaper()
+    private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper()
 
     enum SearchType {
         FIND_BY_VALUE,
@@ -694,7 +692,9 @@ class SearchUtils {
 
     private Object escapeQueryParam(Object input) {
         return input instanceof String
-                ? QUERY_ESCAPER.escape(input)
+                // We want pretty URIs, restore some characters which are inside query strings
+                // https://tools.ietf.org/html/rfc3986#section-3.4
+                ? QUERY_ESCAPER.escape(input).replace(['%3A': ':', '%2F': '/', '%40': '@'])
                 : input
     }
 }

@@ -113,6 +113,8 @@ class SearchUtilsSpec extends Specification {
         ['q': 'Tove']                  | SearchType.ELASTIC           | '/find?q=Tove'
         ['q': 'Tove Jansson']          | SearchType.ELASTIC           | '/find?q=Tove+Jansson'
         ['q': 'functions & duties']    | SearchType.ELASTIC           | '/find?q=functions+%26+duties'
+        ['q': 'ftp://test']            | SearchType.ELASTIC           | '/find?q=ftp://test'
+        ['q': 'hej', '@type': 'Work']  | SearchType.ELASTIC           | '/find?q=hej&@type=Work'
         ['a': ['1']]                   | SearchType.ELASTIC           | '/find?q=*&a=1'
         ['a': '1']                     | SearchType.ELASTIC           | '/find?q=*&a=1'
         ['a': ['1', '2']]              | SearchType.ELASTIC           | '/find?q=*&a=1&a=2'
@@ -120,7 +122,7 @@ class SearchUtilsSpec extends Specification {
         ['a': null, 'b': ['2']]        | SearchType.ELASTIC           | '/find?q=*&b=2'
         // as are 'p', 'o', and 'value'
         ['p': 'foo', 'value': 'bar']   | SearchType.FIND_BY_VALUE     | '/find?p=foo&value=bar'
-        ['o': 'foo', '_lens': 'cards'] | SearchType.FIND_REVERSE      | '/find?o=foo&_lens=cards'
+        ['o': 'https://id.kb.se/country/vm', '_lens': 'cards'] | SearchType.FIND_REVERSE | '/find?o=https://id.kb.se/country/vm&_lens=cards'
     }
 
     def "Should make find URL with offset"() {
