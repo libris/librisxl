@@ -104,6 +104,22 @@ class LinkFinder {
 
         clearReferenceAmbiguities(document)
         replaceSameAsLinksWithPrimaries(document.data, connection, cacheAuthForever)
+        // TODO: check what happens in the sameas table when id:s are changed and changed back!
+        restoreNewCanonicalMainEntityUri(document.data)
+    }
+
+    /**
+     * When {@link #replaceSameAsLinksWithPrimaries} is used, the mainEntity
+     * reference is replaced by any already existing primary id. This collides
+     * with purposefully changing the primary id, which is therefore restored
+     * here.
+     */
+    private void restoreNewCanonicalMainEntityUri(Map data) {
+        List items = data['@graph']
+        if (items.size() < 2) {
+            return
+        }
+        items[0][JsonLd.THING_KEY]['@id'] = items[1]['@id']
     }
 
     private void replaceSameAsLinksWithPrimaries(Map data, Connection connection, boolean cacheAuthForever = false) {
