@@ -127,7 +127,7 @@ jansson` is equivalent to a search for `tove +jansson`. `-` excludes terms, `|`
 means `OR`, `*` is used for prefix queries, `""` matches the whole phrase, and
 `()` is used for operator precedence.
 
-### Parameters
+#### Parameters
 
 * `q` - Search query
 * `_limit` - Max number of hits to include in result, used for pagination.
@@ -135,7 +135,7 @@ means `OR`, `*` is used for prefix queries, `""` matches the whole phrase, and
 * `_offset` - Number of hits to skip in the result, used for pagination.
   Default is 0.
 
-### Example
+#### Example
 
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
@@ -143,6 +143,25 @@ $ curl -XGET -H "Accept: application/ld+json" \
 ...
 ```
 
+### `/find?o` - Find all posts that link to a specific post
+
+When using the `o` parameter, the `find` endpoint lists all posts that link to a specific post in the internal Libris database.
+
+#### Parameters
+
+* `o` - ID of the post for which to find reverse relations
+* `_limit` - Max number of hits to include in result, used for pagination.
+  Default is 200.
+* `_offset` - Number of hits to skip in the result, used for pagination.
+  Default is 0.
+
+#### Example
+
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find?o=https://id.kb.se/country/vm&_limit=2'
+...
+```
 
 ### `/_remotesearch` - Search external databases - Requires authentication
 
@@ -278,7 +297,7 @@ information in MARC21.
 * `id` - Bibliographic post ID (e.g. http://libris.kb.se/bib/1234)
 * `library` - Library ID (e.g. https://libris.kb.se/library/SEK)
 
-### Example
+#### Example
 
 ```
 $ curl -XGET 'https://libris-qa.kb.se/_compilemarc?id=http://libris.kb.se/bib/1234&library=https://libris.kb.se/library/SEK'
