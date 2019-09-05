@@ -339,11 +339,14 @@ class PostgreSQLComponent {
                     throw new ConflictingHoldException("Already exists a holding post for ${doc.getHeldBy()} and bib: $holdingFor")
             }
 
-            if (changedBy != null)
-                doc.setDescriptionCreator("https://libris.kb.se/library/" + changedBy)
-
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc, connection)
+
+            if (changedBy != null) {
+                String creator = getDescriptionChangerId(changedBy)
+                doc.setDescriptionCreator(creator)
+                doc.setDescriptionLastModifier(creator)
+            }
 
             Date now = new Date()
             doc.setCreated(now)
@@ -617,6 +620,10 @@ class PostgreSQLComponent {
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc)
             verifyDocumentIdRetention(preUpdateDoc, doc)
+
+            if (changedBy != null) {
+                doc.setDescriptionLastModifier(getDescriptionChangerId(changedBy))
+            }
 
             boolean deleted = doc.getDeleted()
 
@@ -2197,5 +2204,10 @@ class PostgreSQLComponent {
     private Date parseDate(String date) {
         ZonedDateTime zdt = ZonedDateTime.parse(date, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
         return Date.from(zdt.toInstant())
+    }
+
+    private String getDescriptionChangerId(String changedBy) {
+        // FIXME: hardcoded
+        return "https://libris.kb.se/library/" + changedBy
     }
 }
