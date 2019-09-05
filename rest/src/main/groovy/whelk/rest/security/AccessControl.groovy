@@ -18,30 +18,35 @@ class AccessControl {
 
     boolean checkDocumentToPut(Document newDoc, Document oldDoc,
                                Map userPrivileges, JsonLd jsonld) {
-		if (oldDoc.isHolding(jsonld)) {
-			def newDocSigel = newDoc.getSigel()
-			def oldDocSigel = oldDoc.getSigel()
+        if (oldDoc.isHolding(jsonld)) {
+            def newDocSigel = newDoc.getSigel()
+            def oldDocSigel = oldDoc.getSigel()
 
-			if (!newDoc.isHolding(jsonld)) {
-				// we don't allow changing from holding to non-holding
-				return false
-			}
+            if (!newDoc.isHolding(jsonld)) {
+                // we don't allow changing from holding to non-holding
+                return false
+            }
 
-			// we bail out early if sigel is missing in the new doc
-			if (!newDocSigel) {
-				throw new ModelValidationException('Missing sigel in document.')
-			}
+            // we bail out early if sigel is missing in the new doc
+            if (!newDocSigel) {
+                throw new ModelValidationException('Missing sigel in document.')
+            }
 
-			if (!(newDocSigel == oldDocSigel)) {
-				log.warn("Trying to update content with an another sigel, " +
-						 "denying request.")
-				return false
-			}
+            // allow global registrant to correct holdings with missing sigel
+            if (newDocSigel && !oldDocSigel && hasGlobalRegistrantPermission(userPrivileges)) {
+                return true
+            }
 
-		}
+            if (!(newDocSigel == oldDocSigel)) {
+                log.warn("Trying to update content with an another sigel, " +
+                        "denying request.")
+                return false
+            }
 
-		return checkDocument(newDoc, userPrivileges, jsonld) &&
-					checkDocument(oldDoc, userPrivileges, jsonld)
+        }
+
+        return checkDocument(newDoc, userPrivileges, jsonld) &&
+                checkDocument(oldDoc, userPrivileges, jsonld)
     }
 
     boolean checkDocumentToDelete(Document oldDoc, Map userPrivileges, JsonLd jsonld) {
