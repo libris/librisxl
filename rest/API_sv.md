@@ -137,7 +137,7 @@ innebär `ELLER`, `*` används för prefixsökningar, `""` matchar hela frasen o
 `()` används för att påverka operatorprioritet.
 
 
-### Parametrar
+#### Parametrar
 
 * `q` - Sökfrågan
 * `_limit` - Max antal träffar att inkludera i resultatet, används för
@@ -146,7 +146,7 @@ innebär `ELLER`, `*` används för prefixsökningar, `""` matchar hela frasen o
   paginering. Standardvärdet är 0.
 
 
-### Exempel
+#### Exempel
 
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
@@ -154,11 +154,30 @@ $ curl -XGET -H "Accept: application/ld+json" \
 ...
 ```
 
+### `/find?o` - Hitta alla poster som länkar till en viss post
+
+Detta anrop låter dig hitta alla poster som länkar till en viss post i den interna Libris-databasen.
+
+#### Parametrar
+
+* `o` - ID för posten vars omvända relationer ska slås upp
+* `_limit` - Max antal träffar att inkludera i resultatet, används för
+  paginering. Standardvärdet är 200.
+* `_offset` - Antal träffar att hoppa över i resultatet, används för
+  paginering. Standardvärdet är 0.
+  
+  
+#### Exempel
+
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find?o=https://id.kb.se/country/vm&_limit=2'
+...
+```
 
 ### `/_remotesearch` - Sök i externa databaser  - Kräver autentisering
 
 Detta anrop låter dig slå mot externa databaser.
-
 
 #### Parametrar
 
@@ -301,7 +320,7 @@ och auktoritetsinformation i MARC21-format.
 * `library` - Sigel-ID (t.ex. https://libris.kb.se/library/SEK)
 
 
-### Exempel
+#### Exempel
 
 ```
 $ curl -XGET 'https://libris-qa.kb.se/_compilemarc?id=http://libris.kb.se/bib/1234&library=https://libris.kb.se/library/SEK'
