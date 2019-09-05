@@ -148,7 +148,8 @@ class PostgreSQLComponent {
 
         // Setting up sql-statements
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
-        INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,collection,changedIn,changedBy,checksum,deleted) VALUES (?,?,?,?,?,?,?)"
+        INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,collection,changedIn,changedBy,checksum,deleted," +
+                "created,modified,depminmodified,depmaxmodified) VALUES (?,?,?,?,?,?,?,?,?,?,?)"
         DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
         INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, iri, graphIndex, mainId) VALUES (?,?,?,?)"
 
@@ -338,8 +339,8 @@ class PostgreSQLComponent {
                     throw new ConflictingHoldException("Already exists a holding post for ${doc.getHeldBy()} and bib: $holdingFor")
             }
 
-            Date now = new Date()
-            PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
+            if (linkFinder != null)
+                linkFinder.normalizeIdentifiers(doc, connection)
 
             if (changedBy != null) {
                 String creator = getDescriptionChangerId(changedBy)
@@ -347,10 +348,13 @@ class PostgreSQLComponent {
                 doc.setDescriptionLastModifier(creator)
             }
 
-            if (linkFinder != null)
-                linkFinder.normalizeIdentifiers(doc, connection)
+            Date now = new Date()
+            doc.setCreated(now)
+            doc.setModified(now)
+            doc.setDeleted(deleted)
 
-            insert = rigInsertStatement(insert, doc, changedIn, changedBy, collection, deleted)
+            PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
+            insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, deleted)
             insert.executeUpdate()
             connection.commit()
             Document savedDoc = load(doc.getShortId(), connection)
@@ -504,6 +508,7 @@ class PostgreSQLComponent {
                 throw new SQLException("Not allowed to merge deleted record: " + remainingID)
             resultSet.close()
             Date modTime = new Date()
+            remainingDocument.setModified(modTime)
             updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
             rigUpdateStatement(updateStatement, remainingDocument, modTime, changedIn, changedBy, collection, false)
             updateStatement.execute()
@@ -528,6 +533,7 @@ class PostgreSQLComponent {
             if (disappearingDocument.deleted)
                 throw new SQLException("Not allowed to merge deleted record: " + disappearingID)
             disappearingDocument.setDeleted(true)
+            disappearingDocument.setModified(modTime)
             createdTime = new Date(resultSet.getTimestamp("created").getTime())
             resultSet.close()
             updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
@@ -551,6 +557,7 @@ class PostgreSQLComponent {
                 Document dependerDoc = assembleDocument(resultSet)
                 if (linkFinder != null)
                     linkFinder.normalizeIdentifiers(dependerDoc, connection)
+                dependerDoc.setModified(modTime)
                 updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
                 String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, jsonld)
                 rigUpdateStatement(updateStatement, dependerDoc, modTime, changedIn, changedBy, dependerCollection, false)
@@ -625,6 +632,7 @@ class PostgreSQLComponent {
             if (minorUpdate) {
                 modTime = new Date(resultSet.getTimestamp("modified").getTime())
             }
+            doc.setModified(modTime)
             updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
             rigUpdateStatement(updateStatement, doc, modTime, changedIn, changedBy, collection, deleted)
             updateStatement.execute()
@@ -882,7 +890,7 @@ class PostgreSQLComponent {
         }
     }
 
-    private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
+    private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, Date timestamp, String changedIn, String changedBy, String collection, boolean deleted) {
         insert.setString(1, doc.getShortId())
         insert.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
         insert.setString(3, collection)
@@ -890,6 +898,10 @@ class PostgreSQLComponent {
         insert.setString(5, changedBy)
         insert.setString(6, doc.getChecksum())
         insert.setBoolean(7, deleted)
+        insert.setTimestamp(8, new Timestamp(timestamp.getTime()))
+        insert.setTimestamp(9, new Timestamp(timestamp.getTime()))
+        insert.setTimestamp(10, new Timestamp(timestamp.getTime()))
+        insert.setTimestamp(11, new Timestamp(timestamp.getTime()))
         return insert
     }
 
@@ -960,11 +972,14 @@ class PostgreSQLComponent {
                 if (linkFinder != null)
                     linkFinder.normalizeIdentifiers(doc)
                 Date now = new Date()
+                doc.setCreated(now)
+                doc.setModified(now)
+                doc.setDeleted(false)
                 if (versioning) {
                     ver_batch = rigVersionStatement(ver_batch, doc, now, now, changedIn, changedBy, collection, false)
                     ver_batch.addBatch()
                 }
-                batch = rigInsertStatement(batch, doc, changedIn, changedBy, collection, false)
+                batch = rigInsertStatement(batch, doc, now, changedIn, changedBy, collection, false)
                 batch.addBatch()
                 refreshDerivativeTables(doc, connection, false)
                 if (updateDepMinMax) {
