@@ -5,10 +5,12 @@
  * 2405 of those have type "NotatedMusic" or "Music"
  * Manual inspection of the titles of the 30 remaining gave one post with actual language Muskogean
  *
+ * This has the problem of removing Muskogean from all "Music" or "NotatedMusic" that is actually in Muskogean...
+ *
  * ID list generated with
  * curl '10.50.16.190:9200/libris_stg/_search?type=bib&q=(Muskogeanska)&size=3000&filter_path=hits.total,hits.hits._id&pretty=true' | grep _id | tr '"' ' ' | awk '{print $3}' > muskogeanska_ids.txt
  *
- * See LXL-2652 for more info.
+ * See LXL-2443 for more info.
  *
  */
 
