@@ -13,7 +13,7 @@
  * See LXL-2443 for more info.
  *
  */
-PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-deletion")
+PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 
 File bibIds = new File(scriptDir, 'muskogeanska_ids.txt')
 
