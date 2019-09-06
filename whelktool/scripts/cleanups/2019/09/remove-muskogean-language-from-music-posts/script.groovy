@@ -13,15 +13,14 @@
  * See LXL-2443 for more info.
  *
  */
-
-PrintWriter failedHoldIDs = getReportWriter("failed-to-delete-holdIDs")
-PrintWriter scheduledForDeletion = getReportWriter("scheduled-for-deletion")
+PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-deletion")
 
 File bibIds = new File(scriptDir, 'muskogeanska_ids.txt')
 
 selectByIds(bibIds.readLines()) { bib ->
     if (!isReallyMuskogean(bib)) {
         removeMuskogean(bib.doc.data)
+        scheduledForUpdate.println("${bib.doc.getURI()}")
         bib.scheduleSave()
     }
     else {
