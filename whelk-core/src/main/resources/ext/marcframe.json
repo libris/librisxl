@@ -5122,7 +5122,7 @@
         "_:tableOfContents": {"addLink": "tableOfContents", "resourceType": "TableOfContents"},
         "_:translationSource": {"addLink": "translationOf", "resourceType": "Work"}
       },
-      "TODO": "subfield, m, n, p, q, r",
+      "TODO": "add subfields $m, $n, $p, $q, $r",
       "$a": {
         "TODO:unifyWith": ["008:language", "240.a?", "546"],
         "TODO": "not repeated if equal with existing",
