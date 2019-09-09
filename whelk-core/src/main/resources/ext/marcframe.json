@@ -5562,6 +5562,7 @@
       "i1": {"marcDefault": " "},
       "$a": {"addProperty": "classificationPortion"},
       "$b": {"property": "itemPortion"},
+      "$0": {"property": "marc:recordControlNumber"},
       "$1": {"property": "marc:rwoURI"}
     },
     "071": {
