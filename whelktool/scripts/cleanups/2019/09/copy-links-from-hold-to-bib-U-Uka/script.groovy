@@ -58,6 +58,7 @@ void insertUri(docData, String uri) {
     instance['associatedMedia'] <<
         [
             "@type": "MediaObject",
-            "uri": [uri]
+            "uri": [uri],
+            "marc:publicNote": ["Fritt tillgänglig via Alvin (Universitetsbiblioteket, Lunds universitet)"]
         ]
 }
