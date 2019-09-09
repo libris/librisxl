@@ -4620,8 +4620,16 @@
       "TODO:revert": "To ensure 033 and 518 will not be mixed up when reverting",
       "aboutEntity": "?work",
       "addLink": "capture",
+      "resourceType": "Capture",
+      "pendingResources": {
+        "_:place": {
+          "addLink": "place",
+          "resourceType": "Place"
+        }
+      },
       "i1": {
         "TODO": "align with subfieldproperty instead of separate list, also make sure repeatable.",
+        "NOTE": "Empty i1 actually means no date and should only be used when $a is missing.",
         "property": "marc:typeOfDate",
         "tokenMap": {
           "0": "marc:SingleDate",
@@ -4646,15 +4654,16 @@
       },
       "$b": {"addProperty": "marc:geographicClassificationAreaCode"},
       "$c": {"addProperty": "marc:geographicClassificationSubareaCode"},
-      "$p": {"addLink": "place", "resourceType": "Place", "property": "label", "infer": true},
-      "$0": null,
+      "$p": {"about": "_:place", "property": "label", "infer": true},
+      "$0": {"about": "_:place", "property": "marc:recordControlNumber"},
       "$1": null,
-      "$2": {"property": "marc:placeCodeSource"},
+      "$2": {"about": "_:place", "link": "source", "resourceType": "Source", "property": "code"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": null,
       "_spec": [
         {
-          "source": [{"033": {"ind1": "0", "ind2": "0", "subfields": [{"a": "198407--"}, {"b": "5754"}, {"c": "L7"}]}}],
+          "name": "Recording capture and place in $p with source",
+          "source": [{"033": {"ind1": "0", "ind2": "0", "subfields": [{"a": "198407--"}, {"b": "5754"}, {"c": "L7"}, {"p": "Abbey Road Studio 1, London"}, {"2": "code"}]}}],
           "result": {
             "mainEntity": {
               "instanceOf": {
@@ -4665,7 +4674,41 @@
                     "date": ["198407--"],
                     "marc:geographicClassificationAreaCode": ["5754"],
                     "marc:geographicClassificationSubareaCode": ["L7"],
-                    "marc:typeOfDate": "marc:SingleDate"
+                    "marc:typeOfDate": "marc:SingleDate",
+                    "place": [
+                      {
+                        "@type": "Place",
+                        "label": "Abbey Road Studio 1, London",
+                        "source": {
+                          "@type": "Source",
+                          "code": "code"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "Capture with no date given in i1 and faulty empty i2",
+          "source": [
+            {"033": {"ind1": " ", "ind2": " ", "subfields": [{"b": "6000"}]}},
+            {"518": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Recorded from Dutch and German radio broadcasts."}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "capture": [
+                  {
+                    "@type": "Capture",
+                    "marc:geographicClassificationAreaCode": ["6000"]
+                  },
+                  {
+                    "@type": "Capture",
+                    "label": "Recorded from Dutch and German radio broadcasts."
                   }
                 ]
               }
@@ -10474,6 +10517,7 @@
       "NOTE:$6": {"property": "marc:fieldref", "NOTE:record-count": 0}
     },
     "518": {
+      "NOTE:local": "Observera felaktig delfältsbenämning i den svenska Formathandboken, o och d omkastade.",
       "aboutEntity": "?work",
       "addLink": "capture",
       "resourceType": "Capture",
