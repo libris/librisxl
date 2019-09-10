@@ -5577,6 +5577,7 @@
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "Concept",
+      "TODO": "Concept should be Topic",
       "match": [
         {
           "when": {
@@ -5594,13 +5595,17 @@
         "resourceType": "ConceptScheme",
         "property": "code",
         "tokenMap": {
-          "0": "NAL"
+          "0": "NAL",
+          "TODO:uriTemplate": "http://id.loc.gov/vocabulary/classSchemes/agricola{_}"
         },
         "definedElsewhereToken": "7",
         "marcDefault": "7"
       },
       "$a": {"property": "label", "required": true},
-      "$x": {"link": "inCollection", "property": "label"},
+      "NOTE:$a": "Is code in BF2 1.5",
+      "$x": {"link": "inCollection", "resourceType": "ConceptCollection", "property": "label"},
+      "TODO:$2": "If $2 = bisacsh, then http://id.loc.gov/vocabulary/classSchemes/bisacsh",
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {
@@ -5627,8 +5632,9 @@
         {
           "source": {
             "072": {"ind1": " ", "ind2": "7", "subfields": [
-              {"a": "Token"},
-              {"2": "G"}
+              {"a": "aZ1"},
+              {"x": ".630"},
+              {"2": "mesh"}
             ]}
           },
           "result": {
@@ -5637,10 +5643,14 @@
                 "@type": "Text",
                 "subject": [ {
                   "@type": "Concept",
-                  "label": "Token",
+                  "label": "aZ1",
+                  "inCollection": {
+                    "@type": "ConceptCollection",
+                    "label": ".630"
+                  },
                   "inScheme": {
                     "@type": "ConceptScheme",
-                    "code": "G"
+                    "code": "mesh"
                   }
                 } ]
               }
