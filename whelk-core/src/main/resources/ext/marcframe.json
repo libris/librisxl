@@ -3897,7 +3897,7 @@
       "include": ["idbase"],
       "resourceType": "LCCN",
       "$a": {"property": "value"},
-      "$b": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore"},
+      "$b": null,
       "$z": {"addProperty": "marc:hiddenValue"},
       "$8": {"property": "marc:groupid"},
       "_spec": [
@@ -3919,7 +3919,11 @@
       ]
     },
 
-    "013": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "013": {
+      "NOTE:LC": "013 - PATENT CONTROL INFORMATION (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
 
     "015": {
       "include": ["idbase"],
@@ -3936,6 +3940,7 @@
           "restrictedTo": "http://www.loc.gov/standards/sourcelist/national-bibliography.html"
         }
       },
+      "$6": null,
       "_spec": [
         {
           "source": {"015": {"ind1": " ", "ind2": " ", "subfields": [
@@ -3980,7 +3985,8 @@
         "property": "code",
         "requires-i1": "7",
         "TODO": "see 015 $2"
-      }
+      },
+      "$6": null
     },
 
     "017": {
@@ -3992,9 +3998,15 @@
       "$b": {"link": "source", "resourceType": "Source", "property": "label"},
       "$d": {"property": "date"},
       "$i": {"addProperty": "comment"},
-      "$z": {"addProperty": "marc:hiddenValue"}
+      "$z": {"addProperty": "marc:hiddenValue"},
+      "$2": null,
+      "$6": null
     },
-    "018": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore"},
+    "018": {
+      "NOTE:LC": "018 - COPYRIGHT ARTICLE-FEE CODE (NR) ignore",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
 
     "020": {
       "include": ["idbasequalified"],
@@ -4404,12 +4416,14 @@
         "TODO:definedElsewhereToken": "7"
       },
       "i2": {"marcDefault": " ", "TODO": "ok to lock as undefined?"},
+      "$c": {"property": "acquisitionTerms"},
       "$d": {"property": "comment"},
       "$2": {
         "TODO:requires-i1": "7 (overwritten by 8)",
         "property": "typeNote",
         "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
       },
+      "$6": null,
       "_spec": [
         {
           "name": "indicator as tokenMap",
@@ -4526,7 +4540,8 @@
       "$d": {"addProperty": "marc:numberOfVolumeOrPart"},
       "$e": {"property": "marc:unparsedFingerprint"},
       "$2": {"link": "source", "resourceType": "Source", "property": "label"},
-      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"}
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
+      "$6": null
     },
     "027": {
       "include": ["identifier"],
@@ -4583,10 +4598,15 @@
       "include": ["idbase"],
       "resourceType": "CODEN",
       "$a": {"property": "value"},
-      "$z": {"addProperty": "marc:hiddenValue"}
+      "$z": {"addProperty": "marc:hiddenValue"},
+      "$6": null
     },
 
-    "031": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "031": {
+      "NOTE:LC": "031 - MUSICAL INCIPITS INFORMATION (R) nac",
+      "ignored": true, 
+      "NOTE:record-count": 0
+    },
 
     "032": {
       "NOTE:local":"ANVÄNDS NORMALT EJ",
@@ -4600,8 +4620,16 @@
       "TODO:revert": "To ensure 033 and 518 will not be mixed up when reverting",
       "aboutEntity": "?work",
       "addLink": "capture",
+      "resourceType": "Capture",
+      "pendingResources": {
+        "_:place": {
+          "addLink": "place",
+          "resourceType": "Place"
+        }
+      },
       "i1": {
         "TODO": "align with subfieldproperty instead of separate list, also make sure repeatable.",
+        "NOTE": "Empty i1 actually means no date and should only be used when $a is missing.",
         "property": "marc:typeOfDate",
         "tokenMap": {
           "0": "marc:SingleDate",
@@ -4626,15 +4654,16 @@
       },
       "$b": {"addProperty": "marc:geographicClassificationAreaCode"},
       "$c": {"addProperty": "marc:geographicClassificationSubareaCode"},
-      "$p": {"addLink": "place", "resourceType": "Place", "property": "label", "infer": true},
-      "$0": null,
+      "$p": {"about": "_:place", "property": "label", "infer": true},
+      "$0": {"about": "_:place", "property": "marc:recordControlNumber"},
       "$1": null,
-      "$2": {"property": "marc:placeCodeSource"},
+      "$2": {"about": "_:place", "link": "source", "resourceType": "Source", "property": "code"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": null,
       "_spec": [
         {
-          "source": [{"033": {"ind1": "0", "ind2": "0", "subfields": [{"a": "198407--"}, {"b": "5754"}, {"c": "L7"}]}}],
+          "name": "Recording capture and place in $p with source",
+          "source": [{"033": {"ind1": "0", "ind2": "0", "subfields": [{"a": "198407--"}, {"b": "5754"}, {"c": "L7"}, {"p": "Abbey Road Studio 1, London"}, {"2": "code"}]}}],
           "result": {
             "mainEntity": {
               "instanceOf": {
@@ -4645,7 +4674,41 @@
                     "date": ["198407--"],
                     "marc:geographicClassificationAreaCode": ["5754"],
                     "marc:geographicClassificationSubareaCode": ["L7"],
-                    "marc:typeOfDate": "marc:SingleDate"
+                    "marc:typeOfDate": "marc:SingleDate",
+                    "place": [
+                      {
+                        "@type": "Place",
+                        "label": "Abbey Road Studio 1, London",
+                        "source": {
+                          "@type": "Source",
+                          "code": "code"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "Capture with no date given in i1 and faulty empty i2",
+          "source": [
+            {"033": {"ind1": " ", "ind2": " ", "subfields": [{"b": "6000"}]}},
+            {"518": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Recorded from Dutch and German radio broadcasts."}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "capture": [
+                  {
+                    "@type": "Capture",
+                    "marc:geographicClassificationAreaCode": ["6000"]
+                  },
+                  {
+                    "@type": "Capture",
+                    "label": "Recorded from Dutch and German radio broadcasts."
                   }
                 ]
               }
@@ -4689,8 +4752,6 @@
         "marcDefault": " ",
         "tokenMap": {"0": "marc:OuterRing", "1": "marc:ExcludingRing"}
       },
-      "$2": {"property": "source"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$a": {
         "about": "_:scale",
         "property": "@type",
@@ -4721,6 +4782,11 @@
       "$x": {"property": "marc:beginningDate"},
       "$y": {"property": "marc:endingDate"},
       "$z": {"property": "marc:nameOfExtraterrestrialBody"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
+      "$1": {"addProperty": "marc:rwoURI"},
+      "$2": {"link": "source", "resourceType": "Source", "property": "source"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": [
@@ -4926,7 +4992,8 @@
     "036": {
     "include": ["identifier"],
     "resourceType": "StudyNumber",
-    "$b": {"link": "source", "resourceType": "Source", "property": "label"}
+    "$b": {"link": "source", "resourceType": "Source", "property": "label"},
+    "$6": null
     },
     "037": {
       "addLink": "acquisitionSource",
@@ -4938,6 +5005,8 @@
       "$f": {"addProperty": "marc:formOfIssue"},
       "$g": {"addProperty": "marc:additionalFormatCharacteristics"},
       "$n": {"addProperty": "comment"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
@@ -5053,6 +5122,7 @@
         "_:tableOfContents": {"addLink": "tableOfContents", "resourceType": "TableOfContents"},
         "_:translationSource": {"addLink": "translationOf", "resourceType": "Work"}
       },
+      "TODO": "add subfields $m, $n, $p, $q, $r",
       "$a": {
         "TODO:unifyWith": ["008:language", "240.a?", "546"],
         "TODO": "not repeated if equal with existing",
@@ -5217,6 +5287,7 @@
     },
     "043": {
       "NOTE:local": "ANVÄNDS NORMALT EJ - Används normalt inte i Bibliografiska formatet, men ska ligga kvar oförändrat i importerade poster.",
+      "NOTE:lc": "Is geographicCoverage in BF2",
       "aboutEntity": "?work",
       "link": "marc:hasGeographicAreaCode",
       "resourceType": "marc:GeographicAreaCode",
@@ -5227,7 +5298,7 @@
     },
 
     "044": {
-      "TODO": "map to countrycode",
+      "NOTE:LC": "044 - COUNTRY OF PUBLISHING/PRODUCING ENTITY CODE (NR) nac",
       "link": "marc:hasCountryOfPublishingProducingEntityCode",
       "resourceType": "marc:CountryOfPublishingProducingEntityCode",
       "$a": {"addProperty": "marc:marcCountryCode"},
@@ -5297,7 +5368,11 @@
       "$c": {"property": "marc:date1CEDate"},
       "$e": {"property": "marc:date2CEDateFieldMustAlsoContainASubfieldC"},
       "$m": {"property": "marc:beginningOfDateValid"},
-      "$n": {"property": "marc:endOfDateValid"}
+      "$n": {"property": "marc:endOfDateValid"},
+      "$o": null,
+      "$p": null,
+      "$2": null,
+      "$6": null
     },
     "047": {
       "NOTE:local":"ANVÄNDS NORMALT EJ",
@@ -5342,7 +5417,29 @@
       "i2": {"property": "marc:assignedByLC", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "code", "TODO:repeatable": true},
       "$b": {"property": "itemPortion"},
-      "$6": {"property": "marc:fieldref"}
+      "$0": {"property": "marc:recordControlNumber"},
+      "$1": null,
+      "$3": null,
+      "$6": null,
+      "_spec": [
+        {
+          "source": {
+            "050": {"ind1": " ", "ind2": "4", "subfields": [{"a": "NB933.F44"},{"b": "T6"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "classification": [{
+                  "@type": "ClassificationLcc",
+                  "code": "NB933.F44",
+                  "itemPortion": "T6"
+                }]
+              }
+            }
+          }
+        }
+      ]
     },
 
     "051": {
@@ -5356,6 +5453,7 @@
       "$c": {"property": "marc:copyInformation"}
     },
     "052": {
+      "NOTE:LC": "Is GeographicCoverage in BF2",
       "aboutEntity": "?work",
       "addLink": "marc:hasGeographicClassification",
       "resourceType": "marc:GeographicClassification",
@@ -5376,6 +5474,7 @@
       "$2": {"property": "marc:codeSource"}
     },
     "055": {
+      "NOTE:LC": "Is ClassificationLcc in BF2",
       "NOTE:local":"ANVÄNDS NORMALT EJ",
       "aboutEntity": "?work",
       "addLink": "marc:hasClassificationNumbersAssignedInCanada",
@@ -5406,7 +5505,9 @@
       },
       "$a": {"property": "marc:classificationNumber"},
       "$b": {"property": "marc:itemNumber"},
-      "$2": {"property": "marc:sourceOfCallClassNumber"}
+      "$1": null,
+      "$2": {"property": "marc:sourceOfCallClassNumber"},
+      "$6": null
     },
     "060": {
       "aboutEntity": "?work",
@@ -5415,9 +5516,35 @@
       "i1": {"property": "marc:existenceInNlmCollection", "marcDefault": " ", "tokenMap": {"0": true, "1": false}},
       "i2": {"property": "marc:assignedByNlm", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "code"},
-      "$b": {"property": "itemPortion", "ignored": true}
+      "$b": {"property": "itemPortion"},
+      "$0": {"property": "marc:recordControlNumber"},
+      "$1": null,
+      "_spec": [
+        {
+          "source": {
+            "060": {"ind1": " ", "ind2": "4", "subfields": [{"a": "W1"},{"b": "JO706M"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "classification": [{
+                  "@type": "ClassificationNlm",
+                  "code": "W1",
+                  "itemPortion": "JO706M"
+                }]
+              }
+            }
+          }
+        }
+      ]
     },
-    "061": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
+    "061": {
+      "NOTE:LC": "061 - NATIONAL LIBRARY OF MEDICINE COPY STATEMENT (R) nac",
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "066": {
       "NOTE:record-count": 4905,
       "NOTE:LC": "ignore",
@@ -5435,15 +5562,22 @@
       "i1": {"marcDefault": " "},
       "$a": {"addProperty": "classificationPortion"},
       "$b": {"property": "itemPortion"},
+      "$0": {"property": "marc:recordControlNumber"},
       "$1": {"property": "marc:rwoURI"}
     },
-    "071": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
+    "071": {
+      "NOTE:LC": "071 - NATIONAL AGRICULTURAL LIBRARY COPY STATEMENT (R) nac",
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
 
     "072": {
       "onRevertPrefer": ["653"],
       "aboutEntity": "?work",
       "addLink": "subject",
       "resourceType": "Concept",
+      "TODO": "Concept should be Topic",
       "match": [
         {
           "when": {
@@ -5461,13 +5595,17 @@
         "resourceType": "ConceptScheme",
         "property": "code",
         "tokenMap": {
-          "0": "NAL"
+          "0": "NAL",
+          "TODO:uriTemplate": "http://id.loc.gov/vocabulary/classSchemes/agricola{_}"
         },
         "definedElsewhereToken": "7",
         "marcDefault": "7"
       },
       "$a": {"property": "label", "required": true},
-      "$x": {"link": "inCollection", "property": "label"},
+      "NOTE:$a": "Is code in BF2 1.5",
+      "$x": {"link": "inCollection", "resourceType": "ConceptCollection", "property": "label"},
+      "TODO:$2": "If $2 = bisacsh, then http://id.loc.gov/vocabulary/classSchemes/bisacsh",
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": {
@@ -5494,8 +5632,9 @@
         {
           "source": {
             "072": {"ind1": " ", "ind2": "7", "subfields": [
-              {"a": "Token"},
-              {"2": "G"}
+              {"a": "aZ1"},
+              {"x": ".630"},
+              {"2": "mesh"}
             ]}
           },
           "result": {
@@ -5504,10 +5643,14 @@
                 "@type": "Text",
                 "subject": [ {
                   "@type": "Concept",
-                  "label": "Token",
+                  "label": "aZ1",
+                  "inCollection": {
+                    "@type": "ConceptCollection",
+                    "label": ".630"
+                  },
                   "inScheme": {
                     "@type": "ConceptScheme",
-                    "code": "G"
+                    "code": "mesh"
                   }
                 } ]
               }
@@ -5907,23 +6050,80 @@
       ]
     },
 
-    "085": {"ignored": true, "NOTE:record-count": 21, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
+    "085": {
+      "NOTE:LC": "085 - SYNTHESIZED CLASSIFICATION NUMBER COMPONENTS (R) nac",
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "ignored": true,
+      "NOTE:record-count": 21
+    },
     "086": {
       "TODO": "group with classification",
       "addLink": "marc:hasGovernmentDocumentClassificationNumber",
       "resourceType": "marc:GovernmentDocumentClassificationNumber",
       "i1": {
-        "propert": "marc:numberSource",
+        "link": "inScheme",
+        "resourceType": "ClassificationScheme",
+        "property": "code",
+        "TODO:uriTemplate": "http://id.loc.gov/vocabulary/classSchemes/{_}",
         "tokenMap": {
-          " ": "marc:SourceSpecifiedInSubfield2",
-          "0": "marc:SuperintendentOfDocumentsClassificationSystem",
-          "1": "marc:GovernmentOfCanadaPublicationsOutlineOfClassification"
+          " ": null,
+          "0": "sudocs",
+          "1": "cacodoc"
         },
-        "marcDefault": " "
+        "marcDefault": " ",
+        "definedElsewhereToken":  " "
       },
       "$a": {"property": "marc:classificationNumber"},
       "$z": {"addProperty": "marc:canceledInvalidClassificationNumber"},
-      "$2": {"property": "marc:numberSource"}
+      "$0": {"property": "marc:recordControlNumber"},
+      "$1": null,
+      "$2": {"property": "marc:numberSource"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "name": "FUNKAR",
+          "source": {
+            "086": {"ind1": "0", "ind2": " ", "subfields": [{"a": "A 13.28:F 61/2/981 Glacier"}]}},
+          "result": {
+            "mainEntity": 
+              {
+                "instanceOf": {
+                  "@type": "Text"
+              },
+              "marc:hasGovernmentDocumentClassificationNumber": [
+                {
+                  "@type": "marc:GovernmentDocumentClassificationNumber",
+                  "marc:classificationNumber": "A 13.28:F 61/2/981 Glacier",
+                  "inScheme": {
+                    "@type": "ClassificationScheme",
+                    "code": "sudocs"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Empty i1, Source in $2",
+          "source": {
+            "086": {"ind1": " ", "ind2": " ", "subfields": [{"a": "HEU/G74.3C49"},{"2": "ordocs"}]}},
+          "result": {
+            "mainEntity": 
+              {
+                "instanceOf": {
+                  "@type": "Text"
+              },
+              "marc:hasGovernmentDocumentClassificationNumber": [
+                {
+                  "@type": "marc:GovernmentDocumentClassificationNumber",
+                  "marc:classificationNumber": "HEU/G74.3C49",
+                  "marc:numberSource": "ordocs"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "088": {
       "include": ["identifier"],
@@ -10380,6 +10580,7 @@
       "NOTE:$6": {"property": "marc:fieldref", "NOTE:record-count": 0}
     },
     "518": {
+      "NOTE:local": "Observera felaktig delfältsbenämning i den svenska Formathandboken, o och d omkastade.",
       "aboutEntity": "?work",
       "addLink": "capture",
       "resourceType": "Capture",
