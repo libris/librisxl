@@ -4782,11 +4782,11 @@
       "$x": {"property": "marc:beginningDate"},
       "$y": {"property": "marc:endingDate"},
       "$z": {"property": "marc:nameOfExtraterrestrialBody"},
-      "$0": null,
-      "$1": null,
-      "$2": {"property": "source"},
+      "$0": {"addProperty": "marc:recordControlNumber"},
+      "$1": {"addProperty": "marc:rwoURI"},
+      "$2": {"link": "source", "resourceType": "Source", "property": "source"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": null,
+      "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
           "source": [
