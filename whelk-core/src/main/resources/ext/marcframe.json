@@ -6051,17 +6051,69 @@
       "addLink": "marc:hasGovernmentDocumentClassificationNumber",
       "resourceType": "marc:GovernmentDocumentClassificationNumber",
       "i1": {
-        "propert": "marc:numberSource",
+        "link": "inScheme",
+        "resourceType": "ClassificationScheme",
+        "property": "code",
+        "TODO:uriTemplate": "http://id.loc.gov/vocabulary/classSchemes/{_}",
         "tokenMap": {
-          " ": "marc:SourceSpecifiedInSubfield2",
-          "0": "marc:SuperintendentOfDocumentsClassificationSystem",
-          "1": "marc:GovernmentOfCanadaPublicationsOutlineOfClassification"
+          " ": null,
+          "0": "sudocs",
+          "1": "cacodoc"
         },
-        "marcDefault": " "
+        "marcDefault": " ",
+        "definedElsewhereToken":  " "
       },
       "$a": {"property": "marc:classificationNumber"},
       "$z": {"addProperty": "marc:canceledInvalidClassificationNumber"},
-      "$2": {"property": "marc:numberSource"}
+      "$0": {"property": "marc:recordControlNumber"},
+      "$1": null,
+      "$2": {"property": "marc:numberSource"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "name": "FUNKAR",
+          "source": {
+            "086": {"ind1": "0", "ind2": " ", "subfields": [{"a": "A 13.28:F 61/2/981 Glacier"}]}},
+          "result": {
+            "mainEntity": 
+              {
+                "instanceOf": {
+                  "@type": "Text"
+              },
+              "marc:hasGovernmentDocumentClassificationNumber": [
+                {
+                  "@type": "marc:GovernmentDocumentClassificationNumber",
+                  "marc:classificationNumber": "A 13.28:F 61/2/981 Glacier",
+                  "inScheme": {
+                    "@type": "ClassificationScheme",
+                    "code": "sudocs"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Empty i1, Source in $2",
+          "source": {
+            "086": {"ind1": " ", "ind2": " ", "subfields": [{"a": "HEU/G74.3C49"},{"2": "ordocs"}]}},
+          "result": {
+            "mainEntity": 
+              {
+                "instanceOf": {
+                  "@type": "Text"
+              },
+              "marc:hasGovernmentDocumentClassificationNumber": [
+                {
+                  "@type": "marc:GovernmentDocumentClassificationNumber",
+                  "marc:classificationNumber": "HEU/G74.3C49",
+                  "marc:numberSource": "ordocs"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "088": {
       "include": ["identifier"],
