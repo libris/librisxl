@@ -342,6 +342,7 @@ class PostgreSQLComponent {
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc, connection)
 
+            //FIXME: throw exception on null changedBy
             if (changedBy != null) {
                 String creator = getDescriptionChangerId(changedBy)
                 doc.setDescriptionCreator(creator)
@@ -621,18 +622,18 @@ class PostgreSQLComponent {
                 linkFinder.normalizeIdentifiers(doc)
             verifyDocumentIdRetention(preUpdateDoc, doc)
 
-            if (changedBy != null) {
-                doc.setDescriptionLastModifier(getDescriptionChangerId(changedBy))
-            }
-
             boolean deleted = doc.getDeleted()
 
             Date createdTime = new Date(resultSet.getTimestamp("created").getTime())
-            Date modTime = new Date()
-            if (minorUpdate) {
-                modTime = new Date(resultSet.getTimestamp("modified").getTime())
-            }
+            Date modTime = minorUpdate
+                ? new Date(resultSet.getTimestamp("modified").getTime())
+                : new Date()
             doc.setModified(modTime)
+
+            if (!minorUpdate) {
+                doc.setDescriptionLastModifier(getDescriptionChangerId(changedBy))
+            }
+
             updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
             rigUpdateStatement(updateStatement, doc, modTime, changedIn, changedBy, collection, deleted)
             updateStatement.execute()
@@ -2207,7 +2208,20 @@ class PostgreSQLComponent {
     }
 
     private String getDescriptionChangerId(String changedBy) {
-        // FIXME: hardcoded
-        return "https://libris.kb.se/library/" + changedBy
+        //FIXME(?): hardcoded
+        // for historical reasons changedBy is the script URI for global changes
+        if (changedBy.startsWith('https://libris.kb.se/sys/globalchanges/')) {
+            return getDescriptionChangerId('SEK')
+        }
+        else if (isHttpUri(changedBy)) {
+            return changedBy
+        }
+        else {
+            return 'https://libris.kb.se/library/' + changedBy
+        }
+    }
+
+    private String isHttpUri(String s) {
+        return s.startsWith('http://') || s.startsWith('https://')
     }
 }

@@ -105,7 +105,7 @@ class Document {
 
     String getDescriptionCreator() { get(descriptionCreatorPath) }
 
-    void setDescriptionLastModifier(creator) { set(descriptionLastModifierPath, creator) }
+    void setDescriptionLastModifier(modifier) { set(descriptionLastModifierPath, modifier) }
 
     String getDescriptionLastModifier() { get(descriptionLastModifierPath) }
 
