@@ -233,14 +233,14 @@ class ImporterMain {
 
     static List<String> getExtraAuthIds(String connUrl, List<String> bibIds){
         String sqlQuery = 'SELECT bib_id, auth_id FROM auth_bib WHERE bib_id IN (?)'.replace('?',bibIds.collect{it->'?'}.join(','))
-        def sql = Sql.newInstance(connUrl, "com.mysql.jdbc.Driver")
+        def sql = Sql.newInstance(connUrl, MySQLLoader.JDBC_DRIVER)
         def rows = sql.rows(sqlQuery,bibIds)
         return rows.collect {it->it.auth_id}
     }
 
     static List<String> getExtraHoldIds(String connUrl, List<String> bibIds){
         String sqlQuery = 'SELECT mfhd_id FROM mfhd_record WHERE mfhd_record.bib_id IN (?) AND deleted = 0'.replace('?',bibIds.collect{it->'?'}.join(','))
-        def sql = Sql.newInstance(connUrl, "com.mysql.jdbc.Driver")
+        def sql = Sql.newInstance(connUrl, MySQLLoader.JDBC_DRIVER)
         def rows = sql.rows(sqlQuery,bibIds)
         return rows.collect {it->it.mfhd_id}
     }
