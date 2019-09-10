@@ -66,8 +66,7 @@ void checkFrequency(data, value, type) {
 }
 
 void checkLinkabilitySubUnit(data, value) {
-
-    value.each {
+    value.flatten().each {
         checkLinkability(data, it)
     }
 }
