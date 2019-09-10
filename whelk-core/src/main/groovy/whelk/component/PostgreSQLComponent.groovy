@@ -156,9 +156,7 @@ class PostgreSQLComponent {
         DELETE_DEPENDENCIES = "DELETE FROM $dependenciesTableName WHERE id = ?"
         INSERT_DEPENDENCIES = "INSERT INTO $dependenciesTableName (id, relation, dependsOnId) VALUES (?,?,?)"
 
-        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted) SELECT ?,?,?,?,?,?,?,?,? " +
-                "WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? " +
-                "ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"
+        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted) SELECT ?,?,?,?,?,?,?,?,? "
 
         INSERT_EMBELLISHED_DOCUMENT = "INSERT INTO $embellishedTableName (id, data) VALUES (?,?)"
         DELETE_EMBELLISHED_DOCUMENT = "DELETE FROM $embellishedTableName WHERE id = ?"
@@ -926,9 +924,8 @@ class PostgreSQLComponent {
                 insvers = rigVersionStatement(insvers, doc, createdTime,
                                               modTime, changedIn, changedBy,
                                               collection, deleted)
-                int updated = insvers.executeUpdate()
-                log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
-                return (updated > 0)
+                insvers.executeUpdate()
+                return true
             } catch (Exception e) {
                 log.error("Failed to save document version: ${e.message}")
                 throw e
@@ -952,8 +949,6 @@ class PostgreSQLComponent {
         insvers.setTimestamp(7, new Timestamp(createdTime.getTime()))
         insvers.setTimestamp(8, new Timestamp(modTime.getTime()))
         insvers.setBoolean(9, deleted)
-        insvers.setString(10, doc.getShortId())
-        insvers.setString(11, doc.getChecksum())
         return insvers
     }
 
