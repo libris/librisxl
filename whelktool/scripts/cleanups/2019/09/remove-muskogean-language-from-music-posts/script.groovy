@@ -8,29 +8,29 @@
  * This has the problem of removing Muskogean from all "Music" or "NotatedMusic" that is actually in Muskogean...
  *
  * ID list generated with
- * curl '10.50.16.190:9200/libris_stg/_search?type=bib&q=(Muskogeanska)&size=3000&filter_path=hits.total,hits.hits._id&pretty=true' | grep _id | tr '"' ' ' | awk '{print $3}' > muskogeanska_ids.txt
+ * curl '10.50.16.190:9200/libris_stg/_search?type=bib&q=(Muskogeanska)&size=3000&filter_path=hits.total,hits.hits._id&pretty=true' | grep _id | tr '"' ' ' | awk '{print $3}' > muskogeanska-ids.txt
  *
  * See LXL-2443 for more info.
  *
  */
 PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 
-File bibIds = new File(scriptDir, 'muskogeanska_ids.txt')
+File bibIds = new File(scriptDir, 'muskogean-ids.txt')
+verifiedNotMuskogean = new File(scriptDir, 'verified-not-muskogean-ids.txt').readLines()
 
 selectByIds(bibIds.readLines()) { bib ->
-    if (!isReallyMuskogean(bib)) {
+    if (isNotMuskogean(bib)) {
         removeMuskogean(bib.doc.data)
         scheduledForUpdate.println("${bib.doc.getURI()}")
         bib.scheduleSave()
     }
     else {
-        println ("MUSKOGEAN?: ${bib.doc.shortId} ${bib.doc.data["@graph"][1]['hasTitle']}")
+        println ("MUSKOGEAN?: ${bib.doc.getURI()} ${bib.doc.data["@graph"][1]['hasTitle']}")
     }
 }
 
-boolean isReallyMuskogean(bib) {
-    //return !isMusic(bib)
-    return bib.doc.shortId == 'p60splv152m3svv'
+boolean isNotMuskogean(bib) {
+    return isMusic(bib) || verifiedNotMuskogean.contains(bib.doc.getURI().toString())
 }
 
 boolean isMusic(bib) {
