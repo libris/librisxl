@@ -30,7 +30,7 @@ selectByIds(bibIds.readLines()) { bib ->
 }
 
 boolean isNotMuskogean(bib) {
-    return isMusic(bib) || bib.doc.getURI().toString() in verifiedNotMuskogean
+    return isMusic(bib) || bib.doc.shortId in verifiedNotMuskogean
 }
 
 boolean isMusic(bib) {
