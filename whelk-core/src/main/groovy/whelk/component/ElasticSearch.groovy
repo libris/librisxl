@@ -159,10 +159,15 @@ class ElasticSearch {
         assert collection
         if (docs) {
             String bulkString = docs.collect{ doc ->
-                String shapedData = JsonOutput.toJson(
-                    getShapeForIndex(doc, whelk, collection))
-                String action = createActionRow(doc,collection)
-                "${action}\n${shapedData}\n"
+                try {
+                    String shapedData = JsonOutput.toJson(
+                        getShapeForIndex(doc, whelk, collection))
+                    String action = createActionRow(doc, collection)
+                    return "${action}\n${shapedData}\n"
+                } catch (Exception e) {
+                    log.error("Failed to index ${doc.getShortId()} in elastic.", e)
+                    throw e
+                }
             }.join('')
 
             String response = performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE).second
