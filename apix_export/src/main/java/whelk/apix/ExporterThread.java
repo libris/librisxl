@@ -3,6 +3,7 @@ package whelk.apix;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import whelk.Changer;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
@@ -106,7 +107,7 @@ public class ExporterThread extends Thread
                 String data = resultSet.getString("data");
                 boolean deleted = resultSet.getBoolean("deleted");
                 String collection = resultSet.getString("collection");
-                String changedBy = resultSet.getString("changedBy");
+                Changer changedBy = Changer.sigel(resultSet.getString("changedBy"));
                 String changedIn = resultSet.getString("changedIn");
                 HashMap datamap = m_mapper.readValue(data, HashMap.class);
                 Document document = new Document(datamap);
@@ -362,7 +363,7 @@ public class ExporterThread extends Thread
      * Will not update the documents "modified" column.
      */
     private void commitAtomicDocumentUpdate(String id, String newVoyagerId, boolean failedExport, String changedIn,
-                                            String changedBy, String collection, boolean deleted)
+                                            Changer changedBy, String collection, boolean deleted)
             throws IOException, SQLException
     {
         m_whelk.storeAtomicUpdate(id, true, changedIn, changedBy,

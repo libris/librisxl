@@ -6,6 +6,7 @@ import spock.lang.Specification
 import whelk.JsonLd
 import whelk.exception.InvalidQueryException
 import whelk.rest.api.SearchUtils.SearchType
+import whelk.rest.api.Offsets
 
 class SearchUtilsSpec extends Specification {
 

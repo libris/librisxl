@@ -1,9 +1,10 @@
 package whelk.importer;
 
-import javax.xml.transform.Transformer;
+import whelk.Changer;
+
+import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamSource;
-import javax.xml.transform.Templates;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,7 +42,7 @@ class Parameters
     boolean getReplaceBib() { return replaceBib; }
     boolean getMergeHold() { return mergeHold; }
     boolean getMergeBib() { return mergeBib; }
-    String getChangedBy() { return changedBy; }
+    Changer getChangedBy() { return Changer.sigelOrUnknown(changedBy); }
     String getChangedIn() { return changedIn; }
 
     enum INPUT_FORMAT

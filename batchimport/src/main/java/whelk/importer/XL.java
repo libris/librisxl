@@ -11,6 +11,7 @@ import se.kb.libris.utils.isbn.ConvertException;
 import se.kb.libris.utils.isbn.Isbn;
 import se.kb.libris.utils.isbn.IsbnException;
 import se.kb.libris.utils.isbn.IsbnParser;
+import whelk.Changer;
 import whelk.Document;
 import whelk.IdGenerator;
 import whelk.Whelk;
@@ -91,7 +92,7 @@ class XL
         if (collection.equals("hold") && incomingMarcRecord.getLeader(5) == 'd')
         {
             for (String id : duplicateIDs)
-                m_whelk.remove(id, IMPORT_SYSTEM_CODE, null);
+                m_whelk.remove(id, IMPORT_SYSTEM_CODE, Changer.unknown());
             return null;
         }
 

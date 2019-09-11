@@ -1,5 +1,6 @@
 package whelk.rest.api
 
+import whelk.Changer
 import whelk.Document
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
@@ -110,7 +111,7 @@ class MergeAPI extends HttpServlet {
         // Make use of merged result
 
         if (commit) {
-            whelk.mergeExisting(remainingID, disappearingID, merged, "xl", null, collection)
+            whelk.mergeExisting(remainingID, disappearingID, merged, "xl", Changer.unknown(), collection)
             response.setStatus(HttpServletResponse.SC_OK)
             return
 

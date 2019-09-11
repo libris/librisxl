@@ -1,11 +1,13 @@
 package whelk.rest.api
 
+import com.google.common.base.Strings
 import groovy.util.logging.Log4j2 as Log
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import io.prometheus.client.Summary
 import org.apache.http.entity.ContentType
 import org.codehaus.jackson.map.ObjectMapper
+import whelk.Changer
 import whelk.Document
 import whelk.IdGenerator
 import whelk.IdType
@@ -606,6 +608,15 @@ class Crud extends HttpServlet {
                     "Body is not flat JSON-LD.")
         }
 
+        if (Strings.isNullOrEmpty(request.getHeader(XL_ACTIVE_SIGEL_HEADER))) {
+            log.debug("POST missing header " + XL_ACTIVE_SIGEL_HEADER)
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Missing header: " + XL_ACTIVE_SIGEL_HEADER)
+            return
+        }
+
         // FIXME we're assuming Content-Type application/ld+json here
         // should we deny the others?
 
@@ -692,6 +703,15 @@ class Crud extends HttpServlet {
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Content-Type not supported.")
+            return
+        }
+
+        if (Strings.isNullOrEmpty(request.getHeader(XL_ACTIVE_SIGEL_HEADER))) {
+            log.debug("PUT missing header " + XL_ACTIVE_SIGEL_HEADER)
+            failedRequests.labels("PUT", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Missing header: " + XL_ACTIVE_SIGEL_HEADER)
             return
         }
 
@@ -818,7 +838,7 @@ class Crud extends HttpServlet {
                           boolean isUpdate, String httpMethod) {
         try {
             if (doc) {
-                String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
+                Changer activeSigel = Changer.sigel(request.getHeader(XL_ACTIVE_SIGEL_HEADER))
 
                 if (isUpdate) {
                     whelk.storeAtomicUpdate(doc.getShortId(), false, "xl", activeSigel, {
@@ -1046,7 +1066,7 @@ class Crud extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "This record may not be deleted, because it is referenced by other records.")
             } else {
                 log.debug("Removing resource at ${doc.getShortId()}")
-                String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
+                Changer activeSigel = Changer.sigel(request.getHeader(XL_ACTIVE_SIGEL_HEADER))
                 whelk.remove(doc.getShortId(), "xl", activeSigel)
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT)
             }

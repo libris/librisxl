@@ -1,5 +1,6 @@
 package whelk
 
+import com.google.common.base.Preconditions
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.collections4.map.LRUMap
@@ -249,7 +250,11 @@ class Whelk {
     /**
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
-    Document createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
+    Document createDocument(Document document, String changedIn, Changer changedBy, String collection, boolean deleted) {
+        Preconditions.checkNotNull(document, 'document')
+        Preconditions.checkNotNull(changedIn, 'changedIn')
+        Preconditions.checkNotNull(changedBy,'changedBy')
+        Preconditions.checkNotNull(collection, 'collection')
 
         boolean detectCollisionsOnTypedIDs = false
         List<Tuple2<String, String>> collidingIDs = getIdCollisions(document, detectCollisionsOnTypedIDs)
@@ -269,7 +274,12 @@ class Whelk {
         return document
     }
 
-    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
+    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, Changer changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
+        Preconditions.checkNotNull(id, 'id')
+        Preconditions.checkNotNull(changedIn, 'changedIn')
+        Preconditions.checkNotNull(changedBy,'changedBy')
+        Preconditions.checkNotNull(updateAgent, 'updateAgent')
+
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
         if (updated == null) {
             return null
@@ -285,8 +295,13 @@ class Whelk {
     }
 
     void bulkStore(final List<Document> documents, String changedIn,
-                   String changedBy, String collection,
+                   Changer changedBy, String collection,
                    @Deprecated boolean useDocumentCache = false) {
+        Preconditions.checkNotNull(documents, 'documents')
+        Preconditions.checkNotNull(changedIn, 'changedIn')
+        Preconditions.checkNotNull(changedBy,'changedBy')
+        Preconditions.checkNotNull(collection, 'collection')
+
         if (storage.bulkStore(documents, changedIn, changedBy, collection)) {
             for (Document doc : documents) {
                 if (collection == "auth" || collection == "definitions") {
@@ -304,7 +319,11 @@ class Whelk {
         }
     }
 
-    void remove(String id, String changedIn, String changedBy) {
+    void remove(String id, String changedIn, Changer changedBy) {
+        Preconditions.checkNotNull(id, 'documents')
+        Preconditions.checkNotNull(changedIn, 'changedIn')
+        Preconditions.checkNotNull(changedBy,'changedBy')
+
         log.debug "Deleting ${id} from Whelk"
         storage.remove(id, changedIn, changedBy)
         if (elastic) {
@@ -316,7 +335,7 @@ class Whelk {
         }
     }
 
-    void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn, String changedBy, String collection) {
+    void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn, Changer changedBy, String collection) {
         storage.mergeExisting(remainingID, disappearingID, remainingDocument, changedIn, changedBy, collection, jsonld)
 
         if (elastic) {

@@ -1,31 +1,37 @@
 package whelk.component
 
+import groovy.json.StringEscapeUtils
 import groovy.transform.Canonical
 import groovy.transform.CompileStatic
-import whelk.util.LegacyIntegrationTools
-
-import static groovy.transform.TypeCheckingMode.SKIP
 import groovy.util.logging.Log4j2 as Log
-import groovy.json.StringEscapeUtils
 import org.apache.commons.dbcp2.BasicDataSource
 import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
 import org.postgresql.util.PSQLException
+import whelk.Changer
 import whelk.Document
 import whelk.IdType
 import whelk.JsonLd
+import whelk.exception.CancelUpdateException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
-import whelk.exception.CancelUpdateException
 import whelk.filter.LinkFinder
+import whelk.util.LegacyIntegrationTools
 
-import java.sql.*
+import java.sql.BatchUpdateException
+import java.sql.Connection
+import java.sql.PreparedStatement
+import java.sql.ResultSet
+import java.sql.SQLException
+import java.sql.Timestamp
+import java.sql.Types
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Date
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+
+import static groovy.transform.TypeCheckingMode.SKIP
 
 @Log
 @CompileStatic
@@ -301,7 +307,7 @@ class PostgreSQLComponent {
         }
     }
 
-    boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean createDocument(Document doc, String changedIn, Changer changedBy, String collection, boolean deleted) {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
 
         if (linkFinder != null)
@@ -342,12 +348,7 @@ class PostgreSQLComponent {
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc, connection)
 
-            //FIXME: throw exception on null changedBy
-            if (changedBy != null) {
-                String creator = getDescriptionChangerId(changedBy)
-                doc.setDescriptionCreator(creator)
-                doc.setDescriptionLastModifier(creator)
-            }
+            changedBy.stampCreated(doc)
 
             Date now = new Date()
             doc.setCreated(now)
@@ -480,7 +481,7 @@ class PostgreSQLComponent {
      * The replacement is done atomically within a transaction.
      */
     public void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn,
-                              String changedBy, String collection, JsonLd jsonld) {
+                              Changer changedBy, String collection, JsonLd jsonld) {
         Connection connection = getConnection()
         connection.setAutoCommit(false)
         PreparedStatement selectStatement
@@ -589,7 +590,7 @@ class PostgreSQLComponent {
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
-    public Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent) {
+    public Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, Changer changedBy, UpdateAgent updateAgent) {
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
@@ -611,9 +612,6 @@ class PostgreSQLComponent {
             doc = assembleDocument(resultSet)
 
             String collection = resultSet.getString("collection")
-            String oldChangedBy = resultSet.getString("changedBy")
-            if (changedBy == null)
-                changedBy = oldChangedBy
 
             // Performs the callers updates on the document
             Document preUpdateDoc = doc.clone()
@@ -625,14 +623,12 @@ class PostgreSQLComponent {
             boolean deleted = doc.getDeleted()
 
             Date createdTime = new Date(resultSet.getTimestamp("created").getTime())
+
             Date modTime = minorUpdate
                 ? new Date(resultSet.getTimestamp("modified").getTime())
                 : new Date()
             doc.setModified(modTime)
-
-            if (!minorUpdate) {
-                doc.setDescriptionLastModifier(getDescriptionChangerId(changedBy))
-            }
+            changedBy.stampModified(doc, minorUpdate, modTime)
 
             updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
             rigUpdateStatement(updateStatement, doc, modTime, changedIn, changedBy, collection, deleted)
@@ -660,7 +656,7 @@ class PostgreSQLComponent {
             connection.rollback()
             throw e
         } catch (CancelUpdateException e) {
-            /* An exception the called lambda/clousure can throw to cancel a record update. NOT an indication of an error. */
+            /* An exception the called lambda/closure can throw to cancel a record update. NOT an indication of an error. */
             connection.rollback()
         } catch (Exception e) {
             log.error("Failed to save document: ${e.message}. Rolling back.")
@@ -891,12 +887,12 @@ class PostgreSQLComponent {
         }
     }
 
-    private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, Date timestamp, String changedIn, String changedBy, String collection, boolean deleted) {
+    private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, Date timestamp, String changedIn, Changer changedBy, String collection, boolean deleted) {
         insert.setString(1, doc.getShortId())
         insert.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
         insert.setString(3, collection)
         insert.setString(4, changedIn)
-        insert.setString(5, changedBy)
+        insert.setString(5, changedBy.getChangedBy())
         insert.setString(6, doc.getChecksum())
         insert.setBoolean(7, deleted)
         insert.setTimestamp(8, new Timestamp(timestamp.getTime()))
@@ -906,11 +902,11 @@ class PostgreSQLComponent {
         return insert
     }
 
-    private void rigUpdateStatement(PreparedStatement update, Document doc, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
+    private void rigUpdateStatement(PreparedStatement update, Document doc, Date modTime, String changedIn, Changer changedBy, String collection, boolean deleted) {
         update.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
         update.setString(2, collection)
         update.setString(3, changedIn)
-        update.setString(4, changedBy)
+        update.setString(4, changedBy.getChangedBy())
         update.setString(5, doc.getChecksum())
         update.setBoolean(6, deleted)
         update.setTimestamp(7, new Timestamp(modTime.getTime()))
@@ -918,7 +914,7 @@ class PostgreSQLComponent {
     }
 
     boolean saveVersion(Document doc, Connection connection, Date createdTime,
-                        Date modTime, String changedIn, String changedBy,
+                        Date modTime, String changedIn, Changer changedBy,
                         String collection, boolean deleted) {
         if (versioning) {
             PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
@@ -942,13 +938,13 @@ class PostgreSQLComponent {
     private PreparedStatement rigVersionStatement(PreparedStatement insvers,
                                                   Document doc, Date createdTime,
                                                   Date modTime, String changedIn,
-                                                  String changedBy, String collection,
+                                                  Changer changedBy, String collection,
                                                   boolean deleted) {
         insvers.setString(1, doc.getShortId())
         insvers.setObject(2, doc.dataAsString, Types.OTHER)
         insvers.setString(3, collection)
         insvers.setString(4, changedIn)
-        insvers.setString(5, changedBy)
+        insvers.setString(5, changedBy.getChangedBy())
         insvers.setString(6, doc.getChecksum())
         insvers.setTimestamp(7, new Timestamp(createdTime.getTime()))
         insvers.setTimestamp(8, new Timestamp(modTime.getTime()))
@@ -959,7 +955,7 @@ class PostgreSQLComponent {
     }
 
     boolean bulkStore(
-            final List<Document> docs, String changedIn, String changedBy, String collection, boolean updateDepMinMax = true) {
+            final List<Document> docs, String changedIn, Changer changedBy, String collection, boolean updateDepMinMax = true) {
         if (!docs || docs.isEmpty()) {
             return true
         }
@@ -2003,7 +1999,7 @@ class PostgreSQLComponent {
         }
     }
 
-    void remove(String identifier, String changedIn, String changedBy) {
+    void remove(String identifier, String changedIn, Changer changedBy) {
         if (versioning) {
             log.debug("Marking document with ID ${identifier} as deleted.")
             try {
@@ -2205,23 +2201,5 @@ class PostgreSQLComponent {
     private Date parseDate(String date) {
         ZonedDateTime zdt = ZonedDateTime.parse(date, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
         return Date.from(zdt.toInstant())
-    }
-
-    private String getDescriptionChangerId(String changedBy) {
-        //FIXME(?): hardcoded
-        // for historical reasons changedBy is the script URI for global changes
-        if (changedBy.startsWith('https://libris.kb.se/sys/globalchanges/')) {
-            return getDescriptionChangerId('SEK')
-        }
-        else if (isHttpUri(changedBy)) {
-            return changedBy
-        }
-        else {
-            return 'https://libris.kb.se/library/' + changedBy
-        }
-    }
-
-    private String isHttpUri(String s) {
-        return s.startsWith('http://') || s.startsWith('https://')
     }
 }
