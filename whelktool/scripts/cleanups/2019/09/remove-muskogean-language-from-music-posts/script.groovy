@@ -1,11 +1,11 @@
 /*
- * This removes https://id.kb.se/language/mus from all posts that are not really Muskogean
+ * Remove https://id.kb.se/language/mus from all posts that are not really Muskogean
  *
- * 2435 posts with https://id.kb.se/language/mus
+ * 2435 posts with https://id.kb.se/language/mus (muskogean-ids.txt)
  * 2405 of those have type "NotatedMusic" or "Music"
- * Manual inspection of the titles of the 30 remaining gave one post with actual language Muskogean
+ * 29 of the remaining 30 are not Muskogean through manual inspection of titles (verified-not-muskogean-ids.txt)
  *
- * This has the problem of removing Muskogean from all "Music" or "NotatedMusic" that is actually in Muskogean...
+ * Any "Music" or "NotatedMusic" that is actually in Muskogean will have langauge removed...
  *
  * ID list generated with
  * curl '10.50.16.190:9200/libris_stg/_search?type=bib&q=(Muskogeanska)&size=3000&filter_path=hits.total,hits.hits._id&pretty=true' | grep _id | tr '"' ' ' | awk '{print $3}' > muskogeanska-ids.txt
