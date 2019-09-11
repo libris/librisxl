@@ -36,7 +36,7 @@ class Whelk {
     String vocabUri = "https://id.kb.se/vocab/"
 
     private Map<String, Document> authCache
-    private final int CACHE_MAX_SIZE = 1000
+    private final int CACHE_MAX_SIZE = 200000
 
     static Whelk createLoadedCoreWhelk(String propName = "secret", boolean useCache = false) {
         return createLoadedCoreWhelk(PropertyLoader.loadProperties(propName), useCache)
