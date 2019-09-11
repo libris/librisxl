@@ -44,7 +44,7 @@ class Whelk {
 
     static Whelk createLoadedCoreWhelk(Properties configuration, boolean useCache = false) {
         PostgreSQLComponent storage = new PostgreSQLComponent(configuration)
-        Whelk whelk = new Whelk(storage)
+        Whelk whelk = new Whelk(storage, useCache)
         whelk.loadCoreData()
         return whelk
     }
