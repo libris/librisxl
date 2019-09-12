@@ -22,10 +22,7 @@ selectBySqlWhere(where, silent: false) { hold ->
     else if (item['hasComponent']) {
         List components = item['hasComponent']
         if (components.removeAll(this.&isNcShelf)) {
-            if (components.isEmpty()) {
-                delete(hold)
-            }
-            else if (components.size() == 1) {
+            if (components.size() == 1) {
                 try {
                     promoteLonelyComponent(item)
                     save(hold)
@@ -34,12 +31,16 @@ selectBySqlWhere(where, silent: false) { hold ->
                     failedHoldIDs.println("Failed to update ${hold.doc.shortId} due to: $e")
                 }
             }
+            else if (components.isEmpty()) {
+                delete(hold)
+            }
             else {
                 save(hold)
             }
         }
     }
 }
+
 
 void promoteLonelyComponent(Map item) {
     Map component = item['hasComponent'].first()
