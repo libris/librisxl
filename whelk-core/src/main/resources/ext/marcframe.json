@@ -11482,6 +11482,7 @@
       ],
       "subfieldOrder": "6 a b c q d j g u t m n r p k l s f o x z y v 2 e 4 0",
       "addLink": "subject",
+      "resourceType": "Identity",
       "pendingResources": {
         "_:agent": {
           "addLink": "termComponentList",
@@ -11544,7 +11545,80 @@
             }
           }}
         },
-
+        {
+          "source": {"600": {"ind1": "0", "ind2": "4", "subfields": [
+            {"a": "Franz Kafka,"},
+            {"d": "1883-1924."},
+            {"t": "Amerika"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Work",
+                  "hasTitle" : [{"@type" : "Title", "mainTitle" : "Amerika"}],
+                  "contribution": [ {
+                    "@type": "Contribution",
+                    "agent": {
+                      "@type": "Person",
+                      "name": "Franz Kafka",
+                      "lifeSpan": "1883-1924."
+                    }
+                  } ]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"600": {"ind1": "3", "ind2": "4", "subfields": [
+            {"a": "Holmbring"},
+            {"t": "Med småländska rötter"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Work",
+                  "hasTitle" : [{"@type" : "Title", "mainTitle" : "Med småländska rötter"}],
+                  "contribution": [ {
+                    "@type": "Contribution",
+                    "agent": {
+                      "@type": "Family",
+                      "name": "Holmbring"
+                    }
+                  } ]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "normalized": {"600": {"ind1": "1", "ind2": "4", "subfields": [
+            {"a": "Kipling, Rudyard,"},
+            {"d": "1865-1936."},
+            {"t": "Djungelboken"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Work",
+                  "contribution": [ {
+                      "@type": "Contribution",
+                      "agent": {
+                        "@type": "Person",
+                        "familyName": "Kipling",
+                        "givenName": "Rudyard",
+                        "lifeSpan": "1865-1936."
+                      }
+                    } ],
+                  "hasTitle": [ {"@type": "Title", "mainTitle": "Djungelboken" }]
+                }
+              ]
+            }
+          }}
+        },
         {
           "source": {"600": {"ind1": "1", "ind2": "7", "subfields": [
             {"a": "Lindgren, Astrid,"},
