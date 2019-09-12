@@ -39,6 +39,9 @@ class CrudSpec extends Specification {
         request.getRequestURI() >> {
             request.getPathInfo()
         }
+        request.getHeader(Crud.XL_ACTIVE_SIGEL_HEADER) >> {
+            return "Sig"
+        }
 
         ServletOutputStream out = GroovyMock(ServletOutputStream.class)
         response = new HttpServletResponseWrapper(GroovyMock(HttpServletResponse.class)) {
@@ -572,6 +575,9 @@ class CrudSpec extends Specification {
                                      "cataloger": false,
                                      "registrant": false]]]
         }
+        request.getHeader(Crud.XL_ACTIVE_SIGEL_HEADER) >> {
+            return "Ting"
+        }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
@@ -636,6 +642,9 @@ class CrudSpec extends Specification {
                                      "cataloger": false,
                                      "registrant": true]]]
         }
+        request.getHeader(Crud.XL_ACTIVE_SIGEL_HEADER) >> {
+            return "Ting"
+        }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
@@ -686,6 +695,9 @@ class CrudSpec extends Specification {
                                     ["code": "S",
                                      "cataloger": true,
                                      "registrant": false]]]
+        }
+        request.getHeader(Crud.XL_ACTIVE_SIGEL_HEADER) >> {
+            return "Ting"
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -747,6 +759,9 @@ class CrudSpec extends Specification {
                                      "cataloger": true,
                                      "registrant": false]]]
         }
+        request.getHeader(Crud.XL_ACTIVE_SIGEL_HEADER) >> {
+            return "Ting"
+        }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
@@ -804,6 +819,9 @@ class CrudSpec extends Specification {
                                     ["code": "S",
                                      "cataloger": true,
                                      "registrant": true]]]
+        }
+        request.getHeader(Crud.XL_ACTIVE_SIGEL_HEADER) >> {
+            return "Ting"
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -919,6 +937,9 @@ class CrudSpec extends Specification {
                                      "cataloger": false,
                                      "registrant": true]]]
         }
+        request.getHeader(Crud.XL_ACTIVE_SIGEL_HEADER) >> {
+            return "Ting"
+        }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
@@ -978,6 +999,9 @@ class CrudSpec extends Specification {
                                     ["code": "S",
                                      "cataloger": false,
                                      "registrant": true]]]
+        }
+        request.getHeader(Crud.XL_ACTIVE_SIGEL_HEADER) >> {
+            return "Ting"
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1045,6 +1069,9 @@ class CrudSpec extends Specification {
                                      "cataloger": false,
                                      "registrant": false]]]
         }
+        request.getHeader(Crud.XL_ACTIVE_SIGEL_HEADER) >> {
+            return "Ting"
+        }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
@@ -1101,6 +1128,9 @@ class CrudSpec extends Specification {
                                     ["code": "S",
                                      "cataloger": false,
                                      "registrant": false]]]
+        }
+        request.getHeader(Crud.XL_ACTIVE_SIGEL_HEADER) >> {
+            return "Ting"
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1165,6 +1195,9 @@ class CrudSpec extends Specification {
                                      "cataloger": true,
                                      "registrant": false]]]
         }
+        request.getHeader(Crud.XL_ACTIVE_SIGEL_HEADER) >> {
+            return "Ting"
+        }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
@@ -1226,6 +1259,9 @@ class CrudSpec extends Specification {
                                      "registrant": false,
                                      "global_registrant": true],
                                     ]]
+        }
+        request.getHeader(Crud.XL_ACTIVE_SIGEL_HEADER) >> {
+            return "Ting"
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -1289,6 +1325,9 @@ class CrudSpec extends Specification {
                                      "global_registrant": true],
                     ]]
         }
+        request.getHeader(Crud.XL_ACTIVE_SIGEL_HEADER) >> {
+            return "Ting"
+        }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
@@ -1344,6 +1383,9 @@ class CrudSpec extends Specification {
                                     ["code": "S",
                                      "cataloger": false,
                                      "registrant": false]]]
+        }
+        request.getHeader(Crud.XL_ACTIVE_SIGEL_HEADER) >> {
+            return "Ting"
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())

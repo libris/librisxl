@@ -5,6 +5,7 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.MarcXmlRecordReader
+import whelk.Changer
 import whelk.Document
 import whelk.Whelk
 import whelk.converter.MarcJSONConverter
@@ -148,7 +149,7 @@ class OaiPmhHarvester {
         try {
 
             if (documentList.count { it } > 0)
-                whelk.bulkStore(documentList, sourceSystem, null, incomingCollection)
+                whelk.bulkStore(documentList, sourceSystem, Changer.unknown(), incomingCollection)
             else
                 log.debug("documentList contains no records")
 
@@ -237,7 +238,7 @@ class OaiPmhHarvester {
                         "Collection is: ${getCollection(marcRecord)}")
                 try {
                     //TODO: Do not hard code ChangedIn parameter
-                    whelk.remove(systemId, 'voyager', null)
+                    whelk.remove(systemId, 'voyager', Changer.unknown())
                 } catch (all) {
                     log.error("Could not remove record with ID ${record.identifier}. " +
                             "Located in system as ${systemId}. " +
@@ -258,7 +259,7 @@ class OaiPmhHarvester {
             if (docs.size() > 0 && docs.size() % 1000 == 0) {
                 String sourceSystem = hdata.sourceSystem == null ? DEFAULT_SOURCE_SYSTEM : hdata.sourceSystem
                 log.debug "adding ${docs.count { it }} documents to whelk"
-                whelk.bulkStore(docs, sourceSystem, null, collection)
+                whelk.bulkStore(docs, sourceSystem, Changer.unknown(), collection)
                 docs = []
             }
         }

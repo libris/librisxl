@@ -1,9 +1,17 @@
 package whelk.apixserver;
 
 import org.apache.commons.io.IOUtils;
-import se.kb.libris.util.marc.*;
+import se.kb.libris.util.marc.Controlfield;
+import se.kb.libris.util.marc.Datafield;
+import se.kb.libris.util.marc.Field;
+import se.kb.libris.util.marc.MarcFieldComparator;
+import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.MarcRecordBuilder;
+import se.kb.libris.util.marc.MarcRecordBuilderFactory;
+import se.kb.libris.util.marc.Subfield;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
+import whelk.Changer;
 import whelk.Document;
 
 import javax.servlet.ServletOutputStream;
@@ -224,11 +232,11 @@ public class Digidaily {
                 marcXmlRecordWriter.writeRecord(eRecord);
                 if (newbib) {
                     bibToBeSaved = Utils.convertToRDF(baos.toString("UTF-8"), "bib", null, false);
-                    Utils.s_whelk.createDocument(bibToBeSaved, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), "bib", false);
+                    Utils.s_whelk.createDocument(bibToBeSaved, Utils.APIX_SYSTEM_CODE, changedBy(request), "bib", false);
                     out.write(bibToBeSaved.getShortId() + "\tDIGI CREATED\n");
                 } else {
                     bibToBeSaved = Utils.convertToRDF(baos.toString("UTF-8"), "bib", null, true);
-                    Utils.s_whelk.storeAtomicUpdate(bibToBeSaved.getShortId(), false, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(),
+                    Utils.s_whelk.storeAtomicUpdate(bibToBeSaved.getShortId(), false, Utils.APIX_SYSTEM_CODE, changedBy(request),
                             (Document doc) -> {
                                 doc.data = bibToBeSaved.data;
                             });
@@ -263,7 +271,7 @@ public class Digidaily {
                     MarcXmlRecordWriter marcXmlRecordWriter = new MarcXmlRecordWriter(baos);
                     marcXmlRecordWriter.writeRecord(eRecord);
                     Document holdToBeSaved = Utils.convertToRDF(baos.toString("UTF-8"), "hold", null, false);
-                    Utils.s_whelk.createDocument(holdToBeSaved, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), "hold", false);
+                    Utils.s_whelk.createDocument(holdToBeSaved, Utils.APIX_SYSTEM_CODE, changedBy(request), "hold", false);
                     out.write(holdToBeSaved.getShortId() + "\tMFHD CREATED\n");
                 }
             }
@@ -292,7 +300,7 @@ public class Digidaily {
                     MarcXmlRecordWriter marcXmlRecordWriter = new MarcXmlRecordWriter(baos);
                     marcXmlRecordWriter.writeRecord(eRecord);
                     Document printBibToBeSaved = Utils.convertToRDF(baos.toString("UTF-8"), "bib", null, true);
-                    Utils.s_whelk.storeAtomicUpdate(printBibToBeSaved.getShortId(), false, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(),
+                    Utils.s_whelk.storeAtomicUpdate(printBibToBeSaved.getShortId(), false, Utils.APIX_SYSTEM_CODE, changedBy(request),
                             (Document doc) -> {
                                 doc.data = printBibToBeSaved.data;
                             });
@@ -330,5 +338,9 @@ public class Digidaily {
             }
         }
         return null;
+    }
+
+    private static Changer changedBy(HttpServletRequest request) {
+        return Changer.sigelOrUnknown(request.getRemoteUser());
     }
 }

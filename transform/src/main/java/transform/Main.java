@@ -3,6 +3,7 @@ package transform;
 import groovy.lang.Tuple2;
 import org.codehaus.jackson.map.ObjectMapper;
 import se.kb.libris.util.marc.MarcRecord;
+import whelk.Changer;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
@@ -306,11 +307,9 @@ public class Main
                 doc.data = JsonldSerializer.serialize(triples, s_repeatableTerms);
                 JsonldSerializer.normalize(doc.data, doc.getCompleteId(), false);
 
-                s_whelk.getStorage().storeAtomicUpdate(id, true, "xl", null, (Document _doc) ->
+                s_whelk.storeAtomicUpdate(id, true, "xl", Changer.globalChange("https://id.kb.se/generator/globalchanges", Optional.empty()), (Document _doc) ->
                         {
                             _doc.data = doc.data;
-                            _doc.setGenerationDate(new Date());
-                            _doc.setGenerationProcess("https://id.kb.se/generator/globalchanges");
                         }
                 );
             } catch (Throwable e)

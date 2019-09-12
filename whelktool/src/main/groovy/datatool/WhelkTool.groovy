@@ -1,5 +1,7 @@
 package whelk.datatool
 
+import whelk.Changer
+
 import java.time.ZonedDateTime
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ThreadPoolExecutor
@@ -14,7 +16,6 @@ import javax.script.SimpleBindings
 import javax.script.CompiledScript
 import javax.script.Compilable
 
-import groovy.util.CliBuilder
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
 
 import org.codehaus.jackson.map.ObjectMapper
@@ -33,7 +34,7 @@ class WhelkTool {
 
     File scriptFile
     CompiledScript script
-    String scriptJobUri
+    Changer changedBy
     private boolean hasStoredScriptJob
 
     String changedIn = "xl"
@@ -79,7 +80,9 @@ class WhelkTool {
         def segment = '/scripts/'
         def path = scriptFile.toURI().toString()
         path = path.substring(path.lastIndexOf(segment) + segment.size())
-        scriptJobUri = "https://libris.kb.se/sys/globalchanges/${path}"
+        def scriptUri = 'https://libris.kb.se/sys/globalchanges/' + path
+        String sigel = 'SEK'
+        changedBy = Changer.globalChange(scriptUri, Optional.of(sigel))
     }
 
     boolean getUseThreads() { !noThreads && !stepWise }
@@ -363,7 +366,7 @@ class WhelkTool {
 
     private void doDeletion(DocumentItem item) {
         if (!dryRun) {
-            whelk.remove(item.doc.shortId, changedIn, scriptJobUri)
+            whelk.remove(item.doc.shortId, changedIn, changedBy)
         }
     }
 
@@ -410,10 +413,8 @@ class WhelkTool {
 
     private void doModification(DocumentItem item) {
         Document doc = item.doc
-        doc.setGenerationDate(new Date())
-        doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            whelk.storeAtomicUpdate(doc.shortId, !item.loud, changedIn, scriptJobUri, {
+            whelk.storeAtomicUpdate(doc.shortId, !item.loud, changedIn, changedBy, {
                 it.data = doc.data
             })
         }

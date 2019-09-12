@@ -4,13 +4,13 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import whelk.Changer;
 import whelk.Document;
-import whelk.util.LegacyIntegrationTools;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -147,7 +147,7 @@ public class ApixCatServlet extends HttpServlet
             return;
         }
 
-        Utils.s_whelk.remove(xlShortId, Utils.APIX_SYSTEM_CODE, request.getRemoteUser());
+        Utils.s_whelk.remove(xlShortId, Utils.APIX_SYSTEM_CODE, changedBy(request));
         s_logger.info("Successful delete on: " + xlShortId);
         Utils.send200Response(response, "");
     }
@@ -192,7 +192,7 @@ public class ApixCatServlet extends HttpServlet
                 Utils.send200Response(response, Xml.formatApixErrorResponse("Conversion from MARC failed.", ApixCatServlet.ERROR_CONVERSION_FAILED));
                 return;
             }
-            Utils.s_whelk.createDocument(incomingDocument, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), collection, false);
+            Utils.s_whelk.createDocument(incomingDocument, Utils.APIX_SYSTEM_CODE, changedBy(request), collection, false);
             s_logger.info("Successful new on : " + incomingDocument.getShortId());
             Utils.send201Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
         } else // save/overwrite existing
@@ -208,7 +208,7 @@ public class ApixCatServlet extends HttpServlet
                 id = Utils.s_whelk.getStorage().getSystemIdByIri("http://libris.kb.se/" + collection + "/" + id);
 
             incomingDocument.deepReplaceId( Document.getBASE_URI().resolve(id).toString() );
-            Utils.s_whelk.storeAtomicUpdate(id, false, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(),
+            Utils.s_whelk.storeAtomicUpdate(id, false, Utils.APIX_SYSTEM_CODE, changedBy(request),
                     (Document doc) ->
                     {
                         doc.data = incomingDocument.data;
@@ -244,8 +244,12 @@ public class ApixCatServlet extends HttpServlet
             return;
         }
 
-        Utils.s_whelk.createDocument(incomingDocument, Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), "hold", false);
+        Utils.s_whelk.createDocument(incomingDocument, Utils.APIX_SYSTEM_CODE, changedBy(request), "hold", false);
         s_logger.info("Successful new (hold on bib) on : " + incomingDocument.getShortId());
         Utils.send201Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());
+    }
+
+    private static Changer changedBy(HttpServletRequest request) {
+        return Changer.sigelOrUnknown(request.getRemoteUser());
     }
 }

@@ -2,6 +2,7 @@ package whelk.rest.api
 
 import org.codehaus.jackson.JsonParseException
 import org.codehaus.jackson.map.ObjectMapper
+import whelk.Changer
 import whelk.Document
 import whelk.Whelk
 import whelk.util.LegacyIntegrationTools
@@ -101,7 +102,7 @@ class RefreshAPI extends HttpServlet
     void refreshLoudly(Document doc) {
         boolean minorUpdate = false
         String collection = LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld())
-        whelk.storeAtomicUpdate(doc.getShortId(), minorUpdate, "xl", "Libris admin", {
+        whelk.storeAtomicUpdate(doc.getShortId(), minorUpdate, "xl", Changer.sigel("Libris admin"), {
             Document _doc ->
                 _doc.data = doc.data
         })
