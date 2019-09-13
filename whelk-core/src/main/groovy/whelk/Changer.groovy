@@ -2,26 +2,29 @@ package whelk
 
 import com.google.common.base.Preconditions
 import com.google.common.base.Strings
+import groovy.transform.PackageScope
 
 class Changer {
-    private static String LIBRARY_PREFIX = 'https://libris.kb.se/library/'
+    @PackageScope
+    static String LIBRARY_PREFIX = 'https://libris.kb.se/library/'
 
     private String sigel
     private String scriptUri
 
     static Changer sigel(String sigel) {
-        return new Changer(Preconditions.checkArgument(!Strings.isNullOrEmpty(sigel), 'Must set sigel'))
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(sigel), 'Must set sigel')
+        return new Changer(sigel)
     }
 
     static Changer globalChange(String scriptUri, Optional<String> sigel) {
-        return new Changer(
-                Preconditions.checkArgument(!Strings.isNullOrEmpty(sigel.orElse('SEK')), 'Must set sigel'),
-                Preconditions.checkArgument(!Strings.isNullOrEmpty(scriptUri), 'Must set scriptUri'))
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(scriptUri), 'Must set scriptUri')
+
+        return new Changer(Strings.emptyToNull(sigel.orElse(null)), scriptUri)
     }
 
     @Deprecated
     static Changer sigelOrUnknown(String sigel) {
-        return Strings.isNullOrEmpty(sigel) ? unknown() : sigel(sigel)
+        return Strings.isNullOrEmpty(sigel) ? unknown() : Changer.sigel(sigel)
     }
 
     @Deprecated

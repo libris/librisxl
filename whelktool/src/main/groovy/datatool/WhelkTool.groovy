@@ -77,12 +77,15 @@ class WhelkTool {
         scriptFile = new File(scriptPath)
         String scriptSource = scriptFile.getText("UTF-8")
         script = ((Compilable) engine).compile(scriptSource)
+        initChangedBy('SEK')
+    }
+
+    private void initChangedBy(String sigel) {
         def segment = '/scripts/'
         def path = scriptFile.toURI().toString()
         path = path.substring(path.lastIndexOf(segment) + segment.size())
         def scriptUri = 'https://libris.kb.se/sys/globalchanges/' + path
-        String sigel = 'SEK'
-        changedBy = Changer.globalChange(scriptUri, Optional.of(sigel))
+        changedBy = Changer.globalChange(scriptUri, Optional.ofNullable(sigel))
     }
 
     boolean getUseThreads() { !noThreads && !stepWise }
@@ -93,6 +96,10 @@ class WhelkTool {
 
     Map load(String id) {
         return whelk.storage.loadDocumentByMainId(findCanonicalId(id))?.data
+    }
+
+    void setSigel(String sigel) {
+        initChangedBy(sigel)
     }
 
     void selectByIds(Collection<String> ids, Closure process,
@@ -475,6 +482,7 @@ class WhelkTool {
         bindings.put("isInstanceOf", this.&isInstanceOf)
         bindings.put("findCanonicalId", this.&findCanonicalId)
         bindings.put("load", this.&load)
+        bindings.put("setSigel", this.&setSigel)
         return bindings
     }
 
