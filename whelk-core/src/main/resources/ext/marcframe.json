@@ -16999,7 +16999,9 @@
         "valueMap": {
           "Topic": false,
           "TopicSubdivision": false,
+          "Geographic": false,
           "GeographicSubdivision": false,
+          "Temporal": false,
           "TemporalSubdivision": false,
           "GenreForm": false,
           "GenreSubdivision" : false,
