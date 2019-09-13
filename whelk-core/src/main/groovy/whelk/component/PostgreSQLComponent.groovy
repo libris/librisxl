@@ -2216,7 +2216,7 @@ class PostgreSQLComponent {
         }
     }
 
-    private String isHttpUri(String s) {
+    private boolean isHttpUri(String s) {
         return s.startsWith('http://') || s.startsWith('https://')
     }
 }
