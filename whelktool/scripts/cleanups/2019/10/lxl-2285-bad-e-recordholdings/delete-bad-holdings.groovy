@@ -7,7 +7,7 @@ selectByIds( bibIDsFile.readLines() ) { bib ->
     String query = "id in (select id from lddb " +
             "where data#>>'{@graph,1,itemOf,@id}' = '${bib.graph[1][ID]}')"
 
-    selectBySqlWhere(query, silent: false) { hold ->
+    selectBySqlWhere(query, silent: true) { hold ->
         if ( sigelSet.contains(hold.doc.sigel) ) {
             scheduledForDeletion.println("${hold.doc.getURI()}")
             hold.scheduleDelete(onError: { e ->
