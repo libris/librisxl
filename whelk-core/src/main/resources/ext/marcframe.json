@@ -17067,7 +17067,7 @@
         "property": "encodingLevel",
         "tokenMap": "AuthorityEncLevelType",
         "NOTE:local": "Fullständighetsnivå - n - Fullständig",
-        "TODO:fixedDefault": "n"
+        "fixedDefault": "n"
       },
       "[18]": {
         "NOTE:local": "Interpunktionspolicy - # - Ej specificerad",
@@ -17091,7 +17091,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "mainEntity": { }
           },
@@ -17110,7 +17109,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:New",
             "mainEntity": { }
           },
@@ -17288,7 +17286,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2001-12-06T00:00:00.0+01:00",
             "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
@@ -17311,7 +17308,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2001-12-06T00:00:00.0+01:00",
             "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
@@ -17335,7 +17331,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2002-04-09T00:00:00.0+02:00",
             "mainEntity": { }
@@ -17356,7 +17351,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2011-01-19T00:00:00.0+01:00",
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatalogingRulesType-c"}],
