@@ -16,29 +16,25 @@ selectBySqlWhere("collection = 'bib'", silent: false) { docItem ->
     }
 }
 
-private void findAndRemoveNonfilingChars(docItem, object) {
-        if (object instanceof Map) {
-            object.each { key, value ->
-                if (value instanceof String) {
-                    checkStringAndfixValue(docItem, object, key, value)
-                } else {
-                    findAndRemoveNonfilingChars(docItem, value)
-                }
+void findAndRemoveNonfilingChars(docItem, object) {
+    if (object instanceof Map) {
+        //For each map, find and remove before iterating to avoid concurrentModficationException
+        def somethingWasRemoved = object.entrySet().removeIf { it.getKey() == "marc:nonfilingChars" && it.getValue() == " "}
+        if (somethingWasRemoved) {
+            scheduledForChange.println "Remove marc:nonfilingChars property for ${docItem.doc.getURI()}"
+            docItem.scheduleSave(onError: { e ->
+                failedIDs.println("Failed to save ${docItem.doc.getURI()} due to: $e")
+            })
+        }
+        object.each { entry ->
+            if (entry.value instanceof Map || entry.value instanceof List) {
+                findAndRemoveNonfilingChars(docItem, entry.value)
             }
         }
-        if (object instanceof List) {
-            object.each { element ->
-                findAndRemoveNonfilingChars(docItem, element)
-            }
+    }
+    if (object instanceof List) {
+        object.each { element ->
+            findAndRemoveNonfilingChars(docItem, element)
         }
-}
-
-private void checkStringAndfixValue(docItem, object, key, value) {
-    if (key == "marc:nonfilingChars" && value == " ") {
-        object.remove(key)
-        scheduledForChange.println "Remove marc:nonfilingChars property for ${docItem.doc.getURI()}"
-        docItem.scheduleSave(onError: { e ->
-            failedIDs.println("Failed to save ${docItem.doc.getURI()} due to: $e")
-        })
     }
 }
