@@ -1,0 +1,74 @@
+<%@page contentType="text/html"%>
+<%@page pageEncoding="UTF-8"%>
+<%@page import="java.io.*"%>
+<%@page import="java.sql.*"%>
+<%@page import="java.util.*"%>
+<%@page import="se.kb.libris.export.*"%>
+<%@page import="se.kb.libris.util.marc.*"%>
+<%@page import="se.kb.libris.util.marc.io.*"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+
+<% java.util.Properties properties = new Properties(); %>
+        
+        <form action="getrecord">
+            <table width="100%">
+                <tr>
+                    <td class="default">&nbsp;&nbsp;bibid:</td>
+                    <td><input type="text" size="50" name="bibid"/></td>
+                </tr>
+                <tr><td colspan="2" class="default">&nbsp;</td></tr>
+                <tr>
+                    <td class="default">&nbsp;&nbsp;begränsa sigler:</td>
+                    <td><input type="text" size="50" name="locations" value="*"/></td>
+                </tr>
+                <tr><td colspan="2" class="default">&nbsp;</td></tr>
+                <tr bgcolor="#dfdfdf">
+                    <td colspan="2" class="default"><b>&nbsp;bearbetning</b></td>
+                </tr>
+                <tr>
+                    <td class="default" colspan="2">
+                        &nbsp;&nbsp;<input type="checkbox" name="sab" <% if (properties.getProperty("sab", "").equalsIgnoreCase("ON")) out.print("checked=\"checked\""); %>/>SAB-rubriker
+                        &nbsp;&nbsp;<input type="checkbox" name="lcsh" <% if (properties.getProperty("lcsh", "").equalsIgnoreCase("ON")) out.print("checked=\"checked\""); %>/>LC subject headings
+                        &nbsp;&nbsp;<input type="checkbox" name="isbndehyphenate" <% if (properties.getProperty("isbndehyphenate", "").equalsIgnoreCase("ON")) out.print("checked=\"checked\""); %>/>ta bort streck i ISBN
+                        &nbsp;&nbsp;<input type="checkbox" name="isbnhyphenate" <% if (properties.getProperty("isbnhyphenate", "").equalsIgnoreCase("ON")) out.print("checked=\"checked\""); %>/>lägg till streck i ISBN<br>
+                        &nbsp;&nbsp;<input type="checkbox" name="move0359" <% if (properties.getProperty("move0359", "").equalsIgnoreCase("ON")) out.print("checked=\"checked\""); %>/>035$9 -> 035$a
+                        &nbsp;&nbsp;<input type="checkbox" name="move240to244" <% if (properties.getProperty("move240to244", "").equalsIgnoreCase("ON")) out.print("checked=\"checked\""); %>/>240 -> 244
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="default"></td>
+                </tr>
+                <tr>
+                    <td valign="top" class="default">&nbsp;&nbsp;extra beståndsfält:</td>
+                <td><input type="text" size="50" name="extrafields" value=""/></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td valign="top" class="default"><font size="-1">&nbsp;&nbsp;&lt;sigel&gt;:&lt;fält[,fält,fält,fält,...]&gt; ; &lt;sigel&gt;:... o.s.v.<br>&nbsp;&nbsp;<i>exempel: T:650,730 ; X:650</i></font></td>
+                </tr>
+                <tr><td colspan="2" class="default">&nbsp;</td></tr>
+                <tr bgcolor="#dfdfdf">
+                    <td colspan="2" class="default"><b>&nbsp;format</b></td>
+                </tr>
+                <tr>
+                    <td class="default">&nbsp;&nbsp;postkodning:</td>
+                    <td width="100%"><select name="format"><option value="ISO2709" <% if (properties.getProperty("format", "").equalsIgnoreCase("ISO2709")) out.print("selected"); %>>ISO2709</option><option value="MARCXML" <% if (properties.getProperty("format", "").equalsIgnoreCase("MARCXML")) out.print("selected"); %>>MARCXML</option></select></td>
+                </tr>
+                <tr class="default">
+                    <td>&nbsp;&nbsp;teckenuppsättning:</td>
+                    <td><select name="characterencoding"><option value="UTF-8" <% if (properties.getProperty("characterencoding", "").equalsIgnoreCase("UTF-8")) out.print("selected"); %>>UTF-8</option><option value="ISO-8859-1" <% if (properties.getProperty("characterencoding", "").equalsIgnoreCase("ISO-8859-1")) out.print("selected"); %>>ISO-8859-1</option><option value="VRLIN" <% if (properties.getProperty("characterencoding", "").equalsIgnoreCase("VRLIN")) out.print("selected"); %>>VRLIN</option></select></td>
+                </tr>
+                <tr class="default">
+                    <td>&nbsp;&nbsp;auktoritetsposter:</td>
+                    <td><select name="authtype"><option value="interleaved" <% if (properties.getProperty("authtype", "").equalsIgnoreCase("interleaved")) out.print("selected"); %>>sammanslagna med bib.-post</option><option value="after" <% if (properties.getProperty("authtype", "").equalsIgnoreCase("after")) out.print("selected"); %>>efter posten</option><option value="none" <% if (properties.getProperty("authtype", "").equalsIgnoreCase("none")) out.print("selected"); %>>släng</option></select></td>
+                </tr>
+                <tr class="default">
+                    <td>&nbsp;&nbsp;beståndsposter:</td>
+                    <td><select name="holdtype"><option value="interleaved" <% if (properties.getProperty("holdtype", "").equalsIgnoreCase("interleaved")) out.print("selected"); %>>sammanslagna med bib.-post</option><option value="after" <% if (properties.getProperty("holdtype", "").equalsIgnoreCase("after")) out.print("selected"); %>>efter posten</option><option value="none" <% if (properties.getProperty("holdtype", "").equalsIgnoreCase("none")) out.print("selected"); %>>släng</option></select></td>
+                </tr>
+                <tr><td colspan="2" class="default">&nbsp;</td></tr>
+                <tr>    
+                    <td colspan="2" align="center"><input type="submit" value="spara">&nbsp;<input type="reset" value="återställ"></form></tr>
+                </tr>
+            </table>
+        </form>

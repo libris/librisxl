@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context path="/exportgui" allowLinking="true">
+  <!--Resource auth="Container" driverClassName="oracle.jdbc.driver.OracleDriver" maxActive="20" maxIdle="10" maxWait="-1" name="Voyager" password="Droyallibdb" type="javax.sql.DataSource" url="jdbc:oracle:thin:@localhost:1521:VGER" username="royallibdb"/-->
+<!--  <Resource auth="Container" driverClassName="oracle.jdbc.driver.OracleDriver" maxActive="20" maxIdle="10" maxWait="-1" name="Voyager" password="Droyallibdb" type="javax.sql.DataSource" url="jdbc:oracle:thin:@ritchie:1521:VGER" username="royallibdb"/> -->
+</Context>
