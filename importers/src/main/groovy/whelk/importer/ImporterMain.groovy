@@ -127,7 +127,7 @@ class ImporterMain {
             collection = null
         }
         boolean useCache = directive != 'no-cache'
-        boolean embellish = directive != 'no-embellish'
+        boolean doEmbellish = directive != 'no-embellish'
 
         Whelk whelk = Whelk.createLoadedCoreWhelk(props, useCache)
 
@@ -135,7 +135,7 @@ class ImporterMain {
         println "- collection: $collection"
         println "- directive: $directive"
         println "- useCache: $useCache"
-        println "- embellish: $embellish"
+        println "- doEmbellish: $doEmbellish"
 
         whelk.elastic = new ElasticSearch("", "", "") {
             Tuple2<Integer, String> performRequest(String method,
@@ -145,8 +145,10 @@ class ImporterMain {
                 return new Tuple2(-1, "{}")
             }
 
-            Map getShapeForIndex(Document doc, Whelk w, String coll) {
-                return getShapeForIndex(doc, w, coll, embellish)
+            void embellish(Whelk w, Document src, Document copy) {
+                if (doEmbellish) {
+                    super.embellish(w, src, copy)
+                }
             }
         }
 

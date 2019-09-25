@@ -218,20 +218,7 @@ class ElasticSearch {
         Document copy = document.clone()
 
         if (!collection.equals("hold")) {
-            List externalRefs = document.getExternalRefs()
-            List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
-            Map referencedData = [:]
-            Map externalDocs = whelk.bulkLoad(convertedExternalLinks)
-            externalDocs.each { id, doc ->
-                if (id && doc && doc.hasProperty('data')) {
-                    referencedData[id] = doc.data
-                }
-                else {
-                    log.warn("Could not get external doc ${id} for ${document.getShortId()}, skipping...")
-                }
-            }
-            boolean filterOutNonChipTerms = true // Consider using false here, since cards-in-cards work now.
-            whelk.jsonld.embellish(copy.data, referencedData, filterOutNonChipTerms)
+            embellish(whelk, document, copy)
         }
 
         log.debug("Framing ${document.getShortId()}")
@@ -251,6 +238,23 @@ class ElasticSearch {
         log.trace("Framed data: ${framed}")
 
         return framed
+    }
+
+    void embellish(Whelk whelk, Document document, Document copy) {
+        List externalRefs = document.getExternalRefs()
+        List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
+        Map referencedData = [:]
+        Map externalDocs = whelk.bulkLoad(convertedExternalLinks)
+        externalDocs.each { id, doc ->
+            if (id && doc && doc.hasProperty('data')) {
+                referencedData[id] = doc.data
+            }
+            else {
+                log.warn("Could not get external doc ${id} for ${document.getShortId()}, skipping...")
+            }
+        }
+        boolean filterOutNonChipTerms = true // Consider using false here, since cards-in-cards work now.
+        whelk.jsonld.embellish(copy.data, referencedData, filterOutNonChipTerms)
     }
 
     Map query(Map jsonDsl, String collection) {
