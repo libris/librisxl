@@ -45,6 +45,7 @@ class PostgreSQLComponent {
     public final static ObjectMapper mapper = new ObjectMapper()
 
     boolean versioning = true
+    boolean doVerifyDocumentIdRetention = true
 
     /**
      * This value is sensitive. It must be strictly larger than the maxConnections parameter set in tomcat.
@@ -618,7 +619,9 @@ class PostgreSQLComponent {
             updateAgent.update(doc)
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc)
-            verifyDocumentIdRetention(preUpdateDoc, doc)
+            if (doVerifyDocumentIdRetention) {
+                verifyDocumentIdRetention(preUpdateDoc, doc)
+            }
 
             boolean deleted = doc.getDeleted()
 
