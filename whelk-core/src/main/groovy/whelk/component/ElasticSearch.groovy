@@ -19,7 +19,6 @@ import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
-import whelk.exception.WhelkRuntimeException
 
 @Log
 class ElasticSearch {
@@ -108,7 +107,7 @@ class ElasticSearch {
                 request.setEntity(httpEntity(body, contentType0))
                 break
             default:
-                throw new WhelkRuntimeException("Bad request method:" + method)
+                throw new IllegalArgumentException("Bad request method:" + method)
         }
 
         Tuple2<Integer, String> result = null
@@ -171,12 +170,10 @@ class ElasticSearch {
         // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
         try {
             Map shapedData = getShapeForIndex(doc, whelk, collection)
-            //def body = new NStringEntity(JsonOutput.toJson(shapedData), ContentType.APPLICATION_JSON)
             def response = performRequest('PUT',
                     "/${indexName}/${collection}" +
                             "/${toElasticId(doc.getShortId())}?pipeline=libris",
                     JsonOutput.toJson(shapedData)).second
-            //def eString = EntityUtils.toString(response.getEntity())
             Map responseMap = mapper.readValue(response, Map)
             log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${responseMap['_id']} as version ${responseMap['_version']}")
         } catch (Exception e) {
@@ -187,11 +184,9 @@ class ElasticSearch {
     void remove(String identifier) {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
-        //def query = new NStringEntity(JsonOutput.toJson(dsl), ContentType.APPLICATION_JSON)
         def response = performRequest('POST',
                 "/${indexName}/_delete_by_query?conflicts=proceed",
                 JsonOutput.toJson(dsl)).second
-        //def eString = EntityUtils.toString(response.getEntity())
         Map responseMap = mapper.readValue(response, Map)
         log.debug("Response: ${responseMap.deleted} of ${responseMap.total} " +
                   "objects deleted")
