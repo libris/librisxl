@@ -1998,6 +1998,44 @@ class PostgreSQLComponent {
         }
     }
 
+    Iterable<Document> iterateDocuments(ResultSet rs) {
+        def conn = rs.statement.connection
+        boolean more = rs.next() // rs starts at "-1"
+        if (!more) {
+            try {
+                conn.commit()
+                conn.setAutoCommit(true)
+            } finally {
+                conn.close()
+            }
+        }
+        return new Iterable<Document>() {
+            Iterator<Document> iterator() {
+                return new Iterator<Document>() {
+                    @Override
+                    public Document next() {
+                        Document doc = assembleDocument(rs)
+                        more = rs.next()
+                        if (!more) {
+                            try {
+                                conn.commit()
+                                conn.setAutoCommit(true)
+                            } finally {
+                                conn.close()
+                            }
+                        }
+                        return doc
+                    }
+
+                    @Override
+                    public boolean hasNext() {
+                        return more
+                    }
+                }
+            }
+        }
+    }
+
     void remove(String identifier, String changedIn, String changedBy) {
         if (versioning) {
             log.debug("Marking document with ID ${identifier} as deleted.")

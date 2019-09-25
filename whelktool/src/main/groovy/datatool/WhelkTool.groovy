@@ -162,45 +162,7 @@ class WhelkTool {
         def stmt = conn.prepareStatement(query)
         stmt.setFetchSize(DEFAULT_FETCH_SIZE)
         def rs = stmt.executeQuery()
-        select(iterateDocuments(rs), process, batchSize)
-    }
-
-    Iterable<Document> iterateDocuments(ResultSet rs) {
-        def conn = rs.statement.connection
-        boolean more = rs.next() // rs starts at "-1"
-        if (!more) {
-            try {
-                conn.commit()
-                conn.setAutoCommit(true)
-            } finally {
-                conn.close()
-            }
-        }
-        return new Iterable<Document>() {
-            Iterator<Document> iterator() {
-                return new Iterator<Document>() {
-                    @Override
-                    public Document next() {
-                        Document doc = whelk.storage.assembleDocument(rs)
-                        more = rs.next()
-                        if (!more) {
-                            try {
-                                conn.commit()
-                                conn.setAutoCommit(true)
-                            } finally {
-                                conn.close()
-                            }
-                        }
-                        return doc
-                    }
-
-                    @Override
-                    public boolean hasNext() {
-                        return more
-                    }
-                }
-            }
-        }
+        select(whelk.storage.iterateDocuments(rs), process, batchSize)
     }
 
     void selectByCollection(String collection, Closure process,
