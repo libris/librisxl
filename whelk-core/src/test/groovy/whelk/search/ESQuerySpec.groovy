@@ -1,4 +1,4 @@
-package whelk.rest.api
+package whelk.search
 
 import spock.lang.Specification
 import whelk.JsonLd

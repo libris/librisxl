@@ -2,38 +2,37 @@ package whelk.component
 
 import groovy.json.JsonOutput
 import groovy.util.logging.Log4j2 as Log
-
 import org.apache.commons.codec.binary.Base64
+import org.apache.http.HttpEntity
+import org.apache.http.HttpRequest
+import org.apache.http.HttpResponse
+import org.apache.http.client.HttpClient
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.client.methods.HttpPost
+import org.apache.http.client.methods.HttpPut
 import org.apache.http.entity.ContentType
+import org.apache.http.entity.StringEntity
+import org.apache.http.impl.client.DefaultHttpClient
+import org.apache.http.impl.conn.PoolingClientConnectionManager
+import org.apache.http.util.EntityUtils
 import org.codehaus.jackson.map.ObjectMapper
-import whelk.util.LegacyIntegrationTools
-import whelk.util.LongTermHttpConnection
 import whelk.Document
 import whelk.JsonLd
-import whelk.exception.*
 import whelk.Whelk
-
-import java.util.concurrent.atomic.AtomicBoolean
+import whelk.exception.WhelkRuntimeException
 
 @Log
 class ElasticSearch {
-
-    private class ConnectionPoolEntry {
-        public ConnectionPoolEntry(LongTermHttpConnection connection) {
-            this.connection = connection
-            this.inUse = new AtomicBoolean(false)
-        }
-        AtomicBoolean inUse
-        LongTermHttpConnection connection
-    }
-
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
     static final int CONNECTION_POOL_SIZE = 9
 
-    Vector<ConnectionPoolEntry> httpConnectionPool = []
+    PoolingClientConnectionManager cm = new PoolingClientConnectionManager()
+    HttpClient httpClient = new DefaultHttpClient(cm);
+
     String defaultIndex = null
     private List<String> elasticHosts
     private String elasticCluster
+    Random random = new Random()
 
     private static final ObjectMapper mapper = new ObjectMapper()
 
@@ -62,10 +61,7 @@ class ElasticSearch {
     }
 
     private void setup() {
-        for (int i = 0; i < CONNECTION_POOL_SIZE; ++i) {
-            String host = elasticHosts[ i % elasticHosts.size() ]
-            httpConnectionPool.add(new ConnectionPoolEntry(new LongTermHttpConnection(host)))
-        }
+        cm.setMaxTotal(CONNECTION_POOL_SIZE);
         log.info "ElasticSearch component initialized with ${elasticHosts.count{it}} nodes and $CONNECTION_POOL_SIZE workers."
      }
 
@@ -97,62 +93,54 @@ class ElasticSearch {
         }
     }
 
-    Tuple2<Integer, String> performRequest(String method, String path, String body, String contentType0 = null){
-
-        // Get an available connection from the pool
-        ConnectionPoolEntry httpConnectionEntry
-        int i = 0
-        while(true) {
-            i++
-            if (i == CONNECTION_POOL_SIZE) {
-                i = 0
-                Thread.yield()
-            }
-
-            synchronized (this) {
-                if (!httpConnectionPool[i].inUse.get()) {
-                    httpConnectionEntry = httpConnectionPool[i]
-                    httpConnectionEntry.inUse.set(true)
-                    break
-                }
-            }
+    Tuple2<Integer, String> performRequest(String method, String path, String body, String contentType0 = null) {
+        String host = elasticHosts[random.nextInt(elasticHosts.size())]
+        HttpRequest request
+        switch (method) {
+            case 'GET':
+                request = new HttpGet(host + path)
+                break
+            case 'PUT':
+                request = new HttpPut(host + path)
+                request.setEntity(httpEntity(body, contentType0))
+            case 'POST':
+                request = new HttpPost(host + path)
+                request.setEntity(httpEntity(body, contentType0))
+                break
+            default:
+                throw new WhelkRuntimeException("Bad request method:" + method)
         }
 
-        Tuple2<Integer, String> response = null
-
+        Tuple2<Integer, String> result = null
         try {
-            String contentType
-            if (contentType0 == null) {
-                contentType = ContentType.APPLICATION_JSON.toString()
-            } else {
-                contentType = contentType0
-            }
-
-            LongTermHttpConnection httpConnection = httpConnectionEntry.connection
             int backOffTime = 0
-            while (response == null || httpConnection.getResponseCode() == 429) {
+
+            while (result == null || result.first == 429) {
                 if (backOffTime != 0) {
                     log.info("Bulk indexing request to ElasticSearch was throttled (http 429) waiting $backOffTime seconds before retry.")
                     Thread.sleep(backOffTime * 1000)
                 }
 
-                httpConnection.sendRequest(path, method, contentType, body, null, null)
-                response = new Tuple2(httpConnection.responseCode, httpConnection.responseData)
-                httpConnection.clearBuffers()
+                HttpResponse response = httpClient.execute(request)
+                String responseBody = EntityUtils.toString(response.getEntity())
+                result = new Tuple2(response.getStatusLine().getStatusCode(), responseBody)
+                request.reset()
 
                 if (backOffTime == 0)
                     backOffTime = 1
                 else
                     backOffTime *= 2
             }
-        } catch(Throwable e) {
-            log.error(e)
-        } finally
-        {
-            httpConnectionEntry.inUse.set(false)
+        } finally {
+
         }
 
-        return response
+        return result
+    }
+
+    private HttpEntity httpEntity(String body, String contentType){
+        return new StringEntity(body,
+                contentType ? ContentType.create(contentType) : ContentType.APPLICATION_JSON)
     }
 
     void bulkIndex(List<Document> docs, String collection, Whelk whelk) {
@@ -249,9 +237,25 @@ class ElasticSearch {
     }
 
     Map query(Map jsonDsl, String collection) {
+        return performQuery(
+                jsonDsl,
+                getQueryUrl(collection),
+                { it."_source" }
+        )
+    }
+
+    Map queryIds(Map jsonDsl, String collection) {
+        return performQuery(
+                jsonDsl,
+                getQueryUrl(collection) + '?filter_path=took,hits.total,hits.hits._id',
+                { it."_id" }
+        )
+    }
+
+    private Map performQuery(Map jsonDsl, String queryUrl, Closure<Map> hitCollector) {
         def start = System.currentTimeMillis()
         Tuple2<Integer, String> response = performRequest('POST',
-                getQueryUrl(collection),
+                queryUrl,
                 JsonOutput.toJson(jsonDsl))
         int statusCode = response.first
         String responseBody = response.second
@@ -268,7 +272,7 @@ class ElasticSearch {
 
         results.startIndex = jsonDsl.from
         results.totalHits = responseMap.hits.total
-        results.items = responseMap.hits.hits.collect { it."_source" }
+        results.items = responseMap.hits.hits.collect(hitCollector)
         results.aggregations = responseMap.aggregations
 
         return results
