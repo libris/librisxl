@@ -36,7 +36,7 @@ class Whelk {
     String vocabUri = "https://id.kb.se/vocab/"
 
     private Map<String, Document> authCache
-    private final int CACHE_MAX_SIZE = 200000
+    private final int CACHE_MAX_SIZE = 200_000
 
     static Whelk createLoadedCoreWhelk(String propName = "secret", boolean useCache = false) {
         return createLoadedCoreWhelk(PropertyLoader.loadProperties(propName), useCache)
@@ -150,6 +150,7 @@ class Whelk {
 
                     result[id] = doc
                     String collection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
+                    // TODO: only put used dependencies in cache; and either factor out collectionsToCache, or skip that check!
                     if (collection == "auth" || collection == "definitions"
                             || collection == null) // TODO: Remove ASAP when mainEntity,@type mappings correctly map to collection again.
                         putInAuthCache(doc)
