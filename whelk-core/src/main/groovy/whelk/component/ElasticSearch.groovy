@@ -24,6 +24,7 @@ import whelk.Whelk
 class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
     static final int CONNECTION_POOL_SIZE = 9
+    static final int MAX_BACKOFF = 1024
 
     PoolingClientConnectionManager cm = new PoolingClientConnectionManager()
     HttpClient httpClient = new DefaultHttpClient(cm);
@@ -110,31 +111,27 @@ class ElasticSearch {
                 throw new IllegalArgumentException("Bad request method:" + method)
         }
 
-        Tuple2<Integer, String> result = null
-        try {
-            int backOffTime = 0
+        int backOffTime = 1
+        while (true) {
+            HttpResponse response = httpClient.execute(request)
+            String responseBody = EntityUtils.toString(response.getEntity())
+            Tuple2<Integer, String> result = new Tuple2(response.getStatusLine().getStatusCode(), responseBody)
+            request.reset()
 
-            while (result == null || result.first == 429) {
-                if (backOffTime != 0) {
-                    log.info("Bulk indexing request to ElasticSearch was throttled (http 429) waiting $backOffTime seconds before retry.")
-                    Thread.sleep(backOffTime * 1000)
+            if (result.first == 429) {
+                if (backOffTime > MAX_BACKOFF) {
+                    throw new RuntimeException("Max retries exceeded: HTTP 429 from ElasticSearch")
                 }
 
-                HttpResponse response = httpClient.execute(request)
-                String responseBody = EntityUtils.toString(response.getEntity())
-                result = new Tuple2(response.getStatusLine().getStatusCode(), responseBody)
-                request.reset()
+                log.info("Bulk indexing request to ElasticSearch was throttled (HTTP 429) waiting $backOffTime seconds before retry.")
+                Thread.sleep(backOffTime * 1000)
 
-                if (backOffTime == 0)
-                    backOffTime = 1
-                else
-                    backOffTime *= 2
+                backOffTime *= 2
             }
-        } finally {
-
+            else {
+                return result
+            }
         }
-
-        return result
     }
 
     private HttpEntity httpEntity(String body, String contentType){

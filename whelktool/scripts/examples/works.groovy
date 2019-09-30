@@ -1,3 +1,7 @@
+/**
+ * (When running, redirect STDERR to avoid annoying prints from whelktool)
+ */
+
 import java.util.concurrent.ConcurrentHashMap
 
 Set<String> visited = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>())

@@ -168,7 +168,6 @@ gretty {
             debugSuspend = false
         }
     }
-    scanInterval = 0
 }
 
 task(groovy, dependsOn: "classes", type: JavaExec) {
@@ -182,15 +181,4 @@ task(console, dependsOn: 'classes', type: JavaExec) {
   description "Launch a Groovy Console"
   classpath = sourceSets.main.runtimeClasspath
   main = 'groovy.ui.Console'
-}
-
-task elasticFindTest(dependsOn: "classes", type: JavaExec) {
-    classpath = sourceSets.main.runtimeClasspath
-    main = "whelk.search.ElasticFind"
-    minHeapSize = "1g"
-    maxHeapSize = "4g"
-    systemProperties(
-            'xl.secret.properties': System.getProperty("xl.secret.properties")
-    )
-    args(System.getProperty("args", "").split() as String[])
 }

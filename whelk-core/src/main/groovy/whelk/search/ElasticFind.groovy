@@ -78,31 +78,4 @@ class ElasticFind {
 
         return p
     }
-
-    private static void test(ElasticFind e) {
-        def ixs = e.findIds([
-                "q"                                : ["*"],
-                "@type"                            : ["*"],
-                "hasTitle.mainTitle"               : ["Alice i underlandet"],
-                /*
-                "instanceOf.contribution.agent.familyName": ["Carroll"],
-                "instanceOf.contribution.agent.givenName" : ["Lewis"]
-                */
-                "instanceOf.contribution.agent.@id": ["http://kblocalhost.kb.se:5000/ljx0tr142tk2vrj#it"]
-        ]).collect()
-
-        println(ixs)
-    }
-
-    static void main(String[] args) {
-        Whelk whelk = whelk.Whelk.createLoadedSearchWhelk()
-        def e = new ElasticFind(new ESQuery(whelk))
-
-        long t1 = System.currentTimeMillis()
-        for (int i = 0; i < 100; i++) {
-            test(e)
-        }
-        println("TOTAL:" + (System.currentTimeMillis() - t1))
-    }
-
 }
