@@ -88,7 +88,7 @@ private void insertUri(docData, String uri) {
         [
             "@type": "MediaObject",
             "uri": [uri],
-            "marc:publicNote": ["Fritt tillgänglig via Alvin (Universitetsbiblioteket, Lunds universitet)"]
+            "marc:publicNote": ["Fritt tillgänglig via Alvin (Universitetsbiblioteket, Uppsala universitet)"]
         ]
 }
 
