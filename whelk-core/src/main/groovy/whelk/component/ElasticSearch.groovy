@@ -232,7 +232,7 @@ class ElasticSearch {
         return performQuery(
                 jsonDsl,
                 getQueryUrl(collection),
-                { it."_source" }
+                { def d = it."_source"; d."_id" = it."_id"; return d }
         )
     }
 

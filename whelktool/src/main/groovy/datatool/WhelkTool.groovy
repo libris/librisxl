@@ -149,6 +149,10 @@ class WhelkTool {
         return new ElasticFind(new ESQuery(whelk)).findIds(parameters)
     }
 
+    Iterable<Map> queryDocs(Map<String, List<String>> parameters) {
+        return new ElasticFind(new ESQuery(whelk)).find(parameters)
+    }
+
     void selectBySqlWhere(String whereClause,
             int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false,
             Closure process) {
@@ -493,6 +497,7 @@ class WhelkTool {
         bindings.put("selectByIds", this.&selectByIds)
         bindings.put("selectBySqlWhere", this.&selectBySqlWhere)
         bindings.put("queryIds", this.&queryIds)
+        bindings.put("queryDocs", this.&queryDocs)
         return bindings
     }
 
