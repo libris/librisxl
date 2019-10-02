@@ -12,7 +12,7 @@ selectBySqlWhere("""
         collection = 'auth' AND data#>>'{@graph,0,encodingLevel}' IS NOT NULL
     """) { data ->
 
-    def (record, instance, work) = data.graph
+    def (record, thing) = data.graph
 
     record.remove('encodingLevel')
     scheduledForUpdate.println("${record[ID]}")
