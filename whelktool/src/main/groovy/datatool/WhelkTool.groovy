@@ -1,5 +1,8 @@
 package whelk.datatool
 
+import whelk.search.ESQuery
+import whelk.search.ElasticFind
+
 import java.time.ZonedDateTime
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ThreadPoolExecutor
@@ -140,6 +143,14 @@ class WhelkTool {
         selectBySqlWhere(whereClause,
                 params.batchSize ?: DEFAULT_BATCH_SIZE, params.silent,
                 process)
+    }
+
+    Iterable<String> queryIds(Map<String, List<String>> parameters) {
+        return new ElasticFind(new ESQuery(whelk)).findIds(parameters)
+    }
+
+    Iterable<Map> queryDocs(Map<String, List<String>> parameters) {
+        return new ElasticFind(new ESQuery(whelk)).find(parameters)
     }
 
     void selectBySqlWhere(String whereClause,
@@ -485,6 +496,8 @@ class WhelkTool {
         bindings.put("selectByCollection", this.&selectByCollection)
         bindings.put("selectByIds", this.&selectByIds)
         bindings.put("selectBySqlWhere", this.&selectBySqlWhere)
+        bindings.put("queryIds", this.&queryIds)
+        bindings.put("queryDocs", this.&queryDocs)
         return bindings
     }
 
