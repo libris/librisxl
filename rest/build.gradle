@@ -168,6 +168,8 @@ gretty {
             debugSuspend = false
         }
     }
+
+    scanInterval = 0
 }
 
 task(groovy, dependsOn: "classes", type: JavaExec) {
