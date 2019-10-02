@@ -139,10 +139,6 @@
         "marc:FullLevelInputAddedFromABatchProcessLocal": "3",
         "marc:LessThanFullLevelInputAddedFromABatchProcessLocal": "3"
       },
-      "AuthorityEncLevelType": {
-        "n": "marc:CompleteAuthorityRecord",
-        "o": "marc:IncompleteAuthorityRecord"
-      },
       "HoldingEncLevelType": {
         "1": "marc:HoldingsLevel1",
         "2": "marc:HoldingsLevel2",
@@ -17063,10 +17059,8 @@
       "NOTE:[11]": "see bib",
       "NOTE:[12:17]": "see bib",
       "[17]": {
-        "aboutEntity": "?record",
-        "property": "encodingLevel",
-        "tokenMap": "AuthorityEncLevelType",
         "NOTE:local": "Fullständighetsnivå - n - Fullständig",
+        "NOTE": "Remove encodingLevel from auth. All records will default to Complete Authority records",
         "fixedDefault": "n"
       },
       "[18]": {
