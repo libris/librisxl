@@ -144,13 +144,13 @@
         "o": "marc:IncompleteAuthorityRecord"
       },
       "HoldingEncLevelType": {
-        "1": "marc:HoldingsLevel1",
-        "2": "marc:HoldingsLevel2",
-        "3": "marc:HoldingsLevel3",
-        "4": "marc:HoldingsLevel4",
-        "5": "marc:HoldingsLevel4WithPieceDesignation",
-        "m": "marc:MixedLevels",
-        "z": "marc:OtherLevel"
+        "1": null,
+        "2": null,
+        "3": null,
+        "4": null,
+        "5": null,
+        "m": null,
+        "z": null
       },
       "HoldingType": {
         "v": "marc:MultipartItemHolding",
@@ -20950,8 +20950,13 @@
       "repeatable": false,
       "_spec": [
         {
+          "name": "Drop encodingLevel and revert to correct default value",
           "originalLeader": "00236nxa a22001091n44500",
           "source": {"leader": "     nx  a       1n 4500", "fields": [
+            {"001": "0000000"},
+            {"004": "7149593"}
+          ]},
+          "normalized": {"leader": "     nx  a       un 4500", "fields": [
             {"001": "0000000"},
             {"004": "7149593"}
           ]},
@@ -20959,7 +20964,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/hold/0000000",
             "controlNumber": "0000000",
-            "encodingLevel": "marc:HoldingsLevel1",
             "recordStatus": "marc:New",
             "marc:holdingType": "marc:SinglePartItemHolding",
             "mainEntity": {
