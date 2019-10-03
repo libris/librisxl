@@ -23,11 +23,11 @@ import whelk.Whelk
 @Log
 class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
-    static final int CONNECTION_POOL_SIZE = 9
+    static final int CONNECTION_POOL_SIZE = 20
     static final int MAX_BACKOFF = 1024
 
-    PoolingClientConnectionManager cm = new PoolingClientConnectionManager()
-    HttpClient httpClient = new DefaultHttpClient(cm);
+    PoolingClientConnectionManager cm
+    HttpClient httpClient
 
     String defaultIndex = null
     private List<String> elasticHosts
@@ -61,7 +61,10 @@ class ElasticSearch {
     }
 
     private void setup() {
+        cm = new PoolingClientConnectionManager()
         cm.setMaxTotal(CONNECTION_POOL_SIZE);
+        cm.setDefaultMaxPerRoute(CONNECTION_POOL_SIZE)
+        httpClient = new DefaultHttpClient(cm)
         log.info "ElasticSearch component initialized with ${elasticHosts.count{it}} nodes and $CONNECTION_POOL_SIZE workers."
      }
 
@@ -116,6 +119,7 @@ class ElasticSearch {
             HttpResponse response = httpClient.execute(request)
             String responseBody = EntityUtils.toString(response.getEntity())
             Tuple2<Integer, String> result = new Tuple2(response.getStatusLine().getStatusCode(), responseBody)
+
             request.reset()
 
             if (result.first == 429) {
@@ -129,6 +133,7 @@ class ElasticSearch {
                 backOffTime *= 2
             }
             else {
+                request.releaseConnection()
                 return result
             }
         }
