@@ -3,16 +3,19 @@
  */
 
 import java.util.concurrent.ConcurrentHashMap
-import org.codehaus.jackson.map.ObjectMapper
+
+html = getReportWriter("someworks.html")
 
 visited = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>())
 clusters = Collections.newSetFromMap(new ConcurrentHashMap<Set<String>, Boolean>())
+
+html.println('<html>')
 
 selectByCollection('bib') { bib ->
     if (!visited.add(bib.doc.shortId))
         return
 
-    if (visited.size() >= 50_000) {
+    if (visited.size() >= 100_000) {
         exit()
     }
 
@@ -28,7 +31,7 @@ selectByCollection('bib') { bib ->
         if (ids.size() > 1) {
             visited.addAll(ids)
             clusters.add(ids)
-            log(bib, q, docs, ids)
+            logHtml(bib, q, docs, ids)
         }
     }
     catch (Exception e) {
@@ -55,9 +58,9 @@ Map<String, List<String>> buildQuery(bib) {
         return query
     }
 
-    def contributors = contributorStrs(bib)
+    def contributors = contributorStrings(bib)
     if (contributors) {
-        query["instanceOf.contribution._str"] = contributors
+        query["instanceOf.contribution._str"] = contributors.collect{ it + "~" }
         return query
     }
 
@@ -76,38 +79,21 @@ synchronized void exit() {
             visited.size(), clusters.size(), tot, percent, median, avg, max.size(), max[0])
     )
 
+    html.println('</html>')
+
     System.exit(0)
 }
 
-void log(bib, query, docs, ids) {
-    StringBuilder b = new StringBuilder()
-    b.append(flatTitle(bib)).append(": ").append(query).append("\n")
-    b.append(bib.doc.shortId).append(" ----> ").append(ids.toString()).append("\n")
-
-    List l = Collections.synchronizedList([])
-    selectByIds(ids) { bib2 ->
-        l.add(new Tuple2(bib2.doc.getURI().toString(), flatTitle(bib2)))
-    }
-    l.sort{ it.second }.each{ b.append(it.first).append(" :\t").append(it.second).append("\n") }
-
-    docs.collect{ d-> new Tuple2(d.'_id', d.'_str') }
-            .sort{ it.second }
-            .each{ b.append(it.first).append(" _str:\t").append(it.second).append("\n") }
-
-    b.append("\n")
-    println(b.toString())
-}
-
-String title(bib) {
+private String title(bib) {
     return getPathSafe(bib.doc.data, ['@graph', 1, 'hasTitle', 0, 'mainTitle'])
 }
 
-String primaryContributorId(bib) {
+private String primaryContributorId(bib) {
     def primary = getPathSafe(bib.doc.data, ['@graph', 2, 'contribution'], []).grep{ it['@type'] == "PrimaryContribution"}
     return getPathSafe(primary, [0, 'agent', '@id'])
 }
 
-List contributorStrs(bib) {
+private List contributorStrings(bib) {
     return getPathSafe(bib.asCard(true), ['@graph',2,'contribution'], [])['_str'].grep{it}
 }
 
@@ -147,4 +133,32 @@ private Object getPathSafe(item, path, defaultTo = null) {
         }
     }
     return item
+}
+
+void logHtml(bib, query, docs, ids) {
+    def m = new ConcurrentHashMap<String, Map>()
+    selectByIds(ids) { bib2 ->
+        def w =["id": bib2.doc.shortId, "uri": bib2.doc.getURI().toString(), "title": flatTitle(bib2), "contrib": contributorStrings(bib)]
+        m.put(bib2.doc.shortId, w)
+    }
+
+    docs.each { d ->
+        m[d.'_id'].'_str' = d.'_str'
+    }
+
+    def StringBuilder h = new StringBuilder()
+    h.append('<b>').append(flatTitle(bib)).append('</b><br>\n')
+    h.append("<i>").append(query).append('</i><br>\n')
+    h.append(bib.doc.shortId).append(" ----> ").append(ids.toString()).append("<br>\n")
+    h.append('<table>\n')
+
+    m.values().sort{it['title']}.each { w ->
+        h.append('<tr><td><a href="').append(w.'uri',).append('">').append(w.'title').append('</td><td>')
+                .append(w.'contrib').append('</td><td>')
+                .append(w.'_str').append('</td><td>').append(w.'_str').append('</td></tr>')append('\n')
+    }
+    h.append('</table><br><br>\n')
+
+    html.println(h.toString())
+    println(h.toString())
 }
