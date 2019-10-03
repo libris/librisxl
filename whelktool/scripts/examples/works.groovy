@@ -3,6 +3,7 @@
  */
 
 import java.util.concurrent.ConcurrentHashMap
+import org.codehaus.jackson.map.ObjectMapper
 
 visited = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>())
 clusters = Collections.newSetFromMap(new ConcurrentHashMap<Set<String>, Boolean>())
@@ -11,32 +12,23 @@ selectByCollection('bib') { bib ->
     if (!visited.add(bib.doc.shortId))
         return
 
-    if (visited.size() >= 10_000) {
+    if (visited.size() >= 50_000) {
         exit()
     }
 
     try {
-        title = title(bib)
-        authorId = primaryContributorId(bib)
-
-        if (!title || !authorId)
+        def q = buildQuery(bib)
+        if (!q) {
             return
+        }
 
-        Map<String, List<String>> query = [
-                "q"                                : ["*"],
-                "@type"                            : ["*"],
-                "hasTitle.mainTitle"               : [title + "~"],
-                //"_str"                             : [title + "~"],
-                "instanceOf.contribution.agent.@id": [authorId]
-        ]
-
-        def docs = queryDocs(query).collect()
+        def docs = queryDocs(q).collect()
         def ids = docs.collect{it['_id']}
 
         if (ids.size() > 1) {
             visited.addAll(ids)
             clusters.add(ids)
-            log(bib, query, docs, ids)
+            log(bib, q, docs, ids)
         }
     }
     catch (Exception e) {
@@ -45,7 +37,34 @@ selectByCollection('bib') { bib ->
     }
 }
 
-void exit() {
+Map<String, List<String>> buildQuery(bib) {
+    def title = title(bib)
+
+    if (!title)
+        return null
+
+    Map<String, List<String>> query = [
+            "q"                                : ["*"],
+            "@type"                            : ["*"],
+            "hasTitle.mainTitle"               : [title + "~"],
+    ]
+
+    def author = primaryContributorId(bib)
+    if (author) {
+        query["instanceOf.contribution.agent.@id"] = [author]
+        return query
+    }
+
+    def contributors = contributorStrs(bib)
+    if (contributors) {
+        query["instanceOf.contribution._str"] = contributors
+        return query
+    }
+
+    return null
+}
+
+synchronized void exit() {
     def tot = clusters.sum({ it.size() })
     def avg = tot / clusters.size()
     clusters = clusters.sort{ it.size() }
@@ -86,6 +105,10 @@ String title(bib) {
 String primaryContributorId(bib) {
     def primary = getPathSafe(bib.doc.data, ['@graph', 2, 'contribution'], []).grep{ it['@type'] == "PrimaryContribution"}
     return getPathSafe(primary, [0, 'agent', '@id'])
+}
+
+List contributorStrs(bib) {
+    return getPathSafe(bib.asCard(true), ['@graph',2,'contribution'], [])['_str'].grep{it}
 }
 
 private String flatTitle(bib) {
