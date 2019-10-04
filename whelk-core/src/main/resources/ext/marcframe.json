@@ -139,15 +139,6 @@
         "marc:FullLevelInputAddedFromABatchProcessLocal": "3",
         "marc:LessThanFullLevelInputAddedFromABatchProcessLocal": "3"
       },
-      "HoldingEncLevelType": {
-        "1": "marc:HoldingsLevel1",
-        "2": "marc:HoldingsLevel2",
-        "3": "marc:HoldingsLevel3",
-        "4": "marc:HoldingsLevel4",
-        "5": "marc:HoldingsLevel4WithPieceDesignation",
-        "m": "marc:MixedLevels",
-        "z": "marc:OtherLevel"
-      },
       "HoldingType": {
         "v": "marc:MultipartItemHolding",
         "x": "marc:SinglePartItemHolding",
@@ -20981,9 +20972,7 @@
       "NOTE:[11]": "see bib",
       "NOTE:[12:17]": "see bib",
       "[17]": {
-        "aboutEntity": "?record",
-        "property": "encodingLevel",
-        "tokenMap": "HoldingEncLevelType",
+        "NOTE": "No longer convert this position - just revert to fixedDefault",
         "fixedDefault": "u"
       },
       "[18]": {
@@ -21002,8 +20991,13 @@
       "repeatable": false,
       "_spec": [
         {
+          "name": "Drop encodingLevel and revert to correct default value",
           "originalLeader": "00236nxa a22001091n44500",
           "source": {"leader": "     nx  a       1n 4500", "fields": [
+            {"001": "0000000"},
+            {"004": "7149593"}
+          ]},
+          "normalized": {"leader": "     nx  a       un 4500", "fields": [
             {"001": "0000000"},
             {"004": "7149593"}
           ]},
@@ -21011,7 +21005,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/hold/0000000",
             "controlNumber": "0000000",
-            "encodingLevel": "marc:HoldingsLevel1",
             "recordStatus": "marc:New",
             "marc:holdingType": "marc:SinglePartItemHolding",
             "mainEntity": {

@@ -20,7 +20,7 @@ selectByIds(bibIDsFile.readLines().collect { 'http://libris.kb.se/bib/' + it }) 
         insertUri(bib.doc.data, uri)
 
         report.println("${bib.doc.getURI()} ${hold.doc.getURI()} ${uri}")
-        hold.scheduleSave()
+        save(hold)
         bib.scheduleSave()
     }
     catch(Exception e) {
@@ -88,7 +88,7 @@ private void insertUri(docData, String uri) {
         [
             "@type": "MediaObject",
             "uri": [uri],
-            "marc:publicNote": ["Fritt tillgänglig via Alvin (Universitetsbiblioteket, Lunds universitet)"]
+            "marc:publicNote": ["Fritt tillgänglig via Alvin (Universitetsbiblioteket, Uppsala universitet)"]
         ]
 }
 
@@ -108,4 +108,12 @@ private List holds(bibId) {
         holds << hold
     }
     return holds
+}
+
+private void save(hold) {
+    // must do scheduleSave inside closure...
+    selectByIds([hold.doc.getURI().toString()]) {
+        it.doc.data = hold.doc.data
+        it.scheduleSave()
+    }
 }

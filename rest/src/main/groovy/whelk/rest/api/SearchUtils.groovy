@@ -9,6 +9,7 @@ import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
 import whelk.exception.WhelkRuntimeException
+import whelk.search.ESQuery
 
 @Log
 class SearchUtils {

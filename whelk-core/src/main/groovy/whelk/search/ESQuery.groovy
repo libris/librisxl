@@ -1,4 +1,4 @@
-package whelk.rest.api
+package whelk.search
 
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
@@ -52,6 +52,16 @@ class ESQuery {
     Map doQuery(Map<String, String[]> queryParameters, String dataset) {
         Map esQuery = getESQuery(queryParameters)
         Map esResponse = hideKeywordFields(whelk.elastic.query(esQuery, dataset))
+        if ('esQuery' in queryParameters.get('_debug')) {
+            esResponse._debug = [esQuery: esQuery]
+        }
+        return esResponse
+    }
+
+    @CompileStatic(TypeCheckingMode.SKIP)
+    Map doQueryIds(Map<String, String[]> queryParameters, String dataset) {
+        Map esQuery = getESQuery(queryParameters)
+        Map esResponse = hideKeywordFields(whelk.elastic.queryIds(esQuery, dataset))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
         }

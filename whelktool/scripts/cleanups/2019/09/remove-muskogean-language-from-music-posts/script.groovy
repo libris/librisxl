@@ -20,9 +20,10 @@ verifiedNotMuskogean = new File(scriptDir, 'verified-not-muskogean-ids.txt').rea
 
 selectByIds(bibIds.readLines()) { bib ->
     if (isNotMuskogean(bib)) {
-        removeMuskogean(bib.doc.data)
-        scheduledForUpdate.println("${bib.doc.getURI()}")
-        bib.scheduleSave()
+        if (removeMuskogean(bib.doc.data)) {
+            scheduledForUpdate.println("${bib.doc.getURI()}")
+            bib.scheduleSave()
+        }
     }
     else {
         println ("MUSKOGEAN?: ${bib.doc.getURI()} ${bib.doc.data["@graph"][1]['hasTitle']}")
@@ -40,7 +41,20 @@ boolean isMusic(bib) {
     return workType in ["NotatedMusic", "Music"]
 }
 
-void removeMuskogean(bibData) {
-    List languages = bibData["@graph"][2]["language"]
-    languages.remove(["@id": "https://id.kb.se/language/mus"])
+boolean removeMuskogean(bibData) {
+    Map work = bibData["@graph"][2]
+    return removeFromListProperty(work, "language", ["@id": "https://id.kb.se/language/mus"])
+}
+
+boolean removeFromListProperty(Map data, String propertyName, Object toBeRemoved) {
+    List property = data[propertyName]
+    if (property != null) {
+        if (property.remove(toBeRemoved)) {
+            if (property.isEmpty()) {
+                data.remove(propertyName)
+            }
+            return true
+        }
+    }
+    return false
 }

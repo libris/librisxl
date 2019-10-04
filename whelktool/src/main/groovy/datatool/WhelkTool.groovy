@@ -1,5 +1,8 @@
 package whelk.datatool
 
+import whelk.search.ESQuery
+import whelk.search.ElasticFind
+
 import java.time.ZonedDateTime
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ThreadPoolExecutor
@@ -21,6 +24,8 @@ import org.codehaus.jackson.map.ObjectMapper
 
 import whelk.Whelk
 import whelk.Document
+
+import java.util.concurrent.atomic.AtomicInteger
 
 
 class WhelkTool {
@@ -56,6 +61,8 @@ class WhelkTool {
 
     Map<String, Closure> compiledScripts = [:]
 
+    ElasticFind elasticFind
+
     WhelkTool(String scriptPath, File reportsDir=null) {
         try {
             whelk = Whelk.createLoadedSearchWhelk()
@@ -68,6 +75,12 @@ class WhelkTool {
         mainLog = new PrintWriter(new File(reportsDir, "MAIN.txt"))
         errorLog = new PrintWriter(new File(reportsDir, "ERRORS.txt"))
 
+        try {
+            elasticFind = new ElasticFind(new ESQuery(whelk))
+        }
+        catch (Exception e) {
+            log "Could not initialize elasticsearch: " + e
+        }
     }
 
     private void initScript(String scriptPath) {
@@ -142,6 +155,20 @@ class WhelkTool {
                 process)
     }
 
+    Iterable<String> queryIds(Map<String, List<String>> parameters) {
+        if (!elasticFind)
+            throw new IllegalStateException("no connection to elasticsearch")
+
+        return elasticFind.findIds(parameters)
+    }
+
+    Iterable<Map> queryDocs(Map<String, List<String>> parameters) {
+        if (!elasticFind)
+            throw new IllegalStateException("no connection to elasticsearch")
+
+        return elasticFind.find(parameters)
+    }
+
     void selectBySqlWhere(String whereClause,
             int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false,
             Closure process) {
@@ -162,45 +189,7 @@ class WhelkTool {
         def stmt = conn.prepareStatement(query)
         stmt.setFetchSize(DEFAULT_FETCH_SIZE)
         def rs = stmt.executeQuery()
-        select(iterateDocuments(rs), process, batchSize)
-    }
-
-    Iterable<Document> iterateDocuments(ResultSet rs) {
-        def conn = rs.statement.connection
-        boolean more = rs.next() // rs starts at "-1"
-        if (!more) {
-            try {
-                conn.commit()
-                conn.setAutoCommit(true)
-            } finally {
-                conn.close()
-            }
-        }
-        return new Iterable<Document>() {
-            Iterator<Document> iterator() {
-                return new Iterator<Document>() {
-                    @Override
-                    public Document next() {
-                        Document doc = whelk.storage.assembleDocument(rs)
-                        more = rs.next()
-                        if (!more) {
-                            try {
-                                conn.commit()
-                                conn.setAutoCommit(true)
-                            } finally {
-                                conn.close()
-                            }
-                        }
-                        return doc
-                    }
-
-                    @Override
-                    public boolean hasNext() {
-                        return more
-                    }
-                }
-            }
-        }
+        select(whelk.storage.iterateDocuments(rs), process, batchSize)
     }
 
     void selectByCollection(String collection, Closure process,
@@ -284,7 +273,7 @@ class WhelkTool {
     private def createExecutorService(int batchSize) {
         int cpus = Runtime.getRuntime().availableProcessors()
         int maxPoolSize = cpus * 4
-        def linkedBlockingDeque = new LinkedBlockingDeque<Runnable>(maxPoolSize)
+        def linkedBlockingDeque = new LinkedBlockingDeque<Runnable>((int) (maxPoolSize * 1.5))
         def executorService = new ThreadPoolExecutor(cpus, maxPoolSize,
                 1, TimeUnit.DAYS,
                 linkedBlockingDeque, new ThreadPoolExecutor.CallerRunsPolicy())
@@ -485,6 +474,8 @@ class WhelkTool {
         bindings.put("selectByCollection", this.&selectByCollection)
         bindings.put("selectByIds", this.&selectByIds)
         bindings.put("selectBySqlWhere", this.&selectBySqlWhere)
+        bindings.put("queryIds", this.&queryIds)
+        bindings.put("queryDocs", this.&queryDocs)
         return bindings
     }
 
@@ -622,6 +613,10 @@ class DocumentItem {
     def getVersions() {
         whelk.loadAllVersionsByMainId(doc.shortId)
     }
+
+    Map asCard(boolean withSearchKey = false) {
+        return whelk.jsonld.toCard(doc.data, false, withSearchKey)
+    }
 }
 
 
@@ -633,35 +628,35 @@ class Batch {
 
 class Counter {
     long startTime = System.currentTimeMillis()
-    int readCount = 0
-    int processedCount = 0
-    int modifiedCount = 0
-    int deleteCount = 0
+    AtomicInteger readCount = new AtomicInteger()
+    AtomicInteger processedCount = new AtomicInteger()
+    AtomicInteger modifiedCount = new AtomicInteger()
+    AtomicInteger deleteCount = new AtomicInteger()
 
-    synchronized int getSaved() { modifiedCount + deleteCount }
+    synchronized int getSaved() { modifiedCount.get() + deleteCount.get() }
 
     String getSummary() {
-        double docsPerSec = readCount / elapsedSeconds
-        "read: $readCount, processed: ${processedCount}, modified: ${modifiedCount}, deleted: ${deleteCount} (at ${docsPerSec.round(3)} docs/s)"
+        double docsPerSec = readCount.get() / getElapsedSeconds()
+        "read: ${readCount.get()}, processed: ${processedCount.get()}, modified: ${modifiedCount.get()}, deleted: ${deleteCount.get()} (at ${docsPerSec.round(3)} docs/s)"
     }
 
     double getElapsedSeconds() {
         return (System.currentTimeMillis() - startTime) / 1000
     }
 
-    synchronized void countRead() {
-        readCount++
+    void countRead() {
+        readCount.incrementAndGet()
     }
 
-    synchronized void countProcessed() {
-        processedCount++
+    void countProcessed() {
+        processedCount.incrementAndGet()
     }
 
-    synchronized void countModified() {
-        modifiedCount++
+    void countModified() {
+        modifiedCount.incrementAndGet()
     }
 
-    synchronized void countDeleted() {
-        deleteCount++
+    void countDeleted() {
+        deleteCount.incrementAndGet()
     }
 }

@@ -45,6 +45,7 @@ class PostgreSQLComponent {
     public final static ObjectMapper mapper = new ObjectMapper()
 
     boolean versioning = true
+    boolean doVerifyDocumentIdRetention = true
 
     /**
      * This value is sensitive. It must be strictly larger than the maxConnections parameter set in tomcat.
@@ -618,7 +619,9 @@ class PostgreSQLComponent {
             updateAgent.update(doc)
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc)
-            verifyDocumentIdRetention(preUpdateDoc, doc)
+            if (doVerifyDocumentIdRetention) {
+                verifyDocumentIdRetention(preUpdateDoc, doc)
+            }
 
             boolean deleted = doc.getDeleted()
 
@@ -1890,13 +1893,7 @@ class PostgreSQLComponent {
         } catch (SQLException sqle) {
             log.trace("Resultset didn't have created. Probably a version request.")
         }
-
-        for (altId in loadRecordIdentifiers(doc.id)) {
-            doc.addRecordIdentifier(altId)
-        }
-        for (altId in loadThingIdentifiers(doc.id)) {
-            doc.addThingIdentifier(altId)
-        }
+        
         return doc
 
     }
@@ -1984,6 +1981,44 @@ class PostgreSQLComponent {
                                 connection.setAutoCommit(true)
                             } finally {
                                 connection.close()
+                            }
+                        }
+                        return doc
+                    }
+
+                    @Override
+                    public boolean hasNext() {
+                        return more
+                    }
+                }
+            }
+        }
+    }
+
+    Iterable<Document> iterateDocuments(ResultSet rs) {
+        def conn = rs.statement.connection
+        boolean more = rs.next() // rs starts at "-1"
+        if (!more) {
+            try {
+                conn.commit()
+                conn.setAutoCommit(true)
+            } finally {
+                conn.close()
+            }
+        }
+        return new Iterable<Document>() {
+            Iterator<Document> iterator() {
+                return new Iterator<Document>() {
+                    @Override
+                    public Document next() {
+                        Document doc = assembleDocument(rs)
+                        more = rs.next()
+                        if (!more) {
+                            try {
+                                conn.commit()
+                                conn.setAutoCommit(true)
+                            } finally {
+                                conn.close()
                             }
                         }
                         return doc
