@@ -61,6 +61,8 @@ class WhelkTool {
 
     Map<String, Closure> compiledScripts = [:]
 
+    ElasticFind elasticFind
+
     WhelkTool(String scriptPath, File reportsDir=null) {
         try {
             whelk = Whelk.createLoadedSearchWhelk()
@@ -73,6 +75,12 @@ class WhelkTool {
         mainLog = new PrintWriter(new File(reportsDir, "MAIN.txt"))
         errorLog = new PrintWriter(new File(reportsDir, "ERRORS.txt"))
 
+        try {
+            elasticFind = new ElasticFind(new ESQuery(whelk))
+        }
+        catch (Exception e) {
+            log "Could not initialize elasticsearch: " + e
+        }
     }
 
     private void initScript(String scriptPath) {
@@ -148,11 +156,17 @@ class WhelkTool {
     }
 
     Iterable<String> queryIds(Map<String, List<String>> parameters) {
-        return new ElasticFind(new ESQuery(whelk)).findIds(parameters)
+        if (!elasticFind)
+            throw new IllegalStateException("no connection to elasticsearch")
+
+        return elasticFind.findIds(parameters)
     }
 
     Iterable<Map> queryDocs(Map<String, List<String>> parameters) {
-        return new ElasticFind(new ESQuery(whelk)).find(parameters)
+        if (!elasticFind)
+            throw new IllegalStateException("no connection to elasticsearch")
+
+        return elasticFind.find(parameters)
     }
 
     void selectBySqlWhere(String whereClause,
@@ -297,7 +311,7 @@ class WhelkTool {
     private def createExecutorService(int batchSize) {
         int cpus = Runtime.getRuntime().availableProcessors()
         int maxPoolSize = cpus * 4
-        def linkedBlockingDeque = new LinkedBlockingDeque<Runnable>(maxPoolSize)
+        def linkedBlockingDeque = new LinkedBlockingDeque<Runnable>((int) (maxPoolSize * 1.5))
         def executorService = new ThreadPoolExecutor(cpus, maxPoolSize,
                 1, TimeUnit.DAYS,
                 linkedBlockingDeque, new ThreadPoolExecutor.CallerRunsPolicy())
