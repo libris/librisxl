@@ -139,10 +139,6 @@
         "marc:FullLevelInputAddedFromABatchProcessLocal": "3",
         "marc:LessThanFullLevelInputAddedFromABatchProcessLocal": "3"
       },
-      "AuthorityEncLevelType": {
-        "n": "marc:CompleteAuthorityRecord",
-        "o": "marc:IncompleteAuthorityRecord"
-      },
       "HoldingType": {
         "v": "marc:MultipartItemHolding",
         "x": "marc:SinglePartItemHolding",
@@ -17054,11 +17050,9 @@
       "NOTE:[11]": "see bib",
       "NOTE:[12:17]": "see bib",
       "[17]": {
-        "aboutEntity": "?record",
-        "property": "encodingLevel",
-        "tokenMap": "AuthorityEncLevelType",
         "NOTE:local": "Fullständighetsnivå - n - Fullständig",
-        "TODO:fixedDefault": "n"
+        "NOTE": "Remove encodingLevel from auth. All records will default to Complete Authority records",
+        "fixedDefault": "n"
       },
       "[18]": {
         "NOTE:local": "Interpunktionspolicy - # - Ej specificerad",
@@ -17082,7 +17076,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "mainEntity": { }
           },
@@ -17101,7 +17094,28 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
+            "recordStatus": "marc:New",
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Identity"}
+          }
+        },
+        {
+          "name": "Drop encodingLevel and revert to correct default value",
+          "originalLeader": "01341nz  a2200397n  4500",
+          "source": {
+            "leader": "     nz  a       o  4500",
+            "fields": [{"001": "140482"}]
+          },
+          "normalized": {
+            "leader": "     nz  a       n  4500",
+            "fields": [{"001": "140482"}]
+          },
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
             "recordStatus": "marc:New",
             "mainEntity": { }
           },
@@ -17279,7 +17293,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2001-12-06T00:00:00.0+01:00",
             "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
@@ -17302,7 +17315,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2001-12-06T00:00:00.0+01:00",
             "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
@@ -17311,6 +17323,27 @@
           },
           "addOnRevert": {
             "mainEntity": {"@type": "Organization"}
+          }
+        },
+        {
+          "name": "Dreamhack (359324)",
+          "source": [
+            {"008": "130110n| ac|nnaabn           n ana      "}
+          ],
+          "normalized": [
+            {"008": "130110n| ac|nnaabn          |n ana     |"}
+          ],
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "created": "2013-01-10T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Meeting"}
           }
         },
         {
@@ -17326,13 +17359,33 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2002-04-09T00:00:00.0+02:00",
             "mainEntity": { }
           },
           "addOnRevert": {
             "mainEntity": {"@type": "Topic"}
+          }
+        },
+        {
+          "name": "GenreForm - Skräck (365951)",
+          "NOTE:normalized": "See postProcessing spec for position 14, marc:headingMain",
+          "source": [
+            {"008": "130904n| az|nnbabn           n ana      "}
+          ],
+          "normalized": [
+            {"008": "130904n| az|nnaabn          |n ana     |"}
+          ],
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "created": "2013-09-04T00:00:00.0+02:00",
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "GenreForm"}
           }
         },
         {
@@ -17347,7 +17400,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2011-01-19T00:00:00.0+01:00",
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatalogingRulesType-c"}],
