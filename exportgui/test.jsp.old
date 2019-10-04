@@ -1,0 +1,11 @@
+<%@page contentType="text/html"%>
+<%@page pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="sql" uri="http://java.sun.com/jsp/jstl/sql" %>
+<%@include file="setdatasource.jsp"%>
+
+<sql:query dataSource="${datasource}" var="bib" sql="select MARC_RECORD from BIBBLOB_VW where BIB_ID = ?">
+    <sql:param value="${param.bibid}"/>
+</sql:query>
+
+<c:out value="${bib.rows[0].MARC_RECORD}"/>

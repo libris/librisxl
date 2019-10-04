@@ -1,0 +1,217 @@
+<%@page contentType="text/html"%>
+<%@page pageEncoding="UTF-8"%>
+<%@page import="java.io.*"%>
+<%@page import="java.sql.*"%>
+<%@page import="java.util.*"%>
+<%@page import="se.kb.libris.export.*"%>
+<%@page import="se.kb.libris.util.marc.*"%>
+<%@page import="se.kb.libris.util.marc.io.*"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+
+
+<form>
+    <input type="hidden" name="operation" value="testprofile">
+    <input type="hidden" name="name" value="${param.name}">
+
+<table>
+    <tr>
+        <td class="default"><b>bibid:</b></td>
+        <td><input name="bibid" value="${param.bibid}"></td>
+        <td><input type="submit" value="testa post"></td>
+    </tr>
+</table>
+
+</form>
+
+<c:if test="${param.bibid != null}">
+
+<%
+        java.util.Properties properties = new java.util.Properties();
+        java.util.Properties prop = new java.util.Properties();
+        prop.load(new java.io.FileInputStream(new java.io.File(application.getRealPath("/exportgui.properties"))));
+
+        File voyagerPropertyFile = new java.io.File(prop.getProperty("HomeDir") + java.io.File.separatorChar + prop.getProperty("VoyagerProperyFile"));
+        File profilePropertyFile = new java.io.File(prop.getProperty("ProfileDir") + java.io.File.separatorChar + request.getParameter("name") + ".properties");
+        boolean verbose = true;
+        
+        if (!voyagerPropertyFile.exists() || voyagerPropertyFile.isDirectory()) {
+            System.err.println("error: could not open voyager property file");
+            System.exit(1);
+        }
+        
+        if (!profilePropertyFile.exists() || profilePropertyFile.isDirectory()) {
+            System.err.println("error: could not open profile property file");
+            System.exit(1);
+        }
+        
+        Properties voyagerProperties = new Properties();
+        voyagerProperties.load(new FileInputStream(voyagerPropertyFile));
+        ExportProfile profile = new ExportProfile(profilePropertyFile);
+        String locations = null;
+        
+        // create locations string for SQL query
+        for (String loc: profile.getSet("locations")) {
+            if (locations == null) {
+                locations = "'" + loc + "'";
+            } else {
+                locations += ", '" + loc + "'";
+            }
+        }
+        
+        for (String extra: profile.getProperty("extrafields").split(";")) {
+            String sigel = extra.trim().split(":")[0].trim();
+            
+            if (locations == null) {
+                locations = "'" + sigel + "'";
+            } else {
+                locations += ", '" + sigel + "'";
+            }
+        }
+        
+        int bibId = Integer.parseInt(request.getParameter("bibid"));
+        
+        // open connection, prepare statements
+        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+        Connection connection = DriverManager.getConnection(voyagerProperties.getProperty("DbUrl"), voyagerProperties.getProperty("DbUser"), voyagerProperties.getProperty("DbPassword"));        
+        PreparedStatement getBibRecord = connection.prepareStatement("select * " +
+                                                                     "from BIBBLOB_VW " +
+                                                                     "where BIB_ID = " + bibId);
+        
+        PreparedStatement getAuthRecords = connection.prepareStatement("select AUTHBLOB_VW.* " +
+                                                                       "from AUTHBLOB_VW, BIB_HEADING, AUTH_HEADING " +
+                                                                       "where AUTHBLOB_VW.AUTH_ID = AUTH_HEADING.AUTH_ID " +
+                                                                       "and AUTH_HEADING.HEADING_ID_POINTER = BIB_HEADING.HEADING_ID " +
+                                                                       "and AUTH_HEADING.REFERENCE_TYPE = 'A' " +
+                                                                       "and BIB_HEADING.BIB_ID = " + bibId + " " +
+                                                                       "order by AUTHBLOB_VW.AUTH_ID");
+
+        PreparedStatement getHoldRecords = connection.prepareStatement("select LOCATION_CODE, MFHDBLOB_VW.* " +
+                                                                       "from MFHDBLOB_VW, BIB_MFHD, MFHD_MASTER, LOCATION " +
+                                                                       "where BIB_MFHD.MFHD_ID = MFHD_MASTER.MFHD_ID " + 
+                                                                       "and MFHD_MASTER.LOCATION_ID = LOCATION.LOCATION_ID " +
+                                                                       "and MFHD_MASTER.MFHD_ID = MFHDBLOB_VW.MFHD_ID " +
+                                                                       "and BIB_MFHD.BIB_ID = " + bibId + " " +
+                                                                       ((!profile.getSet("locations").isEmpty() && !profile.getSet("locations").contains("*"))? "":("and LOCATION.LOCATION_CODE in (" + locations + ") ")) + 
+                                                                       "order by LOCATION_CODE");
+
+        MarcRecord bibRecord = null;
+        Set<MarcRecord> auths = new HashSet<MarcRecord>();
+        Map<String, MarcRecord> mfhds = new TreeMap<String, MarcRecord>();
+
+        ResultSet rs = getBibRecord.executeQuery();
+
+        if (rs.next()) {
+            byte bytes[] = rs.getBytes("MARC_RECORD");
+            bibRecord = Iso2709Deserializer.deserialize(bytes, voyagerProperties.getProperty("CharacterEncoding"));
+            
+            Map<String, byte[]> records = new TreeMap<String, byte[]>();
+
+            ResultSet rs2 = getAuthRecords.executeQuery();
+
+            while (rs2.next()) {
+                String authId = rs2.getString("AUTH_ID");
+                //System.err.println("authId: " + authId);
+                records.put(authId, rs2.getBytes("MARC_RECORD"));
+            }
+
+            rs2.close();
+
+            for (byte r[]: records.values()) {
+                auths.add(Iso2709Deserializer.deserialize(r, voyagerProperties.getProperty("CharacterEncoding")));
+            }
+
+            records = new TreeMap<String, byte[]>();
+
+            if (!profile.getSet("locations").isEmpty()) {
+                rs2 = getHoldRecords.executeQuery();
+
+                while (rs2.next()) {
+                    String loc = rs2.getString("LOCATION_CODE");
+                    //System.err.println("location: " + loc);
+                    records.put(rs2.getString("MFHD_ID"), rs2.getBytes("MARC_RECORD"));
+                }
+
+                rs2.close();
+
+                for (byte r[]: records.values()) {
+                    MarcRecord hold = Iso2709Deserializer.deserialize(r, voyagerProperties.getProperty("CharacterEncoding"));
+                    mfhds.put(((Subfield)((Datafield)hold.iterator("852").next()).iterator("b").next()).getData(), hold);
+                }
+            }
+            
+            if (profile.filter(bibRecord)) {
+                out.println("<div class=\"default\"><font color=\"#ff0000\">&nbsp;OBS! denna post filtreras bort vid batch-export, pga inställningar i profilen.</font></div><br>");
+            }
+            
+            for (MarcRecord r: profile.mergeRecord(bibRecord, mfhds, auths)) {
+%>                
+            <table width="100%">
+                <tr bgcolor="#efefef" class="default">
+<%
+                    if (r.getType() == MarcRecord.BIBLIOGRAPHIC) {
+                        out.println("<td><b>bibliografisk post</b></td>");
+                    } else if (r.getType() == MarcRecord.HOLDINGS) {
+                        out.println("<td><b>beståndspost</b></td>");
+                    } else if (r.getType() == MarcRecord.AUTHORITY) {
+                        out.println("<td><b>auktoritetspost</b></td>");
+                    }
+%>
+                </tr>
+                <tr class="default">
+                    <td>
+<%
+                        out.println("<table>");
+                        out.println("  <tr class=\"default\">");
+                        out.println("    <td colspan=\"4\"><b>leader:</b> " + r.getLeader() + "</td>");
+                        out.println("  </tr>");
+                        
+                        Iterator iter = r.iterator();
+                        
+                        while (iter.hasNext()) {
+                            Field f = (Field)iter.next();
+                            
+                            if (f instanceof Controlfield) {
+                                Controlfield cf = (Controlfield)f;
+                                
+                                out.println("  <tr class=\"default\">");
+                                out.println("    <td nowrap valign=\"top\"><b>" + cf.getTag() + "</b></td>");
+                                out.println("    <td nowrap valign=\"top\" colspan=\"3\">" + cf.getData() + "</td>");
+                                out.println("  </tr>");
+                            } else {
+                                Datafield df = (Datafield)f;
+                                out.println("  <tr class=\"default\">");
+                                out.println("    <td nowrap valign=\"top\"><b>" + df.getTag() + "</b></td>");
+                                out.println("    <td nowrap valign=\"top\">'" + df.getIndicator(0) + "'</td>");
+                                out.println("    <td nowrap valign=\"top\">'" + df.getIndicator(1) + "'</td>");
+                                out.print("    <td valign=\"top\">");
+                                        
+                                Iterator sfiter = df.iterator();
+                                
+                                while (sfiter.hasNext()) {
+                                    Subfield sf = (Subfield)sfiter.next();
+                                    out.print(" <i><u>" + sf.getCode() + "</u></i>");
+                                    out.print(sf.getData());
+                                }
+                                
+                                out.println("</td>");
+                                out.println("  </tr>");
+                            }
+                        }
+                        out.println("</table>");
+%>
+                    </td>
+                </tr>
+            </table>
+            <br/>
+<%                
+                //out.println("<pre>" + r.toString() + "</pre>");
+            }                                
+        } else {
+            out.println("posten existerar inte");
+        }
+        
+        connection.close();
+        
+%>
+
+</c:if>
