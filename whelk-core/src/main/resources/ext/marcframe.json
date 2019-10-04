@@ -143,15 +143,6 @@
         "n": "marc:CompleteAuthorityRecord",
         "o": "marc:IncompleteAuthorityRecord"
       },
-      "HoldingEncLevelType": {
-        "1": null,
-        "2": null,
-        "3": null,
-        "4": null,
-        "5": null,
-        "m": null,
-        "z": null
-      },
       "HoldingType": {
         "v": "marc:MultipartItemHolding",
         "x": "marc:SinglePartItemHolding",
@@ -20929,9 +20920,7 @@
       "NOTE:[11]": "see bib",
       "NOTE:[12:17]": "see bib",
       "[17]": {
-        "aboutEntity": "?record",
-        "property": "encodingLevel",
-        "tokenMap": "HoldingEncLevelType",
+        "NOTE": "No longer convert this position - just revert to fixedDefault",
         "fixedDefault": "u"
       },
       "[18]": {
