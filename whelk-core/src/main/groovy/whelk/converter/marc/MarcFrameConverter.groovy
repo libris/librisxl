@@ -1295,7 +1295,8 @@ class MarcFixedFieldHandler {
         def success = true
         def failedFixedFields = ((Map) state.marcRemains).failedFixedFields
         for (col in columns) {
-            if (!col.convert(state, value).ok) {
+            def convertable = col.convert(state, value)
+            if (convertable && !convertable.ok) {
                 success = false
                 def unmapped = failedFixedFields[tag]
                 if (unmapped == null) {
