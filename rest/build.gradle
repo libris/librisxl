@@ -170,6 +170,7 @@ gretty {
     }
 
     scanInterval = 0
+    interactiveMode = 'rebuildAndRestartOnKeyPress'
 }
 
 task(groovy, dependsOn: "classes", type: JavaExec) {
