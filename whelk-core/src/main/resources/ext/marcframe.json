@@ -17109,6 +17109,28 @@
           "addOnRevert": {
             "mainEntity": {"@type": "Identity"}
           }
+        },
+        {
+          "name": "Drop encodingLevel and revert to correct default value",
+          "originalLeader": "01341nz  a2200397n  4500",
+          "source": {
+            "leader": "     nz  a       o  4500",
+            "fields": [{"001": "140482"}]
+          },
+          "normalized": {
+            "leader": "     nz  a       n  4500",
+            "fields": [{"001": "140482"}]
+          },
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "recordStatus": "marc:New",
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Identity"}
+          }
         }
       ]
     },
