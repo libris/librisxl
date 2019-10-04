@@ -1890,13 +1890,7 @@ class PostgreSQLComponent {
         } catch (SQLException sqle) {
             log.trace("Resultset didn't have created. Probably a version request.")
         }
-
-        for (altId in loadRecordIdentifiers(doc.id)) {
-            doc.addRecordIdentifier(altId)
-        }
-        for (altId in loadThingIdentifiers(doc.id)) {
-            doc.addThingIdentifier(altId)
-        }
+        
         return doc
 
     }
