@@ -25,6 +25,8 @@ import org.codehaus.jackson.map.ObjectMapper
 import whelk.Whelk
 import whelk.Document
 
+import java.util.concurrent.atomic.AtomicInteger
+
 
 class WhelkTool {
 
@@ -635,6 +637,10 @@ class DocumentItem {
     def getVersions() {
         whelk.loadAllVersionsByMainId(doc.shortId)
     }
+
+    Map asCard(boolean withSearchKey = false) {
+        return whelk.jsonld.toCard(doc.data, false, withSearchKey)
+    }
 }
 
 
@@ -646,35 +652,35 @@ class Batch {
 
 class Counter {
     long startTime = System.currentTimeMillis()
-    int readCount = 0
-    int processedCount = 0
-    int modifiedCount = 0
-    int deleteCount = 0
+    AtomicInteger readCount = new AtomicInteger()
+    AtomicInteger processedCount = new AtomicInteger()
+    AtomicInteger modifiedCount = new AtomicInteger()
+    AtomicInteger deleteCount = new AtomicInteger()
 
-    synchronized int getSaved() { modifiedCount + deleteCount }
+    synchronized int getSaved() { modifiedCount.get() + deleteCount.get() }
 
     String getSummary() {
-        double docsPerSec = readCount / elapsedSeconds
-        "read: $readCount, processed: ${processedCount}, modified: ${modifiedCount}, deleted: ${deleteCount} (at ${docsPerSec.round(3)} docs/s)"
+        double docsPerSec = readCount.get() / getElapsedSeconds()
+        "read: ${readCount.get()}, processed: ${processedCount.get()}, modified: ${modifiedCount.get()}, deleted: ${deleteCount.get()} (at ${docsPerSec.round(3)} docs/s)"
     }
 
     double getElapsedSeconds() {
         return (System.currentTimeMillis() - startTime) / 1000
     }
 
-    synchronized void countRead() {
-        readCount++
+    void countRead() {
+        readCount.incrementAndGet()
     }
 
-    synchronized void countProcessed() {
-        processedCount++
+    void countProcessed() {
+        processedCount.incrementAndGet()
     }
 
-    synchronized void countModified() {
-        modifiedCount++
+    void countModified() {
+        modifiedCount.incrementAndGet()
     }
 
-    synchronized void countDeleted() {
-        deleteCount++
+    void countDeleted() {
+        deleteCount.incrementAndGet()
     }
 }
