@@ -44,19 +44,13 @@ class PostgreSQLComponentSpec extends Specification {
 
     def "should load document from database"() {
         given:
-        2 * result.next() >> { true }
-        1 * result.next() >> { false }
-        2 * result.next() >> { true }
-        1 * result.next() >> { false }
+        1 * result.next() >> { true }
         result.getString(_) >> {
             if (it.first() == "id") {
                 return "testid"
             }
             if (it.first() == "data") {
                 return documentData
-            }
-            if (it.first() == "iri") {
-                return identifiers
             }
         }
         result.getTimestamp(_) >> {
@@ -68,8 +62,6 @@ class PostgreSQLComponentSpec extends Specification {
         r.getShortId() == "testid"
         r.created != null
         r.modified != null
-        //r.collection == "test" //missing properties
-        //r.deleted == false //missing properties
     }
 
     def "should return null for non existing identifier"() {
