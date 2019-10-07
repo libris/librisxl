@@ -1,0 +1,68 @@
+{
+  "@id": "https://libris-stg.kb.se/dwp93z2q1th2zjn#work",
+  "@type": "Text",
+  "contribution": [
+    {
+      "@type": "Contribution",
+      "agent": {
+        "@type": "Person",
+        "familyName": "Svensson",
+        "givenName": "Leif",
+        "lifeSpan": "1934-"
+      }
+    },
+    {
+      "@type": "Contribution",
+      "agent": {
+        "@id": "https://libris-stg.kb.se/64jmt79q2n9cd0g#it"
+      }
+    },
+    {
+      "@type": "PrimaryContribution",
+      "agent": {
+        "@type": "Person",
+        "givenName": "Matts",
+        "lifeSpan": "1931-",
+        "familyName": "Håstad"
+      }
+    }
+  ],
+  "hasTitle": [
+    {
+      "@type": "Title",
+      "marc:searchElement": false,
+      "mainTitle": "Hej matematik",
+      "hasPart": [
+        {
+          "@type": "TitlePart",
+          "partName": [
+            "Facitbok = Planet"
+          ],
+          "partNumber": [
+            "Åk 1"
+          ]
+        }
+      ]
+    },
+    {
+      "marc:searchControl": "marc:NoNoteAddedEntry",
+      "mainTitle": "Planet",
+      "@type": "ParallelTitle"
+    }
+  ],
+  "intendedAudience": [
+    {
+      "@id": "https://id.kb.se/marc/PreAdolescent"
+    }
+  ],
+  "language": [
+    {
+      "@id": "https://id.kb.se/language/swe"
+    }
+  ],
+  "genreForm": [
+    {
+      "@id": "https://id.kb.se/marc/NotFictionNotFurtherSpecified"
+    }
+  ]
+}
