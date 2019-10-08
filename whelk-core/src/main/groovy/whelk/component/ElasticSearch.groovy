@@ -15,6 +15,8 @@ import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.impl.conn.PoolingClientConnectionManager
+import org.apache.http.params.HttpConnectionParams
+import org.apache.http.params.HttpParams
 import org.apache.http.util.EntityUtils
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
@@ -27,6 +29,7 @@ class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
     static final int MAX_CONNECTIONS_PER_HOST = 12
     static final int CONNECTION_POOL_SIZE = 30
+    static final int TIMEOUT_MS = 40 * 1000
     static final int MAX_BACKOFF = 1024
 
     PoolingClientConnectionManager cm
@@ -69,6 +72,12 @@ class ElasticSearch {
         cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST)
 
         httpClient = new DefaultHttpClient(cm)
+        HttpParams httpParams = httpClient.getParams();
+        HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT_MS)
+        HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT_MS)
+        // FIXME: upgrade httpClient (and use RequestConfig)- https://issues.apache.org/jira/browse/HTTPCLIENT-1418
+        // httpParams.setParameter(ClientPNames.CONN_MANAGER_TIMEOUT, new Long(TIMEOUT_MS));
+
         log.info "ElasticSearch component initialized with ${elasticHosts.count{it}} nodes and $CONNECTION_POOL_SIZE workers."
      }
 
