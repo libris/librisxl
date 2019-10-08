@@ -23,7 +23,8 @@ import whelk.Whelk
 @Log
 class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
-    static final int CONNECTION_POOL_SIZE = 20
+    static final int MAX_CONNECTIONS_PER_HOST = 12
+    static final int CONNECTION_POOL_SIZE = 30
     static final int MAX_BACKOFF = 1024
 
     PoolingClientConnectionManager cm
@@ -62,8 +63,8 @@ class ElasticSearch {
 
     private void setup() {
         cm = new PoolingClientConnectionManager()
-        cm.setMaxTotal(CONNECTION_POOL_SIZE);
-        cm.setDefaultMaxPerRoute(CONNECTION_POOL_SIZE)
+        cm.setMaxTotal(CONNECTION_POOL_SIZE)
+        cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST)
         httpClient = new DefaultHttpClient(cm)
         log.info "ElasticSearch component initialized with ${elasticHosts.count{it}} nodes and $CONNECTION_POOL_SIZE workers."
      }
