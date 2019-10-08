@@ -148,10 +148,15 @@ class ElasticSearch {
         assert collection
         if (docs) {
             String bulkString = docs.collect{ doc ->
-                String shapedData = JsonOutput.toJson(
-                    getShapeForIndex(doc, whelk, collection))
-                String action = createActionRow(doc,collection)
-                "${action}\n${shapedData}\n"
+                try {
+                    String shapedData = JsonOutput.toJson(
+                        getShapeForIndex(doc, whelk, collection))
+                    String action = createActionRow(doc, collection)
+                    return "${action}\n${shapedData}\n"
+                } catch (Exception e) {
+                    log.error("Failed to index ${doc.getShortId()} in elastic.", e)
+                    throw e
+                }
             }.join('')
 
             String response = performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE).second
@@ -198,20 +203,7 @@ class ElasticSearch {
         Document copy = document.clone()
 
         if (!collection.equals("hold")) {
-            List externalRefs = document.getExternalRefs()
-            List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
-            Map referencedData = [:]
-            Map externalDocs = whelk.bulkLoad(convertedExternalLinks)
-            externalDocs.each { id, doc ->
-                if (id && doc && doc.hasProperty('data')) {
-                    referencedData[id] = doc.data
-                }
-                else {
-                    log.warn("Could not get external doc ${id} for ${document.getShortId()}, skipping...")
-                }
-            }
-            boolean filterOutNonChipTerms = true // Consider using false here, since cards-in-cards work now.
-            whelk.jsonld.embellish(copy.data, referencedData, filterOutNonChipTerms)
+            embellish(whelk, document, copy)
         }
 
         log.debug("Framing ${document.getShortId()}")
@@ -231,6 +223,23 @@ class ElasticSearch {
         log.trace("Framed data: ${framed}")
 
         return framed
+    }
+
+    void embellish(Whelk whelk, Document document, Document copy) {
+        List externalRefs = document.getExternalRefs()
+        List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
+        Map referencedData = [:]
+        Map externalDocs = whelk.bulkLoad(convertedExternalLinks)
+        externalDocs.each { id, doc ->
+            if (id && doc && doc.hasProperty('data')) {
+                referencedData[id] = doc.data
+            }
+            else {
+                log.warn("Could not get external doc ${id} for ${document.getShortId()}, skipping...")
+            }
+        }
+        boolean filterOutNonChipTerms = true // Consider using false here, since cards-in-cards work now.
+        whelk.jsonld.embellish(copy.data, referencedData, filterOutNonChipTerms)
     }
 
     Map query(Map jsonDsl, String collection) {

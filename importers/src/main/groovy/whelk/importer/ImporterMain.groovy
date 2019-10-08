@@ -14,6 +14,7 @@ import whelk.MySQLToMarcJSONDumper
 import whelk.PostgresLoadfileWriter
 import whelk.Whelk
 import whelk.actors.StatsMaker
+import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.JsonLdToTurtle
 import whelk.filter.LinkFinder
@@ -115,6 +116,42 @@ class ImporterMain {
     void reindex(String collection=null) {
         boolean useCache = true
         Whelk whelk = Whelk.createLoadedSearchWhelk(props, useCache)
+        def reindex = new ElasticReindexer(whelk)
+        reindex.reindex(collection)
+    }
+
+    @Command(args='[COLLECTION] [no-embellish|no-cache]')
+    void reindexToStdout(String collection=null, String directive=null) {
+        if (directive == null && collection?.indexOf('-') > -1) {
+            directive = collection
+            collection = null
+        }
+        boolean useCache = directive != 'no-cache'
+        boolean doEmbellish = directive != 'no-embellish'
+
+        Whelk whelk = Whelk.createLoadedCoreWhelk(props, useCache)
+
+        println "Creating whelk with dummy ElasticSearch"
+        println "- collection: $collection"
+        println "- directive: $directive"
+        println "- useCache: $useCache"
+        println "- doEmbellish: $doEmbellish"
+
+        whelk.elastic = new ElasticSearch("", "", "") {
+            Tuple2<Integer, String> performRequest(String method,
+                    String path, String body, String contentType0 = null) {
+                println "PATH: $path, CONTENT_TYPE: $contentType0, SIZE: ${body.size()}"
+                println body
+                return new Tuple2(-1, "{}")
+            }
+
+            void embellish(Whelk w, Document src, Document copy) {
+                if (doEmbellish) {
+                    super.embellish(w, src, copy)
+                }
+            }
+        }
+
         def reindex = new ElasticReindexer(whelk)
         reindex.reindex(collection)
     }
