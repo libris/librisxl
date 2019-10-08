@@ -10,6 +10,7 @@ import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.methods.HttpPut
+import org.apache.http.client.methods.HttpRequestBase
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.DefaultHttpClient
@@ -19,6 +20,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.exception.WhelkRuntimeException
 
 @Log
 class ElasticSearch {
@@ -65,6 +67,7 @@ class ElasticSearch {
         cm = new PoolingClientConnectionManager()
         cm.setMaxTotal(CONNECTION_POOL_SIZE)
         cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST)
+
         httpClient = new DefaultHttpClient(cm)
         log.info "ElasticSearch component initialized with ${elasticHosts.count{it}} nodes and $CONNECTION_POOL_SIZE workers."
      }
@@ -115,6 +118,19 @@ class ElasticSearch {
                 throw new IllegalArgumentException("Bad request method:" + method)
         }
 
+        try {
+            performRequest(request)
+        }
+        catch (Exception e) {
+            log.warn("Request to ElasticSearch failed: ${e}", e)
+            throw new WhelkRuntimeException(e.getMessage(), e)
+        }
+        finally {
+            request.releaseConnection()
+        }
+    }
+
+    Tuple2<Integer, String> performRequest(HttpRequestBase request) {
         int backOffTime = 1
         while (true) {
             HttpResponse response = httpClient.execute(request)
@@ -134,7 +150,6 @@ class ElasticSearch {
                 backOffTime *= 2
             }
             else {
-                request.releaseConnection()
                 return result
             }
         }
