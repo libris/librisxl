@@ -4,26 +4,17 @@
 #!/bin/bash
 set -e
 
-SOURCE_HOST="gosling.libris.kb.se"
-SOURCE_PATH="/appl/export2/profiles"
-SOURCE_LOGIN="root"
-SOURCE_PASSWD=""
-
-TEMP_AREA="/tmp/profiles"
-
+PROFILE_DIR="/appl/exportgui/profiles"
 PSQL_HOST=""
 PSQL_USERNAME=""
 PSQL_DB=""
 # note: the PGPASSWORD env variable is a "magic" name looked for by psql.
 export PGPASSWORD=""
 
-mkdir -p $TEMP_AREA
-sshpass -p $SOURCE_PASSWD scp  $SOURCE_LOGIN@$SOURCE_HOST:$SOURCE_PATH/*.properties $TEMP_AREA
-
 # Accept spaces in the below loop
 ORIG_IFS=$IFS
 IFS=$(echo -en "\n\b")
-pushd $TEMP_AREA
+pushd $PROFILE_DIR
 
 query="BEGIN; DELETE FROM lddb__profiles;"
 
@@ -54,5 +45,5 @@ popd
 IFS=""
 query="$query COMMIT;"
 
-echo $query > $TEMP_AREA/reload.sql
-psql -h $PSQL_HOST -U $PSQL_USERNAME -d $PSQL_DB < $TEMP_AREA/reload.sql
+echo $query > /tmp/reload.sql
+psql -h $PSQL_HOST -U $PSQL_USERNAME -d $PSQL_DB < /tmp/reload.sql

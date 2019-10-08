@@ -233,6 +233,21 @@ class ImporterMain {
         System.err.println("All done importing example data.")
     }
 
+    @Command(args='SOURCE_PROPERTIES RECORD_ID_FILE')
+    void copywhelk(String sourcePropsFile, String recordsFile) {
+        def sourceProps = new Properties()
+        new File(sourcePropsFile).withInputStream { it
+            sourceProps.load(it)
+        }
+        def source = Whelk.createLoadedCoreWhelk(sourceProps)
+        def dest = Whelk.createLoadedSearchWhelk(props)
+        def recordIds = new File(recordsFile).collect {
+            it.split(/\t/)[0]
+        }
+        def copier = new WhelkCopier(source, dest, recordIds)
+        copier.run()
+    }
+
     def dumpLinkedRecords(List<String> bibIds) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
 

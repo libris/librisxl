@@ -1,54 +1,83 @@
 /*
- * This copies uri of digitized version from MARC field 852 (hold) to field 856 (bib)
+ * Move URI of digitized version from MARC field 852 (hold) to field 856 (bib)
  *
  * See LXL-2625 for more info.
  *
  */
 
 URI_REGEXP = /.*(http:\/\/urn.kb.se\/resolve\?urn=urn:nbn:se:alvin:portal:record-\d+).*/
+failedBibIDs = getReportWriter("failed-to-update-bibIDs")
+report = getReportWriter("report--bib-hold-uri")
 
-PrintWriter failedBibIDs = getReportWriter("failed-to-update-bibIDs")
-PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 File bibIDsFile = new File(scriptDir, 'eod_utan_856_001.txt')
 
 selectByIds(bibIDsFile.readLines().collect { 'http://libris.kb.se/bib/' + it }) { bib ->
     try {
-        insertUri(bib.doc.data, getAlvinUri(bib.doc.getURI()))
-        scheduledForUpdate.println("${bib.doc.getURI()}")
+        Tuple2 holdUri = findAndRemoveAlvinUri(holds(bib.doc.getURI()))
+        hold = holdUri.first
+        String uri = holdUri.second
+
+        insertUri(bib.doc.data, uri)
+
+        report.println("${bib.doc.getURI()} ${hold.doc.getURI()} ${uri}")
+        save(hold)
         bib.scheduleSave()
     }
     catch(Exception e) {
+        e.printStackTrace()
         failedBibIDs.println("Failed to update ${bib.doc.shortId} due to: $e")
     }
 }
 
-String getAlvinUri(bibId) {
-    where = "data #>> '{@graph,1,itemOf,@id}' = '${bibId}#it' " +
-         """
-         AND collection = 'hold' 
-         AND deleted = false
-         AND (
-               data #>>'{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/U' 
-            OR data #>>'{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/Uka'
-            )
-         """
+private Tuple2 findAndRemoveAlvinUri(List holds) {
+    List holdUris = holds.collect{ new Tuple2(it, extractUri(it.doc.data)) }
+    holdUris.retainAll{ it.second != null }
 
-    String uri
-    selectBySqlWhere(where, silent: false) { hold ->
-        def matcher = hold.doc.data['@graph'][1].toString() =~ URI_REGEXP
-        if (matcher.matches()) {
-            uri = matcher.group(1)
-        }
+    if (holdUris.isEmpty()) {
+        throw new RuntimeException("No URI found")
+    }
+    if (holdUris.size() > 1) {
+        throw new RuntimeException("Multiple holds with URI")
     }
 
-    if (uri == null) {
-        throw new RuntimeException("No URI found")
+    return holdUris[0]
+}
+
+private String extractUri(docData) {
+    String uri
+    def item = docData['@graph'][1]
+    if (item['uri']) {
+        uri = parseUri(item.remove('uri'))
+    } else if (item['hasComponent']) {
+        for (i in item['hasComponent']) {
+            if (i['uri']) {
+                if (uri != null) {
+                    throw new RuntimeException("Multiple URIs in hold")
+                }
+                uri = parseUri(i.remove('uri'))
+            }
+        }
     }
 
     return uri
 }
 
-void insertUri(docData, String uri) {
+private String parseUri(List uris) {
+    if (uris.size() > 1) {
+        throw new RuntimeException('Multiple URIs in "uri"')
+    }
+    String uri = uris[0]
+
+    def matcher = uri =~ URI_REGEXP
+    if (matcher.matches()) {
+        return matcher.group(1)
+    }
+    else {
+        throw new RuntimeException('Unexpected URI format: ' + uri)
+    }
+}
+
+private void insertUri(docData, String uri) {
     def instance = docData['@graph'][1]
 
     if (!instance['associatedMedia']) {
@@ -59,6 +88,32 @@ void insertUri(docData, String uri) {
         [
             "@type": "MediaObject",
             "uri": [uri],
-            "marc:publicNote": ["Fritt tillgänglig via Alvin (Universitetsbiblioteket, Lunds universitet)"]
+            "marc:publicNote": ["Fritt tillgänglig via Alvin (Universitetsbiblioteket, Uppsala universitet)"]
         ]
+}
+
+private List holds(bibId) {
+    where = "data #>> '{@graph,1,itemOf,@id}' = '${bibId}#it' " +
+            """
+         AND collection = 'hold' 
+         AND deleted = false
+         AND (
+               data #>>'{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/U' 
+            OR data #>>'{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/Uka'
+            )
+         """
+
+    List holds = []
+    selectBySqlWhere(where, silent: false) { hold ->
+        holds << hold
+    }
+    return holds
+}
+
+private void save(hold) {
+    // must do scheduleSave inside closure...
+    selectByIds([hold.doc.getURI().toString()]) {
+        it.doc.data = hold.doc.data
+        it.scheduleSave()
+    }
 }

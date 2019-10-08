@@ -32,9 +32,10 @@ class AccessControl {
                 throw new ModelValidationException('Missing sigel in document.')
             }
 
-            // allow global registrant to correct holdings with missing sigel
-            if (newDocSigel && !oldDocSigel && hasGlobalRegistrantPermission(userPrivileges)) {
-                return true
+            // allow registrant to correct holdings with missing sigel
+            if (newDocSigel && !oldDocSigel) {
+                return hasGlobalRegistrantPermission(userPrivileges) ||
+                        hasPermissionForSigel(newDocSigel, userPrivileges)
             }
 
             if (!(newDocSigel == oldDocSigel)) {

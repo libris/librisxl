@@ -45,6 +45,7 @@ class PostgreSQLComponent {
     public final static ObjectMapper mapper = new ObjectMapper()
 
     boolean versioning = true
+    boolean doVerifyDocumentIdRetention = true
 
     /**
      * This value is sensitive. It must be strictly larger than the maxConnections parameter set in tomcat.
@@ -156,9 +157,7 @@ class PostgreSQLComponent {
         DELETE_DEPENDENCIES = "DELETE FROM $dependenciesTableName WHERE id = ?"
         INSERT_DEPENDENCIES = "INSERT INTO $dependenciesTableName (id, relation, dependsOnId) VALUES (?,?,?)"
 
-        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted) SELECT ?,?,?,?,?,?,?,?,? " +
-                "WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? " +
-                "ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"
+        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted) SELECT ?,?,?,?,?,?,?,?,? "
 
         INSERT_EMBELLISHED_DOCUMENT = "INSERT INTO $embellishedTableName (id, data) VALUES (?,?)"
         DELETE_EMBELLISHED_DOCUMENT = "DELETE FROM $embellishedTableName WHERE id = ?"
@@ -620,7 +619,9 @@ class PostgreSQLComponent {
             updateAgent.update(doc)
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc)
-            verifyDocumentIdRetention(preUpdateDoc, doc)
+            if (doVerifyDocumentIdRetention) {
+                verifyDocumentIdRetention(preUpdateDoc, doc)
+            }
 
             boolean deleted = doc.getDeleted()
 
@@ -927,9 +928,8 @@ class PostgreSQLComponent {
                 insvers = rigVersionStatement(insvers, doc, createdTime,
                                               modTime, changedIn, changedBy,
                                               collection, deleted)
-                int updated = insvers.executeUpdate()
-                log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
-                return (updated > 0)
+                insvers.executeUpdate()
+                return true
             } catch (Exception e) {
                 log.error("Failed to save document version: ${e.message}")
                 throw e
@@ -953,8 +953,6 @@ class PostgreSQLComponent {
         insvers.setTimestamp(7, new Timestamp(createdTime.getTime()))
         insvers.setTimestamp(8, new Timestamp(modTime.getTime()))
         insvers.setBoolean(9, deleted)
-        insvers.setString(10, doc.getShortId())
-        insvers.setString(11, doc.getChecksum())
         return insvers
     }
 
@@ -1895,13 +1893,7 @@ class PostgreSQLComponent {
         } catch (SQLException sqle) {
             log.trace("Resultset didn't have created. Probably a version request.")
         }
-
-        for (altId in loadRecordIdentifiers(doc.id)) {
-            doc.addRecordIdentifier(altId)
-        }
-        for (altId in loadThingIdentifiers(doc.id)) {
-            doc.addThingIdentifier(altId)
-        }
+        
         return doc
 
     }
@@ -1989,6 +1981,44 @@ class PostgreSQLComponent {
                                 connection.setAutoCommit(true)
                             } finally {
                                 connection.close()
+                            }
+                        }
+                        return doc
+                    }
+
+                    @Override
+                    public boolean hasNext() {
+                        return more
+                    }
+                }
+            }
+        }
+    }
+
+    Iterable<Document> iterateDocuments(ResultSet rs) {
+        def conn = rs.statement.connection
+        boolean more = rs.next() // rs starts at "-1"
+        if (!more) {
+            try {
+                conn.commit()
+                conn.setAutoCommit(true)
+            } finally {
+                conn.close()
+            }
+        }
+        return new Iterable<Document>() {
+            Iterator<Document> iterator() {
+                return new Iterator<Document>() {
+                    @Override
+                    public Document next() {
+                        Document doc = assembleDocument(rs)
+                        more = rs.next()
+                        if (!more) {
+                            try {
+                                conn.commit()
+                                conn.setAutoCommit(true)
+                            } finally {
+                                conn.close()
                             }
                         }
                         return doc
@@ -2221,7 +2251,7 @@ class PostgreSQLComponent {
         }
     }
 
-    private String isHttpUri(String s) {
+    private boolean isHttpUri(String s) {
         return s.startsWith('http://') || s.startsWith('https://')
     }
 }

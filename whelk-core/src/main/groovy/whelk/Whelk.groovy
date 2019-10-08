@@ -25,6 +25,8 @@ class Whelk {
     Map contextData
     JsonLd jsonld
 
+    URI baseUri = null
+
     // useAuthCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
     // Any other use of this results in a "local" cache, which will not be invalidated when data changes elsewhere,
     // resulting in potential serving of stale data.
@@ -45,6 +47,9 @@ class Whelk {
     static Whelk createLoadedCoreWhelk(Properties configuration, boolean useCache = false) {
         PostgreSQLComponent storage = new PostgreSQLComponent(configuration)
         Whelk whelk = new Whelk(storage, useCache)
+        if (configuration.baseUri) {
+            whelk.baseUri = new URI((String) configuration.baseUri)
+        }
         whelk.loadCoreData()
         return whelk
     }
@@ -55,6 +60,9 @@ class Whelk {
 
     static Whelk createLoadedSearchWhelk(Properties configuration, boolean useCache = false) {
         Whelk whelk = new Whelk(configuration, useCache)
+        if (configuration.baseUri) {
+            whelk.baseUri = new URI((String) configuration.baseUri)
+        }
         whelk.loadCoreData()
         return whelk
     }
@@ -119,6 +127,14 @@ class Whelk {
 
     void loadVocabData() {
         this.vocabData = this.storage.getDocumentByIri(vocabUri).data
+    }
+
+    Document getDocument(String id) {
+        Document doc = storage.load(id)
+        if (baseUri) {
+            doc.baseUri = baseUri
+        }
+        return doc
     }
 
     Map<String, Document> bulkLoad(List<String> ids) {

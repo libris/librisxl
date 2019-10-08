@@ -139,19 +139,6 @@
         "marc:FullLevelInputAddedFromABatchProcessLocal": "3",
         "marc:LessThanFullLevelInputAddedFromABatchProcessLocal": "3"
       },
-      "AuthorityEncLevelType": {
-        "n": "marc:CompleteAuthorityRecord",
-        "o": "marc:IncompleteAuthorityRecord"
-      },
-      "HoldingEncLevelType": {
-        "1": "marc:HoldingsLevel1",
-        "2": "marc:HoldingsLevel2",
-        "3": "marc:HoldingsLevel3",
-        "4": "marc:HoldingsLevel4",
-        "5": "marc:HoldingsLevel4WithPieceDesignation",
-        "m": "marc:MixedLevels",
-        "z": "marc:OtherLevel"
-      },
       "HoldingType": {
         "v": "marc:MultipartItemHolding",
         "x": "marc:SinglePartItemHolding",
@@ -11482,6 +11469,7 @@
       ],
       "subfieldOrder": "6 a b c q d j g u t m n r p k l s f o x z y v 2 e 4 0",
       "addLink": "subject",
+      "resourceType": "Identity",
       "pendingResources": {
         "_:agent": {
           "addLink": "termComponentList",
@@ -11544,7 +11532,80 @@
             }
           }}
         },
-
+        {
+          "source": {"600": {"ind1": "0", "ind2": "4", "subfields": [
+            {"a": "Franz Kafka,"},
+            {"d": "1883-1924."},
+            {"t": "Amerika"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Work",
+                  "hasTitle" : [{"@type" : "Title", "mainTitle" : "Amerika"}],
+                  "contribution": [ {
+                    "@type": "Contribution",
+                    "agent": {
+                      "@type": "Person",
+                      "name": "Franz Kafka",
+                      "lifeSpan": "1883-1924."
+                    }
+                  } ]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"600": {"ind1": "3", "ind2": "4", "subfields": [
+            {"a": "Holmbring"},
+            {"t": "Med småländska rötter"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Work",
+                  "hasTitle" : [{"@type" : "Title", "mainTitle" : "Med småländska rötter"}],
+                  "contribution": [ {
+                    "@type": "Contribution",
+                    "agent": {
+                      "@type": "Family",
+                      "name": "Holmbring"
+                    }
+                  } ]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "normalized": {"600": {"ind1": "1", "ind2": "4", "subfields": [
+            {"a": "Kipling, Rudyard,"},
+            {"d": "1865-1936."},
+            {"t": "Djungelboken"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Work",
+                  "contribution": [ {
+                      "@type": "Contribution",
+                      "agent": {
+                        "@type": "Person",
+                        "familyName": "Kipling",
+                        "givenName": "Rudyard",
+                        "lifeSpan": "1865-1936."
+                      }
+                    } ],
+                  "hasTitle": [ {"@type": "Title", "mainTitle": "Djungelboken" }]
+                }
+              ]
+            }
+          }}
+        },
         {
           "source": {"600": {"ind1": "1", "ind2": "7", "subfields": [
             {"a": "Lindgren, Astrid,"},
@@ -16925,7 +16986,9 @@
         "valueMap": {
           "Topic": false,
           "TopicSubdivision": false,
+          "Geographic": false,
           "GeographicSubdivision": false,
+          "Temporal": false,
           "TemporalSubdivision": false,
           "GenreForm": false,
           "GenreSubdivision" : false,
@@ -16987,11 +17050,9 @@
       "NOTE:[11]": "see bib",
       "NOTE:[12:17]": "see bib",
       "[17]": {
-        "aboutEntity": "?record",
-        "property": "encodingLevel",
-        "tokenMap": "AuthorityEncLevelType",
         "NOTE:local": "Fullständighetsnivå - n - Fullständig",
-        "TODO:fixedDefault": "n"
+        "NOTE": "Remove encodingLevel from auth. All records will default to Complete Authority records",
+        "fixedDefault": "n"
       },
       "[18]": {
         "NOTE:local": "Interpunktionspolicy - # - Ej specificerad",
@@ -17015,7 +17076,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "mainEntity": { }
           },
@@ -17034,7 +17094,28 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
+            "recordStatus": "marc:New",
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Identity"}
+          }
+        },
+        {
+          "name": "Drop encodingLevel and revert to correct default value",
+          "originalLeader": "01341nz  a2200397n  4500",
+          "source": {
+            "leader": "     nz  a       o  4500",
+            "fields": [{"001": "140482"}]
+          },
+          "normalized": {
+            "leader": "     nz  a       n  4500",
+            "fields": [{"001": "140482"}]
+          },
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
             "recordStatus": "marc:New",
             "mainEntity": { }
           },
@@ -17212,7 +17293,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2001-12-06T00:00:00.0+01:00",
             "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
@@ -17235,7 +17315,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2001-12-06T00:00:00.0+01:00",
             "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
@@ -17244,6 +17323,27 @@
           },
           "addOnRevert": {
             "mainEntity": {"@type": "Organization"}
+          }
+        },
+        {
+          "name": "Dreamhack (359324)",
+          "source": [
+            {"008": "130110n| ac|nnaabn           n ana      "}
+          ],
+          "normalized": [
+            {"008": "130110n| ac|nnaabn          |n ana     |"}
+          ],
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "created": "2013-01-10T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Meeting"}
           }
         },
         {
@@ -17259,13 +17359,33 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2002-04-09T00:00:00.0+02:00",
             "mainEntity": { }
           },
           "addOnRevert": {
             "mainEntity": {"@type": "Topic"}
+          }
+        },
+        {
+          "name": "GenreForm - Skräck (365951)",
+          "NOTE:normalized": "See postProcessing spec for position 14, marc:headingMain",
+          "source": [
+            {"008": "130904n| az|nnbabn           n ana      "}
+          ],
+          "normalized": [
+            {"008": "130904n| az|nnaabn          |n ana     |"}
+          ],
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "created": "2013-09-04T00:00:00.0+02:00",
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "GenreForm"}
           }
         },
         {
@@ -17280,7 +17400,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/auth/140482",
             "controlNumber": "140482",
-            "encodingLevel": "marc:CompleteAuthorityRecord",
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2011-01-19T00:00:00.0+01:00",
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatalogingRulesType-c"}],
@@ -20853,9 +20972,7 @@
       "NOTE:[11]": "see bib",
       "NOTE:[12:17]": "see bib",
       "[17]": {
-        "aboutEntity": "?record",
-        "property": "encodingLevel",
-        "tokenMap": "HoldingEncLevelType",
+        "NOTE": "No longer convert this position - just revert to fixedDefault",
         "fixedDefault": "u"
       },
       "[18]": {
@@ -20874,8 +20991,13 @@
       "repeatable": false,
       "_spec": [
         {
+          "name": "Drop encodingLevel and revert to correct default value",
           "originalLeader": "00236nxa a22001091n44500",
           "source": {"leader": "     nx  a       1n 4500", "fields": [
+            {"001": "0000000"},
+            {"004": "7149593"}
+          ]},
+          "normalized": {"leader": "     nx  a       un 4500", "fields": [
             {"001": "0000000"},
             {"004": "7149593"}
           ]},
@@ -20883,7 +21005,6 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/hold/0000000",
             "controlNumber": "0000000",
-            "encodingLevel": "marc:HoldingsLevel1",
             "recordStatus": "marc:New",
             "marc:holdingType": "marc:SinglePartItemHolding",
             "mainEntity": {
