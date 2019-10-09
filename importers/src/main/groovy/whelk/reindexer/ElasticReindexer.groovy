@@ -4,12 +4,14 @@ import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.Whelk
 import whelk.util.ThreadPool
-import whelk.util.Tools
 
 @Log
 class ElasticReindexer {
 
     static final int BATCH_SIZE = 1000
+    static final int MAX_RETRIES = 5
+    static final int RETRY_WAIT_MS = 3000
+
     Whelk whelk
 
     long startTime
@@ -20,7 +22,7 @@ class ElasticReindexer {
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler()
         {
             @Override
-            public void uncaughtException(Thread thread, Throwable throwable)
+            void uncaughtException(Thread thread, Throwable throwable)
             {
                 System.err.println("PANIC ABORT, unhandled exception:\n" + throwable.toString())
                 throwable.printStackTrace()
@@ -49,12 +51,12 @@ class ElasticReindexer {
                         if (counter % BATCH_SIZE == 0) {
                             double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
                             println("Indexing $docsPerSec documents per second (running average since process start). Total count: $counter.")
-                            whelk.elastic.bulkIndex(documents, collection, whelk)
+                            bulkIndexWithRetries(documents, collection, whelk)
                             documents = []
                         }
                 }
                 if (documents.size() > 0) {
-                    whelk.elastic.bulkIndex(documents, collection, whelk)
+                    bulkIndexWithRetries(documents, collection, whelk)
                 }
             }
         } catch (Throwable e) {
@@ -83,13 +85,47 @@ class ElasticReindexer {
                     }
                 }
                 if (documents.size() > 0) {
-                    whelk.elastic.bulkIndex(documents, collection, whelk)
+                    bulkIndexWithRetries(documents, collection, whelk)
                 }
             }
             threadPool.joinAll()
             println("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
         } catch (Throwable e) {
             println("Reindex failed with:\n" + e.toString() + "\ncallstack:\n" + e.printStackTrace())
+        }
+    }
+
+    private void bulkIndexWithRetries(List<Document> docs, String collection, Whelk whelk) {
+        int retriesLeft = MAX_RETRIES
+
+        Exception error
+        while(error = tryBulkIndex(docs, collection, whelk)) {
+            if (retriesLeft-- > 0) {
+                log.warn("Failed to index batch: [${error}], retrying after ${RETRY_WAIT_MS} ms")
+                sleep()
+            } else {
+                log.warn("Failed to index batch: [${error}], max retries exceeded")
+                throw error
+            }
+        }
+    }
+
+    private Exception tryBulkIndex(List<Document> docs, String collection, Whelk whelk) {
+        try {
+            whelk.elastic.bulkIndex(docs, collection, whelk)
+            return null
+        }
+        catch (Exception e) {
+            return e
+        }
+    }
+
+    private void sleep() {
+        try {
+            Thread.sleep(RETRY_WAIT_MS)
+        }
+        catch (InterruptedException e) {
+            log.warn("Woke up early", e)
         }
     }
 
@@ -104,7 +140,7 @@ class ElasticReindexer {
 
     private class BatchHandler implements ThreadPool.Worker<Batch> {
         void doWork(Batch batch, int threadIndex) {
-            whelk.elastic.bulkIndex(batch.documents, batch.collection, whelk)
+            bulkIndexWithRetries(batch.documents, batch.collection, whelk)
         }
     }
 }
