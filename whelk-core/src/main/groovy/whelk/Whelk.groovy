@@ -16,7 +16,7 @@ import whelk.util.PropertyLoader
  */
 @Log
 @CompileStatic
-class Whelk {
+class Whelk implements Storage {
 
     PostgreSQLComponent storage
     ElasticSearch elastic
@@ -286,7 +286,7 @@ class Whelk {
         return document
     }
 
-    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
+    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
         if (updated == null) {
             return null

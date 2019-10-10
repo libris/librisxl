@@ -12,6 +12,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
 import org.postgresql.util.PSQLException
 import whelk.Document
+import whelk.Storage
 import whelk.IdType
 import whelk.JsonLd
 import whelk.exception.StorageCreateFailedException
@@ -29,14 +30,7 @@ import java.util.regex.Pattern
 
 @Log
 @CompileStatic
-class PostgreSQLComponent {
-
-    /**
-     * Interface for performing atomic document updates
-     */
-    public interface UpdateAgent {
-        public void update(Document doc)
-    }
+class PostgreSQLComponent implements Storage {
 
     private BasicDataSource connectionPool
     static String driverClass = "org.postgresql.Driver"
@@ -588,7 +582,7 @@ class PostgreSQLComponent {
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
-    public Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent) {
+    public Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
