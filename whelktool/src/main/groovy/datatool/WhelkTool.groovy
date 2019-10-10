@@ -22,6 +22,7 @@ import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
 
 import org.codehaus.jackson.map.ObjectMapper
 
+import whelk.Storage
 import whelk.Whelk
 import whelk.Document
 
@@ -48,6 +49,7 @@ class WhelkTool {
     PrintWriter errorLog
     Map<String, PrintWriter> reports = [:]
 
+    boolean skipIndex
     boolean dryRun
     boolean noThreads = true
     boolean stepWise
@@ -402,7 +404,8 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            whelk.storeAtomicUpdate(doc.shortId, !item.loud, changedIn, scriptJobUri, {
+            Storage component = skipIndex ? whelk.storage : whelk
+            component.storeAtomicUpdate(doc.shortId, !item.loud, changedIn, scriptJobUri, {
                 it.data = doc.data
             })
         }
@@ -491,6 +494,7 @@ class WhelkTool {
             log "    index:   ${whelk.elastic.defaultIndex}"
         }
         log "Using script: $scriptFile"
+        if (skipIndex) log "  skipIndex"
         if (dryRun) log "  dryRun"
         if (stepWise) log "  stepWise"
         if (noThreads) log "  noThreads"
@@ -542,6 +546,7 @@ class WhelkTool {
         def cli = new CliBuilder(usage:'whelktool [options] <SCRIPT>')
         cli.h(longOpt: 'help', 'Print this help message and exit.')
         cli.r(longOpt:'report', args:1, argName:'REPORT-DIR', 'Directory where reports are written (defaults to "reports").')
+        cli.I(longOpt:'skip-index', 'Do not index any changes, only write to storage.')
         cli.d(longOpt:'dry-run', 'Do not save any modifications.')
         cli.T(longOpt:'no-threads', 'Do not use threads to parallellize batch processing.')
         cli.s(longOpt:'step', 'Change one document at a time, prompting to continue.')
@@ -557,6 +562,7 @@ class WhelkTool {
         def scriptPath = options.arguments()[0]
 
         def tool = new WhelkTool(scriptPath, reportsDir)
+        tool.skipIndex = options.I
         tool.dryRun = options.d
         tool.stepWise = options.s
         tool.noThreads = options.T
