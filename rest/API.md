@@ -31,7 +31,16 @@ give you an HTML rendering of the post and not just the underlying data.
 The response also contains an `ETag` header, which you must use (as a
 If-Match header) if you are going to update the post.
 
-#### Example
+#### Parameters
+All parameters are optional and can be left out.
+* `embellished` - `true` or `false`. Default is `true`.
+* `framed` - `true` or `false`. 
+  * Default `false` for `Content-Type: application/ld+json`. 
+  * Default `true` for  `Content-Type: application/json`.
+* `lens` - `chip`, `card` or `none`. Default is `none`. If value is `chip` or `card` this implies `framed=true`.
+
+
+#### Examples
 
 ```
 $ curl -XGET -H "Accept: application/ld+json" https://libris-qa.kb.se/s93ns5h436dxqsh
@@ -43,6 +52,15 @@ $ curl -XGET -H "Accept: application/ld+json" https://libris-qa.kb.se/s93ns5h436
 }
 ```
 
+```
+$ curl -XGET -H "Accept: application/ld+json" https://libris-qa.kb.se/s93ns5h436dxqsh?embellished=false&lens=chip
+{
+  "@context": "/context.jsonld",
+  "@graph": [
+    ...
+  ]
+}
+```
 
 ### Creating a post - Requires authentication
 

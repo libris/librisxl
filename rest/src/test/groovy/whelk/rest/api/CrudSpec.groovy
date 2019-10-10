@@ -3,6 +3,7 @@ package whelk.rest.api
 import org.codehaus.jackson.map.ObjectMapper
 import spock.lang.Ignore
 import spock.lang.Specification
+import spock.lang.Unroll
 import whelk.Document
 import whelk.IdType
 import whelk.JsonLd
@@ -17,6 +18,12 @@ import javax.servlet.ServletOutputStream
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpServletResponseWrapper
+
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND
+import static javax.servlet.http.HttpServletResponse.SC_OK
+import static whelk.rest.api.MimeTypes.JSON
+import static whelk.rest.api.MimeTypes.JSONLD
 
 /**
  * Created by markus on 2015-10-16.
@@ -40,7 +47,7 @@ class CrudSpec extends Specification {
             request.getPathInfo()
         }
 
-        ServletOutputStream out = GroovyMock(ServletOutputStream.class)
+        CapturingServletOutputStream out = new CapturingServletOutputStream()
         response = new HttpServletResponseWrapper(GroovyMock(HttpServletResponse.class)) {
             int status = 0
             String contentType
@@ -61,6 +68,10 @@ class CrudSpec extends Specification {
             String getHeader(String h) {
                 return headers.get(h)
             }
+
+            String getResponseBody() {
+                return out.asString()
+            }
         }
         storage = GroovyMock(PostgreSQLComponent.class)
         // We want to pass through calls in some cases
@@ -70,7 +81,10 @@ class CrudSpec extends Specification {
         whelk.contextData = ['@context': [
                 'examplevocab': 'http://example.com',
                 'some_term': 'some_value']]
-        whelk.displayData = ['lensGroups': ['chips': [:]]]
+        whelk.displayData = ['lensGroups': [
+                'chips': [lenses: ['Instance' : ['showProperties': ['prop1', 'prop2']]]],
+                'cards': [lenses: ['Instance' : ['showProperties': ['prop1', 'prop2', 'prop3']]]]
+        ]]
         whelk.vocabData = ['@graph': []]
         whelk.jsonld = new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData)
         GroovySpy(LegacyIntegrationTools.class, global: true)
@@ -158,6 +172,9 @@ class CrudSpec extends Specification {
             "*/*"
         }
         storage.load(_, _) >> {
+            new Document(["@graph": [["@id": id, "foo": "bar"]]])
+        }
+        storage.loadEmbellished(_, _) >> {
             new Document(["@graph": [["@id": id, "foo": "bar"]]])
         }
         when:
@@ -339,7 +356,7 @@ class CrudSpec extends Specification {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
-            "/${id}/data".toString()
+            "/${id}/data.jsonld".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -365,17 +382,16 @@ class CrudSpec extends Specification {
             "*/*"
         }
         storage.load(_, _) >> {
-            new Document(["@graph": [["@id": id,
-                                      "foo": "bar",
-                                      "baz": [
-                                        "@id": "examplevocab:"
-                                      ],
-                                      "quux": [
-                                        "@id": "some_term"
-                                      ],
-                                      "bad_ref": [
-                                        "@id": "invalid:ref"
-                                      ]]]])
+            new Document(["@graph": [
+                    ["@id": id,
+                     "foo": "bar",
+                     "baz": ["@id": "examplevocab:"],
+                     "quux": ["@id": "some_term"],
+                     "bad_ref": ["@id": "invalid:ref"],
+                     "mainEntity": ["@id": "main_id"]
+                    ],
+                    ["@id": "main_id"]
+            ]])
         }
         when:
         crud.doGet(request, response)
@@ -384,11 +400,11 @@ class CrudSpec extends Specification {
         response.getContentType() == "application/json"
     }
 
-    def "GET /<id>/data.ttl should return 406 Not Acceptable"() {
+    def "GET /<id>/data.ttl should return 404 Not Found"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
-            "{id}/data.ttl".toString()
+            "/${id}/data.ttl".toString()
         }
         request.getHeader("Accept") >> {
             "*/*"
@@ -399,7 +415,7 @@ class CrudSpec extends Specification {
         when:
         crud.doGet(request, response)
         then:
-        response.getStatus() == HttpServletResponse.SC_NOT_ACCEPTABLE
+        response.getStatus() == SC_NOT_FOUND
     }
 
     def "GET /<id>/data.rdf should return 404 Not Found"() {
@@ -417,7 +433,7 @@ class CrudSpec extends Specification {
         when:
         crud.doGet(request, response)
         then:
-        response.getStatus() == HttpServletResponse.SC_NOT_FOUND
+        response.getStatus() == SC_NOT_FOUND
     }
 
     def "GET document with If-None-Match equal to ETag should return 304 Not Modified"() {
@@ -436,6 +452,300 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED
     }
 
+    @Unroll
+    def "GET should return correct contentType"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}${view}${ending}".toString()
+        }
+        request.getHeader("Accept") >> {
+            acceptContentType
+        }
+        storage.load(_, _) >> {
+            new Document(["@graph": [
+                    ["@id": id, "mainEntity": ["@id": "main"]],
+                    ["@id": "main", "foo": "bar"]]])
+        }
+        storage.loadEmbellished(_, _) >> {
+            new Document(["@graph": [
+                    ["@id": id, "mainEntity": ["@id": "main"]],
+                    ["@id": "main", "foo": "embellished"]]])
+        }
+        crud.doGet(request, response)
+
+        expect:
+        response.getStatus() == status
+        response.getContentType() == responseContentType
+
+        where:
+        view         | ending   | acceptContentType      || responseContentType   | status
+        ''           |''        | '*/*'                  || 'application/ld+json' | SC_OK
+        ''           |''        | 'application/ld+json'  || 'application/ld+json' | SC_OK
+        ''           |''        | 'application/json'     || 'application/json'    | SC_OK
+        ''           |'.jsonld' | '*/*'                  || 'application/ld+json' | SC_OK
+
+        '/data'      |''        | '*/*'                  || 'application/ld+json' | SC_OK
+        '/data'      |''        | 'application/ld+json'  || 'application/ld+json' | SC_OK
+        '/data'      |''        | 'application/json'     || 'application/json'    | SC_OK
+        '/data'      |'.jsonld' | '*/*'                  || 'application/ld+json' | SC_OK
+        '/data'      |'.jsonld' | 'application/json'     || 'application/ld+json' | SC_OK
+        '/data'      |'.json'   | '*/*'                  || 'application/json'    | SC_OK
+        '/data'      |'.json'   | 'application/json'     || 'application/json'    | SC_OK
+        '/data'      |'.json'   | 'application/ld+json'  || 'application/json'    | SC_OK
+
+        '/data-view' |''        | '*/*'                  || 'application/ld+json' | SC_OK
+        '/data-view' |''        | 'application/ld+json'  || 'application/ld+json' | SC_OK
+        '/data-view' |''        | 'application/json'     || 'application/json'    | SC_OK
+        '/data-view' |'.jsonld' | '*/*'                  || 'application/ld+json' | SC_OK
+        '/data-view' |'.jsonld' | 'application/ld+json'  || 'application/ld+json' | SC_OK
+        '/data-view' |'.jsonld' | 'application/json'     || 'application/ld+json' | SC_OK
+        '/data-view' |'.json'   | '*/*'                  || 'application/json'    | SC_OK
+        '/data-view' |'.json'   | 'application/json'     || 'application/json'    | SC_OK
+        '/data-view' |'.json'   | 'application/ld+json'  || 'application/json'    | SC_OK
+
+        ''           |''        | ''                     || 'application/ld+json' | SC_OK
+        ''           |''        | 'text/turtle'          || 'application/ld+json' | SC_OK
+        ''           |''        | 'application/rdf+xml'  || 'application/ld+json' | SC_OK
+        ''           |''        | 'x/x'                  || 'application/ld+json' | SC_OK
+        '/data-view' |'.invalid'| '*/*'                  || null                  | SC_NOT_FOUND
+        '/data'      |'.invalid'| '*/*'                  || null                  | SC_NOT_FOUND
+        '/da'        |''        | '*/*'                  || 'application/ld+json' | SC_OK
+    }
+
+    @Unroll
+    def "GET should format response"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}${view}${ending}".toString()
+        }
+        request.getHeader("Accept") >> {
+            acceptContentType
+        }
+        storage.load(_, _) >> {
+            new Document(["@graph": [
+                    ["@id": id, "mainEntity": ["@id": "main"]],
+                    ["@id": "main", "foo": "bar"]]])
+        }
+        storage.loadEmbellished(_, _) >> {
+            new Document(["@graph": [
+                    ["@id": id, "mainEntity": ["@id": "main"]],
+                    ["@id": "main", "foo": "embellished"]]])
+        }
+        crud.doGet(request, response)
+        String document = response.getResponseBody()
+
+        expect:
+        response.getStatus() == SC_OK
+        response.getContentType() == responseContentType
+        isEmbellished(document) == embellished
+        isFramed(document) == framed
+
+        where:
+        view         | ending    | acceptContentType      || responseContentType   | embellished | framed
+        ''           | ''        | '*/*'                  || 'application/ld+json' | true        | false
+        ''           | ''        | 'application/ld+json'  || 'application/ld+json' | true        | false
+        ''           | ''        | 'application/json'     || 'application/json'    | true        | true
+
+        '/data'      | ''        | '*/*'                  || 'application/ld+json' | false       | false
+        '/data'      | ''        | 'application/ld+json'  || 'application/ld+json' | false       | false
+        '/data'      | '.jsonld' | '*/*'                  || 'application/ld+json' | false       | false
+        '/data'      | '.jsonld' | 'application/ld+json'  || 'application/ld+json' | false       | false
+        '/data'      | '.jsonld' | 'application/json'     || 'application/ld+json' | false       | false
+
+        '/data'      | ''        | 'application/json'     || 'application/json'    | false       | true
+        '/data'      | '.json'   | '*/*'                  || 'application/json'    | false       | true
+        '/data'      | '.json'   | 'application/ld+json'  || 'application/json'    | false       | true
+
+        '/data-view' | ''        | '*/*'                  || 'application/ld+json' | true        | false
+        '/data-view' | ''        | 'application/ld+json'  || 'application/ld+json' | true        | false
+        '/data-view' | '.jsonld' | '*/*'                  || 'application/ld+json' | true        | false
+        '/data-view' | '.jsonld' | 'application/ld+json'  || 'application/ld+json' | true        | false
+        '/data-view' | '.jsonld' | 'application/json'     || 'application/ld+json' | true        | false
+        '/data-view' | '.jsonld' | 'x/x'                  || 'application/ld+json' | true        | false
+
+        '/data-view' | ''        | 'application/json'     || 'application/json'    | true        | true
+        '/data-view' | '.json'   | '*/*'                  || 'application/json'    | true        | true
+        '/data-view' | '.json'   | 'application/ld+json'  || 'application/json'    | true        | true
+        '/data-view' | '.json'   | 'x/x'                  || 'application/json'    | true        | true
+    }
+
+    @Unroll
+    def "GET should format response according to parameters"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}${view}".toString()
+        }
+        request.getHeader("Accept") >> {
+            acceptCT
+        }
+        request.getParameter(_) >> {
+            return getParameter(queryString, arguments[0])
+        }
+        storage.load(_, _) >> {
+            new Document(["@graph": [
+                    ["@id": id, "mainEntity": ["@id": "main"]],
+                    ["@id": "main", "foo": "bar"]]])
+        }
+        storage.loadEmbellished(_, _) >> {
+            new Document(["@graph": [
+                    ["@id": id, "mainEntity": ["@id": "main"]],
+                    ["@id": "main", "foo": "embellished"]]])
+        }
+
+        crud.doGet(request, response)
+        String document = response.getResponseBody()
+
+        expect:
+
+        response.getStatus() == SC_OK
+        response.getContentType() == responseCT
+        isEmbellished(document) == embellished
+        isFramed(document) == framed
+
+        where:
+        view         | queryString                      | acceptCT || responseCT | embellished | framed
+        ''           | ''                               | JSONLD   || JSONLD     | true        | false
+        ''           | '?version=1'                     | JSONLD   || JSONLD     | false       | false
+        ''           | '?version=1&embellished=true'    | JSONLD   || JSONLD     | false       | false
+        ''           | '?framed=true'                   | JSONLD   || JSONLD     | true        | true
+        ''           | '?embellished=false'             | JSONLD   || JSONLD     | false       | false
+        ''           | '?embellished=false&framed=true' | JSONLD   || JSONLD     | false       | true
+
+        ''           | ''                               | JSON     || JSON       | true        | true
+        ''           | '?framed=false'                  | JSON     || JSON       | true        | false
+        ''           | '?embellished=false'             | JSON     || JSON       | false       | true
+
+        'data'       | '?embellished=true&framed=true'  | JSONLD   || JSONLD     | true        | true
+        'data-view'  | '?embellished=false&framed=true' | JSONLD   || JSONLD     | false       | true
+
+        // lens implies framed
+        ''           | '?lens=card'                     | JSONLD   || JSONLD     | true        | true
+        ''           | '?lens=card&framed=false'        | JSON     || JSON       | true        | true // TODO: explicitly disallow? (return 400)
+    }
+
+    @Unroll
+    def "GET should use lens parameter"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}${view}".toString()
+        }
+        request.getHeader("Accept") >> {
+            JSONLD
+        }
+        request.getParameter(_) >> {
+            return getParameter(queryString, arguments[0])
+        }
+        Document d = new Document(["@graph": [["@id": "record_id",
+                                               "@type": "Record",
+                                               "mainEntity": ["@id": "instance_id"],
+                                              ],
+                                              ["@id": "instance_id",
+                                               "@type": "Instance",
+                                               "prop1": "val1",
+                                               "prop2": "val2",
+                                               "prop3": "val3",
+                                               "prop4": "val4",
+                                              ]]])
+        storage.load(_, _) >> { d }
+        storage.loadEmbellished(_, _) >> { d }
+        crud.doGet(request, response)
+        String document = response.getResponseBody()
+        println(lens)
+        println(document)
+        expect:
+        response.getStatus() == SC_OK
+        response.getContentType() == JSONLD
+        lensUsed(document) == lens
+
+        where:
+        view         | queryString                      | lens
+        ''           | ''                               | 'none'
+        ''           | '?lens=none'                     | 'none'
+        ''           | '?lens=card'                     | 'card'
+        ''           | '?lens=chip'                     | 'chip'
+    }
+
+    def "GET /<id>?lens=invalid should return 400 Bad Request"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}".toString()
+        }
+        request.getHeader("Accept") >> {
+            "*/*"
+        }
+        request.getParameter("lens") >> {
+            "invalid"
+        }
+        storage.load(_, _) >> {
+            return new Document(["@graph": [["@id": id, "foo": "bar"]]])
+        }
+        when:
+        crud.doGet(request, response)
+        then:
+        response.getStatus() == SC_BAD_REQUEST
+    }
+
+    def getParameter(String queryString, String name) {
+        if (queryString.startsWith('?')) {
+            queryString = queryString.substring(1)
+        }
+
+        for (String s in queryString.split('&')) {
+            if (s.startsWith(name + '=')) {
+                return s.substring(name.length() + 1)
+            }
+        }
+        return null
+    }
+
+    def isEmbellished(String document) {
+        return document.contains('"foo":"embellished"')
+    }
+
+    def isFramed(String document) {
+        if (document.startsWith('{"@id":')) {
+            return true
+        } else if (document.startsWith('{"@graph":')) {
+            return false
+        } else {
+            throw new RuntimeException("Unrecognized format:" + document)
+        }
+    }
+
+    def lensUsed(String document) {
+        if (document.contains('"prop4":"val4"'))
+            return 'none'
+        if (document.contains('"prop3":"val3"'))
+            return 'card'
+        if (document.contains('"prop2":"val2"'))
+            return 'chip'
+        if (document.contains('"prop1":"val1"'))
+            return 'token'
+
+        throw new RuntimeException()
+    }
+
+    //TODO: Current URL structure cannot handle ids ending with /data
+    @Ignore
+    def "GET with id ending in /data"() {
+        given:
+        def id = BASE_URI.resolve("/1234/data").toString()
+        request.getPathInfo() >> {
+            "/${id}".toString()
+        }
+        storage.load(id, _) >> {
+            new Document(["@graph": [["@id": id, "foo": "bar"]]])
+        }
+        when:
+        crud.doGet(request, response)
+        then:
+        response.getStatus() == SC_OK
+    }
 
     // Tests for create
     def "POST to / should create document with generated @id"() {
@@ -715,11 +1025,11 @@ class CrudSpec extends Specification {
                                     "@type": "Record",
                                     "contains": "some data",
                                     "creationDate": "2002-01-08T00:00:00.0+01:00"],
-                                   ["@id": "/instance_id",
-                                    "@type": "Instance",
+                                   ["@id": "/item_id",
+                                    "@type": "Item",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["code": "S"]]]]
+                                            ["code": "Ting"]]]]
         is.getBytes() >> {
             mapper.writeValueAsBytes(postData)
         }
@@ -3581,66 +3891,4 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_FORBIDDEN
     }
 
-
-    /*
-     * Utilities tests
-     *
-     */
-
-    def "should get ID from path"() {
-        expect:
-        Crud.getIdFromPath(path) == id
-        where:
-        path                                | id
-        ""                                  | null
-        "/"                                 | null
-        "/foo"                              | "foo"
-        "/foo/data"                         | "foo"
-        "/foo/data.jsonld"                  | "foo"
-        "/foo/data.json"                    | "foo"
-        "/foo/data-view.jsonld"             | "foo"
-        "/foo/data-view.json"               | "foo"
-        "/https://example.com/some/id"      | "https://example.com/some/id"
-        "/https://example.com/some/id/data" | "https://example.com/some/id"
-    }
-
-    def "should get formatting type"() {
-        expect:
-        Crud.getFormattingType(path, contentType) == type
-        where:
-        path                                | contentType | type
-        ""                                  | "application/ld+json" | Crud.FormattingType.EMBELLISHED
-        "/"                                 | "application/ld+json" | Crud.FormattingType.EMBELLISHED
-        "/foo"                              | "application/ld+json" | Crud.FormattingType.EMBELLISHED
-        "/foo"                              | "application/json"    | Crud.FormattingType.FRAMED_AND_EMBELLISHED
-        "/foo/data"                         | "application/ld+json" | Crud.FormattingType.RAW
-        "/foo/data"                         | "application/json"    | Crud.FormattingType.FRAMED
-        "/foo/data.jsonld"                  | "application/ld+json" | Crud.FormattingType.RAW
-        "/foo/data.json"                    | "application/ld+json" | Crud.FormattingType.FRAMED
-        "/foo/data-view"                    | "application/ld+json" | Crud.FormattingType.EMBELLISHED
-        "/foo/data-view"                    | "application/json"    | Crud.FormattingType.FRAMED_AND_EMBELLISHED
-        "/foo/data-view.jsonld"             | "application/ld+json" | Crud.FormattingType.EMBELLISHED
-        "/foo/data-view.json"               | "application/ld+json" | Crud.FormattingType.FRAMED_AND_EMBELLISHED
-        "/https://example.com/some/id"      | "application/ld+json" | Crud.FormattingType.EMBELLISHED
-        "/https://example.com/some/id/data" | "application/ld+json" | Crud.FormattingType.RAW
-        "/https://example.com/some/id/data" | "application/json"    | Crud.FormattingType.FRAMED
-        "/foo/data"                         | "text/turtle"         | Crud.FormattingType.RAW
-        "/foo/data"                         | "application/rdf+xml" | Crud.FormattingType.RAW
-        "/foo/data-view"                    | "text/turtle"         | Crud.FormattingType.EMBELLISHED
-        "/foo/data-view"                    | "application/rdf+xml" | Crud.FormattingType.EMBELLISHED
-    }
-
-    def "should throw exception when getting formatting type for invalid file ending, I"() {
-        when:
-        Crud.getFormattingType('/foo/data.invalid', 'application/ld+json')
-        then:
-        thrown Crud.NotFoundException
-    }
-
-    def "should throw exception when getting formatting type for invalid file ending, II"() {
-        when:
-        Crud.getFormattingType('/foo/data-view.invalid', 'application/ld+json')
-        then:
-        thrown Crud.NotFoundException
-    }
 }
