@@ -149,9 +149,8 @@ public class DocumentComparator {
             // in 'b' we must try different ways of matching elements
             stack = new Stack<>();
             matched = new Stack<>();
-            anyMatch = false;
 
-            stack.push(0);
+            nextA();
             while (stack.size() > 0) {
                 boolean match = isSubset(ixA(), ixB());
                 nextB();
