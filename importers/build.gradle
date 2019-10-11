@@ -84,7 +84,7 @@ dependencies {
     compile 'com.damnhandy:handy-uri-templates:2.0.4'
     compile 'org.apache.commons:commons-dbcp2:2.0.1'
     // Integration
-    compile 'mysql:mysql-connector-java:5.1.33'
+    compile 'mysql:mysql-connector-java:8.0.17'
     compile 'org.codehaus.gpars:gpars:1.2.1'
 
     // metrics

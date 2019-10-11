@@ -16,7 +16,7 @@ import whelk.util.PropertyLoader
  */
 @Log
 @CompileStatic
-class Whelk {
+class Whelk implements Storage {
 
     PostgreSQLComponent storage
     ElasticSearch elastic
@@ -24,6 +24,8 @@ class Whelk {
     Map vocabData
     Map contextData
     JsonLd jsonld
+
+    URI baseUri = null
 
     // useAuthCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
     // Any other use of this results in a "local" cache, which will not be invalidated when data changes elsewhere,
@@ -36,7 +38,7 @@ class Whelk {
     String vocabUri = "https://id.kb.se/vocab/"
 
     private Map<String, Document> authCache
-    private final int CACHE_MAX_SIZE = 1000
+    private final int CACHE_MAX_SIZE = 200_000
 
     static Whelk createLoadedCoreWhelk(String propName = "secret", boolean useCache = false) {
         return createLoadedCoreWhelk(PropertyLoader.loadProperties(propName), useCache)
@@ -44,7 +46,10 @@ class Whelk {
 
     static Whelk createLoadedCoreWhelk(Properties configuration, boolean useCache = false) {
         PostgreSQLComponent storage = new PostgreSQLComponent(configuration)
-        Whelk whelk = new Whelk(storage)
+        Whelk whelk = new Whelk(storage, useCache)
+        if (configuration.baseUri) {
+            whelk.baseUri = new URI((String) configuration.baseUri)
+        }
         whelk.loadCoreData()
         return whelk
     }
@@ -55,6 +60,9 @@ class Whelk {
 
     static Whelk createLoadedSearchWhelk(Properties configuration, boolean useCache = false) {
         Whelk whelk = new Whelk(configuration, useCache)
+        if (configuration.baseUri) {
+            whelk.baseUri = new URI((String) configuration.baseUri)
+        }
         whelk.loadCoreData()
         return whelk
     }
@@ -121,6 +129,14 @@ class Whelk {
         this.vocabData = this.storage.getDocumentByIri(vocabUri).data
     }
 
+    Document getDocument(String id) {
+        Document doc = storage.load(id)
+        if (baseUri) {
+            doc.baseUri = baseUri
+        }
+        return doc
+    }
+
     Map<String, Document> bulkLoad(List<String> ids) {
         Map result = [:]
         ids.each { id ->
@@ -150,6 +166,7 @@ class Whelk {
 
                     result[id] = doc
                     String collection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
+                    // TODO: only put used dependencies in cache; and either factor out collectionsToCache, or skip that check!
                     if (collection == "auth" || collection == "definitions"
                             || collection == null) // TODO: Remove ASAP when mainEntity,@type mappings correctly map to collection again.
                         putInAuthCache(doc)
@@ -269,7 +286,7 @@ class Whelk {
         return document
     }
 
-    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
+    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
         if (updated == null) {
             return null

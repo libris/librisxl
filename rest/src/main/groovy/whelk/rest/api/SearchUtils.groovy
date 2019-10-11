@@ -1,6 +1,7 @@
 package whelk.rest.api
 
-
+import com.google.common.escape.Escaper
+import com.google.common.net.UrlEscapers
 import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
@@ -8,6 +9,7 @@ import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
 import whelk.exception.WhelkRuntimeException
+import whelk.search.ESQuery
 
 @Log
 class SearchUtils {
@@ -15,6 +17,8 @@ class SearchUtils {
     final static int DEFAULT_LIMIT = 200
     final static int MAX_LIMIT = 4000
     final static int DEFAULT_OFFSET = 0
+
+    private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper()
 
     enum SearchType {
         FIND_BY_VALUE,
@@ -353,7 +357,7 @@ class SearchUtils {
             Map sliceNode = ['dimension': key.replace(".${JsonLd.ID_KEY}", '')]
             aggregation['buckets'].each { bucket ->
                 String itemId = bucket['key']
-                String searchPageUrl = "${baseUrl}&${key}=${urlEncode(itemId)}"
+                String searchPageUrl = "${baseUrl}&${makeParam(key, itemId)}"
 
                 Map observation = ['totalItems': bucket.getAt('doc_count'),
                                    'view': [(JsonLd.ID_KEY): searchPageUrl],
@@ -462,7 +466,7 @@ class SearchUtils {
     }
 
     private String makeParam(key, value) {
-        return "${urlEncode(key)}=${urlEncode(value)}"
+        return "${escapeQueryParam(key)}=${escapeQueryParam(value)}"
     }
 
     private Tuple2 getInitialParamsAndKeys(SearchType st,
@@ -495,7 +499,7 @@ class SearchUtils {
     private Tuple2 getReverseParams(Map queryParameters) {
         String id = queryParameters.remove('o')
         String lens = queryParameters.remove('_lens')
-        List initialParams = ["o=${id}", "_lens=${lens}"]
+        List initialParams = [makeParam('o', id), makeParam('_lens', lens)]
         List keys = (queryParameters.keySet() as List).sort()
 
         return new Tuple2(initialParams, keys)
@@ -687,9 +691,11 @@ class SearchUtils {
         }
     }
 
-    private Object urlEncode(Object input) {
+    private Object escapeQueryParam(Object input) {
         return input instanceof String
-                ? java.net.URLEncoder.encode(input, "UTF-8")
+                // We want pretty URIs, restore some characters which are inside query strings
+                // https://tools.ietf.org/html/rfc3986#section-3.4
+                ? QUERY_ESCAPER.escape(input).replace(['%3A': ':', '%2F': '/', '%40': '@'])
                 : input
     }
 }

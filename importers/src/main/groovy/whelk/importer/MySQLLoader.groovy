@@ -9,7 +9,7 @@ import java.sql.Statement
 @Log
 class MySQLLoader {
 
-    static final String JDBC_DRIVER = "com.mysql.jdbc.Driver"
+    static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver"
     static private final int BATCH_SIZE = 200
 
     static  Map<String,String> selectExampleDataByMarcType = [
@@ -156,7 +156,7 @@ class MySQLLoader {
     }
 
     private static Sql prepareSql(String connectionUrl) {
-        def sql = Sql.newInstance(connectionUrl, "com.mysql.jdbc.Driver")
+        def sql = Sql.newInstance(connectionUrl, JDBC_DRIVER)
         sql.withStatement { Statement stmt -> stmt.fetchSize = Integer.MIN_VALUE }
         sql.connection.autoCommit = false
         sql.resultSetType = ResultSet.TYPE_FORWARD_ONLY

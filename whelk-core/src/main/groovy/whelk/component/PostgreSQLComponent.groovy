@@ -12,6 +12,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
 import org.postgresql.util.PSQLException
 import whelk.Document
+import whelk.Storage
 import whelk.IdType
 import whelk.JsonLd
 import whelk.exception.StorageCreateFailedException
@@ -29,14 +30,7 @@ import java.util.regex.Pattern
 
 @Log
 @CompileStatic
-class PostgreSQLComponent {
-
-    /**
-     * Interface for performing atomic document updates
-     */
-    public interface UpdateAgent {
-        public void update(Document doc)
-    }
+class PostgreSQLComponent implements Storage {
 
     private BasicDataSource connectionPool
     static String driverClass = "org.postgresql.Driver"
@@ -45,6 +39,7 @@ class PostgreSQLComponent {
     public final static ObjectMapper mapper = new ObjectMapper()
 
     boolean versioning = true
+    boolean doVerifyDocumentIdRetention = true
 
     /**
      * This value is sensitive. It must be strictly larger than the maxConnections parameter set in tomcat.
@@ -148,16 +143,15 @@ class PostgreSQLComponent {
 
         // Setting up sql-statements
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
-        INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,collection,changedIn,changedBy,checksum,deleted) VALUES (?,?,?,?,?,?,?)"
+        INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,collection,changedIn,changedBy,checksum,deleted," +
+                "created,modified,depminmodified,depmaxmodified) VALUES (?,?,?,?,?,?,?,?,?,?,?)"
         DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
         INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, iri, graphIndex, mainId) VALUES (?,?,?,?)"
 
         DELETE_DEPENDENCIES = "DELETE FROM $dependenciesTableName WHERE id = ?"
         INSERT_DEPENDENCIES = "INSERT INTO $dependenciesTableName (id, relation, dependsOnId) VALUES (?,?,?)"
 
-        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted) SELECT ?,?,?,?,?,?,?,?,? " +
-                "WHERE NOT EXISTS (SELECT 1 FROM (SELECT * FROM $versionsTableName WHERE id = ? " +
-                "ORDER BY modified DESC LIMIT 1) AS last WHERE last.checksum = ?)"
+        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted) SELECT ?,?,?,?,?,?,?,?,? "
 
         INSERT_EMBELLISHED_DOCUMENT = "INSERT INTO $embellishedTableName (id, data) VALUES (?,?)"
         DELETE_EMBELLISHED_DOCUMENT = "DELETE FROM $embellishedTableName WHERE id = ?"
@@ -338,19 +332,23 @@ class PostgreSQLComponent {
                     throw new ConflictingHoldException("Already exists a holding post for ${doc.getHeldBy()} and bib: $holdingFor")
             }
 
-            Date now = new Date()
-            PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
+            if (linkFinder != null)
+                linkFinder.normalizeIdentifiers(doc, connection)
 
+            //FIXME: throw exception on null changedBy
             if (changedBy != null) {
                 String creator = getDescriptionChangerId(changedBy)
                 doc.setDescriptionCreator(creator)
                 doc.setDescriptionLastModifier(creator)
             }
 
-            if (linkFinder != null)
-                linkFinder.normalizeIdentifiers(doc, connection)
+            Date now = new Date()
+            doc.setCreated(now)
+            doc.setModified(now)
+            doc.setDeleted(deleted)
 
-            insert = rigInsertStatement(insert, doc, changedIn, changedBy, collection, deleted)
+            PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
+            insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, deleted)
             insert.executeUpdate()
             connection.commit()
             Document savedDoc = load(doc.getShortId(), connection)
@@ -504,6 +502,7 @@ class PostgreSQLComponent {
                 throw new SQLException("Not allowed to merge deleted record: " + remainingID)
             resultSet.close()
             Date modTime = new Date()
+            remainingDocument.setModified(modTime)
             updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
             rigUpdateStatement(updateStatement, remainingDocument, modTime, changedIn, changedBy, collection, false)
             updateStatement.execute()
@@ -528,6 +527,7 @@ class PostgreSQLComponent {
             if (disappearingDocument.deleted)
                 throw new SQLException("Not allowed to merge deleted record: " + disappearingID)
             disappearingDocument.setDeleted(true)
+            disappearingDocument.setModified(modTime)
             createdTime = new Date(resultSet.getTimestamp("created").getTime())
             resultSet.close()
             updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
@@ -551,6 +551,7 @@ class PostgreSQLComponent {
                 Document dependerDoc = assembleDocument(resultSet)
                 if (linkFinder != null)
                     linkFinder.normalizeIdentifiers(dependerDoc, connection)
+                dependerDoc.setModified(modTime)
                 updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
                 String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, jsonld)
                 rigUpdateStatement(updateStatement, dependerDoc, modTime, changedIn, changedBy, dependerCollection, false)
@@ -581,7 +582,7 @@ class PostgreSQLComponent {
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
-    public Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent) {
+    public Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
@@ -612,19 +613,22 @@ class PostgreSQLComponent {
             updateAgent.update(doc)
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc)
-            verifyDocumentIdRetention(preUpdateDoc, doc)
-
-            if (changedBy != null) {
-                doc.setDescriptionLastModifier(getDescriptionChangerId(changedBy))
+            if (doVerifyDocumentIdRetention) {
+                verifyDocumentIdRetention(preUpdateDoc, doc)
             }
 
             boolean deleted = doc.getDeleted()
 
             Date createdTime = new Date(resultSet.getTimestamp("created").getTime())
-            Date modTime = new Date()
-            if (minorUpdate) {
-                modTime = new Date(resultSet.getTimestamp("modified").getTime())
+            Date modTime = minorUpdate
+                ? new Date(resultSet.getTimestamp("modified").getTime())
+                : new Date()
+            doc.setModified(modTime)
+
+            if (!minorUpdate) {
+                doc.setDescriptionLastModifier(getDescriptionChangerId(changedBy))
             }
+
             updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
             rigUpdateStatement(updateStatement, doc, modTime, changedIn, changedBy, collection, deleted)
             updateStatement.execute()
@@ -882,7 +886,7 @@ class PostgreSQLComponent {
         }
     }
 
-    private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
+    private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, Date timestamp, String changedIn, String changedBy, String collection, boolean deleted) {
         insert.setString(1, doc.getShortId())
         insert.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
         insert.setString(3, collection)
@@ -890,6 +894,10 @@ class PostgreSQLComponent {
         insert.setString(5, changedBy)
         insert.setString(6, doc.getChecksum())
         insert.setBoolean(7, deleted)
+        insert.setTimestamp(8, new Timestamp(timestamp.getTime()))
+        insert.setTimestamp(9, new Timestamp(timestamp.getTime()))
+        insert.setTimestamp(10, new Timestamp(timestamp.getTime()))
+        insert.setTimestamp(11, new Timestamp(timestamp.getTime()))
         return insert
     }
 
@@ -914,9 +922,8 @@ class PostgreSQLComponent {
                 insvers = rigVersionStatement(insvers, doc, createdTime,
                                               modTime, changedIn, changedBy,
                                               collection, deleted)
-                int updated = insvers.executeUpdate()
-                log.debug("${updated > 0 ? 'New version saved.' : 'Already had same version'}")
-                return (updated > 0)
+                insvers.executeUpdate()
+                return true
             } catch (Exception e) {
                 log.error("Failed to save document version: ${e.message}")
                 throw e
@@ -940,8 +947,6 @@ class PostgreSQLComponent {
         insvers.setTimestamp(7, new Timestamp(createdTime.getTime()))
         insvers.setTimestamp(8, new Timestamp(modTime.getTime()))
         insvers.setBoolean(9, deleted)
-        insvers.setString(10, doc.getShortId())
-        insvers.setString(11, doc.getChecksum())
         return insvers
     }
 
@@ -960,11 +965,14 @@ class PostgreSQLComponent {
                 if (linkFinder != null)
                     linkFinder.normalizeIdentifiers(doc)
                 Date now = new Date()
+                doc.setCreated(now)
+                doc.setModified(now)
+                doc.setDeleted(false)
                 if (versioning) {
                     ver_batch = rigVersionStatement(ver_batch, doc, now, now, changedIn, changedBy, collection, false)
                     ver_batch.addBatch()
                 }
-                batch = rigInsertStatement(batch, doc, changedIn, changedBy, collection, false)
+                batch = rigInsertStatement(batch, doc, now, changedIn, changedBy, collection, false)
                 batch.addBatch()
                 refreshDerivativeTables(doc, connection, false)
                 if (updateDepMinMax) {
@@ -1879,13 +1887,7 @@ class PostgreSQLComponent {
         } catch (SQLException sqle) {
             log.trace("Resultset didn't have created. Probably a version request.")
         }
-
-        for (altId in loadRecordIdentifiers(doc.id)) {
-            doc.addRecordIdentifier(altId)
-        }
-        for (altId in loadThingIdentifiers(doc.id)) {
-            doc.addThingIdentifier(altId)
-        }
+        
         return doc
 
     }
@@ -1973,6 +1975,44 @@ class PostgreSQLComponent {
                                 connection.setAutoCommit(true)
                             } finally {
                                 connection.close()
+                            }
+                        }
+                        return doc
+                    }
+
+                    @Override
+                    public boolean hasNext() {
+                        return more
+                    }
+                }
+            }
+        }
+    }
+
+    Iterable<Document> iterateDocuments(ResultSet rs) {
+        def conn = rs.statement.connection
+        boolean more = rs.next() // rs starts at "-1"
+        if (!more) {
+            try {
+                conn.commit()
+                conn.setAutoCommit(true)
+            } finally {
+                conn.close()
+            }
+        }
+        return new Iterable<Document>() {
+            Iterator<Document> iterator() {
+                return new Iterator<Document>() {
+                    @Override
+                    public Document next() {
+                        Document doc = assembleDocument(rs)
+                        more = rs.next()
+                        if (!more) {
+                            try {
+                                conn.commit()
+                                conn.setAutoCommit(true)
+                            } finally {
+                                conn.close()
                             }
                         }
                         return doc
@@ -2192,7 +2232,20 @@ class PostgreSQLComponent {
     }
 
     private String getDescriptionChangerId(String changedBy) {
-        // FIXME: hardcoded
-        return "https://libris.kb.se/library/" + changedBy
+        //FIXME(?): hardcoded
+        // for historical reasons changedBy is the script URI for global changes
+        if (changedBy.startsWith('https://libris.kb.se/sys/globalchanges/')) {
+            return getDescriptionChangerId('SEK')
+        }
+        else if (isHttpUri(changedBy)) {
+            return changedBy
+        }
+        else {
+            return 'https://libris.kb.se/library/' + changedBy
+        }
+    }
+
+    private boolean isHttpUri(String s) {
+        return s.startsWith('http://') || s.startsWith('https://')
     }
 }

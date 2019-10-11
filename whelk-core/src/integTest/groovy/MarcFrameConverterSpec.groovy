@@ -51,7 +51,7 @@ class MarcFrameConverterSpec extends Specification {
                 }
 
                 if (tag == '000') {
-                    marcSkeletons[marcType] = dfn._spec[0].source
+                    marcSkeletons[marcType] = dfn._spec[0].normalized ?: dfn._spec[0].source
                     marcResults[marcType] = dfn._spec[0].result
                 }
                 if (dfn._spec instanceof List) {

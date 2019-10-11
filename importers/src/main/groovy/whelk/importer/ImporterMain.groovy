@@ -14,6 +14,7 @@ import whelk.MySQLToMarcJSONDumper
 import whelk.PostgresLoadfileWriter
 import whelk.Whelk
 import whelk.actors.StatsMaker
+import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.JsonLdToTurtle
 import whelk.filter.LinkFinder
@@ -119,6 +120,42 @@ class ImporterMain {
         reindex.reindex(collection)
     }
 
+    @Command(args='[COLLECTION] [no-embellish|no-cache]')
+    void reindexToStdout(String collection=null, String directive=null) {
+        if (directive == null && collection?.indexOf('-') > -1) {
+            directive = collection
+            collection = null
+        }
+        boolean useCache = directive != 'no-cache'
+        boolean doEmbellish = directive != 'no-embellish'
+
+        Whelk whelk = Whelk.createLoadedCoreWhelk(props, useCache)
+
+        println "Creating whelk with dummy ElasticSearch"
+        println "- collection: $collection"
+        println "- directive: $directive"
+        println "- useCache: $useCache"
+        println "- doEmbellish: $doEmbellish"
+
+        whelk.elastic = new ElasticSearch("", "", "") {
+            Tuple2<Integer, String> performRequest(String method,
+                    String path, String body, String contentType0 = null) {
+                println "PATH: $path, CONTENT_TYPE: $contentType0, SIZE: ${body.size()}"
+                println body
+                return new Tuple2(-1, "{}")
+            }
+
+            void embellish(Whelk w, Document src, Document copy) {
+                if (doEmbellish) {
+                    super.embellish(w, src, copy)
+                }
+            }
+        }
+
+        def reindex = new ElasticReindexer(whelk)
+        reindex.reindex(collection)
+    }
+
     @Command(args='[FROM]')
     void reindexFrom(String from=null) {
         boolean useCache = true
@@ -196,6 +233,21 @@ class ImporterMain {
         System.err.println("All done importing example data.")
     }
 
+    @Command(args='SOURCE_PROPERTIES RECORD_ID_FILE')
+    void copywhelk(String sourcePropsFile, String recordsFile) {
+        def sourceProps = new Properties()
+        new File(sourcePropsFile).withInputStream { it
+            sourceProps.load(it)
+        }
+        def source = Whelk.createLoadedCoreWhelk(sourceProps)
+        def dest = Whelk.createLoadedSearchWhelk(props)
+        def recordIds = new File(recordsFile).collect {
+            it.split(/\t/)[0]
+        }
+        def copier = new WhelkCopier(source, dest, recordIds)
+        copier.run()
+    }
+
     def dumpLinkedRecords(List<String> bibIds) {
         def connUrl = props.getProperty("mysqlConnectionUrl")
 
@@ -233,14 +285,14 @@ class ImporterMain {
 
     static List<String> getExtraAuthIds(String connUrl, List<String> bibIds){
         String sqlQuery = 'SELECT bib_id, auth_id FROM auth_bib WHERE bib_id IN (?)'.replace('?',bibIds.collect{it->'?'}.join(','))
-        def sql = Sql.newInstance(connUrl, "com.mysql.jdbc.Driver")
+        def sql = Sql.newInstance(connUrl, MySQLLoader.JDBC_DRIVER)
         def rows = sql.rows(sqlQuery,bibIds)
         return rows.collect {it->it.auth_id}
     }
 
     static List<String> getExtraHoldIds(String connUrl, List<String> bibIds){
         String sqlQuery = 'SELECT mfhd_id FROM mfhd_record WHERE mfhd_record.bib_id IN (?) AND deleted = 0'.replace('?',bibIds.collect{it->'?'}.join(','))
-        def sql = Sql.newInstance(connUrl, "com.mysql.jdbc.Driver")
+        def sql = Sql.newInstance(connUrl, MySQLLoader.JDBC_DRIVER)
         def rows = sql.rows(sqlQuery,bibIds)
         return rows.collect {it->it.mfhd_id}
     }

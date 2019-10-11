@@ -274,7 +274,8 @@ public class ProfileExport
         if (doVirtualDeletions && !locationSet.contains("*"))
         {
             if (!isHeld(document, profile)) {
-                logger.info("Not exporting {} for {} because of virtual deletions setting", systemId, profileName);
+                if (deleteMode == DELETE_MODE.IGNORE)
+                    logger.info("Not exporting {} for {} because of combined virtual deletions and ignore-deleted setting", systemId, profileName);
                 document.setDeleted(true);
             }
         }

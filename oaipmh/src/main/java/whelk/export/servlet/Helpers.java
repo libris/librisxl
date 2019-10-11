@@ -76,7 +76,7 @@ public class Helpers
             throws SQLException
     {
         // Construct the query
-        String selectSQL = "WITH bib_with_heldby AS (" +
+        String selectSQL = "SELECT * FROM (" +
                 " SELECT lddb.id, lddb.data, lddb.collection, lddb.created, lddb.modified, lddb.deleted, lddb.changedBy, lddb.data#>>'{@graph,1,heldBy,@id}' AS sigel, lddb.data#>>'{@graph,1,itemOf,@id}' AS itemOf, lddb_attached_holdings.data#>>'{@graph,1,heldBy,@id}' as heldBy" +
                 " FROM lddb ";
 
@@ -98,8 +98,8 @@ public class Helpers
                 selectSQL += " AND lddb.modified <= ? ";
         }
         selectSQL += " AND lddb.collection = ? ";
-        selectSQL += " ) ";
-        selectSQL += " SELECT * FROM bib_with_heldby WHERE heldBy = ?";
+        selectSQL += " ) AS bib_with_heldby ";
+        selectSQL += " WHERE heldBy = ?";
 
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setFetchSize(512);

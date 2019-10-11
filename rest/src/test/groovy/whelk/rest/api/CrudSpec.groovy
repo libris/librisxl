@@ -2044,7 +2044,7 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_FORBIDDEN
     }
 
-    def "PUT to /<id> should return 403 Forbidden if missing sigel in old document"() {
+    def "PUT to /<id> should return 403 Forbidden if missing sigel in old document and no permission for new"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
@@ -2085,12 +2085,13 @@ class CrudSpec extends Specification {
             "application/ld+json"
         }
         request.getAttribute(_) >> {
-            return ["permissions": [["code": "Ting",
-                                     "cataloger": false,
-                                     "registrant": true],
-                                    ["code": "S",
-                                     "cataloger": true,
-                                     "registrant": false]]]
+            return ["active_sigel": "Sing",
+                    "permissions": [["code": "Sing",
+                             "cataloger": false,
+                             "registrant": true],
+                            ["code": "S",
+                             "cataloger": true,
+                             "registrant": false]]]
         }
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
@@ -2110,6 +2111,142 @@ class CrudSpec extends Specification {
         crud.doPut(request, response)
         then:
         response.getStatus() == HttpServletResponse.SC_FORBIDDEN
+    }
+
+    def "PUT to /<id> - Registrant can correct missing sigel in holding"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some other data"]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
+            return "hold"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true,
+                                     "global_registrant": false]]
+                    ]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.load(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return doc
+        }
+        storage.createDocument(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_NO_CONTENT
+    }
+
+
+    def "PUT to /<id> - Global registrant can correct missing sigel in holding"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some other data"]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/itemId",
+                                      "@type": "Item",
+                                      "contains": "some other data",
+                                      "heldBy":
+                                              ["code": "Sing", "@id":"https://libris.kb.se/library/Sing"]]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
+            return "hold"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["active_sigel": "SEK",
+                    "permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true,
+                                     "global_registrant": false],
+                                    ["code": "SEK",
+                                     "cataloger": false,
+                                     "registrant": false,
+                                     "global_registrant": true]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.load(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return doc
+        }
+        storage.createDocument(_, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_NO_CONTENT
     }
 
     def "PUT to /<id> should return 400 Bad Request if missing sigel in new document"() {

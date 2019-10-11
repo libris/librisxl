@@ -62,6 +62,8 @@ class Document {
     static final List descriptionCreatorPath = ["@graph", 0, "descriptionCreator", "@id"]
     static final List descriptionLastModifierPath = ["@graph", 0, "descriptionLastModifier", "@id"]
 
+    URI baseUri = BASE_URI
+
     public Map data = [:]
     public int version = 0
 
@@ -76,7 +78,7 @@ class Document {
     }
 
     URI getURI() {
-        return BASE_URI.resolve(getShortId())
+        return baseUri.resolve(getShortId())
     }
 
     String getDataAsString() {
@@ -105,7 +107,7 @@ class Document {
 
     String getDescriptionCreator() { get(descriptionCreatorPath) }
 
-    void setDescriptionLastModifier(creator) { set(descriptionLastModifierPath, creator) }
+    void setDescriptionLastModifier(modifier) { set(descriptionLastModifierPath, modifier) }
 
     String getDescriptionLastModifier() { get(descriptionLastModifierPath) }
 
@@ -123,8 +125,8 @@ class Document {
      * Will have base URI prepended if not already there
      */
     void setId(String id) {
-        if (!id.startsWith(Document.BASE_URI.toString()))
-            id = Document.BASE_URI.resolve(id)
+        if (!id.startsWith(baseUri.toString()))
+            id = baseUri.resolve(id)
 
         set(recordIdPath, id)
     }
@@ -133,7 +135,7 @@ class Document {
      * Gets the document id (short form, without base URI).
      */
     String getShortId() {
-        String base = Document.BASE_URI.toString()
+        String base = baseUri.toString()
         for (id in getRecordIdentifiers())
             if (id.startsWith(base))
                 return id.substring(base.length())
@@ -151,12 +153,12 @@ class Document {
      * Gets the document system ID.
      * Usually this is equivalent to getComleteId(). But getComleteId() can sometimes return pretty-IDs
      * (like https://id.kb.se/something) when appropriate. This function will always return the complete
-     * system internal ID (like so: [BASE_URI]/fnrglbrgl)
+     * system internal ID (like so: [baseUri]/fnrglbrgl)
      */
     String getCompleteSystemId() {
         String shortId = getShortId()
         if (shortId != null)
-            return BASE_URI.toString() + shortId
+            return baseUri.toString() + shortId
         return null
     }
 

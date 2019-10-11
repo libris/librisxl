@@ -17,8 +17,6 @@ The project consists of:
 * Applications
     * `apix_export/`
         Exports data from Libris XL back to Voyager (the old system).
-    * `harvesters/`
-        An OAIPMH harvester. Servlet web application.
     * `importers/`
         Java application to load or reindex data into the system.
     * `oaipmh/`
