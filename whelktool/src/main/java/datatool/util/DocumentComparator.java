@@ -2,6 +2,7 @@ package datatool.util;
 
 import com.google.common.base.Preconditions;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -71,8 +72,19 @@ public class DocumentComparator {
 
         a.sort(BY_HASH);
         b.sort(BY_HASH);
+        
+        List<Integer> taken = new ArrayList<>(a.size());
+        nextA: for (int i = 0 ; i < a.size() ; i++) {
+            for (int j = 0 ; j < b.size() ; j++) {
+                if (!taken.contains(j) && isEqual(a.get(i), b.get(j), null)) {
+                    taken.add(j);
+                    continue nextA;
+                }
+            }
+            return false;
+        }
 
-        return isEqualOrdered(a, b);
+        return true;
     }
 
     public boolean isSubset(Map<?, ?> a, Map<?, ?> b) {

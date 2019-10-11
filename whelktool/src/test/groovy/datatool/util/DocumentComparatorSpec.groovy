@@ -61,6 +61,17 @@ class DocumentComparatorSpec extends Specification {
         ["x": ["ordered": [1, 3, 6, 5, 8, 9]]]      | ["x": ["ordered": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]]             || false
     }
 
+    def "handles nested unordered lists"() {
+        given:
+        def a = ["x": [[[5, 6, 7, 8], [1, 2, '3', 4]], [[13, 14, 15, [16: 16]], ['9', 10, 11, 12]]]]
+        def b = ["x": [[[10, '9', 12, 11], [15, 13, [16: 16], 14]], [[4, '3', 2, 1], [7, 8, 5, 6]]]]
+
+        expect:
+        new DocumentComparator().isEqual(a, b) == true
+        new DocumentComparator().isSubset(a, b) == true
+        new DocumentComparator().isSubset(a, b) == true
+    }
+
     def "document should equal itself"() {
         given:
         Map a = loadTestData('work1.json')
