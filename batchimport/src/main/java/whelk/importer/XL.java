@@ -176,10 +176,16 @@ class XL
         if (collection.equals("hold"))
             rdfDoc.setHoldingFor(relatedWithBibResourceId);
 
-        if (!m_parameters.getReadOnly())
-        {
+        String encodingLevel = rdfDoc.getEncodingLevel();
+        if (encodingLevel == null || (
+                !encodingLevel.equals(ENC_PRELIMINARY_STATUS) &&
+                !encodingLevel.equals(ENC_PREPUBLICATION_STATUS) &&
+                !encodingLevel.equals(ENC_ABBREVIVATED_STATUS) &&
+                !encodingLevel.equals(ENC_MINMAL_STATUS)))
             rdfDoc.setRecordStatus(ENC_PRELIMINARY_STATUS);
 
+        if (!m_parameters.getReadOnly())
+        {
             // Doing a replace (but preserving old IDs)
             if (replaceSystemId != null)
             {
@@ -277,7 +283,7 @@ class XL
             {
                 if ( verbose )
                 {
-                    System.out.println("info: Not enriching id: " + ourId + ", because it no longer has encoding level marc:PartialPreliminaryLevel");
+                    System.out.println("info: Not enriching id: " + ourId + ", due to bad combination of encoding levels.");
                 }
             }
         }
