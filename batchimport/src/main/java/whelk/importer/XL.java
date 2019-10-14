@@ -13,6 +13,7 @@ import se.kb.libris.utils.isbn.IsbnException;
 import se.kb.libris.utils.isbn.IsbnParser;
 import whelk.Document;
 import whelk.IdGenerator;
+import whelk.MatchingWorks;
 import whelk.Whelk;
 import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.MarcFrameConverter;
@@ -35,6 +36,7 @@ class XL
     private static final String ENC_MINMAL_STATUS = "marc:MinimalLevel";  // 7
 
     private Whelk m_whelk;
+    private MatchingWorks m_matchingWorks;
     private LinkFinder m_linkfinder;
     private Parameters m_parameters;
     private Properties m_properties;
@@ -53,6 +55,7 @@ class XL
         verbose = m_parameters.getVerbose();
         m_properties = PropertyLoader.loadProperties("secret");
         m_whelk = Whelk.createLoadedSearchWhelk(m_properties);
+        m_matchingWorks = new MatchingWorks(m_whelk);
         m_repeatableTerms = m_whelk.getJsonld().getRepeatableTerms();
         m_marcFrameConverter = m_whelk.createMarcFrameConverter();
         m_linkfinder = new LinkFinder(m_whelk.getStorage());
@@ -179,6 +182,11 @@ class XL
         if (!m_parameters.getReadOnly())
         {
             rdfDoc.setRecordStatus(ENC_PRELIMINARY_STATUS);
+
+            for (String workId: m_matchingWorks.getPossibleMatches(rdfDoc))
+            {
+                System.out.println("Possibly matching work: " + workId);
+            }
 
             // Doing a replace (but preserving old IDs)
             if (replaceSystemId != null)
