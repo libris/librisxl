@@ -300,6 +300,9 @@ class XL
 
     private boolean mayOverwriteExistingEncodingLevel(String existingEncodingLevel, String newEncodingLevel)
     {
+        if (m_parameters.getForceUpdate())
+            return true;
+
         if (newEncodingLevel == null || existingEncodingLevel == null)
             return false;
         switch (newEncodingLevel)

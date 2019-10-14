@@ -27,6 +27,7 @@ class Parameters
     private boolean mergeBib = false;
     private String changedBy = null;
     private String changedIn = null;
+    private boolean forceUpdate = false;
 
     Path getPath() { return path; }
     INPUT_FORMAT getFormat() { return format; }
@@ -43,6 +44,8 @@ class Parameters
     boolean getMergeBib() { return mergeBib; }
     String getChangedBy() { return changedBy; }
     String getChangedIn() { return changedIn; }
+    boolean getForceUpdate() { return forceUpdate; }
+
 
     enum INPUT_FORMAT
     {
@@ -183,6 +186,9 @@ class Parameters
         System.err.println("");
         System.err.println("--changedBy   A string to use as descriptionCreator (MARC 040) for imported records.");
         System.err.println("--changedIn   A string to use for the changedIn column, defaults to \"batch import\".");
+        System.err.println("--forceUpdate If this option is passed, encoding levels are ignored when deciding if");
+        System.err.println("              An incoming record is allowed to affect existing records. USE WITH CARE");
+        System.err.println("              and _NEVER_ use automatically.");
     }
 
     private void interpretBinaryParameter(String parameter, String value)
@@ -284,6 +290,9 @@ class Parameters
                 break;
             case "--mergeBib":
                 mergeBib = true;
+                break;
+            case "--forceUpdate":
+                forceUpdate = true;
                 break;
             default:
                 throw new IllegalArgumentException(parameter);
