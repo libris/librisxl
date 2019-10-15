@@ -1,9 +1,8 @@
-from __future__ import print_function, unicode_literals
 import json
 import sys
 
 
-MAX_STATS = 20
+MAX_STATS = 100
 STATS_FOR_ALL = {
         # from auth 008
         "marc:subdivision",
@@ -25,7 +24,10 @@ STATS_FOR_ALL = {
         "marc:catalogingSource",
         "marc:headingMain",
         "marc:headingSubject",
+        # "shouldn't" be too many...
+        "marc:displayText",
 }
+
 
 def compute_shape(node, index):
     if len(node) == 1 and '@id' in node:
@@ -48,6 +50,7 @@ def compute_shape(node, index):
             else:
                 count_value(k, v, shape)
 
+
 def count_value(k, v, shape):
     stats = shape.setdefault(k, {})
     if isinstance(stats, dict):
@@ -60,17 +63,22 @@ def count_value(k, v, shape):
 
 
 if __name__ == '__main__':
+    from time import time
+
     index = {}
 
+    t_last = 0
+    cr = '\r'
     for i, l in enumerate(sys.stdin):
         if not l.rstrip():
             continue
         if isinstance(l, bytes):
             l = l.decode('utf-8')
-        l = l.replace(r'\\', '\\')
 
-        if i % 100000 == 0:
-            print("At line", i, file=sys.stderr)
+        t_now = time()
+        if t_now - t_last > 2:
+            t_last = t_now
+            print(f'{cr}At: {i}', end='', file=sys.stderr)
 
         try:
             data = json.loads(l)
@@ -84,10 +92,11 @@ if __name__ == '__main__':
                 thing['instanceOf'] = work
 
             compute_shape(thing, index)
+            compute_shape(work, index)
 
         except (ValueError, AttributeError) as e:
-            print("ERROR at", i, "in data:", file=sys.stderr)
+            print(f'ERROR at: {i} in data:', file=sys.stderr)
             print(l, file=sys.stderr)
             print(e, file=sys.stderr)
 
-    print(json.dumps(index, indent=2))
+    print(json.dumps(index, indent=2, ensure_ascii=True))
