@@ -194,7 +194,7 @@ class Parameters
         System.err.println("              and _NEVER_ use automatically.");
         System.err.println("--specialRule Use a non-standard rule for encoding level update permissions.");
         System.err.println("              The rule is passed as a string like so:");
-        System.err.println("                --specialRule=7>3");
+        System.err.println("                --specialRule=7+3");
         System.err.println("              The above example will allow records with encodingLevel 7 to affect");
         System.err.println("              records with encodingLevel 3 (which would normally not be allowed).");
         System.err.println("              Several rules may be specified. This only affects the allowed import");
@@ -247,7 +247,7 @@ class Parameters
                 break;
 
             case "--specialRule":
-                if (value.length() != 3 || value.charAt(1) != '>')
+                if (value.length() != 3 || value.charAt(1) != '+')
                     throw new IllegalArgumentException(parameter);
                 String from = translateEncodingLevel(value.charAt(0));
                 String to = translateEncodingLevel(value.charAt(2));

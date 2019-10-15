@@ -195,6 +195,26 @@ if (( $rowCount != 1 )) ; then
     fail "Expected single hold record (after EAN test)"
 fi
 
+
+cleanup
+# Test special encoding level rules
+java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --changedIn=importtest --changedBy=Utb1
+bibResourceId=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'importtest' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["@id"]')
+
+# batch13.xml is the same as batch 0, but with encoding level 5 instead of 8, and another title
+java -jar build/libs/batchimport.jar --path=./integtest/batch13.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --changedIn=importtest --replaceBib --changedBy=Utb1 --specialRule=5+8
+
+newBibResourceId=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'importtest' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["@id"]')
+if [ $newBibResourceId != $bibResourceId ]; then
+    fail "Bib-replace altered the ID!"
+fi
+mainTitle=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'importtest' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["hasTitle"]|.[0]|.["mainTitle"]')
+expect="\"Polisbilen får INTE ett larm\""
+if [ "$mainTitle" != "$expect" ]; then
+    fail "Data was not replaced!"
+fi
+
+
 cleanup
 popd
 echo $OUTCOME
