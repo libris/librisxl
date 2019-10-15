@@ -8,6 +8,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 class Parameters
@@ -28,6 +29,7 @@ class Parameters
     private String changedBy = null;
     private String changedIn = null;
     private boolean forceUpdate = false;
+    private HashMap<String, String> specialRules = new HashMap<>();
 
     Path getPath() { return path; }
     INPUT_FORMAT getFormat() { return format; }
@@ -45,6 +47,7 @@ class Parameters
     String getChangedBy() { return changedBy; }
     String getChangedIn() { return changedIn; }
     boolean getForceUpdate() { return forceUpdate; }
+    HashMap<String, String> getSpecialRules() { return specialRules; }
 
 
     enum INPUT_FORMAT
@@ -189,6 +192,13 @@ class Parameters
         System.err.println("--forceUpdate If this option is passed, encoding levels are ignored when deciding if");
         System.err.println("              An incoming record is allowed to affect existing records. USE WITH CARE");
         System.err.println("              and _NEVER_ use automatically.");
+        System.err.println("--specialRule Use a non-standard rule for encoding level update permissions.");
+        System.err.println("              The rule is passed as a string like so:");
+        System.err.println("                --specialRule=7>3");
+        System.err.println("              The above example will allow records with encodingLevel 7 to affect");
+        System.err.println("              records with encodingLevel 3 (which would normally not be allowed).");
+        System.err.println("              Several rules may be specified. This only affects the allowed import");
+        System.err.println("              levels (3,5,7,8).");
     }
 
     private void interpretBinaryParameter(String parameter, String value)
@@ -236,8 +246,35 @@ class Parameters
                     dupTypes.add(translateDuplicationType(type));
                 break;
 
+            case "--specialRule":
+                if (value.length() != 3 || value.charAt(1) != '>')
+                    throw new IllegalArgumentException(parameter);
+                String from = translateEncodingLevel(value.charAt(0));
+                String to = translateEncodingLevel(value.charAt(2));
+                if (from == null || to == null)
+                    throw new IllegalArgumentException(parameter);
+                specialRules.put(from, to);
+                break;
+
             default:
                 throw new IllegalArgumentException(parameter);
+        }
+    }
+
+    private String translateEncodingLevel(char marcLevel)
+    {
+        switch (marcLevel)
+        {
+            case '3':
+                return XL.ENC_ABBREVIVATED_STATUS;
+            case '5':
+                return XL.ENC_PRELIMINARY_STATUS;
+            case '7':
+                return XL.ENC_MINMAL_STATUS;
+            case '8':
+                return XL.ENC_PREPUBLICATION_STATUS;
+            default:
+                return null;
         }
     }
 

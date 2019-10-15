@@ -29,10 +29,10 @@ import java.util.function.BiFunction;
 
 class XL
 {
-    private static final String ENC_PRELIMINARY_STATUS = "marc:PartialPreliminaryLevel"; // 5
-    private static final String ENC_PREPUBLICATION_STATUS = "marc:PrepublicationLevel";  // 8
-    private static final String ENC_ABBREVIVATED_STATUS = "marc:AbbreviatedLevel";  // 3
-    private static final String ENC_MINMAL_STATUS = "marc:MinimalLevel";  // 7
+    public static final String ENC_PRELIMINARY_STATUS = "marc:PartialPreliminaryLevel"; // 5
+    public static final String ENC_PREPUBLICATION_STATUS = "marc:PrepublicationLevel";  // 8
+    public static final String ENC_ABBREVIVATED_STATUS = "marc:AbbreviatedLevel";  // 3
+    public static final String ENC_MINMAL_STATUS = "marc:MinimalLevel";  // 7
 
     private Whelk m_whelk;
     private LinkFinder m_linkfinder;
@@ -311,6 +311,11 @@ class XL
 
         if (newEncodingLevel == null || existingEncodingLevel == null)
             return false;
+
+        String specialRule = m_parameters.getSpecialRules().get(existingEncodingLevel);
+        if (specialRule != null && specialRule.equals(newEncodingLevel))
+            return true;
+
         switch (newEncodingLevel)
         {
             case ENC_PRELIMINARY_STATUS: // 5
