@@ -1,4 +1,5 @@
 import datatool.util.Statistics
+
 /*
  * This removes blank language nodes
  *
@@ -15,29 +16,31 @@ isBlank = { !it.containsKey('@id') }
 
 stats = new Statistics().printOnShutdown()
 
-substitutions = ['fra'             : 'fre',
-                 'jap'             : 'jpn',
-                 'taj'             : 'tgz',
-                 'mongoliskt språk': 'mongoliska språk',
-                 'mongoliska'      : 'mongoliska språk',
-]
+substitutions = ['fra'                             : 'fre',
+                 'jap'                             : 'jpn',
+                 'taj'                             : 'tgz',
+        
+                 'mongoliskt språk'                : 'mongoliska språk',
+                 'mongoliska'                      : 'mongoliska språk',
+                 'latviešu val'                    : 'lettiska',
+                 'latviešu valodā'                 : 'lettiska',
+                 'suomi'                           : 'finska',
+                 'česky'                           : 'tjeckiska',
+                 'ruotsi'                          : 'svenska',
 
-/*
-substitutions = [
-    'franska (fornfranska)'           : 'fornfranska',
-    'tyska (medelhögtyska)'           : 'medelhögtyska',
-    'engelska (medelengelska)'        : 'medelengelska',
-    'engelska (fornengelska)'         : 'fornengelska',
-    'tyska (lågtyska)'                : 'lågtyska',
-    'nederländska (medelnederländska)': 'medelnederländska',
-    'norska (nynorsk)'                : 'nynorsk',
-    'franska (medelfranska)'          : 'medelfranska',
-    'tyska (medellågtyska)'           : 'medellågtyska',
-    'arabiska (judearabiska)'         : 'judearabiska',
-    'samiska (nordsamiska)'           : 'nordsamiska',
-    'samiska (lulesamiska)'           : 'lulesamiska'
+                 'franska (fornfranska)'           : 'fornfranska',
+                 'tyska (medelhögtyska)'           : 'medelhögtyska',
+                 'engelska (medelengelska)'        : 'medelengelska',
+                 'engelska (fornengelska)'         : 'fornengelska',
+                 'tyska (lågtyska)'                : 'lågtyska',
+                 'nederländska (medelnederländska)': 'medelnederländska',
+                 'norska (nynorsk)'                : 'nynorsk',
+                 'franska (medelfranska)'          : 'medelfranska',
+                 'tyska (medellågtyska)'           : 'medellågtyska',
+                 'arabiska (judearabiska)'         : 'judearabiska',
+                 'samiska (nordsamiska)'           : 'nordsamiska',
+                 'samiska (lulesamiska)'           : 'lulesamiska'
 ]
-*/
 
 selectByCollection('bib') { bib ->
     try {
