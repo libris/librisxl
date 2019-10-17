@@ -193,7 +193,17 @@ class PostgreSQLComponent implements Storage {
                       "WHERE iri = ?"
         GET_COLLECTION_BY_SYSTEM_ID = "SELECT collection FROM lddb where id = ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
-        LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
+        // This query does the same as LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
+        // but much faster because postgres does not yet have 'loose indexscan' aka 'index skip scan'
+        // https://wiki.postgresql.org/wiki/Loose_indexscan'
+        LOAD_COLLECTIONS = "WITH RECURSIVE t AS ( " +
+                "(SELECT collection FROM $mainTableName ORDER BY collection LIMIT 1) " +
+                "UNION ALL " +
+                "SELECT (SELECT collection FROM $mainTableName WHERE collection > t.collection ORDER BY collection LIMIT 1) " +
+                "FROM t " +
+                "WHERE t.collection IS NOT NULL" +
+                ") " +
+                "SELECT collection FROM t WHERE collection IS NOT NULL"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE modified >= ? AND modified <= ? AND collection = ? AND deleted = false"
         LOAD_RECORD_IDENTIFIERS = "SELECT iri from $idTableName WHERE id = ? AND graphIndex = 0"
