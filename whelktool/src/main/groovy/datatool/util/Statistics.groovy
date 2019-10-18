@@ -12,25 +12,26 @@ class Statistics {
         c.get(category).get(name).incrementAndGet()
     }
 
-    void print() {
-        println("STATISTICS")
-        println("========================")
+    void print(out = System.out) {
+        out.println("STATISTICS")
+        out.println("========================")
         for (Map.Entry e : c.entrySet().sort { a, b -> a.getKey().toString() <=> b.getKey().toString() }) {
-            println(e.getKey())
-            println("------------------------")
+            out.println(e.getKey())
+            out.println("------------------------")
             List<Map.Entry<String, AtomicInteger>> entries = new ArrayList(c.get(e.getKey()).entrySet())
             entries.sort { a, b -> a.getKey().toString() <=> b.getKey().toString() }
             entries.sort { a, b -> b.getValue().intValue() <=> a.getValue().intValue() }
             entries.each {
-                println("${it.getValue().intValue()} ${it.getKey()}")
+                out.println("${it.getValue().intValue()} ${it.getKey()}")
             }
-            println()
+            out.println()
         }
     }
 
-    Statistics printOnShutdown() {
+    Statistics printOnShutdown(out = System.out) {
         Runtime.getRuntime().addShutdownHook {
-            this.print()
+            this.print(out)
+            out.flush()
         }
         return this
     }
