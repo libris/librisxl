@@ -17,14 +17,12 @@ selectBySqlWhere("""
     def (record, instance, work) = data.graph
 
     if (work[TYPE] == INCORRECT_TYPE) {
-            if (work[TYPE] == INCORRECT_TYPE)
             work[TYPE] = CORRECT_TYPE
         scheduledToUpdate.println("${record[ID]}")
         data.scheduleSave()
     }
     work.hasPart?.each {
       if (it[TYPE] == INCORRECT_TYPE) {
-              if (it[TYPE] == INCORRECT_TYPE)
               it[TYPE] = CORRECT_TYPE
           scheduledToUpdate.println("${record[ID]}")
           data.scheduleSave()
