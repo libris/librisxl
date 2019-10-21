@@ -16,25 +16,28 @@ query = """collection = 'bib'
 
 selectBySqlWhere(query, silent: false) { data ->
     work = data.graph[2]
-    classif = work.classification
-    classif = classif instanceof Map ? [classif] : classif
 
-    classif?.each {
-        def type = it.'@type' as String
-        code = it?.code instanceof Map ? [it.code] : it.code
-
-        if (type == "Classification") {
-            def inSchemeCode = it.inScheme?.code as String
-            if (inSchemeCode && inSchemeCode == "kssb" && it.inScheme?.'@type' == "ConceptScheme") {
-                if (code && code.all { c -> c.startsWith("H") || c.startsWith("uH") }) {
-                    if (work.genreForm && work.genreForm.length == 1 && work.genreForm[0] == NOT_FICTION) {
-                        scheduledForChange.println "${data.graph[0][ID]}"
-                        work.genreForm[0] = SKONLITTERATUR
-                        data.scheduleSave()
-                    }
-                }
-            }
+    if (work.genreForm && work.genreForm.length == 1 && work.genreForm[0] == NOT_FICTION) {
+        classif = work.classification
+        classif = classif instanceof Map ? [classif] : classif
+        onlyClassifiedWithH = false
+        if (classif?.all { c -> hasClassificationH(c) }) {
+            scheduledForChange.println "${data.graph[0][ID]}"
+            work.genreForm[0] = SKONLITTERATUR
+            data.scheduleSave()
         }
     }
+}
+
+boolean hasClassificationH(classification) {
+    def type = classification.'@type' as String
+    code = classification?.code instanceof Map ? [classification.code] : classification.code
+    if (type == "Classification") {
+        def inSchemeCode = classification.inScheme?.code as String
+        if (inSchemeCode && inSchemeCode == "kssb" && classification.inScheme?.'@type' == "ConceptScheme") {
+            return (code && code.all { c -> c.startsWith("H") || c.startsWith("uH") })
+        }
+    }
+    return false
 }
 
