@@ -15912,7 +15912,90 @@
       "addLink": "issuedWith",
       "i2": {
         "marcDefault": " "
-      }
+      },
+      "_spec": [
+        {
+          "name": "Example from fxqnstdr4mdmvws",
+          "source": {"777": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Gerland, Gunilla"},
+            {"t": "Autism : svårigehter och möjligheter"},
+            {"w": "9735858"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf" : {
+              "@type" : "Text",
+              "issuedWith" : [ {
+                "@type" : "Work",
+                "contribution" : [ {
+                  "@type" : "PrimaryContribution",
+                  "agent" : [ {
+                    "@type" : "Agent",
+                    "label" : "Gerland, Gunilla"
+                  } ]
+                } ],
+                "hasInstance" : {
+                  "@type" : "Instance",
+                  "describedBy" : [ {
+                    "@type" : "Record",
+                    "controlNumber" : "9735858"
+                  } ],
+                  "hasTitle" : [ {
+                    "@type" : "Title",
+                    "mainTitle" : "Autism : svårigehter och möjligheter"
+                  } ]
+                },
+                "marc:toDisplayNote" : true
+              } ]
+            }
+          }}
+        },
+        {
+          "name": "Example from p712h67105rn32k",
+          "source": {"777": {"ind1": "0", "ind2": "8", "subfields": [
+            {"i": "Online"},
+            {"a": "Andersson, Jan"},
+            {"t": "Personlig utveckling för alla medarbetare - Fallrapport (Länia AB, Örebro)"},
+            {"d": "1994"},
+            {"w": "12033323"}
+          ]}},
+          "normalized": {"777": {"ind1": "0", "ind2": " ", "subfields": [
+            {"i": "Online"},
+            {"a": "Andersson, Jan"},
+            {"t": "Personlig utveckling för alla medarbetare - Fallrapport (Länia AB, Örebro)"},
+            {"d": "1994"},
+            {"w": "12033323"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf" : {
+              "@type" : "Text",
+              "issuedWith" : [ {
+                "@type" : "Work",
+                "contribution" : [ {
+                  "@type" : "PrimaryContribution",
+                  "agent" : [ {
+                    "@type" : "Agent",
+                    "label" : "Andersson, Jan"
+                  } ]
+                } ],
+                "hasInstance" : {
+                  "@type" : "Instance",
+                  "describedBy" : [ {
+                    "@type" : "Record",
+                    "controlNumber" : "12033323"
+                  } ],
+                  "hasTitle" : [ {
+                    "@type" : "Title",
+                    "mainTitle" : "Personlig utveckling för alla medarbetare - Fallrapport (Länia AB, Örebro)"
+                  } ],
+                  "provisionActivityStatement" : "1994"
+                },
+                "marc:displayText" : [ "Online" ],
+                "marc:toDisplayNote" : true
+              } ]
+            }
+          }}
+        }
+      ]
     },
     "780": {
       "inherit": "772",
