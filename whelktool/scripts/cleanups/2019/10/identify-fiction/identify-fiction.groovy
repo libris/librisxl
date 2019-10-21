@@ -5,7 +5,9 @@
 scheduledForChange = getReportWriter("scheduled-for-change")
 codeIsAListCounter = getReportWriter("code-is-a-list-counter")
 
-query = "collection = 'bib' AND data#>>'{@graph,2,@type}' = 'Text'"
+query = """collection = 'bib'
+        AND data#>>'{@graph,2,@type}' = 'Text'
+        AND data#>>'{@graph,2,@genreForm}' LIKE '%"NotFictionNotFurtherSpecified"%'"""
 
 selectBySqlWhere(query, silent: false) { bib ->
     classif = bib.graph[2].classification
@@ -20,12 +22,12 @@ selectBySqlWhere(query, silent: false) { bib ->
         }
         code = it?.code instanceof Map ? [it.code] : it.code
 
-        //SAB classification, ignoring Dewey
         if (type == "Classification") {
             def inSchemeCode = it.inScheme?.code as String
             if (inSchemeCode && inSchemeCode == "kssb" && it.inScheme?.'@type' == "ConceptScheme") {
-                if (code && code.any { c -> c.startsWith("H") || c.startsWith("uH") }) {
-                    scheduledForChange.println "SAB classified fiction: ${bib.graph[0][ID]}"
+                if (code && code.all { c -> c.startsWith("H") || c.startsWith("uH") }) {
+
+                    scheduledForChange.println "Fiction_${bib.graph[0][ID]}"
                 }
             }
         }
