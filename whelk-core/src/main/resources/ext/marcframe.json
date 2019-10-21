@@ -15854,22 +15854,55 @@
             {"w": "22176030"}
           ]}},
           "result": {"mainEntity": {
-              "otherPhysicalFormat": [{
-                  "@type": "Instance",
-                  "marc:toDisplayNote": true,
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Hemmets journal (Online)"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "2002-9659"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "22176030"
-                  }]
+            "otherPhysicalFormat": [{
+              "@type": "Instance",
+              "marc:toDisplayNote": true,
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Hemmets journal (Online)"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "2002-9659"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "22176030"
               }]
+            }]
+          }}
+        },
+        {
+          "name": "Example from 7rkntxsk2wsk8sb",
+          "source": {"776": {"ind1": "0", "ind2": "8", "subfields": [
+            {"i": "Originalversion:"},
+            {"a": "Andersson, Lennart"},
+            {"t": "Umebygdens soldater 1695-1895"},
+            {"d": "1989"},
+            {"w": "1217888"}
+          ]}},
+          "result": {"mainEntity": {
+            "otherPhysicalFormat" : [ {
+              "@type" : "Instance",
+              "contribution" : [ {
+                "@type" : "PrimaryContribution",
+                "agent" : [ {
+                  "@type" : "Agent",
+                  "label" : "Andersson, Lennart"
+                } ]
+              } ],
+              "describedBy" : [ {
+                "@type" : "Record",
+                "controlNumber" : "1217888"
+              } ],
+              "hasTitle" : [ {
+                "@type" : "Title",
+                "mainTitle" : "Umebygdens soldater 1695-1895"
+              } ],
+              "marc:displayText" : [ "Originalversion:" ],
+              "marc:toDisplayNote" : true,
+              "provisionActivityStatement" : "1989"
+            } ]
           }}
         }
       ]
