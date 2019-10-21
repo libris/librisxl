@@ -1,6 +1,6 @@
 /*
  * This script changes the g/f from $NOT_FICTION to $SKONLITTERATUR for ~200k bibliographic records
- * that have only SAB classifications starting with code H or uH.
+ * that have only SAB classifications starting with code H or uH. Only looking at records with 1 g/f -term.
  *
  * See LXL-2730 for more info.
  */
@@ -40,4 +40,3 @@ boolean hasClassificationH(classification) {
     }
     return false
 }
-
