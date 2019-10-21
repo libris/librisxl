@@ -7,7 +7,7 @@ codeIsAListCounter = getReportWriter("code-is-a-list-counter")
 
 query = """collection = 'bib'
         AND data#>>'{@graph,2,@type}' = 'Text'
-        AND data#>>'{@graph,2,@genreForm}' LIKE '%"NotFictionNotFurtherSpecified"%'"""
+        AND data#>>'{@graph,2,genreForm}' LIKE '%"NotFictionNotFurtherSpecified"%'"""
 
 selectBySqlWhere(query, silent: false) { bib ->
     classif = bib.graph[2].classification
