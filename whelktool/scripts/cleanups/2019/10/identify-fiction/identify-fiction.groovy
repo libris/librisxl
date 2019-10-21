@@ -3,7 +3,6 @@
  */
 
 scheduledForChange = getReportWriter("scheduled-for-change")
-codeIsAListCounter = getReportWriter("code-is-a-list-counter")
 
 query = """collection = 'bib'
         AND data#>>'{@graph,2,@type}' = 'Text'
@@ -17,9 +16,6 @@ selectBySqlWhere(query, silent: false) { bib ->
     classif?.each {
         def type = it.'@type' as String
 
-        if (it?.code instanceof List) {
-            codeIsAListCounter.println "Code is a list for ${bib.graph[0][ID]}"
-        }
         code = it?.code instanceof Map ? [it.code] : it.code
 
         if (type == "Classification") {
