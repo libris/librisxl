@@ -4317,6 +4317,366 @@
               }
             }
           }
+        },
+        {
+          "name": "Text/Monograph in (in 000) + Print + Encyclopedia",
+          "source": {
+            "leader": "     cam a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1898    swe     re    000 ||   | "}]
+          },
+          "normalized": {
+            "leader": "     cam a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1898    swe|||||re||||000 ||   | "}]
+          },
+          "result": {
+            "created": "2017-11-23T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Monograph",
+              "carrierType": [{ "@id": "https://id.kb.se/marc/BooksItemType-r" }],
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "1898"
+              },
+              "instanceOf": {
+                "@type": "Text",
+                "genreForm": [{ "@id": "https://id.kb.se/marc/BooksContentsType-e" }]
+              }
+            }
+          }
+        },
+        {
+          "name": "ManuscriptText/Monograph in (in 000) + Encyclopedia",
+          "source": {
+            "leader": "     ctm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1898    swe      e    000 ||   | "}]
+          },
+          "normalized": {
+            "leader": "     ctm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1898    swe||||||e||||000 ||   | "}]
+          },
+          "result": {
+            "created": "2017-11-23T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Monograph",
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "1898"
+              },
+              "instanceOf": {
+                "@type": "ManuscriptText",
+                "genreForm": [{ "@id": "https://id.kb.se/marc/BooksContentsType-e" }]
+              }
+            }
+          }
+        },
+        {
+          "name": "Multimedia (in 000) + Juvenile + Online",
+          "source": {
+            "leader": "     cmm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe    jo  | |         | "}]
+          },
+          "normalized": {
+            "leader": "     cmm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe||  jo  | |         | "}]
+          },
+          "result": {
+            "created": "2017-11-23T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "carrierType": [{ "@id" : "https://id.kb.se/marc/ComputerItemType-o" }],
+              "issuanceType": "Monograph",
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "1999"
+              },
+              "instanceOf": {
+                "@type": "Multimedia",
+                "intendedAudience": [{ "@id" : "https://id.kb.se/marc/AudienceType-j" }]
+              }
+            }
+          }
+        },
+        {
+          "name": "Cartography (in 000) + Shading + Azimuthal Projection + SingleMap",
+          "source": {
+            "leader": "     cem a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sweb   ae a            | "}]
+          },
+          "normalized": {
+            "leader": "     cem a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sweb|||ae|a  || 0 ||   | "}]
+          },
+          "result": {
+            "created": "2017-11-23T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Monograph",
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "1999"
+              },
+              "projection": { "@id" : "https://id.kb.se/marc/MapsProjectionType-ae" },
+              "marc:relief": [{ "@id" : "https://id.kb.se/marc/MapsReliefType-b" }],
+              "instanceOf": {
+                "@type": "Cartography",
+                "genreForm": [{ "@id" : "https://id.kb.se/marc/MapsMaterialType-a" }]
+              }
+            }
+          }
+        },
+        {
+          "name": "ManuscriptCartography (in 000) + Shading + Azimuthal Projection + SingleMap",
+          "source": {
+            "leader": "     cfm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1899    sweb   ae a            | "}]
+          },
+          "normalized": {
+            "leader": "     cfm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1899    sweb|||ae|a  || 0 ||   | "}]
+          },
+          "result": {
+            "created": "2017-11-23T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Monograph",
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "1899"
+              },
+              "projection": { "@id" : "https://id.kb.se/marc/MapsProjectionType-ae" },
+              "marc:relief": [{ "@id" : "https://id.kb.se/marc/MapsReliefType-b" }],
+              "instanceOf": {
+                "@type": "ManuscriptCartography",
+                "genreForm": [{ "@id" : "https://id.kb.se/marc/MapsMaterialType-a" }]
+              }
+            }
+          }
+        },
+        {
+          "name": "MixedMaterial (in 000) + Tactile",
+          "source": {
+            "leader": "     cpm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe     f              | "}]
+          },
+          "normalized": {
+            "leader": "     cpm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe     f              | "}]
+          },
+          "result": {
+            "created": "2017-11-23T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Monograph",
+              "carrierType": [{ "@id": "https://id.kb.se/marc/ItemType-f" }],
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "1999"
+              },
+              "instanceOf": {
+                "@type": "MixedMaterial"
+              }
+            }
+          }
+        },
+        {
+          "name": "NotatedMusic (in 000) + Carols + VocalScore + VocalPart + Adult",
+          "source": {
+            "leader": "     ccm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swecrkfer              | "}]
+          },
+          "normalized": {
+            "leader": "     ccm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swecrkfer||||||   |    | "}]
+          },
+          "result": {
+            "created": "2017-11-23T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Monograph",
+              "carrierType": [{ "@id": "https://id.kb.se/marc/ItemType-r"}],
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "1999"
+              },
+              "instanceOf": {
+                "@type": "NotatedMusic",
+                "genreForm": [{ "@id" : "https://id.kb.se/marc/MusicCompositionType-cr" }],
+                "musicFormat": { "@id" : "https://id.kb.se/marc/MusicFormatType-k" },
+                "marc:parts": { "@id" : "https://id.kb.se/marc/MusicPartsType-f" },
+                "intendedAudience": [{ "@id" : "https://id.kb.se/marc/AudienceType-e" }]
+              }
+            }
+          }
+        },
+        {
+          "name": "ManuscriptNotatedMusic (in 000) + Madrigals + VocalScore + VocalPart",
+          "source": {
+            "leader": "     cdm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swemd                  | "}]
+          },
+          "normalized": {
+            "leader": "     cdm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swemd||||||||||   |    | "}]
+          },
+          "result": {
+            "created": "2017-11-23T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Monograph",
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "1999"
+              },
+              "instanceOf": {
+                "@type": "ManuscriptNotatedMusic",
+                "genreForm": [{ "@id" : "https://id.kb.se/marc/MusicCompositionType-md" }]
+              }
+            }
+          }
+        },
+        {
+          "name": "Music (in 000) + Not applicable",
+          "source": {
+            "leader": "     cim a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swenn                  | "}]
+          },
+          "normalized": {
+            "leader": "     cim a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swenn||||||||||   |    | "}]
+          },
+          "result": {
+            "created": "2017-11-23T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Monograph",
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "1999"
+              },
+              "instanceOf": {
+                "@type": "Audio",
+                "genreForm": [{ "@id" : "https://id.kb.se/marc/MusicCompositionType-nn" }]
+              }
+            }
+          }
+        },
+        {
+          "name": "Music (in 000) + Popular",
+          "source": {
+            "leader": "     cjm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swepp                  | "}]
+          },
+          "normalized": {
+            "leader": "     cjm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swepp||||||||||   |    | "}]
+          },
+          "result": {
+            "created": "2017-11-23T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Monograph",
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "1999"
+              },
+              "instanceOf": {
+                "@type": "Music",
+                "genreForm": [{ "@id" : "https://id.kb.se/marc/MusicCompositionType-pp" }]
+              }
+            }
+          }
+        },
+        {
+          "name": "MovingImage (in 000) + MotionPicture",
+          "source": {
+            "leader": "     cgm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe---            m    | "}]
+          },
+          "normalized": {
+            "leader": "     cgm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe--- ||||||||   m|   | "}]
+          },
+          "result": {
+            "created": "2017-11-23T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Monograph",
+              "marc:runningTime": "---",
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "1999"
+              },
+              "instanceOf": {
+                "@type": "MovingImage",
+                "genreForm": [{ "@id" : "https://id.kb.se/marc/VisualMaterialType-m" }]
+              }
+            }
+          }
+        },
+        {
+          "name": "StillImage (in 000) + Picture",
+          "source": {
+            "leader": "     ckm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe---            i    | "}]
+          },
+          "normalized": {
+            "leader": "     ckm a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe--- ||||||||   i|   | "}]
+          },
+          "result": {
+            "created": "2017-11-23T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Monograph",
+              "marc:runningTime": "---",
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "1999"
+              },
+              "instanceOf": {
+                "@type": "StillImage",
+                "genreForm": [{ "@id" : "https://id.kb.se/marc/VisualMaterialType-i" }]
+              }
+            }
+          }
         }
       ]
     },
