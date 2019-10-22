@@ -13,6 +13,7 @@ OBSOLETE_CODES = ['9ss', '9sl']
 
 PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 
+// These are cases that won't be handled by metadata (definitions) improvements that we still want to clean up
 substitutions = [
         'jap'                             : 'jpn',
         'mongoliskt språk'                : 'mongoliska språk',
