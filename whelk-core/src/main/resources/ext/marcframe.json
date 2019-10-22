@@ -3509,17 +3509,33 @@
       "repeatable": true,
       "_spec": [
         {
-          "source": {"007":"aj |a|||"},
-          "normalized": {"007":"aj |a|||               "},
+          "name": "@type Map + MapATwoDimensionalMap + One color + Plastic",
+          "source": {"007":"aj ai|||"},
+          "normalized": {"007":"aj ai|||               "},
           "result": {
             "mainEntity": {
               "@type": "Map",
+              "colorContent": [{"@id": "https://id.kb.se/marc/MapColorType-a"}],
               "genreForm": [{"@id": "https://id.kb.se/marc/MapMaterialType-j"}],
+              "baseMaterial": [{"@id": "https://id.kb.se/marc/MapMediumType-i"}]
+            }
+          }
+        },
+        {
+          "name": "@type Map + Atlas + Multicolored + Paper",
+          "source": {"007":"ad ca|||"},
+          "normalized": {"007":"ad ca|||               "},
+          "result": {
+            "mainEntity": {
+              "@type": "Map",
+              "colorContent": [{"@id": "https://id.kb.se/marc/MapColorType-c"}],
+              "genreForm": [{"@id": "https://id.kb.se/marc/MapMaterialType-d"}],
               "baseMaterial": [{"@id": "https://id.kb.se/marc/MapMediumType-a"}]
             }
           }
         },
         {
+          "name": "@type Map and hasPart Electronic",
           "source": [
             {"007": "aj |a|||               "},
             {"007": "cj |||   a||||         "}
@@ -3536,6 +3552,164 @@
                   "marc:fileFormats": {"@id": "https://id.kb.se/marc/ComputerFileFormatsType-a"}
                 }
               ]
+            }
+          }
+        },
+        {
+          "name": "@type Electronic + Remote",
+          "source": {"007":"cr |||   |||||"},
+          "normalized": {"007":"cr |||   |||||         "},
+          "result": {
+            "mainEntity": {
+              "@type": "Electronic",
+              "carrierType": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-r"}]
+            }
+          }
+        },
+        {
+          "name": "@type Electronic + OpticalDisc",
+          "source": {"007":"co |g|   |||||"},
+          "normalized": {"007":"co |g|   |||||         "},
+          "result": {
+            "mainEntity": {
+              "@type": "Electronic",
+              "carrierType": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-o"}],
+              "hasDimensions": {"@id": "https://id.kb.se/marc/ComputerDimensionsType-g"}
+            }
+          }
+        },
+        {
+          "name": "@type Globe + TerrestrialGlobe + Multicolored + Plastic",
+          "source": {"007":"dc ai|"},
+          "normalized": {"007":"dc ai|                 "},
+          "result": {
+            "mainEntity": {
+              "@type": "Globe",
+              "colorContent": [{"@id": "https://id.kb.se/marc/MapColorType-a"}],
+              "genreForm": [{"@id": "https://id.kb.se/marc/GlobeMaterialType-c"}],
+              "baseMaterial": [{"@id": "https://id.kb.se/marc/GlobeMediumType-i"}]
+            }
+          }
+        },
+        {
+          "name": "@type Tactile + Braille",
+          "source": {"007":"fb |||||||"},
+          "normalized": {"007":"fb |||||||             "},
+          "result": {
+            "mainEntity": {
+              "@type": "Tactile",
+              "layout": [{"@id": "https://id.kb.se/marc/TacMaterialType-b"}]
+            }
+          }
+        },
+        {
+          "name": "@type ProjectedImageInstance + Slide",
+          "source": {"007":"gs ||||||"},
+          "normalized": {"007":"gs ||||||              "},
+          "result": {
+            "mainEntity": {
+              "@type": "ProjectedImageInstance",
+              "carrierType": [{"@id": "https://id.kb.se/marc/ProjGraphMaterialType-s"}]
+            }
+          }
+        },
+        {
+          "name": "@type Microform + Microfiche",
+          "source": {"007":"hb ||||  ||||"},
+          "normalized": {"007":"hb ||||  ||||          "},
+          "result": {
+            "mainEntity": {
+              "@type": "Microform",
+              "carrierType": [{"@id": "https://id.kb.se/marc/MicroformMaterialType-b"}]
+            }
+          }
+        },
+        {
+          "name": "@type StillImageInstance + Drawing + One Color + Paper",
+          "source": {"007":"kd ao|"},
+          "normalized": {"007":"kd ao|                 "},
+          "result": {
+            "mainEntity": {
+              "@type": "StillImageInstance",
+              "baseMaterial": [{"@id": "https://id.kb.se/marc/NonProjectedType-o"}],
+              "genreForm": [{"@id": "https://id.kb.se/marc/NonProjMaterialType-d"}],
+              "colorContent": [{"@id": "https://id.kb.se/marc/ColorType-a"}]
+            }
+          }
+        },
+        {
+          "name": "@type MovingImageInstance",
+          "source": {"007":"m| ||||||||||||||"},
+          "normalized": {"007":"m| |||||||||||||||     "},
+          "result": {
+            "mainEntity": {
+              "@type": "MovingImageInstance"
+            }
+          }
+        },
+        {
+          "name": "@type KitInstance",
+          "source": {"007":"o|"},
+          "normalized": {"007":"o|                     "},
+          "result": {
+            "mainEntity": {
+              "@type": "KitInstance"
+            }
+          }
+        },
+        {
+          "name": "@type NotatedMusicInstance",
+          "source": {"007":"q|"},
+          "normalized": {"007":"q|                     "},
+          "result": {
+            "mainEntity": {
+              "@type": "NotatedMusicInstance"
+            }
+          }
+        },
+        {
+          "name": "@type RemoteSensingImage",
+          "source": {"007":"r| |||||||"},
+          "normalized": {"007":"r| |||||||             "},
+          "result": {
+            "mainEntity": {
+              "@type": "RemoteSensingImage"
+            }
+          }
+        },
+        {
+          "name": "@type SoundRecording + SoundDisc",
+          "source": {"007":"sd |||||||||||"},
+          "normalized": {"007":"sd |||||||||||         "},
+          "result": {
+            "mainEntity": {
+              "@type": "SoundRecording",
+              "carrierType": [{"@id": "https://id.kb.se/marc/SoundMaterialType-d"}]
+            }
+          }
+        },
+        {
+          "name": "@type TextInstance + RegularPrint",
+          "source": {"007":"ta"},
+          "normalized": {"007":"ta                     "},
+          "result": {
+            "mainEntity": {
+              "@type": "TextInstance",
+              "carrierType": [{"@id": "https://id.kb.se/marc/TextMaterialType-a"}]
+            }
+          }
+        },
+        {
+          "name": "@type VideoRecording + Videocassette + Multicolored + VHS + Stereo",
+          "source": {"007":"vf cb|||s"},
+          "normalized": {"007":"vf cb|||s              "},
+          "result": {
+            "mainEntity": {
+              "@type": "VideoRecording",
+              "carrierType": [{"@id": "https://id.kb.se/marc/VideoMaterialType-f"}],
+              "colorContent": [{"@id": "https://id.kb.se/marc/VideoColorType-c"}],
+              "videoCharacteristic": [{"@id": "https://id.kb.se/marc/VideoFormatType-b"}],
+              "soundCharacteristic":  [{"@id": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-s"}]
             }
           }
         }
