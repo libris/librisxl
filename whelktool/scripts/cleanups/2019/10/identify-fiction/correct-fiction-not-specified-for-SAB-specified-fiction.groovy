@@ -17,11 +17,10 @@ query = """collection = 'bib'
 selectBySqlWhere(query, silent: false) { data ->
     work = data.graph[2]
 
-    if (work.genreForm && work.genreForm.length == 1 && work.genreForm[0] == NOT_FICTION) {
+    if (work.genreForm && work.genreForm.size() == 1 && work.genreForm[0].'@id' == NOT_FICTION) {
         classif = work.classification
         classif = classif instanceof Map ? [classif] : classif
-        onlyClassifiedWithH = false
-        if (classif?.all { c -> hasClassificationH(c) }) {
+        if (classif?.every { c -> hasClassificationH(c) }) {
             scheduledForChange.println "${data.graph[0][ID]}"
             work.genreForm[0] = SKONLITTERATUR
             data.scheduleSave()
@@ -31,11 +30,11 @@ selectBySqlWhere(query, silent: false) { data ->
 
 boolean hasClassificationH(classification) {
     def type = classification.'@type' as String
-    code = classification?.code instanceof Map ? [classification.code] : classification.code
+    code = classification?.code instanceof String ? [classification.code] : classification.code
     if (type == "Classification") {
         def inSchemeCode = classification.inScheme?.code as String
         if (inSchemeCode && inSchemeCode == "kssb" && classification.inScheme?.'@type' == "ConceptScheme") {
-            return (code && code.all { c -> c.startsWith("H") || c.startsWith("uH") })
+            return code && code.every { c -> c.startsWith("H") || c.startsWith("uH") }
         }
     }
     return false
