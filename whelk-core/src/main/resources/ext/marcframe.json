@@ -15914,6 +15914,78 @@
               }]
             }
           }}
+        },
+        {
+          "name": "Example from bvnqrd8n4hkn61z",
+          "source": {"774": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Bonnevie, Kristine"},
+            {"t": "Hydroida"}
+          ]}},
+          "normalized": {"774": {"ind1": "0", "ind2": "0", "subfields": [
+            {"a": "Bonnevie, Kristine"},
+            {"t": "Hydroida"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [{
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": [{
+                    "@type": "Agent",
+                    "label": "Bonnevie, Kristine"
+                  }]
+                }],
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Hydroida"
+                  }]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "name": "Example from 5ngcg35h0rdv299",
+          "source": {"774": {"ind1": "0", "ind2": "0", "subfields": [
+            {"i": "Parallellutgåva:"},
+            {"t": "Swedes in the Twin Cities"},
+            {"d": "2001"},
+            {"z": "0-87351-399-1"},
+            {"w": "6200512"},
+            {"9": "2001"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Swedes in the Twin Cities"
+                  }],
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "6200512"
+                  }],
+                  "identifiedBy": [{
+                    "@type": "ISBN",
+                    "value": "0-87351-399-1"
+                  }],
+                  "provisionActivityStatement": "2001"
+                },
+                "marc:displayText": ["Parallellutgåva:"],
+                "marc:toDisplayNote": true,
+                "partNumber": ["2001"]
+              }]
+            }
+          }}
         }
       ]
     },
