@@ -12,7 +12,6 @@ import datatool.util.Statistics
 OBSOLETE_CODES = ['9ss', '9sl']
 
 PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
-statistics = getReportWriter("statistics.txt")
 
 substitutions = [
         'jap'                             : 'jpn',
