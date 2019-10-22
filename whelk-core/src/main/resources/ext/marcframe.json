@@ -15741,7 +15741,143 @@
       "resourceType": "Aggregate",
       "$c": null,
       "$p": {"about": "_:hasInstance", "addLink": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore", "NOTE:marc-repeatable": false},
-      "$q": {"about": "_:hasInstance", "property": "marc:enumerationAndFirstPage", "NOTE:LC":"ignore"}
+      "$q": {"about": "_:hasInstance", "property": "marc:enumerationAndFirstPage", "NOTE:LC":"ignore"},
+      "_spec": [
+        {
+          "name": "Example from 0h9659tb25shg0g",
+          "source": {"773": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Tidskrift i sjöväsendet"},
+            {"x": "0040-6945"},
+            {"w": "8258455"},
+            {"g": "127:1964, s. 495-534"}
+          ]}},
+          "normalized": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+            {"t": "Tidskrift i sjöväsendet"},
+            {"g": "127:1964, s. 495-534"},
+            {"x": "0040-6945"},
+            {"w": "8258455"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "isPartOf": [{
+                "@type": "Aggregate",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "8258455"
+                  }],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Tidskrift i sjöväsendet"
+                  }],
+                  "identifiedBy": [{
+                    "@type": "ISSN",
+                    "value": "0040-6945"
+                  }],
+                  "part": ["127:1964, s. 495-534"]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "name": "Example from wf79kb670mwvqqw",
+          "source": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+            {"7": "n s"},
+            {"t": "I Värend och Sunnerbo"},
+            {"d": "Växjö : Kronobergs läns hembydsförbund, 1985-1995"},
+            {"g": "1992 (33:1), s. 34-35 : ill."},
+            {"x": "ISSN 0284-771X"},
+            {"w": "517883"},
+            {"9": "1992"},
+            {"9": "1"},
+            {"9": "34"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "isPartOf": [{
+                "@type": "Aggregate",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "517883"
+                  }],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "I Värend och Sunnerbo"
+                  }],
+                  "identifiedBy": [{
+                    "@type": "ISSN",
+                    "value": "ISSN 0284-771X"
+                  }],
+                  "part": ["1992 (33:1), s. 34-35 : ill."],
+                  "provisionActivityStatement": "Växjö : Kronobergs läns hembydsförbund, 1985-1995"
+                },
+                "marc:controlSubfield": "n s",
+                "marc:toDisplayNote": true,
+                "partNumber": ["1992", "1", "34"]
+              } ]
+            }
+          }}
+        },
+        {
+          "name": "Example from 9tmqxznm47m9kzj",
+          "source": {"773": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Robson, James,"},
+            {"t": "Power of place : the religious landscape of the Southern Sacred Peak (Nanyue) in medieval China /"},
+            {"d": "cop. 2009"},
+            {"z": "9780674033320 (cl : alk. paper)"},
+            {"w": "11899145"},
+            {"g": "S.184-212"}
+          ]}},
+          "normalized": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+            {"a": "Robson, James,"},
+            {"t": "Power of place : the religious landscape of the Southern Sacred Peak (Nanyue) in medieval China /"},
+            {"d": "cop. 2009"},
+            {"g": "S.184-212"},
+            {"z": "9780674033320 (cl : alk. paper)"},
+            {"w": "11899145"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "isPartOf": [{
+                "@type": "Aggregate",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": [{
+                    "@type": "Agent",
+                    "label": "Robson, James,"
+                  }]
+                }],
+                "hasInstance": {
+                  "@type": "Instance",
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "11899145"
+                  }],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Power of place : the religious landscape of the Southern Sacred Peak (Nanyue) in medieval China /"
+                  }],
+                  "identifiedBy": [{
+                    "@type": "ISBN",
+                    "value": "9780674033320 (cl : alk. paper)"
+                  }],
+                  "part": ["S.184-212"],
+                  "provisionActivityStatement": "cop. 2009"
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        }
+      ]
     },
     "774": {
       "inherit": "772",
