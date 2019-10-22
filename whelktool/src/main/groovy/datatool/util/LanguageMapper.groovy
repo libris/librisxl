@@ -54,6 +54,11 @@ class LanguageMapper {
     }
 
     List mapBlankLanguage(Map language, List existingLinks) {
+        if (!language['label'] && !language['code']) {
+            incrementStats('unhandled shape', language.keySet())
+            throw new RuntimeException('unhandled shape: ' + language.keySet())
+        }
+
         String key = language['label'] ? 'label' : 'code'
         List linkIds = findLinks(language[key], existingLinks)
         if (linkIds) {

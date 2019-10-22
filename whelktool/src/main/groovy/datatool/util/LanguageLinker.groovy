@@ -49,8 +49,8 @@ class LanguageLinker {
     }
 
     private Operation replaceBlankNode(Map node) {
-        List replacement = mapper.mapBlankLanguage(node, [])
-        if (replacement) {
+        List replacement
+        if (isBlank(node) && (replacement = mapper.mapBlankLanguage(node, []))) {
             return replacement.size() > 1 ? new Replace(replacement) : new Replace(replacement[0])
         }
         return NOP
