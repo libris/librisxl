@@ -4378,21 +4378,22 @@
           }
         },
         {
-          "name": "Multimedia (in 000) + Juvenile + Online",
+          "name": "Multimedia (in 000), Electronic (in 007) + Juvenile + Online",
           "source": {
             "leader": "     cmm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe    jo  | |         | "}]
+            "fields": [{"001": "0000000"},{"007":"cr |||   |||||"},{"008": "171123s1999    swe    jo  | |         | "}]
           },
           "normalized": {
             "leader": "     cmm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe||  jo  | |         | "}]
+            "fields": [{"001": "0000000"},{"007":"cr |||   |||||         "},{"008": "171123s1999    swe||  jo  | |         | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
             "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
             "encodingLevel": "marc:FullLevel",
             "mainEntity": {
-              "carrierType": [{ "@id" : "https://id.kb.se/marc/ComputerItemType-o" }],
+              "@type": "Electronic",
+              "carrierType": [{ "@id" : "https://id.kb.se/marc/ComputerMaterialType-r" },{ "@id" : "https://id.kb.se/marc/ComputerItemType-o" }],
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
