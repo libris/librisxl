@@ -85,8 +85,8 @@ class LanguageMapper {
         }
 
         List multiple = split(labelOrCode)
-        if (multiple && multiple.every { findLink(it, existingLinks) != null }) {
-            return multiple.collect { findLink(it, existingLinks) }
+        if (multiple && multiple.every { findLinks(it, existingLinks) != null }) {
+            return multiple.collect { findLinks(it, existingLinks) }.flatten()
         }
 
         return null

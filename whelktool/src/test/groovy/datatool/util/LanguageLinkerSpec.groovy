@@ -135,6 +135,7 @@ class LanguageLinkerSpec extends Specification {
         // substitution map is used
         [language: [label: 'fornhögtyska']]                                    | true   | [language: ['@id': 'http://id/goh']]
         [language: [label: 'tyska (fornhögtyska)']]                            | true   | [language: ['@id': 'http://id/goh']]
+        [language: [label: ['tyska (fornhögtyska)']]]                          | true   | [language: ['@id': 'http://id/goh']]
     }
 
     def "handles multiple language nodes"() {
@@ -142,20 +143,20 @@ class LanguageLinkerSpec extends Specification {
         def c = new LanguageLinker(mapper)
         def data = [
                 language: [label: 'Engelska'],
-                a: [
+                a       : [
                         language: [label: 'Engelska'],
-                        b: [
-                            [
-                                    [language: [label: 'Engelska']],
-                                    [language: [label: 'Engelska']],
-                                    [c:
-                                             [language: [label: 'Engelska']]
-                                    ]
-                            ]
+                        b       : [
+                                [
+                                        [language: [label: 'Engelska']],
+                                        [language: [label: 'Engelska']],
+                                        [c:
+                                                 [language: [label: 'Engelska']]
+                                        ]
+                                ]
                         ]
 
                 ],
-                b: [
+                b       : [
                         language: [label: 'Engelska']
                 ]
         ]
@@ -164,9 +165,9 @@ class LanguageLinkerSpec extends Specification {
         c.linkLanguages(data) == true
         data == [
                 language: ['@id': 'http://id/eng'],
-                a: [
+                a       : [
                         language: ['@id': 'http://id/eng'],
-                        b: [
+                        b       : [
                                 [
                                         [language: ['@id': 'http://id/eng']],
                                         [language: ['@id': 'http://id/eng']],
@@ -177,7 +178,7 @@ class LanguageLinkerSpec extends Specification {
                         ]
 
                 ],
-                b: [
+                b       : [
                         language: ['@id': 'http://id/eng']
                 ]
         ]
@@ -213,10 +214,11 @@ class LanguageLinkerSpec extends Specification {
         where:
         data                                                                           | change | expected
 
-        [language: [code: '. engelska & hebreiska']]                                   | true   | [language: [['@id': 'http://id/eng'], ['@id': 'http://id/heb']]]
-        [language: [code: 'engelska, hebreiska, latin & arabiska']]                    | true   | [language: [['@id': 'http://id/eng'], ['@id': 'http://id/heb'], ['@id': 'http://id/lat'], ['@id': 'http://id/ara']]]
-        [language: [code: '.tyska (fornhögtyska)., latin och svenska']]                | true   | [language: [['@id': 'http://id/goh'], ['@id': 'http://id/lat'], ['@id': 'http://id/swe']]]
-        [language: [code: 'english and hebrew']]                                       | true   | [language: [['@id': 'http://id/eng'], ['@id': 'http://id/heb']]]
+        [language: [label: '. engelska & hebreiska']]                                  | true   | [language: [['@id': 'http://id/eng'], ['@id': 'http://id/heb']]]
+        [language: [label: 'engelska, hebreiska, latin & arabiska']]                   | true   | [language: [['@id': 'http://id/eng'], ['@id': 'http://id/heb'], ['@id': 'http://id/lat'], ['@id': 'http://id/ara']]]
+        [language: [label: '.tyska (fornhögtyska)., latin och svenska']]               | true   | [language: [['@id': 'http://id/goh'], ['@id': 'http://id/lat'], ['@id': 'http://id/swe']]]
+        [language: [label: 'english and hebrew']]                                      | true   | [language: [['@id': 'http://id/eng'], ['@id': 'http://id/heb']]]
+        [language: [label: ['english and hebrew']]]                                    | true   | [language: [['@id': 'http://id/eng'], ['@id': 'http://id/heb']]]
 
         // existing languages are not replaced
         [language: [['@id': 'http://id/heb'], [code: 'english and hebrew']]]           | true   | [language: [['@id': 'http://id/heb'], ['@id': 'http://id/eng']]]
@@ -322,7 +324,7 @@ class LanguageLinkerSpec extends Specification {
         data == expected
 
         where:
-        data                                               | change | expected
+        data                                                          | change | expected
         [language: [code: 'qqq', sameAs: [['@id': 'http://id/qqq']]]] | true   | [language: [code: 'qqq']]
         [language: [code: 'abc', sameAs: [['@id': 'http://id/fao']]]] | false  | [language: [code: 'abc', sameAs: [['@id': 'http://id/fao']]]]
     }

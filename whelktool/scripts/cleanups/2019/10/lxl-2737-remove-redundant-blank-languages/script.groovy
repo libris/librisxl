@@ -25,6 +25,7 @@ substitutions = [
         'česky'                           : 'tjeckiska',
         'ruotsi'                          : 'svenska',
 
+        'svenska (fornsvenska)'           : 'fornsvenska',
         'grekiska (nygrekiska)'           : 'nygrekiska',
         'franska (fornfranska)'           : 'fornfranska',
         'tyska (medelhögtyska)'           : 'medelhögtyska',
