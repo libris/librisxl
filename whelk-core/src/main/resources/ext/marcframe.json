@@ -2386,7 +2386,10 @@
         {
           "name": "@type StillImage (Collection)",
           "originalLeader": "00887ckc a2200277 a 4500",
-          "source": {"leader": "     ckc a        a 4500", "fields": [{"001": "0000000"}]},
+          "source": {
+            "leader": "     ckc a        a 4500",
+            "fields": [{"001": "0000000"}]
+          },
           "result": {
             "@type": "Record",
             "@id": "http://libris.kb.se/bib/0000000",
@@ -2403,9 +2406,17 @@
           }
         },
         {
-          "name": "@type Multimedia (Integrating)",
+          "name": "@type Multimedia (Integrating) 7qjg2x5k3647qq8",
+          "NOTE": "Mve extended specs to 008?",
           "originalLeader": "00887cmi a2200277 a 4500",
-          "source": {"leader": "     cmi a        a 4500", "fields": [{"001": "0000000"}]},
+          "source": {
+            "leader": "     cmi a        a 4500",
+            "fields": [
+              {"001": "0000000"},
+              {"007":"cr |||   |||||         "},
+              {"245": {"ind1": "1", "ind2": "0", "subfields": [{"a": "The encyclopedia mythica"}]}}
+            ]
+          },
           "result": {
             "@type": "Record",
             "@id": "http://libris.kb.se/bib/0000000",
@@ -2414,8 +2425,15 @@
             "controlNumber": "0000000",
             "encodingLevel": "marc:FullLevel",
             "mainEntity": {
-              "@type": "Instance",
+              "@type": "Electronic",
               "issuanceType": "Integrating",
+              "hasTitle": [
+                {
+                  "@type": "Title",
+                  "mainTitle": "The encyclopedia mythica"
+                }
+              ],
+              "carrierType": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-r"}],
               "@id": "http://libris.kb.se/resource/bib/0000000",
               "instanceOf": {"@type": "Multimedia"}
             }
@@ -2424,7 +2442,10 @@
         {
           "name": "@type Kit",
           "originalLeader": "00887com a2200277 a 4500",
-          "source": {"leader": "     com a        a 4500", "fields": [{"001": "0000000"}]},
+          "source": {
+            "leader": "     com a        a 4500",
+            "fields": [{"001": "0000000"}]
+          },
           "result": {
             "@type": "Record",
             "@id": "http://libris.kb.se/bib/0000000",
@@ -2443,7 +2464,10 @@
         {
           "name": "@type MixedMaterial",
           "originalLeader": "00887cpm a2200277 a 4500",
-          "source": {"leader": "     cpm a        a 4500", "fields": [{"001": "0000000"}]},
+          "source": {
+            "leader": "     cpm a        a 4500",
+            "fields": [{"001": "0000000"}]
+          },
           "result": {
             "@type": "Record",
             "@id": "http://libris.kb.se/bib/0000000",
@@ -2462,7 +2486,10 @@
         {
           "name": "@type Object",
           "originalLeader": "00887crm a2200277 a 4500",
-          "source": {"leader": "     crm a        a 4500", "fields": [{"001": "0000000"}]},
+          "source": {
+            "leader": "     crm a        a 4500",
+            "fields": [{"001": "0000000"}]
+          },
           "result": {
             "@type": "Record",
             "@id": "http://libris.kb.se/bib/0000000",
@@ -2481,7 +2508,10 @@
         {
           "name": "@type ManuscriptText",
           "originalLeader": "00887ctm a2200277 a 4500",
-          "source": {"leader": "     ctm a        a 4500", "fields": [{"001": "0000000"}]},
+          "source": {
+            "leader": "     ctm a        a 4500",
+            "fields": [{"001": "0000000"}]
+          },
           "result": {
             "@type": "Record",
             "@id": "http://libris.kb.se/bib/0000000",
@@ -2500,8 +2530,14 @@
         {
           "name": "encodingLevel marc:AbbreviatedLevel should revert to 3",
           "originalLeader": "00887cam a2200277 a 4500",
-          "source": {"leader": "     cam a       4a 4500", "fields": [{"001": "0000000"}]},
-          "normalized": {"leader": "     cam a       3a 4500", "fields": [{"001": "0000000"}]},
+          "source": {
+            "leader": "     cam a       4a 4500",
+            "fields": [{"001": "0000000"}]
+          },
+          "normalized": {
+            "leader": "     cam a       3a 4500",
+            "fields": [{"001": "0000000"}]
+          },
           "result": {
             "@type": "Record",
             "@id": "http://libris.kb.se/bib/0000000",
@@ -2520,7 +2556,10 @@
         {
           "name": "Obsolete encodingLevel should revert to 3 (marc:AbbreviatedLevel)",
           "originalLeader": "00887cam a2200277 a 4500",
-          "normalized": {"leader": "     cam a       3a 4500", "fields": [{"001": "0000000"}]},
+          "normalized": {
+            "leader": "     cam a       3a 4500",
+            "fields": [{"001": "0000000"}]
+          },
           "result": {
             "@type": "Record",
             "@id": "http://libris.kb.se/bib/0000000",
@@ -2540,7 +2579,9 @@
           "originalLeader": "00887cam a2200277 i 4500",
           "source": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"040": {"ind1": " ", "ind2": " ", "subfields": [{"e": "rda"}]}}]
+            "fields": [
+              {"001": "0000000"},
+              {"040": {"ind1": " ", "ind2": " ", "subfields": [{"e": "rda"}]}}]
           },
           "result": {
             "@type": "Record",
