@@ -2935,6 +2935,28 @@
       "repeatable": true,
       "_spec": [
         {
+          "Name": "Text",
+          "source": [
+            {"006": "a|||||||||||000 0|"}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasPart": [
+                  {
+                    "@type": "Text",
+                    "genreForm": [
+                      {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"}
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "Name": "ManuscriptText",
           "source": [
             {"006": "t|||||||||||000 0|"}
           ],
@@ -2948,6 +2970,221 @@
                     "genreForm": [
                       {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"}
                     ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "Name": "NotatedMusic",
+          "source": [
+            {"006": "c| |||||||||||| | "}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasPart": [
+                  {
+                    "@type": "NotatedMusic"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "Name": "ManuscriptNotatedMusic",
+          "source": [
+            {"006": "d| |||||||||||| | "}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasPart": [
+                  {
+                    "@type": "ManuscriptNotatedMusic"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "Name": "Audio",
+          "source": [
+            {"006": "i| |||||||||||| | "}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasPart": [
+                  {
+                    "@type": "Audio"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "Name": "MovingImage",
+          "source": [
+            {"006": "g|   ||||||||   ||"}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasPart": [
+                  {
+                    "@type": "MovingImage"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "Name": "Cartography",
+          "source": [
+            {"006": "e||||| ||  || 0 ||"}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasPart": [
+                  {
+                    "@type": "Cartography"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "Name": "ManuscriptCartography",
+          "source": [
+            {"006": "f||||| ||  || 0 ||"}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasPart": [
+                  {
+                    "@type": "ManuscriptCartography"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "Name": "MixedMaterial",
+          "source": [
+            {"006": "p     ||          "}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasPart": [
+                  {
+                    "@type": "MixedMaterial"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "Name": "Kit",
+          "source": [
+            {"006": "o|   ||||||||   ||"}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasPart": [
+                  {
+                    "@type": "Kit"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "Name": "StillImage",
+          "source": [
+            {"006": "k|   ||||||||   ||"}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasPart": [
+                  {
+                    "@type": "StillImage"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "Name": "Object",
+          "source": [
+            {"006": "r|   ||||||||   ||"}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasPart": [
+                  {
+                    "@type": "Object"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "Text/Monograph in (in 000,008) + Text (006)",
+          "source": {
+            "leader": "     cam a        i 4500",
+            "fields": [{"001": "0000000"}, {"006": "a|||||||||||000 ||"},{"008": "171123s1898    swe     re    000 ||   | "}]
+          },
+          "normalized": {
+            "leader": "     cam a        i 4500",
+            "fields": [{"001": "0000000"}, {"006": "a|||||||||||000 ||"},{"008": "171123s1898    swe|||||re||||000 ||   | "}]
+          },
+          "result": {
+            "created": "2017-11-23T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Monograph",
+              "carrierType": [{ "@id": "https://id.kb.se/marc/BooksItemType-r" }],
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "1898"
+              },
+              "instanceOf": {
+                "@type": "Text",
+                "genreForm": [{ "@id": "https://id.kb.se/marc/BooksContentsType-e" }],
+                "hasPart": [
+                  {
+                    "@type": "Text"
                   }
                 ]
               }
