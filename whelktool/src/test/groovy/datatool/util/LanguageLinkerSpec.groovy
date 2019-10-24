@@ -159,7 +159,7 @@ class LanguageLinkerSpec extends Specification {
                         language: [label: 'Engelska']
                 ]
         ]
-        
+
         expect:
         c.linkLanguages(data) == true
         data == [

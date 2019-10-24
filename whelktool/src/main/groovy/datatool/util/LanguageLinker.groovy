@@ -22,15 +22,15 @@ class LanguageLinker {
         }
     }
 
-    private Operation replaceBlankNode(List nodes) {
+    private Operation replaceBlankNode(List<Map> nodes) {
         if (!nodes.any(isBlank)) {
             return NOP
         }
 
-        List existingLinks = nodes.findAll { !isBlank(it) }.collect { it['@id'] }
-        List result = []
+        List<Map> existingLinks = nodes.findAll { !isBlank(it) }.collect { it['@id'] }
+        List<Map> result = []
 
-        List newLinked
+        List<Map> newLinked
         for (node in nodes) {
             if (isBlank(node) && (newLinked = mapper.mapBlankLanguage(node, existingLinks))) {
                 result.addAll(newLinked.findAll { l ->
@@ -49,7 +49,7 @@ class LanguageLinker {
     }
 
     private Operation replaceBlankNode(Map node) {
-        List replacement
+        List<Map> replacement
         if (isBlank(node) && (replacement = mapper.mapBlankLanguage(node, []))) {
             return replacement.size() > 1 ? new Replace(replacement) : new Replace(replacement[0])
         }
