@@ -53,24 +53,24 @@ class LanguageMapper {
         return languageMap.values().contains(id)
     }
 
-    List mapBlankLanguage(Map language, List existingLinks) {
+    List<Map> mapBlankLanguage(Map language, List existingLinks) {
         if (!language['label'] && !language['code']) {
-            incrementStats('unhandled shape', language.keySet())
+            incrementCounter('unhandled shape', language.keySet())
             throw new RuntimeException('unhandled shape: ' + language.keySet())
         }
 
         String key = language['label'] ? 'label' : 'code'
-        List linkIds = findLinks(language[key], existingLinks)
-        if (linkIds) {
-            incrementStats('mapped', language[key])
-            return linkIds.collect { ['@id': it] }
+        List<String> links = findLinks(language[key], existingLinks)
+        if (links) {
+            incrementCounter('mapped', language[key])
+            return links.collect { ['@id': it] }
         }
         else {
-            incrementStats('not mapped', language[key])
+            incrementCounter('not mapped', language[key])
         }
 
         if (language['sameAs'] && !language['sameAs'].any { knownId(it['@id']) }) {
-            incrementStats('sameAs 404 - removed', language['sameAs'])
+            incrementCounter('sameAs 404 - removed', language['sameAs'])
             Map r = new HashMap(language)
             r.remove('sameAs')
             return [r]
@@ -79,7 +79,7 @@ class LanguageMapper {
         return null
     }
 
-    private List findLinks(labelOrCode, List existingLinks) {
+    private List<String> findLinks(labelOrCode, List existingLinks) {
         if (labelOrCode instanceof String && findLink(labelOrCode, existingLinks)) {
             return [findLink(labelOrCode, existingLinks)]
         }
@@ -112,6 +112,7 @@ class LanguageMapper {
             return labelOrCode
         }
 
+        // concatenated language codes, e.g "sweruseng", "swe ; rus ; eng"
         if (labelOrCode ==~ /^(\w{3}\W*){2,}/) {
             def m = labelOrCode =~ /(\w{3})\W*/
             def matches = []
@@ -121,7 +122,8 @@ class LanguageMapper {
             return matches
         }
 
-        def m = labelOrCode =~ /(.*)(?: och | and |&)(.*)/
+        // e.g "Swedish, Russian and English"
+        def m = labelOrCode =~ /(.+)(?: och | and |&)(.+)/
         if (m.matches()) {
             def matches = []
             for (String l : m.group(1).split(',')) {
@@ -143,6 +145,7 @@ class LanguageMapper {
     }
 
     private String trim(String s) {
+        // remove leading and trailing non-"alpha, digit or parentheses"
         def w = /\(\)\p{IsAlphabetic}\p{Digit}/
         def m = s =~ /[^${w}]*([${w} ]*[${w}])[^${w}]*/
         return m.matches() ? m.group(1) : s
@@ -158,7 +161,7 @@ class LanguageMapper {
         }
     }
 
-    private void incrementStats(String category, Object name) {
+    private void incrementCounter(String category, Object name) {
         if (stats) {
             stats.increment(category, name)
         }

@@ -14,7 +14,7 @@ class LanguageLinker {
     }
 
     boolean linkLanguages(data) {
-        return new DocumentSearch().search(data) { path, value ->
+        return new DocumentSearch().traverse(data) { path, value ->
             if (path && path.last().equals('language')) {
                 return replaceBlankNode(value)
             }

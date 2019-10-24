@@ -58,13 +58,13 @@ class DocumentSearch {
     List operations
 
     /**
-     * Perform a depth-first search of obj
+     * Traverse obj in depth-first order
      *
      * @param obj list or map containing nested lists or maps
      * @param visitor function to call for every node
      * @return true if obj was changed
      */
-    boolean search(obj, NodeVisitor visitor) {
+    boolean traverse(obj, NodeVisitor visitor) {
         this.visitor = visitor
         path = new Stack()
         operations = []

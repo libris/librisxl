@@ -3,7 +3,7 @@ import datatool.util.LanguageMapper
 import datatool.util.Statistics
 
 /*
- * This removes blank language nodes
+ * Replace blank language nodes with links
  *
  * See LXL-2737 for more info.
  *

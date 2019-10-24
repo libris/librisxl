@@ -137,6 +137,52 @@ class LanguageLinkerSpec extends Specification {
         [language: [label: 'tyska (fornhögtyska)']]                            | true   | [language: ['@id': 'http://id/goh']]
     }
 
+    def "handles multiple language nodes"() {
+        given:
+        def c = new LanguageLinker(mapper)
+        def data = [
+                language: [label: 'Engelska'],
+                a: [
+                        language: [label: 'Engelska'],
+                        b: [
+                            [
+                                    [language: [label: 'Engelska']],
+                                    [language: [label: 'Engelska']],
+                                    [c:
+                                             [language: [label: 'Engelska']]
+                                    ]
+                            ]
+                        ]
+
+                ],
+                b: [
+                        language: [label: 'Engelska']
+                ]
+        ]
+        
+        expect:
+        c.linkLanguages(data) == true
+        data == [
+                language: ['@id': 'http://id/eng'],
+                a: [
+                        language: ['@id': 'http://id/eng'],
+                        b: [
+                                [
+                                        [language: ['@id': 'http://id/eng']],
+                                        [language: ['@id': 'http://id/eng']],
+                                        [c:
+                                                 [language: ['@id': 'http://id/eng']]
+                                        ]
+                                ]
+                        ]
+
+                ],
+                b: [
+                        language: ['@id': 'http://id/eng']
+                ]
+        ]
+    }
+
     def "handles concatenated language codes"() {
         given:
         def c = new LanguageLinker(mapper)
