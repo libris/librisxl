@@ -2172,9 +2172,10 @@
         "fixedDefault": "4500"
       },
       "repeatable": false,
+      "NOTE:_spec": "For Serial issuanceTypes see 008",
       "_spec": [
         {
-          "name": "@type Text",
+          "name": "@type Text (Monograph)",
           "originalLeader": "00887cam a2200277 a 4500",
           "source": {"leader": "     cam a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
@@ -2193,8 +2194,27 @@
           }
         },
         {
+          "name": "@type Text (Monograph Component part)",
+          "originalLeader": "00887caa a2200277 a 4500",
+          "source": {"leader": "     caa a        a 4500", "fields": [{"001": "0000000"}]},
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/bib/0000000",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
+            "controlNumber": "0000000",
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "@type": "Instance",
+              "issuanceType": "ComponentPart",
+              "@id": "http://libris.kb.se/resource/bib/0000000",
+              "instanceOf": {"@type": "Text"}
+            }
+          }
+        },
+        {
           "name": "@type ArchivalUnit",
-          "originalLeader": "00887cam a2200277 a 4500",
+          "originalLeader": "00887cbm a2200277 a 4500",
           "source": {"leader": "     cbm a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
             "@type": "Record",
@@ -2213,7 +2233,7 @@
         },
         {
           "name": "@type NotatedMusic",
-          "originalLeader": "00887cam a2200277 a 4500",
+          "originalLeader": "00887ccm a2200277 a 4500",
           "source": {"leader": "     ccm a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
             "@type": "Record",
@@ -2232,7 +2252,7 @@
         },
         {
           "name": "@type ManuscriptNotatedMusic",
-          "originalLeader": "00887cam a2200277 a 4500",
+          "originalLeader": "00887cdm a2200277 a 4500",
           "source": {"leader": "     cdm a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
             "@type": "Record",
@@ -2251,7 +2271,7 @@
         },
         {
           "name": "@type Cartography",
-          "originalLeader": "00887cam a2200277 a 4500",
+          "originalLeader": "00887cem a2200277 a 4500",
           "source": {"leader": "     cem a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
             "@type": "Record",
@@ -2270,7 +2290,7 @@
         },
         {
           "name": "@type ManuscriptCartography",
-          "originalLeader": "00887cam a2200277 a 4500",
+          "originalLeader": "00887cfm a2200277 a 4500",
           "source": {"leader": "     cfm a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
             "@type": "Record",
@@ -2289,7 +2309,7 @@
         },
         {
           "name": "@type MovingImage",
-          "originalLeader": "00887cam a2200277 a 4500",
+          "originalLeader": "00887cgm a2200277 a 4500",
           "source": {"leader": "     cgm a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
             "@type": "Record",
@@ -2308,7 +2328,7 @@
         },
         {
           "name": "@type Audio",
-          "originalLeader": "00887cam a2200277 a 4500",
+          "originalLeader": "00887cim a2200277 a 4500",
           "source": {"leader": "     cim a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
             "@type": "Record",
@@ -2327,7 +2347,7 @@
         },
         {
           "name": "@type Music",
-          "originalLeader": "00887cam a2200277 a 4500",
+          "originalLeader": "00887cjm a2200277 a 4500",
           "source": {"leader": "     cjm a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
             "@type": "Record",
@@ -2346,7 +2366,7 @@
         },
         {
           "name": "@type StillImage",
-          "originalLeader": "00887cam a2200277 a 4500",
+          "originalLeader": "00887ckm a2200277 a 4500",
           "source": {"leader": "     ckm a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
             "@type": "Record",
@@ -2364,9 +2384,9 @@
           }
         },
         {
-          "name": "@type Multimedia",
-          "originalLeader": "00887cam a2200277 a 4500",
-          "source": {"leader": "     cmm a        a 4500", "fields": [{"001": "0000000"}]},
+          "name": "@type StillImage (Collection)",
+          "originalLeader": "00887ckc a2200277 a 4500",
+          "source": {"leader": "     ckc a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
             "@type": "Record",
             "@id": "http://libris.kb.se/bib/0000000",
@@ -2376,7 +2396,26 @@
             "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "@type": "Instance",
-              "issuanceType": "Monograph",
+              "issuanceType": "Collection",
+              "@id": "http://libris.kb.se/resource/bib/0000000",
+              "instanceOf": {"@type": "StillImage"}
+            }
+          }
+        },
+        {
+          "name": "@type Multimedia (Integrating)",
+          "originalLeader": "00887cmi a2200277 a 4500",
+          "source": {"leader": "     cmi a        a 4500", "fields": [{"001": "0000000"}]},
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/bib/0000000",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
+            "controlNumber": "0000000",
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "@type": "Instance",
+              "issuanceType": "Integrating",
               "@id": "http://libris.kb.se/resource/bib/0000000",
               "instanceOf": {"@type": "Multimedia"}
             }
@@ -2384,7 +2423,7 @@
         },
         {
           "name": "@type Kit",
-          "originalLeader": "00887cam a2200277 a 4500",
+          "originalLeader": "00887com a2200277 a 4500",
           "source": {"leader": "     com a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
             "@type": "Record",
@@ -2403,7 +2442,7 @@
         },
         {
           "name": "@type MixedMaterial",
-          "originalLeader": "00887cam a2200277 a 4500",
+          "originalLeader": "00887cpm a2200277 a 4500",
           "source": {"leader": "     cpm a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
             "@type": "Record",
@@ -2422,7 +2461,7 @@
         },
         {
           "name": "@type Object",
-          "originalLeader": "00887cam a2200277 a 4500",
+          "originalLeader": "00887crm a2200277 a 4500",
           "source": {"leader": "     crm a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
             "@type": "Record",
@@ -2441,7 +2480,7 @@
         },
         {
           "name": "@type ManuscriptText",
-          "originalLeader": "00887cam a2200277 a 4500",
+          "originalLeader": "00887ctm a2200277 a 4500",
           "source": {"leader": "     ctm a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
             "@type": "Record",
@@ -4094,6 +4133,7 @@
         },
         "[19]": {
           "TODO": "Ensure that the reconverting can separate 006, 008, 310 and 321 from each other",
+          "NOTE:local": "Should always default to pipe (LXL-2365).",
           "addLink": "frequency",
           "uriTemplate": "https://id.kb.se/marc/SerialsRegularityType-{_}",
           "matchUriToken": "^[nrx]$",
@@ -4388,7 +4428,7 @@
           }
         },
         {
-          "name": "Text/Monograph in (in 000) + Print + Encyclopedia",
+          "name": "Text/Monograph in (in 000) + ct:Print + gf:Encyclopedia",
           "source": {
             "leader": "     cam a        i 4500",
             "fields": [{"001": "0000000"}, {"008": "171123s1898    swe     re    000 ||   | "}]
@@ -4418,7 +4458,7 @@
           }
         },
         {
-          "name": "ManuscriptText/Monograph in (in 000) + Encyclopedia",
+          "name": "ManuscriptText/Monograph in (in 000) + gf:Encyclopedia",
           "source": {
             "leader": "     ctm a        i 4500",
             "fields": [{"001": "0000000"}, {"008": "171123s1898    swe      e    000 ||   | "}]
@@ -4447,7 +4487,7 @@
           }
         },
         {
-          "name": "Multimedia (in 000), Electronic (in 007) + Juvenile + Online",
+          "name": "Multimedia (in 000), Electronic (in 007) + ct:Online + Juvenile",
           "source": {
             "leader": "     cmm a        i 4500",
             "fields": [{"001": "0000000"},{"007":"cr |||   |||||"},{"008": "171123s1999    swe    jo  | |         | "}]
@@ -4478,7 +4518,7 @@
           }
         },
         {
-          "name": "Cartography (in 000) + Shading + Azimuthal Projection + SingleMap",
+          "name": "Cartography (in 000) + Shading + Azimuthal Projection + gf:SingleMap",
           "source": {
             "leader": "     cem a        i 4500",
             "fields": [{"001": "0000000"}, {"008": "171123s1999    sweb   ae a            | "}]
@@ -4509,7 +4549,7 @@
           }
         },
         {
-          "name": "ManuscriptCartography (in 000) + Shading + Azimuthal Projection + SingleMap",
+          "name": "ManuscriptCartography (in 000) + Shading + Azimuthal Projection + gf:SingleMap",
           "source": {
             "leader": "     cfm a        i 4500",
             "fields": [{"001": "0000000"}, {"008": "171123s1899    sweb   ae a            | "}]
@@ -4540,7 +4580,7 @@
           }
         },
         {
-          "name": "MixedMaterial (in 000) + Tactile",
+          "name": "MixedMaterial (in 000) + ct:Tactile",
           "source": {
             "leader": "     cpm a        i 4500",
             "fields": [{"001": "0000000"}, {"008": "171123s1999    swe     f              | "}]
@@ -4569,7 +4609,7 @@
           }
         },
         {
-          "name": "NotatedMusic (in 000) + Carols + VocalScore + VocalPart + Adult",
+          "name": "NotatedMusic (in 000) + gf:Carols + VocalScore + VocalPart + Adult",
           "source": {
             "leader": "     ccm a        i 4500",
             "fields": [{"001": "0000000"}, {"008": "171123s1999    swecrkfer              | "}]
@@ -4602,7 +4642,7 @@
           }
         },
         {
-          "name": "ManuscriptNotatedMusic (in 000) + Madrigals + VocalScore + VocalPart",
+          "name": "ManuscriptNotatedMusic (in 000) + gf:Madrigals",
           "source": {
             "leader": "     cdm a        i 4500",
             "fields": [{"001": "0000000"}, {"008": "171123s1999    swemd                  | "}]
@@ -4631,7 +4671,7 @@
           }
         },
         {
-          "name": "Music (in 000) + Not applicable",
+          "name": "Music (in 000) + gf:NotApplicable",
           "source": {
             "leader": "     cim a        i 4500",
             "fields": [{"001": "0000000"}, {"008": "171123s1999    swenn                  | "}]
@@ -4660,7 +4700,7 @@
           }
         },
         {
-          "name": "Music (in 000) + Popular",
+          "name": "Music (in 000) + gf:Popular",
           "source": {
             "leader": "     cjm a        i 4500",
             "fields": [{"001": "0000000"}, {"008": "171123s1999    swepp                  | "}]
@@ -4689,7 +4729,33 @@
           }
         },
         {
-          "name": "MovingImage (in 000) + MotionPicture",
+          "name": "Serial + frequency + gf:Periodical",
+          "source": {
+            "leader": "     cas a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171123c1999    swea||p|||||||0   ||   | "}]
+          },
+          "result": {
+            "created": "2017-11-23T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Serial",
+              "frequency": [{ "@id": "https://id.kb.se/marc/SerialsFrequencyType-a" }],
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
+                "year": "1999"
+              },
+              "instanceOf": {
+                "@type": "Text",
+                "genreForm": [{ "@id" : "https://id.kb.se/marc/SerialsTypeOfSerialType-p" }]
+              }
+            }
+          }
+        },
+        {
+          "name": "MovingImage (in 000) + gf:MotionPicture",
           "source": {
             "leader": "     cgm a        i 4500",
             "fields": [{"001": "0000000"}, {"008": "171123s1999    swe---            m    | "}]
@@ -4719,7 +4785,7 @@
           }
         },
         {
-          "name": "StillImage (in 000) + Picture",
+          "name": "StillImage (in 000) + gf:Picture",
           "source": {
             "leader": "     ckm a        i 4500",
             "fields": [{"001": "0000000"}, {"008": "171123s1999    swe---            i    | "}]
