@@ -1605,6 +1605,7 @@ class PostgreSQLComponent implements Storage {
             while (rs.next()) {
                 dependencies.add( new Tuple2<String, String>(rs.getString(1), rs.getString(2)) )
             }
+            dependencies.sort {a, b -> a.get(0) <=> b.get(0)}
             return dependencies
         }
         finally {
