@@ -684,11 +684,17 @@ class PostgreSQLComponent implements Storage {
     void refreshDependers(String id) {
         List<Tuple2<String, String>> dependers = getDependers(id)
         Connection connection = getConnection()
+        connection.setAutoCommit(false)
         try {
             for (Tuple2<String, String> depender : dependers) {
                 updateMinMaxDepModified((String) depender.get(0), connection)
                 removeEmbellishedDocument((String) depender.get(0), connection)
             }
+            connection.commit()
+        }
+        catch (Exception e) {
+            connection.rollback()
+            throw e
         }
         finally {
             connection.close()
