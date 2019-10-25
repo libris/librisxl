@@ -2,6 +2,7 @@ import json
 
 
 MAX_STATS = 512
+HARD_MAX_STATS = 8192
 STATS_FOR_ALL = {
         # from auth 008
         "marc:subdivision",
@@ -25,6 +26,7 @@ STATS_FOR_ALL = {
         "marc:headingSubject",
         # "shouldn't" be too many...
         "marc:displayText",
+        "part",
 }
 
 
@@ -53,8 +55,9 @@ def compute_shape(node, index, type_key=None):
 def count_value(k, v, shape):
     stats = shape.setdefault(k, {})
     if isinstance(stats, dict):
-        if k in STATS_FOR_ALL or len(stats) < MAX_STATS:
-            if not k.startswith('@') and isinstance(v, str):
+        if k in STATS_FOR_ALL and len(stats) < HARD_MAX_STATS or \
+                len(stats) < MAX_STATS:
+            if not k.startswith('@') and isinstance(v, (str, bool, int, float)):
                 v = f'@value {v}'
             stats[v] = stats.setdefault(v, 0) + 1
         else:
