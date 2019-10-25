@@ -633,13 +633,8 @@ class PostgreSQLComponent implements Storage {
             rigUpdateStatement(updateStatement, doc, modTime, changedIn, changedBy, collection, deleted)
             updateStatement.execute()
 
-            // The versions and identifiers tables are NOT under lock. Synchronization is only maintained on the main table.
             saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
-            for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
-                updateMinMaxDepModified((String) depender.get(0), connection)
-                removeEmbellishedDocument((String) depender.get(0), connection)
-            }
             updateMinMaxDepModified(doc.getShortId(), connection)
             connection.commit()
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
@@ -681,7 +676,23 @@ class PostgreSQLComponent implements Storage {
             log.debug("[store] Closed connection.")
         }
 
+        refreshDependers(doc.getShortId())
+
         return doc
+    }
+
+    void refreshDependers(String id) {
+        List<Tuple2<String, String>> dependers = getDependers(id)
+        Connection connection = getConnection()
+        try {
+            for (Tuple2<String, String> depender : dependers) {
+                updateMinMaxDepModified((String) depender.get(0), connection)
+                removeEmbellishedDocument((String) depender.get(0), connection)
+            }
+        }
+        finally {
+            connection.close()
+        }
     }
 
     /**
