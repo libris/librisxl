@@ -1,33 +1,28 @@
 package whelk.datatool
 
+import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
+import org.codehaus.jackson.map.ObjectMapper
+import whelk.Document
+import whelk.Storage
+import whelk.Whelk
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 
+import javax.script.Bindings
+import javax.script.Compilable
+import javax.script.CompiledScript
+import javax.script.ScriptEngineManager
+import javax.script.SimpleBindings
+import java.sql.SQLException
 import java.time.ZonedDateTime
+import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-
-import java.sql.ResultSet
-import java.sql.SQLException
-
-import javax.script.ScriptEngineManager
-import javax.script.Bindings
-import javax.script.SimpleBindings
-import javax.script.CompiledScript
-import javax.script.Compilable
-
-import groovy.util.CliBuilder
-import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
-
-import org.codehaus.jackson.map.ObjectMapper
-
-import whelk.Storage
-import whelk.Whelk
-import whelk.Document
-
 import java.util.concurrent.atomic.AtomicInteger
 
+import static java.util.concurrent.TimeUnit.SECONDS
 
 class WhelkTool {
 
@@ -214,7 +209,6 @@ class WhelkTool {
         Batch batch = new Batch(number: ++batchCount)
 
         def executorService = useThreads ? createExecutorService(batchSize) : null
-
         if (executorService) {
             Thread.setDefaultUncaughtExceptionHandler {
                 Thread thread, Throwable err ->
@@ -229,6 +223,12 @@ class WhelkTool {
                 errorLog.flush()
             }
         }
+
+        def timedLogger = Executors.newScheduledThreadPool(1).scheduleAtFixedRate({
+            if (counter.timeSinceLastSummarySeconds() > 4) {
+                repeat "$counter.summary"
+            }
+        }, 5, 5, SECONDS)
 
         for (Document doc : selection) {
             if (doc.deleted) {
@@ -270,15 +270,28 @@ class WhelkTool {
             log "Processed selection: ${counter.summary}. Done in ${counter.elapsedSeconds} s."
             log()
         }
+        timedLogger.cancel(true)
     }
 
     private def createExecutorService(int batchSize) {
         int cpus = Runtime.getRuntime().availableProcessors()
         int maxPoolSize = cpus * 4
         def linkedBlockingDeque = new LinkedBlockingDeque<Runnable>((int) (maxPoolSize * 1.5))
+
         def executorService = new ThreadPoolExecutor(cpus, maxPoolSize,
                 1, TimeUnit.DAYS,
                 linkedBlockingDeque, new ThreadPoolExecutor.CallerRunsPolicy())
+
+        executorService.setThreadFactory(new ThreadFactory() {
+            ThreadGroup group = new ThreadGroup("whelktool")
+
+            @Override
+            Thread newThread(Runnable runnable) {
+                return new Thread(group, runnable)
+            }
+        })
+
+        return executorService
     }
 
     /**
@@ -634,6 +647,7 @@ class Batch {
 
 class Counter {
     long startTime = System.currentTimeMillis()
+    long lastSummary = startTime
     AtomicInteger readCount = new AtomicInteger()
     AtomicInteger processedCount = new AtomicInteger()
     AtomicInteger modifiedCount = new AtomicInteger()
@@ -642,8 +656,9 @@ class Counter {
     synchronized int getSaved() { modifiedCount.get() + deleteCount.get() }
 
     String getSummary() {
-        double docsPerSec = readCount.get() / getElapsedSeconds()
-        "read: ${readCount.get()}, processed: ${processedCount.get()}, modified: ${modifiedCount.get()}, deleted: ${deleteCount.get()} (at ${docsPerSec.round(3)} docs/s)"
+        lastSummary = System.currentTimeMillis()
+        double docsPerSec = processedCount.get() / getElapsedSeconds()
+        "read: ${readCount.get()}, processed: ${processedCount.get()}, modified: ${modifiedCount.get()}, deleted: ${deleteCount.get()} (at ${docsPerSec.round(2)} docs/s)"
     }
 
     double getElapsedSeconds() {
@@ -664,5 +679,9 @@ class Counter {
 
     void countDeleted() {
         deleteCount.incrementAndGet()
+    }
+
+    double timeSinceLastSummarySeconds() {
+        return (System.currentTimeMillis() - lastSummary) / 1000
     }
 }

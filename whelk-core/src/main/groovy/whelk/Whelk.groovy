@@ -18,6 +18,7 @@ import whelk.util.PropertyLoader
 @CompileStatic
 class Whelk implements Storage {
 
+    ThreadGroup indexers = new ThreadGroup("dep-reindex")
     PostgreSQLComponent storage
     ElasticSearch elastic
     Map displayData
@@ -187,8 +188,8 @@ class Whelk implements Storage {
             }
         }
 
-        // If the number of dependers isn't too large. Update them synchronously
-        if (dependers.size() < 20) {
+        // If the number of dependers isn't too large or we are inside a batch job. Update them synchronously
+        if (dependers.size() < 20 || (batchJobThread() && indexers.activeCount() > 30) ) {
             Map dependingDocuments = bulkLoad(idsToReindex)
             for (String id : dependingDocuments.keySet()) {
                 Document dependingDoc = dependingDocuments.get(id)
@@ -198,7 +199,7 @@ class Whelk implements Storage {
         } else {
             // else use a fire-and-forget thread
             Whelk _this = this
-            new Thread(new Runnable() {
+            new Thread(indexers, new Runnable() {
                 void run() {
                     for (String id : idsToReindex) {
                         Document dependingDoc = storage.load(id)
@@ -397,5 +398,9 @@ class Whelk implements Storage {
         return identifier.startsWith(Document.BASE_URI.toString())
                 ? identifier.substring(Document.BASE_URI.toString().length())
                 : identifier
+    }
+
+    private boolean batchJobThread() {
+        return Thread.currentThread().getThreadGroup().getName().contains("whelktool")
     }
 }
