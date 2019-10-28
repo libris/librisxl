@@ -189,7 +189,7 @@ class Whelk implements Storage {
         }
 
         // If the number of dependers isn't too large or we are inside a batch job. Update them synchronously
-        if (dependers.size() < 20 || (batchJobThread() && indexers.activeCount() > 30) ) {
+        if (dependers.size() < 20 || batchJobThread() ) {
             Map dependingDocuments = bulkLoad(idsToReindex)
             for (String id : dependingDocuments.keySet()) {
                 Document dependingDoc = dependingDocuments.get(id)
