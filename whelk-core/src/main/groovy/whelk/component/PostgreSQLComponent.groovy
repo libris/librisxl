@@ -41,12 +41,7 @@ class PostgreSQLComponent implements Storage {
     boolean versioning = true
     boolean doVerifyDocumentIdRetention = true
 
-    /**
-     * This value is sensitive. It must be strictly larger than the maxConnections parameter set in tomcat.
-     * This is necessary in order to not have the very expensive deadlock/connection-starvation prevention code
-     * in here.
-     */
-    final int MAX_CONNECTION_COUNT = 300
+    final int MAX_CONNECTION_COUNT = 16
 
     // SQL statements
     protected String UPDATE_DOCUMENT, INSERT_DOCUMENT,
