@@ -1,5 +1,6 @@
 package whelk.datatool
 
+import com.google.common.util.concurrent.MoreExecutors
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
@@ -17,6 +18,7 @@ import java.sql.SQLException
 import java.time.ZonedDateTime
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -224,11 +226,7 @@ class WhelkTool {
             }
         }
 
-        def timedLogger = Executors.newScheduledThreadPool(1).scheduleAtFixedRate({
-            if (counter.timeSinceLastSummarySeconds() > 4) {
-                repeat "$counter.summary"
-            }
-        }, 5, 5, SECONDS)
+        def timedLogger = setupTimedLogger(counter)
 
         for (Document doc : selection) {
             if (doc.deleted) {
@@ -292,6 +290,14 @@ class WhelkTool {
         })
 
         return executorService
+    }
+
+    private ScheduledFuture<?> setupTimedLogger(Counter counter) {
+        MoreExecutors.getExitingScheduledExecutorService(Executors.newScheduledThreadPool(1)).scheduleAtFixedRate({
+            if (counter.timeSinceLastSummarySeconds() > 4) {
+                repeat "$counter.summary"
+            }
+        }, 5, 5, SECONDS)
     }
 
     /**
