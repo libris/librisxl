@@ -97,8 +97,8 @@ public class Main
             while (resultSet.next())
             {
                 String id = resultSet.getString(1);
-                Document fromDoc = fromWhelk.getStorage().load(id);
-                Document toDoc = toWhelk.getStorage().load(id);
+                Document fromDoc = fromWhelk.getStorage().load(id, connection);
+                Document toDoc = toWhelk.getStorage().load(id, connection);
 
                 if (fromDoc == null || toDoc == null)
                     continue;
@@ -118,8 +118,8 @@ public class Main
             while (resultSet.next())
             {
                 String id = resultSet.getString(1);
-                Document fromDoc = fromWhelk.getStorage().load(id);
-                Document toDoc = toWhelk.getStorage().load(id);
+                Document fromDoc = fromWhelk.getStorage().load(id, connection);
+                Document toDoc = toWhelk.getStorage().load(id, connection);
 
                 if (fromDoc == null || toDoc == null)
                     continue;

@@ -247,33 +247,25 @@ class PostgreSQLComponent implements Storage {
      }
 
 
-    public Map status(URI uri, Connection connection = null) {
+    private Map status(URI uri, Connection connection) {
         Map statusMap = [:]
-        boolean newConnection = (connection == null)
-        try {
-            if (newConnection) {
-                connection = getConnection()
-            }
-            PreparedStatement statusStmt = connection.prepareStatement(STATUS_OF_DOCUMENT)
-            statusStmt.setString(1, uri.toString())
-            def rs = statusStmt.executeQuery()
-            if (rs.next()) {
-                statusMap['id'] = rs.getString("id")
-                statusMap['uri'] = Document.BASE_URI.resolve(rs.getString("id"))
-                statusMap['exists'] = true
-                statusMap['created'] = new Date(rs.getTimestamp("created").getTime())
-                statusMap['modified'] = new Date(rs.getTimestamp("modified").getTime())
-                statusMap['deleted'] = rs.getBoolean("deleted")
-                log.trace("StatusMap: $statusMap")
-            } else {
-                log.debug("No results returned for $uri")
-                statusMap['exists'] = false
-            }
-        } finally {
-            if (newConnection) {
-                connection.close()
-            }
+
+        PreparedStatement statusStmt = connection.prepareStatement(STATUS_OF_DOCUMENT)
+        statusStmt.setString(1, uri.toString())
+        def rs = statusStmt.executeQuery()
+        if (rs.next()) {
+            statusMap['id'] = rs.getString("id")
+            statusMap['uri'] = Document.BASE_URI.resolve(rs.getString("id"))
+            statusMap['exists'] = true
+            statusMap['created'] = new Date(rs.getTimestamp("created").getTime())
+            statusMap['modified'] = new Date(rs.getTimestamp("modified").getTime())
+            statusMap['deleted'] = rs.getBoolean("deleted")
+            log.trace("StatusMap: $statusMap")
+        } else {
+            log.debug("No results returned for $uri")
+            statusMap['exists'] = false
         }
+
         log.debug("Loaded status for ${uri}: $statusMap")
         return statusMap
     }
@@ -326,7 +318,7 @@ class PostgreSQLComponent implements Storage {
                     log.warn("Was asked to save a holding post linked to a bib post that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
                     return false
                 }
-                String holdingForRecordId = getRecordId(holdingFor)
+                String holdingForRecordId = getRecordId(holdingFor, connection)
                 if (holdingForRecordId == null) {
                     log.warn("Was asked to save a holding post linked to a bib post that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
                     return false
@@ -366,7 +358,7 @@ class PostgreSQLComponent implements Storage {
             Date modifiedAt = parseDate(savedDoc.getModified())
             saveVersion(doc, connection, createdAt, modifiedAt, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
-            for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
+            for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection)) {
                 updateMinMaxDepModified((String) depender.get(0), connection)
             }
 
@@ -376,7 +368,6 @@ class PostgreSQLComponent implements Storage {
                 doc.setCreated((Date) status['created'])
                 doc.setModified((Date) status['modified'])
             }
-
 
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
             return true
@@ -491,7 +482,7 @@ class PostgreSQLComponent implements Storage {
         ResultSet resultSet
 
         try {
-            if (! remainingDocument.getCompleteId().equals(remainingID))
+            if (!remainingDocument.getCompleteId().equals(remainingID))
                 throw new RuntimeException("Bad merge argument, remaining document must have the remaining ID.")
 
             String remainingSystemID = getSystemIdByIri(remainingID, connection)
@@ -520,7 +511,7 @@ class PostgreSQLComponent implements Storage {
             refreshDerivativeTables(remainingDocument, connection, false)
 
             // Update dependers on the remaining record
-            List<Tuple2<String, String>> dependers = getDependers(remainingDocument.getShortId())
+            List<Tuple2<String, String>> dependers = getDependers(remainingDocument.getShortId(), connection)
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
                 updateMinMaxDepModified((String) dependerShortId, connection)
@@ -548,7 +539,7 @@ class PostgreSQLComponent implements Storage {
             saveDependencies(disappearingDocument, connection)
 
             // Update dependers on the disappearing record
-            dependers = getDependers(disappearingSystemID)
+            dependers = getDependers(disappearingSystemID, connection)
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
                 removeEmbellishedDocument(dependerShortId, connection)
@@ -622,9 +613,9 @@ class PostgreSQLComponent implements Storage {
             Document preUpdateDoc = doc.clone()
             updateAgent.update(doc)
             if (linkFinder != null)
-                linkFinder.normalizeIdentifiers(doc)
+                linkFinder.normalizeIdentifiers(doc, connection)
             if (doVerifyDocumentIdRetention) {
-                verifyDocumentIdRetention(preUpdateDoc, doc)
+                verifyDocumentIdRetention(preUpdateDoc, doc, connection)
             }
 
             boolean deleted = doc.getDeleted()
@@ -692,9 +683,9 @@ class PostgreSQLComponent implements Storage {
     }
 
     void refreshDependers(String id) {
-        List<Tuple2<String, String>> dependers = getDependers(id)
         Connection connection = getConnection()
         connection.setAutoCommit(false)
+        List<Tuple2<String, String>> dependers = getDependers(id, connection)
         try {
             for (Tuple2<String, String> depender : dependers) {
                 updateMinMaxDepModified((String) depender.get(0), connection)
@@ -715,7 +706,7 @@ class PostgreSQLComponent implements Storage {
      * Returns if the URIs pointing to 'doc' are acceptable for an update to 'pre_update_doc',
      * otherwise throws.
      */
-    private void verifyDocumentIdRetention(Document preUpdateDoc, Document postUpdateDoc) {
+    private void verifyDocumentIdRetention(Document preUpdateDoc, Document postUpdateDoc, Connection connection) {
 
         // Compile list of all old IDs
         HashSet<String> oldIDs = new HashSet<>()
@@ -741,7 +732,7 @@ class PostgreSQLComponent implements Storage {
         addedIDs.addAll( newIDs )
         addedIDs.removeAll( oldIDs )
         for (String id : addedIDs) {
-            if ( getSystemIdByIri(id) != null )
+            if ( getSystemIdByIri(id, connection) != null )
                 throw new RuntimeException("An update of " + preUpdateDoc.getCompleteId() + " MUST NOT have URIs that are already in use for other records. The update contained an offending URI: " + id)
         }
 
@@ -834,18 +825,6 @@ class PostgreSQLComponent implements Storage {
             } finally {
                 insertDependencies.close()
             }
-        }
-    }
-
-    private void updateMinMaxDepModified(String id) {
-        Connection connection
-        try {
-            connection = getConnection()
-            updateMinMaxDepModified(id, connection)
-        }
-        finally {
-            if (connection != null)
-                connection.close()
         }
     }
 
@@ -1003,7 +982,7 @@ class PostgreSQLComponent implements Storage {
                 batch.addBatch()
                 refreshDerivativeTables(doc, connection, false)
                 if (updateDepMinMax) {
-                    for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
+                    for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection)) {
                         updateMinMaxDepModified((String) depender.get(0), connection)
                         removeEmbellishedDocument((String) depender.get(0), connection)
                     }
@@ -1248,7 +1227,7 @@ class PostgreSQLComponent implements Storage {
     String getThingId(String id) {
         Connection connection = getConnection()
         try {
-            return getRecordOrThingId(id, GET_THING_ID, connection)
+            return getThingId(id, connection)
         } finally {
             if (connection != null)
                 connection.close()
@@ -1614,11 +1593,15 @@ class PostgreSQLComponent implements Storage {
     List<Tuple2<String, String>> getDependers(String id) {
         Connection connection = getConnection()
         try {
-            return getDependencyData(id, GET_DEPENDERS, connection)
+            getDependers(id, connection)
         } finally {
             if (connection != null)
                 connection.close()
         }
+    }
+
+    List<Tuple2<String, String>> getDependers(String id, Connection connection) {
+        return getDependencyData(id, GET_DEPENDERS, connection)
     }
 
     private List<Tuple2<String, String>> getDependencyData(String id, String query, Connection connection) {
@@ -1802,7 +1785,7 @@ class PostgreSQLComponent implements Storage {
             List<Document> holdings = []
             while (rs.next()) {
                 String id = rs.getString("id")
-                holdings.add(loadEmbellished(id, jsonld))
+                holdings.add(loadEmbellished(id, jsonld, connection))
             }
             return holdings
         }
@@ -1858,13 +1841,6 @@ class PostgreSQLComponent implements Storage {
         return doc
     }
 
-
-    Document loadBySameAsIdentifier(String identifier) {
-        log.debug("Using loadBySameAsIdentifier")
-        //return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[["sameAs":["@id":identifier]]], 2:["sameAs":["@id":identifier]]]) // This one is for descriptionsbased data
-        return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1: [["sameAs": ["@id": identifier]]]])
-    }
-
     List<Document> loadAllVersions(String identifier, Connection conn = null) {
         return doLoadAllVersions(identifier, GET_ALL_DOCUMENT_VERSIONS, conn)
     }
@@ -1918,38 +1894,6 @@ class PostgreSQLComponent implements Storage {
         
         return doc
 
-    }
-
-    private List<String> loadRecordIdentifiers(String id) {
-        List<String> identifiers = []
-        Connection connection = getConnection()
-        PreparedStatement loadIds = connection.prepareStatement(LOAD_RECORD_IDENTIFIERS)
-        try {
-            loadIds.setString(1, id)
-            ResultSet rs = loadIds.executeQuery()
-            while (rs.next()) {
-                identifiers << rs.getString("iri")
-            }
-        } finally {
-            connection.close()
-        }
-        return identifiers
-    }
-
-    private List<String> loadThingIdentifiers(String id) {
-        List<String> identifiers = []
-        Connection connection = getConnection()
-        PreparedStatement loadIds = connection.prepareStatement(LOAD_THING_IDENTIFIERS)
-        try {
-            loadIds.setString(1, id)
-            ResultSet rs = loadIds.executeQuery()
-            while (rs.next()) {
-                identifiers << rs.getString("iri")
-            }
-        } finally {
-            connection.close()
-        }
-        return identifiers
     }
 
     @CompileStatic(SKIP)
@@ -2057,12 +2001,13 @@ class PostgreSQLComponent implements Storage {
 
     void remove(String identifier, String changedIn, String changedBy) {
         if (versioning) {
+            if(!getDependers(identifier).isEmpty())
+                throw new RuntimeException("Deleting depended upon records is not allowed.")
+
             log.debug("Marking document with ID ${identifier} as deleted.")
             try {
                 storeAtomicUpdate(identifier, false, changedIn, changedBy,
                     { Document doc ->
-                        if(!getDependers(identifier).isEmpty())
-                            throw new RuntimeException("Deleting depended upon records is not allowed.")
                         doc.setDeleted(true)
                         // Add a tombstone marker (without removing anything) perhaps?
                     })
