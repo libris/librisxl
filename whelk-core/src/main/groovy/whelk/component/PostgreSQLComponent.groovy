@@ -37,18 +37,19 @@ import static groovy.transform.TypeCheckingMode.SKIP
 @Log
 @CompileStatic
 class PostgreSQLComponent implements Storage {
+    public static final String PROPERTY_SQL_URL = "sqlUrl"
+    public static final String PROPERTY_SQL_MAIN_TABLE_NAME = "sqlMaintable"
+    public static final String PROPERTY_SQL_MAX_POOL_SIZE = "sqlMaxPoolSize"
+
+    public static final ObjectMapper mapper = new ObjectMapper()
+
+    private static final int DEFAULT_MAX_POOL_SIZE = 16
+    private static final String UNIQUE_VIOLATION = "23505"
+    private static final String driverClass = "org.postgresql.Driver"
 
     private HikariDataSource connectionPool
-
-    static String driverClass = "org.postgresql.Driver"
-    private static String UNIQUE_VIOLATION = "23505"
-
-    public final static ObjectMapper mapper = new ObjectMapper()
-
     boolean versioning = true
     boolean doVerifyDocumentIdRetention = true
-
-    final int MAX_CONNECTION_COUNT = 16
 
     // SQL statements
     protected String UPDATE_DOCUMENT, INSERT_DOCUMENT,
@@ -98,15 +99,19 @@ class PostgreSQLComponent implements Storage {
     PostgreSQLComponent() {}
 
     PostgreSQLComponent(Properties properties) {
-        setup(properties.getProperty("sqlUrl"), properties.getProperty("sqlMaintable"))
+        int maxPoolSize = properties.getProperty(PROPERTY_SQL_MAX_POOL_SIZE)
+                ? Integer.parseInt(properties.getProperty(PROPERTY_SQL_MAX_POOL_SIZE))
+                : DEFAULT_MAX_POOL_SIZE
+
+        setup(properties.getProperty(PROPERTY_SQL_URL), properties.getProperty(PROPERTY_SQL_MAIN_TABLE_NAME), maxPoolSize)
     }
 
-    PostgreSQLComponent(String sqlUrl, String sqlMaintable) {
-        setup(sqlUrl, sqlMaintable)
+    PostgreSQLComponent(String sqlUrl, String sqlMainTable) {
+        setup(sqlUrl, sqlMainTable, DEFAULT_MAX_POOL_SIZE)
     }
 
-    private void setup(String sqlUrl, String sqlMaintable) {
-        mainTableName = sqlMaintable
+    private void setup(String sqlUrl, String sqlMainTable, int maxPoolSize) {
+        mainTableName = sqlMainTable
         String idTableName = mainTableName + "__identifiers"
         String versionsTableName = mainTableName + "__versions"
         String settingsTableName = mainTableName + "__settings"
@@ -115,13 +120,13 @@ class PostgreSQLComponent implements Storage {
         String embellishedTableName = mainTableName + "__embellished"
 
         HikariConfig config = new HikariConfig()
-        config.setMaximumPoolSize(MAX_CONNECTION_COUNT)
+        config.setMaximumPoolSize(maxPoolSize)
         config.setAutoCommit(true)
 
         if (sqlUrl) {
             config.setJdbcUrl(sqlUrl.replaceAll(":\\/\\/\\w+:*.*@", ":\\/\\/"))
             config.setDriverClassName(driverClass)
-            log.info("Connecting to sql database at ${config.getJdbcUrl()}, using driver $driverClass")
+            log.info("Connecting to sql database at ${config.getJdbcUrl()}, using driver $driverClass. Pool size: $maxPoolSize")
             URI connURI = new URI(sqlUrl.substring(5))
             if (connURI.getUserInfo() != null) {
                 String username = connURI.getUserInfo().split(":")[0]
