@@ -504,7 +504,7 @@ class WhelkTool {
     private void run() {
         log "Running Whelk against:"
         log "  PostgreSQL:"
-        log "    url:     ${whelk.storage.connectionPool.url}"
+        log "    url:     ${whelk.storage.connectionPool.getJdbcUrl()}"
         log "    table:   ${whelk.storage.mainTableName}"
         if (whelk.elastic) {
             log "  ElasticSearch:"

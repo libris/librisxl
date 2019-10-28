@@ -1,38 +1,45 @@
 package whelk.component
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
+import groovy.json.StringEscapeUtils
 import groovy.transform.Canonical
 import groovy.transform.CompileStatic
-import whelk.util.LegacyIntegrationTools
-
-import static groovy.transform.TypeCheckingMode.SKIP
 import groovy.util.logging.Log4j2 as Log
-import groovy.json.StringEscapeUtils
-import org.apache.commons.dbcp2.BasicDataSource
 import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
 import org.postgresql.util.PSQLException
 import whelk.Document
-import whelk.Storage
 import whelk.IdType
 import whelk.JsonLd
+import whelk.Storage
+import whelk.exception.CancelUpdateException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
-import whelk.exception.CancelUpdateException
 import whelk.filter.LinkFinder
+import whelk.util.LegacyIntegrationTools
 
-import java.sql.*
+import java.sql.BatchUpdateException
+import java.sql.Connection
+import java.sql.PreparedStatement
+import java.sql.ResultSet
+import java.sql.SQLException
+import java.sql.Timestamp
+import java.sql.Types
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Date
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+
+import static groovy.transform.TypeCheckingMode.SKIP
 
 @Log
 @CompileStatic
 class PostgreSQLComponent implements Storage {
 
-    private BasicDataSource connectionPool
+    private HikariDataSource connectionPool
+
     static String driverClass = "org.postgresql.Driver"
     private static String UNIQUE_VIOLATION = "23505"
 
@@ -107,31 +114,30 @@ class PostgreSQLComponent implements Storage {
         String profilesTableName = mainTableName + "__profiles"
         String embellishedTableName = mainTableName + "__embellished"
 
-        connectionPool = new BasicDataSource()
+        HikariConfig config = new HikariConfig()
+        config.setMaximumPoolSize(MAX_CONNECTION_COUNT)
+        config.setAutoCommit(true)
 
         if (sqlUrl) {
-            URI connURI = new URI(sqlUrl.substring(5)) // Cut the "jdbc:"-part of the sqlUrl.
-
-            log.info("Connecting to sql database at ${sqlUrl}, using driver $driverClass")
+            config.setJdbcUrl(sqlUrl.replaceAll(":\\/\\/\\w+:*.*@", ":\\/\\/"))
+            config.setDriverClassName(driverClass)
+            log.info("Connecting to sql database at ${config.getJdbcUrl()}, using driver $driverClass")
+            URI connURI = new URI(sqlUrl.substring(5))
             if (connURI.getUserInfo() != null) {
                 String username = connURI.getUserInfo().split(":")[0]
                 log.trace("Setting connectionPool username: $username")
-                connectionPool.setUsername(username)
+                config.setUsername(username)
+
                 try {
                     String password = connURI.getUserInfo().split(":")[1]
                     log.trace("Setting connectionPool password: $password")
-                    connectionPool.setPassword(password)
-                } catch (ArrayIndexOutOfBoundsException aioobe) {
+                    config.setPassword(password)
+                } catch (ArrayIndexOutOfBoundsException ignored) {
                     log.debug("No password part found in connect url userinfo.")
                 }
             }
-            connectionPool.setDriverClassName(driverClass)
-            connectionPool.setUrl(sqlUrl.replaceAll(":\\/\\/\\w+:*.*@", ":\\/\\/"))
-            // Remove the password part from the url or it won't be able to connect
-            connectionPool.setInitialSize(1)
-            connectionPool.setMaxTotal(MAX_CONNECTION_COUNT)
-            connectionPool.setDefaultAutoCommit(true)
         }
+        connectionPool = new HikariDataSource(config)
 
         if (sqlUrl != null)
             this.linkFinder = new LinkFinder(this)
