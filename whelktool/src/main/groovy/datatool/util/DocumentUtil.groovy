@@ -4,7 +4,7 @@ class DocumentUtil {
     public final static Operation NOP = new Nop()
 
     interface Visitor {
-        Operation visitElement(List path, value)
+        Operation visitElement(def value, List path)
     }
 
     interface Linker {
@@ -12,14 +12,36 @@ class DocumentUtil {
     }
 
     /**
-     * Traverse obj in depth-first order
+     * Traverse a JSON-LD structure in depth-first order
      *
-     * @param obj list or map containing nested lists or maps
-     * @param visitor function to call for every node
+     * @param data JSON-LD structure
+     * @param visitor function to call for every value
+     * @return true if data was changed
+     */
+    static boolean traverse(data, Visitor visitor) {
+        return new DFS().traverse(data, visitor)
+    }
+
+    /**
+     * Search for a key in JSON-LD structure
+     *
+     * @param data JSON-LD structure
+     * @param key
+     * @param visitor function to call with value for found keys
      * @return true if obj was changed
      */
-    static boolean traverse(obj, Visitor visitor) {
-        return new DFS().traverse(obj, visitor)
+    static boolean findKey(data, String key, Visitor visitor) {
+        return traverse(data, { value, path ->
+            if (path && path.last() == key) {
+                return visitor.visitElement(value, path)
+            }
+        })
+    }
+
+    static Visitor link(Linker linker) {
+        return { value, path ->
+            return DocumentUtil.&linkBlankNodes(value, linker)
+        }
     }
 
     /**
@@ -88,7 +110,7 @@ class DocumentUtil {
         }
 
         private void node(obj) {
-            Operation op = visitor.visitElement(path, obj)
+            Operation op = visitor.visitElement(obj, path.collect())
             if (op && !(op instanceof Nop)) {
                 op.setPath(path)
                 operations.add(op)

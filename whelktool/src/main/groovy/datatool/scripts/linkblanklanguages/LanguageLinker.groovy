@@ -3,8 +3,6 @@ package datatool.scripts.linkblanklanguages
 import datatool.util.DocumentUtil
 import datatool.util.Statistics
 
-import static datatool.util.DocumentUtil.NOP
-
 class LanguageLinker implements DocumentUtil.Linker {
     List ignoreCodes = []
     Map languageMap = [:]
@@ -15,6 +13,10 @@ class LanguageLinker implements DocumentUtil.Linker {
     LanguageLinker(List ignoreCodes = [], Statistics stats = null) {
         this.ignoreCodes = ignoreCodes
         this.stats = stats
+    }
+
+    boolean linkLanguages(data) {
+        return DocumentUtil.findKey(data, 'language', DocumentUtil.link(this))
     }
 
     void addLanguageDefinition(Map language) {
@@ -52,15 +54,6 @@ class LanguageLinker implements DocumentUtil.Linker {
 
     void addSubstitutions(Map s) {
         substitutions.putAll(s)
-    }
-
-    boolean linkLanguages(data) {
-        return DocumentUtil.traverse(data) { path, value ->
-            if (path && path.last().equals('language')) {
-                return DocumentUtil.linkBlankNodes(value, this)
-            }
-            return NOP
-        }
     }
 
     @Override

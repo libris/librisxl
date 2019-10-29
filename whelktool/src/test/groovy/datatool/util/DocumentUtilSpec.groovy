@@ -11,7 +11,7 @@ class DocumentUtilSpec extends Specification {
     def "replace"() {
         given:
         def o = [a: [b: [c: [0, 1, [d: 0]]]]]
-        DocumentUtil.traverse(o, { path, value ->
+        DocumentUtil.traverse(o, { value, path ->
             (path && path.last() == 'd') ? new Replace(1) : NOP
         })
 
@@ -22,7 +22,7 @@ class DocumentUtilSpec extends Specification {
     def "remove"() {
         given:
         def o = [a: [b: [c: 'q']]]
-        boolean modified = DocumentUtil.traverse(o, { path, value ->
+        boolean modified = DocumentUtil.traverse(o, { value, path ->
             value == 'q' ? new Remove() : NOP
         })
 
@@ -34,7 +34,7 @@ class DocumentUtilSpec extends Specification {
     def "remove from list"() {
         given:
         def o = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        boolean modified = DocumentUtil.traverse(o, { path, value ->
+        boolean modified = DocumentUtil.traverse(o, { value, path ->
             if (path) {
                 value % 2 == 0 ? new Remove() : new Replace(value * 3)
             }
@@ -48,11 +48,81 @@ class DocumentUtilSpec extends Specification {
     def "no op is nop"() {
         given:
         def o = [a: [b: [c: 'q']]]
-        boolean modified = DocumentUtil.traverse(o, { path, value ->  })
+        boolean modified = DocumentUtil.traverse(o, { value, path -> })
 
         expect:
         modified == false
         o == [a: [b: [c: 'q']]]
     }
 
+    def findKey() {
+        given:
+        def data = [
+                a: [b: [c: 'q']],
+                r: [s: [t: [a: [q: 2]]]],
+                l: [[], [a: 2]]
+        ]
+
+        def visited = []
+        def values = []
+        DocumentUtil.findKey(data, 'a', { value, path ->
+            values << value
+            visited << path
+            return NOP
+        })
+
+        expect:
+        values == [
+                [b: [c: 'q']],
+                [q: 2],
+                2
+        ]
+        visited == [
+                ['a'],
+                ['r', 's', 't', 'a'],
+                ['l', 1, 'a']
+        ]
+    }
+
+    def "link"() {
+        given:
+        def data = [
+                [key: [
+                        [x: 3],
+                        [x: 1],
+                        [x: 2],
+                        [x: 3],
+                        [x: 4],
+                ]],
+                [key: [x: 1]],
+                [key: [x: 2]]
+        ]
+
+        DocumentUtil.findKey(data, 'key', DocumentUtil.link({ blankNode, existingLinks ->
+            switch (blankNode['x']) {
+                case 1:
+                    return [['@id': 7]]
+                case 2:
+                    return [['@id': 8], ['@id': 9]]
+                case 3:
+                    return []
+                default:
+                    return null
+            }
+        }))
+
+        expect:
+        data == [
+                [key: [
+                        [x: 3],
+                        ['@id': 7],
+                        ['@id': 8],
+                        ['@id': 9],
+                        [x: 3],
+                        [x: 4]]
+                ],
+                [key: ['@id': 7]],
+                [key: [['@id': 8], ['@id': 9]]]
+        ]
+    }
 }
