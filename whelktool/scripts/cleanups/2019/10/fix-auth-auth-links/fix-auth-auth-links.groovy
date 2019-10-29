@@ -13,41 +13,81 @@
  *
  */
 
-PrintWriter scheduledForChange = getReportWriter("scheduled-for-change")
+scheduledForChange = getReportWriter("scheduled-for-change")
 
 selectBySqlWhere("collection = 'auth'") { data ->
 
-    def instance = data.graph[1]
+    instance = data.graph[1]
 
-    def relations = [instance.related,
-                     instance.broader,
-                     instance.narrower]
+    repairLinksFor(instance.related, "related", data)
+    repairLinksFor(instance.broader, "broader", data)
+    repairLinksFor(instance.narrower, "narrower", data)
+}
 
-    relations.each { relation ->
-        relation.each { brokenLinker ->
+private repairLinksFor(relation, name, data) {
+    relation.eachWithIndex { brokenLink, ix ->
 
-            def sameAs = brokenLinker?.sameAs as List
+        linkerType = brokenLink.'@type'
+        linkerPrefLabel = brokenLink.'prefLabel'
+        linkerId = brokenLink.sameAs?.first()?.'@id'
 
-            if (sameAs) {
-                linkerType = brokenLinker.'@type'
-                linkerPrefLabel = brokenLinker.'prefLabel'
-                linkerId = sameAs.first()?.'@id'
+        if(!linkerId) {
+            return
+        }
 
-                String query = """id in (select id from lddb
+        String query = """id in (select id from lddb
                 where data#>>'{@graph,1,@id}' = '${linkerId}') and
                 collection = 'auth'"""
 
-                selectBySqlWhere(query, silent: false) { auth ->
-                    if (auth.'@type' == linkerType && auth.'prefLabel' == linkerPrefLabel) {
-                        correctedLink = ['@id': linkerId]
-                        brokenLinker = correctedLink
-                        scheduledForChange.println "${data.doc.getURI()}"
-                        data.scheduleSave()
-                    }
-                }
+        selectBySqlWhere(query, silent: true) { thedata ->
+            auth = thedata.graph[1]
+            if (auth.'@type' == linkerType && auth.'prefLabel' == linkerPrefLabel) {
+                correctedLink = ['@id': linkerId]
+                scheduledForChange.println "Will replace ${relation[ix]} with $correctedLink for ${data.graph[0].'@id'} and relation $name"
+                relation[ix] = correctedLink
+                data.scheduleSave()
             }
         }
     }
 }
+
+//   Handle closeMatch:
+//  "closeMatch": [
+//    {
+//      "@type": "GenreForm",
+//      "sameAs": [
+//        {
+//          "@id": "https://id.kb.se/term/saogf/Animated%20films"
+//        }
+//      ],
+//      "inScheme": {
+//        "code": "lcgft",
+//        "@type": "ConceptScheme",
+//        "sameAs": [
+//          {
+//            "@id": "https://id.kb.se/term/lcgft"
+//          }
+//        ]
+//      },
+//      "prefLabel": "Animated films"
+//    }
+
+// "broadMatch": [
+//    {
+//      "code": "Dofa",
+//      "@type": "Classification",
+//      "inScheme": {
+//        "code": "kssb",
+//        "@type": "ConceptScheme",
+//        "sameAs": [
+//          {
+//            "@id": "https://id.kb.se/term/kssb%2F8/"
+//          }
+//        ],
+//        "version": "8"
+//      }
+//    },
+
+
 
 
