@@ -71,8 +71,8 @@ LanguageLinker buildLanguageMap() {
     queryDocs(q).each(linker.&addLanguageDefinition)
 
     linker.addSubstitutions(substitutions)
-    linker.addMapping('grekiska', 'http://id/gre')
-    linker.addMapping('grekiska', 'http://id/grc')
+    linker.addMapping('grekiska', 'https://id.kb.se/language/gre')
+    linker.addMapping('grekiska', 'https://id.kb.se/language/grc')
 
     return linker
 }
