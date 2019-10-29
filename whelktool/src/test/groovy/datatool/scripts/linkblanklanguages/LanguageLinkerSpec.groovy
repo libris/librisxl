@@ -1,14 +1,14 @@
-package datatool.util
+package datatool.scripts.linkblanklanguages
 
 import spock.lang.Specification
 import spock.lang.Unroll
 
 @Unroll
 class LanguageLinkerSpec extends Specification {
-    LanguageMapper mapper
+    LanguageLinker linker
 
     def setup() {
-        mapper = new LanguageMapper()
+        linker = new LanguageLinker()
 
         [
                 [
@@ -89,19 +89,16 @@ class LanguageLinkerSpec extends Specification {
                         ]
 
                 ]
-        ].each(mapper.&addLanguageDefinition)
+        ].each(linker.&addLanguageDefinition)
 
-        mapper.addSubstitutions([
+        linker.addSubstitutions([
                 'tyska (fornhögtyska)': 'fornhögtyska'
         ])
     }
 
     def "handles basic cases"() {
-        given:
-        def c = new LanguageLinker(mapper)
-
         expect:
-        c.linkLanguages(data) == change
+        linker.linkLanguages(data) == change
         data == expected
 
         where:
@@ -140,7 +137,6 @@ class LanguageLinkerSpec extends Specification {
 
     def "handles multiple language nodes"() {
         given:
-        def c = new LanguageLinker(mapper)
         def data = [
                 language: [label: 'Engelska'],
                 a       : [
@@ -162,7 +158,7 @@ class LanguageLinkerSpec extends Specification {
         ]
 
         expect:
-        c.linkLanguages(data) == true
+        linker.linkLanguages(data) == true
         data == [
                 language: ['@id': 'http://id/eng'],
                 a       : [
@@ -185,11 +181,8 @@ class LanguageLinkerSpec extends Specification {
     }
 
     def "handles concatenated language codes"() {
-        given:
-        def c = new LanguageLinker(mapper)
-
         expect:
-        c.linkLanguages(data) == change
+        linker.linkLanguages(data) == change
         data == expected
 
         where:
@@ -204,11 +197,8 @@ class LanguageLinkerSpec extends Specification {
     }
 
     def "handles enumerated language labels"() {
-        given:
-        def c = new LanguageLinker(mapper)
-
         expect:
-        c.linkLanguages(data) == change
+        linker.linkLanguages(data) == change
         data == expected
 
         where:
@@ -229,11 +219,8 @@ class LanguageLinkerSpec extends Specification {
     }
 
     def "handles weird language label lists"() {
-        given:
-        def c = new LanguageLinker(mapper)
-
         expect:
-        c.linkLanguages(data) == change
+        linker.linkLanguages(data) == change
         data == expected
 
         where:
@@ -245,8 +232,7 @@ class LanguageLinkerSpec extends Specification {
 
     def "handles ambiguous labels"() {
         given:
-
-        LanguageMapper mapper = new LanguageMapper()
+        LanguageLinker linker = new LanguageLinker()
         [
                 [
                         '@id'          : 'http://id/tog',
@@ -290,13 +276,12 @@ class LanguageLinkerSpec extends Specification {
                                 'en': 'Latin'
                         ]
                 ]
-        ].each(mapper.&addLanguageDefinition)
-        mapper.addMapping('grekiska', 'http://id/gre')
-        mapper.addMapping('grekiska', 'http://id/grc')
-        def c = new LanguageLinker(mapper)
+        ].each(linker.&addLanguageDefinition)
+        linker.addMapping('grekiska', 'http://id/gre')
+        linker.addMapping('grekiska', 'http://id/grc')
 
         expect:
-        c.linkLanguages(data) == change
+        linker.linkLanguages(data) == change
         data == expected
 
         where:
@@ -316,11 +301,8 @@ class LanguageLinkerSpec extends Specification {
 
 
     def "removes non-existing sameAs links"() {
-        given:
-        def c = new LanguageLinker(mapper)
-
         expect:
-        c.linkLanguages(data) == change
+        linker.linkLanguages(data) == change
         data == expected
 
         where:
@@ -331,7 +313,7 @@ class LanguageLinkerSpec extends Specification {
 
     def "handles language definitions with listed labels"() {
         given:
-        LanguageMapper mapper = new LanguageMapper()
+        LanguageLinker linker = new LanguageLinker()
         [
                 [
                         '@id'          : 'http://id/swe',
@@ -343,11 +325,10 @@ class LanguageLinkerSpec extends Specification {
                                 'sv': ['Svënskâ', 'Svénskã']
                         ]
                 ]
-        ].each(mapper.&addLanguageDefinition)
-        def c = new LanguageLinker(mapper)
+        ].each(linker.&addLanguageDefinition)
 
         expect:
-        c.linkLanguages(data) == change
+        linker.linkLanguages(data) == change
         data == expected
 
         where:
@@ -361,7 +342,7 @@ class LanguageLinkerSpec extends Specification {
 
     def "handles noise"() {
         given:
-        LanguageMapper mapper = new LanguageMapper()
+        LanguageLinker linker = new LanguageLinker()
         [
                 [
                         '@id'          : 'http://id/www',
@@ -373,9 +354,8 @@ class LanguageLinkerSpec extends Specification {
                                 'sv': 'Ẽîïŷ99 (wwwiska)'
                         ]
                 ]
-        ].each(mapper.&addLanguageDefinition)
-        def c = new LanguageLinker(mapper)
-        c.linkLanguages(data)
+        ].each(linker.&addLanguageDefinition)
+        linker.linkLanguages(data)
 
         expect:
         data == expected

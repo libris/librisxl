@@ -1,5 +1,4 @@
-import datatool.util.LanguageLinker
-import datatool.util.LanguageMapper
+import datatool.scripts.linkblanklanguages.LanguageLinker
 import datatool.util.Statistics
 
 /*
@@ -41,7 +40,7 @@ substitutions = [
         'samiska (lulesamiska)'           : 'lulesamiska'
 ]
 
-linker = new LanguageLinker(buildLanguageMap())
+linker = buildLanguageMap()
 
 selectByCollection('bib') { bib ->
     try {
@@ -61,19 +60,19 @@ selectByCollection('bib') { bib ->
     }
 }
 
-LanguageMapper buildLanguageMap() {
+LanguageLinker buildLanguageMap() {
     def q = [
             "@type": ["Language"],
             "q"    : ["*"],
             '_sort': ["@id"]
     ]
 
-    LanguageMapper mapper = new LanguageMapper(OBSOLETE_CODES, new Statistics().printOnShutdown())
-    queryDocs(q).each(mapper.&addLanguageDefinition)
+    LanguageLinker linker = new LanguageLinker(OBSOLETE_CODES, new Statistics().printOnShutdown())
+    queryDocs(q).each(linker.&addLanguageDefinition)
 
-    mapper.addSubstitutions(substitutions)
-    mapper.addMapping('grekiska', 'http://id/gre')
-    mapper.addMapping('grekiska', 'http://id/grc')
+    linker.addSubstitutions(substitutions)
+    linker.addMapping('grekiska', 'http://id/gre')
+    linker.addMapping('grekiska', 'http://id/grc')
 
-    return mapper
+    return linker
 }

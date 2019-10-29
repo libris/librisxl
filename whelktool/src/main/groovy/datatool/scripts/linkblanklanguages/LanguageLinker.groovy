@@ -1,13 +1,18 @@
-package datatool.util
+package datatool.scripts.linkblanklanguages
 
-class LanguageMapper {
+import datatool.util.DocumentUtil
+import datatool.util.Statistics
+
+import static datatool.util.DocumentUtil.NOP
+
+class LanguageLinker implements DocumentUtil.Linker {
     List ignoreCodes = []
     Map languageMap = [:]
     Map<String, List> ambiguousLabels = [:]
     Map substitutions = [:]
     Statistics stats
 
-    LanguageMapper(List ignoreCodes = [], Statistics stats = null) {
+    LanguageLinker(List ignoreCodes = [], Statistics stats = null) {
         this.ignoreCodes = ignoreCodes
         this.stats = stats
     }
@@ -49,29 +54,35 @@ class LanguageMapper {
         substitutions.putAll(s)
     }
 
-    boolean knownId(String id) {
-        return languageMap.values().contains(id)
+    boolean linkLanguages(data) {
+        return DocumentUtil.traverse(data) { path, value ->
+            if (path && path.last().equals('language')) {
+                return DocumentUtil.linkBlankNodes(value, this)
+            }
+            return NOP
+        }
     }
 
-    List<Map> mapBlankLanguage(Map language, List existingLinks) {
-        if (!language['label'] && !language['code']) {
-            incrementCounter('unhandled shape', language.keySet())
-            throw new RuntimeException('unhandled shape: ' + language.keySet())
+    @Override
+    List<Map> link(Map blankLanguage, List existingLinks) {
+        if (!blankLanguage['label'] && !blankLanguage['code']) {
+            incrementCounter('unhandled shape', blankLanguage.keySet())
+            throw new RuntimeException('unhandled shape: ' + blankLanguage.keySet())
         }
 
-        String key = language['label'] ? 'label' : 'code'
-        List<String> links = findLinks(language[key], existingLinks)
+        String key = blankLanguage['label'] ? 'label' : 'code'
+        List<String> links = findLinks(blankLanguage[key], existingLinks)
         if (links) {
-            incrementCounter('mapped', language[key])
+            incrementCounter('mapped', blankLanguage[key])
             return links.collect { ['@id': it] }
         }
         else {
-            incrementCounter('not mapped', language[key])
+            incrementCounter('not mapped', blankLanguage[key])
         }
 
-        if (language['sameAs'] && !language['sameAs'].any { knownId(it['@id']) }) {
-            incrementCounter('sameAs 404 - removed', language['sameAs'])
-            Map r = new HashMap(language)
+        if (blankLanguage['sameAs'] && !blankLanguage['sameAs'].any { knownId(it['@id']) }) {
+            incrementCounter('sameAs 404 - removed', blankLanguage['sameAs'])
+            Map r = new HashMap(blankLanguage)
             r.remove('sameAs')
             return [r]
         }
@@ -105,6 +116,10 @@ class LanguageMapper {
             }
         }
         return null
+    }
+
+    private boolean knownId(String id) {
+        return languageMap.values().contains(id)
     }
 
     private List split(labelOrCode) {

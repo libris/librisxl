@@ -1,17 +1,17 @@
 package datatool.util
 
-import datatool.util.DocumentSearch.Remove
-import datatool.util.DocumentSearch.Replace
+import datatool.util.DocumentUtil.Remove
+import datatool.util.DocumentUtil.Replace
 import spock.lang.Specification
 
-import static DocumentSearch.NOP
+import static DocumentUtil.NOP
 
-class DocumentSearchSpec extends Specification {
+class DocumentUtilSpec extends Specification {
 
     def "replace"() {
         given:
         def o = [a: [b: [c: [0, 1, [d: 0]]]]]
-        new DocumentSearch().traverse(o, { path, value ->
+        DocumentUtil.traverse(o, { path, value ->
             (path && path.last() == 'd') ? new Replace(1) : NOP
         })
 
@@ -22,7 +22,7 @@ class DocumentSearchSpec extends Specification {
     def "remove"() {
         given:
         def o = [a: [b: [c: 'q']]]
-        boolean modified = new DocumentSearch().traverse(o, { path, value ->
+        boolean modified = DocumentUtil.traverse(o, { path, value ->
             value == 'q' ? new Remove() : NOP
         })
 
@@ -34,7 +34,7 @@ class DocumentSearchSpec extends Specification {
     def "remove from list"() {
         given:
         def o = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        boolean modified = new DocumentSearch().traverse(o, { path, value ->
+        boolean modified = DocumentUtil.traverse(o, { path, value ->
             if (path) {
                 value % 2 == 0 ? new Remove() : new Replace(value * 3)
             }
@@ -48,7 +48,7 @@ class DocumentSearchSpec extends Specification {
     def "no op is nop"() {
         given:
         def o = [a: [b: [c: 'q']]]
-        boolean modified = new DocumentSearch().traverse(o, { path, value ->  })
+        boolean modified = DocumentUtil.traverse(o, { path, value ->  })
 
         expect:
         modified == false
