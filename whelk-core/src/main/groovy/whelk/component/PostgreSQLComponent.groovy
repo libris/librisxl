@@ -34,6 +34,12 @@ import java.util.regex.Pattern
 
 import static groovy.transform.TypeCheckingMode.SKIP
 
+/**
+ *  It is important to not grab more than one connection per request/thread to avoid connection related deadlocks.
+ *  i.e. get/release connection should be done in the public methods. Connections should be reused in method calls
+ *  within this class.
+ */
+
 @Log
 @CompileStatic
 class PostgreSQLComponent implements Storage {
