@@ -5,6 +5,7 @@ import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.JsonLD2MarcXMLConverter
 import whelk.util.LegacyIntegrationTools
+import whelk.util.WhelkFactory
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -26,7 +27,7 @@ class HoldAPI extends HttpServlet {
     @Override
     void init() {
         if (!whelk) {
-            whelk = Whelk.createLoadedCoreWhelk()
+            whelk = WhelkFactory.getWhelkFromJndi()
         }
         toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.createMarcFrameConverter())
     }

@@ -6,6 +6,7 @@ import whelk.component.PostgreSQLComponent
 import whelk.triples.Graph
 import whelk.triples.JsonldSerializer
 import whelk.util.LegacyIntegrationTools
+import whelk.util.WhelkFactory
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -27,7 +28,7 @@ class MergeAPI extends HttpServlet {
     @Override
     void init() {
         if (!whelk) {
-            whelk = Whelk.createLoadedSearchWhelk()
+            whelk = WhelkFactory.getWhelkFromJndi()
         }
     }
 

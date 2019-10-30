@@ -6,6 +6,7 @@ import whelk.Document
 import whelk.Whelk
 import whelk.converter.marc.MarcFrameConverter
 import whelk.util.Tools
+import whelk.util.WhelkFactory
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -25,7 +26,7 @@ class ConverterAPI extends HttpServlet {
     void init() {
         log.info("Starting converterAPI")
         if (!marcFrameConverter) {
-            whelk = Whelk.createLoadedCoreWhelk()
+            whelk = WhelkFactory.getWhelkFromJndi()
             marcFrameConverter = whelk.createMarcFrameConverter()
         }
         log.info("Started ...")

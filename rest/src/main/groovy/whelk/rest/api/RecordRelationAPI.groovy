@@ -4,6 +4,7 @@ import whelk.Document
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.util.LegacyIntegrationTools
+import whelk.util.WhelkFactory
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -24,7 +25,7 @@ class RecordRelationAPI extends HttpServlet {
     @Override
     void init() {
         if (!whelk) {
-            whelk = Whelk.createLoadedCoreWhelk()
+            whelk = WhelkFactory.getWhelkFromJndi()
         }
     }
 

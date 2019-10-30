@@ -12,6 +12,7 @@ import whelk.IdGenerator
 import whelk.Whelk
 import whelk.converter.MarcJSONConverter
 import whelk.converter.marc.MarcFrameConverter
+import whelk.util.WhelkFactory
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -58,7 +59,7 @@ class RemoteSearchAPI extends HttpServlet {
         log.info("Starting Remote Search API")
         loadMetaProxyInfo(metaProxyInfoUrl)
         if (!whelk) {
-            whelk = Whelk.createLoadedCoreWhelk()
+            whelk = WhelkFactory.getWhelkFromJndi()
         }
         marcFrameConverter = whelk.createMarcFrameConverter()
 
