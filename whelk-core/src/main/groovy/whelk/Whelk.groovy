@@ -25,6 +25,7 @@ class Whelk implements Storage {
     Map vocabData
     Map contextData
     JsonLd jsonld
+    MarcFrameConverter marcFrameConverter
 
     URI baseUri = null
 
@@ -106,8 +107,12 @@ class Whelk implements Storage {
     public Whelk() {
     }
 
-    MarcFrameConverter createMarcFrameConverter() {
-        return new MarcFrameConverter(new LinkFinder(storage), jsonld)
+    synchronized MarcFrameConverter getMarcFrameConverter() {
+        if (!marcFrameConverter) {
+            marcFrameConverter = new MarcFrameConverter(new LinkFinder(storage), jsonld)
+        }
+
+        return marcFrameConverter
     }
 
     void loadCoreData() {

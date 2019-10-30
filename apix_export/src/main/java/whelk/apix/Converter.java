@@ -10,15 +10,12 @@ import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.converter.marc.MarcFrameConverter;
-import whelk.filter.LinkFinder;
 
 import java.io.ByteArrayInputStream;
 import java.sql.Timestamp;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import whelk.util.VCopyToWhelkConverter;
 
@@ -34,7 +31,7 @@ public class Converter
     {
         m_whelk = whelk;
         m_jsonld = whelk.getJsonld();
-        m_toJsonConverter = whelk.createMarcFrameConverter();
+        m_toJsonConverter = whelk.getMarcFrameConverter();
         m_converter = new JsonLD2MarcXMLConverter(m_toJsonConverter);
     }
 

@@ -57,7 +57,7 @@ class FileDumper implements MySQLLoader.LoadHandler {
         threadPool = new ThreadPool(THREAD_COUNT)
         converterPool = new MarcFrameConverter[THREAD_COUNT]
         for (int i = 0; i < THREAD_COUNT; ++i) {
-            converterPool[i] = whelk.createMarcFrameConverter()
+            converterPool[i] = whelk.getMarcFrameConverter()
         }
     }
 

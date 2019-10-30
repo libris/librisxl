@@ -2,13 +2,7 @@ package whelk
 
 import spock.lang.Requires
 import spock.lang.Specification
-
-import whelk.filter.LinkFinder
-import whelk.util.PropertyLoader
-
-import whelk.filter.LinkFinder
 import whelk.component.PostgreSQLComponent
-import whelk.converter.marc.MarcFrameConverter
 
 class MarcFrameConverterLinkFinderIntegrationSpec extends Specification {
 
@@ -20,7 +14,7 @@ class MarcFrameConverterLinkFinderIntegrationSpec extends Specification {
         def whelk = new Whelk(
                 new PostgreSQLComponent('jdbc:postgresql:whelk', 'lddb'))
         whelk.loadCoreData()
-        def converter = whelk.createMarcFrameConverter()
+        def converter = whelk.getMarcFrameConverter()
 
         and:
             def source = [

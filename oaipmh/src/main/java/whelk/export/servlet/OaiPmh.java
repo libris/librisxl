@@ -1,7 +1,6 @@
 package whelk.export.servlet;
 
 import whelk.Whelk;
-import whelk.component.PostgreSQLComponent;
 import whelk.converter.FormatConverter;
 import whelk.converter.JsonLD2DublinCoreConverter;
 import whelk.converter.JsonLD2RdfXml;
@@ -14,7 +13,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Properties;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -78,7 +77,7 @@ public class OaiPmh extends HttpServlet
         s_whelk = Whelk.createLoadedCoreWhelk();
         supportedFormats = new HashMap<String, FormatDescription>();
         supportedFormats.put("oai_dc", new FormatDescription(new JsonLD2DublinCoreConverter(), true, "http://www.openarchives.org/OAI/2.0/oai_dc.xsd", "http://www.openarchives.org/OAI/2.0"));
-        supportedFormats.put("marcxml", new FormatDescription(new JsonLD2MarcXMLConverter(s_whelk.createMarcFrameConverter()), true, "http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd", "http://www.loc.gov/MARC21/slim"));
+        supportedFormats.put("marcxml", new FormatDescription(new JsonLD2MarcXMLConverter(s_whelk.getMarcFrameConverter()), true, "http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd", "http://www.loc.gov/MARC21/slim"));
         supportedFormats.put("rdfxml", new FormatDescription(new JsonLD2RdfXml(), true, null, null));
         supportedFormats.put("jsonld", new FormatDescription(null, false, null, null));
 

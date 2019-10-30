@@ -61,7 +61,7 @@ class RemoteSearchAPI extends HttpServlet {
         if (!whelk) {
             whelk = WhelkFactory.getWhelkFromJndi()
         }
-        marcFrameConverter = whelk.createMarcFrameConverter()
+        marcFrameConverter = whelk.getMarcFrameConverter()
 
         m_undesirableFields = new HashSet<>()
 

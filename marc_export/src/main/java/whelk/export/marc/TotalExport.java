@@ -34,7 +34,7 @@ public class TotalExport
     public TotalExport(Whelk whelk)
     {
         m_whelk = whelk;
-        m_toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.createMarcFrameConverter());
+        m_toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
     }
 
     class Batch

@@ -42,7 +42,7 @@ public class ProfileExport
     public ProfileExport(Whelk whelk)
     {
         m_whelk = whelk;
-        m_toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.createMarcFrameConverter());
+        m_toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
     }
 
     /**

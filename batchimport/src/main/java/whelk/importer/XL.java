@@ -54,7 +54,7 @@ class XL
         m_properties = PropertyLoader.loadProperties("secret");
         m_whelk = Whelk.createLoadedSearchWhelk(m_properties);
         m_repeatableTerms = m_whelk.getJsonld().getRepeatableTerms();
-        m_marcFrameConverter = m_whelk.createMarcFrameConverter();
+        m_marcFrameConverter = m_whelk.getMarcFrameConverter();
         m_linkfinder = new LinkFinder(m_whelk.getStorage());
         if (parameters.getChangedIn() != null)
             IMPORT_SYSTEM_CODE = parameters.getChangedIn();
