@@ -15,8 +15,8 @@ class LanguageLinker implements DocumentUtil.Linker {
         this.stats = stats
     }
 
-    boolean linkLanguages(data) {
-        return DocumentUtil.findKey(data, 'language', DocumentUtil.link(this))
+    boolean linkLanguages(data, String key = 'language') {
+        return DocumentUtil.findKey(data, key, DocumentUtil.link(this))
     }
 
     void addLanguageDefinition(Map language) {

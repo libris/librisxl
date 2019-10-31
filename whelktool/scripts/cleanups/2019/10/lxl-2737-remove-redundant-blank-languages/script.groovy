@@ -42,6 +42,20 @@ substitutions = [
 
 linker = buildLanguageMap()
 
+selectByCollection('auth') { auth ->
+    try {
+        def (record, thing) = auth.graph
+        if (linker.linkLanguages(thing, 'associatedLanguage')) {
+            scheduledForUpdate.println("${auth.doc.getURI()}")
+            auth.scheduleSave()
+        }
+    }
+    catch (Exception e) {
+        println "failed ${auth.doc.getURI()} : ${e}"
+        e.printStackTrace()
+    }
+}
+
 selectByCollection('bib') { bib ->
     try {
         def (record, thing, work) = bib.graph
