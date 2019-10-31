@@ -138,14 +138,19 @@ class DocumentUtil {
 
         protected abstract void perform(obj)
 
-        protected void setPath(List path) {
+        protected Operation setPath(List path) {
             this.path = path.collect()
+            return this
         }
 
         protected def parentAndKey(obj) {
             def p = path.collect()
             while (p.size() > 1) {
                 obj = obj[p.remove(0)]
+                if (obj == null) {
+                    // already gone
+                    return [null, null]
+                }
             }
             return [obj, p[0]]
         }
@@ -154,14 +159,21 @@ class DocumentUtil {
     static class Nop extends Operation {
         @Override
         protected void perform(Object obj) {}
-        protected void setPath(List path) {}
+        protected Operation setPath(List path) { this }
     }
 
     static class Remove extends Operation {
         @Override
         protected void perform(Object obj) {
             def (parent, key) = parentAndKey(obj)
+            if(!parent) {
+                return
+            }
+
             parent.remove(key)
+            if (parent.isEmpty() && path.size() > 1) {
+                new Remove().setPath(path.collect()[0..-2]).perform(obj)
+            }
         }
     }
 
@@ -175,7 +187,9 @@ class DocumentUtil {
         @Override
         protected void perform(Object obj) {
             def (parent, key) = parentAndKey(obj)
-            parent[key] = with
+            if (parent != null) {
+                parent[key] = with
+            }
         }
     }
 }

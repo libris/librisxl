@@ -1,12 +1,12 @@
-import datatool.scripts.linkblanklanguages.LanguageLinker
-import datatool.util.Statistics
-
-/*
+/**
  * Replace blank language nodes with links
  *
  * See LXL-2737 for more info.
  *
  */
+
+import datatool.scripts.linkblanklanguages.LanguageLinker
+import datatool.util.Statistics
 
 OBSOLETE_CODES = ['9ss', '9sl']
 

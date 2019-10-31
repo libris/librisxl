@@ -21,14 +21,14 @@ class DocumentUtilSpec extends Specification {
 
     def "remove"() {
         given:
-        def o = [a: [b: [c: 'q']]]
+        def o = [a: [b: [c: 'q', d: 'r']]]
         boolean modified = DocumentUtil.traverse(o, { value, path ->
             value == 'q' ? new Remove() : NOP
         })
 
         expect:
         modified == true
-        o == ['a': ['b': [:]]]
+        o == ['a': ['b': [d: 'r']]]
     }
 
     def "remove from list"() {
@@ -43,6 +43,20 @@ class DocumentUtilSpec extends Specification {
         expect:
         modified == true
         o == [3, 9, 15, 21, 27]
+    }
+
+    def "removing last element removes parent"() {
+        given:
+        def o = [b: [a: 2, c: 2, b: [[x: [2, 2]], 2]]]
+        boolean modified = DocumentUtil.traverse(o, { value, path ->
+            if (value == 2 || (path && path.last() == 'x')) {
+                new Remove()
+            }
+        })
+
+        expect:
+        modified == true
+        o == [:]
     }
 
     def "no op is nop"() {
