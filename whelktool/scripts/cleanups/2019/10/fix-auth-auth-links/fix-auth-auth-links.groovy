@@ -35,12 +35,8 @@ private repairLinksFor(relation, name, data) {
             return
         }
 
-        String query = """id in (select id from lddb
-                where data#>>'{@graph,1,@id}' = '${linkerId}') and
-                collection = 'auth'"""
-
-        selectBySqlWhere(query, silent: true) { thedata ->
-            auth = thedata.graph[1]
+        selectByIds([linkerId]) { linkedData ->
+            auth = linkedData.graph[1]
             if (auth.'@type' == linkerType && auth.'prefLabel' == linkerPrefLabel) {
                 correctedLink = ['@id': linkerId]
                 scheduledForChange.println "Will replace ${relation[ix]} with $correctedLink for ${data.graph[0].'@id'} and relation $name"
