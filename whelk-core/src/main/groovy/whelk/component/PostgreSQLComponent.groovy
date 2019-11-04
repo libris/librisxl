@@ -3,7 +3,6 @@ package whelk.component
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import groovy.json.StringEscapeUtils
-import groovy.transform.Canonical
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
@@ -322,8 +321,6 @@ class PostgreSQLComponent implements Storage {
         If we're writing a holding post, obtain a (write) lock on the linked bibpost, and hold it until writing has finished.
         While under lock: first check that there is not already a holding for this sigel/bib-id combination.
          */
-        RowLock lock = null
-
         try {
             if (collection == "hold") {
                 String holdingFor = doc.getHoldingFor()
@@ -341,7 +338,11 @@ class PostgreSQLComponent implements Storage {
                     log.warn("Was asked to save a holding post linked to a bib post that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
                     return false
                 }
-                lock = acquireRowLock(holdingForSystemId)
+
+                if (doc.getId() < holdingForSystemId) {
+                    acquireRowLock(doc.getId(), connection)
+                }
+                acquireRowLock(holdingForSystemId, connection)
 
                 if (getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) != null)
                     throw new ConflictingHoldException("Already exists a holding post for ${doc.getHeldBy()} and bib: $holdingFor")
@@ -404,47 +405,20 @@ class PostgreSQLComponent implements Storage {
             connection.rollback()
             throw e
         } finally {
-            if (lock != null)
-                releaseRowLock(lock)
             connection.close()
             log.debug("[store] Closed connection.")
         }
         return false
     }
 
-    @Canonical
-    private class RowLock {
-        Connection connection
-        PreparedStatement statement
-        ResultSet resultSet
-    }
-
-    /**
-     * HERE BE DRAGONS.
-     * Locks the row with the given ID in the database (for updates), until releaseRowLock is called.
-     * It is absolutely essential that releaseRowLock be explicitly called after each call to this function.
-     * Preferably this should be done in a try/finally block.
-     */
-    RowLock acquireRowLock(String id) {
-        Connection connection = getConnection()
-        PreparedStatement lockStatement
-
-        connection.setAutoCommit(false)
-        lockStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
+    void acquireRowLock(String id, Connection connection) {
+        PreparedStatement lockStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
         lockStatement.setString(1, id)
         ResultSet resultSet = lockStatement.executeQuery()
         if (!resultSet.next())
             throw new AcquireLockException("There is no document with the id $id (So no lock could be acquired)")
 
         log.debug("Row lock aquired for $id")
-        return new RowLock(connection, lockStatement, resultSet)
-    }
-
-    void releaseRowLock(RowLock rowlock) {
-        try { rowlock.connection.rollback() } catch (Exception e) {}
-        try { rowlock.resultSet.close() } catch (Exception e) {}
-        try { rowlock.statement.close() } catch (Exception e) {}
-        try { rowlock.connection.close() } catch (Exception e) {}
     }
 
     String getContext() {
