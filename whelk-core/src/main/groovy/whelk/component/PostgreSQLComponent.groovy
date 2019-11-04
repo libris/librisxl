@@ -339,9 +339,6 @@ class PostgreSQLComponent implements Storage {
                     return false
                 }
 
-                if (doc.getId() < holdingForSystemId) {
-                    acquireRowLock(doc.getId(), connection)
-                }
                 acquireRowLock(holdingForSystemId, connection)
 
                 if (getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) != null)
@@ -366,7 +363,7 @@ class PostgreSQLComponent implements Storage {
             PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
             insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, deleted)
             insert.executeUpdate()
-            
+
             Document savedDoc = load(doc.getShortId(), connection)
             Date createdAt = parseDate(savedDoc.getCreated())
             Date modifiedAt = parseDate(savedDoc.getModified())
