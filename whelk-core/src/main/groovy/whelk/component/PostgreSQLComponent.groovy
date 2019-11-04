@@ -15,6 +15,7 @@ import whelk.Storage
 import whelk.exception.CancelUpdateException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
+import whelk.exception.WhelkException
 import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
 
@@ -23,15 +24,13 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
+import java.sql.Statement
 import java.sql.Timestamp
-import java.sql.Types
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 import static groovy.transform.TypeCheckingMode.SKIP
+import static java.sql.Types.OTHER
 
 /**
  *  It is important to not grab more than one connection per request/thread to avoid connection related deadlocks.
@@ -82,18 +81,7 @@ class PostgreSQLComponent implements Storage {
     protected String INSERT_EMBELLISHED_DOCUMENT
     protected String DELETE_EMBELLISHED_DOCUMENT
 
-    // Query defaults
-    static final int DEFAULT_PAGE_SIZE = 50
-
-    // Query idiomatic data
-    static final Map<StorageType, String> SQL_PREFIXES = [
-            (StorageType.JSONLD)                       : "data->'@graph'",
-            (StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS): "data->'descriptions'",
-            (StorageType.MARC21_JSON)                  : "data->'fields'"
-    ]
-
     String mainTableName
-
     LinkFinder linkFinder
 
     class AcquireLockException extends RuntimeException { AcquireLockException(String s) { super(s) } }
@@ -282,10 +270,10 @@ class PostgreSQLComponent implements Storage {
         return statusMap
     }
 
-    public List<String> loadCollections() {
-        Connection connection
-        PreparedStatement collectionStatement
-        ResultSet collectionResults
+    List<String> loadCollections() {
+        Connection connection = null
+        PreparedStatement collectionStatement = null
+        ResultSet collectionResults = null
         try {
             connection = getConnection()
             collectionStatement = connection.prepareStatement(LOAD_COLLECTIONS)
@@ -299,12 +287,7 @@ class PostgreSQLComponent implements Storage {
             }
             return collections
         } finally {
-            if (collectionResults != null)
-                collectionResults.close()
-            if (collectionStatement != null)
-                collectionStatement.close()
-            if (connection != null)
-                connection.close()
+            closeResources(collectionResults, collectionStatement, connection)
         }
     }
 
@@ -402,7 +385,6 @@ class PostgreSQLComponent implements Storage {
             connection.close()
             log.debug("[store] Closed connection.")
         }
-        return false
     }
 
     void acquireRowLock(String id, Connection connection) {
@@ -416,9 +398,9 @@ class PostgreSQLComponent implements Storage {
     }
 
     String getContext() {
-        Connection connection
-        PreparedStatement selectStatement
-        ResultSet resultSet
+        Connection connection = null
+        PreparedStatement selectStatement = null
+        ResultSet resultSet = null
 
         try {
             connection = getConnection()
@@ -431,18 +413,7 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            try {
-                resultSet.close()
-            } catch (Exception e) { /* ignore */
-            }
-            try {
-                selectStatement.close()
-            } catch (Exception e) { /* ignore */
-            }
-            try {
-                connection.close()
-            } catch (Exception e) { /* ignore */
-            }
+            closeResources(resultSet, selectStatement, connection)
         }
     }
 
@@ -454,13 +425,13 @@ class PostgreSQLComponent implements Storage {
      *
      * The replacement is done atomically within a transaction.
      */
-    public void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn,
+    void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn,
                               String changedBy, String collection, JsonLd jsonld) {
         Connection connection = getConnection()
         connection.setAutoCommit(false)
-        PreparedStatement selectStatement
-        PreparedStatement updateStatement
-        ResultSet resultSet
+        PreparedStatement selectStatement = null
+        PreparedStatement updateStatement = null
+        ResultSet resultSet = null
 
         try {
             if (!remainingDocument.getCompleteId().equals(remainingID))
@@ -548,15 +519,7 @@ class PostgreSQLComponent implements Storage {
             connection.rollback()
             throw e
         } finally {
-            if (resultSet != null)
-                resultSet.close()
-            if (selectStatement != null)
-                selectStatement.close()
-            if (updateStatement != null)
-                updateStatement.close()
-            if (connection != null) {
-                connection.close()
-            }
+            closeResources(resultSet, selectStatement, updateStatement, connection)
         }
     }
 
@@ -564,14 +527,14 @@ class PostgreSQLComponent implements Storage {
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
-    public Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
+    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent) {
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
         Connection connection = getConnection()
-        PreparedStatement selectStatement
-        PreparedStatement updateStatement
-        ResultSet resultSet
+        PreparedStatement selectStatement = null
+        PreparedStatement updateStatement = null
+        ResultSet resultSet = null
 
         Document doc = null
 
@@ -631,31 +594,15 @@ class PostgreSQLComponent implements Storage {
         } catch (TooHighEncodingLevelException e) {
             connection.rollback()
             throw e
-        } catch (CancelUpdateException e) {
-            /* An exception the called lambda/clousure can throw to cancel a record update. NOT an indication of an error. */
+        } catch (CancelUpdateException ignored) {
+            /* An exception the called lambda/closure can throw to cancel a record update. NOT an indication of an error. */
             connection.rollback()
         } catch (Exception e) {
             log.error("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
             throw e
         } finally {
-            try {
-                resultSet.close()
-            } catch (Exception e) {
-            }
-            try {
-                selectStatement.close()
-            } catch (Exception e) {
-            }
-            try {
-                updateStatement.close()
-            } catch (Exception e) {
-            }
-            try {
-                connection.close()
-            } catch (Exception e) {
-            }
-            log.debug("[store] Closed connection.")
+            closeResources(resultSet, selectStatement, updateStatement, connection)
         }
 
         refreshDependers(doc.getShortId())
@@ -722,14 +669,13 @@ class PostgreSQLComponent implements Storage {
                     + preUpdateDoc.getControlNumber() + " The rejected new controlNumber: " + postUpdateDoc.getControlNumber())
 
         // We're ok.
-        return
     }
 
-    public refreshDerivativeTables(Document doc) {
+    void refreshDerivativeTables(Document doc) {
         refreshDerivativeTables(doc, getConnection(), doc.deleted)
     }
 
-    public refreshDerivativeTables(Document doc, Connection connection, boolean deleted) {
+    void refreshDerivativeTables(Document doc, Connection connection, boolean deleted) {
         saveIdentifiers(doc, connection, deleted)
         saveDependencies(doc, connection)
         removeEmbellishedDocument(doc.getShortId(), connection)
@@ -741,7 +687,7 @@ class PostgreSQLComponent implements Storage {
      * You were probably looking for getDependencies() which is much more efficient
      * for a document that is already saved in lddb!
      */
-    public List<String[]> calculateDependenciesSystemIDs(Document doc) {
+    List<String[]> calculateDependenciesSystemIDs(Document doc) {
         Connection connection = getConnection()
         try {
             return _calculateDependenciesSystemIDs(doc, connection)
@@ -757,22 +703,19 @@ class PostgreSQLComponent implements Storage {
             String iri = reference[1]
             if (!iri.startsWith("http"))
                 continue
-            PreparedStatement getSystemId
+            PreparedStatement getSystemId = null
+            ResultSet rs = null
             try {
                 getSystemId = connection.prepareStatement(GET_SYSTEMID_BY_IRI)
                 getSystemId.setString(1, iri)
-                ResultSet rs
-                try {
-                    rs = getSystemId.executeQuery()
-                    if (rs.next()) {
-                        if (!rs.getString(1).equals(doc.getShortId())) // Exclude A -> A (self-references)
-                            dependencies.add([relation, rs.getString(1)] as String[])
-                    }
-                } finally {
-                    if (rs != null) rs.close()
+
+                rs = getSystemId.executeQuery()
+                if (rs.next()) {
+                    if (!rs.getString(1).equals(doc.getShortId())) // Exclude A -> A (self-references)
+                        dependencies.add([relation, rs.getString(1)] as String[])
                 }
             } finally {
-                if (getSystemId != null) getSystemId.close()
+                closeResources(rs, getSystemId)
             }
         }
         return dependencies
@@ -787,7 +730,9 @@ class PostgreSQLComponent implements Storage {
             removeDependencies.setString(1, doc.getShortId())
             int numRemoved = removeDependencies.executeUpdate()
             log.debug("Removed $numRemoved dependencies for id ${doc.getShortId()}")
-        } finally { removeDependencies.close() }
+        } finally {
+            closeResources(removeDependencies)
+        }
 
         if (!doc.deleted) { // We do not care for the dependencies of deleted documents.
             // Insert the dependency list
@@ -804,14 +749,14 @@ class PostgreSQLComponent implements Storage {
                 log.error("Failed saving dependencies for ${doc.getShortId()}")
                 throw bue.getNextException()
             } finally {
-                insertDependencies.close()
+                closeResources(insertDependencies)
             }
         }
     }
 
     private void updateMinMaxDepModified(String id, Connection connection) {
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(UPDATE_MINMAX_MODIFIED)
             preparedStatement.setString(1, id)
@@ -820,12 +765,8 @@ class PostgreSQLComponent implements Storage {
             preparedStatement.execute()
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
+            closeResources(rs, preparedStatement)
         }
-
     }
 
     private void saveIdentifiers(Document doc, Connection connection, boolean deleted, boolean removeOnly = false) {
@@ -873,9 +814,9 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, Date timestamp, String changedIn, String changedBy, String collection, boolean deleted) {
+    private static PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, Date timestamp, String changedIn, String changedBy, String collection, boolean deleted) {
         insert.setString(1, doc.getShortId())
-        insert.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
+        insert.setObject(2, doc.dataAsString, OTHER)
         insert.setString(3, collection)
         insert.setString(4, changedIn)
         insert.setString(5, changedBy)
@@ -888,45 +829,48 @@ class PostgreSQLComponent implements Storage {
         return insert
     }
 
-    private void rigUpdateStatement(PreparedStatement update, Document doc, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
-        update.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
+    private static void rigUpdateStatement(PreparedStatement update, Document doc, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
+        update.setObject(1, doc.dataAsString, OTHER)
         update.setString(2, collection)
         update.setString(3, changedIn)
         update.setString(4, changedBy)
         update.setString(5, doc.getChecksum())
         update.setBoolean(6, deleted)
         update.setTimestamp(7, new Timestamp(modTime.getTime()))
-        update.setObject(8, doc.getShortId(), java.sql.Types.OTHER)
+        update.setObject(8, doc.getShortId(), OTHER)
     }
 
     boolean saveVersion(Document doc, Connection connection, Date createdTime,
                         Date modTime, String changedIn, String changedBy,
                         String collection, boolean deleted) {
         if (versioning) {
-            PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
+            PreparedStatement insVersion = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
             try {
                 log.debug("Trying to save a version of ${doc.getShortId() ?: ""} with checksum ${doc.getChecksum()}. Modified: $modTime")
-                insvers = rigVersionStatement(insvers, doc, createdTime,
+                insVersion = rigVersionStatement(insVersion, doc, createdTime,
                                               modTime, changedIn, changedBy,
                                               collection, deleted)
-                insvers.executeUpdate()
+                insVersion.executeUpdate()
                 return true
             } catch (Exception e) {
                 log.error("Failed to save document version: ${e.message}")
                 throw e
+            }
+            finally {
+                closeResources(insVersion)
             }
         } else {
             return false
         }
     }
 
-    private PreparedStatement rigVersionStatement(PreparedStatement insvers,
-                                                  Document doc, Date createdTime,
-                                                  Date modTime, String changedIn,
-                                                  String changedBy, String collection,
-                                                  boolean deleted) {
+    private static PreparedStatement rigVersionStatement(PreparedStatement insvers,
+                                                         Document doc, Date createdTime,
+                                                         Date modTime, String changedIn,
+                                                         String changedBy, String collection,
+                                                         boolean deleted) {
         insvers.setString(1, doc.getShortId())
-        insvers.setObject(2, doc.dataAsString, Types.OTHER)
+        insvers.setObject(2, doc.dataAsString, OTHER)
         insvers.setString(3, collection)
         insvers.setString(4, changedIn)
         insvers.setString(5, changedBy)
@@ -982,7 +926,7 @@ class PostgreSQLComponent implements Storage {
             }
             connection.rollback()
         } finally {
-            connection.close()
+            closeResources(batch, ver_batch, connection)
             log.trace("[bulkStore] Closed connection.")
         }
         return false
@@ -1023,8 +967,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return getRecordOrThingId(id, GET_RECORD_ID, connection)
         } finally {
-            if (connection != null)
-                connection.close()
+            closeResources(connection)
         }
     }
 
@@ -1044,8 +987,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return getThingId(id, connection)
         } finally {
-            if (connection != null)
-                connection.close()
+            closeResources(connection)
         }
     }
 
@@ -1065,8 +1007,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return getRecordOrThingId(id, GET_MAIN_ID, connection)
         } finally {
-            if (connection != null)
-                connection.close()
+            closeResources(connection)
         }
     }
 
@@ -1074,9 +1015,9 @@ class PostgreSQLComponent implements Storage {
         return getRecordOrThingId(id, GET_MAIN_ID, connection)
     }
 
-    private String getRecordOrThingId(String id, String sql, Connection connection) {
-        PreparedStatement selectstmt
-        ResultSet rs
+    private static String getRecordOrThingId(String id, String sql, Connection connection) {
+        PreparedStatement selectstmt = null
+        ResultSet rs = null
         try {
             selectstmt = connection.prepareStatement(sql)
             selectstmt.setString(1, id)
@@ -1097,10 +1038,7 @@ class PostgreSQLComponent implements Storage {
                 return ids[0]
             }
         } finally {
-            if (rs != null)
-                rs.close()
-            if (selectstmt != null)
-                selectstmt.close()
+            closeResources(rs, selectstmt)
         }
     }
 
@@ -1110,8 +1048,8 @@ class PostgreSQLComponent implements Storage {
      */
     IdType getIdType(String id) {
         Connection connection = getConnection()
-        PreparedStatement selectstmt
-        ResultSet rs
+        PreparedStatement selectstmt = null
+        ResultSet rs = null
         try {
             selectstmt = connection.prepareStatement(GET_ID_TYPE)
             selectstmt.setString(1, id)
@@ -1124,11 +1062,11 @@ class PostgreSQLComponent implements Storage {
                 return null
             }
         } finally {
-            connection.close()
+            closeResources(rs, selectstmt, connection)
         }
     }
 
-    private IdType determineIdType(int graphIndex, boolean isMainId) {
+    private static IdType determineIdType(int graphIndex, boolean isMainId) {
         if (graphIndex == 0) {
             if (isMainId) {
                 return IdType.RecordMainId
@@ -1147,12 +1085,12 @@ class PostgreSQLComponent implements Storage {
     }
 
     private void cacheEmbellishedDocument(String id, Document embellishedDocument, Connection connection) {
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(INSERT_EMBELLISHED_DOCUMENT)
             preparedStatement.setString(1, id)
-            preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), java.sql.Types.OTHER)
+            preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), OTHER)
             preparedStatement.execute()
         }
         catch (PSQLException e) {
@@ -1164,26 +1102,20 @@ class PostgreSQLComponent implements Storage {
             }
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
+            closeResources(rs, preparedStatement)
         }
     }
 
     private void removeEmbellishedDocument(String id, Connection connection) {
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(DELETE_EMBELLISHED_DOCUMENT)
             preparedStatement.setString(1, id)
             preparedStatement.execute()
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
+            closeResources(rs, preparedStatement)
         }
     }
 
@@ -1192,7 +1124,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return loadEmbellished(id, jsonld, connection)
         } finally {
-            connection.close()
+            closeResources(connection)
         }
     }
 
@@ -1202,8 +1134,8 @@ class PostgreSQLComponent implements Storage {
      * (lazy caching).
      */
     Document loadEmbellished(String id, JsonLd jsonld, Connection connection) {
-        PreparedStatement selectStatement
-        ResultSet resultSet
+        PreparedStatement selectStatement = null
+        ResultSet resultSet = null
 
         try {
             selectStatement = connection.prepareStatement(GET_EMBELLISHED_DOCUMENT)
@@ -1229,8 +1161,7 @@ class PostgreSQLComponent implements Storage {
             return document
         }
         finally {
-            try {resultSet.close()} catch (Exception e) { /* ignore */ }
-            try {selectStatement.close()} catch (Exception e) { /* ignore */}
+            closeResources(resultSet, selectStatement)
         }
     }
 
@@ -1239,13 +1170,13 @@ class PostgreSQLComponent implements Storage {
         try {
             return getCollectionBySystemID(id, connection)
         } finally {
-            connection.close()
+            closeResources(connection)
         }
     }
 
     String getCollectionBySystemID(String id, Connection connection) {
-        PreparedStatement selectStatement
-        ResultSet resultSet
+        PreparedStatement selectStatement = null
+        ResultSet resultSet = null
 
         try {
             selectStatement = connection.prepareStatement(GET_COLLECTION_BY_SYSTEM_ID)
@@ -1258,8 +1189,7 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            try {resultSet.close()} catch (Exception e) { /* ignore */ }
-            try {selectStatement.close()} catch (Exception e) { /* ignore */}
+            closeResources(resultSet, selectStatement)
         }
     }
 
@@ -1268,7 +1198,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     Document load(String id, String version, Connection conn = null) {
-        Document doc = null
+        Document doc
         if (version && version.isInteger()) {
             int v = version.toInteger()
             def docList = loadAllVersions(id, conn)
@@ -1287,9 +1217,9 @@ class PostgreSQLComponent implements Storage {
     }
 
     Tuple2<Timestamp, Timestamp> getMinMaxModified(List<String> ids) {
-        Connection connection
-        PreparedStatement preparedStatement
-        ResultSet rs
+        Connection connection = null
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             connection = getConnection()
             String expandedSql = GET_MINMAX_MODIFIED.replace('?', ids.collect { it -> '?' }.join(','))
@@ -1307,12 +1237,7 @@ class PostgreSQLComponent implements Storage {
                 return new Tuple2(null, null)
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
-            if (connection != null)
-                connection.close()
+            closeResources(rs, preparedStatement, connection)
         }
     }
 
@@ -1321,14 +1246,13 @@ class PostgreSQLComponent implements Storage {
         try {
             return getSystemIdByIri(iri, connection)
         } finally {
-            if (connection != null)
-                connection.close()
+            closeResources(connection)
         }
     }
 
     String getSystemIdByIri(String iri, Connection connection) {
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(GET_SYSTEMID_BY_IRI)
             preparedStatement.setString(1, iri)
@@ -1338,10 +1262,7 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
+            closeResources(rs, preparedStatement)
         }
     }
 
@@ -1350,14 +1271,13 @@ class PostgreSQLComponent implements Storage {
         try {
             return getDocumentByIri(iri, connection)
         } finally {
-            if (connection != null)
-                connection.close()
+            closeResources(connection)
         }
     }
 
     Document getDocumentByIri(String iri, Connection connection) {
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(GET_DOCUMENT_BY_IRI)
             preparedStatement.setString(1, iri)
@@ -1367,16 +1287,13 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
+            closeResources(rs, preparedStatement)
         }
     }
 
     String getHoldingForBibAndSigel(String bibThingUri, String libraryUri, Connection connection) {
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             String sql = "SELECT id FROM $mainTableName WHERE data#>>'{@graph, 1, itemOf, @id}' = ? AND data#>>'{@graph, 1, heldBy, @id}' = ? AND deleted = false"
             preparedStatement = connection.prepareStatement(sql)
@@ -1388,10 +1305,7 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
+            closeResources(rs, preparedStatement)
         }
     }
 
@@ -1400,8 +1314,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return getDependencyData(id, GET_DEPENDENCIES, connection)
         } finally {
-            if (connection != null)
-                connection.close()
+            closeResources(connection)
         }
     }
 
@@ -1410,8 +1323,7 @@ class PostgreSQLComponent implements Storage {
         try {
             getDependers(id, connection)
         } finally {
-            if (connection != null)
-                connection.close()
+            closeResources(connection)
         }
     }
 
@@ -1419,9 +1331,9 @@ class PostgreSQLComponent implements Storage {
         return getDependencyData(id, GET_DEPENDERS, connection)
     }
 
-    private List<Tuple2<String, String>> getDependencyData(String id, String query, Connection connection) {
-        PreparedStatement preparedStatement
-        ResultSet rs
+    private static List<Tuple2<String, String>> getDependencyData(String id, String query, Connection connection) {
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, id)
@@ -1434,10 +1346,7 @@ class PostgreSQLComponent implements Storage {
             return dependencies
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
+            closeResources(rs, preparedStatement)
         }
     }
 
@@ -1450,9 +1359,9 @@ class PostgreSQLComponent implements Storage {
     }
 
     private List<String> getDependencyDataOfType(String id, String typeOfRelation, String query) {
-        Connection connection
-        PreparedStatement preparedStatement
-        ResultSet rs
+        Connection connection = null
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             connection = getConnection()
             preparedStatement = connection.prepareStatement(query)
@@ -1466,12 +1375,7 @@ class PostgreSQLComponent implements Storage {
             return dependecies
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
-            if (connection != null)
-                connection.close()
+            closeResources(rs, preparedStatement, connection)
         }
     }
 
@@ -1480,10 +1384,10 @@ class PostgreSQLComponent implements Storage {
      * (for example: type:ISBN, value:1234, graphIndex:1 -> ksjndfkjwbr3k)
      * If type is passed as null, all types will match.
      */
-    public List<String> getSystemIDsByTypedID(String idType, String idValue, int graphIndex) {
-        Connection connection
-        PreparedStatement preparedStatement
-        ResultSet rs
+    List<String> getSystemIDsByTypedID(String idType, String idValue, int graphIndex) {
+        Connection connection = null
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph," + graphIndex + ",identifiedBy}' @> ?"
             connection = getConnection()
@@ -1491,11 +1395,11 @@ class PostgreSQLComponent implements Storage {
 
             if (idType != null) {
                 String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
-                preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + escapedId + "\"}]", java.sql.Types.OTHER)
+                preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + escapedId + "\"}]", OTHER)
             }
             else {
                 String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
-                preparedStatement.setObject(1, "[{\"value\": \"" + escapedId + "\"}]", java.sql.Types.OTHER)
+                preparedStatement.setObject(1, "[{\"value\": \"" + escapedId + "\"}]", OTHER)
             }
 
             rs = preparedStatement.executeQuery()
@@ -1506,19 +1410,14 @@ class PostgreSQLComponent implements Storage {
             return results
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
-            if (connection != null)
-                connection.close()
+            closeResources(rs, preparedStatement, connection)
         }
     }
 
     String getSystemIdByThingId(String thingId) {
-        Connection connection
-        PreparedStatement preparedStatement
-        ResultSet rs
+        Connection connection = null
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             connection = getConnection()
             preparedStatement = connection.prepareStatement(GET_RECORD_ID_BY_THING_ID)
@@ -1530,19 +1429,14 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
-            if (connection != null)
-                connection.close()
+            closeResources(rs, preparedStatement, connection)
         }
     }
 
     String getProfileByLibraryUri(String libraryUri) {
-        Connection connection
-        PreparedStatement preparedStatement
-        ResultSet rs
+        Connection connection = null
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             connection = getConnection()
             preparedStatement = connection.prepareStatement(GET_LEGACY_PROFILE)
@@ -1554,12 +1448,7 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
-            if (connection != null)
-                connection.close()
+            closeResources(rs, preparedStatement, connection)
         }
     }
 
@@ -1568,7 +1457,6 @@ class PostgreSQLComponent implements Storage {
      */
     List<Document> getAttachedHoldings(List<String> thingIdentifiers, JsonLd jsonld) {
         // Build the query
-
         StringBuilder selectSQL = new StringBuilder("SELECT id FROM ")
         selectSQL.append(mainTableName)
         selectSQL.append(" WHERE collection = 'hold' AND deleted = false AND (")
@@ -1584,9 +1472,9 @@ class PostgreSQLComponent implements Storage {
         }
 
         // Assemble results
-        Connection connection
-        ResultSet rs
-        PreparedStatement preparedStatement
+        Connection connection = null
+        ResultSet rs = null
+        PreparedStatement preparedStatement = null
         try {
             connection = getConnection()
             preparedStatement = connection.prepareStatement(selectSQL.toString())
@@ -1605,14 +1493,8 @@ class PostgreSQLComponent implements Storage {
             return holdings
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
-            if (connection != null)
-                connection.close()
+            closeResources(rs, preparedStatement, connection)
         }
-        return []
     }
 
     private Document loadFromSql(String sql, Map parameters, Connection connection = null) {
@@ -1624,8 +1506,8 @@ class PostgreSQLComponent implements Storage {
             shouldCloseConn = true
             log.debug("Got connection.")
         }
-        PreparedStatement selectstmt
-        ResultSet rs
+        PreparedStatement selectstmt = null
+        ResultSet rs = null
         try {
             selectstmt = connection.prepareStatement(sql)
             log.trace("Prepared statement")
@@ -1634,7 +1516,7 @@ class PostgreSQLComponent implements Storage {
                     selectstmt.setString((Integer) items.key, (String) items.value)
                 }
                 if (items.value instanceof Map || items.value instanceof List) {
-                    selectstmt.setObject((Integer) items.key, mapper.writeValueAsString(items.value), java.sql.Types.OTHER)
+                    selectstmt.setObject((Integer) items.key, mapper.writeValueAsString(items.value), OTHER)
                 }
             }
             log.trace("Executing query")
@@ -1648,6 +1530,7 @@ class PostgreSQLComponent implements Storage {
                 log.trace("No results returned for $selectstmt")
             }
         } finally {
+            closeResources(rs, selectstmt)
             if (shouldCloseConn) {
                 connection.close()
             }
@@ -1671,8 +1554,8 @@ class PostgreSQLComponent implements Storage {
             connection = getConnection()
             shouldCloseConn = true
         }
-        PreparedStatement selectstmt
-        ResultSet rs
+        PreparedStatement selectstmt = null
+        ResultSet rs = null
         List<Document> docList = []
         try {
             selectstmt = connection.prepareStatement(sql)
@@ -1685,6 +1568,7 @@ class PostgreSQLComponent implements Storage {
                 docList << doc
             }
         } finally {
+            closeResources(rs, selectstmt)
             if (shouldCloseConn) {
                 connection.close()
                 log.debug("[loadAllVersions] Closed connection.")
@@ -1694,21 +1578,18 @@ class PostgreSQLComponent implements Storage {
     }
 
     private Document assembleDocument(ResultSet rs) {
-
         Document doc = new Document(mapper.readValue(rs.getString("data"), Map))
         doc.setModified(new Date(rs.getTimestamp("modified").getTime()))
-
         doc.setDeleted(rs.getBoolean("deleted"))
 
         try {
             // FIXME better handling of null values
             doc.setCreated(new Date(rs.getTimestamp("created")?.getTime()))
-        } catch (SQLException sqle) {
+        } catch (SQLException ignored) {
             log.trace("Resultset didn't have created. Probably a version request.")
         }
         
         return doc
-
     }
 
     @CompileStatic(SKIP)
@@ -1752,7 +1633,7 @@ class PostgreSQLComponent implements Storage {
 
                 return new Iterator<Document>() {
                     @Override
-                    public Document next() {
+                    Document next() {
                         Document doc
                         doc = assembleDocument(rs)
                         more = rs.next()
@@ -1768,7 +1649,7 @@ class PostgreSQLComponent implements Storage {
                     }
 
                     @Override
-                    public boolean hasNext() {
+                    boolean hasNext() {
                         return more
                     }
                 }
@@ -1791,7 +1672,7 @@ class PostgreSQLComponent implements Storage {
             Iterator<Document> iterator() {
                 return new Iterator<Document>() {
                     @Override
-                    public Document next() {
+                    Document next() {
                         Document doc = assembleDocument(rs)
                         more = rs.next()
                         if (!more) {
@@ -1806,7 +1687,7 @@ class PostgreSQLComponent implements Storage {
                     }
 
                     @Override
-                    public boolean hasNext() {
+                    boolean hasNext() {
                         return more
                     }
                 }
@@ -1831,37 +1712,27 @@ class PostgreSQLComponent implements Storage {
                 throw e
             }
         } else {
-            throw new whelk.exception.WhelkException(
+            throw new WhelkException(
                     "Actually deleting data from lddb is currently not supported")
         }
 
         // Clear out dependencies
         Connection connection = getConnection()
+        PreparedStatement removeDependencies = null
         try {
-            PreparedStatement removeDependencies = connection.prepareStatement(DELETE_DEPENDENCIES)
-            try {
-                removeDependencies.setString(1, identifier)
-                int numRemoved = removeDependencies.executeUpdate()
-                log.debug("Removed $numRemoved dependencies for id ${identifier}")
-            } finally {
-                removeDependencies.close()
-            }
+            removeDependencies = connection.prepareStatement(DELETE_DEPENDENCIES)
+            removeDependencies.setString(1, identifier)
+            int numRemoved = removeDependencies.executeUpdate()
+            log.debug("Removed $numRemoved dependencies for id ${identifier}")
         } finally {
-            connection.close()
+            closeResources(removeDependencies, connection)
         }
     }
 
-
-    protected Document createTombstone(String id) {
-        // FIXME verify that this is correct behavior
-        String fullId = Document.BASE_URI.resolve(id).toString()
-        return new Document(["@graph": [["@id": fullId, "@type": "Tombstone"]]])
-    }
-
-    public Map loadSettings(String key) {
+    Map loadSettings(String key) {
         Connection connection = getConnection()
-        PreparedStatement selectstmt
-        ResultSet rs
+        PreparedStatement selectstmt = null
+        ResultSet rs = null
         Map settings = [:]
         try {
             selectstmt = connection.prepareStatement(LOAD_SETTINGS)
@@ -1873,26 +1744,26 @@ class PostgreSQLComponent implements Storage {
                 log.trace("No settings found for $key")
             }
         } finally {
-            connection.close()
+            closeResources(rs, selectstmt, connection)
         }
 
         return settings
     }
 
-    public void saveSettings(String key, final Map settings) {
+    void saveSettings(String key, final Map settings) {
         Connection connection = getConnection()
-        PreparedStatement savestmt
+        PreparedStatement savestmt = null
         try {
             String serializedSettings = mapper.writeValueAsString(settings)
             log.debug("Saving settings for ${key}: $serializedSettings")
             savestmt = connection.prepareStatement(SAVE_SETTINGS)
-            savestmt.setObject(1, serializedSettings, Types.OTHER)
+            savestmt.setObject(1, serializedSettings, OTHER)
             savestmt.setString(2, key)
             savestmt.setString(3, key)
-            savestmt.setObject(4, serializedSettings, Types.OTHER)
+            savestmt.setObject(4, serializedSettings, OTHER)
             savestmt.executeUpdate()
         } finally {
-            connection.close()
+            closeResources(savestmt, connection)
         }
     }
 
@@ -1913,15 +1784,8 @@ class PostgreSQLComponent implements Storage {
         try {
             return executeFindByQuery(find)
         } finally {
-            connection.close()
+            closeResources(find, connection)
         }
-    }
-
-    List<Document> findByValue(String relation, String value) {
-        int limit = DEFAULT_PAGE_SIZE
-        int offset = 0
-
-        findByValue(relation, value, limit, offset)
     }
 
     int countByValue(String relation, String value) {
@@ -1951,7 +1815,7 @@ class PostgreSQLComponent implements Storage {
         return docs
     }
 
-    private int executeCountByQuery(PreparedStatement query) {
+    private static int executeCountByQuery(PreparedStatement query) {
         log.debug("Executing count query: ${query}")
 
         ResultSet rs = query.executeQuery()
@@ -1965,58 +1829,48 @@ class PostgreSQLComponent implements Storage {
         return result
     }
 
-    private PreparedStatement rigFindByValueStatement(PreparedStatement find,
-                                                      String relation,
-                                                      String value,
-                                                      int limit,
-                                                      int offset) {
+    private static PreparedStatement rigFindByValueStatement(PreparedStatement find,
+                                                             String relation,
+                                                             String value,
+                                                             int limit,
+                                                             int offset) {
         List valueQuery = [[(relation): value]]
         List valuesQuery = [[(relation): [value]]]
 
         return rigFindByStatement(find, valueQuery, valuesQuery, limit, offset)
     }
 
-    private PreparedStatement rigCountByValueStatement(PreparedStatement find,
-                                                       String relation,
-                                                       String value) {
+    private static PreparedStatement rigCountByValueStatement(PreparedStatement find,
+                                                              String relation,
+                                                              String value) {
         List valueQuery = [[(relation): value]]
         List valuesQuery = [[(relation): [value]]]
 
         return rigCountByStatement(find, valueQuery, valuesQuery)
     }
 
-    private PreparedStatement rigFindByStatement(PreparedStatement find,
-                                                 List firstCondition,
-                                                 List secondCondition,
-                                                 int limit,
-                                                 int offset) {
+    private static PreparedStatement rigFindByStatement(PreparedStatement find,
+                                                        List firstCondition,
+                                                        List secondCondition,
+                                                        int limit,
+                                                        int offset) {
       find.setObject(1, mapper.writeValueAsString(firstCondition),
-                     java.sql.Types.OTHER)
+                     OTHER)
       find.setObject(2, mapper.writeValueAsString(secondCondition),
-                     java.sql.Types.OTHER)
+                     OTHER)
       find.setInt(3, limit)
       find.setInt(4, offset)
       return find
     }
 
-    private PreparedStatement rigCountByStatement(PreparedStatement find,
-                                                  List firstCondition,
-                                                  List secondCondition) {
+    private static PreparedStatement rigCountByStatement(PreparedStatement find,
+                                                         List firstCondition,
+                                                         List secondCondition) {
       find.setObject(1, mapper.writeValueAsString(firstCondition),
-                     java.sql.Types.OTHER)
+                     OTHER)
       find.setObject(2, mapper.writeValueAsString(secondCondition),
-                     java.sql.Types.OTHER)
+                     OTHER)
       return find
-    }
-
-    private String formatDate(Date date) {
-        ZonedDateTime zdt = ZonedDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault())
-        return DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
-    }
-
-    private Date parseDate(String date) {
-        ZonedDateTime zdt = ZonedDateTime.parse(date, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-        return Date.from(zdt.toInstant())
     }
 
     private String getDescriptionChangerId(String changedBy) {
@@ -2033,7 +1887,29 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private boolean isHttpUri(String s) {
+    private static boolean isHttpUri(String s) {
         return s.startsWith('http://') || s.startsWith('https://')
+    }
+
+    private static void closeResources(Object... resources = null) {
+        if (resources != null) {
+            for (def resource : resources) {
+                try {
+                    if (resource != null) {
+                        if (resource instanceof Connection) {
+                            resource.close()
+                        }
+                        if (resource instanceof Statement) {
+                            resource.close()
+                        }
+                        if (resource instanceof ResultSet) {
+                            resource.close()
+                        }
+                    }
+                } catch (Exception e) {
+                    log.debug("Error closing $resource : $e")
+                }
+            }
+        }
     }
 }
