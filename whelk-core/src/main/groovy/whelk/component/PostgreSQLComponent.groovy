@@ -114,7 +114,6 @@ class PostgreSQLComponent implements Storage {
 
         HikariConfig config = new HikariConfig()
         config.setMaximumPoolSize(maxPoolSize)
-        config.setMinimumIdle(1) // FIXME: this is because e.g. rest app creates 8 instances of Whelk
         config.setAutoCommit(true)
 
         if (sqlUrl) {
