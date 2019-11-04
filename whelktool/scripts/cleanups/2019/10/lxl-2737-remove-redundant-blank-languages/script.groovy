@@ -51,6 +51,11 @@ substitutions = [
         'tyska (lågtyska)'                : 'lågtyska',
         'tyska (medelhögtyska)'           : 'medelhögtyska',
         'tyska (medellågtyska)'           : 'medellågtyska',
+
+        // https://www.loc.gov/standards/iso639-2/php/code_changes.php
+        // ISO 639-2/B code deprecated in favor of ISO 639-2/T code
+        'scc'                             : 'srp',
+        'scr'                             : 'hrv'
 ]
 
 linker = buildLanguageMap()
