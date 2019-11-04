@@ -36,10 +36,6 @@
             <param-value>false</param-value>
         </init-param>
     </filter>
-    <resource-env-ref>
-        <resource-env-ref-name>whelk/WhelkFactory</resource-env-ref-name>
-        <resource-env-ref-type>whelk.util.WhelkFactory</resource-env-ref-type>
-    </resource-env-ref>
     <servlet>
         <servlet-name>WhelkServlet</servlet-name>
         <servlet-class>whelk.rest.api.Crud</servlet-class>
