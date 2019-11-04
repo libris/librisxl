@@ -58,7 +58,7 @@ linker = buildLanguageMap()
 selectByCollection('auth') { auth ->
     try {
         def (record, thing) = auth.graph
-        if (linker.linkLanguages(thing, 'associatedLanguage')) {
+        if (linker.linkLanguages(thing, 'associatedLanguage') || linker.linkLanguages(thing, 'language')) {
             scheduledForUpdate.println("${auth.doc.getURI()}")
             auth.scheduleSave()
         }
