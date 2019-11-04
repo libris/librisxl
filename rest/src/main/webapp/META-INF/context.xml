@@ -1,5 +1,0 @@
-<Context>
-<Resource name="whelk/WhelkFactory"
-          type="whelk.util.WhelkFactory"
-          factory="org.apache.naming.factory.BeanFactory"/>
-</Context>

@@ -27,7 +27,7 @@ class HoldAPI extends HttpServlet {
     @Override
     void init() {
         if (!whelk) {
-            whelk = WhelkFactory.getWhelkFromJndi()
+            whelk = WhelkFactory.getSingletonWhelk()
         }
         toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter())
     }

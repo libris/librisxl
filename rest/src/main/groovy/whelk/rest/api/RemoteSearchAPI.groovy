@@ -59,7 +59,7 @@ class RemoteSearchAPI extends HttpServlet {
         log.info("Starting Remote Search API")
         loadMetaProxyInfo(metaProxyInfoUrl)
         if (!whelk) {
-            whelk = WhelkFactory.getWhelkFromJndi()
+            whelk = WhelkFactory.getSingletonWhelk()
         }
         marcFrameConverter = whelk.getMarcFrameConverter()
 

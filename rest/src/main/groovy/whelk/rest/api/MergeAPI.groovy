@@ -28,7 +28,7 @@ class MergeAPI extends HttpServlet {
     @Override
     void init() {
         if (!whelk) {
-            whelk = WhelkFactory.getWhelkFromJndi()
+            whelk = WhelkFactory.getSingletonWhelk()
         }
     }
 

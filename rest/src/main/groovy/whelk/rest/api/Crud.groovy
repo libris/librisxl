@@ -83,7 +83,7 @@ class Crud extends HttpServlet {
     @Override
     void init() {
         if (!whelk) {
-            whelk = WhelkFactory.getWhelkFromJndi()
+            whelk = WhelkFactory.getSingletonWhelk()
         }
         displayData = whelk.displayData
         vocabData = whelk.vocabData

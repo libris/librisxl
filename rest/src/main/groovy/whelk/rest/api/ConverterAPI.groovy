@@ -26,7 +26,7 @@ class ConverterAPI extends HttpServlet {
     void init() {
         log.info("Starting converterAPI")
         if (!marcFrameConverter) {
-            whelk = WhelkFactory.getWhelkFromJndi()
+            whelk = WhelkFactory.getSingletonWhelk()
             marcFrameConverter = whelk.getMarcFrameConverter()
         }
         log.info("Started ...")
