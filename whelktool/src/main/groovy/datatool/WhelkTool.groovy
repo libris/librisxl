@@ -18,6 +18,7 @@ import java.sql.SQLException
 import java.time.ZonedDateTime
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
@@ -61,6 +62,9 @@ class WhelkTool {
     Map<String, Closure> compiledScripts = [:]
 
     ElasticFind elasticFind
+
+    private ScheduledExecutorService timedLogger = MoreExecutors.getExitingScheduledExecutorService(
+            Executors.newScheduledThreadPool(1))
 
     WhelkTool(String scriptPath, File reportsDir=null) {
         try {
@@ -293,7 +297,7 @@ class WhelkTool {
     }
 
     private ScheduledFuture<?> setupTimedLogger(Counter counter) {
-        MoreExecutors.getExitingScheduledExecutorService(Executors.newScheduledThreadPool(1)).scheduleAtFixedRate({
+        timedLogger.scheduleAtFixedRate({
             if (counter.timeSinceLastSummarySeconds() > 4) {
                 repeat "$counter.summary"
             }
