@@ -434,13 +434,13 @@ class PostgreSQLComponent implements Storage {
         ResultSet resultSet = null
 
         try {
-            if (!remainingDocument.getCompleteId().equals(remainingID))
+            if (remainingDocument.getCompleteId() != remainingID)
                 throw new RuntimeException("Bad merge argument, remaining document must have the remaining ID.")
 
             String remainingSystemID = getSystemIdByIri(remainingID, connection)
             String disappearingSystemID = getSystemIdByIri(disappearingID, connection)
 
-            if (remainingSystemID.equals(disappearingSystemID))
+            if (remainingSystemID == disappearingSystemID)
                 throw new SQLException("Cannot self-merge.")
 
             // Update the remaining record
@@ -664,7 +664,7 @@ class PostgreSQLComponent implements Storage {
                 throw new RuntimeException("An update of " + preUpdateDoc.getCompleteId() + " MUST NOT have URIs that are already in use for other records. The update contained an offending URI: " + id)
         }
 
-        if (!preUpdateDoc.getControlNumber().equals(postUpdateDoc.getControlNumber()))
+        if (preUpdateDoc.getControlNumber() != postUpdateDoc.getControlNumber())
             throw new RuntimeException("An update of " + preUpdateDoc.getCompleteId() + " MUST NOT change the controlNumber of the record in question. Existing controlNumber: "
                     + preUpdateDoc.getControlNumber() + " The rejected new controlNumber: " + postUpdateDoc.getControlNumber())
 
@@ -711,7 +711,7 @@ class PostgreSQLComponent implements Storage {
 
                 rs = getSystemId.executeQuery()
                 if (rs.next()) {
-                    if (!rs.getString(1).equals(doc.getShortId())) // Exclude A -> A (self-references)
+                    if (rs.getString(1) != doc.getShortId()) // Exclude A -> A (self-references)
                         dependencies.add([relation, rs.getString(1)] as String[])
                 }
             } finally {
@@ -1094,7 +1094,7 @@ class PostgreSQLComponent implements Storage {
             preparedStatement.execute()
         }
         catch (PSQLException e) {
-            if (UNIQUE_VIOLATION.equals(e.getSQLState())) {
+            if (UNIQUE_VIOLATION == e.getSQLState()) {
                 // Someone else cached the document before we could,
                 // so we fail silently
             } else {
@@ -1577,7 +1577,7 @@ class PostgreSQLComponent implements Storage {
         return docList
     }
 
-    private Document assembleDocument(ResultSet rs) {
+    private static Document assembleDocument(ResultSet rs) {
         Document doc = new Document(mapper.readValue(rs.getString("data"), Map))
         doc.setModified(new Date(rs.getTimestamp("modified").getTime()))
         doc.setDeleted(rs.getBoolean("deleted"))
@@ -1657,7 +1657,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    Iterable<Document> iterateDocuments(ResultSet rs) {
+    static Iterable<Document> iterateDocuments(ResultSet rs) {
         def conn = rs.statement.connection
         boolean more = rs.next() // rs starts at "-1"
         if (!more) {
@@ -1801,7 +1801,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private List<Document> executeFindByQuery(PreparedStatement query) {
+    private static List<Document> executeFindByQuery(PreparedStatement query) {
         log.debug("Executing find query: ${query}")
 
         ResultSet rs = query.executeQuery()
