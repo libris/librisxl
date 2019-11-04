@@ -364,10 +364,7 @@ class PostgreSQLComponent implements Storage {
             insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, deleted)
             insert.executeUpdate()
 
-            Document savedDoc = load(doc.getShortId(), connection)
-            Date createdAt = parseDate(savedDoc.getCreated())
-            Date modifiedAt = parseDate(savedDoc.getModified())
-            saveVersion(doc, connection, createdAt, modifiedAt, changedIn, changedBy, collection, deleted)
+            saveVersion(doc, connection, now, now, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
             for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection)) {
                 updateMinMaxDepModified((String) depender.get(0), connection)
