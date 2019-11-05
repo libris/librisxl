@@ -30,6 +30,8 @@ class WhelkTool {
 
     static final int DEFAULT_BATCH_SIZE = 500
     static final int DEFAULT_FETCH_SIZE = 100
+    private static final String WHELKTOOL_THREAD_GROUP = "whelktool"
+
     Whelk whelk
 
     private GroovyScriptEngineImpl engine
@@ -210,7 +212,7 @@ class WhelkTool {
         int batchCount = 0
         Batch batch = new Batch(number: ++batchCount)
 
-        def executorService = useThreads ? createExecutorService(batchSize) : null
+        def executorService = useThreads && !isWorkerThread() ? createExecutorService(batchSize) : null
         if (executorService) {
             Thread.setDefaultUncaughtExceptionHandler {
                 Thread thread, Throwable err ->
@@ -281,7 +283,7 @@ class WhelkTool {
                 linkedBlockingDeque, new ThreadPoolExecutor.CallerRunsPolicy())
 
         executorService.setThreadFactory(new ThreadFactory() {
-            ThreadGroup group = new ThreadGroup("whelktool")
+            ThreadGroup group = new ThreadGroup(WHELKTOOL_THREAD_GROUP)
 
             @Override
             Thread newThread(Runnable runnable) {
@@ -290,6 +292,10 @@ class WhelkTool {
         })
 
         return executorService
+    }
+
+    private boolean isWorkerThread() {
+        return Thread.currentThread().getThreadGroup().getName().contains(WHELKTOOL_THREAD_GROUP)
     }
 
     private ScheduledFuture<?> setupTimedLogger(Counter counter) {
