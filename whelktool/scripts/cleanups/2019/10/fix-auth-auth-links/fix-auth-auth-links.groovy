@@ -12,6 +12,7 @@
  *  See LXL-2721 for more info.
  *
  */
+
 import datatool.util.DocumentUtil
 
 scheduledForChange = getReportWriter("scheduled-for-change")
@@ -35,61 +36,35 @@ selectByCollection('auth') { data ->
     }
 }
 
-private boolean linkedObjectIsValid(linker, linkerId) {
-    def linkerType = linker.'@type'
-    def linkerPrefLabel = linker.prefLabel
-
-    boolean isValid = false
+private boolean linkedObjectIsValid(Map linker, linkerId) {
+    boolean allKeyValuePairsMatch = false
 
     selectByIds([linkerId]) { linkedData ->
-        def linkedObject = linkedData.graph[1]
+        def linkedObject = linkedData.graph[1] as Map
+        scheduledForChange.println "========"
         scheduledForChange.println "Linked object: $linkedObject"
-        scheduledForChange.println "LinkerType: ${linkerPrefLabel}"
-        scheduledForChange.println "LinkerPrefLabel: $linkerType"
+        scheduledForChange.println "Linker: $linker"
 
-        isValid = linkedObject.'@type' == linkerType && linkedObject.prefLabel == linkerPrefLabel
+        if (!isInstanceOf(linkedObject, linker.'@type')) {
+            scheduledForChange.println "Type mismatch:"
+            scheduledForChange.println "${linkedObject.'@type'} not an instance of ${linker.'@type'}"
+            return
+        }
+
+        linker.each { linkerKey, linkerValue ->
+            if (linkerKey == 'sameAs' || linkerKey == '@type') {
+                return
+            }
+            if (linkedObject[linkerKey] != linkerValue) {
+                scheduledForChange.println "Link value mismatch:"
+                scheduledForChange.println "LinkerValue: $linkerValue"
+                scheduledForChange.println "LinkedValue: ${linkedObject[linkerKey]}"
+                allKeyValuePairsMatch = false
+                return
+            }
+            allKeyValuePairsMatch = true
+            scheduledForChange.println "Matching linkerValue: $linkerValue"
+        }
     }
-
-    return isValid
+    return allKeyValuePairsMatch
 }
-
-//   Handle closeMatch:
-//  "closeMatch": [
-//    {
-//      "@type": "GenreForm",
-//      "sameAs": [
-//        {
-//          "@id": "https://id.kb.se/term/saogf/Animated%20films"
-//        }
-//      ],
-//      "inScheme": {
-//        "code": "lcgft",
-//        "@type": "ConceptScheme",
-//        "sameAs": [
-//          {
-//            "@id": "https://id.kb.se/term/lcgft"
-//          }
-//        ]
-//      },
-//      "prefLabel": "Animated films"
-//    }
-
-// "broadMatch": [
-//    {
-//      "code": "Dofa",
-//      "@type": "Classification",
-//      "inScheme": {
-//        "code": "kssb",
-//        "@type": "ConceptScheme",
-//        "sameAs": [
-//          {
-//            "@id": "https://id.kb.se/term/kssb%2F8/"
-//          }
-//        ],
-//        "version": "8"
-//      }
-//    },
-
-
-
-
