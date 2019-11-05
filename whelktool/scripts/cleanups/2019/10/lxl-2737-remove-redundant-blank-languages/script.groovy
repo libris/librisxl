@@ -45,7 +45,7 @@ substitutions = [
         'nederländska (medelnederländska)': 'medelnederländska',
         'norska (nynorsk)'                : 'nynorska',
         'norska (nynorska)'               : 'nynorska',
-        'samiska (lulesamiska)'           : 'lulesamiska'
+        'samiska (lulesamiska)'           : 'lulesamiska',
         'samiska (nordsamiska)'           : 'nordsamiska',
         'svenska (fornsvenska)'           : 'fornsvenska',
         'tyska (lågtyska)'                : 'lågtyska',
@@ -63,7 +63,12 @@ linker = buildLanguageMap()
 selectByCollection('auth') { auth ->
     try {
         def (record, thing) = auth.graph
-        if (linker.linkLanguages(thing, 'associatedLanguage') || linker.linkLanguages(thing, 'language')) {
+
+        boolean a = linker.linkLanguages(record, 'descriptionLanguage')
+        boolean b = linker.linkLanguages(thing, 'associatedLanguage')
+        boolean c = linker.linkLanguages(thing, 'language')
+
+        if (a || b || c) {
             scheduledForUpdate.println("${auth.doc.getURI()}")
             auth.scheduleSave()
         }
@@ -81,7 +86,10 @@ selectByCollection('bib') { bib ->
             return
         }
 
-        if (linker.linkLanguages(work)) {
+        boolean a = linker.linkLanguages(record, 'descriptionLanguage')
+        boolean b = linker.linkLanguages(work)
+
+        if (a || b) {
             scheduledForUpdate.println("${bib.doc.getURI()}")
             bib.scheduleSave()
         }
