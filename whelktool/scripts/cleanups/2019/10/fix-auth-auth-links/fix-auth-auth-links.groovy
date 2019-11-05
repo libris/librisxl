@@ -16,6 +16,7 @@
 import datatool.util.DocumentUtil
 
 scheduledForChange = getReportWriter("scheduled-for-change")
+report = getReportWriter("report")
 
 selectByCollection('auth') { data ->
 
@@ -23,15 +24,16 @@ selectByCollection('auth') { data ->
 
     boolean modified = DocumentUtil.traverse(instance, { object, path ->
         if (object instanceof Map && object.sameAs && path.size() > 0) {
-            linkerId = object.sameAs.first()?.'@id' as String
+            def linkerId = object.sameAs.first()?.'@id' as String
             if (linkerId && linkedObjectIsValid(object, linkerId)) {
                 def correctedLink = ['@id': linkerId]
-                scheduledForChange.println "Will replace $object with $correctedLink for ${data.graph[0].'@id'} in the path $path"
+                report.println "Will replace $object with $correctedLink for ${data.graph[0].'@id'} in the path $path"
                 return new DocumentUtil.Replace(correctedLink)
             }
         }
     })
     if (modified) {
+        scheduledForChange.println "${data.graph[0].'@id'}"
         data.scheduleSave()
     }
 }
@@ -41,13 +43,13 @@ private boolean linkedObjectIsValid(Map linker, linkerId) {
 
     selectByIds([linkerId]) { linkedData ->
         def linkedObject = linkedData.graph[1] as Map
-        scheduledForChange.println "========"
-        scheduledForChange.println "Linked object: $linkedObject"
-        scheduledForChange.println "Linker: $linker"
+        report.println "========"
+        report.println "Linked object: $linkedObject"
+        report.println "Linker: $linker"
 
         if (!isInstanceOf(linkedObject, linker.'@type')) {
-            scheduledForChange.println "Type mismatch:"
-            scheduledForChange.println "${linkedObject.'@type'} not an instance of ${linker.'@type'}"
+            report.println "Type mismatch:"
+            report.println "${linkedObject.'@type'} not an instance of ${linker.'@type'}"
             return
         }
 
@@ -56,14 +58,14 @@ private boolean linkedObjectIsValid(Map linker, linkerId) {
                 return
             }
             if (linkedObject[linkerKey] != linkerValue) {
-                scheduledForChange.println "Link value mismatch:"
-                scheduledForChange.println "LinkerValue: $linkerValue"
-                scheduledForChange.println "LinkedValue: ${linkedObject[linkerKey]}"
+                report.println "Link value mismatch:"
+                report.println "LinkerValue: $linkerValue"
+                report.println "LinkedValue: ${linkedObject[linkerKey]}"
                 allKeyValuePairsMatch = false
                 return
             }
             allKeyValuePairsMatch = true
-            scheduledForChange.println "Matching linkerValue: $linkerValue"
+            report.println "Matching linkerValue: $linkerValue"
         }
     }
     return allKeyValuePairsMatch
