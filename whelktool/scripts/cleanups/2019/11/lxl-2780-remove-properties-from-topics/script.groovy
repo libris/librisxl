@@ -5,12 +5,16 @@ See LXL-2780 & LXL-2395 for more info.
 PrintWriter failedIDs = getReportWriter("failed-to-delete-bibIDs")
 scheduledForChange = getReportWriter("scheduledForChange")
 
-selectBySqlWhere("""collection = 'auth' AND
+selectBySqlWhere("""
+collection = 'auth' 
+AND (
  data#>>'{@graph,1,@type}' = 'Geographic' OR
  data#>>'{@graph,1,@type}' = 'Topic' OR
  data#>>'{@graph,1,@type}' = 'TopicSubdivision' OR
  data#>>'{@graph,1,@type}' = 'Temporal' OR
- data#>>'{@graph,1,@type}' = 'ComplexSubject'""", silent: false) { documentItem ->
+ data#>>'{@graph,1,@type}' = 'ComplexSubject'
+ )
+ """, silent: false) { documentItem ->
 
     removeFieldFromRecord(documentItem, "descriptionConventions")
     removeFieldFromRecord(documentItem, "descriptionUpgrader")
