@@ -19,7 +19,6 @@ scheduledForChange = getReportWriter("scheduled-for-change")
 report = getReportWriter("report")
 
 selectByCollection('auth') { data ->
-
     def instance = data.graph[1]
 
     boolean modified = DocumentUtil.traverse(instance, { object, path ->
@@ -53,20 +52,20 @@ private boolean linkedObjectIsValid(Map linker, linkerId) {
             return
         }
 
-        linker.each { linkerKey, linkerValue ->
+        allKeyValuePairsMatch = linker.every { linkerKey, linkerValue ->
             if (linkerKey == 'sameAs' || linkerKey == '@type') {
-                return
+                return true
             }
             if (linkedObject[linkerKey] != linkerValue) {
                 report.println "Link value mismatch:"
                 report.println "LinkerValue: $linkerValue"
                 report.println "LinkedValue: ${linkedObject[linkerKey]}"
-                allKeyValuePairsMatch = false
-                return
+                return false
             }
-            allKeyValuePairsMatch = true
             report.println "Matching linkerValue: $linkerValue"
+            return true
         }
     }
+
     return allKeyValuePairsMatch
 }
