@@ -64,11 +64,10 @@ selectByCollection('auth') { auth ->
     try {
         def (record, thing) = auth.graph
 
-        boolean a = linker.linkLanguages(record, 'descriptionLanguage')
-        boolean b = linker.linkLanguages(thing, 'associatedLanguage')
-        boolean c = linker.linkLanguages(thing, 'language')
+        boolean a = linker.linkLanguages(thing, 'associatedLanguage')
+        boolean b = linker.linkLanguages(thing, 'language')
 
-        if (a || b || c) {
+        if (a || b) {
             scheduledForUpdate.println("${auth.doc.getURI()}")
             auth.scheduleSave()
         }
@@ -86,10 +85,7 @@ selectByCollection('bib') { bib ->
             return
         }
 
-        boolean a = linker.linkLanguages(record, 'descriptionLanguage')
-        boolean b = linker.linkLanguages(work)
-
-        if (a || b) {
+        if (linker.linkLanguages(work)) {
             scheduledForUpdate.println("${bib.doc.getURI()}")
             bib.scheduleSave()
         }
@@ -113,7 +109,7 @@ LanguageLinker buildLanguageMap() {
     linker.addSubstitutions(substitutions)
     linker.addMapping('grekiska', 'https://id.kb.se/language/gre')
     linker.addMapping('grekiska', 'https://id.kb.se/language/grc')
-    linker.addMapping('greek', 'https://id.kb.se/language/grc')
+    linker.addMapping('greek', 'https://id.kb.se/language/gre')
     linker.addMapping('greek', 'https://id.kb.se/language/grc')
 
     return linker
