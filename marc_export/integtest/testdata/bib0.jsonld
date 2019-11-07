@@ -1,0 +1,170 @@
+{
+    "@graph": [
+        {
+            "@id": "TEMPBASEURITEMPID",
+            "@type": "Record",
+            "controlNumber": "TEMPID",
+            "created": "2001-12-11T00:00:00+01:00",
+            "descriptionConventions": [
+                {
+                    "@id": "https://id.kb.se/marc/Aacr2"
+                }
+            ],
+            "descriptionCreator": {
+                "@id": "TEMPBASEURIlibrary/NBR"
+            },
+            "encodingLevel": "marc:AbbreviatedLevel",
+            "generationDate": "2018-09-12T18:41:52.692+02:00",
+            "generationProcess": {
+                "@id": "https://id.kb.se/generator/globalchanges"
+            },
+            "identifiedBy": [
+                {
+                    "@type": "LibrisIIINumber",
+                    "value": "9914468438"
+                }
+            ],
+            "mainEntity": {
+                "@id": "TEMPBASEURITEMPID#it"
+            },
+            "modified": "2017-03-28T08:23:59+02:00",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "sameAs": [
+                {
+                    "@id": "http://libris.kb.se/bib/1390474"
+                }
+            ]
+        },
+        {
+            "@id": "TEMPBASEURITEMPID#it",
+            "@type": "Instance",
+            "extent": [
+                {
+                    "@type": "Extent",
+                    "label": [
+                        "269 s."
+                    ]
+                }
+            ],
+            "hasTitle": [
+                {
+                    "@type": "Title",
+                    "mainTitle": "Alice in Wonderland and Through the looking-glass"
+                }
+            ],
+            "instanceOf": {
+                "@id": "TEMPBASEURITEMPID#work"
+            },
+            "issuanceType": "Monograph",
+            "marc:otherPhysicalDetails": "Ill",
+            "publication": [
+                {
+                    "@type": "PrimaryPublication",
+                    "agent": {
+                        "@type": "Agent",
+                        "label": [
+                            "Jan."
+                        ]
+                    },
+                    "country": {
+                        "@id": "https://id.kb.se/country/sw"
+                    },
+                    "place": [
+                        {
+                            "@type": "Place",
+                            "label": [
+                                "Stockholm"
+                            ]
+                        }
+                    ],
+                    "year": "1945"
+                }
+            ],
+            "relationship": [
+                {
+                    "@type": "Relationship",
+                    "entity": {
+                        "@type": "Work",
+                        "hasTitle": [
+                            {
+                                "@type": "Title",
+                                "mainTitle": "Alice in Wonderland"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "@type": "Relationship",
+                    "entity": {
+                        "@id": "TEMPBASEURImkz29mf50pbd6v5#it"
+                    }
+                }
+            ],
+            "sameAs": [
+                {
+                    "@id": "http://libris.kb.se/resource/bib/1390474"
+                }
+            ]
+        },
+        {
+            "@id": "TEMPBASEURITEMPID#work",
+            "@type": "Text",
+            "contribution": [
+                {
+                    "@type": "PrimaryContribution",
+                    "agent": {
+                        "@id": "TEMPBASEURIljx0tr142tk2vrj#it"
+                    }
+                }
+            ],
+            "genreForm": [
+                {
+                    "@id": "https://id.kb.se/marc/NotFictionNotFurtherSpecified"
+                }
+            ],
+            "hasPart": [
+                {
+                    "@type": "Work",
+                    "contribution": [
+                        {
+                            "@type": "PrimaryContribution",
+                            "agent": {
+                                "@type": "Person",
+                                "familyName": "Carroll",
+                                "givenName": "Lewis",
+                                "lifeSpan": "1832-1898."
+                            },
+                            "role": [
+                                {
+                                    "@id": "https://id.kb.se/relator/author"
+                                }
+                            ]
+                        }
+                    ],
+                    "hasTitle": [
+                        {
+                            "@type": "Title",
+                            "mainTitle": "Through the looking-glass"
+                        }
+                    ]
+                }
+            ],
+            "hasTitle": [
+                {
+                    "@type": "Title",
+                    "mainTitle": "Alices adventures in Wonderland"
+                }
+            ],
+            "intendedAudience": [
+                {
+                    "@id": "https://id.kb.se/marc/Juvenile"
+                }
+            ],
+            "language": [
+                {
+                    "@id": "https://id.kb.se/language/eng"
+                }
+            ]
+        }
+    ]
+}
