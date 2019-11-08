@@ -181,7 +181,7 @@ public class MarcHttpExport extends HttpServlet
         if (deleteMode == ProfileExport.DELETE_MODE.SEPARATE)
         {
             outStream.write(0); // Use a \0 (null-byte) to delimit the export from the accompanying delete manifest CSV.
-            outStream.write("Libris bibliografiska kontrollnummer, rekommenderade för gallring;Anledning\n".getBytes(StandardCharsets.UTF_8));
+            outStream.write("Libris bibliografiska kontrollnummer rekommenderade för gallring;Anledning\n".getBytes(StandardCharsets.UTF_8));
             for (String id : deleteInfo.keySet())
             {
                 String csvline = id;
