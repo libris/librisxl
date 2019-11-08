@@ -245,7 +245,14 @@ class Crud extends HttpServlet {
     }
 
     private Map frame(Document document) {
-        return JsonLd.frame(document.getCompleteId(), document.data)
+        document.setThingMeta(document.getCompleteId())
+        List<String> thingIds = document.getThingIdentifiers()
+        if (thingIds.isEmpty()) {
+            String msg = "Could not frame document. Missing mainEntity? In: " + document.getCompleteId()
+            log.warn(msg)
+            throw new WhelkRuntimeException(msg)
+        }
+        return JsonLd.frame(thingIds.get(0), document.data)
     }
 
     private Object applyLens(Object framedThing, Lens lens) {
