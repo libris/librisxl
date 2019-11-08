@@ -286,7 +286,7 @@ class PostgreSQLComponent implements Storage {
             }
             return collections
         } finally {
-            closeResources(collectionResults, collectionStatement, connection)
+            close(collectionResults, collectionStatement, connection)
         }
     }
 
@@ -412,7 +412,7 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            closeResources(resultSet, selectStatement, connection)
+            close(resultSet, selectStatement, connection)
         }
     }
 
@@ -518,7 +518,7 @@ class PostgreSQLComponent implements Storage {
             connection.rollback()
             throw e
         } finally {
-            closeResources(resultSet, selectStatement, updateStatement, connection)
+            close(resultSet, selectStatement, updateStatement, connection)
         }
     }
 
@@ -601,7 +601,7 @@ class PostgreSQLComponent implements Storage {
             connection.rollback()
             throw e
         } finally {
-            closeResources(resultSet, selectStatement, updateStatement, connection)
+            close(resultSet, selectStatement, updateStatement, connection)
         }
 
         refreshDependers(doc.getShortId())
@@ -714,7 +714,7 @@ class PostgreSQLComponent implements Storage {
                         dependencies.add([relation, rs.getString(1)] as String[])
                 }
             } finally {
-                closeResources(rs, getSystemId)
+                close(rs, getSystemId)
             }
         }
         return dependencies
@@ -730,7 +730,7 @@ class PostgreSQLComponent implements Storage {
             int numRemoved = removeDependencies.executeUpdate()
             log.debug("Removed $numRemoved dependencies for id ${doc.getShortId()}")
         } finally {
-            closeResources(removeDependencies)
+            close(removeDependencies)
         }
 
         if (!doc.deleted) { // We do not care for the dependencies of deleted documents.
@@ -748,7 +748,7 @@ class PostgreSQLComponent implements Storage {
                 log.error("Failed saving dependencies for ${doc.getShortId()}")
                 throw bue.getNextException()
             } finally {
-                closeResources(insertDependencies)
+                close(insertDependencies)
             }
         }
     }
@@ -764,7 +764,7 @@ class PostgreSQLComponent implements Storage {
             preparedStatement.execute()
         }
         finally {
-            closeResources(rs, preparedStatement)
+            close(rs, preparedStatement)
         }
     }
 
@@ -856,7 +856,7 @@ class PostgreSQLComponent implements Storage {
                 throw e
             }
             finally {
-                closeResources(insVersion)
+                close(insVersion)
             }
         } else {
             return false
@@ -925,7 +925,7 @@ class PostgreSQLComponent implements Storage {
             }
             connection.rollback()
         } finally {
-            closeResources(batch, ver_batch, connection)
+            close(batch, ver_batch, connection)
             log.trace("[bulkStore] Closed connection.")
         }
         return false
@@ -966,7 +966,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return getRecordOrThingId(id, GET_RECORD_ID, connection)
         } finally {
-            closeResources(connection)
+            close(connection)
         }
     }
 
@@ -986,7 +986,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return getThingId(id, connection)
         } finally {
-            closeResources(connection)
+            close(connection)
         }
     }
 
@@ -1006,7 +1006,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return getRecordOrThingId(id, GET_MAIN_ID, connection)
         } finally {
-            closeResources(connection)
+            close(connection)
         }
     }
 
@@ -1037,7 +1037,7 @@ class PostgreSQLComponent implements Storage {
                 return ids[0]
             }
         } finally {
-            closeResources(rs, selectstmt)
+            close(rs, selectstmt)
         }
     }
 
@@ -1061,7 +1061,7 @@ class PostgreSQLComponent implements Storage {
                 return null
             }
         } finally {
-            closeResources(rs, selectstmt, connection)
+            close(rs, selectstmt, connection)
         }
     }
 
@@ -1101,7 +1101,7 @@ class PostgreSQLComponent implements Storage {
             }
         }
         finally {
-            closeResources(rs, preparedStatement)
+            close(rs, preparedStatement)
         }
     }
 
@@ -1114,7 +1114,7 @@ class PostgreSQLComponent implements Storage {
             preparedStatement.execute()
         }
         finally {
-            closeResources(rs, preparedStatement)
+            close(rs, preparedStatement)
         }
     }
 
@@ -1123,7 +1123,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return loadEmbellished(id, jsonld, connection)
         } finally {
-            closeResources(connection)
+            close(connection)
         }
     }
 
@@ -1160,7 +1160,7 @@ class PostgreSQLComponent implements Storage {
             return document
         }
         finally {
-            closeResources(resultSet, selectStatement)
+            close(resultSet, selectStatement)
         }
     }
 
@@ -1169,7 +1169,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return getCollectionBySystemID(id, connection)
         } finally {
-            closeResources(connection)
+            close(connection)
         }
     }
 
@@ -1188,7 +1188,7 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            closeResources(resultSet, selectStatement)
+            close(resultSet, selectStatement)
         }
     }
 
@@ -1236,7 +1236,7 @@ class PostgreSQLComponent implements Storage {
                 return new Tuple2(null, null)
         }
         finally {
-            closeResources(rs, preparedStatement, connection)
+            close(rs, preparedStatement, connection)
         }
     }
 
@@ -1245,7 +1245,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return getSystemIdByIri(iri, connection)
         } finally {
-            closeResources(connection)
+            close(connection)
         }
     }
 
@@ -1261,7 +1261,7 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            closeResources(rs, preparedStatement)
+            close(rs, preparedStatement)
         }
     }
 
@@ -1270,7 +1270,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return getDocumentByIri(iri, connection)
         } finally {
-            closeResources(connection)
+            close(connection)
         }
     }
 
@@ -1286,7 +1286,7 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            closeResources(rs, preparedStatement)
+            close(rs, preparedStatement)
         }
     }
 
@@ -1304,7 +1304,7 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            closeResources(rs, preparedStatement)
+            close(rs, preparedStatement)
         }
     }
 
@@ -1313,7 +1313,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return getDependencyData(id, GET_DEPENDENCIES, connection)
         } finally {
-            closeResources(connection)
+            close(connection)
         }
     }
 
@@ -1322,7 +1322,7 @@ class PostgreSQLComponent implements Storage {
         try {
             getDependers(id, connection)
         } finally {
-            closeResources(connection)
+            close(connection)
         }
     }
 
@@ -1345,7 +1345,7 @@ class PostgreSQLComponent implements Storage {
             return dependencies
         }
         finally {
-            closeResources(rs, preparedStatement)
+            close(rs, preparedStatement)
         }
     }
 
@@ -1374,7 +1374,7 @@ class PostgreSQLComponent implements Storage {
             return dependecies
         }
         finally {
-            closeResources(rs, preparedStatement, connection)
+            close(rs, preparedStatement, connection)
         }
     }
 
@@ -1409,7 +1409,7 @@ class PostgreSQLComponent implements Storage {
             return results
         }
         finally {
-            closeResources(rs, preparedStatement, connection)
+            close(rs, preparedStatement, connection)
         }
     }
 
@@ -1428,7 +1428,7 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            closeResources(rs, preparedStatement, connection)
+            close(rs, preparedStatement, connection)
         }
     }
 
@@ -1447,7 +1447,7 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            closeResources(rs, preparedStatement, connection)
+            close(rs, preparedStatement, connection)
         }
     }
 
@@ -1492,7 +1492,7 @@ class PostgreSQLComponent implements Storage {
             return holdings
         }
         finally {
-            closeResources(rs, preparedStatement, connection)
+            close(rs, preparedStatement, connection)
         }
     }
 
@@ -1529,7 +1529,7 @@ class PostgreSQLComponent implements Storage {
                 log.trace("No results returned for $selectstmt")
             }
         } finally {
-            closeResources(rs, selectstmt)
+            close(rs, selectstmt)
             if (shouldCloseConn) {
                 connection.close()
             }
@@ -1567,7 +1567,7 @@ class PostgreSQLComponent implements Storage {
                 docList << doc
             }
         } finally {
-            closeResources(rs, selectstmt)
+            close(rs, selectstmt)
             if (shouldCloseConn) {
                 connection.close()
                 log.debug("[loadAllVersions] Closed connection.")
@@ -1724,7 +1724,7 @@ class PostgreSQLComponent implements Storage {
             int numRemoved = removeDependencies.executeUpdate()
             log.debug("Removed $numRemoved dependencies for id ${identifier}")
         } finally {
-            closeResources(removeDependencies, connection)
+            close(removeDependencies, connection)
         }
     }
 
@@ -1743,7 +1743,7 @@ class PostgreSQLComponent implements Storage {
                 log.trace("No settings found for $key")
             }
         } finally {
-            closeResources(rs, selectstmt, connection)
+            close(rs, selectstmt, connection)
         }
 
         return settings
@@ -1762,7 +1762,7 @@ class PostgreSQLComponent implements Storage {
             savestmt.setObject(4, serializedSettings, OTHER)
             savestmt.executeUpdate()
         } finally {
-            closeResources(savestmt, connection)
+            close(savestmt, connection)
         }
     }
 
@@ -1783,7 +1783,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return executeFindByQuery(find)
         } finally {
-            closeResources(find, connection)
+            close(find, connection)
         }
     }
 
@@ -1890,7 +1890,7 @@ class PostgreSQLComponent implements Storage {
         return s.startsWith('http://') || s.startsWith('https://')
     }
 
-    private static void closeResources(Object... resources = null) {
+    private static void close(Object... resources = null) {
         if (resources != null) {
             for (def resource : resources) {
                 try {
