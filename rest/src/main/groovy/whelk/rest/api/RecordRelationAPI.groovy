@@ -4,11 +4,11 @@ import whelk.Document
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.util.LegacyIntegrationTools
+import whelk.util.WhelkFactory
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import java.sql.Connection
 
 class RecordRelationAPI extends HttpServlet {
 
@@ -25,7 +25,7 @@ class RecordRelationAPI extends HttpServlet {
     @Override
     void init() {
         if (!whelk) {
-            whelk = Whelk.createLoadedCoreWhelk()
+            whelk = WhelkFactory.getSingletonWhelk()
         }
     }
 
@@ -90,25 +90,15 @@ class RecordRelationAPI extends HttpServlet {
         }
         else if (returnMode.equals("bare_record")) {
             List<Map> records = new ArrayList<>(result.size())
-            Connection connection = whelk.storage.getConnection()
-            try {
-                for (String resultId : result) {
-                    records.add( whelk.storage.load(resultId, connection).data )
-                }
-            } finally {
-                connection.close()
+            for (String resultId : result) {
+                records.add(whelk.storage.load(resultId).data)
             }
             jsonString = PostgreSQLComponent.mapper.writeValueAsString(records)
         }
         else if (returnMode.equals("embellished_record")) {
             List<Map> records = new ArrayList<>(result.size())
-            Connection connection = whelk.storage.getConnection()
-            try {
-                for (String resultId : result) {
-                    records.add( whelk.storage.loadEmbellished(resultId, whelk.getJsonld(), connection).data )
-                }
-            } finally {
-                connection.close()
+            for (String resultId : result) {
+                records.add( whelk.storage.loadEmbellished(resultId, whelk.getJsonld()).data )
             }
             jsonString = PostgreSQLComponent.mapper.writeValueAsString(records)
         }

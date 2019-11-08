@@ -20,6 +20,7 @@ import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
 import whelk.rest.security.AccessControl
 import whelk.util.LegacyIntegrationTools
+import whelk.util.WhelkFactory
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -82,7 +83,7 @@ class Crud extends HttpServlet {
     @Override
     void init() {
         if (!whelk) {
-            whelk = Whelk.createLoadedSearchWhelk()
+            whelk = WhelkFactory.getSingletonWhelk()
         }
         displayData = whelk.displayData
         vocabData = whelk.vocabData

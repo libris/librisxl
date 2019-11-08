@@ -25,6 +25,7 @@ class Whelk implements Storage {
     Map vocabData
     Map contextData
     JsonLd jsonld
+    MarcFrameConverter marcFrameConverter
 
     URI baseUri = null
 
@@ -106,8 +107,12 @@ class Whelk implements Storage {
     public Whelk() {
     }
 
-    MarcFrameConverter createMarcFrameConverter() {
-        return new MarcFrameConverter(new LinkFinder(storage), jsonld)
+    synchronized MarcFrameConverter getMarcFrameConverter() {
+        if (!marcFrameConverter) {
+            marcFrameConverter = new MarcFrameConverter(new LinkFinder(storage), jsonld)
+        }
+
+        return marcFrameConverter
     }
 
     void loadCoreData() {
@@ -189,7 +194,7 @@ class Whelk implements Storage {
         }
 
         // If the number of dependers isn't too large or we are inside a batch job. Update them synchronously
-        if (dependers.size() < 20 || (batchJobThread() && indexers.activeCount() > 30) ) {
+        if (dependers.size() < 20 || batchJobThread() ) {
             Map dependingDocuments = bulkLoad(idsToReindex)
             for (String id : dependingDocuments.keySet()) {
                 Document dependingDoc = dependingDocuments.get(id)

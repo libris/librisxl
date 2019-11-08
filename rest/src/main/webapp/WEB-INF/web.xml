@@ -36,7 +36,6 @@
             <param-value>false</param-value>
         </init-param>
     </filter>
-
     <servlet>
         <servlet-name>WhelkServlet</servlet-name>
         <servlet-class>whelk.rest.api.Crud</servlet-class>

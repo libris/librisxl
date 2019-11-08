@@ -34,7 +34,7 @@ public class TotalExport
     public TotalExport(Whelk whelk)
     {
         m_whelk = whelk;
-        m_toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.createMarcFrameConverter());
+        m_toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
     }
 
     class Batch
@@ -176,7 +176,7 @@ public class TotalExport
                     continue;
                 }
 
-                Document document = m_whelk.getStorage().loadEmbellished(systemID, m_whelk.getJsonld());
+                Document document = m_whelk.getStorage().loadEmbellished(systemID, m_whelk.getJsonld(), connection);
 
                 Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(batch.profile, document, m_whelk, m_toMarcXmlConverter);
                 if (result == null) // A conversion error will already have been logged.

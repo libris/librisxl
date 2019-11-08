@@ -73,32 +73,6 @@ class PostgreSQLComponentSpec extends Specification {
         r == null
     }
 
-    def "should generate correct jsonb query according to storage type"() {
-        expect:
-        storage.translateToSql(key, value, storageType) == [sqlKey, sqlValue]
-        where:
-        key                              | value                | storageType                               | sqlKey                               | sqlValue
-        "entry.@id"                      | "/bib/12345"         | StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS | "data->'descriptions'->'entry' @> ?" | "{\"@id\":\"/bib/12345\"}"
-        "@id"                            | "/resource/auth/345" | StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS | "data->'descriptions'->'items' @> ?" | "[{\"@id\":\"/resource/auth/345\"}]"
-        "items.title"                    | "Kalldrag"           | StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS | "data->'descriptions'->'items' @> ?" | "[{\"title\":\"Kalldrag\"}]"
-        "items.instanceTitle.titleValue" | "Kalldrag"           | StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS | "data->'descriptions'->'items' @> ?" | "[{\"instanceTitle\":{\"titleValue\":\"Kalldrag\"}}]"
-        "instanceTitle.titleValue"       | "Kalldrag"           | StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS | "data->'descriptions'->'items' @> ?" | "[{\"instanceTitle\":{\"titleValue\":\"Kalldrag\"}}]"
-        "245.a"                          | "Kalldrag"           | StorageType.MARC21_JSON                   | "data->'fields' @> ?"                | "[{\"245\":{\"subfields\":[{\"a\":\"Kalldrag\"}]}}]"
-        "024.a"                          | "d12345"             | StorageType.MARC21_JSON                   | "data->'fields' @> ?"                | "[{\"024\":{\"subfields\":[{\"a\":\"d12345\"}]}}]"
-    }
-
-    def "should generate correct ORDER BY according to storage type"() {
-        expect:
-        storage.translateSort(keys, storageType) == orderBy
-        where:
-        keys                      | storageType                               | orderBy
-        "245.a"                   | StorageType.MARC21_JSON                   | "data->'fields'->'245'->'subfields'->'a' ASC"
-        "245.a,024.a"             | StorageType.MARC21_JSON                   | "data->'fields'->'245'->'subfields'->'a' ASC, data->'fields'->'024'->'subfields'->'a' ASC"
-        "245.a,-024.a"            | StorageType.MARC21_JSON                   | "data->'fields'->'245'->'subfields'->'a' ASC, data->'fields'->'024'->'subfields'->'a' DESC"
-        "entry.title,entry.-isbn" | StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS | "data->'descriptions'->'entry'->'title' ASC, data->'descriptions'->'entry'->'isbn' DESC"
-        "items.title,items.-isbn" | StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS | "data->'descriptions'->'items'->'title' ASC, data->'descriptions'->'items'->'isbn' DESC"
-    }
-
     def "should calculate correct checksum regardless of created, modified or previous checksum"() {
         when:
         //String cs1 = new Document(["@graph": [["key": "some data", "@id": "testid"], ["identifier": "testid", "collection": "test", "created": 1298619287, "modified": 10284701287]]]).checksum
