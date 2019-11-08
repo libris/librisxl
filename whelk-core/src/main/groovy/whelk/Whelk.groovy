@@ -425,24 +425,12 @@ class Whelk implements Storage {
                 .collect { it.first }
     }
 
-    List<String> findIdsLinkingTo(String id, String relation) {
-        return storage.getDependersOfType(tryGetSystemId(id), relation)
-    }
-
     List<String> findInverseBroaderRelations(String id) {
         return broaderCache.getUnchecked(id)
     }
 
     private List<String> computeInverseBroaderRelations(String id) {
-        List<String> ids = []
-        List<String> stack = [id]
-        while (!stack.isEmpty()) {
-            List<String> dependers = findIdsLinkingTo(stack.pop(), 'broader')
-            dependers.removeAll(ids)
-            stack.addAll(dependers)
-            ids.addAll(dependers)
-        }
-        return ids.collect( storage.&getThingMainIriBySystemId )
+        return storage.getNestedDependers(tryGetSystemId(id), ['broader'])
     }
 
     private String tryGetSystemId(String id) {

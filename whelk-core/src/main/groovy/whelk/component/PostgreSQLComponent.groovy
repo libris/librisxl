@@ -19,6 +19,7 @@ import whelk.exception.WhelkException
 import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
 
+import java.sql.Array
 import java.sql.BatchUpdateException
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -74,13 +75,13 @@ class PostgreSQLComponent implements Storage {
     protected String QUERY_LD_API
     protected String FIND_BY, COUNT_BY
     protected String GET_SYSTEMID_BY_IRI
-    protected String GET_THING_MAIN_IRI_BY_SYSTEMID
     protected String GET_DOCUMENT_BY_IRI
     protected String GET_MINMAX_MODIFIED
     protected String UPDATE_MINMAX_MODIFIED
     protected String GET_LEGACY_PROFILE
     protected String INSERT_EMBELLISHED_DOCUMENT
     protected String DELETE_EMBELLISHED_DOCUMENT
+    protected String NESTED_RELATIONS
 
     String mainTableName
     LinkFinder linkFinder
@@ -241,10 +242,26 @@ class PostgreSQLComponent implements Storage {
                    "OR data->'@graph' @> ?"
 
         GET_SYSTEMID_BY_IRI = "SELECT id FROM $idTableName WHERE iri = ?"
-        GET_THING_MAIN_IRI_BY_SYSTEMID = "SELECT iri FROM $idTableName WHERE graphindex = 1 and mainid is true and id = ?"
         GET_DOCUMENT_BY_IRI = "SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
 
         GET_LEGACY_PROFILE = "SELECT profile FROM $profilesTableName WHERE library_id = ?"
+
+        NESTED_RELATIONS = "WITH RECURSIVE nested_relation AS (" +
+                "  SELECT id " +
+                "  FROM $dependenciesTableName " +
+                "  WHERE dependsonid = ? " +
+                "  AND relation = ANY (?) " +
+                "  UNION " +
+                "  SELECT d.id " +
+                "  FROM $dependenciesTableName d " +
+                "  INNER JOIN nested_relation n ON d.dependsonid = n.id " +
+                "  WHERE relation = ANY (?) " +
+                ") " +
+                "SELECT i.iri " +
+                "FROM nested_relation n, $idTableName i " +
+                "WHERE n.id = i.id " +
+                "AND i.graphindex = 1 " +
+                "AND i.mainid IS TRUE"
      }
 
 
@@ -1242,20 +1259,32 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    String getThingMainIriBySystemId(String id) {
+    /**
+     * List all nodes in the dependency graph of an ID.
+     *
+     * @param systemId
+     * @param relationTypes Relation types to follow
+     * @return A list with thing main IRIs of dependers
+     */
+    List<String> getNestedDependers(String systemId, List<String> relationTypes) {
         Connection connection = null
         PreparedStatement preparedStatement = null
         ResultSet rs = null
+        Array relationsArray = null
         try {
             connection = getConnection()
-            preparedStatement = connection.prepareStatement(GET_THING_MAIN_IRI_BY_SYSTEMID)
-            preparedStatement.setString(1, id)
+            relationsArray = connection.createArrayOf('text', relationTypes.toArray())
+            preparedStatement = connection.prepareStatement(NESTED_RELATIONS)
+            preparedStatement.setString(1, systemId)
+            preparedStatement.setArray(2, relationsArray)
+            preparedStatement.setArray(3, relationsArray)
             rs = preparedStatement.executeQuery()
-            if (rs.next())
-                return rs.getString(1)
-            throw new RuntimeException("No IRI found for system id $id")
+            List<String> result = []
+            while (rs.next())
+                result.add(rs.getString(1))
+            return result
         } finally {
-            close(rs, preparedStatement, connection)
+            close(relationsArray, rs, preparedStatement, connection)
         }
     }
 
@@ -1922,6 +1951,9 @@ class PostgreSQLComponent implements Storage {
                         }
                         if (resource instanceof ResultSet) {
                             resource.close()
+                        }
+                        if (resource instanceof Array) {
+                            resource.free()
                         }
                     }
                 } catch (Exception e) {
