@@ -74,6 +74,7 @@ class PostgreSQLComponent implements Storage {
     protected String QUERY_LD_API
     protected String FIND_BY, COUNT_BY
     protected String GET_SYSTEMID_BY_IRI
+    protected String GET_THING_MAIN_IRI_BY_SYSTEMID
     protected String GET_DOCUMENT_BY_IRI
     protected String GET_MINMAX_MODIFIED
     protected String UPDATE_MINMAX_MODIFIED
@@ -240,6 +241,7 @@ class PostgreSQLComponent implements Storage {
                    "OR data->'@graph' @> ?"
 
         GET_SYSTEMID_BY_IRI = "SELECT id FROM $idTableName WHERE iri = ?"
+        GET_THING_MAIN_IRI_BY_SYSTEMID = "SELECT iri FROM $idTableName WHERE graphindex = 1 and mainid is true and id = ?"
         GET_DOCUMENT_BY_IRI = "SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
 
         GET_LEGACY_PROFILE = "SELECT profile FROM $profilesTableName WHERE library_id = ?"
@@ -1236,6 +1238,23 @@ class PostgreSQLComponent implements Storage {
                 return new Tuple2(null, null)
         }
         finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    String getThingMainIriBySystemId(String id) {
+        Connection connection = null
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            connection = getConnection()
+            preparedStatement = connection.prepareStatement(GET_THING_MAIN_IRI_BY_SYSTEMID)
+            preparedStatement.setString(1, id)
+            rs = preparedStatement.executeQuery()
+            if (rs.next())
+                return rs.getString(1)
+            throw new RuntimeException("No IRI found for system id $id")
+        } finally {
             close(rs, preparedStatement, connection)
         }
     }
