@@ -1147,15 +1147,30 @@ class PostgreSQLComponent implements Storage {
 
             // Cache-miss, embellish and store
             Document document = load(id, connection)
+            Set<String> secondOrderRefs = new HashSet<String>()
+
             List externalRefs = document.getExternalRefs()
             List convertedExternalLinks = JsonLd.expandLinks(externalRefs, (Map) jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
             Map referencedData = [:]
             for (String iri : convertedExternalLinks) {
                 Document externalDocument = getDocumentByIri(iri, connection)
-                if (externalDocument != null)
+                if (externalDocument != null) {
                     referencedData.put(externalDocument.getShortId(), externalDocument.data)
+                    secondOrderRefs.addAll(JsonLd.expandLinks(externalDocument.getExternalRefs(), (Map) jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY())))
+                }
             }
             jsonld.embellish(document.data, referencedData, false)
+
+            secondOrderRefs.removeAll(convertedExternalLinks)
+            referencedData = [:]
+            for (String iri : secondOrderRefs) {
+                Document externalDocument = getDocumentByIri(iri, connection)
+                if (externalDocument != null) {
+                    referencedData.put(externalDocument.getShortId(), externalDocument.data)
+                }
+            }
+            jsonld.embellish(document.data, referencedData, true)
+
             cacheEmbellishedDocument(id, document, connection)
             return document
         }
