@@ -112,13 +112,13 @@ class PostgreSQLComponent implements Storage {
         String profilesTableName = mainTableName + "__profiles"
         String embellishedTableName = mainTableName + "__embellished"
 
-        HikariConfig config = new HikariConfig()
-        config.setMaximumPoolSize(maxPoolSize)
-        config.setAutoCommit(true)
-
         if (sqlUrl) {
+            HikariConfig config = new HikariConfig()
+            config.setMaximumPoolSize(maxPoolSize)
+            config.setAutoCommit(true)
             config.setJdbcUrl(sqlUrl.replaceAll(":\\/\\/\\w+:*.*@", ":\\/\\/"))
             config.setDriverClassName(driverClass)
+
             log.info("Connecting to sql database at ${config.getJdbcUrl()}, using driver $driverClass. Pool size: $maxPoolSize")
             URI connURI = new URI(sqlUrl.substring(5))
             if (connURI.getUserInfo() != null) {
@@ -134,11 +134,11 @@ class PostgreSQLComponent implements Storage {
                     log.debug("No password part found in connect url userinfo.")
                 }
             }
-        }
-        connectionPool = new HikariDataSource(config)
 
-        if (sqlUrl != null)
+            connectionPool = new HikariDataSource(config)
+
             this.linkFinder = new LinkFinder(this)
+        }
 
         // Setting up sql-statements
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
