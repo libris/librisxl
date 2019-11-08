@@ -247,15 +247,15 @@ class PostgreSQLComponent implements Storage {
         GET_LEGACY_PROFILE = "SELECT profile FROM $profilesTableName WHERE library_id = ?"
 
         NESTED_RELATIONS = "WITH RECURSIVE nested_relation AS (" +
-                "  SELECT id " +
-                "  FROM $dependenciesTableName " +
-                "  WHERE dependsonid = ? " +
-                "  AND relation = ANY (?) " +
+                "    SELECT id " +
+                "    FROM $dependenciesTableName " +
+                "    WHERE dependsonid = ? " +
+                "    AND relation = ANY (?) " +
                 "  UNION " +
-                "  SELECT d.id " +
-                "  FROM $dependenciesTableName d " +
-                "  INNER JOIN nested_relation n ON d.dependsonid = n.id " +
-                "  WHERE relation = ANY (?) " +
+                "    SELECT d.id " +
+                "    FROM $dependenciesTableName d " +
+                "    INNER JOIN nested_relation n ON d.dependsonid = n.id " +
+                "    WHERE relation = ANY (?) " +
                 ") " +
                 "SELECT i.iri " +
                 "FROM nested_relation n, $idTableName i " +
