@@ -86,7 +86,7 @@ dependencies {
     compile "stax:stax:1.2.0"
     compile "stax:stax-api:1.0.1"
     compile 'com.damnhandy:handy-uri-templates:2.0.4'
-    compile 'org.apache.commons:commons-dbcp2:2.0.1'
+    compile 'com.zaxxer:HikariCP:3.4.1'
     compile 'org.apache.jena:apache-jena-libs:3.0.1'
     compile group: 'xerces', name: 'xercesImpl', version: '2.11.0' //KP
 

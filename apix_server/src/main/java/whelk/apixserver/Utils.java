@@ -2,23 +2,17 @@ package whelk.apixserver;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import se.kb.libris.util.marc.Controlfield;
-import se.kb.libris.util.marc.MarcFieldComparator;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import whelk.Document;
 import whelk.IdGenerator;
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.component.ElasticSearch;
-import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.converter.marc.MarcFrameConverter;
 import whelk.util.LegacyIntegrationTools;
-import whelk.util.PropertyLoader;
 
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.transform.TransformerException;
@@ -26,10 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 public class Utils
 {
@@ -43,7 +34,7 @@ public class Utils
     static
     {
         s_whelk = Whelk.createLoadedSearchWhelk();
-        s_toJsonLdConverter = s_whelk.createMarcFrameConverter();
+        s_toJsonLdConverter = s_whelk.getMarcFrameConverter();
         s_toMarcConverter = new JsonLD2MarcXMLConverter(s_toJsonLdConverter);
     }
 

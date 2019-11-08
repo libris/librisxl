@@ -1,18 +1,15 @@
 package whelk.actors
 
-import groovy.json.JsonOutput
+
 import groovy.util.logging.Log4j2 as Log
-import groovyx.gpars.actor.DefaultActor
 import whelk.Document
 import whelk.Location
 import whelk.util.VCopyToWhelkConverter
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.importer.ImportResult
-import whelk.PostgresLoadfileWriter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.importer.MySQLLoader
-import whelk.util.LegacyIntegrationTools
 
 import java.sql.Timestamp
 
@@ -33,7 +30,7 @@ class WhelkSaver implements MySQLLoader.LoadHandler {
         this.importResult = new ImportResult()
         this.whelk = w
         this.sourceSystem = sourceSystem
-        marcFrameConverter = whelk.createMarcFrameConverter()
+        marcFrameConverter = whelk.getMarcFrameConverter()
     }
 
     void setLastRecordTimeStamp(Timestamp timestamp) {

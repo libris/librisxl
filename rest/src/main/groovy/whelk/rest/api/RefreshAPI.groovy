@@ -5,6 +5,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.Whelk
 import whelk.util.LegacyIntegrationTools
+import whelk.util.WhelkFactory
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -34,7 +35,7 @@ class RefreshAPI extends HttpServlet
     @Override
     void init() {
         if (!whelk) {
-            whelk = Whelk.createLoadedSearchWhelk()
+            whelk = WhelkFactory.getSingletonWhelk()
         }
     }
 
