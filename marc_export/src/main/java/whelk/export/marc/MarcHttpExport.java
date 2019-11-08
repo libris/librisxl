@@ -176,7 +176,6 @@ public class MarcHttpExport extends HttpServlet
         finally
         {
             output.close();
-            outStream.write(32);
         }
 
         if (deleteMode == ProfileExport.DELETE_MODE.SEPARATE)
@@ -195,7 +194,7 @@ public class MarcHttpExport extends HttpServlet
                         csvline += ";Ni har ej längre bestånd på posten.\n";
                         break;
                 }
-                outStream.write(line.getBytes(StandardCharsets.UTF_8));
+                outStream.write(csvline.getBytes(StandardCharsets.UTF_8));
             }
         }
         outStream.close();
