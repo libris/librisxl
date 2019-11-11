@@ -15,10 +15,10 @@ query = """collection = 'bib'
         AND data#>>'{@graph,2,genreForm}' LIKE '%"${NOT_FICTION}"%'"""
 
 selectBySqlWhere(query, silent: false) { data ->
-    work = data.graph[2]
+    def work = data.graph[2]
 
     if (work.genreForm && work.genreForm.size() == 1 && work.genreForm[0].'@id' == NOT_FICTION) {
-        classif = work.classification
+        def classif = work.classification
         classif = classif instanceof Map ? [classif] : classif
         if (classif?.every { c -> hasClassificationH(c) }) {
             scheduledForChange.println "${data.graph[0][ID]}"
@@ -30,12 +30,14 @@ selectBySqlWhere(query, silent: false) { data ->
 
 boolean hasClassificationH(classification) {
     def type = classification.'@type' as String
-    code = classification?.code instanceof String ? [classification.code] : classification.code
+    def code = classification?.code instanceof String ? [classification.code] : classification.code
+
     if (type == "Classification") {
         def inSchemeCode = classification.inScheme?.code as String
         if (inSchemeCode && inSchemeCode == "kssb" && classification.inScheme?.'@type' == "ConceptScheme") {
             return code && code.every { c -> c.startsWith("H") || c.startsWith("uH") }
         }
     }
+
     return false
 }
