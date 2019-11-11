@@ -8,7 +8,7 @@
 scheduledForChange = getReportWriter("scheduled-for-change")
 
 NOT_FICTION = "https://id.kb.se/marc/NotFictionNotFurtherSpecified"
-SKONLITTERATUR = "https://id.kb.se/term/saogf/Skönlitteratur" //Use https://id.kb.se/term/saogf/Sk%C3%B6nlitteratur ?
+SKONLITTERATUR = "https://id.kb.se/term/saogf/Sk%C3%B6nlitteratur"
 
 query = """collection = 'bib'
         AND data#>>'{@graph,2,@type}' = 'Text'
