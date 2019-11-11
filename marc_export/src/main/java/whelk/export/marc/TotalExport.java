@@ -119,6 +119,10 @@ public class TotalExport
             while (resultSet.next())
             {
                 String bibMainEntityUri = resultSet.getString(1);
+
+                if (bibMainEntityUri == null) // Necessary due to broken data :(
+                    continue;
+
                 if (exportedUris.contains(bibMainEntityUri))
                     continue;
                 exportedUris.add(bibMainEntityUri);
