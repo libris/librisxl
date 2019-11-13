@@ -75,7 +75,7 @@ class PostgreSQLComponent implements Storage {
     protected String FIND_BY, COUNT_BY
     protected String GET_SYSTEMID_BY_IRI
     protected String GET_DOCUMENT_BY_IRI
-    protected String GET_MINMAX_MODIFIED
+    protected String GET_MAX_MODIFIED
     protected String UPDATE_MINMAX_MODIFIED
     protected String GET_LEGACY_PROFILE
     protected String INSERT_EMBELLISHED_DOCUMENT
@@ -216,7 +216,7 @@ class PostgreSQLComponent implements Storage {
         GET_DEPENDENCIES = "SELECT dependsOnId, relation FROM $dependenciesTableName WHERE id = ?"
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
         GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
-        GET_MINMAX_MODIFIED = "SELECT MIN(modified), MAX(modified) from $mainTableName WHERE id IN (?)"
+        GET_MAX_MODIFIED = "SELECT MAX(modified) from $mainTableName WHERE id IN (?)"
         UPDATE_MINMAX_MODIFIED = "WITH dependsOn AS (SELECT modified FROM $dependenciesTableName JOIN $mainTableName ON " + dependenciesTableName + ".dependsOnId = " + mainTableName+ ".id WHERE " + dependenciesTableName + ".id = ? UNION SELECT modified FROM $mainTableName WHERE id = ?) " +
                 "UPDATE $mainTableName SET depMaxModified = (SELECT MAX(modified) FROM dependsOn) WHERE id = ?"
 
@@ -1214,25 +1214,23 @@ class PostgreSQLComponent implements Storage {
         return doc
     }
 
-    Tuple2<Timestamp, Timestamp> getMinMaxModified(List<String> ids) {
+    Timestamp getMaxModified(List<String> ids) {
         Connection connection = null
         PreparedStatement preparedStatement = null
         ResultSet rs = null
         try {
             connection = getConnection()
-            String expandedSql = GET_MINMAX_MODIFIED.replace('?', ids.collect { it -> '?' }.join(','))
+            String expandedSql = GET_MAX_MODIFIED.replace('?', ids.collect { it -> '?' }.join(','))
             preparedStatement = connection.prepareStatement(expandedSql)
             for (int i = 0; i < ids.size(); ++i) {
                 preparedStatement.setString(i+1, ids.get(i))
             }
             rs = preparedStatement.executeQuery()
             if (rs.next()) {
-                Timestamp min = (Timestamp) rs.getObject(1)
-                Timestamp max = (Timestamp) rs.getObject(2)
-                return new Tuple2(min, max)
+                return (Timestamp) rs.getObject(1)
             }
             else
-                return new Tuple2(null, null)
+                return null
         }
         finally {
             close(rs, preparedStatement, connection)
