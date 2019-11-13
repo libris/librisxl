@@ -143,7 +143,7 @@ class PostgreSQLComponent implements Storage {
         // Setting up sql-statements
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
         INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,collection,changedIn,changedBy,checksum,deleted," +
-                "created,modified,depminmodified,depmaxmodified) VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+                "created,modified,depmaxmodified) VALUES (?,?,?,?,?,?,?,?,?,?)"
         DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
         INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, iri, graphIndex, mainId) VALUES (?,?,?,?)"
 
@@ -218,7 +218,7 @@ class PostgreSQLComponent implements Storage {
         GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
         GET_MINMAX_MODIFIED = "SELECT MIN(modified), MAX(modified) from $mainTableName WHERE id IN (?)"
         UPDATE_MINMAX_MODIFIED = "WITH dependsOn AS (SELECT modified FROM $dependenciesTableName JOIN $mainTableName ON " + dependenciesTableName + ".dependsOnId = " + mainTableName+ ".id WHERE " + dependenciesTableName + ".id = ? UNION SELECT modified FROM $mainTableName WHERE id = ?) " +
-                "UPDATE $mainTableName SET depMinModified = (SELECT MIN(modified) FROM dependsOn), depMaxModified = (SELECT MAX(modified) FROM dependsOn) WHERE id = ?"
+                "UPDATE $mainTableName SET depMaxModified = (SELECT MAX(modified) FROM dependsOn) WHERE id = ?"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
@@ -824,7 +824,6 @@ class PostgreSQLComponent implements Storage {
         insert.setTimestamp(8, new Timestamp(timestamp.getTime()))
         insert.setTimestamp(9, new Timestamp(timestamp.getTime()))
         insert.setTimestamp(10, new Timestamp(timestamp.getTime()))
-        insert.setTimestamp(11, new Timestamp(timestamp.getTime()))
         return insert
     }
 
