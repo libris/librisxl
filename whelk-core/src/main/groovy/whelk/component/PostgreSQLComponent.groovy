@@ -229,7 +229,7 @@ class PostgreSQLComponent implements Storage {
                 "  SELECT d2.dependsonid " +
                 "  FROM " +
                 "  lddb__dependencies d2 " +
-                "  INNER JOIN deps deps1 on d2.id = deps1.id " +
+                "  INNER JOIN deps deps1 ON d2.id = deps1.id AND d2.relation NOT IN ('broader', 'narrower', 'expressionOf') " +
                 " ) " +
                 " SELECT lddb.modified FROM deps INNER JOIN lddb on deps.id = lddb.id " +
                 ") " +
