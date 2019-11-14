@@ -212,10 +212,32 @@ class PostgreSQLComponent implements Storage {
         STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
                 "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.iri = ?"
         GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE iri = 'https://id.kb.se/vocab/context')"
-        GET_DEPENDERS = "SELECT id, relation FROM $dependenciesTableName WHERE dependsOnId = ?"
-        GET_DEPENDENCIES = "SELECT dependsOnId, relation FROM $dependenciesTableName WHERE id = ?"
+
+        GET_DEPENDERS =
+                "WITH RECURSIVE deps(i) AS ( " +
+                " VALUES (?, null) " +
+                " UNION " +
+                " SELECT d.dependsonid, d.relation " +
+                " FROM " +
+                "  lddb__dependencies d " +
+                " INNER JOIN deps deps1 on d.id = i " +
+                ") " +
+                "SELECT * FROM deps"
+
+        GET_DEPENDENCIES =
+                "WITH RECURSIVE deps(i) AS ( " +
+                " VALUES (?, null) " +
+                " UNION " +
+                " SELECT d.id, d.relation " +
+                " FROM " +
+                "  lddb__dependencies d " +
+                " INNER JOIN deps deps1 on d.dependsonid = i " +
+                ") " +
+                "SELECT * FROM deps"
+
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
         GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
+
         GET_MAX_MODIFIED = "SELECT MAX(modified) from $mainTableName WHERE id IN (?)"
 
         UPDATE_MAX_MODIFIED =
@@ -232,6 +254,8 @@ class PostgreSQLComponent implements Storage {
                 "  INNER JOIN deps deps1 ON d2.id = deps1.id AND d2.relation NOT IN ('broader', 'narrower', 'expressionOf') " +
                 " ) " +
                 " SELECT lddb.modified FROM deps INNER JOIN lddb on deps.id = lddb.id " +
+                " UNION " +
+                " SELECT modified FROM lddb WHERE ID = ? " +
                 ") " +
                 "UPDATE lddb SET depMaxModified = (SELECT MAX(modified) FROM recModified) WHERE id = ?"
 
@@ -775,6 +799,7 @@ class PostgreSQLComponent implements Storage {
             preparedStatement = connection.prepareStatement(UPDATE_MAX_MODIFIED)
             preparedStatement.setString(1, id)
             preparedStatement.setString(2, id)
+            preparedStatement.setString(3, id)
             preparedStatement.execute()
         }
         finally {
@@ -1350,7 +1375,8 @@ class PostgreSQLComponent implements Storage {
             rs = preparedStatement.executeQuery()
             List<Tuple2<String, String>> dependencies = []
             while (rs.next()) {
-                dependencies.add( new Tuple2<String, String>(rs.getString(1), rs.getString(2)) )
+                if (rs.getString(2) != null) // The first tuple will be (root, null), which we dont need in the result.
+                    dependencies.add( new Tuple2<String, String>(rs.getString(1), rs.getString(2)) )
             }
             dependencies.sort { it.getFirst() }
             return dependencies
