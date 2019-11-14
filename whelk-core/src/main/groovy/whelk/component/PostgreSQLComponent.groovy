@@ -76,7 +76,7 @@ class PostgreSQLComponent implements Storage {
     protected String GET_SYSTEMID_BY_IRI
     protected String GET_DOCUMENT_BY_IRI
     protected String GET_MAX_MODIFIED
-    protected String UPDATE_MINMAX_MODIFIED
+    protected String UPDATE_MAX_MODIFIED
     protected String GET_LEGACY_PROFILE
     protected String INSERT_EMBELLISHED_DOCUMENT
     protected String DELETE_EMBELLISHED_DOCUMENT
@@ -217,8 +217,23 @@ class PostgreSQLComponent implements Storage {
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
         GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
         GET_MAX_MODIFIED = "SELECT MAX(modified) from $mainTableName WHERE id IN (?)"
-        UPDATE_MINMAX_MODIFIED = "WITH dependsOn AS (SELECT modified FROM $dependenciesTableName JOIN $mainTableName ON " + dependenciesTableName + ".dependsOnId = " + mainTableName+ ".id WHERE " + dependenciesTableName + ".id = ? UNION SELECT modified FROM $mainTableName WHERE id = ?) " +
-                "UPDATE $mainTableName SET depMaxModified = (SELECT MAX(modified) FROM dependsOn) WHERE id = ?"
+
+        UPDATE_MAX_MODIFIED =
+                "WITH recModified AS ( " +
+                " WITH RECURSIVE deps AS ( " +
+                "  SELECT d1.id " +
+                "  FROM " +
+                "  lddb__dependencies d1 " +
+                "  WHERE d1.id = ? " +
+                "  UNION " +
+                "  SELECT d2.dependsonid " +
+                "  FROM " +
+                "  lddb__dependencies d2 " +
+                "  INNER JOIN deps deps1 on d2.id = deps1.id " +
+                " ) " +
+                " SELECT lddb.modified FROM deps INNER JOIN lddb on deps.id = lddb.id " +
+                ") " +
+                "UPDATE lddb SET depMaxModified = (SELECT MAX(modified) FROM recModified) WHERE id = ?"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
@@ -349,7 +364,7 @@ class PostgreSQLComponent implements Storage {
             saveVersion(doc, connection, now, now, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
             for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection)) {
-                updateMinMaxDepModified((String) depender.get(0), connection)
+                updateMaxDepModified((String) depender.get(0), connection)
             }
 
             connection.commit()
@@ -465,7 +480,7 @@ class PostgreSQLComponent implements Storage {
             List<Tuple2<String, String>> dependers = getDependers(remainingDocument.getShortId(), connection)
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
-                updateMinMaxDepModified((String) dependerShortId, connection)
+                updateMaxDepModified((String) dependerShortId, connection)
                 removeEmbellishedDocument(dependerShortId, connection)
             }
 
@@ -494,7 +509,7 @@ class PostgreSQLComponent implements Storage {
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
                 removeEmbellishedDocument(dependerShortId, connection)
-                updateMinMaxDepModified((String) dependerShortId, connection)
+                updateMaxDepModified((String) dependerShortId, connection)
                 selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
                 selectStatement.setString(1, dependerShortId)
                 resultSet = selectStatement.executeQuery()
@@ -579,7 +594,7 @@ class PostgreSQLComponent implements Storage {
 
             saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
-            updateMinMaxDepModified(doc.getShortId(), connection)
+            updateMaxDepModified(doc.getShortId(), connection)
             connection.commit()
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {
@@ -615,7 +630,7 @@ class PostgreSQLComponent implements Storage {
         List<Tuple2<String, String>> dependers = getDependers(id, connection)
         try {
             for (Tuple2<String, String> depender : dependers) {
-                updateMinMaxDepModified((String) depender.get(0), connection)
+                updateMaxDepModified((String) depender.get(0), connection)
                 removeEmbellishedDocument((String) depender.get(0), connection)
             }
             connection.commit()
@@ -753,14 +768,13 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private void updateMinMaxDepModified(String id, Connection connection) {
+    private void updateMaxDepModified(String id, Connection connection) {
         PreparedStatement preparedStatement = null
         ResultSet rs = null
         try {
-            preparedStatement = connection.prepareStatement(UPDATE_MINMAX_MODIFIED)
+            preparedStatement = connection.prepareStatement(UPDATE_MAX_MODIFIED)
             preparedStatement.setString(1, id)
             preparedStatement.setString(2, id)
-            preparedStatement.setString(3, id)
             preparedStatement.execute()
         }
         finally {
@@ -906,7 +920,7 @@ class PostgreSQLComponent implements Storage {
                 refreshDerivativeTables(doc, connection, false)
                 if (updateDepMinMax) {
                     for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection)) {
-                        updateMinMaxDepModified((String) depender.get(0), connection)
+                        updateMaxDepModified((String) depender.get(0), connection)
                         removeEmbellishedDocument((String) depender.get(0), connection)
                     }
                 }
