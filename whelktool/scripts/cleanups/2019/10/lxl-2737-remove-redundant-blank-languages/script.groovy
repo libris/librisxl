@@ -14,30 +14,48 @@ PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 
 // These are cases that won't be handled by metadata (definitions) improvements that we still want to clean up
 substitutions = [
+        'catalán'                         : 'katalanska',
+        'dansk'                           : 'danska',
+        'engl'                            : 'engelska',
+        'fornkyrkoslaviska'               : 'fornkyrkslaviska',
+        'francais'                        : 'franska',
+        'inglés'                          : 'engelska',
         'jap'                             : 'jpn',
-        'mongoliskt språk'                : 'mongoliska språk',
-        'mongoliska'                      : 'mongoliska språk',
-        'mongoliska språket'              : 'mongoliska språk',
+        'kroat'                           : 'kroatiska',
         'latviešu val'                    : 'lettiska',
         'latviešu valodā'                 : 'lettiska',
-        'suomi'                           : 'finska',
-        'česky'                           : 'tjeckiska',
+        'mongoliska språket'              : 'mongoliska språk',
+        'mongoliska'                      : 'mongoliska språk',
+        'mongoliskt språk'                : 'mongoliska språk',
         'ruotsi'                          : 'svenska',
+        'schwed'                          : 'svenska',
+        'suomi'                           : 'finska',
+        'svensk'                          : 'svenska',
+        'tigriniska'                      : 'tigrinska',
+        'á íslensku'                      : 'isländska',
+        'česky'                           : 'tjeckiska',
 
-        'svenska (fornsvenska)'           : 'fornsvenska',
-        'grekiska (nygrekiska)'           : 'nygrekiska',
-        'franska (fornfranska)'           : 'fornfranska',
-        'tyska (medelhögtyska)'           : 'medelhögtyska',
-        'engelska (medelengelska)'        : 'medelengelska',
-        'engelska (fornengelska)'         : 'fornengelska',
-        'tyska (lågtyska)'                : 'lågtyska',
-        'nederländska (medelnederländska)': 'medelnederländska',
-        'norska (nynorsk)'                : 'nynorsk',
-        'franska (medelfranska)'          : 'medelfranska',
-        'tyska (medellågtyska)'           : 'medellågtyska',
         'arabiska (judearabiska)'         : 'judearabiska',
+        'engelska (fornengelska)'         : 'fornengelska',
+        'engelska (medelengelska)'        : 'medelengelska',
+        'franska (fornfranska)'           : 'fornfranska',
+        'franska (medelfranska)'          : 'medelfranska',
+        'french (middle french)'          : 'medelfranska',
+        'grekiska (nygrekiska)'           : 'nygrekiska',
+        'nederländska (medelnederländska)': 'medelnederländska',
+        'norska (nynorsk)'                : 'nynorska',
+        'norska (nynorska)'               : 'nynorska',
+        'samiska (lulesamiska)'           : 'lulesamiska',
         'samiska (nordsamiska)'           : 'nordsamiska',
-        'samiska (lulesamiska)'           : 'lulesamiska'
+        'svenska (fornsvenska)'           : 'fornsvenska',
+        'tyska (lågtyska)'                : 'lågtyska',
+        'tyska (medelhögtyska)'           : 'medelhögtyska',
+        'tyska (medellågtyska)'           : 'medellågtyska',
+
+        // https://www.loc.gov/standards/iso639-2/php/code_changes.php
+        // ISO 639-2/B code deprecated in favor of ISO 639-2/T code
+        'scc'                             : 'srp',
+        'scr'                             : 'hrv'
 ]
 
 linker = buildLanguageMap()
@@ -45,7 +63,11 @@ linker = buildLanguageMap()
 selectByCollection('auth') { auth ->
     try {
         def (record, thing) = auth.graph
-        if (linker.linkLanguages(thing, 'associatedLanguage')) {
+
+        boolean a = linker.linkLanguages(thing, 'associatedLanguage')
+        boolean b = linker.linkLanguages(thing, 'language')
+
+        if (a || b) {
             scheduledForUpdate.println("${auth.doc.getURI()}")
             auth.scheduleSave()
         }
@@ -87,6 +109,8 @@ LanguageLinker buildLanguageMap() {
     linker.addSubstitutions(substitutions)
     linker.addMapping('grekiska', 'https://id.kb.se/language/gre')
     linker.addMapping('grekiska', 'https://id.kb.se/language/grc')
+    linker.addMapping('greek', 'https://id.kb.se/language/gre')
+    linker.addMapping('greek', 'https://id.kb.se/language/grc')
 
     return linker
 }

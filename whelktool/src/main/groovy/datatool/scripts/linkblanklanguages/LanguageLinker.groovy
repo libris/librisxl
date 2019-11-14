@@ -130,17 +130,6 @@ class LanguageLinker implements DocumentUtil.Linker {
             return matches
         }
 
-        // e.g "Swedish, Russian and English"
-        def m = labelOrCode =~ /(.+)(?: och | and |&)(.+)/
-        if (m.matches()) {
-            def matches = []
-            for (String l : m.group(1).split(',')) {
-                matches.add(trim(l))
-            }
-            matches.add(trim(m.group(2)))
-            return matches
-        }
-
         return []
     }
 

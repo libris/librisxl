@@ -196,28 +196,6 @@ class LanguageLinkerSpec extends Specification {
         [language: [code: 'swe qqq eng']]     | false  | [language: [code: 'swe qqq eng']]
     }
 
-    def "handles enumerated language labels"() {
-        expect:
-        linker.linkLanguages(data) == change
-        data == expected
-
-        where:
-        data                                                                           | change | expected
-
-        [language: [label: '. engelska & hebreiska']]                                  | true   | [language: [['@id': 'http://id/eng'], ['@id': 'http://id/heb']]]
-        [language: [label: 'engelska, hebreiska, latin & arabiska']]                   | true   | [language: [['@id': 'http://id/eng'], ['@id': 'http://id/heb'], ['@id': 'http://id/lat'], ['@id': 'http://id/ara']]]
-        [language: [label: '.tyska (fornhögtyska)., latin och svenska']]               | true   | [language: [['@id': 'http://id/goh'], ['@id': 'http://id/lat'], ['@id': 'http://id/swe']]]
-        [language: [label: 'english and hebrew']]                                      | true   | [language: [['@id': 'http://id/eng'], ['@id': 'http://id/heb']]]
-        [language: [label: ['english and hebrew']]]                                    | true   | [language: [['@id': 'http://id/eng'], ['@id': 'http://id/heb']]]
-
-        // existing languages are not replaced
-        [language: [['@id': 'http://id/heb'], [code: 'english and hebrew']]]           | true   | [language: [['@id': 'http://id/heb'], ['@id': 'http://id/eng']]]
-        [language: [[code: 'english and hebrew'], ['@id': 'http://id/heb', abc: 123]]] | true   | [language: [['@id': 'http://id/eng'], ['@id': 'http://id/heb', abc: 123]]]
-
-        // do nothing if not all labels can be mapped
-        [language: [code: 'english and klingon']]                                      | false  | [language: [code: 'english and klingon']]
-    }
-
     def "handles weird language label lists"() {
         expect:
         linker.linkLanguages(data) == change
@@ -293,10 +271,6 @@ class LanguageLinkerSpec extends Specification {
         [language: [[label: 'grekiska']]]                                   | false  | [language: [[label: 'grekiska']]]
         [language: [[label: 'grekiska'], ['@id': 'http://id/gre']]]         | true   | [language: [['@id': 'http://id/gre']]]
         [language: [[label: 'grekiska'], ['@id': 'http://id/grc']]]         | true   | [language: [['@id': 'http://id/grc']]]
-
-        [language: [[label: 'grekiska & latin']]]                           | false  | [language: [[label: 'grekiska & latin']]]
-        [language: [[label: 'grekiska & latin'], ['@id': 'http://id/grc']]] | true   | [language: [['@id': 'http://id/lat'], ['@id': 'http://id/grc']]]
-        [language: [[label: 'grekiska & latin'], ['@id': 'http://id/gre']]] | true   | [language: [['@id': 'http://id/lat'], ['@id': 'http://id/gre']]]
     }
 
 
