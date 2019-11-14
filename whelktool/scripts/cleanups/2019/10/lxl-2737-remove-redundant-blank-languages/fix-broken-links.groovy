@@ -2,6 +2,7 @@
  *  - Remove https://id.kb.se/language/___
  *  - Change 'scc' -> 'srp'
  *  - Change 'scr' -> 'hrv'
+ *
  *  See LXL-2737 for more info
  */
 

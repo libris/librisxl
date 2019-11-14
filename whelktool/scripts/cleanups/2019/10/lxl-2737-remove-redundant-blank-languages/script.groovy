@@ -55,7 +55,35 @@ substitutions = [
         // https://www.loc.gov/standards/iso639-2/php/code_changes.php
         // ISO 639-2/B code deprecated in favor of ISO 639-2/T code
         'scc'                             : 'srp',
-        'scr'                             : 'hrv'
+        'scr'                             : 'hrv',
+
+        // Unambiguous Obsolete MARC codes
+        // https://www.kb.se/katalogisering/Formathandboken/Sprakkoder/Sprakkoder/
+        // https://www.loc.gov/marc/isochange_ann.html
+        'cam':'khm',
+        'esk':'ypk',
+        'eth':'gez',
+        'far':'fao',
+        'gae':'gla',
+        'gag':'glg',
+        'gal':'orm',
+        'gua':'grn',
+        'int':'ina',
+        'iri':'gle',
+        'kus':'kos',
+        'lan':'oci',
+        'lap':'smi',
+        'max':'glv',
+        'mla':'mlg',
+        'sao':'smo',
+        'sho':'sna',
+        'snh':'sin',
+        'sso':'sot',
+        'tag':'tgl',
+        'taj':'tgk',
+        'tar':'tat',
+        'tru':'chk',
+        'tsw':'tsn',
 ]
 
 linker = buildLanguageMap()
