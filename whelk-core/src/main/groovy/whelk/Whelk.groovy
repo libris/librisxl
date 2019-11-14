@@ -1,5 +1,10 @@
 package whelk
 
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.ListenableFutureTask
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.collections4.map.LRUMap
@@ -10,6 +15,11 @@ import whelk.exception.StorageCreateFailedException
 import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
+
+import java.util.concurrent.Callable
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 /**
  * The Whelk is the root component of the XL system.
@@ -41,6 +51,30 @@ class Whelk implements Storage {
 
     private Map<String, Document> authCache
     private final int CACHE_MAX_SIZE = 200_000
+
+    private Executor cacheRefresher = Executors.newSingleThreadExecutor()
+    private LoadingCache<String, List<String>> broaderCache = CacheBuilder.newBuilder()
+            .maximumSize(100)
+            .refreshAfterWrite(5, TimeUnit.MINUTES)
+            .build(new CacheLoader<String, List<String>>() {
+                @Override
+                List<String> load(String id) {
+                    return computeInverseBroaderRelations(id)
+                }
+
+                @Override
+                ListenableFuture<List<String>> reload(String id, List<String> oldValue) throws Exception {
+                    ListenableFutureTask<List<String>> task = ListenableFutureTask.create(new Callable<List<String>>() {
+                        @Override
+                        List<String> call() throws Exception {
+                            return load(id)
+                        }
+                    })
+
+                    cacheRefresher.execute(task)
+                    return task
+                }
+            })
 
     static Whelk createLoadedCoreWhelk(String propName = "secret", boolean useCache = false) {
         return createLoadedCoreWhelk(PropertyLoader.loadProperties(propName), useCache)
@@ -389,6 +423,14 @@ class Whelk implements Storage {
          return storage
                 .getDependers(tryGetSystemId(id))
                 .collect { it.first }
+    }
+
+    List<String> findInverseBroaderRelations(String id) {
+        return broaderCache.getUnchecked(id)
+    }
+
+    private List<String> computeInverseBroaderRelations(String id) {
+        return storage.getNestedDependers(tryGetSystemId(id), ['broader'])
     }
 
     private String tryGetSystemId(String id) {

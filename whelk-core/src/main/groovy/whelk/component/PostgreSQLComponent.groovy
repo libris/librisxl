@@ -19,6 +19,7 @@ import whelk.exception.WhelkException
 import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
 
+import java.sql.Array
 import java.sql.BatchUpdateException
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -80,6 +81,7 @@ class PostgreSQLComponent implements Storage {
     protected String GET_LEGACY_PROFILE
     protected String INSERT_EMBELLISHED_DOCUMENT
     protected String DELETE_EMBELLISHED_DOCUMENT
+    protected String NESTED_RELATIONS
 
     String mainTableName
     LinkFinder linkFinder
@@ -243,6 +245,23 @@ class PostgreSQLComponent implements Storage {
         GET_DOCUMENT_BY_IRI = "SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
 
         GET_LEGACY_PROFILE = "SELECT profile FROM $profilesTableName WHERE library_id = ?"
+
+        NESTED_RELATIONS = "WITH RECURSIVE nested_relation AS (" +
+                "    SELECT id " +
+                "    FROM $dependenciesTableName " +
+                "    WHERE dependsonid = ? " +
+                "    AND relation = ANY (?) " +
+                "  UNION " +
+                "    SELECT d.id " +
+                "    FROM $dependenciesTableName d " +
+                "    INNER JOIN nested_relation n ON d.dependsonid = n.id " +
+                "    WHERE relation = ANY (?) " +
+                ") " +
+                "SELECT i.iri " +
+                "FROM nested_relation n, $idTableName i " +
+                "WHERE n.id = i.id " +
+                "AND i.graphindex = 1 " +
+                "AND i.mainid IS TRUE"
      }
 
 
@@ -1240,6 +1259,35 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
+    /**
+     * List all nodes in the dependency graph of an ID.
+     *
+     * @param systemId
+     * @param relationTypes Relation types to follow
+     * @return A list with thing main IRIs of dependers
+     */
+    List<String> getNestedDependers(String systemId, List<String> relationTypes) {
+        Connection connection = null
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        Array relationsArray = null
+        try {
+            connection = getConnection()
+            relationsArray = connection.createArrayOf('text', relationTypes.toArray())
+            preparedStatement = connection.prepareStatement(NESTED_RELATIONS)
+            preparedStatement.setString(1, systemId)
+            preparedStatement.setArray(2, relationsArray)
+            preparedStatement.setArray(3, relationsArray)
+            rs = preparedStatement.executeQuery()
+            List<String> result = []
+            while (rs.next())
+                result.add(rs.getString(1))
+            return result
+        } finally {
+            close(relationsArray, rs, preparedStatement, connection)
+        }
+    }
+
     String getSystemIdByIri(String iri) {
         Connection connection = getConnection()
         try {
@@ -1903,6 +1951,9 @@ class PostgreSQLComponent implements Storage {
                         }
                         if (resource instanceof ResultSet) {
                             resource.close()
+                        }
+                        if (resource instanceof Array) {
+                            resource.free()
                         }
                     }
                 } catch (Exception e) {
