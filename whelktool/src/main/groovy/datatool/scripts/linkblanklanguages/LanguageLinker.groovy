@@ -27,6 +27,10 @@ class LanguageLinker implements DocumentUtil.Linker {
 
         Set<String> labels = [code]
 
+        if (language.termLangCode) {
+            labels.add(language.termLangCode)
+        }
+
         def prefLabels = language.prefLabelByLang as Map ?: [:]
         prefLabels.values().each(maybeCollection({ String label ->
             labels.add(label.toLowerCase())
