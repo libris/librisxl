@@ -80,8 +80,9 @@ selectByCollection('auth') { auth ->
 
 selectByCollection('bib') { bib ->
     try {
-        def (record, thing, work) = bib.graph
-        if (!((String) work['@id']).endsWith('#work')) {
+        def work = getWork(bib)
+
+        if(!work) {
             return
         }
 
@@ -113,4 +114,15 @@ LanguageLinker buildLanguageMap() {
     linker.addMapping('greek', 'https://id.kb.se/language/grc')
 
     return linker
+}
+
+Map getWork(def bib) {
+    def (record, thing, work) = bib.graph
+    if (isInstanceOf(thing, 'Work')) {
+        return thing
+    }
+    else if (isInstanceOf(work, 'Work')) {
+        return work
+    }
+    return null
 }
