@@ -8,6 +8,8 @@
 import datatool.scripts.linkblanklanguages.LanguageLinker
 import datatool.util.Statistics
 
+import java.util.concurrent.ConcurrentLinkedQueue
+
 OBSOLETE_CODES = ['9ss', '9sl']
 
 PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
@@ -55,7 +57,35 @@ substitutions = [
         // https://www.loc.gov/standards/iso639-2/php/code_changes.php
         // ISO 639-2/B code deprecated in favor of ISO 639-2/T code
         'scc'                             : 'srp',
-        'scr'                             : 'hrv'
+        'scr'                             : 'hrv',
+
+        // Unambiguous Obsolete MARC codes
+        // https://www.kb.se/katalogisering/Formathandboken/Sprakkoder/Sprakkoder/
+        // https://www.loc.gov/marc/isochange_ann.html
+        'cam':'khm',
+        'esk':'ypk',
+        'eth':'gez',
+        'far':'fao',
+        'gae':'gla',
+        'gag':'glg',
+        'gal':'orm',
+        'gua':'grn',
+        'int':'ina',
+        'iri':'gle',
+        'kus':'kos',
+        'lan':'oci',
+        'lap':'smi',
+        'max':'glv',
+        'mla':'mlg',
+        'sao':'smo',
+        'sho':'sna',
+        'snh':'sin',
+        'sso':'sot',
+        'tag':'tgl',
+        'taj':'tgk',
+        'tar':'tat',
+        'tru':'chk',
+        'tsw':'tsn',
 ]
 
 linker = buildLanguageMap()
@@ -80,8 +110,9 @@ selectByCollection('auth') { auth ->
 
 selectByCollection('bib') { bib ->
     try {
-        def (record, thing, work) = bib.graph
-        if (!((String) work['@id']).endsWith('#work')) {
+        def work = getWork(bib)
+
+        if(!work) {
             return
         }
 
@@ -104,7 +135,9 @@ LanguageLinker buildLanguageMap() {
     ]
 
     LanguageLinker linker = new LanguageLinker(OBSOLETE_CODES, new Statistics().printOnShutdown())
-    queryDocs(q).each(linker.&addLanguageDefinition)
+    ConcurrentLinkedQueue<Map> languages = new ConcurrentLinkedQueue<>()
+    selectByIds(queryIds(q).collect()) { languages.add(it.graph[1]) }
+    languages.forEach({l -> linker.addLanguageDefinition(l) } )
 
     linker.addSubstitutions(substitutions)
     linker.addMapping('grekiska', 'https://id.kb.se/language/gre')
@@ -113,4 +146,15 @@ LanguageLinker buildLanguageMap() {
     linker.addMapping('greek', 'https://id.kb.se/language/grc')
 
     return linker
+}
+
+Map getWork(def bib) {
+    def (record, thing, work) = bib.graph
+    if (isInstanceOf(thing, 'Work')) {
+        return thing
+    }
+    else if (isInstanceOf(work, 'Work')) {
+        return work
+    }
+    return null
 }
