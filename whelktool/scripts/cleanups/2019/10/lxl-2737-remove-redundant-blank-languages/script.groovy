@@ -8,6 +8,8 @@
 import datatool.scripts.linkblanklanguages.LanguageLinker
 import datatool.util.Statistics
 
+import java.util.concurrent.ConcurrentLinkedQueue
+
 OBSOLETE_CODES = ['9ss', '9sl']
 
 PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
@@ -133,7 +135,9 @@ LanguageLinker buildLanguageMap() {
     ]
 
     LanguageLinker linker = new LanguageLinker(OBSOLETE_CODES, new Statistics().printOnShutdown())
-    queryDocs(q).each(linker.&addLanguageDefinition)
+    ConcurrentLinkedQueue<Map> languages = new ConcurrentLinkedQueue<>()
+    selectByIds(queryIds(q).collect()) { languages.add(it.graph[1]) }
+    languages.forEach({l -> linker.addLanguageDefinition(l) } )
 
     linker.addSubstitutions(substitutions)
     linker.addMapping('grekiska', 'https://id.kb.se/language/gre')
