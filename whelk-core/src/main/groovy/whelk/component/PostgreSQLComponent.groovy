@@ -213,7 +213,7 @@ class PostgreSQLComponent implements Storage {
                 "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.iri = ?"
         GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE iri = 'https://id.kb.se/vocab/context')"
 
-        GET_DEPENDERS =
+        GET_DEPENDENCIES =
                 "WITH RECURSIVE deps(i) AS ( " +
                 " VALUES (?, null) " +
                 " UNION " +
@@ -224,7 +224,7 @@ class PostgreSQLComponent implements Storage {
                 ") " +
                 "SELECT * FROM deps"
 
-        GET_DEPENDENCIES =
+        GET_DEPENDERS =
                 "WITH RECURSIVE deps(i) AS ( " +
                 " VALUES (?, null) " +
                 " UNION " +
