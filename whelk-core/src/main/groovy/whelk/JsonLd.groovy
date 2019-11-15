@@ -47,6 +47,8 @@ class JsonLd {
 
     static final List<String> NS_SEPARATORS = ['#', '/', ':']
 
+    static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf']
+
     static final Set<String> LD_KEYS
 
     static final ObjectMapper mapper = new ObjectMapper()

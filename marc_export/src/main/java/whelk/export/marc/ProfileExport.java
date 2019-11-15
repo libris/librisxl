@@ -8,6 +8,7 @@ import se.kb.libris.export.ExportProfile;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.MarcRecordWriter;
 import whelk.Document;
+import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.util.LegacyIntegrationTools;
@@ -124,17 +125,12 @@ public class ProfileExport
         }
         else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
         {
-            List<Tuple2<String, String>> dependers = m_whelk.getStorage().getDependers(id);
+            List<Tuple2<String, String>> dependers = m_whelk.getStorage().getDependers(id, JsonLd.getNON_DEPENDANT_RELATIONS());
             for (Tuple2 depender : dependers)
             {
                 String dependerId = (String) depender.getFirst();
-                String dependerRelation = (String) depender.getSecond();
                 Document dependerDoc = m_whelk.getStorage().loadEmbellished(dependerId, m_whelk.getJsonld());
                 String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, m_whelk.getJsonld());
-
-                if (dependerRelation.equals("broader") || dependerRelation.equals("narrower") || dependerRelation.equals("expressionOf"))
-                    continue;
-
                 if (!dependerCollection.equals("bib"))
                     continue;
 

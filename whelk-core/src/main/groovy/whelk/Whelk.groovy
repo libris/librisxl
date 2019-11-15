@@ -183,7 +183,7 @@ class Whelk implements Storage {
     }
 
     public void reindexDependers(Document document) {
-        List<Tuple2<String, String>> dependers = storage.getDependers(document.getShortId())
+        List<Tuple2<String, String>> dependers = storage.getDependers(document.getShortId(), JsonLd.NON_DEPENDANT_RELATIONS)
 
         // Filter out "itemOf"-links. In other words, do not bother reindexing hold posts (they're not embellished in elastic)
         List<String> idsToReindex = []
@@ -345,7 +345,7 @@ class Whelk implements Storage {
         if (elastic) {
             String remainingSystemID = storage.getSystemIdByIri(remainingID)
             String disappearingSystemID = storage.getSystemIdByIri(disappearingID)
-            List<Tuple2<String, String>> dependerRows = storage.getDependers(remainingSystemID)
+            List<Tuple2<String, String>> dependerRows = storage.getDependers(remainingSystemID, JsonLd.NON_DEPENDANT_RELATIONS)
             dependerRows.addAll( storage.getDependers(disappearingSystemID) )
             List<String> dependerSystemIDs = []
             for (Tuple2<String, String> dependerRow : dependerRows) {

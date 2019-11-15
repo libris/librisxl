@@ -220,7 +220,7 @@ class PostgreSQLComponent implements Storage {
                 " SELECT d.dependsonid, d.relation " +
                 " FROM " +
                 "  lddb__dependencies d " +
-                " INNER JOIN deps deps1 on d.id = i " +
+                " INNER JOIN deps deps1 ON d.id = i AND d.relation NOT IN (€) " +
                 ") " +
                 "SELECT * FROM deps"
 
@@ -231,7 +231,7 @@ class PostgreSQLComponent implements Storage {
                 " SELECT d.id, d.relation " +
                 " FROM " +
                 "  lddb__dependencies d " +
-                " INNER JOIN deps deps1 on d.dependsonid = i " +
+                " INNER JOIN deps deps1 ON d.dependsonid = i AND d.relation NOT IN (€) " +
                 ") " +
                 "SELECT * FROM deps"
 
@@ -251,7 +251,7 @@ class PostgreSQLComponent implements Storage {
                 "  SELECT d2.dependsonid " +
                 "  FROM " +
                 "  lddb__dependencies d2 " +
-                "  INNER JOIN deps deps1 ON d2.id = deps1.id AND d2.relation NOT IN ('broader', 'narrower', 'expressionOf') " +
+                "  INNER JOIN deps deps1 ON d2.id = deps1.id AND d2.relation NOT IN (€) " +
                 " ) " +
                 " SELECT lddb.modified FROM deps INNER JOIN lddb on deps.id = lddb.id " +
                 " UNION " +
@@ -387,7 +387,7 @@ class PostgreSQLComponent implements Storage {
 
             saveVersion(doc, connection, now, now, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
-            for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection)) {
+            for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection, JsonLd.NON_DEPENDANT_RELATIONS)) {
                 updateMaxDepModified((String) depender.get(0), connection)
             }
 
@@ -501,7 +501,7 @@ class PostgreSQLComponent implements Storage {
             refreshDerivativeTables(remainingDocument, connection, false)
 
             // Update dependers on the remaining record
-            List<Tuple2<String, String>> dependers = getDependers(remainingDocument.getShortId(), connection)
+            List<Tuple2<String, String>> dependers = getDependers(remainingDocument.getShortId(), connection, JsonLd.NON_DEPENDANT_RELATIONS)
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
                 updateMaxDepModified((String) dependerShortId, connection)
@@ -529,7 +529,7 @@ class PostgreSQLComponent implements Storage {
             saveDependencies(disappearingDocument, connection)
 
             // Update dependers on the disappearing record
-            dependers = getDependers(disappearingSystemID, connection)
+            dependers = getDependers(disappearingSystemID, connection, JsonLd.NON_DEPENDANT_RELATIONS)
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
                 removeEmbellishedDocument(dependerShortId, connection)
@@ -651,7 +651,7 @@ class PostgreSQLComponent implements Storage {
     void refreshDependers(String id) {
         Connection connection = getConnection()
         connection.setAutoCommit(false)
-        List<Tuple2<String, String>> dependers = getDependers(id, connection)
+        List<Tuple2<String, String>> dependers = getDependers(id, connection, JsonLd.NON_DEPENDANT_RELATIONS)
         try {
             for (Tuple2<String, String> depender : dependers) {
                 updateMaxDepModified((String) depender.get(0), connection)
@@ -796,7 +796,9 @@ class PostgreSQLComponent implements Storage {
         PreparedStatement preparedStatement = null
         ResultSet rs = null
         try {
-            preparedStatement = connection.prepareStatement(UPDATE_MAX_MODIFIED)
+            String replacement = "'" + JsonLd.NON_DEPENDANT_RELATIONS.join("', '") + "'"
+            String query = UPDATE_MAX_MODIFIED.replace("€", replacement)
+            preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, id)
             preparedStatement.setString(2, id)
             preparedStatement.setString(3, id)
@@ -944,7 +946,7 @@ class PostgreSQLComponent implements Storage {
                 batch.addBatch()
                 refreshDerivativeTables(doc, connection, false)
                 if (updateDepMinMax) {
-                    for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection)) {
+                    for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection, JsonLd.NON_DEPENDANT_RELATIONS)) {
                         updateMaxDepModified((String) depender.get(0), connection)
                         removeEmbellishedDocument((String) depender.get(0), connection)
                     }
@@ -1344,32 +1346,36 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    List<Tuple2<String, String>> getDependencies(String id) {
+    List<Tuple2<String, String>> getDependencies(String id, List<String> excludeRelations = []) {
         Connection connection = getConnection()
         try {
-            return getDependencyData(id, GET_DEPENDENCIES, connection)
+            return getDependencyData(id, GET_DEPENDENCIES, connection, excludeRelations)
         } finally {
             close(connection)
         }
     }
 
-    List<Tuple2<String, String>> getDependers(String id) {
+    List<Tuple2<String, String>> getDependers(String id, List<String> excludeRelations = []) {
         Connection connection = getConnection()
         try {
-            getDependers(id, connection)
+            getDependers(id, connection, excludeRelations)
         } finally {
             close(connection)
         }
     }
 
-    List<Tuple2<String, String>> getDependers(String id, Connection connection) {
-        return getDependencyData(id, GET_DEPENDERS, connection)
+    List<Tuple2<String, String>> getDependers(String id, Connection connection, List<String> excludeRelations = []) {
+        return getDependencyData(id, GET_DEPENDERS, connection, excludeRelations)
     }
 
-    private static List<Tuple2<String, String>> getDependencyData(String id, String query, Connection connection) {
+    private static List<Tuple2<String, String>> getDependencyData(String id, String query, Connection connection,
+                                                                  List<String> excludeRelations) {
         PreparedStatement preparedStatement = null
         ResultSet rs = null
         try {
+
+            String replacement = "'" + excludeRelations.join("', '") + "'"
+            query = query.replace("€", replacement)
             preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, id)
             rs = preparedStatement.executeQuery()
