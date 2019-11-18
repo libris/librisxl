@@ -2,7 +2,7 @@
 See LXL-2806 & LXL-2395 for more info.
 */
 
-PrintWriter failedIDs = getReportWriter("failed-to-delete-bibIDs")
+PrintWriter failedIDs = getReportWriter("failed-to-delete-authIDs")
 scheduledForChange = getReportWriter("scheduledForChange")
 
 selectBySqlWhere("""
