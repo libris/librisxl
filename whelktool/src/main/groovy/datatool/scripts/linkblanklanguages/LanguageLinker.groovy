@@ -1,6 +1,6 @@
 package datatool.scripts.linkblanklanguages
 
-import datatool.util.DocumentUtil
+import whelk.util.DocumentUtil
 import datatool.util.Statistics
 
 class LanguageLinker implements DocumentUtil.Linker {

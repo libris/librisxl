@@ -1,4 +1,4 @@
-package datatool.util
+package whelk.util
 
 class DocumentUtil {
     public final static Operation NOP = new Nop()
