@@ -26,6 +26,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ExportProfile {
+
+    public static final String BIBLEVEL_FILTER = "biblevel";
+    public static final String E_FILTER = "efilter";
+    public static final String FICTION_FILTER = "fictionfilter";
+    public static final String LICENSE_FILTER = "licensefilter";
+
     Properties properties = new Properties();
     Map<String, Set<String>> sets = new HashMap<String, Set<String>>();
     Map<String, String> extraFields = new HashMap<String, String>();
@@ -106,6 +112,7 @@ public class ExportProfile {
         return ret;
     }
 
+
     public static boolean isEResource(MarcRecord mr) {
         Iterator iter = mr.iterator("007");
 
@@ -118,7 +125,9 @@ public class ExportProfile {
         return false;
     }
 
+
     public static boolean isFiction(MarcRecord mr) {
+        // fiction must be Text and Monograph
         if (mr.getLeader(6) != 'a' || mr.getLeader(7) != 'm') {
             return false;
         }
@@ -135,6 +144,7 @@ public class ExportProfile {
         return false;
     }
 
+
     public static boolean isLicenseRecord(MarcRecord mr) {
         Iterator iter = mr.iterator("040");
 
@@ -148,19 +158,31 @@ public class ExportProfile {
         return false;
     }
 
+
     public static boolean isPrelInfo(MarcRecord mr) {
         return mr.getLeader(17) == '8';
     }
 
     public boolean filter(MarcRecord mr) {
-        if (getProperty("biblevel", "off").equalsIgnoreCase("ON") && isPrelInfo(mr)) return true;
-        if (getProperty("licensefilter", "off").equalsIgnoreCase("ON") && isLicenseRecord(mr)) return true;
-        if (getProperty("efilter", "off").equalsIgnoreCase("ON") && isEResource(mr)) return true;
-        if (getProperty("fictionfilter", "off").equalsIgnoreCase("ON") && isFiction(mr)) return true;
-
-        return false;
+        return findFilter(mr) != null;
     }
 
+    public String findFilter(MarcRecord mr) {
+        if (getProperty(BIBLEVEL_FILTER, "off").equalsIgnoreCase("ON") && isPrelInfo(mr)) {
+            return BIBLEVEL_FILTER;
+        }
+        if (getProperty(LICENSE_FILTER, "off").equalsIgnoreCase("ON") && isLicenseRecord(mr)) {
+            return LICENSE_FILTER;
+        }
+        if (getProperty(E_FILTER, "off").equalsIgnoreCase("ON") && isEResource(mr)) {
+            return E_FILTER;
+        }
+        if (getProperty(FICTION_FILTER, "off").equalsIgnoreCase("ON") && isFiction(mr)) {
+            return FICTION_FILTER;
+        }
+
+        return null;
+    }
 
     /**
      * Adds pointers from 9XX fields to 100, 110, 111, 130, 240, 440,
