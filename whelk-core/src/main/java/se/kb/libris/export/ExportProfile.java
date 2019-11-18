@@ -118,6 +118,23 @@ public class ExportProfile {
         return false;
     }
 
+    public static boolean isFiction(MarcRecord mr) {
+        if (mr.getLeader(6) != 'a' || mr.getLeader(7) != 'm') {
+            return false;
+        }
+
+        Iterator iter008 = mr.iterator("008");
+        if (iter008.hasNext()) {
+            Controlfield cf = (Controlfield)iter008.next();
+            // BooksLiteraryFormType ...
+            char bookstype = cf.getChar(33);
+            // ... is either undefined or NotFictionNotFurtherSpecified
+            return bookstype != ' ' && bookstype != '|' && bookstype != '0';
+        }
+
+        return false;
+    }
+
     public static boolean isLicenseRecord(MarcRecord mr) {
         Iterator iter = mr.iterator("040");
 
@@ -139,6 +156,7 @@ public class ExportProfile {
         if (getProperty("biblevel", "off").equalsIgnoreCase("ON") && isPrelInfo(mr)) return true;
         if (getProperty("licensefilter", "off").equalsIgnoreCase("ON") && isLicenseRecord(mr)) return true;
         if (getProperty("efilter", "off").equalsIgnoreCase("ON") && isEResource(mr)) return true;
+        if (getProperty("fictionfilter", "off").equalsIgnoreCase("ON") && isFiction(mr)) return true;
 
         return false;
     }
