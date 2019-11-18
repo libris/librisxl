@@ -6,6 +6,7 @@ scheduledForChange = getReportWriter("scheduled-for-change")
 report = getReportWriter("report")
 
 NOT_FICTION = "https://id.kb.se/marc/NotFictionNotFurtherSpecified"
+THESIS = "https://id.kb.se/marc/Thesis"
 SKONLITTERATUR = "https://id.kb.se/term/saogf/Sk%C3%B6nlitteratur"
 
 query = """collection = 'bib'
@@ -15,7 +16,18 @@ selectBySqlWhere(query, silent: false) { data ->
     def work = data.graph[2]
     def recordId = data.graph[0][ID]
 
-    if (!hasOnlyHClassifications(work) || !hasAnyNotFictionGenreForm(work)) {
+    if (!hasOnlyHClassifications(work)) {
+        return
+    }
+
+    if (hasNoGenreFormField(work)) {
+        report.println "No genreForm field for $recordId, creating one and setting it to $SKONLITTERATUR"
+        work.genreForm[0] = ['@id' : SKONLITTERATUR]
+        scheduledForChange.println "$recordId"
+        data.scheduleSave()
+    }
+
+    if (!hasAnyNotFictionGenreForm(work)) {
         return
     }
 
@@ -26,23 +38,28 @@ selectBySqlWhere(query, silent: false) { data ->
         data.scheduleSave()
     }
 
-    if (hasNoGenreFormField(work)) {
-        report.println "No genreForm field for $recordId, creating one and setting it to $SKONLITTERATUR"
-        work.genreForm[0] = ['@id' : SKONLITTERATUR]
-        scheduledForChange.println "$recordId"
-        data.scheduleSave()
+    if (hasThesisGenreForm(work)) {
+        report.println "Record $recordId with genreForm $work.genreForm" +
+                "has no broader to $SKONLITTERATUR, but has thesis: NOP..."
+        return
     }
 
-    if (hasAnyBroaderRelationToSkon(work)) {
-        def wasRemoved = work.genreForm.removeIf { gf -> gf.'@id' == NOT_FICTION }
-        if (wasRemoved) {
-            report.println """Record $recordId with genreForm $work.genreForm 
-                has a broader relation to $SKONLITTERATUR, removing $NOT_FICTION..."""
-            scheduledForChange.println "$recordId"
-            data.scheduleSave()
+    def wasRemoved = work.genreForm.removeIf { gf -> gf.'@id' == NOT_FICTION }
+
+    if (wasRemoved) {
+        if (hasAnyBroaderRelationToSkon(work)) {
+            report.println "Record $recordId with genreForm $work.genreForm" +
+                    "has a broader relation to $SKONLITTERATUR, removing $NOT_FICTION..."
         } else {
-            report.println "Could not remove $NOT_FICTION from $recordId"
+            work.genreForm.add(['@id' : SKONLITTERATUR])
+            report.println "Record $recordId with genreForm $work.genreForm" +
+                    "has no broader to $SKONLITTERATUR, setting $SKONLITTERATUR..."
         }
+        scheduledForChange.println "$recordId"
+        data.scheduleSave()
+
+    } else {
+        report.println "Could not remove $NOT_FICTION from $recordId"
     }
 }
 
@@ -64,6 +81,10 @@ boolean hasClassificationH(classification) {
     }
 
     return false
+}
+
+private boolean hasThesisGenreForm(work) {
+    return work.genreForm.any { gf -> gf.'@id' == THESIS }
 }
 
 private boolean hasAnyNotFictionGenreForm(work) {
