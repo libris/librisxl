@@ -24,6 +24,12 @@ $ curl -Ss -XPOST "https://libris.kb.se/api/marc_export/?from=2019-10-05T22:00:0
 
 SE UPP med era tidsangivelser/tidszoner! Exemplet ovan skickar in tider i UTC (därav 'Z' på slutet). Det är ett bra sätt att göra det på. Vill man skicka in lokala tider istället för UTC så går det också, men då måste tidszonen ingå i angivelsen. Vänligen läs på om ISO-8601!
 
+Vill man anropa detta API med ett schemalagt skript så finns exempel/förslag på sådana skript här för:
+[Windows](examplescripts/export_windows.bat)
+och
+[*nix-derivat (bash)](examplescripts/export_nix.sh)
+
+
 Exempel på exportprofil:
 ```
 move240to244=off
@@ -56,7 +62,30 @@ sab=on
 
 ```
 
-Vill man anropa detta API med ett schemalagt skript så finns exempel/förslag på sådana skript här för:
-[Windows](examplescripts/export_windows.bat)
-och
-[*nix-derivat (bash)](examplescripts/export_nix.sh)
+Förklaring till (en del av) de olika inställningarna i exportprofilen:
+* move240to244=off|on - Flytta MARC fältet 240 till 244
+* f003=[sträng] - Tvinga fält 003 att anta ett visst värde
+* nameform=Forskningsbiblioteksform - Tvinga namnformer att anta anta Forskningsbiblioteksform
+* authoperators=[lista av sigel] - Ändringar av auktoritetsposter ska bara resultera i export om de gjorts av någon av följande sigel (lämnas tom för "alla")
+* holdupdate=on|off - Avgör om uppdateringar av bestånd ska leda till export
+* lcsh=on|off - Generera LCSH fält i posten
+* composestrategy=compose|decompose - Avgör ifall unicode-tecken ska vara composed eller decomposed
+* holddelete=on|off - Avgör om borttagning av bestånd ska resultera i export
+* authtype=interleaved|after - Avgör om auktoritetsinformation ska vara inbakad i bib-posten eller följa med som separat därefter
+* isbnhyphenate=on|off - Lägg till bindestreck i ISBN eller ej
+* isbndehyphenate=on|off - Ta bort bindestreck i ISBN eller ej
+* locations=[lista av sigel]|* - Generera export för dessa sigel (alternativt * för alla sigel)
+* bibcreate=on|off - Avgör om nyskapande av bib post ska resultera i export
+* format=ISO2709|MARCXML - Avgör serialisering av MARC-data
+* holdoperators=[list av sigel] - Ändringar av beståndsposter ska bara resultera i export om de gjorts av någon av följande sigel (lämnas tom för "alla")
+* authcreate=on|off - Ska skapande av auktoritetsposter kunna resultera i export
+* issnhyphenate=on|off - Lägg till bindestreck i ISSN
+* issndehyphenate=on|off - Ta bort bindestreck i ISSN
+* bibupdate=on|off - Avgör om uppdateringar av bibliografiska poster ska leda till export
+* holdtype=interleaved|after - Avgör om beståndsinformation ska vara inbakad i bib-posten eller följa med som separat därefter
+* holdcreate=on|off - Avgör om nyskapade bestånd ska leda till export
+* characterencoding=UTF-8|ISO-8859-1 - Avgör tecken-kodning
+* biboperators=[list av sigel] - Ändringar av bibliografiska poster ska bara resultera i export om de gjorts av någon av följande sigel (lämnas tom för "alla")
+* move0359=on|off - Flytta värde ifrån 035$9 till 035$a
+* authupdate=on|off - Avgör om uppdateringar av auktoritetsposter ska leda till export
+* sab=o|offn - Avgör om SAB-titlar ska läggas till
