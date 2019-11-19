@@ -75,7 +75,7 @@ class Whelk implements Storage {
 
     private LoadingCache<Tuple2<String,String>, List<String>> dependencyCache = CacheBuilder.newBuilder()
             .maximumSize(1000)
-            .refreshAfterWrite(5, TimeUnit.MILLISECONDS)
+            .refreshAfterWrite(5, TimeUnit.MINUTES)
             .build(new CacheLoader<Tuple2<String,String>, List<String>>() {
                 @Override
                 List<String> load(Tuple2<String,String> idAndRelation) {
