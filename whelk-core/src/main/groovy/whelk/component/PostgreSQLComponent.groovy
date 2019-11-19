@@ -82,7 +82,6 @@ class PostgreSQLComponent implements Storage {
     protected String GET_LEGACY_PROFILE
     protected String INSERT_EMBELLISHED_DOCUMENT
     protected String DELETE_EMBELLISHED_DOCUMENT
-    protected String NESTED_RELATIONS
 
     String mainTableName
     LinkFinder linkFinder
@@ -163,36 +162,36 @@ class PostgreSQLComponent implements Storage {
         GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,collection,created,modified,deleted,changedBy FROM $mainTableName WHERE id= ? FOR UPDATE"
         GET_DOCUMENT_VERSION = "SELECT id,data FROM $versionsTableName WHERE id = ? AND checksum = ?"
         GET_DOCUMENT_VERSION_BY_MAIN_ID = "SELECT id,data FROM $versionsTableName " +
-                                          "WHERE id = (SELECT id FROM $idTableName " +
-                                                      "WHERE iri = ? AND mainid = 't') " +
-                                          "AND checksum = ?"
+                "WHERE id = (SELECT id FROM $idTableName " +
+                "WHERE iri = ? AND mainid = 't') " +
+                "AND checksum = ?"
         GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,deleted,created,modified " +
                 "FROM $versionsTableName WHERE id = ? ORDER BY modified DESC"
         GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID = "SELECT id,data,deleted,created,modified " +
-                                               "FROM $versionsTableName " +
-                                               "WHERE id = (SELECT id FROM $idTableName " +
-                                                           "WHERE iri = ? AND mainid = 't') " +
-                                               "ORDER BY modified"
+                "FROM $versionsTableName " +
+                "WHERE id = (SELECT id FROM $idTableName " +
+                "WHERE iri = ? AND mainid = 't') " +
+                "ORDER BY modified"
         GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE data->'@graph' @> ?"
         GET_RECORD_ID_BY_THING_ID = "SELECT id FROM $idTableName WHERE iri = ? AND graphIndex = 1"
         GET_DOCUMENT_BY_MAIN_ID = "SELECT id,data,created,modified,deleted " +
-                                  "FROM $mainTableName " +
-                                  "WHERE id = (SELECT id FROM $idTableName " +
-                                              "WHERE mainid = 't' AND iri = ?)"
+                "FROM $mainTableName " +
+                "WHERE id = (SELECT id FROM $idTableName " +
+                "WHERE mainid = 't' AND iri = ?)"
         GET_RECORD_ID = "SELECT iri FROM $idTableName " +
-                        "WHERE graphindex = 0 AND mainid = 't' " +
-                        "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
+                "WHERE graphindex = 0 AND mainid = 't' " +
+                "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
         GET_THING_ID = "SELECT iri FROM $idTableName " +
-                        "WHERE graphindex = 1 AND mainid = 't' " +
-                        "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
+                "WHERE graphindex = 1 AND mainid = 't' " +
+                "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
         GET_MAIN_ID = "SELECT t2.iri FROM $idTableName t1 " +
-                      "JOIN $idTableName t2 " +
-                      "ON t2.id = t1.id " +
-                      "AND t2.graphindex = t1.graphindex " +
-                      "WHERE t1.iri = ? AND t2.mainid = true;"
+                "JOIN $idTableName t2 " +
+                "ON t2.id = t1.id " +
+                "AND t2.graphindex = t1.graphindex " +
+                "WHERE t1.iri = ? AND t2.mainid = true;"
         GET_ID_TYPE = "SELECT graphindex, mainid FROM $idTableName " +
-                      "WHERE iri = ?"
+                "WHERE iri = ?"
         GET_COLLECTION_BY_SYSTEM_ID = "SELECT collection FROM lddb where id = ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         // This query does the same as LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
@@ -220,7 +219,7 @@ class PostgreSQLComponent implements Storage {
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
         GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
         GET_MINMAX_MODIFIED = "SELECT MIN(modified), MAX(modified) from $mainTableName WHERE id IN (?)"
-        UPDATE_MINMAX_MODIFIED = "WITH dependsOn AS (SELECT modified FROM $dependenciesTableName JOIN $mainTableName ON " + dependenciesTableName + ".dependsOnId = " + mainTableName+ ".id WHERE " + dependenciesTableName + ".id = ? UNION SELECT modified FROM $mainTableName WHERE id = ?) " +
+        UPDATE_MINMAX_MODIFIED = "WITH dependsOn AS (SELECT modified FROM $dependenciesTableName JOIN $mainTableName ON " + dependenciesTableName + ".dependsOnId = " + mainTableName + ".id WHERE " + dependenciesTableName + ".id = ? UNION SELECT modified FROM $mainTableName WHERE id = ?) " +
                 "UPDATE $mainTableName SET depMinModified = (SELECT MIN(modified) FROM dependsOn), depMaxModified = (SELECT MAX(modified) FROM dependsOn) WHERE id = ?"
 
         // Queries
@@ -232,40 +231,22 @@ class PostgreSQLComponent implements Storage {
                 "INSERT INTO $settingsTableName (key, settings) SELECT ?,? WHERE NOT EXISTS (SELECT * FROM upsertsettings)"
 
         FIND_BY = "SELECT id, data, created, modified, deleted " +
-                  "FROM $mainTableName " +
-                  "WHERE data->'@graph' @> ? " +
-                  "OR data->'@graph' @> ? " +
-                  "LIMIT ? OFFSET ?"
+                "FROM $mainTableName " +
+                "WHERE data->'@graph' @> ? " +
+                "OR data->'@graph' @> ? " +
+                "LIMIT ? OFFSET ?"
 
         COUNT_BY = "SELECT count(*) " +
-                   "FROM $mainTableName " +
-                   "WHERE data->'@graph' @> ? " +
-                   "OR data->'@graph' @> ?"
+                "FROM $mainTableName " +
+                "WHERE data->'@graph' @> ? " +
+                "OR data->'@graph' @> ?"
 
         GET_SYSTEMID_BY_IRI = "SELECT id FROM $idTableName WHERE iri = ?"
         GET_THING_MAIN_IRI_BY_SYSTEMID = "SELECT iri FROM $idTableName WHERE graphindex = 1 and mainid is true and id = ?"
         GET_DOCUMENT_BY_IRI = "SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
 
         GET_LEGACY_PROFILE = "SELECT profile FROM $profilesTableName WHERE library_id = ?"
-
-        NESTED_RELATIONS = "WITH RECURSIVE nested_relation AS (" +
-                "    SELECT id " +
-                "    FROM $dependenciesTableName " +
-                "    WHERE dependsonid = ? " +
-                "    AND relation = ANY (?) " +
-                "  UNION " +
-                "    SELECT d.id " +
-                "    FROM $dependenciesTableName d " +
-                "    INNER JOIN nested_relation n ON d.dependsonid = n.id " +
-                "    WHERE relation = ANY (?) " +
-                ") " +
-                "SELECT i.iri " +
-                "FROM nested_relation n, $idTableName i " +
-                "WHERE n.id = i.id " +
-                "AND i.graphindex = 1 " +
-                "AND i.mainid IS TRUE"
-     }
-
+    }
 
     private Map status(URI uri, Connection connection) {
         Map statusMap = [:]
@@ -1258,35 +1239,6 @@ class PostgreSQLComponent implements Storage {
         }
         finally {
             close(rs, preparedStatement, connection)
-        }
-    }
-
-    /**
-     * List all nodes in the dependency graph of an ID.
-     *
-     * @param systemId
-     * @param relationTypes Relation types to follow
-     * @return A set of thing main IRIs of dependers
-     */
-    Set<String> getNestedDependers(String systemId, List<String> relationTypes) {
-        Connection connection = null
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        Array relationsArray = null
-        try {
-            connection = getConnection()
-            relationsArray = connection.createArrayOf('text', relationTypes.toArray())
-            preparedStatement = connection.prepareStatement(NESTED_RELATIONS)
-            preparedStatement.setString(1, systemId)
-            preparedStatement.setArray(2, relationsArray)
-            preparedStatement.setArray(3, relationsArray)
-            rs = preparedStatement.executeQuery()
-            Set<String> result = []
-            while (rs.next())
-                result.add(rs.getString(1))
-            return result
-        } finally {
-            close(relationsArray, rs, preparedStatement, connection)
         }
     }
 
