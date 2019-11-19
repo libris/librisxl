@@ -22,9 +22,12 @@ selectBySqlWhere(query, silent: false) { data ->
 
     if (hasNoGenreFormField(work)) {
         report.println "No genreForm field for $recordId, creating one and setting it to $SKONLITTERATUR"
-        work.genreForm[0] = ['@id' : SKONLITTERATUR]
+        genreFormValue = []
+        genreFormValue.add(['@id' : SKONLITTERATUR])
+        work.'genreForm' = genreFormValue
         scheduledForChange.println "$recordId"
         data.scheduleSave()
+        return
     }
 
     if (!hasAnyNotFictionGenreForm(work)) {
@@ -36,6 +39,7 @@ selectBySqlWhere(query, silent: false) { data ->
         work.genreForm[0] = ['@id' : SKONLITTERATUR]
         scheduledForChange.println "$recordId"
         data.scheduleSave()
+        return
     }
 
     if (hasThesisGenreForm(work)) {
@@ -53,7 +57,7 @@ selectBySqlWhere(query, silent: false) { data ->
         } else {
             work.genreForm.add(['@id' : SKONLITTERATUR])
             report.println "Record $recordId with genreForm $work.genreForm" +
-                    "has no broader to $SKONLITTERATUR, setting $SKONLITTERATUR..."
+                    "has no broader to $SKONLITTERATUR, setting $SKONLITTERATUR and removing $NOT_FICTION..."
         }
         scheduledForChange.println "$recordId"
         data.scheduleSave()
