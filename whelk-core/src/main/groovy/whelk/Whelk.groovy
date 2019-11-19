@@ -466,7 +466,7 @@ class Whelk implements Storage {
     }
 
     private Set<String> computeInverseBroaderRelations(String id) {
-        return storage.getNestedDependers(tryGetSystemId(id), BROADER_RELATIONS)
+        return storage.getNestedDependers(tryGetSystemId(id), ['broader'])
     }
 
     private Set<String> getDependenciesOfType(String id, String typeOfRelation) {
