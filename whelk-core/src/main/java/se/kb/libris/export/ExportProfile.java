@@ -32,6 +32,8 @@ public class ExportProfile {
     public static final String FICTION_FILTER = "fictionfilter";
     public static final String LICENSE_FILTER = "licensefilter";
 
+    public static final String FICTION_LETTERS = "1cdefhjmp";
+
     Properties properties = new Properties();
     Map<String, Set<String>> sets = new HashMap<String, Set<String>>();
     Map<String, String> extraFields = new HashMap<String, String>();
@@ -137,8 +139,8 @@ public class ExportProfile {
             Controlfield cf = (Controlfield)iter008.next();
             // BooksLiteraryFormType ...
             char bookstype = cf.getChar(33);
-            // ... is either undefined or NotFictionNotFurtherSpecified
-            return bookstype != ' ' && bookstype != '|' && bookstype != '0';
+            // is one of the fiction codes:
+            return FICTION_LETTERS.indexOf(bookstype) > -1;
         }
 
         return false;
