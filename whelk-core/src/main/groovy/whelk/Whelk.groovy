@@ -63,13 +63,13 @@ class Whelk implements Storage {
             .refreshAfterWrite(5, TimeUnit.MINUTES)
             .build(new CacheLoader<String, Set<String>>() {
                 @Override
-                Set<String> load(String id) {
-                    return Collections.unmodifiableSet(computeInverseBroaderRelations(id))
+                Set<String> load(String iri) {
+                    return Collections.unmodifiableSet(computeInverseBroaderRelations(iri))
                 }
 
                 @Override
-                ListenableFuture<Set<String>> reload(String id, Set<String> oldValue) throws Exception {
-                    return reloadTask( { load(id) } )
+                ListenableFuture<Set<String>> reload(String iri, Set<String> oldValue) throws Exception {
+                    return reloadTask( { load(iri) } )
                 }
             })
 
@@ -78,11 +78,11 @@ class Whelk implements Storage {
             .refreshAfterWrite(5, TimeUnit.MINUTES)
             .build(new CacheLoader<Tuple2<String,String>, Set<String>>() {
                 @Override
-                Set<String> load(Tuple2<String,String> idAndRelation) {
-                    String id = idAndRelation.first
-                    String typeOfRelation = idAndRelation.second
+                Set<String> load(Tuple2<String,String> iriAndRelation) {
+                    String iri = iriAndRelation.first
+                    String typeOfRelation = iriAndRelation.second
                     return Collections.unmodifiableSet(new HashSet(storage
-                            .getDependenciesOfType(storage.getSystemIdByThingId(id), typeOfRelation)
+                            .getDependenciesOfType(storage.getSystemIdByThingId(iri), typeOfRelation)
                             .collect(storage.&getThingMainIriBySystemId)))
                 }
 
@@ -435,15 +435,15 @@ class Whelk implements Storage {
         jsonld.embellish(document.data, referencedData2, filterOutNonChipTerms)
     }
 
-    boolean isImpliedBy(String broaderId, String narrowerId) {
+    boolean isImpliedBy(String broaderIri, String narrowerIri) {
         Set<String> visited = []
-        List<String> stack = [narrowerId]
+        List<String> stack = [narrowerIri]
 
         while (!stack.isEmpty()) {
-            String id = stack.pop()
+            String iri = stack.pop()
             for (String relation : BROADER_RELATIONS) {
-                Set<String> dependencies = new HashSet<>(getDependenciesOfType(id, relation))
-                if (dependencies.contains(broaderId)) {
+                Set<String> dependencies = new HashSet<>(getDependenciesOfType(iri, relation))
+                if (dependencies.contains(broaderIri)) {
                    return true
                 }
                 dependencies.removeAll(visited)
@@ -461,12 +461,27 @@ class Whelk implements Storage {
                 .collect { it.first }
     }
 
-    Set<String> findInverseBroaderRelations(String id) {
-        return broaderCache.getUnchecked(id)
+    Set<String> findInverseBroaderRelations(String iri) {
+        return broaderCache.getUnchecked(iri)
     }
 
-    private Set<String> computeInverseBroaderRelations(String id) {
-        return storage.getNestedDependers(tryGetSystemId(id), ['broader', 'broadMatch'])
+    List<String> findIdsLinkingTo(String id, String relation) {
+        return storage.getDependersOfType(tryGetSystemId(id), relation)
+    }
+
+    private Set<String> computeInverseBroaderRelations(String iri) {
+        Set<String> ids = []
+        List<String> stack = [storage.getSystemIdByIri(iri)]
+        while (!stack.isEmpty()) {
+            String id = stack.pop()
+            for (String relation : BROADER_RELATIONS ) {
+                List<String> dependers = findIdsLinkingTo(id, relation)
+                dependers.removeAll(ids)
+                stack.addAll(dependers)
+                ids.addAll(dependers)
+            }
+        }
+        return new HashSet<>(ids.collect(storage.&getThingMainIriBySystemId))
     }
 
     private Set<String> getDependenciesOfType(String id, String typeOfRelation) {
