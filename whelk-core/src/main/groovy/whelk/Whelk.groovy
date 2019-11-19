@@ -5,6 +5,7 @@ import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.ListenableFutureTask
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.collections4.map.LRUMap
@@ -20,6 +21,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.function.Supplier
 
 /**
  * The Whelk is the root component of the XL system.
@@ -27,6 +29,7 @@ import java.util.concurrent.TimeUnit
 @Log
 @CompileStatic
 class Whelk implements Storage {
+    private static final List<String> BROADER_RELATIONS = ['broader', 'broadMatch', 'exactMatch']
 
     ThreadGroup indexers = new ThreadGroup("dep-reindex")
     PostgreSQLComponent storage
@@ -52,7 +55,9 @@ class Whelk implements Storage {
     private Map<String, Document> authCache
     private final int CACHE_MAX_SIZE = 200_000
 
-    private Executor cacheRefresher = Executors.newSingleThreadExecutor()
+    private Executor cacheRefresher = Executors.newSingleThreadExecutor(
+            new ThreadFactoryBuilder().setDaemon(true).build())
+
     private LoadingCache<String, List<String>> broaderCache = CacheBuilder.newBuilder()
             .maximumSize(100)
             .refreshAfterWrite(5, TimeUnit.MINUTES)
@@ -64,15 +69,26 @@ class Whelk implements Storage {
 
                 @Override
                 ListenableFuture<List<String>> reload(String id, List<String> oldValue) throws Exception {
-                    ListenableFutureTask<List<String>> task = ListenableFutureTask.create(new Callable<List<String>>() {
-                        @Override
-                        List<String> call() throws Exception {
-                            return load(id)
-                        }
-                    })
+                    return reloadTask( { load(id) } )
+                }
+            })
 
-                    cacheRefresher.execute(task)
-                    return task
+    private LoadingCache<Tuple2<String,String>, List<String>> dependencyCache = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .refreshAfterWrite(5, TimeUnit.MILLISECONDS)
+            .build(new CacheLoader<Tuple2<String,String>, List<String>>() {
+                @Override
+                List<String> load(Tuple2<String,String> idAndRelation) {
+                    String id = idAndRelation.first
+                    String typeOfRelation = idAndRelation.second
+                    return storage
+                            .getDependenciesOfType(storage.getSystemIdByThingId(id), typeOfRelation)
+                            .collect(storage.&getThingMainIriBySystemId)
+                }
+
+                @Override
+                ListenableFuture<List<String>> reload(Tuple2<String,String> key, List<String> oldValue) throws Exception {
+                    return reloadTask( { load(key) } )
                 }
             })
 
@@ -419,8 +435,30 @@ class Whelk implements Storage {
         jsonld.embellish(document.data, referencedData2, filterOutNonChipTerms)
     }
 
+    boolean isImpliedBy(String broaderId, String narrowerId) {
+        Set<String> visited = []
+        List<String> stack = [narrowerId]
+
+        while (!stack.isEmpty()) {
+            String id = stack.pop()
+            for (String relation : BROADER_RELATIONS) {
+                List<String> dependencies = getDependenciesOfType(id, relation)
+                if (dependencies.contains(broaderId)) {
+                   return true
+                }
+                dependencies.removeAll(visited)
+                visited.addAll(dependencies)
+                stack.addAll(dependencies)
+            }
+        }
+
+        return false
+    }
+
+
+
     List<String> findIdsLinkingTo(String id) {
-         return storage
+        return storage
                 .getDependers(tryGetSystemId(id))
                 .collect { it.first }
     }
@@ -430,7 +468,11 @@ class Whelk implements Storage {
     }
 
     private List<String> computeInverseBroaderRelations(String id) {
-        return storage.getNestedDependers(tryGetSystemId(id), ['broader'])
+        return storage.getNestedDependers(tryGetSystemId(id), BROADER_RELATIONS)
+    }
+
+    private List<String> getDependenciesOfType(String id, String typeOfRelation) {
+        return dependencyCache.getUnchecked(new Tuple2<>(id, typeOfRelation))
     }
 
     private String tryGetSystemId(String id) {
@@ -449,5 +491,17 @@ class Whelk implements Storage {
 
     private boolean batchJobThread() {
         return Thread.currentThread().getThreadGroup().getName().contains("whelktool")
+    }
+
+    private <V> ListenableFutureTask<V> reloadTask(Supplier<V> reloadFunction) {
+        ListenableFutureTask<V> task = ListenableFutureTask.create(new Callable<V>() {
+            @Override
+            V call() throws Exception {
+                return reloadFunction.get()
+            }
+        })
+
+        cacheRefresher.execute(task)
+        return task
     }
 }
