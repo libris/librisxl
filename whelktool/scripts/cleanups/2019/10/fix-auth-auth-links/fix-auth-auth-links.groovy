@@ -13,7 +13,7 @@
  *
  */
 
-import datatool.util.DocumentUtil
+import whelk.util.DocumentUtil
 
 scheduledForChange = getReportWriter("scheduled-for-change")
 report = getReportWriter("report")

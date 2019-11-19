@@ -6,7 +6,7 @@
  *  See LXL-2737 for more info
  */
 
-import datatool.util.DocumentUtil
+import whelk.util.DocumentUtil
 
 PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 

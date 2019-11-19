@@ -1,10 +1,10 @@
-package datatool.util
+package whelk.util
 
-import datatool.util.DocumentUtil.Remove
-import datatool.util.DocumentUtil.Replace
 import spock.lang.Specification
+import whelk.util.DocumentUtil.Remove
+import whelk.util.DocumentUtil.Replace
 
-import static DocumentUtil.NOP
+import static whelk.util.DocumentUtil.NOP
 
 class DocumentUtilSpec extends Specification {
 
