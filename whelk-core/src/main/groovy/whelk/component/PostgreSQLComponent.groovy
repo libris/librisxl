@@ -1266,9 +1266,9 @@ class PostgreSQLComponent implements Storage {
      *
      * @param systemId
      * @param relationTypes Relation types to follow
-     * @return A list with thing main IRIs of dependers
+     * @return A set of thing main IRIs of dependers
      */
-    List<String> getNestedDependers(String systemId, List<String> relationTypes) {
+    Set<String> getNestedDependers(String systemId, List<String> relationTypes) {
         Connection connection = null
         PreparedStatement preparedStatement = null
         ResultSet rs = null
@@ -1281,7 +1281,7 @@ class PostgreSQLComponent implements Storage {
             preparedStatement.setArray(2, relationsArray)
             preparedStatement.setArray(3, relationsArray)
             rs = preparedStatement.executeQuery()
-            List<String> result = []
+            Set<String> result = []
             while (rs.next())
                 result.add(rs.getString(1))
             return result

@@ -29,7 +29,7 @@ import java.util.function.Supplier
 @Log
 @CompileStatic
 class Whelk implements Storage {
-    private static final List<String> BROADER_RELATIONS = ['broader', 'broadMatch', 'exactMatch']
+    public static final List<String> BROADER_RELATIONS = ['broader', 'broadMatch', 'exactMatch']
 
     ThreadGroup indexers = new ThreadGroup("dep-reindex")
     PostgreSQLComponent storage
@@ -58,36 +58,36 @@ class Whelk implements Storage {
     private Executor cacheRefresher = Executors.newSingleThreadExecutor(
             new ThreadFactoryBuilder().setDaemon(true).build())
 
-    private LoadingCache<String, List<String>> broaderCache = CacheBuilder.newBuilder()
+    private LoadingCache<String, Set<String>> broaderCache = CacheBuilder.newBuilder()
             .maximumSize(100)
             .refreshAfterWrite(5, TimeUnit.MINUTES)
-            .build(new CacheLoader<String, List<String>>() {
+            .build(new CacheLoader<String, Set<String>>() {
                 @Override
-                List<String> load(String id) {
-                    return computeInverseBroaderRelations(id)
+                Set<String> load(String id) {
+                    return Collections.unmodifiableSet(computeInverseBroaderRelations(id))
                 }
 
                 @Override
-                ListenableFuture<List<String>> reload(String id, List<String> oldValue) throws Exception {
+                ListenableFuture<Set<String>> reload(String id, Set<String> oldValue) throws Exception {
                     return reloadTask( { load(id) } )
                 }
             })
 
-    private LoadingCache<Tuple2<String,String>, List<String>> dependencyCache = CacheBuilder.newBuilder()
+    private LoadingCache<Tuple2<String,String>, Set<String>> dependencyCache = CacheBuilder.newBuilder()
             .maximumSize(1000)
             .refreshAfterWrite(5, TimeUnit.MINUTES)
-            .build(new CacheLoader<Tuple2<String,String>, List<String>>() {
+            .build(new CacheLoader<Tuple2<String,String>, Set<String>>() {
                 @Override
-                List<String> load(Tuple2<String,String> idAndRelation) {
+                Set<String> load(Tuple2<String,String> idAndRelation) {
                     String id = idAndRelation.first
                     String typeOfRelation = idAndRelation.second
-                    return storage
+                    return Collections.unmodifiableSet(new HashSet(storage
                             .getDependenciesOfType(storage.getSystemIdByThingId(id), typeOfRelation)
-                            .collect(storage.&getThingMainIriBySystemId)
+                            .collect(storage.&getThingMainIriBySystemId)))
                 }
 
                 @Override
-                ListenableFuture<List<String>> reload(Tuple2<String,String> key, List<String> oldValue) throws Exception {
+                ListenableFuture<Set<String>> reload(Tuple2<String,String> key, Set<String> oldValue) throws Exception {
                     return reloadTask( { load(key) } )
                 }
             })
@@ -442,7 +442,7 @@ class Whelk implements Storage {
         while (!stack.isEmpty()) {
             String id = stack.pop()
             for (String relation : BROADER_RELATIONS) {
-                List<String> dependencies = getDependenciesOfType(id, relation)
+                Set<String> dependencies = new HashSet<>(getDependenciesOfType(id, relation))
                 if (dependencies.contains(broaderId)) {
                    return true
                 }
@@ -455,23 +455,21 @@ class Whelk implements Storage {
         return false
     }
 
-
-
     List<String> findIdsLinkingTo(String id) {
         return storage
                 .getDependers(tryGetSystemId(id))
                 .collect { it.first }
     }
 
-    List<String> findInverseBroaderRelations(String id) {
+    Set<String> findInverseBroaderRelations(String id) {
         return broaderCache.getUnchecked(id)
     }
 
-    private List<String> computeInverseBroaderRelations(String id) {
+    private Set<String> computeInverseBroaderRelations(String id) {
         return storage.getNestedDependers(tryGetSystemId(id), BROADER_RELATIONS)
     }
 
-    private List<String> getDependenciesOfType(String id, String typeOfRelation) {
+    private Set<String> getDependenciesOfType(String id, String typeOfRelation) {
         return dependencyCache.getUnchecked(new Tuple2<>(id, typeOfRelation))
     }
 
