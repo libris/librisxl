@@ -108,6 +108,8 @@ with open('testdata/bib0.jsonld') as fh:
     bibtemplate = fh.read()
 with open('testdata/bibelectronic.jsonld') as fh:
     bibelectronictemplate = fh.read()
+with open('testdata/bibfiction.jsonld') as fh:
+    bibfiction = fh.read()
 with open('testdata/hold0.jsonld') as fh:
     holdtemplate = fh.read()
 
@@ -301,6 +303,13 @@ newBib(bibelectronictemplate, "SEK", "tttttttttttttttt", "2250-01-01 12:00:00")
 newHold(holdtemplate, "SEK", "hhhhhhhhhhhhhhhh", "tttttttttttttttt", "SEK", "2250-01-01 12:00:00")
 doExport("2250-01-01T10:00:00Z", "2250-01-01T15:00:00Z", "efilter_SEK")
 assertNotExported("tttttttttttttttt", "Test 20")
+
+# New fiction should not export when fictionfilter=on
+reset()
+newBib(bibfiction, "SEK", "tttttttttttttt21", "2250-01-01 12:00:00")
+newHold(holdtemplate, "SEK", "hhhhhhhhhhhhhh21", "tttttttttttttt21", "SEK", "2250-01-01 12:00:00")
+doExport("2250-01-01T10:00:00Z", "2250-01-01T15:00:00Z", "fiction_SEK")
+assertNotExported("tttttttttttttt21", "Test 21")
 
 ########## SUMMARY ##########
 
