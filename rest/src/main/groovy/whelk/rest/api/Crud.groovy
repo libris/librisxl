@@ -235,18 +235,30 @@ class Crud extends HttpServlet {
         }
 
         if (request.getLens() != Lens.NONE) {
-            return applyLens(frame(doc), request.getLens())
+            return applyLens(frameThing(doc), request.getLens())
         }
         else {
             return request.shouldFrame()
-                    ? frame(doc)
+                    ? frameRecord(doc)
                     : doc.data
         }
     }
 
-    private Map frame(Document document) {
+    private Map frameRecord(Document document) {
         return JsonLd.frame(document.getCompleteId(), document.data)
     }
+
+    private Map frameThing(Document document) {
+        document.setThingMeta(document.getCompleteId())
+        List<String> thingIds = document.getThingIdentifiers()
+        if (thingIds.isEmpty()) {
+            String msg = "Could not frame document. Missing mainEntity? In: " + document.getCompleteId()
+            log.warn(msg)
+            throw new WhelkRuntimeException(msg)
+        }
+        return JsonLd.frame(thingIds.get(0), document.data)
+     }
+
 
     private Object applyLens(Object framedThing, Lens lens) {
         switch (lens) {
