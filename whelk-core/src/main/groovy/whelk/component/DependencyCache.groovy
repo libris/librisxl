@@ -59,9 +59,12 @@ class DependencyCache {
             Set<String> load(Tuple2<String,String> iriAndRelation) {
                 String iri = iriAndRelation.first
                 String typeOfRelation = iriAndRelation.second
-                return Collections.unmodifiableSet(new HashSet(
-                        func.apply(storage.getSystemIdByThingId(iri), typeOfRelation)
-                        .collect(storage.&getThingMainIriBySystemId)))
+                def iris = func.apply(storage.getSystemIdByThingId(iri), typeOfRelation)
+                        .collect(storage.&getThingMainIriBySystemId)
+
+                return iris.isEmpty()
+                        ? Collections.EMPTY_SET
+                        : Collections.unmodifiableSet(new HashSet(iris))
             }
 
             @Override
