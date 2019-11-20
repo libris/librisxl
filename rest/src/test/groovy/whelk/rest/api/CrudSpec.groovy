@@ -82,8 +82,8 @@ class CrudSpec extends Specification {
                 'examplevocab': 'http://example.com',
                 'some_term': 'some_value']]
         whelk.displayData = ['lensGroups': [
-                'chips': [lenses: ['Record' : ['showProperties': ['prop1', 'prop2']]]],
-                'cards': [lenses: ['Record' : ['showProperties': ['prop1', 'prop2', 'prop3']]]]
+                'chips': [lenses: ['Instance' : ['showProperties': ['prop1', 'prop2']]]],
+                'cards': [lenses: ['Instance' : ['showProperties': ['prop1', 'prop2', 'prop3']]]]
         ]]
         whelk.vocabData = ['@graph': []]
         whelk.jsonld = new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData)
@@ -641,14 +641,15 @@ class CrudSpec extends Specification {
         }
         Document d = new Document(["@graph": [["@id": "record_id",
                                                "@type": "Record",
-                                               "prop1": "val1",
-                                               "prop2": "val2",
-                                               "prop3": "val3",
-                                               "prop4": "val4",
+                                               "propA": "valA",
                                                "mainEntity": ["@id": "instance_id"],
                                               ],
                                               ["@id": "instance_id",
                                                "@type": "Instance",
+                                               "prop1": "val1",
+                                               "prop2": "val2",
+                                               "prop3": "val3",
+                                               "prop4": "val4",
                                               ]]])
         storage.load(_, _) >> { d }
         storage.loadEmbellished(_, _) >> { d }
@@ -718,7 +719,7 @@ class CrudSpec extends Specification {
     }
 
     def lensUsed(String document) {
-        if (document.contains('"prop4":"val4"'))
+        if (!document.contains('meta'))
             return 'none'
         if (document.contains('"prop3":"val3"'))
             return 'card'
