@@ -13,14 +13,22 @@ class Relations {
     }
 
     boolean isImpliedBy(String broaderIri, String narrowerIri) {
+        return isReachable(narrowerIri, broaderIri, BROADER_RELATIONS)
+    }
+
+    Set<String> findInverseBroaderRelations(String iri) {
+        return getNestedDependers(iri, BROADER_RELATIONS)
+    }
+
+    private boolean isReachable(String fromIri, String toIri, List<String> relations) {
         Set<String> visited = []
-        List<String> stack = [narrowerIri]
+        List<String> stack = [fromIri]
 
         while (!stack.isEmpty()) {
             String iri = stack.pop()
-            for (String relation : BROADER_RELATIONS) {
+            for (String relation : relations) {
                 Set<String> dependencies = new HashSet<>(storage.getDependenciesOfTypeByIri(iri, relation))
-                if (dependencies.contains(broaderIri)) {
+                if (dependencies.contains(toIri)) {
                     return true
                 }
                 dependencies.removeAll(visited)
@@ -32,13 +40,13 @@ class Relations {
         return false
     }
 
-    Set<String> findInverseBroaderRelations(String iri) {
+    private Set<String> getNestedDependers(String iri, List<String> relations) {
         Set<String> iris = []
         List<String> stack = [iri]
 
         while (!stack.isEmpty()) {
             String id = stack.pop()
-            for (String relation : BROADER_RELATIONS ) {
+            for (String relation : relations ) {
                 Set<String> dependers = new HashSet<>(storage.getDependersOfTypeByIri(id, relation))
                 dependers.removeAll(iris)
                 stack.addAll(dependers)
