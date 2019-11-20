@@ -26,7 +26,7 @@ class DependencyCache {
             .refreshAfterWrite(5, TimeUnit.MINUTES)
             .build(loader(storage.&getDependersOfType))
 
-    private LoadingCache<Tuple2<String,String>, Set<String>> dependencyCache = CacheBuilder.newBuilder()
+    private LoadingCache<Tuple2<String,String>, Set<String>> dependenciesCache = CacheBuilder.newBuilder()
             .maximumSize(1000)
             .refreshAfterWrite(5, TimeUnit.MINUTES)
             .build(loader(storage.&getDependenciesOfType))
@@ -36,7 +36,7 @@ class DependencyCache {
     }
 
     Set<String> getDependenciesOfType(String iri, String typeOfRelation) {
-        return dependencyCache.getUnchecked(new Tuple2<>(iri, typeOfRelation))
+        return dependenciesCache.getUnchecked(new Tuple2<>(iri, typeOfRelation))
     }
 
     Set<String> getDependersOfType(String iri, String typeOfRelation) {
@@ -49,7 +49,7 @@ class DependencyCache {
             String relation = it[0]
             String iri = it[1]
             dependersCache.invalidate(new Tuple2(iri, relation))
-            dependencyCache.invalidate(new Tuple2(docIri, relation))
+            dependenciesCache.invalidate(new Tuple2(docIri, relation))
         }
     }
 
