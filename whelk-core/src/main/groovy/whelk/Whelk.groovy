@@ -1,10 +1,5 @@
 package whelk
 
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
-import com.google.common.cache.LoadingCache
-import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.ListenableFutureTask
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.collections4.map.LRUMap
@@ -16,18 +11,12 @@ import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 
-import java.util.concurrent.Callable
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-
 /**
  * The Whelk is the root component of the XL system.
  */
 @Log
 @CompileStatic
 class Whelk implements Storage {
-
     ThreadGroup indexers = new ThreadGroup("dep-reindex")
     PostgreSQLComponent storage
     ElasticSearch elastic
@@ -36,6 +25,7 @@ class Whelk implements Storage {
     Map contextData
     JsonLd jsonld
     MarcFrameConverter marcFrameConverter
+    Relations relations
 
     URI baseUri = null
 
@@ -51,30 +41,6 @@ class Whelk implements Storage {
 
     private Map<String, Document> authCache
     private final int CACHE_MAX_SIZE = 200_000
-
-    private Executor cacheRefresher = Executors.newSingleThreadExecutor()
-    private LoadingCache<String, List<String>> broaderCache = CacheBuilder.newBuilder()
-            .maximumSize(100)
-            .refreshAfterWrite(5, TimeUnit.MINUTES)
-            .build(new CacheLoader<String, List<String>>() {
-                @Override
-                List<String> load(String id) {
-                    return computeInverseBroaderRelations(id)
-                }
-
-                @Override
-                ListenableFuture<List<String>> reload(String id, List<String> oldValue) throws Exception {
-                    ListenableFutureTask<List<String>> task = ListenableFutureTask.create(new Callable<List<String>>() {
-                        @Override
-                        List<String> call() throws Exception {
-                            return load(id)
-                        }
-                    })
-
-                    cacheRefresher.execute(task)
-                    return task
-                }
-            })
 
     static Whelk createLoadedCoreWhelk(String propName = "secret", boolean useCache = false) {
         return createLoadedCoreWhelk(PropertyLoader.loadProperties(propName), useCache)
@@ -128,6 +94,7 @@ class Whelk implements Storage {
     public Whelk(PostgreSQLComponent pg, boolean useCache = false) {
         this.storage = pg
         this.useAuthCache = useCache
+        relations = new Relations(pg)
         if (useCache)
             authCache = Collections.synchronizedMap(
                     new LRUMap<String, Document>(CACHE_MAX_SIZE))
@@ -420,17 +387,17 @@ class Whelk implements Storage {
     }
 
     List<String> findIdsLinkingTo(String id) {
-         return storage
+        return storage
                 .getDependers(tryGetSystemId(id))
                 .collect { it.first }
     }
 
-    List<String> findInverseBroaderRelations(String id) {
-        return broaderCache.getUnchecked(id)
+    boolean isImpliedBy(String broaderIri, String narrowerIri) {
+        return relations.isImpliedBy(broaderIri, narrowerIri)
     }
 
-    private List<String> computeInverseBroaderRelations(String id) {
-        return storage.getNestedDependers(tryGetSystemId(id), ['broader'])
+    Set<String> findInverseBroaderRelations(String iri) {
+        return relations.findInverseBroaderRelations(iri)
     }
 
     private String tryGetSystemId(String id) {
