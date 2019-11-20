@@ -85,6 +85,7 @@ class PostgreSQLComponent implements Storage {
 
     String mainTableName
     LinkFinder linkFinder
+    DependencyCache dependencyCache
 
     class AcquireLockException extends RuntimeException { AcquireLockException(String s) { super(s) } }
 
@@ -141,6 +142,8 @@ class PostgreSQLComponent implements Storage {
 
             this.linkFinder = new LinkFinder(this)
         }
+
+        this.dependencyCache = new DependencyCache(this)
 
         // Setting up sql-statements
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
@@ -582,6 +585,7 @@ class PostgreSQLComponent implements Storage {
             saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
             updateMinMaxDepModified(doc.getShortId(), connection)
+            dependencyCache.invalidate(preUpdateDoc)
             connection.commit()
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {
@@ -1374,6 +1378,14 @@ class PostgreSQLComponent implements Storage {
 
     List<String> getDependersOfType(String id, String typeOfRelation) {
         return getDependencyDataOfType(id, typeOfRelation, GET_DEPENDERS_OF_TYPE)
+    }
+
+    Set<String> getDependenciesOfTypeByIri(String iri, String typeOfRelation) {
+        return dependencyCache.getDependenciesOfType(iri, typeOfRelation)
+    }
+
+    Set<String> getDependersOfTypeByIri(String iri, String typeOfRelation) {
+        return dependencyCache.getDependersOfType(iri, typeOfRelation)
     }
 
     private List<String> getDependencyDataOfType(String id, String typeOfRelation, String query) {

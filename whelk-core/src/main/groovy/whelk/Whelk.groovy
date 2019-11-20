@@ -3,6 +3,7 @@ package whelk
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.collections4.map.LRUMap
+import whelk.component.DependencyCache
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
