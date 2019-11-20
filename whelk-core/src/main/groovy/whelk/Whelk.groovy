@@ -1,11 +1,5 @@
 package whelk
 
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
-import com.google.common.cache.LoadingCache
-import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.ListenableFutureTask
-import com.google.common.util.concurrent.ThreadFactoryBuilder
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.collections4.map.LRUMap
@@ -17,20 +11,12 @@ import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 
-import java.util.concurrent.Callable
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.function.Supplier
-
 /**
  * The Whelk is the root component of the XL system.
  */
 @Log
 @CompileStatic
 class Whelk implements Storage {
-    public static final List<String> BROADER_RELATIONS = ['broader', 'broadMatch', 'exactMatch']
-
     ThreadGroup indexers = new ThreadGroup("dep-reindex")
     PostgreSQLComponent storage
     ElasticSearch elastic
@@ -39,6 +25,7 @@ class Whelk implements Storage {
     Map contextData
     JsonLd jsonld
     MarcFrameConverter marcFrameConverter
+    Relations relations
 
     URI baseUri = null
 
@@ -54,43 +41,6 @@ class Whelk implements Storage {
 
     private Map<String, Document> authCache
     private final int CACHE_MAX_SIZE = 200_000
-
-    private Executor cacheRefresher = Executors.newSingleThreadExecutor(
-            new ThreadFactoryBuilder().setDaemon(true).build())
-
-    private LoadingCache<String, Set<String>> broaderCache = CacheBuilder.newBuilder()
-            .maximumSize(100)
-            .refreshAfterWrite(5, TimeUnit.MINUTES)
-            .build(new CacheLoader<String, Set<String>>() {
-                @Override
-                Set<String> load(String iri) {
-                    return Collections.unmodifiableSet(computeInverseBroaderRelations(iri))
-                }
-
-                @Override
-                ListenableFuture<Set<String>> reload(String iri, Set<String> oldValue) throws Exception {
-                    return reloadTask( { load(iri) } )
-                }
-            })
-
-    private LoadingCache<Tuple2<String,String>, Set<String>> dependencyCache = CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .refreshAfterWrite(5, TimeUnit.MINUTES)
-            .build(new CacheLoader<Tuple2<String,String>, Set<String>>() {
-                @Override
-                Set<String> load(Tuple2<String,String> iriAndRelation) {
-                    String iri = iriAndRelation.first
-                    String typeOfRelation = iriAndRelation.second
-                    return Collections.unmodifiableSet(new HashSet(storage
-                            .getDependenciesOfType(storage.getSystemIdByThingId(iri), typeOfRelation)
-                            .collect(storage.&getThingMainIriBySystemId)))
-                }
-
-                @Override
-                ListenableFuture<Set<String>> reload(Tuple2<String,String> key, Set<String> oldValue) throws Exception {
-                    return reloadTask( { load(key) } )
-                }
-            })
 
     static Whelk createLoadedCoreWhelk(String propName = "secret", boolean useCache = false) {
         return createLoadedCoreWhelk(PropertyLoader.loadProperties(propName), useCache)
@@ -144,6 +94,7 @@ class Whelk implements Storage {
     public Whelk(PostgreSQLComponent pg, boolean useCache = false) {
         this.storage = pg
         this.useAuthCache = useCache
+        relations = new Relations(pg)
         if (useCache)
             authCache = Collections.synchronizedMap(
                     new LRUMap<String, Document>(CACHE_MAX_SIZE))
@@ -435,57 +386,18 @@ class Whelk implements Storage {
         jsonld.embellish(document.data, referencedData2, filterOutNonChipTerms)
     }
 
-    boolean isImpliedBy(String broaderIri, String narrowerIri) {
-        Set<String> visited = []
-        List<String> stack = [narrowerIri]
-
-        while (!stack.isEmpty()) {
-            String iri = stack.pop()
-            for (String relation : BROADER_RELATIONS) {
-                Set<String> dependencies = new HashSet<>(getDependenciesOfType(iri, relation))
-                if (dependencies.contains(broaderIri)) {
-                   return true
-                }
-                dependencies.removeAll(visited)
-                visited.addAll(dependencies)
-                stack.addAll(dependencies)
-            }
-        }
-
-        return false
-    }
-
     List<String> findIdsLinkingTo(String id) {
         return storage
                 .getDependers(tryGetSystemId(id))
                 .collect { it.first }
     }
 
+    boolean isImpliedBy(String broaderIri, String narrowerIri) {
+        return relations.isImpliedBy(broaderIri, narrowerIri)
+    }
+
     Set<String> findInverseBroaderRelations(String iri) {
-        return broaderCache.getUnchecked(iri)
-    }
-
-    List<String> findIdsLinkingTo(String id, String relation) {
-        return storage.getDependersOfType(tryGetSystemId(id), relation)
-    }
-
-    private Set<String> computeInverseBroaderRelations(String iri) {
-        Set<String> ids = []
-        List<String> stack = [storage.getSystemIdByIri(iri)]
-        while (!stack.isEmpty()) {
-            String id = stack.pop()
-            for (String relation : BROADER_RELATIONS ) {
-                List<String> dependers = findIdsLinkingTo(id, relation)
-                dependers.removeAll(ids)
-                stack.addAll(dependers)
-                ids.addAll(dependers)
-            }
-        }
-        return new HashSet<>(ids.collect(storage.&getThingMainIriBySystemId))
-    }
-
-    private Set<String> getDependenciesOfType(String id, String typeOfRelation) {
-        return dependencyCache.getUnchecked(new Tuple2<>(id, typeOfRelation))
+        return relations.findInverseBroaderRelations(iri)
     }
 
     private String tryGetSystemId(String id) {
@@ -504,17 +416,5 @@ class Whelk implements Storage {
 
     private boolean batchJobThread() {
         return Thread.currentThread().getThreadGroup().getName().contains("whelktool")
-    }
-
-    private <V> ListenableFutureTask<V> reloadTask(Supplier<V> reloadFunction) {
-        ListenableFutureTask<V> task = ListenableFutureTask.create(new Callable<V>() {
-            @Override
-            V call() throws Exception {
-                return reloadFunction.get()
-            }
-        })
-
-        cacheRefresher.execute(task)
-        return task
     }
 }
