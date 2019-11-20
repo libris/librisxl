@@ -16,19 +16,22 @@ import java.util.function.BiFunction
 import java.util.function.Supplier
 
 class DependencyCache {
+    private static final int CACHE_SIZE = 10_000
+    private static final int REFRESH_INTERVAL_MINUTES = 5
+
     PostgreSQLComponent storage
 
     private Executor cacheRefresher = Executors.newSingleThreadExecutor(
             new ThreadFactoryBuilder().setDaemon(true).build())
 
     private LoadingCache<Tuple2<String,String>, Set<String>> dependersCache = CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .refreshAfterWrite(5, TimeUnit.MINUTES)
+            .maximumSize(CACHE_SIZE)
+            .refreshAfterWrite(REFRESH_INTERVAL_MINUTES, TimeUnit.MINUTES)
             .build(loader(storage.&getDependersOfType))
 
     private LoadingCache<Tuple2<String,String>, Set<String>> dependenciesCache = CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .refreshAfterWrite(5, TimeUnit.MINUTES)
+            .maximumSize(CACHE_SIZE)
+            .refreshAfterWrite(REFRESH_INTERVAL_MINUTES, TimeUnit.MINUTES)
             .build(loader(storage.&getDependenciesOfType))
 
     DependencyCache(PostgreSQLComponent storage) {
