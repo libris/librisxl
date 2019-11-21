@@ -88,8 +88,8 @@ dependencies {
     compile 'org.codehaus.gpars:gpars:1.2.1'
 
     // metrics
-    compile 'io.prometheus:simpleclient:0.0.21'
-    compile 'io.prometheus:simpleclient_servlet:0.0.21'
+    compile "io.prometheus:simpleclient:${prometheusVersion}"
+    compile "io.prometheus:simpleclient_servlet:${prometheusVersion}"
 
     // Logging
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'

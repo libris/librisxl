@@ -113,8 +113,8 @@ dependencies {
     providedCompile 'javax.servlet:javax.servlet-api:3.0.0'
 
     // metrics
-    compile 'io.prometheus:simpleclient:0.0.21'
-    compile 'io.prometheus:simpleclient_servlet:0.0.21'
+    compile "io.prometheus:simpleclient:${prometheusVersion}"
+    compile "io.prometheus:simpleclient_servlet:${prometheusVersion}"
 
     // Logging
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
