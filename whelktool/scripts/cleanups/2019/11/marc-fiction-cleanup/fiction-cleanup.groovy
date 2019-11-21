@@ -8,6 +8,7 @@ report = getReportWriter("report")
 NOT_FICTION = "https://id.kb.se/marc/NotFictionNotFurtherSpecified"
 SKONLITTERATUR = "https://id.kb.se/term/saogf/Sk%C3%B6nlitteratur"
 FICTION = "https://id.kb.se/marc/FictionNotFurtherSpecified"
+SUBJECT_PREFIX = "https://id.kb.se/term"
 
 query = """collection = 'bib'
         AND data#>>'{@graph,2,@type}' = 'Text'
@@ -19,7 +20,7 @@ selectBySqlWhere(query, silent: false) { data ->
 
     if (!hasOnlyHClassifications(work)) {
         //At least one classification is not H OR there are no classfications
-        if (isSaogfSkonlitteratur(data.whelk, work)) {
+        if (isSaogfSkonlitteratur(data.whelk, work) && !hasAnySubjectAsGenreForm()) {
             work.genreForm.removeIf { gf -> gf.'@id' == NOT_FICTION }
             work.genreForm.add(['@id': FICTION])
             report.println "Record $recordId with genreForm $work.genreForm and classification: ${work.classification?.code}" +
@@ -103,6 +104,10 @@ private boolean hasNoGenreFormField(work) {
 
 private boolean isSaogfSkonlitteratur(whelk, work) {
     return work.genreForm.any { gf -> whelk.isImpliedBy(SKONLITTERATUR, gf.'@id') }
+}
+
+private boolean hasAnySubjectAsGenreForm(work) {
+    return work.genreForm.any { gf -> gf.startsWith(SUBJECT_PREFIX)}
 }
 
 private boolean hasAnyMarcFictionType(work) {
