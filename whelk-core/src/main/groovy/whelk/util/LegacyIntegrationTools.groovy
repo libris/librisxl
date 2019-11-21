@@ -62,6 +62,9 @@ class LegacyIntegrationTools {
         }
 
         List superClasses = (List) termMap["subClassOf"]
+        if (superClasses == null) {
+            return null
+        }
 
         for (superClass in superClasses) {
             if (superClass == null || superClass["@id"] == null) {
