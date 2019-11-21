@@ -1372,23 +1372,23 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    List<String> getDependenciesOfType(String id, String typeOfRelation) {
-        return getDependencyDataOfType(id, typeOfRelation, GET_DEPENDENCIES_OF_TYPE)
+    List<String> getDependenciesOfType(String id, String relation) {
+        return getDependencyDataOfType(id, relation, GET_DEPENDENCIES_OF_TYPE)
     }
 
-    List<String> getDependersOfType(String id, String typeOfRelation) {
-        return getDependencyDataOfType(id, typeOfRelation, GET_DEPENDERS_OF_TYPE)
+    List<String> getDependersOfType(String id, String relation) {
+        return getDependencyDataOfType(id, relation, GET_DEPENDERS_OF_TYPE)
     }
 
-    Set<String> getDependenciesOfTypeByIri(String iri, String typeOfRelation) {
-        return dependencyCache.getDependenciesOfType(iri, typeOfRelation)
+    Set<String> getByRelation(String iri, String relation) {
+        return dependencyCache.getDependenciesOfType(iri, relation)
     }
 
-    Set<String> getDependersOfTypeByIri(String iri, String typeOfRelation) {
-        return dependencyCache.getDependersOfType(iri, typeOfRelation)
+    Set<String> getByReverseRelation(String iri, String relation) {
+        return dependencyCache.getDependersOfType(iri, relation)
     }
 
-    private List<String> getDependencyDataOfType(String id, String typeOfRelation, String query) {
+    private List<String> getDependencyDataOfType(String id, String relation, String query) {
         Connection connection = null
         PreparedStatement preparedStatement = null
         ResultSet rs = null
@@ -1396,7 +1396,7 @@ class PostgreSQLComponent implements Storage {
             connection = getConnection()
             preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, id)
-            preparedStatement.setString(2, typeOfRelation)
+            preparedStatement.setString(2, relation)
             rs = preparedStatement.executeQuery()
             List<String> dependecies = []
             while (rs.next()) {

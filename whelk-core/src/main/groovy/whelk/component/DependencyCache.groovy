@@ -16,19 +16,22 @@ import java.util.function.BiFunction
 import java.util.function.Supplier
 
 class DependencyCache {
+    private static final int CACHE_SIZE = 10_000
+    private static final int REFRESH_INTERVAL_MINUTES = 5
+
     PostgreSQLComponent storage
 
     private Executor cacheRefresher = Executors.newSingleThreadExecutor(
             new ThreadFactoryBuilder().setDaemon(true).build())
 
     private LoadingCache<Tuple2<String,String>, Set<String>> dependersCache = CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .refreshAfterWrite(5, TimeUnit.MINUTES)
+            .maximumSize(CACHE_SIZE)
+            .refreshAfterWrite(REFRESH_INTERVAL_MINUTES, TimeUnit.MINUTES)
             .build(loader(storage.&getDependersOfType))
 
-    private LoadingCache<Tuple2<String,String>, Set<String>> dependencyCache = CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .refreshAfterWrite(5, TimeUnit.MINUTES)
+    private LoadingCache<Tuple2<String,String>, Set<String>> dependenciesCache = CacheBuilder.newBuilder()
+            .maximumSize(CACHE_SIZE)
+            .refreshAfterWrite(REFRESH_INTERVAL_MINUTES, TimeUnit.MINUTES)
             .build(loader(storage.&getDependenciesOfType))
 
     DependencyCache(PostgreSQLComponent storage) {
@@ -36,7 +39,7 @@ class DependencyCache {
     }
 
     Set<String> getDependenciesOfType(String iri, String typeOfRelation) {
-        return dependencyCache.getUnchecked(new Tuple2<>(iri, typeOfRelation))
+        return dependenciesCache.getUnchecked(new Tuple2<>(iri, typeOfRelation))
     }
 
     Set<String> getDependersOfType(String iri, String typeOfRelation) {
@@ -49,7 +52,7 @@ class DependencyCache {
             String relation = it[0]
             String iri = it[1]
             dependersCache.invalidate(new Tuple2(iri, relation))
-            dependencyCache.invalidate(new Tuple2(docIri, relation))
+            dependenciesCache.invalidate(new Tuple2(docIri, relation))
         }
     }
 
@@ -59,9 +62,12 @@ class DependencyCache {
             Set<String> load(Tuple2<String,String> iriAndRelation) {
                 String iri = iriAndRelation.first
                 String typeOfRelation = iriAndRelation.second
-                return Collections.unmodifiableSet(new HashSet(
-                        func.apply(storage.getSystemIdByThingId(iri), typeOfRelation)
-                        .collect(storage.&getThingMainIriBySystemId)))
+                def iris = func.apply(storage.getSystemIdByThingId(iri), typeOfRelation)
+                        .collect(storage.&getThingMainIriBySystemId)
+
+                return iris.isEmpty()
+                        ? Collections.EMPTY_SET
+                        : Collections.unmodifiableSet(new HashSet(iris))
             }
 
             @Override

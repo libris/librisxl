@@ -116,6 +116,10 @@ class Whelk implements Storage {
         return marcFrameConverter
     }
 
+    Relations getRelations() {
+        return relations
+    }
+
     void loadCoreData() {
         loadContextData()
         loadDisplayData()
@@ -390,14 +394,6 @@ class Whelk implements Storage {
         return storage
                 .getDependers(tryGetSystemId(id))
                 .collect { it.first }
-    }
-
-    boolean isImpliedBy(String broaderIri, String narrowerIri) {
-        return relations.isImpliedBy(broaderIri, narrowerIri)
-    }
-
-    Set<String> findInverseBroaderRelations(String iri) {
-        return relations.findInverseBroaderRelations(iri)
     }
 
     private String tryGetSystemId(String id) {
