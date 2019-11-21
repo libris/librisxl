@@ -116,6 +116,10 @@ class Whelk implements Storage {
         return marcFrameConverter
     }
 
+    Relations getRelations() {
+        return relations
+    }
+
     void loadCoreData() {
         loadContextData()
         loadDisplayData()
@@ -390,10 +394,6 @@ class Whelk implements Storage {
         return storage
                 .getDependers(tryGetSystemId(id))
                 .collect { it.first }
-    }
-
-    Relations relations() {
-        return relations
     }
 
     private String tryGetSystemId(String id) {
