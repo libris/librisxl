@@ -5986,7 +5986,7 @@
       "$z": {"property": "marc:nameOfExtraterrestrialBody"},
       "$0": {"addProperty": "marc:recordControlNumber"},
       "$1": {"addProperty": "marc:rwoURI"},
-      "$2": {"link": "source", "resourceType": "Source", "property": "source"},
+      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
