@@ -392,12 +392,8 @@ class Whelk implements Storage {
                 .collect { it.first }
     }
 
-    boolean isImpliedBy(String broaderIri, String narrowerIri) {
-        return relations.isImpliedBy(broaderIri, narrowerIri)
-    }
-
-    Set<String> findInverseBroaderRelations(String iri) {
-        return relations.findInverseBroaderRelations(iri)
+    Relations relations() {
+        return relations
     }
 
     private String tryGetSystemId(String id) {
