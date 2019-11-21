@@ -56,28 +56,24 @@ class LegacyIntegrationTools {
         if (termMap == null)
             return null
 
-        if (termMap["category"] == null) {
-            if (termMap["subClassOf"] != null) {
-                List superClasses = (List) termMap["subClassOf"]
+        String marcCategory = getMarcCollectionForTerm(termMap)
+        if (marcCategory != null) {
+            return marcCategory
+        }
 
-                for (superClass in superClasses) {
-                    if (superClass == null || superClass["@id"] == null) {
-                        continue
-                    }
-                    String superClassType = jsonld.toTermKey( (String) superClass["@id"] )
-                    String category = getMarcCollectionInHierarchy(superClassType, jsonld)
-                    if ( category != null )
-                        return category
-                }
+        List superClasses = (List) termMap["subClassOf"]
+
+        for (superClass in superClasses) {
+            if (superClass == null || superClass["@id"] == null) {
+                continue
             }
-            return null
+            String superClassType = jsonld.toTermKey( (String) superClass["@id"] )
+            String category = getMarcCollectionInHierarchy(superClassType, jsonld)
+            if ( category != null )
+                return category
         }
-        else {
-            String marcCategory = getMarcCollectionForTerm(termMap)
-            if (marcCategory != null) {
-                return marcCategory
-            }
-        }
+
+        return null
     }
 
     static String getMarcCollectionForTerm(Map termMap) {

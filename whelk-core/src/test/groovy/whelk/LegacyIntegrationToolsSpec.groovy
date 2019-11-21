@@ -2,9 +2,28 @@ package whelk.util
 
 import spock.lang.Specification
 
+import whelk.JsonLd
+
 class LegacyIntegrationToolsSpec extends Specification {
 
-    static idBase = 'https://id.kb.se/marc'
+    static final Map CONTEXT_DATA = [
+        "@context": ["@vocab": "http://example.org/ns/"]
+    ]
+
+    static final String MARC = 'https://id.kb.se/marc'
+
+    static final Map VOCAB_DATA = [
+        "@graph": [
+            ["@id": "http://example.org/ns/Instance",
+             "category": [ ["@id": "$MARC/bib"] ]],
+            ["@id": "http://example.org/ns/Print",
+             "subClassOf": [ ["@id": "http://example.org/ns/Instance"] ],
+             "category": [ ["@id": "http://example.org/ns/"] ]],
+            ["@id": "http://example.org/ns/Paperback",
+             "subClassOf": [ ["@id": "http://example.org/ns/Print"] ],
+             "category": ["@id": "http://example.org/ns/pending"]]
+        ]
+    ]
 
     def tool = new LegacyIntegrationTools()
 
@@ -26,13 +45,24 @@ class LegacyIntegrationToolsSpec extends Specification {
         tool.getMarcCollectionForTerm([category: cats]) == id
         where:
         id      | cats
-        'bib'   | ['@id': "$idBase/bib"]
-        'bib'   | [['@id': "$idBase/bib"], ['@id': "pending"]]
-        'auth'  | [['@id': "$idBase/auth"]]
+        'bib'   | ['@id': "$MARC/bib"]
+        'bib'   | [['@id': "$MARC/bib"], ['@id': "pending"]]
+        'auth'  | [['@id': "$MARC/auth"]]
         null    | ['@id': 'other']
         null    | [['@id': 'other']]
         null    | []
         null    | null
+    }
+
+    def "should get marc collection for type"() {
+        expect:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        tool.getMarcCollectionInHierarchy(type, ld) == collection
+        where:
+        type        | collection
+        'Instance'  | 'bib'
+        'Print'     | 'bib'
+        'Paperback' | 'bib'
     }
 
 }
