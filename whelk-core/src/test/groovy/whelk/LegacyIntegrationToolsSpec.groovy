@@ -23,7 +23,7 @@ class LegacyIntegrationToolsSpec extends Specification {
 
     def "should get marc category for term"() {
         expect:
-        tool.getMarcCategoryForTerm([category: cats]) == id
+        tool.getMarcCollectionForTerm([category: cats]) == id
         where:
         id      | cats
         'bib'   | ['@id': "$idBase/bib"]
