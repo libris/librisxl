@@ -522,6 +522,8 @@ class Crud extends HttpServlet {
                     collection, isUpdate, "POST")
         } catch (LinkValidationException le)
         {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    le.getMessage())
             log.debug(le.getMessage())
         }
         if (savedDoc != null) {
