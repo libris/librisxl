@@ -16,6 +16,7 @@ import whelk.component.PostgreSQLComponent
 import whelk.exception.InvalidQueryException
 import whelk.exception.ModelValidationException
 import whelk.exception.StorageCreateFailedException
+import whelk.exception.LinkValidationException
 import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
 import whelk.rest.security.AccessControl
@@ -515,8 +516,14 @@ class Crud extends HttpServlet {
         // try store document
         // return 201 or error
         boolean isUpdate = false
-        Document savedDoc = saveDocument(newDoc, request, response,
-                                         collection, isUpdate, "POST")
+        Document savedDoc;
+        try {
+            savedDoc = saveDocument(newDoc, request, response,
+                    collection, isUpdate, "POST")
+        } catch (LinkValidationException le)
+        {
+            log.debug(le.getMessage())
+        }
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
                                savedDoc.getChecksum())
