@@ -33,6 +33,15 @@ renderad HTML-vy av posten och inte enbart underliggande data.
 Svaret innehåller också en `ETag`-header, vars värde måste sättas i en
 `If-Match`-header vid uppdatering av posten.
 
+Formatet på data i svaret kan styras via parametrar.
+
+#### Parametrar
+Alla parametrar är valfria och kan utelämnas.
+* `embellished` - `true` eller `false`. Standardvärdet är `true`.
+* `framed` - `true` eller `false`. 
+  * Standardvärdet är `false` för `Content-Type: application/ld+json`. 
+  * Standardvärdet är `true` för  `Content-Type: application/json`.
+* `lens` - `chip`, `card` eller `none`. Standardvärdet är `none`. Om `lens` är `chip` eller `card` blir `framed` alltid `true`.
 
 #### Exempel
 
@@ -46,6 +55,15 @@ $ curl -XGET -H "Accept: application/ld+json" https://libris-qa.kb.se/s93ns5h436
 }
 ```
 
+```
+$ curl -XGET -H "Accept: application/ld+json" https://libris-qa.kb.se/s93ns5h436dxqsh?embellished=false&lens=chip
+{
+  "@context": "/context.jsonld",
+  "@graph": [
+    ...
+  ]
+}
+```
 
 ### Att skapa en post - Kräver autentisering
 

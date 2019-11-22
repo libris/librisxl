@@ -26,7 +26,7 @@ pushd ../
 
 ######## NORMAL IMPORT
 # Check created bib and attached hold
-java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --changedIn=importtest
+java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --changedIn=importtest --changedBy=Utb1
 bibResourceId=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'importtest' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["@id"]')
 itemOf=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'importtest' and collection = 'hold'" | jq '.["@graph"]|.[1].itemOf|.["@id"]')
 if [ "$itemOf" != "$bibResourceId" ]; then
@@ -35,7 +35,7 @@ fi
 
 ######## RERUN SAME FILE, NO MORE DATA
 # Re-run same file, should result in no changes
-java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --changedIn=importtest
+java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --changedIn=importtest --changedBy=Utb1
 rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'bib'")
 if (( $rowCount != 1 )) ; then
     fail "Expected single bib record"
@@ -46,7 +46,7 @@ if (( $rowCount != 1 )) ; then
 fi
 
 ######## REPLACE RECORD. batch1.xml contains the same data but with a changed title for the bib record and another 035$a
-java -jar build/libs/batchimport.jar --path=./integtest/batch1.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --changedIn=importtest --replaceBib
+java -jar build/libs/batchimport.jar --path=./integtest/batch1.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --changedIn=importtest --replaceBib --changedBy=Utb1
 newBibResourceId=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'importtest' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["@id"]')
 if [ $newBibResourceId != $bibResourceId ]; then
     fail "Bib-replace altered the ID!"
@@ -66,8 +66,8 @@ fi
 
 cleanup
 ######## ISBN 10/13 matching. Batch 2 and 3 contain the same data but with varying forms of the same ISBN.
-java -jar build/libs/batchimport.jar --path=./integtest/batch2.xml --format=xml --live --changedIn=importtest
-java -jar build/libs/batchimport.jar --path=./integtest/batch3.xml --format=xml --dupType=ISBNA --live --changedIn=importtest
+java -jar build/libs/batchimport.jar --path=./integtest/batch2.xml --format=xml --live --changedIn=importtest --changedBy=Utb1
+java -jar build/libs/batchimport.jar --path=./integtest/batch3.xml --format=xml --dupType=ISBNA --live --changedIn=importtest --changedBy=Utb1
 rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'bib'")
 if (( $rowCount != 1 )) ; then
     fail "Expected single bib record (after IBSN10/13 test)"
@@ -79,8 +79,8 @@ fi
 
 cleanup
 ######## ISBN $z (hidden value) matching. Batch 4 contain the same data but with its ISBN in 020$z
-java -jar build/libs/batchimport.jar --path=./integtest/batch4.xml --format=xml --live --changedIn=importtest
-java -jar build/libs/batchimport.jar --path=./integtest/batch4.xml --format=xml --dupType=ISBNZ --live --changedIn=importtest
+java -jar build/libs/batchimport.jar --path=./integtest/batch4.xml --format=xml --live --changedIn=importtest --changedBy=Utb1
+java -jar build/libs/batchimport.jar --path=./integtest/batch4.xml --format=xml --dupType=ISBNZ --live --changedIn=importtest --changedBy=Utb1
 rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'bib'")
 if (( $rowCount != 1 )) ; then
     fail "Expected single bib record (after IBSN hidden value test)"
@@ -92,8 +92,8 @@ fi
 
 cleanup
 ######## ISSN $z (hidden value) matching. Batch 4 contain the same data but with its ISSN in 022$z
-java -jar build/libs/batchimport.jar --path=./integtest/batch5.xml --format=xml --live --changedIn=importtest
-java -jar build/libs/batchimport.jar --path=./integtest/batch5.xml --format=xml --dupType=ISSNZ --live --changedIn=importtest
+java -jar build/libs/batchimport.jar --path=./integtest/batch5.xml --format=xml --live --changedIn=importtest --changedBy=Utb1
+java -jar build/libs/batchimport.jar --path=./integtest/batch5.xml --format=xml --dupType=ISSNZ --live --changedIn=importtest --changedBy=Utb1
 rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'bib'")
 if (( $rowCount != 1 )) ; then
     fail "Expected single bib record (after ISSN hidden value test)"
@@ -106,9 +106,9 @@ fi
 cleanup
 ######## Introduce multiple duplicates (without checking) and make sure incoming records afterwards still place their
 # holdings on at least one of the detected duplicates
-java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --live --changedIn=importtest
-java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --live --changedIn=importtest
-java -jar build/libs/batchimport.jar --path=./integtest/batch1.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --changedIn=importtest
+java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --live --changedIn=importtest --changedBy=Utb1
+java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --live --changedIn=importtest --changedBy=Utb1
+java -jar build/libs/batchimport.jar --path=./integtest/batch1.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --changedIn=importtest --changedBy=Utb1
 rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'bib'")
 if (( $rowCount != 2 )) ; then
     fail "Expected exactly 2 bib records"
@@ -159,8 +159,8 @@ cleanup
 
 cleanup
 ######## ISBN $z 10/13 matching. Batch 4 and 8 contain the same data but with varying forms of the same ISBN in 020$z.
-java -jar build/libs/batchimport.jar --path=./integtest/batch4.xml --format=xml --live --changedIn=importtest
-java -jar build/libs/batchimport.jar --path=./integtest/batch8.xml --format=xml --dupType=ISBNZ --live --changedIn=importtest
+java -jar build/libs/batchimport.jar --path=./integtest/batch4.xml --format=xml --live --changedIn=importtest --changedBy=Utb1
+java -jar build/libs/batchimport.jar --path=./integtest/batch8.xml --format=xml --dupType=ISBNZ --live --changedIn=importtest --changedBy=Utb1
 rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'bib'")
 if (( $rowCount != 1 )) ; then
     fail "Expected single bib record (after IBSN$z 10/13 test)"
@@ -172,7 +172,7 @@ fi
 
 cleanup
 # Should match an existing example record (on Voyager-style LIBRIS-ID), and only add the holding
-java -jar build/libs/batchimport.jar --path=./integtest/batch10.xml --format=xml --dupType=LIBRIS-ID --live --changedIn=importtest
+java -jar build/libs/batchimport.jar --path=./integtest/batch10.xml --format=xml --dupType=LIBRIS-ID --live --changedIn=importtest --changedBy=Utb1
 rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'bib'")
 if (( $rowCount != 0 )) ; then
     fail "Expected no bib record"
@@ -184,8 +184,8 @@ fi
 
 cleanup
 # Test EAN match
-java -jar build/libs/batchimport.jar --path=./integtest/batch11.xml --format=xml --live --changedIn=importtest
-java -jar build/libs/batchimport.jar --path=./integtest/batch11.xml --format=xml --dupType=EAN --live --changedIn=importtest
+java -jar build/libs/batchimport.jar --path=./integtest/batch11.xml --format=xml --live --changedIn=importtest --changedBy=Utb1
+java -jar build/libs/batchimport.jar --path=./integtest/batch11.xml --format=xml --dupType=EAN --live --changedIn=importtest --changedBy=Utb1
 rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'bib'")
 if (( $rowCount != 1 )) ; then
     fail "Expected single bib record (after EAN test)"
@@ -194,6 +194,26 @@ rowCount=$(psql -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 
 if (( $rowCount != 1 )) ; then
     fail "Expected single hold record (after EAN test)"
 fi
+
+
+cleanup
+# Test special encoding level rules
+java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --changedIn=importtest --changedBy=Utb1
+bibResourceId=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'importtest' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["@id"]')
+
+# batch13.xml is the same as batch 0, but with encoding level 5 instead of 8, and another title
+java -jar build/libs/batchimport.jar --path=./integtest/batch13.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --changedIn=importtest --replaceBib --changedBy=Utb1 --specialRule=5+8
+
+newBibResourceId=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'importtest' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["@id"]')
+if [ $newBibResourceId != $bibResourceId ]; then
+    fail "Bib-replace altered the ID!"
+fi
+mainTitle=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'importtest' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["hasTitle"]|.[0]|.["mainTitle"]')
+expect="\"Polisbilen får INTE ett larm\""
+if [ "$mainTitle" != "$expect" ]; then
+    fail "Data was not replaced!"
+fi
+
 
 cleanup
 popd

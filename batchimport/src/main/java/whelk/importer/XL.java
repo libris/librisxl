@@ -29,10 +29,10 @@ import java.util.function.BiFunction;
 
 class XL
 {
-    private static final String ENC_PRELIMINARY_STATUS = "marc:PartialPreliminaryLevel"; // 5
-    private static final String ENC_PREPUBLICATION_STATUS = "marc:PrepublicationLevel";  // 8
-    private static final String ENC_ABBREVIVATED_STATUS = "marc:AbbreviatedLevel";  // 3
-    private static final String ENC_MINMAL_STATUS = "marc:MinimalLevel";  // 7
+    public static final String ENC_PRELIMINARY_STATUS = "marc:PartialPreliminaryLevel"; // 5
+    public static final String ENC_PREPUBLICATION_STATUS = "marc:PrepublicationLevel";  // 8
+    public static final String ENC_ABBREVIVATED_STATUS = "marc:AbbreviatedLevel";  // 3
+    public static final String ENC_MINMAL_STATUS = "marc:MinimalLevel";  // 7
 
     private Whelk m_whelk;
     private LinkFinder m_linkfinder;
@@ -54,7 +54,7 @@ class XL
         m_properties = PropertyLoader.loadProperties("secret");
         m_whelk = Whelk.createLoadedSearchWhelk(m_properties);
         m_repeatableTerms = m_whelk.getJsonld().getRepeatableTerms();
-        m_marcFrameConverter = m_whelk.createMarcFrameConverter();
+        m_marcFrameConverter = m_whelk.getMarcFrameConverter();
         m_linkfinder = new LinkFinder(m_whelk.getStorage());
         if (parameters.getChangedIn() != null)
             IMPORT_SYSTEM_CODE = parameters.getChangedIn();
@@ -176,10 +176,16 @@ class XL
         if (collection.equals("hold"))
             rdfDoc.setHoldingFor(relatedWithBibResourceId);
 
-        if (!m_parameters.getReadOnly())
-        {
+        String encodingLevel = rdfDoc.getEncodingLevel();
+        if (encodingLevel == null || (
+                !encodingLevel.equals(ENC_PRELIMINARY_STATUS) &&
+                !encodingLevel.equals(ENC_PREPUBLICATION_STATUS) &&
+                !encodingLevel.equals(ENC_ABBREVIVATED_STATUS) &&
+                !encodingLevel.equals(ENC_MINMAL_STATUS)))
             rdfDoc.setRecordStatus(ENC_PRELIMINARY_STATUS);
 
+        if (!m_parameters.getReadOnly())
+        {
             // Doing a replace (but preserving old IDs)
             if (replaceSystemId != null)
             {
@@ -277,7 +283,7 @@ class XL
             {
                 if ( verbose )
                 {
-                    System.out.println("info: Not enriching id: " + ourId + ", because it no longer has encoding level marc:PartialPreliminaryLevel");
+                    System.out.println("info: Not enriching id: " + ourId + ", due to bad combination of encoding levels.");
                 }
             }
         }
@@ -300,8 +306,16 @@ class XL
 
     private boolean mayOverwriteExistingEncodingLevel(String existingEncodingLevel, String newEncodingLevel)
     {
+        if (m_parameters.getForceUpdate())
+            return true;
+
         if (newEncodingLevel == null || existingEncodingLevel == null)
             return false;
+
+        String specialRule = m_parameters.getSpecialRules().get(newEncodingLevel);
+        if (specialRule != null && specialRule.equals(existingEncodingLevel))
+            return true;
+
         switch (newEncodingLevel)
         {
             case ENC_PRELIMINARY_STATUS: // 5

@@ -34,7 +34,7 @@ public class TotalExport
     public TotalExport(Whelk whelk)
     {
         m_whelk = whelk;
-        m_toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.createMarcFrameConverter());
+        m_toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
     }
 
     class Batch
@@ -53,7 +53,7 @@ public class TotalExport
     public static void main(String[] args)
             throws IOException, SQLException, InterruptedException
     {
-        if (args.length != 2 && args.length != 3)
+        if (args.length != 2 && args.length != 1)
             printUsageAndExit();
 
         ExportProfile profile = new ExportProfile(new File(args[0]));
@@ -71,12 +71,20 @@ public class TotalExport
         {
             Path idFilePath = new File(args[1]).toPath();
             new TotalExport(Whelk.createLoadedCoreWhelk()).dumpSpecific(profile, idFilePath, output);
-        } else if (args.length == 3)
+        } else if (args.length == 1)
         {
-            long size = Long.parseLong(args[1]);
-            long segment = Long.parseLong(args[2]);
-
-            new TotalExport(Whelk.createLoadedCoreWhelk()).dump(profile, size, segment, output);
+            // If the "profile" contains start/stop times, we should generate an interval-export instead
+            // of a total export.
+            String start = profile.getProperty("start");
+            String stop = profile.getProperty("stop");
+            if (start != null && stop != null)
+            {
+                start = start +"T00:00:00Z";
+                stop = stop +"T23:59:59Z";
+                new ProfileExport(Whelk.createLoadedCoreWhelk()).exportInto(output, profile, start, stop, ProfileExport.DELETE_MODE.IGNORE, false);
+            }
+            else
+                new TotalExport(Whelk.createLoadedCoreWhelk()).dump(profile, output);
         }
         output.close();
     }
@@ -87,35 +95,34 @@ public class TotalExport
         System.out.println("");
         System.out.println("  java -Dxl.secret.properties=SECRETPROPSFILE -jar marc_export.jar PROFILE-FILE ID-FILE");
         System.out.println("or");
-        System.out.println("  java -Dxl.secret.properties=SECRETPROPSFILE -jar marc_export.jar PROFILE-FILE SEGMENT-SIZE SEGMENT");
+        System.out.println("  java -Dxl.secret.properties=SECRETPROPSFILE -jar marc_export.jar PROFILE-FILE");
         System.out.println("");
         System.out.println("   PROFILE-FILE should be a Java-properties file with the export-profile settings.");
         System.out.println("   ID-FILE should be a file with IDs to export, containing one URI per row.");
-        System.out.println("   SEGMENT-SIZE is the number of records to dump in each segment.");
-        System.out.println("   SEGMENT is the number of the segment to be dumped.");
         System.out.println("");
         System.out.println("For example:");
-        System.out.println(" java -jar marc_export.jar export.properties 1000 1");
-        System.out.println("Would generate the second segment (each consisting of 1000 records) of all records held by whatever");
-        System.out.println("is in location=[] in export.properties.");
-        System.out.println("");
-        System.out.println("To not use segmentation, both SEGMENT and SEGMENT-SIZE should be '0'.");
+        System.out.println(" java -jar marc_export.jar export.properties");
+        System.out.println("Would export all records held by whatever is in location=[] in export.properties.");
         System.exit(1);
     }
 
-    private void dump(ExportProfile profile, long size, long segment, MarcRecordWriter output)
+    private void dump(ExportProfile profile, MarcRecordWriter output)
             throws SQLException, InterruptedException
     {
         ThreadPool threadPool = new ThreadPool(4 * Runtime.getRuntime().availableProcessors());
         Batch batch = new Batch(profile, output);
 
         try (Connection connection = getConnection();
-             PreparedStatement statement = getAllHeldURIsStatement(profile, size, size*segment, connection);
+             PreparedStatement statement = getAllHeldURIsStatement(profile, connection);
              ResultSet resultSet = statement.executeQuery())
         {
             while (resultSet.next())
             {
                 String bibMainEntityUri = resultSet.getString(1);
+
+                if (bibMainEntityUri == null) // Necessary due to broken data :(
+                    continue;
+
                 if (exportedUris.contains(bibMainEntityUri))
                     continue;
                 exportedUris.add(bibMainEntityUri);
@@ -163,7 +170,7 @@ public class TotalExport
 
     private void executeBatch(Batch batch, int threadIndex)
     {
-        try (Connection connection = m_whelk.getStorage().getConnection())
+        try (Connection connection = getConnection())
         {
             for (String bibUri : batch.bibUrisToConvert)
             {
@@ -173,7 +180,7 @@ public class TotalExport
                     continue;
                 }
 
-                Document document = m_whelk.getStorage().loadEmbellished(systemID, m_whelk.getJsonld());
+                Document document = m_whelk.getStorage().loadEmbellished(systemID, m_whelk.getJsonld(), connection);
 
                 Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(batch.profile, document, m_whelk, m_toMarcXmlConverter);
                 if (result == null) // A conversion error will already have been logged.
@@ -209,7 +216,7 @@ public class TotalExport
         return connection;
     }
 
-    private PreparedStatement getAllHeldURIsStatement(ExportProfile profile, long limit, long offset, Connection connection)
+    private PreparedStatement getAllHeldURIsStatement(ExportProfile profile, Connection connection)
             throws SQLException
     {
         String locations = profile.getProperty("locations", "");
@@ -225,13 +232,6 @@ public class TotalExport
 
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
 
-        if (limit != 0)
-        {
-            sql += " ORDER BY created LIMIT ? OFFSET ?";
-            preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.setLong(1, limit);
-            preparedStatement.setLong(2, offset);
-        }
         preparedStatement.setFetchSize(100);
 
         return preparedStatement;

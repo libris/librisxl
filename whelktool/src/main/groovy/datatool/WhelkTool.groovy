@@ -1,38 +1,38 @@
 package whelk.datatool
 
+import com.google.common.util.concurrent.MoreExecutors
+import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
+import org.codehaus.jackson.map.ObjectMapper
+import whelk.Document
+import whelk.Storage
+import whelk.Whelk
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 
+import javax.script.Bindings
+import javax.script.Compilable
+import javax.script.CompiledScript
+import javax.script.ScriptEngineManager
+import javax.script.SimpleBindings
+import java.sql.SQLException
 import java.time.ZonedDateTime
+import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-
-import java.sql.ResultSet
-import java.sql.SQLException
-
-import javax.script.ScriptEngineManager
-import javax.script.Bindings
-import javax.script.SimpleBindings
-import javax.script.CompiledScript
-import javax.script.Compilable
-
-import groovy.util.CliBuilder
-import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
-
-import org.codehaus.jackson.map.ObjectMapper
-
-import whelk.Storage
-import whelk.Whelk
-import whelk.Document
-
 import java.util.concurrent.atomic.AtomicInteger
 
+import static java.util.concurrent.TimeUnit.SECONDS
 
 class WhelkTool {
 
     static final int DEFAULT_BATCH_SIZE = 500
     static final int DEFAULT_FETCH_SIZE = 100
+    private static final String WHELKTOOL_THREAD_GROUP = "whelktool"
+
     Whelk whelk
 
     private GroovyScriptEngineImpl engine
@@ -64,6 +64,9 @@ class WhelkTool {
     Map<String, Closure> compiledScripts = [:]
 
     ElasticFind elasticFind
+
+    private ScheduledExecutorService timedLogger = MoreExecutors.getExitingScheduledExecutorService(
+            Executors.newScheduledThreadPool(1))
 
     WhelkTool(String scriptPath, File reportsDir=null) {
         try {
@@ -213,8 +216,7 @@ class WhelkTool {
         int batchCount = 0
         Batch batch = new Batch(number: ++batchCount)
 
-        def executorService = useThreads ? createExecutorService(batchSize) : null
-
+        def executorService = useThreads && !isWorkerThread() ? createExecutorService(batchSize) : null
         if (executorService) {
             Thread.setDefaultUncaughtExceptionHandler {
                 Thread thread, Throwable err ->
@@ -229,6 +231,8 @@ class WhelkTool {
                 errorLog.flush()
             }
         }
+
+        def timedLogger = setupTimedLogger(counter)
 
         for (Document doc : selection) {
             if (doc.deleted) {
@@ -270,15 +274,40 @@ class WhelkTool {
             log "Processed selection: ${counter.summary}. Done in ${counter.elapsedSeconds} s."
             log()
         }
+        timedLogger.cancel(true)
     }
 
     private def createExecutorService(int batchSize) {
         int cpus = Runtime.getRuntime().availableProcessors()
         int maxPoolSize = cpus * 4
         def linkedBlockingDeque = new LinkedBlockingDeque<Runnable>((int) (maxPoolSize * 1.5))
+
         def executorService = new ThreadPoolExecutor(cpus, maxPoolSize,
                 1, TimeUnit.DAYS,
                 linkedBlockingDeque, new ThreadPoolExecutor.CallerRunsPolicy())
+
+        executorService.setThreadFactory(new ThreadFactory() {
+            ThreadGroup group = new ThreadGroup(WHELKTOOL_THREAD_GROUP)
+
+            @Override
+            Thread newThread(Runnable runnable) {
+                return new Thread(group, runnable)
+            }
+        })
+
+        return executorService
+    }
+
+    private boolean isWorkerThread() {
+        return Thread.currentThread().getThreadGroup().getName().contains(WHELKTOOL_THREAD_GROUP)
+    }
+
+    private ScheduledFuture<?> setupTimedLogger(Counter counter) {
+        timedLogger.scheduleAtFixedRate({
+            if (counter.timeSinceLastSummarySeconds() > 4) {
+                repeat "$counter.summary"
+            }
+        }, 5, 5, SECONDS)
     }
 
     /**
@@ -485,7 +514,7 @@ class WhelkTool {
     private void run() {
         log "Running Whelk against:"
         log "  PostgreSQL:"
-        log "    url:     ${whelk.storage.connectionPool.url}"
+        log "    url:     ${whelk.storage.connectionPool.getJdbcUrl()}"
         log "    table:   ${whelk.storage.mainTableName}"
         if (whelk.elastic) {
             log "  ElasticSearch:"
@@ -634,6 +663,7 @@ class Batch {
 
 class Counter {
     long startTime = System.currentTimeMillis()
+    long lastSummary = startTime
     AtomicInteger readCount = new AtomicInteger()
     AtomicInteger processedCount = new AtomicInteger()
     AtomicInteger modifiedCount = new AtomicInteger()
@@ -642,8 +672,9 @@ class Counter {
     synchronized int getSaved() { modifiedCount.get() + deleteCount.get() }
 
     String getSummary() {
-        double docsPerSec = readCount.get() / getElapsedSeconds()
-        "read: ${readCount.get()}, processed: ${processedCount.get()}, modified: ${modifiedCount.get()}, deleted: ${deleteCount.get()} (at ${docsPerSec.round(3)} docs/s)"
+        lastSummary = System.currentTimeMillis()
+        double docsPerSec = processedCount.get() / getElapsedSeconds()
+        "read: ${readCount.get()}, processed: ${processedCount.get()}, modified: ${modifiedCount.get()}, deleted: ${deleteCount.get()} (at ${docsPerSec.round(2)} docs/s)"
     }
 
     double getElapsedSeconds() {
@@ -664,5 +695,9 @@ class Counter {
 
     void countDeleted() {
         deleteCount.incrementAndGet()
+    }
+
+    double timeSinceLastSummarySeconds() {
+        return (System.currentTimeMillis() - lastSummary) / 1000
     }
 }

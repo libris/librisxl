@@ -1,5 +1,6 @@
 package whelk.rest.api
 
+import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
@@ -19,12 +20,14 @@ import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
 import whelk.rest.security.AccessControl
 import whelk.util.LegacyIntegrationTools
+import whelk.util.WhelkFactory
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.lang.management.ManagementFactory
 
+import whelk.rest.api.CrudGetRequest.Lens
 import static whelk.rest.api.HttpTools.sendResponse
 
 /**
@@ -54,10 +57,6 @@ class Crud extends HttpServlet {
         .help("API request latency in seconds.")
         .labelNames("method").register()
 
-    enum FormattingType {
-        FRAMED, EMBELLISHED, FRAMED_AND_EMBELLISHED, RAW
-    }
-
     final static Map contextHeaders = [
             "bib": "/sys/context/lib.jsonld",
             "auth": "/sys/context/lib.jsonld",
@@ -84,7 +83,7 @@ class Crud extends HttpServlet {
     @Override
     void init() {
         if (!whelk) {
-            whelk = Whelk.createLoadedSearchWhelk()
+            whelk = WhelkFactory.getSingletonWhelk()
         }
         displayData = whelk.displayData
         vocabData = whelk.vocabData
@@ -123,7 +122,6 @@ class Crud extends HttpServlet {
         def info = [:]
         info["system"] = "LIBRISXL"
         info["format"] = "linked-data-api"
-        //info["collections"] = whelk.storage.loadCollections()
         sendResponse(response, mapper.writeValueAsString(info), "application/json")
     }
 
@@ -158,13 +156,12 @@ class Crud extends HttpServlet {
         def marcframePath = "/sys/marcframe.json"
         if (request.pathInfo == marcframePath) {
             def responseBody = getClass().classLoader.getResourceAsStream("ext/marcframe.json").getText("utf-8")
-            sendGetResponse(request, response, responseBody, EPOCH_START, marcframePath, "application/json")
+            sendGetResponse(response, responseBody, EPOCH_START, marcframePath, "application/json")
             return
         }
-
+        
         try {
-            def path = getRequestPath(request)
-            handleGetRequest(request, response, path)
+            handleGetRequest(CrudGetRequest.parse(request), response)
         } catch (UnsupportedContentTypeException e) {
             failedRequests.labels("GET", request.getRequestURI(),
                     response.SC_NOT_ACCEPTABLE.toString()).inc()
@@ -173,6 +170,10 @@ class Crud extends HttpServlet {
             failedRequests.labels("GET", request.getRequestURI(),
                     response.SC_NOT_FOUND.toString()).inc()
             response.sendError(response.SC_NOT_FOUND, e.message)
+        } catch (BadRequestException e) {
+            failedRequests.labels("GET", request.getRequestURI(),
+                    response.SC_BAD_REQUEST.toString()).inc()
+            response.sendError(response.SC_BAD_REQUEST, e.message)
         }
         catch (WhelkRuntimeException e) {
             failedRequests.labels("GET", request.getRequestURI(),
@@ -181,129 +182,105 @@ class Crud extends HttpServlet {
         }
     }
 
-    void handleGetRequest(HttpServletRequest request,
-                          HttpServletResponse response,
-                          String path) {
-        String id = getIdFromPath(path)
-        String version = request.getParameter("version")
-
+    void handleGetRequest(CrudGetRequest request,
+                          HttpServletResponse response) {
         // TODO: return already loaded displayData and vocabData (cached on modified)? (LXL-260)
-        Tuple2<Document, String> docAndLocation = getDocumentFromStorage(id, version)
+        Tuple2<Document, String> docAndLocation = getDocumentFromStorage(
+                request.getId(), request.getVersion().orElse(null))
         Document doc = docAndLocation.first
         String loc = docAndLocation.second
 
-        String ifNoneMatch = request.getHeader("If-None-Match")
-        if (ifNoneMatch != null && doc != null &&
-                cleanEtag(ifNoneMatch) == doc.getChecksum()) {
-            response.setHeader("ETag", "\"${doc.getChecksum()}\"")
-            response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
-            response.sendError(HttpServletResponse.SC_NOT_MODIFIED,
-                    "Document has not been modified.")
-            return
-        }
-
         if (!doc && !loc) {
-            failedRequests.labels("GET", request.getRequestURI(),
-                    HttpServletResponse.SC_NOT_FOUND.toString()).inc()
-            response.sendError(HttpServletResponse.SC_NOT_FOUND,
-                    "Document not found.")
-            return
+            sendNotFound(response, request.getPath())
         } else if (!doc && loc) {
-            sendRedirect(request, response, loc)
-            return
-        } else if (doc && doc.deleted) {
-            failedRequests.labels("GET", request.getRequestURI(),
+            sendRedirect(request.getHttpServletRequest(), response, loc)
+        } else if (request.getIfNoneMatch().map({ etag -> etag == doc.getChecksum() }).orElse(false)) {
+            sendNotModified(response, doc)
+        } else if (doc.deleted) {
+            failedRequests.labels("GET", request.getPath(),
                     HttpServletResponse.SC_GONE.toString()).inc()
             response.sendError(HttpServletResponse.SC_GONE,
                     "Document has been deleted.")
-            return
         } else {
-            String contentType = CrudUtils.getBestContentType(request)
-            def responseBody = getFormattedResponseBody(doc, path, contentType, version != null)
-            String etag = doc.getChecksum()
-            response = maybeAddProposal25Headers(response, loc)
-            sendGetResponse(request, response, responseBody, etag,
-                    path, contentType)
-            return
+            sendGetResponse(
+                    maybeAddProposal25Headers(response, loc),
+                    getFormattedResponseBody(request, doc),
+                    doc.getChecksum(),
+                    request.getPath(),
+                    request.getContentType())
         }
     }
 
-    private Object getFormattedResponseBody(Document doc, String path,
-                                            String contentType, boolean archivedVersion) {
-        FormattingType format = getFormattingType(path, contentType)
-        log.debug("Formatting document ${doc.getCompleteId()} with format " +
-                "${format} and content type ${contentType}")
-        def result
-        switch (format) {
-            case FormattingType.RAW:
-                result = doc.data
-                break
-            case FormattingType.EMBELLISHED:
-                if (!archivedVersion)
-                    doc = whelk.storage.loadEmbellished(doc.getShortId(), jsonld)
-                if (doc != null) // FU unit tests
-                    result = doc.data
-                break
-            case FormattingType.FRAMED:
-                result = JsonLd.frame(doc.getCompleteId(), doc.data)
-                break
-            case FormattingType.FRAMED_AND_EMBELLISHED:
-                if (!archivedVersion)
-                    doc = whelk.storage.loadEmbellished(doc.getShortId(), jsonld)
-                if (doc != null) // FU unit tests
-                    result = JsonLd.frame(doc.getCompleteId(), doc.data)
-                break
-            default:
-                throw new WhelkRuntimeException("Invalid formatting type: ${format}")
-        }
-
-        return formatResponseBody(result, contentType)
+    private void sendNotModified(HttpServletResponse response, Document doc) {
+        setVary(response)
+        response.setHeader("ETag", "\"${doc.getChecksum()}\"")
+        response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
+        response.sendError(HttpServletResponse.SC_NOT_MODIFIED,
+                "Document has not been modified.")
     }
 
-    /**
-     * Format response body based on Content-Type.
-     *
-     */
-    Object formatResponseBody(Object responseBody, String contentType) {
-        if (contentType == MimeTypes.JSONLD) {
-            return responseBody
-        } else if (contentType == MimeTypes.JSON) {
-            return responseBody
-        } else if (contentType == MimeTypes.RDF) {
-            // FIXME convert to RDF-XML
-            throw new UnsupportedContentTypeException("Not implemented.")
-        } else if (contentType == MimeTypes.TURTLE) {
-            // FIXME convert to Turtle
-            throw new UnsupportedContentTypeException("Not implemented.")
-        } else {
-            throw new UnsupportedContentTypeException("Not implemented.")
+    private void sendNotFound(HttpServletResponse response, String path) {
+        failedRequests.labels("GET", path,
+                HttpServletResponse.SC_NOT_FOUND.toString()).inc()
+        response.sendError(HttpServletResponse.SC_NOT_FOUND,
+                "Document not found.")
+    }
+
+    private Object getFormattedResponseBody(CrudGetRequest request, Document doc) {
+        log.debug("Formatting document {}. embellished: {}, framed: {}, lens: {}",
+                doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame(), request.getLens())
+
+        if (request.shouldEmbellish()) {
+            doc = whelk.storage.loadEmbellished(doc.getShortId(), jsonld)
+        }
+
+        if (request.getLens() != Lens.NONE) {
+            return applyLens(frameThing(doc), request.getLens())
+        }
+        else {
+            return request.shouldFrame()
+                    ? frameRecord(doc)
+                    : doc.data
         }
     }
 
-    /**
-     * Given a resource path, return the ID part or null.
-     *
-     * E.g.:
-     * getIdFromPath("/foo") -> "foo"
-     * getIdFromPath("/foo/data.jsonld") -> "foo"
-     * getIdFromPath("/") -> null
-     *
-     */
-    static String getIdFromPath(String path) {
-        def pattern = getPathRegex()
-        def matcher = path =~ pattern
-        if (matcher.matches()) {
-            return matcher[0][1]
-        } else {
-            return null
+    private Map frameRecord(Document document) {
+        return JsonLd.frame(document.getCompleteId(), document.data)
+    }
+
+    private Map frameThing(Document document) {
+        document.setThingMeta(document.getCompleteId())
+        List<String> thingIds = document.getThingIdentifiers()
+        if (thingIds.isEmpty()) {
+            String msg = "Could not frame document. Missing mainEntity? In: " + document.getCompleteId()
+            log.warn(msg)
+            throw new WhelkRuntimeException(msg)
         }
+        return JsonLd.frame(thingIds.get(0), document.data)
+     }
+
+
+    private Object applyLens(Object framedThing, Lens lens) {
+        switch (lens) {
+            case Lens.NONE:
+                return framedThing
+            case Lens.CARD:
+                return whelk.jsonld.toCard(framedThing)
+            case Lens.CHIP:
+                return whelk.jsonld.toChip(framedThing)
+        }
+    }
+
+    private void setVary(HttpServletResponse response) {
+        response.setHeader("Vary", "Accept")
     }
 
     /**
      * Return request URI
      *
      */
-    private String getRequestPath(HttpServletRequest request) {
+    @PackageScope
+    static String getRequestPath(HttpServletRequest request) {
         String path = request.getRequestURI()
         // Tomcat incorrectly strips away double slashes from the pathinfo.
         // Compensate here.
@@ -314,118 +291,6 @@ class Crud extends HttpServlet {
         }
 
         return path
-    }
-
-    /**
-     * Given a resource path and a content type, return the formatting
-     * type for that resource.
-     *
-     * FormattingType.EMBELLISHED is the default return value.
-     *
-     */
-    static FormattingType getFormattingType(String path, String contentType) {
-        log.debug("Getting formatting type for path ${path}")
-        int viewGroup = 3
-        int fileEndingGroup = 5
-        def pattern = getPathRegex()
-        def matcher = path =~ pattern
-        if (matcher.matches()) {
-            String view = matcher.group(viewGroup)
-            String fileEnding = matcher.group(fileEndingGroup)
-            return getFormattingTypeForView(view, fileEnding, contentType)
-        } else {
-            return FormattingType.EMBELLISHED
-        }
-    }
-
-    private static FormattingType getFormattingTypeForView(String view,
-                                                           String fileEnding,
-                                                           String contentType) {
-        FormattingType result
-
-        if (!view) {
-            result = getFormattingTypeForFancyView(contentType)
-        } else if (view == 'data') {
-            switch (fileEnding) {
-                case 'jsonld':
-                    result = FormattingType.RAW
-                    break
-                case 'json':
-                    result = FormattingType.FRAMED
-                    break
-                case null:
-                    result = getFormattingTypeForSimpleView(contentType)
-                    break
-                default:
-                    // TODO support more file types
-                    throw new NotFoundException('Bad file ending: ${fileEnding}')
-            }
-        } else if (view == 'data-view') {
-            switch (fileEnding) {
-                case 'jsonld':
-                    result = FormattingType.EMBELLISHED
-                    break
-                case 'json':
-                    result = FormattingType.FRAMED_AND_EMBELLISHED
-                    break
-                case null:
-                    result = getFormattingTypeForFancyView(contentType)
-                    break
-                default:
-                    // TODO support more file types
-                    throw new NotFoundException('Bad file ending: ${fileEnding}')
-            }
-        } else {
-            return FormattingType.EMBELLISHED
-        }
-
-        return result
-    }
-
-    private static FormattingType getFormattingTypeForFancyView(String contentType) {
-        FormattingType result
-
-        switch (contentType) {
-            case MimeTypes.JSONLD:
-                result = FormattingType.EMBELLISHED
-                break
-            case MimeTypes.JSON:
-                result = FormattingType.FRAMED_AND_EMBELLISHED
-                break
-            default:
-                result = FormattingType.EMBELLISHED
-                break
-        }
-
-        return result
-    }
-
-    private static FormattingType getFormattingTypeForSimpleView(String contentType) {
-        FormattingType result
-
-        switch (contentType) {
-            case MimeTypes.JSONLD:
-                result = FormattingType.RAW
-                break
-            case MimeTypes.JSON:
-                result = FormattingType.FRAMED
-                break
-            default:
-                result = FormattingType.RAW
-                break
-        }
-
-        return result
-    }
-
-    /**
-     * Return a regex pattern representation of a CRUD path.
-     *
-     * Matches /foo, /foo/data, /foo/data.<suffix>.
-     *
-     */
-    static String getPathRegex() {
-        return ~/^\/(.+?)(\/(data|data-view)(\.(\w+))?)?$/
     }
 
     /**
@@ -501,8 +366,7 @@ class Crud extends HttpServlet {
      * Sets the necessary headers and picks the best Content-Type to use.
      *
      */
-    void sendGetResponse(HttpServletRequest request,
-                         HttpServletResponse response,
+    void sendGetResponse(HttpServletResponse response,
                          Object responseBody, String modified, String path,
                          String contentType) {
         // FIXME remove?
@@ -527,8 +391,9 @@ class Crud extends HttpServlet {
             log.debug("request is for context file. " +
                     "Must serve original content-type ($contentType).")
             // FIXME what should happen here?
-            // contentType = document.contentType
         }
+
+        setVary(response)
 
         sendResponse(response, responseBody, contentType)
     }
@@ -826,7 +691,7 @@ class Crud extends HttpServlet {
                             log.warn("If-Match: ${request.getHeader('If-Match')}")
                             log.warn("Checksum: ${_doc.checksum}")
 
-                            if (_doc.getChecksum() != cleanEtag(request.getHeader("If-Match"))) {
+                            if (_doc.getChecksum() != CrudUtils.cleanEtag(request.getHeader("If-Match"))) {
                                 log.debug("PUT performed on stale document.")
 
                                 throw new EtagMissmatchException()
@@ -1063,14 +928,6 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, wre.message)
         }
 
-    }
-
-    private String cleanEtag(String str) {
-        return stripQuotes(str).replaceAll('-gzip', '')
-    }
-
-    private String stripQuotes(String str) {
-        return str.replaceAll('"', '')
     }
 
     static class NotFoundException extends RuntimeException {

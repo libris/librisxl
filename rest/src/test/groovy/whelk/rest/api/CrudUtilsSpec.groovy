@@ -1,5 +1,6 @@
 package whelk.rest.api
 
+import com.google.common.net.MediaType
 import spock.lang.Specification
 import whelk.rest.api.CrudUtils
 
@@ -23,99 +24,92 @@ class CrudUtilsSpec extends Specification {
         when:
         String contentType = CrudUtils.getBestContentType(request)
         then:
-        contentType == "application/ld+json"
+        contentType == "application/json"
 
     }
 
     def "Should return correct content type"() {
+        given:
+        request.getHeader(_) >> {
+            accept
+        }
+        request.getRequestURI() >> {
+            "/id${suffix}"
+        }
         expect:
-        CrudUtils.getBestContentType(mimeType, suffix) == contentType
+        CrudUtils.getBestContentType(request) == contentType
         where:
-        mimeType                                            | suffix   | contentType
-        "text/turtle"                                       | null     | "text/turtle"
-        "application/json"                                  | null     | "application/json"
-        "application/ld+json"                               | null     | "application/ld+json"
-        "*/*"                                               | null     | "application/ld+json"
-        "*/*"                                               | "jsonld" | "application/ld+json"
-        "*/*"                                               | "ttl"    | "text/turtle"
-        "*/*"                                               | "rdf"    | "application/rdf+xml"
-        "application/x-octet-stream"                        | null     | null
-        "application/x-octet-stream"                        | "html"   | null
-        "text/turtle;q=0.8"                                 | null     | "text/turtle"
-        "text/turtle, application/json;q=0.8"               | null     | "text/turtle"
-        "text/turtle;q=0.1, application/json;q=0.8"         | null     | "application/json"
-        "*/*, text/turtle;q=0.1, application/json;q=0.8"    | null     | "application/ld+json"
-        "text/turtle, application/signed-exchange;v=b3"     | null     | "text/turtle"
+        accept                                              | suffix    || contentType
+        "text/turtle"                                       | ''        || "application/ld+json"
+        "application/json"                                  | ''        || "application/json"
+        "application/ld+json"                               | ''        || "application/ld+json"
+        "*/*"                                               | ''        || "application/ld+json"
+        "*/*"                                               | ".jsonld" || "application/ld+json"
+        "application/ld+json"                               | ".jsonld" || "application/ld+json"
+        "application/json"                                  | ".jsonld" || "application/ld+json"
+        "*/*"                                               | ".json"   || "application/json"
+        "application/ld+json"                               | ".json"   || "application/json"
+        "application/x-octet-stream"                        | ''        || "application/ld+json"
+        "text/turtle;q=0.8"                                 | ''        || "application/ld+json"
+        "text/turtle, application/json;q=0.8"               | ''        || "application/json"
+        "text/turtle;q=0.1, application/json;q=0.8"         | ''        || "application/json"
+        "*/*, text/turtle;q=0.1, application/json;q=0.8"    | ''        || "application/ld+json"
+        "text/turtle, application/signed-exchange;v=b3"     | ''        || "application/ld+json"
     }
 
-    def "Should convert suffix to MIME type"() {
-        expect:
-        CrudUtils.getMimeTypeForSuffix(suffix) == mimeType
+    def "Should throw on invalid suffix"() {
+        given:
+        request.getHeader(_) >> {
+            '*/*'
+        }
+        request.getRequestURI() >> {
+            "/id${suffix}"
+        }
+        when:
+        CrudUtils.getBestContentType(request)
+
+        then:
+        thrown(Crud.NotFoundException)
+
         where:
-        suffix   | mimeType
-        "jsonld" | "application/ld+json"
-        "json"   | "application/json"
-        "rdf"    | "application/rdf+xml"
-        "ttl"    | "text/turtle"
-        "html"   | null
+        suffix << ['.rdf', '.ttl', '.invalid']
     }
 
-    def "Should find matching MIME type"() {
-        expect:
-        CrudUtils.findMatchingMimeType(sought, available) == result
-        where:
-        sought      | available                              | result
-        "*/*"       | ["application/ld+json"]                | "application/ld+json"
-        "text/html" | ["application/ld+json"]                | null
-        "text/*"    | ["application/ld+json", "text/turtle"] | "text/turtle"
-    }
-
-    def "Should get match wildcard MIME type"() {
-        expect:
-        CrudUtils.isMatch(myMimeType, yourMimeType) == result
-        where:
-        myMimeType            | yourMimeType  | result
-        "text/html"           | "text/html"   | true
-        "text/turtle"         | "text/html"   | false
-        "text/*"              | "text/*"      | true
-        "text/turtle"         | "text/*"      | true
-        "text/*"              | "text/turtle" | true
-        "application/ld+json" | "text/*"      | false
-        "application/ld+json" | "*/*"         | true
-        "bad_input"           | "*/*"         | false
-        "*/*"                 | "bad_input"   | false
-        null                  | "*/*"         | false
-        "*/*"                 | null          | false
-    }
-
+    static final def m = MediaType.&parse
     def "Should pick best matching MIME type"() {
         expect:
         assert CrudUtils.getBestMatchingMimeType(allowed, desired) == expected
         where:
         allowed                           | desired                              | expected
-        ["application/json", "text/html"] | ["application/rdf+xml", "text/html"] | "text/html"
-        ["application/json", "text/html"] | ["*/*"]                              | "application/ld+json"
-        ["application/json"]              | ["text/html"]                        | null
+        [m("application/json"), m("text/html")] | [m("application/rdf+xml"), m("text/html")] | m("text/html")
+        [m("application/json"), m("text/html")] | [m("*/*")]                                 | m("application/json")
+        [m("application/json"), m("text/html")] | [m("text/*")]                              | m("text/html")
+        [m("application/json")]                 | [m("text/html")]                           | m("application/json")
     }
 
     def "Should sort MIME types by quality"() {
         expect:
-        assert CrudUtils.sortMimeTypesByQuality(mimeTypes) == sortedMimeTypes
+        assert CrudUtils.parseAcceptHeader(mimeTypes).collect{ it.toString() } == sortedMimeTypes
         where:
-        mimeTypes                                            | sortedMimeTypes
-        ["*/*", "text/html;q=0.1", "application/json;q=0.8"] | ["*/*", "application/json", "text/html"]
-        [] | []
-        ["text/html;q=0.1"] | ["text/html"]
-        ["application/json", "text/html;q=0.1", "*/*;q=0.1"] | ["application/json", "*/*", "text/html"]
-        ["application/json", "text/html;q=0.2", "*/*;q=0.1"] | ["application/json", "text/html", "*/*"]
+        mimeTypes                                                | sortedMimeTypes
+        "*/*, text/html;q=0.1, application/json;q=0.8"           | ["*/*", "application/json", "text/html"]
+        ''                                                       | []
+        "text/html;q=0.1"                                        | ["text/html"]
+        "application/json, */*;q=0.1, text/html;q=0.1"           | ["application/json", "text/html", "*/*"]
+        "application/json ,  text/html;q=0.1 , */*;q=0.2"        | ["application/json", "*/*", "text/html"]
+        "x/x;p=x;q=1.0;extension-param=ignored"                  | ['x/x; p=x']
+        '*/*, text/*, text/rdf, text/rdf;p=x'                    | ['text/rdf; p=x', 'text/rdf', 'text/*', '*/*']
+        'application/ld+json, application/ld+json;profile="a b"' | ['application/ld+json; profile="a b"', 'application/ld+json']
     }
 
-    def "Should parse accept header into MIME types"() {
-        expect:
-        assert CrudUtils.getMimeTypes(acceptHeader) == mimeTypes
+    def "Should throw on invalid Accept header"() {
+        when:
+        CrudUtils.parseAcceptHeader("application/ld+json;q=one")
+
+        then:
+        thrown(BadRequestException)
+
         where:
-        acceptHeader                                   | mimeTypes
-        "*/*, text/html;q=0.1, application/json;q=0.8" | ["*/*", "text/html;q=0.1", "application/json;q=0.8"]
-        "*/*,                  application/json;q=0.8" | ["*/*", "application/json;q=0.8"]
+        header << ["application/ld+json;q=one", "ld+json"]
     }
 }

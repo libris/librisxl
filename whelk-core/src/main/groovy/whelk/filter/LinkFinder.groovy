@@ -42,32 +42,36 @@ class LinkFinder {
 
             def paramsQuery = ENTITY_QUERY.replace('€', recordIds.collect { it -> '?' }.join(','))
             def connection = postgres.getConnection()
-            PreparedStatement stmt = connection.prepareStatement(paramsQuery)
+            try {
+                PreparedStatement stmt = connection.prepareStatement(paramsQuery)
 
-            def foundLinks = entities.collect { entity ->
-                //log.trace "Trying to match entity ${entity.inspect()}"
+                def foundLinks = entities.collect { entity ->
+                    //log.trace "Trying to match entity ${entity.inspect()}"
 
-                int i = 1
-                stmt.setObject(i, mapper.writeValueAsString([entity]), java.sql.Types.OTHER)
-                recordIds.each { recordId ->
-                    stmt.setObject(++i, recordId)
-                }
-
-                def id
-                log.trace stmt.toString()
-                ResultSet rs = stmt.executeQuery()
-                if (rs.next()) {
-                    id = rs.getString("thingUri") // set id to record id, as fallback
-                    if (rs.next()) {
-                        id = rs.getString("thingUri") // if there's a second row (mainEntity), use that id instead.
+                    int i = 1
+                    stmt.setObject(i, mapper.writeValueAsString([entity]), java.sql.Types.OTHER)
+                    recordIds.each { recordId ->
+                        stmt.setObject(++i, recordId)
                     }
-                }
 
-                return id ? Document.BASE_URI.resolve(id) : null
+                    def id
+                    log.trace stmt.toString()
+                    ResultSet rs = stmt.executeQuery()
+                    if (rs.next()) {
+                        id = rs.getString("thingUri") // set id to record id, as fallback
+                        if (rs.next()) {
+                            id = rs.getString("thingUri") // if there's a second row (mainEntity), use that id instead.
+                        }
+                    }
+
+                    return id ? Document.BASE_URI.resolve(id) : null
+                }
+                log.debug "Found ${foundLinks.count { it -> it }} links to replace in entities"
+                return foundLinks
             }
-            log.debug "Found ${foundLinks.count {it->it}} links to replace in entities"
-            connection.close()
-            return foundLinks
+            finally {
+                connection.close()
+            }
         }
         else{
             log.debug "missing arguments. No linkfinding will be performed."

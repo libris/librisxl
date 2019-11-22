@@ -1,52 +1,60 @@
 package whelk.component
 
-import groovy.transform.Canonical
-import groovy.transform.CompileStatic
-import whelk.util.LegacyIntegrationTools
-
-import static groovy.transform.TypeCheckingMode.SKIP
-import groovy.util.logging.Log4j2 as Log
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import groovy.json.StringEscapeUtils
-import org.apache.commons.dbcp2.BasicDataSource
+import groovy.transform.CompileStatic
+import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
 import org.postgresql.util.PSQLException
 import whelk.Document
-import whelk.Storage
 import whelk.IdType
 import whelk.JsonLd
+import whelk.Storage
+import whelk.exception.CancelUpdateException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
-import whelk.exception.CancelUpdateException
+import whelk.exception.WhelkException
 import whelk.filter.LinkFinder
+import whelk.util.LegacyIntegrationTools
 
-import java.sql.*
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Date
+import java.sql.Array
+import java.sql.BatchUpdateException
+import java.sql.Connection
+import java.sql.PreparedStatement
+import java.sql.ResultSet
+import java.sql.SQLException
+import java.sql.Statement
+import java.sql.Timestamp
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+
+import static groovy.transform.TypeCheckingMode.SKIP
+import static java.sql.Types.OTHER
+
+/**
+ *  It is important to not grab more than one connection per request/thread to avoid connection related deadlocks.
+ *  i.e. get/release connection should be done in the public methods. Connections should be reused in method calls
+ *  within this class.
+ */
 
 @Log
 @CompileStatic
 class PostgreSQLComponent implements Storage {
+    public static final String PROPERTY_SQL_URL = "sqlUrl"
+    public static final String PROPERTY_SQL_MAIN_TABLE_NAME = "sqlMaintable"
+    public static final String PROPERTY_SQL_MAX_POOL_SIZE = "sqlMaxPoolSize"
 
-    private BasicDataSource connectionPool
-    static String driverClass = "org.postgresql.Driver"
-    private static String UNIQUE_VIOLATION = "23505"
+    public static final ObjectMapper mapper = new ObjectMapper()
 
-    public final static ObjectMapper mapper = new ObjectMapper()
+    private static final int DEFAULT_MAX_POOL_SIZE = 16
+    private static final String UNIQUE_VIOLATION = "23505"
+    private static final String driverClass = "org.postgresql.Driver"
 
+    private HikariDataSource connectionPool
     boolean versioning = true
     boolean doVerifyDocumentIdRetention = true
-
-    /**
-     * This value is sensitive. It must be strictly larger than the maxConnections parameter set in tomcat.
-     * This is necessary in order to not have the very expensive deadlock/connection-starvation prevention code
-     * in here.
-     */
-    final int MAX_CONNECTION_COUNT = 300
 
     // SQL statements
     protected String UPDATE_DOCUMENT, INSERT_DOCUMENT,
@@ -57,7 +65,7 @@ class PostgreSQLComponent implements Storage {
                      GET_DOCUMENT_BY_SAMEAS_ID, LOAD_ALL_DOCUMENTS,
                      LOAD_ALL_DOCUMENTS_BY_COLLECTION,
                      DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT,
-                     LOAD_ID_FROM_ALTERNATE, INSERT_IDENTIFIERS,
+                     INSERT_IDENTIFIERS,
                      LOAD_RECORD_IDENTIFIERS, LOAD_THING_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
                      GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, GET_DEPENDENCIES, GET_DEPENDERS,
                      GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE, GET_COLLECTION_BY_SYSTEM_ID
@@ -67,6 +75,7 @@ class PostgreSQLComponent implements Storage {
     protected String QUERY_LD_API
     protected String FIND_BY, COUNT_BY
     protected String GET_SYSTEMID_BY_IRI
+    protected String GET_THING_MAIN_IRI_BY_SYSTEMID
     protected String GET_DOCUMENT_BY_IRI
     protected String GET_MINMAX_MODIFIED
     protected String UPDATE_MINMAX_MODIFIED
@@ -74,19 +83,9 @@ class PostgreSQLComponent implements Storage {
     protected String INSERT_EMBELLISHED_DOCUMENT
     protected String DELETE_EMBELLISHED_DOCUMENT
 
-    // Query defaults
-    static final int DEFAULT_PAGE_SIZE = 50
-
-    // Query idiomatic data
-    static final Map<StorageType, String> SQL_PREFIXES = [
-            (StorageType.JSONLD)                       : "data->'@graph'",
-            (StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS): "data->'descriptions'",
-            (StorageType.MARC21_JSON)                  : "data->'fields'"
-    ]
-
     String mainTableName
-
     LinkFinder linkFinder
+    DependencyCache dependencyCache
 
     class AcquireLockException extends RuntimeException { AcquireLockException(String s) { super(s) } }
 
@@ -96,15 +95,19 @@ class PostgreSQLComponent implements Storage {
     PostgreSQLComponent() {}
 
     PostgreSQLComponent(Properties properties) {
-        setup(properties.getProperty("sqlUrl"), properties.getProperty("sqlMaintable"))
+        int maxPoolSize = properties.getProperty(PROPERTY_SQL_MAX_POOL_SIZE)
+                ? Integer.parseInt(properties.getProperty(PROPERTY_SQL_MAX_POOL_SIZE))
+                : DEFAULT_MAX_POOL_SIZE
+
+        setup(properties.getProperty(PROPERTY_SQL_URL), properties.getProperty(PROPERTY_SQL_MAIN_TABLE_NAME), maxPoolSize)
     }
 
-    PostgreSQLComponent(String sqlUrl, String sqlMaintable) {
-        setup(sqlUrl, sqlMaintable)
+    PostgreSQLComponent(String sqlUrl, String sqlMainTable) {
+        setup(sqlUrl, sqlMainTable, DEFAULT_MAX_POOL_SIZE)
     }
 
-    private void setup(String sqlUrl, String sqlMaintable) {
-        mainTableName = sqlMaintable
+    private void setup(String sqlUrl, String sqlMainTable, int maxPoolSize) {
+        mainTableName = sqlMainTable
         String idTableName = mainTableName + "__identifiers"
         String versionsTableName = mainTableName + "__versions"
         String settingsTableName = mainTableName + "__settings"
@@ -112,34 +115,35 @@ class PostgreSQLComponent implements Storage {
         String profilesTableName = mainTableName + "__profiles"
         String embellishedTableName = mainTableName + "__embellished"
 
-        connectionPool = new BasicDataSource()
-
         if (sqlUrl) {
-            URI connURI = new URI(sqlUrl.substring(5)) // Cut the "jdbc:"-part of the sqlUrl.
+            HikariConfig config = new HikariConfig()
+            config.setMaximumPoolSize(maxPoolSize)
+            config.setAutoCommit(true)
+            config.setJdbcUrl(sqlUrl.replaceAll(":\\/\\/\\w+:*.*@", ":\\/\\/"))
+            config.setDriverClassName(driverClass)
 
-            log.info("Connecting to sql database at ${sqlUrl}, using driver $driverClass")
+            log.info("Connecting to sql database at ${config.getJdbcUrl()}, using driver $driverClass. Pool size: $maxPoolSize")
+            URI connURI = new URI(sqlUrl.substring(5))
             if (connURI.getUserInfo() != null) {
                 String username = connURI.getUserInfo().split(":")[0]
                 log.trace("Setting connectionPool username: $username")
-                connectionPool.setUsername(username)
+                config.setUsername(username)
+
                 try {
                     String password = connURI.getUserInfo().split(":")[1]
                     log.trace("Setting connectionPool password: $password")
-                    connectionPool.setPassword(password)
-                } catch (ArrayIndexOutOfBoundsException aioobe) {
+                    config.setPassword(password)
+                } catch (ArrayIndexOutOfBoundsException ignored) {
                     log.debug("No password part found in connect url userinfo.")
                 }
             }
-            connectionPool.setDriverClassName(driverClass)
-            connectionPool.setUrl(sqlUrl.replaceAll(":\\/\\/\\w+:*.*@", ":\\/\\/"))
-            // Remove the password part from the url or it won't be able to connect
-            connectionPool.setInitialSize(1)
-            connectionPool.setMaxTotal(MAX_CONNECTION_COUNT)
-            connectionPool.setDefaultAutoCommit(true)
+
+            connectionPool = new HikariDataSource(config)
+
+            this.linkFinder = new LinkFinder(this)
         }
 
-        if (sqlUrl != null)
-            this.linkFinder = new LinkFinder(this)
+        this.dependencyCache = new DependencyCache(this)
 
         // Setting up sql-statements
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
@@ -158,42 +162,52 @@ class PostgreSQLComponent implements Storage {
 
         GET_DOCUMENT = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_EMBELLISHED_DOCUMENT = "SELECT data from lddb__embellished where id = ?"
-        GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,collection,created,modified,deleted,changedBy FROM $mainTableName WHERE id= ? FOR UPDATE"
+        GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,collection,created,modified,deleted,changedBy FROM $mainTableName WHERE id = ? AND deleted = false FOR UPDATE"
         GET_DOCUMENT_VERSION = "SELECT id,data FROM $versionsTableName WHERE id = ? AND checksum = ?"
         GET_DOCUMENT_VERSION_BY_MAIN_ID = "SELECT id,data FROM $versionsTableName " +
-                                          "WHERE id = (SELECT id FROM $idTableName " +
-                                                      "WHERE iri = ? AND mainid = 't') " +
-                                          "AND checksum = ?"
+                "WHERE id = (SELECT id FROM $idTableName " +
+                "WHERE iri = ? AND mainid = 't') " +
+                "AND checksum = ?"
         GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,deleted,created,modified " +
                 "FROM $versionsTableName WHERE id = ? ORDER BY modified DESC"
         GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID = "SELECT id,data,deleted,created,modified " +
-                                               "FROM $versionsTableName " +
-                                               "WHERE id = (SELECT id FROM $idTableName " +
-                                                           "WHERE iri = ? AND mainid = 't') " +
-                                               "ORDER BY modified"
+                "FROM $versionsTableName " +
+                "WHERE id = (SELECT id FROM $idTableName " +
+                "WHERE iri = ? AND mainid = 't') " +
+                "ORDER BY modified"
         GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE data->'@graph' @> ?"
         GET_RECORD_ID_BY_THING_ID = "SELECT id FROM $idTableName WHERE iri = ? AND graphIndex = 1"
         GET_DOCUMENT_BY_MAIN_ID = "SELECT id,data,created,modified,deleted " +
-                                  "FROM $mainTableName " +
-                                  "WHERE id = (SELECT id FROM $idTableName " +
-                                              "WHERE mainid = 't' AND iri = ?)"
+                "FROM $mainTableName " +
+                "WHERE id = (SELECT id FROM $idTableName " +
+                "WHERE mainid = 't' AND iri = ?)"
         GET_RECORD_ID = "SELECT iri FROM $idTableName " +
-                        "WHERE graphindex = 0 AND mainid = 't' " +
-                        "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
+                "WHERE graphindex = 0 AND mainid = 't' " +
+                "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
         GET_THING_ID = "SELECT iri FROM $idTableName " +
-                        "WHERE graphindex = 1 AND mainid = 't' " +
-                        "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
+                "WHERE graphindex = 1 AND mainid = 't' " +
+                "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
         GET_MAIN_ID = "SELECT t2.iri FROM $idTableName t1 " +
-                      "JOIN $idTableName t2 " +
-                      "ON t2.id = t1.id " +
-                      "AND t2.graphindex = t1.graphindex " +
-                      "WHERE t1.iri = ? AND t2.mainid = true;"
+                "JOIN $idTableName t2 " +
+                "ON t2.id = t1.id " +
+                "AND t2.graphindex = t1.graphindex " +
+                "WHERE t1.iri = ? AND t2.mainid = true;"
         GET_ID_TYPE = "SELECT graphindex, mainid FROM $idTableName " +
-                      "WHERE iri = ?"
+                "WHERE iri = ?"
         GET_COLLECTION_BY_SYSTEM_ID = "SELECT collection FROM lddb where id = ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
-        LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
+        // This query does the same as LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
+        // but much faster because postgres does not yet have 'loose indexscan' aka 'index skip scan'
+        // https://wiki.postgresql.org/wiki/Loose_indexscan'
+        LOAD_COLLECTIONS = "WITH RECURSIVE t AS ( " +
+                "(SELECT collection FROM $mainTableName ORDER BY collection LIMIT 1) " +
+                "UNION ALL " +
+                "SELECT (SELECT collection FROM $mainTableName WHERE collection > t.collection ORDER BY collection LIMIT 1) " +
+                "FROM t " +
+                "WHERE t.collection IS NOT NULL" +
+                ") " +
+                "SELECT collection FROM t WHERE collection IS NOT NULL"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE modified >= ? AND modified <= ? AND collection = ? AND deleted = false"
         LOAD_RECORD_IDENTIFIERS = "SELECT iri from $idTableName WHERE id = ? AND graphIndex = 0"
@@ -208,7 +222,7 @@ class PostgreSQLComponent implements Storage {
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
         GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
         GET_MINMAX_MODIFIED = "SELECT MIN(modified), MAX(modified) from $mainTableName WHERE id IN (?)"
-        UPDATE_MINMAX_MODIFIED = "WITH dependsOn AS (SELECT modified FROM $dependenciesTableName JOIN $mainTableName ON " + dependenciesTableName + ".dependsOnId = " + mainTableName+ ".id WHERE " + dependenciesTableName + ".id = ? UNION SELECT modified FROM $mainTableName WHERE id = ?) " +
+        UPDATE_MINMAX_MODIFIED = "WITH dependsOn AS (SELECT modified FROM $dependenciesTableName JOIN $mainTableName ON " + dependenciesTableName + ".dependsOnId = " + mainTableName + ".id WHERE " + dependenciesTableName + ".id = ? UNION SELECT modified FROM $mainTableName WHERE id = ?) " +
                 "UPDATE $mainTableName SET depMinModified = (SELECT MIN(modified) FROM dependsOn), depMaxModified = (SELECT MAX(modified) FROM dependsOn) WHERE id = ?"
 
         // Queries
@@ -220,58 +234,50 @@ class PostgreSQLComponent implements Storage {
                 "INSERT INTO $settingsTableName (key, settings) SELECT ?,? WHERE NOT EXISTS (SELECT * FROM upsertsettings)"
 
         FIND_BY = "SELECT id, data, created, modified, deleted " +
-                  "FROM $mainTableName " +
-                  "WHERE data->'@graph' @> ? " +
-                  "OR data->'@graph' @> ? " +
-                  "LIMIT ? OFFSET ?"
+                "FROM $mainTableName " +
+                "WHERE data->'@graph' @> ? " +
+                "OR data->'@graph' @> ? " +
+                "LIMIT ? OFFSET ?"
 
         COUNT_BY = "SELECT count(*) " +
-                   "FROM $mainTableName " +
-                   "WHERE data->'@graph' @> ? " +
-                   "OR data->'@graph' @> ?"
+                "FROM $mainTableName " +
+                "WHERE data->'@graph' @> ? " +
+                "OR data->'@graph' @> ?"
 
         GET_SYSTEMID_BY_IRI = "SELECT id FROM $idTableName WHERE iri = ?"
+        GET_THING_MAIN_IRI_BY_SYSTEMID = "SELECT iri FROM $idTableName WHERE graphindex = 1 and mainid is true and id = ?"
         GET_DOCUMENT_BY_IRI = "SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
 
         GET_LEGACY_PROFILE = "SELECT profile FROM $profilesTableName WHERE library_id = ?"
-     }
+    }
 
-
-    public Map status(URI uri, Connection connection = null) {
+    private Map status(URI uri, Connection connection) {
         Map statusMap = [:]
-        boolean newConnection = (connection == null)
-        try {
-            if (newConnection) {
-                connection = getConnection()
-            }
-            PreparedStatement statusStmt = connection.prepareStatement(STATUS_OF_DOCUMENT)
-            statusStmt.setString(1, uri.toString())
-            def rs = statusStmt.executeQuery()
-            if (rs.next()) {
-                statusMap['id'] = rs.getString("id")
-                statusMap['uri'] = Document.BASE_URI.resolve(rs.getString("id"))
-                statusMap['exists'] = true
-                statusMap['created'] = new Date(rs.getTimestamp("created").getTime())
-                statusMap['modified'] = new Date(rs.getTimestamp("modified").getTime())
-                statusMap['deleted'] = rs.getBoolean("deleted")
-                log.trace("StatusMap: $statusMap")
-            } else {
-                log.debug("No results returned for $uri")
-                statusMap['exists'] = false
-            }
-        } finally {
-            if (newConnection) {
-                connection.close()
-            }
+
+        PreparedStatement statusStmt = connection.prepareStatement(STATUS_OF_DOCUMENT)
+        statusStmt.setString(1, uri.toString())
+        def rs = statusStmt.executeQuery()
+        if (rs.next()) {
+            statusMap['id'] = rs.getString("id")
+            statusMap['uri'] = Document.BASE_URI.resolve(rs.getString("id"))
+            statusMap['exists'] = true
+            statusMap['created'] = new Date(rs.getTimestamp("created").getTime())
+            statusMap['modified'] = new Date(rs.getTimestamp("modified").getTime())
+            statusMap['deleted'] = rs.getBoolean("deleted")
+            log.trace("StatusMap: $statusMap")
+        } else {
+            log.debug("No results returned for $uri")
+            statusMap['exists'] = false
         }
+
         log.debug("Loaded status for ${uri}: $statusMap")
         return statusMap
     }
 
-    public List<String> loadCollections() {
-        Connection connection
-        PreparedStatement collectionStatement
-        ResultSet collectionResults
+    List<String> loadCollections() {
+        Connection connection = null
+        PreparedStatement collectionStatement = null
+        ResultSet collectionResults = null
         try {
             connection = getConnection()
             collectionStatement = connection.prepareStatement(LOAD_COLLECTIONS)
@@ -285,12 +291,7 @@ class PostgreSQLComponent implements Storage {
             }
             return collections
         } finally {
-            if (collectionResults != null)
-                collectionResults.close()
-            if (collectionStatement != null)
-                collectionStatement.close()
-            if (connection != null)
-                connection.close()
+            close(collectionResults, collectionStatement, connection)
         }
     }
 
@@ -307,8 +308,6 @@ class PostgreSQLComponent implements Storage {
         If we're writing a holding post, obtain a (write) lock on the linked bibpost, and hold it until writing has finished.
         While under lock: first check that there is not already a holding for this sigel/bib-id combination.
          */
-        RowLock lock = null
-
         try {
             if (collection == "hold") {
                 String holdingFor = doc.getHoldingFor()
@@ -316,7 +315,7 @@ class PostgreSQLComponent implements Storage {
                     log.warn("Was asked to save a holding post linked to a bib post that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
                     return false
                 }
-                String holdingForRecordId = getRecordId(holdingFor)
+                String holdingForRecordId = getRecordId(holdingFor, connection)
                 if (holdingForRecordId == null) {
                     log.warn("Was asked to save a holding post linked to a bib post that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
                     return false
@@ -326,7 +325,8 @@ class PostgreSQLComponent implements Storage {
                     log.warn("Was asked to save a holding post linked to a bib post that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
                     return false
                 }
-                lock = acquireRowLock(holdingForSystemId)
+
+                acquireRowLock(holdingForSystemId, connection)
 
                 if (getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) != null)
                     throw new ConflictingHoldException("Already exists a holding post for ${doc.getHeldBy()} and bib: $holdingFor")
@@ -350,13 +350,10 @@ class PostgreSQLComponent implements Storage {
             PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
             insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, deleted)
             insert.executeUpdate()
-            connection.commit()
-            Document savedDoc = load(doc.getShortId(), connection)
-            Date createdAt = parseDate(savedDoc.getCreated())
-            Date modifiedAt = parseDate(savedDoc.getModified())
-            saveVersion(doc, connection, createdAt, modifiedAt, changedIn, changedBy, collection, deleted)
+
+            saveVersion(doc, connection, now, now, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
-            for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
+            for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection)) {
                 updateMinMaxDepModified((String) depender.get(0), connection)
             }
 
@@ -366,7 +363,6 @@ class PostgreSQLComponent implements Storage {
                 doc.setCreated((Date) status['created'])
                 doc.setModified((Date) status['modified'])
             }
-
 
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
             return true
@@ -390,53 +386,25 @@ class PostgreSQLComponent implements Storage {
             connection.rollback()
             throw e
         } finally {
-            if (lock != null)
-                releaseRowLock(lock)
             connection.close()
             log.debug("[store] Closed connection.")
         }
-        return false
     }
 
-    @Canonical
-    private class RowLock {
-        Connection connection
-        PreparedStatement statement
-        ResultSet resultSet
-    }
-
-    /**
-     * HERE BE DRAGONS.
-     * Locks the row with the given ID in the database (for updates), until releaseRowLock is called.
-     * It is absolutely essential that releaseRowLock be explicitly called after each call to this function.
-     * Preferably this should be done in a try/finally block.
-     */
-    RowLock acquireRowLock(String id) {
-        Connection connection = getConnection()
-        PreparedStatement lockStatement
-
-        connection.setAutoCommit(false)
-        lockStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
+    void acquireRowLock(String id, Connection connection) {
+        PreparedStatement lockStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
         lockStatement.setString(1, id)
         ResultSet resultSet = lockStatement.executeQuery()
         if (!resultSet.next())
             throw new AcquireLockException("There is no document with the id $id (So no lock could be acquired)")
 
         log.debug("Row lock aquired for $id")
-        return new RowLock(connection, lockStatement, resultSet)
-    }
-
-    void releaseRowLock(RowLock rowlock) {
-        try { rowlock.connection.rollback() } catch (Exception e) {}
-        try { rowlock.resultSet.close() } catch (Exception e) {}
-        try { rowlock.statement.close() } catch (Exception e) {}
-        try { rowlock.connection.close() } catch (Exception e) {}
     }
 
     String getContext() {
-        Connection connection
-        PreparedStatement selectStatement
-        ResultSet resultSet
+        Connection connection = null
+        PreparedStatement selectStatement = null
+        ResultSet resultSet = null
 
         try {
             connection = getConnection()
@@ -449,18 +417,7 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            try {
-                resultSet.close()
-            } catch (Exception e) { /* ignore */
-            }
-            try {
-                selectStatement.close()
-            } catch (Exception e) { /* ignore */
-            }
-            try {
-                connection.close()
-            } catch (Exception e) { /* ignore */
-            }
+            close(resultSet, selectStatement, connection)
         }
     }
 
@@ -472,22 +429,22 @@ class PostgreSQLComponent implements Storage {
      *
      * The replacement is done atomically within a transaction.
      */
-    public void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn,
+    void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn,
                               String changedBy, String collection, JsonLd jsonld) {
         Connection connection = getConnection()
         connection.setAutoCommit(false)
-        PreparedStatement selectStatement
-        PreparedStatement updateStatement
-        ResultSet resultSet
+        PreparedStatement selectStatement = null
+        PreparedStatement updateStatement = null
+        ResultSet resultSet = null
 
         try {
-            if (! remainingDocument.getCompleteId().equals(remainingID))
+            if (remainingDocument.getCompleteId() != remainingID)
                 throw new RuntimeException("Bad merge argument, remaining document must have the remaining ID.")
 
             String remainingSystemID = getSystemIdByIri(remainingID, connection)
             String disappearingSystemID = getSystemIdByIri(disappearingID, connection)
 
-            if (remainingSystemID.equals(disappearingSystemID))
+            if (remainingSystemID == disappearingSystemID)
                 throw new SQLException("Cannot self-merge.")
 
             // Update the remaining record
@@ -510,7 +467,7 @@ class PostgreSQLComponent implements Storage {
             refreshDerivativeTables(remainingDocument, connection, false)
 
             // Update dependers on the remaining record
-            List<Tuple2<String, String>> dependers = getDependers(remainingDocument.getShortId())
+            List<Tuple2<String, String>> dependers = getDependers(remainingDocument.getShortId(), connection)
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
                 updateMinMaxDepModified((String) dependerShortId, connection)
@@ -538,7 +495,7 @@ class PostgreSQLComponent implements Storage {
             saveDependencies(disappearingDocument, connection)
 
             // Update dependers on the disappearing record
-            dependers = getDependers(disappearingSystemID)
+            dependers = getDependers(disappearingSystemID, connection)
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
                 removeEmbellishedDocument(dependerShortId, connection)
@@ -566,15 +523,7 @@ class PostgreSQLComponent implements Storage {
             connection.rollback()
             throw e
         } finally {
-            if (resultSet != null)
-                resultSet.close()
-            if (selectStatement != null)
-                selectStatement.close()
-            if (updateStatement != null)
-                updateStatement.close()
-            if (connection != null) {
-                connection.close()
-            }
+            close(resultSet, selectStatement, updateStatement, connection)
         }
     }
 
@@ -582,14 +531,14 @@ class PostgreSQLComponent implements Storage {
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
-    public Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
+    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent) {
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
         Connection connection = getConnection()
-        PreparedStatement selectStatement
-        PreparedStatement updateStatement
-        ResultSet resultSet
+        PreparedStatement selectStatement = null
+        PreparedStatement updateStatement = null
+        ResultSet resultSet = null
 
         Document doc = null
 
@@ -612,9 +561,9 @@ class PostgreSQLComponent implements Storage {
             Document preUpdateDoc = doc.clone()
             updateAgent.update(doc)
             if (linkFinder != null)
-                linkFinder.normalizeIdentifiers(doc)
+                linkFinder.normalizeIdentifiers(doc, connection)
             if (doVerifyDocumentIdRetention) {
-                verifyDocumentIdRetention(preUpdateDoc, doc)
+                verifyDocumentIdRetention(preUpdateDoc, doc, connection)
             }
 
             boolean deleted = doc.getDeleted()
@@ -633,14 +582,10 @@ class PostgreSQLComponent implements Storage {
             rigUpdateStatement(updateStatement, doc, modTime, changedIn, changedBy, collection, deleted)
             updateStatement.execute()
 
-            // The versions and identifiers tables are NOT under lock. Synchronization is only maintained on the main table.
             saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
-            for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
-                updateMinMaxDepModified((String) depender.get(0), connection)
-                removeEmbellishedDocument((String) depender.get(0), connection)
-            }
             updateMinMaxDepModified(doc.getShortId(), connection)
+            dependencyCache.invalidate(preUpdateDoc)
             connection.commit()
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {
@@ -654,41 +599,47 @@ class PostgreSQLComponent implements Storage {
         } catch (TooHighEncodingLevelException e) {
             connection.rollback()
             throw e
-        } catch (CancelUpdateException e) {
-            /* An exception the called lambda/clousure can throw to cancel a record update. NOT an indication of an error. */
+        } catch (CancelUpdateException ignored) {
+            /* An exception the called lambda/closure can throw to cancel a record update. NOT an indication of an error. */
             connection.rollback()
         } catch (Exception e) {
             log.error("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
             throw e
         } finally {
-            try {
-                resultSet.close()
-            } catch (Exception e) {
-            }
-            try {
-                selectStatement.close()
-            } catch (Exception e) {
-            }
-            try {
-                updateStatement.close()
-            } catch (Exception e) {
-            }
-            try {
-                connection.close()
-            } catch (Exception e) {
-            }
-            log.debug("[store] Closed connection.")
+            close(resultSet, selectStatement, updateStatement, connection)
         }
 
+        refreshDependers(doc.getShortId())
+
         return doc
+    }
+
+    void refreshDependers(String id) {
+        Connection connection = getConnection()
+        connection.setAutoCommit(false)
+        List<Tuple2<String, String>> dependers = getDependers(id, connection)
+        try {
+            for (Tuple2<String, String> depender : dependers) {
+                updateMinMaxDepModified((String) depender.get(0), connection)
+                removeEmbellishedDocument((String) depender.get(0), connection)
+            }
+            connection.commit()
+        }
+        catch (Exception e) {
+            connection.rollback()
+            throw e
+        }
+        finally {
+            connection.close()
+        }
     }
 
     /**
      * Returns if the URIs pointing to 'doc' are acceptable for an update to 'pre_update_doc',
      * otherwise throws.
      */
-    private void verifyDocumentIdRetention(Document preUpdateDoc, Document postUpdateDoc) {
+    private void verifyDocumentIdRetention(Document preUpdateDoc, Document postUpdateDoc, Connection connection) {
 
         // Compile list of all old IDs
         HashSet<String> oldIDs = new HashSet<>()
@@ -714,23 +665,22 @@ class PostgreSQLComponent implements Storage {
         addedIDs.addAll( newIDs )
         addedIDs.removeAll( oldIDs )
         for (String id : addedIDs) {
-            if ( getSystemIdByIri(id) != null )
+            if ( getSystemIdByIri(id, connection) != null )
                 throw new RuntimeException("An update of " + preUpdateDoc.getCompleteId() + " MUST NOT have URIs that are already in use for other records. The update contained an offending URI: " + id)
         }
 
-        if (!preUpdateDoc.getControlNumber().equals(postUpdateDoc.getControlNumber()))
+        if (preUpdateDoc.getControlNumber() != postUpdateDoc.getControlNumber())
             throw new RuntimeException("An update of " + preUpdateDoc.getCompleteId() + " MUST NOT change the controlNumber of the record in question. Existing controlNumber: "
                     + preUpdateDoc.getControlNumber() + " The rejected new controlNumber: " + postUpdateDoc.getControlNumber())
 
         // We're ok.
-        return
     }
 
-    public refreshDerivativeTables(Document doc) {
+    void refreshDerivativeTables(Document doc) {
         refreshDerivativeTables(doc, getConnection(), doc.deleted)
     }
 
-    public refreshDerivativeTables(Document doc, Connection connection, boolean deleted) {
+    void refreshDerivativeTables(Document doc, Connection connection, boolean deleted) {
         saveIdentifiers(doc, connection, deleted)
         saveDependencies(doc, connection)
         removeEmbellishedDocument(doc.getShortId(), connection)
@@ -742,7 +692,7 @@ class PostgreSQLComponent implements Storage {
      * You were probably looking for getDependencies() which is much more efficient
      * for a document that is already saved in lddb!
      */
-    public List<String[]> calculateDependenciesSystemIDs(Document doc) {
+    List<String[]> calculateDependenciesSystemIDs(Document doc) {
         Connection connection = getConnection()
         try {
             return _calculateDependenciesSystemIDs(doc, connection)
@@ -758,22 +708,19 @@ class PostgreSQLComponent implements Storage {
             String iri = reference[1]
             if (!iri.startsWith("http"))
                 continue
-            PreparedStatement getSystemId
+            PreparedStatement getSystemId = null
+            ResultSet rs = null
             try {
                 getSystemId = connection.prepareStatement(GET_SYSTEMID_BY_IRI)
                 getSystemId.setString(1, iri)
-                ResultSet rs
-                try {
-                    rs = getSystemId.executeQuery()
-                    if (rs.next()) {
-                        if (!rs.getString(1).equals(doc.getShortId())) // Exclude A -> A (self-references)
-                            dependencies.add([relation, rs.getString(1)] as String[])
-                    }
-                } finally {
-                    if (rs != null) rs.close()
+
+                rs = getSystemId.executeQuery()
+                if (rs.next()) {
+                    if (rs.getString(1) != doc.getShortId()) // Exclude A -> A (self-references)
+                        dependencies.add([relation, rs.getString(1)] as String[])
                 }
             } finally {
-                if (getSystemId != null) getSystemId.close()
+                close(rs, getSystemId)
             }
         }
         return dependencies
@@ -788,7 +735,9 @@ class PostgreSQLComponent implements Storage {
             removeDependencies.setString(1, doc.getShortId())
             int numRemoved = removeDependencies.executeUpdate()
             log.debug("Removed $numRemoved dependencies for id ${doc.getShortId()}")
-        } finally { removeDependencies.close() }
+        } finally {
+            close(removeDependencies)
+        }
 
         if (!doc.deleted) { // We do not care for the dependencies of deleted documents.
             // Insert the dependency list
@@ -805,26 +754,14 @@ class PostgreSQLComponent implements Storage {
                 log.error("Failed saving dependencies for ${doc.getShortId()}")
                 throw bue.getNextException()
             } finally {
-                insertDependencies.close()
+                close(insertDependencies)
             }
         }
     }
 
-    private void updateMinMaxDepModified(String id) {
-        Connection connection
-        try {
-            connection = getConnection()
-            updateMinMaxDepModified(id, connection)
-        }
-        finally {
-            if (connection != null)
-                connection.close()
-        }
-    }
-
     private void updateMinMaxDepModified(String id, Connection connection) {
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(UPDATE_MINMAX_MODIFIED)
             preparedStatement.setString(1, id)
@@ -833,12 +770,8 @@ class PostgreSQLComponent implements Storage {
             preparedStatement.execute()
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
+            close(rs, preparedStatement)
         }
-
     }
 
     private void saveIdentifiers(Document doc, Connection connection, boolean deleted, boolean removeOnly = false) {
@@ -886,9 +819,9 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, Date timestamp, String changedIn, String changedBy, String collection, boolean deleted) {
+    private static PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, Date timestamp, String changedIn, String changedBy, String collection, boolean deleted) {
         insert.setString(1, doc.getShortId())
-        insert.setObject(2, doc.dataAsString, java.sql.Types.OTHER)
+        insert.setObject(2, doc.dataAsString, OTHER)
         insert.setString(3, collection)
         insert.setString(4, changedIn)
         insert.setString(5, changedBy)
@@ -901,45 +834,48 @@ class PostgreSQLComponent implements Storage {
         return insert
     }
 
-    private void rigUpdateStatement(PreparedStatement update, Document doc, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
-        update.setObject(1, doc.dataAsString, java.sql.Types.OTHER)
+    private static void rigUpdateStatement(PreparedStatement update, Document doc, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
+        update.setObject(1, doc.dataAsString, OTHER)
         update.setString(2, collection)
         update.setString(3, changedIn)
         update.setString(4, changedBy)
         update.setString(5, doc.getChecksum())
         update.setBoolean(6, deleted)
         update.setTimestamp(7, new Timestamp(modTime.getTime()))
-        update.setObject(8, doc.getShortId(), java.sql.Types.OTHER)
+        update.setObject(8, doc.getShortId(), OTHER)
     }
 
     boolean saveVersion(Document doc, Connection connection, Date createdTime,
                         Date modTime, String changedIn, String changedBy,
                         String collection, boolean deleted) {
         if (versioning) {
-            PreparedStatement insvers = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
+            PreparedStatement insVersion = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
             try {
                 log.debug("Trying to save a version of ${doc.getShortId() ?: ""} with checksum ${doc.getChecksum()}. Modified: $modTime")
-                insvers = rigVersionStatement(insvers, doc, createdTime,
+                insVersion = rigVersionStatement(insVersion, doc, createdTime,
                                               modTime, changedIn, changedBy,
                                               collection, deleted)
-                insvers.executeUpdate()
+                insVersion.executeUpdate()
                 return true
             } catch (Exception e) {
                 log.error("Failed to save document version: ${e.message}")
                 throw e
+            }
+            finally {
+                close(insVersion)
             }
         } else {
             return false
         }
     }
 
-    private PreparedStatement rigVersionStatement(PreparedStatement insvers,
-                                                  Document doc, Date createdTime,
-                                                  Date modTime, String changedIn,
-                                                  String changedBy, String collection,
-                                                  boolean deleted) {
+    private static PreparedStatement rigVersionStatement(PreparedStatement insvers,
+                                                         Document doc, Date createdTime,
+                                                         Date modTime, String changedIn,
+                                                         String changedBy, String collection,
+                                                         boolean deleted) {
         insvers.setString(1, doc.getShortId())
-        insvers.setObject(2, doc.dataAsString, Types.OTHER)
+        insvers.setObject(2, doc.dataAsString, OTHER)
         insvers.setString(3, collection)
         insvers.setString(4, changedIn)
         insvers.setString(5, changedBy)
@@ -976,7 +912,7 @@ class PostgreSQLComponent implements Storage {
                 batch.addBatch()
                 refreshDerivativeTables(doc, connection, false)
                 if (updateDepMinMax) {
-                    for (Tuple2<String, String> depender : getDependers(doc.getShortId())) {
+                    for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection)) {
                         updateMinMaxDepModified((String) depender.get(0), connection)
                         removeEmbellishedDocument((String) depender.get(0), connection)
                     }
@@ -995,176 +931,10 @@ class PostgreSQLComponent implements Storage {
             }
             connection.rollback()
         } finally {
-            connection.close()
+            close(batch, ver_batch, connection)
             log.trace("[bulkStore] Closed connection.")
         }
         return false
-    }
-
-    Map<String, Object> query(Map<String, List<String>> queryParameters, String collection, StorageType storageType) {
-        log.debug("Performing query with type $storageType : $queryParameters")
-        long startTime = System.currentTimeMillis()
-        Connection connection = getConnection()
-        // Extract LDAPI parameters
-        String pageSize = queryParameters.remove("_pageSize")?.first() ?: "" + DEFAULT_PAGE_SIZE
-        String page = queryParameters.remove("_page")?.first() ?: "1"
-        String sort = queryParameters.remove("_sort")?.first()
-        queryParameters.remove("_where") // Not supported
-        queryParameters.remove("_orderBy") // Not supported
-        queryParameters.remove("_select") // Not supported
-
-        def queryTuple = buildQueryString(queryParameters, collection, storageType)
-        String whereClause = queryTuple.first
-        List values = queryTuple.second
-
-        int limit = pageSize as int
-        int offset = (Integer.parseInt(page) - 1) * limit
-
-        StringBuilder finalQuery = new StringBuilder("${values ? QUERY_LD_API + whereClause : (collection ? LOAD_ALL_DOCUMENTS_BY_COLLECTION : LOAD_ALL_DOCUMENTS) + " AND deleted IS NOT true"} OFFSET $offset LIMIT $limit")
-
-        if (sort) {
-            finalQuery.append(" ORDER BY ${translateSort(sort, storageType)}")
-        }
-        log.debug("QUERY: ${finalQuery.toString()}")
-        log.debug("QUERY VALUES: $values")
-        PreparedStatement query = connection.prepareStatement(finalQuery.toString())
-        int i = 1
-        for (value in values) {
-            query.setObject(i++, value, java.sql.Types.OTHER)
-        }
-        if (!values) {
-            query.setTimestamp(1, new Timestamp(0L))
-            query.setTimestamp(2, new Timestamp(PGStatement.DATE_POSITIVE_INFINITY))
-            if (collection) {
-                query.setString(3, collection)
-            }
-        }
-        try {
-            ResultSet rs = query.executeQuery()
-            Map results = new HashMap<String, Object>()
-            List items = []
-            while (rs.next()) {
-                Map data = mapper.readValue(rs.getString("data"), Map)
-                Document doc = new Document(data)
-                doc.setId(rs.getString("id"))
-                doc.setCreated(rs.getTimestamp("created"))
-                doc.setModified(rs.getTimestamp("modified"))
-                log.trace("Created document with id ${doc.getShortId()}")
-                items.add(doc.data)
-            }
-            results.put("startIndex", offset)
-            results.put("itemsPerPage", (limit > items.size() ? items.size() : limit))
-            results.put("duration", "PT" + (System.currentTimeMillis() - startTime) / 1000 + "S")
-            results.put("items", items)
-            return results
-        } finally {
-            connection.close()
-        }
-    }
-
-    Tuple2<String, List> buildQueryString(Map queryParameters, String collection, StorageType storageType) {
-        boolean firstKey = true
-        List values = []
-
-        StringBuilder whereClause = new StringBuilder("(")
-
-        if (collection) {
-            whereClause.append("collection = ?")
-            values.add(collection)
-            firstKey = false
-        }
-
-        for (entry in queryParameters) {
-            if (!firstKey) {
-                whereClause.append(" AND ")
-            }
-            String key = entry.key
-            boolean firstValue = true
-            whereClause.append("(")
-            for (String value : entry.value) {
-                if (!firstValue) {
-                    whereClause.append(" OR ")
-                }
-                def sqlKeyValue = translateToSql(key, value, storageType)
-                whereClause.append(sqlKeyValue.first)
-                values.add(sqlKeyValue.second)
-                firstValue = false
-            }
-            whereClause.append(")")
-            firstKey = false
-        }
-        whereClause.append(")")
-        return new Tuple2<>(whereClause.toString(), values)
-    }
-
-    protected String translateSort(String keys, StorageType storageType) {
-        StringBuilder jsonbPath = new StringBuilder()
-        for (key in keys.split(",")) {
-            if (jsonbPath.length() > 0) {
-                jsonbPath.append(", ")
-            }
-            String direction = "ASC"
-            int elementIndex = 0
-            for (element in key.split("\\.")) {
-                if (elementIndex == 0) {
-                    jsonbPath.append(SQL_PREFIXES.get(storageType, "") + "->")
-                } else {
-                    jsonbPath.append("->")
-                }
-                if (storageType == StorageType.MARC21_JSON && elementIndex == 1) {
-                    jsonbPath.append("'subfields'->")
-                }
-
-                if (element.charAt(0) == '-') {
-                    direction = "DESC"
-                    element = element.substring(1)
-                }
-                jsonbPath.append("'${element}'")
-                elementIndex++
-            }
-            jsonbPath.append(" " + direction)
-        }
-        return jsonbPath.toString()
-
-    }
-
-    // TODO: Adapt to real flat JSON
-    protected Tuple2<String, String> translateToSql(String key, String value, StorageType storageType) {
-        def keyElements = key.split("\\.")
-        StringBuilder jsonbPath = new StringBuilder(SQL_PREFIXES.get(storageType, ""))
-        if (storageType == StorageType.JSONLD_FLAT_WITH_DESCRIPTIONS) {
-            if (keyElements[0] == "entry") {
-                jsonbPath.append("->'entry'")
-                value = mapper.writeValueAsString([(keyElements.last()): value])
-            } else {
-                // If no elements in key, assume "items"
-                jsonbPath.append("->'items'")
-                Map jsonbQueryStructure = [:]
-                Map nextMap = null
-                for (int i = (keyElements[0] == "items" ? 1 : 0); i < keyElements.length - 1; i++) {
-                    nextMap = [:]
-                    jsonbQueryStructure.put(keyElements[i], nextMap)
-                }
-                if (nextMap == null) {
-                    nextMap = jsonbQueryStructure
-                }
-                nextMap.put(keyElements.last(), value)
-                value = mapper.writeValueAsString([jsonbQueryStructure])
-            }
-        }
-        if (storageType == StorageType.MARC21_JSON) {
-            if (keyElements.length == 1) {
-                // Probably search in control field
-                value = mapper.writeValueAsString([[(keyElements[0]): value]])
-            } else {
-                value = mapper.writeValueAsString([[(keyElements[0]): ["subfields": [[(keyElements[1]): value]]]]])
-
-            }
-        }
-
-        jsonbPath.append(" @> ?")
-
-        return new Tuple2<>(jsonbPath.toString(), value)
     }
 
     /**
@@ -1202,8 +972,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return getRecordOrThingId(id, GET_RECORD_ID, connection)
         } finally {
-            if (connection != null)
-                connection.close()
+            close(connection)
         }
     }
 
@@ -1221,10 +990,9 @@ class PostgreSQLComponent implements Storage {
     String getThingId(String id) {
         Connection connection = getConnection()
         try {
-            return getRecordOrThingId(id, GET_THING_ID, connection)
+            return getThingId(id, connection)
         } finally {
-            if (connection != null)
-                connection.close()
+            close(connection)
         }
     }
 
@@ -1244,8 +1012,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return getRecordOrThingId(id, GET_MAIN_ID, connection)
         } finally {
-            if (connection != null)
-                connection.close()
+            close(connection)
         }
     }
 
@@ -1253,9 +1020,9 @@ class PostgreSQLComponent implements Storage {
         return getRecordOrThingId(id, GET_MAIN_ID, connection)
     }
 
-    private String getRecordOrThingId(String id, String sql, Connection connection) {
-        PreparedStatement selectstmt
-        ResultSet rs
+    private static String getRecordOrThingId(String id, String sql, Connection connection) {
+        PreparedStatement selectstmt = null
+        ResultSet rs = null
         try {
             selectstmt = connection.prepareStatement(sql)
             selectstmt.setString(1, id)
@@ -1276,10 +1043,7 @@ class PostgreSQLComponent implements Storage {
                 return ids[0]
             }
         } finally {
-            if (rs != null)
-                rs.close()
-            if (selectstmt != null)
-                selectstmt.close()
+            close(rs, selectstmt)
         }
     }
 
@@ -1289,8 +1053,8 @@ class PostgreSQLComponent implements Storage {
      */
     IdType getIdType(String id) {
         Connection connection = getConnection()
-        PreparedStatement selectstmt
-        ResultSet rs
+        PreparedStatement selectstmt = null
+        ResultSet rs = null
         try {
             selectstmt = connection.prepareStatement(GET_ID_TYPE)
             selectstmt.setString(1, id)
@@ -1303,11 +1067,11 @@ class PostgreSQLComponent implements Storage {
                 return null
             }
         } finally {
-            connection.close()
+            close(rs, selectstmt, connection)
         }
     }
 
-    private IdType determineIdType(int graphIndex, boolean isMainId) {
+    private static IdType determineIdType(int graphIndex, boolean isMainId) {
         if (graphIndex == 0) {
             if (isMainId) {
                 return IdType.RecordMainId
@@ -1326,16 +1090,16 @@ class PostgreSQLComponent implements Storage {
     }
 
     private void cacheEmbellishedDocument(String id, Document embellishedDocument, Connection connection) {
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(INSERT_EMBELLISHED_DOCUMENT)
             preparedStatement.setString(1, id)
-            preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), java.sql.Types.OTHER)
+            preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), OTHER)
             preparedStatement.execute()
         }
         catch (PSQLException e) {
-            if (UNIQUE_VIOLATION.equals(e.getSQLState())) {
+            if (UNIQUE_VIOLATION == e.getSQLState()) {
                 // Someone else cached the document before we could,
                 // so we fail silently
             } else {
@@ -1343,26 +1107,20 @@ class PostgreSQLComponent implements Storage {
             }
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
+            close(rs, preparedStatement)
         }
     }
 
     private void removeEmbellishedDocument(String id, Connection connection) {
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(DELETE_EMBELLISHED_DOCUMENT)
             preparedStatement.setString(1, id)
             preparedStatement.execute()
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
+            close(rs, preparedStatement)
         }
     }
 
@@ -1371,7 +1129,7 @@ class PostgreSQLComponent implements Storage {
         try {
             return loadEmbellished(id, jsonld, connection)
         } finally {
-            connection.close()
+            close(connection)
         }
     }
 
@@ -1381,8 +1139,8 @@ class PostgreSQLComponent implements Storage {
      * (lazy caching).
      */
     Document loadEmbellished(String id, JsonLd jsonld, Connection connection) {
-        PreparedStatement selectStatement
-        ResultSet resultSet
+        PreparedStatement selectStatement = null
+        ResultSet resultSet = null
 
         try {
             selectStatement = connection.prepareStatement(GET_EMBELLISHED_DOCUMENT)
@@ -1408,8 +1166,7 @@ class PostgreSQLComponent implements Storage {
             return document
         }
         finally {
-            try {resultSet.close()} catch (Exception e) { /* ignore */ }
-            try {selectStatement.close()} catch (Exception e) { /* ignore */}
+            close(resultSet, selectStatement)
         }
     }
 
@@ -1418,13 +1175,13 @@ class PostgreSQLComponent implements Storage {
         try {
             return getCollectionBySystemID(id, connection)
         } finally {
-            connection.close()
+            close(connection)
         }
     }
 
     String getCollectionBySystemID(String id, Connection connection) {
-        PreparedStatement selectStatement
-        ResultSet resultSet
+        PreparedStatement selectStatement = null
+        ResultSet resultSet = null
 
         try {
             selectStatement = connection.prepareStatement(GET_COLLECTION_BY_SYSTEM_ID)
@@ -1437,8 +1194,7 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            try {resultSet.close()} catch (Exception e) { /* ignore */ }
-            try {selectStatement.close()} catch (Exception e) { /* ignore */}
+            close(resultSet, selectStatement)
         }
     }
 
@@ -1447,7 +1203,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     Document load(String id, String version, Connection conn = null) {
-        Document doc = null
+        Document doc
         if (version && version.isInteger()) {
             int v = version.toInteger()
             def docList = loadAllVersions(id, conn)
@@ -1466,9 +1222,9 @@ class PostgreSQLComponent implements Storage {
     }
 
     Tuple2<Timestamp, Timestamp> getMinMaxModified(List<String> ids) {
-        Connection connection
-        PreparedStatement preparedStatement
-        ResultSet rs
+        Connection connection = null
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             connection = getConnection()
             String expandedSql = GET_MINMAX_MODIFIED.replace('?', ids.collect { it -> '?' }.join(','))
@@ -1486,12 +1242,7 @@ class PostgreSQLComponent implements Storage {
                 return new Tuple2(null, null)
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
-            if (connection != null)
-                connection.close()
+            close(rs, preparedStatement, connection)
         }
     }
 
@@ -1500,14 +1251,13 @@ class PostgreSQLComponent implements Storage {
         try {
             return getSystemIdByIri(iri, connection)
         } finally {
-            if (connection != null)
-                connection.close()
+            close(connection)
         }
     }
 
     String getSystemIdByIri(String iri, Connection connection) {
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(GET_SYSTEMID_BY_IRI)
             preparedStatement.setString(1, iri)
@@ -1517,10 +1267,24 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
+            close(rs, preparedStatement)
+        }
+    }
+
+    String getThingMainIriBySystemId(String id) {
+        Connection connection = null
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            connection = getConnection()
+            preparedStatement = connection.prepareStatement(GET_THING_MAIN_IRI_BY_SYSTEMID)
+            preparedStatement.setString(1, id)
+            rs = preparedStatement.executeQuery()
+            if (rs.next())
+                return rs.getString(1)
+            throw new RuntimeException("No IRI found for system id $id")
+        } finally {
+            close(rs, preparedStatement, connection)
         }
     }
 
@@ -1529,14 +1293,13 @@ class PostgreSQLComponent implements Storage {
         try {
             return getDocumentByIri(iri, connection)
         } finally {
-            if (connection != null)
-                connection.close()
+            close(connection)
         }
     }
 
     Document getDocumentByIri(String iri, Connection connection) {
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(GET_DOCUMENT_BY_IRI)
             preparedStatement.setString(1, iri)
@@ -1546,16 +1309,13 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
+            close(rs, preparedStatement)
         }
     }
 
     String getHoldingForBibAndSigel(String bibThingUri, String libraryUri, Connection connection) {
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             String sql = "SELECT id FROM $mainTableName WHERE data#>>'{@graph, 1, itemOf, @id}' = ? AND data#>>'{@graph, 1, heldBy, @id}' = ? AND deleted = false"
             preparedStatement = connection.prepareStatement(sql)
@@ -1567,10 +1327,7 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
+            close(rs, preparedStatement)
         }
     }
 
@@ -1579,24 +1336,26 @@ class PostgreSQLComponent implements Storage {
         try {
             return getDependencyData(id, GET_DEPENDENCIES, connection)
         } finally {
-            if (connection != null)
-                connection.close()
+            close(connection)
         }
     }
 
     List<Tuple2<String, String>> getDependers(String id) {
         Connection connection = getConnection()
         try {
-            return getDependencyData(id, GET_DEPENDERS, connection)
+            getDependers(id, connection)
         } finally {
-            if (connection != null)
-                connection.close()
+            close(connection)
         }
     }
 
-    private List<Tuple2<String, String>> getDependencyData(String id, String query, Connection connection) {
-        PreparedStatement preparedStatement
-        ResultSet rs
+    List<Tuple2<String, String>> getDependers(String id, Connection connection) {
+        return getDependencyData(id, GET_DEPENDERS, connection)
+    }
+
+    private static List<Tuple2<String, String>> getDependencyData(String id, String query, Connection connection) {
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, id)
@@ -1605,33 +1364,39 @@ class PostgreSQLComponent implements Storage {
             while (rs.next()) {
                 dependencies.add( new Tuple2<String, String>(rs.getString(1), rs.getString(2)) )
             }
+            dependencies.sort { it.getFirst() }
             return dependencies
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
+            close(rs, preparedStatement)
         }
     }
 
-    List<String> getDependenciesOfType(String id, String typeOfRelation) {
-        return getDependencyDataOfType(id, typeOfRelation, GET_DEPENDENCIES_OF_TYPE)
+    List<String> getDependenciesOfType(String id, String relation) {
+        return getDependencyDataOfType(id, relation, GET_DEPENDENCIES_OF_TYPE)
     }
 
-    List<String> getDependersOfType(String id, String typeOfRelation) {
-        return getDependencyDataOfType(id, typeOfRelation, GET_DEPENDERS_OF_TYPE)
+    List<String> getDependersOfType(String id, String relation) {
+        return getDependencyDataOfType(id, relation, GET_DEPENDERS_OF_TYPE)
     }
 
-    private List<String> getDependencyDataOfType(String id, String typeOfRelation, String query) {
-        Connection connection
-        PreparedStatement preparedStatement
-        ResultSet rs
+    Set<String> getByRelation(String iri, String relation) {
+        return dependencyCache.getDependenciesOfType(iri, relation)
+    }
+
+    Set<String> getByReverseRelation(String iri, String relation) {
+        return dependencyCache.getDependersOfType(iri, relation)
+    }
+
+    private List<String> getDependencyDataOfType(String id, String relation, String query) {
+        Connection connection = null
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             connection = getConnection()
             preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, id)
-            preparedStatement.setString(2, typeOfRelation)
+            preparedStatement.setString(2, relation)
             rs = preparedStatement.executeQuery()
             List<String> dependecies = []
             while (rs.next()) {
@@ -1640,12 +1405,7 @@ class PostgreSQLComponent implements Storage {
             return dependecies
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
-            if (connection != null)
-                connection.close()
+            close(rs, preparedStatement, connection)
         }
     }
 
@@ -1654,10 +1414,10 @@ class PostgreSQLComponent implements Storage {
      * (for example: type:ISBN, value:1234, graphIndex:1 -> ksjndfkjwbr3k)
      * If type is passed as null, all types will match.
      */
-    public List<String> getSystemIDsByTypedID(String idType, String idValue, int graphIndex) {
-        Connection connection
-        PreparedStatement preparedStatement
-        ResultSet rs
+    List<String> getSystemIDsByTypedID(String idType, String idValue, int graphIndex) {
+        Connection connection = null
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph," + graphIndex + ",identifiedBy}' @> ?"
             connection = getConnection()
@@ -1665,11 +1425,11 @@ class PostgreSQLComponent implements Storage {
 
             if (idType != null) {
                 String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
-                preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + escapedId + "\"}]", java.sql.Types.OTHER)
+                preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + escapedId + "\"}]", OTHER)
             }
             else {
                 String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
-                preparedStatement.setObject(1, "[{\"value\": \"" + escapedId + "\"}]", java.sql.Types.OTHER)
+                preparedStatement.setObject(1, "[{\"value\": \"" + escapedId + "\"}]", OTHER)
             }
 
             rs = preparedStatement.executeQuery()
@@ -1680,19 +1440,14 @@ class PostgreSQLComponent implements Storage {
             return results
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
-            if (connection != null)
-                connection.close()
+            close(rs, preparedStatement, connection)
         }
     }
 
     String getSystemIdByThingId(String thingId) {
-        Connection connection
-        PreparedStatement preparedStatement
-        ResultSet rs
+        Connection connection = null
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             connection = getConnection()
             preparedStatement = connection.prepareStatement(GET_RECORD_ID_BY_THING_ID)
@@ -1704,19 +1459,14 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
-            if (connection != null)
-                connection.close()
+            close(rs, preparedStatement, connection)
         }
     }
 
     String getProfileByLibraryUri(String libraryUri) {
-        Connection connection
-        PreparedStatement preparedStatement
-        ResultSet rs
+        Connection connection = null
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             connection = getConnection()
             preparedStatement = connection.prepareStatement(GET_LEGACY_PROFILE)
@@ -1728,12 +1478,7 @@ class PostgreSQLComponent implements Storage {
             return null
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
-            if (connection != null)
-                connection.close()
+            close(rs, preparedStatement, connection)
         }
     }
 
@@ -1742,7 +1487,6 @@ class PostgreSQLComponent implements Storage {
      */
     List<Document> getAttachedHoldings(List<String> thingIdentifiers, JsonLd jsonld) {
         // Build the query
-
         StringBuilder selectSQL = new StringBuilder("SELECT id FROM ")
         selectSQL.append(mainTableName)
         selectSQL.append(" WHERE collection = 'hold' AND deleted = false AND (")
@@ -1758,9 +1502,9 @@ class PostgreSQLComponent implements Storage {
         }
 
         // Assemble results
-        Connection connection
-        ResultSet rs
-        PreparedStatement preparedStatement
+        Connection connection = null
+        ResultSet rs = null
+        PreparedStatement preparedStatement = null
         try {
             connection = getConnection()
             preparedStatement = connection.prepareStatement(selectSQL.toString())
@@ -1774,19 +1518,13 @@ class PostgreSQLComponent implements Storage {
             List<Document> holdings = []
             while (rs.next()) {
                 String id = rs.getString("id")
-                holdings.add(loadEmbellished(id, jsonld))
+                holdings.add(loadEmbellished(id, jsonld, connection))
             }
             return holdings
         }
         finally {
-            if (rs != null)
-                rs.close()
-            if (preparedStatement != null)
-                preparedStatement.close()
-            if (connection != null)
-                connection.close()
+            close(rs, preparedStatement, connection)
         }
-        return []
     }
 
     private Document loadFromSql(String sql, Map parameters, Connection connection = null) {
@@ -1798,8 +1536,8 @@ class PostgreSQLComponent implements Storage {
             shouldCloseConn = true
             log.debug("Got connection.")
         }
-        PreparedStatement selectstmt
-        ResultSet rs
+        PreparedStatement selectstmt = null
+        ResultSet rs = null
         try {
             selectstmt = connection.prepareStatement(sql)
             log.trace("Prepared statement")
@@ -1808,7 +1546,7 @@ class PostgreSQLComponent implements Storage {
                     selectstmt.setString((Integer) items.key, (String) items.value)
                 }
                 if (items.value instanceof Map || items.value instanceof List) {
-                    selectstmt.setObject((Integer) items.key, mapper.writeValueAsString(items.value), java.sql.Types.OTHER)
+                    selectstmt.setObject((Integer) items.key, mapper.writeValueAsString(items.value), OTHER)
                 }
             }
             log.trace("Executing query")
@@ -1822,19 +1560,13 @@ class PostgreSQLComponent implements Storage {
                 log.trace("No results returned for $selectstmt")
             }
         } finally {
+            close(rs, selectstmt)
             if (shouldCloseConn) {
                 connection.close()
             }
         }
 
         return doc
-    }
-
-
-    Document loadBySameAsIdentifier(String identifier) {
-        log.debug("Using loadBySameAsIdentifier")
-        //return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1:[["sameAs":["@id":identifier]]], 2:["sameAs":["@id":identifier]]]) // This one is for descriptionsbased data
-        return loadFromSql(GET_DOCUMENT_BY_SAMEAS_ID, [1: [["sameAs": ["@id": identifier]]]])
     }
 
     List<Document> loadAllVersions(String identifier, Connection conn = null) {
@@ -1852,8 +1584,8 @@ class PostgreSQLComponent implements Storage {
             connection = getConnection()
             shouldCloseConn = true
         }
-        PreparedStatement selectstmt
-        ResultSet rs
+        PreparedStatement selectstmt = null
+        ResultSet rs = null
         List<Document> docList = []
         try {
             selectstmt = connection.prepareStatement(sql)
@@ -1866,6 +1598,7 @@ class PostgreSQLComponent implements Storage {
                 docList << doc
             }
         } finally {
+            close(rs, selectstmt)
             if (shouldCloseConn) {
                 connection.close()
                 log.debug("[loadAllVersions] Closed connection.")
@@ -1874,54 +1607,19 @@ class PostgreSQLComponent implements Storage {
         return docList
     }
 
-    private Document assembleDocument(ResultSet rs) {
-
+    private static Document assembleDocument(ResultSet rs) {
         Document doc = new Document(mapper.readValue(rs.getString("data"), Map))
         doc.setModified(new Date(rs.getTimestamp("modified").getTime()))
-
         doc.setDeleted(rs.getBoolean("deleted"))
 
         try {
             // FIXME better handling of null values
             doc.setCreated(new Date(rs.getTimestamp("created")?.getTime()))
-        } catch (SQLException sqle) {
+        } catch (SQLException ignored) {
             log.trace("Resultset didn't have created. Probably a version request.")
         }
         
         return doc
-
-    }
-
-    private List<String> loadRecordIdentifiers(String id) {
-        List<String> identifiers = []
-        Connection connection = getConnection()
-        PreparedStatement loadIds = connection.prepareStatement(LOAD_RECORD_IDENTIFIERS)
-        try {
-            loadIds.setString(1, id)
-            ResultSet rs = loadIds.executeQuery()
-            while (rs.next()) {
-                identifiers << rs.getString("iri")
-            }
-        } finally {
-            connection.close()
-        }
-        return identifiers
-    }
-
-    private List<String> loadThingIdentifiers(String id) {
-        List<String> identifiers = []
-        Connection connection = getConnection()
-        PreparedStatement loadIds = connection.prepareStatement(LOAD_THING_IDENTIFIERS)
-        try {
-            loadIds.setString(1, id)
-            ResultSet rs = loadIds.executeQuery()
-            while (rs.next()) {
-                identifiers << rs.getString("iri")
-            }
-        } finally {
-            connection.close()
-        }
-        return identifiers
     }
 
     @CompileStatic(SKIP)
@@ -1965,7 +1663,7 @@ class PostgreSQLComponent implements Storage {
 
                 return new Iterator<Document>() {
                     @Override
-                    public Document next() {
+                    Document next() {
                         Document doc
                         doc = assembleDocument(rs)
                         more = rs.next()
@@ -1981,7 +1679,7 @@ class PostgreSQLComponent implements Storage {
                     }
 
                     @Override
-                    public boolean hasNext() {
+                    boolean hasNext() {
                         return more
                     }
                 }
@@ -1989,7 +1687,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    Iterable<Document> iterateDocuments(ResultSet rs) {
+    static Iterable<Document> iterateDocuments(ResultSet rs) {
         def conn = rs.statement.connection
         boolean more = rs.next() // rs starts at "-1"
         if (!more) {
@@ -2004,7 +1702,7 @@ class PostgreSQLComponent implements Storage {
             Iterator<Document> iterator() {
                 return new Iterator<Document>() {
                     @Override
-                    public Document next() {
+                    Document next() {
                         Document doc = assembleDocument(rs)
                         more = rs.next()
                         if (!more) {
@@ -2019,7 +1717,7 @@ class PostgreSQLComponent implements Storage {
                     }
 
                     @Override
-                    public boolean hasNext() {
+                    boolean hasNext() {
                         return more
                     }
                 }
@@ -2029,12 +1727,13 @@ class PostgreSQLComponent implements Storage {
 
     void remove(String identifier, String changedIn, String changedBy) {
         if (versioning) {
+            if(!getDependers(identifier).isEmpty())
+                throw new RuntimeException("Deleting depended upon records is not allowed.")
+
             log.debug("Marking document with ID ${identifier} as deleted.")
             try {
                 storeAtomicUpdate(identifier, false, changedIn, changedBy,
                     { Document doc ->
-                        if(!getDependers(identifier).isEmpty())
-                            throw new RuntimeException("Deleting depended upon records is not allowed.")
                         doc.setDeleted(true)
                         // Add a tombstone marker (without removing anything) perhaps?
                     })
@@ -2043,37 +1742,27 @@ class PostgreSQLComponent implements Storage {
                 throw e
             }
         } else {
-            throw new whelk.exception.WhelkException(
+            throw new WhelkException(
                     "Actually deleting data from lddb is currently not supported")
         }
 
         // Clear out dependencies
         Connection connection = getConnection()
+        PreparedStatement removeDependencies = null
         try {
-            PreparedStatement removeDependencies = connection.prepareStatement(DELETE_DEPENDENCIES)
-            try {
-                removeDependencies.setString(1, identifier)
-                int numRemoved = removeDependencies.executeUpdate()
-                log.debug("Removed $numRemoved dependencies for id ${identifier}")
-            } finally {
-                removeDependencies.close()
-            }
+            removeDependencies = connection.prepareStatement(DELETE_DEPENDENCIES)
+            removeDependencies.setString(1, identifier)
+            int numRemoved = removeDependencies.executeUpdate()
+            log.debug("Removed $numRemoved dependencies for id ${identifier}")
         } finally {
-            connection.close()
+            close(removeDependencies, connection)
         }
     }
 
-
-    protected Document createTombstone(String id) {
-        // FIXME verify that this is correct behavior
-        String fullId = Document.BASE_URI.resolve(id).toString()
-        return new Document(["@graph": [["@id": fullId, "@type": "Tombstone"]]])
-    }
-
-    public Map loadSettings(String key) {
+    Map loadSettings(String key) {
         Connection connection = getConnection()
-        PreparedStatement selectstmt
-        ResultSet rs
+        PreparedStatement selectstmt = null
+        ResultSet rs = null
         Map settings = [:]
         try {
             selectstmt = connection.prepareStatement(LOAD_SETTINGS)
@@ -2085,26 +1774,26 @@ class PostgreSQLComponent implements Storage {
                 log.trace("No settings found for $key")
             }
         } finally {
-            connection.close()
+            close(rs, selectstmt, connection)
         }
 
         return settings
     }
 
-    public void saveSettings(String key, final Map settings) {
+    void saveSettings(String key, final Map settings) {
         Connection connection = getConnection()
-        PreparedStatement savestmt
+        PreparedStatement savestmt = null
         try {
             String serializedSettings = mapper.writeValueAsString(settings)
             log.debug("Saving settings for ${key}: $serializedSettings")
             savestmt = connection.prepareStatement(SAVE_SETTINGS)
-            savestmt.setObject(1, serializedSettings, Types.OTHER)
+            savestmt.setObject(1, serializedSettings, OTHER)
             savestmt.setString(2, key)
             savestmt.setString(3, key)
-            savestmt.setObject(4, serializedSettings, Types.OTHER)
+            savestmt.setObject(4, serializedSettings, OTHER)
             savestmt.executeUpdate()
         } finally {
-            connection.close()
+            close(savestmt, connection)
         }
     }
 
@@ -2125,15 +1814,8 @@ class PostgreSQLComponent implements Storage {
         try {
             return executeFindByQuery(find)
         } finally {
-            connection.close()
+            close(find, connection)
         }
-    }
-
-    List<Document> findByValue(String relation, String value) {
-        int limit = DEFAULT_PAGE_SIZE
-        int offset = 0
-
-        findByValue(relation, value, limit, offset)
     }
 
     int countByValue(String relation, String value) {
@@ -2149,7 +1831,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private List<Document> executeFindByQuery(PreparedStatement query) {
+    private static List<Document> executeFindByQuery(PreparedStatement query) {
         log.debug("Executing find query: ${query}")
 
         ResultSet rs = query.executeQuery()
@@ -2163,7 +1845,7 @@ class PostgreSQLComponent implements Storage {
         return docs
     }
 
-    private int executeCountByQuery(PreparedStatement query) {
+    private static int executeCountByQuery(PreparedStatement query) {
         log.debug("Executing count query: ${query}")
 
         ResultSet rs = query.executeQuery()
@@ -2177,58 +1859,48 @@ class PostgreSQLComponent implements Storage {
         return result
     }
 
-    private PreparedStatement rigFindByValueStatement(PreparedStatement find,
-                                                      String relation,
-                                                      String value,
-                                                      int limit,
-                                                      int offset) {
+    private static PreparedStatement rigFindByValueStatement(PreparedStatement find,
+                                                             String relation,
+                                                             String value,
+                                                             int limit,
+                                                             int offset) {
         List valueQuery = [[(relation): value]]
         List valuesQuery = [[(relation): [value]]]
 
         return rigFindByStatement(find, valueQuery, valuesQuery, limit, offset)
     }
 
-    private PreparedStatement rigCountByValueStatement(PreparedStatement find,
-                                                       String relation,
-                                                       String value) {
+    private static PreparedStatement rigCountByValueStatement(PreparedStatement find,
+                                                              String relation,
+                                                              String value) {
         List valueQuery = [[(relation): value]]
         List valuesQuery = [[(relation): [value]]]
 
         return rigCountByStatement(find, valueQuery, valuesQuery)
     }
 
-    private PreparedStatement rigFindByStatement(PreparedStatement find,
-                                                 List firstCondition,
-                                                 List secondCondition,
-                                                 int limit,
-                                                 int offset) {
+    private static PreparedStatement rigFindByStatement(PreparedStatement find,
+                                                        List firstCondition,
+                                                        List secondCondition,
+                                                        int limit,
+                                                        int offset) {
       find.setObject(1, mapper.writeValueAsString(firstCondition),
-                     java.sql.Types.OTHER)
+                     OTHER)
       find.setObject(2, mapper.writeValueAsString(secondCondition),
-                     java.sql.Types.OTHER)
+                     OTHER)
       find.setInt(3, limit)
       find.setInt(4, offset)
       return find
     }
 
-    private PreparedStatement rigCountByStatement(PreparedStatement find,
-                                                  List firstCondition,
-                                                  List secondCondition) {
+    private static PreparedStatement rigCountByStatement(PreparedStatement find,
+                                                         List firstCondition,
+                                                         List secondCondition) {
       find.setObject(1, mapper.writeValueAsString(firstCondition),
-                     java.sql.Types.OTHER)
+                     OTHER)
       find.setObject(2, mapper.writeValueAsString(secondCondition),
-                     java.sql.Types.OTHER)
+                     OTHER)
       return find
-    }
-
-    private String formatDate(Date date) {
-        ZonedDateTime zdt = ZonedDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault())
-        return DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
-    }
-
-    private Date parseDate(String date) {
-        ZonedDateTime zdt = ZonedDateTime.parse(date, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-        return Date.from(zdt.toInstant())
     }
 
     private String getDescriptionChangerId(String changedBy) {
@@ -2245,7 +1917,32 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private boolean isHttpUri(String s) {
+    private static boolean isHttpUri(String s) {
         return s.startsWith('http://') || s.startsWith('https://')
+    }
+
+    private static void close(Object... resources = null) {
+        if (resources != null) {
+            for (def resource : resources) {
+                try {
+                    if (resource != null) {
+                        if (resource instanceof Connection) {
+                            resource.close()
+                        }
+                        if (resource instanceof Statement) {
+                            resource.close()
+                        }
+                        if (resource instanceof ResultSet) {
+                            resource.close()
+                        }
+                        if (resource instanceof Array) {
+                            resource.free()
+                        }
+                    }
+                } catch (Exception e) {
+                    log.debug("Error closing $resource : $e")
+                }
+            }
+        }
     }
 }

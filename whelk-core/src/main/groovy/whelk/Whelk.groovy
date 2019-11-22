@@ -17,13 +17,15 @@ import whelk.util.PropertyLoader
 @Log
 @CompileStatic
 class Whelk implements Storage {
-
+    ThreadGroup indexers = new ThreadGroup("dep-reindex")
     PostgreSQLComponent storage
     ElasticSearch elastic
     Map displayData
     Map vocabData
     Map contextData
     JsonLd jsonld
+    MarcFrameConverter marcFrameConverter
+    Relations relations
 
     URI baseUri = null
 
@@ -92,6 +94,7 @@ class Whelk implements Storage {
     public Whelk(PostgreSQLComponent pg, boolean useCache = false) {
         this.storage = pg
         this.useAuthCache = useCache
+        relations = new Relations(pg)
         if (useCache)
             authCache = Collections.synchronizedMap(
                     new LRUMap<String, Document>(CACHE_MAX_SIZE))
@@ -105,8 +108,16 @@ class Whelk implements Storage {
     public Whelk() {
     }
 
-    MarcFrameConverter createMarcFrameConverter() {
-        return new MarcFrameConverter(new LinkFinder(storage), jsonld)
+    synchronized MarcFrameConverter getMarcFrameConverter() {
+        if (!marcFrameConverter) {
+            marcFrameConverter = new MarcFrameConverter(new LinkFinder(storage), jsonld)
+        }
+
+        return marcFrameConverter
+    }
+
+    Relations getRelations() {
+        return relations
     }
 
     void loadCoreData() {
@@ -187,8 +198,8 @@ class Whelk implements Storage {
             }
         }
 
-        // If the number of dependers isn't too large. Update them synchronously
-        if (dependers.size() < 20) {
+        // If the number of dependers isn't too large or we are inside a batch job. Update them synchronously
+        if (dependers.size() < 20 || batchJobThread() ) {
             Map dependingDocuments = bulkLoad(idsToReindex)
             for (String id : dependingDocuments.keySet()) {
                 Document dependingDoc = dependingDocuments.get(id)
@@ -198,7 +209,7 @@ class Whelk implements Storage {
         } else {
             // else use a fire-and-forget thread
             Whelk _this = this
-            new Thread(new Runnable() {
+            new Thread(indexers, new Runnable() {
                 void run() {
                     for (String id : idsToReindex) {
                         Document dependingDoc = storage.load(id)
@@ -380,7 +391,7 @@ class Whelk implements Storage {
     }
 
     List<String> findIdsLinkingTo(String id) {
-         return storage
+        return storage
                 .getDependers(tryGetSystemId(id))
                 .collect { it.first }
     }
@@ -397,5 +408,9 @@ class Whelk implements Storage {
         return identifier.startsWith(Document.BASE_URI.toString())
                 ? identifier.substring(Document.BASE_URI.toString().length())
                 : identifier
+    }
+
+    private boolean batchJobThread() {
+        return Thread.currentThread().getThreadGroup().getName().contains("whelktool")
     }
 }

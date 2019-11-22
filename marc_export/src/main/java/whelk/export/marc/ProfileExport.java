@@ -23,11 +23,17 @@ public class ProfileExport
 {
     private final Logger logger = LogManager.getLogger(this.getClass());
 
+    public enum DELETE_REASON
+    {
+        DELETED,
+        VIRTUALLY_DELETED
+    }
+
     public enum DELETE_MODE
     {
         IGNORE, // Do not export deleted records
         EXPORT, // Do export deleted record
-        SEND_EMAIL // Do not export deleted records, but send their IDs in an email to be manually deleted
+        SEPARATE // Do not export deleted records, but return a list of them separately
     }
 
     private static final Summary totalExportCount = Summary.build().name("marc_export_total_document_count")
@@ -42,18 +48,22 @@ public class ProfileExport
     public ProfileExport(Whelk whelk)
     {
         m_whelk = whelk;
-        m_toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.createMarcFrameConverter());
+        m_toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
     }
 
     /**
-     * Export MARC data from 'whelk' affected in between 'from' and 'until' shaped by 'profile' into 'output'.
+     * Export MARC data affected in between 'from' and 'until' shaped by 'profile' into 'output'.
+     * Return a set of IDs that should be deleted separately and the reason why. If deleteMode is not 'SEPARATE', the
+     * returned collection will be empty.
      */
-    public void exportInto(MarcRecordWriter output, ExportProfile profile, String from, String until,
-                                   DELETE_MODE deleteMode, boolean doVirtualDeletions)
+    public TreeMap<String, DELETE_REASON> exportInto(MarcRecordWriter output, ExportProfile profile, String from,
+                                                     String until, DELETE_MODE deleteMode, boolean doVirtualDeletions)
             throws IOException, SQLException
     {
+        TreeMap<String, DELETE_REASON> deletedNotifications = new TreeMap<>();
+
         if (profile.getProperty("status", "ON").equalsIgnoreCase("OFF"))
-            return;
+            return deletedNotifications;
 
         ZonedDateTime zonedFrom = ZonedDateTime.parse(from);
         ZonedDateTime zonedUntil = ZonedDateTime.parse(until);
@@ -78,13 +88,16 @@ public class ProfileExport
                     created = true;
 
                 int affected = exportAffectedDocuments(id, collection, created, deleted, fromTimeStamp,
-                        untilTimeStamp, profile, output, deleteMode, doVirtualDeletions, exportedIDs);
+                        untilTimeStamp, profile, output, deleteMode, doVirtualDeletions, exportedIDs,
+                        deletedNotifications);
                 affectedCount.observe(affected);
             }
         }
         finally {
             totalExportCount.observe(exportedIDs.size());
         }
+
+        return deletedNotifications;
     }
 
     /**
@@ -94,14 +107,14 @@ public class ProfileExport
     private int exportAffectedDocuments(String id, String collection, boolean created, Boolean deleted,Timestamp from,
                                          Timestamp until, ExportProfile profile, MarcRecordWriter output,
                                          DELETE_MODE deleteMode, boolean doVirtualDeletions,
-                                         TreeSet<String> exportedIDs)
+                                         TreeSet<String> exportedIDs, TreeMap<String, DELETE_REASON> deletedNotifications)
             throws IOException, SQLException
     {
         Summary.Timer requestTimer = singleExportLatency.labels(collection).startTimer();
         try
         {
             return exportAffectedDocuments2(id, collection, created, deleted, from, until, profile,
-                    output, deleteMode, doVirtualDeletions, exportedIDs);
+                    output, deleteMode, doVirtualDeletions, exportedIDs, deletedNotifications);
         }
         finally
         {
@@ -112,7 +125,7 @@ public class ProfileExport
     private int exportAffectedDocuments2(String id, String collection, boolean created, Boolean deleted,Timestamp from,
                                          Timestamp until, ExportProfile profile, MarcRecordWriter output,
                                          DELETE_MODE deleteMode, boolean doVirtualDeletions,
-                                         TreeSet<String> exportedIDs)
+                                         TreeSet<String> exportedIDs, TreeMap<String, DELETE_REASON> deletedNotifications)
             throws IOException, SQLException
     {
         int oldCount = exportedIDs.size();
@@ -120,7 +133,7 @@ public class ProfileExport
         if (collection.equals("bib") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
         {
             exportDocument(m_whelk.getStorage().loadEmbellished(id, m_whelk.getJsonld()), profile,
-                    output, exportedIDs, deleteMode, doVirtualDeletions);
+                    output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
         }
         else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
         {
@@ -136,7 +149,7 @@ public class ProfileExport
                 if (!isHeld(dependerDoc, profile))
                     continue;
 
-                exportDocument(dependerDoc, profile, output, exportedIDs, deleteMode, doVirtualDeletions);
+                exportDocument(dependerDoc, profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
             }
         }
         else if (collection.equals("hold") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
@@ -162,7 +175,7 @@ public class ProfileExport
                 if (itemOfSystemId != null) {
                     exportDocument(
                             m_whelk.getStorage().loadEmbellished(itemOfSystemId, m_whelk.getJsonld())
-                            , profile, output, exportedIDs, deleteMode, doVirtualDeletions);
+                            , profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
                 } else {
                     logger.info("Not exporting {} ({}) for {} because of missing itemOf systemID", id,
                             collection, profile.getProperty("name", "unknown"));
@@ -241,7 +254,8 @@ public class ProfileExport
      * Export bib document (into output)
      */
     private void exportDocument(Document document, ExportProfile profile, MarcRecordWriter output,
-                                       TreeSet<String> exportedIDs, DELETE_MODE deleteMode, boolean doVirtualDeletions)
+                                TreeSet<String> exportedIDs, DELETE_MODE deleteMode, boolean doVirtualDeletions,
+                                TreeMap<String, DELETE_REASON> deletedNotifications)
             throws IOException
     {
         String profileName = profile.getProperty("name", "unknown");
@@ -250,33 +264,16 @@ public class ProfileExport
             return;
         exportedIDs.add(systemId);
 
-        // TODO (later): Filtering: not just efilter! biblevel (encodingLevel=5) and licensefilter too!
-        if (profile.getProperty("efilter", "OFF").equalsIgnoreCase("ON"))
-        {
-            boolean onlineResource = false;
-            List<Map> carrierTypes = document.getCarrierTypes();
-            if (carrierTypes != null)
-            {
-                for (Map map : carrierTypes)
-                {
-                    if ( map.containsKey("@id") && map.get("@id").equals("https://id.kb.se/marc/OnlineResource") )
-                        onlineResource = true;
-                }
-            }
-            if (document.getThingType().equals("Electronic") && onlineResource) {
-                logger.info("Not exporting {} for {} because of efilter setting", systemId, profileName);
-                return;
-            }
-        }
-
         String locations = profile.getProperty("locations", "");
         HashSet locationSet = new HashSet(Arrays.asList(locations.split(" ")));
+        DELETE_REASON deleteReason = DELETE_REASON.DELETED; // Default
         if (doVirtualDeletions && !locationSet.contains("*"))
         {
             if (!isHeld(document, profile)) {
                 if (deleteMode == DELETE_MODE.IGNORE)
                     logger.info("Not exporting {} for {} because of combined virtual deletions and ignore-deleted setting", systemId, profileName);
                 document.setDeleted(true);
+                deleteReason = DELETE_REASON.VIRTUALLY_DELETED;
             }
         }
 
@@ -286,8 +283,9 @@ public class ProfileExport
             {
                 case IGNORE:
                     return;
-                case SEND_EMAIL:
-                    throw new RuntimeException("EMAIL/MANUAL-DELETE NOT YET IMPLEMENTED");
+                case SEPARATE:
+                    deletedNotifications.put(systemId, deleteReason);
+                    return;
                 case EXPORT:
                     break;
             }
@@ -300,8 +298,14 @@ public class ProfileExport
             return;
         }
 
-        for (MarcRecord mr : result)
+        for (MarcRecord mr : result) {
+            String filterName = profile.findFilter(mr);
+            if (filterName != null) {
+                logger.info("Not exporting {} for {} because of {} setting", systemId, profileName, filterName);
+                continue;
+            }
             output.writeRecord(mr);
+        }
     }
 
     boolean isHeld(Document doc, ExportProfile profile)
