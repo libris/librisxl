@@ -8,7 +8,7 @@ report = getReportWriter("report")
 NOT_FICTION = "https://id.kb.se/marc/NotFictionNotFurtherSpecified"
 SKONLITTERATUR = "https://id.kb.se/term/saogf/Sk%C3%B6nlitteratur"
 FICTION = "https://id.kb.se/marc/FictionNotFurtherSpecified"
-SUBJECT_PREFIX = "https://id.kb.se/term"
+SUBJECT_PREFIX = "https://id.kb.se/term/sao/"
 
 query = """collection = 'bib'
         AND data#>>'{@graph,2,@type}' = 'Text'
@@ -19,12 +19,12 @@ selectBySqlWhere(query, silent: false) { data ->
     def recordId = data.graph[0][ID]
 
     if (!hasOnlyHClassifications(work)) {
-        //At least one classification is not H OR there are no classfications
-        if (isSaogfSkonlitteratur(data.whelk, work) && !hasAnySubjectAsGenreForm()) {
-            work.genreForm.removeIf { gf -> gf.'@id' == NOT_FICTION }
-            work.genreForm.add(['@id': FICTION])
+        //At least one classification is not H OR there are no classifications
+        if (isSaogfSkonlitteratur(data.whelk, work) && !hasAnySubjectAsGenreForm(work) && hasAnyNotFictionGenreForm(work)) {
             report.println "Record $recordId with genreForm $work.genreForm and classification: ${work.classification?.code}" +
                     "has broader to $SKONLITTERATUR. Replacing $NOT_FICTION with $FICTION..."
+            work.genreForm.removeIf { gf -> gf.'@id' == NOT_FICTION }
+            work.genreForm.add(['@id': FICTION])
         }
         return
     }
@@ -58,9 +58,9 @@ selectBySqlWhere(query, silent: false) { data ->
             report.println "Record $recordId with genreForm $work.genreForm" +
                     "has a marc fiction type, removing $NOT_FICTION..."
         } else {
-            work.genreForm.add(['@id': FICTION])
             report.println "Record $recordId with genreForm $work.genreForm" +
                     "has no marc fiction type. Replacing $NOT_FICTION with $FICTION..."
+            work.genreForm.add(['@id': FICTION])
         }
         scheduledForChange.println "$recordId"
         data.scheduleSave()
@@ -103,11 +103,11 @@ private boolean hasNoGenreFormField(work) {
 }
 
 private boolean isSaogfSkonlitteratur(whelk, work) {
-    return work.genreForm.any { gf -> whelk.isImpliedBy(SKONLITTERATUR, gf.'@id') }
+    return work.genreForm && work.genreForm.any { gf -> whelk.isImpliedBy(SKONLITTERATUR, gf.'@id') }
 }
 
 private boolean hasAnySubjectAsGenreForm(work) {
-    return work.genreForm.any { gf -> gf.startsWith(SUBJECT_PREFIX)}
+    return work.genreForm && work.genreForm.any { gf -> gf.'@id'?.startsWith(SUBJECT_PREFIX)}
 }
 
 private boolean hasAnyMarcFictionType(work) {
