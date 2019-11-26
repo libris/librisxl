@@ -239,9 +239,28 @@ class PostgreSQLComponent implements Storage {
                 " INNER JOIN deps deps1 ON d.dependsonid = i AND d.relation NOT IN (€) " +
                 ") " +
                 "SELECT * FROM deps"
+        
+        GET_DEPENDERS_OF_TYPE =
+                "WITH RECURSIVE deps(i) AS ( " +
+                " VALUES (?, null) " +
+                " UNION " +
+                " SELECT d.id, d.relation " +
+                " FROM " +
+                "  lddb__dependencies d " +
+                " INNER JOIN deps deps1 ON d.dependsonid = i AND d.relation = ? " +
+                ") " +
+                "SELECT * FROM deps"
 
-        GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
-        GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
+        GET_DEPENDENCIES_OF_TYPE =
+                "WITH RECURSIVE deps(i) AS ( " +
+                " VALUES (?, null) " +
+                " UNION " +
+                " SELECT d.dependsonid, d.relation " +
+                " FROM " +
+                "  lddb__dependencies d " +
+                " INNER JOIN deps deps1 ON d.id = i AND d.relation = ? " +
+                ") " +
+                "SELECT * FROM deps"
 
         GET_MAX_MODIFIED = "SELECT MAX(modified) from $mainTableName WHERE id IN (?)"
 
