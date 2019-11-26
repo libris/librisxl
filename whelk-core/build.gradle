@@ -189,3 +189,12 @@ task dataview(dependsOn: 'classes', type: JavaExec) {
     )
     args(System.getProperty('args', "").split() as String[])
 }
+
+task testRelations(dependsOn: 'classes', type: JavaExec) {
+    classpath = sourceSets.integTest.runtimeClasspath
+    main = 'Relations'
+    systemProperties(
+            'xl.secret.properties': System.getProperty("xl.secret.properties")
+    )
+    args(System.getProperty('args', "").split() as String[])
+}

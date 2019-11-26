@@ -19,6 +19,7 @@ import whelk.exception.WhelkException
 import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
 
+import java.sql.Array
 import java.sql.BatchUpdateException
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -74,6 +75,7 @@ class PostgreSQLComponent implements Storage {
     protected String QUERY_LD_API
     protected String FIND_BY, COUNT_BY
     protected String GET_SYSTEMID_BY_IRI
+    protected String GET_THING_MAIN_IRI_BY_SYSTEMID
     protected String GET_DOCUMENT_BY_IRI
     protected String GET_MAX_MODIFIED
     protected String UPDATE_MAX_MODIFIED
@@ -83,6 +85,7 @@ class PostgreSQLComponent implements Storage {
 
     String mainTableName
     LinkFinder linkFinder
+    DependencyCache dependencyCache
 
     class AcquireLockException extends RuntimeException { AcquireLockException(String s) { super(s) } }
 
@@ -140,6 +143,8 @@ class PostgreSQLComponent implements Storage {
             this.linkFinder = new LinkFinder(this)
         }
 
+        this.dependencyCache = new DependencyCache(this)
+
         // Setting up sql-statements
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
         INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,collection,changedIn,changedBy,checksum,deleted," +
@@ -157,39 +162,39 @@ class PostgreSQLComponent implements Storage {
 
         GET_DOCUMENT = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_EMBELLISHED_DOCUMENT = "SELECT data from lddb__embellished where id = ?"
-        GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,collection,created,modified,deleted,changedBy FROM $mainTableName WHERE id= ? FOR UPDATE"
+        GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,collection,created,modified,deleted,changedBy FROM $mainTableName WHERE id = ? AND deleted = false FOR UPDATE"
         GET_DOCUMENT_VERSION = "SELECT id,data FROM $versionsTableName WHERE id = ? AND checksum = ?"
         GET_DOCUMENT_VERSION_BY_MAIN_ID = "SELECT id,data FROM $versionsTableName " +
-                                          "WHERE id = (SELECT id FROM $idTableName " +
-                                                      "WHERE iri = ? AND mainid = 't') " +
-                                          "AND checksum = ?"
+                "WHERE id = (SELECT id FROM $idTableName " +
+                "WHERE iri = ? AND mainid = 't') " +
+                "AND checksum = ?"
         GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,deleted,created,modified " +
                 "FROM $versionsTableName WHERE id = ? ORDER BY modified DESC"
         GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID = "SELECT id,data,deleted,created,modified " +
-                                               "FROM $versionsTableName " +
-                                               "WHERE id = (SELECT id FROM $idTableName " +
-                                                           "WHERE iri = ? AND mainid = 't') " +
-                                               "ORDER BY modified"
+                "FROM $versionsTableName " +
+                "WHERE id = (SELECT id FROM $idTableName " +
+                "WHERE iri = ? AND mainid = 't') " +
+                "ORDER BY modified"
         GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE data->'@graph' @> ?"
         GET_RECORD_ID_BY_THING_ID = "SELECT id FROM $idTableName WHERE iri = ? AND graphIndex = 1"
         GET_DOCUMENT_BY_MAIN_ID = "SELECT id,data,created,modified,deleted " +
-                                  "FROM $mainTableName " +
-                                  "WHERE id = (SELECT id FROM $idTableName " +
-                                              "WHERE mainid = 't' AND iri = ?)"
+                "FROM $mainTableName " +
+                "WHERE id = (SELECT id FROM $idTableName " +
+                "WHERE mainid = 't' AND iri = ?)"
         GET_RECORD_ID = "SELECT iri FROM $idTableName " +
-                        "WHERE graphindex = 0 AND mainid = 't' " +
-                        "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
+                "WHERE graphindex = 0 AND mainid = 't' " +
+                "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
         GET_THING_ID = "SELECT iri FROM $idTableName " +
-                        "WHERE graphindex = 1 AND mainid = 't' " +
-                        "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
+                "WHERE graphindex = 1 AND mainid = 't' " +
+                "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
         GET_MAIN_ID = "SELECT t2.iri FROM $idTableName t1 " +
-                      "JOIN $idTableName t2 " +
-                      "ON t2.id = t1.id " +
-                      "AND t2.graphindex = t1.graphindex " +
-                      "WHERE t1.iri = ? AND t2.mainid = true;"
+                "JOIN $idTableName t2 " +
+                "ON t2.id = t1.id " +
+                "AND t2.graphindex = t1.graphindex " +
+                "WHERE t1.iri = ? AND t2.mainid = true;"
         GET_ID_TYPE = "SELECT graphindex, mainid FROM $idTableName " +
-                      "WHERE iri = ?"
+                "WHERE iri = ?"
         GET_COLLECTION_BY_SYSTEM_ID = "SELECT collection FROM lddb where id = ?"
         LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
         // This query does the same as LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
@@ -268,22 +273,22 @@ class PostgreSQLComponent implements Storage {
                 "INSERT INTO $settingsTableName (key, settings) SELECT ?,? WHERE NOT EXISTS (SELECT * FROM upsertsettings)"
 
         FIND_BY = "SELECT id, data, created, modified, deleted " +
-                  "FROM $mainTableName " +
-                  "WHERE data->'@graph' @> ? " +
-                  "OR data->'@graph' @> ? " +
-                  "LIMIT ? OFFSET ?"
+                "FROM $mainTableName " +
+                "WHERE data->'@graph' @> ? " +
+                "OR data->'@graph' @> ? " +
+                "LIMIT ? OFFSET ?"
 
         COUNT_BY = "SELECT count(*) " +
-                   "FROM $mainTableName " +
-                   "WHERE data->'@graph' @> ? " +
-                   "OR data->'@graph' @> ?"
+                "FROM $mainTableName " +
+                "WHERE data->'@graph' @> ? " +
+                "OR data->'@graph' @> ?"
 
         GET_SYSTEMID_BY_IRI = "SELECT id FROM $idTableName WHERE iri = ?"
+        GET_THING_MAIN_IRI_BY_SYSTEMID = "SELECT iri FROM $idTableName WHERE graphindex = 1 and mainid is true and id = ?"
         GET_DOCUMENT_BY_IRI = "SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
 
         GET_LEGACY_PROFILE = "SELECT profile FROM $profilesTableName WHERE library_id = ?"
-     }
-
+    }
 
     private Map status(URI uri, Connection connection) {
         Map statusMap = [:]
@@ -619,6 +624,7 @@ class PostgreSQLComponent implements Storage {
             saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
             updateMaxDepModified(doc.getShortId(), connection)
+            dependencyCache.invalidate(preUpdateDoc)
             connection.commit()
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {
@@ -1303,6 +1309,23 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
+    String getThingMainIriBySystemId(String id) {
+        Connection connection = null
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            connection = getConnection()
+            preparedStatement = connection.prepareStatement(GET_THING_MAIN_IRI_BY_SYSTEMID)
+            preparedStatement.setString(1, id)
+            rs = preparedStatement.executeQuery()
+            if (rs.next())
+                return rs.getString(1)
+            throw new RuntimeException("No IRI found for system id $id")
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
     Document getDocumentByIri(String iri) {
         Connection connection = getConnection()
         try {
@@ -1392,15 +1415,23 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    List<String> getDependenciesOfType(String id, String typeOfRelation) {
-        return getDependencyDataOfType(id, typeOfRelation, GET_DEPENDENCIES_OF_TYPE)
+    List<String> getDependenciesOfType(String id, String relation) {
+        return getDependencyDataOfType(id, relation, GET_DEPENDENCIES_OF_TYPE)
     }
 
-    List<String> getDependersOfType(String id, String typeOfRelation) {
-        return getDependencyDataOfType(id, typeOfRelation, GET_DEPENDERS_OF_TYPE)
+    List<String> getDependersOfType(String id, String relation) {
+        return getDependencyDataOfType(id, relation, GET_DEPENDERS_OF_TYPE)
     }
 
-    private List<String> getDependencyDataOfType(String id, String typeOfRelation, String query) {
+    Set<String> getByRelation(String iri, String relation) {
+        return dependencyCache.getDependenciesOfType(iri, relation)
+    }
+
+    Set<String> getByReverseRelation(String iri, String relation) {
+        return dependencyCache.getDependersOfType(iri, relation)
+    }
+
+    private List<String> getDependencyDataOfType(String id, String relation, String query) {
         Connection connection = null
         PreparedStatement preparedStatement = null
         ResultSet rs = null
@@ -1408,7 +1439,7 @@ class PostgreSQLComponent implements Storage {
             connection = getConnection()
             preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, id)
-            preparedStatement.setString(2, typeOfRelation)
+            preparedStatement.setString(2, relation)
             rs = preparedStatement.executeQuery()
             List<String> dependecies = []
             while (rs.next()) {
@@ -1946,6 +1977,9 @@ class PostgreSQLComponent implements Storage {
                         }
                         if (resource instanceof ResultSet) {
                             resource.close()
+                        }
+                        if (resource instanceof Array) {
+                            resource.free()
                         }
                     }
                 } catch (Exception e) {

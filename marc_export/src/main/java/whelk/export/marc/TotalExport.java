@@ -170,7 +170,7 @@ public class TotalExport
 
     private void executeBatch(Batch batch, int threadIndex)
     {
-        try (Connection connection = m_whelk.getStorage().getConnection())
+        try (Connection connection = getConnection())
         {
             for (String bibUri : batch.bibUrisToConvert)
             {

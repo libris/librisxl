@@ -17,7 +17,6 @@ import whelk.util.PropertyLoader
 @Log
 @CompileStatic
 class Whelk implements Storage {
-
     ThreadGroup indexers = new ThreadGroup("dep-reindex")
     PostgreSQLComponent storage
     ElasticSearch elastic
@@ -26,6 +25,7 @@ class Whelk implements Storage {
     Map contextData
     JsonLd jsonld
     MarcFrameConverter marcFrameConverter
+    Relations relations
 
     URI baseUri = null
 
@@ -94,6 +94,7 @@ class Whelk implements Storage {
     public Whelk(PostgreSQLComponent pg, boolean useCache = false) {
         this.storage = pg
         this.useAuthCache = useCache
+        relations = new Relations(pg)
         if (useCache)
             authCache = Collections.synchronizedMap(
                     new LRUMap<String, Document>(CACHE_MAX_SIZE))
@@ -113,6 +114,10 @@ class Whelk implements Storage {
         }
 
         return marcFrameConverter
+    }
+
+    Relations getRelations() {
+        return relations
     }
 
     void loadCoreData() {
@@ -386,7 +391,7 @@ class Whelk implements Storage {
     }
 
     List<String> findIdsLinkingTo(String id) {
-         return storage
+        return storage
                 .getDependers(tryGetSystemId(id))
                 .collect { it.first }
     }

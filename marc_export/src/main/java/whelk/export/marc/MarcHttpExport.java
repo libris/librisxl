@@ -15,12 +15,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.TreeMap;
 
 /**
  * Call like so:
@@ -113,8 +116,8 @@ public class MarcHttpExport extends HttpServlet
                 case "export":
                     deleteMode = ProfileExport.DELETE_MODE.EXPORT;
                     break;
-                case "email":
-                    deleteMode = ProfileExport.DELETE_MODE.SEND_EMAIL;
+                case "append":
+                    deleteMode = ProfileExport.DELETE_MODE.SEPARATE;
                     break;
                 default:
                     failedRequests.labels("Invalid option for 'deleted'",
@@ -151,14 +154,17 @@ public class MarcHttpExport extends HttpServlet
         }
 
         MarcRecordWriter output = null;
+        OutputStream outStream = res.getOutputStream();
         if (profile.getProperty("format", "ISO2709").equalsIgnoreCase("MARCXML"))
-            output = new MarcXmlRecordWriter(res.getOutputStream(), encoding);
+            output = new MarcXmlRecordWriter(outStream, encoding);
         else
-            output = new Iso2709MarcRecordWriter(res.getOutputStream(), encoding);
+            output = new Iso2709MarcRecordWriter(outStream, encoding);
+
+        TreeMap<String, ProfileExport.DELETE_REASON> deleteInfo = null;
 
         try
         {
-            profileExport.exportInto(output, profile, parameterMap.get("from"), parameterMap.get("until"), deleteMode, doVirtualDeletions);
+            deleteInfo = profileExport.exportInto(output, profile, parameterMap.get("from"), parameterMap.get("until"), deleteMode, doVirtualDeletions);
         }
         catch (SQLException se)
         {
@@ -171,6 +177,27 @@ public class MarcHttpExport extends HttpServlet
         {
             output.close();
         }
+
+        if (deleteMode == ProfileExport.DELETE_MODE.SEPARATE)
+        {
+            outStream.write(0); // Use a \0 (null-byte) to delimit the export from the accompanying delete manifest CSV.
+            outStream.write("Libris bibliografiska kontrollnummer rekommenderade för gallring;Anledning\n".getBytes(StandardCharsets.UTF_8));
+            for (String id : deleteInfo.keySet())
+            {
+                String csvline = id;
+                switch (deleteInfo.get(id))
+                {
+                    case DELETED:
+                        csvline += ";Gallrad ur Libris.\n";
+                        break;
+                    case VIRTUALLY_DELETED:
+                        csvline += ";Ni har ej längre bestånd på posten.\n";
+                        break;
+                }
+                outStream.write(csvline.getBytes(StandardCharsets.UTF_8));
+            }
+        }
+        outStream.close();
     }
 
     private boolean isValidZonedDateTime(String candidate)

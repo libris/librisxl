@@ -641,6 +641,7 @@ class CrudSpec extends Specification {
         }
         Document d = new Document(["@graph": [["@id": "record_id",
                                                "@type": "Record",
+                                               "propA": "valA",
                                                "mainEntity": ["@id": "instance_id"],
                                               ],
                                               ["@id": "instance_id",
@@ -718,7 +719,7 @@ class CrudSpec extends Specification {
     }
 
     def lensUsed(String document) {
-        if (document.contains('"prop4":"val4"'))
+        if (!document.contains('meta'))
             return 'none'
         if (document.contains('"prop3":"val3"'))
             return 'card'

@@ -15,6 +15,12 @@ class LegacyIntegrationTools {
         "hold": DateUtil.parseDate("1988-01-01").getTime()
     ]
 
+    static final Map<String, String> MARC_COLLECTION_BY_CATEGORY = [
+        'https://id.kb.se/marc/auth': 'auth',
+        'https://id.kb.se/marc/bib': 'bib',
+        'https://id.kb.se/marc/hold': 'hold'
+    ]
+
     static String generateId(String originalIdentifier) {
         String[] parts = originalIdentifier.split("/")
         long basetime = BASETIMES[parts[1]]
@@ -42,47 +48,50 @@ class LegacyIntegrationTools {
     static String determineLegacyCollection(Document document, JsonLd jsonld) {
         String type = document.getThingType() // for example "Instance"
 
-        String categoryId = getMarcCategoryInHierarchy(type, jsonld)
-        return categoryUriToTerm(categoryId)
+        return getMarcCollectionInHierarchy(type, jsonld)
     }
 
-    static String getMarcCategoryInHierarchy(String type, JsonLd jsonld) {
-        def termMap = jsonld.vocabIndex[type]
+    static String getMarcCollectionInHierarchy(String type, JsonLd jsonld) {
+        Map termMap = jsonld.vocabIndex[type]
         if (termMap == null)
             return null
 
-        if (termMap["category"] == null) {
-            if (termMap["subClassOf"] != null) {
-                List superClasses = (List) termMap["subClassOf"]
+        String marcCategory = getMarcCollectionForTerm(termMap)
+        if (marcCategory != null) {
+            return marcCategory
+        }
 
-                for (superClass in superClasses) {
-                    if (superClass == null || superClass["@id"] == null) {
-                        continue
-                    }
-                    String superClassType = jsonld.toTermKey( (String) superClass["@id"] )
-                    String category = getMarcCategoryInHierarchy(superClassType, jsonld)
-                    if ( category != null )
-                        return category
-                }
-            }
+        List superClasses = (List) termMap["subClassOf"]
+        if (superClasses == null) {
             return null
         }
-        else
-            return termMap["category"]["@id"]
+
+        for (superClass in superClasses) {
+            if (superClass == null || superClass["@id"] == null) {
+                continue
+            }
+            String superClassType = jsonld.toTermKey( (String) superClass["@id"] )
+            String category = getMarcCollectionInHierarchy(superClassType, jsonld)
+            if ( category != null )
+                return category
+        }
+
+        return null
     }
 
-    static String categoryUriToTerm(String uri) {
-        if (uri == null)
-            return null
-        switch (uri) {
-            case "https://id.kb.se/marc/auth":
-                return "auth"
-            case "https://id.kb.se/marc/bib":
-                return "bib"
-            case "https://id.kb.se/marc/hold":
-                return "hold"
-            default: return null
+    static String getMarcCollectionForTerm(Map termMap) {
+        def categories = termMap["category"]
+        if (!(categories instanceof List)) {
+            categories = categories ? [categories] : []
         }
+        for (category in categories) {
+            String id = category["@id"]
+            String collection = MARC_COLLECTION_BY_CATEGORY[id]
+            if (collection != null) {
+                return collection
+            }
+        }
+        return null
     }
 
     /**

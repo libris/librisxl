@@ -1,6 +1,6 @@
 package datatool.scripts.linkblanklanguages
 
-import datatool.util.DocumentUtil
+import whelk.util.DocumentUtil
 import datatool.util.Statistics
 
 class LanguageLinker implements DocumentUtil.Linker {
@@ -26,6 +26,10 @@ class LanguageLinker implements DocumentUtil.Linker {
         }
 
         Set<String> labels = [code]
+
+        if (language.termLangCode) {
+            labels.add(language.termLangCode)
+        }
 
         def prefLabels = language.prefLabelByLang as Map ?: [:]
         prefLabels.values().each(maybeCollection({ String label ->
@@ -127,17 +131,6 @@ class LanguageLinker implements DocumentUtil.Linker {
             while (m.find()) {
                 matches << m.group(1)
             }
-            return matches
-        }
-
-        // e.g "Swedish, Russian and English"
-        def m = labelOrCode =~ /(.+)(?: och | and |&)(.+)/
-        if (m.matches()) {
-            def matches = []
-            for (String l : m.group(1).split(',')) {
-                matches.add(trim(l))
-            }
-            matches.add(trim(m.group(2)))
             return matches
         }
 
