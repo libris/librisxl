@@ -719,7 +719,7 @@ class PostgreSQLComponent implements Storage {
                 if (rs.next()) {
 
                     if (rs.getBoolean(2)) // If deleted==true, then doc refers to a deleted document which is not ok.
-                        throw new LinkValidationException("Record supposedly depends on deleted record: ${rs.getBoolean(1)}, which is not allowed.")
+                        throw new LinkValidationException("Record supposedly depends on deleted record: ${rs.getString(1)}, which is not allowed.")
 
                     if (rs.getString(1) != doc.getShortId()) // Exclude A -> A (self-references)
                         dependencies.add([relation, rs.getString(1)] as String[])
