@@ -77,8 +77,8 @@ class PostgreSQLComponent implements Storage {
     protected String GET_SYSTEMID_BY_IRI
     protected String GET_THING_MAIN_IRI_BY_SYSTEMID
     protected String GET_DOCUMENT_BY_IRI
-    protected String GET_MINMAX_MODIFIED
-    protected String UPDATE_MINMAX_MODIFIED
+    protected String GET_MAX_MODIFIED
+    protected String UPDATE_MAX_MODIFIED
     protected String GET_LEGACY_PROFILE
     protected String INSERT_EMBELLISHED_DOCUMENT
     protected String DELETE_EMBELLISHED_DOCUMENT
@@ -148,7 +148,7 @@ class PostgreSQLComponent implements Storage {
         // Setting up sql-statements
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
         INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,collection,changedIn,changedBy,checksum,deleted," +
-                "created,modified,depminmodified,depmaxmodified) VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+                "created,modified,depmaxmodified) VALUES (?,?,?,?,?,?,?,?,?,?)"
         DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
         INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, iri, graphIndex, mainId) VALUES (?,?,?,?)"
 
@@ -217,13 +217,71 @@ class PostgreSQLComponent implements Storage {
         STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
                 "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.iri = ?"
         GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE iri = 'https://id.kb.se/vocab/context')"
-        GET_DEPENDERS = "SELECT id, relation FROM $dependenciesTableName WHERE dependsOnId = ?"
-        GET_DEPENDENCIES = "SELECT dependsOnId, relation FROM $dependenciesTableName WHERE id = ?"
-        GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
-        GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
-        GET_MINMAX_MODIFIED = "SELECT MIN(modified), MAX(modified) from $mainTableName WHERE id IN (?)"
-        UPDATE_MINMAX_MODIFIED = "WITH dependsOn AS (SELECT modified FROM $dependenciesTableName JOIN $mainTableName ON " + dependenciesTableName + ".dependsOnId = " + mainTableName + ".id WHERE " + dependenciesTableName + ".id = ? UNION SELECT modified FROM $mainTableName WHERE id = ?) " +
-                "UPDATE $mainTableName SET depMinModified = (SELECT MIN(modified) FROM dependsOn), depMaxModified = (SELECT MAX(modified) FROM dependsOn) WHERE id = ?"
+
+        GET_DEPENDENCIES =
+                "WITH RECURSIVE deps(i) AS ( " +
+                " VALUES (?, null) " +
+                " UNION " +
+                " SELECT d.dependsonid, d.relation " +
+                " FROM " +
+                "  lddb__dependencies d " +
+                " INNER JOIN deps deps1 ON d.id = i AND d.relation NOT IN (€) " +
+                ") " +
+                "SELECT * FROM deps"
+
+        GET_DEPENDERS =
+                "WITH RECURSIVE deps(i) AS ( " +
+                " VALUES (?, null) " +
+                " UNION " +
+                " SELECT d.id, d.relation " +
+                " FROM " +
+                "  lddb__dependencies d " +
+                " INNER JOIN deps deps1 ON d.dependsonid = i AND d.relation NOT IN (€) " +
+                ") " +
+                "SELECT * FROM deps"
+        
+        GET_DEPENDERS_OF_TYPE =
+                "WITH RECURSIVE deps(i) AS ( " +
+                " VALUES (?, null) " +
+                " UNION " +
+                " SELECT d.id, d.relation " +
+                " FROM " +
+                "  lddb__dependencies d " +
+                " INNER JOIN deps deps1 ON d.dependsonid = i AND d.relation = ? " +
+                ") " +
+                "SELECT * FROM deps"
+
+        GET_DEPENDENCIES_OF_TYPE =
+                "WITH RECURSIVE deps(i) AS ( " +
+                " VALUES (?, null) " +
+                " UNION " +
+                " SELECT d.dependsonid, d.relation " +
+                " FROM " +
+                "  lddb__dependencies d " +
+                " INNER JOIN deps deps1 ON d.id = i AND d.relation = ? " +
+                ") " +
+                "SELECT * FROM deps"
+
+        GET_MAX_MODIFIED = "SELECT MAX(modified) from $mainTableName WHERE id IN (?)"
+
+        UPDATE_MAX_MODIFIED =
+                "WITH recModified AS ( " +
+                " WITH RECURSIVE deps AS ( " +
+                "  SELECT d1.id " +
+                "  FROM " +
+                "  lddb__dependencies d1 " +
+                "  WHERE d1.id = ? " +
+                "  UNION " +
+                "  SELECT d2.dependsonid " +
+                "  FROM " +
+                "  lddb__dependencies d2 " +
+                "  INNER JOIN deps deps1 ON d2.id = deps1.id AND d2.relation NOT IN (€) " +
+                " ) " +
+                " SELECT lddb.modified FROM deps INNER JOIN lddb on deps.id = lddb.id " +
+                " UNION " +
+                " SELECT modified FROM lddb WHERE ID = ? " +
+                ") " +
+                "UPDATE lddb SET depMaxModified = (SELECT MAX(modified) FROM recModified) WHERE id = ?"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
@@ -353,8 +411,8 @@ class PostgreSQLComponent implements Storage {
 
             saveVersion(doc, connection, now, now, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
-            for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection)) {
-                updateMinMaxDepModified((String) depender.get(0), connection)
+            for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection, JsonLd.NON_DEPENDANT_RELATIONS)) {
+                updateMaxDepModified((String) depender.get(0), connection)
             }
 
             connection.commit()
@@ -467,10 +525,10 @@ class PostgreSQLComponent implements Storage {
             refreshDerivativeTables(remainingDocument, connection, false)
 
             // Update dependers on the remaining record
-            List<Tuple2<String, String>> dependers = getDependers(remainingDocument.getShortId(), connection)
+            List<Tuple2<String, String>> dependers = getDependers(remainingDocument.getShortId(), connection, JsonLd.NON_DEPENDANT_RELATIONS)
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
-                updateMinMaxDepModified((String) dependerShortId, connection)
+                updateMaxDepModified((String) dependerShortId, connection)
                 removeEmbellishedDocument(dependerShortId, connection)
             }
 
@@ -495,11 +553,11 @@ class PostgreSQLComponent implements Storage {
             saveDependencies(disappearingDocument, connection)
 
             // Update dependers on the disappearing record
-            dependers = getDependers(disappearingSystemID, connection)
+            dependers = getDependers(disappearingSystemID, connection, JsonLd.NON_DEPENDANT_RELATIONS)
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
                 removeEmbellishedDocument(dependerShortId, connection)
-                updateMinMaxDepModified((String) dependerShortId, connection)
+                updateMaxDepModified((String) dependerShortId, connection)
                 selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
                 selectStatement.setString(1, dependerShortId)
                 resultSet = selectStatement.executeQuery()
@@ -584,7 +642,7 @@ class PostgreSQLComponent implements Storage {
 
             saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
-            updateMinMaxDepModified(doc.getShortId(), connection)
+            updateMaxDepModified(doc.getShortId(), connection)
             dependencyCache.invalidate(preUpdateDoc)
             connection.commit()
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
@@ -618,10 +676,10 @@ class PostgreSQLComponent implements Storage {
     void refreshDependers(String id) {
         Connection connection = getConnection()
         connection.setAutoCommit(false)
-        List<Tuple2<String, String>> dependers = getDependers(id, connection)
+        List<Tuple2<String, String>> dependers = getDependers(id, connection, JsonLd.NON_DEPENDANT_RELATIONS)
         try {
             for (Tuple2<String, String> depender : dependers) {
-                updateMinMaxDepModified((String) depender.get(0), connection)
+                updateMaxDepModified((String) depender.get(0), connection)
                 removeEmbellishedDocument((String) depender.get(0), connection)
             }
             connection.commit()
@@ -759,11 +817,13 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private void updateMinMaxDepModified(String id, Connection connection) {
+    private void updateMaxDepModified(String id, Connection connection) {
         PreparedStatement preparedStatement = null
         ResultSet rs = null
         try {
-            preparedStatement = connection.prepareStatement(UPDATE_MINMAX_MODIFIED)
+            String replacement = "'" + JsonLd.NON_DEPENDANT_RELATIONS.join("', '") + "'"
+            String query = UPDATE_MAX_MODIFIED.replace("€", replacement)
+            preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, id)
             preparedStatement.setString(2, id)
             preparedStatement.setString(3, id)
@@ -830,7 +890,6 @@ class PostgreSQLComponent implements Storage {
         insert.setTimestamp(8, new Timestamp(timestamp.getTime()))
         insert.setTimestamp(9, new Timestamp(timestamp.getTime()))
         insert.setTimestamp(10, new Timestamp(timestamp.getTime()))
-        insert.setTimestamp(11, new Timestamp(timestamp.getTime()))
         return insert
     }
 
@@ -912,8 +971,8 @@ class PostgreSQLComponent implements Storage {
                 batch.addBatch()
                 refreshDerivativeTables(doc, connection, false)
                 if (updateDepMinMax) {
-                    for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection)) {
-                        updateMinMaxDepModified((String) depender.get(0), connection)
+                    for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection, JsonLd.NON_DEPENDANT_RELATIONS)) {
+                        updateMaxDepModified((String) depender.get(0), connection)
                         removeEmbellishedDocument((String) depender.get(0), connection)
                     }
                 }
@@ -1221,25 +1280,23 @@ class PostgreSQLComponent implements Storage {
         return doc
     }
 
-    Tuple2<Timestamp, Timestamp> getMinMaxModified(List<String> ids) {
+    Timestamp getMaxModified(List<String> ids) {
         Connection connection = null
         PreparedStatement preparedStatement = null
         ResultSet rs = null
         try {
             connection = getConnection()
-            String expandedSql = GET_MINMAX_MODIFIED.replace('?', ids.collect { it -> '?' }.join(','))
+            String expandedSql = GET_MAX_MODIFIED.replace('?', ids.collect { it -> '?' }.join(','))
             preparedStatement = connection.prepareStatement(expandedSql)
             for (int i = 0; i < ids.size(); ++i) {
                 preparedStatement.setString(i+1, ids.get(i))
             }
             rs = preparedStatement.executeQuery()
             if (rs.next()) {
-                Timestamp min = (Timestamp) rs.getObject(1)
-                Timestamp max = (Timestamp) rs.getObject(2)
-                return new Tuple2(min, max)
+                return (Timestamp) rs.getObject(1)
             }
             else
-                return new Tuple2(null, null)
+                return null
         }
         finally {
             close(rs, preparedStatement, connection)
@@ -1331,38 +1388,43 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    List<Tuple2<String, String>> getDependencies(String id) {
+    List<Tuple2<String, String>> getDependencies(String id, List<String> excludeRelations = []) {
         Connection connection = getConnection()
         try {
-            return getDependencyData(id, GET_DEPENDENCIES, connection)
+            return getDependencyData(id, GET_DEPENDENCIES, connection, excludeRelations)
         } finally {
             close(connection)
         }
     }
 
-    List<Tuple2<String, String>> getDependers(String id) {
+    List<Tuple2<String, String>> getDependers(String id, List<String> excludeRelations = []) {
         Connection connection = getConnection()
         try {
-            getDependers(id, connection)
+            getDependers(id, connection, excludeRelations)
         } finally {
             close(connection)
         }
     }
 
-    List<Tuple2<String, String>> getDependers(String id, Connection connection) {
-        return getDependencyData(id, GET_DEPENDERS, connection)
+    List<Tuple2<String, String>> getDependers(String id, Connection connection, List<String> excludeRelations = []) {
+        return getDependencyData(id, GET_DEPENDERS, connection, excludeRelations)
     }
 
-    private static List<Tuple2<String, String>> getDependencyData(String id, String query, Connection connection) {
+    private static List<Tuple2<String, String>> getDependencyData(String id, String query, Connection connection,
+                                                                  List<String> excludeRelations) {
         PreparedStatement preparedStatement = null
         ResultSet rs = null
         try {
+
+            String replacement = "'" + excludeRelations.join("', '") + "'"
+            query = query.replace("€", replacement)
             preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, id)
             rs = preparedStatement.executeQuery()
             List<Tuple2<String, String>> dependencies = []
             while (rs.next()) {
-                dependencies.add( new Tuple2<String, String>(rs.getString(1), rs.getString(2)) )
+                if (rs.getString(2) != null) // The first tuple will be (root, null), which we dont need in the result.
+                    dependencies.add( new Tuple2<String, String>(rs.getString(1), rs.getString(2)) )
             }
             dependencies.sort { it.getFirst() }
             return dependencies
