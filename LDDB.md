@@ -146,14 +146,14 @@ for i, l in enumerate(sys.stdin):
 ### Create Json-shapes with statistics
 
 1. See instructions under "In General" to create a local output stream of bib, auth or hold.
-2. Run the `lddb_json_shape.py` script.
+2. Run the `lddb_json_shape.py` script (using Python 3, ideally PyPy3).
 
 Example for auth collection:
 
 ```bash
 $ psql -h $HOST -Uwhelk -tc "COPY (SELECT data FROM lddb WHERE collection = 'auth' AND deleted = false) TO stdout;" | sed 's/\\\\/\\/g' > stg-lddb-auth.json.lines
 $ zcat stg-lddb-auth.json.lines.gz |  ...
-$ zcat stg-lddb-auth.json.lines.gz | pypy librisxl-tools/scripts/lddb_json_shape.py > shapes-for-your-selection.json
+$ zcat stg-lddb-auth.json.lines.gz | pypy3 librisxl-tools/scripts/lddb_json_shape.py YOUR-OUTPUT-DIRECTORY
 ```
 
 When crunching lots of data, use [PyPy](http://pypy.org/) for speed.
