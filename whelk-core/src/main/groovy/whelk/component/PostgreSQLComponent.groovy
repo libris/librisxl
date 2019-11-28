@@ -302,8 +302,11 @@ class PostgreSQLComponent implements Storage {
                 "FROM $mainTableName " +
                 "WHERE data->'@graph' @> ? " +
                 "OR data->'@graph' @> ?"
+        
+        GET_SYSTEMID_BY_IRI = "SELECT lddb__identifiers.id, lddb.deleted FROM lddb__identifiers "+
+                "JOIN lddb ON lddb__identifiers.id = lddb.id " +
+                "WHERE lddb__identifiers.iri = ? ";
 
-        GET_SYSTEMID_BY_IRI = "SELECT id, deleted FROM $idTableName WHERE iri = ?"
         GET_THING_MAIN_IRI_BY_SYSTEMID = "SELECT iri FROM $idTableName WHERE graphindex = 1 and mainid is true and id = ?"
         GET_DOCUMENT_BY_IRI = "SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
 
