@@ -15,6 +15,7 @@ import whelk.Storage
 import whelk.exception.CancelUpdateException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
+import whelk.exception.LinkValidationException
 import whelk.exception.WhelkException
 import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
@@ -302,7 +303,7 @@ class PostgreSQLComponent implements Storage {
                 "WHERE data->'@graph' @> ? " +
                 "OR data->'@graph' @> ?"
 
-        GET_SYSTEMID_BY_IRI = "SELECT id FROM $idTableName WHERE iri = ?"
+        GET_SYSTEMID_BY_IRI = "SELECT id, deleted FROM $idTableName WHERE iri = ?"
         GET_THING_MAIN_IRI_BY_SYSTEMID = "SELECT iri FROM $idTableName WHERE graphindex = 1 and mainid is true and id = ?"
         GET_DOCUMENT_BY_IRI = "SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
 
@@ -774,6 +775,10 @@ class PostgreSQLComponent implements Storage {
 
                 rs = getSystemId.executeQuery()
                 if (rs.next()) {
+
+                    if (rs.getBoolean(2)) // If deleted==true, then doc refers to a deleted document which is not ok.
+                        throw new LinkValidationException("Record supposedly depends on deleted record: ${rs.getString(1)}, which is not allowed.")
+
                     if (rs.getString(1) != doc.getShortId()) // Exclude A -> A (self-references)
                         dependencies.add([relation, rs.getString(1)] as String[])
                 }
