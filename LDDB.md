@@ -34,8 +34,8 @@ $ psql -h $HOST -U $USER -tc "COPY (SELECT ...) TO STDOUT;" | sed 's/\\\\/\\/g'
 For repetitive processing, consider redirecting the output to a file and processing it locally.
 
 ```bash
-$ psql -h $HOST -Uwhelk -tc "COPY (SELECT data FROM lddb WHERE collection = 'bib' AND deleted = false) TO stdout;" | sed 's/\\\\/\\/g' > stg-lddb-bib.json.lines
-$ cat stg-lddb-bib.json.lines |  ...
+$ psql -h $HOST -Uwhelk -tc "COPY (SELECT data FROM lddb WHERE collection = 'bib' AND deleted = false) TO stdout;" | sed 's/\\\\/\\/g' | gzip > stg-lddb-bib.json.lines.gz
+$ zcat stg-lddb-bib.json.lines.gz |  ...
 ```
 
 ### Using JQ (and AWK)
@@ -65,7 +65,7 @@ $ time psql -h $HOST -Uwhelk -tc "COPY (SELECT data FROM lddb WHERE collection =
 Count all usages of anonymous ("post-coordinated") ComplexSubjects:
 
 ```bash
-$ cat stg-lddb-bib.json.lines |
+$ zcat stg-lddb-bib.json.lines.gz |
     jq '.["@graph"][2].subject[]? | select(.["@type"] == "ComplexSubject") | .prefLabel' |
     awk '{printf "\r%s", NR}'
 
@@ -75,7 +75,7 @@ $ cat stg-lddb-bib.json.lines |
 Find all ISBN values containing punctuation:
 
 ```bash
-$ time cat stg-lddb-bib.json.lines |
+$ time zcat stg-lddb-bib.json.lines.gz |
     jq '.["@graph"][1]?.identifiedBy[]? |
         select(.["@type"] == "ISBN" and .value)? |
         .value | match(".+([^ ] ?[;:,]$|^[;:,])")? |
@@ -93,7 +93,7 @@ $ time cat stg-lddb-bib.json.lines |
 Count the types of `_marcUncompleted` (including none):
 
 ```bash
-$ time cat stg-lddb-bib.json.lines |
+$ time zcat stg-lddb-bib.json.lines.gz |
     jq -c '.["@graph"][]|._marcUncompleted?|type' |
     awk '{a[$0]++; printf "\r"; for (k in a) printf "%s %s; ", a[k], k }'
 
@@ -103,7 +103,7 @@ $ time cat stg-lddb-bib.json.lines |
 Find and count all `_marcUncompleted` patterns (fields and subfields):
 
 ```bash
-$ time cat stg-lddb-bib.json.lines |
+$ time zcat stg-lddb-bib.json.lines.gz |
     jq -c '.["@graph"][] | select(has("_marcUncompleted"))? |
            ._marcUncompleted |
            if type == "object" then [.] else . end |
@@ -152,8 +152,8 @@ Example for auth collection:
 
 ```bash
 $ psql -h $HOST -Uwhelk -tc "COPY (SELECT data FROM lddb WHERE collection = 'auth' AND deleted = false) TO stdout;" | sed 's/\\\\/\\/g' > stg-lddb-auth.json.lines
-$ cat stg-lddb-auth.json.lines |  ...
-$ cat stg-lddb-auth.json.lines | pypy librisxl-tools/scripts/lddb_json_shape.py > shapes-for-your-selection.json
+$ zcat stg-lddb-auth.json.lines.gz |  ...
+$ zcat stg-lddb-auth.json.lines.gz | pypy librisxl-tools/scripts/lddb_json_shape.py > shapes-for-your-selection.json
 ```
 
 When crunching lots of data, use [PyPy](http://pypy.org/) for speed.
