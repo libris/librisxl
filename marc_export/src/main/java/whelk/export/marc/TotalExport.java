@@ -152,7 +152,7 @@ public class TotalExport
         for (String id : ids)
         {
             if (exportedUris.contains(id))
-                return;
+                continue;
             exportedUris.add(id);
             batch.bibUrisToConvert.add(id);
 
