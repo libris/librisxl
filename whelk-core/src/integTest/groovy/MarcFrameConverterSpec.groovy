@@ -144,7 +144,8 @@ class MarcFrameConverterSpec extends Specification {
         when:
         def result = converter.conversion.revert(jsonld)
 
-        def source = fieldSpec.normalized ?: fieldSpec.source
+        def source = fieldSpec.normalized != null ?
+                        fieldSpec.normalized : fieldSpec.source
         def expected = deepcopy(marcSkeletons[marcType])
 
         if (source instanceof List) {

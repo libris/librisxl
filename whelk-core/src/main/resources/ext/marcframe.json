@@ -5126,6 +5126,12 @@
               "subfields": [{"a": "a 54009564"}, {"b": "IGNORED"}]
             }
           },
+          "normalized": {
+            "010": {
+              "ind1": " ", "ind2": " ",
+              "subfields": [{"a": "a 54009564"}]
+            }
+          },
           "result": {
             "mainEntity": {
               "identifiedBy": [
@@ -5146,6 +5152,7 @@
           "source": {"013": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "X"}
           ]}},
+          "normalized": [],
           "result": {"mainEntity": { }}
         }
       ]
