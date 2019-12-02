@@ -127,7 +127,6 @@ class MarcFrameConverterSpec extends Specification {
         fieldSpec << fieldSpecs.findAll { it.source }
     }
 
-    @Requires({ env.mfspec == 'all' })
     def "should revert field spec for #fieldSpec.marcType #fieldSpec.tag (#fieldSpec.name) [#fieldSpec.i]"() {
         given:
         def marcType = fieldSpec.marcType
