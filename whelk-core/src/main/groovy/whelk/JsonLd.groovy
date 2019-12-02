@@ -47,7 +47,7 @@ class JsonLd {
 
     static final List<String> NS_SEPARATORS = ['#', '/', ':']
 
-    static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf']
+    static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf', 'related', 'derivedFrom']
 
     static final Set<String> LD_KEYS
 
