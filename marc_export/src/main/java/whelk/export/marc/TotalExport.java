@@ -109,7 +109,7 @@ public class TotalExport
     private void dump(ExportProfile profile, MarcRecordWriter output)
             throws SQLException, InterruptedException
     {
-        ThreadPool threadPool = new ThreadPool(4 * Runtime.getRuntime().availableProcessors());
+        ThreadPool threadPool = new ThreadPool(Runtime.getRuntime().availableProcessors());
         Batch batch = new Batch(profile, output);
 
         try (Connection connection = getConnection();
