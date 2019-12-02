@@ -266,23 +266,15 @@ class PostgreSQLComponent implements Storage {
         GET_MAX_MODIFIED = "SELECT MAX(modified) from $mainTableName WHERE id IN (?)"
 
         UPDATE_MAX_MODIFIED =
-                "WITH recModified AS ( " +
-                " WITH RECURSIVE deps AS ( " +
-                "  SELECT d1.id " +
-                "  FROM " +
-                "  lddb__dependencies d1 " +
-                "  WHERE d1.id = ? " +
-                "  UNION " +
-                "  SELECT d2.dependsonid " +
-                "  FROM " +
-                "  lddb__dependencies d2 " +
-                "  INNER JOIN deps deps1 ON d2.id = deps1.id AND d2.relation NOT IN (€) " +
-                " ) " +
-                " SELECT lddb.modified FROM deps INNER JOIN lddb on deps.id = lddb.id " +
+                "WITH RECURSIVE deps(i) AS ( " +
+                " VALUES (?, null) " +
                 " UNION " +
-                " SELECT modified FROM lddb WHERE ID = ? " +
+                " SELECT d.dependsonid, d.relation " +
+                " FROM " +
+                " lddb__dependencies d " +
+                " INNER JOIN deps deps1 ON d.id = i AND d.relation NOT IN (€) " +
                 ") " +
-                "UPDATE lddb SET depMaxModified = (SELECT MAX(modified) FROM recModified) WHERE id = ?"
+                "UPDATE lddb SET depMaxModified = (SELECT MAX(modified) FROM deps LEFT JOIN lddb on i = id) WHERE id = ?"
 
         // Queries
         QUERY_LD_API = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
@@ -834,7 +826,6 @@ class PostgreSQLComponent implements Storage {
             preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, id)
             preparedStatement.setString(2, id)
-            preparedStatement.setString(3, id)
             preparedStatement.execute()
         }
         finally {
