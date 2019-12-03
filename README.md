@@ -135,28 +135,30 @@ $ vim secret.properties
     whelk=# \q
     ```
 
-### Setting up Elasticsearch
+### Setting up Elasticsearch and importing test data
 
-TODO: This is now generated! This step can probably be omitted. (See the devops
-repo for details.)
+Check out the devops repository (https://github.com/libris/devops), which is private (ask a team member for access). 
+Put it in the same directory as the librisxl repo. Also make sure the definitions repository (https://github.com/libris/definitions)
+is checked out and placed in the same directory.
 
-Create index and mappings:
+To avoid entering the db user password multiple times, add it to the fabric local development configuration (conf.xl_local). 
+
+Give the postgres user access to your local database by editing: /etc/postgresql/9.X/main/pg_hba.conf, adding the lines:
 
 ```
-$ cd $LIBRISXL
-$ curl -XPOST http://localhost:9200/whelk_dev -d@librisxl-tools/elasticsearch/libris_config.json
+host    all             postgres        127.0.0.1/32            trust
+host    all             postgres        ::1/128                 trust
 ```
 
-**NOTE:** Windows users can install curl by:
+and do`$ service postgresql restart` for the changes to take effect.
+
+Make sure Elasticsearch is running:
+
 ```
-$ choco install curl
+$ service postgresql status
 ```
 
-### Import test data
-
-Check out the Devops repository, which is private (ask a team member for access and put it in the same directory as the 'librisxl' repo):
-
-For *NIX:
+Run the fabric task that sets up a new Elasticsearch index and imports example data:
 ```bash
 $ cd devops
 $ pip install -r requirements.txt
