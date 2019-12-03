@@ -5099,12 +5099,34 @@
       "include": ["idbase"],
       "resourceType": "LCCN",
       "$a": {"property": "value"},
-      "$b": null,
+      "$b": {"ignored": true},
       "$z": {"addProperty": "marc:hiddenValue"},
       "$8": {"property": "marc:groupid"},
       "_spec": [
         {
           "source": {
+            "010": {
+              "ind1": " ", "ind2": " ",
+              "subfields": [{"a": "a 54009564"}]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {"@type": "LCCN", "value": "a 54009564"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "ingore $b",
+          "source": {
+            "010": {
+              "ind1": " ", "ind2": " ",
+              "subfields": [{"a": "a 54009564"}, {"b": "IGNORED"}]
+            }
+          },
+          "normalized": {
             "010": {
               "ind1": " ", "ind2": " ",
               "subfields": [{"a": "a 54009564"}]
@@ -5124,7 +5146,16 @@
     "013": {
       "NOTE:LC": "013 - PATENT CONTROL INFORMATION (R) nac",
       "ignored": true,
-      "NOTE:record-count": 0
+      "NOTE:record-count": 0,
+      "_spec": [
+        {
+          "source": {"013": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "X"}
+          ]}},
+          "normalized": [],
+          "result": {"mainEntity": { }}
+        }
+      ]
     },
 
     "015": {

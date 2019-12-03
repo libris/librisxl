@@ -127,7 +127,6 @@ class MarcFrameConverterSpec extends Specification {
         fieldSpec << fieldSpecs.findAll { it.source }
     }
 
-    @Requires({ env.mfspec == 'all' })
     def "should revert field spec for #fieldSpec.marcType #fieldSpec.tag (#fieldSpec.name) [#fieldSpec.i]"() {
         given:
         def marcType = fieldSpec.marcType
@@ -144,7 +143,8 @@ class MarcFrameConverterSpec extends Specification {
         when:
         def result = converter.conversion.revert(jsonld)
 
-        def source = fieldSpec.normalized ?: fieldSpec.source
+        def source = fieldSpec.normalized != null ?
+                        fieldSpec.normalized : fieldSpec.source
         def expected = deepcopy(marcSkeletons[marcType])
 
         if (source instanceof List) {
