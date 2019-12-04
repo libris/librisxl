@@ -26,8 +26,6 @@ class Relations {
         def s =  whelk.getRelations().getByReverse(SKÖN, ['broadMatch', 'broader'])
         assert FANTASY in s
         assert !(URBAN_FANTASY in s)
-
-        println("OK")
     }
 
 }

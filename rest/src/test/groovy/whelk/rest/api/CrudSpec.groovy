@@ -1073,7 +1073,7 @@ class CrudSpec extends Specification {
         storage.createDocument(_, _) >> {
             return null
         }
-        storage.getDependers(_) >> {
+        storage.followDependers(_) >> {
             []
         }
         when:
@@ -3275,7 +3275,7 @@ class CrudSpec extends Specification {
         storage.remove(_, _) >> {
           return true
         }
-        storage.getDependers(_) >> {
+        storage.followDependers(_) >> {
             []
         }
         when:
@@ -3529,7 +3529,7 @@ class CrudSpec extends Specification {
         storage.remove(_, _) >> {
             return true
         }
-        storage.getDependers(_) >> {
+        storage.followDependers(_) >> {
             []
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -3574,7 +3574,7 @@ class CrudSpec extends Specification {
         storage.remove(_, _) >> {
             return true
         }
-        storage.getDependers(_) >> {
+        storage.followDependers(_) >> {
             []
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -3619,7 +3619,7 @@ class CrudSpec extends Specification {
         storage.remove(_, _) >> {
             return true
         }
-        storage.getDependers(_) >> {
+        storage.followDependers(_) >> {
             []
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -3757,7 +3757,7 @@ class CrudSpec extends Specification {
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
         }
-        storage.getDependers(_) >> {
+        storage.followDependers(_) >> {
             []
         }
         when:
@@ -3838,7 +3838,7 @@ class CrudSpec extends Specification {
         storage.remove(_, _) >> {
             return true
         }
-        storage.getDependers(_) >> {
+        storage.followDependers(_) >> {
             []
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {

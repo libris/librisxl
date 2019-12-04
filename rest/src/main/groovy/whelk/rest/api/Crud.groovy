@@ -914,7 +914,7 @@ class Crud extends HttpServlet {
                         HttpServletResponse.SC_GONE.toString()).inc()
                 response.sendError(HttpServletResponse.SC_GONE,
                         "Document has been deleted.")
-            } else if(!whelk.storage.getDependers(doc.getShortId()).isEmpty()) {
+            } else if(!whelk.storage.followDependers(doc.getShortId()).isEmpty()) {
                 failedRequests.labels("DELETE", request.getRequestURI(),
                         HttpServletResponse.SC_FORBIDDEN.toString()).inc()
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "This record may not be deleted, because it is referenced by other records.")
