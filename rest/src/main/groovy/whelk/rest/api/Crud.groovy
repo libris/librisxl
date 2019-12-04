@@ -715,7 +715,7 @@ class Crud extends HttpServlet {
                 }
                 else {
                     log.debug("Saving NEW document ("+ doc.getId() +")")
-                    doc = whelk.createDocument(doc, "xl", activeSigel, collection, false)
+                    whelk.createDocument(doc, "xl", activeSigel, collection, false)
                 }
 
                 log.debug("Saving document (${doc.getShortId()})")

@@ -277,7 +277,7 @@ class Whelk implements Storage {
     /**
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
-    Document createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
 
         boolean detectCollisionsOnTypedIDs = false
         List<Tuple2<String, String>> collidingIDs = getIdCollisions(document, detectCollisionsOnTypedIDs)
@@ -286,7 +286,8 @@ class Whelk implements Storage {
             throw new StorageCreateFailedException(document.getShortId(), "Document considered a duplicate of : " + collidingIDs)
         }
 
-        if (storage.createDocument(document, changedIn, changedBy, collection, deleted)) {
+        boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
+        if (success) {
             if (collection == "auth" || collection == "definitions")
                 putInAuthCache(document)
             if (elastic) {
@@ -294,7 +295,7 @@ class Whelk implements Storage {
                 reindexDependers(document)
             }
         }
-        return document
+        return success
     }
 
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
