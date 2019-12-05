@@ -7,6 +7,7 @@ import whelk.Document
 import whelk.IdGenerator
 import whelk.Storage
 import whelk.Whelk
+import whelk.exception.WhelkException
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.util.LegacyIntegrationTools
@@ -464,8 +465,9 @@ class WhelkTool {
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
             Storage component = skipIndex ? whelk.storage : whelk
-            component.createDocument(doc, changedIn, scriptJobUri,
-                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false)
+            if (!component.createDocument(doc, changedIn, scriptJobUri,
+                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false))
+                throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
     }
 

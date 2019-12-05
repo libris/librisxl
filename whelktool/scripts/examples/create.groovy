@@ -7,7 +7,8 @@ def data =
                 [
                         "@id": "TEMPID#it",
                         "@type": "Item",
-                        "heldBy": "https://libris.kb.se/library/Utb1",
+                        "heldBy": ["@id": "https://libris.kb.se/library/Utb1"],
+                        "itemOf": ["@id": "http://kblocalhost.kb.se:5000/wf7mw1h74fkt88r#it"]
                 ]
         ]]
 
