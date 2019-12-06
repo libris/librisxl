@@ -291,6 +291,111 @@ class JsonLdSpec extends Specification {
         props == ['notation', 'label', 'labelByLang', 'note']
     }
 
+    def "should handle lens inheritance"() {
+        given:
+        Map displayData = [
+                "lensGroups":
+                        ["chips":
+                                 ["lenses": [
+                                         "X": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "X-chips",
+                                               "fresnel:extends": ["@id": "Y-chips"],
+                                               "showProperties" : ["x1", "x2", "fresnel:super", "x3"]
+                                         ],
+                                         "Y": ["@type"         : "fresnel:Lens",
+                                               "@id"           : "Y-chips",
+                                               "showProperties": ["y1", "y2",]
+                                         ],
+                                         "Q": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "Q-chips",
+                                               "fresnel:extends": ["@id": "P-cards"],
+                                               "showProperties" : []
+                                         ],
+                                 ]],
+                         "cards":
+                                 ["lenses": [
+                                         "Z": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "Z-cards",
+                                               "fresnel:extends": ["@id": "X-chips"],
+                                               "showProperties" : ["z1", "z2", "z3"]
+                                         ],
+                                         "P": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "P-cards",
+                                               "fresnel:extends": ["@id": "Y-chips"],
+                                               "showProperties" : ["p", "fresnel:super",]
+                                         ],
+                                 ]]]]
+
+
+        def ld = new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA)
+        def groups = ld.displayData.lensGroups
+
+        expect:
+        ld.getLensFor(thing, groups[group])['showProperties'] == props
+
+        where:
+        thing          | group   || props
+        ["@type": "X"] | 'chips' || ['x1', 'x2', 'y1', 'y2', 'x3']
+        ["@type": "Y"] | 'chips' || ['y1', 'y2']
+        ["@type": "Z"] | 'cards' || ['x1', 'x2', 'y1', 'y2', 'x3', 'z1', 'z2', 'z3']
+        ["@type": "P"] | 'cards' || ['p', 'y1', 'y2']
+        ["@type": "Q"] | 'chips' || ['p', 'y1', 'y2']
+    }
+
+    def "should handle lens inheritance loops"() {
+        given:
+        Map displayData = [
+                "lensGroups":
+                        ["chips":
+                                 ["lenses": [
+                                         "X": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "X-chips",
+                                               "fresnel:extends": ["@id": "Y-chips"],
+                                               "showProperties" : ["x"]
+                                         ],
+                                         "Y": ["@type"         : "fresnel:Lens",
+                                               "@id"           : "Y-chips",
+                                               "fresnel:extends": ["@id": "Z-chips"],
+                                               "showProperties": ["y"]
+                                         ],
+                                         "Z": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "Z-chips",
+                                               "fresnel:extends": ["@id": "X-chips"],
+                                               "showProperties" : ["z"]
+                                         ],
+                                 ]]
+                        ]]
+
+
+        when:
+        new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA)
+
+        then:
+        thrown JsonLd.FresnelException
+    }
+
+    def "should handle bad fresnel:extends id"() {
+        given:
+        Map displayData = [
+                "lensGroups":
+                        ["chips":
+                                 ["lenses": [
+                                         "X": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "X-chips",
+                                               "fresnel:extends": ["@id": "Y-chips"],
+                                               "showProperties" : ["x"]
+                                         ]
+                                 ]]
+                        ]]
+
+
+        when:
+        new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA)
+
+        then:
+        thrown JsonLd.FresnelException
+    }
+
     def "get term key from URI"() {
         given:
         def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)

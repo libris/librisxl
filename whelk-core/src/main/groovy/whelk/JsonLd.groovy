@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.exception.FramingException
+import whelk.exception.WhelkRuntimeException
 
 import java.util.regex.Matcher
 
@@ -135,6 +136,7 @@ class JsonLd {
         buildLangContainerAliasMap()
 
         expandAliasesInLensProperties()
+        expandInheritedLensProperties()
     }
 
     private void setupPrefixes() {
@@ -171,6 +173,45 @@ class JsonLd {
                     return alias ? [it, alias] : it
                 }.flatten()
             }
+        }
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    expandInheritedLensProperties() {
+        def lensesById = [:]
+        displayData['lensGroups']?.values()?.each { group ->
+            group.get('lenses')?.values()?.each { lens ->
+                lensesById[lens['@id']] = lens
+            }
+        }
+
+        def flattenedProps
+        flattenedProps = { lens, hierarchy=[] ->
+            if (hierarchy.contains(lens['@id'])) {
+                throw new FresnelException('fresnel:extends inheritance loop: ' + hierarchy.toString())
+            }
+
+            String superLensId = lens.get('fresnel:extends')?.get('@id')
+            if (!superLensId) {
+                return lens['showProperties']
+            }
+            else {
+                if (!lensesById[superLensId]) {
+                    throw new FresnelException("Super lens not found: ${lens['@id']} fresnel:extends ${superLensId}")
+                }
+
+                def superProps = flattenedProps(lensesById[superLensId], hierarchy << lens['@id'])
+                def props = lens['showProperties']
+                if(!props.contains('fresnel:super')) {
+                    props = ['fresnel:super'] + props
+                }
+                return props.collect { it == 'fresnel:super' ? superProps : it }.flatten()
+            }
+        }
+
+        lensesById.values().each { Map lens ->
+            lens.put('showProperties', flattenedProps(lens))
+            lens.remove('fresnel:extends')
         }
     }
 
@@ -1086,4 +1127,9 @@ class JsonLd {
         }
     }
 
+    class FresnelException extends WhelkRuntimeException {
+        FresnelException(String msg) {
+            super(msg);
+        }
+    }
 }
