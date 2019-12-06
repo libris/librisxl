@@ -36,7 +36,7 @@ class PostgreSQLComponentSpec extends Specification {
             }
 
             @Override
-            List<String> getDependers(String id) {
+            List<String> followDependers(String id) {
                 return []
             }
         }
