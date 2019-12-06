@@ -97,8 +97,11 @@ dependencies {
     // Caching
     compile 'org.apache.commons:commons-collections4:4.1'
 
-    // Integration
+    // metrics
+    compile "io.prometheus:simpleclient:${prometheusVersion}"
+    compile "io.prometheus:simpleclient_guava:${prometheusVersion}"
 
+    // Integration
     compile "org.apache.commons:commons-lang3:3.3.2"
     compile 'com.vividsolutions:jts:1.13'
     compile 'org.postgresql:postgresql:9.4.1212.jre7'
