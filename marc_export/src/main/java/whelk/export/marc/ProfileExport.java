@@ -138,7 +138,7 @@ public class ProfileExport
         }
         else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
         {
-            List<Tuple2<String, String>> dependers = m_whelk.getStorage().getDependers(id, JsonLd.getNON_DEPENDANT_RELATIONS());
+            List<Tuple2<String, String>> dependers = m_whelk.getStorage().followDependers(id, JsonLd.getNON_DEPENDANT_RELATIONS());
             for (Tuple2 depender : dependers)
             {
                 String dependerId = (String) depender.getFirst();

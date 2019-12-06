@@ -61,15 +61,15 @@ class PostgreSQLComponent implements Storage {
     protected String UPDATE_DOCUMENT, INSERT_DOCUMENT,
                      INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_EMBELLISHED_DOCUMENT,
                      GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS,
-                     GET_DOCUMENT_VERSION_BY_MAIN_ID,
-                     GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID,
-                     GET_DOCUMENT_BY_SAMEAS_ID, LOAD_ALL_DOCUMENTS,
-                     LOAD_ALL_DOCUMENTS_BY_COLLECTION,
-                     DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT,
-                     INSERT_IDENTIFIERS,
-                     LOAD_RECORD_IDENTIFIERS, LOAD_THING_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
-                     GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, GET_DEPENDENCIES, GET_DEPENDERS,
-                     GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE, GET_COLLECTION_BY_SYSTEM_ID
+                                           GET_DOCUMENT_VERSION_BY_MAIN_ID,
+                                           GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID,
+                                           GET_DOCUMENT_BY_SAMEAS_ID, LOAD_ALL_DOCUMENTS,
+                                           LOAD_ALL_DOCUMENTS_BY_COLLECTION,
+                                           DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT,
+                                           INSERT_IDENTIFIERS,
+                                           LOAD_RECORD_IDENTIFIERS, LOAD_THING_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
+                                           GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, FOLLOW_DEPENDENCIES, FOLLOW_DEPENDERS,
+                                           GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE, GET_COLLECTION_BY_SYSTEM_ID
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String GET_DEPENDENCIES_OF_TYPE, GET_DEPENDERS_OF_TYPE
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
@@ -219,7 +219,7 @@ class PostgreSQLComponent implements Storage {
                 "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.iri = ?"
         GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE iri = 'https://id.kb.se/vocab/context')"
 
-        GET_DEPENDENCIES =
+        FOLLOW_DEPENDENCIES =
                 "WITH RECURSIVE deps(i) AS ( " +
                 " VALUES (?, null) " +
                 " UNION " +
@@ -230,7 +230,7 @@ class PostgreSQLComponent implements Storage {
                 ") " +
                 "SELECT * FROM deps"
 
-        GET_DEPENDERS =
+        FOLLOW_DEPENDERS =
                 "WITH RECURSIVE deps(i) AS ( " +
                 " VALUES (?, null) " +
                 " UNION " +
@@ -240,28 +240,9 @@ class PostgreSQLComponent implements Storage {
                 " INNER JOIN deps deps1 ON d.dependsonid = i AND d.relation NOT IN (€) " +
                 ") " +
                 "SELECT * FROM deps"
-        
-        GET_DEPENDERS_OF_TYPE =
-                "WITH RECURSIVE deps(i) AS ( " +
-                " VALUES (?, null) " +
-                " UNION " +
-                " SELECT d.id, d.relation " +
-                " FROM " +
-                "  lddb__dependencies d " +
-                " INNER JOIN deps deps1 ON d.dependsonid = i AND d.relation = ? " +
-                ") " +
-                "SELECT * FROM deps"
 
-        GET_DEPENDENCIES_OF_TYPE =
-                "WITH RECURSIVE deps(i) AS ( " +
-                " VALUES (?, null) " +
-                " UNION " +
-                " SELECT d.dependsonid, d.relation " +
-                " FROM " +
-                "  lddb__dependencies d " +
-                " INNER JOIN deps deps1 ON d.id = i AND d.relation = ? " +
-                ") " +
-                "SELECT * FROM deps"
+        GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
+        GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
 
         GET_MAX_MODIFIED = "SELECT MAX(modified) from $mainTableName WHERE id IN (?)"
 
@@ -407,7 +388,7 @@ class PostgreSQLComponent implements Storage {
 
             saveVersion(doc, connection, now, now, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
-            for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection, JsonLd.NON_DEPENDANT_RELATIONS)) {
+            for (Tuple2<String, String> depender : followDependers(doc.getShortId(), connection, JsonLd.NON_DEPENDANT_RELATIONS)) {
                 updateMaxDepModified((String) depender.get(0), connection)
             }
 
@@ -521,7 +502,7 @@ class PostgreSQLComponent implements Storage {
             refreshDerivativeTables(remainingDocument, connection, false)
 
             // Update dependers on the remaining record
-            List<Tuple2<String, String>> dependers = getDependers(remainingDocument.getShortId(), connection, JsonLd.NON_DEPENDANT_RELATIONS)
+            List<Tuple2<String, String>> dependers = followDependers(remainingDocument.getShortId(), connection, JsonLd.NON_DEPENDANT_RELATIONS)
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
                 updateMaxDepModified((String) dependerShortId, connection)
@@ -549,7 +530,7 @@ class PostgreSQLComponent implements Storage {
             saveDependencies(disappearingDocument, connection)
 
             // Update dependers on the disappearing record
-            dependers = getDependers(disappearingSystemID, connection, JsonLd.NON_DEPENDANT_RELATIONS)
+            dependers = followDependers(disappearingSystemID, connection, JsonLd.NON_DEPENDANT_RELATIONS)
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
                 removeEmbellishedDocument(dependerShortId, connection)
@@ -672,7 +653,7 @@ class PostgreSQLComponent implements Storage {
     void refreshDependers(String id) {
         Connection connection = getConnection()
         connection.setAutoCommit(false)
-        List<Tuple2<String, String>> dependers = getDependers(id, connection, JsonLd.NON_DEPENDANT_RELATIONS)
+        List<Tuple2<String, String>> dependers = followDependers(id, connection, JsonLd.NON_DEPENDANT_RELATIONS)
         try {
             for (Tuple2<String, String> depender : dependers) {
                 updateMaxDepModified((String) depender.get(0), connection)
@@ -743,7 +724,7 @@ class PostgreSQLComponent implements Storage {
     /**
      * Given a document, look up all it's dependencies (links/references) and return a list of those references that
      * have Libris system IDs (fnrgls), in String[2] form. First element is the relation and second is the link.
-     * You were probably looking for getDependencies() which is much more efficient
+     * You were probably looking for followDependencies() which is much more efficient
      * for a document that is already saved in lddb!
      */
     List<String[]> calculateDependenciesSystemIDs(Document doc) {
@@ -970,7 +951,7 @@ class PostgreSQLComponent implements Storage {
                 batch.addBatch()
                 refreshDerivativeTables(doc, connection, false)
                 if (updateDepMinMax) {
-                    for (Tuple2<String, String> depender : getDependers(doc.getShortId(), connection, JsonLd.NON_DEPENDANT_RELATIONS)) {
+                    for (Tuple2<String, String> depender : followDependers(doc.getShortId(), connection, JsonLd.NON_DEPENDANT_RELATIONS)) {
                         updateMaxDepModified((String) depender.get(0), connection)
                         removeEmbellishedDocument((String) depender.get(0), connection)
                     }
@@ -1387,30 +1368,30 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    List<Tuple2<String, String>> getDependencies(String id, List<String> excludeRelations = []) {
+    List<Tuple2<String, String>> followDependencies(String id, List<String> excludeRelations = []) {
         Connection connection = getConnection()
         try {
-            return getDependencyData(id, GET_DEPENDENCIES, connection, excludeRelations)
+            return followDependencyData(id, FOLLOW_DEPENDENCIES, connection, excludeRelations)
         } finally {
             close(connection)
         }
     }
 
-    List<Tuple2<String, String>> getDependers(String id, List<String> excludeRelations = []) {
+    List<Tuple2<String, String>> followDependers(String id, List<String> excludeRelations = []) {
         Connection connection = getConnection()
         try {
-            getDependers(id, connection, excludeRelations)
+            followDependers(id, connection, excludeRelations)
         } finally {
             close(connection)
         }
     }
 
-    List<Tuple2<String, String>> getDependers(String id, Connection connection, List<String> excludeRelations = []) {
-        return getDependencyData(id, GET_DEPENDERS, connection, excludeRelations)
+    List<Tuple2<String, String>> followDependers(String id, Connection connection, List<String> excludeRelations = []) {
+        return followDependencyData(id, FOLLOW_DEPENDERS, connection, excludeRelations)
     }
 
-    private static List<Tuple2<String, String>> getDependencyData(String id, String query, Connection connection,
-                                                                  List<String> excludeRelations) {
+    private static List<Tuple2<String, String>> followDependencyData(String id, String query, Connection connection,
+                                                                     List<String> excludeRelations) {
         PreparedStatement preparedStatement = null
         ResultSet rs = null
         try {
@@ -1788,7 +1769,7 @@ class PostgreSQLComponent implements Storage {
 
     void remove(String identifier, String changedIn, String changedBy) {
         if (versioning) {
-            if(!getDependers(identifier).isEmpty())
+            if(!followDependers(identifier).isEmpty())
                 throw new RuntimeException("Deleting depended upon records is not allowed.")
 
             log.debug("Marking document with ID ${identifier} as deleted.")
