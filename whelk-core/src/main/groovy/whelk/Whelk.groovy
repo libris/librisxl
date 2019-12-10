@@ -391,10 +391,10 @@ class Whelk implements Storage {
         jsonld.embellish(document.data, referencedData2, filterOutNonChipTerms)
     }
 
-    List<String> findIdsLinkingTo(String id) {
+    List<String> findIdsLinkingTo(String idOrIri) {
         return storage
-                .followDependers(tryGetSystemId(id))
-                .collect { it.first }
+                .getDependers(tryGetSystemId(idOrIri))
+                .collect()
     }
 
     private String tryGetSystemId(String id) {
