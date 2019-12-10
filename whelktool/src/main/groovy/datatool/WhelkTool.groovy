@@ -717,10 +717,6 @@ class Counter {
         return (System.currentTimeMillis() - startTime) / 1000
     }
 
-    void countCreated() {
-        createdCount.incrementAndGet()
-    }
-
     void countNewSaved() {
         newSavedCount.incrementAndGet()
     }
