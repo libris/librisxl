@@ -19,6 +19,8 @@ import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import org.apache.http.util.EntityUtils
 import org.codehaus.jackson.map.ObjectMapper
+import se.kb.libris.utils.isbn.Isbn
+import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
@@ -236,6 +238,7 @@ class ElasticSearch {
         boolean addSearchKey = true
         copy.data['@graph'] = copy.data['@graph'].collect { whelk.jsonld.toCard(it, chipsify, addSearchKey) }
 
+        setComputedProperties(copy)
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = document.getThingIdentifiers()
         if (thingIds.isEmpty()) {
@@ -248,6 +251,19 @@ class ElasticSearch {
         log.trace("Framed data: ${framed}")
 
         return framed
+    }
+
+    private static void setComputedProperties(Document doc) {
+        List<String> isbnValues = doc.getIsbnValues()
+
+        if (isbnValues.size() == 1) {
+            Isbn isbn = IsbnParser.parse(isbnValues.first())
+
+            def isbnOtherType = isbn.getType() == Isbn.ISBN10 ? Isbn.ISBN13 : Isbn.ISBN10
+
+            Isbn isbnOther = isbn.convert(isbnOtherType)
+            doc.addTypedThingIdentifier('ISBN', isbnOther.toString())
+        }
     }
 
     void embellish(Whelk whelk, Document document, Document copy) {
