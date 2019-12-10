@@ -4,10 +4,13 @@ import com.google.common.util.concurrent.MoreExecutors
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
+import whelk.IdGenerator
 import whelk.Storage
 import whelk.Whelk
+import whelk.exception.WhelkException
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
+import whelk.util.LegacyIntegrationTools
 
 import javax.script.Bindings
 import javax.script.Compilable
@@ -48,6 +51,8 @@ class WhelkTool {
     PrintWriter mainLog
     PrintWriter errorLog
     Map<String, PrintWriter> reports = [:]
+
+    Counter counter = new Counter()
 
     boolean skipIndex
     boolean dryRun
@@ -124,6 +129,10 @@ class WhelkTool {
         }
         doSelectBySqlWhere("id IN ($idItems) AND deleted = false", process,
                 batchSize)
+    }
+
+    DocumentItem create(Map data) {
+        return new DocumentItem(number: counter.createdCount, doc: new Document(data), whelk: whelk)
     }
 
     Map<String, String> findShortIdsForUris(Collection uris) {
@@ -204,14 +213,19 @@ class WhelkTool {
         select(whelk.storage.loadAll(collection), process, batchSize)
     }
 
+    void selectFromIterable(Iterable<DocumentItem> docs, Closure process,
+                            int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
+        if (!silent)
+            log "Processing from in-memory collection: ${docs.size()} items."
+        select(docs.collect { it -> it.doc }, process, batchSize)
+    }
+
     private void select(Iterable<Document> selection, Closure process,
             int batchSize = DEFAULT_BATCH_SIZE) {
         if (errorDetected) {
             log "Error detected, refusing further processing."
             return
         }
-
-        def counter = new Counter()
 
         int batchCount = 0
         Batch batch = new Batch(number: ++batchCount)
@@ -365,9 +379,12 @@ class WhelkTool {
                 if (item.doDelete) {
                     doDeletion(item)
                     counter.countDeleted()
-                } else {
+                } else if (item.existsInStorage) {
                     doModification(item)
                     counter.countModified()
+                } else {
+                    doSaveNew(item)
+                    counter.countNewSaved()
                 }
             } catch (Exception err) {
                 if (item.onError) {
@@ -440,6 +457,20 @@ class WhelkTool {
         }
     }
 
+    private void doSaveNew(DocumentItem item) {
+        Document doc = item.doc
+        doc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
+        doc.setControlNumber(doc.getShortId())
+        doc.setGenerationDate(new Date())
+        doc.setGenerationProcess(scriptJobUri)
+        if (!dryRun) {
+            Storage component = skipIndex ? whelk.storage : whelk
+            if (!component.createDocument(doc, changedIn, scriptJobUri,
+                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false))
+                throw new WhelkException("Failed to save a new document. See general whelk log for details.")
+        }
+    }
+
     private boolean confirmNextStep(String inJsonStr, Document doc) {
         new File(reportsDir, "IN.jsonld").setText(inJsonStr, 'UTF-8')
         new File(reportsDir, "OUT.jsonld").withWriter {
@@ -506,6 +537,8 @@ class WhelkTool {
         bindings.put("selectByCollection", this.&selectByCollection)
         bindings.put("selectByIds", this.&selectByIds)
         bindings.put("selectBySqlWhere", this.&selectBySqlWhere)
+        bindings.put("selectFromIterable", this.&selectFromIterable)
+        bindings.put("create", this.&create)
         bindings.put("queryIds", this.&queryIds)
         bindings.put("queryDocs", this.&queryDocs)
         return bindings
@@ -610,6 +643,7 @@ class DocumentItem {
     private boolean needsSaving = false
     private boolean doDelete = false
     private boolean loud = false
+    private boolean existsInStorage = false
     private String restoreToTime = null
     Closure onError = null
 
@@ -664,6 +698,8 @@ class Batch {
 class Counter {
     long startTime = System.currentTimeMillis()
     long lastSummary = startTime
+    AtomicInteger createdCount = new AtomicInteger()
+    AtomicInteger newSavedCount = new AtomicInteger()
     AtomicInteger readCount = new AtomicInteger()
     AtomicInteger processedCount = new AtomicInteger()
     AtomicInteger modifiedCount = new AtomicInteger()
@@ -674,11 +710,15 @@ class Counter {
     String getSummary() {
         lastSummary = System.currentTimeMillis()
         double docsPerSec = processedCount.get() / getElapsedSeconds()
-        "read: ${readCount.get()}, processed: ${processedCount.get()}, modified: ${modifiedCount.get()}, deleted: ${deleteCount.get()} (at ${docsPerSec.round(2)} docs/s)"
+        "read: ${readCount.get()}, processed: ${processedCount.get()}, modified: ${modifiedCount.get()}, deleted: ${deleteCount.get()}, new saved: ${newSavedCount.get()} (at ${docsPerSec.round(2)} docs/s)"
     }
 
     double getElapsedSeconds() {
         return (System.currentTimeMillis() - startTime) / 1000
+    }
+
+    void countNewSaved() {
+        newSavedCount.incrementAndGet()
     }
 
     void countRead() {
