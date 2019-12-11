@@ -2,6 +2,7 @@ apply plugin: 'groovy'
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'jacoco'
+apply plugin: 'nebula.lint'
 
 archivesBaseName = "xlcore"
 
