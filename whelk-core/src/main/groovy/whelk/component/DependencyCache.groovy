@@ -20,6 +20,8 @@ class DependencyCache {
     private static final int CACHE_SIZE = 10_000
     private static final int REFRESH_INTERVAL_MINUTES = 5
 
+    private static final CacheMetricsCollector cacheMetrics = new CacheMetricsCollector().register()
+
     PostgreSQLComponent storage
 
     private Executor cacheRefresher = Executors.newSingleThreadExecutor(
@@ -40,7 +42,6 @@ class DependencyCache {
     DependencyCache(PostgreSQLComponent storage) {
         this.storage = storage
 
-        CacheMetricsCollector cacheMetrics = new CacheMetricsCollector().register()
         cacheMetrics.addCache('dependersCache', dependersCache)
         cacheMetrics.addCache('dependencyCache', dependenciesCache)
     }
