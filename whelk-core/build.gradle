@@ -82,18 +82,21 @@ dependencies {
 
     // Common tools
     compile "com.google.guava:guava:16.0.1"
+    compile "io.github.resilience4j:resilience4j-circuitbreaker:${resilience4jVersion}"
+    compile "io.github.resilience4j:resilience4j-prometheus:${resilience4jVersion}"
+    compile "io.github.resilience4j:resilience4j-retry:${resilience4jVersion}"
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
     compile "stax:stax-api:1.0.1"
     compile 'com.damnhandy:handy-uri-templates:2.0.4'
     compile 'com.zaxxer:HikariCP:3.4.1'
     compile 'commons-codec:commons-codec:1.7'
     compile 'commons-io:commons-io:2.4'
-    compile 'org.codehaus.groovy:groovy:2.5.4'
-    compile 'org.codehaus.groovy:groovy-json:2.5.4'
-    compile 'org.codehaus.groovy:groovy-xml:2.5.4'
     compile 'org.apache.httpcomponents:httpclient:4.2.6'
     compile 'org.apache.httpcomponents:httpcore:4.2.5'
     compile 'org.apache.jena:jena-core:3.0.1'
+    compile 'org.codehaus.groovy:groovy-json:2.5.4'
+    compile 'org.codehaus.groovy:groovy-xml:2.5.4'
+    compile 'org.codehaus.groovy:groovy:2.5.4'
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
     compile 'xerces:xercesImpl:2.11.0' //KP
 
