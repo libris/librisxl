@@ -43,6 +43,7 @@ Using as template (after newly created Item):
  */
 
 File bibIds = new File(scriptDir, 'ths_deduped_iris')
+PrintWriter failedHoldIDs = getReportWriter("failed-holdIDs")
 
 def holdList = []
 
@@ -75,5 +76,7 @@ selectByIds(bibIds.readLines()) { bib ->
 }
 
 selectFromIterable(holdList, { newlyCreatedItem ->
-    newlyCreatedItem.scheduleSave()
+    newlyCreatedItem.scheduleSave(onError: { e ->
+        failedHoldIDs.println("Failed to save ${newlyCreatedItem.doc.shortId} due to: $e")
+    })
 })
