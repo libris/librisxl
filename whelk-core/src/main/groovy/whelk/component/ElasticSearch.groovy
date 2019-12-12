@@ -3,21 +3,6 @@ package whelk.component
 import groovy.json.JsonOutput
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.codec.binary.Base64
-import org.apache.http.HttpEntity
-import org.apache.http.HttpRequest
-import org.apache.http.HttpResponse
-import org.apache.http.client.HttpClient
-import org.apache.http.client.methods.HttpGet
-import org.apache.http.client.methods.HttpPost
-import org.apache.http.client.methods.HttpPut
-import org.apache.http.client.methods.HttpRequestBase
-import org.apache.http.entity.ContentType
-import org.apache.http.entity.StringEntity
-import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.impl.conn.PoolingClientConnectionManager
-import org.apache.http.params.HttpConnectionParams
-import org.apache.http.params.HttpParams
-import org.apache.http.util.EntityUtils
 import org.codehaus.jackson.map.ObjectMapper
 import se.kb.libris.utils.isbn.ConvertException
 import se.kb.libris.utils.isbn.Isbn
@@ -25,28 +10,18 @@ import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
-import whelk.exception.WhelkRuntimeException
 
-import java.util.concurrent.LinkedBlockingDeque
-import java.util.concurrent.locks.ReentrantLock
+import java.util.concurrent.LinkedBlockingQueue
 
 @Log
 class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
-    static final int MAX_CONNECTIONS_PER_HOST = 12
-    static final int CONNECTION_POOL_SIZE = 30
-    static final int TIMEOUT_MS = 40 * 1000
-    static final int MAX_BACKOFF = 1024
-
-    PoolingClientConnectionManager cm
-    HttpClient httpClient
+    private static final ObjectMapper mapper = new ObjectMapper()
 
     String defaultIndex = null
     private List<String> elasticHosts
     private String elasticCluster
-    Random random = new Random()
-
-    private static final ObjectMapper mapper = new ObjectMapper()
+    private ElasticClient client
 
     private class RetryEntry {
         Document doc
@@ -54,64 +29,44 @@ class ElasticSearch {
         Whelk whelk
     }
 
-    private final ReentrantLock retryLock = new ReentrantLock()
-    private final LinkedBlockingDeque<RetryEntry> indexingRetryQueue = new LinkedBlockingDeque()
+    private final Queue<RetryEntry> indexingRetryQueue = new LinkedBlockingQueue<>()
 
     ElasticSearch(Properties props) {
-        this.elasticHosts = getElasticHosts(props.getProperty("elasticHost"))
-        this.elasticCluster = props.getProperty("elasticCluster")
-        this.defaultIndex = props.getProperty("elasticIndex")
-        setup()
+        this(
+                props.getProperty("elasticHost"),
+                props.getProperty("elasticCluster"),
+                props.getProperty("elasticIndex")
+        )
     }
 
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex) {
         this.elasticHosts = getElasticHosts(elasticHost)
         this.elasticCluster = elasticCluster
         this.defaultIndex = elasticIndex
-        setup()
+
+        client = ElasticClient.withDefaultHttpClient(elasticHosts)
+
+        new Timer("ElasticIndexingRetries", true).schedule(new TimerTask() {
+            void run() {
+                indexingRetryQueue.size().times {
+                    RetryEntry entry = indexingRetryQueue.poll()
+                    if (entry != null)
+                        index(entry.doc, entry.collection, entry.whelk)
+                }
+            }
+        }, 60*1000, 10*1000)
     }
 
     private List<String> getElasticHosts(String elasticHost) {
         List<String> hosts = []
         for (String host : elasticHost.split(",")) {
+            host = host.trim()
             if (!host.contains(":"))
                 host += ":9200"
             hosts.add("http://" + host)
         }
         return hosts
     }
-
-    private void setup() {
-        cm = new PoolingClientConnectionManager()
-        cm.setMaxTotal(CONNECTION_POOL_SIZE)
-        cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST)
-
-        httpClient = new DefaultHttpClient(cm)
-        HttpParams httpParams = httpClient.getParams();
-        HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT_MS)
-        HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT_MS)
-        // FIXME: upgrade httpClient (and use RequestConfig)- https://issues.apache.org/jira/browse/HTTPCLIENT-1418
-        // httpParams.setParameter(ClientPNames.CONN_MANAGER_TIMEOUT, new Long(TIMEOUT_MS));
-
-
-        new Timer("ElasticIndexingRetrier", true).schedule(new TimerTask() {
-            void run() {
-                if (retryLock.tryLock()) {
-                    try {
-                        for (int i = 0; i < indexingRetryQueue.size(); ++i) {
-                            RetryEntry entry = indexingRetryQueue.poll()
-                            if (entry != null)
-                                index(entry.doc, entry.collection, entry.whelk)
-                        }
-                    } finally {
-                        retryLock.unlock()
-                    }
-                }
-            }
-        }, 60*1000, 10*1000)
-
-        log.info "ElasticSearch component initialized with ${elasticHosts.count{it}} nodes and $CONNECTION_POOL_SIZE workers."
-     }
 
     String getIndexName() { defaultIndex }
 
@@ -120,7 +75,7 @@ class ElasticSearch {
 	 *
 	 */
 	Map getMappings() {
-		Tuple2<Integer, String> res = performRequest('GET', "/${indexName}/_mappings", '')
+		Tuple2<Integer, String> res = client.performRequest('GET', "/${indexName}/_mappings", '')
 		int statusCode = res.first
 		if (statusCode != 200) {
 			log.warn("Got unexpected status code ${statusCode} when getting ES mappings.")
@@ -141,67 +96,6 @@ class ElasticSearch {
         }
     }
 
-    Tuple2<Integer, String> performRequest(String method, String path, String body, String contentType0 = null) {
-        String host = elasticHosts[random.nextInt(elasticHosts.size())]
-        HttpRequest request
-        switch (method) {
-            case 'GET':
-                request = new HttpGet(host + path)
-                break
-            case 'PUT':
-                request = new HttpPut(host + path)
-                request.setEntity(httpEntity(body, contentType0))
-                break;
-            case 'POST':
-                request = new HttpPost(host + path)
-                request.setEntity(httpEntity(body, contentType0))
-                break
-            default:
-                throw new IllegalArgumentException("Bad request method:" + method)
-        }
-
-        try {
-            performRequest(request)
-        }
-        catch (Exception e) {
-            log.warn("Request to ElasticSearch failed: ${e}", e)
-            throw new WhelkRuntimeException(e.getMessage(), e)
-        }
-        finally {
-            request.releaseConnection()
-        }
-    }
-
-    Tuple2<Integer, String> performRequest(HttpRequestBase request) {
-        int backOffTime = 1
-        while (true) {
-            HttpResponse response = httpClient.execute(request)
-            String responseBody = EntityUtils.toString(response.getEntity())
-            Tuple2<Integer, String> result = new Tuple2(response.getStatusLine().getStatusCode(), responseBody)
-
-            request.reset()
-
-            if (result.first == 429) {
-                if (backOffTime > MAX_BACKOFF) {
-                    throw new RuntimeException("Max retries exceeded: HTTP 429 from ElasticSearch")
-                }
-
-                log.info("Bulk indexing request to ElasticSearch was throttled (HTTP 429) waiting $backOffTime seconds before retry.")
-                Thread.sleep(backOffTime * 1000)
-
-                backOffTime *= 2
-            }
-            else {
-                return result
-            }
-        }
-    }
-
-    private HttpEntity httpEntity(String body, String contentType){
-        return new StringEntity(body,
-                contentType ? ContentType.create(contentType) : ContentType.APPLICATION_JSON)
-    }
-
     void bulkIndex(List<Document> docs, String collection, Whelk whelk) {
         assert collection
         if (docs) {
@@ -217,7 +111,7 @@ class ElasticSearch {
                 }
             }.join('')
 
-            String response = performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE).second
+            String response = client.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE).second
             Map responseMap = mapper.readValue(response, Map)
             log.info("Bulk indexed ${docs.count{it}} docs in ${responseMap.took} ms")
         }
@@ -235,7 +129,7 @@ class ElasticSearch {
         // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
         try {
             Map shapedData = getShapeForIndex(doc, whelk, collection)
-            def response = performRequest('PUT',
+            def response = client.performRequest('PUT',
                     "/${indexName}/${collection}" +
                             "/${toElasticId(doc.getShortId())}?pipeline=libris",
                     JsonOutput.toJson(shapedData)).second
@@ -250,7 +144,7 @@ class ElasticSearch {
     void remove(String identifier) {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
-        def response = performRequest('POST',
+        def response = client.performRequest('POST',
                 "/${indexName}/_delete_by_query?conflicts=proceed",
                 JsonOutput.toJson(dsl)).second
         Map responseMap = mapper.readValue(response, Map)
@@ -347,9 +241,14 @@ class ElasticSearch {
         )
     }
 
+    @Override
+    int hashCode() {
+        return super.hashCode()
+    }
+
     private Map performQuery(Map jsonDsl, String queryUrl, Closure<Map> hitCollector) {
         def start = System.currentTimeMillis()
-        Tuple2<Integer, String> response = performRequest('POST',
+        Tuple2<Integer, String> response = client.performRequest('POST',
                 queryUrl,
                 JsonOutput.toJson(jsonDsl))
         int statusCode = response.first
