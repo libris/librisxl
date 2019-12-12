@@ -19,6 +19,7 @@ import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import org.apache.http.util.EntityUtils
 import org.codehaus.jackson.map.ObjectMapper
+import se.kb.libris.utils.isbn.ConvertException
 import se.kb.libris.utils.isbn.Isbn
 import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
@@ -253,6 +254,23 @@ class ElasticSearch {
         return framed
     }
 
+    void embellish(Whelk whelk, Document document, Document copy) {
+        List externalRefs = document.getExternalRefs()
+        List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
+        Map referencedData = [:]
+        Map externalDocs = whelk.bulkLoad(convertedExternalLinks)
+        externalDocs.each { id, doc ->
+            if (id && doc && doc.hasProperty('data')) {
+                referencedData[id] = doc.data
+            }
+            else {
+                log.warn("Could not get external doc ${id} for ${document.getShortId()}, skipping...")
+            }
+        }
+        boolean filterOutNonChipTerms = true // Consider using false here, since cards-in-cards work now.
+        whelk.jsonld.embellish(copy.data, referencedData, filterOutNonChipTerms)
+    }
+
     private static void setComputedProperties(Document doc) {
         List<String> isbnValues = doc.getIsbnValues()
         List<String> isbnHiddenValues = doc.getIsbnHiddenValues()
@@ -273,29 +291,20 @@ class ElasticSearch {
     }
 
     private static List<Isbn> getOtherIsbn(List<String> isbnValues) {
-        return  isbnValues.collect { isbnValue ->
+        return isbnValues.findResults { isbnValue ->
             Isbn isbn = IsbnParser.parse(isbnValue)
-
+            if (isbn == null ) {
+                //Isbnparser.parse() returns null for invalid ISBN forms
+                return null
+            }
             def isbnOtherType = isbn.getType() == Isbn.ISBN10 ? Isbn.ISBN13 : Isbn.ISBN10
-            return isbn.convert(isbnOtherType)
-        }
-    }
-
-    void embellish(Whelk whelk, Document document, Document copy) {
-        List externalRefs = document.getExternalRefs()
-        List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
-        Map referencedData = [:]
-        Map externalDocs = whelk.bulkLoad(convertedExternalLinks)
-        externalDocs.each { id, doc ->
-            if (id && doc && doc.hasProperty('data')) {
-                referencedData[id] = doc.data
-            }
-            else {
-                log.warn("Could not get external doc ${id} for ${document.getShortId()}, skipping...")
+            try {
+                return isbn.convert(isbnOtherType)
+            } catch (ConvertException ignored) {
+                //Exception thrown when trying to transform non-convertible ISBN13 (starting with 979) to ISBN10
+                return null
             }
         }
-        boolean filterOutNonChipTerms = true // Consider using false here, since cards-in-cards work now.
-        whelk.jsonld.embellish(copy.data, referencedData, filterOutNonChipTerms)
     }
 
     Map query(Map jsonDsl, String collection) {
