@@ -119,6 +119,7 @@ class ElasticSearch {
             case 'PUT':
                 request = new HttpPut(host + path)
                 request.setEntity(httpEntity(body, contentType0))
+                break;
             case 'POST':
                 request = new HttpPost(host + path)
                 request.setEntity(httpEntity(body, contentType0))
