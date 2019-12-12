@@ -24,6 +24,7 @@ import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.WhelkRuntimeException
 
+import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.locks.ReentrantLock
 
 @Log
@@ -51,7 +52,7 @@ class ElasticSearch {
     }
 
     private final ReentrantLock retryLock = new ReentrantLock()
-    private final LinkedList<RetryEntry> indexingRetryQueue = new LinkedList()
+    private final LinkedBlockingDeque<RetryEntry> indexingRetryQueue = new LinkedBlockingDeque()
 
     ElasticSearch(Properties props) {
         this.elasticHosts = getElasticHosts(props.getProperty("elasticHost"))
@@ -238,13 +239,7 @@ class ElasticSearch {
             log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${responseMap['_id']} as version ${responseMap['_version']}")
         } catch (Exception e) {
             log.error("Failed to index ${doc.getShortId()} in elastic, placing in retry queue.", e)
-            retryLock.lock()
-            try {
-                indexingRetryQueue.add(new RetryEntry(doc: doc, collection: collection, whelk: whelk))
-            } finally {
-                retryLock.unlock()
-            }
-
+            indexingRetryQueue.add(new RetryEntry(doc: doc, collection: collection, whelk: whelk))
         }
     }
 
