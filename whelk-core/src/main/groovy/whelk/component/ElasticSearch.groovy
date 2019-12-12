@@ -24,6 +24,8 @@ import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.WhelkRuntimeException
 
+import java.util.concurrent.locks.ReentrantLock
+
 @Log
 class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
@@ -41,6 +43,15 @@ class ElasticSearch {
     Random random = new Random()
 
     private static final ObjectMapper mapper = new ObjectMapper()
+
+    private class RetryEntry {
+        Document doc
+        String collection
+        Whelk whelk
+    }
+
+    private final ReentrantLock retryLock = new ReentrantLock()
+    private final LinkedList<RetryEntry> indexingRetryQueue = new LinkedList()
 
     ElasticSearch(Properties props) {
         this.elasticHosts = getElasticHosts(props.getProperty("elasticHost"))
@@ -77,6 +88,23 @@ class ElasticSearch {
         HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT_MS)
         // FIXME: upgrade httpClient (and use RequestConfig)- https://issues.apache.org/jira/browse/HTTPCLIENT-1418
         // httpParams.setParameter(ClientPNames.CONN_MANAGER_TIMEOUT, new Long(TIMEOUT_MS));
+
+
+        new Timer().schedule(new TimerTask() {
+            void run() {
+                if (retryLock.tryLock()) {
+                    try {
+                        for (int i = 0; i < indexingRetryQueue.size(); ++i) {
+                            RetryEntry entry = indexingRetryQueue.poll()
+                            if (entry != null)
+                                index(entry.doc, entry.collection, entry.whelk)
+                        }
+                    } finally {
+                        retryLock.unlock()
+                    }
+                }
+            }
+        }, 60*1000, 10*1000)
 
         log.info "ElasticSearch component initialized with ${elasticHosts.count{it}} nodes and $CONNECTION_POOL_SIZE workers."
      }
@@ -209,7 +237,14 @@ class ElasticSearch {
             Map responseMap = mapper.readValue(response, Map)
             log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${responseMap['_id']} as version ${responseMap['_version']}")
         } catch (Exception e) {
-            log.error("Failed to index ${doc.getShortId()} in elastic.", e)
+            log.error("Failed to index ${doc.getShortId()} in elastic, placing in retry queue.", e)
+            retryLock.lock()
+            try {
+                indexingRetryQueue.add(new RetryEntry(doc: doc, collection: collection, whelk: whelk))
+            } finally {
+                retryLock.unlock()
+            }
+
         }
     }
 
