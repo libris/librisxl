@@ -90,7 +90,7 @@ class ElasticSearch {
         // httpParams.setParameter(ClientPNames.CONN_MANAGER_TIMEOUT, new Long(TIMEOUT_MS));
 
 
-        new Timer().schedule(new TimerTask() {
+        new Timer("ElasticIndexingRetrier", true).schedule(new TimerTask() {
             void run() {
                 if (retryLock.tryLock()) {
                     try {
