@@ -255,14 +255,29 @@ class ElasticSearch {
 
     private static void setComputedProperties(Document doc) {
         List<String> isbnValues = doc.getIsbnValues()
+        List<String> isbnHiddenValues = doc.getIsbnHiddenValues()
 
-        if (isbnValues.size() == 1) {
-            Isbn isbn = IsbnParser.parse(isbnValues.first())
+        List<Isbn> isbnOther = getOtherIsbn(isbnValues)
+        isbnOther.each { other ->
+            if (!isbnValues.contains(other)) {
+                doc.addTypedThingIdentifier('ISBN', other.toString())
+            }
+        }
+
+        List<Isbn> hiddenIsbnOther = getOtherIsbn(isbnHiddenValues)
+        hiddenIsbnOther.each { other ->
+            if (!isbnHiddenValues.contains(other)) {
+                doc.addIndirectTypedThingIdentifier('ISBN', other.toString())
+            }
+        }
+    }
+
+    private static List<Isbn> getOtherIsbn(List<String> isbnValues) {
+        return  isbnValues.collect { isbnValue ->
+            Isbn isbn = IsbnParser.parse(isbnValue)
 
             def isbnOtherType = isbn.getType() == Isbn.ISBN10 ? Isbn.ISBN13 : Isbn.ISBN10
-
-            Isbn isbnOther = isbn.convert(isbnOtherType)
-            doc.addTypedThingIdentifier('ISBN', isbnOther.toString())
+            return isbn.convert(isbnOtherType)
         }
     }
 
