@@ -4,7 +4,6 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import spock.lang.Specification
 import whelk.Document
-import whelk.DocumentSpec
 
 import java.sql.Connection
 import java.sql.PreparedStatement

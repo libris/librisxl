@@ -13,6 +13,7 @@ import whelk.IdType
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
+import whelk.exception.ElasticIOException
 import whelk.exception.InvalidQueryException
 import whelk.exception.ModelValidationException
 import whelk.exception.StorageCreateFailedException
@@ -100,7 +101,15 @@ class Crud extends HttpServlet {
             Map results = search.doSearch(queryParameters, dataset, jsonld)
             def jsonResult = mapper.writeValueAsString(results)
             sendResponse(response, jsonResult, "application/json")
-        } catch (WhelkRuntimeException e) {
+        } catch (ElasticIOException e) {
+            log.error("Attempted elastic query, but failed.", e)
+            failedRequests.labels("GET", request.getRequestURI(),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Failed to reach elastic for query.")
+            return
+        }
+        catch (WhelkRuntimeException e) {
             log.error("Attempted elastic query, but whelk has no " +
                     "elastic component configured.", e)
             failedRequests.labels("GET", request.getRequestURI(),
