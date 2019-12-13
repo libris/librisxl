@@ -19,6 +19,9 @@ import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import org.apache.http.util.EntityUtils
 import org.codehaus.jackson.map.ObjectMapper
+import se.kb.libris.utils.isbn.ConvertException
+import se.kb.libris.utils.isbn.Isbn
+import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
@@ -267,6 +270,7 @@ class ElasticSearch {
         boolean addSearchKey = true
         copy.data['@graph'] = copy.data['@graph'].collect { whelk.jsonld.toCard(it, chipsify, addSearchKey) }
 
+        setComputedProperties(copy)
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = document.getThingIdentifiers()
         if (thingIds.isEmpty()) {
@@ -296,6 +300,35 @@ class ElasticSearch {
         }
         boolean filterOutNonChipTerms = true // Consider using false here, since cards-in-cards work now.
         whelk.jsonld.embellish(copy.data, referencedData, filterOutNonChipTerms)
+    }
+
+    private static void setComputedProperties(Document doc) {
+        List<String> identifiedByIsbns = doc.getIsbnValues()
+        identifiedByIsbns
+                .findResults { getOtherIsbn(it) }
+                .findAll { !identifiedByIsbns.contains(it) }
+                .each { doc.addTypedThingIdentifier('ISBN', it.toString()) }
+
+        List<String> indirectlyIdentifiedByIsbns = doc.getIsbnHiddenValues()
+        indirectlyIdentifiedByIsbns
+                .findResults { getOtherIsbn(it) }
+                .findAll { !indirectlyIdentifiedByIsbns.contains(it) }
+                .each { doc.addIndirectTypedThingIdentifier('ISBN', it.toString()) }
+    }
+
+    private static Isbn getOtherIsbn(String isbnValue) {
+        Isbn isbn = IsbnParser.parse(isbnValue)
+        if (isbn == null) {
+            //Isbnparser.parse() returns null for invalid ISBN forms
+            return null
+        }
+        def isbnOtherType = isbn.getType() == Isbn.ISBN10 ? Isbn.ISBN13 : Isbn.ISBN10
+        try {
+            return isbn.convert(isbnOtherType)
+        } catch (ConvertException ignored) {
+            //Exception thrown when trying to transform non-convertible ISBN13 (starting with 979) to ISBN10
+            return null
+        }
     }
 
     Map query(Map jsonDsl, String collection) {
