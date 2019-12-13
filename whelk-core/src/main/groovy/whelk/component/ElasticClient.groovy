@@ -1,7 +1,6 @@
 package whelk.component
 
 import com.google.common.collect.Iterators
-import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
@@ -13,7 +12,6 @@ import io.github.resilience4j.retry.RetryConfig
 import io.github.resilience4j.retry.RetryRegistry
 import io.prometheus.client.CollectorRegistry
 import org.apache.http.HttpEntity
-import org.apache.http.HttpRequest
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpGet
@@ -30,9 +28,9 @@ import org.apache.http.util.EntityUtils
 import whelk.exception.ElasticIOException
 
 import java.time.Duration
+import java.util.function.Function
 
 @Log
-@CompileStatic
 class ElasticClient {
     static final int MAX_CONNECTIONS_PER_HOST = 12
     static final int CONNECTION_POOL_SIZE = 30
@@ -49,7 +47,7 @@ class ElasticClient {
             .slowCallRateThreshold(50)
             .slowCallDurationThreshold(Duration.ofSeconds(30))
             .permittedNumberOfCallsInHalfOpenState(1)
-            .build();
+            .build()
 
     List<ElasticNode> elasticNodes
     HttpClient httpClient
@@ -109,20 +107,22 @@ class ElasticClient {
 
     class ElasticNode {
         String host
-        CircuitBreaker circuitBreaker
-        Retry retry
+        Function<HttpRequestBase, Tuple2<Integer, String>> send
 
         ElasticNode(String host) {
             this.host = host
-            this.circuitBreaker = circuitBreakerRegistry.circuitBreaker(host, CB_CONFIG)
-            this.retry = retryRegistry.retry(host, RetryConfig.custom()
+
+            CircuitBreaker cb = circuitBreakerRegistry.circuitBreaker(host, CB_CONFIG)
+
+            Retry tryTwice = retryRegistry.retry(host, RetryConfig.custom()
                     .maxAttempts(2)
                     .retryOnException({ !(it instanceof RetriesExceededException) }).build())
+
+            this.send = CircuitBreaker.decorateFunction(cb, Retry.decorateFunction(tryTwice, this.&sendRequest))
         }
 
         Tuple2<Integer, String> performRequest(String method, String path, String body, String contentType0 = null) {
-            HttpRequest request = buildRequest(method, path, body, contentType0)
-            return circuitBreaker.executeSupplier(Retry.decorateSupplier(retry, { -> sendRequest(request) }))
+            return send.apply(buildRequest(method, path, body, contentType0))
         }
 
         private Tuple2<Integer, String> sendRequest(HttpRequestBase request) {
@@ -146,8 +146,7 @@ class ElasticClient {
 
                 if (statusCode != 429) {
                     return new Tuple2(statusCode, EntityUtils.toString(response.getEntity()))
-                }
-                else {
+                } else {
                     if (backOffSeconds > MAX_BACKOFF_S) {
                         throw new RetriesExceededException("Max retries exceeded: HTTP 429 from ElasticSearch")
                     }
