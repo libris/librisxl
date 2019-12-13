@@ -275,35 +275,33 @@ class ElasticSearch {
         List<String> isbnValues = doc.getIsbnValues()
         List<String> isbnHiddenValues = doc.getIsbnHiddenValues()
 
-        List<Isbn> isbnOther = getOtherIsbn(isbnValues)
-        isbnOther.each { other ->
+        List<Isbn> isbnOthers = isbnValues.findResults { getOtherIsbn(it) }
+        isbnOthers.each { other ->
             if (!isbnValues.contains(other)) {
                 doc.addTypedThingIdentifier('ISBN', other.toString())
             }
         }
 
-        List<Isbn> hiddenIsbnOther = getOtherIsbn(isbnHiddenValues)
-        hiddenIsbnOther.each { other ->
+        List<Isbn> hiddenIsbnOthers = isbnHiddenValues.findResults { getOtherIsbn(it) }
+        hiddenIsbnOthers.each { other ->
             if (!isbnHiddenValues.contains(other)) {
                 doc.addIndirectTypedThingIdentifier('ISBN', other.toString())
             }
         }
     }
 
-    private static List<Isbn> getOtherIsbn(List<String> isbnValues) {
-        return isbnValues.findResults { isbnValue ->
-            Isbn isbn = IsbnParser.parse(isbnValue)
-            if (isbn == null ) {
-                //Isbnparser.parse() returns null for invalid ISBN forms
-                return null
-            }
-            def isbnOtherType = isbn.getType() == Isbn.ISBN10 ? Isbn.ISBN13 : Isbn.ISBN10
-            try {
-                return isbn.convert(isbnOtherType)
-            } catch (ConvertException ignored) {
-                //Exception thrown when trying to transform non-convertible ISBN13 (starting with 979) to ISBN10
-                return null
-            }
+    private static Isbn getOtherIsbn(String isbnValue) {
+        Isbn isbn = IsbnParser.parse(isbnValue)
+        if (isbn == null) {
+            //Isbnparser.parse() returns null for invalid ISBN forms
+            return null
+        }
+        def isbnOtherType = isbn.getType() == Isbn.ISBN10 ? Isbn.ISBN13 : Isbn.ISBN10
+        try {
+            return isbn.convert(isbnOtherType)
+        } catch (ConvertException ignored) {
+            //Exception thrown when trying to transform non-convertible ISBN13 (starting with 979) to ISBN10
+            return null
         }
     }
 
