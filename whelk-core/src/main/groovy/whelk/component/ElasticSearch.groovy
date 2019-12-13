@@ -272,22 +272,17 @@ class ElasticSearch {
     }
 
     private static void setComputedProperties(Document doc) {
-        List<String> isbnValues = doc.getIsbnValues()
-        List<String> isbnHiddenValues = doc.getIsbnHiddenValues()
+        List<String> identifiedByIsbns = doc.getIsbnValues()
+        identifiedByIsbns
+                .findResults { getOtherIsbn(it) }
+                .findAll { !identifiedByIsbns.contains(it) }
+                .each { doc.addTypedThingIdentifier('ISBN', it.toString()) }
 
-        List<Isbn> isbnOthers = isbnValues.findResults { getOtherIsbn(it) }
-        isbnOthers.each { other ->
-            if (!isbnValues.contains(other)) {
-                doc.addTypedThingIdentifier('ISBN', other.toString())
-            }
-        }
-
-        List<Isbn> hiddenIsbnOthers = isbnHiddenValues.findResults { getOtherIsbn(it) }
-        hiddenIsbnOthers.each { other ->
-            if (!isbnHiddenValues.contains(other)) {
-                doc.addIndirectTypedThingIdentifier('ISBN', other.toString())
-            }
-        }
+        List<String> indirectlyIdentifiedByIsbns = doc.getIsbnHiddenValues()
+        indirectlyIdentifiedByIsbns
+                .findResults { getOtherIsbn(it) }
+                .findAll { !indirectlyIdentifiedByIsbns.contains(it) }
+                .each { doc.addIndirectTypedThingIdentifier('ISBN', it.toString()) }
     }
 
     private static Isbn getOtherIsbn(String isbnValue) {
