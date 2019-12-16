@@ -206,26 +206,27 @@ class ElasticSearch {
     }
 
     private static Collection<Isbn> getOtherIsbns(List<String> isbns) {
-        isbns.findResults { getOtherIsbn(it) }
+        isbns.findResults { getOtherIsbnForm(it) }
                 .findAll { !isbns.contains(it) }
     }
 
-    private static Isbn getOtherIsbn(String isbnValue) {
+    private static Isbn getOtherIsbnForm(String isbnValue) {
+        Isbn isbn
         try {
-            Isbn isbn = IsbnParser.parse(isbnValue)
-            if (isbn == null) {
-                //Isbnparser.parse() returns null for invalid ISBN forms
-                return null
-            }
-            def isbnOtherType = isbn.getType() == Isbn.ISBN10 ? Isbn.ISBN13 : Isbn.ISBN10
-            try {
-                return isbn.convert(isbnOtherType)
-            } catch (ConvertException ignored) {
-                //Exception thrown when trying to transform non-convertible ISBN13 (starting with 979) to ISBN10
-                return null
-            }
+            isbn = IsbnParser.parse(isbnValue)
         } catch (IsbnException e) {
-            log.warn "Could not parse ISBN ${isbnValue}. Caught exception: $e"
+            log.warn "Could not parse ISBN ${isbnValue}: $e"
+        }
+        if (isbn == null) {
+            //Isbnparser.parse() returns null for invalid ISBN forms
+            return null
+        }
+        def otherType = isbn.getType() == Isbn.ISBN10 ? Isbn.ISBN13 : Isbn.ISBN10
+        try {
+            return isbn.convert(otherType)
+        } catch (ConvertException ignored) {
+            //Exception thrown when trying to transform non-convertible ISBN13 (starting with 979) to ISBN10
+            return null
         }
     }
 
