@@ -18595,6 +18595,34 @@
             }
           }
         ]
+      },
+      {
+        "type": "MappedProperty",
+        "_NOTE": "Using @type as a raw value. This is not subclass-aware!",
+        "sourceEntity": "?thing",
+        "sourceProperty": "@type",
+        "targetEntity": "?record",
+        "targetProperty": "marc:personalName",
+        "valueMap": {
+          "Person": "a",
+          "Family": "n"
+        },
+        "_spec": [
+          {
+            "name":  "Add personalName a to revert auth 008[32] for type Person",
+            "result": {
+              "mainEntity": {
+                "@type": "Person"
+              }
+            },
+            "back": {
+              "marc:personalName": "a",
+              "mainEntity": {
+                "@type": "Person"
+              }
+            }
+          }
+        ]
       }
     ],
 
@@ -18825,8 +18853,7 @@
         "link": "marc:personalName",
         "uriTemplate": "https://id.kb.se/marc/PersonalNameType-{_}",
         "matchUriToken": "^[ab]$",
-        "fixedDefault": "n",
-        "TODO": "automatic a for person?"
+        "fixedDefault": "n"
       },
       "[33]": {
         "aboutEntity": "?record",
@@ -18853,11 +18880,12 @@
       "_spec": [
         {
           "name": "Person - Astrid Lindgren (71639)",
+          "NOTE:normalized": "See postProcessing spec for position 32, marc:personalName",
           "source": [
-            {"008": "011206n| ac|nnaabn          |n aa       "}
+            {"008": "011206n| ac|nnaabn          |n an       "}
           ],
           "normalized": [
-            {"008": "011206n| ac|nnaabn          |n aaa     |"}
+            {"008": "011206n| ac|nnaabn          |n ana     |"}
           ],
           "result": {
             "@type": "Record",
@@ -18866,7 +18894,6 @@
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2001-12-06T00:00:00.0+01:00",
             "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
-            "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
             "mainEntity": { }
           },
           "addOnRevert": {
@@ -18896,7 +18923,28 @@
           }
         },
         {
-          "name": "Dreamhack (359324)",
+          "name": "Jurisdiction - Riksdagen (380717)",
+          "source": [
+            {"008": "141210n| ac|nnaabn          |n ana      "}
+          ],
+          "normalized": [
+            {"008": "141210n| ac|nnaabn          |n ana     |"}
+          ],
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "created": "2014-12-10T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Jurisdiction"}
+          }
+        },        
+        {
+          "name": "Meeting - Dreamhack (359324)",
           "source": [
             {"008": "130110n| ac|nnaabn           n ana      "}
           ],
@@ -18914,6 +18962,28 @@
           },
           "addOnRevert": {
             "mainEntity": {"@type": "Meeting"}
+          }
+        },
+        {
+          "name": "Family - Medici (364239)",
+          "NOTE:normalized": "See postProcessing spec for position 32, marc:personalName",
+          "source": [
+            {"008": "130612n| ac|nnaabn           n ana      "}
+          ],
+          "normalized": [
+            {"008": "130612n| ac|nnaabn          |n ana     |"}
+          ],
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "created": "2013-06-12T00:00:00.0+02:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Family"}
           }
         },
         {
@@ -18961,10 +19031,10 @@
         {
           "name": "Work - Antikrists mirakler (340686)",
           "source": [
-            {"008": "110119nb ac|nnaabn           n aaa      "}
+            {"008": "110119nb ac|nnaabn           n ana      "}
           ],
           "normalized": [
-            {"008": "110119nb ac|nnaabn          |n aaa     |"}
+            {"008": "110119nb ac|nnaabn          |n ana     |"}
           ],
           "result": {
             "@type": "Record",
@@ -18973,7 +19043,6 @@
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2011-01-19T00:00:00.0+01:00",
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatalogingRulesType-c"}],
-            "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
             "marc:romanization": {"@id": "https://id.kb.se/marc/RomanizationType-b"},
             "mainEntity": { }
           },
