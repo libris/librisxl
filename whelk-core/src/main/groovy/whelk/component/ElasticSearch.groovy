@@ -6,6 +6,7 @@ import org.apache.commons.codec.binary.Base64
 import org.codehaus.jackson.map.ObjectMapper
 import se.kb.libris.utils.isbn.ConvertException
 import se.kb.libris.utils.isbn.Isbn
+import se.kb.libris.utils.isbn.IsbnException
 import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.JsonLd
@@ -197,28 +198,32 @@ class ElasticSearch {
     }
 
     private static void setComputedProperties(Document doc) {
-        List<String> identifiedByIsbns = doc.getIsbnValues()
-        identifiedByIsbns
-                .findResults { getOtherIsbn(it) }
-                .findAll { !identifiedByIsbns.contains(it) }
+        getOtherIsbns(doc.getIsbnValues())
                 .each { doc.addTypedThingIdentifier('ISBN', it.toString()) }
 
-        List<String> indirectlyIdentifiedByIsbns = doc.getIsbnHiddenValues()
-        indirectlyIdentifiedByIsbns
-                .findResults { getOtherIsbn(it) }
-                .findAll { !indirectlyIdentifiedByIsbns.contains(it) }
+        getOtherIsbns(doc.getIsbnHiddenValues())
                 .each { doc.addIndirectTypedThingIdentifier('ISBN', it.toString()) }
     }
 
-    private static Isbn getOtherIsbn(String isbnValue) {
-        Isbn isbn = IsbnParser.parse(isbnValue)
+    private static Collection<Isbn> getOtherIsbns(List<String> isbns) {
+        isbns.findResults { getOtherIsbnForm(it) }
+                .findAll { !isbns.contains(it) }
+    }
+
+    private static Isbn getOtherIsbnForm(String isbnValue) {
+        Isbn isbn
+        try {
+            isbn = IsbnParser.parse(isbnValue)
+        } catch (IsbnException e) {
+            log.warn "Could not parse ISBN ${isbnValue}: $e"
+        }
         if (isbn == null) {
             //Isbnparser.parse() returns null for invalid ISBN forms
             return null
         }
-        def isbnOtherType = isbn.getType() == Isbn.ISBN10 ? Isbn.ISBN13 : Isbn.ISBN10
+        def otherType = isbn.getType() == Isbn.ISBN10 ? Isbn.ISBN13 : Isbn.ISBN10
         try {
-            return isbn.convert(isbnOtherType)
+            return isbn.convert(otherType)
         } catch (ConvertException ignored) {
             //Exception thrown when trying to transform non-convertible ISBN13 (starting with 979) to ISBN10
             return null
