@@ -163,7 +163,11 @@ class ElasticSearch {
         log.debug("Framing ${document.getShortId()}")
         boolean chipsify = false
         boolean addSearchKey = true
-        copy.data['@graph'] = copy.data['@graph'].collect { whelk.jsonld.toCard(it, chipsify, addSearchKey) }
+        boolean reduceKey = false
+        List<List> propertiesToKeep = [[1, 'meta']]
+        copy.data['@graph'] = copy.data['@graph']
+                .collect(this.&addMetaIdIfLinkedThingHasPrettyIri)
+                .collect { whelk.jsonld.toCard(it, chipsify, addSearchKey, reduceKey, propertiesToKeep) }
 
         setComputedProperties(copy)
         copy.setThingMeta(document.getCompleteId())
@@ -178,6 +182,20 @@ class ElasticSearch {
         log.trace("Framed data: ${framed}")
 
         return framed
+    }
+
+    private Map addMetaIdIfLinkedThingHasPrettyIri(Map m) {
+        def graph = m['@graph']
+        if (graph && graph instanceof List && graph.size() > 1 ) {
+            String recordId = graph[0]['@id']
+            String thingId = graph[1]['@id'] ?: ''
+            if (recordId != thingId.split("#")[0]) {
+                // hash URI because we don't want JsonLd.frame to insert the full record
+                graph[1]['meta'] = ['@id': recordId + '#']
+            }
+        }
+
+        return m
     }
 
     void embellish(Whelk whelk, Document document, Document copy) {
