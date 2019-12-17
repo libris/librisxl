@@ -199,18 +199,18 @@ class ElasticSearch {
 
     private static void setComputedProperties(Document doc) {
         getOtherIsbns(doc.getIsbnValues())
-                .each { doc.addTypedThingIdentifier('ISBN', it.toString()) }
+                .each { doc.addTypedThingIdentifier('ISBN', it) }
 
         getOtherIsbns(doc.getIsbnHiddenValues())
-                .each { doc.addIndirectTypedThingIdentifier('ISBN', it.toString()) }
+                .each { doc.addIndirectTypedThingIdentifier('ISBN', it) }
     }
 
-    private static Collection<Isbn> getOtherIsbns(List<String> isbns) {
+    private static Collection<String> getOtherIsbns(List<String> isbns) {
         isbns.findResults { getOtherIsbnForm(it) }
                 .findAll { !isbns.contains(it) }
     }
 
-    private static Isbn getOtherIsbnForm(String isbnValue) {
+    private static String getOtherIsbnForm(String isbnValue) {
         Isbn isbn
         try {
             isbn = IsbnParser.parse(isbnValue)
@@ -223,7 +223,7 @@ class ElasticSearch {
         }
         def otherType = isbn.getType() == Isbn.ISBN10 ? Isbn.ISBN13 : Isbn.ISBN10
         try {
-            return isbn.convert(otherType)
+            return isbn.convert(otherType).toString()
         } catch (ConvertException ignored) {
             //Exception thrown when trying to transform non-convertible ISBN13 (starting with 979) to ISBN10
             return null
