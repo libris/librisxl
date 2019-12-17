@@ -379,12 +379,12 @@ class WhelkTool {
                 if (item.doDelete) {
                     doDeletion(item)
                     counter.countDeleted()
-                } else if (item.existsInStorage) {
-                    doModification(item)
-                    counter.countModified()
-                } else {
+                } else if (item.createNew) {
                     doSaveNew(item)
                     counter.countNewSaved()
+                } else {
+                    doModification(item)
+                    counter.countModified()
                 }
             } catch (Exception err) {
                 if (item.onError) {
@@ -643,7 +643,7 @@ class DocumentItem {
     private boolean needsSaving = false
     private boolean doDelete = false
     private boolean loud = false
-    private boolean existsInStorage = false
+    private boolean createNew = false
     private String restoreToTime = null
     Closure onError = null
 
@@ -661,6 +661,11 @@ class DocumentItem {
         needsSaving = true
         doDelete = true
         set(params)
+    }
+
+    void createNew() {
+        needsSaving = true
+        createNew = true
     }
 
     void scheduleRevertTo(Map params=[:]) {
