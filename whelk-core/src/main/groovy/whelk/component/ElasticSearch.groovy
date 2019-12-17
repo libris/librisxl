@@ -166,7 +166,7 @@ class ElasticSearch {
         boolean reduceKey = false
         List<List> propertiesToKeep = [[1, 'meta']]
         copy.data['@graph'] = copy.data['@graph']
-                .collect(this.&addMetaIdIfLinkedThingHasPrettyIri)
+                .collect(this.&addMetaToLinkedThing)
                 .collect { whelk.jsonld.toCard(it, chipsify, addSearchKey, reduceKey, propertiesToKeep) }
 
         setComputedProperties(copy)
@@ -184,14 +184,18 @@ class ElasticSearch {
         return framed
     }
 
-    private Map addMetaIdIfLinkedThingHasPrettyIri(Map m) {
+    private Map addMetaToLinkedThing(Map m) {
         def graph = m['@graph']
-        if (graph && graph instanceof List && graph.size() > 1 ) {
+        boolean isLink = graph != null
+
+        if (isLink) {
             String recordId = graph[0]['@id']
             String thingId = graph[1]['@id'] ?: ''
             if (recordId != thingId.split("#")[0]) {
-                // hash URI because we don't want JsonLd.frame to insert the full record
-                graph[1]['meta'] = ['@id': recordId + '#']
+                def record = ['@id': recordId]
+                graph[1]['meta'] = record
+                // replace because we don't want the full record inserted by JsonLd.frame
+                graph[0] = record
             }
         }
 
