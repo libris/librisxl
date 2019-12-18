@@ -900,7 +900,8 @@ class JsonLd {
     }
 
     private static boolean shouldKeep(String key, List propertiesToKeep) {
-        return (key == RECORD_KEY || key in propertiesToKeep || key.startsWith("@"))
+        return (key == RECORD_KEY || key == THING_KEY ||
+                key in propertiesToKeep || key.startsWith("@"))
     }
 
 
@@ -974,6 +975,8 @@ class JsonLd {
     static Map frame(String mainId, Map inData) {
         Map<String, Map> idMap = getIdMap(inData)
 
+        putRecordReferencesIntoThings(idMap)
+
         Map mainItem = idMap[mainId]
 
         Map framedData
@@ -989,6 +992,19 @@ class JsonLd {
         cleanUp(framedData)
 
         return framedData
+    }
+
+    static void putRecordReferencesIntoThings(Map<String, Map> idMap) {
+        for (obj in idMap.values()) {
+            Map thingRef = obj[THING_KEY]
+            if (thingRef) {
+                String thingId = thingRef[ID_KEY]
+                Map thing = idMap[thingId]
+                Map recRef = [:]
+                recRef[ID_KEY] = obj[ID_KEY]
+                thing[RECORD_KEY] = recRef
+            }
+        }
     }
 
     private static Map embed(String mainId, Map mainItem, Map idMap, Set embedChain) {
