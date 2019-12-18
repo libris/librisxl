@@ -1049,11 +1049,16 @@ class ConversionPart {
                 def parents = pendingDfn.about == null ? [entity] :
                     pendingDfn.about in aboutMap ? aboutMap[pendingDfn.about] : null
 
-                parents?.each {
-                    def about = it[pendingDfn.link ?: pendingDfn.addLink]
+                parents?.each { parent ->
+                    String link = pendingDfn.link ?: pendingDfn.addLink
+                    def about = parent[link]
+                    if (!about && pendingDfn.infer == true) {
+                        about = ld.getSubProperties(link).findResult { parent[it] }
+                    }
+
                     if (!about && pendingDfn.absorbSingle) {
-                        if (isInstanceOf(it, pendingDfn.resourceType)) {
-                            about = it
+                        if (isInstanceOf(parent, pendingDfn.resourceType)) {
+                            about = parent
                         } else {
                             requiredOk = false
                         }
