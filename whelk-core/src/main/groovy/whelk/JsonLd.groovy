@@ -1000,9 +1000,13 @@ class JsonLd {
             if (thingRef) {
                 String thingId = thingRef[ID_KEY]
                 Map thing = idMap[thingId]
-                Map recRef = [:]
-                recRef[ID_KEY] = obj[ID_KEY]
-                thing[RECORD_KEY] = recRef
+                if (thing) {
+                    Map recRef = [:]
+                    recRef[ID_KEY] = obj[ID_KEY]
+                    thing[RECORD_KEY] = recRef
+                } else {
+                    log.debug("Record <${obj[ID_KEY]}> is missing thing <${thingId}>.")
+                }
             }
         }
     }
