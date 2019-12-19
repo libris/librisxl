@@ -2113,8 +2113,7 @@
       "[5]": {
         "aboutEntity": "?record",
         "property": "recordStatus",
-        "tokenMap": "StatusType",
-        "TODO:fallbackDefault": "c"
+        "tokenMap": "StatusType"
       },
       "[6]": {
         "aboutEntity": "?work",
@@ -2124,21 +2123,19 @@
       "[7]": {
         "aboutEntity": "?thing",
         "tokenMap": "BibLevelType",
-        "property": "issuanceType",
-        "TODO:fallbackDefault": "m"
+        "property": "issuanceType"
       },
       "[8]": {
         "aboutEntity": "?record",
         "link": "marc:typeOfControl",
         "uriTemplate": "https://id.kb.se/marc/TypeOfControlType-{_}",
         "matchUriToken": "^[a]$",
-        "fixedDefault": " "
+        "fixedDefault": " ",
+        "TODO": "BF2: I - rdf:type - Archival"
       },
       "[9]": {
-        "aboutEntity": "?record",
-        "link": "marc:characterCoding",
-        "uriTemplate": "https://id.kb.se/marc/CharacterCodingType-{_}",
-        "matchUriToken": "^[a]$",
+        "NOTE": "Character coding scheme - a - UCS/Unicode",
+        "ignored": true,
         "fixedDefault": "a"
       },
       "NOTE:[10]": "Indicator count (only applicable in ISO 2709 serialization)",
@@ -2160,15 +2157,13 @@
         "fixedDefault": " "
       },
       "[19]": {
-        "aboutEntity": "?record",
-        "link": "marc:linked",
-        "uriTemplate": "https://id.kb.se/marc/LinkedType-{_}",
-        "matchUriToken": "^[abcr]$",
+        "NOTE": "Multipart resource record level - # - Not specified or not applicable",
+        "ignored": true,
         "fixedDefault": " "
       },
       "[20:24]": {
-        "aboutEntity": "?record",
-        "property": "marc:entryMap",
+        "NOTE": "Entry map - 4500 - Default value in MARC21",
+        "ignored": true,
         "fixedDefault": "4500"
       },
       "repeatable": false,
@@ -2182,6 +2177,26 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/bib/0000000",
             "recordStatus": "marc:CorrectedOrRevised",
+            "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
+            "controlNumber": "0000000",
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "@type": "Instance",
+              "issuanceType": "Monograph",
+              "@id": "http://libris.kb.se/resource/bib/0000000",
+              "instanceOf": {"@type": "Text"}
+            }
+          }
+        },
+        {
+          "name": "@type Text (Monograph) status New with broken Leader values fixed by fixedDefault",
+          "originalLeader": "00887nam X220027X aX450X",
+          "normalized": {"leader": "     nam a        a 4500", "fields": [{"001": "0000000"}]},
+          "source": {"leader": "     nam X      X aX450X", "fields": [{"001": "0000000"}]},
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/bib/0000000",
+            "recordStatus": "marc:New",
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
             "controlNumber": "0000000",
             "encodingLevel": "marc:FullLevel",
