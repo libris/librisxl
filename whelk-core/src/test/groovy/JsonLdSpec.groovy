@@ -677,9 +677,7 @@ class JsonLdSpec extends Specification {
 
     def "shouldPreservePaths"() {
         given:
-        Map doc = JsonLd.frame(
-                "http://kblocalhost.kb.se:5000/n602lbw018zh88k#it",
-                readMap("preserve-paths/molecular-aspects.jsonld"))
+        Map doc = readMap("preserve-paths/molecular-aspects.jsonld")
 
         def ld = new JsonLd(
                 readMap("preserve-paths/context.jsonld"),
