@@ -8168,6 +8168,7 @@
       "$0": {
         "aboutEntity": "?work",
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
+        "TODO": "Just drop or remap to something simpler? uriTemplate doesn't work, also only about 37 values? None is a Libris Id...",
         "uriTemplate": "http://libris.kb.se/auth/{_}",
         "matchUriToken": "^\\d{1,14}$"
       },
@@ -16871,6 +16872,7 @@
         },
         "_:describedBy": {
             "addLink": "describedBy",
+            "infer": true,
             "resourceType": "Record"
           }
       },
