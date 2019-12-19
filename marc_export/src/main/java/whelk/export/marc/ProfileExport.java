@@ -304,7 +304,13 @@ public class ProfileExport
                 logger.info("Not exporting {} for {} because of {} setting", systemId, profileName, filterName);
                 continue;
             }
-            output.writeRecord(mr);
+            try {
+                output.writeRecord(mr);
+            } catch (IOException e) {
+                throw e;
+            } catch (Exception e) {
+                logger.error(String.format("Error writing %s for %s:  %s", systemId, profileName, e), e);
+            }
         }
     }
 
