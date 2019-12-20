@@ -73,7 +73,9 @@ dependencies {
     providedCompile 'javax.servlet:servlet-api:2.5'
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
+
     // Integration
+    compile 'mysql:mysql-connector-java:8.0.17'
 
     // metrics
     compile "io.prometheus:simpleclient:${prometheusVersion}"
