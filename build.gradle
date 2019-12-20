@@ -2,6 +2,7 @@ plugins {
     id "nebula.lint" version "16.0.2"
 }
 
-subprojects {
+allprojects {
     gradleLint.rules = ['all-dependency']
+    gradleLint.alwaysRun = false
 }
