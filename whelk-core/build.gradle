@@ -98,8 +98,6 @@ dependencies {
     compile 'org.codehaus.groovy:groovy-json:2.5.4'
     compile 'org.codehaus.groovy:groovy-xml:2.5.4'
     compile 'org.codehaus.groovy:groovy:2.5.4'
-    compile 'org.codehaus.groovy:groovy:2.5.4'
-    groovy-dateutil
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
     compile 'xerces:xercesImpl:2.11.0' //KP
 
