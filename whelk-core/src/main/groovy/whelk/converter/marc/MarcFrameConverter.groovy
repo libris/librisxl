@@ -5,13 +5,14 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
-import whelk.Whelk
-import whelk.component.PostgreSQLComponent
 import whelk.converter.FormatConverter
 import whelk.filter.LinkFinder
-import whelk.util.PropertyLoader
 
-import java.time.*
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.Temporal

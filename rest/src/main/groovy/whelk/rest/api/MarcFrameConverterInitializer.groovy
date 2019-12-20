@@ -25,13 +25,12 @@ class MarcFrameConverterInitializer implements ServletContextListener {
             void run() {
                 try {
                     WhelkFactory.getSingletonWhelk().getMarcFrameConverter()
-                    log.info("Started {}", MarcFrameConverter.class.getSimpleName())
+                    log.info("Started ${MarcFrameConverter.class.getSimpleName()}")
                 }
                 catch (Exception e) {
-                    log.warn(String.format("Error starting %s: %s", MarcFrameConverter.class.getSimpleName(), e), e)
+                    log.warn("Error starting ${MarcFrameConverter.class.getSimpleName()}: $e", e)
                 }
             }
         }).start()
     }
-
 }
