@@ -161,17 +161,16 @@ class MarcConversion {
         }
         addTypeMaps()
 
-        // log.warn? Though, this "should" not happen in prod...
         missingTerms.each {
-            System.err.println "Missing: $it.term a $it.type"
+            log.debug("Missing: $it.term a $it.type")
         }
         badRepeats.each {
             if (it.term.startsWith(converter.ld.expand('marc:')))
                 return
             if (it.shouldRepeat)
-                System.err.println "Expected to be repeatable: $it.term"
+                log.debug("Expected to be repeatable: $it.term")
             else
-                System.err.println "Unexpected repeat of: $it.term"
+                log.debug("Unexpected repeat of: $it.term")
         }
     }
 
@@ -609,13 +608,6 @@ class MarcRuleSet {
                 revertFieldOrder << tag
             }
         }
-
-        // DEBUG:
-        //fieldHandlers.each { tag, handler ->
-        //    if (handler instanceof MarcFieldHandler && handler.sharesGroupIdWith)
-        //        System.err.println "$tag: $handler.sharesGroupIdWith"
-        //}
-
     }
 
     def processInherit(config, subConf, tag, fieldDfn) {
