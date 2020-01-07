@@ -1,39 +1,38 @@
 /*
-Using as template (after newly created Item):
+Using as template:
 {
     "@graph": [
         {
-            "@id": "https://libris-dev.kb.se/gsf7dx05dvppsfp1",
             "@type": "Record",
-            "created": "2019-12-10T12:22:28.912+01:00",
-            "modified": "2019-12-10T12:22:28.912+01:00",
-            "mainEntity": {
-                "@id": "https://libris-dev.kb.se/gsf7dx05dvppsfp1#it"
-            },
-            "recordStatus": "marc:New",
-            "controlNumber": "gsf7dx05dvppsfp1",
+            "@id": "https://id.kb.se/TEMPID",
             "descriptionCreator": {
-                "@id": "https://libris.kb.se/library/Utb1"
+                "@id": "https://libris.kb.se/library/S"
             },
-            "descriptionLastModifier": {
-                "@id": "https://libris.kb.se/library/Utb1"
+            "mainEntity": {
+                "@id": "https://id.kb.se/TEMPID#it"
             }
         },
         {
-            "@id": "https://libris-dev.kb.se/gsf7dx05dvppsfp1#it",
+            "@id": "https://id.kb.se/TEMPID#it",
             "@type": "Item",
             "heldBy": {
-                "@id": "https://libris.kb.se/library/Utb1"
+                "@id": "https://libris.kb.se/library/S"
             },
             "itemOf": {
-                "@id": "https://libris-dev.kb.se/s931wfw45jd6r23#it"
+                "@id": "https://libris.kb.se/0jbnrcsb04grvf4#it"
             },
             "hasComponent": [
                 {
                     "@type": "Item",
                     "heldBy": {
-                        "@id": "https://libris.kb.se/library/Utb1"
-                    }
+                        "@id": "https://libris.kb.se/library/S"
+                    },
+                    "hasNote": [
+                        {
+                            "@type": "Note",
+                            "label": "F\u00f6rv\u00e4rvas ej av KB (annan utg\u00e5va finns)"
+                        }
+                    ]
                 }
             ]
         }
@@ -45,7 +44,7 @@ PrintWriter failedHoldIDs = getReportWriter("failed-holdIDs")
 
 def holdList = []
 
-String where = "data#>'{@graph,0,bibliography}' @> '[{\"@type\": \"Library\", \"sigel\": \"SUEC\"}]'"
+String where = "data#>'{@graph,0,bibliography}' @> '[{\"@type\": \"Library\", \"sigel\": \"SUEC\"}]' and data#>'{@graph,0,technicalNote}' @> '[{\"@type\": \"TechnicalNote\", \"label\": [\"S: F\\u00f6rv\\u00e4rvas ej av KB (annan utg\\u00e5va finns)\"]}]'"
 
 selectBySqlWhere(where, silent: false) { bib ->
 
@@ -66,17 +65,36 @@ selectBySqlWhere(where, silent: false) { bib ->
                             "hasComponent": [
                                     [
                                             "@type": "Item",
-                                            "heldBy": ["@id": "https://libris.kb.se/library/S"]
+                                            "heldBy": ["@id": "https://libris.kb.se/library/S"],
+                                            "hasNote": [
+                                                    [
+                                                            "@type": "Note",
+                                                            "label": "Förvärvas ej av KB (annan utgåva finns)"
+                                                    ]
+                                            ]
                                     ]
                             ]
                     ]
             ]]
 
     holdList.add( create(holdData) )
+
+    def technicalNote = bib.graph[0]["technicalNote"]
+    if (technicalNote != null) {
+        def it = technicalNote.iterator()
+        while (it.hasNext()) {
+            def element = it.next()
+            if (element instanceof String && element == "S: F\\u00f6rv\\u00e4rvas ej av KB (annan utg\\u00e5va finns)")
+                it.remove()
+        }
+        if (technicalNote.size() == 0)
+            bib.graph[0].remove("technicalNote")
+    }
 }
 
 selectFromIterable(holdList, { newlyCreatedItem ->
     newlyCreatedItem.scheduleSave(onError: { e ->
+        // A number of these are expected to fail, since many of the SUEC bib records already have S holdings. This is ok.
         failedHoldIDs.println("Failed to save ${newlyCreatedItem.doc.shortId} due to: $e")
     })
 })
