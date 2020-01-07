@@ -41,6 +41,7 @@ Using as template:
 */
 
 PrintWriter failedHoldIDs = getReportWriter("failed-holdIDs")
+PrintWriter failedBibIDs = getReportWriter("failed-bibIDs")
 
 def holdList = []
 
@@ -90,6 +91,10 @@ selectBySqlWhere(where, silent: false) { bib ->
         if (technicalNote.size() == 0)
             bib.graph[0].remove("technicalNote")
     }
+
+    bib.scheduleSave(onError: { e ->
+        failedBibIDs.println("Failed to save ${bib.doc.shortId} due to: $e")
+    })
 }
 
 selectFromIterable(holdList, { newlyCreatedItem ->
