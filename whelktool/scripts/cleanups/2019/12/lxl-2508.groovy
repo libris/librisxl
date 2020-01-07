@@ -81,16 +81,14 @@ selectBySqlWhere(where, silent: false) { bib ->
     holdList.add( create(holdData) )
 
     def technicalNote = bib.graph[0]["technicalNote"]
-    if (technicalNote != null) {
-        def it = technicalNote.iterator()
-        while (it.hasNext()) {
-            def element = it.next()
-            if (element instanceof String && element == "S: F\\u00f6rv\\u00e4rvas ej av KB (annan utg\\u00e5va finns)")
-                it.remove()
-        }
-        if (technicalNote.size() == 0)
-            bib.graph[0].remove("technicalNote")
+    def it = technicalNote.iterator()
+    while (it.hasNext()) {
+        def element = it.next()
+        if (element instanceof String && element == "S: F\\u00f6rv\\u00e4rvas ej av KB (annan utg\\u00e5va finns)")
+            it.remove()
     }
+    if (technicalNote.size() == 0)
+        bib.graph[0].remove("technicalNote")
 
     bib.scheduleSave(onError: { e ->
         failedBibIDs.println("Failed to save ${bib.doc.shortId} due to: $e")
