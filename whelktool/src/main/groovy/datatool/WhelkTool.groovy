@@ -219,11 +219,13 @@ class WhelkTool {
                             int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
         if (!silent)
             log "Processing from in-memory collection: ${docs.size()} items."
-        select(docs.collect { it -> it.doc }, process, batchSize)
+
+        boolean newItems = true
+        select(docs.collect { it -> it.doc }, process, batchSize, newItems)
     }
 
     private void select(Iterable<Document> selection, Closure process,
-            int batchSize = DEFAULT_BATCH_SIZE) {
+            int batchSize = DEFAULT_BATCH_SIZE, boolean newItems = false) {
         if (errorDetected) {
             log "Error detected, refusing further processing."
             return
@@ -258,7 +260,9 @@ class WhelkTool {
             if (limit > -1 && counter.readCount > limit) {
                 break
             }
-            batch.items << new DocumentItem(number: counter.readCount, doc: doc, whelk: whelk)
+            DocumentItem item = new DocumentItem(number: counter.readCount, doc: doc, whelk: whelk)
+            item.existsInStorage = !newItems
+            batch.items << item
             if (batch.items.size() == batchSize) {
                 def batchToProcess = batch
                 if (executorService) {
@@ -471,7 +475,6 @@ class WhelkTool {
                     LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
-        item.existsInStorage = true
     }
 
     private boolean confirmNextStep(String inJsonStr, Document doc) {
