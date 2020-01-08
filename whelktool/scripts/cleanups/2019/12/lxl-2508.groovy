@@ -85,7 +85,15 @@ selectBySqlWhere(where, silent: false) { bib ->
     def it = technicalNote.iterator()
     while (it.hasNext()) {
         def element = it.next()
-        if (element instanceof String && element == "S: F\\u00f6rv\\u00e4rvas ej av KB (annan utg\\u00e5va finns)")
+        def labels = element["label"]
+        def labelIt = labels.iterator()
+        while (labelIt.hasNext()) {
+            def label = labelIt.next()
+            if (label == "S: Förvärvas ej av KB (annan utgåva finns)") {
+                labelIt.remove()
+            }
+        }
+        if (labels.size() == 0)
             it.remove()
     }
     if (technicalNote.size() == 0)
