@@ -132,7 +132,9 @@ class WhelkTool {
     }
 
     DocumentItem create(Map data) {
-        return new DocumentItem(number: counter.createdCount, doc: new Document(data), whelk: whelk)
+        DocumentItem item = new DocumentItem(number: counter.createdCount, doc: new Document(data), whelk: whelk)
+        item.existsInStorage = false
+        return item
     }
 
     Map<String, String> findShortIdsForUris(Collection uris) {
@@ -469,6 +471,7 @@ class WhelkTool {
                     LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
+        item.existsInStorage = true
     }
 
     private boolean confirmNextStep(String inJsonStr, Document doc) {
@@ -643,7 +646,7 @@ class DocumentItem {
     private boolean needsSaving = false
     private boolean doDelete = false
     private boolean loud = false
-    private boolean existsInStorage = false
+    boolean existsInStorage = true
     private String restoreToTime = null
     Closure onError = null
 
