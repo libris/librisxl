@@ -124,6 +124,21 @@ class JsonLdSpec extends Specification {
         assert JsonLd.frame(id, input) == expected
     }
 
+   def "should link record as meta when framing jsonld"() {
+        given:
+        def input = ["@graph": [
+            ["@id": "1", "mainEntity": ["@id": "1#it"]],
+            ["@id": "1#it", "foo": "bar"]
+        ]]
+        def expected = [
+            "@id": "1#it",
+            "foo": "bar",
+            "meta": ["@id": "1", "mainEntity": ["@id": "1#it"]]
+        ]
+        expect:
+        assert JsonLd.frame("1#it", input) == expected
+    }
+
     def "framing framed jsonld should preserve input"() {
         given:
         def id = "1234"
@@ -677,9 +692,7 @@ class JsonLdSpec extends Specification {
 
     def "shouldPreservePaths"() {
         given:
-        Map doc = JsonLd.frame(
-                "http://kblocalhost.kb.se:5000/n602lbw018zh88k#it",
-                readMap("preserve-paths/molecular-aspects.jsonld"))
+        Map doc = readMap("preserve-paths/molecular-aspects.jsonld")
 
         def ld = new JsonLd(
                 readMap("preserve-paths/context.jsonld"),

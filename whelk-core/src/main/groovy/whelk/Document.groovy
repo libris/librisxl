@@ -398,32 +398,27 @@ class Document {
         }
     }
 
-    void addTypedRecordIdentifier(String type, String identifier) {
-        if (identifier == null)
-            throw new NullPointerException("Attempted to add typed null-identifier.")
-
-        if (preparePath(recordTypedIDsPath)) {
-            Object typedIDList = get(recordTypedIDsPath)
-            if (typedIDList == null || !(typedIDList instanceof List)) {
-                set(recordTypedIDsPath, [])
-                typedIDList = get(recordTypedIDsPath)
-            }
-
-            def idObject = ["value": identifier, "@type": type]
-            if (typedIDList.every { it -> it != idObject })
-                typedIDList.add(idObject)
-        }
+    void addTypedThingIdentifier(String type, String identifier) {
+        addTypedIdentifier(type, identifier, thingTypedIDsPath)
     }
 
-    void addTypedThingIdentifier(String type, String identifier) {
+    void addIndirectTypedThingIdentifier(String type, String identifier) {
+        addTypedIdentifier(type, identifier, thingIndirectTypedIDsPath)
+    }
+
+    void addTypedRecordIdentifier(String type, String identifier) {
+        addTypedIdentifier(type, identifier, recordIdPath)
+    }
+
+    private void addTypedIdentifier(String type, String identifier, List<Serializable> typedIdsPath) {
         if (identifier == null)
             throw new NullPointerException("Attempted to add typed null-identifier.")
 
-        if (preparePath(thingTypedIDsPath)) {
-            Object typedIDList = get(thingTypedIDsPath)
+        if (preparePath(typedIdsPath)) {
+            Object typedIDList = get(typedIdsPath)
             if (typedIDList == null || !(typedIDList instanceof List)) {
-                set(thingTypedIDsPath, [])
-                typedIDList = get(thingTypedIDsPath)
+                set(typedIdsPath, [])
+                typedIDList = get(typedIdsPath)
             }
 
             def idObject = ["value": identifier, "@type": type]

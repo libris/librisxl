@@ -30,6 +30,24 @@ STATS_FOR_ALL = {
 }
 
 
+def reshape(data):
+    if '@graph' in data:
+        graph =  data['@graph']
+        thing =graph[1]
+        thing['meta'] = graph[0]
+
+        if len(graph) > 2 and 'instanceOf' in thing:
+            work = graph[2]
+            assert thing['instanceOf']['@id'] == work['@id']
+            thing['instanceOf'] = work
+        else:
+            work = None
+
+        return thing, work
+
+    return data, data.get('instanceOf')
+
+
 def compute_shape(node, index, type_key=None):
     if len(node) == 1 and '@id' in node:
         count_value('@id', node['@id'], index)
@@ -107,17 +125,7 @@ if __name__ == '__main__':
 
         try:
             data = json.loads(l)
-            graph =  data['@graph']
-            thing =graph[1]
-            thing['meta'] =graph[0]
-
-            if len(graph) > 2 and 'instanceOf' in thing:
-                work = graph[2]
-                assert thing['instanceOf']['@id'] == work['@id']
-                thing['instanceOf'] = work
-            else:
-                work = None
-
+            thing, work = reshape(data)
             compute_shape(thing, index)
             if work:
                 compute_shape(thing, instance_index, type_key='Instance')

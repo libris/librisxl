@@ -5,13 +5,14 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
-import whelk.Whelk
-import whelk.component.PostgreSQLComponent
 import whelk.converter.FormatConverter
 import whelk.filter.LinkFinder
-import whelk.util.PropertyLoader
 
-import java.time.*
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.Temporal
@@ -161,17 +162,16 @@ class MarcConversion {
         }
         addTypeMaps()
 
-        // log.warn? Though, this "should" not happen in prod...
         missingTerms.each {
-            System.err.println "Missing: $it.term a $it.type"
+            log.debug("Missing: $it.term a $it.type")
         }
         badRepeats.each {
             if (it.term.startsWith(converter.ld.expand('marc:')))
                 return
             if (it.shouldRepeat)
-                System.err.println "Expected to be repeatable: $it.term"
+                log.debug("Expected to be repeatable: $it.term")
             else
-                System.err.println "Unexpected repeat of: $it.term"
+                log.debug("Unexpected repeat of: $it.term")
         }
     }
 
@@ -609,13 +609,6 @@ class MarcRuleSet {
                 revertFieldOrder << tag
             }
         }
-
-        // DEBUG:
-        //fieldHandlers.each { tag, handler ->
-        //    if (handler instanceof MarcFieldHandler && handler.sharesGroupIdWith)
-        //        System.err.println "$tag: $handler.sharesGroupIdWith"
-        //}
-
     }
 
     def processInherit(config, subConf, tag, fieldDfn) {
@@ -1049,11 +1042,16 @@ class ConversionPart {
                 def parents = pendingDfn.about == null ? [entity] :
                     pendingDfn.about in aboutMap ? aboutMap[pendingDfn.about] : null
 
-                parents?.each {
-                    def about = it[pendingDfn.link ?: pendingDfn.addLink]
+                parents?.each { parent ->
+                    String link = pendingDfn.link ?: pendingDfn.addLink
+                    def about = parent[link]
+                    if (!about && pendingDfn.infer == true) {
+                        about = ld.getSubProperties(link).findResult { parent[it] }
+                    }
+
                     if (!about && pendingDfn.absorbSingle) {
-                        if (isInstanceOf(it, pendingDfn.resourceType)) {
-                            about = it
+                        if (isInstanceOf(parent, pendingDfn.resourceType)) {
+                            about = parent
                         } else {
                             requiredOk = false
                         }

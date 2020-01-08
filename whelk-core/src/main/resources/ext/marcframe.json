@@ -2113,8 +2113,7 @@
       "[5]": {
         "aboutEntity": "?record",
         "property": "recordStatus",
-        "tokenMap": "StatusType",
-        "TODO:fallbackDefault": "c"
+        "tokenMap": "StatusType"
       },
       "[6]": {
         "aboutEntity": "?work",
@@ -2124,21 +2123,19 @@
       "[7]": {
         "aboutEntity": "?thing",
         "tokenMap": "BibLevelType",
-        "property": "issuanceType",
-        "TODO:fallbackDefault": "m"
+        "property": "issuanceType"
       },
       "[8]": {
         "aboutEntity": "?record",
         "link": "marc:typeOfControl",
         "uriTemplate": "https://id.kb.se/marc/TypeOfControlType-{_}",
         "matchUriToken": "^[a]$",
-        "fixedDefault": " "
+        "fixedDefault": " ",
+        "TODO": "BF2: I - rdf:type - Archival"
       },
       "[9]": {
-        "aboutEntity": "?record",
-        "link": "marc:characterCoding",
-        "uriTemplate": "https://id.kb.se/marc/CharacterCodingType-{_}",
-        "matchUriToken": "^[a]$",
+        "NOTE": "Character coding scheme - a - UCS/Unicode",
+        "ignored": true,
         "fixedDefault": "a"
       },
       "NOTE:[10]": "Indicator count (only applicable in ISO 2709 serialization)",
@@ -2160,15 +2157,13 @@
         "fixedDefault": " "
       },
       "[19]": {
-        "aboutEntity": "?record",
-        "link": "marc:linked",
-        "uriTemplate": "https://id.kb.se/marc/LinkedType-{_}",
-        "matchUriToken": "^[abcr]$",
+        "NOTE": "Multipart resource record level - # - Not specified or not applicable",
+        "ignored": true,
         "fixedDefault": " "
       },
       "[20:24]": {
-        "aboutEntity": "?record",
-        "property": "marc:entryMap",
+        "NOTE": "Entry map - 4500 - Default value in MARC21",
+        "ignored": true,
         "fixedDefault": "4500"
       },
       "repeatable": false,
@@ -2182,6 +2177,26 @@
             "@type": "Record",
             "@id": "http://libris.kb.se/bib/0000000",
             "recordStatus": "marc:CorrectedOrRevised",
+            "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
+            "controlNumber": "0000000",
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "@type": "Instance",
+              "issuanceType": "Monograph",
+              "@id": "http://libris.kb.se/resource/bib/0000000",
+              "instanceOf": {"@type": "Text"}
+            }
+          }
+        },
+        {
+          "name": "@type Text (Monograph) status New with broken Leader values fixed by fixedDefault",
+          "originalLeader": "00887nam X220027X aX450X",
+          "normalized": {"leader": "     nam a        a 4500", "fields": [{"001": "0000000"}]},
+          "source": {"leader": "     nam X      X aX450X", "fields": [{"001": "0000000"}]},
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/bib/0000000",
+            "recordStatus": "marc:New",
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
             "controlNumber": "0000000",
             "encodingLevel": "marc:FullLevel",
@@ -8153,6 +8168,7 @@
       "$0": {
         "aboutEntity": "?work",
         "addLink": "describedBy", "resourceType": "Record", "property": "controlNumber",
+        "TODO": "Just drop or remap to something simpler? uriTemplate doesn't work, also only about 37 values? None is a Libris Id...",
         "uriTemplate": "http://libris.kb.se/auth/{_}",
         "matchUriToken": "^\\d{1,14}$"
       },
@@ -16856,6 +16872,7 @@
         },
         "_:describedBy": {
             "addLink": "describedBy",
+            "infer": true,
             "resourceType": "Record"
           }
       },
@@ -18595,6 +18612,34 @@
             }
           }
         ]
+      },
+      {
+        "type": "MappedProperty",
+        "_NOTE": "Using @type as a raw value. This is not subclass-aware!",
+        "sourceEntity": "?thing",
+        "sourceProperty": "@type",
+        "targetEntity": "?record",
+        "targetProperty": "marc:personalName",
+        "valueMap": {
+          "Person": "a",
+          "Family": "n"
+        },
+        "_spec": [
+          {
+            "name":  "Add personalName a to revert auth 008[32] for type Person",
+            "result": {
+              "mainEntity": {
+                "@type": "Person"
+              }
+            },
+            "back": {
+              "marc:personalName": "a",
+              "mainEntity": {
+                "@type": "Person"
+              }
+            }
+          }
+        ]
       }
     ],
 
@@ -18825,8 +18870,7 @@
         "link": "marc:personalName",
         "uriTemplate": "https://id.kb.se/marc/PersonalNameType-{_}",
         "matchUriToken": "^[ab]$",
-        "fixedDefault": "n",
-        "TODO": "automatic a for person?"
+        "fixedDefault": "n"
       },
       "[33]": {
         "aboutEntity": "?record",
@@ -18853,11 +18897,12 @@
       "_spec": [
         {
           "name": "Person - Astrid Lindgren (71639)",
+          "NOTE:normalized": "See postProcessing spec for position 32, marc:personalName",
           "source": [
-            {"008": "011206n| ac|nnaabn          |n aa       "}
+            {"008": "011206n| ac|nnaabn          |n an       "}
           ],
           "normalized": [
-            {"008": "011206n| ac|nnaabn          |n aaa     |"}
+            {"008": "011206n| ac|nnaabn          |n ana     |"}
           ],
           "result": {
             "@type": "Record",
@@ -18866,7 +18911,6 @@
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2001-12-06T00:00:00.0+01:00",
             "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
-            "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
             "mainEntity": { }
           },
           "addOnRevert": {
@@ -18896,7 +18940,28 @@
           }
         },
         {
-          "name": "Dreamhack (359324)",
+          "name": "Jurisdiction - Riksdagen (380717)",
+          "source": [
+            {"008": "141210n| ac|nnaabn          |n ana      "}
+          ],
+          "normalized": [
+            {"008": "141210n| ac|nnaabn          |n ana     |"}
+          ],
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "created": "2014-12-10T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Jurisdiction"}
+          }
+        },        
+        {
+          "name": "Meeting - Dreamhack (359324)",
           "source": [
             {"008": "130110n| ac|nnaabn           n ana      "}
           ],
@@ -18914,6 +18979,28 @@
           },
           "addOnRevert": {
             "mainEntity": {"@type": "Meeting"}
+          }
+        },
+        {
+          "name": "Family - Medici (364239)",
+          "NOTE:normalized": "See postProcessing spec for position 32, marc:personalName",
+          "source": [
+            {"008": "130612n| ac|nnaabn           n ana      "}
+          ],
+          "normalized": [
+            {"008": "130612n| ac|nnaabn          |n ana     |"}
+          ],
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "created": "2013-06-12T00:00:00.0+02:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Family"}
           }
         },
         {
@@ -18961,10 +19048,10 @@
         {
           "name": "Work - Antikrists mirakler (340686)",
           "source": [
-            {"008": "110119nb ac|nnaabn           n aaa      "}
+            {"008": "110119nb ac|nnaabn           n ana      "}
           ],
           "normalized": [
-            {"008": "110119nb ac|nnaabn          |n aaa     |"}
+            {"008": "110119nb ac|nnaabn          |n ana     |"}
           ],
           "result": {
             "@type": "Record",
@@ -18973,7 +19060,6 @@
             "recordStatus": "marc:CorrectedOrRevised",
             "created": "2011-01-19T00:00:00.0+01:00",
             "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatalogingRulesType-c"}],
-            "marc:personalName": {"@id": "https://id.kb.se/marc/PersonalNameType-a"},
             "marc:romanization": {"@id": "https://id.kb.se/marc/RomanizationType-b"},
             "mainEntity": { }
           },
