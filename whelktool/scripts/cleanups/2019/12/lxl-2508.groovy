@@ -42,7 +42,7 @@ Using as template:
 
 PrintWriter failedHoldIDs = getReportWriter("failed-holdIDs")
 PrintWriter failedBibIDs = getReportWriter("failed-bibIDs")
-PrintWriter scheduledForUpdating = getReportWriter("failed-bibIDs")
+PrintWriter scheduledForUpdating = getReportWriter("scheduled-for-update")
 
 def holdList = []
 
