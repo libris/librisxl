@@ -73,7 +73,11 @@ class WhelkCopier {
             }
         } else {
             def collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, dest.jsonld)
-            dest.createDocument(newDoc, "xl", "WhelkCopier", collection, false)
+            if (collection) {
+                dest.createDocument(newDoc, "xl", "WhelkCopier", collection, false)
+            } else {
+                System.err.println "Collection could not be determined for id ${newDoc.getShortId()}, document will not be exported."
+            }
         }
         copied++
     }
