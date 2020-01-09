@@ -1199,7 +1199,7 @@ class PostgreSQLComponent implements Storage {
             boolean filterOutNonChipTerms = false
             embellish(document, jsonld, filterOutNonChipTerms, { iris ->
                 iris.collectEntries {
-                    [(it): getDocumentByIri(it, connection)]
+                    [it: getDocumentByIri(it, connection)]
                 }
             })
 
@@ -1211,13 +1211,15 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    void embellish(Document document,
-                   JsonLd jsonld,
-                   boolean filterOutNonChipTerms,
-                   Function<List<String>, Map<String, Document>> docSupplier) {
+    static void embellish(Document document,
+                          JsonLd jsonld,
+                          boolean filterOutNonChipTerms,
+                          Function<List<String>, Map<String, Document>> docSupplier) {
 
-        List externalRefs = document.getExternalRefs()
-        List convertedExternalLinks = JsonLd.expandLinks(externalRefs, (Map) jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
+        List convertedExternalLinks = JsonLd.expandLinks(
+                document.getExternalRefs(),
+                (Map) jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
+
         Map referencedData = [:]
         Map externalDocs = docSupplier.apply(convertedExternalLinks)
         externalDocs.each { id, doc ->
@@ -1225,6 +1227,7 @@ class PostgreSQLComponent implements Storage {
                 referencedData[id] = doc.data
             }
         }
+
         jsonld.embellish(document.data, referencedData, filterOutNonChipTerms)
     }
 
