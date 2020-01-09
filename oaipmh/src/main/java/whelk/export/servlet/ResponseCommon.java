@@ -154,7 +154,7 @@ public class ResponseCommon
 
         if (embellish)
         {
-            document = OaiPmh.s_whelk.getStorage().loadEmbellished(document.getShortId(), OaiPmh.s_whelk.getJsonld());
+            document = OaiPmh.s_whelk.loadEmbellished(document.getShortId());
         }
         else
         {
@@ -273,7 +273,7 @@ public class ResponseCommon
                     continue;
                 if (!OaiPmh.s_whelk.getStorage().getCollectionBySystemID(systemID).equals("auth"))
                     continue;
-                Document auth = OaiPmh.s_whelk.getStorage().loadEmbellished(systemID, OaiPmh.s_whelk.getJsonld());
+                Document auth = OaiPmh.s_whelk.loadEmbellished(systemID);
 
                 writer.writeStartElement("auth");
                 writer.writeAttribute("id", auth.getShortId());

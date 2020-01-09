@@ -181,20 +181,8 @@ class ElasticSearch {
     }
 
     void embellish(Whelk whelk, Document document, Document copy) {
-        List externalRefs = document.getExternalRefs()
-        List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
-        Map referencedData = [:]
-        Map externalDocs = whelk.bulkLoad(convertedExternalLinks)
-        externalDocs.each { id, doc ->
-            if (id && doc && doc.hasProperty('data')) {
-                referencedData[id] = doc.data
-            }
-            else {
-                log.warn("Could not get external doc ${id} for ${document.getShortId()}, skipping...")
-            }
-        }
         boolean filterOutNonChipTerms = true // Consider using false here, since cards-in-cards work now.
-        whelk.jsonld.embellish(copy.data, referencedData, filterOutNonChipTerms)
+        whelk.embellish(copy, filterOutNonChipTerms)
     }
 
     private static void setComputedProperties(Document doc) {

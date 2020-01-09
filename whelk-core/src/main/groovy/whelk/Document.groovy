@@ -691,7 +691,7 @@ class Document {
             return Eval.me(ois.readObject())
         }
     }
-    
+
     /**
      * Replaces the main ID of this document with 'newId'.
      * Also replaces all derivatives of the old systemId, like for example oldId#it with the corresponding derivative
