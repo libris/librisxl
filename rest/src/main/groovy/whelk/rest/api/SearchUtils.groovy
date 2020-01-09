@@ -128,6 +128,7 @@ class SearchUtils {
         ids = slice(ids, offset, offset+limit)
 
         List items = whelk.bulkLoad(ids).values()
+                .each(whelk.&embellish)
                 .collect(SearchUtils.&formatReverseResult)
                 .findAll{ !it.isEmpty() }
                 .collect{applyLens(it, id, lens)}
