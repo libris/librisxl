@@ -380,15 +380,11 @@ class Whelk implements Storage {
     }
 
     void embellish(Document document, boolean filterOutNonChipTerms = true) {
-        List externalRefs = document.getExternalRefs()
-        List convertedExternalLinks = JsonLd.expandLinks(externalRefs,
-                (Map) jsonld.getDisplayData().get(JsonLd.CONTEXT_KEY))
-        Map referencedData = bulkLoad(convertedExternalLinks)
-        Map referencedData2 = new HashMap()
-        for (Object key : referencedData.keySet()) {
-            referencedData2.put(key, ((Document) referencedData.get(key)).data)
-        }
-        jsonld.embellish(document.data, referencedData2, filterOutNonChipTerms)
+        storage.embellish(document, jsonld, filterOutNonChipTerms, this.&bulkLoad)
+    }
+
+    Document loadEmbellished(String systemId) {
+        return storage.loadEmbellished(systemId, jsonld)
     }
 
     List<String> findIdsLinkingTo(String idOrIri) {

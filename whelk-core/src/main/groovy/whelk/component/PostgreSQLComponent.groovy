@@ -28,6 +28,7 @@ import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
 import java.sql.Timestamp
+import java.util.function.Function
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -1194,21 +1195,40 @@ class PostgreSQLComponent implements Storage {
 
             // Cache-miss, embellish and store
             Document document = load(id, connection)
-            List externalRefs = document.getExternalRefs()
-            List convertedExternalLinks = JsonLd.expandLinks(externalRefs, (Map) jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
-            Map referencedData = [:]
-            for (String iri : convertedExternalLinks) {
-                Document externalDocument = getDocumentByIri(iri, connection)
-                if (externalDocument != null)
-                    referencedData.put(externalDocument.getShortId(), externalDocument.data)
-            }
-            jsonld.embellish(document.data, referencedData, false)
+
+            boolean filterOutNonChipTerms = false
+            embellish(document, jsonld, filterOutNonChipTerms, { iris ->
+                iris.collectEntries {
+                    [it: getDocumentByIri(it, connection)]
+                }
+            })
+
             cacheEmbellishedDocument(id, document, connection)
             return document
         }
         finally {
             close(resultSet, selectStatement)
         }
+    }
+
+    static void embellish(Document document,
+                          JsonLd jsonld,
+                          boolean filterOutNonChipTerms,
+                          Function<List<String>, Map<String, Document>> docSupplier) {
+
+        List convertedExternalLinks = JsonLd.expandLinks(
+                document.getExternalRefs(),
+                (Map) jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
+
+        Map referencedData = [:]
+        Map externalDocs = docSupplier.apply(convertedExternalLinks)
+        externalDocs.each { id, doc ->
+            if (id && doc && doc.hasProperty('data')) {
+                referencedData[id] = doc.data
+            }
+        }
+
+        jsonld.embellish(document.data, referencedData, filterOutNonChipTerms)
     }
 
     String getCollectionBySystemID(String id) {

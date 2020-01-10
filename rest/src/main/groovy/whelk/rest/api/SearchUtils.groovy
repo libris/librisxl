@@ -261,22 +261,6 @@ class SearchUtils {
         return result
     }
 
-    private List embellishItems(List items) {
-        List embellished = []
-
-        for (item in items) {
-            Map graph = JsonLd.flatten(item)
-            List refs = JsonLd.getExternalReferences(graph)
-            List ids = ld.expandLinks(refs)
-            Map recordMap = whelk.bulkLoad(ids).collectEntries { id, doc -> [id, doc.data] }
-            ld.embellish(graph, recordMap)
-
-            embellished << JsonLd.frame(item[JsonLd.ID_KEY], null, graph, true)
-        }
-
-        return embellished
-    }
-
     private Map assembleSearchResults(SearchType st, List items,
                                       List mappings, Map pageParams,
                                       int limit, int offset, int total) {

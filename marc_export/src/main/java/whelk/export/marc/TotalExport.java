@@ -170,17 +170,17 @@ public class TotalExport
 
     private void executeBatch(Batch batch, int threadIndex)
     {
-        try (Connection connection = getConnection())
+        try
         {
             for (String bibUri : batch.bibUrisToConvert)
             {
-                String systemID = m_whelk.getStorage().getSystemIdByIri(bibUri, connection);
+                String systemID = m_whelk.getStorage().getSystemIdByIri(bibUri);
                 if (systemID == null) {
                     log.warn("BibURI " + bibUri + " not found in system, skipping...");
                     continue;
                 }
 
-                Document document = m_whelk.getStorage().loadEmbellished(systemID, m_whelk.getJsonld(), connection);
+                Document document = m_whelk.loadEmbellished(systemID);
 
                 Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(batch.profile, document, m_whelk, m_toMarcXmlConverter);
                 if (result == null) // A conversion error will already have been logged.
@@ -202,7 +202,7 @@ public class TotalExport
                 }
 
             }
-        } catch (SQLException e)
+        } catch (Exception e)
         {
             throw new RuntimeException(e);
         }
