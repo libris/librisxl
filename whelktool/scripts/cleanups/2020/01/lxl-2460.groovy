@@ -1,7 +1,7 @@
 PrintWriter failedHoldIDs = getReportWriter("failed-holdIDs")
 PrintWriter scheduledForUpdating = getReportWriter("scheduled-updates")
 
-String where = "data#>'{@graph,1,hasComponent}' @> '[{\"@type\": \"Item\", \"heldBy\": {\"@id\": \"https://libris.kb.se/library/Jox\"}}]'"
+String where = "data#>'{@graph,1,hasComponent}' @> '[{\"@type\": \"Item\", \"heldBy\": {\"@id\": \"https://libris.kb.se/library/Jox\"}}]' or data#>>'{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/Jox'"
 
 selectBySqlWhere(where, silent: false) { hold ->
     def heldBy = hold.graph[1].heldBy
@@ -16,7 +16,7 @@ selectBySqlWhere(where, silent: false) { hold ->
     }
 
     scheduledForUpdating.println("${hold.doc.getURI()}")
-    hold.scheduleSave(onError: { e ->
+    hold.scheduleSave(loud: true, onError: { e ->
         failedHoldIDs.println("Failed to update ${hold.doc.shortId} due to: $e")
     })
 }
