@@ -187,7 +187,7 @@ class Whelk implements Storage {
         return result
     }
 
-    public void reindexDependers(Document document) {
+    public void reindexAffected(Document document) {
         List<Tuple2<String, String>> dependers = storage.followDependers(document.getShortId(), JsonLd.NON_DEPENDANT_RELATIONS)
 
         // Filter out "itemOf"-links. In other words, do not bother reindexing hold posts (they're not embellished in elastic)
@@ -197,6 +197,10 @@ class Whelk implements Storage {
                 idsToReindex.add( (String) depender.get(0))
             }
         }
+
+        // 1-step dependencies (may) need reindexing, to update their linksHereCount.
+        Collection<String> dependencies = storage.getDependencies(document.getShortId())
+        idsToReindex.addAll(dependencies)
 
         // If the number of dependers isn't too large or we are inside a batch job. Update them synchronously
         if (dependers.size() < 20 || batchJobThread() ) {
@@ -292,7 +296,7 @@ class Whelk implements Storage {
                 putInAuthCache(document)
             if (elastic) {
                 elastic.index(document, collection, this)
-                reindexDependers(document)
+                reindexAffected(document)
             }
         }
         return success
@@ -308,7 +312,7 @@ class Whelk implements Storage {
             putInAuthCache(updated)
         if (elastic) {
             elastic.index(updated, collection, this)
-            reindexDependers(updated)
+            reindexAffected(updated)
         }
         return updated
     }
@@ -325,7 +329,7 @@ class Whelk implements Storage {
             if (elastic) {
                 elastic.bulkIndex(documents, collection, this)
                 for (Document doc : documents) {
-                    reindexDependers(doc)
+                    reindexAffected(doc)
                 }
             }
         } else {

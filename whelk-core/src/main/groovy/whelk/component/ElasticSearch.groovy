@@ -165,7 +165,7 @@ class ElasticSearch {
         boolean addSearchKey = true
         copy.data['@graph'] = copy.data['@graph'].collect { whelk.jsonld.toCard(it, chipsify, addSearchKey) }
 
-        setComputedProperties(copy)
+        setComputedProperties(copy, whelk)
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = document.getThingIdentifiers()
         if (thingIds.isEmpty()) {
@@ -185,12 +185,14 @@ class ElasticSearch {
         whelk.embellish(copy, filterOutNonChipTerms)
     }
 
-    private static void setComputedProperties(Document doc) {
+    private static void setComputedProperties(Document doc, Whelk whelk) {
         getOtherIsbns(doc.getIsbnValues())
                 .each { doc.addTypedThingIdentifier('ISBN', it) }
 
         getOtherIsbns(doc.getIsbnHiddenValues())
                 .each { doc.addIndirectTypedThingIdentifier('ISBN', it) }
+
+        doc.data['@graph'][0]['linksHereCount'] = whelk.getStorage().getDependers(doc.getShortId()).size()
     }
 
     private static Collection<String> getOtherIsbns(List<String> isbns) {
