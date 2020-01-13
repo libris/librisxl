@@ -250,7 +250,7 @@ class WhelkTool {
             }
         }
 
-        def timedLogger = setupTimedLogger(counter)
+        def loggerFuture = !stepWise ? setupTimedLogger(counter) : null
 
         for (Document doc : selection) {
             if (doc.deleted) {
@@ -294,7 +294,7 @@ class WhelkTool {
             log "Processed selection: ${counter.summary}. Done in ${counter.elapsedSeconds} s."
             log()
         }
-        timedLogger.cancel(true)
+        loggerFuture?.cancel(true)
     }
 
     private def createExecutorService(int batchSize) {
