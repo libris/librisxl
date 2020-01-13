@@ -149,18 +149,14 @@ class Whelk implements Storage {
     }
 
     Map<String, Document> bulkLoad(List<String> ids) {
-        Map result = [:]
+        Map<String, Document> result = [:]
         ids.each { id ->
-
             Document doc
 
             // Check the auth cache
             if (useAuthCache && authCache.containsKey(id)) {
-                /*if (hits++ % 100 == 0)
-                    println("Fetching with cache: $id, Sofar hits: $hits , misses: $misses")*/
                 result[id] = authCache.get(id)
             } else {
-
                 // Fetch from DB
                 if (id.startsWith(Document.BASE_URI.toString())) {
                     id = Document.BASE_URI.resolve(id).getPath().substring(1)
@@ -169,12 +165,7 @@ class Whelk implements Storage {
                 if (doc == null)
                     doc = storage.getDocumentByIri(id)
 
-
                 if (doc && !doc.deleted) {
-
-                    /*if (misses++ % 100 == 0)
-                        println("Fetching without cache: $id (${doc.getCompleteId()}), Sofar hits: $hits , misses: $misses")*/
-
                     result[id] = doc
                     String collection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
                     // TODO: only put used dependencies in cache; and either factor out collectionsToCache, or skip that check!
