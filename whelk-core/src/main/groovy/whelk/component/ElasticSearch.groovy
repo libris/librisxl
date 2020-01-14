@@ -151,6 +151,9 @@ class ElasticSearch {
         Map responseMap = mapper.readValue(response, Map)
         log.debug("Response: ${responseMap.deleted} of ${responseMap.total} " +
                   "objects deleted")
+        if (responseMap.deleted == 0) {
+            log.warn("Record with id $identifier was not deleted from the Elasticsearch index.")
+        }
     }
 
     Map getShapeForIndex(Document document, Whelk whelk, String collection) {
