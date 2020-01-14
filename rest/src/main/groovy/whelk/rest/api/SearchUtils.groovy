@@ -201,7 +201,7 @@ class SearchUtils {
                 def item = ld.toCard(it)
                 item['reverseLinks'] = [
                         (JsonLd.TYPE_KEY) : 'PartialCollectionView',
-                        (JsonLd.ID_KEY) : Document.getBASE_URI().toString() + 'find?o=' + it['@id'],
+                        (JsonLd.ID_KEY) : URLEncoder.encode(Document.getBASE_URI().resolve('find?o=' + it['@id']).toString()),
                         'totalItems' : it['meta']['linksHereCount']
                 ]
                 return item
