@@ -5191,18 +5191,13 @@
       "_spec": [
         {
           "source": {"015": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "(BIBBI)0245010"},
-            {"a": "nf0909903"}
+            {"a": "GBA3-81295"}
           ]}},
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "identifiedBy": [
               {
                 "@type": "NBN",
-                "value": "(BIBBI)0245010"
-              },
-              {
-                "@type": "NBN",
-                "value": "nf0909903"
+                "value": "GBA3-81295"
               }
             ]
           }}
