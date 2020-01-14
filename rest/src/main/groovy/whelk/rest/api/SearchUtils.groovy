@@ -197,7 +197,15 @@ class SearchUtils {
 
         List items = []
         if (esResult['items']) {
-            items = esResult['items'].collect { ld.toCard(it) }
+            items = esResult['items'].collect {
+                def item = ld.toCard(it)
+                item['reverseLinks'] = [
+                        (JsonLd.TYPE_KEY) : 'PartialCollectionView',
+                        (JsonLd.ID_KEY) : Document.getBASE_URI().toString() + 'find?o=' + it['@id'],
+                        'totalItems' : it['meta']['linksHereCount']
+                ]
+                return item
+            }
         }
 
         Map stats = buildStats(esResult['aggregations'],
