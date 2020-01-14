@@ -5114,9 +5114,8 @@
       "include": ["idbase"],
       "resourceType": "LCCN",
       "$a": {"property": "value"},
-      "$b": {"ignored": true},
+      "$b": {"ignored": true, "NOTE:LC": "NUCMC control number (R) - ignore"},
       "$z": {"addProperty": "marc:hiddenValue"},
-      "$8": {"property": "marc:groupid"},
       "_spec": [
         {
           "source": {
@@ -5134,7 +5133,7 @@
           }
         },
         {
-          "name": "ingore $b",
+          "name": "ignore $b",
           "source": {
             "010": {
               "ind1": " ", "ind2": " ",
