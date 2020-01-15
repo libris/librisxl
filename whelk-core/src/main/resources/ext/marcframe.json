@@ -16867,12 +16867,11 @@
         },
       "_:hasInstanceDescribedBy": {
           "about": "_:hasInstance",
-          "addLink": "describedBy",
+          "addLink": "describedBy", "infer": true,
           "resourceType": "Record"
         },
         "_:describedBy": {
-            "addLink": "describedBy",
-            "infer": true,
+            "addLink": "describedBy", "infer": true,
             "resourceType": "Record"
           }
       },
@@ -17134,6 +17133,27 @@
                   }],
                   "part": ["S.184-212"],
                   "provisionActivityStatement": "cop. 2009"
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "name": "Infer describedBy from meta",
+          "normalized": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+            {"t": "Tidskrift"},
+            {"w": "8258455"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "isPartOf": [{
+                "@type": "Aggregate",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "meta": [{"@type": "Record", "controlNumber": "8258455"}],
+                  "hasTitle": [{"@type": "Title", "mainTitle": "Tidskrift"}]
                 },
                 "marc:toDisplayNote": true
               }]
@@ -17615,6 +17635,26 @@
                       "@type": "Record",
                       "controlNumber": "000"
                     }]
+                  }
+              }]
+            }
+          }}
+        },
+        {
+          "name": "Infer describedBy from meta",
+          "normalized": {"787": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "State"},
+            {"w": "000"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [{
+                  "@type": "Work",
+                  "hasInstance": {
+                    "@type": "Instance",
+                    "hasTitle": [{"@type": "Title", "mainTitle": "State"}],
+                    "meta": [{"@type": "Record", "controlNumber": "000"}]
                   }
               }]
             }
