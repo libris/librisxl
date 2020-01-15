@@ -25,7 +25,14 @@ class WhelkCopier {
 
     void run() {
         for (id in recordIds) {
-            def doc = source.getDocument(id)
+            def doc
+            if (id.contains("/")) {
+                doc = source.storage.getDocumentByIri(id)
+                System.out.println("GOT FROM IRI: " + id + "\n" + doc.data)
+            }
+            else
+                doc = source.getDocument(id)
+
             // this links to:
             for (relDoc in selectBySqlWhere("""id in (select dependsonid from lddb__dependencies where id = '${id}')""")) {
                 if (relDoc.deleted) continue
