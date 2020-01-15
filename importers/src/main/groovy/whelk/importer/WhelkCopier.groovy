@@ -28,10 +28,14 @@ class WhelkCopier {
             def doc
             if (id.contains("/")) {
                 doc = source.storage.getDocumentByIri(id)
-                System.out.println("GOT FROM IRI: " + id + "\n" + doc.data)
             }
             else
                 doc = source.getDocument(id)
+            if (doc == null) {
+                System.err.println("Could not load document with ID: $id");
+                continue
+            }
+            doc.baseUri = source.baseUri
 
             // this links to:
             for (relDoc in selectBySqlWhere("""id in (select dependsonid from lddb__dependencies where id = '${id}')""")) {
