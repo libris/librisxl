@@ -429,6 +429,35 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
+    /**
+     * This is a variant of createDocument that does no or minimal denormalization or indexing.
+     * It should NOT be used to create records in a production environment. Its intended purpose is
+     * to be used when copying data from one xl environment to another.
+     */
+    boolean quickCreateDocument(Document doc, String changedIn, String changedBy, String collection) {
+        Connection connection = getConnection()
+        connection.setAutoCommit(false)
+        try {
+            Date now = new Date()
+            PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
+            insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, false)
+            insert.executeUpdate()
+
+            saveVersion(doc, connection, now, now, changedIn, changedBy, collection, false)
+            refreshDerivativeTables(doc, connection, false)
+
+            connection.commit()
+            return true
+        } catch (Exception e) {
+            log.error("Failed to save document: ${e.message}. Rolling back.")
+            connection.rollback()
+            throw e
+        } finally {
+            connection.close()
+            log.debug("[store] Closed connection.")
+        }
+    }
+
     void acquireRowLock(String id, Connection connection) {
         PreparedStatement lockStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
         lockStatement.setString(1, id)

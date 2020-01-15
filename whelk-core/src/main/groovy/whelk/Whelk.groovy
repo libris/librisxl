@@ -313,6 +313,15 @@ class Whelk implements Storage {
         return updated
     }
 
+    /**
+     * This is a variant of createDocument that does no or minimal denormalization or indexing.
+     * It should NOT be used to create records in a production environment. Its intended purpose is
+     * to be used when copying data from one xl environment to another.
+     */
+    boolean quickCreateDocument(Document document, String changedIn, String changedBy, String collection) {
+        return storage.quickCreateDocument(document, changedIn, changedBy, collection)
+    }
+
     void bulkStore(final List<Document> documents, String changedIn,
                    String changedBy, String collection,
                    @Deprecated boolean useDocumentCache = false) {
