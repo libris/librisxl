@@ -125,6 +125,7 @@ class Whelk implements Storage {
         loadDisplayData()
         loadVocabData()
         jsonld = new JsonLd(contextData, displayData, vocabData)
+        storage.setJsonld(jsonld)
         log.info("Loaded with core data")
     }
 

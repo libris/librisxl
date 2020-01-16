@@ -89,6 +89,7 @@ class PostgreSQLComponent implements Storage {
     String mainTableName
     LinkFinder linkFinder
     DependencyCache dependencyCache
+    JsonLd jsonld
 
     class AcquireLockException extends RuntimeException { AcquireLockException(String s) { super(s) } }
 
@@ -157,7 +158,7 @@ class PostgreSQLComponent implements Storage {
         INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, iri, graphIndex, mainId) VALUES (?,?,?,?)"
 
         DELETE_DEPENDENCIES = "DELETE FROM $dependenciesTableName WHERE id = ?"
-        INSERT_DEPENDENCIES = "INSERT INTO $dependenciesTableName (id, relation, dependsOnId) VALUES (?,?,?)"
+        INSERT_DEPENDENCIES = "INSERT INTO $dependenciesTableName (id, relation, dependsOnId, inCard) VALUES (?,?,?,?)"
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted) SELECT ?,?,?,?,?,?,?,?,? "
 
@@ -772,6 +773,7 @@ class PostgreSQLComponent implements Storage {
 
     private List<String[]> _calculateDependenciesSystemIDs(Document doc, Connection connection) {
         List<String[]> dependencies = []
+        List notInCard = nonCardDependencies(doc)
         for (String[] reference : doc.getRefsWithRelation()) {
             String relation = reference[0]
             String iri = reference[1]
@@ -790,13 +792,25 @@ class PostgreSQLComponent implements Storage {
                         throw new LinkValidationException("Record supposedly depends on deleted record: ${rs.getString(1)}, which is not allowed.")
 
                     if (rs.getString(1) != doc.getShortId()) // Exclude A -> A (self-references)
-                        dependencies.add([relation, rs.getString(1)] as String[])
+                        dependencies.add([relation, rs.getString(1), !notInCard.contains(iri)] as String[])
                 }
             } finally {
                 close(rs, getSystemId)
             }
         }
         return dependencies
+    }
+
+    private List nonCardDependencies(Document doc) {
+        if (!jsonld) {
+            return []
+        }
+
+        Document card = doc.clone()
+        card.data = jsonld.toCard(card.data, false)
+        List refs = doc.getExternalRefs()
+        refs.removeAll(card.getExternalRefs())
+        return refs
     }
 
     private void saveDependencies(Document doc, Connection connection) {
@@ -819,6 +833,7 @@ class PostgreSQLComponent implements Storage {
                 insertDependencies.setString(1, doc.getShortId())
                 insertDependencies.setString(2, dependsOn[0])
                 insertDependencies.setString(3, dependsOn[1])
+                insertDependencies.setBoolean(4, Boolean.parseBoolean(dependsOn[2]))
                 insertDependencies.addBatch()
             }
             try {
