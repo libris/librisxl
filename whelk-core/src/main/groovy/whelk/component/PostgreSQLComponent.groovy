@@ -1228,11 +1228,19 @@ class PostgreSQLComponent implements Storage {
             Document document = load(id, connection)
 
             boolean filterOutNonChipTerms = false
-            embellish(document, jsonld, filterOutNonChipTerms, { iris ->
-                iris.collectEntries { iri ->
-                    [(iri): getDocumentByIri(iri, connection)]
-                }
-            })
+            embellish(document, jsonld, filterOutNonChipTerms,
+                    { iris ->
+                        iris.collectEntries { iri ->
+                            [(iri): getDocumentByIri(iri, connection)]
+                        }
+                    },
+                    { iris ->
+                        iris.collectMany{ iri ->
+                            followDependencies(getSystemIdByIri(iri, connection), connection)
+                        }.collect{ idAndRelation ->
+                            getThingMainIriBySystemId(idAndRelation.getFirst(), connection)
+                        }.findAll{ it != null }
+                    })
 
             cacheEmbellishedDocument(id, document, connection)
             return document
@@ -1245,12 +1253,15 @@ class PostgreSQLComponent implements Storage {
     static void embellish(Document document,
                           JsonLd jsonld,
                           boolean filterOutNonChipTerms,
-                          Function<List<String>, Map<String, Document>> docSupplier) {
+                          Function<List<String>, Map<String, Document>> docSupplier,
+                          Function<List<String>, List<String>> dependencySupplier
+    ) {
 
-        List convertedExternalLinks = jsonld.expandLinks(document.getExternalRefs())
+        Set convertedExternalLinks = dependencySupplier.apply(jsonld.expandLinks(document.getExternalRefs())).toSet()
+        convertedExternalLinks.removeAll(document.getThingIdentifiers())
 
         Map referencedData = [:]
-        Map externalDocs = docSupplier.apply(convertedExternalLinks)
+        Map externalDocs = docSupplier.apply(convertedExternalLinks.toList())
         externalDocs.each { id, doc ->
             if (id && doc && doc.hasProperty('data')) {
                 referencedData[id] = doc.data
@@ -1259,6 +1270,8 @@ class PostgreSQLComponent implements Storage {
 
         jsonld.embellish(document.data, referencedData, filterOutNonChipTerms)
     }
+
+
 
     String getCollectionBySystemID(String id) {
         Connection connection = getConnection()
@@ -1361,10 +1374,18 @@ class PostgreSQLComponent implements Storage {
 
     String getThingMainIriBySystemId(String id) {
         Connection connection = null
+        try {
+            connection = getConnection()
+            return getThingMainIriBySystemId(id, connection)
+        } finally {
+            close(connection)
+        }
+    }
+
+    String getThingMainIriBySystemId(String id, Connection connection) {
         PreparedStatement preparedStatement = null
         ResultSet rs = null
         try {
-            connection = getConnection()
             preparedStatement = connection.prepareStatement(GET_THING_MAIN_IRI_BY_SYSTEMID)
             preparedStatement.setString(1, id)
             rs = preparedStatement.executeQuery()
@@ -1372,7 +1393,7 @@ class PostgreSQLComponent implements Storage {
                 return rs.getString(1)
             throw new RuntimeException("No IRI found for system id $id")
         } finally {
-            close(rs, preparedStatement, connection)
+            close(rs, preparedStatement)
         }
     }
 
@@ -1422,10 +1443,14 @@ class PostgreSQLComponent implements Storage {
     List<Tuple2<String, String>> followDependencies(String id, List<String> excludeRelations = []) {
         Connection connection = getConnection()
         try {
-            return followDependencyData(id, FOLLOW_DEPENDENCIES, connection, excludeRelations)
+            return followDependencies(id, connection, excludeRelations)
         } finally {
             close(connection)
         }
+    }
+
+    List<Tuple2<String, String>> followDependencies(String id, Connection connection, List<String> excludeRelations = []) {
+        return followDependencyData(id, FOLLOW_DEPENDENCIES, connection, excludeRelations)
     }
 
     List<Tuple2<String, String>> followDependers(String id, List<String> excludeRelations = []) {

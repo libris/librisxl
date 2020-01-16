@@ -393,7 +393,13 @@ class Whelk implements Storage {
     }
 
     void embellish(Document document, boolean filterOutNonChipTerms = true) {
-        storage.embellish(document, jsonld, filterOutNonChipTerms, this.&bulkLoad)
+        storage.embellish(document, jsonld, filterOutNonChipTerms, this.&bulkLoad, { iris ->
+            iris.collectMany{ iri ->
+                storage.followDependencies(storage.getSystemIdByIri(iri))
+            }.collect{ idAndRelation ->
+                storage.getThingMainIriBySystemId(idAndRelation.getFirst())
+            }.findAll{ it != null }
+        })
     }
 
     Document loadEmbellished(String systemId) {
