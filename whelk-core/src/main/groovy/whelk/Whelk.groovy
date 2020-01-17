@@ -178,20 +178,32 @@ class Whelk implements Storage {
         return result
     }
 
-    public void reindexDependers(Document document) {
+    public void reindexAffected(Document document, Set<String> preUpdateDependencies) {
         List<Tuple2<String, String>> dependers = storage.followDependers(document.getShortId(), JsonLd.NON_DEPENDANT_RELATIONS)
 
         // Filter out "itemOf"-links. In other words, do not bother reindexing hold posts (they're not embellished in elastic)
-        List<String> idsToReindex = []
+        TreeSet<String> idsToReindex = new TreeSet<>()
         for (Tuple2<String, String> depender : dependers) {
             if (!depender.get(1).equals("itemOf")) {
                 idsToReindex.add( (String) depender.get(0))
             }
         }
 
+        // 1-step dependencies (may) need reindexing, to update their linksHereCount.
+        Set<String> dependencies = storage.getDependencies(document.getShortId())
+
+        TreeSet removedLinksTo = new TreeSet(preUpdateDependencies)
+        removedLinksTo.removeAll(dependencies)
+
+        TreeSet addedLinksTo = new TreeSet(dependencies)
+        addedLinksTo.removeAll(preUpdateDependencies)
+
+        idsToReindex.addAll(addedLinksTo)
+        idsToReindex.addAll(removedLinksTo)
+
         // If the number of dependers isn't too large or we are inside a batch job. Update them synchronously
-        if (dependers.size() < 20 || batchJobThread() ) {
-            Map dependingDocuments = bulkLoad(idsToReindex)
+        if (idsToReindex.size() < 20 || batchJobThread() ) {
+            Map dependingDocuments = bulkLoad(idsToReindex.toList())
             for (String id : dependingDocuments.keySet()) {
                 Document dependingDoc = dependingDocuments.get(id)
                 String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
@@ -283,13 +295,14 @@ class Whelk implements Storage {
                 putInAuthCache(document)
             if (elastic) {
                 elastic.index(document, collection, this)
-                reindexDependers(document)
+                reindexAffected(document, new TreeSet<String>())
             }
         }
         return success
     }
 
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
+        Collection<String> preUpdateDependencies = storage.getDependencies(id)
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
         if (updated == null) {
             return null
@@ -299,7 +312,7 @@ class Whelk implements Storage {
             putInAuthCache(updated)
         if (elastic) {
             elastic.index(updated, collection, this)
-            reindexDependers(updated)
+            reindexAffected(updated, preUpdateDependencies)
         }
         return updated
     }
@@ -325,7 +338,7 @@ class Whelk implements Storage {
             if (elastic) {
                 elastic.bulkIndex(documents, collection, this)
                 for (Document doc : documents) {
-                    reindexDependers(doc)
+                    reindexAffected(doc, new TreeSet<String>())
                 }
             }
         } else {

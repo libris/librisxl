@@ -197,7 +197,14 @@ class SearchUtils {
 
         List items = []
         if (esResult['items']) {
-            items = esResult['items'].collect { ld.toCard(it) }
+            items = esResult['items'].collect {
+                def item = ld.toCard(it)
+                // This object must be re-added because it gets filtered out in toCard().
+                item['reverseLinks'] = it['reverseLinks']
+                if (item['reverseLinks'] != null)
+                    item['reverseLinks'][JsonLd.ID_KEY] = Document.getBASE_URI().resolve('find?o=' + URLEncoder.encode(it['@id']).toString())
+                return item
+            }
         }
 
         Map stats = buildStats(esResult['aggregations'],
