@@ -179,14 +179,14 @@ class Whelk implements Storage {
         return result
     }
 
-    public void reindexAffected(Document document, Set<String> preUpdateDependencies) {
-        List<Tuple2<String, String>> dependers = storage.followDependers(document.getShortId(), JsonLd.NON_DEPENDANT_RELATIONS)
+     void reindexAffected(Document document, Set<String> preUpdateDependencies) {
+        List<Tuple2<String, String>> dependers = storage.getInCardDependers(document.getShortId())
 
         // Filter out "itemOf"-links. In other words, do not bother reindexing hold posts (they're not embellished in elastic)
         TreeSet<String> idsToReindex = new TreeSet<>()
         for (Tuple2<String, String> depender : dependers) {
-            if (!depender.get(1).equals("itemOf")) {
-                idsToReindex.add( (String) depender.get(0))
+            if (!depender.getSecond().equals("itemOf")) {
+                idsToReindex.add(depender.getFirst())
             }
         }
 

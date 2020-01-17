@@ -276,14 +276,14 @@ class PostgreSQLComponent implements Storage {
                 "OFFSET 1\n"
 
         FOLLOW_EMBELLISH_DEPENDERS =
-                "WITH RECURSIVE deps(id, incard) AS (\n" +
-                "        VALUES (?, true)\n" +
+                "WITH RECURSIVE deps(id, relation, incard) AS (\n" +
+                "        VALUES (?, null, true)\n" +
                 "    UNION\n" +
-                "        SELECT d.id, d.incard\n" +
+                "        SELECT d.id, d.relation, d.incard\n" +
                 "        FROM $dependenciesTableName d\n" +
                 "        INNER JOIN deps deps1 ON d.dependsonid = deps1.id AND deps1.incard AND d.id != ?\n" +
                 "    )\n" +
-                "SELECT id\n" +
+                "SELECT id, relation\n" +
                 "FROM deps\n" +
                 "OFFSET 1"
 
@@ -902,6 +902,26 @@ class PostgreSQLComponent implements Storage {
             while(rs.next()) {
                 String card = rs.getString("card")
                 result[rs.getString("id")] = card != null ? mapper.readValue(card, Map) : null
+            }
+            return result
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    List<Tuple2<String, String>> getInCardDependers(String id) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            preparedStatement = connection.prepareStatement(FOLLOW_EMBELLISH_DEPENDERS)
+            preparedStatement.setString(1, id)
+            preparedStatement.setString(2, id)
+
+            rs = preparedStatement.executeQuery()
+            List<Tuple2<String, String>> result = []
+            while(rs.next()) {
+                result << new Tuple2(rs.getString("id"), rs.getString("relation"))
             }
             return result
         } finally {
