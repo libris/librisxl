@@ -24,20 +24,42 @@ class WhelkCopier {
     }
 
     void run() {
+        TreeSet<String> alreadyImportedIDs = new TreeSet<>()
+
         for (id in recordIds) {
-            def doc = source.getDocument(id)
+            def doc
+            if (id.contains("/")) {
+                doc = source.storage.getDocumentByIri(id)
+            }
+            else
+                doc = source.getDocument(id)
+            if (doc == null) {
+                System.err.println("Could not load document with ID: $id");
+                continue
+            }
+            doc.baseUri = source.baseUri
+
             // this links to:
             for (relDoc in selectBySqlWhere("""id in (select dependsonid from lddb__dependencies where id = '${id}')""")) {
                 if (relDoc.deleted) continue
                 relDoc.baseUri = source.baseUri
-                save(relDoc)
+                if (!alreadyImportedIDs.contains(relDoc.shortId)) {
+                    alreadyImportedIDs.add(relDoc.shortId)
+                    save(relDoc)
+                }
             }
-            save(doc)
+            if (!alreadyImportedIDs.contains(doc.shortId)) {
+                alreadyImportedIDs.add(doc.shortId)
+                save(doc)
+            }
             // links to this:
             for (revDoc in selectBySqlWhere("""id in (select id from lddb__dependencies where dependsonid = '${id}')""")) {
                 if (revDoc.deleted) continue
                 revDoc.baseUri = source.baseUri
-                save(revDoc)
+                if (!alreadyImportedIDs.contains(revDoc.shortId)) {
+                    alreadyImportedIDs.add(revDoc.shortId)
+                    save(revDoc)
+                }
             }
         }
         System.err.println "Copied $copied documents (from ${recordIds.size()} selected)."
@@ -67,18 +89,17 @@ class WhelkCopier {
         def newId = dest.baseUri.resolve(doc.shortId).toString()
         newDoc.id = newId
 
-        if (dest.storage.getMainId(newId)) {
-            dest.storeAtomicUpdate(newDoc.getShortId(), true, "xl", "WhelkCopier") {
-                it.data = newDoc.data
+        def collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, dest.jsonld)
+        if (collection && collection != "definitions") {
+            try {
+                dest.quickCreateDocument(newDoc, "xl", "WhelkCopier", collection)
+            } catch (Exception e) {
+                System.err.println("Could not save $doc.shortId due to: $e")
             }
         } else {
-            def collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, dest.jsonld)
-            if (collection) {
-                dest.createDocument(newDoc, "xl", "WhelkCopier", collection, false)
-            } else {
-                System.err.println "Collection could not be determined for id ${newDoc.getShortId()}, document will not be exported."
-            }
+            System.err.println "Collection could not be determined for id ${newDoc.getShortId()}, document will not be exported."
         }
+
         copied++
     }
 
