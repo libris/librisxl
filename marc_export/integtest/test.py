@@ -30,7 +30,6 @@ def reset():
     queueSql("delete from lddb__versions where changedIn = $$integtest$$;")
     queueSql("delete from lddb__dependencies where id in (select id from lddb where changedIn = $$integtest$$);")
     queueSql("delete from lddb where changedIn = $$integtest$$;")
-    queueSql("delete from lddb__embellished;")
 
 def newBib(jsonstring, agent, systemid, timestring):
     jsonstring = jsonstring.replace("TEMPID", systemid)
@@ -54,7 +53,6 @@ def newHold(jsonstring, agent, systemid, itemof, sigel, timestring):
 def updateRecord(agent, systemid, timestring):
     queueSql("insert into lddb__versions (id, data, collection, changedIn, checksum, changedBy, modified) select id, data, collection, changedIn, checksum, $${}$$ as changedBy, $${}$$ as modified from lddb where id = $${}$$;".format(agent, timestring, systemid))
     queueSql("update lddb set modified = $${}$$, changedBy = $${}$$ where id = $${}$$;".format(timestring, agent, systemid))
-    queueSql("delete from lddb__embellished;")
 
 def relinkHolding(jsonstring, systemid, itemof, sigel):
     jsonstring = jsonstring.replace("TEMPID", systemid)

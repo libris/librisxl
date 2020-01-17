@@ -59,7 +59,7 @@ class PostgreSQLComponent implements Storage {
 
     // SQL statements
     protected String UPDATE_DOCUMENT, INSERT_DOCUMENT,
-                     INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_EMBELLISHED_DOCUMENT,
+                     INSERT_DOCUMENT_VERSION, GET_DOCUMENT,
                      GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS,
                                            GET_DOCUMENT_VERSION_BY_MAIN_ID,
                                            GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID,
@@ -82,8 +82,6 @@ class PostgreSQLComponent implements Storage {
     protected String GET_MAX_MODIFIED
     protected String UPDATE_MAX_MODIFIED
     protected String GET_LEGACY_PROFILE
-    protected String INSERT_EMBELLISHED_DOCUMENT
-    protected String DELETE_EMBELLISHED_DOCUMENT
     protected String UPSERT_CARD
     protected String GET_CARD
     protected String DELETE_CARD
@@ -122,7 +120,6 @@ class PostgreSQLComponent implements Storage {
         String settingsTableName = mainTableName + "__settings"
         String dependenciesTableName = mainTableName + "__dependencies"
         String profilesTableName = mainTableName + "__profiles"
-        String embellishedTableName = mainTableName + "__embellished"
         String cardsTableName = mainTableName + "__cards"
 
         if (sqlUrl) {
@@ -168,16 +165,12 @@ class PostgreSQLComponent implements Storage {
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted) SELECT ?,?,?,?,?,?,?,?,? "
 
-        INSERT_EMBELLISHED_DOCUMENT = "INSERT INTO $embellishedTableName (id, data) VALUES (?,?)"
-        DELETE_EMBELLISHED_DOCUMENT = "DELETE FROM $embellishedTableName WHERE id = ?"
-
         UPSERT_CARD = "INSERT INTO $cardsTableName (id, data) VALUES (?,?) " +
                 "ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data"
         GET_CARD = "SELECT data FROM $cardsTableName WHERE ID = ?"
         DELETE_CARD = "DELETE FROM $cardsTableName WHERE ID = ?"
 
         GET_DOCUMENT = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ?"
-        GET_EMBELLISHED_DOCUMENT = "SELECT data from lddb__embellished where id = ?"
         GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,collection,created,modified,deleted,changedBy FROM $mainTableName WHERE id = ? AND deleted = false FOR UPDATE"
         GET_DOCUMENT_VERSION = "SELECT id,data FROM $versionsTableName WHERE id = ? AND checksum = ?"
         GET_DOCUMENT_VERSION_BY_MAIN_ID = "SELECT id,data FROM $versionsTableName " +
@@ -590,7 +583,6 @@ class PostgreSQLComponent implements Storage {
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
                 updateMaxDepModified((String) dependerShortId, connection)
-                removeEmbellishedDocument(dependerShortId, connection)
             }
 
             // Update the disappearing record
@@ -618,7 +610,6 @@ class PostgreSQLComponent implements Storage {
             dependers = followDependers(disappearingSystemID, connection, JsonLd.NON_DEPENDANT_RELATIONS)
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
-                removeEmbellishedDocument(dependerShortId, connection)
                 updateMaxDepModified((String) dependerShortId, connection)
                 selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
                 selectStatement.setString(1, dependerShortId)
@@ -742,7 +733,6 @@ class PostgreSQLComponent implements Storage {
         try {
             for (Tuple2<String, String> depender : dependers) {
                 updateMaxDepModified((String) depender.get(0), connection)
-                removeEmbellishedDocument((String) depender.get(0), connection)
             }
             connection.commit()
         }
@@ -803,7 +793,6 @@ class PostgreSQLComponent implements Storage {
     void refreshDerivativeTables(Document doc, Connection connection, boolean deleted) {
         saveIdentifiers(doc, connection, deleted)
         saveDependencies(doc, connection)
-        removeEmbellishedDocument(doc.getShortId(), connection)
 
         if (deleted) {
             deleteCard(doc, connection)
@@ -1141,7 +1130,6 @@ class PostgreSQLComponent implements Storage {
                 if (updateDepMinMax) {
                     for (Tuple2<String, String> depender : followDependers(doc.getShortId(), connection, JsonLd.NON_DEPENDANT_RELATIONS)) {
                         updateMaxDepModified((String) depender.get(0), connection)
-                        removeEmbellishedDocument((String) depender.get(0), connection)
                     }
                 }
             }
@@ -1313,41 +1301,6 @@ class PostgreSQLComponent implements Storage {
             }
         } else {
             return null
-        }
-    }
-
-    private void cacheEmbellishedDocument(String id, Document embellishedDocument, Connection connection) {
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(INSERT_EMBELLISHED_DOCUMENT)
-            preparedStatement.setString(1, id)
-            preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), OTHER)
-            preparedStatement.execute()
-        }
-        catch (PSQLException e) {
-            if (UNIQUE_VIOLATION == e.getSQLState()) {
-                // Someone else cached the document before we could,
-                // so we fail silently
-            } else {
-                throw e
-            }
-        }
-        finally {
-            close(rs, preparedStatement)
-        }
-    }
-
-    private void removeEmbellishedDocument(String id, Connection connection) {
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(DELETE_EMBELLISHED_DOCUMENT)
-            preparedStatement.setString(1, id)
-            preparedStatement.execute()
-        }
-        finally {
-            close(rs, preparedStatement)
         }
     }
 
