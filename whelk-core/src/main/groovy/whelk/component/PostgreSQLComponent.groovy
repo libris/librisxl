@@ -630,7 +630,7 @@ class PostgreSQLComponent implements Storage {
         } catch (PSQLException psqle) {
             log.error("SQL failed: ${psqle.message}")
             connection.rollback()
-            if (psqle.serverErrorMessage.message.startsWith("duplicate key value violates unique constraint")) {
+            if (psqle.serverErrorMessage?.message?.startsWith("duplicate key value violates unique constraint")) {
                 throw new StorageCreateFailedException(id)
             } else {
                 throw psqle
