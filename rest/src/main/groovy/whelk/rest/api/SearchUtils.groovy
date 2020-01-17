@@ -199,11 +199,10 @@ class SearchUtils {
         if (esResult['items']) {
             items = esResult['items'].collect {
                 def item = ld.toCard(it)
-                item['reverseLinks'] = [
-                        (JsonLd.TYPE_KEY) : 'PartialCollectionView',
-                        (JsonLd.ID_KEY) : Document.getBASE_URI().resolve('find?o=' + URLEncoder.encode(it['@id']).toString()),
-                        'totalItems' : it['meta']['linksHereCount']
-                ]
+                // This object must be re-added because it gets filtered out in toCard().
+                item['reverseLinks'] = it['reverseLinks']
+                if (item['reverseLinks'] != null)
+                    item['reverseLinks'][JsonLd.ID_KEY] = Document.getBASE_URI().resolve('find?o=' + URLEncoder.encode(it['@id']).toString())
                 return item
             }
         }

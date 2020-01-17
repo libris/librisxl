@@ -192,7 +192,9 @@ class ElasticSearch {
         getOtherIsbns(doc.getIsbnHiddenValues())
                 .each { doc.addIndirectTypedThingIdentifier('ISBN', it) }
 
-        doc.data['@graph'][0]['linksHereCount'] = whelk.getStorage().getDependers(doc.getShortId()).size()
+        doc.data['@graph'][1]['reverseLinks'] = [
+                (JsonLd.TYPE_KEY) : 'PartialCollectionView',
+                'totalItems' : whelk.getStorage().getDependers(doc.getShortId()).size()]
     }
 
     private static Collection<String> getOtherIsbns(List<String> isbns) {
