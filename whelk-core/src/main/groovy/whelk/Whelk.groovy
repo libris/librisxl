@@ -393,24 +393,29 @@ class Whelk implements Storage {
         }
     }
 
-    void embellish(Document document, boolean filterOutNonChipTerms = true) {
-        storage.embellish(document, jsonld, filterOutNonChipTerms, this.&bulkLoad, { iris ->
-            iris.collectMany{ iri ->
-                storage.followDependencies(storage.getSystemIdByIri(iri))
-            }.collect{ idAndRelation ->
-                storage.getThingMainIriBySystemId(idAndRelation.getFirst())
-            }.findAll{ it != null }
-        })
+    void embellish(Document document, boolean filterOutNonChipTerms = false) {
+        List convertedExternalLinks = jsonld.expandLinks(document.getExternalRefs())
+        List cards = storage.getCardsByFollowingInCardRelations(convertedExternalLinks)
+                .collect { id, card ->
+                    card != null ? card : jsonld.toCard(getDocument(id).data, false)
+                }
+        jsonld.embellish(document.data, cards, filterOutNonChipTerms)
     }
 
     Document loadEmbellished(String systemId) {
-        return storage.loadEmbellished(systemId, jsonld)
+        Document doc = getDocument(systemId)
+        embellish(doc)
+        return doc
     }
 
     List<String> findIdsLinkingTo(String idOrIri) {
         return storage
                 .getDependers(tryGetSystemId(idOrIri))
                 .collect()
+    }
+
+    List<Document> getAttachedHoldings(List<String> thingIdentifiers) {
+        return storage.getAttachedHoldings(thingIdentifiers).collect(this.&loadEmbellished)
     }
 
     private String tryGetSystemId(String id) {

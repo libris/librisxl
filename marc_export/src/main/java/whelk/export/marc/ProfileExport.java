@@ -322,7 +322,7 @@ public class ProfileExport
 
 	if ( locationSet.contains("*") ) return true; // KP 190401
 	
-        List<Document> holdings = m_whelk.getStorage().getAttachedHoldings(doc.getThingIdentifiers(), m_whelk.getJsonld());
+        List<Document> holdings = m_whelk.getAttachedHoldings(doc.getThingIdentifiers());
         for (Document holding : holdings)
         {
             if (locationSet.contains(holding.getSigel()))

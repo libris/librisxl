@@ -13,9 +13,9 @@ import whelk.IdType
 import whelk.JsonLd
 import whelk.Storage
 import whelk.exception.CancelUpdateException
+import whelk.exception.LinkValidationException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
-import whelk.exception.LinkValidationException
 import whelk.exception.WhelkException
 import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
@@ -28,7 +28,6 @@ import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
 import java.sql.Timestamp
-import java.util.function.Function
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -85,6 +84,12 @@ class PostgreSQLComponent implements Storage {
     protected String GET_LEGACY_PROFILE
     protected String INSERT_EMBELLISHED_DOCUMENT
     protected String DELETE_EMBELLISHED_DOCUMENT
+    protected String UPSERT_CARD
+    protected String GET_CARD
+    protected String DELETE_CARD
+    protected String GET_EMBELLISH_CARDS
+    protected String FOLLOW_EMBELLISH_DEPENDENCIES
+    protected String FOLLOW_EMBELLISH_DEPENDERS
 
     String mainTableName
     LinkFinder linkFinder
@@ -118,6 +123,7 @@ class PostgreSQLComponent implements Storage {
         String dependenciesTableName = mainTableName + "__dependencies"
         String profilesTableName = mainTableName + "__profiles"
         String embellishedTableName = mainTableName + "__embellished"
+        String cardsTableName = mainTableName + "__cards"
 
         if (sqlUrl) {
             HikariConfig config = new HikariConfig()
@@ -164,6 +170,11 @@ class PostgreSQLComponent implements Storage {
 
         INSERT_EMBELLISHED_DOCUMENT = "INSERT INTO $embellishedTableName (id, data) VALUES (?,?)"
         DELETE_EMBELLISHED_DOCUMENT = "DELETE FROM $embellishedTableName WHERE id = ?"
+
+        UPSERT_CARD = "INSERT INTO $cardsTableName (id, data) VALUES (?,?) " +
+                "ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data"
+        GET_CARD = "SELECT data FROM $cardsTableName WHERE ID = ?"
+        DELETE_CARD = "DELETE FROM $cardsTableName WHERE ID = ?"
 
         GET_DOCUMENT = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_EMBELLISHED_DOCUMENT = "SELECT data from lddb__embellished where id = ?"
@@ -244,6 +255,44 @@ class PostgreSQLComponent implements Storage {
                 " INNER JOIN deps deps1 ON d.dependsonid = i AND d.relation NOT IN (€) " +
                 ") " +
                 "SELECT * FROM deps"
+
+        GET_EMBELLISH_CARDS =
+                "WITH RECURSIVE deps(id, card) AS (\n" +
+                "        SELECT i.id, c.data from unnest(?) as in_iri\n" +
+                "        INNER JOIN $idTableName i ON in_iri = i.iri\n" +
+                "        LEFT JOIN $cardsTableName c on i.id = c.id\n" +
+                "    UNION\n" +
+                "        SELECT d.dependsonid, c.data\n" +
+                "        FROM $dependenciesTableName d\n" +
+                "        INNER JOIN deps deps1 ON d.id = deps1.id AND d.incard\n" +
+                "        LEFT JOIN $cardsTableName c on d.dependsonid = c.id\n" +
+                "    )\n" +
+                "SELECT id, card\n" +
+                "FROM deps\n"
+
+        FOLLOW_EMBELLISH_DEPENDENCIES =
+                "WITH RECURSIVE deps(id) AS (\n" +
+                "        VALUES (?)\n" +
+                "    UNION\n" +
+                "        SELECT d.dependsonid\n" +
+                "        FROM lddb__dependencies d\n" +
+                "        INNER JOIN deps deps1 ON d.id = deps1.id AND d.incard\n" +
+                "    )\n" +
+                "SELECT *\n" +
+                "FROM deps\n" +
+                "OFFSET 1\n"
+
+        FOLLOW_EMBELLISH_DEPENDERS =
+                "WITH RECURSIVE deps(id, incard) AS (\n" +
+                "        VALUES (?, true)\n" +
+                "    UNION\n" +
+                "        SELECT d.id, d.incard\n" +
+                "        FROM $dependenciesTableName d\n" +
+                "        INNER JOIN deps deps1 ON d.dependsonid = deps1.id AND deps1.incard AND d.id != ?\n" +
+                "    )\n" +
+                "SELECT id\n" +
+                "FROM deps\n" +
+                "OFFSET 1"
 
         GET_DEPENDERS = "SELECT DISTINCT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id"
         GET_DEPENDENCIES = "SELECT DISTINCT dependsOnId FROM $dependenciesTableName WHERE id = ? ORDER BY dependsOnId"
@@ -563,6 +612,7 @@ class PostgreSQLComponent implements Storage {
             saveVersion(disappearingDocument, connection, createdTime, modTime, changedIn, changedBy, collection, true)
             saveIdentifiers(disappearingDocument, connection, true, true)
             saveDependencies(disappearingDocument, connection)
+            deleteCard(disappearingDocument, connection)
 
             // Update dependers on the disappearing record
             dependers = followDependers(disappearingSystemID, connection, JsonLd.NON_DEPENDANT_RELATIONS)
@@ -754,6 +804,13 @@ class PostgreSQLComponent implements Storage {
         saveIdentifiers(doc, connection, deleted)
         saveDependencies(doc, connection)
         removeEmbellishedDocument(doc.getShortId(), connection)
+
+        if (deleted) {
+            deleteCard(doc, connection)
+        }
+        else {
+            storeCard(doc, connection)
+        }
     }
 
     /**
@@ -799,6 +856,88 @@ class PostgreSQLComponent implements Storage {
             }
         }
         return dependencies
+    }
+
+    private void storeCard(Document doc, Connection connection) {
+        if (!jsonld) {
+            return
+        }
+
+        Document card = new Document(jsonld.toCard(doc.data, false))
+
+        PreparedStatement preparedStatement
+        try {
+            preparedStatement = connection.prepareStatement(UPSERT_CARD)
+            preparedStatement.setString(1, card.getShortId())
+            preparedStatement.setObject(2, card.dataAsString, OTHER)
+
+            preparedStatement.executeUpdate()
+        }
+        finally {
+            close(preparedStatement)
+        }
+    }
+
+    private void deleteCard(Document doc, Connection connection) {
+        PreparedStatement preparedStatement
+        try {
+            preparedStatement = connection.prepareStatement(DELETE_CARD)
+            preparedStatement.setString(1, doc.getId())
+
+            preparedStatement.executeUpdate()
+        }
+        finally {
+            close(preparedStatement)
+        }
+    }
+
+    Map getCard(String id) {
+        Connection connection = getConnection()
+        try {
+            return getCard(id, connection)
+        } finally {
+            close(connection)
+        }
+    }
+
+    Map<String, Map> getCardsByFollowingInCardRelations(List<String> startIris) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            preparedStatement = connection.prepareStatement(GET_EMBELLISH_CARDS)
+            preparedStatement.setArray(1,  connection.createArrayOf("TEXT", startIris as String[]))
+
+            rs = preparedStatement.executeQuery()
+            Map<String, Map> result = [:]
+            while(rs.next()) {
+                String card = rs.getString("card")
+                result[rs.getString("id")] = card != null ? mapper.readValue(card, Map) : null
+            }
+            return result
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    Map getCard(String id, Connection connection) {
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            preparedStatement = connection.prepareStatement(GET_CARD)
+            preparedStatement.setString(1, id)
+
+            rs = preparedStatement.executeQuery()
+            if (rs.next()) {
+                return mapper.readValue(rs.getString("data"), Map)
+            }
+            else {
+                return null
+            }
+        }
+        finally {
+            close(preparedStatement)
+        }
     }
 
     private List nonCardDependencies(Document doc) {
@@ -1212,82 +1351,6 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    Document loadEmbellished(String id, JsonLd jsonld) {
-        Connection connection = getConnection()
-        try {
-            return loadEmbellished(id, jsonld, connection)
-        } finally {
-            close(connection)
-        }
-    }
-
-    /**
-     * Loads the embellished version of the stored document 'id'.
-     * If there isn't an embellished version cached already, one will be created
-     * (lazy caching).
-     */
-    Document loadEmbellished(String id, JsonLd jsonld, Connection connection) {
-        PreparedStatement selectStatement = null
-        ResultSet resultSet = null
-
-        try {
-            selectStatement = connection.prepareStatement(GET_EMBELLISHED_DOCUMENT)
-            selectStatement.setString(1, id)
-            resultSet = selectStatement.executeQuery()
-
-            if (resultSet.next()) {
-                return new Document(mapper.readValue(resultSet.getString("data"), Map))
-            }
-
-            // Cache-miss, embellish and store
-            Document document = load(id, connection)
-
-            boolean filterOutNonChipTerms = false
-            embellish(document, jsonld, filterOutNonChipTerms,
-                    { iris ->
-                        iris.collectEntries { iri ->
-                            [(iri): getDocumentByIri(iri, connection)]
-                        }
-                    },
-                    { iris ->
-                        iris.collectMany{ iri ->
-                            followDependencies(getSystemIdByIri(iri, connection), connection)
-                        }.collect{ idAndRelation ->
-                            getThingMainIriBySystemId(idAndRelation.getFirst(), connection)
-                        }.findAll{ it != null }
-                    })
-
-            cacheEmbellishedDocument(id, document, connection)
-            return document
-        }
-        finally {
-            close(resultSet, selectStatement)
-        }
-    }
-
-    static void embellish(Document document,
-                          JsonLd jsonld,
-                          boolean filterOutNonChipTerms,
-                          Function<List<String>, Map<String, Document>> docSupplier,
-                          Function<List<String>, List<String>> dependencySupplier
-    ) {
-
-        Set convertedExternalLinks = dependencySupplier.apply(jsonld.expandLinks(document.getExternalRefs())).toSet()
-        convertedExternalLinks.removeAll(document.getThingIdentifiers())
-
-        Map referencedData = [:]
-        Map externalDocs = docSupplier.apply(convertedExternalLinks.toList())
-        externalDocs.each { id, doc ->
-            if (id && doc && doc.hasProperty('data')) {
-                referencedData[id] = doc.data
-            }
-        }
-
-        jsonld.embellish(document.data, referencedData, filterOutNonChipTerms)
-    }
-
-
-
     String getCollectionBySystemID(String id) {
         Connection connection = getConnection()
         try {
@@ -1652,9 +1715,9 @@ class PostgreSQLComponent implements Storage {
     }
 
     /**
-     * Returns a list of holdings documents, for any of the passed thingIdentifiers
+     * Returns a list of holdings document ids, for any of the passed thingIdentifiers
      */
-    List<Document> getAttachedHoldings(List<String> thingIdentifiers, JsonLd jsonld) {
+    List<String> getAttachedHoldings(List<String> thingIdentifiers) {
         // Build the query
         StringBuilder selectSQL = new StringBuilder("SELECT id FROM ")
         selectSQL.append(mainTableName)
@@ -1684,10 +1747,9 @@ class PostgreSQLComponent implements Storage {
             }
 
             rs = preparedStatement.executeQuery()
-            List<Document> holdings = []
+            List<String> holdings = []
             while (rs.next()) {
-                String id = rs.getString("id")
-                holdings.add(loadEmbellished(id, jsonld, connection))
+                holdings.add(rs.getString("id"))
             }
             return holdings
         }
