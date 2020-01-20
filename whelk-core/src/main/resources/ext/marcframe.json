@@ -5936,7 +5936,25 @@
     },
     "027": {
       "include": ["identifier"],
-      "resourceType": "STRN"
+      "resourceType": "STRN",
+      "$6": null,
+      "$8": null,
+      "_spec": [
+        {
+          "source": {"027": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "KTH/INFRA/EX-02-003"},{"q": "1-1"}
+          ]}},
+          "result": {"mainEntity": {
+            "identifiedBy": [
+              {
+                "@type": "STRN",
+                "value": "KTH/INFRA/EX-02-003",
+                "qualifier": ["1-1"]
+              }
+            ]
+          }}
+        }
+      ]
     },
 
     "028": {
