@@ -13,7 +13,7 @@ String where =
                 "left join lddb__dependencies d on d.dependsonid = i.id and d.relation = 'itemOf' " +
                 "left join lddb l on d.id = l.id " +
                 "where " +
-                "i.iri in ('${bibidstring}') and l.data#>>'{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/Osts' " +
+                "i.iri in ('${bibidstring}') and l.data#>>'{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/Nv' " +
                 ")"
 
 selectBySqlWhere(where, silent: false, { hold ->
