@@ -5275,14 +5275,39 @@
       "NOTE:local": "ANVÄNDS NORMALT EJ",
       "include": ["idbase"],
       "resourceType": "CopyrightNumber",
-      "i2": {"marcDefault": " "},
+      "i2": null,
       "$a": {"property": "value"},
-      "$b": {"link": "source", "resourceType": "Source", "property": "label"},
+      "$b": {"link": "source", "resourceType": "Source", "property": "label", "required": true},
       "$d": {"property": "date"},
       "$i": {"addProperty": "comment"},
       "$z": {"addProperty": "marc:hiddenValue"},
       "$2": null,
-      "$6": null
+      "$6": null,
+      "_spec": [
+        {
+          "source": {"017": {"ind1": " ", "ind2": "8", "subfields": [
+            {"a": "DL1377-1984"},{"b": "Bibliothèque nationale de France"}
+          ]}},
+          "normalized": {"017": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "DL1377-1984"},{"b": "Bibliothèque nationale de France"}
+          ]}},
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {
+                  "@type": "CopyrightNumber",
+                  "value": "DL1377-1984",
+                  "source": 
+                  {
+                    "@type": "Source",
+                    "label": "Bibliothèque nationale de France"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
 
     "018": {
