@@ -5732,7 +5732,7 @@
         },
         "TODO:definedElsewhereToken": "7"
       },
-      "i2": {"marcDefault": " ", "TODO": "ok to lock as undefined?"},
+      "i2": null,
       "$c": {"property": "acquisitionTerms"},
       "$d": {"property": "comment"},
       "$2": {
@@ -5869,7 +5869,14 @@
           }
         },
         {
+          "name": "i2 = 0 (No difference)",
           "source": {
+            "024": {
+              "ind1": "7", "ind2": "0",
+              "subfields": [{"a": "A 148"}, {"2": "KB-signum"}]
+            }
+          },
+          "normalized": {
             "024": {
               "ind1": "7", "ind2": " ",
               "subfields": [{"a": "A 148"}, {"2": "KB-signum"}]
