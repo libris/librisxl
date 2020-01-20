@@ -5226,9 +5226,49 @@
         "resourceType": "Source",
         "property": "code",
         "requires-i1": "7",
-        "TODO": "see 015 $2"
+        "TODO": "https://www.loc.gov/marc/organizations/"
       },
-      "$6": null
+      "$6": null,
+      "_spec": [
+        {
+          "name": "identifiedBy.Local source = Library and Archives Canada",
+          "source": {"016": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "721234569"}
+          ]}},
+          "result": {
+            "@type": "Record",
+            "identifiedBy": [
+              {
+                "@type": "Local",
+                "marc:nationalBibliographicAgency": "marc:LAC",
+                "value": "721234569"
+              }
+            ],
+            "mainEntity": {}
+          }
+        },
+        {
+          "name": "identifiedBy.Local source in $2",
+          "source": {"016": {"ind1": "7", "ind2": " ", "subfields": [
+            {"a": "721234569"},{"2": "Uk"}
+          ]}},
+          "result": {
+            "@type": "Record",
+            "identifiedBy": [
+              {
+                "@type": "Local",
+                "marc:nationalBibliographicAgency": "marc:SourceSpecifiedInSubfield2",
+                "value": "721234569",
+                "source": {
+                  "@type": "Source",
+                  "code": "Uk"
+                }
+              }
+            ],
+            "mainEntity": {}
+          }
+        }
+      ]
     },
 
     "017": {
