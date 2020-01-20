@@ -1,5 +1,7 @@
 package whelk.importer
 
+import whelk.reindexer.CardRefresher
+
 import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -118,6 +120,12 @@ class ImporterMain {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props, useCache)
         def reindex = new ElasticReindexer(whelk)
         reindex.reindex(collection)
+    }
+
+    @Command(args='[COLLECTION]')
+    void refreshCards(String collection=null) {
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
+        new CardRefresher(whelk).refresh(collection)
     }
 
     @Command(args='[COLLECTION] [no-embellish|no-cache]')

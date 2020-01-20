@@ -373,6 +373,10 @@ class PostgreSQLComponent implements Storage {
         return statusMap
     }
 
+    int getPoolSize() {
+        return connectionPool?.getMaximumPoolSize()
+    }
+
     List<String> loadCollections() {
         Connection connection = null
         PreparedStatement collectionStatement = null
@@ -815,6 +819,16 @@ class PostgreSQLComponent implements Storage {
         }
         else {
             storeCard(doc, connection)
+        }
+    }
+
+    void refreshCardData(Document doc) {
+        Connection connection = getConnection()
+        try {
+            saveIdentifiers(doc, connection, false)
+            storeCard(doc, connection)
+        } finally {
+            connection.close()
         }
     }
 
