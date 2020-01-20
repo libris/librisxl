@@ -2,7 +2,6 @@ package whelk
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
-import org.apache.commons.collections4.map.LRUMap
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
@@ -254,7 +253,7 @@ class Whelk implements Storage {
 
         boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
         if (success) {
-            cards.remove(document.shortId)
+            cards.invalidate(document.shortId)
             if (elastic) {
                 elastic.index(document, collection, this)
                 reindexAffected(document, new TreeSet<String>())
@@ -269,7 +268,7 @@ class Whelk implements Storage {
         if (updated == null) {
             return null
         }
-        cards.remove(id)
+        cards.invalidate(id)
         String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
         if (elastic) {
             elastic.index(updated, collection, this)
@@ -293,7 +292,7 @@ class Whelk implements Storage {
                    @Deprecated boolean useDocumentCache = false) {
         if (storage.bulkStore(documents, changedIn, changedBy, collection)) {
             for (Document doc : documents) {
-                cards.remove(doc.shortId)
+                cards.invalidate(doc.shortId)
             }
             if (elastic) {
                 elastic.bulkIndex(documents, collection, this)
@@ -309,7 +308,7 @@ class Whelk implements Storage {
     void remove(String id, String changedIn, String changedBy) {
         log.debug "Deleting ${id} from Whelk"
         storage.remove(id, changedIn, changedBy)
-        cards.remove(id)
+        cards.invalidate(id)
         if (elastic) {
             elastic.remove(id)
             log.debug "Object ${id} was removed from Whelk"
@@ -325,8 +324,8 @@ class Whelk implements Storage {
         if (elastic) {
             String remainingSystemID = storage.getSystemIdByIri(remainingID)
             String disappearingSystemID = storage.getSystemIdByIri(disappearingID)
-            cards.remove(remainingSystemID)
-            cards.remove(disappearingSystemID)
+            cards.invalidate(remainingSystemID)
+            cards.invalidate(disappearingSystemID)
             List<Tuple2<String, String>> dependerRows = storage.followDependers(remainingSystemID, JsonLd.NON_DEPENDANT_RELATIONS)
             dependerRows.addAll( storage.followDependers(disappearingSystemID) )
             List<String> dependerSystemIDs = []

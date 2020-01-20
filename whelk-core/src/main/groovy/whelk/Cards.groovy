@@ -44,7 +44,7 @@ class Cards {
         }
     }
 
-    void remove(String id) {
+    void invalidate(String id) {
         cache.invalidate(id)
     }
 
