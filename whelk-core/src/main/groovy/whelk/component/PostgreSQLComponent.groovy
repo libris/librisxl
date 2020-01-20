@@ -85,7 +85,9 @@ class PostgreSQLComponent implements Storage {
     protected String UPSERT_CARD
     protected String GET_CARD
     protected String DELETE_CARD
-    protected String GET_EMBELLISH_CARDS
+    protected String GET_CARDS_FOR_EMBELLISH
+    protected String GET_IDS_FOR_EMBELLISH
+    protected String BULK_LOAD_CARDS
     protected String FOLLOW_EMBELLISH_DEPENDENCIES
     protected String FOLLOW_EMBELLISH_DEPENDERS
 
@@ -249,7 +251,7 @@ class PostgreSQLComponent implements Storage {
                 ") " +
                 "SELECT * FROM deps"
 
-        GET_EMBELLISH_CARDS =
+        GET_CARDS_FOR_EMBELLISH =
                 "WITH RECURSIVE deps(id, card) AS (\n" +
                 "        SELECT i.id, c.data from unnest(?) as in_iri\n" +
                 "        INNER JOIN $idTableName i ON in_iri = i.iri\n" +
@@ -262,6 +264,20 @@ class PostgreSQLComponent implements Storage {
                 "    )\n" +
                 "SELECT id, card\n" +
                 "FROM deps\n"
+
+        GET_IDS_FOR_EMBELLISH =
+                "WITH RECURSIVE deps(id) AS (\n" +
+                        "        SELECT i.id from unnest(?) as in_iri\n" +
+                        "        INNER JOIN $idTableName i ON in_iri = i.iri\n" +
+                        "    UNION\n" +
+                        "        SELECT d.dependsonid\n" +
+                        "        FROM $dependenciesTableName d\n" +
+                        "        INNER JOIN deps deps1 ON d.id = deps1.id AND d.incard\n" +
+                        "    )\n" +
+                        "SELECT id\n" +
+                        "FROM deps\n"
+
+        BULK_LOAD_CARDS = "SELECT in_id as id, data from unnest(?) as in_id LEFT JOIN $cardsTableName c ON in_id = c.id"
 
         FOLLOW_EMBELLISH_DEPENDENCIES =
                 "WITH RECURSIVE deps(id) AS (\n" +
@@ -894,13 +910,52 @@ class PostgreSQLComponent implements Storage {
         PreparedStatement preparedStatement
         ResultSet rs
         try {
-            preparedStatement = connection.prepareStatement(GET_EMBELLISH_CARDS)
+            preparedStatement = connection.prepareStatement(GET_CARDS_FOR_EMBELLISH)
             preparedStatement.setArray(1,  connection.createArrayOf("TEXT", startIris as String[]))
 
             rs = preparedStatement.executeQuery()
             Map<String, Map> result = [:]
             while(rs.next()) {
                 String card = rs.getString("card")
+                result[rs.getString("id")] = card != null ? mapper.readValue(card, Map) : null
+            }
+            return result
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    Set<String> getIdsForEmbellish(List<String> startIris) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            preparedStatement = connection.prepareStatement(GET_CARDS_FOR_EMBELLISH)
+            preparedStatement.setArray(1,  connection.createArrayOf("TEXT", startIris as String[]))
+
+            rs = preparedStatement.executeQuery()
+            Set<String> result = []
+            while(rs.next()) {
+                result.add(rs.getString("id"))
+            }
+            return result
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    Map<String, Map> bulkLoadCards(Set<String> ids) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            preparedStatement = connection.prepareStatement(BULK_LOAD_CARDS)
+            preparedStatement.setArray(1,  connection.createArrayOf("TEXT", ids as String[]))
+
+            rs = preparedStatement.executeQuery()
+            Map<String, Map> result = [:]
+            while(rs.next()) {
+                String card = rs.getString("data")
                 result[rs.getString("id")] = card != null ? mapper.readValue(card, Map) : null
             }
             return result
