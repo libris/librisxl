@@ -241,7 +241,7 @@ class Crud extends HttpServlet {
                 doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame(), request.getLens())
 
         if (request.shouldEmbellish()) {
-            doc = whelk.loadEmbellished(doc.getShortId())
+            whelk.embellish(doc)
         }
 
         if (request.getLens() != Lens.NONE) {
