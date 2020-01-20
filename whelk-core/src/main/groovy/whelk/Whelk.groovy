@@ -202,28 +202,22 @@ class Whelk implements Storage {
         idsToReindex.addAll(addedLinksTo)
         idsToReindex.addAll(removedLinksTo)
 
+        Runnable reindex = {
+            Map dependingDocuments = bulkLoad(idsToReindex.toList())
+            for (Document dependingDoc : dependingDocuments.values()) {
+                String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
+                if (dependingDocCollection != null) {
+                    elastic.index(dependingDoc, dependingDocCollection, this)
+                }
+            }
+        }
+
         // If the number of dependers isn't too large or we are inside a batch job. Update them synchronously
         if (idsToReindex.size() < 20 || batchJobThread() ) {
-            Map dependingDocuments = bulkLoad(idsToReindex.toList())
-            for (String id : dependingDocuments.keySet()) {
-                Document dependingDoc = dependingDocuments.get(id)
-                String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
-                elastic.index(dependingDoc, dependingDocCollection, this)
-            }
+            reindex.run()
         } else {
             // else use a fire-and-forget thread
-            Whelk _this = this
-            new Thread(indexers, new Runnable() {
-                void run() {
-                    for (String id : idsToReindex) {
-                        Document dependingDoc = storage.load(id)
-                        String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
-                        if (dependingDocCollection != null)
-                            elastic.index(dependingDoc, dependingDocCollection, _this)
-                    }
-                }
-            }).start()
-
+            new Thread(indexers, reindex).start()
         }
     }
 
