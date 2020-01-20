@@ -90,7 +90,7 @@ class ElasticReindexer {
             }
             threadPool.joinAll()
             println("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
-            println("Card cache statistics: $whelk.cards")
+            whelk.storage.logStats()
         } catch (Throwable e) {
             println("Reindex failed with:\n" + e.toString() + "\ncallstack:\n" + e.printStackTrace())
         }

@@ -1,5 +1,8 @@
 package whelk.component
 
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import groovy.json.StringEscapeUtils
@@ -52,6 +55,10 @@ class PostgreSQLComponent implements Storage {
     private static final int DEFAULT_MAX_POOL_SIZE = 16
     private static final String UNIQUE_VIOLATION = "23505"
     private static final String driverClass = "org.postgresql.Driver"
+
+    private static final int CARD_CACHE_MAX_SIZE = 200_000
+    private boolean useCardCache = false
+    private LoadingCache<String, Map> cardCache
 
     private HikariDataSource connectionPool
     boolean versioning = true
@@ -108,7 +115,8 @@ class PostgreSQLComponent implements Storage {
                 ? Integer.parseInt(properties.getProperty(PROPERTY_SQL_MAX_POOL_SIZE))
                 : DEFAULT_MAX_POOL_SIZE
 
-        setup(properties.getProperty(PROPERTY_SQL_URL), properties.getProperty(PROPERTY_SQL_MAIN_TABLE_NAME), maxPoolSize)
+        setup(properties.getProperty(PROPERTY_SQL_URL), properties.getProperty(PROPERTY_SQL_MAIN_TABLE_NAME),
+                maxPoolSize)
     }
 
     PostgreSQLComponent(String sqlUrl, String sqlMainTable) {
@@ -154,6 +162,7 @@ class PostgreSQLComponent implements Storage {
         }
 
         this.dependencyCache = new DependencyCache(this)
+        initCardCache(false)
 
         // Setting up sql-statements
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
@@ -348,6 +357,28 @@ class PostgreSQLComponent implements Storage {
         GET_DOCUMENT_BY_IRI = "SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
 
         GET_LEGACY_PROFILE = "SELECT profile FROM $profilesTableName WHERE library_id = ?"
+    }
+
+    void initCardCache(boolean useCache) {
+        this.useCardCache = useCache
+        cardCache = CacheBuilder.newBuilder()
+                .maximumSize(useCache ? CARD_CACHE_MAX_SIZE : 0)
+                .recordStats()
+                .build(new CacheLoader<String, Map>() {
+                    @Override
+                    Map load(String systemId) throws Exception {
+                        return loadCard(systemId) ?: makeCard(systemId);
+                    }
+
+                    @Override
+                    Map<String, Map> loadAll(Iterable<? extends String> systemIds) throws Exception {
+                        return addMissingCards(bulkLoadCards(systemIds))
+                    }
+                })
+    }
+
+    void logStats() {
+        log.info("Card cache: ${cardCache.stats()}")
     }
 
     private Map status(URI uri, Connection connection) {
@@ -877,6 +908,10 @@ class PostgreSQLComponent implements Storage {
         return dependencies
     }
 
+    Map getCard(String id) {
+        return cardCache.get(id)
+    }
+
     private void storeCard(Document doc, Connection connection) {
         if (!jsonld) {
             return
@@ -895,31 +930,43 @@ class PostgreSQLComponent implements Storage {
         finally {
             close(preparedStatement)
         }
+
+        cardCache.put(card.getShortId(), card.data)
     }
 
     private void deleteCard(Document doc, Connection connection) {
         PreparedStatement preparedStatement
         try {
             preparedStatement = connection.prepareStatement(DELETE_CARD)
-            preparedStatement.setString(1, doc.getId())
+            preparedStatement.setString(1, doc.getShortId())
 
             preparedStatement.executeUpdate()
         }
         finally {
             close(preparedStatement)
         }
+
+        cardCache.invalidate(doc.getShortId())
     }
 
-    Map getCard(String id) {
+    private Map loadCard(String id) {
         Connection connection = getConnection()
         try {
-            return getCard(id, connection)
+            return loadCard(id, connection)
         } finally {
             close(connection)
         }
     }
 
-    Map<String, Map> getCardsForEmbellish(List<String> startIris) {
+    Iterable<Map> getCardsByFollowingInCardRelations(List<String> startIris) {
+        if (useCardCache) {
+            return cardCache.getAll(getIdsForEmbellish(startIris)).values()
+        } else {
+            return addMissingCards(getCardsForEmbellish(startIris)).values()
+        }
+    }
+
+    private Map<String, Map> getCardsForEmbellish(List<String> startIris) {
         Connection connection = getConnection()
         PreparedStatement preparedStatement
         ResultSet rs
@@ -939,7 +986,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    SortedSet<String> getIdsForEmbellish(List<String> startIris) {
+    private SortedSet<String> getIdsForEmbellish(List<String> startIris) {
         Connection connection = getConnection()
         PreparedStatement preparedStatement
         ResultSet rs
@@ -958,7 +1005,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    Map<String, Map> bulkLoadCards(Set<String> ids) {
+    private Map<String, Map> bulkLoadCards(Iterable<String> ids) {
         Connection connection = getConnection()
         PreparedStatement preparedStatement
         ResultSet rs
@@ -998,7 +1045,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    Map getCard(String id, Connection connection) {
+    private Map loadCard(String id, Connection connection) {
         PreparedStatement preparedStatement
         ResultSet rs
         try {
@@ -1016,6 +1063,23 @@ class PostgreSQLComponent implements Storage {
         finally {
             close(preparedStatement)
         }
+    }
+
+    private Map<String, Map> addMissingCards(Map<String, Map> cards) {
+        Map <String, Map> result = [:]
+        cards.each { id, card ->
+            result[id] = card ?: makeCard(id)
+        }
+        return result
+    }
+
+    private Map makeCard(String systemId) {
+        Document doc = load(systemId)
+        if (!doc) {
+            throw new WhelkException("Could not find document with id " + systemId)
+        }
+
+        return jsonld.toCard(doc.data, false)
     }
 
     private List nonCardDependencies(Document doc) {

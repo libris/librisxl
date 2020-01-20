@@ -684,7 +684,7 @@ class JsonLd {
 
     //==== Embellish ====
 
-    Map embellish(Map jsonLd, List additionalObjects, boolean filterOutNonChipTerms = true) {
+    Map embellish(Map jsonLd, Iterable additionalObjects, boolean filterOutNonChipTerms = true) {
         if (!jsonLd.get(GRAPH_KEY)) {
             return jsonLd
         }

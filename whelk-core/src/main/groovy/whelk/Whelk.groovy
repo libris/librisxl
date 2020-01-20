@@ -25,13 +25,13 @@ class Whelk implements Storage {
     JsonLd jsonld
     MarcFrameConverter marcFrameConverter
     Relations relations
-    Cards cards
 
     URI baseUri = null
 
     // useCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
     // Any other use of this results in a "local" cache, which will not be invalidated when data changes elsewhere,
     // resulting in potential serving of stale data.
+    boolean useCache = false
 
     // TODO: encapsulate and configure (LXL-260)
     String vocabContextUri = "https://id.kb.se/vocab/context"
@@ -74,7 +74,7 @@ class Whelk implements Storage {
     public Whelk(PostgreSQLComponent pg, boolean useCache = false) {
         this.storage = pg
         relations = new Relations(pg)
-        cards = new Cards(this, useCache)
+        this.useCache = useCache
         log.info("Started with storage: $storage")
     }
 
@@ -103,6 +103,9 @@ class Whelk implements Storage {
         loadVocabData()
         jsonld = new JsonLd(contextData, displayData, vocabData)
         storage.setJsonld(jsonld)
+        if (useCache) {
+            storage.initCardCache(useCache)
+        }
         log.info("Loaded with core data")
     }
 
@@ -253,7 +256,6 @@ class Whelk implements Storage {
 
         boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
         if (success) {
-            cards.invalidate(document.shortId)
             if (elastic) {
                 elastic.index(document, collection, this)
                 reindexAffected(document, new TreeSet<String>())
@@ -268,7 +270,6 @@ class Whelk implements Storage {
         if (updated == null) {
             return null
         }
-        cards.invalidate(id)
         String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
         if (elastic) {
             elastic.index(updated, collection, this)
@@ -291,9 +292,6 @@ class Whelk implements Storage {
                    String changedBy, String collection,
                    @Deprecated boolean useDocumentCache = false) {
         if (storage.bulkStore(documents, changedIn, changedBy, collection)) {
-            for (Document doc : documents) {
-                cards.invalidate(doc.shortId)
-            }
             if (elastic) {
                 elastic.bulkIndex(documents, collection, this)
                 for (Document doc : documents) {
@@ -308,7 +306,6 @@ class Whelk implements Storage {
     void remove(String id, String changedIn, String changedBy) {
         log.debug "Deleting ${id} from Whelk"
         storage.remove(id, changedIn, changedBy)
-        cards.invalidate(id)
         if (elastic) {
             elastic.remove(id)
             log.debug "Object ${id} was removed from Whelk"
@@ -324,8 +321,6 @@ class Whelk implements Storage {
         if (elastic) {
             String remainingSystemID = storage.getSystemIdByIri(remainingID)
             String disappearingSystemID = storage.getSystemIdByIri(disappearingID)
-            cards.invalidate(remainingSystemID)
-            cards.invalidate(disappearingSystemID)
             List<Tuple2<String, String>> dependerRows = storage.followDependers(remainingSystemID, JsonLd.NON_DEPENDANT_RELATIONS)
             dependerRows.addAll( storage.followDependers(disappearingSystemID) )
             List<String> dependerSystemIDs = []
@@ -357,7 +352,7 @@ class Whelk implements Storage {
 
     void embellish(Document document, boolean filterOutNonChipTerms = false) {
         List convertedExternalLinks = jsonld.expandLinks(document.getExternalRefs())
-        List cards = cards.getCardsByFollowingInCardRelations(convertedExternalLinks)
+        def cards = storage.getCardsByFollowingInCardRelations(convertedExternalLinks)
         jsonld.embellish(document.data, cards, filterOutNonChipTerms)
     }
 
