@@ -919,7 +919,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    Map<String, Map> getCardsByFollowingInCardRelations(List<String> startIris) {
+    Map<String, Map> getCardsForEmbellish(List<String> startIris) {
         Connection connection = getConnection()
         PreparedStatement preparedStatement
         ResultSet rs
@@ -939,7 +939,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    Set<String> getIdsForEmbellish(List<String> startIris) {
+    SortedSet<String> getIdsForEmbellish(List<String> startIris) {
         Connection connection = getConnection()
         PreparedStatement preparedStatement
         ResultSet rs
@@ -948,7 +948,7 @@ class PostgreSQLComponent implements Storage {
             preparedStatement.setArray(1,  connection.createArrayOf("TEXT", startIris as String[]))
 
             rs = preparedStatement.executeQuery()
-            Set<String> result = []
+            Set<String> result = new TreeSet<>()
             while(rs.next()) {
                 result.add(rs.getString("id"))
             }
