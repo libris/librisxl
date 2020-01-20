@@ -5284,10 +5284,20 @@
       "$2": null,
       "$6": null
     },
+
     "018": {
       "NOTE:LC": "018 - COPYRIGHT ARTICLE-FEE CODE (NR) ignore",
       "ignored": true,
-      "NOTE:record-count": 0
+      "NOTE:record-count": 0,
+      "_spec": [
+        {
+          "source": {"018": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "03043923/78/050243-03$00.95/0"}
+          ]}},
+          "normalized": [],
+          "result": {"mainEntity": { }}
+        }
+      ]
     },
 
     "020": {
