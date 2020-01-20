@@ -5916,13 +5916,13 @@
     },
 
     "025": {
-      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "NOTE:local": "ANVÄNDS NORMALT EJ (STRUKEN I EXPORTFORMAT)",
       "include": ["idbase"],
       "resourceType": "LcOverseasAcq",
       "$a": {"property": "value"}
     },
     "026": {
-      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "NOTE:local": "ANVÄNDS NORMALT EJ (STRUKEN I EXPORTFORMAT)",
       "include": ["idbase"],
       "resourceType": "Fingerprint",
       "$a": {"property": "value"},
