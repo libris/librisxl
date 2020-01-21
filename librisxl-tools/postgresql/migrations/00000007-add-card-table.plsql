@@ -25,7 +25,10 @@ BEGIN
    -- ACTUAL SCHEMA CHANGES HERE:
    CREATE TABLE lddb__cards (
       id       text  PRIMARY KEY,
-      data     jsonb NOT NULL
+      data     jsonb NOT NULL,
+      checksum text  NOT NULL,
+      updated  timestamp with time zone NOT NULL,
+      changed  timestamp with time zone NOT NULL
    );
 
 END$$;

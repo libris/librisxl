@@ -31,6 +31,7 @@ import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
 import java.sql.Timestamp
+import java.time.Instant
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -178,8 +179,12 @@ class PostgreSQLComponent implements Storage {
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted) SELECT ?,?,?,?,?,?,?,?,? "
 
-        UPSERT_CARD = "INSERT INTO $cardsTableName (id, data) VALUES (?,?) " +
-                "ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data"
+        UPSERT_CARD = "INSERT INTO $cardsTableName (id, data, checksum, updated, changed) VALUES (?,?,?,?,?) " +
+                "ON CONFLICT (id) DO UPDATE SET (data, checksum, updated, changed) " +
+                "= (EXCLUDED.data, EXCLUDED.checksum, EXCLUDED.updated, " +
+                "CASE WHEN ${cardsTableName}.checksum != EXCLUDED.checksum " +
+                "THEN EXCLUDED.changed " +
+                "ELSE ${cardsTableName}.changed END)"
         GET_CARD = "SELECT data FROM $cardsTableName WHERE ID = ?"
         DELETE_CARD = "DELETE FROM $cardsTableName WHERE ID = ?"
 
@@ -929,12 +934,16 @@ class PostgreSQLComponent implements Storage {
         }
 
         Document card = new Document(jsonld.toCard(doc.data, false))
+        Timestamp timestamp = new Timestamp(Instant.now().toEpochMilli()) // TODO: use transaction timstamp
 
         PreparedStatement preparedStatement
         try {
             preparedStatement = connection.prepareStatement(UPSERT_CARD)
             preparedStatement.setString(1, card.getShortId())
             preparedStatement.setObject(2, card.dataAsString, OTHER)
+            preparedStatement.setString(3, card.getChecksum())
+            preparedStatement.setTimestamp(4, timestamp)
+            preparedStatement.setTimestamp(5, timestamp)
 
             preparedStatement.executeUpdate()
         }
