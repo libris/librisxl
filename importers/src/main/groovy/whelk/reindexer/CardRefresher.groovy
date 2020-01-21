@@ -5,11 +5,14 @@ import whelk.Whelk
 import whelk.util.ThreadPool
 import groovy.util.logging.Log4j2 as Log
 
+import java.time.Instant
+
 @Log
 class CardRefresher {
     static final int BATCH_SIZE = 1000
 
     Whelk whelk
+    Instant timestamp = Instant.now()
 
     CardRefresher(Whelk whelk) {
         this.whelk = whelk
@@ -44,7 +47,7 @@ class CardRefresher {
     private void refreshCards(List<Document> documents) {
         for (Document document : documents) {
             try {
-                whelk.storage.refreshCardData(document)
+                whelk.storage.refreshCardData(document, timestamp)
             }
             catch (Exception e) {
                 log.error("Error refreshing card for ${document.shortId}: $e", e)

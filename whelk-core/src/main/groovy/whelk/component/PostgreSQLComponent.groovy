@@ -92,6 +92,7 @@ class PostgreSQLComponent implements Storage {
     protected String GET_CARDS_FOR_EMBELLISH
     protected String GET_IDS_FOR_EMBELLISH
     protected String BULK_LOAD_CARDS
+    protected String IS_CARD_CHANGED
     protected String FOLLOW_EMBELLISH_DEPENDENCIES
     protected String FOLLOW_EMBELLISH_DEPENDERS
 
@@ -291,6 +292,9 @@ class PostgreSQLComponent implements Storage {
                 "FROM deps "
 
         BULK_LOAD_CARDS = "SELECT in_id as id, data from unnest(?) as in_id LEFT JOIN $cardsTableName c ON in_id = c.id"
+
+        IS_CARD_CHANGED = "SELECT card.changed >= doc.modified " +
+                "FROM lddb__cards card, lddb doc WHERE doc.id = card.id AND doc.id = ?"
 
         FOLLOW_EMBELLISH_DEPENDENCIES =
                 "WITH RECURSIVE deps(id) AS ( " +
@@ -844,11 +848,13 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    void refreshCardData(Document doc) {
+    void refreshCardData(Document doc, Instant timestamp) {
         Connection connection = getConnection()
         try {
             saveIdentifiers(doc, connection, false)
-            storeCard(toCard(doc), connection)
+            Document card = toCard(doc)
+            card.setModified(timestamp.toDate())
+            storeCard(card, connection)
         } finally {
             connection.close()
         }
@@ -903,7 +909,27 @@ class PostgreSQLComponent implements Storage {
         return loadCard(systemId) ?: makeCard(systemId);
     }
 
-    Document toCard(Document doc) {
+    Iterable<Map> getCardsByFollowingInCardRelations(List<String> startIris) {
+        return addMissingCards(getCardsForEmbellish(startIris)).values()
+    }
+
+    boolean isCardChanged(String systemId) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement
+        ResultSet rs
+        try {
+            preparedStatement = connection.prepareStatement(IS_CARD_CHANGED)
+            preparedStatement.setString(1, systemId)
+
+            rs = preparedStatement.executeQuery()
+
+            return rs.next() && rs.getBoolean(1)
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    protected Document toCard(Document doc) {
         return new Document(jsonld.toCard(doc.data, false))
     }
 
@@ -912,7 +938,7 @@ class PostgreSQLComponent implements Storage {
             return
         }
 
-        Timestamp timestamp = new Timestamp(Instant.now().toEpochMilli()) // TODO: use transaction timstamp
+        Timestamp timestamp = new Timestamp(card.getModifiedTimestamp().toEpochMilli())
 
         PreparedStatement preparedStatement
         try {
@@ -950,10 +976,6 @@ class PostgreSQLComponent implements Storage {
         } finally {
             close(connection)
         }
-    }
-
-    Iterable<Map> getCardsByFollowingInCardRelations(List<String> startIris) {
-        return addMissingCards(getCardsForEmbellish(startIris)).values()
     }
 
     protected Map<String, Map> getCardsForEmbellish(List<String> startIris) {

@@ -6,6 +6,7 @@ import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 
 import java.lang.reflect.Type
+import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -222,6 +223,10 @@ class Document {
     }
 
     String getModified() { get(modifiedPath) }
+
+    Instant getModifiedTimestamp() {
+        ZonedDateTime.parse( getModified(), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant()
+    }
 
     void setGenerationDate(Date generationDate) {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(generationDate.toInstant(), ZoneId.systemDefault())
