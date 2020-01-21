@@ -32,7 +32,6 @@ class Whelk implements Storage {
     // useCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
     // Any other use of this results in a "local" cache, which will not be invalidated when data changes elsewhere,
     // resulting in potential serving of stale data.
-    boolean useCache = false
 
     // TODO: encapsulate and configure (LXL-260)
     String vocabContextUri = "https://id.kb.se/vocab/context"
@@ -172,6 +171,7 @@ class Whelk implements Storage {
         idsToReindex.addAll(removedLinksTo)
 
         Runnable reindex = {
+            log.debug("Reindexing ${idsToReindex.size()} affected documents")
             Map dependingDocuments = bulkLoad(idsToReindex.toList())
             for (Document dependingDoc : dependingDocuments.values()) {
                 String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)

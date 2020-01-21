@@ -31,7 +31,7 @@ class CardRefresher {
                 counter++
                 if (counter % BATCH_SIZE == 0) {
                     double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
-                    log.info("Refreshing $docsPerSec documents per second (running average since process start). Total count: $counter.")
+                    log.info("Refreshing $docsPerSec cards per second (running average since process start). Total count: $counter.")
                     threadPool.executeOnThread(documents, new BatchHandler())
                     documents = []
                 }

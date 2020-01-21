@@ -18,6 +18,7 @@ import whelk.exception.LinkValidationException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
 import whelk.exception.WhelkException
+import whelk.exception.WhelkRuntimeException
 import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
 
@@ -52,7 +53,6 @@ class PostgreSQLComponent implements Storage {
     public static final ObjectMapper mapper = new ObjectMapper()
 
     private static final int DEFAULT_MAX_POOL_SIZE = 16
-    private static final String UNIQUE_VIOLATION = "23505"
     private static final String driverClass = "org.postgresql.Driver"
 
     private static final String EMBELLISH_EXCLUDE_RELATIONS = "'${['narrower', 'broader'].join("', '")}'"
@@ -274,8 +274,7 @@ class PostgreSQLComponent implements Storage {
                         "AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS) " +
                 "        LEFT JOIN $cardsTableName c on d.dependsonid = c.id " +
                 "    ) " +
-                "SELECT id, card " +
-                "FROM deps "
+                "SELECT id, card FROM deps"
 
         GET_IDS_FOR_EMBELLISH =
                 "WITH RECURSIVE deps(id) AS ( " +
@@ -288,8 +287,7 @@ class PostgreSQLComponent implements Storage {
                 "        AND d.incard  " +
                 "        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS) " +
                 "    ) " +
-                "SELECT id " +
-                "FROM deps "
+                "SELECT id FROM deps"
 
         BULK_LOAD_CARDS = "SELECT in_id as id, data from unnest(?) as in_id LEFT JOIN $cardsTableName c ON in_id = c.id"
 
@@ -306,9 +304,7 @@ class PostgreSQLComponent implements Storage {
                 "        AND d.incard " +
                 "        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS) " +
                 "    ) " +
-                "SELECT * " +
-                "FROM deps " +
-                "OFFSET 1 "
+                "SELECT * FROM deps OFFSET 1"
 
         FOLLOW_EMBELLISH_DEPENDERS =
                 "WITH RECURSIVE deps(id, relation, incard) AS ( " +
@@ -321,9 +317,7 @@ class PostgreSQLComponent implements Storage {
                 "        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS) " +
                 "        AND d.id != ? " +
                 "    ) " +
-                "SELECT id, relation " +
-                "FROM deps " +
-                "OFFSET 1"
+                "SELECT id, relation FROM deps OFFSET 1"
 
         GET_DEPENDERS = "SELECT DISTINCT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id"
         GET_DEPENDENCIES = "SELECT DISTINCT dependsOnId FROM $dependenciesTableName WHERE id = ? ORDER BY dependsOnId"
@@ -364,7 +358,7 @@ class PostgreSQLComponent implements Storage {
         
         GET_SYSTEMID_BY_IRI = "SELECT lddb__identifiers.id, lddb.deleted FROM lddb__identifiers "+
                 "JOIN lddb ON lddb__identifiers.id = lddb.id " +
-                "WHERE lddb__identifiers.iri = ? ";
+                "WHERE lddb__identifiers.iri = ? "
 
         GET_THING_MAIN_IRI_BY_SYSTEMID = "SELECT iri FROM $idTableName WHERE graphindex = 1 and mainid is true and id = ?"
         GET_DOCUMENT_BY_IRI = "SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
@@ -906,7 +900,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     Map getCard(String systemId) {
-        return loadCard(systemId) ?: makeCard(systemId);
+        return loadCard(systemId) ?: makeCardData(systemId);
     }
 
     Iterable<Map> getCardsByFollowingInCardRelations(List<String> startIris) {
@@ -915,8 +909,8 @@ class PostgreSQLComponent implements Storage {
 
     boolean isCardChanged(String systemId) {
         Connection connection = getConnection()
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(IS_CARD_CHANGED)
             preparedStatement.setString(1, systemId)
@@ -930,17 +924,17 @@ class PostgreSQLComponent implements Storage {
     }
 
     protected Document toCard(Document doc) {
+        if (!jsonld) {
+            throw new WhelkRuntimeException("jsonld not set")
+        }
+
         return new Document(jsonld.toCard(doc.data, false))
     }
 
     protected void storeCard(Document card, Connection connection) {
-        if (!jsonld) {
-            return
-        }
-
         Timestamp timestamp = new Timestamp(card.getModifiedTimestamp().toEpochMilli())
 
-        PreparedStatement preparedStatement
+        PreparedStatement preparedStatement = null
         try {
             preparedStatement = connection.prepareStatement(UPSERT_CARD)
             preparedStatement.setString(1, card.getShortId())
@@ -980,8 +974,8 @@ class PostgreSQLComponent implements Storage {
 
     protected Map<String, Map> getCardsForEmbellish(List<String> startIris) {
         Connection connection = getConnection()
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(GET_CARDS_FOR_EMBELLISH)
             preparedStatement.setArray(1,  connection.createArrayOf("TEXT", startIris as String[]))
@@ -1000,14 +994,14 @@ class PostgreSQLComponent implements Storage {
 
     protected SortedSet<String> getIdsForEmbellish(List<String> startIris) {
         Connection connection = getConnection()
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(GET_IDS_FOR_EMBELLISH)
             preparedStatement.setArray(1,  connection.createArrayOf("TEXT", startIris as String[]))
 
             rs = preparedStatement.executeQuery()
-            Set<String> result = new TreeSet<>()
+            SortedSet<String> result = new TreeSet<>()
             while(rs.next()) {
                 result.add(rs.getString("id"))
             }
@@ -1019,8 +1013,8 @@ class PostgreSQLComponent implements Storage {
 
     protected Map<String, Map> bulkLoadCards(Iterable<String> ids) {
         Connection connection = getConnection()
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(BULK_LOAD_CARDS)
             preparedStatement.setArray(1,  connection.createArrayOf("TEXT", ids as String[]))
@@ -1039,8 +1033,8 @@ class PostgreSQLComponent implements Storage {
 
     List<Tuple2<String, String>> getInCardDependers(String id) {
         Connection connection = getConnection()
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(FOLLOW_EMBELLISH_DEPENDERS)
             preparedStatement.setString(1, id)
@@ -1058,8 +1052,8 @@ class PostgreSQLComponent implements Storage {
     }
 
     protected Map loadCard(String id, Connection connection) {
-        PreparedStatement preparedStatement
-        ResultSet rs
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
         try {
             preparedStatement = connection.prepareStatement(GET_CARD)
             preparedStatement.setString(1, id)
@@ -1080,27 +1074,22 @@ class PostgreSQLComponent implements Storage {
     protected Map<String, Map> addMissingCards(Map<String, Map> cards) {
         Map <String, Map> result = [:]
         cards.each { id, card ->
-            result[id] = card ?: makeCard(id)
+            result[id] = card ?: makeCardData(id)
         }
         return result
     }
 
-    private Map makeCard(String systemId) {
+    private Map makeCardData(String systemId) {
         Document doc = load(systemId)
         if (!doc) {
             throw new WhelkException("Could not find document with id " + systemId)
         }
 
-        return jsonld.toCard(doc.data, false)
+        return toCard(doc).data
     }
 
     private List nonCardDependencies(Document doc) {
-        if (!jsonld) {
-            return []
-        }
-
-        Document card = doc.clone()
-        card.data = jsonld.toCard(card.data, false)
+        Document card = toCard(doc)
         List refs = doc.getExternalRefs()
         refs.removeAll(card.getExternalRefs())
         return refs

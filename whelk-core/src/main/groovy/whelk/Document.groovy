@@ -225,7 +225,7 @@ class Document {
     String getModified() { get(modifiedPath) }
 
     Instant getModifiedTimestamp() {
-        ZonedDateTime.parse( getModified(), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant()
+        ZonedDateTime.parse(getModified(), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant()
     }
 
     void setGenerationDate(Date generationDate) {
