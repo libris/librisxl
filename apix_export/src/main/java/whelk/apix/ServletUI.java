@@ -1,6 +1,5 @@
 package whelk.apix;
 
-import com.github.jsonldjava.utils.Obj;
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.component.PostgreSQLComponent;
 import whelk.util.PropertyLoader;
@@ -19,11 +18,8 @@ import java.sql.SQLException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-
-import static whelk.component.PostgreSQLComponent.mapper;
 
 public class ServletUI extends HttpServlet implements UI
 {

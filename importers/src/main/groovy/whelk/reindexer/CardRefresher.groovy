@@ -30,7 +30,7 @@ class CardRefresher {
                 documents.add(document)
                 counter++
                 if (counter % BATCH_SIZE == 0) {
-                    double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
+                    int docsPerSec = (int) ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
                     log.info("Refreshing $docsPerSec cards per second (running average since process start). Total count: $counter.")
                     threadPool.executeOnThread(documents, new BatchHandler())
                     documents = []
@@ -38,7 +38,7 @@ class CardRefresher {
             }
             refreshCards(documents)
             threadPool.joinAll()
-            log.info("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
+            log.info("Done! $counter cards refreshed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
         } catch (Exception e) {
             log.error("Refresh cards failed: $e", e)
         }
