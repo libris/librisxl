@@ -4,68 +4,18 @@ import whelk.Document;
 import whelk.util.LegacyIntegrationTools;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.StringJoiner;
 
 public class Helpers
 {
-    public static class ResultIterator implements Iterator<Document>, AutoCloseable {
-
-        private final PreparedStatement statement;
-        private final ResultSet resultSet;
-        private final SetSpec setSpec;
-        private final boolean includeDependenciesInTimeInterval;
-        private boolean thereIsMore = true;
-
-        public ResultIterator(PreparedStatement statement, SetSpec setSpec, boolean includeDependenciesInTimeInterval)
-                throws SQLException {
-            this.statement = statement;
-            this.resultSet = statement.executeQuery();
-            this.setSpec = setSpec;
-            this.includeDependenciesInTimeInterval = includeDependenciesInTimeInterval;
-        }
-
-        public boolean hasNext()
-        {
-            try
-            {
-                if (resultSet.isBeforeFirst())
-                    return false;
-                return thereIsMore;
-            } catch (SQLException e)
-            {
-                throw new RuntimeException(e);
-            }
-        }
-
-        public Document next()
-        {
-            try
-            {
-                thereIsMore = resultSet.next();
-                String data = resultSet.getString("data");
-                return new Document(ResponseCommon.mapper.readValue(data, HashMap.class));
-            } catch (SQLException | IOException e)
-            {
-                try
-                {
-                    statement.cancel();
-                } catch (SQLException e2)
-                {
-                    throw new RuntimeException(e2);
-                }
-                throw new RuntimeException(e);
-            }
-        }
-
-        public void close() throws SQLException {
-            resultSet.close();
-            statement.close();
-        }
-    }
-
     public static String getUnknownParameters(HttpServletRequest request, String... knownParameters)
     {
         HashSet<String> knownParametersSet = new HashSet<String>();
@@ -106,29 +56,6 @@ public class Helpers
         preparedStatement.setString(1, id);
 
         return preparedStatement;
-    }
-
-    public static ResultIterator getMatchingDocuments(Connection connection, ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec, String id, boolean includeDependenciesInTimeInterval)
-            throws SQLException
-    {
-        PreparedStatement preparedStatement;
-        if (id == null)
-        {
-            Timestamp fromTimeStamp = new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L);
-            Timestamp untilTimeStamp = new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L);
-            String sql = "SELECT id, collection, created, deleted FROM lddb__versions WHERE modified >= ? AND modified <= ?";
-            preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.setTimestamp(1, fromTimeStamp);
-            preparedStatement.setTimestamp(2, untilTimeStamp);
-        }
-        else
-        {
-            String sql = "SELECT id, collection, created, deleted FROM lddb WHERE id = ?";
-            preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.setString(1, id);
-        }
-
-        return new ResultIterator(preparedStatement, setSpec, includeDependenciesInTimeInterval);
     }
 
     public static PreparedStatement getMatchingDocumentsStatement(Connection dbconn, ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec, String id, boolean includeDependenciesInTimeInterval)
@@ -185,8 +112,6 @@ public class Helpers
             preparedStatement.setTimestamp(parameterIndex++, new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L));
         preparedStatement.setString(parameterIndex++, setSpec.getRootSet());
         preparedStatement.setString(parameterIndex++, LegacyIntegrationTools.legacySigelToUri(setSpec.getSubset()));
-
-        System.out.println(preparedStatement);
 
         return preparedStatement;
     }

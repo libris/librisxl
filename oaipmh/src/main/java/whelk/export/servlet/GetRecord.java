@@ -78,31 +78,6 @@ public class GetRecord
         try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection())
         {
             dbconn.setAutoCommit(false);
-            try (Helpers.ResultIterator it = Helpers.getMatchingDocuments(dbconn, null, null, null, id, false))
-            {
-                if (!it.hasNext())
-                {
-                    failedRequests.labels(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH).inc();
-                    ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
-                    return;
-                }
-
-                // Build the xml response feed
-                XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
-                XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(response.getOutputStream());
-
-                ResponseCommon.writeOaiPmhHeader(writer, request, true);
-                writer.writeStartElement("GetRecord");
-
-                ResponseCommon.emitRecord(it.next(), writer, metadataPrefix, false,
-                        metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX), withDeletedData);
-
-                writer.writeEndElement(); // GetRecord
-                ResponseCommon.writeOaiPmhClose(writer, request);
-            } finally {
-                dbconn.commit();
-            }
-            /*
             try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, null, null, null, id, false);
                  ResultSet resultSet = preparedStatement.executeQuery())
             {
@@ -128,7 +103,6 @@ public class GetRecord
             } finally {
                 dbconn.commit();
             }
-            */
         }
     }
 }
