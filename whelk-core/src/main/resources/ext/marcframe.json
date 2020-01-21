@@ -5969,35 +5969,107 @@
           "2": "MusicPlate",
           "3": "MusicPublisherNumber",
           "4": "VideoRecordingNumber",
-          "5": "PublisherNumber"
+          "5": "PublisherNumber",
+          "6": "MusicDistributorNumber"
         }
       },
       "i2": {
-        "property": "marc:noteAddedEntryController",
-        "marcDefault": "1",
-        "tokenMap": {
-          "0": "marc:NoNoteNoAddedEntry",
-          "2": "marc:NoteNoAddedEntry",
-          "3": "marc:NoNoteAddedEntry"
-        }
+        "NOTE:LC": "Note/added entry controller ignore",
+        "ignored": true,
+        "marcDefault": "1"
       },
       "$a": {"property": "value"},
-      "$b": {
-        "link": "agent", "resourceType": "Organization", "property": "name"
-      },
+      "$b": {"link": "agent", "resourceType": "Organization", "property": "name"},
       "$q": {"addProperty": "qualifier"},
-      "$6": {"property": "marc:fieldref"},
+      "$6": null,
+      "$8": null,
       "_spec": [
         {
-          "source": {"028": {"ind1": "0", "ind2": "1", "subfields": [{"a": "123"}]}},
+          "name": "AudioIssueNumber i1=0",
+          "source": {"028": {"ind1": "0", "ind2": "1", "subfields": [{"a": "STMA 8007"},{"b": "Tamla Motown"}]}},
           "result": {"mainEntity": {
-            "identifiedBy": [{"@type": "AudioIssueNumber", "value": "123"}]
+            "identifiedBy": [
+              {
+                "@type": "AudioIssueNumber",
+                "value": "STMA 8007",
+                "agent": {
+                  "@type": "Organization",
+                  "name": "Tamla Motown"
+                }
+                }
+              ]
           }}
         },
         {
-          "source": {"028": {"ind1": "1", "ind2": "0", "subfields": [{"a": "321"}]}},
+          "name": "MatrixNumber i1=1",
+          "source": {"028": {"ind1": "1", "ind2": "1", "subfields": [{"a": "256A090"},{"b": "Deutsche Grammophon Gesellschaft"}]}},
           "result": {"mainEntity": {
-            "identifiedBy": [{"@type": "MatrixNumber", "value": "321", "marc:noteAddedEntryController": "marc:NoNoteNoAddedEntry"}]
+            "identifiedBy": [
+              {
+                "@type": "MatrixNumber",
+                "value": "256A090",
+                "agent": {
+                  "@type": "Organization",
+                  "name": "Deutsche Grammophon Gesellschaft"
+                }
+              }
+            ]
+          }}
+        },
+        {
+          "name": "MusicPlate i1=2",
+          "source": {"028": {"ind1": "2", "ind2": "1", "subfields": [{"a": "B. & H. 8797"},{"b": "Breitkopf & Hartel"}]}},
+          "result": {"mainEntity": {
+            "identifiedBy": [
+              {
+                "@type": "MusicPlate",
+                "value": "B. & H. 8797",
+                "agent": {
+                  "@type": "Organization",
+                  "name": "Breitkopf & Hartel"
+                }
+              }
+            ]
+          }}
+        },
+        {
+          "name": "MusicPublisherNumber i1=3, i2=0",
+          "source": {"028": {"ind1": "3", "ind2": "0", "subfields": [{"a": "321"}]}},
+          "normalized": {"028": {"ind1": "3", "ind2": "1", "subfields": [{"a": "321"}]}},
+          "result": {"mainEntity": {
+            "identifiedBy": [{"@type": "MusicPublisherNumber", "value": "321"}]
+          }}
+        },
+        {
+          "name": "VideoRecordingNumber i1=4",
+          "source": {"028": {"ind1": "4", "ind2": "1", "subfields": [{"a": "440 073 033-9"},{"b": "Deutsche Grammophon"},{"q": "skiva 2"}]}},
+          "result": {"mainEntity": {
+            "identifiedBy": [
+              {
+                "@type": "VideoRecordingNumber",
+                "value": "440 073 033-9",
+                "qualifier": ["skiva 2"],
+                "agent": {
+                  "@type": "Organization",
+                  "name": "Deutsche Grammophon"
+                }
+              }
+            ]
+          }}
+        },
+        {
+          "name": "PublisherNumber i1=5, i2=2",
+          "source": {"028": {"ind1": "5", "ind2": "2", "subfields": [{"a": "321"}]}},
+          "normalized": {"028": {"ind1": "5", "ind2": "1", "subfields": [{"a": "321"}]}},
+          "result": {"mainEntity": {
+            "identifiedBy": [{"@type": "PublisherNumber", "value": "321"}]
+          }}
+        },
+        {
+          "name": "MusicDistributorNumber i1=6",
+          "source": {"028": {"ind1": "6", "ind2": "1", "subfields": [{"a": "321"}]}},
+          "result": {"mainEntity": {
+            "identifiedBy": [{"@type": "MusicDistributorNumber", "value": "321"}]
           }}
         }
       ]
