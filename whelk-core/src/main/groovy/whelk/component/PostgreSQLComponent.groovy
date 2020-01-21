@@ -56,6 +56,8 @@ class PostgreSQLComponent implements Storage {
     private static final String UNIQUE_VIOLATION = "23505"
     private static final String driverClass = "org.postgresql.Driver"
 
+    private static final String EMBELLISH_EXCLUDE_RELATIONS = "'${['narrower', 'broader'].join("', '")}'"
+
     private static final int CARD_CACHE_MAX_SIZE = 200_000
     private boolean useCardCache = false
     private LoadingCache<String, Map> cardCache
@@ -261,55 +263,64 @@ class PostgreSQLComponent implements Storage {
                 "SELECT * FROM deps"
 
         GET_CARDS_FOR_EMBELLISH =
-                "WITH RECURSIVE deps(id, card) AS (\n" +
-                "        SELECT i.id, c.data from unnest(?) as in_iri\n" +
-                "        INNER JOIN $idTableName i ON in_iri = i.iri\n" +
-                "        LEFT JOIN $cardsTableName c on i.id = c.id\n" +
-                "    UNION\n" +
-                "        SELECT d.dependsonid, c.data\n" +
-                "        FROM $dependenciesTableName d\n" +
-                "        INNER JOIN deps deps1 ON d.id = deps1.id AND d.incard\n" +
-                "        LEFT JOIN $cardsTableName c on d.dependsonid = c.id\n" +
-                "    )\n" +
-                "SELECT id, card\n" +
-                "FROM deps\n"
+                "WITH RECURSIVE deps(id, card) AS ( " +
+                "        SELECT i.id, c.data from unnest(?) as in_iri " +
+                "        INNER JOIN $idTableName i ON in_iri = i.iri " +
+                "        LEFT JOIN $cardsTableName c on i.id = c.id " +
+                "    UNION " +
+                "        SELECT d.dependsonid, c.data " +
+                "        FROM $dependenciesTableName d " +
+                "        INNER JOIN deps deps1 ON d.id = deps1.id " +
+                        "AND d.incard " +
+                        "AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS) " +
+                "        LEFT JOIN $cardsTableName c on d.dependsonid = c.id " +
+                "    ) " +
+                "SELECT id, card " +
+                "FROM deps "
 
         GET_IDS_FOR_EMBELLISH =
-                "WITH RECURSIVE deps(id) AS (\n" +
-                        "        SELECT i.id from unnest(?) as in_iri\n" +
-                        "        INNER JOIN $idTableName i ON in_iri = i.iri\n" +
-                        "    UNION\n" +
-                        "        SELECT d.dependsonid\n" +
-                        "        FROM $dependenciesTableName d\n" +
-                        "        INNER JOIN deps deps1 ON d.id = deps1.id AND d.incard\n" +
-                        "    )\n" +
-                        "SELECT id\n" +
-                        "FROM deps\n"
+                "WITH RECURSIVE deps(id) AS ( " +
+                "        SELECT i.id from unnest(?) as in_iri " +
+                "        INNER JOIN $idTableName i ON in_iri = i.iri " +
+                "    UNION " +
+                "        SELECT d.dependsonid " +
+                "        FROM $dependenciesTableName d " +
+                "        INNER JOIN deps deps1 ON d.id = deps1.id " +
+                "        AND d.incard  " +
+                "        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS) " +
+                "    ) " +
+                "SELECT id " +
+                "FROM deps "
 
         BULK_LOAD_CARDS = "SELECT in_id as id, data from unnest(?) as in_id LEFT JOIN $cardsTableName c ON in_id = c.id"
 
         FOLLOW_EMBELLISH_DEPENDENCIES =
-                "WITH RECURSIVE deps(id) AS (\n" +
-                "        VALUES (?)\n" +
-                "    UNION\n" +
-                "        SELECT d.dependsonid\n" +
-                "        FROM lddb__dependencies d\n" +
-                "        INNER JOIN deps deps1 ON d.id = deps1.id AND d.incard\n" +
-                "    )\n" +
-                "SELECT *\n" +
-                "FROM deps\n" +
-                "OFFSET 1\n"
+                "WITH RECURSIVE deps(id) AS ( " +
+                "        VALUES (?) " +
+                "    UNION " +
+                "        SELECT d.dependsonid " +
+                "        FROM lddb__dependencies d " +
+                "        INNER JOIN deps deps1 ON d.id = deps1.id " +
+                "        AND d.incard " +
+                "        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS) " +
+                "    ) " +
+                "SELECT * " +
+                "FROM deps " +
+                "OFFSET 1 "
 
         FOLLOW_EMBELLISH_DEPENDERS =
-                "WITH RECURSIVE deps(id, relation, incard) AS (\n" +
-                "        VALUES (?, null, true)\n" +
-                "    UNION\n" +
-                "        SELECT d.id, d.relation, d.incard\n" +
-                "        FROM $dependenciesTableName d\n" +
-                "        INNER JOIN deps deps1 ON d.dependsonid = deps1.id AND deps1.incard AND d.id != ?\n" +
-                "    )\n" +
-                "SELECT id, relation\n" +
-                "FROM deps\n" +
+                "WITH RECURSIVE deps(id, relation, incard) AS ( " +
+                "        VALUES (?, null, true) " +
+                "    UNION " +
+                "        SELECT d.id, d.relation, d.incard " +
+                "        FROM $dependenciesTableName d " +
+                "        INNER JOIN deps deps1 ON d.dependsonid = deps1.id " +
+                "        AND deps1.incard " +
+                "        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS) " +
+                "        AND d.id != ? " +
+                "    ) " +
+                "SELECT id, relation " +
+                "FROM deps " +
                 "OFFSET 1"
 
         GET_DEPENDERS = "SELECT DISTINCT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id"
