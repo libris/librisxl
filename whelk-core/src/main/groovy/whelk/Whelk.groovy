@@ -2,6 +2,7 @@ package whelk
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
+import whelk.component.CachingPostgreSQLComponent
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
@@ -43,8 +44,7 @@ class Whelk implements Storage {
     }
 
     static Whelk createLoadedCoreWhelk(Properties configuration, boolean useCache = false) {
-        PostgreSQLComponent storage = new PostgreSQLComponent(configuration)
-        Whelk whelk = new Whelk(storage, useCache)
+        Whelk whelk = new Whelk(configuration, useCache)
         if (configuration.baseUri) {
             whelk.baseUri = new URI((String) configuration.baseUri)
         }
@@ -65,24 +65,23 @@ class Whelk implements Storage {
         return whelk
     }
 
-    public Whelk(PostgreSQLComponent pg, ElasticSearch es, boolean useCache = false) {
-        this(pg, useCache)
+    Whelk(PostgreSQLComponent pg, ElasticSearch es) {
+        this(pg)
         this.elastic = es
         log.info("Using index: $elastic")
     }
 
-    public Whelk(PostgreSQLComponent pg, boolean useCache = false) {
+    Whelk(PostgreSQLComponent pg) {
         this.storage = pg
         relations = new Relations(pg)
-        this.useCache = useCache
         log.info("Started with storage: $storage")
     }
 
-    public Whelk(Properties conf, boolean useCache = false) {
-        this(new PostgreSQLComponent(conf), new ElasticSearch(conf), useCache)
+    Whelk(Properties conf, useCache = false) {
+        this(useCache ? new CachingPostgreSQLComponent(conf) : new PostgreSQLComponent(conf), new ElasticSearch(conf))
     }
 
-    public Whelk() {
+    Whelk() {
     }
 
     synchronized MarcFrameConverter getMarcFrameConverter() {
@@ -103,9 +102,6 @@ class Whelk implements Storage {
         loadVocabData()
         jsonld = new JsonLd(contextData, displayData, vocabData)
         storage.setJsonld(jsonld)
-        if (useCache) {
-            storage.initCardCache(useCache)
-        }
         log.info("Loaded with core data")
     }
 

@@ -1,8 +1,6 @@
 package whelk.component
 
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
-import com.google.common.cache.LoadingCache
+
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import groovy.json.StringEscapeUtils
@@ -58,10 +56,6 @@ class PostgreSQLComponent implements Storage {
     private static final String driverClass = "org.postgresql.Driver"
 
     private static final String EMBELLISH_EXCLUDE_RELATIONS = "'${['narrower', 'broader'].join("', '")}'"
-
-    private static final int CARD_CACHE_MAX_SIZE = 200_000
-    private boolean useCardCache = false
-    private LoadingCache<String, Map> cardCache
 
     private HikariDataSource connectionPool
     boolean versioning = true
@@ -165,7 +159,6 @@ class PostgreSQLComponent implements Storage {
         }
 
         this.dependencyCache = new DependencyCache(this)
-        initCardCache(false)
 
         // Setting up sql-statements
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
@@ -375,26 +368,8 @@ class PostgreSQLComponent implements Storage {
         GET_LEGACY_PROFILE = "SELECT profile FROM $profilesTableName WHERE library_id = ?"
     }
 
-    void initCardCache(boolean useCache) {
-        this.useCardCache = useCache
-        cardCache = CacheBuilder.newBuilder()
-                .maximumSize(useCache ? CARD_CACHE_MAX_SIZE : 0)
-                .recordStats()
-                .build(new CacheLoader<String, Map>() {
-                    @Override
-                    Map load(String systemId) throws Exception {
-                        return loadCard(systemId) ?: makeCard(systemId);
-                    }
-
-                    @Override
-                    Map<String, Map> loadAll(Iterable<? extends String> systemIds) throws Exception {
-                        return addMissingCards(bulkLoadCards(systemIds))
-                    }
-                })
-    }
-
     void logStats() {
-        log.info("Card cache: ${cardCache.stats()}")
+        // NOP
     }
 
     private Map status(URI uri, Connection connection) {
@@ -862,10 +837,10 @@ class PostgreSQLComponent implements Storage {
         saveDependencies(doc, connection)
 
         if (deleted) {
-            deleteCard(doc, connection)
+            deleteCard(toCard(doc), connection)
         }
         else {
-            storeCard(doc, connection)
+            storeCard(toCard(doc), connection)
         }
     }
 
@@ -873,7 +848,7 @@ class PostgreSQLComponent implements Storage {
         Connection connection = getConnection()
         try {
             saveIdentifiers(doc, connection, false)
-            storeCard(doc, connection)
+            storeCard(toCard(doc), connection)
         } finally {
             connection.close()
         }
@@ -924,16 +899,19 @@ class PostgreSQLComponent implements Storage {
         return dependencies
     }
 
-    Map getCard(String id) {
-        return cardCache.get(id)
+    Map getCard(String systemId) {
+        return loadCard(systemId) ?: makeCard(systemId);
     }
 
-    private void storeCard(Document doc, Connection connection) {
+    Document toCard(Document doc) {
+        return new Document(jsonld.toCard(doc.data, false))
+    }
+
+    protected void storeCard(Document card, Connection connection) {
         if (!jsonld) {
             return
         }
 
-        Document card = new Document(jsonld.toCard(doc.data, false))
         Timestamp timestamp = new Timestamp(Instant.now().toEpochMilli()) // TODO: use transaction timstamp
 
         PreparedStatement preparedStatement
@@ -950,26 +928,22 @@ class PostgreSQLComponent implements Storage {
         finally {
             close(preparedStatement)
         }
-
-        cardCache.put(card.getShortId(), card.data)
     }
 
-    private void deleteCard(Document doc, Connection connection) {
+    protected void deleteCard(Document card, Connection connection) {
         PreparedStatement preparedStatement
         try {
             preparedStatement = connection.prepareStatement(DELETE_CARD)
-            preparedStatement.setString(1, doc.getShortId())
+            preparedStatement.setString(1, card.getShortId())
 
             preparedStatement.executeUpdate()
         }
         finally {
             close(preparedStatement)
         }
-
-        cardCache.invalidate(doc.getShortId())
     }
 
-    private Map loadCard(String id) {
+    protected Map loadCard(String id) {
         Connection connection = getConnection()
         try {
             return loadCard(id, connection)
@@ -979,14 +953,10 @@ class PostgreSQLComponent implements Storage {
     }
 
     Iterable<Map> getCardsByFollowingInCardRelations(List<String> startIris) {
-        if (useCardCache) {
-            return cardCache.getAll(getIdsForEmbellish(startIris)).values()
-        } else {
-            return addMissingCards(getCardsForEmbellish(startIris)).values()
-        }
+        return addMissingCards(getCardsForEmbellish(startIris)).values()
     }
 
-    private Map<String, Map> getCardsForEmbellish(List<String> startIris) {
+    protected Map<String, Map> getCardsForEmbellish(List<String> startIris) {
         Connection connection = getConnection()
         PreparedStatement preparedStatement
         ResultSet rs
@@ -1006,12 +976,12 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private SortedSet<String> getIdsForEmbellish(List<String> startIris) {
+    protected SortedSet<String> getIdsForEmbellish(List<String> startIris) {
         Connection connection = getConnection()
         PreparedStatement preparedStatement
         ResultSet rs
         try {
-            preparedStatement = connection.prepareStatement(GET_CARDS_FOR_EMBELLISH)
+            preparedStatement = connection.prepareStatement(GET_IDS_FOR_EMBELLISH)
             preparedStatement.setArray(1,  connection.createArrayOf("TEXT", startIris as String[]))
 
             rs = preparedStatement.executeQuery()
@@ -1025,7 +995,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private Map<String, Map> bulkLoadCards(Iterable<String> ids) {
+    protected Map<String, Map> bulkLoadCards(Iterable<String> ids) {
         Connection connection = getConnection()
         PreparedStatement preparedStatement
         ResultSet rs
@@ -1065,7 +1035,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private Map loadCard(String id, Connection connection) {
+    protected Map loadCard(String id, Connection connection) {
         PreparedStatement preparedStatement
         ResultSet rs
         try {
@@ -1085,7 +1055,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private Map<String, Map> addMissingCards(Map<String, Map> cards) {
+    protected Map<String, Map> addMissingCards(Map<String, Map> cards) {
         Map <String, Map> result = [:]
         cards.each { id, card ->
             result[id] = card ?: makeCard(id)
