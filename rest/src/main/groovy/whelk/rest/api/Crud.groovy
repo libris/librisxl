@@ -241,6 +241,7 @@ class Crud extends HttpServlet {
                 doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame(), request.getLens())
 
         if (request.shouldEmbellish()) {
+            doc = doc.clone() // FIXME: this is because ETag calculation is done on non-embellished doc...
             whelk.embellish(doc)
         }
 
