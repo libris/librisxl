@@ -7271,7 +7271,7 @@
         }
       },
       "$b": {"property": "itemPortion"},
-      "$m": {"ignored": true, "NOTE:record-count": 1},
+      "$m": {"ignored": true, "NOTE:LC": "Standard or optional designation (NR) - nac"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "subfieldOrder": "a b 2 q ...",
@@ -7439,6 +7439,7 @@
     },
     "083": {
       "aboutEntity": "?work",
+      "TODO": "Should we deprecate this altogether? BF2=nac",
       "addLink": "additionalClassificationDdc",
       "include": ["classification-ddc"],
       "$c": {"ignored": true, "NOTE:record-count": 1, "NOTE:local": "Används normalt ej"},
@@ -7643,9 +7644,10 @@
       ]
     },
     "088": {
+      "NOTE:local": "EJ I EXPORT",
       "include": ["identifier"],
       "resourceType": "ReportNumber",
-      "$6": {"property": "marc:fieldref"}
+      "$6": null
     },
     "090": {"ignored": true, "NOTE:record-count": 67, "NOTE:LC": "OBSOLETE, 1982", "NOTE:OCLC": "Locally Assigned LC-type Call Number. Field 090 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
     "092": {"ignored": true, "NOTE:record-count": 15, "NOTE:LC": "Not part of BF2 conversion", "NOTE:OCLC": "Locally Assigned Dewey Call Number. Field 092 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
