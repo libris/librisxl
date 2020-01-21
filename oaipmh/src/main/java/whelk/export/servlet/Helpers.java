@@ -114,12 +114,25 @@ public class Helpers
         PreparedStatement preparedStatement;
         if (id == null)
         {
-            Timestamp fromTimeStamp = new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L);
-            Timestamp untilTimeStamp = new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L);
-            String sql = "SELECT id, collection, created, deleted FROM lddb__versions WHERE modified >= ? AND modified <= ?";
+            String sql = "SELECT id, collection, created, deleted FROM lddb__versions WHERE true";
+
+            if (fromDateTime != null) {
+                sql += " AND modified >= ?";
+            }
+            if (untilDateTime != null) {
+                sql += " AND modified <= ?";
+            }
+
             preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.setTimestamp(1, fromTimeStamp);
-            preparedStatement.setTimestamp(2, untilTimeStamp);
+            int parameterIndex = 1;
+            if (fromDateTime != null) {
+                Timestamp fromTimeStamp = new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L);
+                preparedStatement.setTimestamp(parameterIndex++, fromTimeStamp);
+            }
+            if (untilDateTime != null) {
+                Timestamp untilTimeStamp = new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L);
+                preparedStatement.setTimestamp(parameterIndex++, untilTimeStamp);
+            }
         }
         else
         {
