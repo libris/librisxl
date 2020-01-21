@@ -5317,7 +5317,7 @@
       "_spec": [
         {
           "source": {"018": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "03043923/78/050243-03$00.95/0"}
+            {"a": "X"}
           ]}},
           "normalized": [],
           "result": {"mainEntity": { }}
@@ -6086,7 +6086,16 @@
     "031": {
       "NOTE:LC": "031 - MUSICAL INCIPITS INFORMATION (R) nac",
       "ignored": true, 
-      "NOTE:record-count": 0
+      "NOTE:record-count": 0,
+      "_spec": [
+        {
+          "source": {"031": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "X"}
+          ]}},
+          "normalized": [],
+          "result": {"mainEntity": { }}
+        }
+      ]
     },
 
     "032": {
@@ -7024,7 +7033,16 @@
       "NOTE:LC": "061 - NATIONAL LIBRARY OF MEDICINE COPY STATEMENT (R) nac",
       "NOTE:local": "ANVÄNDS NORMALT EJ",
       "ignored": true,
-      "NOTE:record-count": 0
+      "NOTE:record-count": 0,
+      "_spec": [
+        {
+          "source": {"061": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "X"}
+          ]}},
+          "normalized": [],
+          "result": {"mainEntity": { }}
+        }
+      ]
     },
     "066": {
       "NOTE:record-count": 4905,
@@ -7050,7 +7068,16 @@
       "NOTE:LC": "071 - NATIONAL AGRICULTURAL LIBRARY COPY STATEMENT (R) nac",
       "NOTE:local": "ANVÄNDS NORMALT EJ",
       "ignored": true,
-      "NOTE:record-count": 0
+      "NOTE:record-count": 0,
+      "_spec": [
+        {
+          "source": {"071": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "X"}
+          ]}},
+          "normalized": [],
+          "result": {"mainEntity": { }}
+        }
+      ]
     },
 
     "072": {
@@ -7535,7 +7562,16 @@
       "NOTE:LC": "085 - SYNTHESIZED CLASSIFICATION NUMBER COMPONENTS (R) nac",
       "NOTE:local": "ANVÄNDS NORMALT EJ",
       "ignored": true,
-      "NOTE:record-count": 21
+      "NOTE:record-count": 21,
+      "_spec": [
+        {
+          "source": {"085": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "X"}
+          ]}},
+          "normalized": [],
+          "result": {"mainEntity": { }}
+        }
+      ]
     },
     "086": {
       "TODO": "group with classification",
