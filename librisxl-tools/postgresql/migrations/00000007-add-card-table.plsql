@@ -31,6 +31,8 @@ BEGIN
       changed  timestamp with time zone NOT NULL
    );
 
+   TRUNCATE TABLE lddb__embellished;
+
 END$$;
 
 COMMIT;
