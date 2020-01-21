@@ -99,9 +99,13 @@ class Whelk implements Storage {
         loadContextData()
         loadDisplayData()
         loadVocabData()
-        jsonld = new JsonLd(contextData, displayData, vocabData)
-        storage.setJsonld(jsonld)
+        setJsonld(new JsonLd(contextData, displayData, vocabData))
         log.info("Loaded with core data")
+    }
+
+    void setJsonld(JsonLd jsonld) {
+        this.jsonld = jsonld
+        storage.setJsonld(jsonld)
     }
 
     void loadContextData() {
@@ -148,7 +152,7 @@ class Whelk implements Storage {
         TreeSet<String> idsToReindex = new TreeSet<>()
 
         if (storage.isCardChanged(document.getShortId())) {
-            List<Tuple2<String, String>> dependers = storage.getInCardDependers(document.getShortId())
+            List<Tuple2<String, String>> dependers = storage.followEmbellishDependers(document.getShortId())
 
             // Filter out "itemOf"-links. In other words, do not bother reindexing hold posts (they're not embellished in elastic)
             for (Tuple2<String, String> depender : dependers) {
@@ -351,7 +355,7 @@ class Whelk implements Storage {
 
     void embellish(Document document, boolean filterOutNonChipTerms = false) {
         List convertedExternalLinks = jsonld.expandLinks(document.getExternalRefs())
-        def cards = storage.getCardsByFollowingInCardRelations(convertedExternalLinks)
+        def cards = storage.getCardsForEmbellish(convertedExternalLinks)
         jsonld.embellish(document.data, cards, filterOutNonChipTerms)
     }
 

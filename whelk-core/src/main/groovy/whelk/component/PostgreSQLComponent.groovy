@@ -903,10 +903,23 @@ class PostgreSQLComponent implements Storage {
         return loadCard(systemId) ?: makeCardData(systemId);
     }
 
-    Iterable<Map> getCardsByFollowingInCardRelations(List<String> startIris) {
-        return addMissingCards(getCardsForEmbellish(startIris)).values()
+    /**
+     * Get cards by following relations in cards recursively.
+     * Excluding {@value #EMBELLISH_EXCLUDE_RELATIONS}.
+     *
+     * @param startIris IRIs of cards to start with
+     * @return data of cards
+     */
+    Iterable<Map> getCardsForEmbellish(List<String> startIris) {
+        return addMissingCards(getIdsAndCardsForEmbellish(startIris)).values()
     }
 
+    /**
+     * Check if a card has changed
+     *
+     * @param systemId
+     * @return true if the card changed after or at the same time as the document was modified
+     */
     boolean isCardChanged(String systemId) {
         Connection connection = getConnection()
         PreparedStatement preparedStatement = null
@@ -918,6 +931,34 @@ class PostgreSQLComponent implements Storage {
             rs = preparedStatement.executeQuery()
 
             return rs.next() && rs.getBoolean(1)
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    /**
+     * Find all ids that depend on a card by having it in their embellish dependencies.
+     * <p>i.e. the card + all cards that link to it, recursively + all documents that link to any of all these cards</p>
+     * Excluding {@value #EMBELLISH_EXCLUDE_RELATIONS}.
+     *
+     * @param systemId id of card
+     * @return a list of depender (id, relation) tuples
+     */
+    List<Tuple2<String, String>> followEmbellishDependers(String systemId) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            preparedStatement = connection.prepareStatement(FOLLOW_EMBELLISH_DEPENDERS)
+            preparedStatement.setString(1, systemId)
+            preparedStatement.setString(2, systemId)
+
+            rs = preparedStatement.executeQuery()
+            List<Tuple2<String, String>> result = []
+            while(rs.next()) {
+                result << new Tuple2(rs.getString("id"), rs.getString("relation"))
+            }
+            return result
         } finally {
             close(rs, preparedStatement, connection)
         }
@@ -951,7 +992,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     protected void deleteCard(Document card, Connection connection) {
-        PreparedStatement preparedStatement
+        PreparedStatement preparedStatement = null
         try {
             preparedStatement = connection.prepareStatement(DELETE_CARD)
             preparedStatement.setString(1, card.getShortId())
@@ -972,7 +1013,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    protected Map<String, Map> getCardsForEmbellish(List<String> startIris) {
+    protected Map<String, Map> getIdsAndCardsForEmbellish(List<String> startIris) {
         Connection connection = getConnection()
         PreparedStatement preparedStatement = null
         ResultSet rs = null
@@ -1024,26 +1065,6 @@ class PostgreSQLComponent implements Storage {
             while(rs.next()) {
                 String card = rs.getString("data")
                 result[rs.getString("id")] = card != null ? mapper.readValue(card, Map) : null
-            }
-            return result
-        } finally {
-            close(rs, preparedStatement, connection)
-        }
-    }
-
-    List<Tuple2<String, String>> getInCardDependers(String id) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(FOLLOW_EMBELLISH_DEPENDERS)
-            preparedStatement.setString(1, id)
-            preparedStatement.setString(2, id)
-
-            rs = preparedStatement.executeQuery()
-            List<Tuple2<String, String>> result = []
-            while(rs.next()) {
-                result << new Tuple2(rs.getString("id"), rs.getString("relation"))
             }
             return result
         } finally {

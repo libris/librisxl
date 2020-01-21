@@ -24,7 +24,7 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
     }
 
     @Override
-    Iterable<Map> getCardsByFollowingInCardRelations(List<String> startIris) {
+    Iterable<Map> getCardsForEmbellish(List<String> startIris) {
         return cardCache.getAll(getIdsForEmbellish(startIris)).values()
     }
 
