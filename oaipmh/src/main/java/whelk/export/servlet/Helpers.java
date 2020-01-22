@@ -17,6 +17,7 @@ public class Helpers
         private final ResultSet resultSet;
         private final SetSpec setSpec;
         private final boolean includeDependenciesInTimeInterval;
+        private final Stack<Document> resultingDocuments = new Stack<>();
         private boolean firstAccess = true;
 
         public ResultIterator(PreparedStatement statement, SetSpec setSpec, boolean includeDependenciesInTimeInterval)
@@ -31,24 +32,40 @@ public class Helpers
         {
             try
             {
-                if ( firstAccess && (!resultSet.isBeforeFirst()) ) {
+                if ( firstAccess && (!resultSet.isBeforeFirst()) ) // Empty initial resultset?
+                {
                     return false;
                 }
-                return !resultSet.isLast();
-            } catch (SQLException e)
-            {
-                throw new RuntimeException(e);
-            }
-        }
+                else if (!resultingDocuments.isEmpty()) // Stuff already in the queue?
+                {
+                    return true;
+                }
+                else // More to fetch from db?
+                {
+                    firstAccess = false;
+                    while (resultSet.next())
+                    {
+                        String data = resultSet.getString("data");
 
-        public Document next()
-        {
-            try
-            {
-                firstAccess = false;
-                resultSet.next();
-                String data = resultSet.getString("data");
-                return new Document(ResponseCommon.mapper.readValue(data, HashMap.class));
+                        Document updated = new Document(ResponseCommon.mapper.readValue(data, HashMap.class));
+                        String collection = LegacyIntegrationTools.determineLegacyCollection(updated, OaiPmh.s_whelk.getJsonld());
+
+                        if (collection.equals("auth"))
+                        {
+
+                        }
+                        else if (collection.equals("bib"))
+                        {
+                            resultingDocuments.push(updated);
+                            return true;
+                        }
+                        else if (collection.equals("hold"))
+                        {
+
+                        }
+                    }
+                    return false;
+                }
             } catch (SQLException | IOException e)
             {
                 try
@@ -60,6 +77,11 @@ public class Helpers
                 }
                 throw new RuntimeException(e);
             }
+        }
+
+        public Document next()
+        {
+            return resultingDocuments.pop();
         }
 
         public void close() throws SQLException {
@@ -116,7 +138,7 @@ public class Helpers
         PreparedStatement preparedStatement;
         if (id == null)
         {
-            String sql = "SELECT data FROM lddb__versions WHERE collection <> 'definitions'";
+            String sql = "SELECT data FROM lddb WHERE collection <> 'definitions'";
 
             if (fromDateTime != null) {
                 sql += " AND modified >= ?";
