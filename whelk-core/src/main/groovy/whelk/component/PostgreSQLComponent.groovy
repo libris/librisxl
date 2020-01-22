@@ -91,7 +91,6 @@ class PostgreSQLComponent implements Storage {
     protected String GET_IDS_FOR_EMBELLISH
     protected String BULK_LOAD_CARDS
     protected String IS_CARD_CHANGED
-    protected String FOLLOW_EMBELLISH_DEPENDENCIES
     protected String FOLLOW_EMBELLISH_DEPENDERS
 
     String mainTableName
@@ -259,20 +258,8 @@ class PostgreSQLComponent implements Storage {
                 ") " +
                 "SELECT * FROM deps"
 
-        GET_CARDS_FOR_EMBELLISH =
-                "WITH RECURSIVE deps(id, card) AS ( " +
-                "        SELECT i.id, c.data from unnest(?) as in_iri " +
-                "        INNER JOIN $idTableName i ON in_iri = i.iri " +
-                "        LEFT JOIN $cardsTableName c on i.id = c.id " +
-                "    UNION " +
-                "        SELECT d.dependsonid, c.data " +
-                "        FROM $dependenciesTableName d " +
-                "        INNER JOIN deps deps1 ON d.id = deps1.id " +
-                "        AND d.incard " +
-                "        LEFT JOIN $cardsTableName c on d.dependsonid = c.id " +
-                "    ) " +
-                "SELECT id, card FROM deps"
-
+        // Start with an ARRAY of IRIs and convert them to SystemIDs.
+        // Then recursively load SystemIDs by following in-card-relations (given by $dependenciesTableName.incard)
         GET_IDS_FOR_EMBELLISH =
                 "WITH RECURSIVE deps(id) AS ( " +
                 "        SELECT i.id from unnest(?) as in_iri " +
@@ -285,33 +272,43 @@ class PostgreSQLComponent implements Storage {
                 "    ) " +
                 "SELECT id FROM deps"
 
-        BULK_LOAD_CARDS = "SELECT in_id as id, data from unnest(?) as in_id LEFT JOIN $cardsTableName c ON in_id = c.id"
+        // Same as GET_IDS_FOR_EMBELLISH but also try to join in card data for all SystemIDs.
+        GET_CARDS_FOR_EMBELLISH =
+                "WITH RECURSIVE deps(id, card) AS ( " +
+                        "        SELECT i.id, c.data from unnest(?) as in_iri " +
+                        "        INNER JOIN $idTableName i ON in_iri = i.iri " +
+                        "        LEFT JOIN $cardsTableName c on i.id = c.id " +
+                        "    UNION " +
+                        "        SELECT d.dependsonid, c.data " +
+                        "        FROM $dependenciesTableName d " +
+                        "        INNER JOIN deps deps1 ON d.id = deps1.id " +
+                        "        AND d.incard " +
+                        "        LEFT JOIN $cardsTableName c on d.dependsonid = c.id " +
+                        "    ) " +
+                        "SELECT id, card FROM deps"
 
-        IS_CARD_CHANGED = "SELECT card.changed >= doc.modified " +
-                "FROM lddb__cards card, lddb doc WHERE doc.id = card.id AND doc.id = ?"
-
-        FOLLOW_EMBELLISH_DEPENDENCIES =
-                "WITH RECURSIVE deps(id) AS ( " +
-                "        VALUES (?) " +
-                "    UNION " +
-                "        SELECT d.dependsonid " +
-                "        FROM lddb__dependencies d " +
-                "        INNER JOIN deps deps1 ON d.id = deps1.id " +
-                "        AND d.incard " +
-                "    ) " +
-                "SELECT * FROM deps OFFSET 1"
-
+        // Starting with a SystemID, find all SystemIDs that have the ID in their "embellish dependencies"
+        // , i.e. it is part of their embellished document.
+        // Going backwards from SystemID:
+        // - Recursively follow in-card-relations backwards.
+        // - Also follow not-in-card-relations (since embellish starts from the full doc) but stop at them.
+        // Don't include the starting ID in the result
         FOLLOW_EMBELLISH_DEPENDERS =
                 "WITH RECURSIVE deps(id, relation, incard) AS ( " +
                 "        VALUES (?, null, true) " +
                 "    UNION " +
                 "        SELECT d.id, d.relation, d.incard " +
                 "        FROM $dependenciesTableName d " +
-                "        INNER JOIN deps deps1 ON d.dependsonid = deps1.id " +
-                "        AND deps1.incard " +
+                "        INNER JOIN deps results ON d.dependsonid = results.id " +
+                "        AND results.incard " +
                 "        AND d.id != ? " +
                 "    ) " +
                 "SELECT id, relation FROM deps OFFSET 1"
+
+        BULK_LOAD_CARDS = "SELECT in_id as id, data from unnest(?) as in_id LEFT JOIN $cardsTableName c ON in_id = c.id"
+
+        IS_CARD_CHANGED = "SELECT card.changed >= doc.modified " +
+                "FROM lddb__cards card, lddb doc WHERE doc.id = card.id AND doc.id = ?"
 
         GET_DEPENDERS = "SELECT DISTINCT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id"
         GET_DEPENDENCIES = "SELECT DISTINCT dependsOnId FROM $dependenciesTableName WHERE id = ? ORDER BY dependsOnId"
@@ -836,6 +833,9 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
+    /**
+     * Rewrite card. To be used when card definitions have changed
+     */
     void refreshCardData(Document doc, Instant timestamp) {
         Connection connection = getConnection()
         try {
