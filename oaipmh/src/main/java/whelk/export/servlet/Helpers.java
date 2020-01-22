@@ -17,7 +17,7 @@ public class Helpers
         private final ResultSet resultSet;
         private final SetSpec setSpec;
         private final boolean includeDependenciesInTimeInterval;
-        private boolean thereIsMore = true;
+        private boolean firstAccess = true;
 
         public ResultIterator(PreparedStatement statement, SetSpec setSpec, boolean includeDependenciesInTimeInterval)
                 throws SQLException {
@@ -31,9 +31,10 @@ public class Helpers
         {
             try
             {
-                if (resultSet.isBeforeFirst())
+                if ( firstAccess && (!resultSet.isBeforeFirst()) ) {
                     return false;
-                return thereIsMore;
+                }
+                return !resultSet.isLast();
             } catch (SQLException e)
             {
                 throw new RuntimeException(e);
@@ -44,7 +45,8 @@ public class Helpers
         {
             try
             {
-                thereIsMore = resultSet.next();
+                firstAccess = false;
+                resultSet.next();
                 String data = resultSet.getString("data");
                 return new Document(ResponseCommon.mapper.readValue(data, HashMap.class));
             } catch (SQLException | IOException e)
@@ -114,7 +116,7 @@ public class Helpers
         PreparedStatement preparedStatement;
         if (id == null)
         {
-            String sql = "SELECT id, collection, created, deleted FROM lddb__versions WHERE true";
+            String sql = "SELECT data FROM lddb__versions WHERE collection <> 'definitions'";
 
             if (fromDateTime != null) {
                 sql += " AND modified >= ?";
