@@ -50,7 +50,7 @@ public class Helpers
                         String data = resultSet.getString("data");
 
                         Document updated = new Document(ResponseCommon.mapper.readValue(data, HashMap.class));
-                        String collection = LegacyIntegrationTools.determineLegacyCollection(updated, OaiPmh.s_whelk.getJsonld());
+                        String updatedCollection = LegacyIntegrationTools.determineLegacyCollection(updated, OaiPmh.s_whelk.getJsonld());
 
                         if (setSpec == null)
                         {
@@ -60,11 +60,11 @@ public class Helpers
                         }
 
 
-                        if (collection == null)
+                        if (updatedCollection == null)
                         {
                             continue;
                         }
-                        else if (collection.equals("auth"))
+                        else if (updatedCollection.equals("auth"))
                         {
                             if (setSpec.getRootSet().equals("auth"))
                                 resultingDocuments.push(updated);
@@ -78,7 +78,7 @@ public class Helpers
                                 }
                             }
                         }
-                        else if (collection.equals("bib"))
+                        else if (updatedCollection.equals("bib"))
                         {
                             if (setSpec.getRootSet().equals("bib"))
                             {
@@ -99,7 +99,7 @@ public class Helpers
                             }
 
                         }
-                        else if (collection.equals("hold"))
+                        else if (updatedCollection.equals("hold"))
                         {
                             if (setSpec.getRootSet().equals("hold"))
                             {
@@ -111,9 +111,13 @@ public class Helpers
                                 }
                             }
                         }
+
+                        // Did reading this record from the DB result in anything new in the export flow?
                         if (!resultingDocuments.isEmpty())
                             return true;
                     }
+
+                    // We've gone over everything that's changed and there is nothing more to export.
                     return false;
                 }
             } catch (SQLException | IOException e)
