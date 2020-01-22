@@ -5,8 +5,10 @@ String where =
         "id in (" +
                 "select id\n" +
                 "from lddb l\n" +
-                "where data#>'{@graph,0,technicalNote,0,label}' @> '[\"ALMA\"]'::jsonb\n" +
+                "where (\n" +
+                "data#>'{@graph,0,technicalNote,0,label}' @> '[\"ALMA\"]'::jsonb\n" +
                 "or data#>>'{@graph,0,technicalNote,0,label}' = 'ALMA'\n" +
+                ")\n" +
                 "and collection = 'bib'\n" +
                 "and deleted = 'false'\n" +
                 "and not exists(\n" +
