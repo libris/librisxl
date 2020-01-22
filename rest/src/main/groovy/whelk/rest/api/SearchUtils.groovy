@@ -141,7 +141,6 @@ class SearchUtils {
     }
 
     private static Map formatReverseResult(Document document) {
-        document.setThingMeta(document.getCompleteId())
         List<String> thingIds = document.getThingIdentifiers()
         if (thingIds.isEmpty()) {
             log.warn("Missing mainEntity? In: " + document.getCompleteId())
