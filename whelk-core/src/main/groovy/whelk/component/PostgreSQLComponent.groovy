@@ -55,8 +55,6 @@ class PostgreSQLComponent implements Storage {
     private static final int DEFAULT_MAX_POOL_SIZE = 16
     private static final String driverClass = "org.postgresql.Driver"
 
-    public static final String EMBELLISH_EXCLUDE_RELATIONS = "'${['narrower', 'broader'].join("', '")}'"
-
     private HikariDataSource connectionPool
     boolean versioning = true
     boolean doVerifyDocumentIdRetention = true
@@ -270,8 +268,7 @@ class PostgreSQLComponent implements Storage {
                 "        SELECT d.dependsonid, c.data " +
                 "        FROM $dependenciesTableName d " +
                 "        INNER JOIN deps deps1 ON d.id = deps1.id " +
-                        "AND d.incard " +
-                        "AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS) " +
+                "        AND d.incard " +
                 "        LEFT JOIN $cardsTableName c on d.dependsonid = c.id " +
                 "    ) " +
                 "SELECT id, card FROM deps"
@@ -285,7 +282,6 @@ class PostgreSQLComponent implements Storage {
                 "        FROM $dependenciesTableName d " +
                 "        INNER JOIN deps deps1 ON d.id = deps1.id " +
                 "        AND d.incard  " +
-                "        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS) " +
                 "    ) " +
                 "SELECT id FROM deps"
 
@@ -302,7 +298,6 @@ class PostgreSQLComponent implements Storage {
                 "        FROM lddb__dependencies d " +
                 "        INNER JOIN deps deps1 ON d.id = deps1.id " +
                 "        AND d.incard " +
-                "        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS) " +
                 "    ) " +
                 "SELECT * FROM deps OFFSET 1"
 
@@ -314,7 +309,6 @@ class PostgreSQLComponent implements Storage {
                 "        FROM $dependenciesTableName d " +
                 "        INNER JOIN deps deps1 ON d.dependsonid = deps1.id " +
                 "        AND deps1.incard " +
-                "        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS) " +
                 "        AND d.id != ? " +
                 "    ) " +
                 "SELECT id, relation FROM deps OFFSET 1"
@@ -872,7 +866,6 @@ class PostgreSQLComponent implements Storage {
     private List<String[]> _calculateDependenciesSystemIDs(Document doc, Connection connection) {
         List<String[]> dependencies = []
         List notInCard = nonCardDependencies(doc)
-        println(notInCard)
         for (String[] reference : doc.getRefsWithRelation()) {
             String relation = reference[0]
             String iri = reference[1]
@@ -906,7 +899,6 @@ class PostgreSQLComponent implements Storage {
 
     /**
      * Get cards by following relations in cards recursively.
-     * Excluding {@link #EMBELLISH_EXCLUDE_RELATIONS}.
      *
      * @param startIris IRIs of cards to start with
      * @return data of cards
@@ -940,7 +932,6 @@ class PostgreSQLComponent implements Storage {
     /**
      * Find all ids that depend on a card by having it in their embellish dependencies.
      * <p>i.e. the card + all cards that link to it, recursively + all documents that link to any of all these cards</p>
-     * Excluding {@link #EMBELLISH_EXCLUDE_RELATIONS}.
      *
      * @param systemId id of card
      * @return a list of depender (id, relation) tuples
