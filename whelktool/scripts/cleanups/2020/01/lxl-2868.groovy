@@ -11,6 +11,7 @@ String where =
                 ")\n" +
                 "and collection = 'bib'\n" +
                 "and deleted = 'false'\n" +
+                "and data#>>'{@graph,0,encodingLevel}' = 'marc:PartialPreliminaryLevel'\n" +
                 "and not exists(\n" +
                 "select d.dependsonid\n" +
                 "from lddb__dependencies d\n" +
