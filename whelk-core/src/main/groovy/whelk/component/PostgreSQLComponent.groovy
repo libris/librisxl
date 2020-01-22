@@ -845,7 +845,7 @@ class PostgreSQLComponent implements Storage {
     void refreshCardData(Document doc, Instant timestamp) {
         Connection connection = getConnection()
         try {
-            saveIdentifiers(doc, connection, false)
+            saveDependencies(doc, connection)
             Document card = toCard(doc)
             card.setModified(timestamp.toDate())
             storeCard(card, connection)
@@ -872,6 +872,7 @@ class PostgreSQLComponent implements Storage {
     private List<String[]> _calculateDependenciesSystemIDs(Document doc, Connection connection) {
         List<String[]> dependencies = []
         List notInCard = nonCardDependencies(doc)
+        println(notInCard)
         for (String[] reference : doc.getRefsWithRelation()) {
             String relation = reference[0]
             String iri = reference[1]
