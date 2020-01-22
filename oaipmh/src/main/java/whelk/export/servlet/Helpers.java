@@ -1,6 +1,8 @@
 package whelk.export.servlet;
 
+import groovy.lang.Tuple2;
 import whelk.Document;
+import whelk.JsonLd;
 import whelk.util.LegacyIntegrationTools;
 
 import javax.servlet.http.HttpServletRequest;
@@ -50,19 +52,65 @@ public class Helpers
                         Document updated = new Document(ResponseCommon.mapper.readValue(data, HashMap.class));
                         String collection = LegacyIntegrationTools.determineLegacyCollection(updated, OaiPmh.s_whelk.getJsonld());
 
-                        if (collection.equals("auth"))
+                        if (setSpec == null)
                         {
-
-                        }
-                        else if (collection.equals("bib"))
-                        {
+                            // If no set is used, all records are welcome.
                             resultingDocuments.push(updated);
                             return true;
                         }
-                        else if (collection.equals("hold"))
+
+
+                        if (collection == null)
                         {
+                            continue;
+                        }
+                        else if (collection.equals("auth"))
+                        {
+                            if (setSpec.getRootSet().equals("auth"))
+                                resultingDocuments.push(updated);
+                            if (includeDependenciesInTimeInterval)
+                            {
+                                List<Tuple2<String, String>> dependers = OaiPmh.s_whelk.getStorage().followDependers(updated.getShortId(), JsonLd.getNON_DEPENDANT_RELATIONS());
+                                for (Tuple2<String, String> depender : dependers)
+                                {
+                                    String dependerId = depender.getFirst();
+                                    resultingDocuments.push(OaiPmh.s_whelk.loadEmbellished(dependerId));
+                                }
+                            }
+                        }
+                        else if (collection.equals("bib"))
+                        {
+                            if (setSpec.getRootSet().equals("bib"))
+                            {
+                                String mustBeHeldBy = setSpec.getSubset();
+                                if (mustBeHeldBy == null)
+                                {
+                                    resultingDocuments.push(updated);
+                                }
+                                List<Document> holdings = OaiPmh.s_whelk.getStorage().getAttachedHoldings(updated.getThingIdentifiers(), OaiPmh.s_whelk.getJsonld());
+                                for (Document holding : holdings)
+                                {
+                                    if (mustBeHeldBy.equals(holding.getSigel()))
+                                    {
+                                        resultingDocuments.push(updated);
+                                    }
+                                }
+                            }
 
                         }
+                        else if (collection.equals("hold"))
+                        {
+                            if (setSpec.getRootSet().equals("hold"))
+                            {
+                                String mustBeHeldBy = setSpec.getSubset();
+                                if (mustBeHeldBy == null || mustBeHeldBy.equals(updated.getSigel()))
+                                {
+                                    resultingDocuments.push(updated);
+                                }
+                            }
+                        }
+                        if (!resultingDocuments.isEmpty())
+                            return true;
                     }
                     return false;
                 }
