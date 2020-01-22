@@ -68,7 +68,7 @@ public class Helpers
                         {
                             if (setSpec.getRootSet().equals("auth"))
                                 resultingDocuments.push(updated);
-                            if (includeDependenciesInTimeInterval)
+                            if (includeDependenciesInTimeInterval && (setSpec.getRootSet().equals("bib") || setSpec.getRootSet().equals("hold")))
                             {
                                 List<Tuple2<String, String>> dependers = OaiPmh.s_whelk.getStorage().followDependers(updated.getShortId(), JsonLd.getNON_DEPENDANT_RELATIONS());
                                 for (Tuple2<String, String> depender : dependers)
@@ -90,7 +90,8 @@ public class Helpers
                                 List<Document> holdings = OaiPmh.s_whelk.getStorage().getAttachedHoldings(updated.getThingIdentifiers(), OaiPmh.s_whelk.getJsonld());
                                 for (Document holding : holdings)
                                 {
-                                    if (mustBeHeldBy.equals(holding.getSigel()))
+                                    String sigel = holding.getSigel();
+                                    if (sigel != null && mustBeHeldBy.equals(sigel))
                                     {
                                         resultingDocuments.push(updated);
                                     }
@@ -103,7 +104,8 @@ public class Helpers
                             if (setSpec.getRootSet().equals("hold"))
                             {
                                 String mustBeHeldBy = setSpec.getSubset();
-                                if (mustBeHeldBy == null || mustBeHeldBy.equals(updated.getSigel()))
+                                String sigel = updated.getSigel();
+                                if (mustBeHeldBy == null || ( sigel != null && mustBeHeldBy.equals(updated.getSigel() )))
                                 {
                                     resultingDocuments.push(updated);
                                 }
