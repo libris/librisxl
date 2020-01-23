@@ -17266,10 +17266,12 @@
         {
           "source": {"774": {"ind1": " ", "ind2": "8", "subfields": [
             {"t": "Map of area with highlighted street"},
+            {"b": "3. ed."},
             {"w": "000"}
           ]}},
           "normalized": {"774": {"ind1": "0", "ind2": "0", "subfields": [
             {"t": "Map of area with highlighted street"},
+            {"b": "3. ed."},
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
@@ -17279,6 +17281,7 @@
                 "@type": "Work",
                 "hasInstance": {
                   "@type": "Instance",
+                  "editionStatement" : "3. ed.",
                   "hasTitle": [{
                     "@type": "Title",
                     "mainTitle": "Map of area with highlighted street"
@@ -17492,16 +17495,19 @@
           "source": {"776": {"ind1": "0", "ind2": "8", "subfields": [
             {"i": "Print"},
             {"t": "War of Words: Dutch Pro-Boer Propaganda and the South African War (1899-1902)"},
+            {"b": "First edition"},
             {"z": "978-90-8964-412-1"}
           ]}},
           "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [
             {"i": "Print"},
             {"t": "War of Words: Dutch Pro-Boer Propaganda and the South African War (1899-1902)"},
+            {"b": "First edition"},
             {"z": "978-90-8964-412-1"}
           ]}},
           "result": {"mainEntity": {
             "otherPhysicalFormat": [{
               "@type": "Instance",
+              "editionStatement" : "First edition",
               "instanceOf" : {
                 "@type" : "Work",
                 "marc:displayText": ["Print"]
