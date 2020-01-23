@@ -100,6 +100,9 @@ class PostgreSQLComponent implements Storage {
     DependencyCache dependencyCache
     JsonLd jsonld
 
+    private AtomicLong cardsUpdated = new AtomicLong()
+    private AtomicLong dependersUpdated = new AtomicLong()
+
     class AcquireLockException extends RuntimeException { AcquireLockException(String s) { super(s) } }
 
     class ConflictingHoldException extends RuntimeException { ConflictingHoldException(String s) { super(s) } }
@@ -364,7 +367,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     void logStats() {
-        // NOP
+        log.info("Cards created or changed: $cardsUpdated. Dependers updated: $dependersUpdated")
     }
 
     private Map status(URI uri, Connection connection) {
@@ -843,18 +846,13 @@ class PostgreSQLComponent implements Storage {
     /**
      * Rewrite card. To be used when card definitions have changed
      */
-    void refreshCardData(Document doc, Instant timestamp, AtomicLong cardsUpdated, AtomicLong nonExistingCards) {
+    void refreshCardData(Document doc, Instant timestamp) {
         getConnection().withCloseable { connection ->
             Document card = toCard(doc)
             card.setModified(timestamp.toDate())
 
-            if (!loadCard(card.shortId, connection)) {
+            if (!loadCard(card.shortId, connection) || updateCard(card, connection)) {
                 saveDependencies(doc, connection)
-                nonExistingCards.incrementAndGet()
-            }
-            else if (updateCard(card, connection)) {
-                saveDependencies(doc, connection)
-                cardsUpdated.incrementAndGet()
             }
         }
     }
@@ -979,7 +977,7 @@ class PostgreSQLComponent implements Storage {
         getConnection().withCloseable { connection -> storeCard(card, connection)}
     }
 
-    protected void storeCard(Document card, Connection connection) {
+    protected boolean storeCard(Document card, Connection connection) {
         Timestamp timestamp = new Timestamp(card.getModifiedTimestamp().toEpochMilli())
 
         PreparedStatement preparedStatement = null
@@ -990,7 +988,13 @@ class PostgreSQLComponent implements Storage {
             preparedStatement.setString(3, card.getChecksum())
             preparedStatement.setTimestamp(4, timestamp)
 
-            preparedStatement.executeUpdate()
+            boolean createdOrUpdated = preparedStatement.executeUpdate() > 0
+
+            if (createdOrUpdated) {
+                cardsUpdated.incrementAndGet()
+            }
+
+            return createdOrUpdated
         }
         finally {
             close(preparedStatement)
@@ -1010,7 +1014,13 @@ class PostgreSQLComponent implements Storage {
             preparedStatement.setString(4, card.getShortId())
             preparedStatement.setString(5, checksum)
 
-            return preparedStatement.executeUpdate() > 0
+            boolean updated = preparedStatement.executeUpdate() > 0
+
+            if (updated) {
+                cardsUpdated.incrementAndGet()
+            }
+
+            return updated
         }
         finally {
             close(preparedStatement)
@@ -1173,6 +1183,7 @@ class PostgreSQLComponent implements Storage {
             }
             try {
                 insertDependencies.executeBatch()
+                dependersUpdated.incrementAndGet()
             } catch (BatchUpdateException bue) {
                 log.error("Failed saving dependencies for ${doc.getShortId()}")
                 throw bue.getNextException()

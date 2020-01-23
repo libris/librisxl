@@ -1,12 +1,11 @@
 package whelk.reindexer
 
+import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.Whelk
 import whelk.util.ThreadPool
-import groovy.util.logging.Log4j2 as Log
 
 import java.time.Instant
-import java.util.concurrent.atomic.AtomicLong
 
 @Log
 class CardRefresher {
@@ -14,8 +13,6 @@ class CardRefresher {
 
     Whelk whelk
     Instant timestamp = Instant.now()
-    AtomicLong cardsUpdated = new AtomicLong()
-    AtomicLong nonExistingCards = new AtomicLong()
 
     CardRefresher(Whelk whelk) {
         this.whelk = whelk
@@ -43,11 +40,7 @@ class CardRefresher {
             threadPool.joinAll()
 
             log.info("Done! $counter documents processed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
-
-            long dependersUpdated = cardsUpdated.longValue() + nonExistingCards.longValue()
-            long untouchedCards =  counter - cardsUpdated.longValue() - nonExistingCards.longValue()
-            log.info("Cards changed: $cardsUpdated. Cards not changed: $untouchedCards.")
-            log.info("Dependers updated: $dependersUpdated. Docs without cards: $nonExistingCards.")
+            whelk.storage.logStats()
         } catch (Exception e) {
             log.error("Refresh cards failed: $e", e)
         }
@@ -56,7 +49,7 @@ class CardRefresher {
     private void refreshCards(List<Document> documents) {
         for (Document document : documents) {
             try {
-                whelk.storage.refreshCardData(document, timestamp, cardsUpdated, nonExistingCards)
+                whelk.storage.refreshCardData(document, timestamp)
             }
             catch (Exception e) {
                 log.error("Error refreshing card for ${document.shortId}: $e", e)

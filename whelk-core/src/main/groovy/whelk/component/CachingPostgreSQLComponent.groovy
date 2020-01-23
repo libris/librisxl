@@ -20,6 +20,7 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
 
     @Override
     void logStats() {
+        super.logStats()
         log.info("Card cache: ${cardCache.stats()}")
     }
 
@@ -34,9 +35,10 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
     }
 
     @Override
-    protected void storeCard(Document card, Connection connection) {
-        super.storeCard(card, connection)
+    protected boolean storeCard(Document card, Connection connection) {
+        boolean change = super.storeCard(card, connection)
         cardCache.put(card.getShortId(), card.data)
+        return change
     }
 
     @Override
