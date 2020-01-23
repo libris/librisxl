@@ -826,11 +826,12 @@ class PostgreSQLComponent implements Storage {
         saveIdentifiers(doc, connection, deleted)
         saveDependencies(doc, connection)
 
-        if (deleted) {
-            deleteCard(toCard(doc), connection)
-        }
-        else {
-            storeCard(toCard(doc), connection)
+        if (jsonld) {
+            if (deleted) {
+                deleteCard(toCard(doc), connection)
+            } else {
+                storeCard(toCard(doc), connection)
+            }
         }
     }
 
@@ -1102,6 +1103,10 @@ class PostgreSQLComponent implements Storage {
     }
 
     private List nonCardDependencies(Document doc) {
+        if (!jsonld) {
+            return []
+        }
+
         Document card = toCard(doc)
         List refs = doc.getExternalRefs()
         refs.removeAll(card.getExternalRefs())

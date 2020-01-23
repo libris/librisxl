@@ -100,10 +100,12 @@ class ImporterMain {
 
     @Command(args='FNAME')
     void defs(String fname) {
-        def whelk = Whelk.createLoadedCoreWhelk(props)
+        def whelk = new Whelk(new PostgreSQLComponent(props))
         DefinitionsImporter defsImporter = new DefinitionsImporter(whelk)
         defsImporter.definitionsFilename = fname
         defsImporter.run("definitions")
+
+
     }
 
     @Command(args='COLLECTION [SOURCE_SYSTEM]')
