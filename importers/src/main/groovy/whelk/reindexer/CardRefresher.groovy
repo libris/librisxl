@@ -6,6 +6,7 @@ import whelk.util.ThreadPool
 import groovy.util.logging.Log4j2 as Log
 
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicLong
 
 @Log
 class CardRefresher {
@@ -13,6 +14,8 @@ class CardRefresher {
 
     Whelk whelk
     Instant timestamp = Instant.now()
+    AtomicLong cardsUpdated = new AtomicLong()
+    AtomicLong nonExistingCards = new AtomicLong()
 
     CardRefresher(Whelk whelk) {
         this.whelk = whelk
@@ -20,7 +23,7 @@ class CardRefresher {
 
     void refresh(String collection = null) {
         try {
-            int counter = 0
+            long counter = 0
             long startTime = System.currentTimeMillis()
 
             ThreadPool threadPool = new ThreadPool(whelk.storage.getPoolSize())
@@ -31,14 +34,20 @@ class CardRefresher {
                 counter++
                 if (counter % BATCH_SIZE == 0) {
                     int docsPerSec = (int) ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
-                    log.info("Refreshing $docsPerSec cards per second (running average since process start). Total count: $counter.")
+                    log.info("Processing $docsPerSec docs per second (running average since process start). Total count: $counter.")
                     threadPool.executeOnThread(documents, new BatchHandler())
                     documents = new ArrayList<>(BATCH_SIZE)
                 }
             }
             refreshCards(documents)
             threadPool.joinAll()
-            log.info("Done! $counter cards refreshed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
+
+            log.info("Done! $counter documents processed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
+
+            long dependersUpdated = cardsUpdated.longValue() + nonExistingCards.longValue()
+            long untouchedCards =  counter - cardsUpdated.longValue() - nonExistingCards.longValue()
+            log.info("Cards changed: $cardsUpdated. Cards not changed: $untouchedCards.")
+            log.info("Dependers updated: $dependersUpdated. Docs without cards: $nonExistingCards.")
         } catch (Exception e) {
             log.error("Refresh cards failed: $e", e)
         }
@@ -47,7 +56,7 @@ class CardRefresher {
     private void refreshCards(List<Document> documents) {
         for (Document document : documents) {
             try {
-                whelk.storage.refreshCardData(document, timestamp)
+                whelk.storage.refreshCardData(document, timestamp, cardsUpdated, nonExistingCards)
             }
             catch (Exception e) {
                 log.error("Error refreshing card for ${document.shortId}: $e", e)

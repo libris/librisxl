@@ -31,6 +31,7 @@ import java.sql.SQLException
 import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicLong
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -85,6 +86,7 @@ class PostgreSQLComponent implements Storage {
     protected String UPDATE_MAX_MODIFIED
     protected String GET_LEGACY_PROFILE
     protected String UPSERT_CARD
+    protected String UPDATE_CARD
     protected String GET_CARD
     protected String DELETE_CARD
     protected String GET_CARDS_FOR_EMBELLISH
@@ -172,10 +174,13 @@ class PostgreSQLComponent implements Storage {
 
         GET_CARD = "SELECT data FROM $cardsTableName WHERE ID = ?"
         DELETE_CARD = "DELETE FROM $cardsTableName WHERE ID = ?"
-        UPSERT_CARD = "INSERT INTO $cardsTableName (id, data, checksum, changed) VALUES (?,?,?,?) " +
-                "ON CONFLICT (id) DO UPDATE " +
-                "SET (data, checksum, changed) = (EXCLUDED.data, EXCLUDED.checksum, EXCLUDED.changed) " +
-                "WHERE ${cardsTableName}.checksum != EXCLUDED.checksum"
+        UPSERT_CARD = """
+                INSERT INTO $cardsTableName (id, data, checksum, changed) VALUES (?,?,?,?) 
+                ON CONFLICT (id) DO UPDATE 
+                SET (data, checksum, changed) = (EXCLUDED.data, EXCLUDED.checksum, EXCLUDED.changed) 
+                WHERE ${cardsTableName}.checksum != EXCLUDED.checksum
+                """.stripIndent()
+        UPDATE_CARD = "UPDATE $cardsTableName SET (data, checksum, changed) = (?,?,?) WHERE id = ? AND checksum != ?"
 
         GET_DOCUMENT = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,collection,created,modified,deleted,changedBy FROM $mainTableName WHERE id = ? AND deleted = false FOR UPDATE"
@@ -830,7 +835,7 @@ class PostgreSQLComponent implements Storage {
             if (deleted) {
                 deleteCard(toCard(doc), connection)
             } else {
-                storeCard(toCard(doc), connection)
+                updateCard(toCard(doc), connection)
             }
         }
     }
@@ -838,15 +843,19 @@ class PostgreSQLComponent implements Storage {
     /**
      * Rewrite card. To be used when card definitions have changed
      */
-    void refreshCardData(Document doc, Instant timestamp) {
-        Connection connection = getConnection()
-        try {
-            saveDependencies(doc, connection)
+    void refreshCardData(Document doc, Instant timestamp, AtomicLong cardsUpdated, AtomicLong nonExistingCards) {
+        getConnection().withCloseable { connection ->
             Document card = toCard(doc)
             card.setModified(timestamp.toDate())
-            storeCard(card, connection)
-        } finally {
-            connection.close()
+
+            if (!loadCard(card.shortId, connection)) {
+                saveDependencies(doc, connection)
+                nonExistingCards.incrementAndGet()
+            }
+            else if (updateCard(card, connection)) {
+                saveDependencies(doc, connection)
+                cardsUpdated.incrementAndGet()
+            }
         }
     }
 
@@ -966,6 +975,10 @@ class PostgreSQLComponent implements Storage {
         return new Document(jsonld.toCard(doc.data, false))
     }
 
+    protected void storeCard(Document card) {
+        getConnection().withCloseable { connection -> storeCard(card, connection)}
+    }
+
     protected void storeCard(Document card, Connection connection) {
         Timestamp timestamp = new Timestamp(card.getModifiedTimestamp().toEpochMilli())
 
@@ -978,6 +991,26 @@ class PostgreSQLComponent implements Storage {
             preparedStatement.setTimestamp(4, timestamp)
 
             preparedStatement.executeUpdate()
+        }
+        finally {
+            close(preparedStatement)
+        }
+    }
+
+    protected boolean updateCard(Document card, Connection connection) {
+        Timestamp timestamp = new Timestamp(card.getModifiedTimestamp().toEpochMilli())
+
+        PreparedStatement preparedStatement = null
+        try {
+            String checksum = card.getChecksum()
+            preparedStatement = connection.prepareStatement(UPDATE_CARD)
+            preparedStatement.setObject(1, card.dataAsString, OTHER)
+            preparedStatement.setString(2, checksum)
+            preparedStatement.setTimestamp(3, timestamp)
+            preparedStatement.setString(4, card.getShortId())
+            preparedStatement.setString(5, checksum)
+
+            return preparedStatement.executeUpdate() > 0
         }
         finally {
             close(preparedStatement)
@@ -1099,7 +1132,9 @@ class PostgreSQLComponent implements Storage {
             throw new WhelkException("Could not find document with id " + systemId)
         }
 
-        return toCard(doc).data
+        Document card = toCard(doc)
+        storeCard(card)
+        return card.data
     }
 
     private List nonCardDependencies(Document doc) {
