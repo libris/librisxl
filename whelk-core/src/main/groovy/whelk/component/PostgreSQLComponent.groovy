@@ -170,14 +170,12 @@ class PostgreSQLComponent implements Storage {
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted) SELECT ?,?,?,?,?,?,?,?,? "
 
-        UPSERT_CARD = "INSERT INTO $cardsTableName (id, data, checksum, updated, changed) VALUES (?,?,?,?,?) " +
-                "ON CONFLICT (id) DO UPDATE SET (data, checksum, updated, changed) " +
-                "= (EXCLUDED.data, EXCLUDED.checksum, EXCLUDED.updated, " +
-                "CASE WHEN ${cardsTableName}.checksum != EXCLUDED.checksum " +
-                "THEN EXCLUDED.changed " +
-                "ELSE ${cardsTableName}.changed END)"
         GET_CARD = "SELECT data FROM $cardsTableName WHERE ID = ?"
         DELETE_CARD = "DELETE FROM $cardsTableName WHERE ID = ?"
+        UPSERT_CARD = "INSERT INTO $cardsTableName (id, data, checksum, changed) VALUES (?,?,?,?) " +
+                "ON CONFLICT (id) DO UPDATE " +
+                "SET (data, checksum, changed) = (EXCLUDED.data, EXCLUDED.checksum, EXCLUDED.changed) " +
+                "WHERE ${cardsTableName}.checksum != EXCLUDED.checksum"
 
         GET_DOCUMENT = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,collection,created,modified,deleted,changedBy FROM $mainTableName WHERE id = ? AND deleted = false FOR UPDATE"
@@ -974,7 +972,6 @@ class PostgreSQLComponent implements Storage {
             preparedStatement.setObject(2, card.dataAsString, OTHER)
             preparedStatement.setString(3, card.getChecksum())
             preparedStatement.setTimestamp(4, timestamp)
-            preparedStatement.setTimestamp(5, timestamp)
 
             preparedStatement.executeUpdate()
         }

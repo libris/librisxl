@@ -27,7 +27,6 @@ BEGIN
       id       text  PRIMARY KEY,
       data     jsonb NOT NULL,
       checksum text  NOT NULL,
-      updated  timestamp with time zone NOT NULL,
       changed  timestamp with time zone NOT NULL
    );
 
