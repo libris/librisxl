@@ -62,3 +62,9 @@ curl -s "export-prod.libris.kb.se:8080/oaipmh/?verb=ListRecords&set=bib&from=202
 wait
 echo "Diff is:"
 diff oldcode newcode
+
+curl -s "localhost:8080/oaipmh/?verb=ListRecords&from=2020-01-23T11:00:00Z&metadataPrefix=jsonld" | xmllint --format - | wc -l > newcode &
+curl -s "export-prod.libris.kb.se:8080/oaipmh/?verb=ListRecords&from=2020-01-23T11:00:00Z&metadataPrefix=jsonld" | xmllint --format - | wc -l > oldcode &
+wait
+echo "Diff is:"
+diff oldcode newcode

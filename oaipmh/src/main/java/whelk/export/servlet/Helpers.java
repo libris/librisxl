@@ -56,7 +56,7 @@ public class Helpers
                 return;
             }
 
-            if (setSpec == null)
+            if (setSpec == null || setSpec.getRootSet() == null)
             {
                 // If no set is used, all records are welcome.
                 resultingDocuments.push(updated);
