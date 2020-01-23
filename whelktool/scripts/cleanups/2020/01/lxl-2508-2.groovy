@@ -96,10 +96,10 @@ selectBySqlWhere(where, silent: false) { bib ->
                 labelIt.remove()
             }
         }
-        if (labels.size() == 0)
+        if (labels != null && labels.size() == 0)
             it.remove()
     }
-    if (technicalNote.size() == 0)
+    if (technicalNote != null technicalNote.size() == 0)
         bib.graph[0].remove("technicalNote")
 
     scheduledForUpdating.println("${bib.doc.getURI()}")
