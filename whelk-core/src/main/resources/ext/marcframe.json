@@ -1429,7 +1429,6 @@
       },
       "$a": {"about": "_:agent", "property": "label", "infer": true, "TODO:targetMatch": "1xx"},
       "$b": {"about": "_:instance", "property": "editionStatement", "TODO:targetMatch": "250"},
-      "$c": {"about": "_:workTitle", "property": "qualifier", "NOTE:marc-repeatable": false},
       "$d": {"about": "_:instance", "property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
       "$g": {"about": "_:instance", "addProperty": "part"},
       "$h": {"about": "_:instance", "addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
@@ -1457,11 +1456,21 @@
     },
 
     "referenceToInstance": {
-      "include": ["referenceToSeriesInstance", "serialSpecificDetails"]
+      "include": ["referencedObjectDetails", "serialSpecificDetails"],
+      "pendingResources": {
+        "_:work": {
+          "about": "_:instance",
+          "link": "instanceOf",
+          "resourceType": "Work"
+        }
+      },
+      "TODO": "Does $c relates to $t or $s?. Check statistics. Deviates from 'referenceToWork' and 'referenceToSeriesInstance'",
+      "NOTE": "For now, continue to map bib 776 differently; $c together with $t",
+      "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false}
     },
 
     "referenceToWork": {
-      "include": ["referencedObjectDetails", "serialSpecificDetails"],
+      "include": ["referencedObjectDetails", "serialSpecificDetails", "linkQualifier"],
       "pendingResources": {
         "_:instance": {
           "about": "_:work",
@@ -1472,7 +1481,7 @@
     },
 
     "referenceToSeriesInstance": {
-      "include": ["referencedObjectDetails"],
+      "include": ["referencedObjectDetails", "linkQualifier"],
       "pendingResources": {
         "_:work": {
           "about": "_:instance",
@@ -1480,6 +1489,12 @@
           "resourceType": "Work"
         }
       }
+    },
+
+    "linkQualifier": {
+      "TODO": "Does $c relates to $t or $s?. Check statistics. Deviates from 'referenceToInstance'",
+      "NOTE": "For now, continue to map $c together with $s - applies to all linkfields (except 776)",
+      "$c": {"about": "_:workTitle", "property": "qualifier", "NOTE:marc-repeatable": false}
     }
   },
 
@@ -16676,24 +16691,18 @@
       "ignored": true
     },
     "760": {
-      "aboutEntity": "?thing",
       "include": ["referenceToSeriesInstance"],
-      "pendingResources": {
-        "_:instance": {
-          "addLink": "hasSeries",
-          "resourceType": "Instance"
-        }
-      },
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
+      "addLink": "hasSeries",
+      "resourceType": "Instance",
       "NOTE:domainIncludes": "Serial",
       "i2": { "marcDefault": " " },
       "_spec": [
         {
           "source": {"760": {"ind1": "0", "ind2": " ", "subfields": [
             {"t": "Publikation"},
-            {"x": "1401-9612"}
-          ]}},
-          "normalized": {"760": {"ind1": "0", "ind2": " ", "subfields": [
-            {"t": "Publikation"},
+            {"c": "Särskiljande tillägg"},
             {"x": "1401-9612"}
           ]}},
           "result": {"mainEntity": {
@@ -16706,7 +16715,14 @@
               "identifiedBy": [{
                 "@type": "ISSN",
                 "value": "1401-9612"
-              }]
+              }],
+              "instanceOf": {
+                "@type": "Work",
+                "hasTitle": [{
+                  "@type": "Title",
+                  "qualifier": "Särskiljande tillägg"
+                }]
+              }
             }]
           }}
         }
@@ -17622,15 +17638,12 @@
               }],
               "hasTitle": [{
                 "@type": "Title",
-                "mainTitle": "Entangled world"
+                "mainTitle": "Entangled world",
+                "qualifier": "Original"
               }],
               "instanceOf": {
                 "@type": "Work",
-                "marc:displayText": ["Print"],
-                "hasTitle": [{
-                  "@type": "Title",
-                  "qualifier": "Original"
-                }]
+                "marc:displayText": ["Print"]
               }
             }]
           }}
