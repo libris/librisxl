@@ -91,7 +91,7 @@ public class Helpers
                                 for (Document holding : holdings)
                                 {
                                     String sigel = holding.getSigel();
-                                    if (sigel != null && mustBeHeldBy.equals(sigel))
+                                    if (sigel != null && mustBeHeldBy != null && mustBeHeldBy.equals(sigel))
                                     {
                                         resultingDocuments.push(updated);
                                     }
@@ -202,6 +202,7 @@ public class Helpers
             }
 
             preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setFetchSize(512);
             int parameterIndex = 1;
             if (fromDateTime != null) {
                 Timestamp fromTimeStamp = new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L);
