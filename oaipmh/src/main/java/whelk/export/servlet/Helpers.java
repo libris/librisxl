@@ -242,7 +242,7 @@ public class Helpers
         }
         else
         {
-            String sql = "SELECT id, collection, created, deleted FROM lddb WHERE id = ?";
+            String sql = "SELECT data FROM lddb WHERE id = ?";
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setString(1, id);
         }
