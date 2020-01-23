@@ -30,6 +30,93 @@ public class Helpers
             this.includeDependenciesInTimeInterval = includeDependenciesInTimeInterval;
         }
 
+        private boolean isHeld(Document doc, String bySigel)
+        {
+            if (bySigel == null)
+                return false;
+
+            List<Document> holdings = OaiPmh.s_whelk.getStorage().getAttachedHoldings(doc.getThingIdentifiers(), OaiPmh.s_whelk.getJsonld());
+            for (Document holding : holdings)
+            {
+                String sigel = holding.getSigel();
+                if (bySigel.equals(sigel))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void emitAffected(Document updated)
+        {
+            String updatedCollection = LegacyIntegrationTools.determineLegacyCollection(updated, OaiPmh.s_whelk.getJsonld());
+
+            if (updatedCollection == null)
+            {
+                return;
+            }
+
+            if (setSpec == null)
+            {
+                // If no set is used, all records are welcome.
+                resultingDocuments.push(updated);
+            }
+            else if (updatedCollection.equals("auth"))
+            {
+                if (setSpec.getRootSet().equals("auth"))
+                    resultingDocuments.push(updated);
+                if (includeDependenciesInTimeInterval && (setSpec.getRootSet().equals("bib") || setSpec.getRootSet().equals("hold")))
+                {
+                    List<Tuple2<String, String>> dependers = OaiPmh.s_whelk.getStorage().followDependers(updated.getShortId(), JsonLd.getNON_DEPENDANT_RELATIONS());
+                    for (Tuple2<String, String> depender : dependers)
+                    {
+                        String dependerId = depender.getFirst();
+                        Document dependerDocument = OaiPmh.s_whelk.loadEmbellished(dependerId);
+                        String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDocument, OaiPmh.s_whelk.getJsonld());
+                        if (dependerCollection.equals("bib") && setSpec.getRootSet().equals("bib"))
+                        {
+                            String mustBeHeldBy = setSpec.getSubset();
+                            if (mustBeHeldBy == null || isHeld(dependerDocument, mustBeHeldBy))
+                                resultingDocuments.push(dependerDocument);
+                        }
+                        else if (dependerCollection.equals("hold") && setSpec.getRootSet().equals("hold"))
+                        {
+                            String mustBeHeldBy = setSpec.getSubset();
+                            String sigel = dependerDocument.getSigel();
+                            if (mustBeHeldBy == null || mustBeHeldBy.equals(sigel))
+                            {
+                                resultingDocuments.push(updated);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (updatedCollection.equals("bib"))
+            {
+                if (setSpec.getRootSet().equals("bib"))
+                {
+                    String mustBeHeldBy = setSpec.getSubset();
+                    if (mustBeHeldBy == null || isHeld(updated, mustBeHeldBy))
+                    {
+                        resultingDocuments.push(updated);
+                    }
+                }
+            }
+            else if (updatedCollection.equals("hold"))
+            {
+                if (setSpec.getRootSet().equals("hold"))
+                {
+                    String mustBeHeldBy = setSpec.getSubset();
+                    String sigel = updated.getSigel();
+                    if (mustBeHeldBy == null || mustBeHeldBy.equals(sigel))
+                    {
+                        resultingDocuments.push(updated);
+                    }
+                }
+            }
+
+        }
+
         public boolean hasNext()
         {
             try
@@ -50,70 +137,7 @@ public class Helpers
                         String data = resultSet.getString("data");
 
                         Document updated = new Document(ResponseCommon.mapper.readValue(data, HashMap.class));
-                        String updatedCollection = LegacyIntegrationTools.determineLegacyCollection(updated, OaiPmh.s_whelk.getJsonld());
-
-                        if (setSpec == null)
-                        {
-                            // If no set is used, all records are welcome.
-                            resultingDocuments.push(updated);
-                            return true;
-                        }
-
-
-                        if (updatedCollection == null)
-                        {
-                            continue;
-                        }
-                        else if (updatedCollection.equals("auth"))
-                        {
-                            if (setSpec.getRootSet().equals("auth"))
-                                resultingDocuments.push(updated);
-                            if (includeDependenciesInTimeInterval && (setSpec.getRootSet().equals("bib") || setSpec.getRootSet().equals("hold")))
-                            {
-                                List<Tuple2<String, String>> dependers = OaiPmh.s_whelk.getStorage().followDependers(updated.getShortId(), JsonLd.getNON_DEPENDANT_RELATIONS());
-                                for (Tuple2<String, String> depender : dependers)
-                                {
-                                    String dependerId = depender.getFirst();
-                                    Document dependerDocument = OaiPmh.s_whelk.loadEmbellished(dependerId);
-                                    String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDocument, OaiPmh.s_whelk.getJsonld());
-                                    if (setSpec.getRootSet().equals(dependerCollection))
-                                        resultingDocuments.push(dependerDocument);
-                                }
-                            }
-                        }
-                        else if (updatedCollection.equals("bib"))
-                        {
-                            if (setSpec.getRootSet().equals("bib"))
-                            {
-                                String mustBeHeldBy = setSpec.getSubset();
-                                if (mustBeHeldBy == null)
-                                {
-                                    resultingDocuments.push(updated);
-                                }
-                                List<Document> holdings = OaiPmh.s_whelk.getStorage().getAttachedHoldings(updated.getThingIdentifiers(), OaiPmh.s_whelk.getJsonld());
-                                for (Document holding : holdings)
-                                {
-                                    String sigel = holding.getSigel();
-                                    if (sigel != null && mustBeHeldBy != null && mustBeHeldBy.equals(sigel))
-                                    {
-                                        resultingDocuments.push(updated);
-                                    }
-                                }
-                            }
-
-                        }
-                        else if (updatedCollection.equals("hold"))
-                        {
-                            if (setSpec.getRootSet().equals("hold"))
-                            {
-                                String mustBeHeldBy = setSpec.getSubset();
-                                String sigel = updated.getSigel();
-                                if (mustBeHeldBy == null || ( sigel != null && mustBeHeldBy.equals(updated.getSigel() )))
-                                {
-                                    resultingDocuments.push(updated);
-                                }
-                            }
-                        }
+                        emitAffected(updated);
 
                         // Did reading this record from the DB result in anything new in the export flow?
                         if (!resultingDocuments.isEmpty())
