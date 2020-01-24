@@ -963,8 +963,8 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    protected void storeCard(CardEntry cardEntry) {
-        getConnection().withCloseable { connection -> storeCard(cardEntry, connection)}
+    protected boolean storeCard(CardEntry cardEntry) {
+        return getConnection().withCloseable { connection -> storeCard(cardEntry, connection)}
     }
 
     protected boolean storeCard(CardEntry cardEntry, Connection connection) {
