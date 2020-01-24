@@ -50,7 +50,7 @@ public class Identify
         writer.writeEndElement(); // adminEmail
 
         writer.writeStartElement("earliestDatestamp");
-        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection();
+        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getWrappingConnection();
              PreparedStatement preparedStatement = prepareStatement(dbconn);
              ResultSet resultSet = preparedStatement.executeQuery())
         {

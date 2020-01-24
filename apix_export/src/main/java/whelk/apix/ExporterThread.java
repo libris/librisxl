@@ -94,7 +94,7 @@ public class ExporterThread extends Thread
         int successfullyExportedDocumentsCount = 0;
         int documentsInBatchCount = 0;
 
-        try ( Connection connection = m_whelk.getStorage().getConnection();
+        try ( Connection connection = m_whelk.getStorage().getWrappingConnection();
               PreparedStatement statement = prepareStatement(connection, batchSelection);
               ResultSet resultSet = statement.executeQuery() )
         {

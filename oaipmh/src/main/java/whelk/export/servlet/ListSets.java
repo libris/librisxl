@@ -77,7 +77,7 @@ public class ListSets
         writer.writeEndElement(); // set
 
         // Dynamic sigel-sets
-        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection();
+        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getWrappingConnection();
              PreparedStatement preparedStatement = prepareStatement(dbconn);
              ResultSet resultSet = preparedStatement.executeQuery())
         {

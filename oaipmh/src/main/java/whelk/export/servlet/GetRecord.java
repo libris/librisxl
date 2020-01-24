@@ -61,7 +61,7 @@ public class GetRecord
         }
 
         String id = null;
-        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection();
+        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getWrappingConnection();
              PreparedStatement preparedStatement = Helpers.prepareSameAsStatement(dbconn, identifierUri);
              ResultSet resultSet = preparedStatement.executeQuery())
         {
@@ -75,7 +75,7 @@ public class GetRecord
             return;
         }
 
-        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection())
+        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getWrappingConnection())
         {
             dbconn.setAutoCommit(false);
             try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, null, null, null, id, false);

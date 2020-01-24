@@ -211,7 +211,7 @@ public class TotalExport
     private Connection getConnection()
             throws SQLException
     {
-        Connection connection = m_whelk.getStorage().getConnection();
+        Connection connection = m_whelk.getStorage().getWrappingConnection();
         connection.setAutoCommit(false);
         return connection;
     }
