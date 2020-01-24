@@ -101,7 +101,7 @@ public class ListRecords
             return;
         }
 
-        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getWrappingConnection())
+        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getOuterConnection())
         {
             dbconn.setAutoCommit(false);
             boolean includeDependencies = metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX);

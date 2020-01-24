@@ -19,11 +19,8 @@ import java.sql.SQLException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-
-import static whelk.component.PostgreSQLComponent.mapper;
 
 public class ServletUI extends HttpServlet implements UI
 {
@@ -117,7 +114,7 @@ public class ServletUI extends HttpServlet implements UI
         String formatedTimestamp = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt);
         String jsonString = "{\"" + LDDB_TIMESTAMP_KEY_NAME + "\":\"" + formatedTimestamp + "\"}";
 
-        try (Connection connection = m_postgreSQLComponent.getWrappingConnection();
+        try (Connection connection = m_postgreSQLComponent.getOuterConnection();
              PreparedStatement statement = prepareWriteStatement(connection, jsonString))
         {
             statement.executeUpdate();
@@ -133,7 +130,7 @@ public class ServletUI extends HttpServlet implements UI
 
         m_postgreSQLComponent = new PostgreSQLComponent(m_properties.getProperty("sqlUrl"), m_properties.getProperty("sqlMaintable"));
 
-        try (Connection connection = m_postgreSQLComponent.getWrappingConnection();
+        try (Connection connection = m_postgreSQLComponent.getOuterConnection();
              PreparedStatement statement = prepareSelectStatement(connection);
              ResultSet resultSet = statement.executeQuery() )
         {
@@ -161,7 +158,7 @@ public class ServletUI extends HttpServlet implements UI
 
     private void cancelAutomaticResuming()
     {
-        try (Connection connection = m_postgreSQLComponent.getWrappingConnection();
+        try (Connection connection = m_postgreSQLComponent.getOuterConnection();
              PreparedStatement statement = prepareCancelStatement(connection))
         {
             statement.executeUpdate();

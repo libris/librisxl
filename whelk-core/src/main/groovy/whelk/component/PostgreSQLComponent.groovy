@@ -41,7 +41,7 @@ import static java.sql.Types.OTHER
  *  i.e. get/release connection should be done in the public methods. Connections should be reused in method calls
  *  within this class.
  *
- *  See also getWrappingConnection() and createAdditionalConnectionPool() for clients that need to hold their own
+ *  See also getOuterConnection() and createAdditionalConnectionPool() for clients that need to hold their own
  *  connection while calling into this class.
  */
 
@@ -59,8 +59,8 @@ class PostgreSQLComponent implements Storage {
     private static final String driverClass = "org.postgresql.Driver"
 
     private HikariDataSource connectionPool
-    private HikariDataSource connectionPool2
-    private final Object connectionPool2Lock = new Object()
+    private HikariDataSource outerConnectionPool
+    private final Object outerConnectionPoolLock = new Object()
 
     boolean versioning = true
     boolean doVerifyDocumentIdRetention = true
@@ -1947,19 +1947,19 @@ class PostgreSQLComponent implements Storage {
     /**
      * Get a database connection that is safe to keep open while calling into this class.
      */
-    Connection getWrappingConnection() {
-        return getSecondPool().getConnection()
+    Connection getOuterConnection() {
+        return getOuterPool().getConnection()
     }
 
-    private DataSource getSecondPool() {
-        if (!connectionPool2) {
-            synchronized (connectionPool2Lock) {
-                if (!connectionPool2) {
-                    connectionPool2 = (HikariDataSource) createAdditionalConnectionPool("Pool2")
+    private DataSource getOuterPool() {
+        if (!outerConnectionPool) {
+            synchronized (outerConnectionPoolLock) {
+                if (!outerConnectionPool) {
+                    outerConnectionPool = (HikariDataSource) createAdditionalConnectionPool("OuterPool")
                 }
             }
         }
-        return connectionPool2
+        return outerConnectionPool
     }
 
     DataSource createAdditionalConnectionPool(String name) {

@@ -94,9 +94,9 @@ public class ExporterThread extends Thread
         int successfullyExportedDocumentsCount = 0;
         int documentsInBatchCount = 0;
 
-        try ( Connection connection = m_whelk.getStorage().getWrappingConnection();
-              PreparedStatement statement = prepareStatement(connection, batchSelection);
-              ResultSet resultSet = statement.executeQuery() )
+        try (Connection connection = m_whelk.getStorage().getOuterConnection();
+             PreparedStatement statement = prepareStatement(connection, batchSelection);
+             ResultSet resultSet = statement.executeQuery() )
         {
             ZonedDateTime modified = null;
             while( resultSet.next() )
