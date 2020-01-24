@@ -73,6 +73,10 @@ class Document {
         updateRecordStatus()
     }
 
+    Document(String json) {
+        this(mapper.readValue(json, Map))
+    }
+
     Document clone() {
         Map clonedDate = deepCopy(data)
         return new Document(clonedDate)

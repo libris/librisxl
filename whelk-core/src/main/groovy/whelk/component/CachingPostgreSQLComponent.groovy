@@ -35,16 +35,17 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
     }
 
     @Override
-    protected boolean storeCard(Document card, Connection connection) {
-        boolean change = super.storeCard(card, connection)
+    protected boolean storeCard(CardEntry cardEntry, Connection connection) {
+        boolean change = super.storeCard(cardEntry, connection)
+        Document card = cardEntry.getCard()
         cardCache.put(card.getShortId(), card.data)
         return change
     }
 
     @Override
-    protected void deleteCard(Document card, Connection connection) {
-        super.deleteCard(card, connection)
-        cardCache.invalidate(card.getShortId())
+    protected void deleteCard(String systemId, Connection connection) {
+        super.deleteCard(systemId, connection)
+        cardCache.invalidate(systemId)
     }
 
     void initCardCache() {
@@ -54,7 +55,7 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
                 .build(new CacheLoader<String, Map>() {
                     @Override
                     Map load(String systemId) throws Exception {
-                        return CachingPostgreSQLComponent.super.getCard(systemId);
+                        return CachingPostgreSQLComponent.super.getCard(systemId)
                     }
 
                     @Override

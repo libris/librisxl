@@ -644,7 +644,7 @@ class PostgreSQLComponent implements Storage {
             saveVersion(disappearingDocument, connection, createdTime, modTime, changedIn, changedBy, collection, true)
             saveIdentifiers(disappearingDocument, connection, true, true)
             saveDependencies(disappearingDocument, connection)
-            deleteCard(disappearingDocument, connection)
+            deleteCard(disappearingSystemID, connection)
 
             // Update dependers on the disappearing record
             dependers = followDependers(disappearingSystemID, connection, JsonLd.NON_DEPENDANT_RELATIONS)
@@ -836,9 +836,9 @@ class PostgreSQLComponent implements Storage {
 
         if (jsonld) {
             if (deleted) {
-                deleteCard(toCard(doc), connection)
+                deleteCard(doc.getShortId(), connection)
             } else {
-                updateCard(toCard(doc), connection)
+                updateCard(new CardEntry(doc), connection)
             }
         }
     }
@@ -848,10 +848,8 @@ class PostgreSQLComponent implements Storage {
      */
     void refreshCardData(Document doc, Instant timestamp) {
         getConnection().withCloseable { connection ->
-            Document card = toCard(doc)
-            card.setModified(timestamp.toDate())
-
-            if (!loadCard(card.shortId, connection) || updateCard(card, connection)) {
+            boolean hasNoCard = !loadCard(doc.shortId, connection)
+            if (hasNoCard || updateCard(new CardEntry(doc, timestamp), connection)) {
                 saveDependencies(doc, connection)
             }
         }
@@ -903,7 +901,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     Map getCard(String systemId) {
-        return loadCard(systemId) ?: makeCardData(systemId);
+        return loadCard(systemId) ?: makeCardData(systemId)
     }
 
     /**
@@ -965,20 +963,13 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    protected Document toCard(Document doc) {
-        if (!jsonld) {
-            throw new WhelkRuntimeException("jsonld not set")
-        }
-
-        return new Document(jsonld.toCard(doc.data, false))
+    protected void storeCard(CardEntry cardEntry) {
+        getConnection().withCloseable { connection -> storeCard(cardEntry, connection)}
     }
 
-    protected void storeCard(Document card) {
-        getConnection().withCloseable { connection -> storeCard(card, connection)}
-    }
-
-    protected boolean storeCard(Document card, Connection connection) {
-        Timestamp timestamp = new Timestamp(card.getModifiedTimestamp().toEpochMilli())
+    protected boolean storeCard(CardEntry cardEntry, Connection connection) {
+        Document card = cardEntry.getCard()
+        Timestamp timestamp = new Timestamp(cardEntry.getChangedTimestamp().toEpochMilli())
 
         PreparedStatement preparedStatement = null
         try {
@@ -1001,8 +992,9 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    protected boolean updateCard(Document card, Connection connection) {
-        Timestamp timestamp = new Timestamp(card.getModifiedTimestamp().toEpochMilli())
+    protected boolean updateCard(CardEntry cardEntry, Connection connection) {
+        Document card = cardEntry.getCard()
+        Timestamp timestamp = new Timestamp(cardEntry.getChangedTimestamp().toEpochMilli())
 
         PreparedStatement preparedStatement = null
         try {
@@ -1027,11 +1019,11 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    protected void deleteCard(Document card, Connection connection) {
+    protected void deleteCard(String systemId, Connection connection) {
         PreparedStatement preparedStatement = null
         try {
             preparedStatement = connection.prepareStatement(DELETE_CARD)
-            preparedStatement.setString(1, card.getShortId())
+            preparedStatement.setString(1,systemId)
 
             preparedStatement.executeUpdate()
         }
@@ -1124,7 +1116,7 @@ class PostgreSQLComponent implements Storage {
             }
         }
         finally {
-            close(preparedStatement)
+            close(rs, preparedStatement)
         }
     }
 
@@ -1142,9 +1134,9 @@ class PostgreSQLComponent implements Storage {
             throw new WhelkException("Could not find document with id " + systemId)
         }
 
-        Document card = toCard(doc)
-        storeCard(card)
-        return card.data
+        CardEntry cardEntry = new CardEntry(doc, Instant.now())
+        storeCard(cardEntry)
+        return cardEntry.getCard().data
     }
 
     private List nonCardDependencies(Document doc) {
@@ -1152,7 +1144,7 @@ class PostgreSQLComponent implements Storage {
             return []
         }
 
-        Document card = toCard(doc)
+        Document card = new CardEntry(doc).getCard()
         List refs = doc.getExternalRefs()
         refs.removeAll(card.getExternalRefs())
         return refs
@@ -1773,7 +1765,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private SortedSet<String> getDependencyData(String id, String query, Connection connection) {
+    private static SortedSet<String> getDependencyData(String id, String query, Connection connection) {
         PreparedStatement preparedStatement = null
         ResultSet rs = null
         try {
@@ -2345,6 +2337,20 @@ class PostgreSQLComponent implements Storage {
                     log.debug("Error closing $resource : $e")
                 }
             }
+        }
+    }
+
+    private class CardEntry {
+        Document card
+        Instant changedTimestamp
+
+        CardEntry(Document doc, Instant changedTimestamp = null) {
+            if (!jsonld) {
+                throw new WhelkRuntimeException("jsonld not set")
+            }
+
+            this.card = new Document(jsonld.toCard(doc.data, false))
+            this.changedTimestamp = changedTimestamp ?: doc.getModifiedTimestamp()
         }
     }
 }
