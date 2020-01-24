@@ -71,7 +71,7 @@ public class Helpers
                     for (Tuple2<String, String> depender : dependers)
                     {
                         String dependerId = depender.getFirst();
-                        Document dependerDocument = OaiPmh.s_whelk.loadEmbellished(dependerId);
+                        Document dependerDocument = OaiPmh.s_whelk.getDocument(dependerId);
                         String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDocument, OaiPmh.s_whelk.getJsonld());
                         if (dependerCollection.equals("bib") && setSpec.getRootSet().equals("bib"))
                         {
