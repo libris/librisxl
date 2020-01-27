@@ -18661,18 +18661,18 @@
         "targetEntity": "?record",
         "targetProperty": "marc:personalName",
         "valueMap": {
-          "Person": "https://id.kb.se/marc/PersonalNameType-a"
+          "Person": "https://id.kb.se/marc/DifferentiatedPersonalName"
         },
         "_spec": [
           {
-            "name":  "Add personalName a to revert auth 008[32] for type Person",
+            "name":  "Add DifferentiatedPersonalName to revert auth 008[32] for type Person",
             "result": {
               "mainEntity": {
                 "@type": "Person"
               }
             },
             "back": {
-              "marc:personalName": "https://id.kb.se/marc/PersonalNameType-a",
+              "marc:personalName": "https://id.kb.se/marc/DifferentiatedPersonalName",
               "mainEntity": {
                 "@type": "Person"
               }
