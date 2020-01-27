@@ -3,7 +3,6 @@
  * fix faulty mapping of otherPhysicalFormat
  *
  * otherPhysicalFormat.Instance.contribution --> otherPhysicalFormat.Instance.instanceOf.contribution
- * otherPhysicalFormat.Instance.marc:displayText --> otherPhysicalFormat.Instance.instanceOf.marc:displayText
  * otherPhysicalFormat.Instance.expressionOf.hasTitle --> otherPhysicalFormat.Instance.instanceOf.hasTitle
  *
  * See LXL-2769 for more info.
@@ -13,7 +12,7 @@ PrintWriter failedIDs = getReportWriter("failed-to-update")
 scheduledForChange = getReportWriter("scheduled-for-change")
 
 PROPERTIES_TO_REMOVE = ['marc:toDisplayNote', 'marc:controlSubfield', 'partNumber', 'marc:fieldref']
-PROPERTIES_TO_MOVE = ['contribution', 'marc:displayText']
+PROPERTIES_TO_MOVE = ['contribution']
 
 selectBySqlWhere("""
         collection = 'bib' AND data#>>'{@graph,1,otherPhysicalFormat}' IS NOT NULL
