@@ -27,18 +27,35 @@ for (String operation : ProgramLines) {
             "from lddb__identifiers i\n" +
             "left join lddb__dependencies d on i.id = d.dependsonid\n" +
             "left join lddb l on d.id = l.id\n" +
-            "where i.iri = '$iri' and d.relation = 'itemOf' and l.data#>>'{@graph,1,heldBy,@id}' = '${baseUri.resolve("library/Ors")}'\n" +
+
+            // If this is run again in the future, the change which makes library-URIs env-specific will have gone through. At the
+            // time of writing, this is only in effect on dev, and so the hardcoded URI must be used.
+            //"where i.iri = '$iri' and d.relation = 'itemOf' and l.data#>>'{@graph,1,heldBy,@id}' = '${baseUri.resolve("library/Ors")}'\n" +
+            "where i.iri = '$iri' and d.relation = 'itemOf' and l.data#>>'{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/Ors'\n" +
+
             ")"
 
     selectBySqlWhere(where, silent: true) { hold ->
 
-        List components = hold.graph[1].hasComponent.findAll { it["@type"] == "Item" && it.heldBy["@id"] == baseUri.resolve("library/Ors")}
+        List components = hold.graph[1].hasComponent.findAll { it["@type"] == "Item" &&
+
+                // Same as above, library URIs may be env-specific or not, depending on when/where this is run
+                // it.heldBy["@id"] == baseUri.resolve("library/Ors")}
+                it.heldBy["@id"] == "https://libris.kb.se/library/Ors"}
+
+        components.add(hold.graph[1]) // Shelf mark may also be on the outer Item (instead of component list)
         for (Map component : components) {
-            def labels = component.shelfMark.label
-            if (labels.size != 1 || !labels[0].equals(oldShelfMark))
-                unexpectedRecordState.println("$iri had shelfMark: ${labels}, expected $oldShelfMark")
-            labels.clear()
-            labels.add(newShelfMark)
+            if (component.shelfMark) {
+                def labels = component.shelfMark.label
+                if (labels instanceof List) {
+                    if (labels.size != 1 || !labels[0].equals(oldShelfMark))
+                        unexpectedRecordState.println("$iri had shelfMark: ${labels}, expected $oldShelfMark")
+                    labels.clear()
+                    labels.add(newShelfMark)
+                } else {
+                    component.shelfMark.label = newShelfMark
+                }
+            }
         }
 
         scheduledForUpdating.println("${hold.doc.getURI()}")
