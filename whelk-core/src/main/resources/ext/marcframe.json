@@ -1440,6 +1440,7 @@
       "$x": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "TODO:targetMatch": "022"},
       "$y": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
       "$w": {"aboutNew": "_:describedBy", "property": "controlNumber"},
+      "TODO:$4": "Check occurrences; do we need to map this subfield or just drop it (ignored=true)?",
       "$6": {"ignored": true, "NOTE": "After inventory of usage, this has been set to ignored"},
       "$7": {"ignored": true, "NOTE": "After inventory of usage, this has been set to ignored"},
       "$8": {"ignored": true, "NOTE": "After inventory of usage, this has been set to ignored"},
@@ -16698,7 +16699,7 @@
       "addLink": "hasSeries",
       "resourceType": "Instance",
       "NOTE:domainIncludes": "Serial",
-      "i2": { "marcDefault": " " },
+      "i2": {"ignored": "true", "marcDefault": " "},
       "_spec": [
         {
           "source": {"760": {"ind1": "0", "ind2": " ", "subfields": [
@@ -16736,7 +16737,7 @@
       "addLink": "hasSubseries",
       "resourceType": "Instance",
       "NOTE:domainIncludes": "Serial",
-      "i2": { "marcDefault": " " },
+      "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
           "source": {"762": {"ind1": "0", "ind2": " ", "subfields": [
@@ -16798,7 +16799,7 @@
       "aboutAlias": "_:work",
       "addLink": "translationOf",
       "resourceType": "Work",
-      "i2": {"marcDefault": " "},
+      "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
           "source": {"765": {"ind1": " ", "ind2": "8", "subfields": [
@@ -16870,7 +16871,7 @@
       "aboutAlias": "_:work",
       "addLink": "translation",
       "resourceType": "Work",
-      "i2": {"marcDefault": " "},
+      "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
           "source": {"767": {"ind1": " ", "ind2": "8", "subfields": [
@@ -16915,7 +16916,7 @@
       "aboutAlias": "_:work",
       "addLink": "supplement",
       "resourceType": "Work",
-      "i2": {"marcDefault": " "},
+      "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
           "source": {"770": {"ind1": " ", "ind2": "8", "subfields": [
@@ -16961,7 +16962,7 @@
       "aboutAlias": "_:work",
       "addLink": "supplementTo",
       "resourceType": "Work",
-      "i2": {"marcDefault": "0"},
+      "i2": {"ignored": true, "marcDefault": "0"},
       "_spec": [
         {
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
@@ -17092,7 +17093,7 @@
       "aboutAlias": "_:work",
       "addLink": "isPartOf",
       "resourceType": "Aggregate",
-      "i2": { "marcDefault": "0" },
+      "i2": {"ignored": true, "marcDefault": "0"},
       "$p": {"about": "_:instance", "addLink": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore", "NOTE:marc-repeatable": false},
       "$q": {"about": "_:instance", "property": "marc:enumerationAndFirstPage", "NOTE:LC":"ignore"},
       "_spec": [
@@ -17260,7 +17261,7 @@
       "aboutAlias": "_:work",
       "addLink": "hasPart",
       "resourceType": "Work",
-      "i2": {"marcDefault": "0"},
+      "i2": {"ignored": true, "marcDefault": "0"},
       "NOTE:domainIncludes": "Serial",
       "FIXME": "this is overeagerly reverted from a hasPart converted from 740; should only be added if issuanceType = 'Serial'...",
       "_spec": [
@@ -17387,7 +17388,7 @@
           "resourceType": "ProvisionActivity"
         }
       },
-      "i2": {"marcDefault": " "},
+      "i2": {"ignored": true, "marcDefault": " "},
       "$e": {"addLink": "language", "NOTE:marc-repeatable": false, "resourceType": "Language", "property": "label", "infer": true, "TODO:inherit": "008:[35:38]"},
       "$f": {"about": "_:provisionActivity", "link": "place", "resourceType": "Place", "property": "code", "NOTE:marc-repeatable": false, "TODO:inherit": "008:[15:18]"},
       "_spec": [
@@ -17490,7 +17491,7 @@
       "aboutAlias": "_:instance",
       "addLink": "otherPhysicalFormat",
       "resourceType": "Instance",
-      "i2": {"marcDefault": "8"},
+      "i2": {"ignored": true, "marcDefault": "8"},
       "_spec": [
         {
           "source": {"776": {"ind1": "0", "ind2": "8", "subfields": [
@@ -17657,7 +17658,7 @@
       "aboutAlias": "_:work",
       "addLink": "issuedWith",
       "resourceType": "Work",
-      "i2": {"marcDefault": " "},
+      "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
           "name": "Example from fxqnstdr4mdmvws",
@@ -17779,7 +17780,7 @@
         {"when": "i2=6", "addLink": "absorbedInPart", "resourceType": "Work"},
         {"when": "i2=7", "addLink": "separatedFrom", "resourceType": "Work"}
       ],
-      "i2": {"marcDefault": "0"},
+      "i2": {"ignored": true, "marcDefault": "0"},
       "_spec": [
         {
           "source": {"780": {"ind1": "0", "ind2": "0", "subfields": [
@@ -17978,7 +17979,7 @@
         {"when": "i2=7", "addLink": "mergedToForm", "resourceType": "Work"},
         {"when": "i2=8", "addLink": "continuedBy", "resourceType": "Work"}
       ],
-      "i2": {"marcDefault": "0"},
+      "i2": {"ignored": true, "marcDefault": "0"},
       "_spec": [
         {
           "source": {"785": {"ind1": "0", "ind2": "0", "subfields": [
@@ -18152,7 +18153,7 @@
       "aboutAlias": "_:work",
       "addLink": "dataSource",
       "resourceType": "Dataset",
-      "i2": {"marcDefault": " "},
+      "i2": {"ignored": true, "marcDefault": " "},
       "$p": {"about": "_:instance", "addLink": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore", "NOTE:marc-repeatable": false},
       "_spec": [
         {
@@ -18196,7 +18197,7 @@
       "aboutAlias": "_:work",
       "addLink": "relatedTo",
       "resourceType": "Work",
-      "i2": {"marcDefault": " "},
+      "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
           "source": {"787": {"ind1": " ", "ind2": "8", "subfields": [
