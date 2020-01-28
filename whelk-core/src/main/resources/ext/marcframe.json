@@ -1391,8 +1391,118 @@
 
     "relation_from_w": {
       "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
-    }
+    },
 
+    "referencedObjectDetails": {
+      "pendingResources": {
+        "_:contribution": {
+          "about": "_:work",
+          "addLink": "contribution",
+          "resourceType": "PrimaryContribution",
+          "embedded": true
+        },
+        "_:agent": {
+          "about": "_:contribution",
+          "link": "agent",
+          "resourceType": "Agent"
+        },
+        "_:workTitle": {
+          "about": "_:work",
+          "addLink": "hasTitle",
+          "resourceType": "Title"
+        },
+        "_:title": {
+          "about": "_:instance",
+          "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        },
+        "_:describedBy": {
+          "NOTE": "If not possible to link, LinkFinder will change it to a Local identifiedBy property",
+          "about": "_:instance",
+          "addLink": "describedBy", "infer": true,
+          "resourceType": "Record"
+        }
+      },
+      "i1": {
+        "TODO": "By moving 580 to 500 this indicator will not be usefull anymore",
+        "property": "marc:toDisplayNote",
+        "tokenMap": {
+          "0": true,
+          "1": false
+        },
+        "marcDefault": "0"
+      },
+      "$a": {"about": "_:agent", "property": "label", "infer": true, "TODO:targetMatch": "1xx"},
+      "$b": {"about": "_:instance", "property": "editionStatement", "TODO:targetMatch": "250"},
+      "$d": {"about": "_:instance", "property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
+      "$g": {"about": "_:instance", "addProperty": "part"},
+      "$h": {"about": "_:instance", "addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
+      "$m": {"about": "_:instance", "property": "marc:materialSpecificDetails"},
+      "$n": {"about": "_:instance", "addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$o": {"ignored": true, "NOTE:subfield-count": 0},
+      "$s": {"about": "_:workTitle", "property": "mainTitle", "TODO:targetMatch": "240"},
+      "$t": {"about": "_:title", "property": "mainTitle", "TODO:targetMatch": "222, 245"},
+      "$x": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "TODO:targetMatch": "022"},
+      "$y": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
+      "$w": {"aboutNew": "_:describedBy", "property": "controlNumber"},
+      "TODO:$4": "Check occurrences; do we need to map this subfield or just drop it (ignored=true)?",
+      "$6": {"property": "marc:fieldref", "TODO": "Decided to set to ignored true"},
+      "$7": {"property": "marc:controlSubfield", "TODO": "Decided to set to ignored true"},
+      "$8": {"property": "marc:groupid", "TODO": "Decided to set to ignored true"},
+      "$9": {"addProperty": "partNumber", "TODO": "Decided to set to ignored true"},
+      "subfieldOrder": "6 7 i a s t b c d h g k ... x z w 4 8 9"
+    },
+
+    "serialSpecificDetails": {
+      "$k": {"about": "_:instance", "addProperty": "seriesStatement", "TODO:targetMatch": "4xx, 8xx"},
+      "$r": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ReportNumber", "property": "value", "TODO:targetMatch": "088"},
+      "$u": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "STRN", "property": "value", "TODO:targetMatch": "027"},
+      "$z": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value", "TODO:targetMatch": "020"}
+    },
+
+    "referenceToInstance": {
+      "include": ["referencedObjectDetails", "serialSpecificDetails"],
+      "pendingResources": {
+        "_:work": {
+          "about": "_:instance",
+          "link": "instanceOf",
+          "resourceType": "Work"
+        }
+      },
+      "TODO": "Does $c relates to $t or $s?. Check statistics. Deviates from 'referenceToWork' and 'referenceToSeriesInstance'",
+      "NOTE": "For now, continue to map bib 776 differently; $c together with $t",
+      "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false},
+      "$i": {"about": "_:instance", "addProperty": "marc:displayText"}
+    },
+
+    "referenceToWork": {
+      "include": ["referencedObjectDetails", "serialSpecificDetails", "linkQualifier"],
+      "pendingResources": {
+        "_:instance": {
+          "about": "_:work",
+          "link": "hasInstance",
+          "resourceType": "Instance"
+        }
+      },
+      "$i": {"about": "_:work", "addProperty": "marc:displayText"}
+    },
+
+    "referenceToSeriesInstance": {
+      "include": ["referencedObjectDetails", "linkQualifier"],
+      "pendingResources": {
+        "_:work": {
+          "about": "_:instance",
+          "link": "instanceOf",
+          "resourceType": "Work"
+        }
+      }
+    },
+
+    "linkQualifier": {
+      "TODO": "Does $c relates to $t or $s?. Check statistics. Deviates from 'referenceToInstance'",
+      "NOTE": "For now, continue to map $c together with $s - applies to all linkfields (except 776)",
+      "$c": {"about": "_:workTitle", "property": "qualifier", "NOTE:marc-repeatable": false}
+    }
   },
 
   "bib": {
@@ -16588,70 +16698,52 @@
       "ignored": true
     },
     "760": {
+      "include": ["referenceToSeriesInstance"],
       "aboutEntity": "?thing",
-      "NOTE:domainIncludes": "Serial",
-      "inherit": "772",
+      "aboutAlias": "_:instance",
       "addLink": "hasSeries",
       "resourceType": "Instance",
-      "i2": {
-        "marcDefault": " "
-      },
-      "$a": {"about": "_:instanceOfContribution", "link": "agent", "resourceType": "Agent", "property": "label", "infer": true, "TODO:targetMatch": "1xx"},
-      "$b": {"property": "editionStatement", "TODO:targetMatch": "250"},
-      "$c": {"about": "_:instanceTitle", "property": "qualifier", "NOTE:marc-repeatable": false},
-      "$d": {"property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
-      "$g": {"addProperty": "part"},
-      "$h": {"addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
-      "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
-      "$i": {"about": "_:instanceOf", "addProperty": "marc:displayText"},
-      "$k": null,
-      "$m": {"property": "marc:materialSpecificDetails"},
-      "$n": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
-      "$o": {"ignored": true, "NOTE:LC": "ignore"},
-      "$r": null,
-      "$s": {"about": "_:instanceTitle", "property": "mainTitle", "TODO:targetMatch": "240"},
-      "$t": {"about": "_:title", "property": "mainTitle", "TODO:targetMatch": "222, 245"},
-      "$u": null,
-      "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "TODO:targetMatch": "022"},
-      "$y": {"addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
-      "$z": null,
-      "$w": {"about": "_:describedBy", "property": "controlNumber", "uriTemplate": "http://libris.kb.se/bib/{_}", "matchUriToken": "^\\d{1,14}$"
-      },
+      "NOTE:domainIncludes": "Serial",
+      "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
           "source": {"760": {"ind1": "0", "ind2": " ", "subfields": [
             {"t": "Publikation"},
-            {"x": "1401-9612"}
-          ]}},
-          "normalized": {"760": {"ind1": "0", "ind2": " ", "subfields": [
-            {"t": "Publikation"},
+            {"c": "Särskiljande tillägg"},
             {"x": "1401-9612"}
           ]}},
           "result": {"mainEntity": {
-              "hasSeries": [{
-                  "@type": "Instance",
-                  "marc:toDisplayNote": true,
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Publikation"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "1401-9612"
-                  }]
-              }]
+            "hasSeries": [{
+              "@type": "Instance",
+              "marc:toDisplayNote": true,
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Publikation"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "1401-9612"
+              }],
+              "instanceOf": {
+                "@type": "Work",
+                "hasTitle": [{
+                  "@type": "Title",
+                  "qualifier": "Särskiljande tillägg"
+                }]
+              }
+            }]
           }}
         }
       ]
     },
     "762": {
+      "include": ["referenceToSeriesInstance"],
       "aboutEntity": "?thing",
-      "NOTE:domainIncludes": "Serial",
-      "inherit": "760",
+      "aboutAlias": "_:instance",
       "addLink": "hasSubseries",
-      "i2": {
-        "marcDefault": " "
-      },
+      "resourceType": "Instance",
+      "NOTE:domainIncludes": "Serial",
+      "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
           "source": {"762": {"ind1": "0", "ind2": " ", "subfields": [
@@ -16663,54 +16755,120 @@
             {"w": "9823877"}
           ]}},
           "result": {"mainEntity": {
-              "hasSubseries": [{
-                  "@type": "Instance",
-                  "marc:toDisplayNote": true,
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Rätt fart"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "9823877"
-                  }]
+            "hasSubseries": [{
+              "@type": "Instance",
+              "marc:toDisplayNote": true,
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Rätt fart"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "9823877"
               }]
+            }]
+          }}
+        },
+        {
+          "source": [
+            {"762": {"ind1": "0", "ind2": " ", "subfields": [{"t": "Title 1"}, {"w": "00000"}]}},
+            {"762": {"ind1": "0", "ind2": " ", "subfields": [{"t": "Title 2"}, {"w": "11111"}]}}
+          ],
+          "result": {"mainEntity": {
+            "hasSubseries": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "00000"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Title 1"
+              }],
+              "marc:toDisplayNote": true
+            },{
+              "@type" : "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "11111"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Title 2"
+              }],
+              "marc:toDisplayNote": true
+            }]
           }}
         }
       ]
     },
     "765": {
-      "inherit": "772",
+      "include": ["referenceToWork"],
+      "aboutEntity": "?work",
+      "aboutAlias": "_:work",
       "addLink": "translationOf",
-      "i2": {
-        "marcDefault": " "
-      },
+      "resourceType": "Work",
+      "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
-          "source": {"767": {"ind1": " ", "ind2": "8", "subfields": [
+          "source": {"765": {"ind1": " ", "ind2": "8", "subfields": [
             {"t": "Tempelriddaren"},
             {"w": "000"}
           ]}},
-          "normalized": {"767": {"ind1": "0", "ind2": " ", "subfields": [
+          "normalized": {"765": {"ind1": "0", "ind2": " ", "subfields": [
             {"t": "Tempelriddaren"},
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "translation": [{
-                  "@type": "Work",
-                  "hasInstance": {
-                    "@type": "Instance",
-                    "hasTitle": [{
-                      "@type": "Title",
-                      "mainTitle": "Tempelriddaren"
-                      }],
-                    "describedBy": [{
-                      "@type": "Record",
-                      "controlNumber": "000"
-                    }]
-                  }
+              "translationOf": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Tempelriddaren"
+                  }],
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "000"
+                  }]
+                }
+              }]
+            }
+          }}
+        },
+        {
+          "name": "Example from 5ng2np8h0j53pbb",
+          "source": {"765": {"ind1": "0", "ind2": " ", "subfields": [
+            {"i": "Översättning av vissa artiklar ur"},
+            {"t": "Färg och fernissa"},
+            {"x": "0427-9107"},
+            {"w": "3736598"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "translationOf": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "3736598"
+                  }],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Färg och fernissa"
+                  }],
+                  "identifiedBy": [{
+                    "@type": "ISSN",
+                    "value": "0427-9107"
+                  } ]
+                },
+                "marc:displayText": ["Översättning av vissa artiklar ur"],
+                "marc:toDisplayNote" : true
               }]
             }
           }}
@@ -16718,11 +16876,12 @@
       ]
     },
     "767": {
-      "inherit": "772",
+      "include": ["referenceToWork"],
+      "aboutEntity": "?work",
+      "aboutAlias": "_:work",
       "addLink": "translation",
-      "i2": {
-        "marcDefault": " "
-      },
+      "resourceType": "Work",
+      "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
           "source": {"767": {"ind1": " ", "ind2": "8", "subfields": [
@@ -16739,22 +16898,22 @@
             "instanceOf": {
               "@type": "Text",
               "translation": [{
-                  "@type": "Work",
-                  "hasInstance": {
-                    "@type": "Instance",
-                    "hasTitle": [{
-                      "@type": "Title",
-                      "mainTitle": "Finance & development. French. Finances et développement"
-                      }],
-                    "identifiedBy": [{
-                      "@type": "ISSN",
-                      "value": "0430-473X"
-                      }],
-                    "describedBy": [{
-                      "@type": "Record",
-                      "controlNumber": "000"
-                    }]
-                  }
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Finance & development. French. Finances et développement"
+                  }],
+                  "identifiedBy": [{
+                    "@type": "ISSN",
+                    "value": "0430-473X"
+                  }],
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "000"
+                  }]
+                }
               }]
             }
           }}
@@ -16762,11 +16921,12 @@
       ]
     },
     "770": {
-      "inherit": "772",
+      "include": ["referenceToWork"],
+      "aboutEntity": "?work",
+      "aboutAlias": "_:work",
       "addLink": "supplement",
-      "i2": {
-        "marcDefault": " "
-      },
+      "resourceType": "Work",
+      "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
           "source": {"770": {"ind1": " ", "ind2": "8", "subfields": [
@@ -16783,22 +16943,22 @@
             "instanceOf": {
               "@type": "Text",
               "supplement": [{
-                  "@type": "Work",
-                  "hasInstance": {
-                    "@type": "Instance",
-                    "hasTitle": [{
-                      "@type": "Title",
-                      "mainTitle": "Journal of cellular biochemistry. Supplement"
-                      }],
-                    "identifiedBy": [{
-                      "@type": "ISSN",
-                      "value": "0733-1959"
-                      }],
-                    "describedBy": [{
-                      "@type": "Record",
-                      "controlNumber": "000"
-                    }]
-                  }
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Journal of cellular biochemistry. Supplement"
+                  }],
+                  "identifiedBy": [{
+                    "@type": "ISSN",
+                    "value": "0733-1959"
+                  }],
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "000"
+                  }]
+                }
               }]
             }
           }}
@@ -16806,118 +16966,13 @@
       ]
     },
     "772": {
+      "include": ["referenceToWork"],
       "NOTE:local": "Observera att fältet även har använts för att på ett enhetligt sätt konvertera delposter till flerbandsverk (med ind. 2 = 0) från ett ursprungligt LIBRISIII-format.",
       "aboutEntity": "?work",
+      "aboutAlias": "_:work",
       "addLink": "supplementTo",
       "resourceType": "Work",
-      "pendingResources": {
-        "_:work": {
-          "link": "expressionOf",
-          "resourceType": "Work"
-        },
-        "_:instanceOf": {
-          "link": "instanceOf",
-          "resourceType": "Work"
-        },
-        "_:hasInstance": {
-          "link": "hasInstance",
-          "resourceType": "Instance"
-        },
-        "_:contribution": {
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
-        },
-        "_:agent": {
-          "about": "_:contribution",
-          "addLink": "agent",
-          "resourceType": "Agent"
-        },
-        "_:title": {
-          "addLink": "hasTitle", "resourceType": "Title",
-          "embedded": true
-        },
-        "_:hasInstanceTitle": {
-          "about": "_:hasInstance",
-          "addLink": "hasTitle",
-          "resourceType": "Title",
-          "embedded": true
-        },
-        "_:workTitle": {
-          "about": "_:work",
-          "addLink": "hasTitle",
-          "resourceType": "Title",
-          "embedded": true
-        },
-        "_:instanceOfContribution": {
-          "about": "_:instanceOf",
-          "addLink": "contribution",
-          "resourceType": "PrimaryContribution",
-          "embedded": true
-        },
-        "_:instanceTitle": {
-          "about": "_:instanceOf",
-          "addLink": "hasTitle",
-          "resourceType": "Title"
-        },
-        "_:provisionActivity": {
-          "about": "_:hasInstance",
-          "link": "provisionActivity",
-          "resourceType": "ProvisionActivity"
-        },
-      "_:hasInstanceDescribedBy": {
-          "about": "_:hasInstance",
-          "addLink": "describedBy", "infer": true,
-          "resourceType": "Record"
-        },
-        "_:describedBy": {
-            "addLink": "describedBy", "infer": true,
-            "resourceType": "Record"
-          }
-      },
-      "i1": {
-        "property": "marc:toDisplayNote",
-        "tokenMap": {
-          "0": true,
-          "1": false
-        },
-        "marcDefault": "0"
-      },
-      "i2": {
-        "marcDefault": "0"
-      },
-      "$a": {"about": "_:agent", "property": "label", "infer": true, "TODO:targetMatch": "1xx"},
-      "$b": {"about": "_:hasInstance", "property": "editionStatement", "TODO:targetMatch": "250"},
-      "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false},
-      "$d": {"about": "_:hasInstance", "property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
-      "$g": {"about": "_:hasInstance", "addProperty": "part"},
-      "$h": {"about": "_:hasInstance", "addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
-      "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
-      "$i": {"addProperty": "marc:displayText"},
-      "$k": {"about": "_:hasInstance", "addProperty": "seriesStatement", "TODO:targetMatch": "4xx, 8xx"},
-      "$m": {"about": "_:hasInstance", "property": "marc:materialSpecificDetails"},
-      "$n": {"about": "_:hasInstance", "addLink": "hasNote", "resourceType": "Note", "property": "label"},
-      "$o": {"ignored": true, "NOTE:subfield-count": 0},
-      "$r": {"about": "_:hasInstance", "addLink": "identifiedBy", "resourceType": "ReportNumber", "property": "value", "TODO:targetMatch": "088"},
-      "$s": {"about": "_:workTitle", "property": "mainTitle", "TODO:targetMatch": "240"},
-      "$t": {"about": "_:hasInstanceTitle", "property": "mainTitle", "TODO:targetMatch": "222, 245"},
-      "$u": {"about": "_:hasInstance", "addLink": "identifiedBy", "resourceType": "STRN", "property": "value", "TODO:targetMatch": "027"},
-      "$x": {
-        "TODO:targetMatch": "022",
-        "about": "_:hasInstance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"
-      },
-      "$y": {"about": "_:hasInstance", "addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
-      "$z": {
-        "TODO:targetMatch": "020",
-        "about": "_:hasInstance", "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"
-      },
-      "$w": {"about": "_:hasInstanceDescribedBy", "property": "controlNumber", "uriTemplate": "http://libris.kb.se/bib/{_}", "matchUriToken": "^\\d{1,14}$"
-      },
-      "$6": {"property": "marc:fieldref"},
-      "$7": {"property": "marc:controlSubfield"},
-      "$8": {"property": "marc:groupid"},
-      "$9": {"addProperty": "partNumber"},
-      "subfieldOrder": "6 7 i a s t b c d h g k ... x z w 4 8 9",
+      "i2": {"ignored": true, "marcDefault": "0"},
       "_spec": [
         {
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
@@ -16930,24 +16985,21 @@
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
-            "@type": "Text",
-            "supplementTo": [{
-              "@type": "Work",
-              "expressionOf": {
-                  "@type": "Work",
-                    "hasTitle": [{
-                      "@type": "Title",
-                      "mainTitle": "Main Thing"
-                  }]
-                },
-              "hasInstance": {
+              "@type": "Text",
+              "supplementTo": [{
+                "@type": "Work",
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Main Thing"
+                }],
+                "hasInstance": {
                   "@type": "Instance",
                   "identifiedBy": [{
-                      "@type": "ISBN",
-                      "value": "00-0-000000-0"
-                  }]  
+                    "@type": "ISBN",
+                    "value": "00-0-000000-0"
+                  }]
                 }
-            }]
+              }]
             }
           }}
         },
@@ -16970,27 +17022,73 @@
             "instanceOf": {
               "@type": "Text",
               "supplementTo": [{
-                  "@type": "Work",
-                  "hasInstance": {
-                    "@type": "Instance",
-                    "hasTitle": [{
-                      "@type": "Title",
-                      "mainTitle": "Briefec"
-                    }],
-                    "provisionActivityStatement": "provisionActivityStatement",
-                    "describedBy": [{
-                      "@type": "Record",
-                      "controlNumber": "000"
-                    }]
-                  },
-                  "marc:controlSubfield": "p1",
-                  "contribution": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Briefec"
+                  }],
+                  "provisionActivityStatement": "provisionActivityStatement",
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "000"
+                  }]
+                },
+                "marc:controlSubfield" : "p1",
+                "contribution": [{
                   "@type": "PrimaryContribution",
-                  "agent": [{
+                  "agent": {
                     "@type": "Agent",
                     "label": "Beckmann, Max"
-                  }]
+                  }
                 }]
+              }]
+            }
+          }}
+        },
+        {
+          "name": "Example from 6ph2bmpj1fw7p1z",
+          "source": {"772": {"ind1": "0", "ind2": "0", "subfields": [
+            {"7": "p1"},
+            {"a": "Hellström, Lennart, 1942-"},
+            {"t": "Grundläggande matematik för tillämpningar"},
+            {"c": "Lennart Hellström, Lars-Åke Lindahl"},
+            {"d": "Uppsala : förf., cop. 1973"},
+            {"w": "9901066360"},
+            {"9": "3"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "supplementTo": [{
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Agent",
+                    "label": "Hellström, Lennart, 1942-"
+                  }
+                }],
+                "hasInstance": {
+                  "@type": "Instance",
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "9901066360"
+                  }],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Grundläggande matematik för tillämpningar"
+                  }],
+                  "provisionActivityStatement": "Uppsala : förf., cop. 1973"
+                },
+                "hasTitle": [{
+                  "@type": "Title",
+                  "qualifier": "Lennart Hellström, Lars-Åke Lindahl"
+                }],
+                "marc:controlSubfield": "p1",
+                "marc:toDisplayNote": true,
+                "partNumber": ["3"]
               }]
             }
           }}
@@ -16998,12 +17096,14 @@
       ]
     },
     "773": {
-      "inherit": "772",
+      "include": ["referenceToWork"],
+      "aboutEntity": "?work",
+      "aboutAlias": "_:work",
       "addLink": "isPartOf",
       "resourceType": "Aggregate",
-      "$c": null,
-      "$p": {"about": "_:hasInstance", "addLink": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore", "NOTE:marc-repeatable": false},
-      "$q": {"about": "_:hasInstance", "property": "marc:enumerationAndFirstPage", "NOTE:LC":"ignore"},
+      "i2": {"ignored": true, "marcDefault": "0"},
+      "$p": {"about": "_:instance", "addLink": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore", "NOTE:marc-repeatable": false},
+      "$q": {"about": "_:instance", "property": "marc:enumerationAndFirstPage", "NOTE:LC":"ignore"},
       "_spec": [
         {
           "name": "Example from 0h9659tb25shg0g",
@@ -17083,7 +17183,7 @@
                 "marc:controlSubfield": "n s",
                 "marc:toDisplayNote": true,
                 "partNumber": ["1992", "1", "34"]
-              } ]
+              }]
             }
           }}
         },
@@ -17112,10 +17212,10 @@
                 "@type": "Aggregate",
                 "contribution": [{
                   "@type": "PrimaryContribution",
-                  "agent": [{
+                  "agent": {
                     "@type": "Agent",
                     "label": "Robson, James,"
-                  }]
+                  }
                 }],
                 "hasInstance": {
                   "@type": "Instance",
@@ -17154,8 +17254,7 @@
                   "@type": "Instance",
                   "meta": [{"@type": "Record", "controlNumber": "8258455"}],
                   "hasTitle": [{"@type": "Title", "mainTitle": "Tidskrift"}]
-                },
-                "marc:toDisplayNote": true
+                }
               }]
             }
           }}
@@ -17163,37 +17262,43 @@
       ]
     },
     "774": {
-      "inherit": "772",
+      "include": ["referenceToWork"],
+      "aboutEntity": "?work",
+      "aboutAlias": "_:work",
       "addLink": "hasPart",
+      "resourceType": "Work",
+      "i2": {"ignored": true, "marcDefault": "0"},
       "NOTE:domainIncludes": "Serial",
       "FIXME": "this is overeagerly reverted from a hasPart converted from 740; should only be added if issuanceType = 'Serial'...",
-      "resourceType": "Work",
       "_spec": [
         {
           "source": {"774": {"ind1": " ", "ind2": "8", "subfields": [
             {"t": "Map of area with highlighted street"},
+            {"b": "3. ed."},
             {"w": "000"}
           ]}},
           "normalized": {"774": {"ind1": "0", "ind2": "0", "subfields": [
             {"t": "Map of area with highlighted street"},
+            {"b": "3. ed."},
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "hasPart": [{
-                  "@type": "Work",
-                  "hasInstance": {
-                    "@type": "Instance",
-                    "hasTitle": [{
-                      "@type": "Title",
-                      "mainTitle": "Map of area with highlighted street"
-                      }],
-                    "describedBy": [{
-                      "@type": "Record",
-                      "controlNumber": "000"
-                    }]
-                  }
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "editionStatement" : "3. ed.",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Map of area with highlighted street"
+                  }],
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "000"
+                  }]
+                }
               }]
             }
           }}
@@ -17215,10 +17320,10 @@
                 "@type": "Work",
                 "contribution": [{
                   "@type": "PrimaryContribution",
-                  "agent": [{
+                  "agent": {
                     "@type": "Agent",
                     "label": "Bonnevie, Kristine"
-                  }]
+                  }
                 }],
                 "hasInstance": {
                   "@type": "Instance",
@@ -17273,64 +17378,145 @@
       ]
     },
     "775": {
-      "inherit": "772",
-      "TODO:note": "uncommon",
+      "include": ["referenceToWork"],
+      "aboutEntity": "?work",
+      "aboutAlias": "_:work",
       "addLink": "otherEdition",
-      "i2": {
-        "marcDefault": " "
+      "resourceType": "Work",
+      "pendingResources": {
+        "_:provisionActivity": {
+          "about": "_:instance",
+          "link": "provisionActivity",
+          "resourceType": "ProvisionActivity"
+        }
       },
+      "i2": {"ignored": true, "marcDefault": " "},
       "$e": {"addLink": "language", "NOTE:marc-repeatable": false, "resourceType": "Language", "property": "label", "infer": true, "TODO:inherit": "008:[35:38]"},
-      "$f": {"about": "_:provisionActivity", "link": "place", "resourceType": "Place", "property": "code", "NOTE:marc-repeatable": false, "TODO:inherit": "008:[15:18]"}
+      "$f": {"about": "_:provisionActivity", "link": "place", "resourceType": "Place", "property": "code", "NOTE:marc-repeatable": false, "TODO:inherit": "008:[15:18]"},
+      "_spec": [
+        {
+          "name": "Example from xf7626r83c73st9",
+          "source": {"775": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Olsson, Jan"},
+            {"d": "1979"},
+            {"g": "Övningsbok"},
+            {"f": "Företagsekonomi 80"},
+            {"z": "91-40-55055-9"},
+            {"w": "1320351"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "otherEdition": [{
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Agent",
+                    "label": "Olsson, Jan"
+                  }
+                }],
+                "hasInstance": {
+                  "@type": "Instance",
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "1320351"
+                  }],
+                  "identifiedBy": [{
+                    "@type": "ISBN",
+                    "value": "91-40-55055-9"
+                  }],
+                  "part": ["Övningsbok"],
+                  "provisionActivity": {
+                    "@type": "ProvisionActivity",
+                    "place": {
+                      "@type": "Place",
+                      "code": "Företagsekonomi 80"
+                    }
+                  },
+                  "provisionActivityStatement": "1979"
+                },
+                "marc:toDisplayNote" : false
+              }]
+            }
+          }}
+        },
+        {
+          "name": "Example from 5phh1s8h5m6f6zp",
+          "source": {"775": {"ind1": "1", "ind2": "8", "subfields": [
+            {"i": "Parallellupplaga"},
+            {"t": "Hållbar utveckling nu!"},
+            {"d": "[2008?]"},
+            {"w": "10948597"}
+          ]}},
+          "normalized": {"775": {"ind1": "1", "ind2": " ", "subfields": [
+            {"i": "Parallellupplaga"},
+            {"t": "Hållbar utveckling nu!"},
+            {"d": "[2008?]"},
+            {"w": "10948597"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "otherEdition": [{
+                "@type": "Work",
+                "marc:displayText": ["Parallellupplaga"],
+                "hasInstance": {
+                  "@type": "Instance",
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "10948597"
+                  }],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Hållbar utveckling nu!"
+                  }],
+                  "provisionActivityStatement": "[2008?]"
+                },
+                "marc:toDisplayNote" : false
+              }]
+            }
+          }}
+        }
+      ]
     },
     "776": {
       "NOTE": "We deviate from BF2 as we do not link from the Work with hasInstance.",
-      "inherit": "772",
+      "include": ["referenceToInstance"],
       "aboutEntity": "?thing",
-      "aboutAlias": "_:instanceOf",
+      "aboutAlias": "_:instance",
       "addLink": "otherPhysicalFormat",
       "resourceType": "Instance",
-      "i2": {"link": null, "marcDefault": "8"},
-      "$b": {"property": "editionStatement"},
-      "$d": {"property": "provisionActivityStatement"},
-      "$g": {"addProperty": "part"},
-      "$h": {"addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
-      "$k": {"addProperty": "seriesStatement"},
-      "$m": {"property": "marc:materialSpecificDetails"},
-      "$n": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
-      "$r": {"addLink": "identifiedBy", "resourceType": "ReportNumber", "property": "value"},
-      "$t": {"about": "_:title", "property": "mainTitle"},
-      "$u": {"addLink": "identifiedBy", "resourceType": "STRN", "property": "value"},
-      "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"},
-      "$y": {"addLink": "identifiedBy", "resourceType": "CODEN", "property": "value"},
-      "$z": {"addLink": "identifiedBy", "resourceType": "ISBN", "property": "value"},
-      "$w": {"about": "_:describedBy", "property": "controlNumber", "uriTemplate": "http://libris.kb.se/bib/{_}", "matchUriToken": "^\\d{1,14}$"
-      },
+      "i2": {"ignored": true, "marcDefault": "8"},
       "_spec": [
         {
           "source": {"776": {"ind1": "0", "ind2": "8", "subfields": [
             {"i": "Print"},
             {"t": "War of Words: Dutch Pro-Boer Propaganda and the South African War (1899-1902)"},
+            {"b": "First edition"},
             {"z": "978-90-8964-412-1"}
           ]}},
           "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [
             {"i": "Print"},
             {"t": "War of Words: Dutch Pro-Boer Propaganda and the South African War (1899-1902)"},
+            {"b": "First edition"},
             {"z": "978-90-8964-412-1"}
           ]}},
           "result": {"mainEntity": {
-              "otherPhysicalFormat": [{
-                  "@type": "Instance",
-                  "marc:toDisplayNote": true,
-                  "marc:displayText": ["Print"],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "War of Words: Dutch Pro-Boer Propaganda and the South African War (1899-1902)"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISBN",
-                    "value": "978-90-8964-412-1"
-                  }]
+            "otherPhysicalFormat": [{
+              "@type": "Instance",
+              "marc:toDisplayNote": true,
+              "marc:displayText": ["Print"],
+              "editionStatement" : "First edition",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "War of Words: Dutch Pro-Boer Propaganda and the South African War (1899-1902)"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "978-90-8964-412-1"
               }]
+            }]
           }}
         },
         {
@@ -17373,37 +17559,108 @@
             {"w": "1217888"}
           ]}},
           "result": {"mainEntity": {
+            "otherPhysicalFormat": [{
+              "@type": "Instance",
+
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Agent",
+                    "label": "Andersson, Lennart"
+                  }
+                }]
+              },
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "1217888"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Umebygdens soldater 1695-1895"
+              }],
+              "marc:displayText": ["Originalversion:"],
+              "marc:toDisplayNote": true,
+              "provisionActivityStatement": "1989"
+            }]
+          }}
+        },
+        {
+          "name": "Example from m5z1zbbz50clqtz",
+          "source": {"776": {"ind1": "0", "ind2": "8", "subfields": [
+            {"i": "Online version:"},
+            {"a": "Adam, von Bremen, 11th cent."},
+            {"s": "Gesta Hammaburgensis ecclesiae pontificum. French."},
+            {"t": "Histoire des archevêques de Hambourg."},
+            {"d": "[Paris] : Gallimard, c1998"},
+            {"w": "(OCoLC)607718109"}
+          ]}},
+          "result": {"mainEntity": {
             "otherPhysicalFormat" : [ {
               "@type" : "Instance",
-              "contribution" : [ {
-                "@type" : "PrimaryContribution",
-                "agent" : [ {
-                  "@type" : "Agent",
-                  "label" : "Andersson, Lennart"
-                } ]
-              } ],
-              "describedBy" : [ {
-                "@type" : "Record",
-                "controlNumber" : "1217888"
-              } ],
-              "hasTitle" : [ {
-                "@type" : "Title",
-                "mainTitle" : "Umebygdens soldater 1695-1895"
-              } ],
-              "marc:displayText" : [ "Originalversion:" ],
-              "marc:toDisplayNote" : true,
-              "provisionActivityStatement" : "1989"
-            } ]
+              "marc:displayText": ["Online version:"],
+              "marc:toDisplayNote": true,
+              "instanceOf": {
+                "@type": "Work",
+                "contribution" : [ {
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Agent",
+                    "label": "Adam, von Bremen, 11th cent."
+                  }
+                }],
+                "hasTitle": [{
+                  "@type": "Title",
+                  "mainTitle": "Gesta Hammaburgensis ecclesiae pontificum. French."
+                }]
+              },
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "(OCoLC)607718109"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Histoire des archevêques de Hambourg."
+              }],
+              "provisionActivityStatement": "[Paris] : Gallimard, c1998"
+            }]
+          }}
+        },
+        {
+          "name": "Example from 8slp04fl25wwbrl",
+          "source": {"776": {"ind1": "0", "ind2": "8", "subfields": [
+            {"i": "Print"},
+            {"t": "Entangled world"},
+            {"c": "Original"},
+            {"z": "9783527404704"}
+          ]}},
+          "result": {"mainEntity": {
+            "otherPhysicalFormat": [{
+              "@type": "Instance",
+              "marc:displayText": ["Print"],
+              "marc:toDisplayNote": true,
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "9783527404704"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Entangled world",
+                "qualifier": "Original"
+              }]
+            }]
           }}
         }
       ]
     },
     "777": {
-      "inherit": "772",
+      "include": ["referenceToWork"],
+      "aboutEntity": "?work",
+      "aboutAlias": "_:work",
       "addLink": "issuedWith",
-      "i2": {
-        "marcDefault": " "
-      },
+      "resourceType": "Work",
+      "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
           "name": "Example from fxqnstdr4mdmvws",
@@ -17413,30 +17670,30 @@
             {"w": "9735858"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf" : {
-              "@type" : "Text",
-              "issuedWith" : [ {
-                "@type" : "Work",
-                "contribution" : [ {
-                  "@type" : "PrimaryContribution",
-                  "agent" : [ {
-                    "@type" : "Agent",
-                    "label" : "Gerland, Gunilla"
-                  } ]
-                } ],
-                "hasInstance" : {
-                  "@type" : "Instance",
-                  "describedBy" : [ {
-                    "@type" : "Record",
-                    "controlNumber" : "9735858"
-                  } ],
-                  "hasTitle" : [ {
-                    "@type" : "Title",
-                    "mainTitle" : "Autism : svårigehter och möjligheter"
-                  } ]
+            "instanceOf": {
+              "@type": "Text",
+              "issuedWith": [{
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Agent",
+                    "label": "Gerland, Gunilla"
+                  }
+                }],
+                "hasInstance": {
+                  "@type": "Instance",
+                  "describedBy": [ {
+                    "@type": "Record",
+                    "controlNumber": "9735858"
+                  }],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Autism : svårigehter och möjligheter"
+                  }]
                 },
                 "marc:toDisplayNote" : true
-              } ]
+              }]
             }
           }}
         },
@@ -17457,52 +17714,78 @@
             {"w": "12033323"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf" : {
-              "@type" : "Text",
-              "issuedWith" : [ {
-                "@type" : "Work",
-                "contribution" : [ {
-                  "@type" : "PrimaryContribution",
-                  "agent" : [ {
-                    "@type" : "Agent",
-                    "label" : "Andersson, Jan"
-                  } ]
-                } ],
-                "hasInstance" : {
+            "instanceOf": {
+              "@type": "Text",
+              "issuedWith": [{
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Agent",
+                    "label": "Andersson, Jan"
+                  }
+                }],
+                "hasInstance": {
                   "@type" : "Instance",
-                  "describedBy" : [ {
-                    "@type" : "Record",
-                    "controlNumber" : "12033323"
-                  } ],
-                  "hasTitle" : [ {
-                    "@type" : "Title",
-                    "mainTitle" : "Personlig utveckling för alla medarbetare - Fallrapport (Länia AB, Örebro)"
-                  } ],
-                  "provisionActivityStatement" : "1994"
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "12033323"
+                  }],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Personlig utveckling för alla medarbetare - Fallrapport (Länia AB, Örebro)"
+                  }],
+                  "provisionActivityStatement": "1994"
                 },
-                "marc:displayText" : [ "Online" ],
-                "marc:toDisplayNote" : true
-              } ]
+                "marc:displayText": ["Online"],
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "name": "Verify mapping of seriesStatement",
+          "source": {"777": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Statliga betongbestämmelser"},
+            {"k": "Statens offentliga utredningar"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "issuedWith": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Statliga betongbestämmelser"
+                  }],
+                  "seriesStatement": ["Statens offentliga utredningar"]
+                },
+                "marc:toDisplayNote": true
+              }]
             }
           }}
         }
       ]
     },
     "780": {
-      "inherit": "772",
+      "include": ["referenceToWork"],
+      "aboutEntity": "?work",
+      "aboutAlias": "_:work",
       "addLink": "precededBy",
       "resourceType": "Work",
       "match": [
-        {"when": "i2=0", "addLink": "continues"},
-        {"when": "i2=1", "addLink": "continuesInPart"},
-        {"when": "i2=2", "addLink": "precededBy"},
-        {"when": "i2=3", "addLink": "precededInPartBy"},
-        {"when": "i2=4", "addLink": "mergerOf"},
-        {"when": "i2=5", "addLink": "absorbed"},
-        {"when": "i2=6", "addLink": "absorbedInPart"},
-        {"when": "i2=7", "addLink": "separatedFrom"}
+        {"when": "i2=0", "addLink": "continues", "resourceType": "Work"},
+        {"when": "i2=1", "addLink": "continuesInPart", "resourceType": "Work"},
+        {"when": "i2=2", "addLink": "precededBy", "resourceType": "Work"},
+        {"when": "i2=3", "addLink": "precededInPartBy", "resourceType": "Work"},
+        {"when": "i2=4", "addLink": "mergerOf", "resourceType": "Work"},
+        {"when": "i2=5", "addLink": "absorbed", "resourceType": "Work"},
+        {"when": "i2=6", "addLink": "absorbedInPart", "resourceType": "Work"},
+        {"when": "i2=7", "addLink": "separatedFrom", "resourceType": "Work"}
       ],
-      "i2": {"marcDefault": "0"},
+      "i2": {"ignored": true, "marcDefault": "0"},
       "_spec": [
         {
           "source": {"780": {"ind1": "0", "ind2": "0", "subfields": [
@@ -17526,6 +17809,147 @@
           }}
         },
         {
+          "source": {"780": {"ind1": "0", "ind2": "1", "subfields": [{"t": "A Title"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "continuesInPart": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "source": {"780": {"ind1": "0", "ind2": "2", "subfields": [
+            {"t": "Journal of nuclear energy (1967)"},
+            {"x": "0022-3107"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "precededBy": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Journal of nuclear energy (1967)"
+                  }],
+                  "identifiedBy": [{
+                    "@type": "ISSN",
+                    "value": "0022-3107"
+                  }]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "source": {"780": {"ind1": "0", "ind2": "3", "subfields": [{"t": "A Title"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "precededInPartBy": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "source": {"780": {"ind1": "0", "ind2": "4", "subfields": [
+            {"t": "Field & stream (West edition)"},
+            {"x": "8755-8610"},
+            {"w": "(DLC) 84647859"},
+            {"w": "(OCoLC)11405900"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "mergerOf": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "(DLC) 84647859"
+                  },{
+                    "@type": "Record",
+                    "controlNumber": "(OCoLC)11405900"
+                  }],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Field & stream (West edition)"
+                  }],
+                  "identifiedBy": [{
+                    "@type": "ISSN",
+                    "value": "8755-8610"
+                  }]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "source": {"780": {"ind1": "0", "ind2": "5", "subfields": [{"t": "A Title"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "absorbed": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "source": {"780": {"ind1": "0", "ind2": "6", "subfields": [{"t": "A Title"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "absorbedInPart": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "source": {"780": {"ind1": "0", "ind2": "7", "subfields": [{"t": "A Title"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "separatedFrom": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
           "source": {"780": {"ind1": " ", "ind2": " ", "subfields": [
             {"t": "Bulletin mensuel"}
           ]}},
@@ -17536,15 +17960,15 @@
             "instanceOf": {
               "@type": "Text",
               "precededBy": [{
-                  "@type": "Work",
-                  "hasInstance": {
-                    "@type": "Instance",
-                    "hasTitle": [{
-                      "@type": "Title",
-                      "mainTitle": "Bulletin mensuel"
-                    }]
-                  }
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Bulletin mensuel"
+                  }]
                 }
+              }
               ]
             }
           }}
@@ -17552,21 +17976,23 @@
       ]
     },
     "785": {
-      "inherit": "780",
+      "include": ["referenceToWork"],
+      "aboutEntity": "?work",
+      "aboutAlias": "_:work",
       "addLink": "succeededBy",
       "resourceType": "Work",
       "match": [
-        {"when": "i2=0", "addLink": "continuedBy"},
-        {"when": "i2=1", "addLink": "continuedInPartBy"},
-        {"when": "i2=2", "addLink": "succeededBy"},
-        {"when": "i2=3", "addLink": "succeededInPartBy"},
-        {"when": "i2=4", "addLink": "absorbedBy"},
-        {"when": "i2=5", "addLink": "absorbedInPartBy"},
-        {"when": "i2=6", "addLink": "splitInto"},
-        {"when": "i2=7", "addLink": "mergedToForm"},
-        {"when": "i2=8", "addLink": "continuedBy"}
+        {"when": "i2=0", "addLink": "continuedBy", "resourceType": "Work"},
+        {"when": "i2=1", "addLink": "continuedInPartBy", "resourceType": "Work"},
+        {"when": "i2=2", "addLink": "succeededBy", "resourceType": "Work"},
+        {"when": "i2=3", "addLink": "succeededInPartBy", "resourceType": "Work"},
+        {"when": "i2=4", "addLink": "absorbedBy", "resourceType": "Work"},
+        {"when": "i2=5", "addLink": "absorbedInPartBy", "resourceType": "Work"},
+        {"when": "i2=6", "addLink": "splitInto", "resourceType": "Work"},
+        {"when": "i2=7", "addLink": "mergedToForm", "resourceType": "Work"},
+        {"when": "i2=8", "addLink": "continuedBy", "resourceType": "Work"}
       ],
-      "i2": {"marcDefault": "0"},
+      "i2": {"ignored": true, "marcDefault": "0"},
       "_spec": [
         {
           "source": {"785": {"ind1": "0", "ind2": "0", "subfields": [
@@ -17581,13 +18007,161 @@
                 "hasInstance": {
                   "@type": "Instance",
                   "hasTitle": [{
-                      "@type": "Title",
-                      "mainTitle": "Naysprayer"
+                    "@type": "Title",
+                    "mainTitle": "Naysprayer"
                   }],
                   "identifiedBy": [{
-                      "@type" : "ISSN",
-                      "value" : "1937-6545"
+                    "@type" : "ISSN",
+                    "value" : "1937-6545"
                   }]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "source": {"785": {"ind1": "0", "ind2": "1", "subfields": [{"t": "A Title"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "continuedInPartBy": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "source": {"785": {"ind1": "0", "ind2": "2", "subfields": [{"t": "A Title"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "succeededBy": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "source": {"785": {"ind1": "0", "ind2": "3", "subfields": [{"t": "A Title"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "succeededInPartBy": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "source": {"785": {"ind1": "0", "ind2": "4", "subfields": [{"t": "A Title"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "absorbedBy": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "source": {"785": {"ind1": "0", "ind2": "5", "subfields": [{"t": "A Title"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "absorbedInPartBy": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "source": {"785": {"ind1": "0", "ind2": "6", "subfields": [{"t": "A Title"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "splitInto": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "source": {"785": {"ind1": "0", "ind2": "7", "subfields": [{"t": "A Title"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "mergedToForm": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "name": "Reverts to ind2 = 0",
+          "source": {"785": {"ind1": "0", "ind2": "8", "subfields": [{"t": "A Title"}]}},
+          "normalized": {"785": {"ind1": "0", "ind2": "0", "subfields": [{"t": "A Title"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "continuedBy": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+                },
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        },
+        {
+          "name": "Reverts to ind2 = 2",
+          "source": {"785": {"ind1": "0", "ind2": " ", "subfields": [{"t": "A Title"}]}},
+          "normalized": {"785": {"ind1": "0", "ind2": "2", "subfields": [{"t": "A Title"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "succeededBy": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
                 },
                 "marc:toDisplayNote": true
               }]
@@ -17597,19 +18171,57 @@
       ]
     },
     "786": {
-      "inherit": "772",
+      "include": ["referenceToWork"],
+      "aboutEntity": "?work",
+      "aboutAlias": "_:work",
       "addLink": "dataSource",
       "resourceType": "Dataset",
-      "i2": {
-        "marcDefault": " "
-      }
+      "i2": {"ignored": true, "marcDefault": " "},
+      "$p": {"about": "_:instance", "addLink": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore", "NOTE:marc-repeatable": false},
+      "_spec": [
+        {
+          "name": "Example from 3ld26bgf09pcprr",
+          "source": {"786": {"ind1": "0", "ind2": "8", "subfields": [
+            {"i": "Source"},
+            {"t": "The catalogue of the book collection of the Jesuit College in Braniewo held in the University Library in Uppsala"},
+            {"w": "13527363"}
+          ]}},
+          "normalized": {"786": {"ind1": "0", "ind2": " ", "subfields": [
+            {"i": "Source"},
+            {"t": "The catalogue of the book collection of the Jesuit College in Braniewo held in the University Library in Uppsala"},
+            {"w": "13527363"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "dataSource": [{
+                "@type": "Dataset",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "The catalogue of the book collection of the Jesuit College in Braniewo held in the University Library in Uppsala"
+                  }],
+                  "describedBy": [{
+                    "@type" : "Record",
+                    "controlNumber": "13527363"
+                  }]
+                },
+                "marc:displayText": ["Source"],
+                "marc:toDisplayNote": true
+              }]
+            }
+          }}
+        }
+      ]
     },
     "787": {
-      "inherit": "772",
+      "include": ["referenceToWork"],
+      "aboutEntity": "?work",
+      "aboutAlias": "_:work",
       "addLink": "relatedTo",
-      "i2": {
-        "marcDefault": " "
-      },
+      "resourceType": "Work",
+      "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
           "source": {"787": {"ind1": " ", "ind2": "8", "subfields": [
@@ -17624,18 +18236,18 @@
             "instanceOf": {
               "@type": "Text",
               "relatedTo": [{
-                  "@type": "Work",
-                  "hasInstance": {
-                    "@type": "Instance",
-                    "hasTitle": [{
-                      "@type": "Title",
-                      "mainTitle": "Empire State report weekly"
-                      }],
-                    "describedBy": [{
-                      "@type": "Record",
-                      "controlNumber": "000"
-                    }]
-                  }
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Empire State report weekly"
+                  }],
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "000"
+                  }]
+                }
               }]
             }
           }}
@@ -17650,12 +18262,52 @@
             "instanceOf": {
               "@type": "Text",
               "relatedTo": [{
-                  "@type": "Work",
-                  "hasInstance": {
-                    "@type": "Instance",
-                    "hasTitle": [{"@type": "Title", "mainTitle": "State"}],
-                    "meta": [{"@type": "Record", "controlNumber": "000"}]
-                  }
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "hasTitle": [{"@type": "Title", "mainTitle": "State"}],
+                  "meta": [{"@type": "Record", "controlNumber": "000"}]
+                }
+              }]
+            }
+          }}
+        },
+        {
+          "source": [
+            {"787": {"ind1": "0", "ind2": " ", "subfields": [{"t": "Symfoni, Ess-dur"}, {"w": "11862622"}]}},
+            {"787": {"ind1": "0", "ind2": " ", "subfields": [{"t": "Symfoni, C-dur"}, {"w": "11862630"}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "11862622"
+                  }],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Symfoni, Ess-dur"
+                  }]
+                },
+                "marc:toDisplayNote": true
+              },{
+                "@type": "Work",
+                "hasInstance": {
+                  "@type": "Instance",
+                  "describedBy": [{
+                    "@type": "Record",
+                    "controlNumber": "11862630"
+                  }],
+                  "hasTitle": [{
+                    "@type": "Title",
+                    "mainTitle": "Symfoni, C-dur"
+                  }]
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
