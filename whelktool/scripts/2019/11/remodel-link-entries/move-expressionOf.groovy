@@ -22,7 +22,8 @@ LINK_FIELDS_WORK = ['translationOf', 'translation', 'supplement', 'supplementTo'
                     'mergedToForm', 'dataSource', 'relatedTo', 'isPartOf',
                     'otherEdition', 'issuedWith' ]
 
-selectByIds(['l4x16knx27bvjvz']) { data ->
+
+selectByIds(bibIds.readLines()) { data ->
     def (record, thing, work) = data.graph
 
     work.subMap(LINK_FIELDS_WORK).each {
