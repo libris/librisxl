@@ -18661,7 +18661,9 @@
         "targetEntity": "?record",
         "targetProperty": "marc:personalName",
         "valueMap": {
-          "Person": "https://id.kb.se/marc/DifferentiatedPersonalName"
+          "Person": {
+            "@id": "https://id.kb.se/marc/DifferentiatedPersonalName"
+          }
         },
         "_spec": [
           {
@@ -18672,7 +18674,9 @@
               }
             },
             "back": {
-              "marc:personalName": "https://id.kb.se/marc/DifferentiatedPersonalName",
+              "marc:personalName": {
+                "@id": "https://id.kb.se/marc/DifferentiatedPersonalName"
+              },
               "mainEntity": {
                 "@type": "Person"
               }
