@@ -53,6 +53,8 @@ for (String operation : ProgramLines) {
                     labels.clear()
                     labels.add(newShelfMark)
                 } else {
+                    if (labels instanceof String && !labels.equals(oldShelfMark))
+                        unexpectedRecordState.println("$iri had shelfMark: ${labels}, expected $oldShelfMark")
                     component.shelfMark.label = newShelfMark
                 }
             }
