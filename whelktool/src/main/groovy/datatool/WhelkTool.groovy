@@ -538,6 +538,7 @@ class WhelkTool {
     private Bindings createMainBindings() {
         Bindings bindings = createDefaultBindings()
         bindings.put("scriptDir", scriptFile.parent)
+        bindings.put("baseUri", Document.BASE_URI)
         bindings.put("getReportWriter", this.&getReportWriter)
         bindings.put("script", this.&compileScript)
         bindings.put("selectByCollection", this.&selectByCollection)
