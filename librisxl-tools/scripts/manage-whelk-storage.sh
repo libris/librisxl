@@ -1,14 +1,16 @@
 #!/bin/bash
 set -e
+SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )
+TOOLDIR=$(dirname $SCRIPT_DIR)
 
-TOOLDIR=$(dirname $(dirname $0))
 RECREATE_DB=false
 NUKE_DEFINITIONS=false
+RUN_MIGRATIONS=false
 
 usage () {
     cat <<EOF
 
-Usage: ./rebuild-whelk-storage.sh -n <NAME> [-h <POSTGRES HOST>]
+Usage: ./manage-whelk-storage.sh -n <NAME> [-h <POSTGRES HOST>]
            [-e <ELASTICSEARCH HOST>] [-D <POSTGRES USER>]
            [-C <CREATEDB USER>] [-R] [-N]
 
@@ -40,6 +42,12 @@ Usage: ./rebuild-whelk-storage.sh -n <NAME> [-h <POSTGRES HOST>]
     -R, --recreate-db
         If set, will drop and recreate PostgreSQL and ElasticSearch
         databases indicated by -n/--whelk-name, and reload schema.
+
+        Unset by default.
+
+    -M, --run-migrations
+        If set, will run all migration scripts on PostgreSQL database
+        indicated by -n/--whelk-name
 
         Unset by default.
 
@@ -100,6 +108,9 @@ do
         -N|--nuke-definitions)
             NUKE_DEFINITIONS=true
             ;;
+        -M|--run-migrations)
+            RUN_MIGRATIONS=true
+            ;;
         *)
             usage
             exit 1
@@ -138,7 +149,7 @@ if [ "$RECREATE_DB" = true ]; then
     MIGRATIONS=${TOOLDIR}/postgresql/migrations/*.plsql
     for MIGRATIONFILE in $MIGRATIONS
     do
-	psql -h $DBHOST $DBUSER_ARG $WHELKNAME < $MIGRATIONFILE
+      psql -h $DBHOST $DBUSER_ARG $WHELKNAME < $MIGRATIONFILE
     done
 
     echo ""
@@ -164,6 +175,21 @@ if [ "$RECREATE_DB" = true ]; then
 
 fi
 
+if [ "$RUN_MIGRATIONS" = true ]; then
+    echo "Running PostgreSQL database migrations..."
+    CURRENT_VERSION=$(psql -qtA -h $DBHOST $DBUSER_ARG $WHELKNAME -c "SELECT version FROM lddb__schema" || echo 0)
+    echo "Version before: $CURRENT_VERSION"
+    echo ""
+
+    MIGRATIONS=$(ls -1 ${TOOLDIR}/postgresql/migrations/*.plsql | awk "NR > $CURRENT_VERSION")
+    for MIGRATIONFILE in $MIGRATIONS
+    do
+      psql -h $DBHOST $DBUSER_ARG $WHELKNAME < $MIGRATIONFILE
+    done
+
+    echo ""
+    echo "Version after: $(psql -qtA -h $DBHOST $DBUSER_ARG $WHELKNAME -c "SELECT version FROM lddb__schema")"
+fi
 
 if [ "$NUKE_DEFINITIONS" = true ]; then
     echo ""
