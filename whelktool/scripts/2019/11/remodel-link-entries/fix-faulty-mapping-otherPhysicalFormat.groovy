@@ -9,12 +9,13 @@
 
 PrintWriter failedIDs = getReportWriter("failed-to-update")
 scheduledForChange = getReportWriter("scheduled-for-change")
+propertiesNotMoved = getReportWriter("properties-not-moved")
 
 PROPERTIES_TO_MOVE = ['contribution']
 
 selectBySqlWhere("""
-        collection = 'bib' AND 
-        (data#>>'{@graph,1,otherPhysicalFormat}' LIKE '%expressionOf%' OR 
+        collection = 'bib' AND
+        (data#>>'{@graph,1,otherPhysicalFormat}' LIKE '%expressionOf%' OR
          data#>>'{@graph,1,otherPhysicalFormat}' LIKE '%contribution%')
     """) { data ->
 
@@ -30,7 +31,12 @@ void updateProperties(data, object) {
 
     if (!workObjectsToMove.isEmpty()) {
         if (object.instanceOf)
-            object.instanceOf << workObjectsToMove
+            workObjectsToMove.each { ->
+                if (!object.instanceOf.containsKey(it.key))
+                    object.instanceOf << it
+                else
+                    propertiesNotMoved.println "${it.key} already exists for ${data.graph[0][ID]}"
+            }
         else
             object['instanceOf'] = [(TYPE): 'Work'] << workObjectsToMove
     }
