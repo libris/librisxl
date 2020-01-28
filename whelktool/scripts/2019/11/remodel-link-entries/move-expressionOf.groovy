@@ -38,7 +38,9 @@ void updateProperties(data, propertyName, toUpdate) {
     objectsToUpdate.each {
         if (propertyName == 'isPartOf' && it[TYPE] != 'Aggregate')
             return
-        expressionOfWasUpdated = moveExpressionOf(it, data)
+        if(moveExpressionOf(it, data)) {
+            expressionOfWasUpdated = true
+        }
     }
 
     if (expressionOfWasUpdated) {
