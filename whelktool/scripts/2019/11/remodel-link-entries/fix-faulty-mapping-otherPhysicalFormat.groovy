@@ -1,6 +1,5 @@
 /*
- * This removes legacy marc properties from link entries and
- * fix faulty mapping of otherPhysicalFormat
+ * This fix faulty mapping of otherPhysicalFormat
  *
  * otherPhysicalFormat.Instance.contribution --> otherPhysicalFormat.Instance.instanceOf.contribution
  * otherPhysicalFormat.Instance.expressionOf.hasTitle --> otherPhysicalFormat.Instance.instanceOf.hasTitle
@@ -11,11 +10,12 @@
 PrintWriter failedIDs = getReportWriter("failed-to-update")
 scheduledForChange = getReportWriter("scheduled-for-change")
 
-PROPERTIES_TO_REMOVE = ['marc:toDisplayNote', 'marc:controlSubfield', 'partNumber', 'marc:fieldref']
 PROPERTIES_TO_MOVE = ['contribution']
 
 selectBySqlWhere("""
-        collection = 'bib' AND data#>>'{@graph,1,otherPhysicalFormat}' IS NOT NULL
+        collection = 'bib' AND 
+        (data#>>'{@graph,1,otherPhysicalFormat}' LIKE '%expressionOf%' OR 
+         data#>>'{@graph,1,otherPhysicalFormat}' LIKE '%contribution%')
     """) { data ->
 
     def (record, thing, work) = data.graph
@@ -26,7 +26,6 @@ selectBySqlWhere("""
 }
 
 void updateProperties(data, object) {
-    def somethingWasRemoved = removeProperties(object, PROPERTIES_TO_REMOVE)
     def workObjectsToMove = moveWorkObjects(object)
 
     if (!workObjectsToMove.isEmpty()) {
@@ -36,7 +35,7 @@ void updateProperties(data, object) {
             object['instanceOf'] = [(TYPE): 'Work'] << workObjectsToMove
     }
 
-    if (somethingWasRemoved || workObjectsToMove) {
+    if (workObjectsToMove) {
         scheduledForChange.println "Record was updated ${data.graph[0][ID]}"
         data.scheduleSave(onError: { e ->
             failedIDs.println("Failed to save ${data.graph[0][ID]} due to: $e")

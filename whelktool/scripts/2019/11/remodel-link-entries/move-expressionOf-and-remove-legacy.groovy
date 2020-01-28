@@ -17,8 +17,6 @@ LINK_FIELDS_WORK = ['translationOf', 'translation', 'supplement', 'supplementTo'
                     'mergedToForm', 'dataSource', 'relatedTo', 'isPartOf',
                     'otherEdition', 'issuedWith' ]
 
-PROPERTIES_TO_REMOVE = ['marc:toDisplayNote', 'marc:controlSubfield', 'partNumber', 'marc:fieldref']
-
 String subQueryInstance = LINK_FIELDS_INSTANCE.collect {"data#>>'{@graph,1,${it}}' IS NOT NULL"}.join(" OR ")
 String subQueryWork = LINK_FIELDS_WORK.collect {"data#>>'{@graph,2,${it}}' IS NOT NULL"}.join(" OR ")
 String query = "collection = 'bib' AND ( ${subQueryInstance} OR ${subQueryWork} )"
@@ -43,20 +41,15 @@ void updateProperties(data, propertyName, toUpdate, isWork) {
     objectsToUpdate.each {
         if (propertyName == 'isPartOf' && it[TYPE] != 'Aggregate')
             return
-        someThingWasRemoved = removeLegacyProperties(it)
         expressionOfWasUpdated = isWork ? moveExpressionOf(it) : false
     }
 
-    if (someThingWasRemoved || expressionOfWasUpdated) {
+    if (expressionOfWasUpdated) {
         scheduledForChange.println "Record was updated ${data.graph[0][ID]}"
         data.scheduleSave(onError: { e ->
             failedIDs.println("Failed to save ${data.graph[0][ID]} due to: $e")
         })
     }
-}
-
-boolean removeLegacyProperties(object) {
-    return object.keySet().removeIf { PROPERTIES_TO_REMOVE.contains(it) }
 }
 
 boolean moveExpressionOf(object) {

@@ -1424,7 +1424,12 @@
         }
       },
       "i1": {
-        "NOTE": "By moving 580 to 500 this indicator will not be usefull anymore",
+        "TODO": "By moving 580 to 500 this indicator will not be usefull anymore",
+        "property": "marc:toDisplayNote",
+        "tokenMap": {
+          "0": true,
+          "1": false
+        },
         "marcDefault": "0"
       },
       "$a": {"about": "_:agent", "property": "label", "infer": true, "TODO:targetMatch": "1xx"},
@@ -1441,10 +1446,10 @@
       "$y": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
       "$w": {"aboutNew": "_:describedBy", "property": "controlNumber"},
       "TODO:$4": "Check occurrences; do we need to map this subfield or just drop it (ignored=true)?",
-      "$6": {"ignored": true, "NOTE": "After inventory of usage, this has been set to ignored"},
-      "$7": {"ignored": true, "NOTE": "After inventory of usage, this has been set to ignored"},
-      "$8": {"ignored": true, "NOTE": "After inventory of usage, this has been set to ignored"},
-      "$9": {"ignored": true, "NOTE": "After inventory of usage, this has been set to ignored"},
+      "$6": {"property": "marc:fieldref", "TODO": "Decided to set to ignored true"},
+      "$7": {"property": "marc:controlSubfield", "TODO": "Decided to set to ignored true"},
+      "$8": {"property": "marc:groupid", "TODO": "Decided to set to ignored true"},
+      "$9": {"addProperty": "partNumber", "TODO": "Decided to set to ignored true"},
       "subfieldOrder": "6 7 i a s t b c d h g k ... x z w 4 8 9"
     },
 
@@ -16699,7 +16704,7 @@
       "addLink": "hasSeries",
       "resourceType": "Instance",
       "NOTE:domainIncludes": "Serial",
-      "i2": {"ignored": "true", "marcDefault": " "},
+      "i2": {"marcDefault": " "},
       "_spec": [
         {
           "source": {"760": {"ind1": "0", "ind2": " ", "subfields": [
@@ -16710,6 +16715,7 @@
           "result": {"mainEntity": {
             "hasSeries": [{
               "@type": "Instance",
+              "marc:toDisplayNote": true,
               "hasTitle": [{
                 "@type": "Title",
                 "mainTitle": "Publikation"
@@ -16737,7 +16743,7 @@
       "addLink": "hasSubseries",
       "resourceType": "Instance",
       "NOTE:domainIncludes": "Serial",
-      "i2": {"ignored": true, "marcDefault": " "},
+      "i2": {"marcDefault": " "},
       "_spec": [
         {
           "source": {"762": {"ind1": "0", "ind2": " ", "subfields": [
@@ -16751,6 +16757,7 @@
           "result": {"mainEntity": {
             "hasSubseries": [{
               "@type": "Instance",
+              "marc:toDisplayNote": true,
               "hasTitle": [{
                 "@type": "Title",
                 "mainTitle": "Rätt fart"
@@ -16768,27 +16775,29 @@
             {"762": {"ind1": "0", "ind2": " ", "subfields": [{"t": "Title 2"}, {"w": "11111"}]}}
           ],
           "result": {"mainEntity": {
-            "hasSubseries" : [ {
+            "hasSubseries": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "00000"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Title 1"
+              }],
+              "marc:toDisplayNote": true
+            },{
               "@type" : "Instance",
-              "describedBy" : [ {
-                "@type" : "Record",
-                "controlNumber" : "00000"
-              } ],
-              "hasTitle" : [ {
-                "@type" : "Title",
-                "mainTitle" : "Title 1"
-              } ]
-            }, {
-              "@type" : "Instance",
-              "describedBy" : [ {
-                "@type" : "Record",
-                "controlNumber" : "11111"
-              } ],
-              "hasTitle" : [ {
-                "@type" : "Title",
-                "mainTitle" : "Title 2"
-              } ]
-            } ]
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "11111"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Title 2"
+              }],
+              "marc:toDisplayNote": true
+            }]
           }}
         }
       ]
@@ -16799,7 +16808,7 @@
       "aboutAlias": "_:work",
       "addLink": "translationOf",
       "resourceType": "Work",
-      "i2": {"ignored": true, "marcDefault": " "},
+      "i2": {"marcDefault": " "},
       "_spec": [
         {
           "source": {"765": {"ind1": " ", "ind2": "8", "subfields": [
@@ -16858,7 +16867,8 @@
                     "value": "0427-9107"
                   } ]
                 },
-                "marc:displayText": ["Översättning av vissa artiklar ur"]
+                "marc:displayText": ["Översättning av vissa artiklar ur"],
+                "marc:toDisplayNote" : true
               }]
             }
           }}
@@ -16871,7 +16881,7 @@
       "aboutAlias": "_:work",
       "addLink": "translation",
       "resourceType": "Work",
-      "i2": {"ignored": true, "marcDefault": " "},
+      "i2": {"marcDefault": " "},
       "_spec": [
         {
           "source": {"767": {"ind1": " ", "ind2": "8", "subfields": [
@@ -16916,7 +16926,7 @@
       "aboutAlias": "_:work",
       "addLink": "supplement",
       "resourceType": "Work",
-      "i2": {"ignored": true, "marcDefault": " "},
+      "i2": {"marcDefault": " "},
       "_spec": [
         {
           "source": {"770": {"ind1": " ", "ind2": "8", "subfields": [
@@ -16962,7 +16972,7 @@
       "aboutAlias": "_:work",
       "addLink": "supplementTo",
       "resourceType": "Work",
-      "i2": {"ignored": true, "marcDefault": "0"},
+      "i2": {"marcDefault": "0"},
       "_spec": [
         {
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
@@ -17002,6 +17012,7 @@
             {"w": "000"}
           ]}},
           "normalized": {"772": {"ind1": "0", "ind2": "0", "subfields": [
+            {"7": "p1"},
             {"a": "Beckmann, Max"},
             {"t": "Briefec"},
             {"d": "provisionActivityStatement"},
@@ -17024,6 +17035,7 @@
                     "controlNumber": "000"
                   }]
                 },
+                "marc:controlSubfield" : "p1",
                 "contribution": [{
                   "@type": "PrimaryContribution",
                   "agent": {
@@ -17045,13 +17057,6 @@
             {"d": "Uppsala : förf., cop. 1973"},
             {"w": "9901066360"},
             {"9": "3"}
-          ]}},
-          "normalized": {"772": {"ind1": "0", "ind2": "0", "subfields": [
-            {"a": "Hellström, Lennart, 1942-"},
-            {"t": "Grundläggande matematik för tillämpningar"},
-            {"c": "Lennart Hellström, Lars-Åke Lindahl"},
-            {"d": "Uppsala : förf., cop. 1973"},
-            {"w": "9901066360"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -17080,7 +17085,10 @@
                 "hasTitle": [{
                   "@type": "Title",
                   "qualifier": "Lennart Hellström, Lars-Åke Lindahl"
-                }]
+                }],
+                "marc:controlSubfield": "p1",
+                "marc:toDisplayNote": true,
+                "partNumber": ["3"]
               }]
             }
           }}
@@ -17093,7 +17101,7 @@
       "aboutAlias": "_:work",
       "addLink": "isPartOf",
       "resourceType": "Aggregate",
-      "i2": {"ignored": true, "marcDefault": "0"},
+      "i2": {"marcDefault": "0"},
       "$p": {"about": "_:instance", "addLink": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore", "NOTE:marc-repeatable": false},
       "$q": {"about": "_:instance", "property": "marc:enumerationAndFirstPage", "NOTE:LC":"ignore"},
       "_spec": [
@@ -17131,7 +17139,8 @@
                     "value": "0040-6945"
                   }],
                   "part": ["127:1964, s. 495-534"]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -17148,13 +17157,6 @@
             {"9": "1992"},
             {"9": "1"},
             {"9": "34"}
-          ]}},
-          "normalized": {"773": {"ind1": "0", "ind2": "0", "subfields": [
-            {"t": "I Värend och Sunnerbo"},
-            {"d": "Växjö : Kronobergs läns hembydsförbund, 1985-1995"},
-            {"g": "1992 (33:1), s. 34-35 : ill."},
-            {"x": "ISSN 0284-771X"},
-            {"w": "517883"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -17177,7 +17179,10 @@
                   }],
                   "part": ["1992 (33:1), s. 34-35 : ill."],
                   "provisionActivityStatement": "Växjö : Kronobergs läns hembydsförbund, 1985-1995"
-                }
+                },
+                "marc:controlSubfield": "n s",
+                "marc:toDisplayNote": true,
+                "partNumber": ["1992", "1", "34"]
               }]
             }
           }}
@@ -17228,7 +17233,8 @@
                   }],
                   "part": ["S.184-212"],
                   "provisionActivityStatement": "cop. 2009"
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -17261,7 +17267,7 @@
       "aboutAlias": "_:work",
       "addLink": "hasPart",
       "resourceType": "Work",
-      "i2": {"ignored": true, "marcDefault": "0"},
+      "i2": {"marcDefault": "0"},
       "NOTE:domainIncludes": "Serial",
       "FIXME": "this is overeagerly reverted from a hasPart converted from 740; should only be added if issuanceType = 'Serial'...",
       "_spec": [
@@ -17325,7 +17331,8 @@
                     "@type": "Title",
                     "mainTitle": "Hydroida"
                   }]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -17339,13 +17346,6 @@
             {"z": "0-87351-399-1"},
             {"w": "6200512"},
             {"9": "2001"}
-          ]}},
-          "normalized": {"774": {"ind1": "0", "ind2": "0", "subfields": [
-            {"i": "Parallellutgåva:"},
-            {"t": "Swedes in the Twin Cities"},
-            {"d": "2001"},
-            {"z": "0-87351-399-1"},
-            {"w": "6200512"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -17368,7 +17368,9 @@
                   }],
                   "provisionActivityStatement": "2001"
                 },
-                "marc:displayText": ["Parallellutgåva:"]
+                "marc:displayText": ["Parallellutgåva:"],
+                "marc:toDisplayNote": true,
+                "partNumber": ["2001"]
               }]
             }
           }}
@@ -17388,21 +17390,13 @@
           "resourceType": "ProvisionActivity"
         }
       },
-      "i2": {"ignored": true, "marcDefault": " "},
+      "i2": {"marcDefault": " "},
       "$e": {"addLink": "language", "NOTE:marc-repeatable": false, "resourceType": "Language", "property": "label", "infer": true, "TODO:inherit": "008:[35:38]"},
       "$f": {"about": "_:provisionActivity", "link": "place", "resourceType": "Place", "property": "code", "NOTE:marc-repeatable": false, "TODO:inherit": "008:[15:18]"},
       "_spec": [
         {
           "name": "Example from xf7626r83c73st9",
           "source": {"775": {"ind1": "1", "ind2": " ", "subfields": [
-            {"a": "Olsson, Jan"},
-            {"d": "1979"},
-            {"g": "Övningsbok"},
-            {"f": "Företagsekonomi 80"},
-            {"z": "91-40-55055-9"},
-            {"w": "1320351"}
-          ]}},
-          "normalized": {"775": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "Olsson, Jan"},
             {"d": "1979"},
             {"g": "Övningsbok"},
@@ -17441,7 +17435,8 @@
                     }
                   },
                   "provisionActivityStatement": "1979"
-                }
+                },
+                "marc:toDisplayNote" : false
               }]
             }
           }}
@@ -17454,7 +17449,7 @@
             {"d": "[2008?]"},
             {"w": "10948597"}
           ]}},
-          "normalized": {"775": {"ind1": "0", "ind2": " ", "subfields": [
+          "normalized": {"775": {"ind1": "1", "ind2": " ", "subfields": [
             {"i": "Parallellupplaga"},
             {"t": "Hållbar utveckling nu!"},
             {"d": "[2008?]"},
@@ -17477,7 +17472,8 @@
                     "mainTitle": "Hållbar utveckling nu!"
                   }],
                   "provisionActivityStatement": "[2008?]"
-                }
+                },
+                "marc:toDisplayNote" : false
               }]
             }
           }}
@@ -17491,7 +17487,7 @@
       "aboutAlias": "_:instance",
       "addLink": "otherPhysicalFormat",
       "resourceType": "Instance",
-      "i2": {"ignored": true, "marcDefault": "8"},
+      "i2": {"marcDefault": "8"},
       "_spec": [
         {
           "source": {"776": {"ind1": "0", "ind2": "8", "subfields": [
@@ -17509,6 +17505,7 @@
           "result": {"mainEntity": {
             "otherPhysicalFormat": [{
               "@type": "Instance",
+              "marc:toDisplayNote": true,
               "marc:displayText": ["Print"],
               "editionStatement" : "First edition",
               "hasTitle": [{
@@ -17536,6 +17533,7 @@
           "result": {"mainEntity": {
             "otherPhysicalFormat": [{
               "@type": "Instance",
+              "marc:toDisplayNote": true,
               "hasTitle": [{
                 "@type": "Title",
                 "mainTitle": "Hemmets journal (Online)"
@@ -17563,7 +17561,7 @@
           "result": {"mainEntity": {
             "otherPhysicalFormat": [{
               "@type": "Instance",
-              "marc:displayText": ["Originalversion:"],
+
               "instanceOf": {
                 "@type": "Work",
                 "contribution": [{
@@ -17582,6 +17580,8 @@
                 "@type": "Title",
                 "mainTitle": "Umebygdens soldater 1695-1895"
               }],
+              "marc:displayText": ["Originalversion:"],
+              "marc:toDisplayNote": true,
               "provisionActivityStatement": "1989"
             }]
           }}
@@ -17600,6 +17600,7 @@
             "otherPhysicalFormat" : [ {
               "@type" : "Instance",
               "marc:displayText": ["Online version:"],
+              "marc:toDisplayNote": true,
               "instanceOf": {
                 "@type": "Work",
                 "contribution" : [ {
@@ -17638,6 +17639,7 @@
             "otherPhysicalFormat": [{
               "@type": "Instance",
               "marc:displayText": ["Print"],
+              "marc:toDisplayNote": true,
               "identifiedBy": [{
                 "@type": "ISBN",
                 "value": "9783527404704"
@@ -17658,7 +17660,7 @@
       "aboutAlias": "_:work",
       "addLink": "issuedWith",
       "resourceType": "Work",
-      "i2": {"ignored": true, "marcDefault": " "},
+      "i2": {"marcDefault": " "},
       "_spec": [
         {
           "name": "Example from fxqnstdr4mdmvws",
@@ -17689,7 +17691,8 @@
                     "@type": "Title",
                     "mainTitle": "Autism : svårigehter och möjligheter"
                   }]
-                }
+                },
+                "marc:toDisplayNote" : true
               }]
             }
           }}
@@ -17734,7 +17737,8 @@
                   }],
                   "provisionActivityStatement": "1994"
                 },
-                "marc:displayText": ["Online"]
+                "marc:displayText": ["Online"],
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -17757,7 +17761,8 @@
                     "mainTitle": "Statliga betongbestämmelser"
                   }],
                   "seriesStatement": ["Statens offentliga utredningar"]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -17780,7 +17785,7 @@
         {"when": "i2=6", "addLink": "absorbedInPart", "resourceType": "Work"},
         {"when": "i2=7", "addLink": "separatedFrom", "resourceType": "Work"}
       ],
-      "i2": {"ignored": true, "marcDefault": "0"},
+      "i2": {"marcDefault": "0"},
       "_spec": [
         {
           "source": {"780": {"ind1": "0", "ind2": "0", "subfields": [
@@ -17791,6 +17796,7 @@
               "@type": "Text",
               "continues": [{
                 "@type": "Work",
+                "marc:toDisplayNote": true,
                 "hasInstance": {
                   "@type": "Instance",
                   "hasTitle": [{
@@ -17812,7 +17818,8 @@
                 "hasInstance": {
                   "@type": "Instance",
                   "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -17837,7 +17844,8 @@
                     "@type": "ISSN",
                     "value": "0022-3107"
                   }]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -17852,7 +17860,8 @@
                 "hasInstance": {
                   "@type": "Instance",
                   "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -17886,7 +17895,8 @@
                     "@type": "ISSN",
                     "value": "8755-8610"
                   }]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -17901,7 +17911,8 @@
                 "hasInstance": {
                   "@type": "Instance",
                   "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -17916,7 +17927,8 @@
                 "hasInstance": {
                   "@type": "Instance",
                   "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -17931,7 +17943,8 @@
                 "hasInstance": {
                   "@type": "Instance",
                   "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -17979,7 +17992,7 @@
         {"when": "i2=7", "addLink": "mergedToForm", "resourceType": "Work"},
         {"when": "i2=8", "addLink": "continuedBy", "resourceType": "Work"}
       ],
-      "i2": {"ignored": true, "marcDefault": "0"},
+      "i2": {"marcDefault": "0"},
       "_spec": [
         {
           "source": {"785": {"ind1": "0", "ind2": "0", "subfields": [
@@ -18001,7 +18014,8 @@
                     "@type" : "ISSN",
                     "value" : "1937-6545"
                   }]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -18016,7 +18030,8 @@
                 "hasInstance": {
                   "@type": "Instance",
                   "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -18031,7 +18046,8 @@
                 "hasInstance": {
                   "@type": "Instance",
                   "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -18046,7 +18062,8 @@
                 "hasInstance": {
                   "@type": "Instance",
                   "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -18061,7 +18078,8 @@
                 "hasInstance": {
                   "@type": "Instance",
                   "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -18076,7 +18094,8 @@
                 "hasInstance": {
                   "@type": "Instance",
                   "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -18091,7 +18110,8 @@
                 "hasInstance": {
                   "@type": "Instance",
                   "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -18106,7 +18126,8 @@
                 "hasInstance": {
                   "@type": "Instance",
                   "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -18123,7 +18144,8 @@
                 "hasInstance": {
                   "@type": "Instance",
                   "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -18140,7 +18162,8 @@
                 "hasInstance": {
                   "@type": "Instance",
                   "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -18153,7 +18176,7 @@
       "aboutAlias": "_:work",
       "addLink": "dataSource",
       "resourceType": "Dataset",
-      "i2": {"ignored": true, "marcDefault": " "},
+      "i2": {"marcDefault": " "},
       "$p": {"about": "_:instance", "addLink": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore", "NOTE:marc-repeatable": false},
       "_spec": [
         {
@@ -18184,7 +18207,8 @@
                     "controlNumber": "13527363"
                   }]
                 },
-                "marc:displayText": ["Source"]
+                "marc:displayText": ["Source"],
+                "marc:toDisplayNote": true
               }]
             }
           }}
@@ -18197,7 +18221,7 @@
       "aboutAlias": "_:work",
       "addLink": "relatedTo",
       "resourceType": "Work",
-      "i2": {"ignored": true, "marcDefault": " "},
+      "i2": {"marcDefault": " "},
       "_spec": [
         {
           "source": {"787": {"ind1": " ", "ind2": "8", "subfields": [
@@ -18268,7 +18292,8 @@
                     "@type": "Title",
                     "mainTitle": "Symfoni, Ess-dur"
                   }]
-                }
+                },
+                "marc:toDisplayNote": true
               },{
                 "@type": "Work",
                 "hasInstance": {
@@ -18281,7 +18306,8 @@
                     "@type": "Title",
                     "mainTitle": "Symfoni, C-dur"
                   }]
-                }
+                },
+                "marc:toDisplayNote": true
               }]
             }
           }}
