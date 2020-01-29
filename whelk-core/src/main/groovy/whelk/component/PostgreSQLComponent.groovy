@@ -171,7 +171,7 @@ class PostgreSQLComponent implements Storage {
         String settingsTableName = mainTableName + "__settings"
         String dependenciesTableName = mainTableName + "__dependencies"
         String profilesTableName = mainTableName + "__profiles"
-        String embellishedTableName = mainTableName + "__embellished"
+        String cardsTableName = mainTableName + "__cards"
 
         // Setting up sql-statements
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
