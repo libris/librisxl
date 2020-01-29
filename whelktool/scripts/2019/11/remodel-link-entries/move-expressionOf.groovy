@@ -22,7 +22,6 @@ LINK_FIELDS_WORK = ['translationOf', 'translation', 'supplement', 'supplementTo'
                     'mergedToForm', 'dataSource', 'relatedTo', 'isPartOf',
                     'otherEdition', 'issuedWith' ]
 
-
 selectByIds(bibIds.readLines()) { data ->
     def (record, thing, work) = data.graph
 
@@ -54,12 +53,13 @@ void updateProperties(data, propertyName, toUpdate) {
 boolean moveExpressionOf(object, data) {
     boolean wasChanged = false
     object.remove('expressionOf')?.findAll { key, value ->
-        if (!object.containsKey(key)) {
+        if (!object.containsKey(key) && key != ID) {
             object[key] = value
             wasChanged = true
         } else {
-            if (!object[key] == TYPE)
+            if (key != TYPE) {
                 expressionOfpropertiesNotMoved.println "${key} already exists for ${data.graph[0][ID]}"
+            }
         }
     }
     return wasChanged
