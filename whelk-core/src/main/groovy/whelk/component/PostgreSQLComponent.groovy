@@ -60,7 +60,6 @@ class PostgreSQLComponent implements Storage {
 
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
-    private final Object outerConnectionPoolLock = new Object()
 
     boolean versioning = true
     boolean doVerifyDocumentIdRetention = true
@@ -1953,7 +1952,7 @@ class PostgreSQLComponent implements Storage {
 
     private DataSource getOuterPool() {
         if (!outerConnectionPool) {
-            synchronized (outerConnectionPoolLock) {
+            synchronized (this) {
                 if (!outerConnectionPool) {
                     outerConnectionPool = (HikariDataSource) createAdditionalConnectionPool("OuterPool")
                 }
