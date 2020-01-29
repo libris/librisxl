@@ -1,6 +1,5 @@
 package whelk.apix;
 
-import com.github.jsonldjava.utils.Obj;
 import org.codehaus.jackson.map.ObjectMapper;
 import whelk.component.PostgreSQLComponent;
 import whelk.util.PropertyLoader;

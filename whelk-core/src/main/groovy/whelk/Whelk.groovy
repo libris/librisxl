@@ -2,7 +2,7 @@ package whelk
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
-import org.apache.commons.collections4.map.LRUMap
+import whelk.component.CachingPostgreSQLComponent
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
@@ -29,26 +29,21 @@ class Whelk implements Storage {
 
     URI baseUri = null
 
-    // useAuthCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
+    // useCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
     // Any other use of this results in a "local" cache, which will not be invalidated when data changes elsewhere,
     // resulting in potential serving of stale data.
-    boolean useAuthCache = false
 
     // TODO: encapsulate and configure (LXL-260)
     String vocabContextUri = "https://id.kb.se/vocab/context"
     String vocabDisplayUri = "https://id.kb.se/vocab/display"
     String vocabUri = "https://id.kb.se/vocab/"
 
-    private Map<String, Document> authCache
-    private final int CACHE_MAX_SIZE = 200_000
-
     static Whelk createLoadedCoreWhelk(String propName = "secret", boolean useCache = false) {
         return createLoadedCoreWhelk(PropertyLoader.loadProperties(propName), useCache)
     }
 
     static Whelk createLoadedCoreWhelk(Properties configuration, boolean useCache = false) {
-        PostgreSQLComponent storage = new PostgreSQLComponent(configuration)
-        Whelk whelk = new Whelk(storage, useCache)
+        Whelk whelk = new Whelk(configuration, useCache)
         if (configuration.baseUri) {
             whelk.baseUri = new URI((String) configuration.baseUri)
         }
@@ -69,43 +64,23 @@ class Whelk implements Storage {
         return whelk
     }
 
-    void putInAuthCache(Document authDocument) {
-        if (!useAuthCache)
-            return
-        if (authDocument == null) {
-            log.warn("Tried to cache a null document (ignored)!")
-            return
-        }
-        for (String uri : authDocument.getRecordIdentifiers()) {
-            authCache.put(uri, authDocument)
-        }
-        for (String uri : authDocument.getThingIdentifiers()) {
-            authCache.put(uri, authDocument)
-        }
-        authCache.put(authDocument.getShortId(), authDocument)
-    }
-
-    public Whelk(PostgreSQLComponent pg, ElasticSearch es, boolean useCache = false) {
-        this(pg, useCache)
+    Whelk(PostgreSQLComponent pg, ElasticSearch es) {
+        this(pg)
         this.elastic = es
         log.info("Using index: $elastic")
     }
 
-    public Whelk(PostgreSQLComponent pg, boolean useCache = false) {
+    Whelk(PostgreSQLComponent pg) {
         this.storage = pg
-        this.useAuthCache = useCache
         relations = new Relations(pg)
-        if (useCache)
-            authCache = Collections.synchronizedMap(
-                    new LRUMap<String, Document>(CACHE_MAX_SIZE))
         log.info("Started with storage: $storage")
     }
 
-    public Whelk(Properties conf, boolean useCache = false) {
-        this(new PostgreSQLComponent(conf), new ElasticSearch(conf), useCache)
+    Whelk(Properties conf, useCache = false) {
+        this(useCache ? new CachingPostgreSQLComponent(conf) : new PostgreSQLComponent(conf), new ElasticSearch(conf))
     }
 
-    public Whelk() {
+    Whelk() {
     }
 
     synchronized MarcFrameConverter getMarcFrameConverter() {
@@ -124,8 +99,13 @@ class Whelk implements Storage {
         loadContextData()
         loadDisplayData()
         loadVocabData()
-        jsonld = new JsonLd(contextData, displayData, vocabData)
+        setJsonld(new JsonLd(contextData, displayData, vocabData))
         log.info("Loaded with core data")
+    }
+
+    void setJsonld(JsonLd jsonld) {
+        this.jsonld = jsonld
+        storage.setJsonld(jsonld)
     }
 
     void loadContextData() {
@@ -153,39 +133,32 @@ class Whelk implements Storage {
         ids.each { id ->
             Document doc
 
-            // Check the auth cache
-            if (useAuthCache && authCache.containsKey(id)) {
-                result[id] = authCache.get(id)
-            } else {
-                // Fetch from DB
-                if (id.startsWith(Document.BASE_URI.toString())) {
-                    id = Document.BASE_URI.resolve(id).getPath().substring(1)
-                }
-                doc = storage.load(id)
-                if (doc == null)
-                    doc = storage.getDocumentByIri(id)
+            // Fetch from DB
+            if (id.startsWith(Document.BASE_URI.toString())) {
+                id = Document.BASE_URI.resolve(id).getPath().substring(1)
+            }
+            doc = storage.load(id)
+            if (doc == null)
+                doc = storage.getDocumentByIri(id)
 
-                if (doc && !doc.deleted) {
-                    result[id] = doc
-                    String collection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
-                    // TODO: only put used dependencies in cache; and either factor out collectionsToCache, or skip that check!
-                    if (collection == "auth" || collection == "definitions"
-                            || collection == null) // TODO: Remove ASAP when mainEntity,@type mappings correctly map to collection again.
-                        putInAuthCache(doc)
-                }
+            if (doc && !doc.deleted) {
+                result[id] = doc
             }
         }
         return result
     }
 
-    public void reindexAffected(Document document, Set<String> preUpdateDependencies) {
-        List<Tuple2<String, String>> dependers = storage.followDependers(document.getShortId(), JsonLd.NON_DEPENDANT_RELATIONS)
-
-        // Filter out "itemOf"-links. In other words, do not bother reindexing hold posts (they're not embellished in elastic)
+    void reindexAffected(Document document, Set<String> preUpdateDependencies) {
         TreeSet<String> idsToReindex = new TreeSet<>()
-        for (Tuple2<String, String> depender : dependers) {
-            if (!depender.get(1).equals("itemOf")) {
-                idsToReindex.add( (String) depender.get(0))
+
+        if (storage.isCardChanged(document.getShortId())) {
+            List<Tuple2<String, String>> dependers = storage.followEmbellishDependers(document.getShortId())
+
+            // Filter out "itemOf"-links. In other words, do not bother reindexing hold posts (they're not embellished in elastic)
+            for (Tuple2<String, String> depender : dependers) {
+                if (!depender.getSecond().equals("itemOf")) {
+                    idsToReindex.add(depender.getFirst())
+                }
             }
         }
 
@@ -201,28 +174,23 @@ class Whelk implements Storage {
         idsToReindex.addAll(addedLinksTo)
         idsToReindex.addAll(removedLinksTo)
 
+        Runnable reindex = {
+            log.debug("Reindexing ${idsToReindex.size()} affected documents")
+            Map dependingDocuments = bulkLoad(idsToReindex.toList())
+            for (Document dependingDoc : dependingDocuments.values()) {
+                String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
+                if (dependingDocCollection != null) {
+                    elastic.index(dependingDoc, dependingDocCollection, this)
+                }
+            }
+        }
+
         // If the number of dependers isn't too large or we are inside a batch job. Update them synchronously
         if (idsToReindex.size() < 20 || batchJobThread() ) {
-            Map dependingDocuments = bulkLoad(idsToReindex.toList())
-            for (String id : dependingDocuments.keySet()) {
-                Document dependingDoc = dependingDocuments.get(id)
-                String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
-                elastic.index(dependingDoc, dependingDocCollection, this)
-            }
+            reindex.run()
         } else {
             // else use a fire-and-forget thread
-            Whelk _this = this
-            new Thread(indexers, new Runnable() {
-                void run() {
-                    for (String id : idsToReindex) {
-                        Document dependingDoc = storage.load(id)
-                        String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
-                        if (dependingDocCollection != null)
-                            elastic.index(dependingDoc, dependingDocCollection, _this)
-                    }
-                }
-            }).start()
-
+            new Thread(indexers, reindex).start()
         }
     }
 
@@ -291,8 +259,6 @@ class Whelk implements Storage {
 
         boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
         if (success) {
-            if (collection == "auth" || collection == "definitions")
-                putInAuthCache(document)
             if (elastic) {
                 elastic.index(document, collection, this)
                 reindexAffected(document, new TreeSet<String>())
@@ -308,12 +274,11 @@ class Whelk implements Storage {
             return null
         }
         String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
-        if (collection == "auth" || collection == "definitions")
-            putInAuthCache(updated)
         if (elastic) {
             elastic.index(updated, collection, this)
             reindexAffected(updated, preUpdateDependencies)
         }
+
         return updated
     }
 
@@ -330,11 +295,6 @@ class Whelk implements Storage {
                    String changedBy, String collection,
                    @Deprecated boolean useDocumentCache = false) {
         if (storage.bulkStore(documents, changedIn, changedBy, collection)) {
-            for (Document doc : documents) {
-                if (collection == "auth" || collection == "definitions") {
-                    putInAuthCache(doc)
-                }
-            }
             if (elastic) {
                 elastic.bulkIndex(documents, collection, this)
                 for (Document doc : documents) {
@@ -390,20 +350,29 @@ class Whelk implements Storage {
             elastic.bulkIndex(bibDocs, "bib", this)
             elastic.bulkIndex(holdDocs, "hold", this)
         }
+
     }
 
-    void embellish(Document document, boolean filterOutNonChipTerms = true) {
-        storage.embellish(document, jsonld, filterOutNonChipTerms, this.&bulkLoad)
+    void embellish(Document document, boolean filterOutNonChipTerms = false) {
+        List convertedExternalLinks = jsonld.expandLinks(document.getExternalRefs())
+        def cards = storage.getCardsForEmbellish(convertedExternalLinks)
+        jsonld.embellish(document.data, cards, filterOutNonChipTerms)
     }
 
     Document loadEmbellished(String systemId) {
-        return storage.loadEmbellished(systemId, jsonld)
+        Document doc = getDocument(systemId)
+        embellish(doc)
+        return doc
     }
 
     List<String> findIdsLinkingTo(String idOrIri) {
         return storage
                 .getDependers(tryGetSystemId(idOrIri))
                 .collect()
+    }
+
+    List<Document> getAttachedHoldings(List<String> thingIdentifiers) {
+        return storage.getAttachedHoldings(thingIdentifiers).collect(this.&loadEmbellished)
     }
 
     private String tryGetSystemId(String id) {

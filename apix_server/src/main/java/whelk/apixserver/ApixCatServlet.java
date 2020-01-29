@@ -123,7 +123,7 @@ public class ApixCatServlet extends HttpServlet
         List<Document> attachedHoldings = null;
         if (collection.equals("bib") && request.getParameter("x-holdings") != null && request.getParameter("x-holdings").equalsIgnoreCase("true"))
         {
-            attachedHoldings = Utils.s_whelk.getStorage().getAttachedHoldings(document.getThingIdentifiers(), Utils.s_whelk.getJsonld());
+            attachedHoldings = Utils.s_whelk.getAttachedHoldings(document.getThingIdentifiers());
         }
 
         Utils.send200Response(response, Xml.formatApixGetRecordResponse(marcXmlString, document, collection, attachedHoldings));

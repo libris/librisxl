@@ -1,5 +1,6 @@
 package whelk.component
 
+
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import groovy.json.StringEscapeUtils
@@ -13,10 +14,11 @@ import whelk.IdType
 import whelk.JsonLd
 import whelk.Storage
 import whelk.exception.CancelUpdateException
+import whelk.exception.LinkValidationException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
-import whelk.exception.LinkValidationException
 import whelk.exception.WhelkException
+import whelk.exception.WhelkRuntimeException
 import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
 
@@ -29,7 +31,8 @@ import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
 import java.sql.Timestamp
-import java.util.function.Function
+import java.time.Instant
+import java.util.concurrent.atomic.AtomicLong
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -55,7 +58,6 @@ class PostgreSQLComponent implements Storage {
     public static final ObjectMapper mapper = new ObjectMapper()
 
     private static final int DEFAULT_MAX_POOL_SIZE = 16
-    private static final String UNIQUE_VIOLATION = "23505"
     private static final String driverClass = "org.postgresql.Driver"
 
     private HikariDataSource connectionPool
@@ -66,7 +68,7 @@ class PostgreSQLComponent implements Storage {
 
     // SQL statements
     protected String UPDATE_DOCUMENT, INSERT_DOCUMENT,
-                     INSERT_DOCUMENT_VERSION, GET_DOCUMENT, GET_EMBELLISHED_DOCUMENT,
+                     INSERT_DOCUMENT_VERSION, GET_DOCUMENT,
                      GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS,
                                            GET_DOCUMENT_VERSION_BY_MAIN_ID,
                                            GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID,
@@ -89,12 +91,23 @@ class PostgreSQLComponent implements Storage {
     protected String GET_MAX_MODIFIED
     protected String UPDATE_MAX_MODIFIED
     protected String GET_LEGACY_PROFILE
-    protected String INSERT_EMBELLISHED_DOCUMENT
-    protected String DELETE_EMBELLISHED_DOCUMENT
+    protected String UPSERT_CARD
+    protected String UPDATE_CARD
+    protected String GET_CARD
+    protected String DELETE_CARD
+    protected String GET_CARDS_FOR_EMBELLISH
+    protected String GET_IDS_FOR_EMBELLISH
+    protected String BULK_LOAD_CARDS
+    protected String IS_CARD_CHANGED
+    protected String FOLLOW_EMBELLISH_DEPENDERS
 
     String mainTableName
     LinkFinder linkFinder
     DependencyCache dependencyCache
+    JsonLd jsonld
+
+    private AtomicLong cardsUpdated = new AtomicLong()
+    private AtomicLong dependersUpdated = new AtomicLong()
 
     class AcquireLockException extends RuntimeException { AcquireLockException(String s) { super(s) } }
 
@@ -108,7 +121,8 @@ class PostgreSQLComponent implements Storage {
                 ? Integer.parseInt(properties.getProperty(PROPERTY_SQL_MAX_POOL_SIZE))
                 : DEFAULT_MAX_POOL_SIZE
 
-        setup(properties.getProperty(PROPERTY_SQL_URL), properties.getProperty(PROPERTY_SQL_MAIN_TABLE_NAME), maxPoolSize)
+        setup(properties.getProperty(PROPERTY_SQL_URL), properties.getProperty(PROPERTY_SQL_MAIN_TABLE_NAME),
+                maxPoolSize)
     }
 
     PostgreSQLComponent(String sqlUrl, String sqlMainTable) {
@@ -167,15 +181,21 @@ class PostgreSQLComponent implements Storage {
         INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, iri, graphIndex, mainId) VALUES (?,?,?,?)"
 
         DELETE_DEPENDENCIES = "DELETE FROM $dependenciesTableName WHERE id = ?"
-        INSERT_DEPENDENCIES = "INSERT INTO $dependenciesTableName (id, relation, dependsOnId) VALUES (?,?,?)"
+        INSERT_DEPENDENCIES = "INSERT INTO $dependenciesTableName (id, relation, dependsOnId, inCard) VALUES (?,?,?,?)"
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted) SELECT ?,?,?,?,?,?,?,?,? "
 
-        INSERT_EMBELLISHED_DOCUMENT = "INSERT INTO $embellishedTableName (id, data) VALUES (?,?)"
-        DELETE_EMBELLISHED_DOCUMENT = "DELETE FROM $embellishedTableName WHERE id = ?"
+        GET_CARD = "SELECT data FROM $cardsTableName WHERE ID = ?"
+        DELETE_CARD = "DELETE FROM $cardsTableName WHERE ID = ?"
+        UPSERT_CARD = """
+                INSERT INTO $cardsTableName (id, data, checksum, changed) VALUES (?,?,?,?) 
+                ON CONFLICT (id) DO UPDATE 
+                SET (data, checksum, changed) = (EXCLUDED.data, EXCLUDED.checksum, EXCLUDED.changed) 
+                WHERE ${cardsTableName}.checksum != EXCLUDED.checksum
+                """.stripIndent()
+        UPDATE_CARD = "UPDATE $cardsTableName SET (data, checksum, changed) = (?,?,?) WHERE id = ? AND checksum != ?"
 
         GET_DOCUMENT = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ?"
-        GET_EMBELLISHED_DOCUMENT = "SELECT data from lddb__embellished where id = ?"
         GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,collection,created,modified,deleted,changedBy FROM $mainTableName WHERE id = ? AND deleted = false FOR UPDATE"
         GET_DOCUMENT_VERSION = "SELECT id,data FROM $versionsTableName WHERE id = ? AND checksum = ?"
         GET_DOCUMENT_VERSION_BY_MAIN_ID = "SELECT id,data FROM $versionsTableName " +
@@ -254,6 +274,61 @@ class PostgreSQLComponent implements Storage {
                 ") " +
                 "SELECT * FROM deps"
 
+        // Start with an ARRAY of IRIs and convert them to SystemIDs.
+        // Then recursively load SystemIDs by following in-card-relations (given by $dependenciesTableName.incard)
+        GET_IDS_FOR_EMBELLISH = """
+                WITH RECURSIVE deps(id) AS ( 
+                        SELECT i.id from unnest(?) as in_iri 
+                        INNER JOIN $idTableName i ON in_iri = i.iri 
+                    UNION 
+                        SELECT d.dependsonid 
+                        FROM $dependenciesTableName d 
+                        INNER JOIN deps deps1 ON d.id = deps1.id 
+                        AND d.incard  
+                    ) 
+                SELECT id FROM deps
+                """.stripIndent()
+
+        // Same as GET_IDS_FOR_EMBELLISH but also try to join in card data for all SystemIDs.
+        GET_CARDS_FOR_EMBELLISH = """
+                WITH RECURSIVE deps(id, card) AS ( 
+                        SELECT i.id, c.data from unnest(?) as in_iri 
+                        INNER JOIN $idTableName i ON in_iri = i.iri 
+                        LEFT JOIN $cardsTableName c on i.id = c.id 
+                    UNION 
+                        SELECT d.dependsonid, c.data 
+                        FROM $dependenciesTableName d 
+                        INNER JOIN deps deps1 ON d.id = deps1.id 
+                        AND d.incard 
+                        LEFT JOIN $cardsTableName c on d.dependsonid = c.id 
+                    ) 
+                SELECT id, card FROM deps
+                """.stripIndent()
+
+        // Starting with a SystemID, find all SystemIDs that have the ID in their "embellish dependencies"
+        // , i.e. it is part of their embellished document.
+        // Going backwards from SystemID:
+        // - Recursively follow in-card-relations backwards.
+        // - Also follow not-in-card-relations (since embellish starts from the full doc) but stop at them.
+        // Don't include the starting ID in the result
+        FOLLOW_EMBELLISH_DEPENDERS = """
+                WITH RECURSIVE deps(id, relation, incard) AS ( 
+                        VALUES (?, null, true) 
+                    UNION 
+                        SELECT d.id, d.relation, d.incard 
+                        FROM $dependenciesTableName d 
+                        INNER JOIN deps results ON d.dependsonid = results.id 
+                        AND results.incard 
+                        AND d.id != ? 
+                    ) 
+                SELECT id, relation FROM deps OFFSET 1
+                """.stripIndent()
+
+        BULK_LOAD_CARDS = "SELECT in_id as id, data from unnest(?) as in_id LEFT JOIN $cardsTableName c ON in_id = c.id"
+
+        IS_CARD_CHANGED = "SELECT card.changed >= doc.modified " +
+                "FROM lddb__cards card, lddb doc WHERE doc.id = card.id AND doc.id = ?"
+
         GET_DEPENDERS = "SELECT DISTINCT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id"
         GET_DEPENDENCIES = "SELECT DISTINCT dependsOnId FROM $dependenciesTableName WHERE id = ? ORDER BY dependsOnId"
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
@@ -293,12 +368,16 @@ class PostgreSQLComponent implements Storage {
         
         GET_SYSTEMID_BY_IRI = "SELECT lddb__identifiers.id, lddb.deleted FROM lddb__identifiers "+
                 "JOIN lddb ON lddb__identifiers.id = lddb.id " +
-                "WHERE lddb__identifiers.iri = ? ";
+                "WHERE lddb__identifiers.iri = ? "
 
         GET_THING_MAIN_IRI_BY_SYSTEMID = "SELECT iri FROM $idTableName WHERE graphindex = 1 and mainid is true and id = ?"
         GET_DOCUMENT_BY_IRI = "SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
 
         GET_LEGACY_PROFILE = "SELECT profile FROM $profilesTableName WHERE library_id = ?"
+    }
+
+    void logStats() {
+        log.info("Cards created or changed: $cardsUpdated. Dependers updated: $dependersUpdated")
     }
 
     private Map status(URI uri, Connection connection) {
@@ -322,6 +401,10 @@ class PostgreSQLComponent implements Storage {
 
         log.debug("Loaded status for ${uri}: $statusMap")
         return statusMap
+    }
+
+    int getPoolSize() {
+        return connectionPool?.getMaximumPoolSize()
     }
 
     List<String> loadCollections() {
@@ -550,7 +633,6 @@ class PostgreSQLComponent implements Storage {
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
                 updateMaxDepModified((String) dependerShortId, connection)
-                removeEmbellishedDocument(dependerShortId, connection)
             }
 
             // Update the disappearing record
@@ -572,12 +654,12 @@ class PostgreSQLComponent implements Storage {
             saveVersion(disappearingDocument, connection, createdTime, modTime, changedIn, changedBy, collection, true)
             saveIdentifiers(disappearingDocument, connection, true, true)
             saveDependencies(disappearingDocument, connection)
+            deleteCard(disappearingSystemID, connection)
 
             // Update dependers on the disappearing record
             dependers = followDependers(disappearingSystemID, connection, JsonLd.NON_DEPENDANT_RELATIONS)
             for (Tuple2<String, String> depender : dependers) {
                 String dependerShortId = depender.get(0)
-                removeEmbellishedDocument(dependerShortId, connection)
                 updateMaxDepModified((String) dependerShortId, connection)
                 selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
                 selectStatement.setString(1, dependerShortId)
@@ -701,7 +783,6 @@ class PostgreSQLComponent implements Storage {
         try {
             for (Tuple2<String, String> depender : dependers) {
                 updateMaxDepModified((String) depender.get(0), connection)
-                removeEmbellishedDocument((String) depender.get(0), connection)
             }
             connection.commit()
         }
@@ -762,7 +843,26 @@ class PostgreSQLComponent implements Storage {
     void refreshDerivativeTables(Document doc, Connection connection, boolean deleted) {
         saveIdentifiers(doc, connection, deleted)
         saveDependencies(doc, connection)
-        removeEmbellishedDocument(doc.getShortId(), connection)
+
+        if (jsonld) {
+            if (deleted) {
+                deleteCard(doc.getShortId(), connection)
+            } else {
+                updateCard(new CardEntry(doc), connection)
+            }
+        }
+    }
+
+    /**
+     * Rewrite card. To be used when card definitions have changed
+     */
+    void refreshCardData(Document doc, Instant timestamp) {
+        getConnection().withCloseable { connection ->
+            boolean hasNoCard = !loadCard(doc.shortId, connection)
+            if (hasNoCard || updateCard(new CardEntry(doc, timestamp), connection)) {
+                saveDependencies(doc, connection)
+            }
+        }
     }
 
     /**
@@ -782,6 +882,7 @@ class PostgreSQLComponent implements Storage {
 
     private List<String[]> _calculateDependenciesSystemIDs(Document doc, Connection connection) {
         List<String[]> dependencies = []
+        List notInCard = nonCardDependencies(doc)
         for (String[] reference : doc.getRefsWithRelation()) {
             String relation = reference[0]
             String iri = reference[1]
@@ -800,13 +901,263 @@ class PostgreSQLComponent implements Storage {
                         throw new LinkValidationException("Record supposedly depends on deleted record: ${rs.getString(1)}, which is not allowed.")
 
                     if (rs.getString(1) != doc.getShortId()) // Exclude A -> A (self-references)
-                        dependencies.add([relation, rs.getString(1)] as String[])
+                        dependencies.add([relation, rs.getString(1), !notInCard.contains(iri)] as String[])
                 }
             } finally {
                 close(rs, getSystemId)
             }
         }
         return dependencies
+    }
+
+    Map getCard(String systemId) {
+        return loadCard(systemId) ?: makeCardData(systemId)
+    }
+
+    /**
+     * Get cards by following relations in cards recursively.
+     *
+     * @param startIris IRIs of cards to start with
+     * @return data of cards
+     */
+    Iterable<Map> getCardsForEmbellish(List<String> startIris) {
+        return addMissingCards(getIdsAndCardsForEmbellish(startIris)).values()
+    }
+
+    /**
+     * Check if a card has changed
+     *
+     * @param systemId
+     * @return true if the card changed after or at the same time as the document was modified
+     */
+    boolean isCardChanged(String systemId) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            preparedStatement = connection.prepareStatement(IS_CARD_CHANGED)
+            preparedStatement.setString(1, systemId)
+
+            rs = preparedStatement.executeQuery()
+
+            return rs.next() && rs.getBoolean(1)
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    /**
+     * Find all ids that depend on a card by having it in their embellish dependencies.
+     * <p>i.e. the card + all cards that link to it, recursively + all documents that link to any of all these cards</p>
+     *
+     * @param systemId id of card
+     * @return a list of depender (id, relation) tuples
+     */
+    List<Tuple2<String, String>> followEmbellishDependers(String systemId) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            preparedStatement = connection.prepareStatement(FOLLOW_EMBELLISH_DEPENDERS)
+            preparedStatement.setString(1, systemId)
+            preparedStatement.setString(2, systemId)
+
+            rs = preparedStatement.executeQuery()
+            List<Tuple2<String, String>> result = []
+            while(rs.next()) {
+                result << new Tuple2(rs.getString("id"), rs.getString("relation"))
+            }
+            return result
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    protected boolean storeCard(CardEntry cardEntry) {
+        return getConnection().withCloseable { connection -> storeCard(cardEntry, connection)}
+    }
+
+    protected boolean storeCard(CardEntry cardEntry, Connection connection) {
+        Document card = cardEntry.getCard()
+        Timestamp timestamp = new Timestamp(cardEntry.getChangedTimestamp().toEpochMilli())
+
+        PreparedStatement preparedStatement = null
+        try {
+            preparedStatement = connection.prepareStatement(UPSERT_CARD)
+            preparedStatement.setString(1, card.getShortId())
+            preparedStatement.setObject(2, card.dataAsString, OTHER)
+            preparedStatement.setString(3, card.getChecksum())
+            preparedStatement.setTimestamp(4, timestamp)
+
+            boolean createdOrUpdated = preparedStatement.executeUpdate() > 0
+
+            if (createdOrUpdated) {
+                cardsUpdated.incrementAndGet()
+            }
+
+            return createdOrUpdated
+        }
+        finally {
+            close(preparedStatement)
+        }
+    }
+
+    protected boolean updateCard(CardEntry cardEntry, Connection connection) {
+        Document card = cardEntry.getCard()
+        Timestamp timestamp = new Timestamp(cardEntry.getChangedTimestamp().toEpochMilli())
+
+        PreparedStatement preparedStatement = null
+        try {
+            String checksum = card.getChecksum()
+            preparedStatement = connection.prepareStatement(UPDATE_CARD)
+            preparedStatement.setObject(1, card.dataAsString, OTHER)
+            preparedStatement.setString(2, checksum)
+            preparedStatement.setTimestamp(3, timestamp)
+            preparedStatement.setString(4, card.getShortId())
+            preparedStatement.setString(5, checksum)
+
+            boolean updated = preparedStatement.executeUpdate() > 0
+
+            if (updated) {
+                cardsUpdated.incrementAndGet()
+            }
+
+            return updated
+        }
+        finally {
+            close(preparedStatement)
+        }
+    }
+
+    protected void deleteCard(String systemId, Connection connection) {
+        PreparedStatement preparedStatement = null
+        try {
+            preparedStatement = connection.prepareStatement(DELETE_CARD)
+            preparedStatement.setString(1,systemId)
+
+            preparedStatement.executeUpdate()
+        }
+        finally {
+            close(preparedStatement)
+        }
+    }
+
+    protected Map loadCard(String id) {
+        Connection connection = getConnection()
+        try {
+            return loadCard(id, connection)
+        } finally {
+            close(connection)
+        }
+    }
+
+    protected Map<String, Map> getIdsAndCardsForEmbellish(List<String> startIris) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            preparedStatement = connection.prepareStatement(GET_CARDS_FOR_EMBELLISH)
+            preparedStatement.setArray(1,  connection.createArrayOf("TEXT", startIris as String[]))
+
+            rs = preparedStatement.executeQuery()
+            Map<String, Map> result = [:]
+            while(rs.next()) {
+                String card = rs.getString("card")
+                result[rs.getString("id")] = card != null ? mapper.readValue(card, Map) : null
+            }
+            return result
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    protected SortedSet<String> getIdsForEmbellish(List<String> startIris) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            preparedStatement = connection.prepareStatement(GET_IDS_FOR_EMBELLISH)
+            preparedStatement.setArray(1,  connection.createArrayOf("TEXT", startIris as String[]))
+
+            rs = preparedStatement.executeQuery()
+            SortedSet<String> result = new TreeSet<>()
+            while(rs.next()) {
+                result.add(rs.getString("id"))
+            }
+            return result
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    protected Map<String, Map> bulkLoadCards(Iterable<String> ids) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            preparedStatement = connection.prepareStatement(BULK_LOAD_CARDS)
+            preparedStatement.setArray(1,  connection.createArrayOf("TEXT", ids as String[]))
+
+            rs = preparedStatement.executeQuery()
+            Map<String, Map> result = [:]
+            while(rs.next()) {
+                String card = rs.getString("data")
+                result[rs.getString("id")] = card != null ? mapper.readValue(card, Map) : null
+            }
+            return result
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    protected Map loadCard(String id, Connection connection) {
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            preparedStatement = connection.prepareStatement(GET_CARD)
+            preparedStatement.setString(1, id)
+
+            rs = preparedStatement.executeQuery()
+            if (rs.next()) {
+                return mapper.readValue(rs.getString("data"), Map)
+            }
+            else {
+                return null
+            }
+        }
+        finally {
+            close(rs, preparedStatement)
+        }
+    }
+
+    protected Map<String, Map> addMissingCards(Map<String, Map> cards) {
+        Map <String, Map> result = [:]
+        cards.each { id, card ->
+            result[id] = card ?: makeCardData(id)
+        }
+        return result
+    }
+
+    private Map makeCardData(String systemId) {
+        Document doc = load(systemId)
+        if (!doc) {
+            throw new WhelkException("Could not find document with id " + systemId)
+        }
+
+        CardEntry cardEntry = new CardEntry(doc, Instant.now())
+        storeCard(cardEntry)
+        return cardEntry.getCard().data
+    }
+
+    private List nonCardDependencies(Document doc) {
+        if (!jsonld) {
+            return []
+        }
+
+        Document card = new CardEntry(doc).getCard()
+        List refs = doc.getExternalRefs()
+        refs.removeAll(card.getExternalRefs())
+        return refs
     }
 
     private void saveDependencies(Document doc, Connection connection) {
@@ -829,10 +1180,12 @@ class PostgreSQLComponent implements Storage {
                 insertDependencies.setString(1, doc.getShortId())
                 insertDependencies.setString(2, dependsOn[0])
                 insertDependencies.setString(3, dependsOn[1])
+                insertDependencies.setBoolean(4, Boolean.parseBoolean(dependsOn[2]))
                 insertDependencies.addBatch()
             }
             try {
                 insertDependencies.executeBatch()
+                dependersUpdated.incrementAndGet()
             } catch (BatchUpdateException bue) {
                 log.error("Failed saving dependencies for ${doc.getShortId()}")
                 throw bue.getNextException()
@@ -997,7 +1350,6 @@ class PostgreSQLComponent implements Storage {
                 if (updateDepMinMax) {
                     for (Tuple2<String, String> depender : followDependers(doc.getShortId(), connection, JsonLd.NON_DEPENDANT_RELATIONS)) {
                         updateMaxDepModified((String) depender.get(0), connection)
-                        removeEmbellishedDocument((String) depender.get(0), connection)
                     }
                 }
             }
@@ -1172,104 +1524,6 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private void cacheEmbellishedDocument(String id, Document embellishedDocument, Connection connection) {
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(INSERT_EMBELLISHED_DOCUMENT)
-            preparedStatement.setString(1, id)
-            preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), OTHER)
-            preparedStatement.execute()
-        }
-        catch (PSQLException e) {
-            if (UNIQUE_VIOLATION == e.getSQLState()) {
-                // Someone else cached the document before we could,
-                // so we fail silently
-            } else {
-                throw e
-            }
-        }
-        finally {
-            close(rs, preparedStatement)
-        }
-    }
-
-    private void removeEmbellishedDocument(String id, Connection connection) {
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(DELETE_EMBELLISHED_DOCUMENT)
-            preparedStatement.setString(1, id)
-            preparedStatement.execute()
-        }
-        finally {
-            close(rs, preparedStatement)
-        }
-    }
-
-    Document loadEmbellished(String id, JsonLd jsonld) {
-        Connection connection = getConnection()
-        try {
-            return loadEmbellished(id, jsonld, connection)
-        } finally {
-            close(connection)
-        }
-    }
-
-    /**
-     * Loads the embellished version of the stored document 'id'.
-     * If there isn't an embellished version cached already, one will be created
-     * (lazy caching).
-     */
-    Document loadEmbellished(String id, JsonLd jsonld, Connection connection) {
-        PreparedStatement selectStatement = null
-        ResultSet resultSet = null
-
-        try {
-            selectStatement = connection.prepareStatement(GET_EMBELLISHED_DOCUMENT)
-            selectStatement.setString(1, id)
-            resultSet = selectStatement.executeQuery()
-
-            if (resultSet.next()) {
-                return new Document(mapper.readValue(resultSet.getString("data"), Map))
-            }
-
-            // Cache-miss, embellish and store
-            Document document = load(id, connection)
-
-            boolean filterOutNonChipTerms = false
-            embellish(document, jsonld, filterOutNonChipTerms, { iris ->
-                iris.collectEntries { iri ->
-                    [(iri): getDocumentByIri(iri, connection)]
-                }
-            })
-
-            cacheEmbellishedDocument(id, document, connection)
-            return document
-        }
-        finally {
-            close(resultSet, selectStatement)
-        }
-    }
-
-    static void embellish(Document document,
-                          JsonLd jsonld,
-                          boolean filterOutNonChipTerms,
-                          Function<List<String>, Map<String, Document>> docSupplier) {
-
-        List convertedExternalLinks = jsonld.expandLinks(document.getExternalRefs())
-
-        Map referencedData = [:]
-        Map externalDocs = docSupplier.apply(convertedExternalLinks)
-        externalDocs.each { id, doc ->
-            if (id && doc && doc.hasProperty('data')) {
-                referencedData[id] = doc.data
-            }
-        }
-
-        jsonld.embellish(document.data, referencedData, filterOutNonChipTerms)
-    }
-
     String getCollectionBySystemID(String id) {
         Connection connection = getConnection()
         try {
@@ -1371,10 +1625,18 @@ class PostgreSQLComponent implements Storage {
 
     String getThingMainIriBySystemId(String id) {
         Connection connection = null
+        try {
+            connection = getConnection()
+            return getThingMainIriBySystemId(id, connection)
+        } finally {
+            close(connection)
+        }
+    }
+
+    String getThingMainIriBySystemId(String id, Connection connection) {
         PreparedStatement preparedStatement = null
         ResultSet rs = null
         try {
-            connection = getConnection()
             preparedStatement = connection.prepareStatement(GET_THING_MAIN_IRI_BY_SYSTEMID)
             preparedStatement.setString(1, id)
             rs = preparedStatement.executeQuery()
@@ -1382,7 +1644,7 @@ class PostgreSQLComponent implements Storage {
                 return rs.getString(1)
             throw new RuntimeException("No IRI found for system id $id")
         } finally {
-            close(rs, preparedStatement, connection)
+            close(rs, preparedStatement)
         }
     }
 
@@ -1432,10 +1694,14 @@ class PostgreSQLComponent implements Storage {
     List<Tuple2<String, String>> followDependencies(String id, List<String> excludeRelations = []) {
         Connection connection = getConnection()
         try {
-            return followDependencyData(id, FOLLOW_DEPENDENCIES, connection, excludeRelations)
+            return followDependencies(id, connection, excludeRelations)
         } finally {
             close(connection)
         }
+    }
+
+    List<Tuple2<String, String>> followDependencies(String id, Connection connection, List<String> excludeRelations = []) {
+        return followDependencyData(id, FOLLOW_DEPENDENCIES, connection, excludeRelations)
     }
 
     List<Tuple2<String, String>> followDependers(String id, List<String> excludeRelations = []) {
@@ -1509,7 +1775,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    private SortedSet<String> getDependencyData(String id, String query, Connection connection) {
+    private static SortedSet<String> getDependencyData(String id, String query, Connection connection) {
         PreparedStatement preparedStatement = null
         ResultSet rs = null
         try {
@@ -1622,9 +1888,9 @@ class PostgreSQLComponent implements Storage {
     }
 
     /**
-     * Returns a list of holdings documents, for any of the passed thingIdentifiers
+     * Returns a list of holdings document ids, for any of the passed thingIdentifiers
      */
-    List<Document> getAttachedHoldings(List<String> thingIdentifiers, JsonLd jsonld) {
+    List<String> getAttachedHoldings(List<String> thingIdentifiers) {
         // Build the query
         StringBuilder selectSQL = new StringBuilder("SELECT id FROM ")
         selectSQL.append(mainTableName)
@@ -1654,10 +1920,9 @@ class PostgreSQLComponent implements Storage {
             }
 
             rs = preparedStatement.executeQuery()
-            List<Document> holdings = []
+            List<String> holdings = []
             while (rs.next()) {
-                String id = rs.getString("id")
-                holdings.add(loadEmbellished(id, jsonld, connection))
+                holdings.add(rs.getString("id"))
             }
             return holdings
         }
@@ -2109,6 +2374,20 @@ class PostgreSQLComponent implements Storage {
                     log.debug("Error closing $resource : $e")
                 }
             }
+        }
+    }
+
+    private class CardEntry {
+        Document card
+        Instant changedTimestamp
+
+        CardEntry(Document doc, Instant changedTimestamp = null) {
+            if (!jsonld) {
+                throw new WhelkRuntimeException("jsonld not set")
+            }
+
+            this.card = new Document(jsonld.toCard(doc.data, false))
+            this.changedTimestamp = changedTimestamp ?: doc.getModifiedTimestamp()
         }
     }
 }
