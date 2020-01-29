@@ -43,7 +43,7 @@ class Whelk implements Storage {
     }
 
     static Whelk createLoadedCoreWhelk(Properties configuration, boolean useCache = false) {
-        Whelk whelk = new Whelk(configuration, useCache)
+        Whelk whelk = new Whelk(useCache ? new CachingPostgreSQLComponent(configuration) : new PostgreSQLComponent(configuration))
         if (configuration.baseUri) {
             whelk.baseUri = new URI((String) configuration.baseUri)
         }
