@@ -57,8 +57,9 @@ boolean moveExpressionOf(object, data) {
             object[key] = value
             wasChanged = true
         } else {
-            if (!object[key] == TYPE)
+            if (key != TYPE) {
                 expressionOfpropertiesNotMoved.println "${key} already exists for ${data.graph[0][ID]}"
+            }
         }
     }
     return wasChanged
