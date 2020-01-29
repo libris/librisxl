@@ -78,10 +78,9 @@ public class GetRecord
         try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection())
         {
             dbconn.setAutoCommit(false);
-            try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, null, null, null, id, false);
-                 ResultSet resultSet = preparedStatement.executeQuery())
+            try (Helpers.ResultIterator it = Helpers.getMatchingDocuments(dbconn, null, null, null, id, false))
             {
-                if (!resultSet.next())
+                if (!it.hasNext())
                 {
                     failedRequests.labels(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH).inc();
                     ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
@@ -95,7 +94,7 @@ public class GetRecord
                 ResponseCommon.writeOaiPmhHeader(writer, request, true);
                 writer.writeStartElement("GetRecord");
 
-                ResponseCommon.emitRecord(resultSet, writer, metadataPrefix, false,
+                ResponseCommon.emitRecord(it.next(), writer, metadataPrefix, false,
                         metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX), withDeletedData);
 
                 writer.writeEndElement(); // GetRecord
