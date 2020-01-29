@@ -113,7 +113,7 @@ public class ServletUI extends HttpServlet implements UI
         String formatedTimestamp = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt);
         String jsonString = "{\"" + LDDB_TIMESTAMP_KEY_NAME + "\":\"" + formatedTimestamp + "\"}";
 
-        try (Connection connection = m_postgreSQLComponent.getConnection();
+        try (Connection connection = m_postgreSQLComponent.getOuterConnection();
              PreparedStatement statement = prepareWriteStatement(connection, jsonString))
         {
             statement.executeUpdate();
@@ -129,7 +129,7 @@ public class ServletUI extends HttpServlet implements UI
 
         m_postgreSQLComponent = new PostgreSQLComponent(m_properties.getProperty("sqlUrl"), m_properties.getProperty("sqlMaintable"));
 
-        try (Connection connection = m_postgreSQLComponent.getConnection();
+        try (Connection connection = m_postgreSQLComponent.getOuterConnection();
              PreparedStatement statement = prepareSelectStatement(connection);
              ResultSet resultSet = statement.executeQuery() )
         {
@@ -138,7 +138,7 @@ public class ServletUI extends HttpServlet implements UI
                 System.out.println(statement);
                 String settings = resultSet.getString("settings");
 
-                ObjectMapper mapper = (ObjectMapper) PostgreSQLComponent.mapper;
+                ObjectMapper mapper = PostgreSQLComponent.mapper;
                 Map<String, String> map = mapper.readValue(settings, Map.class);
 
                 ZonedDateTime lastTimeStamp = ZonedDateTime.parse( map.get(LDDB_TIMESTAMP_KEY_NAME) );
@@ -157,7 +157,7 @@ public class ServletUI extends HttpServlet implements UI
 
     private void cancelAutomaticResuming()
     {
-        try (Connection connection = m_postgreSQLComponent.getConnection();
+        try (Connection connection = m_postgreSQLComponent.getOuterConnection();
              PreparedStatement statement = prepareCancelStatement(connection))
         {
             statement.executeUpdate();

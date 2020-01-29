@@ -22,6 +22,7 @@ import whelk.exception.WhelkRuntimeException
 import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
 
+import javax.sql.DataSource
 import java.sql.Array
 import java.sql.BatchUpdateException
 import java.sql.Connection
@@ -42,6 +43,9 @@ import static java.sql.Types.OTHER
  *  It is important to not grab more than one connection per request/thread to avoid connection related deadlocks.
  *  i.e. get/release connection should be done in the public methods. Connections should be reused in method calls
  *  within this class.
+ *
+ *  See also getOuterConnection() and createAdditionalConnectionPool() for clients that need to hold their own
+ *  connection while calling into this class.
  */
 
 @Log
@@ -57,6 +61,8 @@ class PostgreSQLComponent implements Storage {
     private static final String driverClass = "org.postgresql.Driver"
 
     private HikariDataSource connectionPool
+    private HikariDataSource outerConnectionPool
+
     boolean versioning = true
     boolean doVerifyDocumentIdRetention = true
 
@@ -124,13 +130,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     private void setup(String sqlUrl, String sqlMainTable, int maxPoolSize) {
-        mainTableName = sqlMainTable
-        String idTableName = mainTableName + "__identifiers"
-        String versionsTableName = mainTableName + "__versions"
-        String settingsTableName = mainTableName + "__settings"
-        String dependenciesTableName = mainTableName + "__dependencies"
-        String profilesTableName = mainTableName + "__profiles"
-        String cardsTableName = mainTableName + "__cards"
+        setupStatements(sqlMainTable)
 
         if (sqlUrl) {
             HikariConfig config = new HikariConfig()
@@ -162,6 +162,16 @@ class PostgreSQLComponent implements Storage {
         }
 
         this.dependencyCache = new DependencyCache(this)
+    }
+
+    private void setupStatements(String sqlMainTable) {
+        mainTableName = sqlMainTable
+        String idTableName = mainTableName + "__identifiers"
+        String versionsTableName = mainTableName + "__versions"
+        String settingsTableName = mainTableName + "__settings"
+        String dependenciesTableName = mainTableName + "__dependencies"
+        String profilesTableName = mainTableName + "__profiles"
+        String embellishedTableName = mainTableName + "__embellished"
 
         // Setting up sql-statements
         UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
@@ -2196,6 +2206,33 @@ class PostgreSQLComponent implements Storage {
      */
     Connection getConnection(){
         return connectionPool.getConnection()
+    }
+
+    /**
+     * Get a database connection that is safe to keep open while calling into this class.
+     */
+    Connection getOuterConnection() {
+        return getOuterPool().getConnection()
+    }
+
+    private DataSource getOuterPool() {
+        if (!outerConnectionPool) {
+            synchronized (this) {
+                if (!outerConnectionPool) {
+                    outerConnectionPool = (HikariDataSource) createAdditionalConnectionPool("OuterPool")
+                }
+            }
+        }
+        return outerConnectionPool
+    }
+
+    DataSource createAdditionalConnectionPool(String name) {
+        HikariConfig config = new HikariConfig()
+        connectionPool.copyStateTo(config)
+        config.setPoolName(name)
+        HikariDataSource pool = new HikariDataSource(config)
+        log.info("Created additional connection pool: ${pool.getPoolName()}, max size:${pool.getMaximumPoolSize()}")
+        return pool
     }
 
     List<Document> findByValue(String relation, String value, int limit,
