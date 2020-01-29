@@ -5,6 +5,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException
 import whelk.Document
 import whelk.IdGenerator
 import whelk.Whelk
+import whelk.reindexer.CardRefresher
 
 class DefinitionsImporter extends Importer {
 
@@ -32,6 +33,9 @@ class DefinitionsImporter extends Importer {
         boolean updateMinMaxDepModified = false
         whelk.storage.bulkStore(documentList, "xl", null, collection, updateMinMaxDepModified)
         println("Operation complete. Time elapsed: ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
+
+        whelk.loadCoreData()
+        new CardRefresher(whelk).refresh(collection)
     }
 
     @Override

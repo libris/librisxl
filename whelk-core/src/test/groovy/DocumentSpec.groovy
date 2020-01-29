@@ -203,12 +203,12 @@ class DocumentSpec extends Specification {
                                 ["someOtherValue": 2],
                                 "A lonely string"]]
 
-        Map extra = ["/externalBar": ["@id": "/externalBar",
+        List extra = [["@id": "/externalBar",
                                       "@type": "Work",
                                       "hasTitle": "aTitle",
                                       "language": "danska",
                                       "someThirdValue": 3],
-                     "/externalBaz": ["@id": "/externalBaz",
+                     ["@id": "/externalBaz",
                                       "@type": "ProvisionActivity",
                                       "date": "aDate",
                                       "place": "aPlace",
@@ -378,6 +378,5 @@ class DocumentSpec extends Specification {
 
 
     }
-
 
 }

@@ -256,8 +256,7 @@ public class Main
         Properties properties = new Properties();
         properties.load(propStream);
         Document.setBASE_URI( new URI( (String) properties.get("baseUri")) );
-        PostgreSQLComponent storage = new PostgreSQLComponent(properties);
-        s_whelk = new Whelk(storage);
+        s_whelk = Whelk.createLoadedCoreWhelk(properties);
         s_whelk.loadCoreData();
         s_failureWriter = new PrintWriter("transformations_failed " + new Date().toString() + ".log");
         s_repeatableTerms = s_whelk.getJsonld().getRepeatableTerms();

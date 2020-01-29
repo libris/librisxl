@@ -245,7 +245,7 @@ public class ResponseCommon
     private static void emitAttachedRecords(Document rootDocument, XMLStreamWriter writer, String requestedFormat)
             throws SQLException, XMLStreamException, IOException
     {
-        List<Document> holdings = OaiPmh.s_whelk.getStorage().getAttachedHoldings(rootDocument.getThingIdentifiers(), OaiPmh.s_whelk.getJsonld());
+        List<Document> holdings = OaiPmh.s_whelk.getAttachedHoldings(rootDocument.getThingIdentifiers());
         writer.writeStartElement("about");
         for (Document holding : holdings)
         {

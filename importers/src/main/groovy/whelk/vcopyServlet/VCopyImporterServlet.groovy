@@ -65,8 +65,7 @@ class VCopyImporterServlet extends HttpServlet {
         log.info("Starting vcopyImporter.")
 
         props = PropertyLoader.loadProperties('secret', 'mysql')
-        PostgreSQLComponent pg = new PostgreSQLComponent(props)
-        whelk = new Whelk(pg)
+        whelk = new Whelk(props)
         log.info("Started ...")
     }
 

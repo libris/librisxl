@@ -53,10 +53,8 @@ public class ExporterThread extends Thread
         this.m_properties = properties;
         this.m_exportNewerThan = exportNewerThan;
         this.m_ui = ui;
-        PostgreSQLComponent postgres = new PostgreSQLComponent(properties.getProperty("sqlUrl"), properties.getProperty("sqlMaintable"));
-        ElasticSearch elastic = new ElasticSearch(properties.getProperty("elasticHost"), properties.getProperty("elasticCluster"), properties.getProperty("elasticIndex"));
-        m_whelk = new Whelk(postgres, elastic);
-        m_whelk.loadCoreData();
+        m_whelk = Whelk.createLoadedSearchWhelk(properties);
+
         m_converter = new Converter(m_whelk);
     }
 
