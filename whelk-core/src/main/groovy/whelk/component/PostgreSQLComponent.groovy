@@ -72,6 +72,7 @@ class PostgreSQLComponent implements Storage {
                                            GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, FOLLOW_DEPENDENCIES, FOLLOW_DEPENDERS,
                                            GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE, GET_COLLECTION_BY_SYSTEM_ID
     protected String LOAD_SETTINGS, SAVE_SETTINGS
+    protected String GET_INCOMING_LINK_COUNT
     protected String GET_DEPENDERS, GET_DEPENDENCIES
     protected String GET_DEPENDENCIES_OF_TYPE, GET_DEPENDERS_OF_TYPE
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
@@ -245,6 +246,7 @@ class PostgreSQLComponent implements Storage {
                 "SELECT * FROM deps"
 
         GET_DEPENDERS = "SELECT DISTINCT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id"
+        GET_INCOMING_LINK_COUNT = "SELECT COUNT(id) FROM $dependenciesTableName WHERE dependsOnId = ?"
         GET_DEPENDENCIES = "SELECT DISTINCT dependsOnId FROM $dependenciesTableName WHERE id = ? ORDER BY dependsOnId"
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
         GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
@@ -1479,6 +1481,21 @@ class PostgreSQLComponent implements Storage {
 
     Set<String> getByReverseRelation(String iri, String relation) {
         return dependencyCache.getDependersOfType(iri, relation)
+    }
+
+    long getIncomingLinkCount(String id) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            preparedStatement = connection.prepareStatement(GET_INCOMING_LINK_COUNT)
+            preparedStatement.setString(1, id)
+            rs = preparedStatement.executeQuery()
+            rs.next()
+            return rs.getInt(1)
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
     }
 
     SortedSet<String> getDependers(String id) {
