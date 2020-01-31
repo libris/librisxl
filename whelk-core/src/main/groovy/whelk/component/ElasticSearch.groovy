@@ -119,6 +119,10 @@ class ElasticSearch {
     }
 
     String createActionRow(Document doc, String collection) {
+        if (!collection) {
+            return
+        }
+
         def action = ["index" : [ "_index" : indexName,
                                   "_type" : collection,
                                   "_id" : toElasticId(doc.getShortId()) ]]
@@ -126,6 +130,10 @@ class ElasticSearch {
     }
 
     void index(Document doc, String collection, Whelk whelk) {
+        if (!collection) {
+            return
+        }
+
         // The justification for this uncomfortable catch-all, is that an index-failure must raise an alert (log entry)
         // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
         try {
@@ -139,6 +147,39 @@ class ElasticSearch {
         } catch (Exception e) {
             log.error("Failed to index ${doc.getShortId()} in elastic, placing in retry queue.", e)
             indexingRetryQueue.add(new RetryEntry(doc: doc, collection: collection, whelk: whelk))
+        }
+    }
+
+    void incrementReverseLinks(String shortId, String collection) {
+        updateReverseLinkCounter(shortId, collection, 1)
+    }
+
+    void decrementReverseLinks(String shortId, String collection) {
+        updateReverseLinkCounter(shortId, collection, -1)
+    }
+
+    private void updateReverseLinkCounter(String shortId, String collection, int deltaCount) {
+        if (!collection) {
+            return
+        }
+
+        String body = """
+        {
+            "script" : {
+                "source": "ctx._source.reverseLinks.totalItems += $deltaCount",
+                "lang": "painless"
+            }
+        }
+        """.stripIndent()
+
+        try {
+            client.performRequest(
+                    'POST',
+                    "/${indexName}/${collection}/${toElasticId(shortId)}/_update",
+                    body)
+        }
+        catch (Exception e) {
+            log.warn("Failed to update reverse link counter for $shortId: $e", e)
         }
     }
 
