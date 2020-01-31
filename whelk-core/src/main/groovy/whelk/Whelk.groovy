@@ -193,7 +193,7 @@ class Whelk implements Storage {
             log.debug("Reindexing ${idsToReindex.size()} affected documents")
             idsToReindex.each { id ->
                 Document doc = storage.load(id)
-                elastic.index(doc, getLegacyCollection(doc), this)
+                elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
             }
             updateLinkCount(document, preUpdateDependencies)
         }
@@ -211,12 +211,10 @@ class Whelk implements Storage {
         Set<String> postUpdateDependencies = storage.getDependencies(document.getShortId())
 
         (preUpdateDependencies - postUpdateDependencies)
-                .collect{ id -> storage.load(id) }
-                .each { doc -> elastic.decrementReverseLinks(doc.getShortId(), getLegacyCollection(doc))}
+                .each { id -> elastic.decrementReverseLinks(id, storage.getCollectionBySystemID(id))}
 
         (postUpdateDependencies - preUpdateDependencies)
-                .collect{ id -> storage.load(id) }
-                .each { doc -> elastic.incrementReverseLinks(doc.getShortId(), getLegacyCollection(doc))}
+                .each { id -> elastic.incrementReverseLinks(id, storage.getCollectionBySystemID(id))}
     }
 
     /**
@@ -405,11 +403,6 @@ class Whelk implements Storage {
             systemId = stripBaseUri(id)
         }
         return systemId
-    }
-
-    private String getLegacyCollection(Document doc) {
-        return LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
-                ?: storage.getCollectionBySystemID(doc.getShortId())
     }
 
     private static String stripBaseUri(String identifier) {
