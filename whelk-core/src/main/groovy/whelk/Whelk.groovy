@@ -148,41 +148,26 @@ class Whelk implements Storage {
         return result
     }
 
-    void reindexAffected(Document document, Set<String> preUpdateDependencies) {
+    private void reindexAffected(Document document, Set<String> preUpdateDependencies) {
         TreeSet<String> idsToReindex = new TreeSet<>()
-
         if (storage.isCardChanged(document.getShortId())) {
             List<Tuple2<String, String>> dependers = storage.followEmbellishDependers(document.getShortId())
 
             // Filter out "itemOf"-links. In other words, do not bother reindexing hold posts (they're not embellished in elastic)
             for (Tuple2<String, String> depender : dependers) {
-                if (!depender.getSecond().equals("itemOf")) {
+                if (depender.getSecond() != "itemOf") {
                     idsToReindex.add(depender.getFirst())
                 }
             }
         }
 
-        // 1-step dependencies (may) need reindexing, to update their linksHereCount.
-        Set<String> dependencies = storage.getDependencies(document.getShortId())
-
-        TreeSet removedLinksTo = new TreeSet(preUpdateDependencies)
-        removedLinksTo.removeAll(dependencies)
-
-        TreeSet addedLinksTo = new TreeSet(dependencies)
-        addedLinksTo.removeAll(preUpdateDependencies)
-
-        idsToReindex.addAll(addedLinksTo)
-        idsToReindex.addAll(removedLinksTo)
-
         Runnable reindex = {
             log.debug("Reindexing ${idsToReindex.size()} affected documents")
-            Map dependingDocuments = bulkLoad(idsToReindex.toList())
-            for (Document dependingDoc : dependingDocuments.values()) {
-                String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
-                if (dependingDocCollection != null) {
-                    elastic.index(dependingDoc, dependingDocCollection, this)
-                }
+            idsToReindex.each { id ->
+                Document doc = storage.load(id)
+                elastic.index(doc, getLegacyCollection(doc), this)
             }
+            updateLinkCount(document, preUpdateDependencies)
         }
 
         // If the number of dependers isn't too large or we are inside a batch job. Update them synchronously
@@ -192,6 +177,18 @@ class Whelk implements Storage {
             // else use a fire-and-forget thread
             new Thread(indexers, reindex).start()
         }
+    }
+
+    private void updateLinkCount(Document document, Set<String> preUpdateDependencies) {
+        Set<String> postUpdateDependencies = storage.getDependencies(document.getShortId())
+
+        (preUpdateDependencies - postUpdateDependencies)
+                .collect{ id -> storage.load(id) }
+                .each { doc -> elastic.decrementReverseLinks(doc.getShortId(), getLegacyCollection(doc))}
+
+        (postUpdateDependencies - preUpdateDependencies)
+                .collect{ id -> storage.load(id) }
+                .each { doc -> elastic.incrementReverseLinks(doc.getShortId(), getLegacyCollection(doc))}
     }
 
     /**
@@ -381,6 +378,11 @@ class Whelk implements Storage {
             systemId = stripBaseUri(id)
         }
         return systemId
+    }
+
+    private String getLegacyCollection(Document doc) {
+        return LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
+                ?: storage.getCollectionBySystemID(doc.getShortId())
     }
 
     private static String stripBaseUri(String identifier) {
