@@ -24,13 +24,7 @@ class ElasticSearch {
     private String elasticCluster
     private ElasticClient client
 
-    private class RetryEntry {
-        Document doc
-        String collection
-        Whelk whelk
-    }
-
-    private final Queue<RetryEntry> indexingRetryQueue = new LinkedBlockingQueue<>()
+    private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
 
     ElasticSearch(Properties props) {
         this(
@@ -50,9 +44,9 @@ class ElasticSearch {
         new Timer("ElasticIndexingRetries", true).schedule(new TimerTask() {
             void run() {
                 indexingRetryQueue.size().times {
-                    RetryEntry entry = indexingRetryQueue.poll()
+                    Runnable entry = indexingRetryQueue.poll()
                     if (entry != null)
-                        index(entry.doc, entry.collection, entry.whelk)
+                        entry.run()
                 }
             }
         }, 60*1000, 10*1000)
@@ -146,7 +140,7 @@ class ElasticSearch {
             log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${responseMap['_id']} as version ${responseMap['_version']}")
         } catch (Exception e) {
             log.error("Failed to index ${doc.getShortId()} in elastic, placing in retry queue.", e)
-            indexingRetryQueue.add(new RetryEntry(doc: doc, collection: collection, whelk: whelk))
+            indexingRetryQueue.add({ -> index(doc, collection, whelk) })
         }
     }
 
@@ -179,7 +173,8 @@ class ElasticSearch {
                     body)
         }
         catch (Exception e) {
-            log.warn("Failed to update reverse link counter for $shortId: $e", e)
+            log.warn("Failed to update reverse link counter for $shortId: $e, placing in retry queue.", e)
+            indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, collection, deltaCount) })
         }
     }
 
