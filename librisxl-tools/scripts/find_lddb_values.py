@@ -86,7 +86,8 @@ if __name__ == '__main__':
     if leaf_filter:
         leaf_filter = compile(leaf_filter, 'CmdLineArgument', 'eval')
 
-    paths_values = defaultdict(lambda: defaultdict(set if keep_examples else int))
+    paths_values = defaultdict(lambda: defaultdict(int))
+    paths_values_examples = defaultdict(lambda: defaultdict(set))
 
     pool = Pool()
     results = pool.imap_unordered(process_record, sys.stdin, chunksize=8192)
@@ -94,7 +95,9 @@ if __name__ == '__main__':
 
     def show_progress():
         values = sum(len(v) for v in paths_values.values())
-        print(f"\033cRecords: {i + 1:,}, Results: {values:,}", file=sys.stderr)
+        uses = sum(sum(i for i in v.values()) for v in paths_values.values())
+        print(f"\033cRecords: {i + 1:,}\tValues: {values:,}\tUses: {uses:,}",
+                file=sys.stderr)
 
     try:
         t_last = 0
@@ -103,14 +106,15 @@ if __name__ == '__main__':
             for rec_id, path, value in result:
                 if isinstance(value, list):
                     value = '\t'.join(value)
+
+                paths_values[path][value] += 1
+
                 if keep_examples:
-                    examples = paths_values[path][value]
+                    examples = paths_values_examples[path][value]
                     if len(examples) < keep_examples:
                         examples.add(rec_id)
                     elif len(examples) == keep_examples:
                         examples.add('...')
-                else:
-                    paths_values[path][value] += 1
 
             t_now = time()
             if (t_now - t_last) > 2:
@@ -119,5 +123,12 @@ if __name__ == '__main__':
 
     finally:
         show_progress()
+
+        if keep_examples:
+            for path, values_examples in paths_values_examples.items():
+                for value, examples in values_examples.items():
+                    examples.add(f'total: {paths_values[path][value]:,}')
+            paths_values = paths_values_examples
+
         print(json.dumps(paths_values,
             indent=2, ensure_ascii=False, cls=JsonSetReprEncoder))
