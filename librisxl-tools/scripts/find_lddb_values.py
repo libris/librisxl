@@ -4,6 +4,7 @@ import json
 
 keys = []
 by_type = False
+leaf_filter = False
 
 
 def process_record(line):
@@ -12,7 +13,7 @@ def process_record(line):
     return tuple((rec_id, '.'.join(path), value)
             for i, thing in enumerate(graph[1:])
             for path, value in
-            find_paths(thing, keys, trail=_start_trail(i, thing)))
+            find_paths(graph, thing, keys, trail=_start_trail(i, thing)))
 
 
 def _start_trail(i, thing):
@@ -20,15 +21,16 @@ def _start_trail(i, thing):
 
 
 def _typed_key(k, o):
-    if isinstance(o, dict) and '@type' in o:
+    if by_type and isinstance(o, dict) and '@type' in o:
         return f"{k}[{o['@type']}]"
     else:
         return k
 
-def find_paths(data, keys, trail=[]):
+
+def find_paths(graph, data, keys, trail=[]):
     if isinstance(data, list):
         for item in data:
-            yield from find_paths(item, keys, trail)
+            yield from find_paths(graph, item, keys, trail)
         return
 
     if not isinstance(data, dict):
@@ -40,12 +42,13 @@ def find_paths(data, keys, trail=[]):
         if not isinstance(vs, list):
             vs = [vs]
         for v in vs:
-            tk = _typed_key(k, v) if by_type else k
+            tk = _typed_key(k, v)
             subtrail = trail + [tk]
-            if k in keys:
+            if k in keys and (not leaf_filter or
+                    eval(leaf_filter, globals(), locals())):
                 yield subtrail, v
             else:
-                yield from find_paths(v, keys, subtrail)
+                yield from find_paths(graph, v, keys, subtrail)
 
 
 class JsonSetReprEncoder(json.JSONEncoder):
@@ -69,12 +72,19 @@ if __name__ == '__main__':
             keep_examples = int(it)
         elif it in {'-t', '--by-type'}:
             by_type = True
+        elif leaf_filter is True:
+            leaf_filter = it
+        elif it == '--filter':
+            leaf_filter = True
         else:
             keys.append(it)
 
     if not keys:
         print('Provide keys to find values for!', file=sys.stderr)
         sys.exit()
+
+    if leaf_filter:
+        leaf_filter = compile(leaf_filter, 'CmdLineArgument', 'eval')
 
     paths_values = defaultdict(lambda: defaultdict(set if keep_examples else int))
 
