@@ -11240,8 +11240,34 @@
       "NOTE:$q": {"NOTE:record-count": 0, "TODO": "To enable future imports to EncodingFormat, we need something like onRevertPrefer 347$b to avoid collisions in export."},
       "$6": null
     },
-    "355": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "355 - SECURITY CLASSIFICATION CONTROL (R) nac"},
-    "357": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "357 - ORIGINATOR DISSEMINATION CONTROL (NR) nac"},
+    "355": {
+      "NOTE:LC": "355 - SECURITY CLASSIFICATION CONTROL (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "_spec": [
+        {
+          "source": {"342": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "X"}
+          ]}},
+          "normalized": [],
+          "result": {"mainEntity": { }}
+        }
+      ]
+    },
+    "357": {
+      "NOTE:LC": "357 - ORIGINATOR DISSEMINATION CONTROL (NR) nac",
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "_spec": [
+        {
+          "source": {"342": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "X"}
+          ]}},
+          "normalized": [],
+          "result": {"mainEntity": { }}
+        }
+      ]
+    },
     "362": {
       "aboutEntity": "?thing",
       "addLink": "hasNumberingOfSerials",
@@ -11314,18 +11340,18 @@
         }
       },
       "$c": {"about": "_:associated", "property": "label"},
-      "$f": null,
+      "$f": {"ignored": true, "NOTE:LC": "nac"},
       "$g": {"about": "_:origin", "property": "label"},
-      "$s": null,
-      "$t": null,
-      "$u": null,
-      "$v": null,
+      "$s": {"ignored": true, "NOTE:LC": "nac"},
+      "$t": {"ignored": true, "NOTE:LC": "nac"},
+      "$u": {"ignored": true, "NOTE:LC": "nac"},
+      "$v": {"ignored": true, "NOTE:LC": "nac"},
       "$0": null,
-      "$1": null,
+      "$1": {"ignored": true, "NOTE:LC": "nac"},
       "$2": null,
-      "$3": null,
-      "$4": null,
-      "$6": null,
+      "$3": {"ignored": true, "NOTE:LC": "ignored"},
+      "$4": {"ignored": true, "NOTE:LC": "ignored"},
+      "$6": {"ignored": true, "NOTE:LC": "ignored"},
       "_spec": [
          {
            "source": [
@@ -11357,54 +11383,48 @@
       "ignored": true,
       "NOTE:record-count": 0,
       "NOTE:LC": "language",
-      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
-      "TODO": "For imports"
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
     },
     "380": {
       "ignored": true,
       "NOTE:record-count": 2,
       "NOTE:LC": "genreForm",
-      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
-      "TODO": "For imports"
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
     },
     "381": {
-      "ignored": true,
-      "NOTE:record-count": 0,
       "NOTE:LC": "381 - OTHER DISTINGUISHING CHARACTERISTICS OF WORK OR EXPRESSION (R) nac",
-      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "382": {
       "ignored": true,
       "NOTE:record-count": 0,
       "NOTE:LC": "musicMedium",
-      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
-      "TODO": "For imports"
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
     },
     "383": {
       "ignored": true,
       "NOTE:record-count": 0,
       "NOTE:LC": "musicSerialnumber, musicOpusNumber, etc.",
-      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
-      "TODO": "For imports"
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
     },
     "384": {
       "ignored": true,
       "NOTE:record-count": 0,
       "NOTE:LC": "musicKey",
-      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
-      "TODO": "For imports"
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
     },
     "385": {
       "ignored": true,
       "NOTE:record-count": 0,
-      "NOTE:LC": "intendedAudience",
-      "TODO": "For imports"
+      "NOTE:LC": "intendedAudience"
     },
     "386": {
       "ignored": true,
       "NOTE:record-count": 0,
-      "NOTE:LC": "creatorCharacteristic",
-      "TODO": "For imports"},
+      "NOTE:LC": "creatorCharacteristic"
+    },
     "388": {
       "ignored": true,
       "NOTE:record-count": 0,
