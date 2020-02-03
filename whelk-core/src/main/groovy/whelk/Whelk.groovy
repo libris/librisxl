@@ -190,13 +190,22 @@ class Whelk implements Storage {
         }
 
         Runnable reindex = {
-            log.debug("Reindexing ${idsToReindex.size()} affected documents")
+            long t1 = System.currentTimeMillis()
+            if (idsToReindex.size() > 100 ) {
+                log.info("Reindexing ${idsToReindex.size()} affected documents")
+            }
+
             storage.removeEmbellishedDocuments(dependers)
             idsToReindex.each { id ->
                 Document doc = storage.load(id)
                 elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
             }
             updateLinkCount(document, preUpdateDependencies)
+
+            if (idsToReindex.size() > 100 ) {
+                long dt = (System.currentTimeMillis() - t1) / 1000 as long
+                log.info("Reindexed ${idsToReindex.size()} affected documents in $dt seconds")
+            }
         }
 
         // If the number of dependers isn't too large or we are inside a batch job. Update them synchronously
