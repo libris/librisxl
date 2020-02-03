@@ -19313,9 +19313,7 @@
         "targetEntity": "?record",
         "targetProperty": "marc:personalName",
         "valueMap": {
-          "Person": {
-            "@id": "https://id.kb.se/marc/DifferentiatedPersonalName"
-          }
+          "Person": "a"
         },
         "_spec": [
           {
@@ -19326,9 +19324,7 @@
               }
             },
             "back": {
-              "marc:personalName": {
-                "@id": "https://id.kb.se/marc/DifferentiatedPersonalName"
-              },
+              "marc:personalName": "a",
               "mainEntity": {
                 "@type": "Person"
               }
@@ -19562,9 +19558,8 @@
       },
       "[32]": {
         "aboutEntity": "?record",
-        "link": "marc:personalName",
-        "uriTemplate": "https://id.kb.se/marc/PersonalNameType-{_}",
-        "matchUriToken": "^[ab]$",
+        "property": "marc:personalName",
+        "tokenMap": {"a": "a", "b": "b"},
         "fixedDefault": "n"
       },
       "[33]": {
