@@ -666,20 +666,8 @@ class PostgreSQLComponent implements Storage {
     }
 
     void removeEmbellishedDocuments(List<Tuple2<String, String>> dependers) {
-        Connection connection = getConnection()
-        connection.setAutoCommit(false)
-        try {
-            for (Tuple2<String, String> depender : dependers) {
-                removeEmbellishedDocument((String) depender.get(0), connection)
-            }
-            connection.commit()
-        }
-        catch (Exception e) {
-            connection.rollback()
-            throw e
-        }
-        finally {
-            connection.close()
+        for (Tuple2<String, String> depender : dependers) {
+            removeEmbellishedDocument(depender.getFirst())
         }
     }
 
@@ -1142,6 +1130,15 @@ class PostgreSQLComponent implements Storage {
         }
         finally {
             close(rs, preparedStatement)
+        }
+    }
+
+    private void removeEmbellishedDocument(String id) {
+        Connection connection = getConnection()
+        try {
+            removeEmbellishedDocument(id, connection)
+        } finally {
+            close(connection)
         }
     }
 
