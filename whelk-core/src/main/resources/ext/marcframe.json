@@ -10761,9 +10761,76 @@
         }
       ]
     },
-    "341": {"ignored": true, "NOTE": "New 2018, terms not in BF2 yet.", "TODO": "W - contentAccessibility - ContentAccessibility"},
-    "342": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "342 - GEOSPATIAL REFERENCE DATA (R) nac"},
-    "343": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "343 - PLANAR COORDINATE DATA (R) nac"},
+    "341": {
+      "aboutEntity": "?work",
+      "addLink": "contentAccessibility",
+      "resourceType": "ContentAccessibility",
+      "i1": null,
+      "$a": {"property": "label"},
+      "$b": {"addProperty": "marc:textualAssistiveFeatures"},
+      "$c": {"addProperty": "marc:visualAssistiveFeatures"},
+      "$d": {"addProperty": "marc:auditoryAssistiveFeatures"},
+      "$e": {"addProperty": "marc:tactileAssistiveFeatures"},
+      "$2": {"link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$3": {"property": "typeNote", "supplementary": true},
+      "$6": {"property": "marc:fieldref", "supplementary": true},
+      "_spec": [
+        {
+          "source": {"341": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "auditory"},{"b": "captions"},{"2": "[code for accessibility feature]"}
+          ]}},
+          "normalized": {"341": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "auditory"},{"b": "captions"},{"2": "[code for accessibility feature]"}
+          ]}},
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentAccessibility": [
+                  {
+                    "@type": "ContentAccessibility",
+                    "label": "auditory",
+                    "marc:textualAssistiveFeatures": ["captions"],
+                    "source": {
+                      "@type": "Source",
+                      "code": "[code for accessibility feature]"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "342": {
+      "NOTE:LC": "342 - GEOSPATIAL REFERENCE DATA (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "_spec": [
+        {
+          "source": {"342": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "X"}
+          ]}},
+          "normalized": [],
+          "result": {"mainEntity": { }}
+        }
+      ]
+    },
+    "343": {
+      "NOTE:LC": "343 - PLANAR COORDINATE DATA (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "_spec": [
+        {
+          "source": {"343": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "X"}
+          ]}},
+          "normalized": [],
+          "result": {"mainEntity": { }}
+        }
+      ]
+    },
     "344": {
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
