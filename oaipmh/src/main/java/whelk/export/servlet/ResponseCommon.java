@@ -26,7 +26,7 @@ import org.apache.cxf.staxutils.StaxUtils;
 public class ResponseCommon
 {
     private static final Logger logger = LogManager.getLogger(ResponseCommon.class);
-    private static final ObjectMapper mapper = new ObjectMapper();
+    static final ObjectMapper mapper = new ObjectMapper();
     private static final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
 
     /**
@@ -139,28 +139,13 @@ public class ResponseCommon
             writer.writeCData(convertedText);
     }
 
-    public static void emitRecord(ResultSet resultSet, XMLStreamWriter writer, String requestedFormat,
+    public static void emitRecord(Document document, XMLStreamWriter writer, String requestedFormat,
                                   boolean onlyIdentifiers, boolean embellish, boolean withDeletedData)
             throws SQLException, XMLStreamException, IOException
     {
-        boolean deleted = resultSet.getBoolean("deleted");
-        String sigel = resultSet.getString("sigel");
-        if (sigel != null)
-            sigel = LegacyIntegrationTools.uriToLegacySigel( resultSet.getString("sigel").replace("\"", "") );
-
-        String data = resultSet.getString("data");
-        HashMap datamap = mapper.readValue(data, HashMap.class);
-        Document document = new Document(datamap);
-
         if (embellish)
         {
             document = OaiPmh.s_whelk.loadEmbellished(document.getShortId());
-        }
-        else
-        {
-            document.setModified(new Date(resultSet.getTimestamp("modified").getTime()));
-            document.setDeleted(deleted);
-            document.setCreated(new Date(resultSet.getTimestamp("created").getTime()));
         }
 
         if (!onlyIdentifiers)
@@ -168,7 +153,7 @@ public class ResponseCommon
 
         writer.writeStartElement("header");
 
-        if (deleted)
+        if (document.getDeleted())
             writer.writeAttribute("status", "deleted");
 
         writer.writeStartElement("identifier");
@@ -176,11 +161,10 @@ public class ResponseCommon
         writer.writeEndElement(); // identifier
 
         writer.writeStartElement("datestamp");
-        ZonedDateTime modified = ZonedDateTime.ofInstant(resultSet.getTimestamp("modified").toInstant(), ZoneOffset.UTC);
-        writer.writeCharacters(modified.toString());
+        writer.writeCharacters(document.getModified());
         writer.writeEndElement(); // datestamp
 
-        String dataset = resultSet.getString("collection");
+        String dataset = LegacyIntegrationTools.determineLegacyCollection(document, OaiPmh.s_whelk.getJsonld());
         if (dataset != null)
         {
             writer.writeStartElement("setSpec");
@@ -188,6 +172,7 @@ public class ResponseCommon
             writer.writeEndElement(); // setSpec
         }
 
+        String sigel = document.getSigel();
         if (sigel != null)
         {
             writer.writeStartElement("setSpec");
@@ -197,7 +182,7 @@ public class ResponseCommon
 
         writer.writeEndElement(); // header
 
-        if (!onlyIdentifiers && (!deleted || withDeletedData))
+        if (!onlyIdentifiers && (!document.getDeleted() || withDeletedData))
         {
             writer.writeStartElement("metadata");
             ResponseCommon.writeConvertedDocument(writer, requestedFormat, document);
@@ -219,14 +204,14 @@ public class ResponseCommon
         //if (!onlyIdentifiers) {
             writer.writeStartElement("about");
 
-            String itemOf = resultSet.getString("itemOf");
+            String itemOf = document.getHoldingFor();
             if (dataset.equals("hold") && itemOf != null) {
                 writer.writeStartElement("itemOf");
                 writer.writeAttribute("id", itemOf);
                 writer.writeEndElement(); // itemOf
             }
 
-            String changedBy = resultSet.getString("changedBy");
+            String changedBy = document.getDescriptionLastModifier();
             if (changedBy == null)
                 changedBy = "unknown";
 

@@ -105,19 +105,10 @@ public class ListRecords
         {
             dbconn.setAutoCommit(false);
             boolean includeDependencies = metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX);
-            try (PreparedStatement preparedStatement = Helpers.getMatchingDocumentsStatement(dbconn, fromDateTime, untilDateTime, setSpec, null, includeDependencies);
-                 ResultSet resultSet = preparedStatement.executeQuery())
+
+            try (Helpers.ResultIterator resultIterator = Helpers.getMatchingDocuments(dbconn, fromDateTime, untilDateTime, setSpec, null, includeDependencies))
             {
-                try
-                {
-                    respond(request, response, metadataPrefix, onlyIdentifiers, includeDependencies, withDeletedData, resultSet);
-                }
-                catch (Throwable e)
-                {
-                    logger.info("Attempting to cancel ongoing query due to failing to respond.");
-                    preparedStatement.cancel();
-                    throw e;
-                }
+                respond(request, response, metadataPrefix, onlyIdentifiers, includeDependencies, withDeletedData, resultIterator);
             } finally {
                 dbconn.commit();
             }
@@ -126,11 +117,11 @@ public class ListRecords
 
     private static void respond(HttpServletRequest request, HttpServletResponse response,
                                 String requestedFormat, boolean onlyIdentifiers, boolean embellish,
-                                boolean withDeletedData, ResultSet resultSet)
+                                boolean withDeletedData, Helpers.ResultIterator resultIterator)
             throws IOException, XMLStreamException, SQLException
     {
         // Is the resultset empty?
-        if (!resultSet.isBeforeFirst())
+        if (!resultIterator.hasNext())
         {
             failedRequests.labels(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
@@ -148,9 +139,9 @@ public class ListRecords
         else
             writer.writeStartElement("ListRecords");
 
-        while (resultSet.next())
+        while (resultIterator.hasNext())
         {
-            ResponseCommon.emitRecord(resultSet, writer, requestedFormat, onlyIdentifiers, embellish, withDeletedData);
+            ResponseCommon.emitRecord(resultIterator.next(), writer, requestedFormat, onlyIdentifiers, embellish, withDeletedData);
         }
 
         writer.writeEndElement(); // ListIdentifiers/ListRecords
