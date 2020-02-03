@@ -90,6 +90,12 @@ if __name__ == '__main__':
 
     pool = Pool()
     results = pool.imap_unordered(process_record, sys.stdin, chunksize=8192)
+    i = -1
+
+    def show_progress():
+        values = sum(len(v) for v in paths_values.values())
+        print(f"\033cRecords: {i + 1:,}, Results: {values:,}", file=sys.stderr)
+
     try:
         t_last = 0
         for i, result in enumerate(results):
@@ -109,10 +115,9 @@ if __name__ == '__main__':
             t_now = time()
             if (t_now - t_last) > 2:
                 t_last = t_now
-                values = sum(len(v) for v in paths_values.values())
-                print(f"\033cRecords: {i + 1:,}, Results: {values:,}",
-                        file=sys.stderr)
+                show_progress()
 
     finally:
+        show_progress()
         print(json.dumps(paths_values,
             indent=2, ensure_ascii=False, cls=JsonSetReprEncoder))
