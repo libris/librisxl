@@ -11180,7 +11180,33 @@
       "$b": {"addProperty": "pattern"},
       "$c": {"property": "hierarchicalLevel"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "subfieldOrder": "6 3 c a b",
+      "_spec": [
+        {
+          "source": {"351": {"ind1": " ", "ind2": " ", "subfields": [
+            {"3": "Records"}, {"a": "Organized into four subgroups;"},{"b": "Arranged by office of origin."}
+          ]}},
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "arrangement": [
+                  {
+                    "@type": "Arrangement",
+                    "organizationOfMaterial": ["Organized into four subgroups;"],
+                    "pattern": ["Arranged by office of origin."],
+                    "appliesTo": {
+                      "@type": "Resource",
+                      "label": "Records"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
     },
     "352": {
       "linkSubsequentRepeated": {
