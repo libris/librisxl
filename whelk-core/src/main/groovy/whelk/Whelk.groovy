@@ -191,6 +191,7 @@ class Whelk implements Storage {
 
         Runnable reindex = {
             log.debug("Reindexing ${idsToReindex.size()} affected documents")
+            storage.removeEmbellishedDocuments(dependers)
             idsToReindex.each { id ->
                 Document doc = storage.load(id)
                 elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)

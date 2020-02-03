@@ -662,15 +662,12 @@ class PostgreSQLComponent implements Storage {
             close(resultSet, selectStatement, updateStatement, connection)
         }
 
-        refreshDependers(doc.getShortId())
-
         return doc
     }
 
-    void refreshDependers(String id) {
+    void removeEmbellishedDocuments(List<Tuple2<String, String>> dependers) {
         Connection connection = getConnection()
         connection.setAutoCommit(false)
-        List<Tuple2<String, String>> dependers = followDependers(id, connection, JsonLd.NON_DEPENDANT_RELATIONS)
         try {
             for (Tuple2<String, String> depender : dependers) {
                 removeEmbellishedDocument((String) depender.get(0), connection)
