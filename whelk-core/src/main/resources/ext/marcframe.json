@@ -12039,7 +12039,7 @@
     },
 
     "514": {
-      "NOTE:LC": "nac",
+      "NOTE:LC": "514 - DATA QUALITY NOTE (NR) nac",
       "NOTE:Local": "Removed from bibliographic marc-export",
       "NOTE:record-count": 0,
       "ignored": true
@@ -12318,7 +12318,12 @@
       "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"}
     },
-    "526": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ", "NOTE:LC": "526 - STUDY PROGRAM INFORMATION NOTE (R) nac"},
+    "526": {
+      "NOTE:LC": "526 - STUDY PROGRAM INFORMATION NOTE (R) nac",
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
 
     "530": {
       "NOTE:local": "Deviating from BF2 since subfield a is a note on the relation, not a note on a new instance",
@@ -12514,7 +12519,7 @@
         }
       },
       "$a": {"property": "label"},
-      "$b": {"ignored": true, "NOTE:LC": "nac"},
+      "$b": {"ignored": true, "NOTE:LC": "$b - Jurisdiction (NR) nac"},
       "$c": {"property": "marc:methodOfAcquisition"},
       "$d": {"property": "date"},
       "$e": {"property": "marc:accessionNumber"},
@@ -12556,7 +12561,11 @@
         }
       ]
     },
-    "542": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "542 - INFORMATION RELATING TO COPYRIGHT STATUS (R) nac"},
+    "542": {
+      "NOTE:LC": "542 - INFORMATION RELATING TO COPYRIGHT STATUS (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "544": {
       "aboutEntity": "?thing",
       "addLink": "marc:hasLocationOfOtherArchivalMaterialsNote",
@@ -12624,7 +12633,11 @@
       "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"}
     },
-    "552": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "552": {
+      "NOTE:LC": "552 - ENTITY AND ATTRIBUTE INFORMATION NOTE (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "555": {
       "aboutEntity": "?thing",
       "addLink": "hasNote",
@@ -12639,10 +12652,8 @@
       "addLink": "hasNote",
       "resourceType": "Note",
       "i1": null,
-      "NOTE:i1": {"ignored": true, "NOTE:lc": "ignore"},
       "$a": {"property": "label"},
-      "$z": null,
-      "NOTE:$z": {"ignored": true, "NOTE:lc": "nac"},
+      "$z": {"ignored": true, "NOTE:lc": "$z - International Standard Book Number (R) nac"},
       "$6": {"property": "marc:fieldref"}
     },
     "561": {
@@ -12662,7 +12673,7 @@
         }  
       },
       "$a": {"property": "label"},
-      "$u": {"ignored": true},
+      "$u": {"ignored": true, "NOTE:LC": "$u - Uniform Resource Identifier (R) nac"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"}
     },
@@ -12688,12 +12699,20 @@
       "resourceType": "marc:BindingInformation",
       "$a": {"property": "label"},
       "$u": {"addProperty": "uri"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label", "NOTE:LC": "nac"},
+      "$3": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "$3 - Materials specified (NR) nac"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
-      "$6": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"}
+      "$6": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "$6 - Linkage (NR) nac"}
     },
-    "565": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "565 - CASE FILE CHARACTERISTICS NOTE (R) nac"},
-    "567": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "567 - METHODOLOGY NOTE (R) nac"},
+    "565": {
+      "NOTE:LC": "565 - CASE FILE CHARACTERISTICS NOTE (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "567": {
+      "NOTE:LC": "567 - METHODOLOGY NOTE (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "580": {
       "aboutEntity": "?work",
       "addLink": "hasNote",
@@ -12808,7 +12827,11 @@
         }
       ]
     },
-    "584": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "584 - ACCUMULATION AND FREQUENCY OF USE NOTE (R) nac"},
+    "584": {
+      "NOTE:LC": "584 - ACCUMULATION AND FREQUENCY OF USE NOTE (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "585": {
       "NOTE:local": "För anmärkning till utställningskataloger används fält 500.",
       "onRevertPrefer": "500",
