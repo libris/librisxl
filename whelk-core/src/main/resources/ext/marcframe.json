@@ -8861,8 +8861,17 @@
       ]
     },
     "251": {
+      "NOTE:LC": "251 - VERSION INFORMATION (R) nac",
       "ignored": true,
-      "NOTE:LC": "251 - VERSION INFORMATION (R) nac"
+      "_spec": [
+        {
+          "source": {"251": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "X"}
+          ]}},
+          "normalized": [],
+          "result": {"mainEntity": { }}
+        }
+      ]
     },
 
     "254": {
@@ -8974,9 +8983,18 @@
       ]
     },
     "258": {
-      "ignored": true,
       "NOTE:LC": "258 - PHILATELIC ISSUE DATE (R) nac",
-      "NOTE:record-count": 0
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "_spec": [
+        {
+          "source": {"258": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "X"}
+          ]}},
+          "normalized": [],
+          "result": {"mainEntity": { }}
+        }
+      ]
     },
 
     "260": {
@@ -9762,8 +9780,17 @@
       ]
     },
     "270": {
+      "NOTE:LC": "270 - ADDRESS (R) ignore",
       "ignored": true,
-      "NOTE:LC": "270 - ADDRESS (R) ignore"
+      "_spec": [
+        {
+          "source": {"270": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "X"}
+          ]}},
+          "normalized": [],
+          "result": {"mainEntity": { }}
+        }
+      ]
     },
 
     "300": {
@@ -9883,10 +9910,19 @@
     },
 
     "307": {
+      "NOTE:LC": "307 - HOURS, ETC. (R) nac",
+      "NOTE:local": "Används företrädesvis för elektroniska resurser.",
       "ignored": true,
       "NOTE:record-count": 0,
-      "NOTE:LC": "307 - HOURS, ETC. (R) nac",
-      "NOTE:local": "Används företrädesvis för elektroniska resurser."
+      "_spec": [
+        {
+          "source": {"307": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "X"}
+          ]}},
+          "normalized": [],
+          "result": {"mainEntity": { }}
+        }
+      ]
     },
 
     "310": {
