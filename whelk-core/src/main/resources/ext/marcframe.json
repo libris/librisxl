@@ -12575,14 +12575,34 @@
       "$c": {"property": "marc:degreeOfControl", "NOTE": "concatenate with $a", "NOTE:record-count": 2}
     },
     "556": {
+      "NOTE:LC": "556 - INFORMATION ABOUT DOCUMENTATION NOTE (R) I - note - Note",
       "onRevertPrefer": "500",
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "Note",
       "i1": null,
       "$a": {"property": "label"},
-      "$z": {"ignored": true, "NOTE:lc": "$z - International Standard Book Number (R) nac"},
-      "$6": {"property": "marc:fieldref"}
+      "$z": {"ignored": true, "NOTE:LC": "$z - International Standard Book Number (R) nac"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": {"556": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "BASIC reference. 3rd ed. Boca Raton, Fl. : IBM, c1984. (Personal computer hardware reference library); 6361132."},
+            {"z": "drop isbn"}
+          ]}},
+          "normalized": {"500": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "BASIC reference. 3rd ed. Boca Raton, Fl. : IBM, c1984. (Personal computer hardware reference library); 6361132."}
+          ]}},
+          "result": {"mainEntity": {
+            "hasNote": [
+              {
+                "@type": "Note",
+                "label": "BASIC reference. 3rd ed. Boca Raton, Fl. : IBM, c1984. (Personal computer hardware reference library); 6361132."
+              }
+            ]
+          }}
+        }
+      ]
     },
     "561": {
       "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
