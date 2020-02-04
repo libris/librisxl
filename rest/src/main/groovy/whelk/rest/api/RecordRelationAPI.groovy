@@ -59,9 +59,9 @@ class RecordRelationAPI extends HttpServlet {
         if (relation == null) {
             List<Tuple2<String, String>> dependencySystemIDs
             if (reverse)
-                dependencySystemIDs = whelk.storage.getDependers(systemId)
+                dependencySystemIDs = whelk.storage.followDependers(systemId)
             else
-                dependencySystemIDs = whelk.storage.getDependencies(systemId)
+                dependencySystemIDs = whelk.storage.followDependencies(systemId)
 
             for (Tuple2<String, String> dependencySystemId : dependencySystemIDs){
                 result.add(dependencySystemId.get(0))
@@ -98,7 +98,7 @@ class RecordRelationAPI extends HttpServlet {
         else if (returnMode.equals("embellished_record")) {
             List<Map> records = new ArrayList<>(result.size())
             for (String resultId : result) {
-                records.add( whelk.storage.loadEmbellished(resultId, whelk.getJsonld()).data )
+                records.add( whelk.loadEmbellished(resultId).data )
             }
             jsonString = PostgreSQLComponent.mapper.writeValueAsString(records)
         }

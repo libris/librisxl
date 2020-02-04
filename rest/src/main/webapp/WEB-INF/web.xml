@@ -44,12 +44,10 @@
     <servlet>
         <servlet-name>RemoteSearch</servlet-name>
         <servlet-class>whelk.rest.api.RemoteSearchAPI</servlet-class>
-        <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet>
         <servlet-name>MarcConverter</servlet-name>
         <servlet-class>whelk.rest.api.ConverterAPI</servlet-class>
-        <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet>
         <servlet-name>LegacyVirtualMarc</servlet-name>
@@ -58,27 +56,22 @@
     <servlet>
         <servlet-name>RefreshAPI</servlet-name>
         <servlet-class>whelk.rest.api.RefreshAPI</servlet-class>
-        <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet>
         <servlet-name>HoldAPI</servlet-name>
         <servlet-class>whelk.rest.api.HoldAPI</servlet-class>
-        <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet>
         <servlet-name>MergeAPI</servlet-name>
         <servlet-class>whelk.rest.api.MergeAPI</servlet-class>
-        <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet>
         <servlet-name>RelationsAPI</servlet-name>
         <servlet-class>whelk.rest.api.RecordRelationAPI</servlet-class>
-        <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet>
         <servlet-name>DuplicatesAPI</servlet-name>
         <servlet-class>whelk.rest.api.DuplicatesAPI</servlet-class>
-        <load-on-startup>1</load-on-startup>
     </servlet>
 
     <servlet>
@@ -150,5 +143,9 @@
     <welcome-file-list>
         <welcome-file>index.xhtml</welcome-file>
     </welcome-file-list>
+
+    <listener>
+        <listener-class>whelk.rest.api.MarcFrameConverterInitializer</listener-class>
+    </listener>
 
 </web-app>

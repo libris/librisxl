@@ -111,22 +111,17 @@ class FileDumper implements MySQLLoader.LoadHandler {
                         for (String[] reference : externalDependencies) {
                             dependencyIDs.add(reference[1])
                         }
-                        Tuple2<Timestamp, Timestamp> depMinMaxModified = whelk.storage.getMinMaxModified(dependencyIDs)
-
-                        Instant min = ((Timestamp) depMinMaxModified.get(0)).toInstant()
-                        Instant max = ((Timestamp) depMinMaxModified.get(1)).toInstant()
+                        Timestamp depMaxModified = whelk.storage.getMaxModified(dependencyIDs)
+                        Instant max = ((Timestamp) depMaxModified).toInstant()
                         Instant modifiedInstant = modified.toInstant()
 
-                        if (modifiedInstant.isBefore(min))
-                            min = modifiedInstant
                         if (modifiedInstant.isAfter(max))
                             max = modifiedInstant
 
-                        recordMap["depMinModified"] = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( ZonedDateTime.ofInstant(min, ZoneId.systemDefault()) )
                         recordMap["depMaxModified"] = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( ZonedDateTime.ofInstant(max, ZoneId.systemDefault()) )
                     }
                     else
-                        recordMap["depMinModified"] = recordMap["depMaxModified"] = recordMap.document.getModified()
+                        recordMap["depMaxModified"] = recordMap.document.getModified()
                     writeBatch.add(recordMap)
                 }
             }
@@ -157,7 +152,6 @@ class FileDumper implements MySQLLoader.LoadHandler {
                         "${doc.created}\t" +
                         "${doc.modified}\t" +
                         "false\t" + // deleted
-                        recordMap["depMinModified"] + delimiterString +
                         recordMap["depMaxModified"] + "\n"
                 )
 

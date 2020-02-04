@@ -127,7 +127,6 @@ class MarcFrameConverterSpec extends Specification {
         fieldSpec << fieldSpecs.findAll { it.source }
     }
 
-    @Requires({ env.mfspec == 'all' })
     def "should revert field spec for #fieldSpec.marcType #fieldSpec.tag (#fieldSpec.name) [#fieldSpec.i]"() {
         given:
         def marcType = fieldSpec.marcType
@@ -142,9 +141,10 @@ class MarcFrameConverterSpec extends Specification {
         expect:
         converter.conversion.getRuleSetFromJsonLd(jsonld).name == marcType
         when:
-        def result = converter.conversion.revert(jsonld)
+        def result = converter.runRevert(jsonld)
 
-        def source = fieldSpec.normalized ?: fieldSpec.source
+        def source = fieldSpec.normalized != null ?
+                        fieldSpec.normalized : fieldSpec.source
         def expected = deepcopy(marcSkeletons[marcType])
 
         if (source instanceof List) {
@@ -216,7 +216,7 @@ class MarcFrameConverterSpec extends Specification {
             ]
         ]
         when:
-        def result = converter.conversion.revert(jsonld)
+        def result = converter.runRevert(jsonld)
         then:
         result.fields == [
             ["001": "0000000"],
@@ -224,6 +224,20 @@ class MarcFrameConverterSpec extends Specification {
             ["008": "020409 | anznnbabn          |EEEEEEEEEEE"]
         ]
 
+    }
+
+    def "should handle various data shapes on revert"() {
+        given:
+        def data = [
+            "meta": ["controlNumber": "0000000"],
+            "@type": "Instance",
+            "instanceOf": ["@type": "Text"]
+        ]
+        when:
+        def marc = converter.runRevert(data)
+        then:
+        marc.leader.contains('|a|')
+        marc.fields[0]['001'] == '0000000'
     }
 
     def "should accept sameAs-token-URIs on revert"() {
@@ -245,7 +259,7 @@ class MarcFrameConverterSpec extends Specification {
             ]
         ]
         when:
-        def result = converter.conversion.revert(jsonld)
+        def result = converter.runRevert(jsonld)
         then:
         result.fields[1]["008"] == "900101|        |  |||||||||||000 1dswe| "
     }

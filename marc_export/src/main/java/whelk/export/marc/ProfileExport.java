@@ -8,6 +8,7 @@ import se.kb.libris.export.ExportProfile;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.MarcRecordWriter;
 import whelk.Document;
+import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.util.LegacyIntegrationTools;
@@ -132,18 +133,18 @@ public class ProfileExport
 
         if (collection.equals("bib") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
         {
-            exportDocument(m_whelk.getStorage().loadEmbellished(id, m_whelk.getJsonld()), profile,
+            exportDocument(m_whelk.loadEmbellished(id), profile,
                     output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
         }
         else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
         {
-            List<Tuple2<String, String>> dependers = m_whelk.getStorage().getDependers(id);
+            List<Tuple2<String, String>> dependers = m_whelk.getStorage().followDependers(id, JsonLd.getNON_DEPENDANT_RELATIONS());
             for (Tuple2 depender : dependers)
             {
                 String dependerId = (String) depender.getFirst();
-                Document dependerDoc = m_whelk.getStorage().loadEmbellished(dependerId, m_whelk.getJsonld());
+                Document dependerDoc = m_whelk.loadEmbellished(dependerId);
                 String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, m_whelk.getJsonld());
-                if (!dependerCollection.equals("bib"))
+                if (dependerCollection == null || !dependerCollection.equals("bib"))
                     continue;
 
                 if (!isHeld(dependerDoc, profile))
@@ -174,7 +175,7 @@ public class ProfileExport
                 // itemOfSystemId _can_ be null, if the bib linked record is deleted (no thing-uri left in the id table)
                 if (itemOfSystemId != null) {
                     exportDocument(
-                            m_whelk.getStorage().loadEmbellished(itemOfSystemId, m_whelk.getJsonld())
+                            m_whelk.loadEmbellished(itemOfSystemId)
                             , profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
                 } else {
                     logger.info("Not exporting {} ({}) for {} because of missing itemOf systemID", id,

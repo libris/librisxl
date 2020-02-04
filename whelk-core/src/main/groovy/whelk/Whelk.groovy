@@ -149,18 +149,14 @@ class Whelk implements Storage {
     }
 
     Map<String, Document> bulkLoad(List<String> ids) {
-        Map result = [:]
+        Map<String, Document> result = [:]
         ids.each { id ->
-
             Document doc
 
             // Check the auth cache
             if (useAuthCache && authCache.containsKey(id)) {
-                /*if (hits++ % 100 == 0)
-                    println("Fetching with cache: $id, Sofar hits: $hits , misses: $misses")*/
                 result[id] = authCache.get(id)
             } else {
-
                 // Fetch from DB
                 if (id.startsWith(Document.BASE_URI.toString())) {
                     id = Document.BASE_URI.resolve(id).getPath().substring(1)
@@ -169,12 +165,7 @@ class Whelk implements Storage {
                 if (doc == null)
                     doc = storage.getDocumentByIri(id)
 
-
                 if (doc && !doc.deleted) {
-
-                    /*if (misses++ % 100 == 0)
-                        println("Fetching without cache: $id (${doc.getCompleteId()}), Sofar hits: $hits , misses: $misses")*/
-
                     result[id] = doc
                     String collection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
                     // TODO: only put used dependencies in cache; and either factor out collectionsToCache, or skip that check!
@@ -187,40 +178,53 @@ class Whelk implements Storage {
         return result
     }
 
-    public void reindexDependers(Document document) {
-        List<Tuple2<String, String>> dependers = storage.getDependers(document.getShortId())
+    private void reindexAffected(Document document, Set<String> preUpdateDependencies) {
+        List<Tuple2<String, String>> dependers = storage.followDependers(document.getShortId(), JsonLd.NON_DEPENDANT_RELATIONS)
 
         // Filter out "itemOf"-links. In other words, do not bother reindexing hold posts (they're not embellished in elastic)
-        List<String> idsToReindex = []
+        TreeSet<String> idsToReindex = new TreeSet<>()
         for (Tuple2<String, String> depender : dependers) {
             if (!depender.get(1).equals("itemOf")) {
                 idsToReindex.add( (String) depender.get(0))
             }
         }
 
-        // If the number of dependers isn't too large or we are inside a batch job. Update them synchronously
-        if (dependers.size() < 20 || batchJobThread() ) {
-            Map dependingDocuments = bulkLoad(idsToReindex)
-            for (String id : dependingDocuments.keySet()) {
-                Document dependingDoc = dependingDocuments.get(id)
-                String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
-                elastic.index(dependingDoc, dependingDocCollection, this)
+        Runnable reindex = {
+            long t1 = System.currentTimeMillis()
+            if (idsToReindex.size() > 100 ) {
+                log.info("Reindexing ${idsToReindex.size()} affected documents")
             }
+
+            storage.removeEmbellishedDocuments(dependers)
+            idsToReindex.each { id ->
+                Document doc = storage.load(id)
+                elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
+            }
+            updateLinkCount(document, preUpdateDependencies)
+
+            if (idsToReindex.size() > 100 ) {
+                long dt = (System.currentTimeMillis() - t1) / 1000 as long
+                log.info("Reindexed ${idsToReindex.size()} affected documents in $dt seconds")
+            }
+        }
+
+        // If the number of dependers isn't too large or we are inside a batch job. Update them synchronously
+        if (idsToReindex.size() < 20 || batchJobThread() ) {
+            reindex.run()
         } else {
             // else use a fire-and-forget thread
-            Whelk _this = this
-            new Thread(indexers, new Runnable() {
-                void run() {
-                    for (String id : idsToReindex) {
-                        Document dependingDoc = storage.load(id)
-                        String dependingDocCollection = LegacyIntegrationTools.determineLegacyCollection(dependingDoc, jsonld)
-                        if (dependingDocCollection != null)
-                            elastic.index(dependingDoc, dependingDocCollection, _this)
-                    }
-                }
-            }).start()
-
+            new Thread(indexers, reindex).start()
         }
+    }
+
+    private void updateLinkCount(Document document, Set<String> preUpdateDependencies) {
+        Set<String> postUpdateDependencies = storage.getDependencies(document.getShortId())
+
+        (preUpdateDependencies - postUpdateDependencies)
+                .each { id -> elastic.decrementReverseLinks(id, storage.getCollectionBySystemID(id))}
+
+        (postUpdateDependencies - preUpdateDependencies)
+                .each { id -> elastic.incrementReverseLinks(id, storage.getCollectionBySystemID(id))}
     }
 
     /**
@@ -277,7 +281,7 @@ class Whelk implements Storage {
     /**
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
-    Document createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
 
         boolean detectCollisionsOnTypedIDs = false
         List<Tuple2<String, String>> collidingIDs = getIdCollisions(document, detectCollisionsOnTypedIDs)
@@ -286,18 +290,20 @@ class Whelk implements Storage {
             throw new StorageCreateFailedException(document.getShortId(), "Document considered a duplicate of : " + collidingIDs)
         }
 
-        if (storage.createDocument(document, changedIn, changedBy, collection, deleted)) {
+        boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
+        if (success) {
             if (collection == "auth" || collection == "definitions")
                 putInAuthCache(document)
             if (elastic) {
                 elastic.index(document, collection, this)
-                reindexDependers(document)
+                reindexAffected(document, new TreeSet<String>())
             }
         }
-        return document
+        return success
     }
 
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
+        Collection<String> preUpdateDependencies = storage.getDependencies(id)
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
         if (updated == null) {
             return null
@@ -307,9 +313,18 @@ class Whelk implements Storage {
             putInAuthCache(updated)
         if (elastic) {
             elastic.index(updated, collection, this)
-            reindexDependers(updated)
+            reindexAffected(updated, preUpdateDependencies)
         }
         return updated
+    }
+
+    /**
+     * This is a variant of createDocument that does no or minimal denormalization or indexing.
+     * It should NOT be used to create records in a production environment. Its intended purpose is
+     * to be used when copying data from one xl environment to another.
+     */
+    boolean quickCreateDocument(Document document, String changedIn, String changedBy, String collection) {
+        return storage.quickCreateDocument(document, changedIn, changedBy, collection)
     }
 
     void bulkStore(final List<Document> documents, String changedIn,
@@ -324,7 +339,7 @@ class Whelk implements Storage {
             if (elastic) {
                 elastic.bulkIndex(documents, collection, this)
                 for (Document doc : documents) {
-                    reindexDependers(doc)
+                    reindexAffected(doc, new TreeSet<String>())
                 }
             }
         } else {
@@ -350,8 +365,8 @@ class Whelk implements Storage {
         if (elastic) {
             String remainingSystemID = storage.getSystemIdByIri(remainingID)
             String disappearingSystemID = storage.getSystemIdByIri(disappearingID)
-            List<Tuple2<String, String>> dependerRows = storage.getDependers(remainingSystemID)
-            dependerRows.addAll( storage.getDependers(disappearingSystemID) )
+            List<Tuple2<String, String>> dependerRows = storage.followDependers(remainingSystemID, JsonLd.NON_DEPENDANT_RELATIONS)
+            dependerRows.addAll( storage.followDependers(disappearingSystemID) )
             List<String> dependerSystemIDs = []
             for (Tuple2<String, String> dependerRow : dependerRows) {
                 dependerSystemIDs.add( (String) dependerRow.get(0) )
@@ -379,21 +394,19 @@ class Whelk implements Storage {
     }
 
     void embellish(Document document, boolean filterOutNonChipTerms = true) {
-        List externalRefs = document.getExternalRefs()
-        List convertedExternalLinks = JsonLd.expandLinks(externalRefs,
-                (Map) jsonld.getDisplayData().get(JsonLd.CONTEXT_KEY))
-        Map referencedData = bulkLoad(convertedExternalLinks)
-        Map referencedData2 = new HashMap()
-        for (Object key : referencedData.keySet()) {
-            referencedData2.put(key, ((Document) referencedData.get(key)).data)
-        }
-        jsonld.embellish(document.data, referencedData2, filterOutNonChipTerms)
+        storage.embellish(document, jsonld, filterOutNonChipTerms, this.&bulkLoad)
     }
 
-    List<String> findIdsLinkingTo(String id) {
-        return storage
-                .getDependers(tryGetSystemId(id))
-                .collect { it.first }
+    Document loadEmbellished(String systemId) {
+        return storage.loadEmbellished(systemId, jsonld)
+    }
+
+    long getIncomingLinkCount(String idOrIri) {
+        return storage.getIncomingLinkCount(tryGetSystemId(idOrIri))
+    }
+
+    List<String> findIdsLinkingTo(String idOrIri, int limit, int offset) {
+        return storage.getIncomingLinkIdsPaginated(tryGetSystemId(idOrIri), limit, offset)
     }
 
     private String tryGetSystemId(String id) {

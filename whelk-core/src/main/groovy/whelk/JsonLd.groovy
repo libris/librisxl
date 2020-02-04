@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.exception.FramingException
+import whelk.exception.WhelkRuntimeException
 
 import java.util.regex.Matcher
 
@@ -46,6 +47,8 @@ class JsonLd {
     static final String SEARCH_KEY = "_str"
 
     static final List<String> NS_SEPARATORS = ['#', '/', ':']
+
+    static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf', 'related', 'derivedFrom']
 
     static final Set<String> LD_KEYS
 
@@ -133,6 +136,7 @@ class JsonLd {
         buildLangContainerAliasMap()
 
         expandAliasesInLensProperties()
+        expandInheritedLensProperties()
     }
 
     private void setupPrefixes() {
@@ -169,6 +173,45 @@ class JsonLd {
                     return alias ? [it, alias] : it
                 }.flatten()
             }
+        }
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    expandInheritedLensProperties() {
+        def lensesById = [:]
+        displayData['lensGroups']?.values()?.each { group ->
+            group.get('lenses')?.values()?.each { lens ->
+                lensesById[lens['@id']] = lens
+            }
+        }
+
+        def flattenedProps
+        flattenedProps = { lens, hierarchy=[] ->
+            if (hierarchy.contains(lens['@id'])) {
+                throw new FresnelException('fresnel:extends inheritance loop: ' + hierarchy.toString())
+            }
+
+            String superLensId = lens.get('fresnel:extends')?.get('@id')
+            if (!superLensId) {
+                return lens['showProperties']
+            }
+            else {
+                if (!lensesById[superLensId]) {
+                    throw new FresnelException("Super lens not found: ${lens['@id']} fresnel:extends ${superLensId}")
+                }
+
+                def superProps = flattenedProps(lensesById[superLensId], hierarchy << lens['@id'])
+                def props = lens['showProperties']
+                if(!props.contains('fresnel:super')) {
+                    props = ['fresnel:super'] + props
+                }
+                return props.collect { it == 'fresnel:super' ? superProps : it }.flatten()
+            }
+        }
+
+        lensesById.values().each { Map lens ->
+            lens.put('showProperties', flattenedProps(lens))
+            lens.remove('fresnel:extends')
         }
     }
 
@@ -857,7 +900,8 @@ class JsonLd {
     }
 
     private static boolean shouldKeep(String key, List propertiesToKeep) {
-        return (key == RECORD_KEY || key in propertiesToKeep || key.startsWith("@"))
+        return (key == RECORD_KEY || key == THING_KEY ||
+                key in propertiesToKeep || key.startsWith("@"))
     }
 
 
@@ -931,6 +975,8 @@ class JsonLd {
     static Map frame(String mainId, Map inData) {
         Map<String, Map> idMap = getIdMap(inData)
 
+        putRecordReferencesIntoThings(idMap)
+
         Map mainItem = idMap[mainId]
 
         Map framedData
@@ -946,6 +992,23 @@ class JsonLd {
         cleanUp(framedData)
 
         return framedData
+    }
+
+    static void putRecordReferencesIntoThings(Map<String, Map> idMap) {
+        for (obj in idMap.values()) {
+            Map thingRef = obj[THING_KEY]
+            if (thingRef) {
+                String thingId = thingRef[ID_KEY]
+                Map thing = idMap[thingId]
+                if (thing) {
+                    Map recRef = [:]
+                    recRef[ID_KEY] = obj[ID_KEY]
+                    thing[RECORD_KEY] = recRef
+                } else {
+                    log.debug("Record <${obj[ID_KEY]}> is missing thing <${thingId}>.")
+                }
+            }
+        }
     }
 
     private static Map embed(String mainId, Map mainItem, Map idMap, Set embedChain) {
@@ -1084,4 +1147,9 @@ class JsonLd {
         }
     }
 
+    class FresnelException extends WhelkRuntimeException {
+        FresnelException(String msg) {
+            super(msg);
+        }
+    }
 }

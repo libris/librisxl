@@ -3,83 +3,65 @@ package whelk.component
 import groovy.json.JsonOutput
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.codec.binary.Base64
-import org.apache.http.HttpEntity
-import org.apache.http.HttpRequest
-import org.apache.http.HttpResponse
-import org.apache.http.client.HttpClient
-import org.apache.http.client.methods.HttpGet
-import org.apache.http.client.methods.HttpPost
-import org.apache.http.client.methods.HttpPut
-import org.apache.http.client.methods.HttpRequestBase
-import org.apache.http.entity.ContentType
-import org.apache.http.entity.StringEntity
-import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.impl.conn.PoolingClientConnectionManager
-import org.apache.http.params.HttpConnectionParams
-import org.apache.http.params.HttpParams
-import org.apache.http.util.EntityUtils
 import org.codehaus.jackson.map.ObjectMapper
+import se.kb.libris.utils.isbn.ConvertException
+import se.kb.libris.utils.isbn.Isbn
+import se.kb.libris.utils.isbn.IsbnException
+import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
-import whelk.exception.WhelkRuntimeException
+
+import java.util.concurrent.LinkedBlockingQueue
 
 @Log
 class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
-    static final int MAX_CONNECTIONS_PER_HOST = 12
-    static final int CONNECTION_POOL_SIZE = 30
-    static final int TIMEOUT_MS = 40 * 1000
-    static final int MAX_BACKOFF = 1024
-
-    PoolingClientConnectionManager cm
-    HttpClient httpClient
+    private static final ObjectMapper mapper = new ObjectMapper()
 
     String defaultIndex = null
     private List<String> elasticHosts
     private String elasticCluster
-    Random random = new Random()
+    private ElasticClient client
 
-    private static final ObjectMapper mapper = new ObjectMapper()
+    private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
 
     ElasticSearch(Properties props) {
-        this.elasticHosts = getElasticHosts(props.getProperty("elasticHost"))
-        this.elasticCluster = props.getProperty("elasticCluster")
-        this.defaultIndex = props.getProperty("elasticIndex")
-        setup()
+        this(
+                props.getProperty("elasticHost"),
+                props.getProperty("elasticCluster"),
+                props.getProperty("elasticIndex")
+        )
     }
 
     ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex) {
         this.elasticHosts = getElasticHosts(elasticHost)
         this.elasticCluster = elasticCluster
         this.defaultIndex = elasticIndex
-        setup()
+
+        client = ElasticClient.withDefaultHttpClient(elasticHosts)
+
+        new Timer("ElasticIndexingRetries", true).schedule(new TimerTask() {
+            void run() {
+                indexingRetryQueue.size().times {
+                    Runnable entry = indexingRetryQueue.poll()
+                    if (entry != null)
+                        entry.run()
+                }
+            }
+        }, 60*1000, 10*1000)
     }
 
     private List<String> getElasticHosts(String elasticHost) {
         List<String> hosts = []
         for (String host : elasticHost.split(",")) {
+            host = host.trim()
             if (!host.contains(":"))
                 host += ":9200"
             hosts.add("http://" + host)
         }
         return hosts
     }
-
-    private void setup() {
-        cm = new PoolingClientConnectionManager()
-        cm.setMaxTotal(CONNECTION_POOL_SIZE)
-        cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST)
-
-        httpClient = new DefaultHttpClient(cm)
-        HttpParams httpParams = httpClient.getParams();
-        HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT_MS)
-        HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT_MS)
-        // FIXME: upgrade httpClient (and use RequestConfig)- https://issues.apache.org/jira/browse/HTTPCLIENT-1418
-        // httpParams.setParameter(ClientPNames.CONN_MANAGER_TIMEOUT, new Long(TIMEOUT_MS));
-
-        log.info "ElasticSearch component initialized with ${elasticHosts.count{it}} nodes and $CONNECTION_POOL_SIZE workers."
-     }
 
     String getIndexName() { defaultIndex }
 
@@ -88,7 +70,7 @@ class ElasticSearch {
 	 *
 	 */
 	Map getMappings() {
-		Tuple2<Integer, String> res = performRequest('GET', "/${indexName}/_mappings", '')
+		Tuple2<Integer, String> res = client.performRequest('GET', "/${indexName}/_mappings", '')
 		int statusCode = res.first
 		if (statusCode != 200) {
 			log.warn("Got unexpected status code ${statusCode} when getting ES mappings.")
@@ -109,66 +91,6 @@ class ElasticSearch {
         }
     }
 
-    Tuple2<Integer, String> performRequest(String method, String path, String body, String contentType0 = null) {
-        String host = elasticHosts[random.nextInt(elasticHosts.size())]
-        HttpRequest request
-        switch (method) {
-            case 'GET':
-                request = new HttpGet(host + path)
-                break
-            case 'PUT':
-                request = new HttpPut(host + path)
-                request.setEntity(httpEntity(body, contentType0))
-            case 'POST':
-                request = new HttpPost(host + path)
-                request.setEntity(httpEntity(body, contentType0))
-                break
-            default:
-                throw new IllegalArgumentException("Bad request method:" + method)
-        }
-
-        try {
-            performRequest(request)
-        }
-        catch (Exception e) {
-            log.warn("Request to ElasticSearch failed: ${e}", e)
-            throw new WhelkRuntimeException(e.getMessage(), e)
-        }
-        finally {
-            request.releaseConnection()
-        }
-    }
-
-    Tuple2<Integer, String> performRequest(HttpRequestBase request) {
-        int backOffTime = 1
-        while (true) {
-            HttpResponse response = httpClient.execute(request)
-            String responseBody = EntityUtils.toString(response.getEntity())
-            Tuple2<Integer, String> result = new Tuple2(response.getStatusLine().getStatusCode(), responseBody)
-
-            request.reset()
-
-            if (result.first == 429) {
-                if (backOffTime > MAX_BACKOFF) {
-                    throw new RuntimeException("Max retries exceeded: HTTP 429 from ElasticSearch")
-                }
-
-                log.info("Bulk indexing request to ElasticSearch was throttled (HTTP 429) waiting $backOffTime seconds before retry.")
-                Thread.sleep(backOffTime * 1000)
-
-                backOffTime *= 2
-            }
-            else {
-                return result
-            }
-        }
-    }
-
-    private HttpEntity httpEntity(String body, String contentType){
-        return new StringEntity(body,
-                contentType ? ContentType.create(contentType) : ContentType.APPLICATION_JSON)
-    }
-
     void bulkIndex(List<Document> docs, String collection, Whelk whelk) {
         assert collection
         if (docs) {
@@ -184,13 +106,17 @@ class ElasticSearch {
                 }
             }.join('')
 
-            String response = performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE).second
+            String response = client.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE).second
             Map responseMap = mapper.readValue(response, Map)
             log.info("Bulk indexed ${docs.count{it}} docs in ${responseMap.took} ms")
         }
     }
 
     String createActionRow(Document doc, String collection) {
+        if (!collection) {
+            return
+        }
+
         def action = ["index" : [ "_index" : indexName,
                                   "_type" : collection,
                                   "_id" : toElasticId(doc.getShortId()) ]]
@@ -198,30 +124,72 @@ class ElasticSearch {
     }
 
     void index(Document doc, String collection, Whelk whelk) {
+        if (!collection) {
+            return
+        }
+
         // The justification for this uncomfortable catch-all, is that an index-failure must raise an alert (log entry)
         // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
         try {
             Map shapedData = getShapeForIndex(doc, whelk, collection)
-            def response = performRequest('PUT',
+            def response = client.performRequest('PUT',
                     "/${indexName}/${collection}" +
                             "/${toElasticId(doc.getShortId())}?pipeline=libris",
                     JsonOutput.toJson(shapedData)).second
             Map responseMap = mapper.readValue(response, Map)
             log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${responseMap['_id']} as version ${responseMap['_version']}")
         } catch (Exception e) {
-            log.error("Failed to index ${doc.getShortId()} in elastic.", e)
+            log.error("Failed to index ${doc.getShortId()} in elastic, placing in retry queue.", e)
+            indexingRetryQueue.add({ -> index(doc, collection, whelk) })
+        }
+    }
+
+    void incrementReverseLinks(String shortId, String collection) {
+        updateReverseLinkCounter(shortId, collection, 1)
+    }
+
+    void decrementReverseLinks(String shortId, String collection) {
+        updateReverseLinkCounter(shortId, collection, -1)
+    }
+
+    private void updateReverseLinkCounter(String shortId, String collection, int deltaCount) {
+        if (!collection) {
+            return
+        }
+
+        String body = """
+        {
+            "script" : {
+                "source": "ctx._source.reverseLinks.totalItems += $deltaCount",
+                "lang": "painless"
+            }
+        }
+        """.stripIndent()
+
+        try {
+            client.performRequest(
+                    'POST',
+                    "/${indexName}/${collection}/${toElasticId(shortId)}/_update",
+                    body)
+        }
+        catch (Exception e) {
+            log.warn("Failed to update reverse link counter for $shortId: $e, placing in retry queue.", e)
+            indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, collection, deltaCount) })
         }
     }
 
     void remove(String identifier) {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
-        def response = performRequest('POST',
+        def response = client.performRequest('POST',
                 "/${indexName}/_delete_by_query?conflicts=proceed",
                 JsonOutput.toJson(dsl)).second
         Map responseMap = mapper.readValue(response, Map)
         log.debug("Response: ${responseMap.deleted} of ${responseMap.total} " +
                   "objects deleted")
+        if (responseMap.deleted == 0) {
+            log.warn("Record with id $identifier was not deleted from the Elasticsearch index.")
+        }
     }
 
     Map getShapeForIndex(Document document, Whelk whelk, String collection) {
@@ -236,6 +204,7 @@ class ElasticSearch {
         boolean addSearchKey = true
         copy.data['@graph'] = copy.data['@graph'].collect { whelk.jsonld.toCard(it, chipsify, addSearchKey) }
 
+        setComputedProperties(copy, whelk)
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = document.getThingIdentifiers()
         if (thingIds.isEmpty()) {
@@ -251,20 +220,45 @@ class ElasticSearch {
     }
 
     void embellish(Whelk whelk, Document document, Document copy) {
-        List externalRefs = document.getExternalRefs()
-        List convertedExternalLinks = JsonLd.expandLinks(externalRefs, whelk.jsonld.getDisplayData().get(JsonLd.getCONTEXT_KEY()))
-        Map referencedData = [:]
-        Map externalDocs = whelk.bulkLoad(convertedExternalLinks)
-        externalDocs.each { id, doc ->
-            if (id && doc && doc.hasProperty('data')) {
-                referencedData[id] = doc.data
-            }
-            else {
-                log.warn("Could not get external doc ${id} for ${document.getShortId()}, skipping...")
-            }
-        }
         boolean filterOutNonChipTerms = true // Consider using false here, since cards-in-cards work now.
-        whelk.jsonld.embellish(copy.data, referencedData, filterOutNonChipTerms)
+        whelk.embellish(copy, filterOutNonChipTerms)
+    }
+
+    private static void setComputedProperties(Document doc, Whelk whelk) {
+        getOtherIsbns(doc.getIsbnValues())
+                .each { doc.addTypedThingIdentifier('ISBN', it) }
+
+        getOtherIsbns(doc.getIsbnHiddenValues())
+                .each { doc.addIndirectTypedThingIdentifier('ISBN', it) }
+
+        doc.data['@graph'][1]['reverseLinks'] = [
+                (JsonLd.TYPE_KEY) : 'PartialCollectionView',
+                'totalItems' : whelk.getStorage().getIncomingLinkCount(doc.getShortId())]
+    }
+
+    private static Collection<String> getOtherIsbns(List<String> isbns) {
+        isbns.findResults { getOtherIsbnForm(it) }
+                .findAll { !isbns.contains(it) }
+    }
+
+    private static String getOtherIsbnForm(String isbnValue) {
+        Isbn isbn
+        try {
+            isbn = IsbnParser.parse(isbnValue)
+        } catch (IsbnException e) {
+            log.warn "Could not parse ISBN ${isbnValue}: $e"
+        }
+        if (isbn == null) {
+            //Isbnparser.parse() returns null for invalid ISBN forms
+            return null
+        }
+        def otherType = isbn.getType() == Isbn.ISBN10 ? Isbn.ISBN13 : Isbn.ISBN10
+        try {
+            return isbn.convert(otherType).toString()
+        } catch (ConvertException ignored) {
+            //Exception thrown when trying to transform non-convertible ISBN13 (starting with 979) to ISBN10
+            return null
+        }
     }
 
     Map query(Map jsonDsl, String collection) {
@@ -283,9 +277,14 @@ class ElasticSearch {
         )
     }
 
+    @Override
+    int hashCode() {
+        return super.hashCode()
+    }
+
     private Map performQuery(Map jsonDsl, String queryUrl, Closure<Map> hitCollector) {
         def start = System.currentTimeMillis()
-        Tuple2<Integer, String> response = performRequest('POST',
+        Tuple2<Integer, String> response = client.performRequest('POST',
                 queryUrl,
                 JsonOutput.toJson(jsonDsl))
         int statusCode = response.first

@@ -6,6 +6,7 @@ import com.google.common.cache.LoadingCache
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.ListenableFutureTask
 import com.google.common.util.concurrent.ThreadFactoryBuilder
+import io.prometheus.client.guava.cache.CacheMetricsCollector
 import whelk.Document
 
 import java.util.concurrent.Callable
@@ -19,6 +20,8 @@ class DependencyCache {
     private static final int CACHE_SIZE = 10_000
     private static final int REFRESH_INTERVAL_MINUTES = 5
 
+    private static final CacheMetricsCollector cacheMetrics = new CacheMetricsCollector().register()
+
     PostgreSQLComponent storage
 
     private Executor cacheRefresher = Executors.newSingleThreadExecutor(
@@ -27,15 +30,20 @@ class DependencyCache {
     private LoadingCache<Tuple2<String,String>, Set<String>> dependersCache = CacheBuilder.newBuilder()
             .maximumSize(CACHE_SIZE)
             .refreshAfterWrite(REFRESH_INTERVAL_MINUTES, TimeUnit.MINUTES)
+            .recordStats()
             .build(loader(storage.&getDependersOfType))
 
     private LoadingCache<Tuple2<String,String>, Set<String>> dependenciesCache = CacheBuilder.newBuilder()
             .maximumSize(CACHE_SIZE)
             .refreshAfterWrite(REFRESH_INTERVAL_MINUTES, TimeUnit.MINUTES)
+            .recordStats()
             .build(loader(storage.&getDependenciesOfType))
-
+    
     DependencyCache(PostgreSQLComponent storage) {
         this.storage = storage
+
+        cacheMetrics.addCache('dependersCache', dependersCache)
+        cacheMetrics.addCache('dependencyCache', dependenciesCache)
     }
 
     Set<String> getDependenciesOfType(String iri, String typeOfRelation) {

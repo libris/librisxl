@@ -109,7 +109,7 @@ public class TotalExport
     private void dump(ExportProfile profile, MarcRecordWriter output)
             throws SQLException, InterruptedException
     {
-        ThreadPool threadPool = new ThreadPool(4 * Runtime.getRuntime().availableProcessors());
+        ThreadPool threadPool = new ThreadPool(Runtime.getRuntime().availableProcessors());
         Batch batch = new Batch(profile, output);
 
         try (Connection connection = getConnection();
@@ -144,7 +144,7 @@ public class TotalExport
     private void dumpSpecific(ExportProfile profile, Path idFilePath, MarcRecordWriter output)
             throws IOException, InterruptedException
     {
-        ThreadPool threadPool = new ThreadPool(4 * Runtime.getRuntime().availableProcessors());
+        ThreadPool threadPool = new ThreadPool(Runtime.getRuntime().availableProcessors());
         Batch batch = new Batch(profile, output);
 
         List<String> ids = Files.readAllLines(idFilePath);
@@ -152,7 +152,7 @@ public class TotalExport
         for (String id : ids)
         {
             if (exportedUris.contains(id))
-                return;
+                continue;
             exportedUris.add(id);
             batch.bibUrisToConvert.add(id);
 
@@ -170,17 +170,17 @@ public class TotalExport
 
     private void executeBatch(Batch batch, int threadIndex)
     {
-        try (Connection connection = getConnection())
+        try
         {
             for (String bibUri : batch.bibUrisToConvert)
             {
-                String systemID = m_whelk.getStorage().getSystemIdByIri(bibUri, connection);
+                String systemID = m_whelk.getStorage().getSystemIdByIri(bibUri);
                 if (systemID == null) {
                     log.warn("BibURI " + bibUri + " not found in system, skipping...");
                     continue;
                 }
 
-                Document document = m_whelk.getStorage().loadEmbellished(systemID, m_whelk.getJsonld(), connection);
+                Document document = m_whelk.loadEmbellished(systemID);
 
                 Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(batch.profile, document, m_whelk, m_toMarcXmlConverter);
                 if (result == null) // A conversion error will already have been logged.
@@ -202,7 +202,7 @@ public class TotalExport
                 }
 
             }
-        } catch (SQLException e)
+        } catch (Exception e)
         {
             throw new RuntimeException(e);
         }

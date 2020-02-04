@@ -9,10 +9,12 @@ Session.vim
 
 # Local Config
 /*.properties
+!gradle.properties
 
 # Java/Gradle Artifacts
 /.gradle
 /*/.gradle
+/build
 /*/build
 /*/catalina.base_IS_UNDEFINED
 /*/logs

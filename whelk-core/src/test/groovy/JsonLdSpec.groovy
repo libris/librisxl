@@ -124,6 +124,21 @@ class JsonLdSpec extends Specification {
         assert JsonLd.frame(id, input) == expected
     }
 
+   def "should link record as meta when framing jsonld"() {
+        given:
+        def input = ["@graph": [
+            ["@id": "1", "mainEntity": ["@id": "1#it"]],
+            ["@id": "1#it", "foo": "bar"]
+        ]]
+        def expected = [
+            "@id": "1#it",
+            "foo": "bar",
+            "meta": ["@id": "1", "mainEntity": ["@id": "1#it"]]
+        ]
+        expect:
+        assert JsonLd.frame("1#it", input) == expected
+    }
+
     def "framing framed jsonld should preserve input"() {
         given:
         def id = "1234"
@@ -289,6 +304,111 @@ class JsonLdSpec extends Specification {
         expect:
         def props = ld.displayData.lensGroups.chips.lenses.Thing.showProperties
         props == ['notation', 'label', 'labelByLang', 'note']
+    }
+
+    def "should handle lens inheritance"() {
+        given:
+        Map displayData = [
+                "lensGroups":
+                        ["chips":
+                                 ["lenses": [
+                                         "X": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "X-chips",
+                                               "fresnel:extends": ["@id": "Y-chips"],
+                                               "showProperties" : ["x1", "x2", "fresnel:super", "x3"]
+                                         ],
+                                         "Y": ["@type"         : "fresnel:Lens",
+                                               "@id"           : "Y-chips",
+                                               "showProperties": ["y1", "y2",]
+                                         ],
+                                         "Q": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "Q-chips",
+                                               "fresnel:extends": ["@id": "P-cards"],
+                                               "showProperties" : []
+                                         ],
+                                 ]],
+                         "cards":
+                                 ["lenses": [
+                                         "Z": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "Z-cards",
+                                               "fresnel:extends": ["@id": "X-chips"],
+                                               "showProperties" : ["z1", "z2", "z3"]
+                                         ],
+                                         "P": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "P-cards",
+                                               "fresnel:extends": ["@id": "Y-chips"],
+                                               "showProperties" : ["p", "fresnel:super",]
+                                         ],
+                                 ]]]]
+
+
+        def ld = new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA)
+        def groups = ld.displayData.lensGroups
+
+        expect:
+        ld.getLensFor(thing, groups[group])['showProperties'] == props
+
+        where:
+        thing          | group   || props
+        ["@type": "X"] | 'chips' || ['x1', 'x2', 'y1', 'y2', 'x3']
+        ["@type": "Y"] | 'chips' || ['y1', 'y2']
+        ["@type": "Z"] | 'cards' || ['x1', 'x2', 'y1', 'y2', 'x3', 'z1', 'z2', 'z3']
+        ["@type": "P"] | 'cards' || ['p', 'y1', 'y2']
+        ["@type": "Q"] | 'chips' || ['p', 'y1', 'y2']
+    }
+
+    def "should handle lens inheritance loops"() {
+        given:
+        Map displayData = [
+                "lensGroups":
+                        ["chips":
+                                 ["lenses": [
+                                         "X": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "X-chips",
+                                               "fresnel:extends": ["@id": "Y-chips"],
+                                               "showProperties" : ["x"]
+                                         ],
+                                         "Y": ["@type"         : "fresnel:Lens",
+                                               "@id"           : "Y-chips",
+                                               "fresnel:extends": ["@id": "Z-chips"],
+                                               "showProperties": ["y"]
+                                         ],
+                                         "Z": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "Z-chips",
+                                               "fresnel:extends": ["@id": "X-chips"],
+                                               "showProperties" : ["z"]
+                                         ],
+                                 ]]
+                        ]]
+
+
+        when:
+        new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA)
+
+        then:
+        thrown JsonLd.FresnelException
+    }
+
+    def "should handle bad fresnel:extends id"() {
+        given:
+        Map displayData = [
+                "lensGroups":
+                        ["chips":
+                                 ["lenses": [
+                                         "X": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "X-chips",
+                                               "fresnel:extends": ["@id": "Y-chips"],
+                                               "showProperties" : ["x"]
+                                         ]
+                                 ]]
+                        ]]
+
+
+        when:
+        new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA)
+
+        then:
+        thrown JsonLd.FresnelException
     }
 
     def "get term key from URI"() {
@@ -572,9 +692,7 @@ class JsonLdSpec extends Specification {
 
     def "shouldPreservePaths"() {
         given:
-        Map doc = JsonLd.frame(
-                "http://kblocalhost.kb.se:5000/n602lbw018zh88k#it",
-                readMap("preserve-paths/molecular-aspects.jsonld"))
+        Map doc = readMap("preserve-paths/molecular-aspects.jsonld")
 
         def ld = new JsonLd(
                 readMap("preserve-paths/context.jsonld"),

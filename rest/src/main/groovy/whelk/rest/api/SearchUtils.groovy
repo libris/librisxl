@@ -2,7 +2,6 @@ package whelk.rest.api
 
 import com.google.common.escape.Escaper
 import com.google.common.net.UrlEscapers
-import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
@@ -122,25 +121,29 @@ class SearchUtils {
         lens = lens ? lens : 'cards'
         log.debug("findReverse. o: ${id}, _lens: ${lens}")
 
-        def ids = whelk.findIdsLinkingTo(id)
-        int total = ids.size()
+        int total = (int) whelk.getIncomingLinkCount(id)
+        List items
 
-        ids = slice(ids, offset, offset+limit)
-
-        List items = whelk.bulkLoad(ids).values()
-                .collect(SearchUtils.&formatReverseResult)
-                .findAll{ !it.isEmpty() }
-                .collect{applyLens(it, id, lens)}
+        if (limit > 0) {
+            def ids = whelk.findIdsLinkingTo(id, limit, offset)
+            ids = ids.unique() // filter out duplicate documents (docs having more than one link)
+            items = whelk.bulkLoad(ids).values()
+                    .each(whelk.&embellish)
+                    .collect(SearchUtils.&formatReverseResult)
+                    .findAll { !it.isEmpty() }
+                    .collect { applyLens(it, id, lens) }
+        }
+        else {
+            items = []
+        }
 
         Map pageParams = ['o': id, '_lens': lens, '_limit': limit]
-
         return assembleSearchResults(SearchType.FIND_REVERSE,
                 items, [], pageParams,
                 limit, offset, total)
     }
 
     private static Map formatReverseResult(Document document) {
-        document.setThingMeta(document.getCompleteId())
         List<String> thingIds = document.getThingIdentifiers()
         if (thingIds.isEmpty()) {
             log.warn("Missing mainEntity? In: " + document.getCompleteId())
@@ -154,14 +157,6 @@ class SearchUtils {
         return lens == 'chips'
                 ? ld.toChip(framedThing, preservedPaths)
                 : ld.toCard(framedThing, preservedPaths)
-    }
-
-    @PackageScope
-    static <T> List<T> slice(List<T> list, int fromIx, int toIx) {
-        if (fromIx > list.size() || fromIx > toIx) {
-            return []
-        }
-        return list[(Math.max(0,fromIx)..<Math.min(list.size(), toIx))]
     }
 
     private Map queryElasticSearch(Map queryParameters,
@@ -196,7 +191,14 @@ class SearchUtils {
 
         List items = []
         if (esResult['items']) {
-            items = esResult['items'].collect { ld.toCard(it) }
+            items = esResult['items'].collect {
+                def item = ld.toCard(it)
+                // This object must be re-added because it gets filtered out in toCard().
+                item['reverseLinks'] = it['reverseLinks']
+                if (item['reverseLinks'] != null)
+                    item['reverseLinks'][JsonLd.ID_KEY] = Document.getBASE_URI().resolve('find?o=' + URLEncoder.encode(it['@id']).toString())
+                return item
+            }
         }
 
         Map stats = buildStats(esResult['aggregations'],
@@ -258,22 +260,6 @@ class SearchUtils {
             }
         }
         return result
-    }
-
-    private List embellishItems(List items) {
-        List embellished = []
-
-        for (item in items) {
-            Map graph = JsonLd.flatten(item)
-            List refs = JsonLd.getExternalReferences(graph)
-            List ids = ld.expandLinks(refs)
-            Map recordMap = whelk.bulkLoad(ids).collectEntries { id, doc -> [id, doc.data] }
-            ld.embellish(graph, recordMap)
-
-            embellished << JsonLd.frame(item[JsonLd.ID_KEY], null, graph, true)
-        }
-
-        return embellished
     }
 
     private Map assembleSearchResults(SearchType st, List items,

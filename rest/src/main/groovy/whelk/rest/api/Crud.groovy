@@ -13,9 +13,11 @@ import whelk.IdType
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
+import whelk.exception.ElasticIOException
 import whelk.exception.InvalidQueryException
 import whelk.exception.ModelValidationException
 import whelk.exception.StorageCreateFailedException
+import whelk.exception.LinkValidationException
 import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
 import whelk.rest.security.AccessControl
@@ -99,7 +101,15 @@ class Crud extends HttpServlet {
             Map results = search.doSearch(queryParameters, dataset, jsonld)
             def jsonResult = mapper.writeValueAsString(results)
             sendResponse(response, jsonResult, "application/json")
-        } catch (WhelkRuntimeException e) {
+        } catch (ElasticIOException e) {
+            log.error("Attempted elastic query, but failed.", e)
+            failedRequests.labels("GET", request.getRequestURI(),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Failed to reach elastic for query.")
+            return
+        }
+        catch (WhelkRuntimeException e) {
             log.error("Attempted elastic query, but whelk has no " +
                     "elastic component configured.", e)
             failedRequests.labels("GET", request.getRequestURI(),
@@ -231,7 +241,7 @@ class Crud extends HttpServlet {
                 doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame(), request.getLens())
 
         if (request.shouldEmbellish()) {
-            doc = whelk.storage.loadEmbellished(doc.getShortId(), jsonld)
+            doc = whelk.loadEmbellished(doc.getShortId())
         }
 
         if (request.getLens() != Lens.NONE) {
@@ -515,8 +525,16 @@ class Crud extends HttpServlet {
         // try store document
         // return 201 or error
         boolean isUpdate = false
-        Document savedDoc = saveDocument(newDoc, request, response,
-                                         collection, isUpdate, "POST")
+        Document savedDoc;
+        try {
+            savedDoc = saveDocument(newDoc, request, response,
+                    collection, isUpdate, "POST")
+        } catch (LinkValidationException le)
+        {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    le.getMessage())
+            log.debug(le.getMessage())
+        }
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
                                savedDoc.getChecksum())
@@ -706,7 +724,7 @@ class Crud extends HttpServlet {
                 }
                 else {
                     log.debug("Saving NEW document ("+ doc.getId() +")")
-                    doc = whelk.createDocument(doc, "xl", activeSigel, collection, false)
+                    whelk.createDocument(doc, "xl", activeSigel, collection, false)
                 }
 
                 log.debug("Saving document (${doc.getShortId()})")
@@ -905,7 +923,7 @@ class Crud extends HttpServlet {
                         HttpServletResponse.SC_GONE.toString()).inc()
                 response.sendError(HttpServletResponse.SC_GONE,
                         "Document has been deleted.")
-            } else if(!whelk.storage.getDependers(doc.getShortId()).isEmpty()) {
+            } else if(!whelk.storage.followDependers(doc.getShortId()).isEmpty()) {
                 failedRequests.labels("DELETE", request.getRequestURI(),
                         HttpServletResponse.SC_FORBIDDEN.toString()).inc()
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "This record may not be deleted, because it is referenced by other records.")

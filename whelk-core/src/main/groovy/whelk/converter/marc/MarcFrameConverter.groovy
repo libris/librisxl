@@ -5,13 +5,14 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
-import whelk.Whelk
-import whelk.component.PostgreSQLComponent
 import whelk.converter.FormatConverter
 import whelk.filter.LinkFinder
-import whelk.util.PropertyLoader
 
-import java.time.*
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.Temporal
@@ -93,6 +94,12 @@ class MarcFrameConverter implements FormatConverter {
         if (data['@graph']) {
             def entryId = data['@graph'][0]['@id']
             data = JsonLd.frame(entryId, data)
+        } else if (data[JsonLd.RECORD_KEY]) {
+            // Reshape a framed top-level thing with a meta record
+            Map thing = data.clone()
+            Map record = thing.remove(JsonLd.RECORD_KEY)
+            record.mainEntity = thing
+            data = record
         }
         return conversion.revert(data)
     }
@@ -161,17 +168,16 @@ class MarcConversion {
         }
         addTypeMaps()
 
-        // log.warn? Though, this "should" not happen in prod...
         missingTerms.each {
-            System.err.println "Missing: $it.term a $it.type"
+            log.debug("Missing: $it.term a $it.type")
         }
         badRepeats.each {
             if (it.term.startsWith(converter.ld.expand('marc:')))
                 return
             if (it.shouldRepeat)
-                System.err.println "Expected to be repeatable: $it.term"
+                log.debug("Expected to be repeatable: $it.term")
             else
-                System.err.println "Unexpected repeat of: $it.term"
+                log.debug("Unexpected repeat of: $it.term")
         }
     }
 
@@ -518,9 +524,11 @@ class MarcRuleSet {
             } else if (tag == 'oaipmhSetSpecPrefixMap') {
                 oaipmhSetSpecPrefixMap = dfn
                 return
+            } else if (tag.startsWith('TODO:')) {
+                return
             }
 
-            if (dfn.ignored || dfn.size() == 0) {
+            if (dfn.size() == 0) {
                 return
             }
 
@@ -560,7 +568,10 @@ class MarcRuleSet {
                 }
             } else {
                 handler = new MarcSimpleFieldHandler(this, tag, dfn)
-                assert handler.property || handler.uriTemplate, "Incomplete: $tag: $dfn"
+                if (!handler.ignored) {
+                    assert handler.property || handler.uriTemplate,
+                            "Incomplete: $tag: $dfn"
+            }
             }
 
             fieldHandlers[tag] = handler
@@ -604,13 +615,6 @@ class MarcRuleSet {
                 revertFieldOrder << tag
             }
         }
-
-        // DEBUG:
-        //fieldHandlers.each { tag, handler ->
-        //    if (handler instanceof MarcFieldHandler && handler.sharesGroupIdWith)
-        //        System.err.println "$tag: $handler.sharesGroupIdWith"
-        //}
-
     }
 
     def processInherit(config, subConf, tag, fieldDfn) {
@@ -1044,11 +1048,16 @@ class ConversionPart {
                 def parents = pendingDfn.about == null ? [entity] :
                     pendingDfn.about in aboutMap ? aboutMap[pendingDfn.about] : null
 
-                parents?.each {
-                    def about = it[pendingDfn.link ?: pendingDfn.addLink]
+                parents?.each { parent ->
+                    String link = pendingDfn.link ?: pendingDfn.addLink
+                    def about = parent[link]
+                    if (!about && pendingDfn.infer == true) {
+                        about = ld.getSubProperties(link).findResult { parent[it] }
+                    }
+
                     if (!about && pendingDfn.absorbSingle) {
-                        if (isInstanceOf(it, pendingDfn.resourceType)) {
-                            about = it
+                        if (isInstanceOf(parent, pendingDfn.resourceType)) {
+                            about = parent
                         } else {
                             requiredOk = false
                         }
@@ -1133,6 +1142,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
     Map computeLinks
     boolean repeatable = false
     String resourceType
+    boolean ignored = false
     String groupId
     Map linkRepeated = null
     boolean onlySubsequentRepeated = false
@@ -1154,6 +1164,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
         repeatable = fieldDfn.containsKey('addLink')
         link = linkTerm(fieldDfn.link ?: fieldDfn.addLink, repeatable)
         resourceType = typeTerm(fieldDfn.resourceType)
+        ignored = fieldDfn.ignored == true
         groupId = fieldDfn.groupId
         embedded = fieldDfn.embedded == true
 
@@ -1577,7 +1588,6 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     ZoneId timeZone
     LocalTime defaultTime
     boolean missingCentury = false
-    boolean ignored = false
     Boolean silentRevert = null
     // TODO: working, but not so useful until capable of merging entities..
     //MarcSimpleFieldHandler linkedHandler
@@ -1611,7 +1621,6 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             }
         }
         parseZeroPaddedNumber = (fieldDfn.parseZeroPaddedNumber == true)
-        ignored = fieldDfn.get('ignored', false)
         uriTemplate = fieldDfn.uriTemplate
         if (fieldDfn.matchUriToken) {
             matchUriToken = Pattern.compile(fieldDfn.matchUriToken)
@@ -1632,8 +1641,12 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     }
 
     ConvertResult convert(Map state, value) {
-        if (ignored || !(property || link))
-            return
+        if (ignored) {
+            return OK
+        }
+        if (!(property || link)) {
+            return null
+        }
 
         def strValue = (String) value
 
@@ -1753,6 +1766,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                         return revertToken(it, token)
                     }
                     if (it instanceof Map) {
+                        // TODO: def enumCandidates = relations.findDependers(id, MATCHING_LINKS) // TODO: of sought after enum type? Won't reduce selection as things are imolemented right now...
                         for (same in Util.asList(it['sameAs'])) {
                             token = findTokenFromId(same, uriTemplate, matchUriToken)
                             if (token) {
@@ -1913,6 +1927,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     }
 
     ConvertResult convert(Map state, value) {
+        if (ignored) {
+            return OK
+        }
         if (!(value instanceof Map)) {
             throw new MalformedFieldValueException()
         }
@@ -1975,6 +1992,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         value.subfields.each { Map it ->
             it.each { code, subVal ->
                 def subDfn = (MarcSubFieldHandler) subfields[code as String]
+                if (subDfn?.ignored) {
+                    return
+                }
                 boolean ok = false
                 if (subDfn) {
                     def entKey = subDfn.aboutEntityName
@@ -2506,6 +2526,7 @@ class MarcSubFieldHandler extends ConversionPart {
     boolean allowEmpty
     String definedElsewhereToken
     String marcDefault
+    boolean ignored = false
     boolean required = false
     boolean supplementary = false
     String requiresI1
@@ -2520,6 +2541,7 @@ class MarcSubFieldHandler extends ConversionPart {
         this.code = code
         super.setTokenMap(fieldHandler, subDfn)
         aboutEntityName = subDfn.aboutEntity
+        ignored = subDfn.ignored == true
 
         trailingPunctuation = subDfn.trailingPunctuation
         leadingPunctuation = subDfn.leadingPunctuation
