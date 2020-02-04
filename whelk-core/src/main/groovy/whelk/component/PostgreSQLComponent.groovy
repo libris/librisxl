@@ -937,10 +937,9 @@ class PostgreSQLComponent implements Storage {
                 batch.addBatch()
                 refreshDerivativeTables(doc, connection, false)
 
-                for (Tuple2<String, String> depender : followDependers(doc.getShortId(), connection, JsonLd.NON_DEPENDANT_RELATIONS)) {
-                    removeEmbellishedDocument((String) depender.get(0), connection)
+                for (String dependerId : getDependencyData(doc.getShortId(), GET_DEPENDERS, connection)) {
+                    removeEmbellishedDocument(dependerId, connection)
                 }
-
             }
             batch.executeBatch()
             ver_batch.executeBatch()
