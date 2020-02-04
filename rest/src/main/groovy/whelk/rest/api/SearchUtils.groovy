@@ -2,7 +2,6 @@ package whelk.rest.api
 
 import com.google.common.escape.Escaper
 import com.google.common.net.UrlEscapers
-import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
@@ -127,6 +126,7 @@ class SearchUtils {
 
         if (limit > 0) {
             def ids = whelk.findIdsLinkingTo(id, limit, offset)
+            ids = ids.unique() // filter out duplicate documents (docs having more than one link)
             items = whelk.bulkLoad(ids).values()
                     .each(whelk.&embellish)
                     .collect(SearchUtils.&formatReverseResult)

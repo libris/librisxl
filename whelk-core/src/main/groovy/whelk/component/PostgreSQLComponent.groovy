@@ -1456,7 +1456,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    SortedSet<String> getIncomingLinkIdsPaginated(String id, int limit, int offset) {
+    List<String> getIncomingLinkIdsPaginated(String id, int limit, int offset) {
         Connection connection = getConnection()
         PreparedStatement preparedStatement = null
         ResultSet rs = null
@@ -1466,7 +1466,7 @@ class PostgreSQLComponent implements Storage {
             preparedStatement.setInt(2, limit)
             preparedStatement.setInt(3, offset)
             rs = preparedStatement.executeQuery()
-            SortedSet<String> result = new TreeSet<>()
+            List<String> result = new ArrayList<>(limit)
             while (rs.next()) {
                 result.add( rs.getString(1) )
             }

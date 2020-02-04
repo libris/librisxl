@@ -406,9 +406,7 @@ class Whelk implements Storage {
     }
 
     List<String> findIdsLinkingTo(String idOrIri, int limit, int offset) {
-        return storage
-                .getIncomingLinkIdsPaginated(tryGetSystemId(idOrIri), limit, offset)
-                .collect()
+        return storage.getIncomingLinkIdsPaginated(tryGetSystemId(idOrIri), limit, offset)
     }
 
     private String tryGetSystemId(String id) {
