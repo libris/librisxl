@@ -912,7 +912,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     boolean bulkStore(
-            final List<Document> docs, String changedIn, String changedBy, String collection) {
+            final List<Document> docs, String changedIn, String changedBy, String collection, boolean removeEmbellished = true) {
         if (!docs || docs.isEmpty()) {
             return true
         }
@@ -937,8 +937,10 @@ class PostgreSQLComponent implements Storage {
                 batch.addBatch()
                 refreshDerivativeTables(doc, connection, false)
 
-                for (String dependerId : getDependencyData(doc.getShortId(), GET_DEPENDERS, connection)) {
-                    removeEmbellishedDocument(dependerId, connection)
+                if (removeEmbellished) {
+                    for (String dependerId : getDependencyData(doc.getShortId(), GET_DEPENDERS, connection)) {
+                        removeEmbellishedDocument(dependerId, connection)
+                    }
                 }
             }
             batch.executeBatch()
