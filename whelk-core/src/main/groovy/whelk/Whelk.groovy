@@ -162,12 +162,21 @@ class Whelk implements Storage {
         }
 
         Runnable reindex = {
-            log.debug("Reindexing ${idsToReindex.size()} affected documents")
+            long t1 = System.currentTimeMillis()
+            if (idsToReindex.size() > 100 ) {
+                log.info("Reindexing ${idsToReindex.size()} affected documents")
+            }
+
             idsToReindex.each { id ->
                 Document doc = storage.load(id)
-                elastic.index(doc, getLegacyCollection(doc), this)
+                elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
             }
             updateLinkCount(document, preUpdateDependencies)
+
+            if (idsToReindex.size() > 100 ) {
+                long dt = (System.currentTimeMillis() - t1) / 1000 as long
+                log.info("Reindexed ${idsToReindex.size()} affected documents in $dt seconds")
+            }
         }
 
         // If the number of dependers isn't too large or we are inside a batch job. Update them synchronously
@@ -183,12 +192,10 @@ class Whelk implements Storage {
         Set<String> postUpdateDependencies = storage.getDependencies(document.getShortId())
 
         (preUpdateDependencies - postUpdateDependencies)
-                .collect{ id -> storage.load(id) }
-                .each { doc -> elastic.decrementReverseLinks(doc.getShortId(), getLegacyCollection(doc))}
+                .each { id -> elastic.decrementReverseLinks(id, storage.getCollectionBySystemID(id))}
 
         (postUpdateDependencies - preUpdateDependencies)
-                .collect{ id -> storage.load(id) }
-                .each { doc -> elastic.incrementReverseLinks(doc.getShortId(), getLegacyCollection(doc))}
+                .each { id -> elastic.incrementReverseLinks(id, storage.getCollectionBySystemID(id))}
     }
 
     /**
@@ -362,10 +369,12 @@ class Whelk implements Storage {
         return doc
     }
 
-    List<String> findIdsLinkingTo(String idOrIri) {
-        return storage
-                .getDependers(tryGetSystemId(idOrIri))
-                .collect()
+    long getIncomingLinkCount(String idOrIri) {
+        return storage.getIncomingLinkCount(tryGetSystemId(idOrIri))
+    }
+
+    List<String> findIdsLinkingTo(String idOrIri, int limit, int offset) {
+        return storage.getIncomingLinkIdsPaginated(tryGetSystemId(idOrIri), limit, offset)
     }
 
     List<Document> getAttachedHoldings(List<String> thingIdentifiers) {
@@ -378,11 +387,6 @@ class Whelk implements Storage {
             systemId = stripBaseUri(id)
         }
         return systemId
-    }
-
-    private String getLegacyCollection(Document doc) {
-        return LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
-                ?: storage.getCollectionBySystemID(doc.getShortId())
     }
 
     private static String stripBaseUri(String identifier) {

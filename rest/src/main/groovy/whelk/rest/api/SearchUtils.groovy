@@ -2,7 +2,6 @@ package whelk.rest.api
 
 import com.google.common.escape.Escaper
 import com.google.common.net.UrlEscapers
-import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
@@ -122,19 +121,23 @@ class SearchUtils {
         lens = lens ? lens : 'cards'
         log.debug("findReverse. o: ${id}, _lens: ${lens}")
 
-        def ids = whelk.findIdsLinkingTo(id)
-        int total = ids.size()
+        int total = (int) whelk.getIncomingLinkCount(id)
+        List items
 
-        ids = slice(ids, offset, offset+limit)
-
-        List items = whelk.bulkLoad(ids).values()
-                .each(whelk.&embellish)
-                .collect(SearchUtils.&formatReverseResult)
-                .findAll{ !it.isEmpty() }
-                .collect{applyLens(it, id, lens)}
+        if (limit > 0) {
+            def ids = whelk.findIdsLinkingTo(id, limit, offset)
+            ids = ids.unique() // filter out duplicate documents (docs having more than one link)
+            items = whelk.bulkLoad(ids).values()
+                    .each(whelk.&embellish)
+                    .collect(SearchUtils.&formatReverseResult)
+                    .findAll { !it.isEmpty() }
+                    .collect { applyLens(it, id, lens) }
+        }
+        else {
+            items = []
+        }
 
         Map pageParams = ['o': id, '_lens': lens, '_limit': limit]
-
         return assembleSearchResults(SearchType.FIND_REVERSE,
                 items, [], pageParams,
                 limit, offset, total)
@@ -154,14 +157,6 @@ class SearchUtils {
         return lens == 'chips'
                 ? ld.toChip(framedThing, preservedPaths)
                 : ld.toCard(framedThing, preservedPaths)
-    }
-
-    @PackageScope
-    static <T> List<T> slice(List<T> list, int fromIx, int toIx) {
-        if (fromIx > list.size() || fromIx > toIx) {
-            return []
-        }
-        return list[(Math.max(0,fromIx)..<Math.min(list.size(), toIx))]
     }
 
     private Map queryElasticSearch(Map queryParameters,

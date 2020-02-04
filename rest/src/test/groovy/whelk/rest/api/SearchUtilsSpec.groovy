@@ -311,25 +311,4 @@ class SearchUtilsSpec extends Specification {
         [a: ['A', 'a'], 'b': 'B']|  [variable: 'a', value: 'a']                     | [a: ['A'], 'b': 'B']
     }
 
-    def "slicing should work"() {
-        expect:
-        List<String> list = ['a', 'b', 'c', 'd', 'e']
-        // Can't call variable 'expected' because 'expected' is declared as Map in test above...
-        // https://github.com/spockframework/spock/issues/880
-        SearchUtils.slice(list, from, to) == expectedSlice
-        where:
-        from | to | expectedSlice
-        0    | 1  | ['a']
-        0    | 5  | ['a', 'b', 'c', 'd', 'e']
-        0    | 6  | ['a', 'b', 'c', 'd', 'e']
-        1    | 5  | ['b', 'c', 'd', 'e']
-        2    | 2  | []
-        3    | 2  | []
-        2    | 3  | ['c']
-        5    | 0  | []
-        0    | 3  | ['a', 'b', 'c']
-        -4   | 9  | ['a', 'b', 'c', 'd', 'e']
-        5    | 0  | []
-    }
-
 }

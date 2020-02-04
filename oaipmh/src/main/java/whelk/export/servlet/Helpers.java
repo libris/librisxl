@@ -34,8 +34,9 @@ public class Helpers
         {
             if (bySigel == null)
                 return false;
-
+            
             List<Document> holdings = OaiPmh.s_whelk.getAttachedHoldings(doc.getThingIdentifiers());
+
             for (Document holding : holdings)
             {
                 String sigel = holding.getSigel();
