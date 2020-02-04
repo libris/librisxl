@@ -74,6 +74,7 @@ class PostgreSQLComponent implements Storage {
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String GET_INCOMING_LINK_COUNT
     protected String GET_DEPENDERS, GET_DEPENDENCIES
+    protected String GET_INCOMING_LINK_IDS_PAGINATED
     protected String GET_DEPENDENCIES_OF_TYPE, GET_DEPENDERS_OF_TYPE
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
     protected String QUERY_LD_API
@@ -245,6 +246,7 @@ class PostgreSQLComponent implements Storage {
                 "SELECT * FROM deps"
 
         GET_DEPENDERS = "SELECT DISTINCT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id"
+        GET_INCOMING_LINK_IDS_PAGINATED = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id LIMIT ? OFFSET ?"
         GET_INCOMING_LINK_COUNT = "SELECT COUNT(id) FROM $dependenciesTableName WHERE dependsOnId = ?"
         GET_DEPENDENCIES = "SELECT DISTINCT dependsOnId FROM $dependenciesTableName WHERE id = ? ORDER BY dependsOnId"
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
@@ -1450,6 +1452,27 @@ class PostgreSQLComponent implements Storage {
             rs.next()
             return rs.getInt(1)
         } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    SortedSet<String> getIncomingLinkIdsPaginated(String id, int limit, int offset) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            preparedStatement = connection.prepareStatement(GET_INCOMING_LINK_IDS_PAGINATED)
+            preparedStatement.setString(1, id)
+            preparedStatement.setInt(2, limit)
+            preparedStatement.setInt(3, offset)
+            rs = preparedStatement.executeQuery()
+            SortedSet<String> result = new TreeSet<>()
+            while (rs.next()) {
+                result.add( rs.getString(1) )
+            }
+            return result
+        }
+        finally {
             close(rs, preparedStatement, connection)
         }
     }

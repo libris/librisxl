@@ -401,9 +401,13 @@ class Whelk implements Storage {
         return storage.loadEmbellished(systemId, jsonld)
     }
 
-    List<String> findIdsLinkingTo(String idOrIri) {
+    long getIncomingLinkCount(String idOrIri) {
+        return storage.getIncomingLinkCount(tryGetSystemId(idOrIri))
+    }
+
+    List<String> findIdsLinkingTo(String idOrIri, int limit, int offset) {
         return storage
-                .getDependers(tryGetSystemId(idOrIri))
+                .getIncomingLinkIdsPaginated(tryGetSystemId(idOrIri), limit, offset)
                 .collect()
     }
 
