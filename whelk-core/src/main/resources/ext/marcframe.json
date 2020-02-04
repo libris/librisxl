@@ -8862,16 +8862,7 @@
     },
     "251": {
       "NOTE:LC": "251 - VERSION INFORMATION (R) nac",
-      "ignored": true,
-      "_spec": [
-        {
-          "source": {"251": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "X"}
-          ]}},
-          "normalized": [],
-          "result": {"mainEntity": { }}
-        }
-      ]
+      "ignored": true
     },
 
     "254": {
@@ -8985,16 +8976,7 @@
     "258": {
       "NOTE:LC": "258 - PHILATELIC ISSUE DATE (R) nac",
       "ignored": true,
-      "NOTE:record-count": 0,
-      "_spec": [
-        {
-          "source": {"258": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "X"}
-          ]}},
-          "normalized": [],
-          "result": {"mainEntity": { }}
-        }
-      ]
+      "NOTE:record-count": 0
     },
 
     "260": {
@@ -9781,16 +9763,7 @@
     },
     "270": {
       "NOTE:LC": "270 - ADDRESS (R) ignore",
-      "ignored": true,
-      "_spec": [
-        {
-          "source": {"270": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "X"}
-          ]}},
-          "normalized": [],
-          "result": {"mainEntity": { }}
-        }
-      ]
+      "ignored": true
     },
 
     "300": {
@@ -9913,16 +9886,7 @@
       "NOTE:LC": "307 - HOURS, ETC. (R) nac",
       "NOTE:local": "Används företrädesvis för elektroniska resurser.",
       "ignored": true,
-      "NOTE:record-count": 0,
-      "_spec": [
-        {
-          "source": {"307": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "X"}
-          ]}},
-          "normalized": [],
-          "result": {"mainEntity": { }}
-        }
-      ]
+      "NOTE:record-count": 0
     },
 
     "310": {
@@ -10806,30 +10770,12 @@
     "342": {
       "NOTE:LC": "342 - GEOSPATIAL REFERENCE DATA (R) nac",
       "ignored": true,
-      "NOTE:record-count": 0,
-      "_spec": [
-        {
-          "source": {"342": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "X"}
-          ]}},
-          "normalized": [],
-          "result": {"mainEntity": { }}
-        }
-      ]
+      "NOTE:record-count": 0
     },
     "343": {
       "NOTE:LC": "343 - PLANAR COORDINATE DATA (R) nac",
       "ignored": true,
-      "NOTE:record-count": 0,
-      "_spec": [
-        {
-          "source": {"343": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "X"}
-          ]}},
-          "normalized": [],
-          "result": {"mainEntity": { }}
-        }
-      ]
+      "NOTE:record-count": 0
     },
     "344": {
       "linkSubsequentRepeated": {
@@ -11218,30 +11164,12 @@
     "355": {
       "NOTE:LC": "355 - SECURITY CLASSIFICATION CONTROL (R) nac",
       "ignored": true,
-      "NOTE:record-count": 0,
-      "_spec": [
-        {
-          "source": {"355": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "X"}
-          ]}},
-          "normalized": [],
-          "result": {"mainEntity": { }}
-        }
-      ]
+      "NOTE:record-count": 0
     },
     "357": {
       "NOTE:LC": "357 - ORIGINATOR DISSEMINATION CONTROL (NR) nac",
       "ignored": true,
-      "NOTE:record-count": 0,
-      "_spec": [
-        {
-          "source": {"357": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "X"}
-          ]}},
-          "normalized": [],
-          "result": {"mainEntity": { }}
-        }
-      ]
+      "NOTE:record-count": 0
     },
     "362": {
       "aboutEntity": "?thing",
