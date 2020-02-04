@@ -5163,6 +5163,7 @@
       "NOTE:record-count": 0,
       "_spec": [
         {
+          "name": "Test for ignored true on field",
           "source": {"013": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "X"}
           ]}},
@@ -5313,16 +5314,7 @@
     "018": {
       "NOTE:LC": "018 - COPYRIGHT ARTICLE-FEE CODE (NR) ignore",
       "ignored": true,
-      "NOTE:record-count": 0,
-      "_spec": [
-        {
-          "source": {"018": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "X"}
-          ]}},
-          "normalized": [],
-          "result": {"mainEntity": { }}
-        }
-      ]
+      "NOTE:record-count": 0
     },
 
     "020": {
@@ -6086,16 +6078,7 @@
     "031": {
       "NOTE:LC": "031 - MUSICAL INCIPITS INFORMATION (R) nac",
       "ignored": true, 
-      "NOTE:record-count": 0,
-      "_spec": [
-        {
-          "source": {"031": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "X"}
-          ]}},
-          "normalized": [],
-          "result": {"mainEntity": { }}
-        }
-      ]
+      "NOTE:record-count": 0
     },
 
     "032": {
@@ -7033,16 +7016,7 @@
       "NOTE:LC": "061 - NATIONAL LIBRARY OF MEDICINE COPY STATEMENT (R) nac",
       "NOTE:local": "ANVÄNDS NORMALT EJ",
       "ignored": true,
-      "NOTE:record-count": 0,
-      "_spec": [
-        {
-          "source": {"061": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "X"}
-          ]}},
-          "normalized": [],
-          "result": {"mainEntity": { }}
-        }
-      ]
+      "NOTE:record-count": 0
     },
     "066": {
       "NOTE:record-count": 4905,
@@ -7068,16 +7042,7 @@
       "NOTE:LC": "071 - NATIONAL AGRICULTURAL LIBRARY COPY STATEMENT (R) nac",
       "NOTE:local": "ANVÄNDS NORMALT EJ",
       "ignored": true,
-      "NOTE:record-count": 0,
-      "_spec": [
-        {
-          "source": {"071": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "X"}
-          ]}},
-          "normalized": [],
-          "result": {"mainEntity": { }}
-        }
-      ]
+      "NOTE:record-count": 0
     },
 
     "072": {
@@ -7563,16 +7528,7 @@
       "NOTE:LC": "085 - SYNTHESIZED CLASSIFICATION NUMBER COMPONENTS (R) nac",
       "NOTE:local": "ANVÄNDS NORMALT EJ",
       "ignored": true,
-      "NOTE:record-count": 21,
-      "_spec": [
-        {
-          "source": {"085": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "X"}
-          ]}},
-          "normalized": [],
-          "result": {"mainEntity": { }}
-        }
-      ]
+      "NOTE:record-count": 21
     },
     "086": {
       "TODO": "group with classification",
