@@ -4,6 +4,7 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
+import whelk.util.Unicode
 
 import java.lang.reflect.Type
 import java.text.Normalizer
@@ -85,8 +86,8 @@ class Document {
 
     void normalizeUnicode() {
         String json = mapper.writeValueAsString(data)
-        if (!Normalizer.isNormalized(json, Normalizer.Form.NFC)) {
-            data = mapper.readValue(Normalizer.normalize(json, Normalizer.Form.NFC), Map)
+        if (!Unicode.isNormalized(json)) {
+            data = mapper.readValue(Unicode.normalize(json), Map)
         }
     }
 
