@@ -12026,8 +12026,8 @@
     "514": {
       "NOTE:LC": "514 - DATA QUALITY NOTE (NR) nac",
       "NOTE:Local": "Removed from bibliographic marc-export",
-      "NOTE:record-count": 0,
-      "ignored": true
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "515": {
       "aboutEntity": "?thing",
@@ -14113,10 +14113,10 @@
     },
 
     "647": {
+      "NOTE:LC": "647 - SUBJECT ADDED ENTRY--NAMED EVENT (R) nac",
+      "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris.",
       "ignored": true,
-      "NOTE:LC": "647 - SUBJECT ADDED ENTRY--NAMED EVENT (R) nac", 
-      "NOTE:record-count": 2,
-      "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."
+      "NOTE:record-count": 0
     },
     "648": {
       "include": ["subjectbase"],
@@ -14889,8 +14889,8 @@
     },
 
     "654": {
-      "ignored": true,
       "NOTE:LC": "654 - SUBJECT ADDED ENTRY--FACETED TOPICAL TERMS (R) nac",
+      "ignored": true,
       "NOTE:record-count": 174,
       "TODO": "facet term (i1:like 650, i2: null)"
     },
@@ -15045,70 +15045,72 @@
     },
 
     "656" : {
-      "ignored": true,
       "NOTE:LC": "656 - INDEX TERM--OCCUPATION (R)",
-      "NOTE:local": "ANVÄNDS NORMALT EJ"
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "ignored": true,
+      "NOTE:record-count": 47
     },
     "657" : {
-      "ignored": true,
       "NOTE:LC": "657 - INDEX TERM--FUNCTION (R) nac",
-      "NOTE:local": "ANVÄNDS NORMALT EJ"
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "ignored": true,
+      "NOTE:record-count": 36
     },
     "658": {
-      "ignored": true,
       "NOTE:LC": "658 - INDEX TERM--CURRICULUM OBJECTIVE (R) nac",
-      "NOTE:record-count": 0,
-      "NOTE:local": "ANVÄNDS NORMALT EJ"
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "ignored": true,
+      "NOTE:record-count": 59
     },
 
     "662": {
-      "ignored": true,
       "NOTE:LC": "662 - SUBJECT ADDED ENTRY--HIERARCHICAL PLACE NAME (R)",
+      "ignored": true,
       "NOTE:record-count": 25,
       "TODO": "Map?"
     },
 
     "690": {
-      "ignored": true,
-      "NOTE:record-count": 21,
       "NOTE:OCLC": "Local Subject Added Entry--Topical Term.",
-      "NOTE:local": "Ej i formathandboken."
+      "NOTE:local": "Ej i formathandboken.",
+      "ignored": true,
+      "NOTE:record-count": 21
     },
     "691": {
-      "ignored": true,
-      "NOTE:record-count": 5,
       "NOTE:OCLC": "Local Subject Added Entry--Geographic Name",
-      "NOTE:local": "Ej i formathandboken."
+      "NOTE:local": "Ej i formathandboken.",
+      "ignored": true,
+      "NOTE:record-count": 5
     },
     "695": {
-      "ignored": true,
-      "NOTE:record-count": 1,
       "NOTE:OCLC": "Added Class Number",
-      "NOTE:local": "Ej i formathandboken."
+      "NOTE:local": "Ej i formathandboken.",
+      "ignored": true,
+      "NOTE:record-count": 1
     },
     "696": {
-      "ignored": true,
-      "NOTE:record-count": 0, 
       "NOTE:OCLC": "Local Subject Added Entry--Personal Name",
-      "NOTE:local": "Ej i formathandboken."
+      "NOTE:local": "Ej i formathandboken.",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "697": {
-      "ignored": true,
-      "NOTE:record-count": 0,
       "NOTE:OCLC": "Local Subject Added Entry--Corporate Name.",
-      "NOTE:local": "Ej i formathandboken."
+      "NOTE:local": "Ej i formathandboken.",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "698": {
-      "ignored": true,
-      "NOTE:record-count": 5604,
       "NOTE:OCLC": "Local Subject Added Entry--Corporate Name. If the subject access point is of value to others, then use field field 653.",
-      "NOTE:local": "Ej i formathandboken."
+      "NOTE:local": "Ej i formathandboken.",
+      "ignored": true,
+      "NOTE:record-count": 5604
     },
     "699": {
-      "ignored": true,
-      "NOTE:record-count": 1,
       "NOTE:OCLC": "Local Subject Added Entry--Uniform Title.",
-      "NOTE:local": "Ej i formathandboken."
+      "NOTE:local": "Ej i formathandboken.",
+      "ignored": true,
+      "NOTE:record-count": 1
     },
 
     "700": {
