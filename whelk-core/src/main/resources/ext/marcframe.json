@@ -11291,10 +11291,65 @@
       "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
     },
     "380": {
-      "ignored": true,
-      "NOTE:record-count": 2,
-      "NOTE:LC": "genreForm",
-      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "NOTE:record-count": 350,
+      "onRevertPrefer": "655",
+      "include": ["subjectbase"],
+      "aboutEntity": "?work",
+      "addLink": "genreForm",
+      "resourceType": "GenreForm",
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "GenreForm",
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
+        }
+      },
+      "$a": {"about": "_:topic", "property": "prefLabel"},
+      "0": null,
+      "1": {"ignored": true, "NOTE:LC": "nac"},
+      "_spec": [
+        {
+          "name": "GF inScheme",
+          "source": {"380": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Novel"}, {"2": "lcgft"}]}},
+          "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Novel"}, {"2": "lcgft"}]}},
+
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "genreForm": [
+                {
+                  "@type": "GenreForm",
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/lcgft",
+                    "@type": "ConceptScheme",
+                    "code": "lcgft"
+                  },
+                  "prefLabel": "Novel"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"380": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Operas"}]}},
+          "source": {"655": {"ind1": " ", "ind2": "4", "subfields": [{"a": "Operas"}]}},
+
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "genreForm": [
+                {
+                  "@type": "GenreForm",
+                  "prefLabel": "Operas"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "381": {
       "NOTE:LC": "381 - OTHER DISTINGUISHING CHARACTERISTICS OF WORK OR EXPRESSION (R) nac",
