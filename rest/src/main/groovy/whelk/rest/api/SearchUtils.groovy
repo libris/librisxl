@@ -126,7 +126,7 @@ class SearchUtils {
 
         if (limit > 0) {
             def ids = whelk.findIdsLinkingTo(id, limit, offset)
-            //FIXME: how should it work? -- ids = ids.unique() // filter out duplicate documents (docs having more than one link)
+            ids = ids.unique() // filter out duplicate documents (docs having more than one link)
             items = whelk.bulkLoad(ids).values()
                     .each(whelk.&embellish)
                     .collect(SearchUtils.&formatReverseResult)
