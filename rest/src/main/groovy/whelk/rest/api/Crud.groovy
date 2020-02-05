@@ -486,6 +486,7 @@ class Crud extends HttpServlet {
         // should we deny the others?
 
         Document newDoc = new Document(requestBody)
+        newDoc.normalizeUnicode()
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
         // TODO https://jira.kb.se/browse/LXL-1263
         newDoc.setControlNumber(newDoc.getShortId())
@@ -629,6 +630,7 @@ class Crud extends HttpServlet {
         }
 
         Document updatedDoc = new Document(requestBody)
+        updatedDoc.normalizeUnicode()
         updatedDoc.setId(documentId)
 
         log.debug("Checking permissions for ${updatedDoc}")

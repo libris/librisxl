@@ -6,6 +6,7 @@ import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 
 import java.lang.reflect.Type
+import java.text.Normalizer
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -80,6 +81,13 @@ class Document {
     Document clone() {
         Map clonedDate = deepCopy(data)
         return new Document(clonedDate)
+    }
+
+    void normalizeUnicode() {
+        String json = mapper.writeValueAsString(data)
+        if (!Normalizer.isNormalized(json, Normalizer.Form.NFC)) {
+            data = mapper.readValue(Normalizer.normalize(json, Normalizer.Form.NFC), Map)
+        }
     }
 
     URI getURI() {

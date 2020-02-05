@@ -422,6 +422,7 @@ class PostgreSQLComponent implements Storage {
     boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
 
+        doc.normalizeUnicode()
         if (linkFinder != null)
             linkFinder.normalizeIdentifiers(doc)
 
@@ -700,6 +701,7 @@ class PostgreSQLComponent implements Storage {
             // Performs the callers updates on the document
             Document preUpdateDoc = doc.clone()
             updateAgent.update(doc)
+            doc.normalizeUnicode()
             if (linkFinder != null)
                 linkFinder.normalizeIdentifiers(doc, connection)
             if (doVerifyDocumentIdRetention) {
@@ -1273,6 +1275,7 @@ class PostgreSQLComponent implements Storage {
         PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
         try {
             docs.each { doc ->
+                doc.normalizeUnicode()
                 if (linkFinder != null)
                     linkFinder.normalizeIdentifiers(doc)
                 Date now = new Date()
