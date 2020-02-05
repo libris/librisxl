@@ -11374,9 +11374,36 @@
       "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
     },
     "385": {
-      "ignored": true,
-      "NOTE:record-count": 0,
-      "NOTE:LC": "intendedAudience"
+      "aboutEntity": "?thing",
+      "onRevertPrefer": "521",
+      "embedded": true,
+      "addLink": "intendedAudience",
+      "resourceType": "IntendedAudience",
+      "$a": {"addProperty": "label"},
+      "$2": {"link": "source", "resourceType": "Source","property": "label"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": {"385": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Teenagers"}
+          ]}},
+          "normalized": {"521": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Teenagers"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text"
+            },
+            "intendedAudience": [
+              {
+                "@type": "IntendedAudience",
+                "label": ["Teenagers"]
+              }
+            ]
+          }}
+        }
+      ]
     },
     "386": {
       "ignored": true,
