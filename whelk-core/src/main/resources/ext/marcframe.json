@@ -11213,21 +11213,23 @@
       ]
     },
     "363": {
+      "NOTE:LC": "363 - NORMALIZED DATE AND SEQUENTIAL DESIGNATION (R) nac",
       "ignored": true,
-      "NOTE:record-count": 0,
-      "NOTE:LC": "363 - NORMALIZED DATE AND SEQUENTIAL DESIGNATION (R) nac"
+      "NOTE:record-count": 0
     },
     "365": {
-      "ignored": true,
-      "NOTE:record-count": 8066,
       "NOTE:LC": "365 - TRADE PRICE (R) nac",
-      "NOTE:local": "Avsett för bokhandelns information"
+      "NOTE:local": "Avsett för bokhandelns information",
+      "ignored": true,
+      "NOTE:record-count": 8066
+
     },
     "366": {
-      "ignored": true,
-      "NOTE:record-count": 8066,
       "NOTE:LC": "366 - TRADE AVAILABILITY INFORMATION (R) nac",
-      "NOTE:local": "Avsett för bokhandelns information"
+      "NOTE:local": "Avsett för bokhandelns information",
+      "ignored": true,
+      "NOTE:record-count": 8066
+
     },
     "370": {
       "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
@@ -11329,10 +11331,10 @@
       "NOTE:LC": "creatorCharacteristic"
     },
     "388": {
-      "ignored": true,
-      "NOTE:record-count": 0,
       "NOTE:LC": "388 - TIME PERIOD OF CREATION (R) nac",
-      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
 
     "400": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
