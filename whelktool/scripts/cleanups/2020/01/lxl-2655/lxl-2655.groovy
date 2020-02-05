@@ -40,7 +40,7 @@ for (String operation : ProgramLines) {
 
             ")"
 
-    if (!iri || !physicalLocation || !shelfMark || !shelfLabel) { // null or empty-string
+    if (!iri || !physicalLocation || !newShelfMark || !newShelfLabel) { // null or empty-string
         System.err.println("Malformed operation: " + operation)
         continue
     }
