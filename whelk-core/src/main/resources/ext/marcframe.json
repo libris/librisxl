@@ -11308,8 +11308,6 @@
         }
       },
       "$a": {"about": "_:topic", "property": "prefLabel"},
-      "0": null,
-      "1": {"ignored": true, "NOTE:LC": "nac"},
       "_spec": [
         {
           "name": "GF inScheme",
@@ -11335,7 +11333,7 @@
         },
         {
           "source": {"380": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Operas"}]}},
-          "source": {"655": {"ind1": " ", "ind2": "4", "subfields": [{"a": "Operas"}]}},
+          "normalized": {"655": {"ind1": " ", "ind2": "4", "subfields": [{"a": "Operas"}]}},
 
           "result": {"mainEntity": {
             "instanceOf": {
