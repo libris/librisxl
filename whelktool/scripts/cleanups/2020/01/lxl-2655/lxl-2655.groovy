@@ -48,27 +48,23 @@ for (String operation : ProgramLines) {
     selectBySqlWhere(where, silent: true) { hold ->
 
         // Update shelfMark
-        {
-            List components = hold.graph[1].hasComponent.findAll { it["@type"] == "Item" &&
+        List components = hold.graph[1].hasComponent.findAll {
+            it["@type"] == "Item" &&
 
                     // Same as above, library URIs may be env-specific or not, depending on when/where this is run
                     // it.heldBy["@id"] == baseUri.resolve("library/Ors")}
-                    it.heldBy["@id"] == "https://libris.kb.se/library/Jon"}
+                    it.heldBy["@id"] == "https://libris.kb.se/library/Jon"
+        }
 
-            components.add(hold.graph[1]) // Shelf mark may also be on the outer Item (instead of component list)
-            for (Map component : components) {
-                if (component.shelfMark) {
-                    def labels = component.shelfMark.label
-                    if (labels instanceof List) {
-                        if (labels.size != 1 || !labels[0].equals(oldShelfMark))
-                            unexpectedRecordState.println("$iri had shelfMark: ${labels}, expected $oldShelfMark")
-                        labels.clear()
-                        labels.add(newShelfMark)
-                    } else {
-                        if (labels instanceof String && !labels.equals(oldShelfMark))
-                            unexpectedRecordState.println("$iri had shelfMark: ${labels}, expected $oldShelfMark")
-                        component.shelfMark.label = newShelfMark
-                    }
+        components.add(hold.graph[1]) // Shelf mark may also be on the outer Item (instead of component list)
+        for (Map component : components) {
+            if (component.shelfMark) {
+                def labels = component.shelfMark.label
+                if (labels instanceof List) {
+                    labels.clear()
+                    labels.add(newShelfMark)
+                } else {
+                    component.shelfMark.label = newShelfMark
                 }
             }
         }
