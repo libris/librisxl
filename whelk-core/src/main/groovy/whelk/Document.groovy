@@ -4,8 +4,10 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
+import whelk.util.Unicode
 
 import java.lang.reflect.Type
+import java.text.Normalizer
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -80,6 +82,13 @@ class Document {
     Document clone() {
         Map clonedDate = deepCopy(data)
         return new Document(clonedDate)
+    }
+
+    void normalizeUnicode() {
+        String json = mapper.writeValueAsString(data)
+        if (!Unicode.isNormalized(json)) {
+            data = mapper.readValue(Unicode.normalize(json), Map)
+        }
     }
 
     URI getURI() {
