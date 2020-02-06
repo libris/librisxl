@@ -5,9 +5,12 @@ import java.text.Normalizer
 class Unicode {
 
     /**
-     * Typographical ligatures from the "Alphabetic Presentation Forms" unicode block
-     * that are not covered by NFC but we want to normalize.
+     * Additional characters we want to normalize that are not covered by NFC.
+     *
+     * Ligatures from the "Alphabetic Presentation Forms" unicode block that are strictly typographical.
+     * (but we don't want to touch e.g. æ and ß that are actual letters in some alphabets)
      * https://www.unicode.org/charts/PDF/UFB00.pdf
+     * https://en.wikipedia.org/wiki/Orthographic_ligature
      */
     private static final List FORBIDDEN_UNICODE_CHARS = [
             'ﬀ', // 'LATIN SMALL LIGATURE FF'
