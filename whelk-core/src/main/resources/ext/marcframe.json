@@ -8861,8 +8861,8 @@
       ]
     },
     "251": {
-      "ignored": true,
-      "NOTE:LC": "251 - VERSION INFORMATION (R) nac"
+      "NOTE:LC": "251 - VERSION INFORMATION (R) nac",
+      "ignored": true
     },
 
     "254": {
@@ -8974,8 +8974,8 @@
       ]
     },
     "258": {
-      "ignored": true,
       "NOTE:LC": "258 - PHILATELIC ISSUE DATE (R) nac",
+      "ignored": true,
       "NOTE:record-count": 0
     },
 
@@ -9762,8 +9762,8 @@
       ]
     },
     "270": {
-      "ignored": true,
-      "NOTE:LC": "270 - ADDRESS (R) ignore"
+      "NOTE:LC": "270 - ADDRESS (R) ignore",
+      "ignored": true
     },
 
     "300": {
@@ -9883,10 +9883,10 @@
     },
 
     "307": {
-      "ignored": true,
-      "NOTE:record-count": 0,
       "NOTE:LC": "307 - HOURS, ETC. (R) nac",
-      "NOTE:local": "Används företrädesvis för elektroniska resurser."
+      "NOTE:local": "Används företrädesvis för elektroniska resurser.",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
 
     "310": {
@@ -10725,9 +10725,58 @@
         }
       ]
     },
-    "341": {"ignored": true, "NOTE": "New 2018, terms not in BF2 yet.", "TODO": "W - contentAccessibility - ContentAccessibility"},
-    "342": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "342 - GEOSPATIAL REFERENCE DATA (R) nac"},
-    "343": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "343 - PLANAR COORDINATE DATA (R) nac"},
+    "341": {
+      "aboutEntity": "?work",
+      "addLink": "contentAccessibility",
+      "resourceType": "ContentAccessibility",
+      "i1": null,
+      "$a": {"property": "label"},
+      "$b": {"addProperty": "marc:textualAssistiveFeatures"},
+      "$c": {"addProperty": "marc:visualAssistiveFeatures"},
+      "$d": {"addProperty": "marc:auditoryAssistiveFeatures"},
+      "$e": {"addProperty": "marc:tactileAssistiveFeatures"},
+      "$2": {"link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$3": {"property": "typeNote", "supplementary": true},
+      "$6": {"property": "marc:fieldref", "supplementary": true},
+      "_spec": [
+        {
+          "source": {"341": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "auditory"},{"b": "captions"},{"2": "[code for accessibility feature]"}
+          ]}},
+          "normalized": {"341": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "auditory"},{"b": "captions"},{"2": "[code for accessibility feature]"}
+          ]}},
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contentAccessibility": [
+                  {
+                    "@type": "ContentAccessibility",
+                    "label": "auditory",
+                    "marc:textualAssistiveFeatures": ["captions"],
+                    "source": {
+                      "@type": "Source",
+                      "code": "[code for accessibility feature]"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "342": {
+      "NOTE:LC": "342 - GEOSPATIAL REFERENCE DATA (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "343": {
+      "NOTE:LC": "343 - PLANAR COORDINATE DATA (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "344": {
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
@@ -11070,6 +11119,7 @@
        ]
      },
     "351": {
+      "NOTE:Local": "ignoreOnRevert?",
       "aboutEntity": "?work",
       "addLink": "arrangement",
       "resourceType": "Arrangement",
@@ -11111,8 +11161,16 @@
       "NOTE:$q": {"NOTE:record-count": 0, "TODO": "To enable future imports to EncodingFormat, we need something like onRevertPrefer 347$b to avoid collisions in export."},
       "$6": null
     },
-    "355": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "355 - SECURITY CLASSIFICATION CONTROL (R) nac"},
-    "357": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "357 - ORIGINATOR DISSEMINATION CONTROL (NR) nac"},
+    "355": {
+      "NOTE:LC": "355 - SECURITY CLASSIFICATION CONTROL (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "357": {
+      "NOTE:LC": "357 - ORIGINATOR DISSEMINATION CONTROL (NR) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "362": {
       "aboutEntity": "?thing",
       "addLink": "hasNumberingOfSerials",
@@ -11155,21 +11213,23 @@
       ]
     },
     "363": {
+      "NOTE:LC": "363 - NORMALIZED DATE AND SEQUENTIAL DESIGNATION (R) nac",
       "ignored": true,
-      "NOTE:record-count": 0,
-      "NOTE:LC": "363 - NORMALIZED DATE AND SEQUENTIAL DESIGNATION (R) nac"
+      "NOTE:record-count": 0
     },
     "365": {
-      "ignored": true,
-      "NOTE:record-count": 8066,
       "NOTE:LC": "365 - TRADE PRICE (R) nac",
-      "NOTE:local": "Avsett för bokhandelns information"
+      "NOTE:local": "Avsett för bokhandelns information",
+      "ignored": true,
+      "NOTE:record-count": 8066
+
     },
     "366": {
-      "ignored": true,
-      "NOTE:record-count": 8066,
       "NOTE:LC": "366 - TRADE AVAILABILITY INFORMATION (R) nac",
-      "NOTE:local": "Avsett för bokhandelns information"
+      "NOTE:local": "Avsett för bokhandelns information",
+      "ignored": true,
+      "NOTE:record-count": 8066
+
     },
     "370": {
       "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
@@ -11185,18 +11245,18 @@
         }
       },
       "$c": {"about": "_:associated", "property": "label"},
-      "$f": null,
+      "$f": {"ignored": true, "NOTE:LC": "nac"},
       "$g": {"about": "_:origin", "property": "label"},
-      "$s": null,
-      "$t": null,
-      "$u": null,
-      "$v": null,
+      "$s": {"ignored": true, "NOTE:LC": "nac"},
+      "$t": {"ignored": true, "NOTE:LC": "nac"},
+      "$u": {"ignored": true, "NOTE:LC": "nac"},
+      "$v": {"ignored": true, "NOTE:LC": "nac"},
       "$0": null,
-      "$1": null,
+      "$1": {"ignored": true, "NOTE:LC": "nac"},
       "$2": null,
-      "$3": null,
-      "$4": null,
-      "$6": null,
+      "$3": {"ignored": true, "NOTE:LC": "ignored"},
+      "$4": {"ignored": true, "NOTE:LC": "ignored"},
+      "$6": {"ignored": true, "NOTE:LC": "ignored"},
       "_spec": [
          {
            "source": [
@@ -11228,59 +11288,133 @@
       "ignored": true,
       "NOTE:record-count": 0,
       "NOTE:LC": "language",
-      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
-      "TODO": "For imports"
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
     },
     "380": {
-      "ignored": true,
-      "NOTE:record-count": 2,
-      "NOTE:LC": "genreForm",
       "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
-      "TODO": "For imports"
+      "NOTE:record-count": 350,
+      "onRevertPrefer": "655",
+      "include": ["subjectbase"],
+      "aboutEntity": "?work",
+      "addLink": "genreForm",
+      "resourceType": "GenreForm",
+      "pendingResources": {
+        "_:topic": {
+          "addLink": "termComponentList",
+          "resourceType": "GenreForm",
+          "required": true,
+          "itemPos": "first",
+          "absorbSingle": true
+        }
+      },
+      "$a": {"about": "_:topic", "property": "prefLabel"},
+      "_spec": [
+        {
+          "name": "GF inScheme",
+          "source": {"380": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Novel"}, {"2": "lcgft"}]}},
+          "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Novel"}, {"2": "lcgft"}]}},
+
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "genreForm": [
+                {
+                  "@type": "GenreForm",
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/lcgft",
+                    "@type": "ConceptScheme",
+                    "code": "lcgft"
+                  },
+                  "prefLabel": "Novel"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"380": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Operas"}]}},
+          "normalized": {"655": {"ind1": " ", "ind2": "4", "subfields": [{"a": "Operas"}]}},
+
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "genreForm": [
+                {
+                  "@type": "GenreForm",
+                  "prefLabel": "Operas"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "381": {
-      "ignored": true,
-      "NOTE:record-count": 0,
       "NOTE:LC": "381 - OTHER DISTINGUISHING CHARACTERISTICS OF WORK OR EXPRESSION (R) nac",
-      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "382": {
       "ignored": true,
       "NOTE:record-count": 0,
       "NOTE:LC": "musicMedium",
-      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
-      "TODO": "For imports"
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
     },
     "383": {
       "ignored": true,
       "NOTE:record-count": 0,
       "NOTE:LC": "musicSerialnumber, musicOpusNumber, etc.",
-      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
-      "TODO": "For imports"
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
     },
     "384": {
       "ignored": true,
       "NOTE:record-count": 0,
       "NOTE:LC": "musicKey",
-      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
-      "TODO": "For imports"
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
     },
     "385": {
-      "ignored": true,
-      "NOTE:record-count": 0,
-      "NOTE:LC": "intendedAudience",
-      "TODO": "For imports"
+      "aboutEntity": "?thing",
+      "onRevertPrefer": "521",
+      "embedded": true,
+      "addLink": "intendedAudience",
+      "resourceType": "IntendedAudience",
+      "$a": {"addProperty": "label"},
+      "$2": {"link": "source", "resourceType": "Source","property": "label"},
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": {"385": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Teenagers"}
+          ]}},
+          "normalized": {"521": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Teenagers"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text"
+            },
+            "intendedAudience": [
+              {
+                "@type": "IntendedAudience",
+                "label": ["Teenagers"]
+              }
+            ]
+          }}
+        }
+      ]
     },
     "386": {
       "ignored": true,
       "NOTE:record-count": 0,
-      "NOTE:LC": "creatorCharacteristic",
-      "TODO": "For imports"},
+      "NOTE:LC": "creatorCharacteristic"
+    },
     "388": {
-      "ignored": true,
-      "NOTE:record-count": 0,
       "NOTE:LC": "388 - TIME PERIOD OF CREATION (R) nac",
-      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET"
+      "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
 
     "400": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "Obsolete Data Elements"},
@@ -11915,10 +12049,10 @@
     },
 
     "514": {
-      "NOTE:LC": "nac",
+      "NOTE:LC": "514 - DATA QUALITY NOTE (NR) nac",
       "NOTE:Local": "Removed from bibliographic marc-export",
-      "NOTE:record-count": 0,
-      "ignored": true
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "515": {
       "aboutEntity": "?thing",
@@ -12194,7 +12328,12 @@
       "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"}
     },
-    "526": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ", "NOTE:LC": "526 - STUDY PROGRAM INFORMATION NOTE (R) nac"},
+    "526": {
+      "NOTE:LC": "526 - STUDY PROGRAM INFORMATION NOTE (R) nac",
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
 
     "530": {
       "NOTE:local": "Deviating from BF2 since subfield a is a note on the relation, not a note on a new instance",
@@ -12390,7 +12529,7 @@
         }
       },
       "$a": {"property": "label"},
-      "$b": {"ignored": true, "NOTE:LC": "nac"},
+      "$b": {"ignored": true, "NOTE:LC": "$b - Jurisdiction (NR) nac"},
       "$c": {"property": "marc:methodOfAcquisition"},
       "$d": {"property": "date"},
       "$e": {"property": "marc:accessionNumber"},
@@ -12432,7 +12571,11 @@
         }
       ]
     },
-    "542": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "542 - INFORMATION RELATING TO COPYRIGHT STATUS (R) nac"},
+    "542": {
+      "NOTE:LC": "542 - INFORMATION RELATING TO COPYRIGHT STATUS (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "544": {
       "aboutEntity": "?thing",
       "addLink": "marc:hasLocationOfOtherArchivalMaterialsNote",
@@ -12500,7 +12643,11 @@
       "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"}
     },
-    "552": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "552": {
+      "NOTE:LC": "552 - ENTITY AND ATTRIBUTE INFORMATION NOTE (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "555": {
       "aboutEntity": "?thing",
       "addLink": "hasNote",
@@ -12510,16 +12657,34 @@
       "$c": {"property": "marc:degreeOfControl", "NOTE": "concatenate with $a", "NOTE:record-count": 2}
     },
     "556": {
+      "NOTE:LC": "556 - INFORMATION ABOUT DOCUMENTATION NOTE (R) I - note - Note",
       "onRevertPrefer": "500",
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "Note",
       "i1": null,
-      "NOTE:i1": {"ignored": true, "NOTE:lc": "ignore"},
       "$a": {"property": "label"},
-      "$z": null,
-      "NOTE:$z": {"ignored": true, "NOTE:lc": "nac"},
-      "$6": {"property": "marc:fieldref"}
+      "$z": {"ignored": true, "NOTE:LC": "$z - International Standard Book Number (R) nac"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": {"556": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "BASIC reference. 3rd ed. Boca Raton, Fl. : IBM, c1984. (Personal computer hardware reference library); 6361132."},
+            {"z": "drop isbn"}
+          ]}},
+          "normalized": {"500": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "BASIC reference. 3rd ed. Boca Raton, Fl. : IBM, c1984. (Personal computer hardware reference library); 6361132."}
+          ]}},
+          "result": {"mainEntity": {
+            "hasNote": [
+              {
+                "@type": "Note",
+                "label": "BASIC reference. 3rd ed. Boca Raton, Fl. : IBM, c1984. (Personal computer hardware reference library); 6361132."
+              }
+            ]
+          }}
+        }
+      ]
     },
     "561": {
       "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
@@ -12538,7 +12703,7 @@
         }  
       },
       "$a": {"property": "label"},
-      "$u": {"ignored": true},
+      "$u": {"ignored": true, "NOTE:LC": "$u - Uniform Resource Identifier (R) nac"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"}
     },
@@ -12564,12 +12729,20 @@
       "resourceType": "marc:BindingInformation",
       "$a": {"property": "label"},
       "$u": {"addProperty": "uri"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label", "NOTE:LC": "nac"},
+      "$3": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "$3 - Materials specified (NR) nac"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
-      "$6": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"}
+      "$6": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "$6 - Linkage (NR) nac"}
     },
-    "565": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "565 - CASE FILE CHARACTERISTICS NOTE (R) nac"},
-    "567": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "567 - METHODOLOGY NOTE (R) nac"},
+    "565": {
+      "NOTE:LC": "565 - CASE FILE CHARACTERISTICS NOTE (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "567": {
+      "NOTE:LC": "567 - METHODOLOGY NOTE (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "580": {
       "aboutEntity": "?work",
       "addLink": "hasNote",
@@ -12684,7 +12857,11 @@
         }
       ]
     },
-    "584": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "584 - ACCUMULATION AND FREQUENCY OF USE NOTE (R) nac"},
+    "584": {
+      "NOTE:LC": "584 - ACCUMULATION AND FREQUENCY OF USE NOTE (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "585": {
       "NOTE:local": "För anmärkning till utställningskataloger används fält 500.",
       "onRevertPrefer": "500",
@@ -13961,10 +14138,10 @@
     },
 
     "647": {
+      "NOTE:LC": "647 - SUBJECT ADDED ENTRY--NAMED EVENT (R) nac",
+      "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris.",
       "ignored": true,
-      "NOTE:LC": "647 - SUBJECT ADDED ENTRY--NAMED EVENT (R) nac", 
-      "NOTE:record-count": 2,
-      "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."
+      "NOTE:record-count": 0
     },
     "648": {
       "include": ["subjectbase"],
@@ -14737,8 +14914,8 @@
     },
 
     "654": {
-      "ignored": true,
       "NOTE:LC": "654 - SUBJECT ADDED ENTRY--FACETED TOPICAL TERMS (R) nac",
+      "ignored": true,
       "NOTE:record-count": 174,
       "TODO": "facet term (i1:like 650, i2: null)"
     },
@@ -14893,70 +15070,72 @@
     },
 
     "656" : {
-      "ignored": true,
       "NOTE:LC": "656 - INDEX TERM--OCCUPATION (R)",
-      "NOTE:local": "ANVÄNDS NORMALT EJ"
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "ignored": true,
+      "NOTE:record-count": 47
     },
     "657" : {
-      "ignored": true,
       "NOTE:LC": "657 - INDEX TERM--FUNCTION (R) nac",
-      "NOTE:local": "ANVÄNDS NORMALT EJ"
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "ignored": true,
+      "NOTE:record-count": 36
     },
     "658": {
-      "ignored": true,
       "NOTE:LC": "658 - INDEX TERM--CURRICULUM OBJECTIVE (R) nac",
-      "NOTE:record-count": 0,
-      "NOTE:local": "ANVÄNDS NORMALT EJ"
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "ignored": true,
+      "NOTE:record-count": 59
     },
 
     "662": {
-      "ignored": true,
       "NOTE:LC": "662 - SUBJECT ADDED ENTRY--HIERARCHICAL PLACE NAME (R)",
+      "ignored": true,
       "NOTE:record-count": 25,
       "TODO": "Map?"
     },
 
     "690": {
-      "ignored": true,
-      "NOTE:record-count": 21,
       "NOTE:OCLC": "Local Subject Added Entry--Topical Term.",
-      "NOTE:local": "Ej i formathandboken."
+      "NOTE:local": "Ej i formathandboken.",
+      "ignored": true,
+      "NOTE:record-count": 21
     },
     "691": {
-      "ignored": true,
-      "NOTE:record-count": 5,
       "NOTE:OCLC": "Local Subject Added Entry--Geographic Name",
-      "NOTE:local": "Ej i formathandboken."
+      "NOTE:local": "Ej i formathandboken.",
+      "ignored": true,
+      "NOTE:record-count": 5
     },
     "695": {
-      "ignored": true,
-      "NOTE:record-count": 1,
       "NOTE:OCLC": "Added Class Number",
-      "NOTE:local": "Ej i formathandboken."
+      "NOTE:local": "Ej i formathandboken.",
+      "ignored": true,
+      "NOTE:record-count": 1
     },
     "696": {
-      "ignored": true,
-      "NOTE:record-count": 0, 
       "NOTE:OCLC": "Local Subject Added Entry--Personal Name",
-      "NOTE:local": "Ej i formathandboken."
+      "NOTE:local": "Ej i formathandboken.",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "697": {
-      "ignored": true,
-      "NOTE:record-count": 0,
       "NOTE:OCLC": "Local Subject Added Entry--Corporate Name.",
-      "NOTE:local": "Ej i formathandboken."
+      "NOTE:local": "Ej i formathandboken.",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "698": {
-      "ignored": true,
-      "NOTE:record-count": 5604,
       "NOTE:OCLC": "Local Subject Added Entry--Corporate Name. If the subject access point is of value to others, then use field field 653.",
-      "NOTE:local": "Ej i formathandboken."
+      "NOTE:local": "Ej i formathandboken.",
+      "ignored": true,
+      "NOTE:record-count": 5604
     },
     "699": {
-      "ignored": true,
-      "NOTE:record-count": 1,
       "NOTE:OCLC": "Local Subject Added Entry--Uniform Title.",
-      "NOTE:local": "Ej i formathandboken."
+      "NOTE:local": "Ej i formathandboken.",
+      "ignored": true,
+      "NOTE:record-count": 1
     },
 
     "700": {
