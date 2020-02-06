@@ -5212,9 +5212,16 @@
       "addLink": "identifiedBy",
       "embedded": true,
       "resourceType": "Local",
+      "match": [
+        {
+          "when": "i1=7 & $2",
+          "$2": {"requires-i1": "7", "link": "source", "resourceType": "Source", "property": "code"}
+        }
+      ],
       "i1": {
         "property": "marc:nationalBibliographicAgency",
         "marcDefault": "7",
+        "definedElsewhereToken": "7",
         "tokenMap": {
           " ": "marc:LAC",
           "7": "marc:SourceSpecifiedInSubfield2"
@@ -5258,7 +5265,6 @@
             "identifiedBy": [
               {
                 "@type": "Local",
-                "marc:nationalBibliographicAgency": "marc:SourceSpecifiedInSubfield2",
                 "value": "721234569",
                 "source": {
                   "@type": "Source",
