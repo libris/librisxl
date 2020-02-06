@@ -197,7 +197,7 @@ class PostgreSQLComponent implements Storage {
         UPDATE_CARD = "UPDATE $cardsTableName SET (data, checksum, changed) = (?,?,?) WHERE id = ? AND checksum != ?"
 
         GET_DOCUMENT = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ?"
-        GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,collection,created,modified,deleted,changedBy FROM $mainTableName WHERE id = ? AND deleted = false FOR UPDATE"
+        GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,collection,created,modified,deleted,changedBy FROM $mainTableName WHERE id = ? FOR UPDATE"
         GET_DOCUMENT_VERSION = "SELECT id,data FROM $versionsTableName WHERE id = ? AND checksum = ?"
         GET_DOCUMENT_VERSION_BY_MAIN_ID = "SELECT id,data FROM $versionsTableName " +
                 "WHERE id = (SELECT id FROM $idTableName " +
