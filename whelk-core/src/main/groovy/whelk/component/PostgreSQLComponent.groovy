@@ -6,6 +6,7 @@ import com.zaxxer.hikari.HikariDataSource
 import groovy.json.StringEscapeUtils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
+import io.vavr.Tuple
 import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
 import org.postgresql.util.PSQLException
@@ -88,6 +89,7 @@ class PostgreSQLComponent implements Storage {
     protected String QUERY_LD_API
     protected String FIND_BY, COUNT_BY
     protected String GET_SYSTEMID_BY_IRI
+    protected String GET_SYSTEMIDS_BY_IRIS
     protected String GET_THING_MAIN_IRI_BY_SYSTEMID
     protected String GET_DOCUMENT_BY_IRI
     protected String GET_MAX_MODIFIED
@@ -360,6 +362,13 @@ class PostgreSQLComponent implements Storage {
         GET_SYSTEMID_BY_IRI = "SELECT lddb__identifiers.id, lddb.deleted FROM lddb__identifiers "+
                 "JOIN lddb ON lddb__identifiers.id = lddb.id " +
                 "WHERE lddb__identifiers.iri = ? "
+
+        GET_SYSTEMIDS_BY_IRIS = """
+                SELECT lddb__identifiers.iri, lddb__identifiers.id, lddb.deleted 
+                FROM lddb__identifiers, lddb, unnest(?) as in_iri 
+                WHERE lddb__identifiers.iri = in_iri 
+                AND lddb.id = lddb__identifiers.id
+                """.stripIndent()
 
         GET_THING_MAIN_IRI_BY_SYSTEMID = "SELECT iri FROM $idTableName WHERE graphindex = 1 and mainid is true and id = ?"
         GET_DOCUMENT_BY_IRI = "SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
@@ -840,31 +849,40 @@ class PostgreSQLComponent implements Storage {
     private List<String[]> _calculateDependenciesSystemIDs(Document doc, Connection connection) {
         List<String[]> dependencies = []
         List notInCard = nonCardDependencies(doc)
-        for (String[] reference : doc.getRefsWithRelation()) {
-            String relation = reference[0]
-            String iri = reference[1]
-            if (!iri.startsWith("http"))
-                continue
-            PreparedStatement getSystemId = null
-            ResultSet rs = null
-            try {
-                getSystemId = connection.prepareStatement(GET_SYSTEMID_BY_IRI)
-                getSystemId.setString(1, iri)
 
-                rs = getSystemId.executeQuery()
-                if (rs.next()) {
+        Map iriToRelation = doc.getRefsWithRelation()
+            .findAll{ relationAndIri -> relationAndIri[1].startsWith("http") }
+            .collectEntries { relationAndIri -> [ relationAndIri[1], relationAndIri[0] ] }
 
-                    if (rs.getBoolean(2)) // If deleted==true, then doc refers to a deleted document which is not ok.
-                        throw new LinkValidationException("Record supposedly depends on deleted record: ${rs.getString(1)}, which is not allowed.")
+        getSystemIds(iriToRelation.keySet(), connection) { String iri, String systemId, boolean deleted ->
+            if (deleted) // doc refers to a deleted document which is not ok.
+                throw new LinkValidationException("Record supposedly depends on deleted record: ${systemId}, which is not allowed.")
 
-                    if (rs.getString(1) != doc.getShortId()) // Exclude A -> A (self-references)
-                        dependencies.add([relation, rs.getString(1), !notInCard.contains(iri)] as String[])
-                }
-            } finally {
-                close(rs, getSystemId)
-            }
+            if (systemId != doc.getShortId()) // Exclude A -> A (self-references)
+                dependencies.add([iriToRelation[iri], systemId, !notInCard.contains(iri)] as String[])
         }
+
         return dependencies
+    }
+
+    private void getSystemIds(Collection iris, Connection connection, Closure c) {
+        PreparedStatement getSystemIds = null
+        ResultSet rs = null
+        try {
+            getSystemIds = connection.prepareStatement(GET_SYSTEMIDS_BY_IRIS)
+            getSystemIds.setArray(1, connection.createArrayOf("TEXT", iris as String[]))
+
+            rs = getSystemIds.executeQuery()
+            while (rs.next()) {
+                String iri = rs.getString(1)
+                String systemId = rs.getString(2)
+                boolean deleted = rs.getBoolean(3)
+
+                c(iri, systemId, deleted)
+            }
+        } finally {
+            close(rs, getSystemIds)
+        }
     }
 
     Map getCard(String systemId) {
