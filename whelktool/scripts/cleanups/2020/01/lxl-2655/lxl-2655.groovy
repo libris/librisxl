@@ -30,11 +30,15 @@ for (String operation : ProgramLines) {
 
     // Looks like an ISBN
     if (fuzzyID.matches("[0-9X]{9,14}")) {
+        // Postgres unfortunately fails to optimize the non-CTE version of this. The same thing happens if you attempt
+        // to join in the holdings to filter out non-Jon-ones.
         where = "id in (\n" +
-                "select lh.id from lddb lb\n" +
-                "join lddb lh on lb.data#>>'{@graph,1,@id}' = lh.data#>>'{@graph,1,itemOf,@id}'\n" +
-                "where lb.data#>'{@graph,1,identifiedBy}' @> '[{\"@type\":\"ISBN\", \"value\":\"$fuzzyID\"}]'\n" +
-                "and lh.data#>>'{@graph,1,heldBy,@id}' = '$libraryURI'\n" +
+                "with bibIds as\n" +
+                "(\n" +
+                "select id from lddb where data#>'{@graph,1,identifiedBy}' @> '[{\"@type\":\"ISBN\", \"value\":\"$fuzzyID\"}]'\n" +
+                ")\n" +
+                "select d.id from lddb__dependencies d\n" +
+                "where d.dependsonid in (select * from bibIds)\n" +
                 ")"
     }
     else {
@@ -59,32 +63,34 @@ for (String operation : ProgramLines) {
     }
 
     selectBySqlWhere(where, silent: true) { hold ->
+        if (hold.doc.getSigel() == "Jon") {
 
-        // Update shelfMark
-        List components = hold.graph[1].hasComponent.findAll {
-            it["@type"] == "Item" &&
-                    it.heldBy["@id"] == libraryURI
-        }
+            // Update shelfMark
+            List components = hold.graph[1].hasComponent.findAll {
+                it["@type"] == "Item" &&
+                        it.heldBy["@id"] == libraryURI
+            }
 
-        components.add(hold.graph[1]) // Shelf mark may also be on the outer Item (instead of component list)
-        for (Map component : components) {
-            if (component.shelfMark) {
-                def labels = component.shelfMark.label
-                if (labels instanceof List) {
-                    labels.clear()
-                    labels.add(newShelfMark)
-                } else {
-                    component.shelfMark.label = newShelfMark
+            components.add(hold.graph[1]) // Shelf mark may also be on the outer Item (instead of component list)
+            for (Map component : components) {
+                if (component.shelfMark) {
+                    def labels = component.shelfMark.label
+                    if (labels instanceof List) {
+                        labels.clear()
+                        labels.add(newShelfMark)
+                    } else {
+                        component.shelfMark.label = newShelfMark
+                    }
                 }
             }
+
+            hold.graph[1].shelfLabel = newShelfLabel
+
+            scheduledForUpdating.println("${hold.doc.getURI()}")
+            hold.scheduleSave(loud: true, onError: { e ->
+                failedHoldIDs.println("Failed to update ${hold.doc.shortId} due to: $e")
+            })
         }
-
-        hold.graph[1].shelfLabel = newShelfLabel
-
-        scheduledForUpdating.println("${hold.doc.getURI()}")
-        hold.scheduleSave(loud: true, onError: { e ->
-            failedHoldIDs.println("Failed to update ${hold.doc.shortId} due to: $e")
-        })
     }
 
 }
