@@ -167,7 +167,7 @@ class PostgreSQLComponent implements Storage {
 
         GET_DOCUMENT = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ?"
         GET_EMBELLISHED_DOCUMENT = "SELECT data from lddb__embellished where id = ?"
-        GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,collection,created,modified,deleted,changedBy FROM $mainTableName WHERE id = ? AND deleted = false FOR UPDATE"
+        GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,collection,created,modified,deleted,changedBy FROM $mainTableName WHERE id = ? FOR UPDATE"
         GET_DOCUMENT_VERSION = "SELECT id,data FROM $versionsTableName WHERE id = ? AND checksum = ?"
         GET_DOCUMENT_VERSION_BY_MAIN_ID = "SELECT id,data FROM $versionsTableName " +
                 "WHERE id = (SELECT id FROM $idTableName " +
