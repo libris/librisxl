@@ -1,12 +1,10 @@
 package whelk.component
 
-
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import groovy.json.StringEscapeUtils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
-import io.vavr.Tuple
 import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
 import org.postgresql.util.PSQLException
