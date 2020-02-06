@@ -5224,9 +5224,8 @@
       "include": ["idbase"],
       "resourceType": "LCCN",
       "$a": {"property": "value"},
-      "$b": {"ignored": true},
+      "$b": {"ignored": true, "NOTE:LC": "NUCMC control number (R) - ignore"},
       "$z": {"addProperty": "marc:hiddenValue"},
-      "$8": {"property": "marc:groupid"},
       "_spec": [
         {
           "source": {
@@ -5244,7 +5243,7 @@
           }
         },
         {
-          "name": "ingore $b",
+          "name": "ignore $b",
           "source": {
             "010": {
               "ind1": " ", "ind2": " ",
@@ -5274,6 +5273,7 @@
       "NOTE:record-count": 0,
       "_spec": [
         {
+          "name": "Test for ignored true on field",
           "source": {"013": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "X"}
           ]}},
@@ -5302,18 +5302,13 @@
       "_spec": [
         {
           "source": {"015": {"ind1": " ", "ind2": " ", "subfields": [
-            {"a": "(BIBBI)0245010"},
-            {"a": "nf0909903"}
+            {"a": "GBA3-81295"}
           ]}},
-          "TODO:result": {"mainEntity": {
+          "result": {"mainEntity": {
             "identifiedBy": [
               {
                 "@type": "NBN",
-                "value": "(BIBBI)0245010"
-              },
-              {
-                "@type": "NBN",
-                "value": "nf0909903"
+                "value": "GBA3-81295"
               }
             ]
           }}
@@ -5327,9 +5322,16 @@
       "addLink": "identifiedBy",
       "embedded": true,
       "resourceType": "Local",
+      "match": [
+        {
+          "when": "i1=7 & $2",
+          "$2": {"requires-i1": "7", "link": "source", "resourceType": "Source", "property": "code"}
+        }
+      ],
       "i1": {
         "property": "marc:nationalBibliographicAgency",
         "marcDefault": "7",
+        "definedElsewhereToken": "7",
         "tokenMap": {
           " ": "marc:LAC",
           "7": "marc:SourceSpecifiedInSubfield2"
@@ -5342,24 +5344,89 @@
         "resourceType": "Source",
         "property": "code",
         "requires-i1": "7",
-        "TODO": "see 015 $2"
+        "TODO": "https://www.loc.gov/marc/organizations/"
       },
-      "$6": null
+      "$6": null,
+      "_spec": [
+        {
+          "name": "identifiedBy.Local source = Library and Archives Canada",
+          "source": {"016": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "721234569"}
+          ]}},
+          "result": {
+            "@type": "Record",
+            "identifiedBy": [
+              {
+                "@type": "Local",
+                "marc:nationalBibliographicAgency": "marc:LAC",
+                "value": "721234569"
+              }
+            ],
+            "mainEntity": {}
+          }
+        },
+        {
+          "name": "identifiedBy.Local source in $2",
+          "source": {"016": {"ind1": "7", "ind2": " ", "subfields": [
+            {"a": "721234569"},{"2": "Uk"}
+          ]}},
+          "result": {
+            "@type": "Record",
+            "identifiedBy": [
+              {
+                "@type": "Local",
+                "value": "721234569",
+                "source": {
+                  "@type": "Source",
+                  "code": "Uk"
+                }
+              }
+            ],
+            "mainEntity": {}
+          }
+        }
+      ]
     },
 
     "017": {
       "NOTE:local": "ANVÄNDS NORMALT EJ",
       "include": ["idbase"],
       "resourceType": "CopyrightNumber",
-      "i2": {"marcDefault": " "},
+      "i2": null,
       "$a": {"property": "value"},
-      "$b": {"link": "source", "resourceType": "Source", "property": "label"},
+      "$b": {"link": "source", "resourceType": "Source", "property": "label", "required": true},
       "$d": {"property": "date"},
       "$i": {"addProperty": "comment"},
       "$z": {"addProperty": "marc:hiddenValue"},
       "$2": null,
-      "$6": null
+      "$6": null,
+      "_spec": [
+        {
+          "source": {"017": {"ind1": " ", "ind2": "8", "subfields": [
+            {"a": "DL1377-1984"},{"b": "Bibliothèque nationale de France"}
+          ]}},
+          "normalized": {"017": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "DL1377-1984"},{"b": "Bibliothèque nationale de France"}
+          ]}},
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {
+                  "@type": "CopyrightNumber",
+                  "value": "DL1377-1984",
+                  "source": 
+                  {
+                    "@type": "Source",
+                    "label": "Bibliothèque nationale de France"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
+
     "018": {
       "NOTE:LC": "018 - COPYRIGHT ARTICLE-FEE CODE (NR) ignore",
       "ignored": true,
@@ -5773,7 +5840,7 @@
         },
         "TODO:definedElsewhereToken": "7"
       },
-      "i2": {"marcDefault": " ", "TODO": "ok to lock as undefined?"},
+      "i2": null,
       "$c": {"property": "acquisitionTerms"},
       "$d": {"property": "comment"},
       "$2": {
@@ -5784,17 +5851,83 @@
       "$6": null,
       "_spec": [
         {
-          "name": "indicator as tokenMap",
+          "name": "ISRC, indicator as tokenMap",
           "source": {
-            "024": {"ind1": "3", "ind2": " ", "subfields": [{"a": "1234567890"},{"d": "1"}]}
+            "024": {"ind1": "0", "ind2": " ", "subfields": [{"a": "NLC018413261"},{"z": "NLC018403261"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {
+                  "@type": "ISRC",
+                  "value":  "NLC018413261",
+                  "marc:hiddenValue": ["NLC018403261"]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "UPC, indicator as tokenMap",
+          "source": {
+            "024": {"ind1": "1", "ind2": " ", "subfields": [{"a": "070993005955"},{"d": "35740"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {
+                  "@type": "UPC",
+                  "value":  "070993005955",
+                  "comment": "35740"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "ISMN, indicator as tokenMap",
+          "source": {
+            "024": {"ind1": "2", "ind2": " ", "subfields": [{"a": "9790692006282"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {
+                  "@type": "ISMN",
+                  "value":  "9790692006282"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "EAN, indicator as tokenMap",
+          "source": {
+            "024": {"ind1": "3", "ind2": " ", "subfields": [{"a": "9780838934326"},{"d": "90000"}]}
           },
           "result": {
             "mainEntity": {
               "identifiedBy": [
                 {
                   "@type": "EAN",
-                  "value":  "1234567890",
-                  "comment": "1"
+                  "value":  "9780838934326",
+                  "comment": "90000"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "SICI, indicator as tokenMap",
+          "source": {
+            "024": {"ind1": "4", "ind2": " ", "subfields": [{"a": "8756-2324(198603/04)65:2L.4:QTP:1-P"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {
+                  "@type": "SICI",
+                  "value":  "8756-2324(198603/04)65:2L.4:QTP:1-P"
                 }
               ]
             }
@@ -5818,6 +5951,7 @@
           }
         },
         {
+          "name": "Identifier with space",
           "source": {
             "024": {
               "ind1": "7", "ind2": "2",
@@ -5843,7 +5977,14 @@
           }
         },
         {
+          "name": "i2 = 0 (No difference)",
           "source": {
+            "024": {
+              "ind1": "7", "ind2": "0",
+              "subfields": [{"a": "A 148"}, {"2": "KB-signum"}]
+            }
+          },
+          "normalized": {
             "024": {
               "ind1": "7", "ind2": " ",
               "subfields": [{"a": "A 148"}, {"2": "KB-signum"}]
@@ -5883,13 +6024,13 @@
     },
 
     "025": {
-      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "NOTE:local": "ANVÄNDS NORMALT EJ (STRUKEN I EXPORTFORMAT)",
       "include": ["idbase"],
       "resourceType": "LcOverseasAcq",
       "$a": {"property": "value"}
     },
     "026": {
-      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "NOTE:local": "ANVÄNDS NORMALT EJ (STRUKEN I EXPORTFORMAT)",
       "include": ["idbase"],
       "resourceType": "Fingerprint",
       "$a": {"property": "value"},
@@ -5903,7 +6044,25 @@
     },
     "027": {
       "include": ["identifier"],
-      "resourceType": "STRN"
+      "resourceType": "STRN",
+      "$6": null,
+      "$8": null,
+      "_spec": [
+        {
+          "source": {"027": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "KTH/INFRA/EX-02-003"},{"q": "1-1"}
+          ]}},
+          "result": {"mainEntity": {
+            "identifiedBy": [
+              {
+                "@type": "STRN",
+                "value": "KTH/INFRA/EX-02-003",
+                "qualifier": ["1-1"]
+              }
+            ]
+          }}
+        }
+      ]
     },
 
     "028": {
@@ -5918,35 +6077,107 @@
           "2": "MusicPlate",
           "3": "MusicPublisherNumber",
           "4": "VideoRecordingNumber",
-          "5": "PublisherNumber"
+          "5": "PublisherNumber",
+          "6": "MusicDistributorNumber"
         }
       },
       "i2": {
-        "property": "marc:noteAddedEntryController",
-        "marcDefault": "1",
-        "tokenMap": {
-          "0": "marc:NoNoteNoAddedEntry",
-          "2": "marc:NoteNoAddedEntry",
-          "3": "marc:NoNoteAddedEntry"
-        }
+        "NOTE:LC": "Note/added entry controller ignore",
+        "ignored": true,
+        "marcDefault": "1"
       },
       "$a": {"property": "value"},
-      "$b": {
-        "link": "agent", "resourceType": "Organization", "property": "name"
-      },
+      "$b": {"link": "agent", "resourceType": "Organization", "property": "name"},
       "$q": {"addProperty": "qualifier"},
-      "$6": {"property": "marc:fieldref"},
+      "$6": null,
+      "$8": null,
       "_spec": [
         {
-          "source": {"028": {"ind1": "0", "ind2": "1", "subfields": [{"a": "123"}]}},
+          "name": "AudioIssueNumber i1=0",
+          "source": {"028": {"ind1": "0", "ind2": "1", "subfields": [{"a": "STMA 8007"},{"b": "Tamla Motown"}]}},
           "result": {"mainEntity": {
-            "identifiedBy": [{"@type": "AudioIssueNumber", "value": "123"}]
+            "identifiedBy": [
+              {
+                "@type": "AudioIssueNumber",
+                "value": "STMA 8007",
+                "agent": {
+                  "@type": "Organization",
+                  "name": "Tamla Motown"
+                }
+                }
+              ]
           }}
         },
         {
-          "source": {"028": {"ind1": "1", "ind2": "0", "subfields": [{"a": "321"}]}},
+          "name": "MatrixNumber i1=1",
+          "source": {"028": {"ind1": "1", "ind2": "1", "subfields": [{"a": "256A090"},{"b": "Deutsche Grammophon Gesellschaft"}]}},
           "result": {"mainEntity": {
-            "identifiedBy": [{"@type": "MatrixNumber", "value": "321", "marc:noteAddedEntryController": "marc:NoNoteNoAddedEntry"}]
+            "identifiedBy": [
+              {
+                "@type": "MatrixNumber",
+                "value": "256A090",
+                "agent": {
+                  "@type": "Organization",
+                  "name": "Deutsche Grammophon Gesellschaft"
+                }
+              }
+            ]
+          }}
+        },
+        {
+          "name": "MusicPlate i1=2",
+          "source": {"028": {"ind1": "2", "ind2": "1", "subfields": [{"a": "B. & H. 8797"},{"b": "Breitkopf & Hartel"}]}},
+          "result": {"mainEntity": {
+            "identifiedBy": [
+              {
+                "@type": "MusicPlate",
+                "value": "B. & H. 8797",
+                "agent": {
+                  "@type": "Organization",
+                  "name": "Breitkopf & Hartel"
+                }
+              }
+            ]
+          }}
+        },
+        {
+          "name": "MusicPublisherNumber i1=3, i2=0",
+          "source": {"028": {"ind1": "3", "ind2": "0", "subfields": [{"a": "321"}]}},
+          "normalized": {"028": {"ind1": "3", "ind2": "1", "subfields": [{"a": "321"}]}},
+          "result": {"mainEntity": {
+            "identifiedBy": [{"@type": "MusicPublisherNumber", "value": "321"}]
+          }}
+        },
+        {
+          "name": "VideoRecordingNumber i1=4",
+          "source": {"028": {"ind1": "4", "ind2": "1", "subfields": [{"a": "440 073 033-9"},{"b": "Deutsche Grammophon"},{"q": "skiva 2"}]}},
+          "result": {"mainEntity": {
+            "identifiedBy": [
+              {
+                "@type": "VideoRecordingNumber",
+                "value": "440 073 033-9",
+                "qualifier": ["skiva 2"],
+                "agent": {
+                  "@type": "Organization",
+                  "name": "Deutsche Grammophon"
+                }
+              }
+            ]
+          }}
+        },
+        {
+          "name": "PublisherNumber i1=5, i2=2",
+          "source": {"028": {"ind1": "5", "ind2": "2", "subfields": [{"a": "321"}]}},
+          "normalized": {"028": {"ind1": "5", "ind2": "1", "subfields": [{"a": "321"}]}},
+          "result": {"mainEntity": {
+            "identifiedBy": [{"@type": "PublisherNumber", "value": "321"}]
+          }}
+        },
+        {
+          "name": "MusicDistributorNumber i1=6",
+          "source": {"028": {"ind1": "6", "ind2": "1", "subfields": [{"a": "321"}]}},
+          "result": {"mainEntity": {
+            "identifiedBy": [{"@type": "MusicDistributorNumber", "value": "321"}]
           }}
         }
       ]
@@ -7121,7 +7352,7 @@
         }
       },
       "$b": {"property": "itemPortion"},
-      "$m": {"ignored": true, "NOTE:record-count": 1},
+      "$m": {"ignored": true, "NOTE:LC": "Standard or optional designation (NR) - nac"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
       "subfieldOrder": "a b 2 q ...",
@@ -7289,6 +7520,7 @@
     },
     "083": {
       "aboutEntity": "?work",
+      "TODO": "Should we deprecate this altogether? BF2=nac",
       "addLink": "additionalClassificationDdc",
       "include": ["classification-ddc"],
       "$c": {"ignored": true, "NOTE:record-count": 1, "NOTE:local": "Används normalt ej"},
@@ -7484,9 +7716,10 @@
       ]
     },
     "088": {
+      "NOTE:local": "EJ I EXPORT",
       "include": ["identifier"],
       "resourceType": "ReportNumber",
-      "$6": {"property": "marc:fieldref"}
+      "$6": null
     },
     "090": {"ignored": true, "NOTE:record-count": 67, "NOTE:LC": "OBSOLETE, 1982", "NOTE:OCLC": "Locally Assigned LC-type Call Number. Field 090 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
     "092": {"ignored": true, "NOTE:record-count": 15, "NOTE:LC": "Not part of BF2 conversion", "NOTE:OCLC": "Locally Assigned Dewey Call Number. Field 092 is not part of the standard MARC 21 Bibliographic format.", "NOTE:local": "Ej i formathandboken."},
