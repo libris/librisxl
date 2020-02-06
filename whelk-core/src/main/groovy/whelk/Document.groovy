@@ -416,7 +416,7 @@ class Document {
     }
 
     void addTypedRecordIdentifier(String type, String identifier) {
-        addTypedIdentifier(type, identifier, recordIdPath)
+        addTypedIdentifier(type, identifier, recordTypedIDsPath)
     }
 
     private void addTypedIdentifier(String type, String identifier, List<Serializable> typedIdsPath) {
