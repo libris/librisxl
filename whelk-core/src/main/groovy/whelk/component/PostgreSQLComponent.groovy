@@ -57,6 +57,8 @@ class PostgreSQLComponent implements Storage {
 
     public static final ObjectMapper mapper = new ObjectMapper()
 
+    public static final String EMBELLISH_EXCLUDE_RELATIONS = "'${['narrower', 'broader'].join("', '")}'"
+
     private static final int DEFAULT_MAX_POOL_SIZE = 16
     private static final String driverClass = "org.postgresql.Driver"
 
@@ -286,6 +288,7 @@ class PostgreSQLComponent implements Storage {
                         FROM $dependenciesTableName d 
                         INNER JOIN deps deps1 ON d.id = deps1.id 
                         AND d.incard  
+                        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS)
                     ) 
                 SELECT id FROM deps
                 """.stripIndent()
@@ -300,7 +303,8 @@ class PostgreSQLComponent implements Storage {
                         SELECT d.dependsonid, c.data 
                         FROM $dependenciesTableName d 
                         INNER JOIN deps deps1 ON d.id = deps1.id 
-                        AND d.incard 
+                        AND d.incard
+                        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS)
                         LEFT JOIN $cardsTableName c on d.dependsonid = c.id 
                     ) 
                 SELECT id, card FROM deps
@@ -320,6 +324,7 @@ class PostgreSQLComponent implements Storage {
                         FROM $dependenciesTableName d 
                         INNER JOIN deps results ON d.dependsonid = results.id 
                         AND results.incard 
+                        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS)
                         AND d.id != ? 
                     ) 
                 SELECT id, relation FROM deps OFFSET 1
@@ -875,6 +880,7 @@ class PostgreSQLComponent implements Storage {
 
     /**
      * Get cards by following relations in cards recursively.
+     * Excluding {@link #EMBELLISH_EXCLUDE_RELATIONS}.
      *
      * @param startIris IRIs of cards to start with
      * @return data of cards
@@ -908,6 +914,7 @@ class PostgreSQLComponent implements Storage {
     /**
      * Find all ids that depend on a card by having it in their embellish dependencies.
      * <p>i.e. the card + all cards that link to it, recursively + all documents that link to any of all these cards</p>
+     * Excluding {@link #EMBELLISH_EXCLUDE_RELATIONS}.
      *
      * @param systemId id of card
      * @return a list of depender (id, relation) tuples
