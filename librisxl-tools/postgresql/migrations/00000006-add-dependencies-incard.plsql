@@ -23,7 +23,7 @@ BEGIN
 
 
    -- ACTUAL SCHEMA CHANGES HERE:
-   ALTER TABLE lddb__dependencies ADD COLUMN inCard boolean DEFAULT true;
+   ALTER TABLE lddb__dependencies ADD COLUMN inCard boolean DEFAULT false;
 
 END$$;
 
