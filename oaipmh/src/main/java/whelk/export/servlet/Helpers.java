@@ -85,7 +85,7 @@ public class Helpers
                             String sigel = dependerDocument.getSigel();
                             if (mustBeHeldBy == null || mustBeHeldBy.equals(sigel))
                             {
-                                resultingDocuments.push(updated);
+                                resultingDocuments.push(dependerDocument);
                             }
                         }
                     }
