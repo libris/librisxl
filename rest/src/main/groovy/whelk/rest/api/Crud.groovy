@@ -528,15 +528,7 @@ class Crud extends HttpServlet {
         // return 201 or error
         boolean isUpdate = false
         Document savedDoc;
-        try {
-            savedDoc = saveDocument(newDoc, request, response,
-                    collection, isUpdate, "POST")
-        } catch (LinkValidationException le)
-        {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    le.getMessage())
-            log.debug(le.getMessage())
-        }
+        savedDoc = saveDocument(newDoc, request, response, collection, isUpdate, "POST")
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
                                savedDoc.getChecksum())
@@ -764,7 +756,7 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Failed to acquire a necessary lock. Did you submit a holding record without a valid bib link? " + e.message)
             return null
-        } catch (PostgreSQLComponent.ConflictingHoldException e) {
+        } catch (LinkValidationException | PostgreSQLComponent.ConflictingHoldException e) {
             failedRequests.labels(httpMethod, request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage())
