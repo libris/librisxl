@@ -84,14 +84,14 @@ class WhelkCopier {
 
         def libUriPlaceholder = "___TEMP_HARDCODED_LIB_BASEURI"
         def newDataRepr = doc.dataAsString.replaceAll( // Move all lib uris, to a temporary placeholder.
-                source.baseUri.resolve("library/").toString().replace(".", "\\."),
-                libUriPlaceholder)
+                '"\\Q' + source.baseUri.resolve("library/").toString() + '\\E',
+                '"' + libUriPlaceholder)
         newDataRepr = newDataRepr.replaceAll( // Replace all other baseURIs
-                source.baseUri.toString().replace(".", "\\."),
-                dest.baseUri.toString().replace(".", "\\."))
+                '"\\Q' + source.baseUri.toString() + '\\E',
+                '"' + dest.baseUri.toString())
         newDataRepr = newDataRepr.replaceAll( // Move the hardcoded lib uris back
-                libUriPlaceholder,
-                source.baseUri.resolve("library/").toString().replace(".", "\\."))
+                '"\\Q' + libUriPlaceholder + '\\E',
+                '"' + source.baseUri.resolve("library/").toString())
 
         def newDoc = new Document(doc.mapper.readValue(newDataRepr, Map))
 
