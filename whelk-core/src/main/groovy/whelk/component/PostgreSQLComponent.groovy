@@ -97,6 +97,7 @@ class PostgreSQLComponent implements Storage {
     protected String UPSERT_CARD
     protected String UPDATE_CARD
     protected String GET_CARD
+    protected String CARD_EXISTS
     protected String DELETE_CARD
     protected String GET_CARDS_FOR_EMBELLISH
     protected String GET_IDS_FOR_EMBELLISH
@@ -189,6 +190,7 @@ class PostgreSQLComponent implements Storage {
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted) SELECT ?,?,?,?,?,?,?,?,? "
 
         GET_CARD = "SELECT data FROM $cardsTableName WHERE ID = ?"
+        CARD_EXISTS = "SELECT EXISTS(SELECT 1 from $cardsTableName where id = ?)"
         DELETE_CARD = "DELETE FROM $cardsTableName WHERE ID = ?"
         UPSERT_CARD = """
                 INSERT INTO $cardsTableName (id, data, checksum, changed) VALUES (?,?,?,?) 
@@ -829,8 +831,7 @@ class PostgreSQLComponent implements Storage {
      */
     void refreshCardData(Document doc, Instant timestamp) {
         getConnection().withCloseable { connection ->
-            boolean hasNoCard = !loadCard(doc.shortId, connection)
-            if (hasNoCard || updateCard(new CardEntry(doc, timestamp), connection)) {
+            if (!hasCard(doc.shortId, connection) || updateCard(new CardEntry(doc, timestamp), connection)) {
                 saveDependencies(doc, connection)
             }
         }
@@ -1089,6 +1090,22 @@ class PostgreSQLComponent implements Storage {
             return result
         } finally {
             close(rs, preparedStatement, connection)
+        }
+    }
+
+    protected boolean hasCard(String id, Connection connection) {
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            preparedStatement = connection.prepareStatement(CARD_EXISTS)
+            preparedStatement.setString(1, id)
+
+            rs = preparedStatement.executeQuery()
+            rs.next()
+            return rs.getBoolean(1)
+        }
+        finally {
+            close(rs, preparedStatement)
         }
     }
 
