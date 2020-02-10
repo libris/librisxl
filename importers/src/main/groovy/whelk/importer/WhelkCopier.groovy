@@ -82,8 +82,17 @@ class WhelkCopier {
     void save(doc) {
         System.err.println "[$copied] Copying $doc.shortId from $source.baseUri to $dest.baseUri"
 
-        def newDataRepr = doc.dataAsString.replaceAll(/"${source.baseUri}/,
-                '"'+dest.baseUri.toString())
+        def libUriPlaceholder = "___TEMP_HARDCODED_LIB_BASEURI"
+        def newDataRepr = doc.dataAsString.replaceAll( // Move all lib uris, to a temporary placeholder.
+                '"\\Q' + source.baseUri.resolve("library/").toString() + '\\E',
+                '"' + libUriPlaceholder)
+        newDataRepr = newDataRepr.replaceAll( // Replace all other baseURIs
+                '"\\Q' + source.baseUri.toString() + '\\E',
+                '"' + dest.baseUri.toString())
+        newDataRepr = newDataRepr.replaceAll( // Move the hardcoded lib uris back
+                '"\\Q' + libUriPlaceholder + '\\E',
+                '"' + source.baseUri.resolve("library/").toString())
+
         def newDoc = new Document(doc.mapper.readValue(newDataRepr, Map))
 
         def newId = dest.baseUri.resolve(doc.shortId).toString()
