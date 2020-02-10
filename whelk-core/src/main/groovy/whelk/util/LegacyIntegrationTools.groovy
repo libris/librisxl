@@ -28,17 +28,15 @@ class LegacyIntegrationTools {
         return IdGenerator.generate(numericId, originalIdentifier)
     }
 
-    static final String BASE_LIBRARY_URI = "https://libris.kb.se/library/"
-
     static String legacySigelToUri(String sigel) {
-        if (sigel.startsWith(BASE_LIBRARY_URI))
+        if (sigel.startsWith(Document.BASE_URI.resolve("library/").toString()))
             return sigel
-        return BASE_LIBRARY_URI + sigel
+        return Document.BASE_URI.resolve("library/" + sigel)
     }
 
     static String uriToLegacySigel(String uri) {
-        if (uri.startsWith(BASE_LIBRARY_URI))
-            return uri.substring(BASE_LIBRARY_URI.length())
+        if (uri.startsWith(Document.BASE_URI.resolve("library/").toString()))
+            return uri.substring(Document.BASE_URI.resolve("library/").toString().length())
         return null
     }
 
