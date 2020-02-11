@@ -23,8 +23,8 @@ for (String operation : ProgramLines) {
     String fuzzyShelfSomething = part[3]
 
     String[] shelfParts = fuzzyShelfSomething.split(" ")
-    String newShelfMark = shelfParts[shelfParts.length-1].trim() // The last part, separated by a space
-    String newShelfLabel = fuzzyShelfSomething.substring(0, fuzzyShelfSomething.length() - newShelfMark.length()).trim() // All but the last part
+    String newShelfLabel = shelfParts[shelfParts.length-1].trim() // The last part, separated by a space
+    String newShelfMark = fuzzyShelfSomething.substring(0, fuzzyShelfSomething.length() - newShelfLabel.length()).trim() // All but the last part
 
     String where = null
 
@@ -81,10 +81,10 @@ for (String operation : ProgramLines) {
                     } else {
                         component.shelfMark.label = newShelfMark
                     }
+
+                    component.shelfLabel = newShelfLabel
                 }
             }
-
-            hold.graph[1].shelfLabel = newShelfLabel
 
             scheduledForUpdating.println("${hold.doc.getURI()}")
             hold.scheduleSave(loud: true, onError: { e ->
