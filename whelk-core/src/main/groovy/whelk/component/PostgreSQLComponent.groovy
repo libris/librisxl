@@ -83,6 +83,7 @@ class PostgreSQLComponent implements Storage {
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String GET_INCOMING_LINK_COUNT
     protected String GET_DEPENDERS, GET_DEPENDENCIES
+    protected String GET_IN_CARD_DEPENDENCIES
     protected String GET_INCOMING_LINK_IDS_PAGINATED
     protected String GET_DEPENDENCIES_OF_TYPE, GET_DEPENDERS_OF_TYPE
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
@@ -339,6 +340,12 @@ class PostgreSQLComponent implements Storage {
         GET_INCOMING_LINK_IDS_PAGINATED = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id LIMIT ? OFFSET ?"
         GET_INCOMING_LINK_COUNT = "SELECT COUNT(id) FROM $dependenciesTableName WHERE dependsOnId = ?"
         GET_DEPENDENCIES = "SELECT DISTINCT dependsOnId FROM $dependenciesTableName WHERE id = ? ORDER BY dependsOnId"
+        GET_IN_CARD_DEPENDENCIES = """
+                SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND inCard
+                AND relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS)
+                ORDER BY dependsOnId
+                """.stripIndent()
+
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
         GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
 
@@ -1052,24 +1059,27 @@ class PostgreSQLComponent implements Storage {
             close(rs, preparedStatement, connection)
         }
     }
-
+    
     protected SortedSet<String> getIdsForEmbellish(List<String> startIris) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(GET_IDS_FOR_EMBELLISH)
-            preparedStatement.setArray(1,  connection.createArrayOf("TEXT", startIris as String[]))
-
-            rs = preparedStatement.executeQuery()
-            SortedSet<String> result = new TreeSet<>()
-            while(rs.next()) {
-                result.add(rs.getString("id"))
+        SortedSet<String> result = new TreeSet<>()
+        Queue<String> queue = new LinkedList<>()
+        getConnection().withCloseable { connection ->
+            getSystemIds(startIris, connection) { String iri, String systemId, boolean deleted ->
+                result.add(systemId)
+                queue.add(systemId)
             }
-            return result
-        } finally {
-            close(rs, preparedStatement, connection)
         }
+
+        while(!queue.isEmpty()) {
+            getConnection().withCloseable { connection ->
+                SortedSet<String> ids = getDependencyData(queue.poll(), GET_IN_CARD_DEPENDENCIES, connection)
+                ids.removeAll(result)
+                queue.addAll(ids)
+                result.addAll(ids)
+            }
+        }
+
+        return result
     }
 
     protected Map<String, Map> bulkLoadCards(Iterable<String> ids) {
