@@ -23,7 +23,6 @@ class WhelkCopier {
         this.dest = dest
         this.recordIds = recordIds
 
-        dest.storage.versioning = false
         dest.storage.doVerifyDocumentIdRetention = false
     }
 
