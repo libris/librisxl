@@ -1071,15 +1071,19 @@ class PostgreSQLComponent implements Storage {
         }
 
         while(!queue.isEmpty()) {
-            getConnection().withCloseable { connection ->
-                SortedSet<String> ids = getDependencyData(queue.poll(), GET_IN_CARD_DEPENDENCIES, connection)
-                ids.removeAll(result)
-                queue.addAll(ids)
-                result.addAll(ids)
-            }
+            SortedSet<String> ids = getInCardDependers(queue.poll())
+            ids.removeAll(result)
+            queue.addAll(ids)
+            result.addAll(ids)
         }
 
         return result
+    }
+
+    protected SortedSet<String> getInCardDependers(String id) {
+        getConnection().withCloseable { connection ->
+            return getDependencyData(id, GET_IN_CARD_DEPENDENCIES, connection)
+        }
     }
 
     protected Map<String, Map> bulkLoadCards(Iterable<String> ids) {

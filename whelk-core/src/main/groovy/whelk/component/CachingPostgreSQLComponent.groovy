@@ -10,18 +10,20 @@ import java.sql.Connection
 
 @Log
 class CachingPostgreSQLComponent extends PostgreSQLComponent {
-    private static final int CARD_CACHE_MAX_SIZE = 200_000
+    private static final int CARD_CACHE_MAX_SIZE = 250_000
     private LoadingCache<String, Map> cardCache
+    private LoadingCache<String, SortedSet<String>> dependencyCache
 
     CachingPostgreSQLComponent(Properties properties) {
         super(properties)
-        initCardCache()
+        initCaches()
     }
 
     @Override
     void logStats() {
         super.logStats()
         log.info("Card cache: ${cardCache.stats()}")
+        log.info("Card dependency cache: ${dependencyCache.stats()}")
     }
 
     @Override
@@ -32,6 +34,11 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
     @Override
     Map getCard(String id) {
         return cardCache.get(id)
+    }
+
+    @Override
+    protected SortedSet<String> getInCardDependers(String id) {
+        return dependencyCache.get(id)
     }
 
     @Override
@@ -48,19 +55,37 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
         cardCache.invalidate(systemId)
     }
 
-    void initCardCache() {
+    private SortedSet<String> superGetInCardDependers(String id) {
+        return super.getInCardDependers(id)
+    }
+
+    private Map superGetCard(String id) {
+        return super.getCard(id)
+    }
+
+    void initCaches() {
         cardCache = CacheBuilder.newBuilder()
                 .maximumSize(CARD_CACHE_MAX_SIZE)
                 .recordStats()
                 .build(new CacheLoader<String, Map>() {
                     @Override
                     Map load(String systemId) throws Exception {
-                        return CachingPostgreSQLComponent.super.getCard(systemId)
+                        return superGetCard(systemId)
                     }
 
                     @Override
                     Map<String, Map> loadAll(Iterable<? extends String> systemIds) throws Exception {
                         return addMissingCards(bulkLoadCards(systemIds))
+                    }
+                })
+
+        dependencyCache = CacheBuilder.newBuilder()
+                .maximumSize(CARD_CACHE_MAX_SIZE)
+                .recordStats()
+                .build(new CacheLoader<String, SortedSet<String>>() {
+                    @Override
+                    SortedSet<String> load(String systemId) throws Exception {
+                        return superGetInCardDependers(systemId)
                     }
                 })
     }
