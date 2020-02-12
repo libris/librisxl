@@ -92,6 +92,7 @@ class WhelkCopier {
             }
         }
         flushSaveQueue()
+        threadPool.joinAll()
         System.err.println "Copied $copied documents (from ${recordIds.size()} selected)."
     }
 
