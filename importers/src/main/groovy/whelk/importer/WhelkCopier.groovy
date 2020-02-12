@@ -3,14 +3,18 @@ package whelk.importer
 import whelk.Whelk
 import whelk.Document
 import whelk.util.LegacyIntegrationTools
+import whelk.util.ThreadPool
 
 class WhelkCopier {
 
     static final int DEFAULT_FETCH_SIZE = 100
+    static final int SAVE_BATCH_SIZE = 200
 
     Whelk source
     Whelk dest
     List recordIds
+    ThreadPool threadPool = new ThreadPool(Runtime.getRuntime().availableProcessors())
+    List<Document> saveQueue = []
 
     private int copied = 0
 
@@ -47,7 +51,7 @@ class WhelkCopier {
             relDoc.baseUri = source.baseUri
             if (!alreadyImportedIDs.contains(relDoc.shortId)) {
                 alreadyImportedIDs.add(relDoc.shortId)
-                save(relDoc)
+                queueSave(relDoc)
             }
         }
 
@@ -70,12 +74,12 @@ class WhelkCopier {
                 relDoc.baseUri = source.baseUri
                 if (!alreadyImportedIDs.contains(relDoc.shortId)) {
                     alreadyImportedIDs.add(relDoc.shortId)
-                    save(relDoc)
+                    queueSave(relDoc)
                 }
             }
             if (!alreadyImportedIDs.contains(doc.shortId)) {
                 alreadyImportedIDs.add(doc.shortId)
-                save(doc)
+                queueSave(doc)
             }
             // links to this:
             for (revDoc in selectBySqlWhere("""id in (select id from lddb__dependencies where dependsonid = '${id}')""")) {
@@ -83,10 +87,11 @@ class WhelkCopier {
                 revDoc.baseUri = source.baseUri
                 if (!alreadyImportedIDs.contains(revDoc.shortId)) {
                     alreadyImportedIDs.add(revDoc.shortId)
-                    save(revDoc)
+                    queueSave(revDoc)
                 }
             }
         }
+        flushSaveQueue()
         System.err.println "Copied $copied documents (from ${recordIds.size()} selected)."
     }
 
@@ -104,10 +109,26 @@ class WhelkCopier {
         source.storage.iterateDocuments(rs)
     }
 
-    void save(doc) {
+    void queueSave(doc) {
+        saveQueue.add(doc)
+        copied++
         if (copied % 200 == 0)
-            System.err.println "Records copied: $copied"
+            System.err.println "Records queued for copying: $copied"
+        if (saveQueue.size() >= SAVE_BATCH_SIZE) {
+            flushSaveQueue()
+        }
+    }
 
+    void flushSaveQueue() {
+        List<Document> batch = saveQueue
+        saveQueue = []
+        threadPool.executeOnThread(batch, {_batch, threadIndex ->
+            for (Document d : _batch)
+                save(d)
+        })
+    }
+
+    void save(doc) {
         def libUriPlaceholder = "___TEMP_HARDCODED_LIB_BASEURI"
         def newDataRepr = doc.dataAsString.replaceAll( // Move all lib uris, to a temporary placeholder.
                 '"\\Q' + source.baseUri.resolve("library/").toString() + '\\E',
@@ -134,8 +155,6 @@ class WhelkCopier {
         } else {
             System.err.println "Collection could not be determined for id ${newDoc.getShortId()}, document will not be exported."
         }
-
-        copied++
     }
 
 }
