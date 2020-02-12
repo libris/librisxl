@@ -26,6 +26,31 @@ class WhelkCopier {
     void run() {
         TreeSet<String> alreadyImportedIDs = new TreeSet<>()
 
+        // Import all (ish) auth records
+        for (relDoc in selectBySqlWhere("collection = 'auth' and data#>>'{@graph,1,@type}' in (\n" +
+                "'GeographicSubdivision',\n" +
+                "'Meeting',\n" +
+                "'Person',\n" + // The absolute lion share of auth records.
+                "'Topic',\n" +
+                "'Agent',\n" +
+                "'Jurisdiction',\n" +
+                "'GenreForm',\n" +
+                "'Family',\n" +
+                "'Organization',\n" +
+                "'Temporal',\n" +
+                "'TemporalSubdivision',\n" +
+                "'Library',\n" +
+                "'ComplexSubject',\n" +
+                "'Geographic',\n" +
+                "'TopicSubdivision')")) {
+            if (relDoc.deleted) continue
+            relDoc.baseUri = source.baseUri
+            if (!alreadyImportedIDs.contains(relDoc.shortId)) {
+                alreadyImportedIDs.add(relDoc.shortId)
+                save(relDoc)
+            }
+        }
+
         for (id in recordIds) {
             def doc
             if (id.contains("/")) {
@@ -80,7 +105,8 @@ class WhelkCopier {
     }
 
     void save(doc) {
-        System.err.println "[$copied] Copying $doc.shortId from $source.baseUri to $dest.baseUri"
+        if (copied % 200 == 0)
+            System.err.println "Records copied: $copied"
 
         def libUriPlaceholder = "___TEMP_HARDCODED_LIB_BASEURI"
         def newDataRepr = doc.dataAsString.replaceAll( // Move all lib uris, to a temporary placeholder.
