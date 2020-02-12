@@ -46,6 +46,7 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
         boolean change = super.storeCard(cardEntry, connection)
         Document card = cardEntry.getCard()
         cardCache.put(card.getShortId(), card.data)
+        dependencyCache.invalidate(card.getShortId())
         return change
     }
 
@@ -53,6 +54,7 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
     protected void deleteCard(String systemId, Connection connection) {
         super.deleteCard(systemId, connection)
         cardCache.invalidate(systemId)
+        dependencyCache.invalidate(systemId)
     }
 
     private SortedSet<String> superGetInCardDependers(String id) {
