@@ -101,10 +101,8 @@ class PostgreSQLComponent implements Storage {
     protected String GET_CARD
     protected String DELETE_CARD
     protected String GET_CARDS_FOR_EMBELLISH
-    protected String GET_IDS_FOR_EMBELLISH
     protected String BULK_LOAD_CARDS
     protected String IS_CARD_CHANGED
-    protected String FOLLOW_EMBELLISH_DEPENDERS
 
     String mainTableName
     LinkFinder linkFinder
@@ -279,22 +277,6 @@ class PostgreSQLComponent implements Storage {
                 ") " +
                 "SELECT * FROM deps"
 
-        // Start with an ARRAY of IRIs and convert them to SystemIDs.
-        // Then recursively load SystemIDs by following in-card-relations (given by $dependenciesTableName.incard)
-        GET_IDS_FOR_EMBELLISH = """
-                WITH RECURSIVE deps(id) AS ( 
-                        SELECT i.id from unnest(?) as in_iri 
-                        INNER JOIN $idTableName i ON in_iri = i.iri 
-                    UNION 
-                        SELECT d.dependsonid 
-                        FROM $dependenciesTableName d 
-                        INNER JOIN deps deps1 ON d.id = deps1.id 
-                        AND d.incard  
-                        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS)
-                    ) 
-                SELECT id FROM deps
-                """.stripIndent()
-
         // Same as GET_IDS_FOR_EMBELLISH but also try to join in card data for all SystemIDs.
         GET_CARDS_FOR_EMBELLISH = """
                 WITH RECURSIVE deps(id, card) AS ( 
@@ -310,26 +292,6 @@ class PostgreSQLComponent implements Storage {
                         LEFT JOIN $cardsTableName c on d.dependsonid = c.id 
                     ) 
                 SELECT id, card FROM deps
-                """.stripIndent()
-
-        // Starting with a SystemID, find all SystemIDs that have the ID in their "embellish dependencies"
-        // , i.e. it is part of their embellished document.
-        // Going backwards from SystemID:
-        // - Recursively follow in-card-relations backwards.
-        // - Also follow not-in-card-relations (since embellish starts from the full doc) but stop at them.
-        // Don't include the starting ID in the result
-        FOLLOW_EMBELLISH_DEPENDERS = """
-                WITH RECURSIVE deps(id, relation, incard) AS ( 
-                        VALUES (?, null, true) 
-                    UNION 
-                        SELECT d.id, d.relation, d.incard 
-                        FROM $dependenciesTableName d 
-                        INNER JOIN deps results ON d.dependsonid = results.id 
-                        AND results.incard 
-                        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS, 'itemOf')
-                        AND d.id != ? 
-                    ) 
-                SELECT id, relation FROM deps OFFSET 1
                 """.stripIndent()
 
         BULK_LOAD_CARDS = "SELECT in_id as id, data from unnest(?) as in_id LEFT JOIN $cardsTableName c ON in_id = c.id"
