@@ -1,5 +1,4 @@
 PrintWriter failedHoldIDs = getReportWriter("failed-holdIDs")
-PrintWriter unexpectedRecordState = getReportWriter("unexpeted-record-states")
 PrintWriter scheduledForUpdating = getReportWriter("scheduled-updates")
 
 File bibids = new File(scriptDir, "informalProgram.tsv")
@@ -28,14 +27,17 @@ for (String operation : ProgramLines) {
 
     String where = null
 
-    // Looks like an ISBN
+    // Looks like an ISBN ... OR A FU**ING LIBRISIIINUMBER, THIS IS INSANE.
     if (fuzzyID.matches("[0-9X]{9,14}")) {
         // Postgres unfortunately fails to optimize the non-CTE version of this. The same thing happens if you attempt
         // to join in the holdings to filter out non-Jon-ones.
         where = "id in (\n" +
                 "with bibIds as\n" +
                 "(\n" +
-                "select id from lddb where data#>'{@graph,1,identifiedBy}' @> '[{\"@type\":\"ISBN\", \"value\":\"$fuzzyID\"}]'\n" +
+                "select id from lddb where\n" +
+                "data#>'{@graph,1,identifiedBy}' @> '[{\"value\":\"$fuzzyID\"}]'\n" +
+                "or\n" +
+                "data#>'{@graph,0,identifiedBy}' @> '[{\"value\":\"$fuzzyID\"}]'\n" +
                 ")\n" +
                 "select d.id from lddb__dependencies d\n" +
                 "where d.dependsonid in (select * from bibIds)\n" +
@@ -62,8 +64,11 @@ for (String operation : ProgramLines) {
         continue
     }
 
+    boolean foundSomeThing = false
     selectBySqlWhere(where, silent: true) { hold ->
         if (hold.doc.getSigel() == "Jon") {
+
+            foundSomeThing = true
 
             // Update shelfMark
             List components = hold.graph[1].hasComponent.findAll {
@@ -92,5 +97,8 @@ for (String operation : ProgramLines) {
             })
         }
     }
+
+    if (!foundSomeThing)
+        System.err.println("Could not find a record matching the \"id\" in: " + operation)
 
 }
