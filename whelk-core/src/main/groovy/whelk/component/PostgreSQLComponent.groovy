@@ -84,6 +84,7 @@ class PostgreSQLComponent implements Storage {
     protected String GET_INCOMING_LINK_COUNT
     protected String GET_DEPENDERS, GET_DEPENDENCIES
     protected String GET_IN_CARD_DEPENDENCIES
+    protected String GET_EMBELLISH_AFFECTED
     protected String GET_INCOMING_LINK_IDS_PAGINATED
     protected String GET_DEPENDENCIES_OF_TYPE, GET_DEPENDERS_OF_TYPE
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
@@ -325,7 +326,7 @@ class PostgreSQLComponent implements Storage {
                         FROM $dependenciesTableName d 
                         INNER JOIN deps results ON d.dependsonid = results.id 
                         AND results.incard 
-                        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS)
+                        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS, 'itemOf')
                         AND d.id != ? 
                     ) 
                 SELECT id, relation FROM deps OFFSET 1
@@ -344,6 +345,11 @@ class PostgreSQLComponent implements Storage {
                 SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND inCard
                 AND relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS)
                 ORDER BY dependsOnId
+                """.stripIndent()
+
+        GET_EMBELLISH_AFFECTED = """
+                SELECT id, incard FROM $dependenciesTableName WHERE dependsOnId = ANY (?) 
+                AND relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS, 'itemOf')
                 """.stripIndent()
 
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
@@ -940,26 +946,46 @@ class PostgreSQLComponent implements Storage {
      * Excluding {@link #EMBELLISH_EXCLUDE_RELATIONS}.
      *
      * @param systemId id of card
-     * @return a list of depender (id, relation) tuples
+     * @return a set of depender system ids
      */
-    List<Tuple2<String, String>> followEmbellishDependers(String systemId) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(FOLLOW_EMBELLISH_DEPENDERS)
-            preparedStatement.setString(1, systemId)
-            preparedStatement.setString(2, systemId)
+    //TODO: will this miss some docs?
+    Set<String> followEmbellishDependers(String systemId) {
+        Set<String> visited = new HashSet<>()
 
-            rs = preparedStatement.executeQuery()
-            List<Tuple2<String, String>> result = []
-            while(rs.next()) {
-                result << new Tuple2(rs.getString("id"), rs.getString("relation"))
+        LinkedList<String> queue = new LinkedList<>()
+        queue.add(systemId)
+        visited.add(systemId)
+
+        int BATCH_SIZE = 1000
+        while(!queue.isEmpty()) {
+            int n = Math.min(BATCH_SIZE, queue.size())
+            def ids = new String[n]
+            n.times { i ->
+                ids[i] = queue.removeFirst()
             }
-            return result
-        } finally {
-            close(rs, preparedStatement, connection)
+
+            Connection connection = getOuterConnection() // TODO
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            Array array = null
+            try {
+                preparedStatement = connection.prepareStatement(GET_EMBELLISH_AFFECTED)
+                array = connection.createArrayOf("TEXT", ids)
+                preparedStatement.setArray(1, array)
+                rs = preparedStatement.executeQuery()
+                while(rs.next()) {
+                    String id = rs.getString("id")
+                    if (visited.add(id) && rs.getBoolean("inCard")) {
+                        queue.add(id)
+                    }
+                }
+            } finally {
+                close(array, rs, preparedStatement, connection)
+            }
         }
+
+        visited.remove(systemId)
+        return visited
     }
 
     protected boolean storeCard(CardEntry cardEntry) {
@@ -1071,7 +1097,7 @@ class PostgreSQLComponent implements Storage {
         }
 
         while(!queue.isEmpty()) {
-            SortedSet<String> ids = getInCardDependers(queue.poll())
+            SortedSet<String> ids = getInCardDependencies(queue.poll())
             ids.removeAll(result)
             queue.addAll(ids)
             result.addAll(ids)
@@ -1080,7 +1106,7 @@ class PostgreSQLComponent implements Storage {
         return result
     }
 
-    protected SortedSet<String> getInCardDependers(String id) {
+    protected SortedSet<String> getInCardDependencies(String id) {
         getConnection().withCloseable { connection ->
             return getDependencyData(id, GET_IN_CARD_DEPENDENCIES, connection)
         }
@@ -2236,10 +2262,11 @@ class PostgreSQLComponent implements Storage {
         return outerConnectionPool
     }
 
-    DataSource createAdditionalConnectionPool(String name) {
+    DataSource createAdditionalConnectionPool(String name, int size = this.getPoolSize()) {
         HikariConfig config = new HikariConfig()
         connectionPool.copyStateTo(config)
         config.setPoolName(name)
+        config.setMaximumPoolSize(size)
         HikariDataSource pool = new HikariDataSource(config)
         log.info("Created additional connection pool: ${pool.getPoolName()}, max size:${pool.getMaximumPoolSize()}")
         return pool

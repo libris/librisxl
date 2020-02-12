@@ -37,7 +37,7 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
     }
 
     @Override
-    protected SortedSet<String> getInCardDependers(String id) {
+    protected SortedSet<String> getInCardDependencies(String id) {
         return dependencyCache.get(id)
     }
 
@@ -58,7 +58,7 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
     }
 
     private SortedSet<String> superGetInCardDependers(String id) {
-        return super.getInCardDependers(id)
+        return super.getInCardDependencies(id)
     }
 
     private Map superGetCard(String id) {
