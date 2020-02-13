@@ -18643,12 +18643,13 @@
       ]
     },
     "786": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "include": ["referenceToInstanceSansDisplayText"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "dataSource",
-      "resourceType": "Dataset",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
+      "$i": {"about": "_:instance", "addProperty": "marc:displayText"},
       "$p": {"about": "_:instance", "addLink": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore", "NOTE:marc-repeatable": false},
       "_spec": [
         {
@@ -18664,25 +18665,19 @@
             {"w": "13527363"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "dataSource": [{
-                "@type": "Dataset",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "The catalogue of the book collection of the Jesuit College in Braniewo held in the University Library in Uppsala"
-                  }],
-                  "describedBy": [{
-                    "@type" : "Record",
-                    "controlNumber": "13527363"
-                  }]
-                },
-                "marc:displayText": ["Source"],
-                "marc:toDisplayNote": true
-              }]
-            }
+            "dataSource": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "The catalogue of the book collection of the Jesuit College in Braniewo held in the University Library in Uppsala"
+              }],
+              "describedBy": [{
+                "@type" : "Record",
+                "controlNumber": "13527363"
+              }],
+              "marc:displayText": ["Source"],
+              "marc:toDisplayNote": true
+            }]
           }}
         }
       ]
