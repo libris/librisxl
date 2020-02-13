@@ -910,15 +910,15 @@ class PostgreSQLComponent implements Storage {
      * @param systemId id of card
      * @return a set of depender system ids
      */
-    //TODO: will this miss some docs?
     Set<String> followEmbellishDependers(String systemId) {
-        Set<String> visited = new HashSet<>()
+        // we can reach the same doc both as a card (continue) and as a full doc (stop) through different paths
+        Set<Tuple2<String, Boolean>> visited = new HashSet<>()
 
         LinkedList<String> queue = new LinkedList<>()
         queue.add(systemId)
-        visited.add(systemId)
+        visited.add(new Tuple2(systemId, true))
 
-        int BATCH_SIZE = 1000
+        final int BATCH_SIZE = 1000
         while(!queue.isEmpty()) {
             int n = Math.min(BATCH_SIZE, queue.size())
             def ids = new String[n]
@@ -926,7 +926,7 @@ class PostgreSQLComponent implements Storage {
                 ids[i] = queue.removeFirst()
             }
 
-            Connection connection = getOuterConnection() // TODO
+            Connection connection = getOuterConnection() // TODO need a separate pool for these potentially slow queries when inside rest app
             PreparedStatement preparedStatement = null
             ResultSet rs = null
             Array array = null
@@ -937,7 +937,8 @@ class PostgreSQLComponent implements Storage {
                 rs = preparedStatement.executeQuery()
                 while(rs.next()) {
                     String id = rs.getString("id")
-                    if (visited.add(id) && rs.getBoolean("inCard")) {
+                    boolean inCard = rs.getBoolean("inCard")
+                    if (visited.add(new Tuple2(id, inCard)) && inCard) {
                         queue.add(id)
                     }
                 }
@@ -946,8 +947,10 @@ class PostgreSQLComponent implements Storage {
             }
         }
 
-        visited.remove(systemId)
-        return visited
+        Set<String> result = new HashSet<>()
+        visited.each {t -> result.add(t.getFirst())}
+        result.remove(systemId)
+        return result
     }
 
     protected boolean storeCard(CardEntry cardEntry) {
