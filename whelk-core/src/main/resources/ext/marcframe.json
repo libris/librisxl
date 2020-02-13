@@ -1461,7 +1461,7 @@
     },
 
     "referenceToWork": {
-      "include": ["referencedObjectDetails", "serialSpecificDetails", "workTitleQualifier", "linkRelation"],
+      "include": ["referencedObjectDetails", "serialSpecificDetails", "workTitleQualifier", "workDisplayText"],
       "pendingResources": {
         "_:instance": {
           "about": "_:work",
@@ -1476,7 +1476,7 @@
     },
 
     "referenceToSeriesInstance": {
-      "include": ["instanceOfObject", "referencedObjectDetails", "workTitleQualifier", "linkRelation"]
+      "include": ["instanceOfObject", "referencedObjectDetails", "workTitleQualifier", "workDisplayText"]
     },
 
     "instanceOfObject": {
@@ -1489,7 +1489,12 @@
       }
     },
 
-    "linkRelation": {
+    "instanceDisplayText": {
+      "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
+      "$i": {"about": "_:instance", "addProperty": "marc:displayText"}
+    },
+
+    "workDisplayText": {
       "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
       "$i": {"about": "_:work", "addProperty": "marc:displayText"}
     },
@@ -17867,7 +17872,7 @@
       ]
     },
     "775": {
-      "include": ["referenceToInstanceSansDisplayText"],
+      "include": ["referenceToInstanceSansDisplayText", "instanceDisplayText"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "otherEdition",
@@ -17882,7 +17887,6 @@
       "i2": {"ignored": true, "marcDefault": " "},
       "$e": {"addLink": "language", "NOTE:marc-repeatable": false, "resourceType": "Language", "property": "label", "infer": true, "TODO:inherit": "008:[35:38]"},
       "$f": {"about": "_:provisionActivity", "link": "place", "resourceType": "Place", "property": "code", "NOTE:marc-repeatable": false, "TODO:inherit": "008:[15:18]"},
-      "$i": {"about": "_:instance", "addProperty": "marc:displayText"},
       "_spec": [
         {
           "name": "Example from xf7626r83c73st9",
@@ -17963,14 +17967,13 @@
     },
     "776": {
       "NOTE": "We deviate from BF2 as we do not link from the Work with hasInstance.",
-      "include": ["referenceToInstanceSansDisplayText"],
+      "include": ["referenceToInstanceSansDisplayText", "instanceDisplayText"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "otherPhysicalFormat",
       "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": "8"},
       "NOTE:$i": "Not using same pattern as all other linkfields since only 776 is correctly mapped to Instance. Not creating new pattern because aiming for get rid of displayText",
-      "$i": {"about": "_:instance", "addProperty": "marc:displayText"},
       "_spec": [
         {
           "source": {"776": {"ind1": "0", "ind2": "8", "subfields": [
@@ -18138,14 +18141,12 @@
       ]
     },
     "777": {
-      "include": ["referenceToInstanceSansDisplayText"],
+      "include": ["referenceToInstanceSansDisplayText", "instanceDisplayText"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "issuedWith",
       "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
-      "NOTE:$i": "Not using same pattern as all other linkfields since only 776 is correctly mapped to Instance. Not creating new pattern because aiming for get rid of displayText",
-      "$i": {"about": "_:instance", "addProperty": "marc:displayText"},
       "_spec": [
         {
           "name": "Example from fxqnstdr4mdmvws",
@@ -18643,13 +18644,12 @@
       ]
     },
     "786": {
-      "include": ["referenceToInstanceSansDisplayText"],
+      "include": ["referenceToInstanceSansDisplayText", "instanceDisplayText"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "dataSource",
       "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
-      "$i": {"about": "_:instance", "addProperty": "marc:displayText"},
       "$p": {"about": "_:instance", "addLink": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore", "NOTE:marc-repeatable": false},
       "_spec": [
         {
