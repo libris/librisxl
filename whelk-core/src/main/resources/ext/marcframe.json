@@ -17130,6 +17130,7 @@
             {"i": "displayText"},
             {"t": "Publikation"},
             {"c": "Särskiljande tillägg"},
+            {"g": "s. 144-145"},
             {"x": "1401-9612"}
           ]}},
           "result": {"mainEntity": {
@@ -17144,6 +17145,7 @@
                 "@type": "ISSN",
                 "value": "1401-9612"
               }],
+              "part": ["s. 144-145"],
               "instanceOf": {
                 "@type": "Work",
                 "hasTitle": [{
@@ -17398,10 +17400,12 @@
         {
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
             {"s": "Main Thing"},
+            {"g": "part 1"},
             {"z": "00-0-000000-0"}
           ]}},
           "normalized": {"772": {"ind1": "0", "ind2": "0", "subfields": [
             {"s": "Main Thing"},
+            {"g": "part 1"},
             {"z": "00-0-000000-0"}
           ]}},
           "result": {"mainEntity": {
@@ -17418,7 +17422,8 @@
                   "identifiedBy": [{
                     "@type": "ISBN",
                     "value": "00-0-000000-0"
-                  }]
+                  }],
+                  "part": ["part 1"]
                 }
               }]
             }
