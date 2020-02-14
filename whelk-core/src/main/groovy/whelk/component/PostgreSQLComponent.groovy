@@ -50,6 +50,8 @@ import static java.sql.Types.OTHER
 @Log
 @CompileStatic
 class PostgreSQLComponent implements Storage {
+    public static final int MAX_EMBELLISH_DEPTH = 4
+
     public static final String PROPERTY_SQL_URL = "sqlUrl"
     public static final String PROPERTY_SQL_MAIN_TABLE_NAME = "sqlMaintable"
     public static final String PROPERTY_SQL_MAX_POOL_SIZE = "sqlMaxPoolSize"
@@ -1015,19 +1017,25 @@ class PostgreSQLComponent implements Storage {
 
     protected SortedSet<String> getIdsForEmbellish(List<String> startIris) {
         SortedSet<String> result = new TreeSet<>()
-        Queue<String> queue = new LinkedList<>()
+        Queue<Tuple2<String, Integer>> queue = new LinkedList<>()
         getConnection().withCloseable { connection ->
             getSystemIds(startIris, connection) { String iri, String systemId, boolean deleted ->
                 result.add(systemId)
-                queue.add(systemId)
+                queue.add(new Tuple2(systemId, 1))
             }
         }
 
-        while(!queue.isEmpty()) {
-            SortedSet<String> ids = getInCardDependencies(queue.poll())
+        while (!queue.isEmpty()) {
+            def next = queue.poll()
+            String id = next.getFirst()
+            int depth = next.getSecond()
+
+            SortedSet<String> ids = getInCardDependencies(id)
             ids.removeAll(result)
-            queue.addAll(ids)
             result.addAll(ids)
+            if (depth + 1 < MAX_EMBELLISH_DEPTH) {
+                ids.each { queue.add(new Tuple2(it, depth + 1)) }
+            }
         }
 
         return result
@@ -1048,7 +1056,7 @@ class PostgreSQLComponent implements Storage {
             preparedStatement.setArray(1,  connection.createArrayOf("TEXT", ids as String[]))
 
             rs = preparedStatement.executeQuery()
-            Map<String, Map> result = [:]
+            SortedMap<String, Map> result = new TreeMap<>()
             while(rs.next()) {
                 String card = rs.getString("data")
                 result[rs.getString("id")] = card != null ? mapper.readValue(card, Map) : null
