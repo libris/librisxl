@@ -86,7 +86,7 @@ class PostgreSQLComponent implements Storage {
     protected String GET_INCOMING_LINK_COUNT
     protected String GET_DEPENDERS, GET_DEPENDENCIES
     protected String GET_IN_CARD_DEPENDENCIES
-    protected String GET_EMBELLISH_AFFECTED
+    protected String GET_EMBELLISH_DEPENDERS
     protected String GET_INCOMING_LINK_IDS_PAGINATED
     protected String GET_DEPENDENCIES_OF_TYPE, GET_DEPENDERS_OF_TYPE
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
@@ -293,7 +293,7 @@ class PostgreSQLComponent implements Storage {
                 ORDER BY dependsOnId
                 """.stripIndent()
 
-        GET_EMBELLISH_AFFECTED = """
+        GET_EMBELLISH_DEPENDERS = """
                 SELECT id, incard FROM $dependenciesTableName WHERE dependsOnId = ANY (?) 
                 AND relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS, 'itemOf')
                 """.stripIndent()
@@ -899,42 +899,57 @@ class PostgreSQLComponent implements Storage {
         Set<Tuple2<String, Boolean>> visited = new HashSet<>()
 
         LinkedList<String> queue = new LinkedList<>()
+        LinkedList<String> nextDepthQueue = new LinkedList<>()
         queue.add(systemId)
         visited.add(new Tuple2(systemId, true))
 
-        final int BATCH_SIZE = 1000
-        while(!queue.isEmpty()) {
-            int n = Math.min(BATCH_SIZE, queue.size())
-            def ids = new String[n]
-            n.times { i ->
-                ids[i] = queue.removeFirst()
+        int depth = MAX_EMBELLISH_DEPTH
+        while (depth-- > 0) {
+            while(!queue.isEmpty()) {
+                log.trace("followEmbellishDependers {}, depth:{}, queue size:{}, next queue size:{}",
+                        systemId, depth, queue.size(), nextDepthQueue.size())
+                followEmbellishDependersBatch(visited, queue, depth > 0 ? nextDepthQueue : null)
             }
-
-            Connection connection = getOuterConnection() // TODO need a separate pool for these potentially slow queries when inside rest app
-            PreparedStatement preparedStatement = null
-            ResultSet rs = null
-            Array array = null
-            try {
-                preparedStatement = connection.prepareStatement(GET_EMBELLISH_AFFECTED)
-                array = connection.createArrayOf("TEXT", ids)
-                preparedStatement.setArray(1, array)
-                rs = preparedStatement.executeQuery()
-                while(rs.next()) {
-                    String id = rs.getString("id")
-                    boolean inCard = rs.getBoolean("inCard")
-                    if (visited.add(new Tuple2(id, inCard)) && inCard) {
-                        queue.add(id)
-                    }
-                }
-            } finally {
-                close(array, rs, preparedStatement, connection)
-            }
+            (queue, nextDepthQueue) = [nextDepthQueue, queue]
         }
 
         Set<String> result = new HashSet<>()
         visited.each {t -> result.add(t.getFirst())}
         result.remove(systemId)
+        log.trace("followEmbellishDependers {}, result size:{}", systemId, result.size())
         return result
+    }
+
+    private void followEmbellishDependersBatch(Set<Tuple2<String, Boolean>> visited,
+                                               LinkedList<String> queue,
+                                               LinkedList<String> nextDepthQueue) {
+        final int QUERY_SIZE = 1000
+
+        int n = Math.min(QUERY_SIZE, queue.size())
+        def ids = new String[n]
+        n.times { i ->
+            ids[i] = queue.removeFirst()
+        }
+
+        Connection connection = getOuterConnection() // TODO need a separate pool for these potentially slow queries when inside rest app
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        Array array = null
+        try {
+            preparedStatement = connection.prepareStatement(GET_EMBELLISH_DEPENDERS)
+            array = connection.createArrayOf("TEXT", ids)
+            preparedStatement.setArray(1, array)
+            rs = preparedStatement.executeQuery()
+            while(rs.next()) {
+                String id = rs.getString("id")
+                boolean inCard = rs.getBoolean("inCard")
+                if (visited.add(new Tuple2(id, inCard)) && inCard && nextDepthQueue != null) {
+                    nextDepthQueue.add(id)
+                }
+            }
+        } finally {
+            close(array, rs, preparedStatement, connection)
+        }
     }
 
     protected boolean storeCard(CardEntry cardEntry) {
