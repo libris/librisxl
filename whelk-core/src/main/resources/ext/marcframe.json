@@ -1435,7 +1435,6 @@
       "$a": {"about": "_:agent", "property": "label", "infer": true, "TODO:targetMatch": "1xx"},
       "$b": {"about": "_:instance", "property": "editionStatement", "TODO:targetMatch": "250"},
       "$d": {"about": "_:instance", "property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
-      "$g": {"about": "_:instance", "addProperty": "part"},
       "$h": {"about": "_:instance", "addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
       "$m": {"about": "_:instance", "property": "marc:materialSpecificDetails"},
       "$n": {"about": "_:instance", "addLink": "hasNote", "resourceType": "Note", "property": "label"},
@@ -1461,7 +1460,7 @@
     },
 
     "referenceToWork": {
-      "include": ["referencedObjectDetails", "serialSpecificDetails", "workTitleQualifier", "workDisplayText"],
+      "include": ["referencedObjectDetailsWithPart", "serialSpecificDetails", "workTitleQualifier", "workDisplayText"],
       "pendingResources": {
         "_:instance": {
           "about": "_:work",
@@ -1471,12 +1470,22 @@
       }
     },
 
+    "referencedObjectDetailsWithPart": {
+      "include": ["referencedObjectDetails"],
+      "$g": {"about": "_:instance", "addProperty": "part"}
+    },
+
+    "referenceToInstance": {
+      "include": ["instanceOfObject", "referencedObjectDetailsWithPart", "instanceTitleQualifier", "serialSpecificDetails", "instanceDisplayText"]
+    },
+
     "referenceToInstanceSansDisplayText": {
-      "include": ["instanceOfObject", "referencedObjectDetails", "instanceTitleQualifier", "serialSpecificDetails"]
+      "include": ["instanceOfObject", "referencedObjectDetails", "instanceTitleQualifier", "serialSpecificDetails"],
+      "$g": {"aboutEntity": "?thing", "addProperty": "part"}
     },
 
     "referenceToSeriesInstance": {
-      "include": ["instanceOfObject", "referencedObjectDetails", "workTitleQualifier", "workDisplayText"]
+      "include": ["instanceOfObject", "referencedObjectDetailsWithPart", "workTitleQualifier", "workDisplayText"]
     },
 
     "instanceOfObject": {
@@ -17547,6 +17556,7 @@
             {"w": "8258455"}
           ]}},
           "result": {"mainEntity": {
+            "part": ["127:1964, s. 495-534"],
             "isPartOf": [{
               "@type": "Instance",
               "describedBy": [{
@@ -17561,7 +17571,6 @@
                 "@type": "ISSN",
                 "value": "0040-6945"
               }],
-              "part": ["127:1964, s. 495-534"],
               "marc:toDisplayNote": true
             }]
           }}
@@ -17580,6 +17589,7 @@
             {"9": "34"}
           ]}},
           "result": {"mainEntity": {
+            "part": ["1992 (33:1), s. 34-35 : ill."],
             "isPartOf": [{
               "@type": "Instance",
               "describedBy": [{
@@ -17594,7 +17604,6 @@
                 "@type": "ISSN",
                 "value": "ISSN 0284-771X"
               }],
-              "part": ["1992 (33:1), s. 34-35 : ill."],
               "provisionActivityStatement": "Växjö : Kronobergs läns hembydsförbund, 1985-1995",
               "marc:controlSubfield": "n s",
               "marc:toDisplayNote": true,
@@ -17621,6 +17630,7 @@
             {"w": "11899145"}
           ]}},
           "result": {"mainEntity": {
+            "part": ["S.184-212"],
             "isPartOf": [{
               "@type": "Instance",
               "describedBy": [{
@@ -17635,7 +17645,6 @@
                 "@type": "ISBN",
                 "value": "9780674033320 (cl : alk. paper)"
               }],
-              "part": ["S.184-212"],
               "provisionActivityStatement": "cop. 2009",
               "instanceOf": {
                 "@type": "Work",
@@ -17725,6 +17734,7 @@
                 "marc:toDisplayNote": true
               }]
             },
+            "part": ["2002(122):1, s. [99]-108"],
             "isPartOf": [{
               "@type": "Instance",
               "describedBy": [{
@@ -17739,7 +17749,6 @@
                 "@type": "ISSN",
                 "value": "0345-469X"
               }],
-              "part": ["2002(122):1, s. [99]-108"],
               "marc:toDisplayNote": true
             }]
           }}
@@ -17877,7 +17886,7 @@
       ]
     },
     "775": {
-      "include": ["referenceToInstanceSansDisplayText", "instanceDisplayText"],
+      "include": ["referenceToInstance"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "otherEdition",
@@ -17972,7 +17981,7 @@
     },
     "776": {
       "NOTE": "We deviate from BF2 as we do not link from the Work with hasInstance.",
-      "include": ["referenceToInstanceSansDisplayText", "instanceDisplayText"],
+      "include": ["referenceToInstance"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "otherPhysicalFormat",
@@ -18146,7 +18155,7 @@
       ]
     },
     "777": {
-      "include": ["referenceToInstanceSansDisplayText", "instanceDisplayText"],
+      "include": ["referenceToInstance"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "issuedWith",
@@ -18649,7 +18658,7 @@
       ]
     },
     "786": {
-      "include": ["referenceToInstanceSansDisplayText", "instanceDisplayText"],
+      "include": ["referenceToInstance"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "dataSource",
