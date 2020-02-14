@@ -889,7 +889,7 @@ class PostgreSQLComponent implements Storage {
     /**
      * Find all ids that depend on a card by having it in their embellish dependencies.
      * <p>i.e. the card + all cards that link to it, recursively + all documents that link to any of all these cards</p>
-     * Excluding {@link #EMBELLISH_EXCLUDE_RELATIONS}.
+     * Excluding {@link #EMBELLISH_EXCLUDE_RELATIONS} AND itemOf.
      *
      * @param systemId id of card
      * @return a set of depender system ids
