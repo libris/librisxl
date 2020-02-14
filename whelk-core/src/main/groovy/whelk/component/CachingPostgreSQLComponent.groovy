@@ -77,7 +77,7 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
 
                     @Override
                     Map<String, Map> loadAll(Iterable<? extends String> systemIds) throws Exception {
-                        return addMissingCards(bulkLoadCards(systemIds))
+                        return createAndAddMissingCards(bulkLoadCards(systemIds))
                     }
                 })
 

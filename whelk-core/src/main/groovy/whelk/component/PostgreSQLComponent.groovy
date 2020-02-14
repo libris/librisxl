@@ -100,7 +100,6 @@ class PostgreSQLComponent implements Storage {
     protected String UPDATE_CARD
     protected String GET_CARD
     protected String DELETE_CARD
-    protected String GET_CARDS_FOR_EMBELLISH
     protected String BULK_LOAD_CARDS
     protected String IS_CARD_CHANGED
 
@@ -276,23 +275,6 @@ class PostgreSQLComponent implements Storage {
                 " INNER JOIN deps deps1 ON d.dependsonid = i AND d.relation NOT IN (€) " +
                 ") " +
                 "SELECT * FROM deps"
-
-        // Same as GET_IDS_FOR_EMBELLISH but also try to join in card data for all SystemIDs.
-        GET_CARDS_FOR_EMBELLISH = """
-                WITH RECURSIVE deps(id, card) AS ( 
-                        SELECT i.id, c.data from unnest(?) as in_iri 
-                        INNER JOIN $idTableName i ON in_iri = i.iri 
-                        LEFT JOIN $cardsTableName c on i.id = c.id 
-                    UNION 
-                        SELECT d.dependsonid, c.data 
-                        FROM $dependenciesTableName d 
-                        INNER JOIN deps deps1 ON d.id = deps1.id 
-                        AND d.incard
-                        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS)
-                        LEFT JOIN $cardsTableName c on d.dependsonid = c.id 
-                    ) 
-                SELECT id, card FROM deps
-                """.stripIndent()
 
         BULK_LOAD_CARDS = "SELECT in_id as id, data from unnest(?) as in_id LEFT JOIN $cardsTableName c ON in_id = c.id"
 
@@ -877,7 +859,7 @@ class PostgreSQLComponent implements Storage {
      * @return data of cards
      */
     Iterable<Map> getCardsForEmbellish(List<String> startIris) {
-        return addMissingCards(getIdsAndCardsForEmbellish(startIris)).values()
+        return createAndAddMissingCards(bulkLoadCards(getIdsForEmbellish(startIris))).values()
     }
 
     /**
@@ -1031,26 +1013,6 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    protected Map<String, Map> getIdsAndCardsForEmbellish(List<String> startIris) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(GET_CARDS_FOR_EMBELLISH)
-            preparedStatement.setArray(1,  connection.createArrayOf("TEXT", startIris as String[]))
-
-            rs = preparedStatement.executeQuery()
-            Map<String, Map> result = [:]
-            while(rs.next()) {
-                String card = rs.getString("card")
-                result[rs.getString("id")] = card != null ? mapper.readValue(card, Map) : null
-            }
-            return result
-        } finally {
-            close(rs, preparedStatement, connection)
-        }
-    }
-    
     protected SortedSet<String> getIdsForEmbellish(List<String> startIris) {
         SortedSet<String> result = new TreeSet<>()
         Queue<String> queue = new LinkedList<>()
@@ -1117,7 +1079,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    protected Map<String, Map> addMissingCards(Map<String, Map> cards) {
+    protected Map<String, Map> createAndAddMissingCards(Map<String, Map> cards) {
         Map <String, Map> result = [:]
         cards.each { id, card ->
             result[id] = card ?: makeCardData(id)
