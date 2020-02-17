@@ -32,6 +32,7 @@ class JsonLd {
     static final String RECORD_KEY = "meta"
     static final String CREATED_KEY = "created"
     static final String MODIFIED_KEY = "modified"
+    static final String RECORD_STATUS_KEY = "recordStatus"
     static final String DELETED_KEY = "deleted"
     static final String COLLECTION_KEY = "collection"
     static final String CONTENT_TYPE_KEY = "contentType"
