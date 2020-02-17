@@ -160,6 +160,12 @@
                             }
                         }
                     }
+                },
+                "_links": {
+                    "type": "keyword"
+                },
+                "_transitiveDependencies": {
+                    "type": "keyword"
                 }
             },
             "date_detection": false,
