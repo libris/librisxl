@@ -32,9 +32,6 @@ class WhelkCopier {
         TreeSet<String> alreadyImportedIDs = new TreeSet<>()
 
         if (additionalTypes != null) {
-
-            
-
             String[] types = additionalTypes.split(",")
             for (doc in selectBySqlWhere("data#>>'{@graph,1,@type}' in (\n" +
                     "'" + types.join("','") + "'" +
