@@ -13,15 +13,17 @@ class WhelkCopier {
     Whelk source
     Whelk dest
     List recordIds
+    String additionalTypes
     ThreadPool threadPool = new ThreadPool(Runtime.getRuntime().availableProcessors())
     List<Document> saveQueue = []
 
     private int copied = 0
 
-    WhelkCopier(source, dest, recordIds) {
+    WhelkCopier(source, dest, recordIds, additionalTypes) {
         this.source = source
         this.dest = dest
         this.recordIds = recordIds
+        this.additionalTypes = additionalTypes
 
         dest.storage.doVerifyDocumentIdRetention = false
     }
@@ -29,28 +31,20 @@ class WhelkCopier {
     void run() {
         TreeSet<String> alreadyImportedIDs = new TreeSet<>()
 
-        // Import all (ish) auth records
-        for (relDoc in selectBySqlWhere("collection = 'auth' and data#>>'{@graph,1,@type}' in (\n" +
-                "'GeographicSubdivision',\n" +
-                "'Meeting',\n" +
-                "'Person',\n" + // The absolute lion share of auth records.
-                "'Topic',\n" +
-                "'Agent',\n" +
-                "'Jurisdiction',\n" +
-                "'GenreForm',\n" +
-                "'Family',\n" +
-                "'Organization',\n" +
-                "'Temporal',\n" +
-                "'TemporalSubdivision',\n" +
-                "'Library',\n" +
-                "'ComplexSubject',\n" +
-                "'Geographic',\n" +
-                "'TopicSubdivision')")) {
-            if (relDoc.deleted) continue
-            relDoc.baseUri = source.baseUri
-            if (!alreadyImportedIDs.contains(relDoc.shortId)) {
-                alreadyImportedIDs.add(relDoc.shortId)
-                queueSave(relDoc)
+        if (additionalTypes != null) {
+
+            
+
+            String[] types = additionalTypes.split(",")
+            for (doc in selectBySqlWhere("data#>>'{@graph,1,@type}' in (\n" +
+                    "'" + types.join("','") + "'" +
+                ")")) {
+                if (doc.deleted) continue
+                doc.baseUri = source.baseUri
+                if (!alreadyImportedIDs.contains(doc.shortId)) {
+                    alreadyImportedIDs.add(doc.shortId)
+                    queueSave(doc)
+                }
             }
         }
 

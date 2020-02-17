@@ -243,8 +243,12 @@ class ImporterMain {
         System.err.println("All done importing example data.")
     }
 
-    @Command(args='SOURCE_PROPERTIES RECORD_ID_FILE')
-    void copywhelk(String sourcePropsFile, String recordsFile) {
+    /**
+     * The additional_types argument should be a comma separated list of types to include. Like so:
+     * Person,GenreForm
+     */
+    @Command(args='SOURCE_PROPERTIES RECORD_ID_FILE [ADDITIONAL_TYPES]')
+    void copywhelk(String sourcePropsFile, String recordsFile, additionalTypes=null) {
         def sourceProps = new Properties()
         new File(sourcePropsFile).withInputStream { it
             sourceProps.load(it)
@@ -254,7 +258,7 @@ class ImporterMain {
         def recordIds = new File(recordsFile).collect {
             it.split(/\t/)[0]
         }
-        def copier = new WhelkCopier(source, dest, recordIds)
+        def copier = new WhelkCopier(source, dest, recordIds, additionalTypes)
         copier.run()
     }
 
