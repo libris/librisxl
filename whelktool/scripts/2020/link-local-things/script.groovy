@@ -25,6 +25,7 @@ String findMainEntityId(Whelk whelk, String ctrlNumber) {
     def byLibris3Ids = []
     // IMPORTANT: This REQUIRES an index on '@graph[0]identifiedBy*.value'.
     // If that is removed, this slows to a GLACIAL crawl!
+    ctrlNumber = ctrlNumber.replaceAll(/['"\\]/, '')
     selectBySqlWhere("""
     data #> '{@graph,0,identifiedBy}' @> '[{"@type": "LibrisIIINumber", "value": "${ctrlNumber}"}]'::jsonb and collection = 'bib'
     """, silent: true) {
@@ -49,6 +50,9 @@ selectBySqlWhere("""
     def (record, instance, work) = data.graph
 
     new DocumentUtil().traverse(data.graph[1..-1], { values, path ->
+        if (!path.size()) {
+            return
+        }
         boolean oneValue = false
         if (values instanceof Map) {
             values = [values]
