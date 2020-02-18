@@ -353,10 +353,47 @@ class Whelk implements Storage {
 
     }
 
+    private static final List<String> EMBELLISH_LENSES = ['cards', 'cards', 'chips', 'chips']
     void embellish(Document document, boolean filterOutNonChipTerms = false) {
         List convertedExternalLinks = jsonld.expandLinks(document.getExternalRefs())
-        def cards = storage.getCardsForEmbellish(convertedExternalLinks)
-        jsonld.embellish(document.data, cards, filterOutNonChipTerms)
+
+        //TODO: check for cycles
+        Iterable<Map> previousDepthDocs = [document.data]
+        List docs = []
+        List iris = convertedExternalLinks
+        for (String lens : EMBELLISH_LENSES) {
+            def cards = storage.getCards((List<String>) iris).collect()
+
+            previousDepthDocs.each { insertInverseCards(lens, it, cards) }
+
+            if (lens == 'chips') {
+                cards = cards.collect{ (Map) jsonld.toChip(it) }
+            }
+
+            previousDepthDocs = cards
+            docs.addAll(cards)
+            iris = cards.collect{ JsonLd.getExternalReferences((Map) it) }.flatten()
+        }
+        previousDepthDocs.each { insertInverseCards(EMBELLISH_LENSES.last(), it, []) } // TODO
+
+        jsonld.embellish(document.data, docs, filterOutNonChipTerms)
+    }
+
+    private void insertInverseCards(String lens, Map thing, List<Map> cards) {
+        Set<String> inverseRelations = jsonld.getInverseProperties(thing, lens)
+        if (inverseRelations.size() > 0) {
+            String id = new Document(thing).getShortId() // TODO : sketchy
+            for (String relation : inverseRelations) {
+                List<Map> deps = storage.getCardsBySystemIds(storage.getDependersOfType(id, relation)).collect() //TODO use IRIs
+                if (deps.size() > 0) {
+                    Map theThing = ((List) thing['@graph'])[1]
+                    if (!theThing['@reverse'])
+                        theThing['@reverse'] = [:]
+                    theThing['@reverse'][relation] = deps.collect { ["@id": ((List) it['@graph'])[0]['@id']] }
+                    cards.addAll(deps)
+                }
+            }
+        }
     }
 
     Document loadEmbellished(String systemId) {

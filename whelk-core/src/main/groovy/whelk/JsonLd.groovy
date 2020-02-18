@@ -137,6 +137,7 @@ class JsonLd {
 
         expandAliasesInLensProperties()
         expandInheritedLensProperties()
+        expandInverseLensProperties()
     }
 
     private void setupPrefixes() {
@@ -212,6 +213,17 @@ class JsonLd {
         lensesById.values().each { Map lens ->
             lens.put('showProperties', flattenedProps(lens))
             lens.remove('fresnel:extends')
+        }
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    expandInverseLensProperties() {
+        displayData['lensGroups']?.values().each { group ->
+            group.get('lenses')?.values().each { lens ->
+                lens['inverseProperties'] = ((Iterable) lens['showProperties']).findResults {
+                    return (it instanceof Map ) && it['inverseOf'] ? it['inverseOf'] : null
+                }
+            }
         }
     }
 
@@ -826,6 +838,17 @@ class JsonLd {
             }
         }
         return parts
+    }
+
+    Set getInverseProperties(Map data, String lensType) {
+        if (data[GRAPH_KEY]) {
+            return new LinkedHashSet(((List) data[GRAPH_KEY]).collect{ getInverseProperties((Map) it, lensType) }.flatten())
+        }
+
+        Map lensGroups = displayData.get('lensGroups')
+        Map lensGroup = lensGroups.get(lensType)
+        Map lens = getLensFor(data, lensGroup)
+        return new LinkedHashSet((List) lens?.get('inverseProperties') ?: [])
     }
 
     private static void restorePreserved(Map cardOrChip, Map thing, List<List> preservePaths) {

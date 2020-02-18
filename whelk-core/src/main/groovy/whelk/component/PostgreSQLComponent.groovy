@@ -830,6 +830,16 @@ class PostgreSQLComponent implements Storage {
         return dependencies
     }
 
+    Map<String, String> getSystemIdsByIris (Collection iris) {
+        Map<String, String> ids = new HashMap<>()
+        getConnection().withCloseable { connection ->
+            getSystemIds(iris, connection) { String iri, String systemId, deleted ->
+                ids.put(iri, systemId)
+            }
+        }
+        return ids
+    }
+
     private void getSystemIds(Collection iris, Connection connection, Closure c) {
         PreparedStatement getSystemIds = null
         ResultSet rs = null
@@ -863,6 +873,14 @@ class PostgreSQLComponent implements Storage {
      */
     Iterable<Map> getCardsForEmbellish(List<String> startIris) {
         return createAndAddMissingCards(bulkLoadCards(getIdsForEmbellish(startIris))).values()
+    }
+
+    Iterable<Map> getCards(List<String> iris) {
+        return createAndAddMissingCards(bulkLoadCards(getSystemIdsByIris(iris).values())).values()
+    }
+
+    Iterable<Map> getCardsBySystemIds(List<String> systemIds) {
+        return createAndAddMissingCards(bulkLoadCards(systemIds)).values()
     }
 
     /**

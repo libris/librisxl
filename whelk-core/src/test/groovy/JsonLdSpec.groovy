@@ -411,6 +411,51 @@ class JsonLdSpec extends Specification {
         thrown JsonLd.FresnelException
     }
 
+    def "should handle inverse lens properties"() {
+        given:
+        Map displayData = [
+                "lensGroups":
+                        ["chips":
+                                 ["lenses": [
+                                         "X": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "X-chips",
+                                               "showProperties" : ["x1", "x2", ["inverseOf": "prop1"]]
+                                         ],
+                                         "Q": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "Q-chips",
+                                               "showProperties" : ["q", ["inverseOf": "propQ"]]
+                                         ]
+                                 ]],
+                         "cards":
+                                 ["lenses": [
+                                         "X": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "X-cards",
+                                               "fresnel:extends": ["@id": "X-chips"],
+                                               "showProperties" : ["fresnel:super", "x3", ["inverseOf": "prop2"]]
+                                         ],
+                                         "P": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "P-cards",
+                                               "fresnel:extends": ["@id": "X-cards"],
+                                               "showProperties" : ["p", "fresnel:super", ["inverseOf": "prop3"]]
+                                         ],
+
+                                 ]]]]
+
+
+        def ld = new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA)
+
+        expect:
+        ld.getInverseProperties(thing, group) as List == props
+
+        where:
+        thing                                        | group   || props
+        ["@type": "X"]                               | 'chips' || ['prop1']
+        ["@type": "X"]                               | 'cards' || ['prop1', 'prop2']
+        ["@type": "P"]                               | 'cards' || ['prop1', 'prop2', 'prop3']
+        ["@graph": [["@type": "Q"], ["@type": "X"]]] | 'chips' || ['propQ', 'prop1']
+        ["@graph": [["@type": "X"], ["@type": "X"]]] | 'chips' || ['prop1']
+    }
+
     def "get term key from URI"() {
         given:
         def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
