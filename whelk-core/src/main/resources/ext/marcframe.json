@@ -2857,6 +2857,7 @@
           "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
+        "[15]": null,
         "[16]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/BooksLiteraryFormType-{_}",
@@ -2905,11 +2906,13 @@
           "uriTemplate": "https://id.kb.se/marc/MusicTextType-{_}",
           "matchUriToken": "^[_abcdefghijklmoprst]$"
         },
+        "[15]": null,
         "[16]": {
           "link": "marc:transposition",
           "uriTemplate": "https://id.kb.se/marc/MusicTranspositionType-{_}",
           "matchUriToken": "^[abc]$"
-        }
+        },
+        "[17]": null
       },
       "Cartography": {
         "[1] [2] [3] [4]": {
@@ -2924,11 +2927,13 @@
           "uriTemplate": "https://id.kb.se/marc/MapsProjectionType-{_}",
           "matchUriToken": "^[_abcdefghijklmnoprsuz]$"
         },
+        "[7]": null,
         "[8]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapsMaterialType-{_}",
           "matchUriToken": "^[_abcdefg]$"
         },
+        "[9] [10]": null,
         "[11]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
@@ -2938,23 +2943,19 @@
           "link": "marc:additionalCarrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
+        "[13]": null,
         "[14]": {
           "link": "supplementaryContent",
           "uriTemplate": "https://id.kb.se/marc/IndexType-{_}",
           "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
+        "[15]": null,
         "[16] [17]": {
           "TODO:ignore pos 17": "Not used in 008",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapsFormatType-{_}",
           "matchUriToken": "^[_ejklnopr]$"
-        },
-        "[7]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:primeMeridian",
-          "uriTemplate": "https://id.kb.se/marc/MapsPrimeMeridianType-{_}",
-          "matchUriToken": "^[efgpwz]$"
         }
       },
       "Visual": {
@@ -2962,11 +2963,13 @@
           "property": "marc:runningTime",
           "TODO:patternMap": "VisualRunningTimeType"
         },
+        "[4]": null,
         "[5]": {
           "addLink": "intendedAudience",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
         },
+        "[6] [7] [8] [9] [10]": null,
         "[11]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
@@ -2976,6 +2979,7 @@
           "link": "marc:additionalCarrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
+        "[13] [14] [15]": null,
         "[16]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/VisualMaterialType-{_}",
@@ -2986,13 +2990,6 @@
           "link": "marc:technique",
           "uriTemplate": "https://id.kb.se/marc/VisualTechniqueType-{_}",
           "matchUriToken": "^[aclz]$"
-        },
-        "[6] [7] [8] [9] [10]": {
-          "TODO:about": "_:otherInstance",
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:matter",
-          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}",
-          "matchUriToken": "^[lmopqrsz]$"
         }
       },
       "Multimedia": {
@@ -3027,12 +3024,13 @@
         "[12] [13] [14] [15] [16] [17]": null
       },
       "Mixed": {
-        "[6] [7]": {
-          "NOTE": "Pos 7 Undefined in MARC21/Voyager",
+        "[1] [2] [3] [4] [5]": null,
+        "[6]": {
           "TODO:about": "_:otherInstance",
           "link": "marc:additionalCarrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
-        }
+        },
+        "[7] [8] [9] [10] [11] [12] [13] [14] [15] [16] [17]": null
       },
       "Serial": {
         "[1]": {
@@ -3051,13 +3049,7 @@
           "matchUriToken": "^[nrx]$",
           "fixedDefault": "|"
         },
-        "[3]": {
-          "TODO:ignore": "Not used in 008. Should we remove this mapping as well?",
-          "TODO:about": "_:otherInstance",
-          "link": "marc:issn",
-          "uriTemplate": "https://id.kb.se/marc/SerialsISSNType-{_}",
-          "matchUriToken": "^[0124_f]$"
-        },
+        "[3]": null,
         "[4]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsTypeOfSerialType-{_}",
@@ -3094,6 +3086,7 @@
           "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
+        "[13] [14] [15]": null,
         "[16]": {
           "link": "marc:alphabet",
           "uriTemplate": "https://id.kb.se/marc/SerialsAlphabetType-{_}",
@@ -3206,7 +3199,7 @@
         {
           "Name": "MovingImage",
           "source": [
-            {"006": "g|   ||||||||   ||"}
+            {"006": "g|   |     ||   ||"}
           ],
           "result": {
             "mainEntity": {
@@ -3224,7 +3217,7 @@
         {
           "Name": "Cartography",
           "source": [
-            {"006": "e||||| ||  || 0 ||"}
+            {"006": "e|||||  |  || 0 ||"}
           ],
           "result": {
             "mainEntity": {
@@ -3242,7 +3235,7 @@
         {
           "Name": "ManuscriptCartography",
           "source": [
-            {"006": "f||||| ||  || 0 ||"}
+            {"006": "f|||||  |  || 0 ||"}
           ],
           "result": {
             "mainEntity": {
@@ -3260,7 +3253,7 @@
         {
           "Name": "MixedMaterial",
           "source": [
-            {"006": "p     ||          "}
+            {"006": "p     |           "}
           ],
           "result": {
             "mainEntity": {
@@ -3278,7 +3271,7 @@
         {
           "Name": "Kit",
           "source": [
-            {"006": "o|   ||||||||   ||"}
+            {"006": "o|   |     ||   ||"}
           ],
           "result": {
             "mainEntity": {
@@ -3296,7 +3289,7 @@
         {
           "Name": "StillImage",
           "source": [
-            {"006": "k|   ||||||||   ||"}
+            {"006": "k|   |     ||   ||"}
           ],
           "result": {
             "mainEntity": {
@@ -3314,7 +3307,7 @@
         {
           "Name": "Object",
           "source": [
-            {"006": "r|   ||||||||   ||"}
+            {"006": "r|   |     ||   ||"}
           ],
           "result": {
             "mainEntity": {
