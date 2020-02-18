@@ -2996,28 +2996,35 @@
         }
       },
       "Multimedia": {
+        "[1] [2] [3] [4]": null,
         "[5]": {
           "addLink": "intendedAudience",
-          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}",
+          "matchUriToken": "^[abcdefgj]$",
+          "fixedDefault": " "
         },
         "[6]": {
           "TODO:about": "_:otherInstance",
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ComputerItemType-{_}",
-          "matchUriToken": "^[oqs]$",
+          "matchUriToken": "^[oq]$",
+          "fixedDefault": " ",
           "silentRevert": false
         },
+        "[7] [8]": null,
         "[9]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/ComputerTypeOfFileType-{_}",
           "matchUriToken": "^[_abcdefghijm]$",
           "silentRevert": false
         },
+        "[10]": null,
         "[11]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
           "silentRevert": false
-        }
+        },
+        "[12] [13] [14] [15] [16] [17]": null
       },
       "Mixed": {
         "[6] [7]": {
@@ -3358,14 +3365,14 @@
           }
         },
         {
-          "name": "Text/Monograph in (in 000,008) + Multimedia (006)",
+          "name": "Text/Monograph in (in 000,008) + Multimedia (006), wiping erroneous XY",
           "source": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"006": "m    ||  j |"},{"008": "171123s1898    swe     re    000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"006": "mXY  ||  j |"},{"008": "171123s1898    swe     re    000 ||   | "}]
           },
           "normalized": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"006": "m    ||  j |      "},{"008": "171123s1898    swe|||||re||||000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"006": "m        j |      "},{"008": "171123s1898    swe|||||re||||000 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -4389,36 +4396,30 @@
         }
       },
       "Multimedia": {
-        "[18]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:frequencyCategory",
-          "uriTemplate": "https://id.kb.se/marc/ComputerFrequencyType-{_}",
-          "matchUriToken": "^[abcdefghijmqstwz]$"
-        },
-        "[19]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:regularity",
-          "uriTemplate": "https://id.kb.se/marc/ComputerRegularityType-{_}",
-          "matchUriToken": "^[nrx]$"
-        },
+        "[18] [19] [20] [21]": null,
         "[22]": {
           "aboutEntity": "?work",
           "addLink": "intendedAudience",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}",
+          "matchUriToken": "^[abcdefgj]$",
+          "fixedDefault": " "
         },
         "[23]": {
-          "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ComputerItemType-{_}",
+          "matchUriToken": "^[oq]$",
+          "fixedDefault": " ",
           "silentRevert": false
         },
+        "[24] [25]": null,
         "[26]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/ComputerTypeOfFileType-{_}",
           "silentRevert": false
         },
+        "[27]": null,
         "[28]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
@@ -4890,14 +4891,14 @@
           }
         },
         {
-          "name": "Multimedia (in 000), Electronic (in 007) + ct:Online + Juvenile",
+          "name": "Multimedia (in 000), Electronic (in 007) + ct:Online + Juvenile, wiping erroneous ZX",
           "source": {
             "leader": "     cmm a        i 4500",
-            "fields": [{"001": "0000000"},{"007":"cr |||   |||||"},{"008": "171123s1999    swe    jo  | |         | "}]
+            "fields": [{"001": "0000000"},{"007":"co |||   |||||"},{"008": "171123s1999    sweZX  jo  | |         | "}]
           },
           "normalized": {
             "leader": "     cmm a        i 4500",
-            "fields": [{"001": "0000000"},{"007":"cr |||   |||||         "},{"008": "171123s1999    swe||  jo  | |         | "}]
+            "fields": [{"001": "0000000"},{"007":"co |||   |||||         "},{"008": "171123s1999    swe    jo  | |         | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -4905,7 +4906,7 @@
             "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "@type": "Electronic",
-              "carrierType": [{ "@id" : "https://id.kb.se/marc/ComputerMaterialType-r" },{ "@id" : "https://id.kb.se/marc/ComputerItemType-o" }],
+              "carrierType": [{ "@id" : "https://id.kb.se/marc/ComputerMaterialType-o" },{ "@id" : "https://id.kb.se/marc/ComputerItemType-o" }],
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
