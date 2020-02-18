@@ -3461,6 +3461,7 @@
           "uriTemplate": "https://id.kb.se/marc/MapMaterialType-{_}",
           "matchUriToken": "^[_dgjkqrsy]$"
         },
+        "[2]": null,
         "[3]": {
           "TODO:abou  tEntity (perhaps ideal for all colorContent (LoC does so), but more cumbersome and practically/statistically irrelevant)": "?work",
           "addLink": "colorContent",
@@ -3490,13 +3491,6 @@
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/PolarityType-{_}",
           "matchUriToken": "^[abm]$"
-        },
-        "[2]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:aspect",
-          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
-          "matchUriToken": "^[for]$",
-        "fixedDefault": " "
         }
       },
       "Electronic": {
@@ -3506,6 +3500,7 @@
           "matchUriToken": "^[_abcdefhjkmor]$",
           "silentRevert": false
         },
+        "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
@@ -3551,12 +3546,6 @@
           "link": "marc:reformattingQuality",
           "uriTemplate": "https://id.kb.se/marc/ComputerReformattingQualityType-{_}",
           "matchUriToken": "^[apr]$"
-        },
-        "[2]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:fileAspect",
-          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
-        "fixedDefault": " "
         }
       },
       "Globe": {
@@ -3565,6 +3554,7 @@
           "uriTemplate": "https://id.kb.se/marc/GlobeMaterialType-{_}",
           "matchUriToken": "^[_abce]$"
         },
+        "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
@@ -3580,12 +3570,6 @@
           "addLink": "generation",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/ReproductionType-{_}"
-        },
-        "[2]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:aspect",
-          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
-        "fixedDefault": " "
         }
       },
       "Tactile": {
@@ -3595,6 +3579,7 @@
           "uriTemplate": "https://id.kb.se/marc/TacMaterialType-{_}",
           "matchUriToken": "^[_abcd]$"
         },
+        "[2]": null,
         "[3] [4]": {
           "addLink": "layout",
           "uriTemplate": "https://id.kb.se/marc/TacBrailleWritingType-{_}",
@@ -3623,6 +3608,7 @@
           "matchUriToken": "^[_cdfost]$",
           "silentRevert": false
         },
+        "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
@@ -3653,12 +3639,6 @@
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/ProjGraphSupportType-{_}",
           "matchUriToken": "^[_cdehjkm]$"
-        },
-        "[2]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:projGraphAspect",
-          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
-        "fixedDefault": " "
         }
       },
       "Microform": {
@@ -3668,6 +3648,7 @@
           "matchUriToken": "^[_abcdefghj]$",
           "silentRevert": false
         },
+        "[2]": null,
         "[3]": {
           "addLink": "polarity",
           "NOTE:marc-repeatable": false,
@@ -3711,12 +3692,6 @@
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}",
           "matchUriToken": "^[_acdimprt]$"
-        },
-        "[2]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:aspect",
-          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
-        "fixedDefault": " "
         }
       },
       "StillImageInstance": {
@@ -3726,6 +3701,7 @@
           "matchUriToken": "^[_acdefghijklnopqrsv]$",
           "TODO:tokenMap": "Rename the uri:s of NonProjMaterialType (n and v) to not only contain the code"
         },
+        "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
@@ -3741,12 +3717,6 @@
           "addLink": "mount",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/NonProjectedType-{_}"
-        },
-        "[2]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:nonProjAspect",
-          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
-        "fixedDefault": " "
         }
       },
       "MovingImageInstance": {
@@ -3756,6 +3726,7 @@
           "matchUriToken": "^[_cfor]$",
           "silentRevert": false
         },
+        "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
@@ -3832,12 +3803,6 @@
         },
         "[17:23]": {
           "property": "marc:timeOfExamination"
-        },
-        "[2]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:motionPicAspect",
-          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
-          "fixedDefault": " "
         }
       },
       "KitInstance": {
@@ -3862,6 +3827,7 @@
           "TODO:tokenMap? (empty, just as KitMaterialType)": "RemoteSensingImageMaterialType",
           "silentRevert": false
         },
+        "[2]": null,
         "[3]": {
           "link": "marc:remoteSensImageAltitude",
           "uriTemplate": "https://id.kb.se/marc/RemoteSensImageAltitudeType-{_}",
@@ -3905,6 +3871,7 @@
           "matchUriToken": "^[_degiqstw]$",
           "silentRevert": false
         },
+        "[2]": null,
         "[3]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundSpeedType-{_}",
@@ -3963,12 +3930,6 @@
           "link": "marc:soundCapture",
           "uriTemplate": "https://id.kb.se/marc/SoundCaptureType-{_}",
           "matchUriToken": "^[_abde]$"
-        },
-        "[2]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:soundAspect",
-          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
-        "fixedDefault": " "
         }
       },
       "TextInstance": {
@@ -3986,6 +3947,7 @@
           "matchUriToken": "^[_cdfr]$",
           "silentRevert": false
         },
+        "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
