@@ -4380,6 +4380,7 @@
           "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
+        "[32]": null,
         "[33]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
@@ -4450,6 +4451,7 @@
           "uriTemplate": "https://id.kb.se/marc/MapsMaterialType-{_}",
           "silentRevert": false
         },
+        "[26] [27]": null,
         "[28]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
@@ -4461,12 +4463,14 @@
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
           "silentRevert": false
         },
+        "[30]": null,
         "[31]": {
           "link": "supplementaryContent",
           "uriTemplate": "https://id.kb.se/marc/IndexType-{_}",
           "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
+        "[32]": null,
         "[33] [34]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
@@ -4475,12 +4479,14 @@
         }
       },
       "Mixed": {
+        "[18] [19] [20] [21] [22]": null,
         "[23]": {
           "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
           "silentRevert": false
-        }
+        },
+        "[24] [25] [26] [27] [28] [29] [30] [31] [32] [33] [34]": null
       },
       "Audio": {
         "[18:20]": {
@@ -4523,10 +4529,12 @@
           "fixedDefault": " ",
           "silentRevert": false
         },
+        "[32]": null,
         "[33]": {
           "link": "marc:transposition",
           "uriTemplate": "https://id.kb.se/marc/MusicTranspositionType-{_}"
-        }
+        },
+        "[34]": null
       },
       "Serial": {
         "[18]": {
@@ -4544,11 +4552,7 @@
           "matchUriToken": "^[nrx]$",
           "fixedDefault": "|"
         },
-        "[20]": {
-          "TODO:ignore": true,
-          "link": "marc:issn",
-          "uriTemplate": "https://id.kb.se/marc/SerialsISSNType-{_}"
-        },
+        "[20]": null,
         "[21]": {
           "aboutEntity": "?work",
           "TODO": "Decide if it should be Work or Instance",
@@ -4591,6 +4595,7 @@
           "fixedDefault": "0",
           "silentRevert": false
         },
+        "[30] [31] [32]": null,
         "[33]": {
           "link": "marc:alphabet",
           "uriTemplate": "https://id.kb.se/marc/SerialsAlphabetType-{_}"
@@ -4605,12 +4610,14 @@
           "property": "marc:runningTime",
           "TODO:patternMap": "visualRunningTime"
         },
+        "[21]": null,
         "[22]": {
           "aboutEntity": "?work",
           "addLink": "intendedAudience",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
         },
+        "[23] [24] [25] [26] [27]": null,
         "[28]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
@@ -4622,6 +4629,7 @@
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
           "silentRevert": false
         },
+        "[30] [31] [32]": null,
         "[33]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
@@ -4631,11 +4639,6 @@
         "[34]": {
           "link": "marc:technique",
           "uriTemplate": "https://id.kb.se/marc/VisualTechniqueType-{_}"
-        },
-        "[23] [24] [25] [26] [27]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:matter",
-          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
         }
       },
       "repeatable": false,
@@ -4675,7 +4678,7 @@
           },
           "normalized": {
             "leader": "     cas a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123d1898    enku||p|||||||0   ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123d1898    enku| p|||||||0   ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -4700,7 +4703,7 @@
           "name": "create uri for frequency in series and export to the same token",
           "source": {
             "leader": "     cas a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123d1898    enkz||p|||||||0   ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123d1898    enkz| p|||||||0   ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5137,7 +5140,7 @@
           "name": "Serial + frequency + gf:Periodical",
           "source": {
             "leader": "     cas a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123c1999    swea||p|||||||0   ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123c1999    swea| p|||||||0   ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5167,7 +5170,7 @@
           },
           "normalized": {
             "leader": "     cgm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe--- ||||||||   m|   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe--- |     ||   m|   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5197,7 +5200,7 @@
           },
           "normalized": {
             "leader": "     ckm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe--- ||||||||   i|   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe--- |     ||   i|   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
