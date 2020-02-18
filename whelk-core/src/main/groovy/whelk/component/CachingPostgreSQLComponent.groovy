@@ -32,8 +32,13 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
     }
 
     @Override
-    Map getCard(String id) {
-        return cardCache.get(id)
+    Iterable<Map> getCards(Iterable<String> iris) {
+        cardCache.getAll(iris).values()
+    }
+
+    @Override
+    Map getCard(String iri) {
+        return cardCache.get(iri)
     }
 
     @Override
@@ -61,8 +66,15 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
         return super.getInCardDependencies(id)
     }
 
-    private Map superGetCard(String id) {
-        return super.getCard(id)
+    private Map superGetCard(String iri) {
+        return super.getCard(iri)
+    }
+
+    private Map<String, Map> superGetCards(Iterable<String> iris) {
+        def irisToIds = getSystemIdsByIris(iris)
+        def cards = bulkLoadCards(irisToIds.values())
+        cards.put("MISSING", ['@graph':[]])
+        return iris.collectEntries { [it, cards.get(irisToIds.get(it) ?: "MISSING")] }
     }
 
     void initCaches() {
@@ -71,13 +83,13 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
                 .recordStats()
                 .build(new CacheLoader<String, Map>() {
                     @Override
-                    Map load(String systemId) throws Exception {
-                        return superGetCard(systemId)
+                    Map load(String iri) throws Exception {
+                        return superGetCard(iri)
                     }
 
                     @Override
-                    Map<String, Map> loadAll(Iterable<? extends String> systemIds) throws Exception {
-                        return createAndAddMissingCards(bulkLoadCards(systemIds))
+                    Map<String, Map> loadAll(Iterable<? extends String> iris) throws Exception {
+                        return superGetCards(iris)
                     }
                 })
 

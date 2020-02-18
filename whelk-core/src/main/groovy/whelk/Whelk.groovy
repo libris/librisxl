@@ -389,7 +389,7 @@ class Whelk implements Storage {
                     Map theThing = ((List) thing['@graph'])[1]
                     if (!theThing['@reverse'])
                         theThing['@reverse'] = [:]
-                    theThing['@reverse'][relation] = deps.collect { ["@id": ((List) it['@graph'])[0]['@id']] }
+                    theThing['@reverse'][relation] = deps.collect { ["@id": ((List) it['@graph'])[1]['@id']] }
                     cards.addAll(deps)
                 }
             }
