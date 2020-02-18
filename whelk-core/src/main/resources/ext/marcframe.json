@@ -4425,7 +4425,8 @@
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
           "silentRevert": false
-        }
+        },
+        "[29] [30] [31] [32] [33] [34]": null
       },
       "Cartography": {
         "[18] [19] [20] [21]": {
