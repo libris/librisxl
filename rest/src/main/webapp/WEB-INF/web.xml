@@ -92,11 +92,6 @@
     </servlet-mapping>
 
     <servlet-mapping>
-        <servlet-name>MergeAPI</servlet-name>
-        <url-pattern>/_merge</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
         <servlet-name>RelationsAPI</servlet-name>
         <url-pattern>/_dependencies</url-pattern>
     </servlet-mapping>
