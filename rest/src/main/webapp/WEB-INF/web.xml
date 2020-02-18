@@ -62,10 +62,6 @@
         <servlet-class>whelk.rest.api.HoldAPI</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>MergeAPI</servlet-name>
-        <servlet-class>whelk.rest.api.MergeAPI</servlet-class>
-    </servlet>
-    <servlet>
         <servlet-name>RelationsAPI</servlet-name>
         <servlet-class>whelk.rest.api.RecordRelationAPI</servlet-class>
     </servlet>
