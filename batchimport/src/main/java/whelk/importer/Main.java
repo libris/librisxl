@@ -72,12 +72,6 @@ public class Main
 	public static void main(String[] args)
             throws Exception
 	{
-        // Enrich a jsonld file with another jsonld file and print result. Mainly for testing purposes, imports nothing.
-        if (args.length > 0 && args[0].equals("--enrichFiles"))
-        {
-            CliEnrich.enrich(args[1], args[2]);
-            return;
-        }
 
         // Normal importing operations
 	Parameters parameters = new Parameters(args);
