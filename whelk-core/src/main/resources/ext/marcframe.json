@@ -3510,7 +3510,7 @@
         "[4]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/ComputerDimensionsType-{_}",
-        "matchUriToken": "^[_aegijov]$"
+          "matchUriToken": "^[_aegijov]$"
         },
         "[5]": {
           "link": "soundContent",
@@ -3784,7 +3784,7 @@
         "[13]": {
           "link": "marc:motionPicCategories",
           "uriTemplate": "https://id.kb.se/marc/MotionPicCategoriesType-{_}",
-        "matchUriToken": "^[_abcdefghijklmpqrstv]$"
+          "matchUriToken": "^[_abcdefghijklmpqrstv]$"
         },
         "[14]": {
           "link": "marc:motionPicColorStock",
