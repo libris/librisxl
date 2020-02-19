@@ -12997,7 +12997,29 @@
       "addLink": "hasNote",
       "resourceType": "marc:LinkingEntryComplexityNote",
       "$a": {"property": "label"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": [
+            {"580": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Continues: Civil air regulations and reference guide for pilots."}]}},
+            {"580": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Continued by: Federal aviation regulations and flight standards for pilots."}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf" : {
+                "@type": "Text",
+                "hasNote": [{
+                  "@type": "marc:LinkingEntryComplexityNote",
+                  "label": "Continues: Civil air regulations and reference guide for pilots."
+                },{
+                  "@type": "marc:LinkingEntryComplexityNote",
+                  "label": "Continued by: Federal aviation regulations and flight standards for pilots."
+                }]
+              }
+            }
+          }
+        }
+      ]
     },
     "581": {
       "aboutEntity": "?thing",
