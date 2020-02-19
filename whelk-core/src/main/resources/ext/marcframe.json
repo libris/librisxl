@@ -12993,7 +12993,7 @@
       "NOTE:record-count": 0
     },
     "580": {
-      "aboutEntity": "?work",
+      "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "marc:LinkingEntryComplexityNote",
       "$a": {"property": "label"},
@@ -13006,16 +13006,13 @@
           ],
           "result": {
             "mainEntity": {
-              "instanceOf" : {
-                "@type": "Text",
-                "hasNote": [{
-                  "@type": "marc:LinkingEntryComplexityNote",
-                  "label": "Continues: Civil air regulations and reference guide for pilots."
-                },{
-                  "@type": "marc:LinkingEntryComplexityNote",
-                  "label": "Continued by: Federal aviation regulations and flight standards for pilots."
-                }]
-              }
+              "hasNote": [{
+                "@type": "marc:LinkingEntryComplexityNote",
+                "label": "Continues: Civil air regulations and reference guide for pilots."
+              },{
+                "@type": "marc:LinkingEntryComplexityNote",
+                "label": "Continued by: Federal aviation regulations and flight standards for pilots."
+              }]
             }
           }
         }
