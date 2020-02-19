@@ -1008,17 +1008,6 @@ class PostgreSQLComponent implements Storage {
         return cardEntry.getCard().data
     }
 
-    private List nonCardDependencies(Document doc) {
-        if (!jsonld) {
-            return []
-        }
-
-        Document card = new CardEntry(doc).getCard()
-        List refs = doc.getExternalRefs()
-        refs.removeAll(card.getExternalRefs())
-        return refs
-    }
-
     private void saveDependencies(Document doc, Connection connection) {
         List dependencies = _calculateDependenciesSystemIDs(doc, connection)
 
@@ -1651,11 +1640,11 @@ class PostgreSQLComponent implements Storage {
             preparedStatement.setString(1, id)
             preparedStatement.setString(2, relation)
             rs = preparedStatement.executeQuery()
-            List<String> dependecies = []
+            List<String> dependencies = []
             while (rs.next()) {
-                dependecies.add( rs.getString(1) )
+                dependencies.add( rs.getString(1) )
             }
-            return dependecies
+            return dependencies
         }
         finally {
             close(rs, preparedStatement, connection)
@@ -2030,23 +2019,6 @@ class PostgreSQLComponent implements Storage {
         }
 
         return settings
-    }
-
-    void saveSettings(String key, final Map settings) {
-        Connection connection = getConnection()
-        PreparedStatement savestmt = null
-        try {
-            String serializedSettings = mapper.writeValueAsString(settings)
-            log.debug("Saving settings for ${key}: $serializedSettings")
-            savestmt = connection.prepareStatement(SAVE_SETTINGS)
-            savestmt.setObject(1, serializedSettings, OTHER)
-            savestmt.setString(2, key)
-            savestmt.setString(3, key)
-            savestmt.setObject(4, serializedSettings, OTHER)
-            savestmt.executeUpdate()
-        } finally {
-            close(savestmt, connection)
-        }
     }
 
     /**
