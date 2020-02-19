@@ -154,24 +154,12 @@ class Whelk implements Storage {
         return result
     }
 
-    private void reindexAffected(Document document, Set<Link> preUpdateDependencies) {
+    private void reindexAffected(Document document, Set<Link> preUpdateLinks) {
         Runnable reindex = {
-            long t1 = System.currentTimeMillis()
-            int count = 0
-            if (storage.isCardChanged(document.getShortId())) {
-                getAffectedIds(document).each { id ->
-                    Document doc = storage.load(id)
-                    elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
-                    count++
-                }
-            }
-
-            if (count > 100 ) {
-                long dt = (System.currentTimeMillis() - t1) / 1000 as long
-                log.info("Reindexed $count affected documents in $dt seconds")
-            }
-
-            updateLinkCount(document, preUpdateDependencies)
+            Set<Link> postUpdateLinks = document.getExternalRefs()
+            Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
+            Set<Link> addedLinks = (postUpdateLinks - preUpdateLinks)
+            reindex(document, addedLinks, removedLinks)
         }
 
         // If we are inside a batch job. Update them synchronously
@@ -183,22 +171,35 @@ class Whelk implements Storage {
         }
     }
 
+    private void reindex(Document document,Set<Link> addedLinks, Set<Link> removedLinks) {
+        removedLinks.findResults { storage.getSystemIdByIri(it.iri) }
+                .each{id -> elastic.decrementReverseLinks(id, storage.getCollectionBySystemID(id))}
+
+        if (storage.isCardChanged(document.getShortId())) {
+            getAffectedIds(document).each { id ->
+                Document doc = storage.load(id)
+                elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
+            }
+        }
+
+        addedLinks.each { link ->
+            String id = storage.getSystemIdByIri(link.iri)
+            if (id) {
+                Document doc = storage.load(id)
+                def rev = ['chips', 'cards', 'full'].collect{ jsonld.getInverseProperties(doc.data, it) }.flatten()
+                if (rev.contains(link.relation)) {
+                    elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
+                }
+                else {
+                    elastic.incrementReverseLinks(id, storage.getCollectionBySystemID(id))
+                }
+            }
+        }
+    }
+
     private Iterable<String> getAffectedIds(Document document) {
         List<String> iris = document.getThingIdentifiers()
         return elasticFind.findIdsByTerm(["_terms": iris, "_fields": ["_links", "_transitiveDependencies"]])
-    }
-
-    private void updateLinkCount(Document document, Set<Link> preUpdateDependencies) {
-        Set<Link> postUpdateDependencies = document.getExternalRefs()
-
-        Set<Link> removed = (preUpdateDependencies - postUpdateDependencies)
-        Set<Link> added = (postUpdateDependencies - preUpdateDependencies)
-
-        removed.collect { storage.getSystemIdByIri(it.iri) }
-                .each{id -> elastic.decrementReverseLinks(id, storage.getCollectionBySystemID(id))}
-
-        added.collect { storage.getSystemIdByIri(it.iri) }
-                .each { id -> elastic.incrementReverseLinks(id, storage.getCollectionBySystemID(id))}
     }
 
     /**
@@ -275,7 +276,7 @@ class Whelk implements Storage {
     }
 
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
-        Set<Link> preUpdateDependencies = storage.load(id).getExternalRefs() // TODO: use storage.getDependencies
+        Set<Link> preUpdateLinks = storage.load(id).getExternalRefs()
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
         if (updated == null) {
             return null
@@ -283,7 +284,7 @@ class Whelk implements Storage {
         String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
         if (elastic) {
             elastic.index(updated, collection, this)
-            reindexAffected(updated, preUpdateDependencies)
+            reindexAffected(updated, preUpdateLinks)
         }
 
         return updated
@@ -300,9 +301,11 @@ class Whelk implements Storage {
 
     void remove(String id, String changedIn, String changedBy) {
         log.debug "Deleting ${id} from Whelk"
+        Document doc = storage.load(id)
         storage.remove(id, changedIn, changedBy)
         if (elastic) {
             elastic.remove(id)
+            reindexAffected(doc, doc.getExternalRefs())
             log.debug "Object ${id} was removed from Whelk"
         }
         else {
