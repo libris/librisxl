@@ -353,18 +353,20 @@ class Whelk implements Storage {
 
     }
 
-    private static final List<String> EMBELLISH_LENSES = ['cards', 'cards', 'chips', 'chips']
+    private static final List<String> EMBELLISH_LENSES = ['cards', 'chips', 'chips']
     void embellish(Document document, boolean filterOutNonChipTerms = false) {
         List convertedExternalLinks = jsonld.expandLinks(document.getExternalRefs())
 
-        //TODO: check for cycles
+        Set<String> visitedIris = new HashSet<>()
+        visitedIris.add(document.getThingIdentifiers().first())
         Iterable<Map> previousDepthDocs = [document.data]
         List docs = []
         List iris = convertedExternalLinks
         for (String lens : EMBELLISH_LENSES) {
             def cards = storage.getCards((List<String>) iris).collect()
+            visitedIris.addAll(iris)
 
-            previousDepthDocs.each { insertInverseCards(lens, it, cards) }
+            previousDepthDocs.each { insertInverseCards(lens, it, cards, visitedIris) }
 
             if (lens == 'chips') {
                 cards = cards.collect{ (Map) jsonld.toChip(it) }
@@ -373,24 +375,28 @@ class Whelk implements Storage {
             previousDepthDocs = cards
             docs.addAll(cards)
             iris = cards.collect{ JsonLd.getExternalReferences((Map) it) }.flatten()
+            iris.removeAll(visitedIris)
         }
-        previousDepthDocs.each { insertInverseCards(EMBELLISH_LENSES.last(), it, []) } // TODO
+        previousDepthDocs.each { insertInverseCards(EMBELLISH_LENSES.last(), it, [], visitedIris) } // TODO: no cards here
 
         jsonld.embellish(document.data, docs, filterOutNonChipTerms)
     }
 
-    private void insertInverseCards(String lens, Map thing, List<Map> cards) {
+    private void insertInverseCards(String lens, Map thing, List<Map> cards, Set<String> visitedIris) {
         Set<String> inverseRelations = jsonld.getInverseProperties(thing, lens)
         if (inverseRelations.size() > 0) {
-            String id = new Document(thing).getShortId() // TODO : sketchy
+            String iri = new Document(thing).getThingIdentifiers().first() // TODO : sketchy
             for (String relation : inverseRelations) {
-                List<Map> deps = storage.getCardsBySystemIds(storage.getDependersOfType(id, relation)).collect() //TODO use IRIs
-                if (deps.size() > 0) {
+                Set<String> iris = relations.getByReverse(iri, [relation])
+                if (iris.size() > 0) {
                     Map theThing = ((List) thing['@graph'])[1]
-                    if (!theThing['@reverse'])
+                    if (!theThing['@reverse']) {
                         theThing['@reverse'] = [:]
-                    theThing['@reverse'][relation] = deps.collect { ["@id": ((List) it['@graph'])[1]['@id']] }
-                    cards.addAll(deps)
+                    }
+                    theThing['@reverse'][relation] = iris.collect { ["@id": it] }
+                    iris.removeAll(visitedIris)
+                    cards.addAll(storage.getCards(iris))
+                    visitedIris.addAll(iris)
                 }
             }
         }
