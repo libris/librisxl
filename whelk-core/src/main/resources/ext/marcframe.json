@@ -4394,11 +4394,7 @@
           "link": "projection",
           "uriTemplate": "https://id.kb.se/marc/MapsProjectionType-{_}"
         },
-        "[24]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:primeMeridian",
-          "uriTemplate": "https://id.kb.se/marc/MapsPrimeMeridianType-{_}"
-        },
+        "[24]": null,
         "[25]": {
           "TODO": "Add condition to 'link' to MapsMaterialType: (a|b|c|f|g|z) should be issuance. (d|e) should be genreForm (see also 006)",
           "aboutEntity": "?work",
@@ -4888,7 +4884,7 @@
           },
           "normalized": {
             "leader": "     cem a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    sweb|||ae|a  || 0 ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sweb|||ae a  || 0 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -4919,7 +4915,7 @@
           },
           "normalized": {
             "leader": "     cfm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1899    sweb|||ae|a  || 0 ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1899    sweb|||ae a  || 0 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
