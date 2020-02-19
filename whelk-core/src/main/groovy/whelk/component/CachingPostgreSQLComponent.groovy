@@ -12,7 +12,6 @@ import java.sql.Connection
 class CachingPostgreSQLComponent extends PostgreSQLComponent {
     private static final int CARD_CACHE_MAX_SIZE = 250_000
     private LoadingCache<String, Map> cardCache
-    private LoadingCache<String, SortedSet<String>> dependencyCache
 
     CachingPostgreSQLComponent(Properties properties) {
         super(properties)
@@ -23,12 +22,6 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
     void logStats() {
         super.logStats()
         log.info("Card cache: ${cardCache.stats()}")
-        log.info("Card dependency cache: ${dependencyCache.stats()}")
-    }
-
-    @Override
-    Iterable<Map> getCardsForEmbellish(List<String> startIris) {
-        return cardCache.getAll(getIdsForEmbellish(startIris)).values()
     }
 
     @Override
@@ -42,16 +35,10 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
     }
 
     @Override
-    protected SortedSet<String> getInCardDependencies(String id) {
-        return dependencyCache.get(id)
-    }
-
-    @Override
     protected boolean storeCard(CardEntry cardEntry, Connection connection) {
         boolean change = super.storeCard(cardEntry, connection)
         Document card = cardEntry.getCard()
         cardCache.put(card.getShortId(), card.data)
-        dependencyCache.invalidate(card.getShortId())
         return change
     }
 
@@ -59,11 +46,6 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
     protected void deleteCard(String systemId, Connection connection) {
         super.deleteCard(systemId, connection)
         cardCache.invalidate(systemId)
-        dependencyCache.invalidate(systemId)
-    }
-
-    private SortedSet<String> superGetInCardDependers(String id) {
-        return super.getInCardDependencies(id)
     }
 
     private Map superGetCard(String iri) {
@@ -73,7 +55,7 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
     private Map<String, Map> superGetCards(Iterable<String> iris) {
         def irisToIds = getSystemIdsByIris(iris)
         def cards = bulkLoadCards(irisToIds.values())
-        cards.put("MISSING", ['@graph':[]])
+        cards.put("MISSING", ['@graph':[]]) // TODO : clean up
         return iris.collectEntries { [it, cards.get(irisToIds.get(it) ?: "MISSING")] }
     }
 
@@ -90,16 +72,6 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
                     @Override
                     Map<String, Map> loadAll(Iterable<? extends String> iris) throws Exception {
                         return superGetCards(iris)
-                    }
-                })
-
-        dependencyCache = CacheBuilder.newBuilder()
-                .maximumSize(CARD_CACHE_MAX_SIZE)
-                .recordStats()
-                .build(new CacheLoader<String, SortedSet<String>>() {
-                    @Override
-                    SortedSet<String> load(String systemId) throws Exception {
-                        return superGetInCardDependers(systemId)
                     }
                 })
     }

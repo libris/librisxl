@@ -4,9 +4,9 @@ DO $$DECLARE
    -- THESE MUST BE CHANGED WHEN YOU COPY THE SCRIPT!
    
    -- The version you expect the database to have _before_ the migration
-   old_version numeric := 5;
+   old_version numeric := 8;
    -- The version the database should have _after_ the migration
-   new_version numeric := 6;
+   new_version numeric := 9;
 
    -- hands off
    existing_version numeric;
@@ -22,9 +22,7 @@ BEGIN
    UPDATE lddb__schema SET version = new_version;
 
    -- ACTUAL SCHEMA CHANGES HERE:
-
-   -- This was never part of a release, commented out
-   -- ALTER TABLE lddb__dependencies ADD COLUMN inCard boolean DEFAULT false;
+   ALTER TABLE lddb__dependencies DROP COLUMN inCard;
 
 END$$;
 
