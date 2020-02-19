@@ -154,7 +154,7 @@ class Whelk implements Storage {
         return result
     }
 
-    private void reindexAffected(Document document, Set<String> preUpdateDependencies) {
+    private void reindexAffected(Document document, Set<Link> preUpdateDependencies) {
         Runnable reindex = {
             long t1 = System.currentTimeMillis()
             int count = 0
@@ -183,19 +183,21 @@ class Whelk implements Storage {
         }
     }
 
-    //TODO: also needs to include documents whose @reverse have changed because of added or removed links in document
     private Iterable<String> getAffectedIds(Document document) {
         List<String> iris = document.getThingIdentifiers()
         return elasticFind.findIdsByTerm(["_terms": iris, "_fields": ["_links", "_transitiveDependencies"]])
     }
 
-    private void updateLinkCount(Document document, Set<String> preUpdateDependencies) {
-        Set<String> postUpdateDependencies = storage.getDependencies(document.getShortId())
+    private void updateLinkCount(Document document, Set<Link> preUpdateDependencies) {
+        Set<Link> postUpdateDependencies = document.getExternalRefs()
 
-        (preUpdateDependencies - postUpdateDependencies)
-                .each { id -> elastic.decrementReverseLinks(id, storage.getCollectionBySystemID(id))}
+        Set<Link> removed = (preUpdateDependencies - postUpdateDependencies)
+        Set<Link> added = (postUpdateDependencies - preUpdateDependencies)
 
-        (postUpdateDependencies - preUpdateDependencies)
+        removed.collect { storage.getSystemIdByIri(it.iri) }
+                .each{id -> elastic.decrementReverseLinks(id, storage.getCollectionBySystemID(id))}
+
+        added.collect { storage.getSystemIdByIri(it.iri) }
                 .each { id -> elastic.incrementReverseLinks(id, storage.getCollectionBySystemID(id))}
     }
 
@@ -266,14 +268,14 @@ class Whelk implements Storage {
         if (success) {
             if (elastic) {
                 elastic.index(document, collection, this)
-                reindexAffected(document, new TreeSet<String>())
+                reindexAffected(document, new TreeSet<>())
             }
         }
         return success
     }
 
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
-        Collection<String> preUpdateDependencies = storage.getDependencies(id)
+        Set<Link> preUpdateDependencies = storage.load(id).getExternalRefs() // TODO: use storage.getDependencies
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
         if (updated == null) {
             return null
@@ -303,7 +305,7 @@ class Whelk implements Storage {
             if (elastic) {
                 elastic.bulkIndex(documents, collection, this)
                 for (Document doc : documents) {
-                    reindexAffected(doc, new TreeSet<String>())
+                    reindexAffected(doc, new TreeSet<>())
                 }
             }
         } else {
@@ -360,13 +362,13 @@ class Whelk implements Storage {
 
     private static final List<String> EMBELLISH_LENSES = ['cards', 'chips', 'chips']
     void embellish(Document document, boolean filterOutNonChipTerms = false) {
-        List convertedExternalLinks = jsonld.expandLinks(document.getExternalRefs())
+        List<String> convertedExternalLinks = jsonld.expandLinks(document.getExternalRefs()).collect { it.iri }
 
         Set<String> visitedIris = new HashSet<>()
         visitedIris.add(document.getThingIdentifiers().first())
         Iterable<Map> previousDepthDocs = [document.data]
         List docs = []
-        List iris = convertedExternalLinks
+        List<String> iris = convertedExternalLinks
         for (String lens : EMBELLISH_LENSES) {
             def cards = storage.getCards((List<String>) iris).collect()
             visitedIris.addAll(iris)
@@ -379,7 +381,7 @@ class Whelk implements Storage {
 
             previousDepthDocs = cards
             docs.addAll(cards)
-            iris = cards.collect{ JsonLd.getExternalReferences((Map) it) }.flatten()
+            iris = (List<String>) cards.collect{ JsonLd.getExternalReferences((Map) it).collect{ it.iri } }.flatten()
             iris.removeAll(visitedIris)
         }
         previousDepthDocs.each { insertInverseCards(EMBELLISH_LENSES.last(), it, [], visitedIris) } // TODO: no cards here

@@ -10,6 +10,7 @@ import se.kb.libris.utils.isbn.IsbnException
 import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.JsonLd
+import whelk.Link
 import whelk.Whelk
 
 import java.util.concurrent.LinkedBlockingQueue
@@ -231,7 +232,7 @@ class ElasticSearch {
         getOtherIsbns(doc.getIsbnHiddenValues())
                 .each { doc.addIndirectTypedThingIdentifier('ISBN', it) }
 
-        Set<String> links = whelk.jsonld.expandLinks(unEmbellished.getExternalRefs())
+        Set<String> links = whelk.jsonld.expandLinks(unEmbellished.getExternalRefs()).collect{ it.iri }
 
         Set<String> transitiveDependencies = new HashSet<>()
         doc.data['@graph'].eachWithIndex{ def entry, int i ->

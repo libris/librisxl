@@ -6,6 +6,7 @@ import spock.lang.Specification
 import spock.lang.Unroll
 import whelk.Document
 import whelk.JsonLd
+import whelk.Link
 import whelk.exception.FramingException
 
 @Unroll
@@ -57,7 +58,7 @@ class JsonLdSpec extends Specification {
                 ['@graph': ['@id': '/some_other_id']]
             ],
             '@context': 'base.jsonld']
-        def expected = ['/external']
+        def expected = [new Link(iri: '/external', relation: 'external')]
 
         expect:
         assert JsonLd.getExternalReferences(graph) == expected
@@ -96,12 +97,17 @@ class JsonLdSpec extends Specification {
                                 'bar': ['@id': '/bar'],
                                 'extra': ['baz': ['@id': '/baz']],
                                 'aList': [['quux': ['@id': '/quux']]],
-                                'quux': ['@id': '/quux']],
+                                'quux': [['@id': '/quux'], ['@id': '/quux2']]],
                                ['@id': '/bar',
                                 'someValue': 1],
                                ['@id': '/baz/',
                                 'someOtherValue': 2]]]
-       Set expected = ['/bar', '/baz', '/quux']
+       Set expected = [
+               new Link(iri: '/quux', relation: 'quux'),
+               new Link(iri: '/quux2', relation: 'quux'),
+               new Link(iri: '/baz', relation: 'baz'),
+               new Link(iri: '/bar', relation: 'bar')
+       ]
        expect:
        assert JsonLd.getAllReferences(input) == expected
    }
@@ -495,7 +501,7 @@ class JsonLdSpec extends Specification {
         given:
         Map context = ["ex": "http://example.org/ns/"]
         expect:
-        JsonLd.expandLinks(['/path', 'ex:path', 'other:path'], context) ==
+        ['/path', 'ex:path', 'other:path'].collect({JsonLd.expand(it, context)}) ==
                 ['/path', 'http://example.org/ns/path', 'other:path']
     }
 

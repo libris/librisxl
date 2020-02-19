@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.Document;
 import whelk.JsonLd;
+import whelk.Link;
 import whelk.util.LegacyIntegrationTools;
 
 import javax.servlet.http.HttpServletRequest;
@@ -12,15 +13,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.stream.*;
 import java.io.IOException;
 import java.io.StringReader;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.Date;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+
 import org.apache.cxf.staxutils.StaxUtils;
 
 public class ResponseCommon
@@ -248,9 +246,9 @@ public class ResponseCommon
             writer.writeEndElement(); // holding
         }
 
-        Set<String> refs = JsonLd.getAllReferences(rootDocument.data);
-        for (String ref : refs)
+        for (Link r : JsonLd.getAllReferences(rootDocument.data))
         {
+            String ref = r.getIri();
             if (ref.startsWith("https://id.kb.se/") || ref.startsWith(Document.getBASE_URI().toString()))
             {
                 String systemID = OaiPmh.s_whelk.getStorage().getSystemIdByIri(ref);

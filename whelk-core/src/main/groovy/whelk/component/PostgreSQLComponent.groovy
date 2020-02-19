@@ -779,9 +779,9 @@ class PostgreSQLComponent implements Storage {
     private List<String[]> _calculateDependenciesSystemIDs(Document doc, Connection connection) {
         List<String[]> dependencies = []
 
-        Map iriToRelation = doc.getRefsWithRelation()
-            .findAll{ relationAndIri -> relationAndIri[1].startsWith("http") }
-            .collectEntries { relationAndIri -> [ relationAndIri[1], relationAndIri[0] ] }
+        Map iriToRelation = doc.getExternalRefs()
+            .findAll{ it.iri.startsWith("http") }
+            .collectEntries {  [ it.iri, it.relation ] }
 
         getSystemIds(iriToRelation.keySet(), connection) { String iri, String systemId, boolean deleted ->
             if (deleted) // doc refers to a deleted document which is not ok.

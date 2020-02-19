@@ -8,6 +8,7 @@ import com.google.common.util.concurrent.ListenableFutureTask
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import io.prometheus.client.guava.cache.CacheMetricsCollector
 import whelk.Document
+import whelk.Link
 
 import java.util.concurrent.Callable
 import java.util.concurrent.Executor
@@ -55,12 +56,10 @@ class DependencyCache {
     }
 
     void invalidate(Document doc) {
-        String docIri = doc.getThingIdentifiers()[0]
-        doc.getRefsWithRelation().each {
-            String relation = it[0]
-            String iri = it[1]
-            dependersCache.invalidate(new Tuple2(iri, relation))
-            dependenciesCache.invalidate(new Tuple2(docIri, relation))
+        String docIri = doc.getThingIdentifiers().first()
+        doc.getExternalRefs().each { Link link ->
+            dependersCache.invalidate(new Tuple2(link.iri, link.relation))
+            dependenciesCache.invalidate(new Tuple2(docIri, link.relation))
         }
     }
 
