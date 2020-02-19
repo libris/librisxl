@@ -1,7 +1,6 @@
 package whelk.search
 
 import groovy.transform.CompileStatic
-import whelk.Whelk
 
 @CompileStatic
 class ElasticFind {
@@ -9,8 +8,13 @@ class ElasticFind {
 
     ESQuery esQuery
 
-    public ElasticFind(ESQuery esQuery) {
+    ElasticFind(ESQuery esQuery) {
         this.esQuery = esQuery
+    }
+
+    Iterable<String> findIdsByTerm(Map<String, List<String>> parameters) {
+        def q = { int offset -> esQuery.doQueryIdsByTerm(makeParams(parameters, offset)) }
+        return query(q)
     }
 
     Iterable<String> findIds(Map<String, List<String>> parameters) {
@@ -75,6 +79,8 @@ class ElasticFind {
 
         p.put("_offset", [Integer.toString(offset)] as String[])
         p.put("_limit", [Integer.toString(PAGE_SIZE)] as String[])
+
+        p.putIfAbsent("_sort", ["_doc"] as String[])
 
         return p
     }

@@ -68,6 +68,45 @@ class ESQuery {
         return esResponse
     }
 
+    //TODO: refactor
+    @CompileStatic(TypeCheckingMode.SKIP)
+    Map doQueryIdsByTerm(Map<String, String[]> queryParameters) {
+        int limit
+        int offset
+        (limit, offset) = getPaginationParams(queryParameters)
+        List sortBy = getSortClauses(queryParameters)
+
+        String[] terms = queryParameters.get("_terms")
+        String[] fields = queryParameters.get("_fields")
+
+        def termQueries = GroovyCollections.combinations([fields as List, terms as List] as Iterable)
+                .collect { String field, String term ->
+                    ['term': [(field): term]]
+                }
+
+        Map query = [
+                'query': ['bool': ['should': termQueries]]
+        ]
+
+        if (limit >= 0) {
+            query['size'] = limit
+        }
+
+        if (offset) {
+            query['from'] = offset
+        }
+
+        if (sortBy) {
+            query['sort'] = sortBy
+        }
+
+        Map esResponse = hideKeywordFields(whelk.elastic.queryIds(query, null))
+        if ('esQuery' in queryParameters.get('_debug')) {
+            esResponse._debug = [esQuery: query]
+        }
+        return esResponse
+    }
+
     @CompileStatic(TypeCheckingMode.SKIP)
     Map getESQuery(Map<String, String[]> queryParameters) {
         // Legit params and their uses:

@@ -8,6 +8,8 @@ import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LinkFinder
+import whelk.search.ESQuery
+import whelk.search.ElasticFind
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 
@@ -26,6 +28,7 @@ class Whelk implements Storage {
     JsonLd jsonld
     MarcFrameConverter marcFrameConverter
     Relations relations
+    ElasticFind elasticFind
 
     URI baseUri = null
 
@@ -106,6 +109,9 @@ class Whelk implements Storage {
     void setJsonld(JsonLd jsonld) {
         this.jsonld = jsonld
         storage.setJsonld(jsonld)
+        if (elastic) {
+            elasticFind = new ElasticFind(new ESQuery(this))
+        }
     }
 
     void loadContextData() {
@@ -150,29 +156,22 @@ class Whelk implements Storage {
 
     private void reindexAffected(Document document, Set<String> preUpdateDependencies) {
         Runnable reindex = {
-            elastic.index(document, storage.getCollectionBySystemID(document.shortId), this)
-
-            // FIXME: some day this will be too big too keep in memory...
-            // FIXME: state is lost on restart
-            Set<String> idsToReindex = storage.isCardChanged(document.getShortId())
-                    ? storage.followEmbellishDependers(document.getShortId())
-                    : new HashSet<String>()
-
             long t1 = System.currentTimeMillis()
-            if (idsToReindex.size() > 100 ) {
-                log.info("Reindexing ${idsToReindex.size()} affected documents")
+            int count = 0
+            if (storage.isCardChanged(document.getShortId())) {
+                getAffectedIds(document).each { id ->
+                    Document doc = storage.load(id)
+                    elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
+                    count++
+                }
             }
 
-            idsToReindex.each { id ->
-                Document doc = storage.load(id)
-                elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
-            }
-            updateLinkCount(document, preUpdateDependencies)
-
-            if (idsToReindex.size() > 100 ) {
+            if (count > 100 ) {
                 long dt = (System.currentTimeMillis() - t1) / 1000 as long
-                log.info("Reindexed ${idsToReindex.size()} affected documents in $dt seconds")
+                log.info("Reindexed $count affected documents in $dt seconds")
             }
+
+            updateLinkCount(document, preUpdateDependencies)
         }
 
         // If we are inside a batch job. Update them synchronously
@@ -182,6 +181,12 @@ class Whelk implements Storage {
             // else use a fire-and-forget thread
             new Thread(indexers, reindex).start()
         }
+    }
+
+    //TODO: also needs to include documents whose @reverse have changed because of added or removed links in document
+    private Iterable<String> getAffectedIds(Document document) {
+        List<String> iris = document.getThingIdentifiers()
+        return elasticFind.findIdsByTerm(["_terms": iris, "_fields": ["_links", "_transitiveDependencies"]])
     }
 
     private void updateLinkCount(Document document, Set<String> preUpdateDependencies) {
