@@ -46,7 +46,6 @@ class EmbellishSpec extends Specification{
     
     /*
 
-
                        ┌−−−−−−−−−−−−−−−┐
                        ╎   embellish   ╎
                        ╎               ╎
@@ -115,149 +114,41 @@ digraph {
 
      */
 
-    def "should embellish recursively"() {
+    def "should embellish recursively, three levels, using cards, chips, chips"() {
         given:
         def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, DISPLAY_DATA, JsonLdSpec.VOCAB_DATA)
 
-        def doc = ['@graph': [
-                [
-                        '@type'     : 'R',
-                        '@id'       : '/record',
-                        'mainEntity': ['@id': '/thing']
-                ],
-                [
-                        '@type': 'X',
-                        '@id'  : '/thing',
-                        'px1'   : ['@id': '/thingX1']
-                ]
+        def doc = ['@graph': [['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
+                              ['@type': 'X', '@id': '/thing', 'px1': ['@id': '/thingX1']]
         ]]
 
         def docs = [
-                ['@graph': [
-                        [
-                                '@type'     : 'R',
-                                '@id'       : '/recordX1',
-                                'mainEntity': ['@id': '/thingX1']
-                        ],
-                        [
-                                '@type': 'X',
-                                '@id'  : '/thingX1',
-                                'px1'  : ['@id': '/thingX2'],
-                                'px2'  : ['@id': '/thingX4']
-                        ]
-                ]],
+                ['@graph': [['@type': 'R', '@id': '/recordX1', 'mainEntity': ['@id': '/thingX1']],
+                            ['@type': 'X', '@id': '/thingX1', 'px1': ['@id': '/thingX2'], 'px2': ['@id': '/thingX4']]]],
 
-                ['@graph': [
-                        [
-                                '@type'     : 'R',
-                                '@id'       : '/recordX2',
-                                'mainEntity': ['@id': '/thingX2']
-                        ],
-                        [
-                                '@type': 'X',
-                                '@id'  : '/thingX2',
-                                'px1'  : ['@id': '/thingX3'],
-                                'px2'  : ['@id': '/thingX5']
-                        ]
-                ]],
+                ['@graph': [['@type': 'R', '@id': '/recordX2', 'mainEntity': ['@id': '/thingX2']], 
+                            ['@type': 'X', '@id': '/thingX2', 'px1': ['@id': '/thingX3'], 'px2': ['@id': '/thingX5']]]],
 
-                ['@graph': [
-                        [
-                                '@type'     : 'R',
-                                '@id'       : '/recordX3',
-                                'mainEntity': ['@id': '/thingX3']
-                        ],
-                        [
-                                '@type': 'X',
-                                '@id'  : '/thingX3',
-                                'px1'  : ['@id': '/thingX6'],
-                                'px2'  : 'foo'
-                        ]
-                ]],
+                ['@graph': [['@type': 'R', '@id': '/recordX3', 'mainEntity': ['@id': '/thingX3']],
+                            ['@type': 'X', '@id': '/thingX3', 'px1': ['@id': '/thingX6'], 'px2': 'foo']]],
 
-                ['@graph': [
-                        [
-                                '@type'     : 'R',
-                                '@id'       : '/recordX4',
-                                'mainEntity': ['@id': '/thingX4']
-                        ],
-                        [
-                                '@type': 'X',
-                                '@id'  : '/thingX4',
-                                'px1'  : 'foo',
-                                'px2'  : 'foo'
-                        ]
-                ]],
+                ['@graph': [['@type': 'R', '@id': '/recordX4', 'mainEntity': ['@id': '/thingX4']],
+                            ['@type': 'X', '@id': '/thingX4', 'px1': 'foo', 'px2': 'foo']]],
 
-                ['@graph': [
-                        [
-                                '@type'     : 'R',
-                                '@id'       : '/recordX5',
-                                'mainEntity': ['@id': '/thingX5']
-                        ],
-                        [
-                                '@type': 'X',
-                                '@id'  : '/thingX5',
-                                'px1'  : 'foo',
-                                'px2'  : 'foo'
-                        ]
-                ]],
+                ['@graph': [['@type': 'R', '@id': '/recordX5', 'mainEntity': ['@id': '/thingX5']],
+                            ['@type': 'X', '@id': '/thingX5', 'px1': 'foo', 'px2': 'foo']]],
 
-                ['@graph': [
-                        [
-                                '@type'     : 'R',
-                                '@id'       : '/recordX6',
-                                'mainEntity': ['@id': '/thingX6']
-                        ],
-                        [
-                                '@type': 'X',
-                                '@id'  : '/thingX6',
-                                'px1'  : 'foo',
-                                'px2'  : 'foo'
-                        ]
-                ]],
+                ['@graph': [['@type': 'R', '@id': '/recordX6', 'mainEntity': ['@id': '/thingX6']],
+                            ['@type': 'X', '@id': '/thingX6', 'px1': 'foo', 'px2': 'foo']]],
 
-                ['@graph': [
-                        [
-                                '@type'     : 'R',
-                                '@id'       : '/recordY1',
-                                'mainEntity': ['@id': '/thingY1']
-                        ],
-                        [
-                                '@type': 'Y',
-                                '@id'  : '/thingY1',
-                                'py1'  : ['@id': '/thingX1'],
-                                'py2'  : 'foo'
-                        ]
-                ]],
+                ['@graph': [['@type': 'R', '@id': '/recordY1', 'mainEntity': ['@id': '/thingY1']],
+                            ['@type': 'Y', '@id': '/thingY1', 'py1': ['@id': '/thingX1'], 'py2': 'foo']]],
 
-                ['@graph': [
-                        [
-                                '@type'     : 'R',
-                                '@id'       : '/recordY2',
-                                'mainEntity': ['@id': '/thingY2']
-                        ],
-                        [
-                                '@type': 'Y',
-                                '@id'  : '/thingY2',
-                                'py1'  : ['@id': '/thingX2'],
-                                'py2'  : 'foo'
-                        ]
-                ]],
+                ['@graph': [['@type': 'R', '@id': '/recordY2', 'mainEntity': ['@id': '/thingY2']],
+                            ['@type': 'Y', '@id': '/thingY2', 'py1': ['@id': '/thingX2'], 'py2': 'foo']]],
 
-                ['@graph': [
-                        [
-                                '@type'     : 'R',
-                                '@id'       : '/recordY3',
-                                'mainEntity': ['@id': '/thingY3']
-                        ],
-                        [
-                                '@type': 'Y',
-                                '@id'  : '/thingY3',
-                                'py1'  : ['@id': '/thingX3'],
-                                'py2'  : 'foo'
-                        ]
-                ]],
+                ['@graph': [['@type': 'R', '@id': '/recordY3', 'mainEntity': ['@id': '/thingY3']],
+                            ['@type': 'Y', '@id': '/thingY3', 'py1': ['@id': '/thingX3'], 'py2': 'foo']]],
         ]
 
         def storage = new Storage(ld)

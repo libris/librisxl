@@ -1197,7 +1197,7 @@ class Embellisher {
 
     JsonLd jsonld
     Function<Iterable<String>, Iterable<Map>> getCards
-    BiFunction<String, List<String>, Set<String>> getByReverse
+    BiFunction<String, List<String>, Set<String>> getByReverseRelation
 
     Embellisher(
             JsonLd jsonld,
@@ -1206,7 +1206,7 @@ class Embellisher {
     ) {
         this.jsonld = jsonld
         this.getCards = getCards
-        this.getByReverse = getByReverseRelation
+        this.getByReverseRelation = getByReverseRelation
     }
 
     void embellish(Document document, boolean filterOutNonChipTerms = false) {
@@ -1242,7 +1242,7 @@ class Embellisher {
         if (inverseRelations.size() > 0) {
             String iri = new Document(thing).getThingIdentifiers().first()
             for (String relation : inverseRelations) {
-                Set<String> irisLinkingHere = getByReverse.apply(iri, [relation])
+                Set<String> irisLinkingHere = getByReverseRelation.apply(iri, [relation])
                 if (irisLinkingHere.size() > 0) {
                     Map theThing = ((List) thing['@graph'])[1]
                     if (!theThing['@reverse']) {
