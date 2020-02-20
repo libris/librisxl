@@ -299,6 +299,21 @@ class Whelk implements Storage {
         return storage.quickCreateDocument(document, changedIn, changedBy, collection)
     }
 
+    void bulkStore(final List<Document> documents, String changedIn,
+                   String changedBy, String collection,
+                   @Deprecated boolean useDocumentCache = false) {
+        if (storage.bulkStore(documents, changedIn, changedBy, collection)) {
+            if (elastic) {
+                elastic.bulkIndex(documents, collection, this)
+                for (Document doc : documents) {
+                    reindexAffected(doc, new TreeSet<>())
+                }
+            }
+        } else {
+            log.warn("Bulk store failed, not indexing : ${documents.first().id} - ${documents.last().id}")
+        }
+    }
+
     void remove(String id, String changedIn, String changedBy) {
         log.debug "Deleting ${id} from Whelk"
         Document doc = storage.load(id)
@@ -311,6 +326,41 @@ class Whelk implements Storage {
         else {
             log.warn "No Elastic present when deleting. Skipping call to elastic.remove(${id})"
         }
+    }
+
+    void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn, String changedBy, String collection) {
+        storage.mergeExisting(remainingID, disappearingID, remainingDocument, changedIn, changedBy, collection, jsonld)
+
+        if (elastic) {
+            String remainingSystemID = storage.getSystemIdByIri(remainingID)
+            String disappearingSystemID = storage.getSystemIdByIri(disappearingID)
+            List<Tuple2<String, String>> dependerRows = storage.followDependers(remainingSystemID, JsonLd.NON_DEPENDANT_RELATIONS)
+            dependerRows.addAll( storage.followDependers(disappearingSystemID) )
+            List<String> dependerSystemIDs = []
+            for (Tuple2<String, String> dependerRow : dependerRows) {
+                dependerSystemIDs.add( (String) dependerRow.get(0) )
+            }
+            Map<String, Document> dependerDocuments = bulkLoad(dependerSystemIDs)
+
+            List<Document> authDocs = []
+            List<Document> bibDocs = []
+            List<Document> holdDocs = []
+            for (Object key : dependerDocuments.keySet()) {
+                Document doc = dependerDocuments.get(key)
+                String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
+                if (dependerCollection.equals("auth"))
+                    authDocs.add(doc)
+                else if (dependerCollection.equals("bib"))
+                    bibDocs.add(doc)
+                else if (dependerCollection.equals("hold"))
+                    holdDocs.add(doc)
+            }
+
+            elastic.bulkIndex(authDocs, "auth", this)
+            elastic.bulkIndex(bibDocs, "bib", this)
+            elastic.bulkIndex(holdDocs, "hold", this)
+        }
+
     }
 
     private static final List<String> EMBELLISH_LENSES = ['cards', 'chips', 'chips']
@@ -368,8 +418,30 @@ class Whelk implements Storage {
         return doc
     }
 
+    long getIncomingLinkCount(String idOrIri) {
+        return storage.getIncomingLinkCount(tryGetSystemId(idOrIri))
+    }
+
+    List<String> findIdsLinkingTo(String idOrIri, int limit, int offset) {
+        return storage.getIncomingLinkIdsPaginated(tryGetSystemId(idOrIri), limit, offset)
+    }
+
     List<Document> getAttachedHoldings(List<String> thingIdentifiers) {
         return storage.getAttachedHoldings(thingIdentifiers).collect(this.&loadEmbellished)
+    }
+
+    private String tryGetSystemId(String id) {
+        String systemId = storage.getSystemIdByThingId(id)
+        if (systemId == null) {
+            systemId = stripBaseUri(id)
+        }
+        return systemId
+    }
+
+    private static String stripBaseUri(String identifier) {
+        return identifier.startsWith(Document.BASE_URI.toString())
+                ? identifier.substring(Document.BASE_URI.toString().length())
+                : identifier
     }
 
     private boolean batchJobThread() {

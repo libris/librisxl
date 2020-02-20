@@ -19,6 +19,7 @@ import whelk.exception.TooHighEncodingLevelException
 import whelk.exception.WhelkException
 import whelk.exception.WhelkRuntimeException
 import whelk.filter.LinkFinder
+import whelk.util.LegacyIntegrationTools
 
 import javax.sql.DataSource
 import java.sql.Array
@@ -80,6 +81,7 @@ class PostgreSQLComponent implements Storage {
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String GET_INCOMING_LINK_COUNT
     protected String GET_DEPENDERS, GET_DEPENDENCIES
+    protected String GET_INCOMING_LINK_IDS_PAGINATED
     protected String GET_DEPENDENCIES_OF_TYPE, GET_DEPENDERS_OF_TYPE
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
     protected String QUERY_LD_API
@@ -276,7 +278,7 @@ class PostgreSQLComponent implements Storage {
                 "FROM lddb__cards card, lddb doc WHERE doc.id = card.id AND doc.id = ?"
 
         GET_DEPENDERS = "SELECT DISTINCT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id"
-
+        GET_INCOMING_LINK_IDS_PAGINATED = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id LIMIT ? OFFSET ?"
         GET_INCOMING_LINK_COUNT = "SELECT COUNT(id) FROM $dependenciesTableName WHERE dependsOnId = ?"
         GET_DEPENDENCIES = "SELECT DISTINCT dependsOnId FROM $dependenciesTableName WHERE id = ? ORDER BY dependsOnId"
 
@@ -520,6 +522,102 @@ class PostgreSQLComponent implements Storage {
         }
         finally {
             close(resultSet, selectStatement, connection)
+        }
+    }
+
+    /**
+     * Remove both the document at 'remainingID' and the one at 'disapperaingID' and replace them
+     * with 'remainingDocument' at 'remainingID'.
+     *
+     * Will throw exception if 'remainingDocument' does not internally have id set to 'remainingID'
+     *
+     * The replacement is done atomically within a transaction.
+     */
+    void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn,
+                              String changedBy, String collection, JsonLd jsonld) {
+        Connection connection = getConnection()
+        connection.setAutoCommit(false)
+        PreparedStatement selectStatement = null
+        PreparedStatement updateStatement = null
+        ResultSet resultSet = null
+
+        try {
+            if (remainingDocument.getCompleteId() != remainingID)
+                throw new RuntimeException("Bad merge argument, remaining document must have the remaining ID.")
+
+            String remainingSystemID = getSystemIdByIri(remainingID, connection)
+            String disappearingSystemID = getSystemIdByIri(disappearingID, connection)
+
+            if (remainingSystemID == disappearingSystemID)
+                throw new SQLException("Cannot self-merge.")
+
+            // Update the remaining record
+            selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
+            selectStatement.setString(1, remainingSystemID)
+            resultSet = selectStatement.executeQuery()
+            if (!resultSet.next())
+                throw new SQLException("There is no document with the id: " + remainingID)
+            Date createdTime = new Date(resultSet.getTimestamp("created").getTime())
+            Document documentToBeReplaced = assembleDocument(resultSet)
+            if (documentToBeReplaced.deleted)
+                throw new SQLException("Not allowed to merge deleted record: " + remainingID)
+            resultSet.close()
+            Date modTime = new Date()
+            remainingDocument.setModified(modTime)
+            updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
+            rigUpdateStatement(updateStatement, remainingDocument, modTime, changedIn, changedBy, collection, false)
+            updateStatement.execute()
+            saveVersion(remainingDocument, connection, createdTime, modTime, changedIn, changedBy, collection, false)
+            refreshDerivativeTables(remainingDocument, connection, false)
+
+            // Update the disappearing record
+            selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
+            selectStatement.setString(1, disappearingSystemID)
+            resultSet = selectStatement.executeQuery()
+            if (!resultSet.next())
+                throw new SQLException("There is no document with the id: " + disappearingID)
+            Document disappearingDocument = assembleDocument(resultSet)
+            if (disappearingDocument.deleted)
+                throw new SQLException("Not allowed to merge deleted record: " + disappearingID)
+            disappearingDocument.setDeleted(true)
+            disappearingDocument.setModified(modTime)
+            createdTime = new Date(resultSet.getTimestamp("created").getTime())
+            resultSet.close()
+            updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
+            rigUpdateStatement(updateStatement, disappearingDocument, modTime, changedIn, changedBy, collection, true)
+            updateStatement.execute()
+            saveVersion(disappearingDocument, connection, createdTime, modTime, changedIn, changedBy, collection, true)
+            saveIdentifiers(disappearingDocument, connection, true, true)
+            saveDependencies(disappearingDocument, connection)
+            deleteCard(disappearingSystemID, connection)
+
+            // Update dependers on the disappearing record
+            SortedSet<String> dependers = getDependencyData(disappearingSystemID, GET_DEPENDERS, connection)
+            for (String dependerShortId : dependers) {
+                selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
+                selectStatement.setString(1, dependerShortId)
+                resultSet = selectStatement.executeQuery()
+                if (!resultSet.next())
+                    throw new SQLException("There is no document with the id: " + dependerShortId + ", the document was to be updated because of merge of " + remainingID + " and " + disappearingID)
+                Document dependerDoc = assembleDocument(resultSet)
+                if (linkFinder != null)
+                    linkFinder.normalizeIdentifiers(dependerDoc, connection)
+                dependerDoc.setModified(modTime)
+                updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
+                String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, jsonld)
+                rigUpdateStatement(updateStatement, dependerDoc, modTime, changedIn, changedBy, dependerCollection, false)
+                updateStatement.execute()
+                updateStatement.close()
+                refreshDerivativeTables(dependerDoc, connection, false)
+            }
+
+            // All done
+            connection.commit()
+        } catch (Throwable e) {
+            connection.rollback()
+            throw e
+        } finally {
+            close(resultSet, selectStatement, updateStatement, connection)
         }
     }
 
@@ -1471,6 +1569,27 @@ class PostgreSQLComponent implements Storage {
             rs.next()
             return rs.getInt(1)
         } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    List<String> getIncomingLinkIdsPaginated(String id, int limit, int offset) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            preparedStatement = connection.prepareStatement(GET_INCOMING_LINK_IDS_PAGINATED)
+            preparedStatement.setString(1, id)
+            preparedStatement.setInt(2, limit)
+            preparedStatement.setInt(3, offset)
+            rs = preparedStatement.executeQuery()
+            List<String> result = new ArrayList<>(limit)
+            while (rs.next()) {
+                result.add( rs.getString(1) )
+            }
+            return result
+        }
+        finally {
             close(rs, preparedStatement, connection)
         }
     }
