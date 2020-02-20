@@ -122,13 +122,13 @@ class SearchUtils {
         log.debug("findReverse. o: ${iri}, _lens: ${lens}")
 
         Map<String, String[]> parameters = [
+                'q': '*',
                 '_limit': [limit.toString()],
                 '_offset': [offset.toString()],
                 '_sort': ['_doc'],
-                '_fields': ['_links'],
-                '_terms': [iri],
+                '_links': [iri],
         ]
-        Map esResult = esQuery.doQueryIdsByTerm(parameters)
+        Map esResult = esQuery.doQueryIds(parameters, null)
 
         int total = 0
         if (esResult['totalHits']) {

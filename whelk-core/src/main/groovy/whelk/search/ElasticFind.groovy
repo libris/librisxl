@@ -12,11 +12,6 @@ class ElasticFind {
         this.esQuery = esQuery
     }
 
-    Iterable<String> findIdsByTerm(Map<String, List<String>> parameters) {
-        def q = { int offset -> esQuery.doQueryIdsByTerm(makeParams(parameters, offset)) }
-        return query(q)
-    }
-
     Iterable<String> findIds(Map<String, List<String>> parameters) {
         def q = { int offset -> esQuery.doQueryIds(makeParams(parameters, offset), null) }
         return query(q)
