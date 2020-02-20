@@ -2,11 +2,8 @@ package whelk
 
 import spock.lang.Specification
 import spock.lang.Unroll
-import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
-import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
-import whelk.util.PropertyLoader
 
 import java.sql.Timestamp
 

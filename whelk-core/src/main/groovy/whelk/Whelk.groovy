@@ -13,6 +13,9 @@ import whelk.search.ElasticFind
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 
+import java.util.function.BiFunction
+import java.util.function.Function
+
 /**
  * The Whelk is the root component of the XL system.
  */
@@ -363,53 +366,8 @@ class Whelk implements Storage {
 
     }
 
-    private static final List<String> EMBELLISH_LENSES = ['cards', 'chips', 'chips']
     void embellish(Document document, boolean filterOutNonChipTerms = false) {
-        List<String> convertedExternalLinks = jsonld.expandLinks(document.getExternalRefs()).collect { it.iri }
-
-        Set<String> visitedIris = new HashSet<>()
-        visitedIris.add(document.getThingIdentifiers().first())
-        Iterable<Map> previousDepthDocs = [document.data]
-        List docs = []
-        List<String> iris = convertedExternalLinks
-        for (String lens : EMBELLISH_LENSES) {
-            def cards = storage.getCards((List<String>) iris).collect()
-            visitedIris.addAll(iris)
-
-            previousDepthDocs.each { insertInverseCards(lens, it, cards, visitedIris) }
-
-            if (lens == 'chips') {
-                cards = cards.collect{ (Map) jsonld.toChip(it) }
-            }
-
-            previousDepthDocs = cards
-            docs.addAll(cards)
-            iris = (List<String>) cards.collect{ JsonLd.getExternalReferences((Map) it).collect{ it.iri } }.flatten()
-            iris.removeAll(visitedIris)
-        }
-        previousDepthDocs.each { insertInverseCards(EMBELLISH_LENSES.last(), it, [], visitedIris) } // TODO: no cards here
-
-        jsonld.embellish(document.data, docs, filterOutNonChipTerms)
-    }
-
-    private void insertInverseCards(String lens, Map thing, List<Map> cards, Set<String> visitedIris) {
-        Set<String> inverseRelations = jsonld.getInverseProperties(thing, lens)
-        if (inverseRelations.size() > 0) {
-            String iri = new Document(thing).getThingIdentifiers().first() // TODO : sketchy
-            for (String relation : inverseRelations) {
-                Set<String> iris = relations.getByReverse(iri, [relation])
-                if (iris.size() > 0) {
-                    Map theThing = ((List) thing['@graph'])[1]
-                    if (!theThing['@reverse']) {
-                        theThing['@reverse'] = [:]
-                    }
-                    theThing['@reverse'][relation] = iris.collect { ["@id": it] }
-                    iris.removeAll(visitedIris)
-                    cards.addAll(storage.getCards(iris))
-                    visitedIris.addAll(iris)
-                }
-            }
-        }
+        new Embellisher(jsonld, storage.&getCards, relations.&getByReverse).embellish(document, filterOutNonChipTerms)
     }
 
     Document loadEmbellished(String systemId) {
