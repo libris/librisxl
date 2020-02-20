@@ -22,7 +22,7 @@ BEGIN
    UPDATE lddb__schema SET version = new_version;
 
    -- ACTUAL SCHEMA CHANGES HERE:
-   ALTER TABLE lddb__dependencies DROP COLUMN inCard;
+   ALTER TABLE lddb__dependencies DROP COLUMN IF EXISTS inCard;
 
 END$$;
 
