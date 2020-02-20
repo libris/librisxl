@@ -12,9 +12,7 @@ import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
-
-import java.util.function.BiFunction
-import java.util.function.Function
+import whelk.util.Util
 
 /**
  * The Whelk is the root component of the XL system.
@@ -202,7 +200,10 @@ class Whelk implements Storage {
 
     private Iterable<String> getAffectedIds(Document document) {
         List<String> iris = document.getThingIdentifiers()
-        return elasticFind.findIdsByTerm(["_terms": iris, "_fields": ["_links", "_transitiveDependencies"]])
+        return Util.lazyIterableChain((GroovyCollections.combinations([["_links", "_transitiveDependencies"], iris] as Iterable))
+                .collect { String field, String iri ->
+                    return { ->  elasticFind.findIds(['q': ["*"], (field): [iri]]) }
+                })
     }
 
     /**
