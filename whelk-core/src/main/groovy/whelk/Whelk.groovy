@@ -418,30 +418,8 @@ class Whelk implements Storage {
         return doc
     }
 
-    long getIncomingLinkCount(String idOrIri) {
-        return storage.getIncomingLinkCount(tryGetSystemId(idOrIri))
-    }
-
-    List<String> findIdsLinkingTo(String idOrIri, int limit, int offset) {
-        return storage.getIncomingLinkIdsPaginated(tryGetSystemId(idOrIri), limit, offset)
-    }
-
     List<Document> getAttachedHoldings(List<String> thingIdentifiers) {
         return storage.getAttachedHoldings(thingIdentifiers).collect(this.&loadEmbellished)
-    }
-
-    private String tryGetSystemId(String id) {
-        String systemId = storage.getSystemIdByThingId(id)
-        if (systemId == null) {
-            systemId = stripBaseUri(id)
-        }
-        return systemId
-    }
-
-    private static String stripBaseUri(String identifier) {
-        return identifier.startsWith(Document.BASE_URI.toString())
-                ? identifier.substring(Document.BASE_URI.toString().length())
-                : identifier
     }
 
     private boolean batchJobThread() {

@@ -80,8 +80,7 @@ class PostgreSQLComponent implements Storage {
                                            GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE, GET_COLLECTION_BY_SYSTEM_ID
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String GET_INCOMING_LINK_COUNT
-    protected String GET_DEPENDERS, GET_DEPENDENCIES
-    protected String GET_INCOMING_LINK_IDS_PAGINATED
+    protected String GET_DEPENDERS
     protected String GET_DEPENDENCIES_OF_TYPE, GET_DEPENDERS_OF_TYPE
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
     protected String QUERY_LD_API
@@ -278,9 +277,7 @@ class PostgreSQLComponent implements Storage {
                 "FROM lddb__cards card, lddb doc WHERE doc.id = card.id AND doc.id = ?"
 
         GET_DEPENDERS = "SELECT DISTINCT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id"
-        GET_INCOMING_LINK_IDS_PAGINATED = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id LIMIT ? OFFSET ?"
         GET_INCOMING_LINK_COUNT = "SELECT COUNT(id) FROM $dependenciesTableName WHERE dependsOnId = ?"
-        GET_DEPENDENCIES = "SELECT DISTINCT dependsOnId FROM $dependenciesTableName WHERE id = ? ORDER BY dependsOnId"
 
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
         GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
@@ -1570,45 +1567,6 @@ class PostgreSQLComponent implements Storage {
             return rs.getInt(1)
         } finally {
             close(rs, preparedStatement, connection)
-        }
-    }
-
-    List<String> getIncomingLinkIdsPaginated(String id, int limit, int offset) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(GET_INCOMING_LINK_IDS_PAGINATED)
-            preparedStatement.setString(1, id)
-            preparedStatement.setInt(2, limit)
-            preparedStatement.setInt(3, offset)
-            rs = preparedStatement.executeQuery()
-            List<String> result = new ArrayList<>(limit)
-            while (rs.next()) {
-                result.add( rs.getString(1) )
-            }
-            return result
-        }
-        finally {
-            close(rs, preparedStatement, connection)
-        }
-    }
-
-    SortedSet<String> getDependers(String id) {
-        Connection connection = getConnection()
-        try {
-            getDependencyData(id, GET_DEPENDERS, connection)
-        } finally {
-            close(connection)
-        }
-    }
-
-    SortedSet<String> getDependencies(String id) {
-        Connection connection = getConnection()
-        try {
-            getDependencyData(id, GET_DEPENDENCIES, connection)
-        } finally {
-            close(connection)
         }
     }
 
