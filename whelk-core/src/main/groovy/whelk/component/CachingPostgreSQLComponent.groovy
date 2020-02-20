@@ -26,7 +26,7 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
 
     @Override
     Iterable<Map> getCards(Iterable<String> iris) {
-        cardCache.getAll(iris).values()
+        cardCache.getAll(iris).values().findAll{ !it.isEmpty() }
     }
 
     @Override
@@ -38,25 +38,23 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
     protected boolean storeCard(CardEntry cardEntry, Connection connection) {
         boolean change = super.storeCard(cardEntry, connection)
         Document card = cardEntry.getCard()
-        cardCache.put(card.getShortId(), card.data)
+        card.getThingIdentifiers().each { id ->
+            cardCache.put(id, card.data)
+        }
+
         return change
     }
 
     @Override
-    protected void deleteCard(String systemId, Connection connection) {
-        super.deleteCard(systemId, connection)
-        cardCache.invalidate(systemId)
+    protected void deleteCard(Document doc, Connection connection) {
+        super.deleteCard(doc, connection)
+        doc.getThingIdentifiers().each { id ->
+            cardCache.invalidate(id)
+        }
     }
 
     private Map superGetCard(String iri) {
         return super.getCard(iri)
-    }
-
-    private Map<String, Map> superGetCards(Iterable<String> iris) {
-        def irisToIds = getSystemIdsByIris(iris)
-        def cards = createAndAddMissingCards(bulkLoadCards(irisToIds.values()))
-        cards.put("MISSING", ['@graph':[]]) // TODO : clean up
-        return iris.collectEntries { [it, cards.get(irisToIds.get(it) ?: "MISSING")] }
     }
 
     void initCaches() {
@@ -71,7 +69,10 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
 
                     @Override
                     Map<String, Map> loadAll(Iterable<? extends String> iris) throws Exception {
-                        return superGetCards(iris)
+                        def irisToIds = getSystemIdsByIris(iris)
+                        def cards = createAndAddMissingCards(bulkLoadCards(irisToIds.values()))
+                        cards.put('NON-EXISTING', Collections.emptyMap())
+                        return iris.collectEntries { [it, cards.get(irisToIds.get(it) ?: "NON-EXISTING")] }
                     }
                 })
     }

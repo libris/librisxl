@@ -586,7 +586,7 @@ class PostgreSQLComponent implements Storage {
             saveVersion(disappearingDocument, connection, createdTime, modTime, changedIn, changedBy, collection, true)
             saveIdentifiers(disappearingDocument, connection, true, true)
             saveDependencies(disappearingDocument, connection)
-            deleteCard(disappearingSystemID, connection)
+            deleteCard(disappearingDocument, connection)
 
             // Update dependers on the disappearing record
             SortedSet<String> dependers = getDependencyData(disappearingSystemID, GET_DEPENDERS, connection)
@@ -755,7 +755,7 @@ class PostgreSQLComponent implements Storage {
 
         if (jsonld) {
             if (deleted) {
-                deleteCard(doc.getShortId(), connection)
+                deleteCard(doc, connection)
             } else {
                 updateCard(new CardEntry(doc), connection)
             }
@@ -908,7 +908,8 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    protected void deleteCard(String systemId, Connection connection) {
+    protected void deleteCard(Document doc, Connection connection) {
+        String systemId = getSystemIdByIri(doc.getThingIdentifiers().first())
         PreparedStatement preparedStatement = null
         try {
             preparedStatement = connection.prepareStatement(DELETE_CARD)
