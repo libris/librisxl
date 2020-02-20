@@ -925,7 +925,7 @@ class JsonLd {
     }
 
     private static boolean shouldKeep(String key, List propertiesToKeep) {
-        return (key == RECORD_KEY || key == THING_KEY ||
+        return (key == RECORD_KEY || key == THING_KEY || key == JSONLD_ALT_ID_KEY ||
                 key in propertiesToKeep || key.startsWith("@"))
     }
 
