@@ -1193,7 +1193,8 @@ class Link {
 }
 
 class Embellisher {
-    static final List<String> EMBELLISH_LENSES = ['cards', 'chips', 'chips']
+    static final List<String> EMBELLISH_LEVELS = ['cards', 'chips', 'chips']
+    static final int MAX_REVERSE_LINKS = 50
 
     JsonLd jsonld
     Function<Iterable<String>, Iterable<Map>> getCards
@@ -1210,50 +1211,70 @@ class Embellisher {
     }
 
     void embellish(Document document, boolean filterOutNonChipTerms = false) {
-        List<String> convertedExternalLinks = jsonld.expandLinks(document.getExternalRefs()).collect { it.iri }
+        jsonld.embellish(document.data, getEmbellishData(document), filterOutNonChipTerms)
+    }
+
+    private List getEmbellishData(Document document) {
+        Iterable<Map> start = [document.data]
 
         Set<String> visitedIris = new HashSet<>()
         visitedIris.add(document.getThingIdentifiers().first())
-        Iterable<Map> previousDepthDocs = [document.data]
-        List docs = []
-        List<String> iris = convertedExternalLinks
-        for (String lens : EMBELLISH_LENSES) {
+
+        List<String> iris = getAllLinks(start)
+        Iterable<Map> previousLevelDocs = start
+        List embellishData = []
+        for (String lens : EMBELLISH_LEVELS) {
             def cards = getCards.apply((List<String>) iris).collect()
             visitedIris.addAll(iris)
 
-            previousDepthDocs.each { insertInverseCards(lens, it, cards, visitedIris) }
+            previousLevelDocs.each { insertInverseCards(lens, it, cards, visitedIris) }
 
             if (lens == 'chips') {
                 cards = cards.collect{ (Map) jsonld.toChip(it) }
             }
 
-            previousDepthDocs = cards
-            docs.addAll(cards)
-            iris = (List<String>) cards.collect{ JsonLd.getExternalReferences((Map) it).collect{ it.iri } }.flatten()
+            previousLevelDocs = cards
+            embellishData.addAll(cards)
+
+            iris = getAllLinks(cards)
             iris.removeAll(visitedIris)
         }
-        previousDepthDocs.each { insertInverseCards(EMBELLISH_LENSES.last(), it, [], visitedIris) }
+        // Last level: add reverse links, but not the documents linking here
+        previousLevelDocs.each { insertInverseCards(EMBELLISH_LEVELS.last(), it, [], visitedIris) }
 
-        jsonld.embellish(document.data, docs, filterOutNonChipTerms)
+        return embellishData
+    }
+
+    private List<String> getAllLinks(Iterable<Map> docs) {
+        (List<String>) docs.collect{ JsonLd.getExternalReferences((Map) it).collect{ it.iri } }.flatten()
     }
 
     private void insertInverseCards(String lens, Map thing, List<Map> cards, Set<String> visitedIris) {
         Set<String> inverseRelations = jsonld.getInverseProperties(thing, lens)
-        if (inverseRelations.size() > 0) {
-            String iri = new Document(thing).getThingIdentifiers().first()
-            for (String relation : inverseRelations) {
-                Set<String> irisLinkingHere = getByReverseRelation.apply(iri, [relation])
-                if (irisLinkingHere.size() > 0) {
-                    Map theThing = ((List) thing['@graph'])[1]
-                    if (!theThing['@reverse']) {
-                        theThing['@reverse'] = [:]
-                    }
-                    theThing['@reverse'][relation] = irisLinkingHere.collect { ["@id": it] }
-                    irisLinkingHere.removeAll(visitedIris)
-                    cards.addAll(getCards.apply(irisLinkingHere))
-                    visitedIris.addAll(irisLinkingHere)
-                }
+        if (inverseRelations.isEmpty()) {
+            return
+        }
+
+        String iri = new Document(thing).getThingIdentifiers().first()
+        for (String relation : inverseRelations) {
+            Set<String> irisLinkingHere = getByReverseRelation.apply(iri, [relation])
+            if (irisLinkingHere.isEmpty()) {
+                continue
             }
+
+            if (irisLinkingHere.size() > MAX_REVERSE_LINKS) {
+                irisLinkingHere = irisLinkingHere.take(MAX_REVERSE_LINKS).toSet()
+            }
+
+            Map theThing = ((List) thing[JsonLd.GRAPH_KEY])[1]
+            if (!theThing[JsonLd.REVERSE_KEY]) {
+                theThing[JsonLd.REVERSE_KEY] = [:]
+            }
+
+            theThing[JsonLd.REVERSE_KEY][relation] = irisLinkingHere.collect { [(JsonLd.ID_KEY): it] }
+            irisLinkingHere.removeAll(visitedIris)
+            cards.addAll(getCards.apply(irisLinkingHere))
+            visitedIris.addAll(irisLinkingHere)
         }
     }
 }
