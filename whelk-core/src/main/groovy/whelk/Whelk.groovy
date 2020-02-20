@@ -149,19 +149,15 @@ class Whelk implements Storage {
     }
 
     private void reindexAffected(Document document, Set<String> preUpdateDependencies) {
-        TreeSet<String> idsToReindex = new TreeSet<>()
-        if (storage.isCardChanged(document.getShortId())) {
-            List<Tuple2<String, String>> dependers = storage.followEmbellishDependers(document.getShortId())
-
-            // Filter out "itemOf"-links. In other words, do not bother reindexing hold posts (they're not embellished in elastic)
-            for (Tuple2<String, String> depender : dependers) {
-                if (depender.getSecond() != "itemOf") {
-                    idsToReindex.add(depender.getFirst())
-                }
-            }
-        }
-
         Runnable reindex = {
+            elastic.index(document, storage.getCollectionBySystemID(document.shortId), this)
+
+            // FIXME: some day this will be too big too keep in memory...
+            // FIXME: state is lost on restart
+            Set<String> idsToReindex = storage.isCardChanged(document.getShortId())
+                    ? storage.followEmbellishDependers(document.getShortId())
+                    : new HashSet<String>()
+
             long t1 = System.currentTimeMillis()
             if (idsToReindex.size() > 100 ) {
                 log.info("Reindexing ${idsToReindex.size()} affected documents")
@@ -179,8 +175,8 @@ class Whelk implements Storage {
             }
         }
 
-        // If the number of dependers isn't too large or we are inside a batch job. Update them synchronously
-        if (idsToReindex.size() < 20 || batchJobThread() ) {
+        // If we are inside a batch job. Update them synchronously
+        if (batchJobThread()) {
             reindex.run()
         } else {
             // else use a fire-and-forget thread

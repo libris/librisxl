@@ -50,6 +50,8 @@ import static java.sql.Types.OTHER
 @Log
 @CompileStatic
 class PostgreSQLComponent implements Storage {
+    public static final int MAX_EMBELLISH_DEPTH = 4
+
     public static final String PROPERTY_SQL_URL = "sqlUrl"
     public static final String PROPERTY_SQL_MAIN_TABLE_NAME = "sqlMaintable"
     public static final String PROPERTY_SQL_MAX_POOL_SIZE = "sqlMaxPoolSize"
@@ -83,6 +85,8 @@ class PostgreSQLComponent implements Storage {
     protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String GET_INCOMING_LINK_COUNT
     protected String GET_DEPENDERS, GET_DEPENDENCIES
+    protected String GET_IN_CARD_DEPENDENCIES
+    protected String GET_EMBELLISH_DEPENDERS
     protected String GET_INCOMING_LINK_IDS_PAGINATED
     protected String GET_DEPENDENCIES_OF_TYPE, GET_DEPENDERS_OF_TYPE
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
@@ -99,11 +103,8 @@ class PostgreSQLComponent implements Storage {
     protected String GET_CARD
     protected String CARD_EXISTS
     protected String DELETE_CARD
-    protected String GET_CARDS_FOR_EMBELLISH
-    protected String GET_IDS_FOR_EMBELLISH
     protected String BULK_LOAD_CARDS
     protected String IS_CARD_CHANGED
-    protected String FOLLOW_EMBELLISH_DEPENDERS
 
     String mainTableName
     LinkFinder linkFinder
@@ -279,59 +280,6 @@ class PostgreSQLComponent implements Storage {
                 ") " +
                 "SELECT * FROM deps"
 
-        // Start with an ARRAY of IRIs and convert them to SystemIDs.
-        // Then recursively load SystemIDs by following in-card-relations (given by $dependenciesTableName.incard)
-        GET_IDS_FOR_EMBELLISH = """
-                WITH RECURSIVE deps(id) AS ( 
-                        SELECT i.id from unnest(?) as in_iri 
-                        INNER JOIN $idTableName i ON in_iri = i.iri 
-                    UNION 
-                        SELECT d.dependsonid 
-                        FROM $dependenciesTableName d 
-                        INNER JOIN deps deps1 ON d.id = deps1.id 
-                        AND d.incard  
-                        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS)
-                    ) 
-                SELECT id FROM deps
-                """.stripIndent()
-
-        // Same as GET_IDS_FOR_EMBELLISH but also try to join in card data for all SystemIDs.
-        GET_CARDS_FOR_EMBELLISH = """
-                WITH RECURSIVE deps(id, card) AS ( 
-                        SELECT i.id, c.data from unnest(?) as in_iri 
-                        INNER JOIN $idTableName i ON in_iri = i.iri 
-                        LEFT JOIN $cardsTableName c on i.id = c.id 
-                    UNION 
-                        SELECT d.dependsonid, c.data 
-                        FROM $dependenciesTableName d 
-                        INNER JOIN deps deps1 ON d.id = deps1.id 
-                        AND d.incard
-                        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS)
-                        LEFT JOIN $cardsTableName c on d.dependsonid = c.id 
-                    ) 
-                SELECT id, card FROM deps
-                """.stripIndent()
-
-        // Starting with a SystemID, find all SystemIDs that have the ID in their "embellish dependencies"
-        // , i.e. it is part of their embellished document.
-        // Going backwards from SystemID:
-        // - Recursively follow in-card-relations backwards.
-        // - Also follow not-in-card-relations (since embellish starts from the full doc) but stop at them.
-        // Don't include the starting ID in the result
-        FOLLOW_EMBELLISH_DEPENDERS = """
-                WITH RECURSIVE deps(id, relation, incard) AS ( 
-                        VALUES (?, null, true) 
-                    UNION 
-                        SELECT d.id, d.relation, d.incard 
-                        FROM $dependenciesTableName d 
-                        INNER JOIN deps results ON d.dependsonid = results.id 
-                        AND results.incard 
-                        AND d.relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS)
-                        AND d.id != ? 
-                    ) 
-                SELECT id, relation FROM deps OFFSET 1
-                """.stripIndent()
-
         BULK_LOAD_CARDS = "SELECT in_id as id, data from unnest(?) as in_id LEFT JOIN $cardsTableName c ON in_id = c.id"
 
         IS_CARD_CHANGED = "SELECT card.changed >= doc.modified " +
@@ -341,6 +289,17 @@ class PostgreSQLComponent implements Storage {
         GET_INCOMING_LINK_IDS_PAGINATED = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id LIMIT ? OFFSET ?"
         GET_INCOMING_LINK_COUNT = "SELECT COUNT(id) FROM $dependenciesTableName WHERE dependsOnId = ?"
         GET_DEPENDENCIES = "SELECT DISTINCT dependsOnId FROM $dependenciesTableName WHERE id = ? ORDER BY dependsOnId"
+        GET_IN_CARD_DEPENDENCIES = """
+                SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND inCard
+                AND relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS)
+                ORDER BY dependsOnId
+                """.stripIndent()
+
+        GET_EMBELLISH_DEPENDERS = """
+                SELECT id, incard FROM $dependenciesTableName WHERE dependsOnId = ANY (?) 
+                AND relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS, 'itemOf')
+                """.stripIndent()
+
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
         GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
 
@@ -903,7 +862,7 @@ class PostgreSQLComponent implements Storage {
      * @return data of cards
      */
     Iterable<Map> getCardsForEmbellish(List<String> startIris) {
-        return addMissingCards(getIdsAndCardsForEmbellish(startIris)).values()
+        return createAndAddMissingCards(bulkLoadCards(getIdsForEmbellish(startIris))).values()
     }
 
     /**
@@ -931,28 +890,66 @@ class PostgreSQLComponent implements Storage {
     /**
      * Find all ids that depend on a card by having it in their embellish dependencies.
      * <p>i.e. the card + all cards that link to it, recursively + all documents that link to any of all these cards</p>
-     * Excluding {@link #EMBELLISH_EXCLUDE_RELATIONS}.
+     * Excluding {@link #EMBELLISH_EXCLUDE_RELATIONS} AND itemOf.
      *
      * @param systemId id of card
-     * @return a list of depender (id, relation) tuples
+     * @return a set of depender system ids
      */
-    List<Tuple2<String, String>> followEmbellishDependers(String systemId) {
-        Connection connection = getConnection()
+    Set<String> followEmbellishDependers(String systemId) {
+        // we can reach the same doc both as a card (continue) and as a full doc (stop) through different paths
+        Set<Tuple2<String, Boolean>> visited = new HashSet<>()
+
+        LinkedList<String> queue = new LinkedList<>()
+        LinkedList<String> nextDepthQueue = new LinkedList<>()
+        queue.add(systemId)
+        visited.add(new Tuple2(systemId, true))
+
+        int depth = MAX_EMBELLISH_DEPTH
+        while (depth-- > 0) {
+            while(!queue.isEmpty()) {
+                log.trace("followEmbellishDependers {}, depth:{}, queue size:{}, next queue size:{}",
+                        systemId, depth, queue.size(), nextDepthQueue.size())
+                followEmbellishDependersBatch(visited, queue, depth > 0 ? nextDepthQueue : null)
+            }
+            (queue, nextDepthQueue) = [nextDepthQueue, queue]
+        }
+
+        Set<String> result = new HashSet<>()
+        visited.each {t -> result.add(t.getFirst())}
+        result.remove(systemId)
+        log.trace("followEmbellishDependers {}, result size:{}", systemId, result.size())
+        return result
+    }
+
+    private void followEmbellishDependersBatch(Set<Tuple2<String, Boolean>> visited,
+                                               LinkedList<String> queue,
+                                               LinkedList<String> nextDepthQueue) {
+        final int QUERY_SIZE = 1000
+
+        int n = Math.min(QUERY_SIZE, queue.size())
+        def ids = new String[n]
+        n.times { i ->
+            ids[i] = queue.removeFirst()
+        }
+
+        Connection connection = getOuterConnection() // TODO need a separate pool for these potentially slow queries when inside rest app
         PreparedStatement preparedStatement = null
         ResultSet rs = null
+        Array array = null
         try {
-            preparedStatement = connection.prepareStatement(FOLLOW_EMBELLISH_DEPENDERS)
-            preparedStatement.setString(1, systemId)
-            preparedStatement.setString(2, systemId)
-
+            preparedStatement = connection.prepareStatement(GET_EMBELLISH_DEPENDERS)
+            array = connection.createArrayOf("TEXT", ids)
+            preparedStatement.setArray(1, array)
             rs = preparedStatement.executeQuery()
-            List<Tuple2<String, String>> result = []
             while(rs.next()) {
-                result << new Tuple2(rs.getString("id"), rs.getString("relation"))
+                String id = rs.getString("id")
+                boolean inCard = rs.getBoolean("inCard")
+                if (visited.add(new Tuple2(id, inCard)) && inCard && nextDepthQueue != null) {
+                    nextDepthQueue.add(id)
+                }
             }
-            return result
         } finally {
-            close(rs, preparedStatement, connection)
+            close(array, rs, preparedStatement, connection)
         }
     }
 
@@ -1034,42 +1031,35 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    protected Map<String, Map> getIdsAndCardsForEmbellish(List<String> startIris) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(GET_CARDS_FOR_EMBELLISH)
-            preparedStatement.setArray(1,  connection.createArrayOf("TEXT", startIris as String[]))
-
-            rs = preparedStatement.executeQuery()
-            Map<String, Map> result = [:]
-            while(rs.next()) {
-                String card = rs.getString("card")
-                result[rs.getString("id")] = card != null ? mapper.readValue(card, Map) : null
+    protected SortedSet<String> getIdsForEmbellish(List<String> startIris) {
+        SortedSet<String> result = new TreeSet<>()
+        Queue<Tuple2<String, Integer>> queue = new LinkedList<>()
+        getConnection().withCloseable { connection ->
+            getSystemIds(startIris, connection) { String iri, String systemId, boolean deleted ->
+                result.add(systemId)
+                queue.add(new Tuple2(systemId, 1))
             }
-            return result
-        } finally {
-            close(rs, preparedStatement, connection)
         }
+
+        while (!queue.isEmpty()) {
+            def next = queue.poll()
+            String id = next.getFirst()
+            int depth = next.getSecond()
+
+            SortedSet<String> ids = getInCardDependencies(id)
+            ids.removeAll(result)
+            result.addAll(ids)
+            if (depth + 1 < MAX_EMBELLISH_DEPTH) {
+                ids.each { queue.add(new Tuple2(it, depth + 1)) }
+            }
+        }
+
+        return result
     }
 
-    protected SortedSet<String> getIdsForEmbellish(List<String> startIris) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(GET_IDS_FOR_EMBELLISH)
-            preparedStatement.setArray(1,  connection.createArrayOf("TEXT", startIris as String[]))
-
-            rs = preparedStatement.executeQuery()
-            SortedSet<String> result = new TreeSet<>()
-            while(rs.next()) {
-                result.add(rs.getString("id"))
-            }
-            return result
-        } finally {
-            close(rs, preparedStatement, connection)
+    protected SortedSet<String> getInCardDependencies(String id) {
+        getConnection().withCloseable { connection ->
+            return getDependencyData(id, GET_IN_CARD_DEPENDENCIES, connection)
         }
     }
 
@@ -1082,7 +1072,7 @@ class PostgreSQLComponent implements Storage {
             preparedStatement.setArray(1,  connection.createArrayOf("TEXT", ids as String[]))
 
             rs = preparedStatement.executeQuery()
-            Map<String, Map> result = [:]
+            SortedMap<String, Map> result = new TreeMap<>()
             while(rs.next()) {
                 String card = rs.getString("data")
                 result[rs.getString("id")] = card != null ? mapper.readValue(card, Map) : null
@@ -1129,7 +1119,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    protected Map<String, Map> addMissingCards(Map<String, Map> cards) {
+    protected Map<String, Map> createAndAddMissingCards(Map<String, Map> cards) {
         Map <String, Map> result = [:]
         cards.each { id, card ->
             result[id] = card ?: makeCardData(id)
@@ -2239,10 +2229,11 @@ class PostgreSQLComponent implements Storage {
         return outerConnectionPool
     }
 
-    DataSource createAdditionalConnectionPool(String name) {
+    DataSource createAdditionalConnectionPool(String name, int size = this.getPoolSize()) {
         HikariConfig config = new HikariConfig()
         connectionPool.copyStateTo(config)
         config.setPoolName(name)
+        config.setMaximumPoolSize(size)
         HikariDataSource pool = new HikariDataSource(config)
         log.info("Created additional connection pool: ${pool.getPoolName()}, max size:${pool.getMaximumPoolSize()}")
         return pool
