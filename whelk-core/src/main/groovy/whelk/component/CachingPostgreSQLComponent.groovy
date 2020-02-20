@@ -54,7 +54,7 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
 
     private Map<String, Map> superGetCards(Iterable<String> iris) {
         def irisToIds = getSystemIdsByIris(iris)
-        def cards = bulkLoadCards(irisToIds.values())
+        def cards = createAndAddMissingCards(bulkLoadCards(irisToIds.values()))
         cards.put("MISSING", ['@graph':[]]) // TODO : clean up
         return iris.collectEntries { [it, cards.get(irisToIds.get(it) ?: "MISSING")] }
     }
