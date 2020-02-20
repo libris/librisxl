@@ -508,6 +508,16 @@ class Document {
         return null
     }
 
+    Set<String> getEmbellishmentsIris() {
+        Set<String> result = new HashSet<>()
+        data[JsonLd.GRAPH_KEY].eachWithIndex{ def entry, int i ->
+            if (i > 1 && entry[JsonLd.GRAPH_KEY]) {
+                result.add(_get(thingIdPath2, entry))
+            }
+        }
+        return result
+    }
+
     /**
      * Return a list of external references in the doc.
      *

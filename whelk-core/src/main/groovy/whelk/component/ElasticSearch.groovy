@@ -234,16 +234,8 @@ class ElasticSearch {
 
         Set<String> links = whelk.jsonld.expandLinks(unEmbellished.getExternalRefs()).collect{ it.iri }
 
-        Set<String> transitiveDependencies = new HashSet<>()
-        doc.data['@graph'].eachWithIndex{ def entry, int i ->
-            if (i > 1 && entry['@graph']) {
-                transitiveDependencies.add(entry['@graph'][1]['@id'])
-            }
-        }
-        transitiveDependencies = transitiveDependencies - links
-
         doc.data['@graph'][1]['_links'] = links
-        doc.data['@graph'][1]['_transitiveDependencies'] = transitiveDependencies
+        doc.data['@graph'][1]['_transitiveDependencies'] = doc.getEmbellishmentsIris() - links
 
         doc.data['@graph'][1]['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
