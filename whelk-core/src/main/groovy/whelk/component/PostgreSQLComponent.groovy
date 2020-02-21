@@ -19,7 +19,6 @@ import whelk.exception.TooHighEncodingLevelException
 import whelk.exception.WhelkException
 import whelk.exception.WhelkRuntimeException
 import whelk.filter.LinkFinder
-import whelk.util.LegacyIntegrationTools
 
 import javax.sql.DataSource
 import java.sql.Array
@@ -82,9 +81,8 @@ class PostgreSQLComponent implements Storage {
                                            LOAD_RECORD_IDENTIFIERS, LOAD_THING_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
                                            GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, FOLLOW_DEPENDENCIES, FOLLOW_DEPENDERS,
                                            GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE, GET_COLLECTION_BY_SYSTEM_ID
-    protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String GET_INCOMING_LINK_COUNT
-    protected String GET_DEPENDERS, GET_DEPENDENCIES
+    protected String GET_DEPENDENCIES
     protected String GET_IN_CARD_DEPENDENCIES
     protected String GET_EMBELLISH_DEPENDERS
     protected String GET_INCOMING_LINK_IDS_PAGINATED
@@ -96,7 +94,6 @@ class PostgreSQLComponent implements Storage {
     protected String GET_SYSTEMIDS_BY_IRIS
     protected String GET_THING_MAIN_IRI_BY_SYSTEMID
     protected String GET_DOCUMENT_BY_IRI
-    protected String GET_MAX_MODIFIED
     protected String GET_LEGACY_PROFILE
     protected String UPSERT_CARD
     protected String UPDATE_CARD
@@ -173,7 +170,6 @@ class PostgreSQLComponent implements Storage {
         mainTableName = sqlMainTable
         String idTableName = mainTableName + "__identifiers"
         String versionsTableName = mainTableName + "__versions"
-        String settingsTableName = mainTableName + "__settings"
         String dependenciesTableName = mainTableName + "__dependencies"
         String profilesTableName = mainTableName + "__profiles"
         String cardsTableName = mainTableName + "__cards"
@@ -285,7 +281,6 @@ class PostgreSQLComponent implements Storage {
         IS_CARD_CHANGED = "SELECT card.changed >= doc.modified " +
                 "FROM lddb__cards card, lddb doc WHERE doc.id = card.id AND doc.id = ?"
 
-        GET_DEPENDERS = "SELECT DISTINCT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id"
         GET_INCOMING_LINK_IDS_PAGINATED = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id LIMIT ? OFFSET ?"
         GET_INCOMING_LINK_COUNT = "SELECT COUNT(id) FROM $dependenciesTableName WHERE dependsOnId = ?"
         GET_DEPENDENCIES = "SELECT DISTINCT dependsOnId FROM $dependenciesTableName WHERE id = ? ORDER BY dependsOnId"
@@ -303,14 +298,7 @@ class PostgreSQLComponent implements Storage {
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
         GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
 
-        GET_MAX_MODIFIED = "SELECT MAX(modified) from $mainTableName WHERE id IN (?)"
-
         QUERY_LD_API = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
-
-        // SQL for settings management
-        LOAD_SETTINGS = "SELECT key,settings FROM $settingsTableName where key = ?"
-        SAVE_SETTINGS = "WITH upsertsettings AS (UPDATE $settingsTableName SET settings = ? WHERE key = ? RETURNING *) " +
-                "INSERT INTO $settingsTableName (key, settings) SELECT ?,? WHERE NOT EXISTS (SELECT * FROM upsertsettings)"
 
         FIND_BY = "SELECT id, data, created, modified, deleted " +
                 "FROM $mainTableName " +
@@ -542,102 +530,6 @@ class PostgreSQLComponent implements Storage {
         }
         finally {
             close(resultSet, selectStatement, connection)
-        }
-    }
-
-    /**
-     * Remove both the document at 'remainingID' and the one at 'disapperaingID' and replace them
-     * with 'remainingDocument' at 'remainingID'.
-     *
-     * Will throw exception if 'remainingDocument' does not internally have id set to 'remainingID'
-     *
-     * The replacement is done atomically within a transaction.
-     */
-    void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn,
-                              String changedBy, String collection, JsonLd jsonld) {
-        Connection connection = getConnection()
-        connection.setAutoCommit(false)
-        PreparedStatement selectStatement = null
-        PreparedStatement updateStatement = null
-        ResultSet resultSet = null
-
-        try {
-            if (remainingDocument.getCompleteId() != remainingID)
-                throw new RuntimeException("Bad merge argument, remaining document must have the remaining ID.")
-
-            String remainingSystemID = getSystemIdByIri(remainingID, connection)
-            String disappearingSystemID = getSystemIdByIri(disappearingID, connection)
-
-            if (remainingSystemID == disappearingSystemID)
-                throw new SQLException("Cannot self-merge.")
-
-            // Update the remaining record
-            selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
-            selectStatement.setString(1, remainingSystemID)
-            resultSet = selectStatement.executeQuery()
-            if (!resultSet.next())
-                throw new SQLException("There is no document with the id: " + remainingID)
-            Date createdTime = new Date(resultSet.getTimestamp("created").getTime())
-            Document documentToBeReplaced = assembleDocument(resultSet)
-            if (documentToBeReplaced.deleted)
-                throw new SQLException("Not allowed to merge deleted record: " + remainingID)
-            resultSet.close()
-            Date modTime = new Date()
-            remainingDocument.setModified(modTime)
-            updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
-            rigUpdateStatement(updateStatement, remainingDocument, modTime, changedIn, changedBy, collection, false)
-            updateStatement.execute()
-            saveVersion(remainingDocument, connection, createdTime, modTime, changedIn, changedBy, collection, false)
-            refreshDerivativeTables(remainingDocument, connection, false)
-
-            // Update the disappearing record
-            selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
-            selectStatement.setString(1, disappearingSystemID)
-            resultSet = selectStatement.executeQuery()
-            if (!resultSet.next())
-                throw new SQLException("There is no document with the id: " + disappearingID)
-            Document disappearingDocument = assembleDocument(resultSet)
-            if (disappearingDocument.deleted)
-                throw new SQLException("Not allowed to merge deleted record: " + disappearingID)
-            disappearingDocument.setDeleted(true)
-            disappearingDocument.setModified(modTime)
-            createdTime = new Date(resultSet.getTimestamp("created").getTime())
-            resultSet.close()
-            updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
-            rigUpdateStatement(updateStatement, disappearingDocument, modTime, changedIn, changedBy, collection, true)
-            updateStatement.execute()
-            saveVersion(disappearingDocument, connection, createdTime, modTime, changedIn, changedBy, collection, true)
-            saveIdentifiers(disappearingDocument, connection, true, true)
-            saveDependencies(disappearingDocument, connection)
-            deleteCard(disappearingSystemID, connection)
-
-            // Update dependers on the disappearing record
-            SortedSet<String> dependers = getDependencyData(disappearingSystemID, GET_DEPENDERS, connection)
-            for (String dependerShortId : dependers) {
-                selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
-                selectStatement.setString(1, dependerShortId)
-                resultSet = selectStatement.executeQuery()
-                if (!resultSet.next())
-                    throw new SQLException("There is no document with the id: " + dependerShortId + ", the document was to be updated because of merge of " + remainingID + " and " + disappearingID)
-                Document dependerDoc = assembleDocument(resultSet)
-                if (linkFinder != null)
-                    linkFinder.normalizeIdentifiers(dependerDoc, connection)
-                dependerDoc.setModified(modTime)
-                updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
-                String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, jsonld)
-                rigUpdateStatement(updateStatement, dependerDoc, modTime, changedIn, changedBy, dependerCollection, false)
-                updateStatement.execute()
-                updateStatement.close()
-                refreshDerivativeTables(dependerDoc, connection, false)
-            }
-
-            // All done
-            connection.commit()
-        } catch (Throwable e) {
-            connection.rollback()
-            throw e
-        } finally {
-            close(resultSet, selectStatement, updateStatement, connection)
         }
     }
 
@@ -1542,29 +1434,6 @@ class PostgreSQLComponent implements Storage {
         return doc
     }
 
-    Timestamp getMaxModified(List<String> ids) {
-        Connection connection = null
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            connection = getConnection()
-            String expandedSql = GET_MAX_MODIFIED.replace('?', ids.collect { it -> '?' }.join(','))
-            preparedStatement = connection.prepareStatement(expandedSql)
-            for (int i = 0; i < ids.size(); ++i) {
-                preparedStatement.setString(i+1, ids.get(i))
-            }
-            rs = preparedStatement.executeQuery()
-            if (rs.next()) {
-                return (Timestamp) rs.getObject(1)
-            }
-            else
-                return null
-        }
-        finally {
-            close(rs, preparedStatement, connection)
-        }
-    }
-
     String getSystemIdByIri(String iri) {
         Connection connection = getConnection()
         try {
@@ -1757,15 +1626,6 @@ class PostgreSQLComponent implements Storage {
         }
         finally {
             close(rs, preparedStatement, connection)
-        }
-    }
-
-    SortedSet<String> getDependers(String id) {
-        Connection connection = getConnection()
-        try {
-            getDependencyData(id, GET_DEPENDERS, connection)
-        } finally {
-            close(connection)
         }
     }
 
@@ -2163,44 +2023,6 @@ class PostgreSQLComponent implements Storage {
             log.debug("Removed $numRemoved dependencies for id ${identifier}")
         } finally {
             close(removeDependencies, connection)
-        }
-    }
-
-    Map loadSettings(String key) {
-        Connection connection = getConnection()
-        PreparedStatement selectstmt = null
-        ResultSet rs = null
-        Map settings = [:]
-        try {
-            selectstmt = connection.prepareStatement(LOAD_SETTINGS)
-            selectstmt.setString(1, key)
-            rs = selectstmt.executeQuery()
-            if (rs.next()) {
-                settings = mapper.readValue(rs.getString("settings"), Map)
-            } else if (log.isTraceEnabled()) {
-                log.trace("No settings found for $key")
-            }
-        } finally {
-            close(rs, selectstmt, connection)
-        }
-
-        return settings
-    }
-
-    void saveSettings(String key, final Map settings) {
-        Connection connection = getConnection()
-        PreparedStatement savestmt = null
-        try {
-            String serializedSettings = mapper.writeValueAsString(settings)
-            log.debug("Saving settings for ${key}: $serializedSettings")
-            savestmt = connection.prepareStatement(SAVE_SETTINGS)
-            savestmt.setObject(1, serializedSettings, OTHER)
-            savestmt.setString(2, key)
-            savestmt.setString(3, key)
-            savestmt.setObject(4, serializedSettings, OTHER)
-            savestmt.executeUpdate()
-        } finally {
-            close(savestmt, connection)
         }
     }
 

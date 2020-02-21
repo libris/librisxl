@@ -93,28 +93,6 @@ class CrudSpec extends Specification {
         crud.accessControl = accessControl
     }
 
-
-    /*
-     * API tests
-     *
-     */
-
-    def "GET to / should display system information"() {
-        given:
-        request.getPathInfo() >> {
-            "/"
-        }
-        storage.loadSettings("system") >> {
-          ["version": "1.0"]
-        }
-        when:
-        crud.doGet(request, response)
-        then:
-        assert response.getStatus() == HttpServletResponse.SC_OK
-        assert response.getContentType() == "application/json"
-    }
-
-
     // Tests for 405 Method Not Allowed
 
     def "PUT to / should return 405 Method Not Allowed"() {
