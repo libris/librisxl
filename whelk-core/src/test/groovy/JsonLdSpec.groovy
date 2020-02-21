@@ -700,7 +700,7 @@ class JsonLdSpec extends Specification {
                 readMap("preserve-paths/vocab.jsonld"))
 
         def preservePaths = ld.findPaths(doc, '@id', 'https://id.kb.se/marc/Document')
-
+        
         expect:
         ld.toChip(doc, preservePaths) == readMap("preserve-paths/molecular-aspects-chips.jsonld")
         ld.toCard(doc, preservePaths) == readMap("preserve-paths/molecular-aspects-cards-chips.jsonld")
