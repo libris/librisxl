@@ -1,5 +1,6 @@
 package whelk
 
+import com.google.common.collect.Iterables
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import whelk.component.CachingPostgreSQLComponent
@@ -12,7 +13,6 @@ import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
-import whelk.util.Util
 
 /**
  * The Whelk is the root component of the XL system.
@@ -209,9 +209,9 @@ class Whelk implements Storage {
      */
     private Iterable<String> getAffectedIds(Document document) {
         List<String> iris = document.getThingIdentifiers()
-        return Util.lazyIterableChain((GroovyCollections.combinations([["_links", "_transitiveDependencies"], iris] as Iterable))
+        return Iterables.concat((GroovyCollections.combinations([["_links", "_transitiveDependencies"], iris] as Iterable))
                 .collect { String field, String iri ->
-                    return { ->  elasticFind.findIds(['q': ["*"], (field): [iri]]) }
+                    return elasticFind.findIds(['q': ["*"], (field): [iri]])
                 })
     }
 

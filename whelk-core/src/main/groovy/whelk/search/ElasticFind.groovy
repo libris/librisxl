@@ -23,21 +23,29 @@ class ElasticFind {
     }
 
     private <T> Iterable<T> query(Closure<Map> getter) {
-        def firstResult = getter(0)
-
         Iterator<T> i = new Iterator<T>() {
-            int total = firstResult['totalHits']
+            boolean beforeFirstFetch = true
+
+            int total = 0
             int page = 0
             int ix = 0
-            List<T> items = (List<T>) firstResult['items']
+            List<T> items
 
             @Override
             boolean hasNext() {
+                if (beforeFirstFetch) {
+                    fetchFirst()
+                }
+
                 return page * PAGE_SIZE + ix < total
             }
 
             @Override
             T next() {
+                if (beforeFirstFetch) {
+                    fetchFirst()
+                }
+
                 if (!hasNext()) {
                     throw new NoSuchElementException()
                 }
@@ -54,6 +62,14 @@ class ElasticFind {
                 def offset = PAGE_SIZE * page
                 items = (List<T>) getter(offset)['items']
                 ix = 0
+            }
+
+            private void fetchFirst() {
+                def firstResult = getter(0)
+                total = firstResult['totalHits']
+                items = (List<T>) firstResult['items']
+
+                beforeFirstFetch = false
             }
         }
 
