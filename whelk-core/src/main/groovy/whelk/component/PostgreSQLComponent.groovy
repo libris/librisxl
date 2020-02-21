@@ -74,11 +74,11 @@ class PostgreSQLComponent implements Storage {
                      GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS,
                                            GET_DOCUMENT_VERSION_BY_MAIN_ID,
                                            GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID,
-                                           GET_DOCUMENT_BY_SAMEAS_ID, LOAD_ALL_DOCUMENTS,
+                                           LOAD_ALL_DOCUMENTS,
                                            LOAD_ALL_DOCUMENTS_BY_COLLECTION,
-                                           DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT,
+                                           STATUS_OF_DOCUMENT,
                                            INSERT_IDENTIFIERS,
-                                           LOAD_RECORD_IDENTIFIERS, LOAD_THING_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
+                                           DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
                                            GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, FOLLOW_DEPENDENCIES, FOLLOW_DEPENDERS,
                                            GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE, GET_COLLECTION_BY_SYSTEM_ID
     protected String GET_INCOMING_LINK_COUNT
@@ -88,7 +88,6 @@ class PostgreSQLComponent implements Storage {
     protected String GET_INCOMING_LINK_IDS_PAGINATED
     protected String GET_DEPENDENCIES_OF_TYPE, GET_DEPENDERS_OF_TYPE
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
-    protected String QUERY_LD_API
     protected String FIND_BY, COUNT_BY
     protected String GET_SYSTEMID_BY_IRI
     protected String GET_SYSTEMIDS_BY_IRIS
@@ -211,8 +210,6 @@ class PostgreSQLComponent implements Storage {
                 "WHERE id = (SELECT id FROM $idTableName " +
                 "WHERE iri = ? AND mainid = 't') " +
                 "ORDER BY modified"
-        GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
-                "WHERE data->'@graph' @> ?"
         GET_RECORD_ID_BY_THING_ID = "SELECT id FROM $idTableName WHERE iri = ? AND graphIndex = 1"
         GET_DOCUMENT_BY_MAIN_ID = "SELECT id,data,created,modified,deleted " +
                 "FROM $mainTableName " +
@@ -246,10 +243,6 @@ class PostgreSQLComponent implements Storage {
                 "SELECT collection FROM t WHERE collection IS NOT NULL"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE modified >= ? AND modified <= ? AND collection = ? AND deleted = false"
-        LOAD_RECORD_IDENTIFIERS = "SELECT iri from $idTableName WHERE id = ? AND graphIndex = 0"
-        LOAD_THING_IDENTIFIERS = "SELECT iri from $idTableName WHERE id = ? AND graphIndex = 1"
-
-        DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
         STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
                 "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.iri = ?"
         GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE iri = 'https://id.kb.se/vocab/context')"
@@ -297,8 +290,6 @@ class PostgreSQLComponent implements Storage {
 
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
         GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
-
-        QUERY_LD_API = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
 
         FIND_BY = "SELECT id, data, created, modified, deleted " +
                 "FROM $mainTableName " +
