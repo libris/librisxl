@@ -20,11 +20,20 @@ import whelk.exception.TooHighEncodingLevelException;
 import whelk.filter.LinkFinder;
 import whelk.util.LegacyIntegrationTools;
 import whelk.util.PropertyLoader;
-import whelk.triples.*;
 
 import java.io.IOException;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.function.BiFunction;
 
 class XL
@@ -71,8 +80,6 @@ class XL
                          String relatedWithBibResourceId,
                          Counter importedBibRecords,
                          Counter importedHoldRecords,
-                         Counter enrichedBibRecords,
-                         Counter enrichedHoldRecords,
                          Counter encounteredMulBibs)
             throws Exception
     {
@@ -114,13 +121,6 @@ class XL
                 resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, idToReplace);
             }
 
-            // merge
-            else if ((m_parameters.getMergeBib() && collection.equals("bib")) ||
-                    m_parameters.getMergeHold() && collection.equals("hold"))
-            {
-                resultingResourceId = enrichRecord((String) duplicateIDs.toArray()[0], incomingMarcRecord, collection, relatedWithBibResourceId);
-            }
-
             // Keep existing
             else
             {
@@ -139,14 +139,6 @@ class XL
         {
             // Multiple coinciding documents.
             encounteredMulBibs.inc();
-
-            if (m_parameters.getEnrichMulDup())
-            {
-                for (String id : duplicateIDs)
-                {
-                    enrichRecord( id, incomingMarcRecord, collection, relatedWithBibResourceId );
-                }
-            }
 
             if (collection.equals("bib"))
             {
@@ -253,57 +245,6 @@ class XL
         return null;
     }
 
-    private String enrichRecord(String ourId, MarcRecord incomingMarcRecord, String collection, String relatedWithBibResourceId)
-            throws IOException
-    {
-        Document rdfDoc = convertToRDF(incomingMarcRecord, ourId);
-        if (collection.equals("hold"))
-            rdfDoc.setHoldingFor(relatedWithBibResourceId);
-
-        if (!m_parameters.getReadOnly())
-        {
-            try
-            {
-                m_whelk.storeAtomicUpdate(ourId, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(),
-                        (Document doc) ->
-                        {
-                            if (collection.equals("bib"))
-                            {
-                                String existingEncodingLevel = doc.getEncodingLevel();
-                                String newEncodingLevel = rdfDoc.getEncodingLevel();
-
-                                if (existingEncodingLevel == null || !mayOverwriteExistingEncodingLevel(existingEncodingLevel, newEncodingLevel))
-                                    throw new TooHighEncodingLevelException();
-                            }
-
-                            enrich( doc, rdfDoc );
-                        });
-            }
-            catch (TooHighEncodingLevelException e)
-            {
-                if ( verbose )
-                {
-                    System.out.println("info: Not enriching id: " + ourId + ", due to bad combination of encoding levels.");
-                }
-            }
-        }
-        else
-        {
-            Document doc = m_whelk.getStorage().load( ourId );
-            enrich( doc, rdfDoc );
-            if ( verbose )
-            {
-                System.out.println("info: Would now (if --live had been specified) have written the following (merged) json-ld to whelk:\n");
-                System.out.println("id:\n" + doc.getShortId());
-                System.out.println("data:\n" + doc.getDataAsString());
-            }
-        }
-
-        if (collection.equals("bib"))
-            return rdfDoc.getThingIdentifiers().get(0);
-        return null;
-    }
-
     private boolean mayOverwriteExistingEncodingLevel(String existingEncodingLevel, String newEncodingLevel)
     {
         if (m_parameters.getForceUpdate())
@@ -336,33 +277,6 @@ class XL
                 break;
         }
         return false;
-    }
-
-    private void enrich(Document mutableDocument, Document withDocument)
-    {
-        JsonldSerializer serializer = new JsonldSerializer();
-        List<String[]> withTriples = serializer.deserialize(withDocument.data);
-        List<String[]> originalTriples = serializer.deserialize(mutableDocument.data);
-
-        Graph originalGraph = new Graph(originalTriples);
-        Graph withGraph = new Graph(withTriples);
-
-        // This is temporary, these special rules should not be hardcoded here, but rather obtained from (presumably)
-        // whelk-core's marcframe.json.
-        Map<String, Graph.PREDICATE_RULES> specialRules = new HashMap<>();
-        for (String term : m_repeatableTerms)
-            specialRules.put(term, Graph.PREDICATE_RULES.RULE_AGGREGATE);
-        specialRules.put("created", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
-        specialRules.put("controlNumber", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
-        specialRules.put("modified", Graph.PREDICATE_RULES.RULE_PREFER_INCOMING);
-        specialRules.put("marc:encLevel", Graph.PREDICATE_RULES.RULE_PREFER_ORIGINAL);
-
-        originalGraph.enrichWith(withGraph, specialRules);
-
-        Map enrichedData = JsonldSerializer.serialize(originalGraph.getTriples(), m_repeatableTerms);
-        boolean deleteUnreferencedData = true;
-        JsonldSerializer.normalize(enrichedData, mutableDocument.getShortId(), deleteUnreferencedData);
-        mutableDocument.data = enrichedData;
     }
 
     private Document convertToRDF(MarcRecord _marcRecord, String id)
@@ -823,5 +737,4 @@ class XL
         return ids;
     }
 
-    //private class TooHighEncodingLevelException extends RuntimeException {}
 }
