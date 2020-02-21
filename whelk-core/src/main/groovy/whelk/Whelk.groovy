@@ -160,7 +160,7 @@ class Whelk implements Storage {
             Set<Link> postUpdateLinks = document.getExternalRefs()
             Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
             Set<Link> addedLinks = (postUpdateLinks - preUpdateLinks)
-            reindex(document, addedLinks, removedLinks)
+            reindexAffected(document, addedLinks, removedLinks)
         }
 
         // If we are inside a batch job. Update them synchronously
@@ -172,11 +172,12 @@ class Whelk implements Storage {
         }
     }
 
-    private void reindex(Document document,Set<Link> addedLinks, Set<Link> removedLinks) {
+    private void reindexAffected(Document document, Set<Link> addedLinks, Set<Link> removedLinks) {
         removedLinks.findResults { storage.getSystemIdByIri(it.iri) }
                 .each{id -> elastic.decrementReverseLinks(id, storage.getCollectionBySystemID(id))}
 
         if (storage.isCardChanged(document.getShortId())) {
+            // TODO: when types (auth, bib...) have been removed from elastic, do bulk index in chunks of size N here
             getAffectedIds(document).each { id ->
                 Document doc = storage.load(id)
                 elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
@@ -187,17 +188,25 @@ class Whelk implements Storage {
             String id = storage.getSystemIdByIri(link.iri)
             if (id) {
                 Document doc = storage.load(id)
-                def rev = ['chips', 'cards', 'full'].collect{ jsonld.getInverseProperties(doc.data, it) }.flatten()
-                if (rev.contains(link.relation)) {
+                def lenses = ['chips', 'cards', 'full']
+                def reverseRelations = lenses.collect{ jsonld.getInverseProperties(doc.data, it) }.flatten()
+                if (reverseRelations.contains(link.relation)) {
+                    // we added a link to a document that includes us in its @reverse relations, reindex it
                     elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
                 }
                 else {
+                    // just update link counter
                     elastic.incrementReverseLinks(id, storage.getCollectionBySystemID(id))
                 }
             }
         }
     }
 
+    /**
+     * Find all other documents that need to be re-indexed because of a change in document
+     * @param document the changed document
+     * @return an Iterable of system IDs.
+     */
     private Iterable<String> getAffectedIds(Document document) {
         List<String> iris = document.getThingIdentifiers()
         return Util.lazyIterableChain((GroovyCollections.combinations([["_links", "_transitiveDependencies"], iris] as Iterable))

@@ -1210,6 +1210,7 @@ class Embellisher {
         this.getByReverseRelation = getByReverseRelation
     }
 
+    // FIXME: describe me
     void embellish(Document document, boolean filterOutNonChipTerms = false) {
         jsonld.embellish(document.data, getEmbellishData(document), filterOutNonChipTerms)
     }

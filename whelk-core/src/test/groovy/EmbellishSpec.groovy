@@ -164,7 +164,7 @@ digraph {
                             ['@type': 'Y', '@id': '/thingY3', 'py1': ['@id': '/thingX3'], 'py2': 'foo']]],
         ]
 
-        def storage = new Storage(ld)
+        def storage = new TestStorage(ld)
         docs.each(storage.&add)
 
         def embellisher = new Embellisher(ld, storage.&getCards, storage.&getReverseLinks)
@@ -234,12 +234,13 @@ digraph {
         throw new RuntimeException("Could not determine lens")
     }
 
-    class Storage {
+    class TestStorage {
         Map<String, Map> cards = new HashMap<>()
         Multimap<Link, String> reverseLinks = new ArrayListMultimap<>()
 
         JsonLd jsonld
-        Storage(JsonLd jsonld) {
+
+        TestStorage(JsonLd jsonld) {
             this.jsonld = jsonld
         }
 
