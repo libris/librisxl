@@ -76,8 +76,7 @@ class CrudSpec extends Specification {
         storage = GroovyMock(PostgreSQLComponent.class)
         // We want to pass through calls in some cases
         accessControl = GroovySpy(AccessControl.class)
-        whelk = new Whelk()
-        whelk.storage = storage
+        whelk = new Whelk(storage)
         whelk.contextData = ['@context': [
                 'examplevocab': 'http://example.com',
                 'some_term': 'some_value']]
@@ -150,10 +149,7 @@ class CrudSpec extends Specification {
             "*/*"
         }
         storage.load(_, _) >> {
-            new Document(["@graph": [["@id": id, "foo": "bar"]]])
-        }
-        storage.getCardsForEmbellish(_) >> {
-            []
+            new Document(["@graph": [["@id": id, "foo": "bar", 'mainEntity': ["@id": id + '#it']], ["@id": id + '#it']]])
         }
         when:
         crud.doGet(request, response)
@@ -445,9 +441,6 @@ class CrudSpec extends Specification {
                     ["@id": id, "mainEntity": ["@id": "main"]],
                     ["@id": "main", "foo": "bar"]]])
         }
-        storage.getCardsForEmbellish(_) >> {
-            []
-        }
         crud.doGet(request, response)
 
         expect:
@@ -505,7 +498,7 @@ class CrudSpec extends Specification {
                     ["@id": id, "mainEntity": ["@id": "main"]],
                     ["@id": "main", "a": ["@id": id2]]]])
         }
-        storage.getCardsForEmbellish(_) >> {
+        storage.getCards([id2]) >> {
             [
                     ["@graph": [
                             ["@id": id2, "mainEntity": ["@id": "main2"]],
@@ -570,7 +563,7 @@ class CrudSpec extends Specification {
                     ["@id": id, "mainEntity": ["@id": "main"]],
                     ["@id": "main", "a": ["@id": id2]]]])
         }
-        storage.getCardsForEmbellish(_) >> {
+        storage.getCards([id2]) >> {
             [
                     ["@graph": [
                             ["@id": id2, "mainEntity": ["@id": "main2"]],
@@ -635,7 +628,7 @@ class CrudSpec extends Specification {
                                                "prop4": "val4",
                                               ]]])
         storage.load(_, _) >> { d }
-        storage.getCardsForEmbellish(_) >> { [] }
+        storage.getCards(_) >> { [] }
         crud.doGet(request, response)
         String document = response.getResponseBody()
         println(lens)

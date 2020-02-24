@@ -291,13 +291,14 @@ class Whelk implements Storage {
     }
 
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
-        Set<Link> preUpdateLinks = storage.load(id).getExternalRefs()
+        Set<Link> preUpdateLinks = elastic ? storage.load(id).getExternalRefs() : new HashSet<Link>()
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
         if (updated == null) {
             return null
         }
-        String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
+
         if (elastic) {
+            String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
             elastic.index(updated, collection, this)
             reindexAffected(updated, preUpdateLinks)
         }
