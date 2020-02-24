@@ -84,7 +84,7 @@ URI satt i `Location`-headern.
 ```
 $ curl -XPOST -H "Content-Type: application/ld+json" \
     -H "Authorization: Bearer xxxx" -d@my_post.jsonld \
-    https://libris-qa.kb.se/
+    https://libris-qa.kb.se/data/
 ...
 ```
 
