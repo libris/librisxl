@@ -14,6 +14,7 @@ import whelk.JsonLd
 import whelk.Storage
 import whelk.exception.CancelUpdateException
 import whelk.exception.LinkValidationException
+import whelk.exception.MissingMainIriException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
 import whelk.exception.WhelkException
@@ -1326,7 +1327,7 @@ class PostgreSQLComponent implements Storage {
             rs = preparedStatement.executeQuery()
             if (rs.next())
                 return rs.getString(1)
-            throw new RuntimeException("No IRI found for system id $id")
+            throw new MissingMainIriException("No IRI found for system id $id")
         } finally {
             close(rs, preparedStatement)
         }
