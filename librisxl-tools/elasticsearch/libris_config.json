@@ -164,7 +164,7 @@
                 "_links": {
                     "type": "keyword"
                 },
-                "_transitiveDependencies": {
+                "_outerEmbellishments": {
                     "type": "keyword"
                 }
             },

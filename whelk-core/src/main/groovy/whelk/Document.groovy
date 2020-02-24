@@ -508,7 +508,7 @@ class Document {
         return null
     }
 
-    Set<String> getEmbellishmentsIris() {
+    Set<String> getEmbellishments() {
         Set<String> result = new HashSet<>()
         data[JsonLd.GRAPH_KEY].eachWithIndex{ def entry, int i ->
             if (i > 1 && entry[JsonLd.GRAPH_KEY]) {

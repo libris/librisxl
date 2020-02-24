@@ -10,7 +10,6 @@ import se.kb.libris.utils.isbn.IsbnException
 import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.JsonLd
-import whelk.Link
 import whelk.Whelk
 
 import java.util.concurrent.LinkedBlockingQueue
@@ -235,7 +234,7 @@ class ElasticSearch {
         Set<String> links = whelk.jsonld.expandLinks(unEmbellished.getExternalRefs()).collect{ it.iri }
 
         doc.data['@graph'][1]['_links'] = links
-        doc.data['@graph'][1]['_transitiveDependencies'] = doc.getEmbellishmentsIris() - links
+        doc.data['@graph'][1]['_outerEmbellishments'] = doc.getEmbellishments() - links
 
         doc.data['@graph'][1]['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',

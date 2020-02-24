@@ -208,11 +208,13 @@ class Whelk implements Storage {
      * @return an Iterable of system IDs.
      */
     private Iterable<String> getAffectedIds(Document document) {
-        List<String> iris = document.getThingIdentifiers()
-        return Iterables.concat((GroovyCollections.combinations([["_links", "_transitiveDependencies"], iris] as Iterable))
-                .collect { String field, String iri ->
-                    return elasticFind.findIds(['q': ["*"], (field): [iri]])
-                })
+        List<Iterable<String>> queries = []
+        for (String iri : document.getThingIdentifiers()) {
+            for (String field : ["_links", "_outerEmbellishments"]) {
+                queries << elasticFind.findIds(['q': ["*"], (field): [iri]])
+            }
+        }
+        return Iterables.concat(queries)
     }
 
     /**
