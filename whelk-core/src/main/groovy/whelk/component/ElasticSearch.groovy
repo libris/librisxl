@@ -94,15 +94,15 @@ class ElasticSearch {
     void bulkIndex(List<Document> docs, String collection, Whelk whelk) {
         assert collection
         if (docs) {
-            String bulkString = docs.collect{ doc ->
+            String bulkString = docs.findResults{ doc ->
                 try {
                     String shapedData = JsonOutput.toJson(
                         getShapeForIndex(doc, whelk, collection))
                     String action = createActionRow(doc, collection)
                     return "${action}\n${shapedData}\n"
                 } catch (Exception e) {
-                    log.error("Failed to index ${doc.getShortId()} in elastic.", e)
-                    throw e
+                    log.error("Failed to index ${doc.getShortId()} in elastic: $e", e)
+                    return null
                 }
             }.join('')
 
