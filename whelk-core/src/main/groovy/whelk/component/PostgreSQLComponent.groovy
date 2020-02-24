@@ -58,17 +58,21 @@ class PostgreSQLComponent implements Storage {
     private static final String driverClass = "org.postgresql.Driver"
 
     // SQL statements
-    private static final String UPDATE_DOCUMENT = "UPDATE lddb SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
+    private static final String UPDATE_DOCUMENT = """
+            UPDATE lddb 
+            SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? 
+            WHERE id = ?
+            """.stripIndent()
 
     private static final String INSERT_DOCUMENT = """
-                INSERT INTO lddb (id,data,collection,changedIn,changedBy,checksum,deleted,created,modified)
-                VALUES (?,?,?,?,?,?,?,?,?)
-                """.stripIndent()
+            INSERT INTO lddb (id,data,collection,changedIn,changedBy,checksum,deleted,created,modified)
+            VALUES (?,?,?,?,?,?,?,?,?)
+            """.stripIndent()
 
     private static final String INSERT_DOCUMENT_VERSION = """
-                INSERT INTO lddb__versions (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted)
-                SELECT ?,?,?,?,?,?,?,?,?
-                """.stripIndent()
+            INSERT INTO lddb__versions (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted)
+            SELECT ?,?,?,?,?,?,?,?,?
+            """.stripIndent()
 
     private static final String GET_DOCUMENT = "SELECT id, data, created, modified, deleted FROM lddb WHERE id = ?"
 
@@ -97,7 +101,8 @@ class PostgreSQLComponent implements Storage {
             """.stripIndent()
 
     private static final String GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID = """
-            SELECT id, data, deleted, created, modified FROM lddb__versions 
+            SELECT id, data, deleted, created, modified 
+            FROM lddb__versions 
             WHERE id = (SELECT id FROM lddb__identifiers WHERE iri = ? AND mainid = 't')
             ORDER BY modified
             """.stripIndent()
@@ -157,7 +162,8 @@ class PostgreSQLComponent implements Storage {
             "SELECT dependsOnId FROM lddb__dependencies WHERE id = ? AND relation = ?"
 
     private static final String UPSERT_CARD = """
-            INSERT INTO lddb__cards (id, data, checksum, changed) VALUES (?,?,?,?) 
+            INSERT INTO lddb__cards (id, data, checksum, changed)
+            VALUES (?,?,?,?) 
             ON CONFLICT (id) DO UPDATE 
             SET (data, checksum, changed) = (EXCLUDED.data, EXCLUDED.checksum, EXCLUDED.changed) 
             WHERE lddb__cards.checksum != EXCLUDED.checksum
@@ -166,14 +172,17 @@ class PostgreSQLComponent implements Storage {
     private static final String UPDATE_CARD =
             "UPDATE lddb__cards SET (data, checksum, changed) = (?,?,?) WHERE id = ? AND checksum != ?"
 
-    private static final String GET_CARD = "SELECT data FROM lddb__cards WHERE ID = ?"
+    private static final String GET_CARD =
+            "SELECT data FROM lddb__cards WHERE ID = ?"
 
     private static final String BULK_LOAD_CARDS =
             "SELECT in_id as id, data from unnest(?) as in_id LEFT JOIN lddb__cards c ON in_id = c.id"
 
-    private static final String DELETE_CARD = "DELETE FROM lddb__cards WHERE ID = ?"
+    private static final String DELETE_CARD =
+            "DELETE FROM lddb__cards WHERE ID = ?"
 
-    private static final String CARD_EXISTS = "SELECT EXISTS(SELECT 1 from lddb__cards where id = ?)"
+    private static final String CARD_EXISTS =
+            "SELECT EXISTS(SELECT 1 from lddb__cards where id = ?)"
 
     private static final String IS_CARD_CHANGED =
             "SELECT card.changed >= doc.modified FROM lddb__cards card, lddb doc WHERE doc.id = card.id AND doc.id = ?"
@@ -182,28 +191,33 @@ class PostgreSQLComponent implements Storage {
             "SELECT id FROM lddb__identifiers WHERE iri = ? AND graphIndex = 1"
 
     private static final String GET_DOCUMENT_BY_MAIN_ID = """
-            SELECT id, data, created, modified, deleted FROM lddb 
+            SELECT id, data, created, modified, deleted 
+            FROM lddb 
             WHERE id = (SELECT id FROM lddb__identifiers WHERE mainid = 't' AND iri = ?)
             """.stripIndent()
 
     private static final String GET_RECORD_ID = """
-            SELECT iri FROM lddb__identifiers 
+            SELECT iri 
+            FROM lddb__identifiers 
             WHERE graphindex = 0 AND mainid = 't' AND id = (SELECT id FROM lddb__identifiers WHERE iri = ?)
             """.stripIndent()
 
     private static final String GET_THING_ID = """
-            SELECT iri FROM lddb__identifiers 
+            SELECT iri 
+            FROM lddb__identifiers 
             WHERE graphindex = 1 AND mainid = 't' AND id = (SELECT id FROM lddb__identifiers WHERE iri = ?)
             """.stripIndent()
 
     private static final String GET_MAIN_ID = """
-            SELECT t2.iri FROM lddb__identifiers t1
+            SELECT t2.iri
+            FROM lddb__identifiers t1
             JOIN lddb__identifiers t2 ON t2.id = t1.id AND t2.graphindex = t1.graphindex
             WHERE t1.iri = ? AND t2.mainid = true
             """.stripIndent()
 
     private static final String GET_SYSTEMID_BY_IRI = """
-            SELECT lddb__identifiers.id, lddb.deleted FROM lddb__identifiers 
+            SELECT lddb__identifiers.id, lddb.deleted
+            FROM lddb__identifiers 
             JOIN lddb ON lddb__identifiers.id = lddb.id WHERE lddb__identifiers.iri = ? 
             """.stripIndent()
 
@@ -217,9 +231,11 @@ class PostgreSQLComponent implements Storage {
     private static final String GET_THING_MAIN_IRI_BY_SYSTEMID =
             "SELECT iri FROM lddb__identifiers WHERE graphindex = 1 and mainid is true and id = ?"
 
-    private static final String GET_ID_TYPE = "SELECT graphindex, mainid FROM lddb__identifiers WHERE iri = ?"
+    private static final String GET_ID_TYPE =
+            "SELECT graphindex, mainid FROM lddb__identifiers WHERE iri = ?"
 
-    private static final String GET_COLLECTION_BY_SYSTEM_ID = "SELECT collection FROM lddb where id = ?"
+    private static final String GET_COLLECTION_BY_SYSTEM_ID =
+            "SELECT collection FROM lddb where id = ?"
 
     /** This query does the same as LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM lddb"
         but much faster because postgres does not yet have 'loose indexscan' aka 'index skip scan'
@@ -233,17 +249,23 @@ class PostgreSQLComponent implements Storage {
             ) SELECT collection FROM t WHERE collection IS NOT NULL
             """.stripIndent()
 
-    private static final String GET_CONTEXT =
-            "SELECT data FROM lddb WHERE id IN (SELECT id FROM lddb__identifiers WHERE iri = 'https://id.kb.se/vocab/context')"
+    private static final String GET_CONTEXT = """
+            SELECT data 
+            FROM lddb 
+            WHERE id IN (SELECT id FROM lddb__identifiers WHERE iri = 'https://id.kb.se/vocab/context')
+            """.stripIndent()
 
     private static final String FIND_BY = """
             SELECT id, data, created, modified, deleted 
-            FROM lddb WHERE data->'@graph' @> ? OR data->'@graph' @> ? LIMIT ? OFFSET ?
+            FROM lddb 
+            WHERE data->'@graph' @> ? OR data->'@graph' @> ? LIMIT ? OFFSET ?
             """.stripIndent()
 
-    private static final String COUNT_BY = "SELECT count(*) FROM lddb WHERE data->'@graph' @> ? OR data->'@graph' @> ?"
+    private static final String COUNT_BY =
+            "SELECT count(*) FROM lddb WHERE data->'@graph' @> ? OR data->'@graph' @> ?"
 
-    private static final String GET_LEGACY_PROFILE = "SELECT profile FROM lddb__profiles WHERE library_id = ?"
+    private static final String GET_LEGACY_PROFILE =
+            "SELECT profile FROM lddb__profiles WHERE library_id = ?"
 
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
