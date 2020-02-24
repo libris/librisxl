@@ -117,27 +117,34 @@ class SearchUtils {
                                      limit, offset, total)
     }
 
-    private Map findReverse(String id, String lens, int limit, int offset) {
+    private Map findReverse(String iri, String lens, int limit, int offset) {
         lens = lens ? lens : 'cards'
-        log.debug("findReverse. o: ${id}, _lens: ${lens}")
+        log.debug("findReverse. o: ${iri}, _lens: ${lens}")
 
-        int total = (int) whelk.getIncomingLinkCount(id)
-        List items
+        Map<String, String[]> parameters = [
+                'q': '*',
+                '_limit': [limit.toString()],
+                '_offset': [offset.toString()],
+                '_sort': ['_doc'],
+                '_links': [iri],
+        ]
+        Map esResult = esQuery.doQueryIds(parameters, null)
 
-        if (limit > 0) {
-            def ids = whelk.findIdsLinkingTo(id, limit, offset)
-            ids = ids.unique() // filter out duplicate documents (docs having more than one link)
-            items = whelk.bulkLoad(ids).values()
+        int total = 0
+        if (esResult['totalHits']) {
+            total = esResult['totalHits']
+        }
+
+        List items = []
+        if (esResult['items']) {
+            items = whelk.bulkLoad(esResult['items']).values()
                     .each(whelk.&embellish)
                     .collect(SearchUtils.&formatReverseResult)
                     .findAll { !it.isEmpty() }
-                    .collect { applyLens(it, id, lens) }
-        }
-        else {
-            items = []
+                    .collect { applyLens(it, iri, lens) }
         }
 
-        Map pageParams = ['o': id, '_lens': lens, '_limit': limit]
+        Map pageParams = ['o': iri, '_lens': lens, '_limit': limit]
         return assembleSearchResults(SearchType.FIND_REVERSE,
                 items, [], pageParams,
                 limit, offset, total)

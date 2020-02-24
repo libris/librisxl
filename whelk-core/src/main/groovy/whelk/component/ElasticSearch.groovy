@@ -204,7 +204,7 @@ class ElasticSearch {
         boolean addSearchKey = true
         copy.data['@graph'] = copy.data['@graph'].collect { whelk.jsonld.toCard(it, chipsify, addSearchKey) }
 
-        setComputedProperties(copy, whelk)
+        setComputedProperties(copy, document, whelk)
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = document.getThingIdentifiers()
         if (thingIds.isEmpty()) {
@@ -224,12 +224,17 @@ class ElasticSearch {
         whelk.embellish(copy, filterOutNonChipTerms)
     }
 
-    private static void setComputedProperties(Document doc, Whelk whelk) {
+    private static void setComputedProperties(Document doc, Document unEmbellished, Whelk whelk) {
         getOtherIsbns(doc.getIsbnValues())
                 .each { doc.addTypedThingIdentifier('ISBN', it) }
 
         getOtherIsbns(doc.getIsbnHiddenValues())
                 .each { doc.addIndirectTypedThingIdentifier('ISBN', it) }
+
+        Set<String> links = whelk.jsonld.expandLinks(unEmbellished.getExternalRefs()).collect{ it.iri }
+
+        doc.data['@graph'][1]['_links'] = links
+        doc.data['@graph'][1]['_outerEmbellishments'] = doc.getEmbellishments() - links
 
         doc.data['@graph'][1]['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',

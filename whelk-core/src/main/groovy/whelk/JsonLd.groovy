@@ -1,6 +1,7 @@
 package whelk
 
 import groovy.transform.CompileStatic
+import groovy.transform.Immutable
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.apache.logging.log4j.LogManager
@@ -9,6 +10,8 @@ import org.codehaus.jackson.map.ObjectMapper
 import whelk.exception.FramingException
 import whelk.exception.WhelkRuntimeException
 
+import java.util.function.BiFunction
+import java.util.function.Function
 import java.util.regex.Matcher
 
 @CompileStatic
@@ -137,6 +140,7 @@ class JsonLd {
 
         expandAliasesInLensProperties()
         expandInheritedLensProperties()
+        expandInverseLensProperties()
     }
 
     private void setupPrefixes() {
@@ -215,6 +219,17 @@ class JsonLd {
         }
     }
 
+    @TypeChecked(TypeCheckingMode.SKIP)
+    expandInverseLensProperties() {
+        displayData['lensGroups']?.values().each { group ->
+            group.get('lenses')?.values().each { lens ->
+                lens['inverseProperties'] = ((Iterable) lens['showProperties']).findResults {
+                    return (it instanceof Map ) && it['inverseOf'] ? it['inverseOf'] : null
+                }
+            }
+        }
+    }
+
     boolean isSetContainer(dfn) {
         return dfn instanceof Map && dfn[CONTAINER_KEY] == SET_KEY
     }
@@ -251,14 +266,13 @@ class JsonLd {
         return termId.replace(vocabId, '')
     }
 
-    List expandLinks(List refs) {
+    Set<Link> expandLinks(Set<Link> refs) {
         return expandLinks(refs, (Map) displayData[CONTEXT_KEY])
     }
 
     String expand(String ref) {
         return expand(ref, (Map) displayData[CONTEXT_KEY])
     }
-
 
     static URI findRecordURI(Map jsonLd) {
         String foundIdentifier = findIdentifier(jsonLd)
@@ -303,17 +317,17 @@ class JsonLd {
         }
     }
 
-    static List getExternalReferences(Map jsonLd){
-        Set allReferences = getAllReferences(jsonLd)
-        Set localObjects = getLocalObjects(jsonLd)
-        List externalRefs = allReferences.minus(localObjects) as List
+    static Set<Link> getExternalReferences(Map jsonLd) {
+        Set<Link> allReferences = getAllReferences(jsonLd)
+        Set<Link> localObjects = getLocalObjects(jsonLd)
+        Set<Link> externalRefs = allReferences.findAll { !localObjects.contains(it.getIri()) }
         // NOTE: this is necessary because some documents contain references to
         // bnodes that don't exist (in that document).
         return filterOutDanglingBnodes(externalRefs)
     }
 
-    static List expandLinks(List refs, Map context) {
-        return refs.collect { expand( (String) it, context) }
+    static Set<Link> expandLinks(Set<Link> refs, Map context) {
+        return refs.collect{ it.withIri(expand(it.iri, context)) }.toSet()
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
@@ -382,42 +396,42 @@ class JsonLd {
         return result
     }
 
-    private static List filterOutDanglingBnodes(List refs) {
+    private static Set<Link> filterOutDanglingBnodes(Set<Link> refs) {
         return refs.findAll {
-            !((String)it).startsWith('_:')
+            !it.iri.startsWith('_:')
         }
     }
 
-    static Set getAllReferences(Map jsonLd) {
+    static Set<Link> getAllReferences(Map jsonLd) {
         List items
         if (jsonLd.containsKey(GRAPH_KEY)) {
             items = jsonLd.get(GRAPH_KEY)
         } else {
             throw new FramingException("Missing '@graph' key in input")
         }
-        return getAllReferencesFromList(items).flatten()
+        return getAllReferencesFromList(null, items)
     }
 
-    private static Set getRefs(Object o) {
+    private static Set<Link> getRefs(String parentKey, Object o) {
         if(o instanceof Map) {
-            return getAllReferencesFromMap(o)
+            return getAllReferencesFromMap(parentKey, o)
         } else if (o instanceof List){
-            return getAllReferencesFromList(o)
+            return getAllReferencesFromList(parentKey, o)
         } else {
-            return new HashSet()
+            return Collections.emptySet()
         }
     }
 
-    private static Set getAllReferencesFromMap(Map item) {
-        Set refs = []
+    private static Set<Link> getAllReferencesFromMap(String parentKey, Map item) {
+        Set<Link> refs = []
 
         if (isReference(item)) {
-            refs.add(item[ID_KEY])
+            refs.add(new Link(iri: item[ID_KEY], relation: parentKey))
             return refs
         } else {
             item.each { key, value ->
                 if (key != JSONLD_ALT_ID_KEY) {
-                    refs << getRefs(value)
+                    refs.addAll(getRefs((String) key, value))
                 }
             }
         }
@@ -433,10 +447,10 @@ class JsonLd {
         }
     }
 
-    private static Set getAllReferencesFromList(List items) {
-        Set result = []
+    private static Set<Link> getAllReferencesFromList(String parentKey, List items) {
+        Set<Link> result = []
         items.each { item ->
-            result << getRefs(item)
+            result.addAll(getRefs(parentKey, item))
         }
         return result
     }
@@ -828,6 +842,17 @@ class JsonLd {
         return parts
     }
 
+    Set getInverseProperties(Map data, String lensType) {
+        if (data[GRAPH_KEY]) {
+            return new LinkedHashSet(((List) data[GRAPH_KEY]).collect{ getInverseProperties((Map) it, lensType) }.flatten())
+        }
+
+        Map lensGroups = displayData.get('lensGroups')
+        Map lensGroup = lensGroups.get(lensType)
+        Map lens = getLensFor(data, lensGroup)
+        return new LinkedHashSet((List) lens?.get('inverseProperties') ?: [])
+    }
+
     private static void restorePreserved(Map cardOrChip, Map thing, List<List> preservePaths) {
         preservePaths.each {
             if (!it.isEmpty()) {
@@ -1153,3 +1178,17 @@ class JsonLd {
         }
     }
 }
+
+
+@Immutable
+class Link {
+    String iri
+    String relation
+
+    Link withIri(String iri) {
+        iri == this.iri
+                ? this
+                : new Link(iri: iri, relation: this.relation)
+    }
+}
+

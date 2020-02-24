@@ -49,15 +49,11 @@ import static java.sql.Types.OTHER
 @Log
 @CompileStatic
 class PostgreSQLComponent implements Storage {
-    public static final int MAX_EMBELLISH_DEPTH = 4
-
     public static final String PROPERTY_SQL_URL = "sqlUrl"
     public static final String PROPERTY_SQL_MAIN_TABLE_NAME = "sqlMaintable"
     public static final String PROPERTY_SQL_MAX_POOL_SIZE = "sqlMaxPoolSize"
 
     public static final ObjectMapper mapper = new ObjectMapper()
-
-    public static final String EMBELLISH_EXCLUDE_RELATIONS = "'${['narrower', 'broader'].join("', '")}'"
 
     private static final int DEFAULT_MAX_POOL_SIZE = 16
     private static final String driverClass = "org.postgresql.Driver"
@@ -82,10 +78,6 @@ class PostgreSQLComponent implements Storage {
                                            GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, FOLLOW_DEPENDENCIES, FOLLOW_DEPENDERS,
                                            GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE, GET_COLLECTION_BY_SYSTEM_ID
     protected String GET_INCOMING_LINK_COUNT
-    protected String GET_DEPENDENCIES
-    protected String GET_IN_CARD_DEPENDENCIES
-    protected String GET_EMBELLISH_DEPENDERS
-    protected String GET_INCOMING_LINK_IDS_PAGINATED
     protected String GET_DEPENDENCIES_OF_TYPE, GET_DEPENDERS_OF_TYPE
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
     protected String FIND_BY, COUNT_BY
@@ -108,7 +100,6 @@ class PostgreSQLComponent implements Storage {
     JsonLd jsonld
 
     private AtomicLong cardsUpdated = new AtomicLong()
-    private AtomicLong dependersUpdated = new AtomicLong()
 
     class AcquireLockException extends RuntimeException { AcquireLockException(String s) { super(s) } }
 
@@ -181,7 +172,7 @@ class PostgreSQLComponent implements Storage {
         INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, iri, graphIndex, mainId) VALUES (?,?,?,?)"
 
         DELETE_DEPENDENCIES = "DELETE FROM $dependenciesTableName WHERE id = ?"
-        INSERT_DEPENDENCIES = "INSERT INTO $dependenciesTableName (id, relation, dependsOnId, inCard) VALUES (?,?,?,?)"
+        INSERT_DEPENDENCIES = "INSERT INTO $dependenciesTableName (id, relation, dependsOnId) VALUES (?,?,?)"
 
         INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted) SELECT ?,?,?,?,?,?,?,?,? "
 
@@ -274,19 +265,7 @@ class PostgreSQLComponent implements Storage {
         IS_CARD_CHANGED = "SELECT card.changed >= doc.modified " +
                 "FROM lddb__cards card, lddb doc WHERE doc.id = card.id AND doc.id = ?"
 
-        GET_INCOMING_LINK_IDS_PAGINATED = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id LIMIT ? OFFSET ?"
         GET_INCOMING_LINK_COUNT = "SELECT COUNT(id) FROM $dependenciesTableName WHERE dependsOnId = ?"
-        GET_DEPENDENCIES = "SELECT DISTINCT dependsOnId FROM $dependenciesTableName WHERE id = ? ORDER BY dependsOnId"
-        GET_IN_CARD_DEPENDENCIES = """
-                SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND inCard
-                AND relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS)
-                ORDER BY dependsOnId
-                """.stripIndent()
-
-        GET_EMBELLISH_DEPENDERS = """
-                SELECT id, incard FROM $dependenciesTableName WHERE dependsOnId = ANY (?) 
-                AND relation NOT IN ($EMBELLISH_EXCLUDE_RELATIONS, 'itemOf')
-                """.stripIndent()
 
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
         GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
@@ -320,7 +299,7 @@ class PostgreSQLComponent implements Storage {
     }
 
     void logStats() {
-        log.info("Cards created or changed: $cardsUpdated. Dependers updated: $dependersUpdated")
+        log.info("Cards created or changed: $cardsUpdated")
     }
 
     private Map status(URI uri, Connection connection) {
@@ -524,7 +503,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    /**
+    /*
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
@@ -661,7 +640,7 @@ class PostgreSQLComponent implements Storage {
 
         if (jsonld) {
             if (deleted) {
-                deleteCard(doc.getShortId(), connection)
+                deleteCard(doc, connection)
             } else {
                 updateCard(new CardEntry(doc), connection)
             }
@@ -673,47 +652,41 @@ class PostgreSQLComponent implements Storage {
      */
     void refreshCardData(Document doc, Instant timestamp) {
         getConnection().withCloseable { connection ->
-            if (!hasCard(doc.shortId, connection) || updateCard(new CardEntry(doc, timestamp), connection)) {
-                saveDependencies(doc, connection)
+            if (hasCard(doc.shortId, connection)) {
+                updateCard(new CardEntry(doc, timestamp), connection)
             }
-        }
-    }
-
-    /**
-     * Given a document, look up all it's dependencies (links/references) and return a list of those references that
-     * have Libris system IDs (fnrgls), in String[2] form. First element is the relation and second is the link.
-     * You were probably looking for followDependencies() which is much more efficient
-     * for a document that is already saved in lddb!
-     */
-    List<String[]> calculateDependenciesSystemIDs(Document doc) {
-        Connection connection = getConnection()
-        try {
-            return _calculateDependenciesSystemIDs(doc, connection)
-        } finally {
-            connection.close()
         }
     }
 
     private List<String[]> _calculateDependenciesSystemIDs(Document doc, Connection connection) {
         List<String[]> dependencies = []
-        List notInCard = nonCardDependencies(doc)
 
-        Map iriToRelation = doc.getRefsWithRelation()
-            .findAll{ relationAndIri -> relationAndIri[1].startsWith("http") }
-            .collectEntries { relationAndIri -> [ relationAndIri[1], relationAndIri[0] ] }
+        Map iriToRelation = doc.getExternalRefs()
+            .findAll{ it.iri.startsWith("http") }
+            .collectEntries {  [ it.iri, it.relation ] }
 
         getSystemIds(iriToRelation.keySet(), connection) { String iri, String systemId, boolean deleted ->
             if (deleted) // doc refers to a deleted document which is not ok.
                 throw new LinkValidationException("Record supposedly depends on deleted record: ${systemId}, which is not allowed.")
 
             if (systemId != doc.getShortId()) // Exclude A -> A (self-references)
-                dependencies.add([iriToRelation[iri], systemId, !notInCard.contains(iri)] as String[])
+                dependencies.add([iriToRelation[iri], systemId] as String[])
         }
 
         return dependencies
     }
 
-    private void getSystemIds(Collection iris, Connection connection, Closure c) {
+    Map<String, String> getSystemIdsByIris (Iterable iris) {
+        Map<String, String> ids = new HashMap<>()
+        getConnection().withCloseable { connection ->
+            getSystemIds(iris, connection) { String iri, String systemId, deleted ->
+                ids.put(iri, systemId)
+            }
+        }
+        return ids
+    }
+
+    private void getSystemIds(Iterable iris, Connection connection, Closure c) {
         PreparedStatement getSystemIds = null
         ResultSet rs = null
         try {
@@ -733,19 +706,13 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    Map getCard(String systemId) {
+    Map getCard(String iri) {
+        String systemId = getSystemIdByIri(iri)
         return loadCard(systemId) ?: makeCardData(systemId)
     }
 
-    /**
-     * Get cards by following relations in cards recursively.
-     * Excluding {@link #EMBELLISH_EXCLUDE_RELATIONS}.
-     *
-     * @param startIris IRIs of cards to start with
-     * @return data of cards
-     */
-    Iterable<Map> getCardsForEmbellish(List<String> startIris) {
-        return createAndAddMissingCards(bulkLoadCards(getIdsForEmbellish(startIris))).values()
+    Iterable<Map> getCards(Iterable<String> iris) {
+        return createAndAddMissingCards(bulkLoadCards(getSystemIdsByIris(iris).values())).values()
     }
 
     /**
@@ -767,72 +734,6 @@ class PostgreSQLComponent implements Storage {
             return rs.next() && rs.getBoolean(1)
         } finally {
             close(rs, preparedStatement, connection)
-        }
-    }
-
-    /**
-     * Find all ids that depend on a card by having it in their embellish dependencies.
-     * <p>i.e. the card + all cards that link to it, recursively + all documents that link to any of all these cards</p>
-     * Excluding {@link #EMBELLISH_EXCLUDE_RELATIONS} AND itemOf.
-     *
-     * @param systemId id of card
-     * @return a set of depender system ids
-     */
-    Set<String> followEmbellishDependers(String systemId) {
-        // we can reach the same doc both as a card (continue) and as a full doc (stop) through different paths
-        Set<Tuple2<String, Boolean>> visited = new HashSet<>()
-
-        LinkedList<String> queue = new LinkedList<>()
-        LinkedList<String> nextDepthQueue = new LinkedList<>()
-        queue.add(systemId)
-        visited.add(new Tuple2(systemId, true))
-
-        int depth = MAX_EMBELLISH_DEPTH
-        while (depth-- > 0) {
-            while(!queue.isEmpty()) {
-                log.trace("followEmbellishDependers {}, depth:{}, queue size:{}, next queue size:{}",
-                        systemId, depth, queue.size(), nextDepthQueue.size())
-                followEmbellishDependersBatch(visited, queue, depth > 0 ? nextDepthQueue : null)
-            }
-            (queue, nextDepthQueue) = [nextDepthQueue, queue]
-        }
-
-        Set<String> result = new HashSet<>()
-        visited.each {t -> result.add(t.getFirst())}
-        result.remove(systemId)
-        log.trace("followEmbellishDependers {}, result size:{}", systemId, result.size())
-        return result
-    }
-
-    private void followEmbellishDependersBatch(Set<Tuple2<String, Boolean>> visited,
-                                               LinkedList<String> queue,
-                                               LinkedList<String> nextDepthQueue) {
-        final int QUERY_SIZE = 1000
-
-        int n = Math.min(QUERY_SIZE, queue.size())
-        def ids = new String[n]
-        n.times { i ->
-            ids[i] = queue.removeFirst()
-        }
-
-        Connection connection = getOuterConnection() // TODO need a separate pool for these potentially slow queries when inside rest app
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        Array array = null
-        try {
-            preparedStatement = connection.prepareStatement(GET_EMBELLISH_DEPENDERS)
-            array = connection.createArrayOf("TEXT", ids)
-            preparedStatement.setArray(1, array)
-            rs = preparedStatement.executeQuery()
-            while(rs.next()) {
-                String id = rs.getString("id")
-                boolean inCard = rs.getBoolean("inCard")
-                if (visited.add(new Tuple2(id, inCard)) && inCard && nextDepthQueue != null) {
-                    nextDepthQueue.add(id)
-                }
-            }
-        } finally {
-            close(array, rs, preparedStatement, connection)
         }
     }
 
@@ -892,7 +793,8 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    protected void deleteCard(String systemId, Connection connection) {
+    protected void deleteCard(Document doc, Connection connection) {
+        String systemId = getSystemIdByIri(doc.getThingIdentifiers().first())
         PreparedStatement preparedStatement = null
         try {
             preparedStatement = connection.prepareStatement(DELETE_CARD)
@@ -911,38 +813,6 @@ class PostgreSQLComponent implements Storage {
             return loadCard(id, connection)
         } finally {
             close(connection)
-        }
-    }
-
-    protected SortedSet<String> getIdsForEmbellish(List<String> startIris) {
-        SortedSet<String> result = new TreeSet<>()
-        Queue<Tuple2<String, Integer>> queue = new LinkedList<>()
-        getConnection().withCloseable { connection ->
-            getSystemIds(startIris, connection) { String iri, String systemId, boolean deleted ->
-                result.add(systemId)
-                queue.add(new Tuple2(systemId, 1))
-            }
-        }
-
-        while (!queue.isEmpty()) {
-            def next = queue.poll()
-            String id = next.getFirst()
-            int depth = next.getSecond()
-
-            SortedSet<String> ids = getInCardDependencies(id)
-            ids.removeAll(result)
-            result.addAll(ids)
-            if (depth + 1 < MAX_EMBELLISH_DEPTH) {
-                ids.each { queue.add(new Tuple2(it, depth + 1)) }
-            }
-        }
-
-        return result
-    }
-
-    protected SortedSet<String> getInCardDependencies(String id) {
-        getConnection().withCloseable { connection ->
-            return getDependencyData(id, GET_IN_CARD_DEPENDENCIES, connection)
         }
     }
 
@@ -1021,17 +891,6 @@ class PostgreSQLComponent implements Storage {
         return cardEntry.getCard().data
     }
 
-    private List nonCardDependencies(Document doc) {
-        if (!jsonld) {
-            return []
-        }
-
-        Document card = new CardEntry(doc).getCard()
-        List refs = doc.getExternalRefs()
-        refs.removeAll(card.getExternalRefs())
-        return refs
-    }
-
     private void saveDependencies(Document doc, Connection connection) {
         List dependencies = _calculateDependenciesSystemIDs(doc, connection)
 
@@ -1052,12 +911,10 @@ class PostgreSQLComponent implements Storage {
                 insertDependencies.setString(1, doc.getShortId())
                 insertDependencies.setString(2, dependsOn[0])
                 insertDependencies.setString(3, dependsOn[1])
-                insertDependencies.setBoolean(4, Boolean.parseBoolean(dependsOn[2]))
                 insertDependencies.addBatch()
             }
             try {
                 insertDependencies.executeBatch()
-                dependersUpdated.incrementAndGet()
             } catch (BatchUpdateException bue) {
                 log.error("Failed saving dependencies for ${doc.getShortId()}")
                 throw bue.getNextException()
@@ -1599,36 +1456,6 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    List<String> getIncomingLinkIdsPaginated(String id, int limit, int offset) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(GET_INCOMING_LINK_IDS_PAGINATED)
-            preparedStatement.setString(1, id)
-            preparedStatement.setInt(2, limit)
-            preparedStatement.setInt(3, offset)
-            rs = preparedStatement.executeQuery()
-            List<String> result = new ArrayList<>(limit)
-            while (rs.next()) {
-                result.add( rs.getString(1) )
-            }
-            return result
-        }
-        finally {
-            close(rs, preparedStatement, connection)
-        }
-    }
-
-    SortedSet<String> getDependencies(String id) {
-        Connection connection = getConnection()
-        try {
-            getDependencyData(id, GET_DEPENDENCIES, connection)
-        } finally {
-            close(connection)
-        }
-    }
-
     private static SortedSet<String> getDependencyData(String id, String query, Connection connection) {
         PreparedStatement preparedStatement = null
         ResultSet rs = null
@@ -1657,11 +1484,11 @@ class PostgreSQLComponent implements Storage {
             preparedStatement.setString(1, id)
             preparedStatement.setString(2, relation)
             rs = preparedStatement.executeQuery()
-            List<String> dependecies = []
+            List<String> dependencies = []
             while (rs.next()) {
-                dependecies.add( rs.getString(1) )
+                dependencies.add( rs.getString(1) )
             }
-            return dependecies
+            return dependencies
         }
         finally {
             close(rs, preparedStatement, connection)

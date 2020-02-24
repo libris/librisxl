@@ -1,5 +1,6 @@
 package whelk
 
+
 import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.util.LegacyIntegrationTools
@@ -7,7 +8,6 @@ import whelk.util.PropertyLoader
 import whelk.util.Unicode
 
 import java.lang.reflect.Type
-import java.text.Normalizer
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -508,24 +508,22 @@ class Document {
         return null
     }
 
+    Set<String> getEmbellishments() {
+        Set<String> result = new HashSet<>()
+        data[JsonLd.GRAPH_KEY].eachWithIndex{ def entry, int i ->
+            if (i > 1 && entry[JsonLd.GRAPH_KEY]) {
+                result.add(_get(thingIdPath2, entry))
+            }
+        }
+        return result
+    }
+
     /**
      * Return a list of external references in the doc.
      *
      */
-    List getExternalRefs() {
+    Set<Link> getExternalRefs() {
         return JsonLd.getExternalReferences(this.data)
-    }
-
-    /**
-     * Returns a String[2], first of which is the relation (itemOf, heldBy etc).
-     * The second string is the referenced URI.
-     */
-    List<String[]> getRefsWithRelation() {
-        List<String[]> references = new ArrayList<>()
-
-        addRefsWithRelation(this.data, references, null)
-
-        return references
     }
 
     private void addRefsWithRelation(Map node, List<String[]> references, String relation) {
@@ -825,4 +823,6 @@ class Document {
 
         return term
     }
+
+
 }
