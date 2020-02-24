@@ -7,6 +7,11 @@
       "label": "xiv, 244 p."
     }
   ],
+  "sameAs": [
+    {
+      "@id": "http://libris.kb.se/resource/bib/12915810"
+    }
+  ],
   "hasTitle": [
     {
       "@type": "Title",
@@ -27,6 +32,11 @@
       },
       {
         "@type": "ComplexSubject",
+        "sameAs": [
+          {
+            "@id": "http://id.loc.gov/authorities/label/Enzymes--Regulation."
+          }
+        ],
         "inScheme": {
           "@id": "https://id.kb.se/term/lcsh"
         },
@@ -34,6 +44,11 @@
       },
       {
         "@type": "Topic",
+        "sameAs": [
+          {
+            "@id": "http://id.loc.gov/authorities/label/Biological%20control%20systems."
+          }
+        ],
         "inScheme": {
           "@id": "https://id.kb.se/term/lcsh"
         },

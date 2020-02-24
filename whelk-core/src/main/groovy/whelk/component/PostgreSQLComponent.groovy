@@ -19,7 +19,6 @@ import whelk.exception.TooHighEncodingLevelException
 import whelk.exception.WhelkException
 import whelk.exception.WhelkRuntimeException
 import whelk.filter.LinkFinder
-import whelk.util.LegacyIntegrationTools
 
 import javax.sql.DataSource
 import java.sql.Array
@@ -71,19 +70,16 @@ class PostgreSQLComponent implements Storage {
                      GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS,
                                            GET_DOCUMENT_VERSION_BY_MAIN_ID,
                                            GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID,
-                                           GET_DOCUMENT_BY_SAMEAS_ID, LOAD_ALL_DOCUMENTS,
+                                           LOAD_ALL_DOCUMENTS,
                                            LOAD_ALL_DOCUMENTS_BY_COLLECTION,
-                                           DELETE_DOCUMENT_STATEMENT, STATUS_OF_DOCUMENT,
+                                           STATUS_OF_DOCUMENT,
                                            INSERT_IDENTIFIERS,
-                                           LOAD_RECORD_IDENTIFIERS, LOAD_THING_IDENTIFIERS, DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
+                                           DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
                                            GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, FOLLOW_DEPENDENCIES, FOLLOW_DEPENDERS,
                                            GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE, GET_COLLECTION_BY_SYSTEM_ID
-    protected String LOAD_SETTINGS, SAVE_SETTINGS
     protected String GET_INCOMING_LINK_COUNT
-    protected String GET_DEPENDERS
     protected String GET_DEPENDENCIES_OF_TYPE, GET_DEPENDERS_OF_TYPE
     protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
-    protected String QUERY_LD_API
     protected String FIND_BY, COUNT_BY
     protected String GET_SYSTEMID_BY_IRI
     protected String GET_SYSTEMIDS_BY_IRIS
@@ -164,7 +160,6 @@ class PostgreSQLComponent implements Storage {
         mainTableName = sqlMainTable
         String idTableName = mainTableName + "__identifiers"
         String versionsTableName = mainTableName + "__versions"
-        String settingsTableName = mainTableName + "__settings"
         String dependenciesTableName = mainTableName + "__dependencies"
         String profilesTableName = mainTableName + "__profiles"
         String cardsTableName = mainTableName + "__cards"
@@ -206,8 +201,6 @@ class PostgreSQLComponent implements Storage {
                 "WHERE id = (SELECT id FROM $idTableName " +
                 "WHERE iri = ? AND mainid = 't') " +
                 "ORDER BY modified"
-        GET_DOCUMENT_BY_SAMEAS_ID = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
-                "WHERE data->'@graph' @> ?"
         GET_RECORD_ID_BY_THING_ID = "SELECT id FROM $idTableName WHERE iri = ? AND graphIndex = 1"
         GET_DOCUMENT_BY_MAIN_ID = "SELECT id,data,created,modified,deleted " +
                 "FROM $mainTableName " +
@@ -241,10 +234,6 @@ class PostgreSQLComponent implements Storage {
                 "SELECT collection FROM t WHERE collection IS NOT NULL"
         LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
                 "WHERE modified >= ? AND modified <= ? AND collection = ? AND deleted = false"
-        LOAD_RECORD_IDENTIFIERS = "SELECT iri from $idTableName WHERE id = ? AND graphIndex = 0"
-        LOAD_THING_IDENTIFIERS = "SELECT iri from $idTableName WHERE id = ? AND graphIndex = 1"
-
-        DELETE_DOCUMENT_STATEMENT = "DELETE FROM $mainTableName WHERE id = ?"
         STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
                 "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.iri = ?"
         GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE iri = 'https://id.kb.se/vocab/context')"
@@ -276,18 +265,10 @@ class PostgreSQLComponent implements Storage {
         IS_CARD_CHANGED = "SELECT card.changed >= doc.modified " +
                 "FROM lddb__cards card, lddb doc WHERE doc.id = card.id AND doc.id = ?"
 
-        GET_DEPENDERS = "SELECT DISTINCT id FROM $dependenciesTableName WHERE dependsOnId = ? ORDER BY id"
         GET_INCOMING_LINK_COUNT = "SELECT COUNT(id) FROM $dependenciesTableName WHERE dependsOnId = ?"
 
         GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
         GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
-
-        QUERY_LD_API = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE deleted IS NOT TRUE AND "
-
-        // SQL for settings management
-        LOAD_SETTINGS = "SELECT key,settings FROM $settingsTableName where key = ?"
-        SAVE_SETTINGS = "WITH upsertsettings AS (UPDATE $settingsTableName SET settings = ? WHERE key = ? RETURNING *) " +
-                "INSERT INTO $settingsTableName (key, settings) SELECT ?,? WHERE NOT EXISTS (SELECT * FROM upsertsettings)"
 
         FIND_BY = "SELECT id, data, created, modified, deleted " +
                 "FROM $mainTableName " +
@@ -522,103 +503,6 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    /**
-     * Remove both the document at 'remainingID' and the one at 'disapperaingID' and replace them
-     * with 'remainingDocument' at 'remainingID'.
-     *
-     * Will throw exception if 'remainingDocument' does not internally have id set to 'remainingID'
-     *
-     * The replacement is done atomically within a transaction.
-     */
-    void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn,
-                              String changedBy, String collection, JsonLd jsonld) {
-        Connection connection = getConnection()
-        connection.setAutoCommit(false)
-        PreparedStatement selectStatement = null
-        PreparedStatement updateStatement = null
-        ResultSet resultSet = null
-
-        try {
-            if (remainingDocument.getCompleteId() != remainingID)
-                throw new RuntimeException("Bad merge argument, remaining document must have the remaining ID.")
-
-            String remainingSystemID = getSystemIdByIri(remainingID, connection)
-            String disappearingSystemID = getSystemIdByIri(disappearingID, connection)
-
-            if (remainingSystemID == disappearingSystemID)
-                throw new SQLException("Cannot self-merge.")
-
-            // Update the remaining record
-            selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
-            selectStatement.setString(1, remainingSystemID)
-            resultSet = selectStatement.executeQuery()
-            if (!resultSet.next())
-                throw new SQLException("There is no document with the id: " + remainingID)
-            Date createdTime = new Date(resultSet.getTimestamp("created").getTime())
-            Document documentToBeReplaced = assembleDocument(resultSet)
-            if (documentToBeReplaced.deleted)
-                throw new SQLException("Not allowed to merge deleted record: " + remainingID)
-            resultSet.close()
-            Date modTime = new Date()
-            remainingDocument.setModified(modTime)
-            updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
-            rigUpdateStatement(updateStatement, remainingDocument, modTime, changedIn, changedBy, collection, false)
-            updateStatement.execute()
-            saveVersion(remainingDocument, connection, createdTime, modTime, changedIn, changedBy, collection, false)
-            refreshDerivativeTables(remainingDocument, connection, false)
-
-            // Update the disappearing record
-            selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
-            selectStatement.setString(1, disappearingSystemID)
-            resultSet = selectStatement.executeQuery()
-            if (!resultSet.next())
-                throw new SQLException("There is no document with the id: " + disappearingID)
-            Document disappearingDocument = assembleDocument(resultSet)
-            if (disappearingDocument.deleted)
-                throw new SQLException("Not allowed to merge deleted record: " + disappearingID)
-            disappearingDocument.setDeleted(true)
-            disappearingDocument.setModified(modTime)
-            createdTime = new Date(resultSet.getTimestamp("created").getTime())
-            resultSet.close()
-            updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
-            rigUpdateStatement(updateStatement, disappearingDocument, modTime, changedIn, changedBy, collection, true)
-            updateStatement.execute()
-            saveVersion(disappearingDocument, connection, createdTime, modTime, changedIn, changedBy, collection, true)
-            saveIdentifiers(disappearingDocument, connection, true, true)
-            saveDependencies(disappearingDocument, connection)
-            deleteCard(disappearingDocument, connection)
-
-            // Update dependers on the disappearing record
-            SortedSet<String> dependers = getDependencyData(disappearingSystemID, GET_DEPENDERS, connection)
-            for (String dependerShortId : dependers) {
-                selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
-                selectStatement.setString(1, dependerShortId)
-                resultSet = selectStatement.executeQuery()
-                if (!resultSet.next())
-                    throw new SQLException("There is no document with the id: " + dependerShortId + ", the document was to be updated because of merge of " + remainingID + " and " + disappearingID)
-                Document dependerDoc = assembleDocument(resultSet)
-                if (linkFinder != null)
-                    linkFinder.normalizeIdentifiers(dependerDoc, connection)
-                dependerDoc.setModified(modTime)
-                updateStatement = connection.prepareStatement(UPDATE_DOCUMENT)
-                String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, jsonld)
-                rigUpdateStatement(updateStatement, dependerDoc, modTime, changedIn, changedBy, dependerCollection, false)
-                updateStatement.execute()
-                updateStatement.close()
-                refreshDerivativeTables(dependerDoc, connection, false)
-            }
-
-            // All done
-            connection.commit()
-        } catch (Throwable e) {
-            connection.rollback()
-            throw e
-        } finally {
-            close(resultSet, selectStatement, updateStatement, connection)
-        }
-    }
-
-    /**
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
@@ -1957,27 +1841,6 @@ class PostgreSQLComponent implements Storage {
         } finally {
             close(removeDependencies, connection)
         }
-    }
-
-    Map loadSettings(String key) {
-        Connection connection = getConnection()
-        PreparedStatement selectstmt = null
-        ResultSet rs = null
-        Map settings = [:]
-        try {
-            selectstmt = connection.prepareStatement(LOAD_SETTINGS)
-            selectstmt.setString(1, key)
-            rs = selectstmt.executeQuery()
-            if (rs.next()) {
-                settings = mapper.readValue(rs.getString("settings"), Map)
-            } else if (log.isTraceEnabled()) {
-                log.trace("No settings found for $key")
-            }
-        } finally {
-            close(rs, selectstmt, connection)
-        }
-
-        return settings
     }
 
     /**

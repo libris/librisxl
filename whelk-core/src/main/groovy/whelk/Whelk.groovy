@@ -311,22 +311,7 @@ class Whelk implements Storage {
     boolean quickCreateDocument(Document document, String changedIn, String changedBy, String collection) {
         return storage.quickCreateDocument(document, changedIn, changedBy, collection)
     }
-
-    void bulkStore(final List<Document> documents, String changedIn,
-                   String changedBy, String collection,
-                   @Deprecated boolean useDocumentCache = false) {
-        if (storage.bulkStore(documents, changedIn, changedBy, collection)) {
-            if (elastic) {
-                elastic.bulkIndex(documents, collection, this)
-                for (Document doc : documents) {
-                    reindexAffected(doc, new TreeSet<>())
-                }
-            }
-        } else {
-            log.warn("Bulk store failed, not indexing : ${documents.first().id} - ${documents.last().id}")
-        }
-    }
-
+  
     void remove(String id, String changedIn, String changedBy) {
         log.debug "Deleting ${id} from Whelk"
         Document doc = storage.load(id)
@@ -339,41 +324,6 @@ class Whelk implements Storage {
         else {
             log.warn "No Elastic present when deleting. Skipping call to elastic.remove(${id})"
         }
-    }
-
-    void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn, String changedBy, String collection) {
-        storage.mergeExisting(remainingID, disappearingID, remainingDocument, changedIn, changedBy, collection, jsonld)
-
-        if (elastic) {
-            String remainingSystemID = storage.getSystemIdByIri(remainingID)
-            String disappearingSystemID = storage.getSystemIdByIri(disappearingID)
-            List<Tuple2<String, String>> dependerRows = storage.followDependers(remainingSystemID, JsonLd.NON_DEPENDANT_RELATIONS)
-            dependerRows.addAll( storage.followDependers(disappearingSystemID) )
-            List<String> dependerSystemIDs = []
-            for (Tuple2<String, String> dependerRow : dependerRows) {
-                dependerSystemIDs.add( (String) dependerRow.get(0) )
-            }
-            Map<String, Document> dependerDocuments = bulkLoad(dependerSystemIDs)
-
-            List<Document> authDocs = []
-            List<Document> bibDocs = []
-            List<Document> holdDocs = []
-            for (Object key : dependerDocuments.keySet()) {
-                Document doc = dependerDocuments.get(key)
-                String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
-                if (dependerCollection.equals("auth"))
-                    authDocs.add(doc)
-                else if (dependerCollection.equals("bib"))
-                    bibDocs.add(doc)
-                else if (dependerCollection.equals("hold"))
-                    holdDocs.add(doc)
-            }
-
-            elastic.bulkIndex(authDocs, "auth", this)
-            elastic.bulkIndex(bibDocs, "bib", this)
-            elastic.bulkIndex(holdDocs, "hold", this)
-        }
-
     }
 
     void embellish(Document document, boolean filterOutNonChipTerms = false) {
@@ -390,7 +340,7 @@ class Whelk implements Storage {
         return storage.getAttachedHoldings(thingIdentifiers).collect(this.&loadEmbellished)
     }
 
-    private boolean batchJobThread() {
+    private static boolean batchJobThread() {
         return Thread.currentThread().getThreadGroup().getName().contains("whelktool")
     }
 }
