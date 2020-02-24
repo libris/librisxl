@@ -74,7 +74,8 @@ class PostgreSQLComponent implements Storage {
             SELECT ?,?,?,?,?,?,?,?,?
             """.stripIndent()
 
-    private static final String GET_DOCUMENT = "SELECT id, data, created, modified, deleted FROM lddb WHERE id = ?"
+    private static final String GET_DOCUMENT =
+            "SELECT id, data, created, modified, deleted FROM lddb WHERE id = ?"
 
     private static final String GET_DOCUMENT_BY_IRI = """
             SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted 
