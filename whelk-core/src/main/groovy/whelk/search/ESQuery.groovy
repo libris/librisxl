@@ -17,7 +17,7 @@ class ESQuery {
     private static final ObjectMapper mapper = new ObjectMapper()
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
-        'q', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost'
+        'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens'
     ]
 
     private Map<String, List<String>> boostFieldsByType = [:]
@@ -89,6 +89,10 @@ class ESQuery {
         if (originalTypeParam != null) {
             queryParameters.put('@type',
                     expandTypeParam(originalTypeParam, whelk.jsonld))
+        }
+
+        if (queryParameters.containsKey('o')) {
+            queryParameters.put('_links', queryParameters.get('o'))
         }
 
         q = getQueryString(queryParameters)
