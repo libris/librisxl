@@ -65,7 +65,7 @@ class PostgreSQLComponent implements Storage {
             """.stripIndent()
 
     private static final String INSERT_DOCUMENT = """
-            INSERT INTO lddb (id,data,collection,changedIn,changedBy,checksum,deleted,created,modified)
+            INSERT INTO lddb (id, data, collection, changedIn, changedBy, checksum, deleted, created, modified)
             VALUES (?,?,?,?,?,?,?,?,?)
             """.stripIndent()
 
@@ -78,25 +78,27 @@ class PostgreSQLComponent implements Storage {
             "SELECT id, data, created, modified, deleted FROM lddb WHERE id = ?"
 
     private static final String GET_DOCUMENT_BY_IRI = """
-            SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted 
+            SELECT lddb.id, lddb.data, lddb.created, lddb.modified, lddb.deleted 
             FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id
             WHERE lddb__identifiers.iri = ?
             """.stripIndent()
 
     private static final String GET_DOCUMENT_FOR_UPDATE =
-            "SELECT id,data,collection,created,modified,deleted,changedBy FROM lddb WHERE id = ? FOR UPDATE"
+            "SELECT id, data, collection, created, modified, deleted, changedBy FROM lddb WHERE id = ? FOR UPDATE"
 
     private static final String GET_DOCUMENT_VERSION =
             "SELECT id, data FROM lddb__versions WHERE id = ? AND checksum = ?"
 
     private static final String GET_DOCUMENT_VERSION_BY_MAIN_ID = """
-            SELECT id, data FROM lddb__versions 
+            SELECT id, data 
+            FROM lddb__versions 
             WHERE id = (SELECT id FROM lddb__identifiers WHERE iri = ? AND mainid = 't') 
             AND checksum = ?
             """.stripIndent()
 
     private static final String GET_ALL_DOCUMENT_VERSIONS = """
-            SELECT id, data, deleted, created, modified FROM lddb__versions
+            SELECT id, data, deleted, created, modified 
+            FROM lddb__versions
             WHERE id = ? 
             ORDER BY modified DESC
             """.stripIndent()
@@ -112,7 +114,8 @@ class PostgreSQLComponent implements Storage {
             "SELECT id, data, created, modified, deleted FROM lddb WHERE modified >= ? AND modified <= ?"
 
     private static final String LOAD_ALL_DOCUMENTS_BY_COLLECTION = """
-            SELECT id,data,created,modified,deleted FROM lddb 
+            SELECT id, data, created, modified, deleted
+            FROM lddb 
             WHERE modified >= ? AND modified <= ? AND collection = ? AND deleted = false
             """.stripIndent()
 
@@ -164,14 +167,14 @@ class PostgreSQLComponent implements Storage {
 
     private static final String UPSERT_CARD = """
             INSERT INTO lddb__cards (id, data, checksum, changed)
-            VALUES (?,?,?,?) 
+            VALUES (?, ?, ?, ?) 
             ON CONFLICT (id) DO UPDATE 
             SET (data, checksum, changed) = (EXCLUDED.data, EXCLUDED.checksum, EXCLUDED.changed) 
             WHERE lddb__cards.checksum != EXCLUDED.checksum
             """.stripIndent()
 
     private static final String UPDATE_CARD =
-            "UPDATE lddb__cards SET (data, checksum, changed) = (?,?,?) WHERE id = ? AND checksum != ?"
+            "UPDATE lddb__cards SET (data, checksum, changed) = (?, ?, ?) WHERE id = ? AND checksum != ?"
 
     private static final String GET_CARD =
             "SELECT data FROM lddb__cards WHERE ID = ?"
