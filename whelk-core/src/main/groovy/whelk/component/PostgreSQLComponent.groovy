@@ -157,11 +157,11 @@ class PostgreSQLComponent implements Storage {
             "SELECT dependsOnId FROM lddb__dependencies WHERE id = ? AND relation = ?"
 
     private static final String UPSERT_CARD = """
-                INSERT INTO lddb__cards (id, data, checksum, changed) VALUES (?,?,?,?) 
-                ON CONFLICT (id) DO UPDATE 
-                SET (data, checksum, changed) = (EXCLUDED.data, EXCLUDED.checksum, EXCLUDED.changed) 
-                WHERE lddb__cards.checksum != EXCLUDED.checksum
-                """.stripIndent()
+            INSERT INTO lddb__cards (id, data, checksum, changed) VALUES (?,?,?,?) 
+            ON CONFLICT (id) DO UPDATE 
+            SET (data, checksum, changed) = (EXCLUDED.data, EXCLUDED.checksum, EXCLUDED.changed) 
+            WHERE lddb__cards.checksum != EXCLUDED.checksum
+            """.stripIndent()
 
     private static final String UPDATE_CARD =
             "UPDATE lddb__cards SET (data, checksum, changed) = (?,?,?) WHERE id = ? AND checksum != ?"
