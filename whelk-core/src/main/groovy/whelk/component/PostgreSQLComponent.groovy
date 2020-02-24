@@ -77,6 +77,12 @@ class PostgreSQLComponent implements Storage {
     private static final String GET_DOCUMENT =
             "SELECT id, data, created, modified, deleted FROM lddb WHERE id = ?"
 
+    private static final String GET_DOCUMENT_BY_MAIN_ID = """
+            SELECT id, data, created, modified, deleted 
+            FROM lddb 
+            WHERE id = (SELECT id FROM lddb__identifiers WHERE mainid = 't' AND iri = ?)
+            """.stripIndent()
+
     private static final String GET_DOCUMENT_BY_IRI = """
             SELECT lddb.id, lddb.data, lddb.created, lddb.modified, lddb.deleted 
             FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id
@@ -120,21 +126,16 @@ class PostgreSQLComponent implements Storage {
             """.stripIndent()
 
     private static final String STATUS_OF_DOCUMENT = """
-            SELECT t1.id AS id, created, modified, deleted FROM lddb t1 
+            SELECT t1.id AS id, created, modified, deleted 
+            FROM lddb t1 
             JOIN lddb__identifiers t2 ON t1.id = t2.id WHERE t2.iri = ?
             """.stripIndent()
-
-    private static final String DELETE_IDENTIFIERS =
-            "DELETE FROM lddb__identifiers WHERE id = ?"
-
-    private static final String INSERT_IDENTIFIERS =
-            "INSERT INTO lddb__identifiers (id, iri, graphIndex, mainId) VALUES (?,?,?,?)"
 
     private static final String DELETE_DEPENDENCIES =
             "DELETE FROM lddb__dependencies WHERE id = ?"
 
     private static final String INSERT_DEPENDENCIES =
-            "INSERT INTO lddb__dependencies (id, relation, dependsOnId) VALUES (?,?,?)"
+            "INSERT INTO lddb__dependencies (id, relation, dependsOnId) VALUES (?, ?, ?)"
 
     private static final String FOLLOW_DEPENDENCIES = """
             WITH RECURSIVE deps(i) AS (  
@@ -191,14 +192,14 @@ class PostgreSQLComponent implements Storage {
     private static final String IS_CARD_CHANGED =
             "SELECT card.changed >= doc.modified FROM lddb__cards card, lddb doc WHERE doc.id = card.id AND doc.id = ?"
 
+    private static final String INSERT_IDENTIFIERS =
+            "INSERT INTO lddb__identifiers (id, iri, graphIndex, mainId) VALUES (?, ?, ?, ?)"
+
+    private static final String DELETE_IDENTIFIERS =
+            "DELETE FROM lddb__identifiers WHERE id = ?"
+
     private static final String GET_RECORD_ID_BY_THING_ID =
             "SELECT id FROM lddb__identifiers WHERE iri = ? AND graphIndex = 1"
-
-    private static final String GET_DOCUMENT_BY_MAIN_ID = """
-            SELECT id, data, created, modified, deleted 
-            FROM lddb 
-            WHERE id = (SELECT id FROM lddb__identifiers WHERE mainid = 't' AND iri = ?)
-            """.stripIndent()
 
     private static final String GET_RECORD_ID = """
             SELECT iri 
