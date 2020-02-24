@@ -20,7 +20,6 @@ class SearchUtils {
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper()
 
     enum SearchType {
-        FIND_BY_VALUE,
         FIND_REVERSE,
         ELASTIC,
         POSTGRES
@@ -61,9 +60,7 @@ class SearchUtils {
         }
 
         Map results
-        if (relation && value) {
-            results = findByValue(relation, value, limit, offset)
-        } else if (object) {
+        if (object) {
             results = findReverse(
                     object,
                     getReservedQueryParameter('_lens', queryParameters),
@@ -88,33 +85,6 @@ class SearchUtils {
         }
 
         return results
-    }
-
-    private Map findByValue(String relation, String value,
-                            int limit, int offset) {
-        log.debug("Calling findByValue with p: ${relation} and value: ${value}")
-
-        List<Document> docs = whelk.storage.findByValue(relation, value,
-                                                        limit, offset)
-
-        List mappings = []
-        mappings << ['variable': 'p',
-                     'predicate': ld.toChip(getVocabEntry('predicate')),
-                     'value': relation]
-        mappings << ['variable': 'value',
-                     'predicate': ld.toChip(getVocabEntry('object')),
-                     'value': value]
-
-        Map pageParams = ['p': relation, 'value': value,
-                          '_limit': limit]
-
-        int total = whelk.storage.countByValue(relation, value)
-
-        List items = docs.collect { ld.toCard(it.data) }
-
-        return assembleSearchResults(SearchType.FIND_BY_VALUE,
-                                     items, mappings, pageParams,
-                                     limit, offset, total)
     }
 
     private Map findReverse(String iri, String lens, int limit, int offset) {
@@ -467,9 +437,6 @@ class SearchUtils {
         Map queryParameters = queryParameters0.clone()
         Tuple2 result
         switch (st) {
-            case SearchType.FIND_BY_VALUE:
-                result = getValueParams(queryParameters)
-                break
             case SearchType.FIND_REVERSE:
                 result = getReverseParams(queryParameters)
                 break
@@ -478,15 +445,6 @@ class SearchUtils {
                 break
         }
         return result
-    }
-
-    private Tuple2 getValueParams(Map queryParameters) {
-        String relation = queryParameters.remove('p')
-        String value = queryParameters.remove('value')
-        List initialParams = [makeParam('p', relation), makeParam('value', value)]
-        List keys = (queryParameters.keySet() as List).sort()
-
-        return new Tuple2(initialParams, keys)
     }
 
     private Tuple2 getReverseParams(Map queryParameters) {

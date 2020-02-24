@@ -261,15 +261,6 @@ class PostgreSQLComponent implements Storage {
             WHERE id IN (SELECT id FROM lddb__identifiers WHERE iri = 'https://id.kb.se/vocab/context')
             """.stripIndent()
 
-    private static final String FIND_BY = """
-            SELECT id, data, created, modified, deleted 
-            FROM lddb 
-            WHERE data->'@graph' @> ? OR data->'@graph' @> ? LIMIT ? OFFSET ?
-            """.stripIndent()
-
-    private static final String COUNT_BY =
-            "SELECT count(*) FROM lddb WHERE data->'@graph' @> ? OR data->'@graph' @> ?"
-
     private static final String GET_LEGACY_PROFILE =
             "SELECT profile FROM lddb__profiles WHERE library_id = ?"
 
@@ -1917,105 +1908,6 @@ class PostgreSQLComponent implements Storage {
         HikariDataSource pool = new HikariDataSource(config)
         log.info("Created additional connection pool: ${pool.getPoolName()}, max size:${pool.getMaximumPoolSize()}")
         return pool
-    }
-
-    List<Document> findByValue(String relation, String value, int limit,
-                               int offset) {
-        Connection connection = getConnection()
-        PreparedStatement find = connection.prepareStatement(FIND_BY)
-
-        find = rigFindByValueStatement(find, relation, value, limit, offset)
-
-        try {
-            return executeFindByQuery(find)
-        } finally {
-            close(find, connection)
-        }
-    }
-
-    int countByValue(String relation, String value) {
-        Connection connection = getConnection()
-        PreparedStatement count = connection.prepareStatement(COUNT_BY)
-
-        count = rigCountByValueStatement(count, relation, value)
-
-        try {
-            return executeCountByQuery(count)
-        } finally {
-            connection.close()
-        }
-    }
-
-    private static List<Document> executeFindByQuery(PreparedStatement query) {
-        log.debug("Executing find query: ${query}")
-
-        ResultSet rs = query.executeQuery()
-
-        List<Document> docs = []
-
-        while (rs.next()) {
-            docs << assembleDocument(rs)
-        }
-
-        return docs
-    }
-
-    private static int executeCountByQuery(PreparedStatement query) {
-        log.debug("Executing count query: ${query}")
-
-        ResultSet rs = query.executeQuery()
-
-        int result = 0
-
-        if (rs.next()) {
-            result = rs.getInt('count')
-        }
-
-        return result
-    }
-
-    private static PreparedStatement rigFindByValueStatement(PreparedStatement find,
-                                                             String relation,
-                                                             String value,
-                                                             int limit,
-                                                             int offset) {
-        List valueQuery = [[(relation): value]]
-        List valuesQuery = [[(relation): [value]]]
-
-        return rigFindByStatement(find, valueQuery, valuesQuery, limit, offset)
-    }
-
-    private static PreparedStatement rigCountByValueStatement(PreparedStatement find,
-                                                              String relation,
-                                                              String value) {
-        List valueQuery = [[(relation): value]]
-        List valuesQuery = [[(relation): [value]]]
-
-        return rigCountByStatement(find, valueQuery, valuesQuery)
-    }
-
-    private static PreparedStatement rigFindByStatement(PreparedStatement find,
-                                                        List firstCondition,
-                                                        List secondCondition,
-                                                        int limit,
-                                                        int offset) {
-      find.setObject(1, mapper.writeValueAsString(firstCondition),
-                     OTHER)
-      find.setObject(2, mapper.writeValueAsString(secondCondition),
-                     OTHER)
-      find.setInt(3, limit)
-      find.setInt(4, offset)
-      return find
-    }
-
-    private static PreparedStatement rigCountByStatement(PreparedStatement find,
-                                                         List firstCondition,
-                                                         List secondCondition) {
-      find.setObject(1, mapper.writeValueAsString(firstCondition),
-                     OTHER)
-      find.setObject(2, mapper.writeValueAsString(secondCondition),
-                     OTHER)
-      return find
     }
 
     private String getDescriptionChangerId(String changedBy) {
