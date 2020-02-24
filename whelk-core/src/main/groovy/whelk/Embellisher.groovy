@@ -27,6 +27,10 @@ class Embellisher {
     }
 
     private List getEmbellishData(Document document) {
+        if (document.getThingIdentifiers().isEmpty()) {
+            return []
+        }
+
         Iterable<Map> start = [document.data]
 
         Set<String> visitedIris = new HashSet<>()
