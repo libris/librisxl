@@ -89,7 +89,7 @@ class WhelkCopier {
     Iterable<Document> selectBySqlWhere(whereClause) {
         def query = """
             SELECT id, data, created, modified, deleted
-            FROM $source.storage.mainTableName
+            FROM lddb
             WHERE $whereClause
             """
         def conn = source.storage.getConnection()

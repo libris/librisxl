@@ -47,7 +47,7 @@ class JsonLD2RdfXml implements FormatConverter {
     private synchronized readContextFromDb() {
         if (m_context == null) {
             Properties props = PropertyLoader.loadProperties("secret")
-            PostgreSQLComponent postgreSQLComponent = new PostgreSQLComponent(props.getProperty("sqlUrl"), props.getProperty("sqlMaintable"))
+            PostgreSQLComponent postgreSQLComponent = new PostgreSQLComponent(props.getProperty("sqlUrl"))
             Map context = mapper.readValue(postgreSQLComponent.getContext(), HashMap.class)
             m_context = [:]
             m_context[JsonLd.CONTEXT_KEY] = context[JsonLd.CONTEXT_KEY]

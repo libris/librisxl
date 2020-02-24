@@ -50,7 +50,6 @@ import static java.sql.Types.OTHER
 @CompileStatic
 class PostgreSQLComponent implements Storage {
     public static final String PROPERTY_SQL_URL = "sqlUrl"
-    public static final String PROPERTY_SQL_MAIN_TABLE_NAME = "sqlMaintable"
     public static final String PROPERTY_SQL_MAX_POOL_SIZE = "sqlMaxPoolSize"
 
     public static final ObjectMapper mapper = new ObjectMapper()
@@ -58,43 +57,200 @@ class PostgreSQLComponent implements Storage {
     private static final int DEFAULT_MAX_POOL_SIZE = 16
     private static final String driverClass = "org.postgresql.Driver"
 
+    // SQL statements
+    private static final String UPDATE_DOCUMENT = "UPDATE lddb SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
+
+    private static final String INSERT_DOCUMENT = """
+                INSERT INTO lddb (id,data,collection,changedIn,changedBy,checksum,deleted,created,modified)
+                VALUES (?,?,?,?,?,?,?,?,?)
+                """.stripIndent()
+
+    private static final String INSERT_DOCUMENT_VERSION = """
+                INSERT INTO lddb__versions (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted)
+                SELECT ?,?,?,?,?,?,?,?,?
+                """.stripIndent()
+
+    private static final String GET_DOCUMENT = "SELECT id, data, created, modified, deleted FROM lddb WHERE id = ?"
+
+    private static final String GET_DOCUMENT_BY_IRI = """
+            SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted 
+            FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id
+            WHERE lddb__identifiers.iri = ?
+            """.stripIndent()
+
+    private static final String GET_DOCUMENT_FOR_UPDATE =
+            "SELECT id,data,collection,created,modified,deleted,changedBy FROM lddb WHERE id = ? FOR UPDATE"
+
+    private static final String GET_DOCUMENT_VERSION =
+            "SELECT id, data FROM lddb__versions WHERE id = ? AND checksum = ?"
+
+    private static final String GET_DOCUMENT_VERSION_BY_MAIN_ID = """
+            SELECT id, data FROM lddb__versions 
+            WHERE id = (SELECT id FROM lddb__identifiers WHERE iri = ? AND mainid = 't') 
+            AND checksum = ?
+            """.stripIndent()
+
+    private static final String GET_ALL_DOCUMENT_VERSIONS = """
+            SELECT id, data, deleted, created, modified FROM lddb__versions
+            WHERE id = ? 
+            ORDER BY modified DESC
+            """.stripIndent()
+
+    private static final String GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID = """
+            SELECT id, data, deleted, created, modified FROM lddb__versions 
+            WHERE id = (SELECT id FROM lddb__identifiers WHERE iri = ? AND mainid = 't')
+            ORDER BY modified
+            """.stripIndent()
+
+    private static final String LOAD_ALL_DOCUMENTS =
+            "SELECT id, data, created, modified, deleted FROM lddb WHERE modified >= ? AND modified <= ?"
+
+    private static final String LOAD_ALL_DOCUMENTS_BY_COLLECTION = """
+            SELECT id,data,created,modified,deleted FROM lddb 
+            WHERE modified >= ? AND modified <= ? AND collection = ? AND deleted = false
+            """.stripIndent()
+
+    private static final String STATUS_OF_DOCUMENT = """
+            SELECT t1.id AS id, created, modified, deleted FROM lddb t1 
+            JOIN lddb__identifiers t2 ON t1.id = t2.id WHERE t2.iri = ?
+            """.stripIndent()
+
+    private static final String DELETE_IDENTIFIERS =
+            "DELETE FROM lddb__identifiers WHERE id = ?"
+
+    private static final String INSERT_IDENTIFIERS =
+            "INSERT INTO lddb__identifiers (id, iri, graphIndex, mainId) VALUES (?,?,?,?)"
+
+    private static final String DELETE_DEPENDENCIES =
+            "DELETE FROM lddb__dependencies WHERE id = ?"
+
+    private static final String INSERT_DEPENDENCIES =
+            "INSERT INTO lddb__dependencies (id, relation, dependsOnId) VALUES (?,?,?)"
+
+    private static final String FOLLOW_DEPENDENCIES = """
+            WITH RECURSIVE deps(i) AS (  
+                    VALUES (?, null)  
+                UNION
+                    SELECT d.dependsonid, d.relation 
+                    FROM lddb__dependencies d 
+                    INNER JOIN deps deps1 ON d.id = i AND d.relation NOT IN (€)
+            ) SELECT * FROM deps
+            """.stripIndent()
+
+    private static final String FOLLOW_DEPENDERS = """
+            WITH RECURSIVE deps(i) AS (  
+                    VALUES (?, null) 
+                UNION  
+                    SELECT d.id, d.relation 
+                    FROM lddb__dependencies d
+                    INNER JOIN deps deps1 ON d.dependsonid = i AND d.relation NOT IN (€) 
+            ) SELECT * FROM deps
+            """.stripIndent()
+
+    private static final String GET_INCOMING_LINK_COUNT =
+            "SELECT COUNT(id) FROM lddb__dependencies WHERE dependsOnId = ?"
+
+    private static final String GET_DEPENDERS_OF_TYPE =
+            "SELECT id FROM lddb__dependencies WHERE dependsOnId = ? AND relation = ?"
+
+    private static final String GET_DEPENDENCIES_OF_TYPE =
+            "SELECT dependsOnId FROM lddb__dependencies WHERE id = ? AND relation = ?"
+
+    private static final String UPSERT_CARD = """
+                INSERT INTO lddb__cards (id, data, checksum, changed) VALUES (?,?,?,?) 
+                ON CONFLICT (id) DO UPDATE 
+                SET (data, checksum, changed) = (EXCLUDED.data, EXCLUDED.checksum, EXCLUDED.changed) 
+                WHERE lddb__cards.checksum != EXCLUDED.checksum
+                """.stripIndent()
+
+    private static final String UPDATE_CARD =
+            "UPDATE lddb__cards SET (data, checksum, changed) = (?,?,?) WHERE id = ? AND checksum != ?"
+
+    private static final String GET_CARD = "SELECT data FROM lddb__cards WHERE ID = ?"
+
+    private static final String BULK_LOAD_CARDS =
+            "SELECT in_id as id, data from unnest(?) as in_id LEFT JOIN lddb__cards c ON in_id = c.id"
+
+    private static final String DELETE_CARD = "DELETE FROM lddb__cards WHERE ID = ?"
+
+    private static final String CARD_EXISTS = "SELECT EXISTS(SELECT 1 from lddb__cards where id = ?)"
+
+    private static final String IS_CARD_CHANGED =
+            "SELECT card.changed >= doc.modified FROM lddb__cards card, lddb doc WHERE doc.id = card.id AND doc.id = ?"
+
+    private static final String GET_RECORD_ID_BY_THING_ID =
+            "SELECT id FROM lddb__identifiers WHERE iri = ? AND graphIndex = 1"
+
+    private static final String GET_DOCUMENT_BY_MAIN_ID = """
+            SELECT id, data, created, modified, deleted FROM lddb 
+            WHERE id = (SELECT id FROM lddb__identifiers WHERE mainid = 't' AND iri = ?)
+            """.stripIndent()
+
+    private static final String GET_RECORD_ID = """
+            SELECT iri FROM lddb__identifiers 
+            WHERE graphindex = 0 AND mainid = 't' AND id = (SELECT id FROM lddb__identifiers WHERE iri = ?)
+            """.stripIndent()
+
+    private static final String GET_THING_ID = """
+            SELECT iri FROM lddb__identifiers 
+            WHERE graphindex = 1 AND mainid = 't' AND id = (SELECT id FROM lddb__identifiers WHERE iri = ?)
+            """.stripIndent()
+
+    private static final String GET_MAIN_ID = """
+            SELECT t2.iri FROM lddb__identifiers t1
+            JOIN lddb__identifiers t2 ON t2.id = t1.id AND t2.graphindex = t1.graphindex
+            WHERE t1.iri = ? AND t2.mainid = true
+            """.stripIndent()
+
+    private static final String GET_SYSTEMID_BY_IRI = """
+            SELECT lddb__identifiers.id, lddb.deleted FROM lddb__identifiers 
+            JOIN lddb ON lddb__identifiers.id = lddb.id WHERE lddb__identifiers.iri = ? 
+            """.stripIndent()
+
+    private static final String GET_SYSTEMIDS_BY_IRIS = """
+            SELECT lddb__identifiers.iri, lddb__identifiers.id, lddb.deleted
+            FROM lddb__identifiers, lddb, unnest(?) as in_iri
+            WHERE lddb__identifiers.iri = in_iri
+            AND lddb.id = lddb__identifiers.id
+            """.stripIndent()
+
+    private static final String GET_THING_MAIN_IRI_BY_SYSTEMID =
+            "SELECT iri FROM lddb__identifiers WHERE graphindex = 1 and mainid is true and id = ?"
+
+    private static final String GET_ID_TYPE = "SELECT graphindex, mainid FROM lddb__identifiers WHERE iri = ?"
+
+    private static final String GET_COLLECTION_BY_SYSTEM_ID = "SELECT collection FROM lddb where id = ?"
+
+    /** This query does the same as LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM lddb"
+        but much faster because postgres does not yet have 'loose indexscan' aka 'index skip scan'
+        https://wiki.postgresql.org/wiki/Loose_indexscan' */
+    private static final String LOAD_COLLECTIONS = """
+            WITH RECURSIVE t AS (
+                    (SELECT collection FROM lddb ORDER BY collection LIMIT 1) 
+                UNION ALL 
+                    SELECT (SELECT collection FROM lddb WHERE collection > t.collection ORDER BY collection LIMIT 1) 
+                    FROM t WHERE t.collection IS NOT NULL
+            ) SELECT collection FROM t WHERE collection IS NOT NULL
+            """.stripIndent()
+
+    private static final String GET_CONTEXT =
+            "SELECT data FROM lddb WHERE id IN (SELECT id FROM lddb__identifiers WHERE iri = 'https://id.kb.se/vocab/context')"
+
+    private static final String FIND_BY = """
+            SELECT id, data, created, modified, deleted 
+            FROM lddb WHERE data->'@graph' @> ? OR data->'@graph' @> ? LIMIT ? OFFSET ?
+            """.stripIndent()
+
+    private static final String COUNT_BY = "SELECT count(*) FROM lddb WHERE data->'@graph' @> ? OR data->'@graph' @> ?"
+
+    private static final String GET_LEGACY_PROFILE = "SELECT profile FROM lddb__profiles WHERE library_id = ?"
+
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
 
     boolean versioning = true
     boolean doVerifyDocumentIdRetention = true
 
-    // SQL statements
-    protected String UPDATE_DOCUMENT, INSERT_DOCUMENT,
-                     INSERT_DOCUMENT_VERSION, GET_DOCUMENT,
-                     GET_DOCUMENT_VERSION, GET_ALL_DOCUMENT_VERSIONS,
-                                           GET_DOCUMENT_VERSION_BY_MAIN_ID,
-                                           GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID,
-                                           LOAD_ALL_DOCUMENTS,
-                                           LOAD_ALL_DOCUMENTS_BY_COLLECTION,
-                                           STATUS_OF_DOCUMENT,
-                                           INSERT_IDENTIFIERS,
-                                           DELETE_IDENTIFIERS, LOAD_COLLECTIONS,
-                                           GET_DOCUMENT_FOR_UPDATE, GET_CONTEXT, GET_RECORD_ID_BY_THING_ID, FOLLOW_DEPENDENCIES, FOLLOW_DEPENDERS,
-                                           GET_DOCUMENT_BY_MAIN_ID, GET_RECORD_ID, GET_THING_ID, GET_MAIN_ID, GET_ID_TYPE, GET_COLLECTION_BY_SYSTEM_ID
-    protected String GET_INCOMING_LINK_COUNT
-    protected String GET_DEPENDENCIES_OF_TYPE, GET_DEPENDERS_OF_TYPE
-    protected String DELETE_DEPENDENCIES, INSERT_DEPENDENCIES
-    protected String FIND_BY, COUNT_BY
-    protected String GET_SYSTEMID_BY_IRI
-    protected String GET_SYSTEMIDS_BY_IRIS
-    protected String GET_THING_MAIN_IRI_BY_SYSTEMID
-    protected String GET_DOCUMENT_BY_IRI
-    protected String GET_LEGACY_PROFILE
-    protected String UPSERT_CARD
-    protected String UPDATE_CARD
-    protected String GET_CARD
-    protected String CARD_EXISTS
-    protected String DELETE_CARD
-    protected String BULK_LOAD_CARDS
-    protected String IS_CARD_CHANGED
-
-    String mainTableName
     LinkFinder linkFinder
     DependencyCache dependencyCache
     JsonLd jsonld
@@ -113,16 +269,14 @@ class PostgreSQLComponent implements Storage {
                 ? Integer.parseInt(properties.getProperty(PROPERTY_SQL_MAX_POOL_SIZE))
                 : DEFAULT_MAX_POOL_SIZE
 
-        setup(properties.getProperty(PROPERTY_SQL_URL), properties.getProperty(PROPERTY_SQL_MAIN_TABLE_NAME),
-                maxPoolSize)
+        setup(properties.getProperty(PROPERTY_SQL_URL), maxPoolSize)
     }
 
-    PostgreSQLComponent(String sqlUrl, String sqlMainTable) {
-        setup(sqlUrl, sqlMainTable, DEFAULT_MAX_POOL_SIZE)
+    PostgreSQLComponent(String sqlUrl) {
+        setup(sqlUrl, DEFAULT_MAX_POOL_SIZE)
     }
 
-    private void setup(String sqlUrl, String sqlMainTable, int maxPoolSize) {
-        setupStatements(sqlMainTable)
+    private void setup(String sqlUrl, int maxPoolSize) {
 
         if (sqlUrl) {
             HikariConfig config = new HikariConfig()
@@ -154,148 +308,6 @@ class PostgreSQLComponent implements Storage {
         }
 
         this.dependencyCache = new DependencyCache(this)
-    }
-
-    private void setupStatements(String sqlMainTable) {
-        mainTableName = sqlMainTable
-        String idTableName = mainTableName + "__identifiers"
-        String versionsTableName = mainTableName + "__versions"
-        String dependenciesTableName = mainTableName + "__dependencies"
-        String profilesTableName = mainTableName + "__profiles"
-        String cardsTableName = mainTableName + "__cards"
-
-        // Setting up sql-statements
-        UPDATE_DOCUMENT = "UPDATE $mainTableName SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? WHERE id = ?"
-        INSERT_DOCUMENT = "INSERT INTO $mainTableName (id,data,collection,changedIn,changedBy,checksum,deleted," +
-                "created,modified) VALUES (?,?,?,?,?,?,?,?,?)"
-        DELETE_IDENTIFIERS = "DELETE FROM $idTableName WHERE id = ?"
-        INSERT_IDENTIFIERS = "INSERT INTO $idTableName (id, iri, graphIndex, mainId) VALUES (?,?,?,?)"
-
-        DELETE_DEPENDENCIES = "DELETE FROM $dependenciesTableName WHERE id = ?"
-        INSERT_DEPENDENCIES = "INSERT INTO $dependenciesTableName (id, relation, dependsOnId) VALUES (?,?,?)"
-
-        INSERT_DOCUMENT_VERSION = "INSERT INTO $versionsTableName (id, data, collection, changedIn, changedBy, checksum, created, modified, deleted) SELECT ?,?,?,?,?,?,?,?,? "
-
-        GET_CARD = "SELECT data FROM $cardsTableName WHERE ID = ?"
-        CARD_EXISTS = "SELECT EXISTS(SELECT 1 from $cardsTableName where id = ?)"
-        DELETE_CARD = "DELETE FROM $cardsTableName WHERE ID = ?"
-        UPSERT_CARD = """
-                INSERT INTO $cardsTableName (id, data, checksum, changed) VALUES (?,?,?,?) 
-                ON CONFLICT (id) DO UPDATE 
-                SET (data, checksum, changed) = (EXCLUDED.data, EXCLUDED.checksum, EXCLUDED.changed) 
-                WHERE ${cardsTableName}.checksum != EXCLUDED.checksum
-                """.stripIndent()
-        UPDATE_CARD = "UPDATE $cardsTableName SET (data, checksum, changed) = (?,?,?) WHERE id = ? AND checksum != ?"
-
-        GET_DOCUMENT = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE id= ?"
-        GET_DOCUMENT_FOR_UPDATE = "SELECT id,data,collection,created,modified,deleted,changedBy FROM $mainTableName WHERE id = ? FOR UPDATE"
-        GET_DOCUMENT_VERSION = "SELECT id,data FROM $versionsTableName WHERE id = ? AND checksum = ?"
-        GET_DOCUMENT_VERSION_BY_MAIN_ID = "SELECT id,data FROM $versionsTableName " +
-                "WHERE id = (SELECT id FROM $idTableName " +
-                "WHERE iri = ? AND mainid = 't') " +
-                "AND checksum = ?"
-        GET_ALL_DOCUMENT_VERSIONS = "SELECT id,data,deleted,created,modified " +
-                "FROM $versionsTableName WHERE id = ? ORDER BY modified DESC"
-        GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID = "SELECT id,data,deleted,created,modified " +
-                "FROM $versionsTableName " +
-                "WHERE id = (SELECT id FROM $idTableName " +
-                "WHERE iri = ? AND mainid = 't') " +
-                "ORDER BY modified"
-        GET_RECORD_ID_BY_THING_ID = "SELECT id FROM $idTableName WHERE iri = ? AND graphIndex = 1"
-        GET_DOCUMENT_BY_MAIN_ID = "SELECT id,data,created,modified,deleted " +
-                "FROM $mainTableName " +
-                "WHERE id = (SELECT id FROM $idTableName " +
-                "WHERE mainid = 't' AND iri = ?)"
-        GET_RECORD_ID = "SELECT iri FROM $idTableName " +
-                "WHERE graphindex = 0 AND mainid = 't' " +
-                "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
-        GET_THING_ID = "SELECT iri FROM $idTableName " +
-                "WHERE graphindex = 1 AND mainid = 't' " +
-                "AND id = (SELECT id FROM $idTableName WHERE iri = ?)"
-        GET_MAIN_ID = "SELECT t2.iri FROM $idTableName t1 " +
-                "JOIN $idTableName t2 " +
-                "ON t2.id = t1.id " +
-                "AND t2.graphindex = t1.graphindex " +
-                "WHERE t1.iri = ? AND t2.mainid = true;"
-        GET_ID_TYPE = "SELECT graphindex, mainid FROM $idTableName " +
-                "WHERE iri = ?"
-        GET_COLLECTION_BY_SYSTEM_ID = "SELECT collection FROM lddb where id = ?"
-        LOAD_ALL_DOCUMENTS = "SELECT id,data,created,modified,deleted FROM $mainTableName WHERE modified >= ? AND modified <= ?"
-        // This query does the same as LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM $mainTableName"
-        // but much faster because postgres does not yet have 'loose indexscan' aka 'index skip scan'
-        // https://wiki.postgresql.org/wiki/Loose_indexscan'
-        LOAD_COLLECTIONS = "WITH RECURSIVE t AS ( " +
-                "(SELECT collection FROM $mainTableName ORDER BY collection LIMIT 1) " +
-                "UNION ALL " +
-                "SELECT (SELECT collection FROM $mainTableName WHERE collection > t.collection ORDER BY collection LIMIT 1) " +
-                "FROM t " +
-                "WHERE t.collection IS NOT NULL" +
-                ") " +
-                "SELECT collection FROM t WHERE collection IS NOT NULL"
-        LOAD_ALL_DOCUMENTS_BY_COLLECTION = "SELECT id,data,created,modified,deleted FROM $mainTableName " +
-                "WHERE modified >= ? AND modified <= ? AND collection = ? AND deleted = false"
-        STATUS_OF_DOCUMENT = "SELECT t1.id AS id, created, modified, deleted FROM $mainTableName t1 " +
-                "JOIN $idTableName t2 ON t1.id = t2.id WHERE t2.iri = ?"
-        GET_CONTEXT = "SELECT data FROM $mainTableName WHERE id IN (SELECT id FROM $idTableName WHERE iri = 'https://id.kb.se/vocab/context')"
-
-        FOLLOW_DEPENDENCIES =
-                "WITH RECURSIVE deps(i) AS ( " +
-                " VALUES (?, null) " +
-                " UNION " +
-                " SELECT d.dependsonid, d.relation " +
-                " FROM " +
-                "  lddb__dependencies d " +
-                " INNER JOIN deps deps1 ON d.id = i AND d.relation NOT IN (€) " +
-                ") " +
-                "SELECT * FROM deps"
-
-        FOLLOW_DEPENDERS =
-                "WITH RECURSIVE deps(i) AS ( " +
-                " VALUES (?, null) " +
-                " UNION " +
-                " SELECT d.id, d.relation " +
-                " FROM " +
-                "  lddb__dependencies d " +
-                " INNER JOIN deps deps1 ON d.dependsonid = i AND d.relation NOT IN (€) " +
-                ") " +
-                "SELECT * FROM deps"
-
-        BULK_LOAD_CARDS = "SELECT in_id as id, data from unnest(?) as in_id LEFT JOIN $cardsTableName c ON in_id = c.id"
-
-        IS_CARD_CHANGED = "SELECT card.changed >= doc.modified " +
-                "FROM lddb__cards card, lddb doc WHERE doc.id = card.id AND doc.id = ?"
-
-        GET_INCOMING_LINK_COUNT = "SELECT COUNT(id) FROM $dependenciesTableName WHERE dependsOnId = ?"
-
-        GET_DEPENDERS_OF_TYPE = "SELECT id FROM $dependenciesTableName WHERE dependsOnId = ? AND relation = ?"
-        GET_DEPENDENCIES_OF_TYPE = "SELECT dependsOnId FROM $dependenciesTableName WHERE id = ? AND relation = ?"
-
-        FIND_BY = "SELECT id, data, created, modified, deleted " +
-                "FROM $mainTableName " +
-                "WHERE data->'@graph' @> ? " +
-                "OR data->'@graph' @> ? " +
-                "LIMIT ? OFFSET ?"
-
-        COUNT_BY = "SELECT count(*) " +
-                "FROM $mainTableName " +
-                "WHERE data->'@graph' @> ? " +
-                "OR data->'@graph' @> ?"
-        
-        GET_SYSTEMID_BY_IRI = "SELECT lddb__identifiers.id, lddb.deleted FROM lddb__identifiers "+
-                "JOIN lddb ON lddb__identifiers.id = lddb.id " +
-                "WHERE lddb__identifiers.iri = ? "
-
-        GET_SYSTEMIDS_BY_IRIS = """
-                SELECT lddb__identifiers.iri, lddb__identifiers.id, lddb.deleted 
-                FROM lddb__identifiers, lddb, unnest(?) as in_iri 
-                WHERE lddb__identifiers.iri = in_iri 
-                AND lddb.id = lddb__identifiers.id
-                """.stripIndent()
-
-        GET_THING_MAIN_IRI_BY_SYSTEMID = "SELECT iri FROM $idTableName WHERE graphindex = 1 and mainid is true and id = ?"
-        GET_DOCUMENT_BY_IRI = "SELECT lddb.id,lddb.data,lddb.created,lddb.modified,lddb.deleted FROM lddb INNER JOIN lddb__identifiers ON lddb.id = lddb__identifiers.id WHERE lddb__identifiers.iri = ?"
-
-        GET_LEGACY_PROFILE = "SELECT profile FROM $profilesTableName WHERE library_id = ?"
     }
 
     void logStats() {
@@ -1361,7 +1373,7 @@ class PostgreSQLComponent implements Storage {
         PreparedStatement preparedStatement = null
         ResultSet rs = null
         try {
-            String sql = "SELECT id FROM $mainTableName WHERE data#>>'{@graph, 1, itemOf, @id}' = ? AND data#>>'{@graph, 1, heldBy, @id}' = ? AND deleted = false"
+            String sql = "SELECT id FROM lddb WHERE data#>>'{@graph, 1, itemOf, @id}' = ? AND data#>>'{@graph, 1, heldBy, @id}' = ? AND deleted = false"
             preparedStatement = connection.prepareStatement(sql)
             preparedStatement.setString(1, bibThingUri)
             preparedStatement.setString(2, libraryUri)
@@ -1573,9 +1585,9 @@ class PostgreSQLComponent implements Storage {
      */
     List<String> getAttachedHoldings(List<String> thingIdentifiers) {
         // Build the query
-        StringBuilder selectSQL = new StringBuilder("SELECT id FROM ")
-        selectSQL.append(mainTableName)
-        selectSQL.append(" WHERE collection = 'hold' AND deleted = false AND (")
+        StringBuilder selectSQL = new StringBuilder(
+                "SELECT id FROM lddb WHERE collection = 'hold' AND deleted = false AND ("
+        )
         for (int i = 0; i < thingIdentifiers.size(); ++i)
         {
             selectSQL.append(" data#>>'{@graph,1,itemOf,@id}' = ? ")
