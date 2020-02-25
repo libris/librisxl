@@ -807,18 +807,23 @@ class Document {
             return node.booleanValue() ? depth : term
         else if (node instanceof Integer)
             return node.intValue() * depth
+        else if (node instanceof Long)
+            return node.longValue() * depth
         else if (node instanceof Map) {
             for (String key : node.keySet()) {
-                if ( !key.equals(JsonLd.MODIFIED_KEY) && !key.equals(JsonLd.CREATED_KEY)) {
+                if (key != JsonLd.MODIFIED_KEY && key != JsonLd.CREATED_KEY) {
                     term += key.hashCode() * depth
                     term += calculateCheckSum(node[key], depth + 1)
                 }
             }
         }
-        else { // node is a list
+        else if (node instanceof List) {
             int i = 1
             for (entry in node)
                 term += calculateCheckSum(entry, depth + (i++))
+        }
+        else {
+            return node.hashCode() * depth
         }
 
         return term
