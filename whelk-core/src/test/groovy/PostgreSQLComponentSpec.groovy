@@ -27,7 +27,7 @@ class PostgreSQLComponentSpec extends Specification {
     def setup() {
         conn.prepareStatement(_) >> { stmt }
         stmt.executeQuery() >> { result }
-        storage = new PostgreSQLComponent(null, "lddb") {
+        storage = new PostgreSQLComponent((String) null) {
             @Override
             Connection getConnection() {
                 log.info("Getting connection ...")

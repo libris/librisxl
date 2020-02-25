@@ -145,7 +145,7 @@ class WhelkTool {
         def uriItems = uris.collect { "'$it'" }.join(',\n')
         def query = """
             SELECT id, iri
-            FROM ${whelk.storage.mainTableName}__identifiers
+            FROM lddb__identifiers
             WHERE iri IN ($uriItems)
             """
         def conn = whelk.storage.getConnection()
@@ -197,7 +197,7 @@ class WhelkTool {
             int batchSize = DEFAULT_BATCH_SIZE) {
         def query = """
             SELECT id, data, created, modified, deleted
-            FROM $whelk.storage.mainTableName
+            FROM lddb
             WHERE $whereClause
             """
         def conn = whelk.storage.getConnection()
@@ -555,7 +555,6 @@ class WhelkTool {
         log "Running Whelk against:"
         log "  PostgreSQL:"
         log "    url:     ${whelk.storage.connectionPool.getJdbcUrl()}"
-        log "    table:   ${whelk.storage.mainTableName}"
         if (whelk.elastic) {
             log "  ElasticSearch:"
             log "    hosts:   ${whelk.elastic.elasticHosts}"
