@@ -10,8 +10,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import whelk.exception.FramingException
 import whelk.exception.WhelkRuntimeException
 
-import java.util.function.BiFunction
-import java.util.function.Function
+import java.text.Normalizer
 import java.util.regex.Matcher
 
 @CompileStatic
@@ -772,7 +771,7 @@ class JsonLd {
                 }
             }
             if (key) {
-                result[SEARCH_KEY] = key.join(' ')
+                result[SEARCH_KEY] = java.text.Normalizer.normalize(key.join(' '), Normalizer.Form.NFKC)
             }
         }
 

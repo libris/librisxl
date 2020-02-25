@@ -8,6 +8,8 @@ import org.codehaus.jackson.map.ObjectMapper
 import whelk.JsonLd
 import whelk.Whelk
 
+import java.text.Normalizer
+
 @CompileStatic
 @Log
 class ESQuery {
@@ -95,7 +97,7 @@ class ESQuery {
             queryParameters.put('_links', queryParameters.get('o'))
         }
 
-        q = getQueryString(queryParameters)
+        q = Normalizer.normalize(getQueryString(queryParameters), Normalizer.Form.NFKC)
         (limit, offset) = getPaginationParams(queryParameters)
         sortBy = getSortClauses(queryParameters)
         siteFilter = getSiteFilter(queryParameters)
