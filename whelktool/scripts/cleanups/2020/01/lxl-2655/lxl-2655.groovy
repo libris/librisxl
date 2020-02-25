@@ -20,10 +20,10 @@ for (String operation : ProgramLines) {
     String sigel = part[1] // "Jon" on all lines, ignore this value
     String newPhysicalLocation = part[2].trim()
     String fuzzyShelfSomething = part[3].trim()
-
-    String[] shelfParts = fuzzyShelfSomething.split(" ")
-    String newShelfLabel = shelfParts[shelfParts.length-1].trim() // The last part, separated by a space
-    String newShelfMark = fuzzyShelfSomething.substring(0, fuzzyShelfSomething.length() - newShelfLabel.length()).trim() // All but the last part
+    
+    int breakShelfMessAt = fuzzyShelfSomething.indexOf(" ") // _first_ space
+    String newShelfMark = fuzzyShelfSomething.substring(0, breakShelfMessAt).trim() // The first part, separated by space
+    String newShelfLabel = fuzzyShelfSomething.substring(breakShelfMessAt, fuzzyShelfSomething.length()).trim() // The rest of the string
 
     String where = null
 
