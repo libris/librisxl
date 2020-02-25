@@ -171,7 +171,7 @@ digraph {
 
         Document document = new Document(doc)
 
-        embellisher.embellish(document, false)
+        embellisher.embellish(document)
         def result = document.data
 
         expect:

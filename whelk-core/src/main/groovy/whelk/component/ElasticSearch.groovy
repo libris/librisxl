@@ -195,8 +195,8 @@ class ElasticSearch {
     Map getShapeForIndex(Document document, Whelk whelk, String collection) {
         Document copy = document.clone()
 
-        if (!collection.equals("hold")) {
-            embellish(whelk, document, copy)
+        if (collection != "hold") {
+            whelk.embellish(copy)
         }
 
         log.debug("Framing ${document.getShortId()}")
@@ -217,11 +217,6 @@ class ElasticSearch {
         log.trace("Framed data: ${framed}")
 
         return framed
-    }
-
-    void embellish(Whelk whelk, Document document, Document copy) {
-        boolean filterOutNonChipTerms = true // Consider using false here, since cards-in-cards work now.
-        whelk.embellish(copy, filterOutNonChipTerms)
     }
 
     private static void setComputedProperties(Document doc, Document unEmbellished, Whelk whelk) {

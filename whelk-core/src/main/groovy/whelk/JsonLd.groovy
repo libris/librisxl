@@ -698,30 +698,19 @@ class JsonLd {
 
     //==== Embellish ====
 
-    Map embellish(Map jsonLd, Iterable additionalObjects, boolean filterOutNonChipTerms = true) {
+    Map embellish(Map jsonLd, Iterable additionalObjects) {
         if (!jsonLd.get(GRAPH_KEY)) {
             return jsonLd
         }
 
         List graphItems = jsonLd.get(GRAPH_KEY)
 
-        if (filterOutNonChipTerms) {
-            additionalObjects.each { object ->
-                Map chip = (Map) toChip(object)
-                if (chip.containsKey('@graph')) {
-                    graphItems << chip
+        additionalObjects.each { object ->
+            if (object instanceof Map) {
+                if (((Map)object).containsKey('@graph')) {
+                    graphItems << object
                 } else {
-                    graphItems << ['@graph': chip]
-                }
-            }
-        } else {
-            additionalObjects.each { object ->
-                if (object instanceof Map) {
-                    if (((Map)object).containsKey('@graph')) {
-                        graphItems << object
-                    } else {
-                        graphItems << ['@graph': object]
-                    }
+                    graphItems << ['@graph': object]
                 }
             }
         }

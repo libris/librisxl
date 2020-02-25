@@ -22,8 +22,8 @@ class Embellisher {
     }
 
     // FIXME: describe me
-    void embellish(Document document, boolean filterOutNonChipTerms = false) {
-        jsonld.embellish(document.data, getEmbellishData(document), filterOutNonChipTerms)
+    void embellish(Document document) {
+        jsonld.embellish(document.data, getEmbellishData(document))
     }
 
     private List getEmbellishData(Document document) {
