@@ -2,7 +2,7 @@
 
 **NOTERA:** Denna dokumentation är inte komplett, utan kan komma att ändras.
 Den är i dagsläget enbart användbar för att testa integrationer, men räkna med
-förändringar innan systemet tas i produktion.
+förändringar.
 
 ## CRUD-API
 
@@ -158,6 +158,7 @@ innebär `ELLER`, `*` används för prefixsökningar, `""` matchar hela frasen o
 #### Parametrar
 
 * `q` - Sökfrågan
+* `o` - Hitta endast poster som länkar till detta ID.
 * `_limit` - Max antal träffar att inkludera i resultatet, används för
   paginering. Standardvärdet är 200.
 * `_offset` - Antal träffar att hoppa över i resultatet, används för
@@ -172,24 +173,21 @@ $ curl -XGET -H "Accept: application/ld+json" \
 ...
 ```
 
-### `/find?o` - Hitta alla poster som länkar till en viss post
-
-Detta anrop låter dig hitta alla poster som länkar till en viss post i den interna Libris-databasen.
-
-#### Parametrar
-
-* `o` - ID för posten vars omvända relationer ska slås upp
-* `_limit` - Max antal träffar att inkludera i resultatet, används för
-  paginering. Standardvärdet är 200.
-* `_offset` - Antal träffar att hoppa över i resultatet, används för
-  paginering. Standardvärdet är 0.
-  
-  
 #### Exempel
 
+Hitta poster som länkar till country/Vietnam.
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
     'https://libris-qa.kb.se/find?o=https://id.kb.se/country/vm&_limit=2'
+...
+```
+
+#### Exempel
+
+Hitta poster som innehåller 'tove' och länkar till saogf/Romaner.
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find?q=tove&o=https://id.kb.se/term/saogf/Romaner&_limit=3'
 ...
 ```
 

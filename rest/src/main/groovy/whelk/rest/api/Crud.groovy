@@ -98,7 +98,7 @@ class Crud extends HttpServlet {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
 
         try {
-            Map results = search.doSearch(queryParameters, dataset, jsonld)
+            Map results = search.doSearch(queryParameters, dataset)
             def jsonResult = mapper.writeValueAsString(results)
             sendResponse(response, jsonResult, "application/json")
         } catch (ElasticIOException e) {
