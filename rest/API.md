@@ -1,7 +1,7 @@
 # Libris XL 'REST' API
 
 **NOTE:** This document is a work in progress. It can be useful for testing,
-but the interface is likely to change before the system is in production.
+but the interface is likely to change.
 
 ## CRUD API
 
@@ -148,6 +148,7 @@ means `OR`, `*` is used for prefix queries, `""` matches the whole phrase, and
 #### Parameters
 
 * `q` - Search query
+* `o` - Only find posts that link to this ID
 * `_limit` - Max number of hits to include in result, used for pagination.
   Default is 200.
 * `_offset` - Number of hits to skip in the result, used for pagination.
@@ -161,23 +162,21 @@ $ curl -XGET -H "Accept: application/ld+json" \
 ...
 ```
 
-### `/find?o` - Find all posts that link to a specific post
-
-When using the `o` parameter, the `find` endpoint lists all posts that link to a specific post in the internal Libris database.
-
-#### Parameters
-
-* `o` - ID of the post for which to find reverse relations
-* `_limit` - Max number of hits to include in result, used for pagination.
-  Default is 200.
-* `_offset` - Number of hits to skip in the result, used for pagination.
-  Default is 0.
-
 #### Example
 
+Find posts linking to country/Vietnam.
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
     'https://libris-qa.kb.se/find?o=https://id.kb.se/country/vm&_limit=2'
+...
+```
+
+#### Exempel
+
+Find posts containing 'tove' and linking to saogf/Romaner.
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find?q=tove&o=https://id.kb.se/term/saogf/Romaner&_limit=3'
 ...
 ```
 
