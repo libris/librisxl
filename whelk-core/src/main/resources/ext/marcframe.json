@@ -9070,6 +9070,7 @@
 
     "250": {
       "aboutEntity": "?thing",
+      "onRevertPrefer": "775",
       "linkSubsequentRepeated": {
         "addLink": "otherEdition",
         "embedded": true
@@ -17995,7 +17996,37 @@
               "marc:toDisplayNote" : false
             }]
           }}
+        },
+        {
+          "normalized": {"775": {"ind1": "0", "ind2": " ", "subfields": [
+            {"i": "Parallellutgåva"},
+            {"t": "Tolkning och översättning vid straffrättsliga förfaranden"},
+            {"b": "genomförande av EU:s tolknings- och översättningsdirektiv : betänkande"},
+            {"z": "9789138237748"},
+            {"w": "13506478"}
+          ]}},
+          "result": {"mainEntity": {
+            "otherEdition": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Tolkning och översättning vid straffrättsliga förfaranden"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "13506478"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "9789138237748"
+              }],
+              "editionStatement": "genomförande av EU:s tolknings- och översättningsdirektiv : betänkande",
+              "marc:displayText": "Parallellutgåva",
+              "marc:toDisplayNote": true
+            }]
+          }}
         }
+
       ]
     },
     "776": {
