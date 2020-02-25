@@ -329,8 +329,8 @@ class Whelk implements Storage {
         }
     }
 
-    void embellish(Document document, boolean filterOutNonChipTerms = false) {
-        new Embellisher(jsonld, storage.&getCards, relations.&getByReverse).embellish(document, filterOutNonChipTerms)
+    void embellish(Document document) {
+        new Embellisher(jsonld, storage.&getCards, relations.&getByReverse).embellish(document)
     }
 
     Document loadEmbellished(String systemId) {
