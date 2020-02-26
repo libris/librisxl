@@ -26,16 +26,12 @@ class RemoteSearchAPI extends HttpServlet {
 
     final static mapper = new ObjectMapper()
 
-    Map remoteURLs
-
     MarcFrameConverter marcFrameConverter
 
-    URL metaProxyInfoUrl = new URL("http://mproxy.libris.kb.se/db_Metaproxy.xml")
-    String metaProxyBaseUrl = "http://mproxy.libris.kb.se:8000"
+    static final URL metaProxyInfoUrl = new URL("http://mproxy.libris.kb.se/db_Metaproxy.xml")
+    static final String metaProxyBaseUrl = "http://mproxy.libris.kb.se:8000"
 
     final String DEFAULT_DATABASE = "LC"
-
-    def urlParams = ["version": "1.1", "operation": "searchRetrieve", "maximumRecords": "10","startRecord": "1"]
 
     private Whelk whelk
 
@@ -48,7 +44,6 @@ class RemoteSearchAPI extends HttpServlet {
     @Override
     void init() {
         log.info("Starting Remote Search API")
-        loadMetaProxyInfo(metaProxyInfoUrl)
         if (!whelk) {
             whelk = WhelkFactory.getSingletonWhelk()
         }
@@ -177,10 +172,6 @@ class RemoteSearchAPI extends HttpServlet {
                 }
                 return map
             }
-
-            remoteURLs = databases.inject([:]) { map, db ->
-                map << [(db.database): metaProxyBaseUrl + "/" + db.database]
-            }
         } catch (SocketException se) {
             log.error("Unable to load database list.")
         }
@@ -189,7 +180,6 @@ class RemoteSearchAPI extends HttpServlet {
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
-
         // Check that we have kat-rights.
         boolean hasPermission = false
         Map userInfo = request.getAttribute("user")
@@ -213,11 +203,16 @@ class RemoteSearchAPI extends HttpServlet {
         def queryStr, url
         String output = ""
 
+        def urlParams = ["version": "1.1", "operation": "searchRetrieve"]
         urlParams['maximumRecords'] = n
         urlParams['startRecord'] = (start < 1 ? 1 : start)
 
         log.trace("Query is $query")
         if (query) {
+            Map remoteURLs = loadMetaProxyInfo(metaProxyInfoUrl).inject([:]) { map, db ->
+                map << [(db.database): metaProxyBaseUrl + "/" + db.database]
+            }
+
             // Weed out the unavailable databases
             databaseList = databaseList.intersect(remoteURLs.keySet() as List)
             log.debug("Remaining databases: $databaseList")
