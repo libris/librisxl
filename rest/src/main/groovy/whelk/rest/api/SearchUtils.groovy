@@ -20,7 +20,6 @@ class SearchUtils {
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper()
 
     enum SearchType {
-        FIND_REVERSE,
         ELASTIC,
         POSTGRES
     }
@@ -113,9 +112,11 @@ class SearchUtils {
         Map esResult = esQuery.doQuery(queryParameters, dataset)
 
         List<Map> mappings = []
-        mappings << ['variable': 'q',
-                     'predicate': ld.toChip(getVocabEntry('textQuery')),
-                     'value': query]
+        if (query) {
+            mappings << ['variable' : 'q',
+                         'predicate': ld.toChip(getVocabEntry('textQuery')),
+                         'value'    : query]
+        }
 
         Tuple2 mappingsAndPageParams = mapParams(queryParameters)
         mappings.addAll(mappingsAndPageParams.first)
@@ -144,11 +145,12 @@ class SearchUtils {
             log.debug("No stats found for query: ${queryParameters}, result: ${esResult}")
         }
 
-        mappings.tail().each { Map mapping ->
+        (query ? mappings.tail() : mappings).each { Map mapping ->
             Map params = removeMappingFromParams(pageParams, mapping)
             String upUrl = makeFindUrl(SearchType.ELASTIC, params, offset)
             mapping['up'] = [ (JsonLd.ID_KEY): upUrl ]
         }
+
 
         Map result = assembleSearchResults(SearchType.ELASTIC,
                                            items, mappings, pageParams,
@@ -409,12 +411,12 @@ class SearchUtils {
     }
 
     private Tuple2 getElasticParams(Map queryParameters) {
-        if (!('q' in queryParameters)) {
+        if (!('q' in queryParameters) && !('o' in queryParameters)) {
             queryParameters['q'] = '*'
         }
 
         String query = queryParameters.remove('q')
-        List initialParams = [makeParam('q', query)]
+        List initialParams = query ? [makeParam('q', query)] : []
         List keys = (queryParameters.keySet() as List).sort()
 
         return new Tuple2(initialParams, keys)
