@@ -32,6 +32,8 @@ public class SoftValidation extends HttpServlet
         ARRAY,
         NUMBER,
         STRING,
+        BOOLEAN,
+        NULL,
     }
 
     private class Thing
@@ -132,6 +134,30 @@ public class SoftValidation extends HttpServlet
                 sampleNodeData( next, path + "[]" + lookForwardForType(next) + ",");
                 addToProfile(path, thing);
             }
+        }
+        else if (obj instanceof String)
+        {
+            Thing thing = new Thing();
+            thing.jsonType = JSON_TYPE.STRING;
+            addToProfile(path, thing);
+        }
+        else if (obj instanceof Integer || obj instanceof Long || obj instanceof Float || obj instanceof Double)
+        {
+            Thing thing = new Thing();
+            thing.jsonType = JSON_TYPE.NUMBER;
+            addToProfile(path, thing);
+        }
+        else if (obj instanceof Boolean)
+        {
+            Thing thing = new Thing();
+            thing.jsonType = JSON_TYPE.BOOLEAN;
+            addToProfile(path, thing);
+        }
+        else if (obj == null)
+        {
+            Thing thing = new Thing();
+            thing.jsonType = JSON_TYPE.NULL;
+            addToProfile(path, thing);
         }
     }
 
