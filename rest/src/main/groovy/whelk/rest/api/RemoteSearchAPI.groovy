@@ -20,18 +20,13 @@ import javax.servlet.http.HttpServletResponse
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.regex.Pattern
 
 @Log
 class RemoteSearchAPI extends HttpServlet {
 
     final static mapper = new ObjectMapper()
 
-    String description = "Query API for remote search"
-
     Map remoteURLs
-
-    Pattern pathPattern = Pattern.compile("/_remotesearch")
 
     MarcFrameConverter marcFrameConverter
 
@@ -48,10 +43,6 @@ class RemoteSearchAPI extends HttpServlet {
 
     RemoteSearchAPI() {
         // Do nothing - only here for Tomcat to have something to call
-    }
-
-    RemoteSearchAPI(Whelk whelk) {
-        this.whelk = whelk
     }
 
     @Override
@@ -220,7 +211,6 @@ class RemoteSearchAPI extends HttpServlet {
         int n = (request.getParameter("n") ?: "10") as int
         def databaseList = (request.getParameter("databases") ?: DEFAULT_DATABASE).split(",") as List
         def queryStr, url
-        MarcRecord record
         String output = ""
 
         urlParams['maximumRecords'] = n
