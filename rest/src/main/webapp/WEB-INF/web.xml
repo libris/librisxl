@@ -69,6 +69,10 @@
         <servlet-name>DuplicatesAPI</servlet-name>
         <servlet-class>whelk.rest.api.DuplicatesAPI</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>SoftValidation</servlet-name>
+        <servlet-class>whelk.rest.api.SoftValidation</servlet-class>
+    </servlet>
 
     <servlet>
         <servlet-name>PrometheusSimpleClientServlet</servlet-name>
@@ -114,6 +118,11 @@
     <servlet-mapping>
         <servlet-name>DuplicatesAPI</servlet-name>
         <url-pattern>/_duplicates</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>SoftValidation</servlet-name>
+        <url-pattern>/_validate</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>

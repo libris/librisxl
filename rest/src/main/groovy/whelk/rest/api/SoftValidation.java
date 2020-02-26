@@ -27,6 +27,7 @@ public class SoftValidation extends HttpServlet
 
     private enum JSON_TYPE
     {
+        UNDEFINED,
         OBJECT,
         ARRAY,
         NUMBER,
@@ -35,8 +36,8 @@ public class SoftValidation extends HttpServlet
 
     private class Thing
     {
-        JSON_TYPE jsonType;
-        String property; // hasComponent/mainEntity etc
+        JSON_TYPE jsonType = JSON_TYPE.UNDEFINED;
+        String property = ""; // hasComponent/mainEntity etc
 
         @Override
         public int hashCode()
@@ -75,7 +76,8 @@ public class SoftValidation extends HttpServlet
 
     private void sampleMoreRecords()
     {
-        String sql = "SELECT data FROM lddb TABLESAMPLE SYSTEM ( 0.001 ) limit 200;";
+        //String sql = "SELECT data FROM lddb TABLESAMPLE SYSTEM ( 0.001 ) WHERE collection in ('hold', 'bib') limit 200;";
+        String sql = "SELECT data FROM lddb TABLESAMPLE SYSTEM ( 0.1 ) WHERE collection in ('hold', 'bib') limit 200;";
         ArrayList<Document> documents = new ArrayList<>(200);
         try(Connection connection = whelk.getStorage().getConnection();
             PreparedStatement statement = connection.prepareStatement(sql);
@@ -103,71 +105,69 @@ public class SoftValidation extends HttpServlet
         }
 
         for (Document doc : documents)
-            sampleObject(doc.data, "");
+            sampleNodeData(doc.data, "");
     }
 
-    private void sampleObject(Map map, String path)
+    private void sampleNodeData(Object obj, String path)
     {
-        for (Object key : map.keySet())
-        {
-            Object obj = map.get(key);
-            sampleNodeData(obj, path, (String) key);
-        }
-    }
-
-    private void sampleList(List list, String path)
-    {
-        for (Object obj : list)
-        {
-            sampleNodeData(obj, path, "_");
-        }
-    }
-
-    private void sampleNodeData(Object obj, String path, String property)
-    {
-        JSON_TYPE jsonType = null;
         if (obj instanceof Map)
         {
-            jsonType = JSON_TYPE.OBJECT;
-            sampleObject( (Map) obj, path + property + ",");
+            Map map = (Map) obj;
+            for (Object key : ((Map)obj).keySet())
+            {
+                Thing thing = new Thing();
+                thing.jsonType = JSON_TYPE.OBJECT;
+                thing.property = (String) key;
+
+                String type = (String) map.get("@type");
+                if (type == null)
+                    type = "";
+                else type = ":" + type;
+
+                sampleNodeData( map.get(key), path + type + "," + key);
+
+                ThingsAtPath things = profile.get(path);
+                if (things == null)
+                {
+                    things = new ThingsAtPath();
+                    profile.put(path, things);
+                }
+                Integer count = things.things.get(thing);
+                if (count != null)
+                    things.things.put(thing, count + 1);
+                else
+                    things.things.put(thing, 1);
+                things.count++;
+            }
+
         }
         else if (obj instanceof List)
         {
-            sampleList( (List) obj, path + "_,");
+            for (Object next : (List) obj)
+                sampleNodeData( next, path + ",[]");
         }
-        else
-            return;
-        /*else if (obj instanceof String)
+    }
+
+    private void printProfile()
+    {
+        for (Object key : profile.keySet())
         {
+            ThingsAtPath thingsAtPath = profile.get(key);
+            System.out.println(key + " total: " + thingsAtPath.count);
+            for (Thing t : thingsAtPath.things.keySet())
+                System.out.println("\t" + t.property + " / " + t.jsonType + " count: " + thingsAtPath.things.get(t));
 
-        }*/
-
-        Thing thing = new Thing();
-        thing.property = property;
-        thing.jsonType = jsonType;
-
-
-        ThingsAtPath things = profile.get(path);
-        if (things == null)
-        {
-            things = new ThingsAtPath();
-            profile.put(path, things);
         }
-        int count = things.things.get(thing);
-        count++;
-        things.things.put(thing, count);
-        things.count++;
-
-
     }
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) {
-
+        sampleMoreRecords();
+        printProfile();
     }
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) {
-        sampleMoreRecords();
+
     }
 }
