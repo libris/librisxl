@@ -105,7 +105,7 @@ public class SoftValidation extends HttpServlet
         }
 
         for (Document doc : documents)
-            sampleNodeData(doc.data, "");
+            sampleNodeData(doc.data, "root,");
     }
 
     private void sampleNodeData(Object obj, String path)
@@ -118,34 +118,51 @@ public class SoftValidation extends HttpServlet
                 Thing thing = new Thing();
                 thing.jsonType = JSON_TYPE.OBJECT;
                 thing.property = (String) key;
-
-                String type = (String) map.get("@type");
-                if (type == null)
-                    type = "";
-                else type = ":" + type;
-
-                sampleNodeData( map.get(key), path + type + "," + key);
-
-                ThingsAtPath things = profile.get(path);
-                if (things == null)
-                {
-                    things = new ThingsAtPath();
-                    profile.put(path, things);
-                }
-                Integer count = things.things.get(thing);
-                if (count != null)
-                    things.things.put(thing, count + 1);
-                else
-                    things.things.put(thing, 1);
-                things.count++;
+                sampleNodeData( map.get(key), path + key + lookForwardForType(map.get(key)) + ",");
+                addToProfile(path, thing);
             }
 
         }
         else if (obj instanceof List)
         {
             for (Object next : (List) obj)
-                sampleNodeData( next, path + ",[]");
+            {
+                Thing thing = new Thing();
+                thing.jsonType = JSON_TYPE.ARRAY;
+                sampleNodeData( next, path + "[]" + lookForwardForType(next) + ",");
+                addToProfile(path, thing);
+            }
         }
+    }
+
+    private String lookForwardForType(Object obj)
+    {
+        if (obj instanceof Map)
+        {
+            Map map = (Map) obj;
+            String type = (String) map.get("@type");
+            if (type == null)
+                return "";
+            else
+                return ":" + type;
+            }
+        return "";
+    }
+
+    private void addToProfile(String path, Thing thing)
+    {
+        ThingsAtPath things = profile.get(path);
+        if (things == null)
+        {
+            things = new ThingsAtPath();
+            profile.put(path, things);
+        }
+        Integer count = things.things.get(thing);
+        if (count != null)
+            things.things.put(thing, count + 1);
+        else
+            things.things.put(thing, 1);
+        things.count++;
     }
 
     private void printProfile()
