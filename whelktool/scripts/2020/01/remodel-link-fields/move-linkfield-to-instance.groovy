@@ -37,7 +37,7 @@ selectBySqlWhere(query) { data ->
         } else {
             if (key == 'isPartOf') {
                 shouldRemoveProperties = true
-                def part = fixIsPartOf(val, record[ID])
+                def part = getPart(val, record[ID])
                 if (!part.isEmpty())
                     thing << ['part': part]
             }
@@ -61,7 +61,7 @@ selectBySqlWhere(query) { data ->
     })
 }
 
-List fixIsPartOf(listOfObjects, docId) {
+List getPart(listOfObjects, docId) {
     Set parts = []
     listOfObjects.each {
         if (it.hasInstance && it.hasInstance instanceof List)
@@ -104,6 +104,12 @@ Map remodelObjectToInstance(object, docID, shouldIgnoreProperties) {
     }
 
     object.each {
+        //Check if object already is linked
+        if (it.key == 'hasInstance' && it.value instanceof List && it.value.any { it.containsKey(ID) })
+            return newInstanceObject = it.value.find { it[ID] }
+        else if (it.key == ID)
+            return newInstanceObject << it
+
         if (it.key == 'hasInstance')
             instanceProperties << it.value
         else if (LEGACY_PROPERTIES.contains(it.key))
@@ -116,9 +122,6 @@ Map remodelObjectToInstance(object, docID, shouldIgnoreProperties) {
         instanceProperties.keySet().removeIf { PROPERTIES_TO_IGNORE.contains(it) }
 
     if (instanceProperties && !onlyContainsNoise(instanceProperties)) {
-        //TODO: If hasInstance only contains @id --> log to be analyzed!!
-        if (instanceProperties.containsKey(ID))
-            deviantRecords.println "${docID} contains hasInstance with link"
         instanceProperties[TYPE] = "Instance"
         newInstanceObject << instanceProperties
     }
