@@ -20,6 +20,7 @@ import whelk.exception.TooHighEncodingLevelException
 import whelk.exception.WhelkException
 import whelk.exception.WhelkRuntimeException
 import whelk.filter.LinkFinder
+import whelk.util.DocumentUtil
 
 import javax.sql.DataSource
 import java.sql.Array
@@ -384,9 +385,7 @@ class PostgreSQLComponent implements Storage {
     boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
 
-        doc.normalizeUnicode()
-        if (linkFinder != null)
-            linkFinder.normalizeIdentifiers(doc)
+        normalizeDocumentForStorage(doc)
 
         Connection connection = getConnection()
         connection.setAutoCommit(false)
@@ -567,9 +566,8 @@ class PostgreSQLComponent implements Storage {
             // Performs the callers updates on the document
             Document preUpdateDoc = doc.clone()
             updateAgent.update(doc)
-            doc.normalizeUnicode()
-            if (linkFinder != null)
-                linkFinder.normalizeIdentifiers(doc, connection)
+            normalizeDocumentForStorage(doc)
+
             if (doVerifyDocumentIdRetention) {
                 verifyDocumentIdRetention(preUpdateDoc, doc, connection)
             }
@@ -1721,6 +1719,19 @@ class PostgreSQLComponent implements Storage {
             }
         }
         return docList
+    }
+
+    private void normalizeDocumentForStorage(Document doc) {
+        // Synthetic property, should never be stored
+        DocumentUtil.findKey(doc.data, JsonLd.REVERSE_KEY) { value, path ->
+            new DocumentUtil.Remove()
+        }
+
+        doc.normalizeUnicode()
+
+        if (linkFinder != null) {
+            linkFinder.normalizeIdentifiers(doc)
+        }
     }
 
     private static Document assembleDocument(ResultSet rs) {
