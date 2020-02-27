@@ -9070,11 +9070,6 @@
 
     "250": {
       "aboutEntity": "?thing",
-      "onRevertPrefer": "775",
-      "linkSubsequentRepeated": {
-        "addLink": "otherEdition",
-        "embedded": true
-      },
       "$a": {"property": "editionStatement", "punctuationChars": "/"},
       "$b": {"property": "editionStatementRemainder"},
       "$3": {
@@ -9097,15 +9092,14 @@
           "result": {"mainEntity": {"editionStatement": "New ed."}}
         },
         {
+          "name": "Repeated 250: added to list and for now only the first value will be exported",
           "source": [
             {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "New"}]}},
             {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Newer"}]}}
           ],
+          "normalized": {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "New"}]}},
           "result": {"mainEntity": {
-            "editionStatement": "New",
-            "otherEdition": [
-              {"editionStatement": "Newer"}
-            ]
+            "editionStatement": ["New", "Newer"]
           }}
         }
       ]
