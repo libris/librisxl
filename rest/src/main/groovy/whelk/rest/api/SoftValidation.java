@@ -137,7 +137,7 @@ public class SoftValidation extends HttpServlet
             for (Document doc : documents)
             {
                 OPERATION op = OPERATION.ADD_TO_PROFILE;
-                traverseData(doc.data, "root,", op, null);
+                traverseData(doc.data, "root,", op, null, new ArrayList());
             }
 
         } finally {
@@ -145,7 +145,7 @@ public class SoftValidation extends HttpServlet
         }
     }
 
-    private void traverseData(Object obj, String path, OPERATION op, Map result)
+    private void traverseData(Object obj, String profileKey, OPERATION op, Map result, List path)
     {
         if (obj instanceof Map)
         {
@@ -155,44 +155,49 @@ public class SoftValidation extends HttpServlet
                 Observation observation = new Observation();
                 observation.jsonType = JSON_TYPE.OBJECT;
                 observation.property = (String) key;
-                traverseData( map.get(key), path + key + lookForwardForType(map.get(key)) + ",", op, result);
-                addToProfileOrValidate(path, observation, op, result);
+                ArrayList newPath = new ArrayList(path);
+                newPath.add(key);
+                traverseData( map.get(key), profileKey + key + lookForwardForType(map.get(key)) + ",", op, result, newPath);
+                addToProfileOrValidate(profileKey, observation, op, result, newPath);
             }
 
         }
         else if (obj instanceof List)
         {
-            for (Object next : (List) obj)
+            for (int i = 0; i < ((List)obj).size(); ++i)
             {
+                Object next = ((List)obj).get(i);
                 Observation observation = new Observation();
                 observation.jsonType = JSON_TYPE.ARRAY;
-                traverseData( next, path + "[]" + lookForwardForType(next) + ",", op, result);
-                addToProfileOrValidate(path, observation, op, result);
+                ArrayList newPath = new ArrayList(path);
+                newPath.add(i);
+                traverseData( next, profileKey + "[]" + lookForwardForType(next) + ",", op, result, newPath);
+                addToProfileOrValidate(profileKey, observation, op, result, newPath);
             }
         }
         else if (obj instanceof String)
         {
             Observation observation = new Observation();
             observation.jsonType = JSON_TYPE.STRING;
-            addToProfileOrValidate(path, observation, op, result);
+            addToProfileOrValidate(profileKey, observation, op, result, path);
         }
         else if (obj instanceof Integer || obj instanceof Long || obj instanceof Float || obj instanceof Double)
         {
             Observation observation = new Observation();
             observation.jsonType = JSON_TYPE.NUMBER;
-            addToProfileOrValidate(path, observation, op, result);
+            addToProfileOrValidate(profileKey, observation, op, result, path);
         }
         else if (obj instanceof Boolean)
         {
             Observation observation = new Observation();
             observation.jsonType = JSON_TYPE.BOOLEAN;
-            addToProfileOrValidate(path, observation, op, result);
+            addToProfileOrValidate(profileKey, observation, op, result, path);
         }
         else if (obj == null)
         {
             Observation observation = new Observation();
             observation.jsonType = JSON_TYPE.NULL;
-            addToProfileOrValidate(path, observation, op, result);
+            addToProfileOrValidate(profileKey, observation, op, result, path);
         }
     }
 
@@ -210,33 +215,50 @@ public class SoftValidation extends HttpServlet
         return "";
     }
 
-    private void addToProfileOrValidate(String path, Observation observation, OPERATION op, Map result)
+    private void addToProfileOrValidate(String profileKey, Observation observation, OPERATION op, Map result, List path)
     {
         if (op == OPERATION.ADD_TO_PROFILE)
         {
-            ObservationsAtPath observations = profile.get(path);
-            if (observations == null)
+            ObservationsAtPath observationsAtPath = profile.get(profileKey);
+            if (observationsAtPath == null)
             {
-                observations = new ObservationsAtPath();
-                profile.put(path, observations);
+                observationsAtPath = new ObservationsAtPath();
+                profile.put(profileKey, observationsAtPath);
             }
-            Integer count = observations.observations.get(observation);
+            Integer count = observationsAtPath.observations.get(observation);
             if (count != null)
-                observations.observations.put(observation, count + 1);
+                observationsAtPath.observations.put(observation, count + 1);
             else
-                observations.observations.put(observation, 1);
-            observations.count++;
-        } else if (op == OPERATION.VALIDATE)
+                observationsAtPath.observations.put(observation, 1);
+            observationsAtPath.count++;
+        }
+        else if (op == OPERATION.VALIDATE)
         {
-            ObservationsAtPath observationsAtPath = profile.get(path);
+            ObservationsAtPath observationsAtPath = profile.get(profileKey);
             if (observationsAtPath == null)
                 return;
             Integer count = observationsAtPath.observations.get(observation);
             if (count == null)
             {
-                System.out.println("Did not expect " + observation.property + " (of type " + observation.jsonType + ") at " + path + " suggestions:");
+                /*System.out.println("Did not expect " + observation.property + " (of type " + observation.jsonType + ") at " + profileKey + " suggestions:");
                 for (Observation t : observationsAtPath.observations.keySet())
                     System.out.println("\t" + t.property + " / " + t.jsonType + " (" + (100.0f * (float)observationsAtPath.observations.get(t) / (float)observationsAtPath.count) + "%)");
+                    
+                 */
+
+                if (!result.keySet().contains("warnings"))
+                    result.put("warnings", new ArrayList());
+                List warnings = (List) result.get("warnings");
+
+                HashMap warning = new HashMap();
+                warnings.add(warning);
+                warning.put("at", path);
+
+                String explanation = observation.property.equals("") ?
+                        "Did not expect JSON " + observation.jsonType + " here.":
+                        "Did not expect \"" + observation.property + "\" JSON " + observation.jsonType + " here.";
+                warning.put("explanation", explanation);
+
             }
         }
     }
@@ -255,6 +277,9 @@ public class SoftValidation extends HttpServlet
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+
+        sampleMoreRecords();
+
         lock.readLock().lock();
         try
         {
@@ -262,13 +287,13 @@ public class SoftValidation extends HttpServlet
             Map body = PostgreSQLComponent.mapper.readValue(content, HashMap.class);
 
             Map result = new HashMap();
-            traverseData(body, "root,", OPERATION.VALIDATE, result);
+            traverseData(body, "root,", OPERATION.VALIDATE, result, new ArrayList());
 
             response.setStatus(HttpServletResponse.SC_OK);
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             PrintWriter out = response.getWriter();
-            out.print(PostgreSQLComponent.mapper.writeValueAsString(body));
+            out.print(PostgreSQLComponent.mapper.writeValueAsString(result));
             out.close();
         } finally {
             lock.readLock().unlock();
