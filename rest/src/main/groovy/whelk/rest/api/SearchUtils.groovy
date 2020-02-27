@@ -9,6 +9,7 @@ import whelk.Whelk
 import whelk.exception.InvalidQueryException
 import whelk.exception.WhelkRuntimeException
 import whelk.search.ESQuery
+import whelk.util.DocumentUtil
 
 @Log
 class SearchUtils {
@@ -188,7 +189,12 @@ class SearchUtils {
     }
 
     Map removeSystemInternalProperties(Map framedThing) {
-        throw new WhelkRuntimeException('_lens=full not implemented')
+        DocumentUtil.traverse(framedThing) { value, path ->
+            if (path && ((String) path.last()).startsWith('_')) {
+                return new DocumentUtil.Remove()
+            }
+        }
+        return framedThing
     }
 
     /*
