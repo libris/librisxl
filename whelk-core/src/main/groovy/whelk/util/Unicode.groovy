@@ -38,4 +38,11 @@ class Unicode {
         return Normalizer.normalize(s, Normalizer.Form.NFC).replace(EXTRA_NORMALIZATION_MAP)
     }
 
+    static boolean isNormalizedForSearch(String s) {
+        return Normalizer.isNormalized(s, Normalizer.Form.NFKC)
+    }
+
+    static String normalizeForSearch(String s) {
+        return Normalizer.normalize(s, Normalizer.Form.NFKC)
+    }
 }

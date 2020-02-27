@@ -7,6 +7,7 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.util.Unicode
 
 @CompileStatic
 @Log
@@ -95,7 +96,7 @@ class ESQuery {
             queryParameters.put('_links', queryParameters.get('o'))
         }
 
-        q = getQueryString(queryParameters)
+        q = Unicode.normalizeForSearch(getQueryString(queryParameters))
         (limit, offset) = getPaginationParams(queryParameters)
         sortBy = getSortClauses(queryParameters)
         siteFilter = getSiteFilter(queryParameters)
