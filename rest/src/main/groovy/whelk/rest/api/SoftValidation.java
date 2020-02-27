@@ -158,7 +158,7 @@ public class SoftValidation extends HttpServlet
                 ArrayList newPath = new ArrayList(path);
                 newPath.add(key);
                 traverseData( map.get(key), profileKey + key + lookForwardForType(map.get(key)) + ",", op, result, newPath);
-                addToProfileOrValidate(profileKey, observation, op, result, newPath);
+                addToProfileOrValidate(profileKey, observation, op, result, newPath, obj);
             }
 
         }
@@ -172,32 +172,32 @@ public class SoftValidation extends HttpServlet
                 ArrayList newPath = new ArrayList(path);
                 newPath.add(i);
                 traverseData( next, profileKey + "[]" + lookForwardForType(next) + ",", op, result, newPath);
-                addToProfileOrValidate(profileKey, observation, op, result, newPath);
+                addToProfileOrValidate(profileKey, observation, op, result, newPath, obj);
             }
         }
         else if (obj instanceof String)
         {
             Observation observation = new Observation();
             observation.jsonType = JSON_TYPE.STRING;
-            addToProfileOrValidate(profileKey, observation, op, result, path);
+            addToProfileOrValidate(profileKey, observation, op, result, path, obj);
         }
         else if (obj instanceof Integer || obj instanceof Long || obj instanceof Float || obj instanceof Double)
         {
             Observation observation = new Observation();
             observation.jsonType = JSON_TYPE.NUMBER;
-            addToProfileOrValidate(profileKey, observation, op, result, path);
+            addToProfileOrValidate(profileKey, observation, op, result, path, obj);
         }
         else if (obj instanceof Boolean)
         {
             Observation observation = new Observation();
             observation.jsonType = JSON_TYPE.BOOLEAN;
-            addToProfileOrValidate(profileKey, observation, op, result, path);
+            addToProfileOrValidate(profileKey, observation, op, result, path, obj);
         }
         else if (obj == null)
         {
             Observation observation = new Observation();
             observation.jsonType = JSON_TYPE.NULL;
-            addToProfileOrValidate(profileKey, observation, op, result, path);
+            addToProfileOrValidate(profileKey, observation, op, result, path, obj);
         }
     }
 
@@ -215,7 +215,7 @@ public class SoftValidation extends HttpServlet
         return "";
     }
 
-    private void addToProfileOrValidate(String profileKey, Observation observation, OPERATION op, Map result, List path)
+    private void addToProfileOrValidate(String profileKey, Observation observation, OPERATION op, Map result, List path, Object obj)
     {
         if (op == OPERATION.ADD_TO_PROFILE)
         {
@@ -240,12 +240,6 @@ public class SoftValidation extends HttpServlet
             Integer count = observationsAtPath.observations.get(observation);
             if (count == null)
             {
-                /*System.out.println("Did not expect " + observation.property + " (of type " + observation.jsonType + ") at " + profileKey + " suggestions:");
-                for (Observation t : observationsAtPath.observations.keySet())
-                    System.out.println("\t" + t.property + " / " + t.jsonType + " (" + (100.0f * (float)observationsAtPath.observations.get(t) / (float)observationsAtPath.count) + "%)");
-                    
-                 */
-
                 if (!result.keySet().contains("warnings"))
                     result.put("warnings", new ArrayList());
                 List warnings = (List) result.get("warnings");
@@ -258,6 +252,15 @@ public class SoftValidation extends HttpServlet
                         "Did not expect JSON " + observation.jsonType + " here.":
                         "Did not expect \"" + observation.property + "\" JSON " + observation.jsonType + " here.";
                 warning.put("explanation", explanation);
+
+                List<String> suggestions = new ArrayList<>();
+                for (Observation t : observationsAtPath.observations.keySet())
+                {
+                    if ( obj instanceof Map && !((Map)obj).keySet().contains(t.property) )
+                        suggestions.add(t.property);
+                }
+                if (suggestions.size() > 0)
+                    warning.put("suggestions", suggestions);
 
             }
         }
