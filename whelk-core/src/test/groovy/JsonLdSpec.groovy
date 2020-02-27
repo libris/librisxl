@@ -759,6 +759,22 @@ class JsonLdSpec extends Specification {
                 readMap("preserve-paths/molecular-aspects-cards-cards.jsonld")
     }
 
+    def "should preserve all links"() {
+        given:
+        Map data = readMap("preserve-paths/dtestpost.jsonld")
+
+        def ld = new JsonLd(
+                readMap("preserve-paths/context.jsonld"),
+                readMap("preserve-paths/display-data.jsonld"),
+                readMap("preserve-paths/vocab.jsonld"))
+
+        Set<String> links = ld.expandLinks(new Document(data).getExternalRefs()).collect{ it.iri }
+        def preservePaths = ld.findPaths(data, '@id', links)
+
+        expect:
+        ld.toChip(data, preservePaths) == readMap("preserve-paths/dtestpost-chips-links.jsonld")
+    }
+
     static Map readMap(String filename) {
         return mapper.readValue(readFile(filename), Map)
     }

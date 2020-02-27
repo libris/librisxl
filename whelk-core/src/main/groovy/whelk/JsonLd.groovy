@@ -563,9 +563,13 @@ class JsonLd {
     }
 
     static List<List<String>> findPaths(Map obj, String key, String value) {
+        return findPaths(obj, key, [value].toSet())
+    }
+
+    static List<List<String>> findPaths(Map obj, String key, Set<String> values) {
         List paths = []
         new DFS().search(obj, { List path, v ->
-            if (value == v && key == path[-1]) {
+            if (v in values && key == path[-1]) {
                 paths << new ArrayList(path)
             }
         })
@@ -747,7 +751,7 @@ class JsonLd {
                 if (value instanceof List) {
                     lensValue = ((List) value).withIndex().collect { it, index ->
                         it instanceof Map
-                        ? toCard((Map) it, chipsify, addSearchKey, reduceKey, pathRemainders([index, key], preservePaths))
+                        ? toCard((Map) it, chipsify, addSearchKey, reduceKey, pathRemainders([key, index], preservePaths))
                         : it
                     }
                 } else if (value instanceof Map) {

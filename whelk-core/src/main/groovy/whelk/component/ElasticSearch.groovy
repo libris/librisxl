@@ -200,11 +200,16 @@ class ElasticSearch {
         }
 
         log.debug("Framing ${document.getShortId()}")
-        boolean chipsify = false
-        boolean addSearchKey = true
-        copy.data['@graph'] = copy.data['@graph'].collect { whelk.jsonld.toCard(it, chipsify, addSearchKey) }
 
-        setComputedProperties(copy, document, whelk)
+        Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri }
+
+        def graph = ((List) copy.data['@graph'])
+        int originalSize = document.data['@graph'].size()
+        copy.data['@graph'] =
+                graph.take(originalSize).collect { toSearchCard(whelk, it, links) } +
+                graph.drop(originalSize).collect { toSearchCard(whelk, it, Collections.EMPTY_SET) }
+
+        setComputedProperties(copy, links, whelk)
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = document.getThingIdentifiers()
         if (thingIds.isEmpty()) {
@@ -219,14 +224,21 @@ class ElasticSearch {
         return framed
     }
 
-    private static void setComputedProperties(Document doc, Document unEmbellished, Whelk whelk) {
+    private Map toSearchCard(Whelk whelk, Map thing, Set<String> preserveLinks) {
+        boolean chipsify = false
+        boolean addSearchKey = true
+        boolean reduceKey = false
+        def preservedPaths = preserveLinks ? JsonLd.findPaths(thing, '@id', preserveLinks) : []
+
+        return whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preservedPaths)
+    }
+
+    private static void setComputedProperties(Document doc, Set<String> links, Whelk whelk) {
         getOtherIsbns(doc.getIsbnValues())
                 .each { doc.addTypedThingIdentifier('ISBN', it) }
 
         getOtherIsbns(doc.getIsbnHiddenValues())
                 .each { doc.addIndirectTypedThingIdentifier('ISBN', it) }
-
-        Set<String> links = whelk.jsonld.expandLinks(unEmbellished.getExternalRefs()).collect{ it.iri }
 
         doc.data['@graph'][1]['_links'] = links
         doc.data['@graph'][1]['_outerEmbellishments'] = doc.getEmbellishments() - links
