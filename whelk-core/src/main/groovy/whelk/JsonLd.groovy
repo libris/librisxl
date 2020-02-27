@@ -10,8 +10,6 @@ import org.codehaus.jackson.map.ObjectMapper
 import whelk.exception.FramingException
 import whelk.exception.WhelkRuntimeException
 
-import java.util.function.BiFunction
-import java.util.function.Function
 import java.util.regex.Matcher
 
 @CompileStatic

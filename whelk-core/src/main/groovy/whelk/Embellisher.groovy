@@ -2,10 +2,12 @@ package whelk
 
 import java.util.function.BiFunction
 import java.util.function.Function
+import groovy.util.logging.Log4j2 as Log
 
+@Log
 class Embellisher {
     static final List<String> EMBELLISH_LEVELS = ['cards', 'chips', 'chips']
-    static final int MAX_REVERSE_LINKS = 50
+    static final int MAX_REVERSE_LINKS = 512
 
     JsonLd jsonld
     Function<Iterable<String>, Iterable<Map>> getCards
@@ -79,6 +81,8 @@ class Embellisher {
             }
 
             if (irisLinkingHere.size() > MAX_REVERSE_LINKS) {
+                log.warn("MAX_REVERSE_LINKS exceeded. $iri $JsonLd.REVERSE_KEY $relation " +
+                        "(${irisLinkingHere.size()} > $MAX_REVERSE_LINKS)")
                 irisLinkingHere = irisLinkingHere.take(MAX_REVERSE_LINKS).toSet()
             }
 
