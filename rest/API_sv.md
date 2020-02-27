@@ -191,6 +191,16 @@ $ curl -XGET -H "Accept: application/ld+json" \
 ...
 ```
 
+#### Exempel
+
+Find posts containing 'Aniara' and held ny sigel APP1.
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?q=Aniara&@reverse.itemOf.heldBy.@id=https://libris.kb.se/library/APP1'
+...
+```
+
+
 ### `/_remotesearch` - Sök i externa databaser  - Kräver autentisering
 
 Detta anrop låter dig slå mot externa databaser.

@@ -171,7 +171,7 @@ $ curl -XGET -H "Accept: application/ld+json" \
 ...
 ```
 
-#### Exempel
+#### Example
 
 Find posts containing 'tove' and linking to saogf/Romaner.
 ```
@@ -179,6 +179,16 @@ $ curl -XGET -H "Accept: application/ld+json" \
     'https://libris-qa.kb.se/find?q=tove&o=https://id.kb.se/term/saogf/Romaner&_limit=3'
 ...
 ```
+
+#### Example
+
+Find posts containing 'Aniara' and held ny sigel APP1.
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?q=Aniara&@reverse.itemOf.heldBy.@id=https://libris.kb.se/library/APP1'
+...
+```
+
 
 ### `/_remotesearch` - Search external databases - Requires authentication
 
