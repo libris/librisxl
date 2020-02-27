@@ -21,12 +21,19 @@ import org.codehaus.jackson.map.ObjectMapper
 @Log
 class JSONMarcConverter {
     protected final static ObjectMapper mapper = new ObjectMapper()
-    static MarcRecord fromJson(String json) {
+
+    static MarcRecord fromJson(String marcJson) {
+        Map resultJson = mapper.readValue(marcJson, Map)
+
+	return fromJsonMap(resultJson)
+    }
+
+
+    static MarcRecord fromJsonMap(Map marcJson) {
 
         MarcRecord record = new MarcRecordImpl()
-        Map resultJson = mapper.readValue(json, Map)
-        def fields = resultJson.get("fields")
-        def leader = resultJson.get("leader")
+        def fields = marcJson.get("fields")
+        def leader = marcJson.get("leader")
 
         record.setLeader(leader)
 
