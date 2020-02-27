@@ -1485,7 +1485,7 @@
     },
 
     "referenceToSeriesInstance": {
-      "include": ["instanceOfObject", "referencedObjectDetailsWithPart", "workTitleQualifier", "workDisplayText"]
+      "include": ["instanceOfObject", "referencedObjectDetailsWithPart", "workTitleQualifier", "instanceDisplayText"]
     },
 
     "instanceOfObject": {
@@ -17169,13 +17169,13 @@
                 "value": "1401-9612"
               }],
               "part": ["s. 144-145"],
+              "marc:displayText": ["displayText"],
               "instanceOf": {
                 "@type": "Work",
                 "hasTitle": [{
                   "@type": "Title",
                   "qualifier": "Särskiljande tillägg"
-                }],
-                "marc:displayText": ["displayText"]
+                }]
               }
             }]
           }}
@@ -17193,10 +17193,12 @@
       "_spec": [
         {
           "source": {"762": {"ind1": "0", "ind2": " ", "subfields": [
+            {"i": "displayText"},
             {"t": "Rätt fart"},
             {"w": "9823877"}
           ]}},
           "normalized": {"762": {"ind1": "0", "ind2": " ", "subfields": [
+            {"i": "displayText"},
             {"t": "Rätt fart"},
             {"w": "9823877"}
           ]}},
@@ -17204,6 +17206,7 @@
             "hasSubseries": [{
               "@type": "Instance",
               "marc:toDisplayNote": true,
+              "marc:displayText": ["displayText"],
               "hasTitle": [{
                 "@type": "Title",
                 "mainTitle": "Rätt fart"
