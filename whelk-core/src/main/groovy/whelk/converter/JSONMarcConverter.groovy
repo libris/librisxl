@@ -25,7 +25,7 @@ class JSONMarcConverter {
     static MarcRecord fromJson(String marcJson) {
         Map resultJson = mapper.readValue(marcJson, Map)
 
-	return fromJsonMap(resultJson)
+        return fromJsonMap(resultJson)
     }
 
 
