@@ -1,5 +1,6 @@
 package whelk.rest.api;
 
+import org.apache.commons.io.IOUtils;
 import whelk.Document;
 import whelk.Whelk;
 import whelk.component.PostgreSQLComponent;
@@ -8,15 +9,18 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class SoftValidation extends HttpServlet
 {
     private Whelk whelk = null;
+    private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     // Actually storing 100 million libris IDs in an array/list would require at least 1,7Gb of memory (too much).
     // A set (which is what we would need here) would be _much_ worse still.
@@ -34,6 +38,12 @@ public class SoftValidation extends HttpServlet
         STRING,
         BOOLEAN,
         NULL,
+    }
+
+    private enum OPERATION
+    {
+        ADD,
+        VALIDATE,
     }
 
     private class Thing
@@ -74,43 +84,68 @@ public class SoftValidation extends HttpServlet
     public void init()
     {
         whelk = Whelk.createLoadedCoreWhelk();
+
+        new Timer("SoftValidation", true).schedule(new TimerTask()
+        {
+            public void run()
+            {
+                try
+                {
+                    sampleMoreRecords();
+                } catch (Throwable e)
+                {
+                    // LOG AND IGNORE
+                }
+            }
+        }, 10*1000, 10*1000);
     }
 
     private void sampleMoreRecords()
     {
-        //String sql = "SELECT data FROM lddb TABLESAMPLE SYSTEM ( 0.001 ) WHERE collection in ('hold', 'bib') limit 200;";
-        String sql = "SELECT data FROM lddb TABLESAMPLE SYSTEM ( 0.1 ) WHERE collection in ('hold', 'bib') limit 200;";
-        ArrayList<Document> documents = new ArrayList<>(200);
-        try(Connection connection = whelk.getStorage().getConnection();
-            PreparedStatement statement = connection.prepareStatement(sql);
-            ResultSet rs = statement.executeQuery())
+        lock.writeLock().lock();
+        try
         {
-            while (rs.next())
+
+            //String sql = "SELECT data FROM lddb TABLESAMPLE SYSTEM ( 0.001 ) WHERE collection in ('hold', 'bib') limit 200;";
+            String sql = "SELECT data FROM lddb TABLESAMPLE SYSTEM ( 0.1 ) WHERE collection in ('hold', 'bib') limit 200;";
+            ArrayList<Document> documents = new ArrayList<>(200);
+            try(Connection connection = whelk.getStorage().getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet rs = statement.executeQuery())
             {
-                Document doc = new Document(PostgreSQLComponent.mapper.readValue(rs.getString("data"), HashMap.class));
+                while (rs.next())
+                {
+                    Document doc = new Document(PostgreSQLComponent.mapper.readValue(rs.getString("data"), HashMap.class));
 
-                String id = doc.getShortId();
-                int hash = id.hashCode();
-                hash = hash % ID_SET_SIZE;
-                if (hash < 0)
-                    hash = -hash;
+                    String id = doc.getShortId();
+                    int hash = id.hashCode();
+                    hash = hash % ID_SET_SIZE;
+                    if (hash < 0)
+                        hash = -hash;
 
-                if ( alreadyIndexed.get( hash ) )
-                    continue;
-                alreadyIndexed.set( hash );
-                documents.add(doc);
+                    if ( alreadyIndexed.get( hash ) )
+                        continue;
+                    alreadyIndexed.set( hash );
+                    documents.add(doc);
+                }
+
+            } catch (SQLException | IOException e)
+            {
+                // LOG AND IGNORE
             }
 
-        } catch (SQLException | IOException e)
-        {
-            // LOG AND IGNORE
-        }
+            for (Document doc : documents)
+            {
+                OPERATION op = OPERATION.ADD;
+                sampleNodeData(doc.data, "root,", op);
+            }
 
-        for (Document doc : documents)
-            sampleNodeData(doc.data, "root,");
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
-    private void sampleNodeData(Object obj, String path)
+    private void sampleNodeData(Object obj, String path, OPERATION op)
     {
         if (obj instanceof Map)
         {
@@ -120,8 +155,11 @@ public class SoftValidation extends HttpServlet
                 Thing thing = new Thing();
                 thing.jsonType = JSON_TYPE.OBJECT;
                 thing.property = (String) key;
-                sampleNodeData( map.get(key), path + key + lookForwardForType(map.get(key)) + ",");
-                addToProfile(path, thing);
+                sampleNodeData( map.get(key), path + key + lookForwardForType(map.get(key)) + ",", op);
+                if (op == OPERATION.ADD)
+                    addToProfile(path, thing);
+                else
+                    validateObject(path, thing, obj);
             }
 
         }
@@ -131,33 +169,48 @@ public class SoftValidation extends HttpServlet
             {
                 Thing thing = new Thing();
                 thing.jsonType = JSON_TYPE.ARRAY;
-                sampleNodeData( next, path + "[]" + lookForwardForType(next) + ",");
-                addToProfile(path, thing);
+                sampleNodeData( next, path + "[]" + lookForwardForType(next) + ",", op);
+                if (op == OPERATION.ADD)
+                    addToProfile(path, thing);
+                else
+                    validateObject(path, thing, obj);
             }
         }
         else if (obj instanceof String)
         {
             Thing thing = new Thing();
             thing.jsonType = JSON_TYPE.STRING;
-            addToProfile(path, thing);
+            if (op == OPERATION.ADD)
+                addToProfile(path, thing);
+            else
+                validateObject(path, thing, obj);
         }
         else if (obj instanceof Integer || obj instanceof Long || obj instanceof Float || obj instanceof Double)
         {
             Thing thing = new Thing();
             thing.jsonType = JSON_TYPE.NUMBER;
-            addToProfile(path, thing);
+            if (op == OPERATION.ADD)
+                addToProfile(path, thing);
+            else
+                validateObject(path, thing, obj);
         }
         else if (obj instanceof Boolean)
         {
             Thing thing = new Thing();
             thing.jsonType = JSON_TYPE.BOOLEAN;
-            addToProfile(path, thing);
+            if (op == OPERATION.ADD)
+                addToProfile(path, thing);
+            else
+                validateObject(path, thing, obj);
         }
         else if (obj == null)
         {
             Thing thing = new Thing();
             thing.jsonType = JSON_TYPE.NULL;
-            addToProfile(path, thing);
+            if (op == OPERATION.ADD)
+                addToProfile(path, thing);
+            else
+                validateObject(path, thing, obj);
         }
     }
 
@@ -191,6 +244,20 @@ public class SoftValidation extends HttpServlet
         things.count++;
     }
 
+    private void validateObject(String path, Thing thing, Object data)
+    {
+        ThingsAtPath things = profile.get(path);
+        if (things == null)
+            return;
+        Integer count = things.things.get(thing);
+        if (count == null)
+        {
+            System.out.println("Did not expect " + thing.property + " (of type " + thing.jsonType + ") at " + path + " suggestions:");
+            for (Thing t : things.things.keySet())
+                System.out.println("\t" + t.property + " / " + t.jsonType + " " + (100.0f * (float)things.things.get(t) / (float)things.count) + "%");
+        }
+    }
+
     private void printProfile()
     {
         for (Object key : profile.keySet())
@@ -204,9 +271,25 @@ public class SoftValidation extends HttpServlet
     }
 
     @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response) {
-        sampleMoreRecords();
-        printProfile();
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        lock.readLock().lock();
+        try
+        {
+            String content = IOUtils.toString(request.getReader());
+            Map body = PostgreSQLComponent.mapper.readValue(content, HashMap.class);
+
+            boolean addNotAnnotate = false;
+            sampleNodeData(body, "root,", OPERATION.VALIDATE);
+
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.setContentType("application/ld+json");
+            response.setCharacterEncoding("UTF-8");
+            PrintWriter out = response.getWriter();
+            out.print(PostgreSQLComponent.mapper.writeValueAsString(body));
+            out.close();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
