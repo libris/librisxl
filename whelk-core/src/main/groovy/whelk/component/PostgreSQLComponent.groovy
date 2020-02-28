@@ -21,6 +21,7 @@ import whelk.exception.WhelkException
 import whelk.exception.WhelkRuntimeException
 import whelk.filter.LinkFinder
 import whelk.util.DocumentUtil
+import whelk.util.LegacyIntegrationTools
 
 import javax.sql.DataSource
 import java.sql.Array
@@ -1924,14 +1925,14 @@ class PostgreSQLComponent implements Storage {
     private String getDescriptionChangerId(String changedBy) {
         //FIXME(?): hardcoded
         // for historical reasons changedBy is the script URI for global changes
-        if (changedBy.startsWith('https://libris.kb.se/sys/globalchanges/')) {
+        if (changedBy.startsWith(LegacyIntegrationTools.BASE_LIBRARY_URI + '/sys/globalchanges/')) {
             return getDescriptionChangerId('SEK')
         }
         else if (isHttpUri(changedBy)) {
             return changedBy
         }
         else {
-            return 'https://libris.kb.se/library/' + changedBy
+            return LegacyIntegrationTools.legacySigelToUri(changedBy)
         }
     }
 
