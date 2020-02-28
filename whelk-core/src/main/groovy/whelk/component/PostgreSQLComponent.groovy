@@ -1925,7 +1925,7 @@ class PostgreSQLComponent implements Storage {
     private String getDescriptionChangerId(String changedBy) {
         //FIXME(?): hardcoded
         // for historical reasons changedBy is the script URI for global changes
-        if (changedBy.startsWith(LegacyIntegrationTools.BASE_LIBRARY_URI + '/sys/globalchanges/')) {
+        if (changedBy.startsWith(LegacyIntegrationTools.BASE_LIBRARY_URI + 'sys/globalchanges/')) {
             return getDescriptionChangerId('SEK')
         }
         else if (isHttpUri(changedBy)) {
