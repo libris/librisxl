@@ -21,6 +21,7 @@ import whelk.exception.WhelkException
 import whelk.exception.WhelkRuntimeException
 import whelk.filter.LinkFinder
 import whelk.util.DocumentUtil
+import whelk.util.LegacyIntegrationTools
 
 import javax.sql.DataSource
 import java.sql.Array
@@ -1931,7 +1932,7 @@ class PostgreSQLComponent implements Storage {
             return changedBy
         }
         else {
-            return 'https://libris.kb.se/library/' + changedBy
+            return LegacyIntegrationTools.legacySigelToUri(changedBy)
         }
     }
 
