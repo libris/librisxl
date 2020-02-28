@@ -5,9 +5,12 @@ import se.kb.libris.export.ExportProfile;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter;
 import se.kb.libris.util.marc.io.MarcRecordWriter;
+import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.Document;
+import whelk.JsonLd;
 import whelk.Whelk;
+import whelk.component.PostgreSQLComponent;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.util.MarcExport;
 import whelk.util.ThreadPool;
@@ -56,6 +59,13 @@ public class MarcCliExport
         if (args.length != 2 && args.length != 1)
             printUsageAndExit();
 
+        if (args[0].equals("--sao"))
+        {
+            MarcRecordWriter output = new Iso2709MarcRecordWriter(System.out, "ISO-8859-1");
+            new MarcCliExport(Whelk.createLoadedCoreWhelk()).dumpSao(output);
+            return;
+        }
+
         ExportProfile profile = new ExportProfile(new File(args[0]));
         String encoding = profile.getProperty("characterencoding");
         if (encoding.equals("Latin1Strip")) {
@@ -73,25 +83,18 @@ public class MarcCliExport
             new MarcCliExport(Whelk.createLoadedCoreWhelk()).dumpSpecific(profile, idFilePath, output);
         } else if (args.length == 1)
         {
-            if (args[0].equals("--sao"))
+            // If the "profile" contains start/stop times, we should generate an interval-export instead
+            // of a total export.
+            String start = profile.getProperty("start");
+            String stop = profile.getProperty("stop");
+            if (start != null && stop != null)
             {
-                new MarcCliExport(Whelk.createLoadedCoreWhelk()).dumpSao(output);
+                start = start +"T00:00:00Z";
+                stop = stop +"T23:59:59Z";
+                new ProfileExport(Whelk.createLoadedCoreWhelk()).exportInto(output, profile, start, stop, ProfileExport.DELETE_MODE.IGNORE, false);
             }
             else
-            {
-                // If the "profile" contains start/stop times, we should generate an interval-export instead
-                // of a total export.
-                String start = profile.getProperty("start");
-                String stop = profile.getProperty("stop");
-                if (start != null && stop != null)
-                {
-                    start = start +"T00:00:00Z";
-                    stop = stop +"T23:59:59Z";
-                    new ProfileExport(Whelk.createLoadedCoreWhelk()).exportInto(output, profile, start, stop, ProfileExport.DELETE_MODE.IGNORE, false);
-                }
-                else
-                    new MarcCliExport(Whelk.createLoadedCoreWhelk()).dump(profile, output);
-            }
+                new MarcCliExport(Whelk.createLoadedCoreWhelk()).dump(profile, output);
         }
         output.close();
     }
@@ -119,9 +122,32 @@ public class MarcCliExport
         System.exit(1);
     }
 
-    private void dumpSao(MarcRecordWriter output)
+    private void dumpSao(MarcRecordWriter output) throws SQLException, IOException
     {
-        System.out.println("DUMP SAO!!");
+        try(Connection connection = m_whelk.getStorage().getOuterConnection();
+            PreparedStatement preparedStatement = getAllSaoStatement(connection);
+            ResultSet resultSet = preparedStatement.executeQuery())
+        {
+            while (resultSet.next())
+            {
+                String id = resultSet.getString("id");
+                Document doc = m_whelk.loadEmbellished(id);
+
+                String marcXml = null;
+                try
+                {
+                    marcXml = (String) m_toMarcXmlConverter.convert(doc.data, doc.getShortId()).get(JsonLd.getNON_JSON_CONTENT_KEY());
+                }
+                catch (Exception | Error e)
+                { // Depending on the converter, a variety of problems may arise here
+                    log.error("Conversion error for: " + doc.getCompleteId() + " cause: ", e);
+                    continue;
+                }
+
+                MarcRecord marcRecord = MarcXmlRecordReader.fromXml(marcXml);
+                output.writeRecord(marcRecord);
+            }
+        }
     }
 
     private void dump(ExportProfile profile, MarcRecordWriter output)
@@ -250,6 +276,16 @@ public class MarcCliExport
 
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
 
+        preparedStatement.setFetchSize(100);
+
+        return preparedStatement;
+    }
+
+    private PreparedStatement getAllSaoStatement(Connection connection)
+            throws SQLException
+    {
+        String sql = "SELECT id FROM lddb WHERE data#>>'{@graph,1,inScheme,@id}' = 'https://id.kb.se/term/saogf' AND deleted = false";
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setFetchSize(100);
 
         return preparedStatement;
