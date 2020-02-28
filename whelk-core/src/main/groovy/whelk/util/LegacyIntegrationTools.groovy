@@ -33,7 +33,7 @@ class LegacyIntegrationTools {
     static String legacySigelToUri(String sigel) {
         if (sigel.startsWith(BASE_LIBRARY_URI))
             return sigel
-        return BASE_LIBRARY_URI + URLEncoder.encode(sigel)
+        return BASE_LIBRARY_URI + URLEncoder.encode(sigel, "UTF-8")
     }
 
     static String uriToLegacySigel(String uri) {
