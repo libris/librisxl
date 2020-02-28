@@ -47,7 +47,7 @@ gretty {
 
 jar {
     manifest {
-        attributes "Main-Class": "whelk.export.marc.TotalExport"
+        attributes "Main-Class": "whelk.export.marc.MarcCliExport"
     }
 
     from {
