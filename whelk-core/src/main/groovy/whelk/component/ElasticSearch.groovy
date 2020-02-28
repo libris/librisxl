@@ -11,6 +11,8 @@ import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.util.DocumentUtil
+import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
 
@@ -96,8 +98,7 @@ class ElasticSearch {
         if (docs) {
             String bulkString = docs.findResults{ doc ->
                 try {
-                    String shapedData = JsonOutput.toJson(
-                        getShapeForIndex(doc, whelk, collection))
+                    String shapedData = getShapeForIndex(doc, whelk, collection)
                     String action = createActionRow(doc, collection)
                     return "${action}\n${shapedData}\n"
                 } catch (Exception e) {
@@ -131,11 +132,11 @@ class ElasticSearch {
         // The justification for this uncomfortable catch-all, is that an index-failure must raise an alert (log entry)
         // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
         try {
-            Map shapedData = getShapeForIndex(doc, whelk, collection)
-            def response = client.performRequest('PUT',
-                    "/${indexName}/${collection}" +
-                            "/${toElasticId(doc.getShortId())}?pipeline=libris",
-                    JsonOutput.toJson(shapedData)).second
+            def response = client.performRequest(
+                    'PUT',
+                    "/${indexName}/${collection}/${toElasticId(doc.getShortId())}?pipeline=libris",
+                    getShapeForIndex(doc, whelk, collection)
+            ).second
             Map responseMap = mapper.readValue(response, Map)
             log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${responseMap['_id']} as version ${responseMap['_version']}")
         } catch (Exception e) {
@@ -192,7 +193,7 @@ class ElasticSearch {
         }
     }
 
-    Map getShapeForIndex(Document document, Whelk whelk, String collection) {
+    String getShapeForIndex(Document document, Whelk whelk, String collection) {
         Document copy = document.clone()
 
         if (collection != "hold") {
@@ -219,9 +220,17 @@ class ElasticSearch {
         String thingId = thingIds.get(0)
         Map framed = JsonLd.frame(thingId, copy.data)
 
+        // TODO: replace with elastic ICU Analysis plugin?
+        // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
+        DocumentUtil.findKey(framed, JsonLd.SEARCH_KEY) { value, path ->
+            if (!Unicode.isNormalizedForSearch(value)) {
+                return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))
+            }
+        }
+
         log.trace("Framed data: ${framed}")
 
-        return framed
+        return JsonOutput.toJson(framed)
     }
 
     private Map toSearchCard(Whelk whelk, Map thing, Set<String> preserveLinks) {

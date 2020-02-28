@@ -20,6 +20,20 @@
                     "type": "pattern_replace",
                     "pattern": "[^0-9]+",
                     "replacement": " "
+                },
+                "apostrophe_and_okina_remover": {
+                    "type": "mapping",
+                    "mappings": [
+                        "\u0027=>",
+                        "\u2018=>",
+                        "\u2019=>",
+                        "\uFF07=>",
+                        "\u02BB=>",
+                        "\u02BC=>",
+                        "\u02BD=>",
+                        "\u02BE=>",
+                        "\u02BF=>"
+                    ]
                 }
             },
             "analyzer": {
@@ -30,6 +44,7 @@
                 },
                 "softmatcher": {
                     "type": "custom",
+                    "char_filter": ["apostrophe_and_okina_remover"],
                     "tokenizer": "standard",
                     "filter": ["lowercase", "ascii_folder", "swedish_snowball"]
                 },
