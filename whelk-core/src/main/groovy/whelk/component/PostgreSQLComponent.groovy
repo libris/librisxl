@@ -385,8 +385,6 @@ class PostgreSQLComponent implements Storage {
     boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
 
-        normalizeDocumentForStorage(doc)
-
         Connection connection = getConnection()
         connection.setAutoCommit(false)
 
@@ -395,6 +393,8 @@ class PostgreSQLComponent implements Storage {
         While under lock: first check that there is not already a holding for this sigel/bib-id combination.
          */
         try {
+            normalizeDocumentForStorage(doc, connection)
+
             if (collection == "hold") {
                 String holdingFor = doc.getHoldingFor()
                 if (holdingFor == null) {
@@ -566,7 +566,7 @@ class PostgreSQLComponent implements Storage {
             // Performs the callers updates on the document
             Document preUpdateDoc = doc.clone()
             updateAgent.update(doc)
-            normalizeDocumentForStorage(doc)
+            normalizeDocumentForStorage(doc, connection)
 
             if (doVerifyDocumentIdRetention) {
                 verifyDocumentIdRetention(preUpdateDoc, doc, connection)
@@ -1721,7 +1721,7 @@ class PostgreSQLComponent implements Storage {
         return docList
     }
 
-    private void normalizeDocumentForStorage(Document doc) {
+    private void normalizeDocumentForStorage(Document doc, Connection connection) {
         // Synthetic property, should never be stored
         DocumentUtil.findKey(doc.data, JsonLd.REVERSE_KEY) { value, path ->
             new DocumentUtil.Remove()
@@ -1730,7 +1730,7 @@ class PostgreSQLComponent implements Storage {
         doc.normalizeUnicode()
 
         if (linkFinder != null) {
-            linkFinder.normalizeIdentifiers(doc)
+            linkFinder.normalizeIdentifiers(doc, connection)
         }
     }
 
