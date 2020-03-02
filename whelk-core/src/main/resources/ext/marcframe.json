@@ -17548,6 +17548,7 @@
       ]
     },
     "773": {
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
       "include": ["referenceToInstanceSansDisplayText"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
@@ -17903,6 +17904,7 @@
       ]
     },
     "775": {
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
       "include": ["referenceToInstance"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
@@ -18027,14 +18029,12 @@
       ]
     },
     "776": {
-      "NOTE": "We deviate from BF2 as we do not link from the Work with hasInstance.",
       "include": ["referenceToInstance"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "otherPhysicalFormat",
       "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": "8"},
-      "NOTE:$i": "Not using same pattern as all other linkfields since only 776 is correctly mapped to Instance. Not creating new pattern because aiming for get rid of displayText",
       "_spec": [
         {
           "source": {"776": {"ind1": "0", "ind2": "8", "subfields": [
@@ -18705,6 +18705,7 @@
       ]
     },
     "786": {
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
       "include": ["referenceToInstance"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",

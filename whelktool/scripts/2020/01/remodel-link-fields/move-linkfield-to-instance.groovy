@@ -1,9 +1,9 @@
 /*
  * Move following properties from Work to Instance and make object an Instance
  *
- * NOTE: This script does not take into account marc:displayNote, marc:controlSubfield
- * partNumber, marc:fieldref or marc:groupid. Will be handled with separate issue. For
- * now the properties will remain directly on the object.
+ * NOTE: This script temporarily keeps marc:displayNote, marc:controlSubfield
+ * partNumber, marc:fieldref and marc:groupid and moves them to the Instance entity.
+ * These properties will be be cleaned up in the following steps (separate issue LXL-3019)
  *
  * Also move isPartOf.part to thing.part
  *
@@ -41,7 +41,7 @@ selectBySqlWhere(query) { data ->
                 if (!part.isEmpty())
                     thing << ['part': part]
             }
-            newListOfObjects = updateProperties(record[ID], val, shouldRemoveProperties)
+            newListOfObjects = updateProperties(val, shouldRemoveProperties, record[ID])
         }
 
         if (!newListOfObjects.isEmpty()) {
@@ -82,18 +82,18 @@ Set addUniquePart(part, existingParts, docId) {
     return updatedParts
 }
 
-List updateProperties(docID, listOfObjects, shouldIgnoreProperties) {
+List updateProperties(listOfObjects, shouldIgnoreProperties, docID) {
     def newListOfObjects = []
 
     listOfObjects.each {
-        instanceObject = remodelObjectToInstance(it, docID, shouldIgnoreProperties)
+        instanceObject = remodelObjectToInstance(it, shouldIgnoreProperties, docID)
         if (instanceObject)
             newListOfObjects << instanceObject
     }
     return newListOfObjects
 }
 
-Map remodelObjectToInstance(object, docID, shouldIgnoreProperties) {
+Map remodelObjectToInstance(object, shouldIgnoreProperties, docID) {
     Map instanceProperties = [:]
     Map workProperties = [:]
     Map newInstanceObject = [:]
