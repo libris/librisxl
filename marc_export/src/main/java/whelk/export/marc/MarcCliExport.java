@@ -284,7 +284,7 @@ public class MarcCliExport
     private PreparedStatement getAllSaoStatement(Connection connection)
             throws SQLException
     {
-        String sql = "SELECT id FROM lddb WHERE data#>>'{@graph,1,inScheme,@id}' = 'https://id.kb.se/term/saogf' AND deleted = false";
+        String sql = "SELECT id FROM lddb WHERE data#>>'{@graph,1,inScheme,@id}' = 'https://id.kb.se/term/sao' AND deleted = false";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setFetchSize(100);
 
