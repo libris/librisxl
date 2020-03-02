@@ -1435,7 +1435,6 @@
       "$a": {"about": "_:agent", "property": "label", "infer": true, "TODO:targetMatch": "1xx"},
       "$b": {"about": "_:instance", "property": "editionStatement", "TODO:targetMatch": "250"},
       "$d": {"about": "_:instance", "property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
-      "$g": {"about": "_:instance", "addProperty": "part"},
       "$h": {"about": "_:instance", "addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
       "$m": {"about": "_:instance", "property": "marc:materialSpecificDetails"},
       "$n": {"about": "_:instance", "addLink": "hasNote", "resourceType": "Note", "property": "label"},
@@ -1460,35 +1459,36 @@
       "$z": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value", "TODO:targetMatch": "020"}
     },
 
-    "referenceToInstance": {
-      "include": ["referencedObjectDetails", "serialSpecificDetails"],
-      "pendingResources": {
-        "_:work": {
-          "about": "_:instance",
-          "link": "instanceOf",
-          "resourceType": "Work"
-        }
-      },
-      "TODO": "Does $c relates to $t or $s?. Check statistics. Deviates from 'referenceToWork' and 'referenceToSeriesInstance'",
-      "NOTE": "For now, continue to map bib 776 differently; $c together with $t",
-      "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false},
-      "$i": {"about": "_:instance", "addProperty": "marc:displayText"}
-    },
-
     "referenceToWork": {
-      "include": ["referencedObjectDetails", "serialSpecificDetails", "linkQualifier"],
+      "include": ["referencedObjectDetailsWithPart", "serialSpecificDetails", "workTitleQualifier", "workDisplayText"],
       "pendingResources": {
         "_:instance": {
           "about": "_:work",
           "link": "hasInstance",
           "resourceType": "Instance"
         }
-      },
-      "$i": {"about": "_:work", "addProperty": "marc:displayText"}
+      }
+    },
+
+    "referencedObjectDetailsWithPart": {
+      "include": ["referencedObjectDetails"],
+      "$g": {"about": "_:instance", "addProperty": "part"}
+    },
+
+    "referenceToInstance": {
+      "include": ["instanceOfObject", "referencedObjectDetailsWithPart", "instanceTitleQualifier", "serialSpecificDetails", "instanceDisplayText"]
+    },
+
+    "referenceToInstanceSansDisplayText": {
+      "include": ["instanceOfObject", "referencedObjectDetails", "instanceTitleQualifier", "serialSpecificDetails"],
+      "$g": {"aboutEntity": "?thing", "addProperty": "part"}
     },
 
     "referenceToSeriesInstance": {
-      "include": ["referencedObjectDetails", "linkQualifier"],
+      "include": ["instanceOfObject", "referencedObjectDetailsWithPart", "workTitleQualifier", "instanceDisplayText"]
+    },
+
+    "instanceOfObject": {
       "pendingResources": {
         "_:work": {
           "about": "_:instance",
@@ -1498,10 +1498,26 @@
       }
     },
 
-    "linkQualifier": {
+    "instanceDisplayText": {
+      "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
+      "$i": {"about": "_:instance", "addProperty": "marc:displayText"}
+    },
+
+    "workDisplayText": {
+      "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
+      "$i": {"about": "_:work", "addProperty": "marc:displayText"}
+    },
+
+    "workTitleQualifier": {
       "TODO": "Does $c relates to $t or $s?. Check statistics. Deviates from 'referenceToInstance'",
       "NOTE": "For now, continue to map $c together with $s - applies to all linkfields (except 776)",
       "$c": {"about": "_:workTitle", "property": "qualifier", "NOTE:marc-repeatable": false}
+    },
+
+    "instanceTitleQualifier": {
+      "TODO": "Does $c relates to $t or $s?. Check statistics. Deviates from 'referenceToWork' and 'referenceToSeriesInstance'",
+      "NOTE": "For now, continue to map bib 776 differently; $c together with $t",
+      "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false}
     }
   },
 
@@ -9054,10 +9070,6 @@
 
     "250": {
       "aboutEntity": "?thing",
-      "linkSubsequentRepeated": {
-        "addLink": "otherEdition",
-        "embedded": true
-      },
       "$a": {"property": "editionStatement", "punctuationChars": "/"},
       "$b": {"property": "editionStatementRemainder"},
       "$3": {
@@ -9080,15 +9092,14 @@
           "result": {"mainEntity": {"editionStatement": "New ed."}}
         },
         {
+          "name": "Repeated 250: added to list and for now only the first value will be exported",
           "source": [
             {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "New"}]}},
             {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Newer"}]}}
           ],
+          "normalized": {"250": {"ind1": " ", "ind2": " ", "subfields": [{"a": "New"}]}},
           "result": {"mainEntity": {
-            "editionStatement": "New",
-            "otherEdition": [
-              {"editionStatement": "Newer"}
-            ]
+            "editionStatement": ["New", "Newer"]
           }}
         }
       ]
@@ -12977,11 +12988,30 @@
       "NOTE:record-count": 0
     },
     "580": {
-      "aboutEntity": "?work",
+      "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "marc:LinkingEntryComplexityNote",
       "$a": {"property": "label"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": [
+            {"580": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Continues: Civil air regulations and reference guide for pilots."}]}},
+            {"580": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Continued by: Federal aviation regulations and flight standards for pilots."}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "hasNote": [{
+                "@type": "marc:LinkingEntryComplexityNote",
+                "label": "Continues: Civil air regulations and reference guide for pilots."
+              },{
+                "@type": "marc:LinkingEntryComplexityNote",
+                "label": "Continued by: Federal aviation regulations and flight standards for pilots."
+              }]
+            }
+          }
+        }
+      ]
     },
     "581": {
       "aboutEntity": "?thing",
@@ -17120,8 +17150,10 @@
       "_spec": [
         {
           "source": {"760": {"ind1": "0", "ind2": " ", "subfields": [
+            {"i": "displayText"},
             {"t": "Publikation"},
             {"c": "Särskiljande tillägg"},
+            {"g": "s. 144-145"},
             {"x": "1401-9612"}
           ]}},
           "result": {"mainEntity": {
@@ -17136,6 +17168,8 @@
                 "@type": "ISSN",
                 "value": "1401-9612"
               }],
+              "part": ["s. 144-145"],
+              "marc:displayText": ["displayText"],
               "instanceOf": {
                 "@type": "Work",
                 "hasTitle": [{
@@ -17159,10 +17193,12 @@
       "_spec": [
         {
           "source": {"762": {"ind1": "0", "ind2": " ", "subfields": [
+            {"i": "displayText"},
             {"t": "Rätt fart"},
             {"w": "9823877"}
           ]}},
           "normalized": {"762": {"ind1": "0", "ind2": " ", "subfields": [
+            {"i": "displayText"},
             {"t": "Rätt fart"},
             {"w": "9823877"}
           ]}},
@@ -17170,6 +17206,7 @@
             "hasSubseries": [{
               "@type": "Instance",
               "marc:toDisplayNote": true,
+              "marc:displayText": ["displayText"],
               "hasTitle": [{
                 "@type": "Title",
                 "mainTitle": "Rätt fart"
@@ -17389,10 +17426,12 @@
         {
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
             {"s": "Main Thing"},
+            {"g": "part 1"},
             {"z": "00-0-000000-0"}
           ]}},
           "normalized": {"772": {"ind1": "0", "ind2": "0", "subfields": [
             {"s": "Main Thing"},
+            {"g": "part 1"},
             {"z": "00-0-000000-0"}
           ]}},
           "result": {"mainEntity": {
@@ -17409,7 +17448,8 @@
                   "identifiedBy": [{
                     "@type": "ISBN",
                     "value": "00-0-000000-0"
-                  }]
+                  }],
+                  "part": ["part 1"]
                 }
               }]
             }
@@ -17508,12 +17548,14 @@
       ]
     },
     "773": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstanceSansDisplayText"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "isPartOf",
-      "resourceType": "Aggregate",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": "0"},
+      "$i": {"ignored": true, "TODO": "Or do we want to make it a hasNote? Local libraries have given their OK to remove"},
       "$p": {"about": "_:instance", "addLink": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore", "NOTE:marc-repeatable": false},
       "$q": {"about": "_:instance", "property": "marc:enumerationAndFirstPage", "NOTE:LC":"ignore"},
       "_spec": [
@@ -17532,29 +17574,23 @@
             {"w": "8258455"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "isPartOf": [{
-                "@type": "Aggregate",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "8258455"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Tidskrift i sjöväsendet"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "0040-6945"
-                  }],
-                  "part": ["127:1964, s. 495-534"]
-                },
-                "marc:toDisplayNote": true
-              }]
-            }
+            "part": ["127:1964, s. 495-534"],
+            "isPartOf": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "8258455"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Tidskrift i sjöväsendet"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "0040-6945"
+              }],
+              "marc:toDisplayNote": true
+            }]
           }}
         },
         {
@@ -17571,32 +17607,26 @@
             {"9": "34"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "isPartOf": [{
-                "@type": "Aggregate",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "517883"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "I Värend och Sunnerbo"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "ISSN 0284-771X"
-                  }],
-                  "part": ["1992 (33:1), s. 34-35 : ill."],
-                  "provisionActivityStatement": "Växjö : Kronobergs läns hembydsförbund, 1985-1995"
-                },
-                "marc:controlSubfield": "n s",
-                "marc:toDisplayNote": true,
-                "partNumber": ["1992", "1", "34"]
-              }]
-            }
+            "part": ["1992 (33:1), s. 34-35 : ill."],
+            "isPartOf": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "517883"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "I Värend och Sunnerbo"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "ISSN 0284-771X"
+              }],
+              "provisionActivityStatement": "Växjö : Kronobergs läns hembydsförbund, 1985-1995",
+              "marc:controlSubfield": "n s",
+              "marc:toDisplayNote": true,
+              "partNumber": ["1992", "1", "34"]
+            }]
           }}
         },
         {
@@ -17618,37 +17648,127 @@
             {"w": "11899145"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "isPartOf": [{
-                "@type": "Aggregate",
+            "part": ["S.184-212"],
+            "isPartOf": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "11899145"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Power of place : the religious landscape of the Southern Sacred Peak (Nanyue) in medieval China /"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "9780674033320 (cl : alk. paper)"
+              }],
+              "provisionActivityStatement": "cop. 2009",
+              "instanceOf": {
+                "@type": "Work",
                 "contribution": [{
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Agent",
                     "label": "Robson, James,"
                   }
+                }]
+              },
+              "marc:toDisplayNote": true
+            }]
+          }}
+        },
+        {
+          "name": "Example from https://www.kb.se/katalogisering/Katalogisering/artikelindexering/exempel/#14.",
+          "source": [
+            {"245": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Hur gammal är arbetslösheten?"}
+            ]}},
+            {"773": {"ind1": "0", "ind2": " ", "subfields": [
+              {"t": "Historisk tidskrift (Stockholm)"},
+              {"x": "0345-469X"},
+              {"w": "8261328"},
+              {"g": "2002(122):1, s. [99]-108"}
+            ]}},
+            {"787": {"ind1": "0", "ind2": "8", "subfields": [
+              {"i": "Recension av:"},
+              {"a": "Olofsson, Jonas"},
+              {"t": "Arbetslöshetsfrågan i historisk belysning : en diskussion om arbetslöshet och social politik i Sverige 1830-1920"},
+              {"d": "1996"},
+              {"z": "91-7966-400-8"},
+              {"w": "7677734"}
+            ]}}],
+          "normalized": [
+            {"245": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Hur gammal är arbetslösheten?"}
+            ]}},
+            {"773": {"ind1": "0", "ind2": "0", "subfields": [
+              {"t": "Historisk tidskrift (Stockholm)"},
+              {"g": "2002(122):1, s. [99]-108"},
+              {"x": "0345-469X"},
+              {"w": "8261328"}
+            ]}},
+            {"787": {"ind1": "0", "ind2": " ", "subfields": [
+              {"i": "Recension av:"},
+              {"a": "Olofsson, Jonas"},
+              {"t": "Arbetslöshetsfrågan i historisk belysning : en diskussion om arbetslöshet och social politik i Sverige 1830-1920"},
+              {"d": "1996"},
+              {"z": "91-7966-400-8"},
+              {"w": "7677734"}
+            ]}}],
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "Title",
+              "mainTitle": "Hur gammal är arbetslösheten?"
+            }],
+            "instanceOf": {
+              "@type": "Text",
+              "relatedTo": [{
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Agent",
+                    "label": "Olofsson, Jonas"
+                  }
                 }],
                 "hasInstance": {
                   "@type": "Instance",
                   "describedBy": [{
                     "@type": "Record",
-                    "controlNumber": "11899145"
+                    "controlNumber": "7677734"
                   }],
                   "hasTitle": [{
                     "@type": "Title",
-                    "mainTitle": "Power of place : the religious landscape of the Southern Sacred Peak (Nanyue) in medieval China /"
+                    "mainTitle": "Arbetslöshetsfrågan i historisk belysning : en diskussion om arbetslöshet och social politik i Sverige 1830-1920"
                   }],
                   "identifiedBy": [{
                     "@type": "ISBN",
-                    "value": "9780674033320 (cl : alk. paper)"
+                    "value": "91-7966-400-8"
                   }],
-                  "part": ["S.184-212"],
-                  "provisionActivityStatement": "cop. 2009"
+                  "provisionActivityStatement": "1996"
                 },
+                "marc:displayText": ["Recension av:"],
                 "marc:toDisplayNote": true
               }]
-            }
+            },
+            "part": ["2002(122):1, s. [99]-108"],
+            "isPartOf": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "8261328"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Historisk tidskrift (Stockholm)"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "0345-469X"
+              }],
+              "marc:toDisplayNote": true
+            }]
           }}
         },
         {
@@ -17658,17 +17778,11 @@
             {"w": "8258455"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "isPartOf": [{
-                "@type": "Aggregate",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "meta": [{"@type": "Record", "controlNumber": "8258455"}],
-                  "hasTitle": [{"@type": "Title", "mainTitle": "Tidskrift"}]
-                }
-              }]
-            }
+            "isPartOf": [{
+              "@type": "Instance",
+              "meta": [{"@type": "Record", "controlNumber": "8258455"}],
+              "hasTitle": [{"@type": "Title", "mainTitle": "Tidskrift"}]
+            }]
           }}
         }
       ]
@@ -17790,11 +17904,12 @@
       ]
     },
     "775": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "otherEdition",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "pendingResources": {
         "_:provisionActivity": {
           "about": "_:instance",
@@ -17817,9 +17932,26 @@
             {"w": "1320351"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "otherEdition": [{
+            "otherEdition": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "1320351"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "91-40-55055-9"
+              }],
+              "part": ["Övningsbok"],
+              "provisionActivity": {
+                "@type": "ProvisionActivity",
+                "place": {
+                  "@type": "Place",
+                  "code": "Företagsekonomi 80"
+                }
+              },
+              "provisionActivityStatement": "1979",
+              "instanceOf": {
                 "@type": "Work",
                 "contribution": [{
                   "@type": "PrimaryContribution",
@@ -17827,30 +17959,10 @@
                     "@type": "Agent",
                     "label": "Olsson, Jan"
                   }
-                }],
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "1320351"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISBN",
-                    "value": "91-40-55055-9"
-                  }],
-                  "part": ["Övningsbok"],
-                  "provisionActivity": {
-                    "@type": "ProvisionActivity",
-                    "place": {
-                      "@type": "Place",
-                      "code": "Företagsekonomi 80"
-                    }
-                  },
-                  "provisionActivityStatement": "1979"
-                },
-                "marc:toDisplayNote" : false
-              }]
-            }
+                }]
+              },
+              "marc:toDisplayNote" : false
+            }]
           }}
         },
         {
@@ -17868,32 +17980,55 @@
             {"w": "10948597"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "otherEdition": [{
-                "@type": "Work",
-                "marc:displayText": ["Parallellupplaga"],
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "10948597"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Hållbar utveckling nu!"
-                  }],
-                  "provisionActivityStatement": "[2008?]"
-                },
-                "marc:toDisplayNote" : false
-              }]
-            }
+            "otherEdition": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "10948597"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Hållbar utveckling nu!"
+              }],
+              "provisionActivityStatement": "[2008?]",
+              "marc:displayText": ["Parallellupplaga"],
+              "marc:toDisplayNote" : false
+            }]
+          }}
+        },
+        {
+          "normalized": {"775": {"ind1": "0", "ind2": " ", "subfields": [
+            {"i": "Parallellutgåva"},
+            {"t": "Tolkning och översättning vid straffrättsliga förfaranden"},
+            {"b": "genomförande av EU:s tolknings- och översättningsdirektiv : betänkande"},
+            {"z": "9789138237748"},
+            {"w": "13506478"}
+          ]}},
+          "result": {"mainEntity": {
+            "otherEdition": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Tolkning och översättning vid straffrättsliga förfaranden"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "13506478"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "9789138237748"
+              }],
+              "editionStatement": "genomförande av EU:s tolknings- och översättningsdirektiv : betänkande",
+              "marc:displayText": "Parallellutgåva",
+              "marc:toDisplayNote": true
+            }]
           }}
         }
+
       ]
     },
     "776": {
-      "NOTE": "We deviate from BF2 as we do not link from the Work with hasInstance.",
       "include": ["referenceToInstance"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
@@ -18067,11 +18202,11 @@
       ]
     },
     "777": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "issuedWith",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
@@ -18082,9 +18217,17 @@
             {"w": "9735858"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "issuedWith": [{
+            "issuedWith": [{
+              "@type": "Instance",
+              "describedBy": [ {
+                "@type": "Record",
+                "controlNumber": "9735858"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Autism : svårigehter och möjligheter"
+              }],
+              "instanceOf": {
                 "@type": "Work",
                 "contribution": [{
                   "@type": "PrimaryContribution",
@@ -18092,21 +18235,10 @@
                     "@type": "Agent",
                     "label": "Gerland, Gunilla"
                   }
-                }],
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [ {
-                    "@type": "Record",
-                    "controlNumber": "9735858"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Autism : svårigehter och möjligheter"
-                  }]
-                },
-                "marc:toDisplayNote" : true
-              }]
-            }
+                }]
+              },
+              "marc:toDisplayNote" : true
+            }]
           }}
         },
         {
@@ -18126,9 +18258,18 @@
             {"w": "12033323"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "issuedWith": [{
+            "issuedWith": [{
+              "@type" : "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "12033323"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Personlig utveckling för alla medarbetare - Fallrapport (Länia AB, Örebro)"
+              }],
+              "provisionActivityStatement": "1994",
+              "instanceOf": {
                 "@type": "Work",
                 "contribution": [{
                   "@type": "PrimaryContribution",
@@ -18136,24 +18277,11 @@
                     "@type": "Agent",
                     "label": "Andersson, Jan"
                   }
-                }],
-                "hasInstance": {
-                  "@type" : "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "12033323"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Personlig utveckling för alla medarbetare - Fallrapport (Länia AB, Örebro)"
-                  }],
-                  "provisionActivityStatement": "1994"
-                },
-                "marc:displayText": ["Online"],
-                "marc:toDisplayNote": true
-              }]
-            }
-          }}
+                }]
+              },
+              "marc:displayText": ["Online"],
+              "marc:toDisplayNote": true
+            }]          }}
         },
         {
           "name": "Verify mapping of seriesStatement",
@@ -18162,21 +18290,15 @@
             {"k": "Statens offentliga utredningar"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "issuedWith": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Statliga betongbestämmelser"
-                  }],
-                  "seriesStatement": ["Statens offentliga utredningar"]
-                },
-                "marc:toDisplayNote": true
-              }]
-            }
+            "issuedWith": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Statliga betongbestämmelser"
+              }],
+              "seriesStatement": ["Statens offentliga utredningar"],
+              "marc:toDisplayNote": true
+            }]
           }}
         }
       ]
@@ -18583,11 +18705,12 @@
       ]
     },
     "786": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "dataSource",
-      "resourceType": "Dataset",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
       "$p": {"about": "_:instance", "addLink": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore", "NOTE:marc-repeatable": false},
       "_spec": [
@@ -18604,25 +18727,19 @@
             {"w": "13527363"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "dataSource": [{
-                "@type": "Dataset",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "The catalogue of the book collection of the Jesuit College in Braniewo held in the University Library in Uppsala"
-                  }],
-                  "describedBy": [{
-                    "@type" : "Record",
-                    "controlNumber": "13527363"
-                  }]
-                },
-                "marc:displayText": ["Source"],
-                "marc:toDisplayNote": true
-              }]
-            }
+            "dataSource": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "The catalogue of the book collection of the Jesuit College in Braniewo held in the University Library in Uppsala"
+              }],
+              "describedBy": [{
+                "@type" : "Record",
+                "controlNumber": "13527363"
+              }],
+              "marc:displayText": ["Source"],
+              "marc:toDisplayNote": true
+            }]
           }}
         }
       ]
