@@ -40,7 +40,7 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
 
         Map marcJsonData = jsonldConverter.convert(data, id)
 
-        MarcRecord record = JSONMarcConverter.fromJson(mapper.writeValueAsString(marcJsonData))
+        MarcRecord record = JSONMarcConverter.fromJsonMap(marcJsonData)
 
         record = prepareRecord(record, id, originalDocument.getModified(), originalDocument.getChecksum())
 
