@@ -162,7 +162,7 @@ Run the fabric task that sets up a new Elasticsearch index and imports example d
 ```bash
 $ cd devops
 $ pip install -r requirements.txt
-$ fab conf.xl_local app.whelk.reload_example_data:force=True
+$ fab conf.xl_local app.whelk.import_work_example_data
 ```
 
 ### Running
