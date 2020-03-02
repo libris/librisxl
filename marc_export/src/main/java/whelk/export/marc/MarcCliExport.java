@@ -61,7 +61,7 @@ public class MarcCliExport
 
         if (args[0].equals("--sao"))
         {
-            MarcRecordWriter output = new Iso2709MarcRecordWriter(System.out, "UTF-8");
+            MarcRecordWriter output = new MarcXmlRecordWriter(System.out, "UTF-8");
             new MarcCliExport(Whelk.createLoadedCoreWhelk()).dumpSao(output);
             return;
         }
