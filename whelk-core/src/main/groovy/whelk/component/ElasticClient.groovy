@@ -36,7 +36,7 @@ class ElasticClient {
     static final int CONNECTION_POOL_SIZE = 30
 
     static final int CONNECT_TIMEOUT_MS = 5 * 1000
-    static final int READ_TIMEOUT_MS = 40 * 1000
+    static final int READ_TIMEOUT_MS = 60 * 1000
     static final int MAX_BACKOFF_S = 1024
 
     static final CircuitBreakerConfig CB_CONFIG = CircuitBreakerConfig.custom()
