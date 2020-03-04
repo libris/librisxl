@@ -1442,8 +1442,8 @@
       "TODO:$4": "Check occurrences; do we need to map this subfield or just drop it (ignored=true)?",
       "$6": {"property": "marc:fieldref", "TODO": "Decided to set to ignored true"},
       "$7": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.15"},
-      "$8": {"property": "marc:groupid", "TODO": "Decided to set to ignored true"},
-      "$9": {"addProperty": "partNumber", "TODO": "Decided to set to ignored true"},
+      "$8": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.15"},
+      "$9": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.15"},
       "subfieldOrder": "6 7 i a s t b c d h g k ... x z w 4 8 9"
     },
 
@@ -17503,8 +17503,7 @@
             {"t": "Grundläggande matematik för tillämpningar"},
             {"c": "Lennart Hellström, Lars-Åke Lindahl"},
             {"d": "Uppsala : förf., cop. 1973"},
-            {"w": "9901066360"},
-            {"9": "3"}
+            {"w": "9901066360"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -17533,8 +17532,7 @@
                 "hasTitle": [{
                   "@type": "Title",
                   "qualifier": "Lennart Hellström, Lars-Åke Lindahl"
-                }],
-                "partNumber": ["3"]
+                }]
               }]
             }
           }}
@@ -17604,10 +17602,7 @@
             {"d": "Växjö : Kronobergs läns hembydsförbund, 1985-1995"},
             {"g": "1992 (33:1), s. 34-35 : ill."},
             {"x": "ISSN 0284-771X"},
-            {"w": "517883"},
-            {"9": "1992"},
-            {"9": "1"},
-            {"9": "34"}
+            {"w": "517883"}
           ]}},
           "result": {"mainEntity": {
             "part": ["1992 (33:1), s. 34-35 : ill."],
@@ -17625,8 +17620,7 @@
                 "@type": "ISSN",
                 "value": "ISSN 0284-771X"
               }],
-              "provisionActivityStatement": "Växjö : Kronobergs läns hembydsförbund, 1985-1995",
-              "partNumber": ["1992", "1", "34"]
+              "provisionActivityStatement": "Växjö : Kronobergs läns hembydsförbund, 1985-1995"
             }]
           }}
         },
@@ -17897,8 +17891,7 @@
             {"t": "Swedes in the Twin Cities"},
             {"d": "2001"},
             {"z": "0-87351-399-1"},
-            {"w": "6200512"},
-            {"9": "2001"}
+            {"w": "6200512"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -17921,8 +17914,7 @@
                   }],
                   "provisionActivityStatement": "2001"
                 },
-                "marc:displayText": ["Parallellutgåva:"],
-                "partNumber": ["2001"]
+                "marc:displayText": ["Parallellutgåva:"]
               }]
             }
           }}
