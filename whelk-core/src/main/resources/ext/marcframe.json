@@ -1423,7 +1423,10 @@
           "resourceType": "Record"
         }
       },
-      "i1": {"marcDefault": "0"},
+      "i1": {
+        "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.15",
+        "marcDefault": "0"
+      },
       "$a": {"about": "_:agent", "property": "label", "infer": true, "TODO:targetMatch": "1xx"},
       "$b": {"about": "_:instance", "property": "editionStatement", "TODO:targetMatch": "250"},
       "$d": {"about": "_:instance", "property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
@@ -1438,7 +1441,7 @@
       "$w": {"aboutNew": "_:describedBy", "property": "controlNumber"},
       "TODO:$4": "Check occurrences; do we need to map this subfield or just drop it (ignored=true)?",
       "$6": {"property": "marc:fieldref", "TODO": "Decided to set to ignored true"},
-      "$7": {"property": "marc:controlSubfield", "TODO": "Decided to set to ignored true"},
+      "$7": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.15"},
       "$8": {"property": "marc:groupid", "TODO": "Decided to set to ignored true"},
       "$9": {"addProperty": "partNumber", "TODO": "Decided to set to ignored true"},
       "subfieldOrder": "6 7 i a s t b c d h g k ... x z w 4 8 9"
@@ -17451,7 +17454,6 @@
             {"w": "000"}
           ]}},
           "normalized": {"772": {"ind1": "0", "ind2": "0", "subfields": [
-            {"7": "p1"},
             {"a": "Beckmann, Max"},
             {"t": "Briefec"},
             {"d": "provisionActivityStatement"},
@@ -17474,7 +17476,6 @@
                     "controlNumber": "000"
                   }]
                 },
-                "marc:controlSubfield" : "p1",
                 "contribution": [{
                   "@type": "PrimaryContribution",
                   "agent": {
@@ -17490,6 +17491,14 @@
           "name": "Example from 6ph2bmpj1fw7p1z",
           "source": {"772": {"ind1": "0", "ind2": "0", "subfields": [
             {"7": "p1"},
+            {"a": "Hellström, Lennart, 1942-"},
+            {"t": "Grundläggande matematik för tillämpningar"},
+            {"c": "Lennart Hellström, Lars-Åke Lindahl"},
+            {"d": "Uppsala : förf., cop. 1973"},
+            {"w": "9901066360"},
+            {"9": "3"}
+          ]}},
+          "normalized": {"772": {"ind1": "0", "ind2": "0", "subfields": [
             {"a": "Hellström, Lennart, 1942-"},
             {"t": "Grundläggande matematik för tillämpningar"},
             {"c": "Lennart Hellström, Lars-Åke Lindahl"},
@@ -17525,7 +17534,6 @@
                   "@type": "Title",
                   "qualifier": "Lennart Hellström, Lars-Åke Lindahl"
                 }],
-                "marc:controlSubfield": "p1",
                 "partNumber": ["3"]
               }]
             }
@@ -17591,6 +17599,16 @@
             {"9": "1"},
             {"9": "34"}
           ]}},
+          "normalized": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+            {"t": "I Värend och Sunnerbo"},
+            {"d": "Växjö : Kronobergs läns hembydsförbund, 1985-1995"},
+            {"g": "1992 (33:1), s. 34-35 : ill."},
+            {"x": "ISSN 0284-771X"},
+            {"w": "517883"},
+            {"9": "1992"},
+            {"9": "1"},
+            {"9": "34"}
+          ]}},
           "result": {"mainEntity": {
             "part": ["1992 (33:1), s. 34-35 : ill."],
             "isPartOf": [{
@@ -17608,7 +17626,6 @@
                 "value": "ISSN 0284-771X"
               }],
               "provisionActivityStatement": "Växjö : Kronobergs läns hembydsförbund, 1985-1995",
-              "marc:controlSubfield": "n s",
               "partNumber": ["1992", "1", "34"]
             }]
           }}
@@ -22031,8 +22048,7 @@
                 },
                 {
                   "@type": "Organization",
-                  "name": "Conföderation Iranischer Studenten",
-                  "marc:controlSubfield": "nnaa"
+                  "name": "Conföderation Iranischer Studenten"
                 }
               ]
             }
