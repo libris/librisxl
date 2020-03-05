@@ -14,6 +14,8 @@ import whelk.search.ElasticFind
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 
+import java.time.ZoneId
+
 /**
  * The Whelk is the root component of the XL system.
  */
@@ -30,6 +32,7 @@ class Whelk implements Storage {
     MarcFrameConverter marcFrameConverter
     Relations relations
     ElasticFind elasticFind
+    ZoneId timezone = ZoneId.of('Europe/Stockholm')
 
     URI baseUri = null
 
@@ -51,6 +54,9 @@ class Whelk implements Storage {
         if (configuration.baseUri) {
             whelk.baseUri = new URI((String) configuration.baseUri)
         }
+        if (configuration.timezone) {
+            whelk.timezone = ZoneId.of((String) configuration.timezone)
+        }
         whelk.loadCoreData()
         return whelk
     }
@@ -63,6 +69,9 @@ class Whelk implements Storage {
         Whelk whelk = new Whelk(configuration, useCache)
         if (configuration.baseUri) {
             whelk.baseUri = new URI((String) configuration.baseUri)
+        }
+        if (configuration.timezone) {
+            whelk.timezone = ZoneId.of((String) configuration.timezone)
         }
         whelk.loadCoreData()
         return whelk
@@ -345,5 +354,9 @@ class Whelk implements Storage {
 
     private static boolean batchJobThread() {
         return Thread.currentThread().getThreadGroup().getName().contains("whelktool")
+    }
+
+    ZoneId getTimezone() {
+        return timezone
     }
 }

@@ -123,7 +123,7 @@ class Crud extends HttpServlet {
             failedRequests.labels("GET", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "Invalid query, please check the documentation.")
+                    "Invalid query, please check the documentation. ${e.getMessage()}")
             return
         }
     }
