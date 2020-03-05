@@ -1,5 +1,6 @@
 package whelk.search
 
+import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeCheckingMode
@@ -519,6 +520,7 @@ class ESQuery {
      * e.g. minEx-x=1984&maxEx-x=1988&minEx-x=1993&min-x=2000&maxEx-x=1995
      * means 1984 < x < 1988 OR 1993 < x < 1995 OR x >= 2000
      */
+    @CompileDynamic // compiler doesn't get the collectMany construct below...
     void makeRangeFilters(Map<String, String[]> queryParameters, List filters) {
         Map<String, Ranges> ranges = [:]
         Set<String> handledParameters = new HashSet<>()
@@ -527,7 +529,7 @@ class ESQuery {
             parseRangeParameter(parameter) { String nameNoPrefix, ParameterPrefix prefix ->
                 Ranges r = ranges.computeIfAbsent(nameNoPrefix,
                         { p -> p in dateFields ? Ranges.date(p, whelk.getTimezone()) : Ranges.nonDate(p)})
-                values.each { r.add(prefix, it) }
+                values.collectMany{ it.tokenize(',') }.each { r.add(prefix, it.trim()) }
                 handledParameters.add(parameter)
             }
         }
