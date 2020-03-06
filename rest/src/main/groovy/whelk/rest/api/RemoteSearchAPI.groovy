@@ -291,7 +291,7 @@ class RemoteSearchAPI extends HttpServlet {
     private List getRange(List resultsList) {
         def hitList = resultsList*.hits
         def largestNumberOfHits = hitList*.size().max()
-        return  0..(largestNumberOfHits-1)
+        return  0..<largestNumberOfHits
     }
 
     class MetaproxyQuery implements Callable<MetaproxySearchResult> {
