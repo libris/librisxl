@@ -6,11 +6,11 @@ but the interface is likely to change.
 ## CRUD API
 
 Libris XL uses JSON-LD as data format, and we provide an API to create, read,
-update, and delete posts. Read operations are available without authentication,
+update, and delete records. Read operations are available without authentication,
 but all other requests require an access token. There are two different
-permission levels for users: one for working with holding posts and one for
-cataloging (which also allows working with holding posts). User permissions are
-connected to sigels, and a user may only work with holding posts belonging to a
+permission levels for users: one for working with holding records and one for
+cataloging (which also allows working with holding records). User permissions are
+connected to sigels, and a user may only work with holding records belonging to a
 sigel that the user has permissions for. More information about authentication
 can be found in the Authentication section in this document.
 
@@ -21,15 +21,15 @@ is responsible for the change. Because of this, we require the header
 An example of how to work with the API can be found in our [integration
 tests](https://github.com/libris/lxl_api_tests).
 
-### Reading a post
+### Reading a record
 
-You read a post by sending a `GET` request to the post's URI (e.g.
+You read a record by sending a `GET` request to the record's URI (e.g.
 `https://libris-qa.kb.se/fnrbrgl`) with the `Accept` header set to e.g.
 `application/ld+json`. The default content type is `text/html`, which would
-give you an HTML rendering of the post and not just the underlying data.
+give you an HTML rendering of the record and not just the underlying data.
 
 The response also contains an `ETag` header, which you must use (as a
-If-Match header) if you are going to update the post.
+If-Match header) if you are going to update the record.
 
 #### Parameters
 All parameters are optional and can be left out.
@@ -62,39 +62,39 @@ $ curl -XGET -H "Accept: application/ld+json" https://libris-qa.kb.se/s93ns5h436
 }
 ```
 
-### Creating a post - Requires authentication
+### Creating a record - Requires authentication
 
-You create a new post by sending a `POST` request to the API root (`/`) with at least the
+You create a new record by sending a `POST` request to the API root (`/`) with at least the
 `Content-Type`, `Authorization`, and `XL-Active-Sigel` headers set.
 
 There are some checks in place, e.g. in order to prevent creation of duplicate
-holding posts, and to these requests the API responds with a `400 Bad Request`
+holding records, and to these requests the API responds with a `400 Bad Request`
 with an error message explaining the issue.
 
 A successful creation will get a `201 Created` response with a `Location`
-header containing the URI of the new post.
+header containing the URI of the new record.
 
 ```
 $ curl -XPOST -H "Content-Type: application/ld+json" \
-    -H "Authorization: Bearer xxxx" -d@my_post.jsonld \
+    -H "Authorization: Bearer xxxx" -d@my_record.jsonld \
     https://libris-qa.kb.se/data/
 ...
 ```
 
 
-### Updating a post - Requires authentication
+### Updating a record - Requires authentication
 
-You update an existing post by sending a `PUT` request to the post URI (e.g.
+You update an existing record by sending a `PUT` request to the record URI (e.g.
 `https://libris-qa.kb.se/fnrbrgl`) with at least the `Content-Type`,
 `Authorization`, `If-Match`, and `XL-Active-Sigel` headers set.
 
-To prevent accidentally overwriting a post modified by someone else, you need
+To prevent accidentally overwriting a record modified by someone else, you need
 to set the `If-Match` header to the value of the `ETag` header you got back
-when you read the post in question. If the post had been modified by someone
+when you read the record in question. If the record had been modified by someone
 else in, you will get a `409 Conflict` back.
 
-You are not allowed to change the ID of a post, for that you must instead first
-delete the original post and then create the replacement.
+You are not allowed to change the ID of a record, for that you must instead first
+delete the original record and then create the replacement.
 
 A successful update will get a `204 No Content` response, and invalid requests
 will get a `400 Bad Request` response, with an error message.
@@ -104,25 +104,25 @@ will get a `400 Bad Request` response, with an error message.
 
 ```
 $ curl -XPUT -H "Content-Type: application/ld+json" \
-    -H "Authorization: Bearer xxxx" -d@my_updated_post.jsonld \
+    -H "Authorization: Bearer xxxx" -d@my_updated_record.jsonld \
     https://libris-qa.kb.se/fnrbrgl
 ...
 ```
 
 
-### Deleting a post - Requires authentication
+### Deleting a record - Requires authentication
 
-You delete a post by sending a `DELETE` request to the post URI (e.g.
+You delete a record by sending a `DELETE` request to the record URI (e.g.
 `https://libris-qa.kb.se/fnrbrgl`) with the `Authorization` and
 `XL-Active-Sigel` headers set.
 
-You can only delete posts that are not linked to by other posts. That is, if
-you want to delete a bibliographic post, you can only do so if there are no
-holding posts related to it. If there are holding posts related to it, the API
+You can only delete records that are not linked to by other records. That is, if
+you want to delete a bibliographic record, you can only do so if there are no
+holding records related to it. If there are holding records related to it, the API
 will respond with a `403 Forbidden`.
 
 A successful deletion will get a `204 No Content` response. Any subsequent
-requests to the post's URI will get a `410 Gone` response.
+requests to the record's URI will get a `410 Gone` response.
 
 
 #### Example
@@ -148,7 +148,7 @@ means `OR`, `*` is used for prefix queries, `""` matches the whole phrase, and
 #### Parameters
 
 * `q` - Search query
-* `o` - Only find posts that link to this ID
+* `o` - Only find records that link to this ID
 * `_limit` - Max number of hits to include in result, used for pagination.
   Default is 200.
 * `_offset` - Number of hits to skip in the result, used for pagination.
@@ -164,7 +164,7 @@ $ curl -XGET -H "Accept: application/ld+json" \
 
 #### Example
 
-Find posts linking to country/Vietnam.
+Find records linking to country/Vietnam.
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
     'https://libris-qa.kb.se/find?o=https://id.kb.se/country/vm&_limit=2'
@@ -173,7 +173,7 @@ $ curl -XGET -H "Accept: application/ld+json" \
 
 #### Example
 
-Find posts containing 'tove' and linking to saogf/Romaner.
+Find records containing 'tove' and linking to saogf/Romaner.
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
     'https://libris-qa.kb.se/find?q=tove&o=https://id.kb.se/term/saogf/Romaner&_limit=3'
@@ -182,7 +182,7 @@ $ curl -XGET -H "Accept: application/ld+json" \
 
 #### Example
 
-Find posts containing 'Aniara' and held ny sigel APP1.
+Find instances containing 'Aniara' and held by sigel APP1.
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
     'https://libris-qa.kb.se/find.jsonld?q=Aniara&@reverse.itemOf.heldBy.@id=https://libris.kb.se/library/APP1'
@@ -237,19 +237,19 @@ converted to MARC21.
 ```
 $ curl -XGET -H "Content-Type: application/ld+json" \
     -H "Accept: application/x-marc-json" \
-    -d@my_post.jsonld https://libris-qa.kb.se/_convert
+    -d@my_record.jsonld https://libris-qa.kb.se/_convert
 ...
 ```
 
 
-### `/_findhold` - Find holding posts for a bibliographic post
+### `/_findhold` - Find holding records for a bibliographic record
 
-This endpoint will list the holding posts that the specified library has for
-the specified bibliographic post.
+This endpoint will list the holding records that the specified library has for
+the specified bibliographic record.
 
 #### Parameters
 
-* `id` - Bibliographic post ID (e.g. https://libris-qa.kb.se/s93ns5h436dxqsh or http://libris.kb.se/bib/1234)
+* `id` - Bibliographic record ID (e.g. https://libris-qa.kb.se/s93ns5h436dxqsh or http://libris.kb.se/bib/1234)
 * `library` - Library ID (e.g. https://libris.kb.se/library/SEK)
 
 #### Example
@@ -261,48 +261,11 @@ $ curl -XGET 'https://libris-qa.kb.se/_findhold?id=http://libris.kb.se/bib/1234&
 ["https://libris-qa.kb.se/48h9kp894jm8kzz"]
 ```
 
-### `/_merge` - Merge two posts - Requires authentication
-
-This endpoint allows you to automatically merge two bibliographic posts. This
-is useful when you have a duplicate post. The resulting merged post will
-generally contain information from both of the original posts, but only
-the original post identified as `id1` is guaranteed to have all it's
-information present in the resulting merged post. Information from the
-other post will be added where possible (where not in conflict with the
-first post).
-
-Calling this with two unrelated posts is never a good idea.
-
-The endpoint allows GET requests to preview the merge, while POST requests
-stores the result in the database.
-
-POST requests requires a valid access token, which must be set in the
-`Authorization` header.
+### `/_dependencies` - List record dependencies
 
 #### Parameters
 
-* `id1` - First bibliographic post (e.g. http://libris.kb.se/bib/1234)
-* `id2` - Second bibliographic post (e.g. http://libris.kb.se/bib/7149593)
-* `promote_id2` - Boolean to indicate that `id2` should be used instead of
-  `id1` for the resulting post (defaults to false)
-
-#### Examples
-
-Preview a merge of two unrelated posts:
-
-```
-$ curl -XGET 'https://libris-qa.kb.se/_merge?id1=http://libris.kb.se/bib/1234&id2=http://libris.kb.se/bib/7149593'
-...
-```
-
-**NOTE:** The above example is only useful to see how the merge works. Never
-ever try to merge two unrelated posts like this.
-
-### `/_dependencies` - List post dependencies
-
-#### Parameters
-
-* `id` - Bibliographic post ID (e.g. http://libris.kb.se/bib/1234)
+* `id` - Bibliographic record ID (e.g. http://libris.kb.se/bib/1234)
 * `relation` - Type of relation (this parameter is optional and may be omitted)
 * `reverse` - Boolean to indicate reverse relation (defaults to false)
 
@@ -314,14 +277,14 @@ $ curl -XGET 'https://libris-qa.kb.se/_dependencies?id=http://libris.kb.se/bib/1
 ```
 
 
-### `/_compilemarc` - Download MARC21 bibliographic post with holding and authority information
+### `/_compilemarc` - Download MARC21 bibliographic record with holding and authority information
 
-This endpoint allows you to download a complete bibliographic post with holding
+This endpoint allows you to download a complete bibliographic record with holding
 information in MARC21.
 
 #### Parameters
 
-* `id` - Bibliographic post ID (e.g. http://libris.kb.se/bib/1234)
+* `id` - Bibliographic record ID (e.g. http://libris.kb.se/bib/1234)
 * `library` - Library ID (e.g. https://libris.kb.se/library/SEK)
 
 #### Example
@@ -342,7 +305,7 @@ If the authentication is successful, you will get back a bearer token, a
 refresh token, and a list of permissions for the user. This list can (and
 probably should) be used to allow the user to select which sigel they want to
 work as. This information is required for creating, updating, and deleting
-posts (see the CRUD API section in this document for more details).
+records (see the CRUD API section in this document for more details).
 
 Once the user is authenticated, you include the bearer token in the API
 requests by setting the `Authentication` header to `Bearer: <the bearer
