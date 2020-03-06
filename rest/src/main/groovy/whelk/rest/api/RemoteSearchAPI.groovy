@@ -248,30 +248,7 @@ class RemoteSearchAPI extends HttpServlet {
                     queue.shutdown()
                 }
                 // Merge results
-                def results = ['totalResults':[:],'items':[]]
-                int biggestList = 0
-                for (result in resultLists) { if (result.hits.size() > biggestList) { biggestList = result.hits.size() } }
-                def errors = [:]
-                for (int i = 0; i <= biggestList; i++) {
-                    for (result in resultLists) {
-                        results.totalResults[result.database] = result.numberOfHits
-                        try {
-                            if (result.error) {
-                                errors.get(result.database, [:]).put(""+i, result.error)
-                            } else if (i < result.hits.size()) {
-                                results.items << ['database':result.database,'data':result.hits[i].data]
-                            }
-                        } catch (ArrayIndexOutOfBoundsException aioobe) {
-                            log.debug("Overstepped array bounds.")
-                        } catch (NullPointerException npe) {
-                            log.trace("npe.")
-                        }
-                    }
-                }
-                if (errors) {
-                    results['errors'] = errors
-                }
-                output = mapper.writeValueAsString(results)
+                output = mergeResults(resultLists)
             }
         } else if (request.getParameter("databases")) {
             def databases = loadMetaProxyInfo(metaProxyInfoUrl)
@@ -284,6 +261,37 @@ class RemoteSearchAPI extends HttpServlet {
         } else {
             HttpTools.sendResponse(response, output, "application/json")
         }
+    }
+
+    String mergeResults(List<MetaproxySearchResult> resultsList) {
+        def results = ['totalResults': [:], 'items': []]
+        def errors = [:]
+
+        getRange(resultsList).collect { index ->
+            resultsList.each { result ->
+                if (result.error) {
+                    errors.get(result.database, [:]).put("" + index, result.error)
+                } else if (result.hits[index]) {
+                    results.items << ['database': result.database, 'data': result.hits[index].data]
+                }
+            }
+        }
+
+        resultsList.each { result ->
+            results.totalResults[result.database] = result.numberOfHits
+        }
+
+        if (errors) {
+            results.errors = errors
+        }
+
+        return mapper.writeValueAsString(results)
+    }
+
+    private List getRange(List resultsList) {
+        def hitList = resultsList*.hits
+        def largestNumberOfHits = hitList*.size().max()
+        return  0..(largestNumberOfHits-1)
     }
 
     class MetaproxyQuery implements Callable<MetaproxySearchResult> {
