@@ -127,6 +127,10 @@ Map remodelObjectToInstance(object, shouldIgnoreProperties, docID) {
     }
 
     if (workProperties && !onlyContainsNoise(workProperties)) {
+        //If there is no instanceProperties, no instance @type has
+        // been set which is needed when workProperties gets appended
+        if (!newInstanceObject.containsKey(TYPE))
+            newInstanceObject[TYPE] = "Instance"
         workProperties[TYPE] = "Work"
         newInstanceObject << ['instanceOf': workProperties]
     }
