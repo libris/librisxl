@@ -54,6 +54,10 @@ class ElasticSearch {
         }, 60*1000, 10*1000)
     }
 
+    int getMaxParallelism() {
+        return Math.min(elasticHosts.size() * client.MAX_CONNECTIONS_PER_HOST, client.CONNECTION_POOL_SIZE)
+    }
+
     private List<String> getElasticHosts(String elasticHost) {
         List<String> hosts = []
         for (String host : elasticHost.split(",")) {

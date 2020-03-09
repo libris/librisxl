@@ -69,7 +69,8 @@ class ElasticReindexer {
             int counter = 0
             startTime = System.currentTimeMillis()
             List<String> collections = suppliedCollection ? [suppliedCollection] : whelk.storage.loadCollections()
-            ThreadPool threadPool = new ThreadPool(Runtime.getRuntime().availableProcessors() * 2)
+            int numWorkers = Math.min(Runtime.getRuntime().availableProcessors() * 2, whelk.elastic.getMaxParallelism())
+            ThreadPool threadPool = new ThreadPool(numWorkers)
             collections.each { collection ->
                 List<Document> documents = []
                 for (document in whelk.storage.loadAll(collection)) {
