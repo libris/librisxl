@@ -147,12 +147,36 @@ means `OR`, `*` is used for prefix queries, `""` matches the whole phrase, and
 
 #### Parameters
 
-* `q` - Search query
-* `o` - Only find records that link to this ID
+* `q` - Search query.
+* `o` - Only find records that link to this ID.
 * `_limit` - Max number of hits to include in result, used for pagination.
   Default is 200.
 * `_offset` - Number of hits to skip in the result, used for pagination.
   Default is 0.
+
+Records can be filtered on field values. Multiple fields means `AND`. Multiple values
+for the same field means `OR`. Specifying multiple values for the same field can be done
+by repeating the parameter or by giving a comma-separated list as value.
+
+* `<field>` - The record has exactly this value for `field`.  
+* `min-<field>` - Greater or equal to.
+* `minEx-<field>` - Greater than (exclusive minimum).
+* `max-<field>` - Less or equal to.
+* `maxEx-<field>` - Less than.
+* `matches-<field>` - Value is matching (see date-search below).
+
+For fields of type date (`meta.created`, `meta.modified` and `meta.generationDate`)
+the following formats can be used for value:
+
+| Format                  | Precision  | Example               |
+|-------------------------|------------|-----------------------|
+| `ÅÅÅÅ`                  | Year       | `2020`                |
+| `ÅÅÅÅ-MM`               | Month      | `2020-04`             |
+| `ÅÅÅÅ-MM-DD`            | Day        | `2020-04-01`          |
+| `ÅÅÅÅ-MM-DD'T'HH`       | Hour       | `2020-04-01T12`       |
+| `ÅÅÅÅ-MM-DD'T'HH:mm`    | Minute     | `2020-04-01T12:15`    |
+| `ÅÅÅÅ-MM-DD'T'HH:mm:ss` | Second     | `2020-04-01T12:15:10` |
+| `ÅÅÅÅ-'W'VV`            | Week       | `2020-W04`            |
 
 #### Example
 
@@ -164,7 +188,7 @@ $ curl -XGET -H "Accept: application/ld+json" \
 
 #### Example
 
-Find records linking to country/Vietnam.
+Linking to country/Vietnam.
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
     'https://libris-qa.kb.se/find?o=https://id.kb.se/country/vm&_limit=2'
@@ -173,22 +197,45 @@ $ curl -XGET -H "Accept: application/ld+json" \
 
 #### Example
 
-Find records containing 'tove' and linking to saogf/Romaner.
+Published in the 1760s.
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
-    'https://libris-qa.kb.se/find?q=tove&o=https://id.kb.se/term/saogf/Romaner&_limit=3'
+    'https://libris-qa.kb.se/find.jsonld?min-publication.year=1760&maxEx-publication.year=1770&_limit=5'
+...
+```
+
+#### Exempel
+
+Notated music published in the 1930s or 1950s.
+```
+$ curl -XGET -H "Accept: application/ld+json" -G \
+    'https://libris-qa.kb.se/find.jsonld' \
+    -d instanceOf.@type=NotatedMusic \
+    -d min-publication.year=1930 \
+    -d max-publication.year=1939 \
+    -d min-publication.year=1950 \
+    -d max-publication.year=1959 \
+    -d _limit=5
+...
+```
+
+#### Exempel
+
+Catalogued by sigel "S" week eight or week nine 2018.
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?meta.descriptionCreator=https://libris.kb.se/library/S&matches-meta.created=2018-W08,2018W10&_limit=2'
 ...
 ```
 
 #### Example
 
-Find instances containing 'Aniara' and held by sigel APP1.
+Containing 'Aniara' and held by sigel APP1.
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
     'https://libris-qa.kb.se/find.jsonld?q=Aniara&@reverse.itemOf.heldBy.@id=https://libris.kb.se/library/APP1'
 ...
 ```
-
 
 ### `/_remotesearch` - Search external databases - Requires authentication
 
