@@ -108,7 +108,7 @@ class ElasticClient {
                 throw new ElasticIOException(e.getMessage(), e)
             }
         } else {
-            elasticNodes[0].performRequest(method, path, body, contentType0)
+            elasticNodes[random.nextInt(elasticNodes.size())].performRequest(method, path, body, contentType0)
         }
     }
 
