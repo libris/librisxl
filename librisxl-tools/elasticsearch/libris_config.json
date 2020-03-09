@@ -158,6 +158,30 @@
                             "index": true,
                             "type": "text",
                             "fielddata": true
+                        },
+                        "startYear": {
+                            "fields": {
+                                "keyword": {
+                                    "index": true,
+                                    "type": "keyword"
+                                }
+                            },
+                            "analyzer": "numeric_extractor",
+                            "index": true,
+                            "type": "text",
+                            "fielddata": true
+                        },
+                        "endYear": {
+                            "fields": {
+                                "keyword": {
+                                    "index": true,
+                                    "type": "keyword"
+                                }
+                            },
+                            "analyzer": "numeric_extractor",
+                            "index": true,
+                            "type": "text",
+                            "fielddata": true
                         }
                     }
                 },
