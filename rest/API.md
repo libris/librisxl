@@ -221,7 +221,7 @@ $ curl -XGET -H "Accept: application/ld+json" -G \
 
 #### Exempel
 
-Catalogued by sigel "S" week eight or week nine 2018.
+Catalogued by sigel "S" week eight or week ten 2018.
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
     'https://libris-qa.kb.se/find.jsonld?meta.descriptionCreator=https://libris.kb.se/library/S&matches-meta.created=2018-W08,2018W10&_limit=2'
