@@ -135,7 +135,10 @@ class ElasticClient {
         }
 
         Tuple2<Integer, String> performRequest(String method, String path, String body, String contentType0 = null) {
-            return send.apply(buildRequest(method, path, body, contentType0))
+            if (useTimeouts)
+                return send.apply(buildRequest(method, path, body, contentType0))
+            else
+                return sendRequest(buildRequest(method, path, body, contentType0))
         }
 
         private Tuple2<Integer, String> sendRequest(HttpRequestBase request) {
