@@ -25,6 +25,7 @@ class ElasticSearch {
     private List<String> elasticHosts
     private String elasticCluster
     private ElasticClient client
+    private ElasticClient bulkClient
 
     private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
 
@@ -41,7 +42,8 @@ class ElasticSearch {
         this.elasticCluster = elasticCluster
         this.defaultIndex = elasticIndex
 
-        client = ElasticClient.withDefaultHttpClient(elasticHosts)
+        client = ElasticClient.withDefaultHttpClient(elasticHosts, true)
+        bulkClient = ElasticClient.withDefaultHttpClient(elasticHosts, false)
 
         new Timer("ElasticIndexingRetries", true).schedule(new TimerTask() {
             void run() {
@@ -107,7 +109,7 @@ class ElasticSearch {
                 }
             }.join('')
 
-            String response = client.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE).second
+            String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE).second
             Map responseMap = mapper.readValue(response, Map)
             log.info("Bulk indexed ${docs.count{it}} docs in ${responseMap.took} ms")
         }
