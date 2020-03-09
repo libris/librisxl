@@ -1438,7 +1438,7 @@
       "$h": {"about": "_:instance", "addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
       "$m": {"about": "_:instance", "property": "marc:materialSpecificDetails"},
       "$n": {"about": "_:instance", "addLink": "hasNote", "resourceType": "Note", "property": "label"},
-      "$o": {"ignored": true, "NOTE:subfield-count": 0},
+      "$o": {"NOTE:subfield-count (Libris)": 0, "NOTE": "Cannot ignore this field since we import Mimer data with $o (We have lost $o data between 1.14.0 and 1.15.0). See LXL-1517"},
       "$s": {"about": "_:workTitle", "property": "mainTitle", "TODO:targetMatch": "240"},
       "$t": {"about": "_:title", "property": "mainTitle", "TODO:targetMatch": "222, 245"},
       "$x": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "TODO:targetMatch": "022"},
