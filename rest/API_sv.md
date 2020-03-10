@@ -157,16 +157,37 @@ innebär `ELLER`, `*` används för prefixsökningar, `""` matchar hela frasen o
 
 #### Parametrar
 
-* `q` - Sökfrågan
+* `q` - Sökfrågan.
 * `o` - Hitta endast poster som länkar till detta ID.
 * `_limit` - Max antal träffar att inkludera i resultatet, används för
   paginering. Standardvärdet är 200.
 * `_offset` - Antal träffar att hoppa över i resultatet, används för
   paginering. Standardvärdet är 0.
+  
+Sökningen kan filtreras på värdet på egenskaper i posten. Om flera egenskaper anges innebär det `OCH`.
+Om samma egenskap anges flera gånger innebär det `ELLER`. Samma egenskap kan anges flera gånger genom 
+att uppprepa parametern eller genom att komma-separera värdena.
+* `<egenskap>` - Egenskapen har exakt värdet.  
+* `min-<egenskap>` - Värdet är större eller lika med.
+* `minEx-<egenskap>` - Värdet är större än (Ex står för "Exclusive").
+* `max-<egenskap>` - Värdet är mindre eller lika med.
+* `maxEx-<egenskap>` - Värdet är mindre än.
+* `matches-<egenskap>` - Värdet matchar (se datum-sökning nedan).
 
+För egenskaper som är av typen datum (`meta.created`, `meta.modified` och `meta.generationDate`)
+kan värdet anges på följande format:
+
+| Format                  | Upplösning | Exempel               |
+|-------------------------|------------|-----------------------|
+| `ÅÅÅÅ`                  | År         | `2020`                |
+| `ÅÅÅÅ-MM`               | Månad      | `2020-04`             |
+| `ÅÅÅÅ-MM-DD`            | Dag        | `2020-04-01`          |
+| `ÅÅÅÅ-MM-DD'T'HH`       | Timme      | `2020-04-01T12`       |
+| `ÅÅÅÅ-MM-DD'T'HH:mm`    | Minut      | `2020-04-01T12:15`    |
+| `ÅÅÅÅ-MM-DD'T'HH:mm:ss` | Sekund     | `2020-04-01T12:15:10` |
+| `ÅÅÅÅ-'W'VV`            | Vecka      | `2020-W04`            |
 
 #### Exempel
-
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
     https://libris-qa.kb.se/find\?q\=tove%20\(jansson\|lindgren\)\&_limit=2
@@ -175,7 +196,7 @@ $ curl -XGET -H "Accept: application/ld+json" \
 
 #### Exempel
 
-Hitta poster som länkar till country/Vietnam.
+Länkar till country/Vietnam.
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
     'https://libris-qa.kb.se/find?o=https://id.kb.se/country/vm&_limit=2'
@@ -184,16 +205,40 @@ $ curl -XGET -H "Accept: application/ld+json" \
 
 #### Exempel
 
-Hitta poster som innehåller 'tove' och länkar till saogf/Romaner.
+Utgiven på 1760-talet.
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
-    'https://libris-qa.kb.se/find?q=tove&o=https://id.kb.se/term/saogf/Romaner&_limit=3'
+    'https://libris-qa.kb.se/find.jsonld?min-publication.year=1760&maxEx-publication.year=1770&_limit=5'
 ...
 ```
 
 #### Exempel
 
-Find posts containing 'Aniara' and held ny sigel APP1.
+Noterad musik utgiven på 1930- eller 1950-talet.
+```
+$ curl -XGET -H "Accept: application/ld+json" -G \
+    'https://libris-qa.kb.se/find.jsonld' \
+    -d instanceOf.@type=NotatedMusic \
+    -d min-publication.year=1930 \
+    -d max-publication.year=1939 \
+    -d min-publication.year=1950 \
+    -d max-publication.year=1959 \
+    -d _limit=5
+...
+```
+
+#### Exempel
+
+Katalogiserad av sigel "S" vecka åtta eller tio 2018.
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?meta.descriptionCreator=https://libris.kb.se/library/S&matches-meta.created=2018-W08,2018W10&_limit=2'
+...
+```
+
+#### Exempel
+
+Innehåller 'Aniara' och har ett bestånd med sigel APP1.
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
     'https://libris-qa.kb.se/find.jsonld?q=Aniara&@reverse.itemOf.heldBy.@id=https://libris.kb.se/library/APP1'
@@ -275,47 +320,6 @@ $ curl -XGET 'https://libris-qa.kb.se/_findhold?id=https://libris-qa.kb.se/s93ns
 $ curl -XGET 'https://libris-qa.kb.se/_findhold?id=http://libris.kb.se/bib/1234&library=https://libris.kb.se/library/SEK'
 ["https://libris-qa.kb.se/48h9kp894jm8kzz"]
 ```
-
-### `/_merge` - Slå ihop två poster - Kräver autentisering
-
-Detta anrop låter dig automatiskt slå ihop två bibliografiska poster. Detta är
-användbart till exempel för att hantera duplicerade poster. Sammanslagningen
-utgår från informationen som finns i posten som anges i `id1` och lägger om
-möjligt till information från den andra posten. Vi ersätter aldrig information
-från den första posten, utan utökar den enbart. Detta innebär att vi enbart
-garanterar att information från den första posten kommer finnas med i den
-sammanslagna posten.
-
-Att ange två orelaterade poster i det här anropet är aldrig en bra idé.
-
-Ett `GET`-anrop ger en förhandsgranskning av sammanslagningen, medan ett
-`POST`-anrop skriver resultatet till databasen.
-
-`POST`-anrop kräver en giltig access-token, som ska sättas i
-`Authorization`-headern.
-
-
-#### Parameters
-
-* `id1` - Den första bibliografiska posten (t.ex. http://libris.kb.se/bib/1234)
-* `id2` - Den andra bibliografiska posten (t.ex. http://libris.kb.se/bib/7149593)
-* `promote_id2` - Bool för att indikera om `id2` ska användas i stället för
-  `id1` som utgångspunkt för den resulterande posten (standardvärdet är
-`false`).
-
-
-#### Exempel
-
-Förhandsgranska en sammanslagning av två orelaterade poster:
-
-```
-$ curl -XGET 'https://libris-qa.kb.se/_merge?id1=http://libris.kb.se/bib/1234&id2=http://libris.kb.se/bib/7149593'
-...
-```
-
-**OBS:** Exemplet ovan är enbart användbart för att se hur sammanslagningen
-fungerar. Slå aldrig ihop två orelaterade poster på det här sättet.
-
 
 ### `/_dependencies` - Lista en posts beroenden
 
