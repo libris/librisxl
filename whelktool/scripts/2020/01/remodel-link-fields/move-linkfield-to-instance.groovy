@@ -97,6 +97,7 @@ Map remodelObjectToInstance(object, shouldIgnoreProperties, docID) {
     Map instanceProperties = [:]
     Map workProperties = [:]
     Map newInstanceObject = [:]
+    boolean isLinked = false
 
     if (object.hasInstance instanceof List && object.hasInstance?.size() > 1) {
         deviantRecords.println "${docID} contains more than one hasInstance entity"
@@ -105,23 +106,28 @@ Map remodelObjectToInstance(object, shouldIgnoreProperties, docID) {
 
     object.each {
         //Check if object already is linked
-        if (it.key == 'hasInstance' && it.value instanceof List && it.value.any { it.containsKey(ID) })
-            return newInstanceObject = it.value.find { it[ID] }
-        else if (it.key == ID)
-            return newInstanceObject << it
+        if (it.key == 'hasInstance' && it.value instanceof List && it.value.any { it.containsKey(ID) }) {
+            isLinked = true
+            newInstanceObject = it.value.find { it[ID] }
+        } else if (it.key == ID){
+            isLinked = true
+            newInstanceObject << it
+        }
 
-        if (it.key == 'hasInstance')
-            instanceProperties << it.value
-        else if (LEGACY_PROPERTIES.contains(it.key))
-            instanceProperties << it
-        else
-            workProperties << it
+        if (!isLinked) {
+            if (it.key == 'hasInstance')
+                instanceProperties << it.value
+            else if (LEGACY_PROPERTIES.contains(it.key))
+                instanceProperties << it
+            else
+                workProperties << it
+        }
     }
 
     if (shouldIgnoreProperties)
         instanceProperties.keySet().removeIf { PROPERTIES_TO_IGNORE.contains(it) }
 
-    if (instanceProperties && !onlyContainsNoise(instanceProperties)) {
+    if (instanceProperties) {
         instanceProperties[TYPE] = "Instance"
         newInstanceObject << instanceProperties
     }
@@ -134,6 +140,10 @@ Map remodelObjectToInstance(object, shouldIgnoreProperties, docID) {
         workProperties[TYPE] = "Work"
         newInstanceObject << ['instanceOf': workProperties]
     }
+
+    //If the new instance object only contains legacy properties, we do not want to keep the object
+    if (onlyContainsNoise(newInstanceObject))
+        newInstanceObject.clear()
 
     return newInstanceObject
 }
