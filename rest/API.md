@@ -204,7 +204,7 @@ $ curl -XGET -H "Accept: application/ld+json" \
 ...
 ```
 
-#### Exempel
+#### Example
 
 Notated music published in the 1930s or 1950s.
 ```
@@ -219,7 +219,7 @@ $ curl -XGET -H "Accept: application/ld+json" -G \
 ...
 ```
 
-#### Exempel
+#### Example
 
 Catalogued by sigel "S" week eight or week ten 2018.
 ```
