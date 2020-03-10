@@ -2873,6 +2873,7 @@
           "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
+        "[15]": null,
         "[16]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/BooksLiteraryFormType-{_}",
@@ -2921,11 +2922,13 @@
           "uriTemplate": "https://id.kb.se/marc/MusicTextType-{_}",
           "matchUriToken": "^[_abcdefghijklmoprst]$"
         },
+        "[15]": null,
         "[16]": {
           "link": "marc:transposition",
           "uriTemplate": "https://id.kb.se/marc/MusicTranspositionType-{_}",
           "matchUriToken": "^[abc]$"
-        }
+        },
+        "[17]": null
       },
       "Cartography": {
         "[1] [2] [3] [4]": {
@@ -2940,11 +2943,13 @@
           "uriTemplate": "https://id.kb.se/marc/MapsProjectionType-{_}",
           "matchUriToken": "^[_abcdefghijklmnoprsuz]$"
         },
+        "[7]": null,
         "[8]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapsMaterialType-{_}",
           "matchUriToken": "^[_abcdefg]$"
         },
+        "[9] [10]": null,
         "[11]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
@@ -2954,23 +2959,19 @@
           "link": "marc:additionalCarrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
+        "[13]": null,
         "[14]": {
           "link": "supplementaryContent",
           "uriTemplate": "https://id.kb.se/marc/IndexType-{_}",
           "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
+        "[15]": null,
         "[16] [17]": {
           "TODO:ignore pos 17": "Not used in 008",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapsFormatType-{_}",
           "matchUriToken": "^[_ejklnopr]$"
-        },
-        "[7]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:primeMeridian",
-          "uriTemplate": "https://id.kb.se/marc/MapsPrimeMeridianType-{_}",
-          "matchUriToken": "^[efgpwz]$"
         }
       },
       "Visual": {
@@ -2978,11 +2979,13 @@
           "property": "marc:runningTime",
           "TODO:patternMap": "VisualRunningTimeType"
         },
+        "[4]": null,
         "[5]": {
           "addLink": "intendedAudience",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
         },
+        "[6] [7] [8] [9] [10]": null,
         "[11]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
@@ -2992,6 +2995,7 @@
           "link": "marc:additionalCarrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
         },
+        "[13] [14] [15]": null,
         "[16]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/VisualMaterialType-{_}",
@@ -3002,46 +3006,47 @@
           "link": "marc:technique",
           "uriTemplate": "https://id.kb.se/marc/VisualTechniqueType-{_}",
           "matchUriToken": "^[aclz]$"
-        },
-        "[6] [7] [8] [9] [10]": {
-          "TODO:about": "_:otherInstance",
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:matter",
-          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}",
-          "matchUriToken": "^[lmopqrsz]$"
         }
       },
       "Multimedia": {
+        "[1] [2] [3] [4]": null,
         "[5]": {
           "addLink": "intendedAudience",
-          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}",
+          "matchUriToken": "^[abcdefgj]$",
+          "fixedDefault": " "
         },
         "[6]": {
           "TODO:about": "_:otherInstance",
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ComputerItemType-{_}",
-          "matchUriToken": "^[oqs]$",
+          "matchUriToken": "^[oq]$",
+          "fixedDefault": " ",
           "silentRevert": false
         },
+        "[7] [8]": null,
         "[9]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/ComputerTypeOfFileType-{_}",
           "matchUriToken": "^[_abcdefghijm]$",
           "silentRevert": false
         },
+        "[10]": null,
         "[11]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
           "silentRevert": false
-        }
+        },
+        "[12] [13] [14] [15] [16] [17]": null
       },
       "Mixed": {
-        "[6] [7]": {
-          "NOTE": "Pos 7 Undefined in MARC21/Voyager",
+        "[1] [2] [3] [4] [5]": null,
+        "[6]": {
           "TODO:about": "_:otherInstance",
           "link": "marc:additionalCarrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
-        }
+        },
+        "[7] [8] [9] [10] [11] [12] [13] [14] [15] [16] [17]": null
       },
       "Serial": {
         "[1]": {
@@ -3060,13 +3065,7 @@
           "matchUriToken": "^[nrx]$",
           "fixedDefault": "|"
         },
-        "[3]": {
-          "TODO:ignore": "Not used in 008. Should we remove this mapping as well?",
-          "TODO:about": "_:otherInstance",
-          "link": "marc:issn",
-          "uriTemplate": "https://id.kb.se/marc/SerialsISSNType-{_}",
-          "matchUriToken": "^[0124_f]$"
-        },
+        "[3]": null,
         "[4]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsTypeOfSerialType-{_}",
@@ -3103,6 +3102,7 @@
           "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
+        "[13] [14] [15]": null,
         "[16]": {
           "link": "marc:alphabet",
           "uriTemplate": "https://id.kb.se/marc/SerialsAlphabetType-{_}",
@@ -3215,7 +3215,7 @@
         {
           "Name": "MovingImage",
           "source": [
-            {"006": "g|   ||||||||   ||"}
+            {"006": "g|   |     ||   ||"}
           ],
           "result": {
             "mainEntity": {
@@ -3233,7 +3233,7 @@
         {
           "Name": "Cartography",
           "source": [
-            {"006": "e||||| ||  || 0 ||"}
+            {"006": "e|||||  |  || 0 ||"}
           ],
           "result": {
             "mainEntity": {
@@ -3251,7 +3251,7 @@
         {
           "Name": "ManuscriptCartography",
           "source": [
-            {"006": "f||||| ||  || 0 ||"}
+            {"006": "f|||||  |  || 0 ||"}
           ],
           "result": {
             "mainEntity": {
@@ -3269,7 +3269,7 @@
         {
           "Name": "MixedMaterial",
           "source": [
-            {"006": "p     ||          "}
+            {"006": "p     |           "}
           ],
           "result": {
             "mainEntity": {
@@ -3287,7 +3287,7 @@
         {
           "Name": "Kit",
           "source": [
-            {"006": "o|   ||||||||   ||"}
+            {"006": "o|   |     ||   ||"}
           ],
           "result": {
             "mainEntity": {
@@ -3305,7 +3305,7 @@
         {
           "Name": "StillImage",
           "source": [
-            {"006": "k|   ||||||||   ||"}
+            {"006": "k|   |     ||   ||"}
           ],
           "result": {
             "mainEntity": {
@@ -3323,7 +3323,7 @@
         {
           "Name": "Object",
           "source": [
-            {"006": "r|   ||||||||   ||"}
+            {"006": "r|   |     ||   ||"}
           ],
           "result": {
             "mainEntity": {
@@ -3374,14 +3374,14 @@
           }
         },
         {
-          "name": "Text/Monograph in (in 000,008) + Multimedia (006)",
+          "name": "Text/Monograph in (in 000,008) + Multimedia (006), wiping erroneous XY",
           "source": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"006": "m    ||  j |"},{"008": "171123s1898    swe     re    000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"006": "mXY  ||  j |"},{"008": "171123s1898    swe     re    000 ||   | "}]
           },
           "normalized": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"006": "m    ||  j |      "},{"008": "171123s1898    swe|||||re||||000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"006": "m        j |      "},{"008": "171123s1898    swe|||||re||||000 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -3477,6 +3477,7 @@
           "uriTemplate": "https://id.kb.se/marc/MapMaterialType-{_}",
           "matchUriToken": "^[_dgjkqrsy]$"
         },
+        "[2]": null,
         "[3]": {
           "TODO:abou  tEntity (perhaps ideal for all colorContent (LoC does so), but more cumbersome and practically/statistically irrelevant)": "?work",
           "addLink": "colorContent",
@@ -3506,13 +3507,6 @@
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/PolarityType-{_}",
           "matchUriToken": "^[abm]$"
-        },
-        "[2]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:aspect",
-          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
-          "matchUriToken": "^[for]$",
-        "fixedDefault": " "
         }
       },
       "Electronic": {
@@ -3522,6 +3516,7 @@
           "matchUriToken": "^[_abcdefhjkmor]$",
           "silentRevert": false
         },
+        "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
@@ -3531,7 +3526,7 @@
         "[4]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/ComputerDimensionsType-{_}",
-        "matchUriToken": "^[_aegijov]$"
+          "matchUriToken": "^[_aegijov]$"
         },
         "[5]": {
           "link": "soundContent",
@@ -3567,12 +3562,6 @@
           "link": "marc:reformattingQuality",
           "uriTemplate": "https://id.kb.se/marc/ComputerReformattingQualityType-{_}",
           "matchUriToken": "^[apr]$"
-        },
-        "[2]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:fileAspect",
-          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
-        "fixedDefault": " "
         }
       },
       "Globe": {
@@ -3581,6 +3570,7 @@
           "uriTemplate": "https://id.kb.se/marc/GlobeMaterialType-{_}",
           "matchUriToken": "^[_abce]$"
         },
+        "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
@@ -3596,12 +3586,6 @@
           "addLink": "generation",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/ReproductionType-{_}"
-        },
-        "[2]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:aspect",
-          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
-        "fixedDefault": " "
         }
       },
       "Tactile": {
@@ -3611,6 +3595,7 @@
           "uriTemplate": "https://id.kb.se/marc/TacMaterialType-{_}",
           "matchUriToken": "^[_abcd]$"
         },
+        "[2]": null,
         "[3] [4]": {
           "addLink": "layout",
           "uriTemplate": "https://id.kb.se/marc/TacBrailleWritingType-{_}",
@@ -3639,6 +3624,7 @@
           "matchUriToken": "^[_cdfost]$",
           "silentRevert": false
         },
+        "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
@@ -3669,12 +3655,6 @@
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/ProjGraphSupportType-{_}",
           "matchUriToken": "^[_cdehjkm]$"
-        },
-        "[2]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:projGraphAspect",
-          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
-        "fixedDefault": " "
         }
       },
       "Microform": {
@@ -3684,6 +3664,7 @@
           "matchUriToken": "^[_abcdefghj]$",
           "silentRevert": false
         },
+        "[2]": null,
         "[3]": {
           "addLink": "polarity",
           "NOTE:marc-repeatable": false,
@@ -3727,12 +3708,6 @@
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}",
           "matchUriToken": "^[_acdimprt]$"
-        },
-        "[2]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:aspect",
-          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
-        "fixedDefault": " "
         }
       },
       "StillImageInstance": {
@@ -3742,6 +3717,7 @@
           "matchUriToken": "^[_acdefghijklnopqrsv]$",
           "TODO:tokenMap": "Rename the uri:s of NonProjMaterialType (n and v) to not only contain the code"
         },
+        "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
@@ -3757,12 +3733,6 @@
           "addLink": "mount",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/NonProjectedType-{_}"
-        },
-        "[2]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:nonProjAspect",
-          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
-        "fixedDefault": " "
         }
       },
       "MovingImageInstance": {
@@ -3772,6 +3742,7 @@
           "matchUriToken": "^[_cfor]$",
           "silentRevert": false
         },
+        "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
@@ -3829,7 +3800,7 @@
         "[13]": {
           "link": "marc:motionPicCategories",
           "uriTemplate": "https://id.kb.se/marc/MotionPicCategoriesType-{_}",
-        "matchUriToken": "^[_abcdefghijklmpqrstv]$"
+          "matchUriToken": "^[_abcdefghijklmpqrstv]$"
         },
         "[14]": {
           "link": "marc:motionPicColorStock",
@@ -3848,12 +3819,6 @@
         },
         "[17:23]": {
           "property": "marc:timeOfExamination"
-        },
-        "[2]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:motionPicAspect",
-          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
-          "fixedDefault": " "
         }
       },
       "KitInstance": {
@@ -3878,6 +3843,7 @@
           "TODO:tokenMap? (empty, just as KitMaterialType)": "RemoteSensingImageMaterialType",
           "silentRevert": false
         },
+        "[2]": null,
         "[3]": {
           "link": "marc:remoteSensImageAltitude",
           "uriTemplate": "https://id.kb.se/marc/RemoteSensImageAltitudeType-{_}",
@@ -3921,6 +3887,7 @@
           "matchUriToken": "^[_degiqstw]$",
           "silentRevert": false
         },
+        "[2]": null,
         "[3]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundSpeedType-{_}",
@@ -3979,12 +3946,6 @@
           "link": "marc:soundCapture",
           "uriTemplate": "https://id.kb.se/marc/SoundCaptureType-{_}",
           "matchUriToken": "^[_abde]$"
-        },
-        "[2]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:soundAspect",
-          "uriTemplate": "https://id.kb.se/marc/MapAspectType-{_}",
-        "fixedDefault": " "
         }
       },
       "TextInstance": {
@@ -4002,6 +3963,7 @@
           "matchUriToken": "^[_cdfr]$",
           "silentRevert": false
         },
+        "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
@@ -4389,6 +4351,7 @@
           "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
+        "[32]": null,
         "[33]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
@@ -4405,42 +4368,37 @@
         }
       },
       "Multimedia": {
-        "[18]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:frequencyCategory",
-          "uriTemplate": "https://id.kb.se/marc/ComputerFrequencyType-{_}",
-          "matchUriToken": "^[abcdefghijmqstwz]$"
-        },
-        "[19]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:regularity",
-          "uriTemplate": "https://id.kb.se/marc/ComputerRegularityType-{_}",
-          "matchUriToken": "^[nrx]$"
-        },
+        "[18] [19] [20] [21]": null,
         "[22]": {
           "aboutEntity": "?work",
           "addLink": "intendedAudience",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}",
+          "matchUriToken": "^[abcdefgj]$",
+          "fixedDefault": " "
         },
         "[23]": {
-          "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ComputerItemType-{_}",
+          "matchUriToken": "^[oq]$",
+          "fixedDefault": " ",
           "silentRevert": false
         },
+        "[24] [25]": null,
         "[26]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/ComputerTypeOfFileType-{_}",
           "silentRevert": false
         },
+        "[27]": null,
         "[28]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
           "silentRevert": false
-        }
+        },
+        "[29] [30] [31] [32] [33] [34]": null
       },
       "Cartography": {
         "[18] [19] [20] [21]": {
@@ -4452,11 +4410,7 @@
           "link": "projection",
           "uriTemplate": "https://id.kb.se/marc/MapsProjectionType-{_}"
         },
-        "[24]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:primeMeridian",
-          "uriTemplate": "https://id.kb.se/marc/MapsPrimeMeridianType-{_}"
-        },
+        "[24]": null,
         "[25]": {
           "TODO": "Add condition to 'link' to MapsMaterialType: (a|b|c|f|g|z) should be issuance. (d|e) should be genreForm (see also 006)",
           "aboutEntity": "?work",
@@ -4464,6 +4418,7 @@
           "uriTemplate": "https://id.kb.se/marc/MapsMaterialType-{_}",
           "silentRevert": false
         },
+        "[26] [27]": null,
         "[28]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
@@ -4475,12 +4430,14 @@
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
           "silentRevert": false
         },
+        "[30]": null,
         "[31]": {
           "link": "supplementaryContent",
           "uriTemplate": "https://id.kb.se/marc/IndexType-{_}",
           "matchUriToken": "^[01]$",
           "fixedDefault": "0"
         },
+        "[32]": null,
         "[33] [34]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
@@ -4489,12 +4446,14 @@
         }
       },
       "Mixed": {
+        "[18] [19] [20] [21] [22]": null,
         "[23]": {
           "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
           "silentRevert": false
-        }
+        },
+        "[24] [25] [26] [27] [28] [29] [30] [31] [32] [33] [34]": null
       },
       "Audio": {
         "[18:20]": {
@@ -4537,10 +4496,12 @@
           "fixedDefault": " ",
           "silentRevert": false
         },
+        "[32]": null,
         "[33]": {
           "link": "marc:transposition",
           "uriTemplate": "https://id.kb.se/marc/MusicTranspositionType-{_}"
-        }
+        },
+        "[34]": null
       },
       "Serial": {
         "[18]": {
@@ -4558,11 +4519,7 @@
           "matchUriToken": "^[nrx]$",
           "fixedDefault": "|"
         },
-        "[20]": {
-          "TODO:ignore": true,
-          "link": "marc:issn",
-          "uriTemplate": "https://id.kb.se/marc/SerialsISSNType-{_}"
-        },
+        "[20]": null,
         "[21]": {
           "aboutEntity": "?work",
           "TODO": "Decide if it should be Work or Instance",
@@ -4605,6 +4562,7 @@
           "fixedDefault": "0",
           "silentRevert": false
         },
+        "[30] [31] [32]": null,
         "[33]": {
           "link": "marc:alphabet",
           "uriTemplate": "https://id.kb.se/marc/SerialsAlphabetType-{_}"
@@ -4619,12 +4577,14 @@
           "property": "marc:runningTime",
           "TODO:patternMap": "visualRunningTime"
         },
+        "[21]": null,
         "[22]": {
           "aboutEntity": "?work",
           "addLink": "intendedAudience",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
         },
+        "[23] [24] [25] [26] [27]": null,
         "[28]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
@@ -4636,6 +4596,7 @@
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
           "silentRevert": false
         },
+        "[30] [31] [32]": null,
         "[33]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
@@ -4645,11 +4606,6 @@
         "[34]": {
           "link": "marc:technique",
           "uriTemplate": "https://id.kb.se/marc/VisualTechniqueType-{_}"
-        },
-        "[23] [24] [25] [26] [27]": {
-          "NOTE": "Undefined in MARC21/Voyager",
-          "link": "marc:matter",
-          "uriTemplate": "https://id.kb.se/marc/VisualMatterType-{_}"
         }
       },
       "repeatable": false,
@@ -4689,7 +4645,7 @@
           },
           "normalized": {
             "leader": "     cas a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123d1898    enku||p|||||||0   ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123d1898    enku| p|||||||0   ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -4714,7 +4670,7 @@
           "name": "create uri for frequency in series and export to the same token",
           "source": {
             "leader": "     cas a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123d1898    enkz||p|||||||0   ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123d1898    enkz| p|||||||0   ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -4906,14 +4862,14 @@
           }
         },
         {
-          "name": "Multimedia (in 000), Electronic (in 007) + ct:Online + Juvenile",
+          "name": "Multimedia (in 000), Electronic (in 007) + ct:Online + Juvenile, wiping erroneous ZX",
           "source": {
             "leader": "     cmm a        i 4500",
-            "fields": [{"001": "0000000"},{"007":"cr |||   |||||"},{"008": "171123s1999    swe    jo  | |         | "}]
+            "fields": [{"001": "0000000"},{"007":"co |||   |||||"},{"008": "171123s1999    sweZX  jo  | |         | "}]
           },
           "normalized": {
             "leader": "     cmm a        i 4500",
-            "fields": [{"001": "0000000"},{"007":"cr |||   |||||         "},{"008": "171123s1999    swe||  jo  | |         | "}]
+            "fields": [{"001": "0000000"},{"007":"co |||   |||||         "},{"008": "171123s1999    swe    jo  | |         | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -4921,7 +4877,7 @@
             "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "@type": "Electronic",
-              "carrierType": [{ "@id" : "https://id.kb.se/marc/ComputerMaterialType-r" },{ "@id" : "https://id.kb.se/marc/ComputerItemType-o" }],
+              "carrierType": [{ "@id" : "https://id.kb.se/marc/ComputerMaterialType-o" },{ "@id" : "https://id.kb.se/marc/ComputerItemType-o" }],
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
@@ -4944,7 +4900,7 @@
           },
           "normalized": {
             "leader": "     cem a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    sweb|||ae|a  || 0 ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sweb|||ae a  || 0 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -4975,7 +4931,7 @@
           },
           "normalized": {
             "leader": "     cfm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1899    sweb|||ae|a  || 0 ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1899    sweb|||ae a  || 0 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5151,7 +5107,7 @@
           "name": "Serial + frequency + gf:Periodical",
           "source": {
             "leader": "     cas a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123c1999    swea||p|||||||0   ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123c1999    swea| p|||||||0   ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5181,7 +5137,7 @@
           },
           "normalized": {
             "leader": "     cgm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe--- ||||||||   m|   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe--- |     ||   m|   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5211,7 +5167,7 @@
           },
           "normalized": {
             "leader": "     ckm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe--- ||||||||   i|   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe--- |     ||   i|   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
