@@ -364,9 +364,9 @@ API:et använder [Libris Login](https://login.libris.kb.se) som OAuth2-provider.
 Alla användare har ett personligt konto och för att autentisera användare
 behöver din applikation vara registrerad som en OAuth2-klient.
 
-Om autentiseringen är lyckad returneras en "bearer token", en "refresh token"
-och en lista på användarens rättigheter. Denna lista kan (och bör) användas för
-att låta användaren välja aktivt sigel, som krävs för att skapa, uppdatera och
+Om autentiseringen är lyckad returneras en "bearer token" och en lista på 
+användarens rättigheter. Denna lista kan (och bör) användas för att låta 
+användaren välja aktivt sigel, som krävs för att skapa, uppdatera och
 radera poster (läs mer om detta i stycket om CRUD-API:et i detta dokument).
 
 Den autentiserade användarens "bearer token" ska inkluderas i

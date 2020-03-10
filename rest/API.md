@@ -344,15 +344,14 @@ $ curl -XGET 'https://libris-qa.kb.se/_compilemarc?id=http://libris.kb.se/bib/12
 
 ## Authentication
 
-The API uses [Libris Login](https://login.libris.kb.se) as OAuth2 provider. All
-users need a personal account and this means that if you will need OAuth2
-client credentials if you want to authenticate users.
+The Libris CRUD API uses [Libris Login](https://login.libris.kb.se) as OAuth2 provider.
+For requests that require authentication, an account with with personal client credentials
+is needed.
 
-If the authentication is successful, you will get back a bearer token, a
-refresh token, and a list of permissions for the user. This list can (and
-probably should) be used to allow the user to select which sigel they want to
-work as. This information is required for creating, updating, and deleting
-records (see the CRUD API section in this document for more details).
+If the authentication is successful, you will obtain a bearer token
+and a list of permissions for the user. This list can be used to allow the user to select
+which sigel they want to work as. This information is required for creating, updating,
+and deleting records (see the CRUD API section in this document for more details).
 
 Once the user is authenticated, you include the bearer token in the API
 requests by setting the `Authentication` header to `Bearer: <the bearer
