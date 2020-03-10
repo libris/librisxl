@@ -202,7 +202,7 @@ class SearchUtils {
      */
     private Map stripNonStatsParams(Map incoming) {
         Map result = [:]
-        List reserved = getReservedAuxParameters()
+        List reserved = ['_offset']
         incoming.each { k, v ->
             if (!reserved.contains(k)) {
                 result[k] = v
@@ -575,14 +575,7 @@ class SearchUtils {
      * Return a list of reserved query params
      */
     private List getReservedParameters() {
-        return ['q', 'p', 'o', 'value'] + getReservedAuxParameters()
-    }
-
-    /*
-     * Return a list of reserved helper params
-     */
-    private List getReservedAuxParameters() {
-        return ['_limit', '_offset']
+        return ['q', 'p', 'o', 'value', '_limit', '_offset']
     }
 
     /*
