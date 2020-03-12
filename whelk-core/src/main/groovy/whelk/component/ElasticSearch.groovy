@@ -230,6 +230,19 @@ class ElasticSearch {
             }
         }
 
+        // FIXME: temporary fix to keep number of elastic field in check
+        // Shrink all meta properties except for root document
+        DocumentUtil.findKey(framed, 'meta') { value, path ->
+            if (path.size() > 1 && value instanceof Map) {
+                Map meta = (Map) value
+                meta.remove('created')
+                meta.remove('modified')
+                meta.remove('recordStatus')
+                meta.remove('mainEntity')
+            }
+            return DocumentUtil.NOP
+        }
+
         log.trace("Framed data: ${framed}")
 
         return JsonOutput.toJson(framed)
