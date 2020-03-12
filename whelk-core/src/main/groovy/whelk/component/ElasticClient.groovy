@@ -161,7 +161,17 @@ class ElasticClient {
                 int statusCode = response.getStatusLine().getStatusCode()
 
                 if (statusCode != 429) {
-                    return new Tuple2(statusCode, EntityUtils.toString(response.getEntity()))
+                    def result = new Tuple2(statusCode, EntityUtils.toString(response.getEntity()))
+
+                    if (log.isDebugEnabled()) {
+                        String r = result.getSecond()
+                        if (r.size() < 50_000) {
+                            log.debug("Elastic response: $r")
+                        }
+                    }
+
+
+                    return result
                 } else {
                     if (backOffSeconds > MAX_BACKOFF_S) {
                         throw new RetriesExceededException("Max retries exceeded: HTTP 429 from ElasticSearch")
