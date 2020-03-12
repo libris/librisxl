@@ -52,38 +52,46 @@ class ElasticClient {
     List<ElasticNode> elasticNodes
     HttpClient httpClient
     Random random = new Random()
-    boolean useTimeouts;
+    boolean useCircuitBreaker
 
     CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults()
     RetryRegistry retryRegistry = RetryRegistry.ofDefaults()
     Retry globalRetry
 
-    static ElasticClient withDefaultHttpClient(List<String> elasticHosts, boolean useTimeouts) {
+    static ElasticClient withDefaultHttpClient(List<String> elasticHosts) {
         PoolingClientConnectionManager cm = new PoolingClientConnectionManager()
         cm.setMaxTotal(CONNECTION_POOL_SIZE)
         cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST)
 
         HttpClient httpClient = new DefaultHttpClient(cm)
         HttpParams httpParams = httpClient.getParams()
-        if (useTimeouts) {
-            HttpConnectionParams.setConnectionTimeout(httpParams, CONNECT_TIMEOUT_MS)
-            HttpConnectionParams.setSoTimeout(httpParams, READ_TIMEOUT_MS)
-        } else {
-            HttpConnectionParams.setConnectionTimeout(httpParams, 0)
-            HttpConnectionParams.setSoTimeout(httpParams, 0)
-        }
+
+        HttpConnectionParams.setConnectionTimeout(httpParams, CONNECT_TIMEOUT_MS)
+        HttpConnectionParams.setSoTimeout(httpParams, READ_TIMEOUT_MS)
         // FIXME: upgrade httpClient (and use RequestConfig)- https://issues.apache.org/jira/browse/HTTPCLIENT-1418
         // httpParams.setParameter(ClientPNames.CONN_MANAGER_TIMEOUT, new Long(TIMEOUT_MS));
 
-        return new ElasticClient(httpClient, elasticHosts, useTimeouts)
+        return new ElasticClient(httpClient, elasticHosts, true)
     }
 
-    ElasticClient(HttpClient httpClient, List<String> elasticHosts, boolean useTimeouts) {
+    static ElasticClient withBulkHttpClient(List<String> elasticHosts) {
+        PoolingClientConnectionManager cm = new PoolingClientConnectionManager()
+        cm.setMaxTotal(CONNECTION_POOL_SIZE)
+        cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST)
+
+        HttpClient httpClient = new DefaultHttpClient(cm)
+        HttpParams httpParams = httpClient.getParams()
+        HttpConnectionParams.setConnectionTimeout(httpParams, 0)
+        HttpConnectionParams.setSoTimeout(httpParams, READ_TIMEOUT_MS * 20)
+
+        return new ElasticClient(httpClient, elasticHosts, false)
+    }
+
+    private ElasticClient(HttpClient httpClient, List<String> elasticHosts, boolean useCircuitBreaker) {
         this.httpClient = httpClient
         this.elasticNodes = elasticHosts.collect { new ElasticNode(it) }
-        this.useTimeouts = useTimeouts;
 
-        if (useTimeouts) {
+        if (useCircuitBreaker) {
             globalRetry = retryRegistry.retry(ElasticClient.class.getSimpleName(), RetryConfig.custom()
                     .waitDuration(Duration.ofMillis(10))
                     .maxAttempts(elasticNodes.size() * 2)
@@ -94,21 +102,24 @@ class ElasticClient {
             collectorRegistry.register(CircuitBreakerMetricsCollector.ofCircuitBreakerRegistry(circuitBreakerRegistry))
         }
 
+        this.useCircuitBreaker = useCircuitBreaker
+
         log.info "ElasticSearch component initialized with ${elasticHosts.size()} nodes."
     }
 
     Tuple2<Integer, String> performRequest(String method, String path, String body, String contentType0 = null) {
-        if (useTimeouts) {
-            try {
-                def nodes = cycleNodes()
+        try {
+            def nodes = cycleNodes()
+            if (useCircuitBreaker) {
                 return globalRetry.executeSupplier({ -> nodes.next().performRequest(method, path, body, contentType0) })
             }
-            catch (Exception e) {
-                log.warn("Request to ElasticSearch failed: ${e}", e)
-                throw new ElasticIOException(e.getMessage(), e)
+            else {
+                nodes.next().performRequest(method, path, body, contentType0)
             }
-        } else {
-            elasticNodes[random.nextInt(elasticNodes.size())].performRequest(method, path, body, contentType0)
+        }
+        catch (Exception e) {
+            log.warn("Request to ElasticSearch failed: ${e}", e)
+            throw new ElasticIOException(e.getMessage(), e)
         }
     }
 
@@ -125,20 +136,22 @@ class ElasticClient {
         ElasticNode(String host) {
             this.host = host
 
-            CircuitBreaker cb = circuitBreakerRegistry.circuitBreaker(host, CB_CONFIG)
+            if (useCircuitBreaker) {
+                CircuitBreaker cb = circuitBreakerRegistry.circuitBreaker(host, CB_CONFIG)
 
-            Retry tryTwice = retryRegistry.retry(host, RetryConfig.custom()
-                    .maxAttempts(2)
-                    .retryOnException({ !(it instanceof RetriesExceededException) }).build())
+                Retry tryTwice = retryRegistry.retry(host, RetryConfig.custom()
+                        .maxAttempts(2)
+                        .retryOnException({ !(it instanceof RetriesExceededException) }).build())
 
-            this.send = CircuitBreaker.decorateFunction(cb, Retry.decorateFunction(tryTwice, this.&sendRequest))
+                this.send = CircuitBreaker.decorateFunction(cb, Retry.decorateFunction(tryTwice, this.&sendRequest))
+            }
+            else {
+                this.send = this.&sendRequest
+            }
         }
 
         Tuple2<Integer, String> performRequest(String method, String path, String body, String contentType0 = null) {
-            if (useTimeouts)
-                return send.apply(buildRequest(method, path, body, contentType0))
-            else
-                return sendRequest(buildRequest(method, path, body, contentType0))
+            return send.apply(buildRequest(method, path, body, contentType0))
         }
 
         private Tuple2<Integer, String> sendRequest(HttpRequestBase request) {

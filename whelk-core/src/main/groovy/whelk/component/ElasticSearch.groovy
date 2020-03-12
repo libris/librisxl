@@ -42,8 +42,8 @@ class ElasticSearch {
         this.elasticCluster = elasticCluster
         this.defaultIndex = elasticIndex
 
-        client = ElasticClient.withDefaultHttpClient(elasticHosts, true)
-        bulkClient = ElasticClient.withDefaultHttpClient(elasticHosts, false)
+        client = ElasticClient.withDefaultHttpClient(elasticHosts)
+        bulkClient = ElasticClient.withBulkHttpClient(elasticHosts)
 
         new Timer("ElasticIndexingRetries", true).schedule(new TimerTask() {
             void run() {
