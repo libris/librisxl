@@ -58,7 +58,7 @@ class JsonLdSpec extends Specification {
                 ['@graph': ['@id': '/some_other_id']]
             ],
             '@context': 'base.jsonld']
-        def expected = [new Link(iri: '/external', relation: 'external')]
+        Set expected = [new Link(iri: '/external', relation: 'external')]
 
         expect:
         assert JsonLd.getExternalReferences(graph) == expected
