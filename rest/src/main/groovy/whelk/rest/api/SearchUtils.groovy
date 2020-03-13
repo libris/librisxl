@@ -9,6 +9,7 @@ import whelk.Whelk
 import whelk.exception.InvalidQueryException
 import whelk.exception.WhelkRuntimeException
 import whelk.search.ESQuery
+import whelk.util.DocumentUtil
 
 @Log
 class SearchUtils {
@@ -20,8 +21,6 @@ class SearchUtils {
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper()
 
     enum SearchType {
-        FIND_BY_VALUE,
-        FIND_REVERSE,
         ELASTIC,
         POSTGRES
     }
@@ -44,126 +43,64 @@ class SearchUtils {
         }
     }
 
-    Map doSearch(Map queryParameters, String dataset, JsonLd jsonld) {
+    Map doSearch(Map queryParameters, String dataset) {
+        if (!whelk.elastic) {
+            throw new WhelkRuntimeException("ElasticSearch not configured.")
+        }
+
         String relation = getReservedQueryParameter('p', queryParameters)
         String object = getReservedQueryParameter('o', queryParameters)
         String value = getReservedQueryParameter('value', queryParameters)
         String query = getReservedQueryParameter('q', queryParameters)
         String sortBy = getReservedQueryParameter('_sort', queryParameters)
-        String siteBaseUri = getReservedQueryParameter('_site_base_uri', queryParameters)
+        String lens = getReservedQueryParameter('_lens', queryParameters)
 
         Tuple2 limitAndOffset = getLimitAndOffset(queryParameters)
         int limit = limitAndOffset.first
         int offset = limitAndOffset.second
 
-        if (object && (relation || value || query || sortBy)) {
-            throw new InvalidQueryException("Cannot use 'o' together with other search parameters")
-        }
+        Map pageParams = ['p'     : relation,
+                          'value' : value,
+                          'q'     : query,
+                          'o'     : object,
+                          '_sort' : sortBy,
+                          '_limit': limit,
+                          '_lens' : lens,
+        ]
 
-        Map results
-        if (relation && value) {
-            results = findByValue(relation, value, limit, offset)
-        } else if (object) {
-            results = findReverse(
-                    object,
-                    getReservedQueryParameter('_lens', queryParameters),
-                    limit,
-                    offset)
-        } else { //assumes elastic query
-            // If general q-parameter chosen, use elastic for query
-            if (whelk.elastic) {
-                Map pageParams = ['p': relation,
-                                  'value': value,
-                                  'q': query,
-                                  '_sort': sortBy,
-                                  '_limit': limit]
-
-                results = queryElasticSearch(queryParameters,
-                                             pageParams,
-                                             dataset, siteBaseUri,
-                                             limit, offset, jsonld)
-            } else {
-                throw new WhelkRuntimeException("ElasticSearch not configured.")
-            }
-        }
+        Map results = queryElasticSearch(
+                queryParameters,
+                pageParams,
+                dataset,
+                limit,
+                offset,
+                lens)
 
         return results
     }
 
-    private Map findByValue(String relation, String value,
-                            int limit, int offset) {
-        log.debug("Calling findByValue with p: ${relation} and value: ${value}")
+    private Map applyLens(Map framedThing, String lens, String preserveId = null) {
+        def preservedPaths = preserveId ? JsonLd.findPaths(framedThing, '@id', preserveId) : []
 
-        List<Document> docs = whelk.storage.findByValue(relation, value,
-                                                        limit, offset)
-
-        List mappings = []
-        mappings << ['variable': 'p',
-                     'predicate': ld.toChip(getVocabEntry('predicate')),
-                     'value': relation]
-        mappings << ['variable': 'value',
-                     'predicate': ld.toChip(getVocabEntry('object')),
-                     'value': value]
-
-        Map pageParams = ['p': relation, 'value': value,
-                          '_limit': limit]
-
-        int total = whelk.storage.countByValue(relation, value)
-
-        List items = docs.collect { ld.toCard(it.data) }
-
-        return assembleSearchResults(SearchType.FIND_BY_VALUE,
-                                     items, mappings, pageParams,
-                                     limit, offset, total)
-    }
-
-    private Map findReverse(String id, String lens, int limit, int offset) {
-        lens = lens ? lens : 'cards'
-        log.debug("findReverse. o: ${id}, _lens: ${lens}")
-
-        int total = (int) whelk.getIncomingLinkCount(id)
-        List items
-
-        if (limit > 0) {
-            def ids = whelk.findIdsLinkingTo(id, limit, offset)
-            ids = ids.unique() // filter out duplicate documents (docs having more than one link)
-            items = whelk.bulkLoad(ids).values()
-                    .each(whelk.&embellish)
-                    .collect(SearchUtils.&formatReverseResult)
-                    .findAll { !it.isEmpty() }
-                    .collect { applyLens(it, id, lens) }
+        switch (lens) {
+            case 'chips':
+                return ld.toChip(framedThing, preservedPaths)
+            case 'full':
+                return removeSystemInternalProperties(framedThing)
+            default:
+                return ld.toCard(framedThing, false, false, false , preservedPaths)
         }
-        else {
-            items = []
-        }
-
-        Map pageParams = ['o': id, '_lens': lens, '_limit': limit]
-        return assembleSearchResults(SearchType.FIND_REVERSE,
-                items, [], pageParams,
-                limit, offset, total)
-    }
-
-    private static Map formatReverseResult(Document document) {
-        List<String> thingIds = document.getThingIdentifiers()
-        if (thingIds.isEmpty()) {
-            log.warn("Missing mainEntity? In: " + document.getCompleteId())
-            return [:]
-        }
-        return JsonLd.frame(thingIds.get(0), document.data)
-    }
-
-    private Map applyLens(Map framedThing, String preserveId, String lens) {
-        def preservedPaths = JsonLd.findPaths(framedThing, '@id', preserveId)
-        return lens == 'chips'
-                ? ld.toChip(framedThing, preservedPaths)
-                : ld.toCard(framedThing, preservedPaths)
     }
 
     private Map queryElasticSearch(Map queryParameters,
                                    Map pageParams,
-                                   String dataset, String siteBaseUri,
-                                   int limit, int offset, JsonLd jsonld) {
+                                   String dataset,
+                                   int limit,
+                                   int offset,
+                                   String lens) {
         String query = pageParams['q']
+        String reverseObject = pageParams['o']
+        lens = lens ?: 'cards'
         log.debug("Querying ElasticSearch")
 
         // SearchUtils may overwrite the `_limit` query param, and since it's
@@ -176,9 +113,11 @@ class SearchUtils {
         Map esResult = esQuery.doQuery(queryParameters, dataset)
 
         List<Map> mappings = []
-        mappings << ['variable': 'q',
-                     'predicate': ld.toChip(getVocabEntry('textQuery')),
-                     'value': query]
+        if (query) {
+            mappings << ['variable' : 'q',
+                         'predicate': ld.toChip(getVocabEntry('textQuery')),
+                         'value'    : query]
+        }
 
         Tuple2 mappingsAndPageParams = mapParams(queryParameters)
         mappings.addAll(mappingsAndPageParams.first)
@@ -192,11 +131,11 @@ class SearchUtils {
         List items = []
         if (esResult['items']) {
             items = esResult['items'].collect {
-                def item = ld.toCard(it)
-                // This object must be re-added because it gets filtered out in toCard().
+                def item = applyLens(it, lens, reverseObject)
+                // This object must be re-added because it might get filtered out in applyLens().
                 item['reverseLinks'] = it['reverseLinks']
                 if (item['reverseLinks'] != null)
-                    item['reverseLinks'][JsonLd.ID_KEY] = Document.getBASE_URI().resolve('find?o=' + URLEncoder.encode(it['@id']).toString())
+                    item['reverseLinks'][JsonLd.ID_KEY] = Document.getBASE_URI().resolve('find?o=' + URLEncoder.encode(it['@id'], 'UTF-8').toString())
                 return item
             }
         }
@@ -207,11 +146,12 @@ class SearchUtils {
             log.debug("No stats found for query: ${queryParameters}, result: ${esResult}")
         }
 
-        mappings.tail().each { Map mapping ->
+        (query ? mappings.tail() : mappings).each { Map mapping ->
             Map params = removeMappingFromParams(pageParams, mapping)
             String upUrl = makeFindUrl(SearchType.ELASTIC, params, offset)
             mapping['up'] = [ (JsonLd.ID_KEY): upUrl ]
         }
+
 
         Map result = assembleSearchResults(SearchType.ELASTIC,
                                            items, mappings, pageParams,
@@ -248,12 +188,21 @@ class SearchUtils {
         return params
     }
 
+    Map removeSystemInternalProperties(Map framedThing) {
+        DocumentUtil.traverse(framedThing) { value, path ->
+            if (path && ((String) path.last()).startsWith('_')) {
+                return new DocumentUtil.Remove()
+            }
+        }
+        return framedThing
+    }
+
     /*
      * Return a map without helper params, useful for facet links.
      */
     private Map stripNonStatsParams(Map incoming) {
         Map result = [:]
-        List reserved = getReservedAuxParameters()
+        List reserved = ['_offset']
         incoming.each { k, v ->
             if (!reserved.contains(k)) {
                 result[k] = v
@@ -460,12 +409,6 @@ class SearchUtils {
         Map queryParameters = queryParameters0.clone()
         Tuple2 result
         switch (st) {
-            case SearchType.FIND_BY_VALUE:
-                result = getValueParams(queryParameters)
-                break
-            case SearchType.FIND_REVERSE:
-                result = getReverseParams(queryParameters)
-                break
             case SearchType.ELASTIC:
                 result = getElasticParams(queryParameters)
                 break
@@ -473,31 +416,13 @@ class SearchUtils {
         return result
     }
 
-    private Tuple2 getValueParams(Map queryParameters) {
-        String relation = queryParameters.remove('p')
-        String value = queryParameters.remove('value')
-        List initialParams = [makeParam('p', relation), makeParam('value', value)]
-        List keys = (queryParameters.keySet() as List).sort()
-
-        return new Tuple2(initialParams, keys)
-    }
-
-    private Tuple2 getReverseParams(Map queryParameters) {
-        String id = queryParameters.remove('o')
-        String lens = queryParameters.remove('_lens')
-        List initialParams = [makeParam('o', id), makeParam('_lens', lens)]
-        List keys = (queryParameters.keySet() as List).sort()
-
-        return new Tuple2(initialParams, keys)
-    }
-
     private Tuple2 getElasticParams(Map queryParameters) {
-        if (!('q' in queryParameters)) {
+        if (!('q' in queryParameters) && !('o' in queryParameters)) {
             queryParameters['q'] = '*'
         }
 
         String query = queryParameters.remove('q')
-        List initialParams = [makeParam('q', query)]
+        List initialParams = query ? [makeParam('q', query)] : []
         List keys = (queryParameters.keySet() as List).sort()
 
         return new Tuple2(initialParams, keys)
@@ -650,14 +575,7 @@ class SearchUtils {
      * Return a list of reserved query params
      */
     private List getReservedParameters() {
-        return ['q', 'p', 'o', 'value'] + getReservedAuxParameters()
-    }
-
-    /*
-     * Return a list of reserved helper params
-     */
-    private List getReservedAuxParameters() {
-        return ['_limit', '_offset']
+        return ['q', 'p', 'o', 'value', '_limit', '_offset']
     }
 
     /*

@@ -98,7 +98,7 @@ class Crud extends HttpServlet {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
 
         try {
-            Map results = search.doSearch(queryParameters, dataset, jsonld)
+            Map results = search.doSearch(queryParameters, dataset)
             def jsonResult = mapper.writeValueAsString(results)
             sendResponse(response, jsonResult, "application/json")
         } catch (ElasticIOException e) {
@@ -123,7 +123,7 @@ class Crud extends HttpServlet {
             failedRequests.labels("GET", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "Invalid query, please check the documentation.")
+                    "Invalid query, please check the documentation. ${e.getMessage()}")
             return
         }
     }
@@ -241,7 +241,8 @@ class Crud extends HttpServlet {
                 doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame(), request.getLens())
 
         if (request.shouldEmbellish()) {
-            doc = whelk.loadEmbellished(doc.getShortId())
+            doc = doc.clone() // FIXME: this is because ETag calculation is done on non-embellished doc...
+            whelk.embellish(doc)
         }
 
         if (request.getLens() != Lens.NONE) {
@@ -485,6 +486,7 @@ class Crud extends HttpServlet {
         // should we deny the others?
 
         Document newDoc = new Document(requestBody)
+        newDoc.normalizeUnicode()
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
         // TODO https://jira.kb.se/browse/LXL-1263
         newDoc.setControlNumber(newDoc.getShortId())
@@ -526,15 +528,7 @@ class Crud extends HttpServlet {
         // return 201 or error
         boolean isUpdate = false
         Document savedDoc;
-        try {
-            savedDoc = saveDocument(newDoc, request, response,
-                    collection, isUpdate, "POST")
-        } catch (LinkValidationException le)
-        {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    le.getMessage())
-            log.debug(le.getMessage())
-        }
+        savedDoc = saveDocument(newDoc, request, response, collection, isUpdate, "POST")
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
                                savedDoc.getChecksum())
@@ -628,6 +622,7 @@ class Crud extends HttpServlet {
         }
 
         Document updatedDoc = new Document(requestBody)
+        updatedDoc.normalizeUnicode()
         updatedDoc.setId(documentId)
 
         log.debug("Checking permissions for ${updatedDoc}")
@@ -761,7 +756,7 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Failed to acquire a necessary lock. Did you submit a holding record without a valid bib link? " + e.message)
             return null
-        } catch (PostgreSQLComponent.ConflictingHoldException e) {
+        } catch (LinkValidationException | PostgreSQLComponent.ConflictingHoldException e) {
             failedRequests.labels(httpMethod, request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage())

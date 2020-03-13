@@ -5,6 +5,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException
 import whelk.Document
 import whelk.IdGenerator
 import whelk.Whelk
+import whelk.reindexer.CardRefresher
 
 class DefinitionsImporter extends Importer {
 
@@ -29,9 +30,11 @@ class DefinitionsImporter extends Importer {
             counter++
         }
         println("Created $counter documents from $definitionsFilename in ${(System.currentTimeMillis() - startTime) / 1000} seconds. Now storing to system.")
-        boolean removeEmbellished = false
-        whelk.storage.bulkStore(documentList, "xl", null, collection, removeEmbellished)
+        whelk.storage.bulkStore(documentList, "xl", null, collection)
         println("Operation complete. Time elapsed: ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
+
+        whelk.loadCoreData()
+        new CardRefresher(whelk).refresh(collection)
     }
 
     @Override

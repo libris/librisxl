@@ -33,7 +33,7 @@ public class ListMetadataFormats
         if (identifierUri != null)
         {
             String id = null;
-            try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection();
+            try (Connection dbconn = OaiPmh.s_whelk.getStorage().getOuterConnection();
                  PreparedStatement preparedStatement = Helpers.prepareSameAsStatement(dbconn, identifierUri);
                  ResultSet resultSet = preparedStatement.executeQuery())
             {
@@ -41,7 +41,7 @@ public class ListMetadataFormats
                     id = resultSet.getString("id");
             }
 
-            try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection();
+            try (Connection dbconn = OaiPmh.s_whelk.getStorage().getOuterConnection();
                  PreparedStatement preparedStatement = prepareMatchingDocumentStatement(dbconn, id);
                  ResultSet resultSet = preparedStatement.executeQuery())
             {

@@ -11,6 +11,8 @@ import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.util.DocumentUtil
+import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
 
@@ -23,6 +25,7 @@ class ElasticSearch {
     private List<String> elasticHosts
     private String elasticCluster
     private ElasticClient client
+    private ElasticClient bulkClient
 
     private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
 
@@ -40,6 +43,7 @@ class ElasticSearch {
         this.defaultIndex = elasticIndex
 
         client = ElasticClient.withDefaultHttpClient(elasticHosts)
+        bulkClient = ElasticClient.withBulkHttpClient(elasticHosts)
 
         new Timer("ElasticIndexingRetries", true).schedule(new TimerTask() {
             void run() {
@@ -94,19 +98,18 @@ class ElasticSearch {
     void bulkIndex(List<Document> docs, String collection, Whelk whelk) {
         assert collection
         if (docs) {
-            String bulkString = docs.collect{ doc ->
+            String bulkString = docs.findResults{ doc ->
                 try {
-                    String shapedData = JsonOutput.toJson(
-                        getShapeForIndex(doc, whelk, collection))
+                    String shapedData = getShapeForIndex(doc, whelk, collection)
                     String action = createActionRow(doc, collection)
                     return "${action}\n${shapedData}\n"
                 } catch (Exception e) {
-                    log.error("Failed to index ${doc.getShortId()} in elastic.", e)
-                    throw e
+                    log.error("Failed to index ${doc.getShortId()} in elastic: $e", e)
+                    return null
                 }
             }.join('')
 
-            String response = client.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE).second
+            String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE).second
             Map responseMap = mapper.readValue(response, Map)
             log.info("Bulk indexed ${docs.count{it}} docs in ${responseMap.took} ms")
         }
@@ -131,11 +134,11 @@ class ElasticSearch {
         // The justification for this uncomfortable catch-all, is that an index-failure must raise an alert (log entry)
         // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
         try {
-            Map shapedData = getShapeForIndex(doc, whelk, collection)
-            def response = client.performRequest('PUT',
-                    "/${indexName}/${collection}" +
-                            "/${toElasticId(doc.getShortId())}?pipeline=libris",
-                    JsonOutput.toJson(shapedData)).second
+            def response = client.performRequest(
+                    'PUT',
+                    "/${indexName}/${collection}/${toElasticId(doc.getShortId())}?pipeline=libris",
+                    getShapeForIndex(doc, whelk, collection)
+            ).second
             Map responseMap = mapper.readValue(response, Map)
             log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${responseMap['_id']} as version ${responseMap['_version']}")
         } catch (Exception e) {
@@ -192,19 +195,24 @@ class ElasticSearch {
         }
     }
 
-    Map getShapeForIndex(Document document, Whelk whelk, String collection) {
+    String getShapeForIndex(Document document, Whelk whelk, String collection) {
         Document copy = document.clone()
 
-        if (!collection.equals("hold")) {
-            embellish(whelk, document, copy)
+        if (collection != "hold") {
+            whelk.embellish(copy)
         }
 
         log.debug("Framing ${document.getShortId()}")
-        boolean chipsify = false
-        boolean addSearchKey = true
-        copy.data['@graph'] = copy.data['@graph'].collect { whelk.jsonld.toCard(it, chipsify, addSearchKey) }
 
-        setComputedProperties(copy, whelk)
+        Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri }
+
+        def graph = ((List) copy.data['@graph'])
+        int originalSize = document.data['@graph'].size()
+        copy.data['@graph'] =
+                graph.take(originalSize).collect { toSearchCard(whelk, it, links) } +
+                graph.drop(originalSize).collect { toSearchCard(whelk, it, Collections.EMPTY_SET) }
+
+        setComputedProperties(copy, links, whelk)
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = document.getThingIdentifiers()
         if (thingIds.isEmpty()) {
@@ -214,22 +222,50 @@ class ElasticSearch {
         String thingId = thingIds.get(0)
         Map framed = JsonLd.frame(thingId, copy.data)
 
+        // TODO: replace with elastic ICU Analysis plugin?
+        // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
+        DocumentUtil.findKey(framed, JsonLd.SEARCH_KEY) { value, path ->
+            if (!Unicode.isNormalizedForSearch(value)) {
+                return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))
+            }
+        }
+
+        // FIXME: temporary fix to keep number of elastic field in check
+        // Shrink all meta properties except for root document
+        DocumentUtil.findKey(framed, 'meta') { value, path ->
+            if (path.size() > 1 && value instanceof Map) {
+                Map meta = (Map) value
+                meta.remove('created')
+                meta.remove('modified')
+                meta.remove('recordStatus')
+                meta.remove('mainEntity')
+            }
+            return DocumentUtil.NOP
+        }
+
         log.trace("Framed data: ${framed}")
 
-        return framed
+        return JsonOutput.toJson(framed)
     }
 
-    void embellish(Whelk whelk, Document document, Document copy) {
-        boolean filterOutNonChipTerms = true // Consider using false here, since cards-in-cards work now.
-        whelk.embellish(copy, filterOutNonChipTerms)
+    private Map toSearchCard(Whelk whelk, Map thing, Set<String> preserveLinks) {
+        boolean chipsify = false
+        boolean addSearchKey = true
+        boolean reduceKey = false
+        def preservedPaths = preserveLinks ? JsonLd.findPaths(thing, '@id', preserveLinks) : []
+
+        return whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preservedPaths)
     }
 
-    private static void setComputedProperties(Document doc, Whelk whelk) {
+    private static void setComputedProperties(Document doc, Set<String> links, Whelk whelk) {
         getOtherIsbns(doc.getIsbnValues())
                 .each { doc.addTypedThingIdentifier('ISBN', it) }
 
         getOtherIsbns(doc.getIsbnHiddenValues())
                 .each { doc.addIndirectTypedThingIdentifier('ISBN', it) }
+
+        doc.data['@graph'][1]['_links'] = links
+        doc.data['@graph'][1]['_outerEmbellishments'] = doc.getEmbellishments() - links
 
         doc.data['@graph'][1]['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',

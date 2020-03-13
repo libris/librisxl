@@ -72,7 +72,7 @@ public class ProfileExport
         Timestamp untilTimeStamp = new Timestamp(zonedUntil.toInstant().getEpochSecond() * 1000L);
 
         TreeSet<String> exportedIDs = new TreeSet<>();
-        try(Connection connection = m_whelk.getStorage().getConnection();
+        try(Connection connection = m_whelk.getStorage().getOuterConnection();
             PreparedStatement preparedStatement = getAllChangedIDsStatement(fromTimeStamp, untilTimeStamp, connection);
             ResultSet resultSet = preparedStatement.executeQuery())
         {
@@ -322,7 +322,7 @@ public class ProfileExport
 
 	if ( locationSet.contains("*") ) return true; // KP 190401
 	
-        List<Document> holdings = m_whelk.getStorage().getAttachedHoldings(doc.getThingIdentifiers(), m_whelk.getJsonld());
+        List<Document> holdings = m_whelk.getAttachedHoldings(doc.getThingIdentifiers());
         for (Document holding : holdings)
         {
             if (locationSet.contains(holding.getSigel()))
@@ -351,7 +351,7 @@ public class ProfileExport
             throws SQLException
     {
         HashSet<String> result = new HashSet<>();
-        Connection connection = m_whelk.getStorage().getConnection();
+        Connection connection = m_whelk.getStorage().getOuterConnection();
         connection.setAutoCommit(false);
         try(PreparedStatement preparedStatement = getAllChangedByStatement(id, from, until, connection);
             ResultSet resultSet = preparedStatement.executeQuery())

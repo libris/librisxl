@@ -2,11 +2,8 @@ package whelk
 
 import spock.lang.Specification
 import spock.lang.Unroll
-import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
-import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
-import whelk.util.PropertyLoader
 
 import java.sql.Timestamp
 
@@ -185,7 +182,7 @@ class DocumentSpec extends Specification {
                                  "someValue": 1],
                                 ["someOtherValue": 2]]]
         Document doc = new Document(input)
-        List expected = ["/externalBar", "/externalBaz"]
+        Set expected = [new Link("/externalBar", "bar"), new Link("/externalBaz", "baz")]
         expect:
         assert doc.getExternalRefs() == expected
 
@@ -203,12 +200,12 @@ class DocumentSpec extends Specification {
                                 ["someOtherValue": 2],
                                 "A lonely string"]]
 
-        Map extra = ["/externalBar": ["@id": "/externalBar",
+        List extra = [["@id": "/externalBar",
                                       "@type": "Work",
                                       "hasTitle": "aTitle",
                                       "language": "danska",
                                       "someThirdValue": 3],
-                     "/externalBaz": ["@id": "/externalBaz",
+                     ["@id": "/externalBaz",
                                       "@type": "ProvisionActivity",
                                       "date": "aDate",
                                       "place": "aPlace",
@@ -378,6 +375,5 @@ class DocumentSpec extends Specification {
 
 
     }
-
 
 }

@@ -1,6 +1,11 @@
 {
   "@id": "http://kblocalhost.kb.se:5000/n602lbw018zh88k#it",
   "@type": "Electronic",
+  "sameAs": [
+    {
+      "@id": "http://libris.kb.se/resource/bib/12915810"
+    }
+  ],
   "hasTitle": [
     {
       "@type": "Title",

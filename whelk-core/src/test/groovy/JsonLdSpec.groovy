@@ -6,6 +6,7 @@ import spock.lang.Specification
 import spock.lang.Unroll
 import whelk.Document
 import whelk.JsonLd
+import whelk.Link
 import whelk.exception.FramingException
 
 @Unroll
@@ -57,7 +58,7 @@ class JsonLdSpec extends Specification {
                 ['@graph': ['@id': '/some_other_id']]
             ],
             '@context': 'base.jsonld']
-        def expected = ['/external']
+        Set expected = [new Link(iri: '/external', relation: 'external')]
 
         expect:
         assert JsonLd.getExternalReferences(graph) == expected
@@ -96,12 +97,17 @@ class JsonLdSpec extends Specification {
                                 'bar': ['@id': '/bar'],
                                 'extra': ['baz': ['@id': '/baz']],
                                 'aList': [['quux': ['@id': '/quux']]],
-                                'quux': ['@id': '/quux']],
+                                'quux': [['@id': '/quux'], ['@id': '/quux2']]],
                                ['@id': '/bar',
                                 'someValue': 1],
                                ['@id': '/baz/',
                                 'someOtherValue': 2]]]
-       Set expected = ['/bar', '/baz', '/quux']
+       Set expected = [
+               new Link(iri: '/quux', relation: 'quux'),
+               new Link(iri: '/quux2', relation: 'quux'),
+               new Link(iri: '/baz', relation: 'baz'),
+               new Link(iri: '/bar', relation: 'bar')
+       ]
        expect:
        assert JsonLd.getAllReferences(input) == expected
    }
@@ -411,6 +417,51 @@ class JsonLdSpec extends Specification {
         thrown JsonLd.FresnelException
     }
 
+    def "should handle inverse lens properties"() {
+        given:
+        Map displayData = [
+                "lensGroups":
+                        ["chips":
+                                 ["lenses": [
+                                         "X": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "X-chips",
+                                               "showProperties" : ["x1", "x2", ["inverseOf": "prop1"]]
+                                         ],
+                                         "Q": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "Q-chips",
+                                               "showProperties" : ["q", ["inverseOf": "propQ"]]
+                                         ]
+                                 ]],
+                         "cards":
+                                 ["lenses": [
+                                         "X": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "X-cards",
+                                               "fresnel:extends": ["@id": "X-chips"],
+                                               "showProperties" : ["fresnel:super", "x3", ["inverseOf": "prop2"]]
+                                         ],
+                                         "P": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "P-cards",
+                                               "fresnel:extends": ["@id": "X-cards"],
+                                               "showProperties" : ["p", "fresnel:super", ["inverseOf": "prop3"]]
+                                         ],
+
+                                 ]]]]
+
+
+        def ld = new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA)
+
+        expect:
+        ld.getInverseProperties(thing, group) as List == props
+
+        where:
+        thing                                        | group   || props
+        ["@type": "X"]                               | 'chips' || ['prop1']
+        ["@type": "X"]                               | 'cards' || ['prop1', 'prop2']
+        ["@type": "P"]                               | 'cards' || ['prop1', 'prop2', 'prop3']
+        ["@graph": [["@type": "Q"], ["@type": "X"]]] | 'chips' || ['propQ', 'prop1']
+        ["@graph": [["@type": "X"], ["@type": "X"]]] | 'chips' || ['prop1']
+    }
+
     def "get term key from URI"() {
         given:
         def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
@@ -450,7 +501,7 @@ class JsonLdSpec extends Specification {
         given:
         Map context = ["ex": "http://example.org/ns/"]
         expect:
-        JsonLd.expandLinks(['/path', 'ex:path', 'other:path'], context) ==
+        ['/path', 'ex:path', 'other:path'].collect({JsonLd.expand(it, context)}) ==
                 ['/path', 'http://example.org/ns/path', 'other:path']
     }
 
@@ -700,12 +751,28 @@ class JsonLdSpec extends Specification {
                 readMap("preserve-paths/vocab.jsonld"))
 
         def preservePaths = ld.findPaths(doc, '@id', 'https://id.kb.se/marc/Document')
-
+        
         expect:
         ld.toChip(doc, preservePaths) == readMap("preserve-paths/molecular-aspects-chips.jsonld")
         ld.toCard(doc, preservePaths) == readMap("preserve-paths/molecular-aspects-cards-chips.jsonld")
         ld.toCard(doc, false, false, false, preservePaths) ==
                 readMap("preserve-paths/molecular-aspects-cards-cards.jsonld")
+    }
+
+    def "should preserve all links"() {
+        given:
+        Map data = readMap("preserve-paths/dtestpost.jsonld")
+
+        def ld = new JsonLd(
+                readMap("preserve-paths/context.jsonld"),
+                readMap("preserve-paths/display-data.jsonld"),
+                readMap("preserve-paths/vocab.jsonld"))
+
+        Set<String> links = ld.expandLinks(new Document(data).getExternalRefs()).collect{ it.iri }
+        def preservePaths = ld.findPaths(data, '@id', links)
+
+        expect:
+        ld.toChip(data, preservePaths) == readMap("preserve-paths/dtestpost-chips-links.jsonld")
     }
 
     static Map readMap(String filename) {

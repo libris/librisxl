@@ -76,8 +76,7 @@ class CrudSpec extends Specification {
         storage = GroovyMock(PostgreSQLComponent.class)
         // We want to pass through calls in some cases
         accessControl = GroovySpy(AccessControl.class)
-        whelk = new Whelk()
-        whelk.storage = storage
+        whelk = new Whelk(storage)
         whelk.contextData = ['@context': [
                 'examplevocab': 'http://example.com',
                 'some_term': 'some_value']]
@@ -86,34 +85,12 @@ class CrudSpec extends Specification {
                 'cards': [lenses: ['Instance' : ['showProperties': ['prop1', 'prop2', 'prop3']]]]
         ]]
         whelk.vocabData = ['@graph': []]
-        whelk.jsonld = new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData)
+        whelk.setJsonld(new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData))
         GroovySpy(LegacyIntegrationTools.class, global: true)
         crud = new Crud(whelk)
         crud.init()
         crud.accessControl = accessControl
     }
-
-
-    /*
-     * API tests
-     *
-     */
-
-    def "GET to / should display system information"() {
-        given:
-        request.getPathInfo() >> {
-            "/"
-        }
-        storage.loadSettings("system") >> {
-          ["version": "1.0"]
-        }
-        when:
-        crud.doGet(request, response)
-        then:
-        assert response.getStatus() == HttpServletResponse.SC_OK
-        assert response.getContentType() == "application/json"
-    }
-
 
     // Tests for 405 Method Not Allowed
 
@@ -172,10 +149,7 @@ class CrudSpec extends Specification {
             "*/*"
         }
         storage.load(_, _) >> {
-            new Document(["@graph": [["@id": id, "foo": "bar"]]])
-        }
-        storage.loadEmbellished(_, _) >> {
-            new Document(["@graph": [["@id": id, "foo": "bar"]]])
+            new Document(["@graph": [["@id": id, "foo": "bar", 'mainEntity': ["@id": id + '#it']], ["@id": id + '#it']]])
         }
         when:
         crud.doGet(request, response)
@@ -467,11 +441,6 @@ class CrudSpec extends Specification {
                     ["@id": id, "mainEntity": ["@id": "main"]],
                     ["@id": "main", "foo": "bar"]]])
         }
-        storage.loadEmbellished(_, _) >> {
-            new Document(["@graph": [
-                    ["@id": id, "mainEntity": ["@id": "main"]],
-                    ["@id": "main", "foo": "embellished"]]])
-        }
         crud.doGet(request, response)
 
         expect:
@@ -517,6 +486,7 @@ class CrudSpec extends Specification {
     def "GET should format response"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
+        def id2 = BASE_URI.resolve("/4321").toString()
         request.getPathInfo() >> {
             "/${id}${view}${ending}".toString()
         }
@@ -526,12 +496,14 @@ class CrudSpec extends Specification {
         storage.load(_, _) >> {
             new Document(["@graph": [
                     ["@id": id, "mainEntity": ["@id": "main"]],
-                    ["@id": "main", "foo": "bar"]]])
+                    ["@id": "main", "a": ["@id": id2]]]])
         }
-        storage.loadEmbellished(_, _) >> {
-            new Document(["@graph": [
-                    ["@id": id, "mainEntity": ["@id": "main"]],
-                    ["@id": "main", "foo": "embellished"]]])
+        storage.getCards([id2]) >> {
+            [
+                    ["@graph": [
+                            ["@id": id2, "mainEntity": ["@id": "main2"]],
+                            ["@id": "main2", "foo": "embellished"]]]
+            ]
         }
         crud.doGet(request, response)
         String document = response.getResponseBody()
@@ -541,6 +513,7 @@ class CrudSpec extends Specification {
         response.getContentType() == responseContentType
         isEmbellished(document) == embellished
         isFramed(document) == framed
+        println("emb: $embellished fr: $framed : $document")
 
         where:
         view         | ending    | acceptContentType      || responseContentType   | embellished | framed
@@ -575,6 +548,7 @@ class CrudSpec extends Specification {
     def "GET should format response according to parameters"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
+        def id2 = BASE_URI.resolve("/4321").toString()
         request.getPathInfo() >> {
             "/${id}${view}".toString()
         }
@@ -587,12 +561,14 @@ class CrudSpec extends Specification {
         storage.load(_, _) >> {
             new Document(["@graph": [
                     ["@id": id, "mainEntity": ["@id": "main"]],
-                    ["@id": "main", "foo": "bar"]]])
+                    ["@id": "main", "a": ["@id": id2]]]])
         }
-        storage.loadEmbellished(_, _) >> {
-            new Document(["@graph": [
-                    ["@id": id, "mainEntity": ["@id": "main"]],
-                    ["@id": "main", "foo": "embellished"]]])
+        storage.getCards([id2]) >> {
+            [
+                    ["@graph": [
+                            ["@id": id2, "mainEntity": ["@id": "main2"]],
+                            ["@id": "main2", "foo": "embellished"]]]
+            ]
         }
 
         crud.doGet(request, response)
@@ -652,7 +628,7 @@ class CrudSpec extends Specification {
                                                "prop4": "val4",
                                               ]]])
         storage.load(_, _) >> { d }
-        storage.loadEmbellished(_, _) >> { d }
+        storage.getCards(_) >> { [] }
         crud.doGet(request, response)
         String document = response.getResponseBody()
         println(lens)

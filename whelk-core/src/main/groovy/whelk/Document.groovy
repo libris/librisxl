@@ -1,11 +1,14 @@
 package whelk
 
+
 import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
+import whelk.util.Unicode
 
 import java.lang.reflect.Type
+import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -72,9 +75,20 @@ class Document {
         updateRecordStatus()
     }
 
+    Document(String json) {
+        this(mapper.readValue(json, Map))
+    }
+
     Document clone() {
         Map clonedDate = deepCopy(data)
         return new Document(clonedDate)
+    }
+
+    void normalizeUnicode() {
+        String json = mapper.writeValueAsString(data)
+        if (!Unicode.isNormalized(json)) {
+            data = mapper.readValue(Unicode.normalize(json), Map)
+        }
     }
 
     URI getURI() {
@@ -222,6 +236,10 @@ class Document {
     }
 
     String getModified() { get(modifiedPath) }
+
+    Instant getModifiedTimestamp() {
+        ZonedDateTime.parse(getModified(), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant()
+    }
 
     void setGenerationDate(Date generationDate) {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(generationDate.toInstant(), ZoneId.systemDefault())
@@ -490,24 +508,22 @@ class Document {
         return null
     }
 
+    Set<String> getEmbellishments() {
+        Set<String> result = new HashSet<>()
+        data[JsonLd.GRAPH_KEY].eachWithIndex{ def entry, int i ->
+            if (i > 1 && entry[JsonLd.GRAPH_KEY]) {
+                result.add(_get(thingIdPath2, entry))
+            }
+        }
+        return result
+    }
+
     /**
      * Return a list of external references in the doc.
      *
      */
-    List getExternalRefs() {
+    Set<Link> getExternalRefs() {
         return JsonLd.getExternalReferences(this.data)
-    }
-
-    /**
-     * Returns a String[2], first of which is the relation (itemOf, heldBy etc).
-     * The second string is the referenced URI.
-     */
-    List<String[]> getRefsWithRelation() {
-        List<String[]> references = new ArrayList<>()
-
-        addRefsWithRelation(this.data, references, null)
-
-        return references
     }
 
     private void addRefsWithRelation(Map node, List<String[]> references, String relation) {
@@ -791,20 +807,27 @@ class Document {
             return node.booleanValue() ? depth : term
         else if (node instanceof Integer)
             return node.intValue() * depth
+        else if (node instanceof Long)
+            return node.longValue() * depth
         else if (node instanceof Map) {
             for (String key : node.keySet()) {
-                if ( !key.equals(JsonLd.MODIFIED_KEY) && !key.equals(JsonLd.CREATED_KEY)) {
+                if (key != JsonLd.MODIFIED_KEY && key != JsonLd.CREATED_KEY) {
                     term += key.hashCode() * depth
                     term += calculateCheckSum(node[key], depth + 1)
                 }
             }
         }
-        else { // node is a list
+        else if (node instanceof List) {
             int i = 1
             for (entry in node)
                 term += calculateCheckSum(entry, depth + (i++))
         }
+        else {
+            return node.hashCode() * depth
+        }
 
         return term
     }
+
+
 }

@@ -54,7 +54,7 @@ class MarcExport {
             }
         }
 
-        List<Document> holdingDocuments = whelk.storage.getAttachedHoldings(rootDocument.getThingIdentifiers(), whelk.getJsonld())
+        List<Document> holdingDocuments = whelk.getAttachedHoldings(rootDocument.getThingIdentifiers())
         def holdings = new TreeMap<String, MarcRecord>()
 
         for (Document holding : holdingDocuments) {

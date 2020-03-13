@@ -8,7 +8,7 @@ import whelk.util.ThreadPool
 @Log
 class ElasticReindexer {
 
-    static final int BATCH_SIZE = 1000
+    static final int BATCH_SIZE = 300
     static final int MAX_RETRIES = 5
     static final int RETRY_WAIT_MS = 3000
 
@@ -69,7 +69,7 @@ class ElasticReindexer {
             int counter = 0
             startTime = System.currentTimeMillis()
             List<String> collections = suppliedCollection ? [suppliedCollection] : whelk.storage.loadCollections()
-            ThreadPool threadPool = new ThreadPool(Runtime.getRuntime().availableProcessors() * 4)
+            ThreadPool threadPool = new ThreadPool(Runtime.getRuntime().availableProcessors() * 2)
             collections.each { collection ->
                 List<Document> documents = []
                 for (document in whelk.storage.loadAll(collection)) {
@@ -90,6 +90,7 @@ class ElasticReindexer {
             }
             threadPool.joinAll()
             println("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
+            whelk.storage.logStats()
         } catch (Throwable e) {
             println("Reindex failed with:\n" + e.toString() + "\ncallstack:\n" + e.printStackTrace())
         }

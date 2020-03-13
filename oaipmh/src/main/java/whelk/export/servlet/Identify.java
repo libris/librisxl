@@ -13,8 +13,6 @@ import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
-import io.prometheus.client.Counter;
-
 public class Identify
 {
     /**
@@ -50,7 +48,7 @@ public class Identify
         writer.writeEndElement(); // adminEmail
 
         writer.writeStartElement("earliestDatestamp");
-        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getConnection();
+        try (Connection dbconn = OaiPmh.s_whelk.getStorage().getOuterConnection();
              PreparedStatement preparedStatement = prepareStatement(dbconn);
              ResultSet resultSet = preparedStatement.executeQuery())
         {
