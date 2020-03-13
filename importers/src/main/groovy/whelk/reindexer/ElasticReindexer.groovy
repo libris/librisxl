@@ -8,7 +8,7 @@ import whelk.util.ThreadPool
 @Log
 class ElasticReindexer {
 
-    static final int BATCH_SIZE = 400
+    static final int BATCH_SIZE = 300
     static final int MAX_RETRIES = 5
     static final int RETRY_WAIT_MS = 3000
 
