@@ -1,5 +1,7 @@
 // A bleak imitation (for hold) of 2018/10/remodel-termComponentList.groovy
 
+PrintWriter scheduledForUpdating = getReportWriter("scheduled-updates")
+
 subdivisionTypes = [
         'GenreForm' : 'GenreSubdivision',
         'Temporal' : 'TemporalSubdivision',
@@ -34,6 +36,7 @@ selectBySqlWhere('''
         it['@type'] == COMPLEX_SUBJECT_TYPE
     }.each {
         if (changeToSubdivision(it, subdivisionTypes)) {
+            scheduledForUpdating.println("${data.doc.getURI()}")
             data.scheduleSave()
         }
     }
