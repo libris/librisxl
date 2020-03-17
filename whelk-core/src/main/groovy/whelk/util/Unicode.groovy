@@ -1,6 +1,8 @@
 package whelk.util
 
 import java.text.Normalizer
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 class Unicode {
 
@@ -29,6 +31,8 @@ class Unicode {
             [(it): Normalizer.normalize(it, Normalizer.Form.NFKC)]
         }
     }
+
+    private static final Pattern UNICODE_MARK = Pattern.compile('\\p{M}')
 
     static boolean isNormalized(String s) {
         return Normalizer.isNormalized(s, Normalizer.Form.NFC) && !EXTRA_NORMALIZATION_MAP.keySet().any{ s.contains(it) }
@@ -60,5 +64,9 @@ class Unicode {
         def w = /\(\)\p{IsAlphabetic}\p{Digit}/
         def m = s =~ /[^${w}]*(.*)/
         return m.matches() ? m.group(1) : s
+    }
+
+    static String asciiFold(String s) {
+        return Normalizer.normalize(s, Normalizer.Form.NFD).replaceAll(UNICODE_MARK, '')
     }
 }
