@@ -40,7 +40,7 @@ class UnicodeSpec extends Specification {
         ' _.:;|(Überzetsung)|;:. '               | '(Überzetsung)'
         ' _.:;| Ü b e r - z e t - s u n g |;:. ' | 'Ü b e r - z e t - s u n g'
     }
-
+    
     def "trim"() {
         expect:
         Unicode.trim(dirty) == clean
@@ -58,7 +58,7 @@ class UnicodeSpec extends Specification {
         '\r\nkeep leading line breaks'                              | '\r\nkeep leading line breaks'
         
     }
-    
+
     def "double quotation marks"() {
         expect:
         Unicode.isNormalizedDoubleQuotes(dirty) == (dirty == clean)
@@ -99,5 +99,22 @@ class UnicodeSpec extends Specification {
         Optional.of('Armn')                           | 'Պիպին նավի վրա'
         Optional.of('Kana')                           | 'デスノート'
         Optional.of('Hira')                           | 'とんとんとんと'
+
+    def "u"() {
+        given:
+        String s = "übers"   //uU+CC88
+        String nfc = "übers" //U+C3BC
+        expect:
+        Unicode.isNormalized(s) == false
+        Unicode.normalize(s) == nfc
+    }
+
+    def "asciiFold"() {
+        expect:
+        Unicode.asciiFold(unicode) == ascii
+
+        where:
+        unicode     | ascii
+        'Désidéria' | 'Desideria'
     }
 }

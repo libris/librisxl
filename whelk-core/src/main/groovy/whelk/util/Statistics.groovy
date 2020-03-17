@@ -13,7 +13,7 @@ class Statistics {
     ThreadLocal<Stack<Object>> context = ThreadLocal.withInitial({ -> null })
 
     int numExamples
-
+    
     Statistics(int numExamples = 1) {
         this.numExamples = numExamples
     }

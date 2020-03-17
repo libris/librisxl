@@ -69,12 +69,12 @@ private String title(bib) {
 }
 
 private String primaryContributorId(bib) {
-    def primary = getPathSafe(bib.doc.data, ['@graph', 2, 'contribution'], []).grep{ it['@type'] == "PrimaryContribution"}
+    def primary = getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf', 'contribution'], []).grep{ it['@type'] == "PrimaryContribution"}
     return getPathSafe(primary, [0, 'agent', '@id'])
 }
 
 private List contributorStrings(bib) {
-    return getPathSafe(bib.asCard(true), ['@graph',2,'contribution'], [])['_str'].grep{it}
+    return getPathSafe(bib.asCard(true), ['@graph', 1, 'instanceOf', 'contribution'], [])['_str'].grep{it}
 }
 
 private String flatTitle(bib) {
