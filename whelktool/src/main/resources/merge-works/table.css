@@ -1,0 +1,27 @@
+ table {
+   border-collapse: collapse;
+ }
+ table, th, td {
+   border: 1px solid grey;
+ }
+ th {
+   text-align: left;
+ }
+ tr.info td {
+   background-color: lightgrey;
+ }
+ tr.DIFF td {
+   background-color: lightpink;
+ }
+ tr.COMPATIBLE td {
+     background-color: greenyellow;
+ }
+ tr.EQUAL td {
+   background-color: lightgreen;
+ }
+ td {
+   vertical-align: top;
+ }
+ hr {
+   border: 4px solid;
+ }

@@ -40,7 +40,7 @@ class UnicodeSpec extends Specification {
         ' _.:;|(Überzetsung)|;:. '               | '(Überzetsung)'
         ' _.:;| Ü b e r - z e t - s u n g |;:. ' | 'Ü b e r - z e t - s u n g'
     }
-
+    
     def "trim"() {
         expect:
         Unicode.trim(dirty) == clean
@@ -52,5 +52,23 @@ class UnicodeSpec extends Specification {
         '\u2007\u2007\u2007FIGURE SPACE\u2007\u2007\u2007'          | 'FIGURE SPACE'
         '\u2060\u2060\u2060WORD JOINER\u2060\u2060\u2060'           | 'WORD JOINER'
         'keep\u00A0\u202F\u2007\u2060us'                            | 'keep\u00A0\u202F\u2007\u2060us'
+    }
+    
+    def "u"() {
+        given:
+        String s = "übers"   //uU+CC88
+        String nfc = "übers" //U+C3BC
+        expect:
+        Unicode.isNormalized(s) == false
+        Unicode.normalize(s) == nfc
+    }
+
+    def "asciiFold"() {
+        expect:
+        Unicode.asciiFold(unicode) == ascii
+
+        where:
+        unicode     | ascii
+        'Désidéria' | 'Desideria'
     }
 }

@@ -44,6 +44,8 @@ class Unicode {
             [(it): Normalizer.normalize(it, Normalizer.Form.NFKC)]
         } + STRIP_UNICODE_CHARS.collectEntries { [(it): ''] }
     }
+
+    private static final Pattern UNICODE_MARK = Pattern.compile('\\p{M}')
     
     static boolean isNormalized(String s) {
         return Normalizer.isNormalized(s, Normalizer.Form.NFC) && !EXTRA_NORMALIZATION_MAP.keySet().any{ s.contains(it) }
@@ -76,8 +78,12 @@ class Unicode {
         def m = s =~ /[^${w}]*(.*)/
         return m.matches() ? m.group(1) : s
     }
-    
+
     static String trim(String s) {
         s.replaceFirst(LEADING_SPACE, '').replaceFirst(TRAILING_SPACE, '')
+    }
+    
+    static String asciiFold(String s) {
+        return Normalizer.normalize(s, Normalizer.Form.NFD).replaceAll(UNICODE_MARK, '')
     }
 }
