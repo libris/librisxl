@@ -150,34 +150,6 @@ class RemoteSearchAPI extends HttpServlet {
         log.info("Started ...")
     }
 
-    List loadMetaProxyInfo(URL url) {
-        List databases = []
-        try {
-            def xml = new XmlSlurper(false, false).parse(url.newInputStream())
-
-            databases = xml.libraryCode.collect {
-                def map = ["database": createString(it.@id)]
-                it.children().each { node ->
-                    def n = node.name().toString()
-                    def o = node.text().toString()
-                    def v = map[n]
-                    if (v) {
-                        if (v instanceof String) {
-                            v = map[n] = [v]
-                        }
-                        v << o
-                    } else {
-                        map[n] = o
-                    }
-                }
-                return map
-            }
-        } catch (SocketException se) {
-            log.error("Unable to load database list.")
-        }
-        return databases
-    }
-
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         // Check that we have kat-rights.
@@ -292,6 +264,34 @@ class RemoteSearchAPI extends HttpServlet {
         def hitList = resultsList*.hits
         def largestNumberOfHits = hitList*.size().max()
         return  0..<largestNumberOfHits
+    }
+
+    List loadMetaProxyInfo(URL url) {
+        List databases = []
+        try {
+            def xml = new XmlSlurper(false, false).parse(url.newInputStream())
+
+            databases = xml.libraryCode.collect {
+                def map = ["database": createString(it.@id)]
+                it.children().each { node ->
+                    def name = node.name().toString()
+                    def text = node.text().toString()
+                    def v = map[name]
+                    if (v) {
+                        if (v instanceof String) {
+                            v = map[name] = [v]
+                        }
+                        v << text
+                    } else {
+                        map[name] = text
+                    }
+                }
+                return map
+            }
+        } catch (SocketException se) {
+            log.error("Unable to load database list.")
+        }
+        return databases
     }
 
     class MetaproxyQuery implements Callable<MetaproxySearchResult> {
