@@ -7,6 +7,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import se.kb.libris.util.marc.Field
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.MarcXmlRecordReader
+import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.IdGenerator
 import whelk.Whelk
@@ -27,7 +28,6 @@ class RemoteSearchAPI extends HttpServlet {
     final static mapper = new ObjectMapper()
 
     MarcFrameConverter marcFrameConverter
-
     static final URL metaProxyInfoUrl = new URL("http://mproxy.libris.kb.se/db_Metaproxy.xml")
     static final String metaProxyBaseUrl = "http://mproxy.libris.kb.se:8000"
 
@@ -181,8 +181,14 @@ class RemoteSearchAPI extends HttpServlet {
 
         log.trace("Query is $query")
         if (query) {
-            Map remoteURLs = loadMetaProxyInfo(metaProxyInfoUrl).inject([:]) { map, db ->
-                map << [(db.database): metaProxyBaseUrl + "/" + db.database]
+            def metaProxyInfo = loadMetaProxyInfo(metaProxyInfoUrl)
+
+            Map remoteURLs = metaProxyInfo.collectEntries {
+                [(it.database): metaProxyBaseUrl + "/" + it.database]
+            }
+
+            Map requiresDcIdentifer = metaProxyInfo.collectEntries {
+                [(it.database): it.requiresDcIdentifier]
             }
 
             // Weed out the unavailable databases
@@ -204,7 +210,12 @@ class RemoteSearchAPI extends HttpServlet {
                 def resultLists = []
                 try {
                     def futures = []
+
                     for (database in databaseList) {
+                        if (requiresDcIdentifer[database] == 'true' && isValidIsbn(query)) {
+                            query = "dc.identifier=" + query
+                        }
+
                         url = new URL(remoteURLs[database] + queryStr + "&query=" + URLEncoder.encode(query, "utf-8"))
                         log.debug("submitting to futures")
                         futures << queue.submit(new MetaproxyQuery(url, database))
@@ -389,6 +400,10 @@ class RemoteSearchAPI extends HttpServlet {
         return new StreamingMarkupBuilder().bind {
             out << root
         }
+    }
+
+    private boolean isValidIsbn(String query) {
+        return IsbnParser.parse(query.trim()) != null
     }
 
     String removeNamespacePrefixes(String xmlStr) {
