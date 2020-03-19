@@ -1031,7 +1031,10 @@ class JsonLd {
         embedChain.add(mainId)
         Map newItem = [:]
         mainItem.each { key, value ->
-            newItem.put(key, toEmbedded(value, idMap, embedChain))
+            if (!key.equals(JSONLD_ALT_ID_KEY))
+                newItem.put(key, toEmbedded(value, idMap, embedChain))
+            else
+                newItem.put(key, value)
         }
         return newItem
     }
