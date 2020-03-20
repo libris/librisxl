@@ -9,13 +9,25 @@ String where = "collection = 'bib' and deleted = false and ( " +
 selectBySqlWhere(where) { data ->
     def (record, instance, work) = data.graph
 
-    boolean anythingChanged = work.classification.removeAll {
-        it['edition'] == "No information provided" ||
-                (it['@type'] == "ClassificationLcc" && it['marc:assignedByLC'] == false) ||
-                (it['@type'] == "ClassificationNlm" && it['marc:assignedByNlm'] == false)
+    boolean changed = false
+    work.classification.each {
+        if (it['edition'] == "No information provided") {
+            it.remove('edition')
+            changed = true
+        }
+
+        if (it['@type'] == "ClassificationLcc" && it['marc:assignedByLC'] == false) {
+            it.remove('marc:assignedByLC')
+            changed = true
+        }
+        
+        if (it['@type'] == "ClassificationNlm" && it['marc:assignedByNlm'] == false) {
+            it.remove('marc:assignedByNlm')
+            changed = true
+        }
     }
 
-    if (anythingChanged) {
+    if (changed) {
         scheduledForUpdating.println("${data.doc.getURI()}")
         data.scheduleSave()
     }
