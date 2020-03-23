@@ -153,6 +153,19 @@ class JsonLdSpec extends Specification {
         assert JsonLd.frame(id, input) == input
     }
 
+    def "should frame on sameAs-link"() {
+        given:
+        def id = "1234"
+        def sameAs = "4321"
+        def input = ["@graph": [
+                ["@id": id, "foo": "bar", "linksTo": ["@id" : sameAs]],
+                ["@id": "other_id", "sameAs":[["@id": sameAs]], "some":"data"]
+        ]]
+        def expected = ["@id": id, "foo": "bar", "linksTo": ["@id": "other_id", "sameAs":[["@id": sameAs]], "some":"data"]]
+        expect:
+        assert JsonLd.frame(id, input) == expected
+    }
+
     def "should flatten framed jsonld"() {
         given:
         def id = "1234"
