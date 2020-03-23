@@ -1424,7 +1424,7 @@
         }
       },
       "i1": {
-        "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.15",
+        "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.16",
         "marcDefault": "0"
       },
       "$a": {"about": "_:agent", "property": "label", "infer": true, "TODO:targetMatch": "1xx"},
@@ -1441,9 +1441,9 @@
       "$w": {"aboutNew": "_:describedBy", "property": "controlNumber"},
       "TODO:$4": "Check occurrences; do we need to map this subfield or just drop it (ignored=true)?",
       "$6": {"property": "marc:fieldref", "TODO": "Decided to set to ignored true"},
-      "$7": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.15"},
-      "$8": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.15"},
-      "$9": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.15"},
+      "$7": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.16"},
+      "$8": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.16"},
+      "$9": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.16"},
       "subfieldOrder": "6 7 i a s t b c d h g k ... x z w 4 8 9"
     },
 
