@@ -90,7 +90,7 @@ public class ProfileExport
 
                 int affected = exportAffectedDocuments(id, collection, created, deleted, fromTimeStamp,
                         untilTimeStamp, profile, output, deleteMode, doVirtualDeletions, exportedIDs,
-                        deletedNotifications);
+                        deletedNotifications, connection);
                 affectedCount.observe(affected);
             }
         }
@@ -106,16 +106,17 @@ public class ProfileExport
      * 'created' == true means 'id' was created in the chosen interval, false means merely updated.
      */
     private int exportAffectedDocuments(String id, String collection, boolean created, Boolean deleted,Timestamp from,
-                                         Timestamp until, ExportProfile profile, MarcRecordWriter output,
-                                         DELETE_MODE deleteMode, boolean doVirtualDeletions,
-                                         TreeSet<String> exportedIDs, TreeMap<String, DELETE_REASON> deletedNotifications)
+                                        Timestamp until, ExportProfile profile, MarcRecordWriter output,
+                                        DELETE_MODE deleteMode, boolean doVirtualDeletions,
+                                        TreeSet<String> exportedIDs, TreeMap<String, DELETE_REASON> deletedNotifications,
+                                        Connection connection)
             throws IOException, SQLException
     {
         Summary.Timer requestTimer = singleExportLatency.labels(collection).startTimer();
         try
         {
             return exportAffectedDocuments2(id, collection, created, deleted, from, until, profile,
-                    output, deleteMode, doVirtualDeletions, exportedIDs, deletedNotifications);
+                    output, deleteMode, doVirtualDeletions, exportedIDs, deletedNotifications, connection);
         }
         finally
         {
@@ -126,17 +127,18 @@ public class ProfileExport
     private int exportAffectedDocuments2(String id, String collection, boolean created, Boolean deleted,Timestamp from,
                                          Timestamp until, ExportProfile profile, MarcRecordWriter output,
                                          DELETE_MODE deleteMode, boolean doVirtualDeletions,
-                                         TreeSet<String> exportedIDs, TreeMap<String, DELETE_REASON> deletedNotifications)
+                                         TreeSet<String> exportedIDs, TreeMap<String, DELETE_REASON> deletedNotifications,
+                                         Connection connection)
             throws IOException, SQLException
     {
         int oldCount = exportedIDs.size();
 
-        if (collection.equals("bib") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
+        if (collection.equals("bib") && updateShouldBeExported(id, collection, profile, from, until, created, deleted, connection))
         {
             exportDocument(m_whelk.loadEmbellished(id), profile,
                     output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
         }
-        else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
+        else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created, deleted, connection))
         {
             List<Tuple2<String, String>> dependers = m_whelk.getStorage().followDependers(id, JsonLd.getNON_DEPENDANT_RELATIONS());
             for (Tuple2 depender : dependers)
@@ -153,7 +155,7 @@ public class ProfileExport
                 exportDocument(dependerDoc, profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
             }
         }
-        else if (collection.equals("hold") && updateShouldBeExported(id, collection, profile, from, until, created, deleted))
+        else if (collection.equals("hold") && updateShouldBeExported(id, collection, profile, from, until, created, deleted, connection))
         {
             List<Document> versions = m_whelk.getStorage().loadAllVersions(id);
 
@@ -195,7 +197,7 @@ public class ProfileExport
      * Should an update of 'id' affect the collection of bibs being exported? 'id' may be any collection!
      */
     private boolean updateShouldBeExported(String id, String collection, ExportProfile profile, Timestamp from,
-                                           Timestamp until, boolean created, Boolean deleted)
+                                           Timestamp until, boolean created, Boolean deleted, Connection connection)
             throws SQLException
     {
         String profileName = profile.getProperty("name", "unknown");
@@ -215,7 +217,7 @@ public class ProfileExport
         Set<String> operators = profile.getSet(collection+"operators");
         if ( !operators.isEmpty() )
         {
-            Set<String> operatorsInInterval = getAllChangedBy(id, from, until);
+            Set<String> operatorsInInterval = getAllChangedBy(id, from, until, connection);
             if ( !operatorsInInterval.isEmpty() ) // Ignore setting if there are no changedBy names
             {
                 operatorsInInterval.retainAll(operators);
@@ -321,7 +323,7 @@ public class ProfileExport
         HashSet locationSet = new HashSet(Arrays.asList(locations.split(" ")));
 
 	if ( locationSet.contains("*") ) return true; // KP 190401
-	
+
         List<Document> holdings = m_whelk.getAttachedHoldings(doc.getThingIdentifiers());
         for (Document holding : holdings)
         {
@@ -347,11 +349,10 @@ public class ProfileExport
     /**
      * Get all changedBy names for the given id and interval
      */
-    private Set<String> getAllChangedBy(String id, Timestamp from, Timestamp until)
+    private Set<String> getAllChangedBy(String id, Timestamp from, Timestamp until, Connection connection)
             throws SQLException
     {
         HashSet<String> result = new HashSet<>();
-        Connection connection = m_whelk.getStorage().getOuterConnection();
         connection.setAutoCommit(false);
         try(PreparedStatement preparedStatement = getAllChangedByStatement(id, from, until, connection);
             ResultSet resultSet = preparedStatement.executeQuery())
@@ -365,9 +366,6 @@ public class ProfileExport
                         until.toInstant().isAfter(modified.toInstant()))
                     result.add(changedBy);
             }
-        } finally
-        {
-            connection.close();
         }
         return result;
     }
