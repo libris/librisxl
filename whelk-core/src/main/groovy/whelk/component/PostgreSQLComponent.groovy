@@ -166,6 +166,9 @@ class PostgreSQLComponent implements Storage {
     private static final String GET_DEPENDERS_OF_TYPE =
             "SELECT id FROM lddb__dependencies WHERE dependsOnId = ? AND relation = ?"
 
+    private static final String GET_DEPENDERS =
+            "SELECT id FROM lddb__dependencies WHERE dependsOnId = ?"
+
     private static final String GET_DEPENDENCIES_OF_TYPE =
             "SELECT dependsOnId FROM lddb__dependencies WHERE id = ? AND relation = ?"
 
@@ -539,17 +542,25 @@ class PostgreSQLComponent implements Storage {
      * LOCKED while the update is in progress.
      */
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent) {
+        // Resources to be closed
+        Connection connection = getConnection()
+        connection.setAutoCommit(false)
+
+        Document result = storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent, connection)
+        connection.commit()
+        return result
+    }
+
+    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent, Connection connection) {
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
-        Connection connection = getConnection()
         PreparedStatement selectStatement = null
         PreparedStatement updateStatement = null
         ResultSet resultSet = null
 
         Document doc = null
 
-        connection.setAutoCommit(false)
         try {
             selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
             selectStatement.setString(1, id)
@@ -591,8 +602,18 @@ class PostgreSQLComponent implements Storage {
 
             saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
             refreshDerivativeTables(doc, connection, deleted)
+
+            // If the mainentity has changed URI (for example happens when new id.kb.se-uris are added to records)
+            if ( preUpdateDoc.getThingIdentifiers()[0] &&
+                    doc.getThingIdentifiers()[0] &&
+                    doc.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]) {
+                SortedSet<String> idsLinkingToOldId = getDependencyData(id, GET_DEPENDERS, connection)
+                for (String dependerId : idsLinkingToOldId)
+                storeAtomicUpdate(dependerId, true, changedIn, changedBy, {}, connection)
+            }
+
             dependencyCache.invalidate(preUpdateDoc)
-            connection.commit()
+
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {
             log.error("SQL failed: ${psqle.message}")
