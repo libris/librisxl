@@ -1,0 +1,187 @@
+package datatool.scripts
+
+import datatool.util.Statistics
+import whelk.Whelk
+import whelk.search.ESQuery
+import whelk.util.DocumentUtil
+
+class GenericLinker implements DocumentUtil.Linker {
+    Map<String, List<String>> ignore = [:]
+    Map map = [:]
+    Map<String, List> ambiguousIdentifiers = [:]
+    Map substitutions = [:]
+    Statistics stats
+
+    List<String> fields = []
+
+    static GenericLinker forType(String type, List<String> fields, Whelk whelk) {
+        def q = [
+                "@type": [type],
+                "q"    : ["*"],
+                '_sort': ["@id"]
+        ]
+
+        GenericLinker linker = new GenericLinker(fields, [:], new Statistics().printOnShutdown())
+        whelk.bulkLoad(new ESQuery(whelk).doQueryIds(q)).values().each { definition ->
+            linker.addDefinition(definition.data['@graph'][1])
+        }
+
+        return linker
+    }
+
+    GenericLinker(List<String> fields, Map<String, List<String>> ignoreFieldValues = [:], Statistics stats = null) {
+        this.fields = fields
+        this.ignore = ignoreFieldValues
+        this.stats = stats
+    }
+
+    boolean linkAll(data, String key) {
+        return DocumentUtil.findKey(data, key, DocumentUtil.link(this))
+    }
+
+    void addDefinition(Map definition) {
+        for (i in ignore) {
+            if (definition[i.getKey()] in i.getValue()) {
+                return
+            }
+        }
+
+        Set<String> identifiers = [] as Set
+        for (String field in fields) {
+            // FIXME: get from context
+            if (field.endsWith('ByLang')) {
+                def labels = definition[field] as Map ?: [:]
+                labels.values().each(maybeCollection({ String label ->
+                    identifiers.add(label.toLowerCase())
+                }))
+            }
+            else {
+                (definition[field] ?: []).with(maybeCollection( { String identifier ->
+                    identifiers.add(identifier.toLowerCase())
+                }))
+            }
+        }
+
+        String id = definition['@id']
+        identifiers.each { addMapping(it, id) }
+    }
+
+    void addMapping(String from, String to) {
+        from = from.toLowerCase()
+        if (ambiguousIdentifiers.containsKey(from)) {
+            ambiguousIdentifiers[from] << to
+        } else if (map.containsKey(from)) {
+            ambiguousIdentifiers[from] = [to, map.remove(from)]
+        } else {
+            map[from] = to
+        }
+    }
+
+    void addSubstitutions(Map s) {
+        substitutions.putAll(s)
+    }
+
+    @Override
+    List<Map> link(Map blank, List existingLinks) {
+        if (!fields.any {blank.containsKey(it)}) {
+            incrementCounter('unhandled shape', blank.keySet())
+            throw new RuntimeException('unhandled shape: ' + blank.keySet())
+        }
+
+        for (String key : fields) {
+            if (blank[key]) {
+                List<String> links = findLinks(blank[key], existingLinks)
+                if (links) {
+                    incrementCounter('mapped', blank[key])
+                    return links.collect { ['@id': it] }
+                }
+            }
+        }
+
+        for (String key : fields) {
+            if (blank[key]) {
+                incrementCounter('not mapped', canonize(blank[key].toString()))
+            }
+        }
+
+        if (blank['sameAs'] && !blank['sameAs'].any { knownId(it['@id']) }) {
+            incrementCounter('sameAs 404 - removed', blank['sameAs'])
+            Map r = new HashMap(blank)
+            r.remove('sameAs')
+            return [r]
+        }
+
+        return null
+    }
+
+    private List<String> findLinks(value, List existingLinks) {
+        if (value instanceof String && findLink(value, existingLinks)) {
+            return [findLink(value, existingLinks)]
+        }
+
+        List multiple = split(value)
+        if (multiple && multiple.every { findLinks(it, existingLinks) != null }) {
+            return multiple.collect { findLinks(it, existingLinks) }.flatten()
+        }
+
+        return null
+    }
+
+    private String findLink(String s, List existingLinks) {
+        s = canonize(s)
+        if (map.containsKey(s)) {
+            return map[s]
+        }
+        if (ambiguousIdentifiers.containsKey(s)) {
+            for (String id : ambiguousIdentifiers[s]) {
+                if (existingLinks.contains(id)) {
+                    return id
+                }
+            }
+        }
+        return null
+    }
+
+    private boolean knownId(String id) {
+        return map.values().contains(id)
+    }
+
+    private List split(value) {
+        if (value instanceof List) {
+            return value
+        }
+
+        return []
+    }
+
+    private String canonize(String s) {
+        s = trim(s.toLowerCase())
+        if (substitutions.containsKey(s)) {
+            s = substitutions[s]
+        }
+        return s
+    }
+
+    private String trim(String s) {
+        // remove leading and trailing non-"alpha, digit or parentheses"
+        def w = /\(\)\p{IsAlphabetic}\p{Digit}/
+        def m = s =~ /[^${w}]*([${w} ]*[${w}])[^${w}]*/
+        return m.matches() ? m.group(1) : s
+    }
+
+    Closure maybeCollection(Closure<?> c) {
+        return { o ->
+            if (o instanceof Collection) {
+                o.each(c)
+            } else {
+                c.call(o)
+            }
+        }
+    }
+
+    private void incrementCounter(String category, Object name) {
+        if (stats) {
+            stats.increment(category, name)
+        }
+    }
+}
