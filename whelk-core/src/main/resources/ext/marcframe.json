@@ -19851,8 +19851,8 @@
       },
       "[19]": null,
       "[20:24]": {
-        "aboutEntity": "?record",
-        "property": "marc:entryMap",
+        "NOTE": "Entry map - 4500 - Default value in MARC21",
+        "ignored": true,
         "fixedDefault": "4500"
       },
       "_spec": [
@@ -21052,7 +21052,12 @@
         }
       ]
     },
-    "147": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
+    "147": {
+      "NOTE:LC": "147 - Heading - Named Event (NR)",
+      "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris.",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "148" : {
       "include": "termbase_with_id",
       "dependsOn": ["040", "042"],
@@ -21249,12 +21254,29 @@
       "$v": {"property": "prefLabel"}
     },
 
-    "260": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore - not used with titles"},
+    "260": {
+      "NOTE:LC": "260 - Complex See Reference - Subject (R) - ignore - not used with titles",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
 
-    "336": {"ignored": true, "NOTE:record-count": 0},
-    "348": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "336": {
+      "NOTE:LC": "336 - Content Type (R)",
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "TODO": "contentType?"
+    },
+    "348": {
+      "NOTE:LC": "348 - Format of Notated Music (R) nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
 
-    "360": {"ignored": true, "NOTE:record-count": 1, "NOTE:LC": "ignore - not used with titles"},
+    "360": {
+      "NOTE:LC": "360 - Complex See Also Reference - Subject (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
 
     "368": {
       "aboutEntity": "?thing",
@@ -21303,7 +21325,8 @@
       "$2": {"property": "marc:sourceOfTerm"}
     },
     "371": {
-      "$a": {"aboutEntity": "?thing", "addProperty": "address"}
+      "NOTE:LC": "371 - Address (R)",
+      "ignored": true
     },
     "372": {
       "aboutEntity": "?thing",
@@ -21376,7 +21399,10 @@
         }
       ]
     },
-    "375": {"ignored": true, "NOTE:local": "gender: Struket av MSS 2017-12-12 efter diskussion om persondata i biblioteksregister."},
+    "375": {
+      "NOTE:LC": "375 - Gender (R)",
+      "ignored": true
+    },
     "376": {
       "$a": {"addLink": "hasTypeOfFamily", "resourceType": "TypeOfFamily", "property": "label"},
       "$b": {"addLink": "hasProminentFamilyMember", "resourceType": "Person", "property": "label", "infer": true},
@@ -21424,15 +21450,47 @@
       "TODO": "link to gf",
       "$a": {"addProperty": "label"},
       "$0": {"addProperty": "marc:recordControlNumber"},
+      "$1": {"ignored": true, "NOTE:LC": "nac"},
       "$2": {"property": "marc:sourceOfTerm"}
     },
-    "381": {"ignored": true, "NOTE:record-count": 0},
-    "382": {"ignored": true, "NOTE:record-count": 0},
-    "383": {"ignored": true, "NOTE:record-count": 0},
-    "384": {"ignored": true, "NOTE:record-count": 0},
-    "385": {"ignored": true, "NOTE:record-count": 0},
-    "386": {"ignored": true, "NOTE:record-count": 0},
-    "388": {"ignored": true, "NOTE:record-count": 0},
+    "381": {
+      "NOTE:LC": "381 - Other Distinguishing Characteristics of Work or Expression (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "382": {
+      "NOTE:LC": "382 - Medium of Performance (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "383": {
+      "NOTE:LC": "383 - Numeric Designation of Musical Work (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "384": {
+      "NOTE:LC": "384 - Key (NR)",
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "TODO": "musicKey?"
+    },
+    "385": {
+      "NOTE:LC": "385 - Audience Characteristics (R)",
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "TODO": "intendedAudience?"
+    },
+    "386": {
+      "NOTE:LC": "386 - Creator/Contributor Characteristics (R)",
+      "ignored": true,
+      "NOTE:record-count": 0,
+      "TODO": "creatorCharacteristic - CreatorCharacteristic?"
+    },
+    "388": {
+      "NOTE:LC": "388 - Time Period of Creation (R) - nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
 
     "400": {
       "TODO:remnants-of-inherit": "bib:100",
@@ -23631,12 +23689,31 @@
         {"when": "i2=8", "addLink": "seeAlso"}
       ]
     },
-    "880": {"ignored": true, "NOTE:record-count": 15, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ I AUKTORITETSFORMATET"},
-    "883": {},
-    "884": {},
-    "885": {},
-    "886": {},
-    "887": {"ignored": true, "NOTE:local": "Maskinellt genererad information från LIBRIS XL till Voyager"}
+    "880": {
+      "NOTE:LC": "880 - Alternate Graphic Representation (R) - nac",
+      "NOTE:local": "ANVÄNDS NORMALT EJ I AUKTORITETSFORMATET",
+      "ignored": true
+    },
+    "883": {
+      "NOTE:LC": "883 - Machine-generated Metadata Provenance (R)",
+      "ignored": true
+    },
+    "884": {
+      "NOTE:LC": "884 - Description Conversion Information (R)",
+      "ignored": true
+    },
+    "885": {
+      "NOTE:LC": "885 - Matching Information (R)",
+      "ignored": true
+    },
+    "886": {
+      "NOTE:local": "886 Uppgift i annat MARC-format (R)",
+      "ignored": true
+    },
+    "887": {
+      "NOTE:local": "887 Maskinellt genererad information från LIBRIS XL (R)",
+      "ignored": true
+    }
   },
 
   "hold": {
