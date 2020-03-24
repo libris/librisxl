@@ -1083,7 +1083,8 @@ class JsonLd {
                 idMap.put(data.get(key), data)
             } else if (key.equals(JSONLD_ALT_ID_KEY)
                     // Don't index graphs, since their @id:s do not denote them.
-                    && !data.containsKey(GRAPH_KEY)) {
+                    && !data.containsKey(GRAPH_KEY)
+                    && data.get(key) instanceof List) {
                 List sameAsList = (List) data.get(key)
                 for (Object altIdObject : sameAsList) {
                     Map altIdMap = (Map) altIdObject
