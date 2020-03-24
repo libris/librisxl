@@ -17145,6 +17145,7 @@
       "_spec": [
         {
           "source": {"760": {"ind1": "0", "ind2": " ", "subfields": [
+            {"6": "fieldref-värde"},
             {"i": "displayText"},
             {"t": "Publikation"},
             {"c": "Särskiljande tillägg"},
@@ -17164,6 +17165,7 @@
               }],
               "part": ["s. 144-145"],
               "marc:displayText": ["displayText"],
+              "marc:fieldref": "fieldref-värde",
               "instanceOf": {
                 "@type": "Work",
                 "hasTitle": [{
@@ -17415,11 +17417,13 @@
       "_spec": [
         {
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
+            {"6": "fieldref-värde"},
             {"s": "Main Thing"},
             {"g": "part 1"},
             {"z": "00-0-000000-0"}
           ]}},
           "normalized": {"772": {"ind1": "0", "ind2": "0", "subfields": [
+            {"6": "fieldref-värde"},
             {"s": "Main Thing"},
             {"g": "part 1"},
             {"z": "00-0-000000-0"}
@@ -17433,6 +17437,7 @@
                   "@type": "Title",
                   "mainTitle": "Main Thing"
                 }],
+                "marc:fieldref": "fieldref-värde",
                 "hasInstance": {
                   "@type": "Instance",
                   "identifiedBy": [{
