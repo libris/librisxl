@@ -1440,7 +1440,7 @@
       "$y": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
       "$w": {"aboutNew": "_:describedBy", "property": "controlNumber"},
       "TODO:$4": "Check occurrences; do we need to map this subfield or just drop it (ignored=true)?",
-      "$6": {"property": "marc:fieldref", "TODO": "Decided to set to ignored true"},
+      "$6": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.16"},
       "$7": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.16"},
       "$8": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.16"},
       "$9": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.16"},
@@ -17152,6 +17152,13 @@
             {"g": "s. 144-145"},
             {"x": "1401-9612"}
           ]}},
+          "normalized": {"760": {"ind1": "0", "ind2": " ", "subfields": [
+            {"i": "displayText"},
+            {"t": "Publikation"},
+            {"c": "Särskiljande tillägg"},
+            {"g": "s. 144-145"},
+            {"x": "1401-9612"}
+          ]}},
           "result": {"mainEntity": {
             "hasSeries": [{
               "@type": "Instance",
@@ -17165,7 +17172,6 @@
               }],
               "part": ["s. 144-145"],
               "marc:displayText": ["displayText"],
-              "marc:fieldref": "fieldref-värde",
               "instanceOf": {
                 "@type": "Work",
                 "hasTitle": [{
@@ -17423,7 +17429,6 @@
             {"z": "00-0-000000-0"}
           ]}},
           "normalized": {"772": {"ind1": "0", "ind2": "0", "subfields": [
-            {"6": "fieldref-värde"},
             {"s": "Main Thing"},
             {"g": "part 1"},
             {"z": "00-0-000000-0"}
@@ -17437,7 +17442,6 @@
                   "@type": "Title",
                   "mainTitle": "Main Thing"
                 }],
-                "marc:fieldref": "fieldref-värde",
                 "hasInstance": {
                   "@type": "Instance",
                   "identifiedBy": [{
