@@ -612,8 +612,8 @@ class PostgreSQLComponent implements Storage {
             if ( preUpdateDoc.getThingIdentifiers()[0] &&
                     doc.getThingIdentifiers()[0] &&
                     doc.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]) {
-                // This is normally done in refreshDerivativeTables, but the NEW id needs to
-                // replaced early, so that it is available in the ID table, when all there dependers
+                // This is normally done in refreshDerivativeTables, but the NEW id needs to be
+                // replaced early, so that it is available in the ID table, when all the dependers
                 // re-calculate their dependencies
                 saveIdentifiers(doc, connection, deleted)
                 SortedSet<String> idsLinkingToOldId = getDependencyData(id, GET_DEPENDERS, connection)
