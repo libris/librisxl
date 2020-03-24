@@ -543,12 +543,18 @@ class PostgreSQLComponent implements Storage {
      */
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent) {
         // Resources to be closed
-        Connection connection = getConnection()
-        connection.setAutoCommit(false)
+        try
+        {
+            Connection connection = getConnection()
+            connection.setAutoCommit(false)
 
-        Document result = storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent, connection)
-        connection.commit()
-        return result
+            Document result = storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent, connection)
+            connection.commit()
+            return result
+        }
+        finally {
+            close(connection)
+        }
     }
 
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent, Connection connection) {
@@ -601,16 +607,22 @@ class PostgreSQLComponent implements Storage {
             updateStatement.execute()
 
             saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
-            refreshDerivativeTables(doc, connection, deleted)
 
             // If the mainentity has changed URI (for example happens when new id.kb.se-uris are added to records)
             if ( preUpdateDoc.getThingIdentifiers()[0] &&
                     doc.getThingIdentifiers()[0] &&
                     doc.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]) {
+                // This is normally done in refreshDerivativeTables, but the NEW id needs to
+                // replaced early, so that it is available in the ID table, when all there dependers
+                // re-calculate their dependencies
+                saveIdentifiers(doc, connection, deleted)
                 SortedSet<String> idsLinkingToOldId = getDependencyData(id, GET_DEPENDERS, connection)
-                for (String dependerId : idsLinkingToOldId)
-                storeAtomicUpdate(dependerId, true, changedIn, changedBy, {}, connection)
+                for (String dependerId : idsLinkingToOldId) {
+                    storeAtomicUpdate(dependerId, true, changedIn, changedBy, {}, connection)
+                }
             }
+
+            refreshDerivativeTables(doc, connection, deleted)
 
             dependencyCache.invalidate(preUpdateDoc)
 
@@ -634,7 +646,7 @@ class PostgreSQLComponent implements Storage {
             connection.rollback()
             throw e
         } finally {
-            close(resultSet, selectStatement, updateStatement, connection)
+            close(resultSet, selectStatement, updateStatement)
         }
 
         return doc
