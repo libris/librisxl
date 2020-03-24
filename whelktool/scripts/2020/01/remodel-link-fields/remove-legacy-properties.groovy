@@ -7,7 +7,7 @@
 PrintWriter failedIDs = getReportWriter("failed-to-update")
 scheduledForChange = getReportWriter("scheduled-for-change")
 
-PROPERTIES_TO_REMOVE = ['marc:controlSubfield', 'marc:groupid', 'partNumber', 'marc:toDisplayNote']
+PROPERTIES_TO_REMOVE = ['marc:controlSubfield', 'marc:groupid', 'partNumber', 'marc:toDisplayNote', 'marc:fieldref']
 LINK_FIELDS_INSTANCE = ['hasSeries', 'hasSubseries', 'isPartOf', 'otherEdition',
                         'otherPhysicalFormat', 'issuedWith', 'dataSource']
 LINK_FIELDS_WORK = ['translationOf', 'translation', 'supplement', 'supplementTo',
@@ -24,25 +24,27 @@ String subQueryHasPart = "data#>>'{@graph,2,${HAS_PART}}' LIKE '%${HAS_INSTANCE}
 String query = "collection = 'bib' AND ( ${subQueryInstance} OR ${subQueryWork} OR ${subQueryHasPart} )"
 
 selectBySqlWhere(query) { data ->
-    def (record, thing, work) = data.graph
-    boolean somethingWasRemoved = false
+    boolean changed = false
+    def record = data.graph[0]
+    def thing = data.graph[1]
+    def work = thing.instanceOf
 
     thing.subMap(LINK_FIELDS_INSTANCE).each { key, val ->
-        if (findAndRemoveLegacyProperties(val, key) && !somethingWasRemoved)
-            somethingWasRemoved = true
+        if (findAndRemoveLegacyProperties(val, key) && !changed)
+            changed = true
     }
     //If empty after removing legacy properties, remove property
     thing.entrySet().removeIf { LINK_FIELDS_INSTANCE.contains(it.key) && it.value.size() == 0 }
 
     work.subMap(LINK_FIELDS_WORK + HAS_PART).each { key, val ->
-        if (findAndRemoveLegacyProperties(val, key) && !somethingWasRemoved)
-            somethingWasRemoved = true
+        if (findAndRemoveLegacyProperties(val, key) && !changed)
+            changed = true
     }
     //If empty after removing legacy properties, remove property
     work.entrySet().removeIf { (LINK_FIELDS_WORK.contains(it.key) || it.key == HAS_PART) &&
             it.value.size() == 0 }
 
-    if (somethingWasRemoved) {
+    if (changed) {
         scheduledForChange.println "Record was updated ${record[ID]}"
         data.scheduleSave(onError: { e ->
             failedIDs.println("Failed to save ${record[ID]} due to: $e")
