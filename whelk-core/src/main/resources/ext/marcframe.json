@@ -8779,7 +8779,7 @@
       "aboutEntity": "?thing",
       "addLink": "hasTitle",
       "resourceType": "Title",
-      "onRevertPrefer": "246",
+      "onRevertPrefer": ["247", "246"],
       "embedded": true,
       "aboutAlias": "_:title",
       "NOTE:prescribed-but-uncommon:subfieldOrder": "6 a n p h b c f g s",
