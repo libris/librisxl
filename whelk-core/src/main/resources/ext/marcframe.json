@@ -8954,12 +8954,13 @@
       "include": ["structuredtitle"],
       "NOTE:domainIncludes": "Integrating",
       "aboutEntity": "?thing",
-      "addLink": "marc:previousTitle",
+      "addLink": "hasTitle",
       "embedded": true,
-      "resourceType": "Title",
+      "resourceType": "FormerTitle",
+      "subfieldOrder": "a b n p ...",
       "i1": {
         "property": "marc:isAddedEntry",
-        "tokenMap": {"1": true},
+        "tokenMap": {"0": null},
         "marcDefault": "1"
       },
       "i2": {
@@ -8968,21 +8969,33 @@
         "marcDefault": "0"
       },
       "$f": {"property": "date"},
-      "$g": {"addProperty": "comment"},
-      "$h": {"property": "marc:mediaTerm"},
-      "$x": {"addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"},
-      "spec_": [
+      "$g": {"property": "qualifier"},
+      "$h": {"ignored": true, "NOTE:LC": "Medium - ignore"},
+      "$x": {"link": "identifiedBy", "resourceType": "ISSN", "property": "value"},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
         {
           "source": {
             "247": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "Everywoman's magazine"},
-              {"f": "v.5, no. 6.(1963-)-v.10, no. 1 (1967)"}
-            ]}},
+              {"f": "v.5, no. 6.(1963-)-v.10, no. 1 (1967)"},
+              {"h": "medium"},
+              {"g": "qualifier"}
+            ]}
+          },
+          "normalized": {
+            "247": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Everywoman's magazine"},
+              {"f": "v.5, no. 6.(1963-)-v.10, no. 1 (1967)"},
+              {"g": "qualifier"}
+            ]}
+          },
           "result": {"mainEntity": {
-            "marc:previousTitle": [{
-              "@type": "TitlePart",
+            "hasTitle": [{
+              "@type": "FormerTitle",
               "mainTitle": "Everywoman's magazine",
-              "date": "v.5, no. 6.(1963-)-v.10, no. 1 (1967)"
+              "date": "v.5, no. 6.(1963-)-v.10, no. 1 (1967)",
+              "qualifier": "qualifier"
             }]
           }}
         },
@@ -8994,13 +9007,24 @@
               {"f": "1923-1925"},
               {"x": "0019-8536"}
             ]}},
+          "normalized": {
+            "247": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Customs and excise circular"},
+              {"n": "Part 2"},
+              {"f": "1923-1925"},
+              {"x": "0019-8536"}
+            ]}
+          },
           "result": {"mainEntity": {
-            "marc:previousTitle": [{
-              "@type": "TitlePart",
+            "hasTitle": [{
+              "@type": "FormerTitle",
               "mainTitle": "Customs and excise circular",
-              "partNumber": "Part 2",
+              "hasPart" : [{
+                "@type" : "TitlePart",
+                "partNumber" : "Part 2"
+              }],
               "date": "1923-1925",
-              "identifiedBy": {"@type": "Identifier", "value": "0019-8536"}
+              "identifiedBy": {"@type": "ISSN", "value": "0019-8536"}
             }]
           }}
         }
