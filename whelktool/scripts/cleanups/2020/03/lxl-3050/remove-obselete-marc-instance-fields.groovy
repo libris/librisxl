@@ -1,6 +1,6 @@
 failedIDs = getReportWriter("failed-to-delete-bibIDs")
 scheduledForChange = getReportWriter("scheduledForChange")
-List<String> fieldsToRemove = ["marc:aspect", "marc:fileAspect", "marc:soundAspect", "marc:issn" , "marc:matter"]
+fieldsToRemove = ["marc:aspect", "marc:fileAspect", "marc:soundAspect", "marc:issn" , "marc:matter"]
 
 selectByCollection('bib') { bib ->
     fieldsToRemove.each {
@@ -9,7 +9,7 @@ selectByCollection('bib') { bib ->
     removeFieldFromPath(bib, "marc:matter")
 }
 
-private void removeFieldFromRecord(documentItem, String fieldName) {
+private void removeFieldFromRecord(documentItem, fieldName) {
     def record = documentItem.doc.data['@graph'][0]
     if (record.remove(fieldName)) {
         documentItem.scheduleSave(onError: { e ->
@@ -19,7 +19,7 @@ private void removeFieldFromRecord(documentItem, String fieldName) {
     }
 }
 
-private void removeFieldFromPath(documentItem, String fieldName) {
+private void removeFieldFromPath(documentItem, fieldName) {
     def record = documentItem.doc.data['@graph'][0]
 
     // There are 361 "marc:matter" occurrences in this path
@@ -29,7 +29,7 @@ private void removeFieldFromPath(documentItem, String fieldName) {
             hasPart?.
             StillImage
 
-    if (hasPartStillImage.remove(fieldName)) {
+    if (hasPartStillImage && hasPartStillImage.remove(fieldName)) {
         documentItem.scheduleSave(onError: { e ->
             failedIDs.println("Failed to save ${record[ID]} due to: $e")
         })
