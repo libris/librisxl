@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 
-linker = linker('Role', ['code', 'label', 'prefLabelByLang'])
+linker = linker('Role', ['code', 'label', 'prefLabelByLang', 'altLabelByLang', 'hiddenLabel'])
 
 selectByCollection('bib') { bib ->
     try {
