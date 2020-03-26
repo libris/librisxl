@@ -18,21 +18,6 @@ class GenericLinker implements DocumentUtil.Linker {
 
     List<String> fields = []
 
-    static GenericLinker forType(String type, List<String> fields, Whelk whelk) {
-        def q = [
-                (TYPE_KEY): [type],
-                "q"       : ["*"],
-                '_sort'   : [ID_KEY]
-        ]
-
-        GenericLinker linker = new GenericLinker(type, fields, new Statistics())
-        whelk.bulkLoad(new ESQuery(whelk).doQueryIds(q)).values().each { definition ->
-            linker.addDefinition(definition.data[JsonLd.GRAPH_KEY][1])
-        }
-
-        return linker
-    }
-
     GenericLinker(String type, List<String> fields, Statistics stats = null) {
         this.type = type
         this.fields = fields
@@ -41,6 +26,18 @@ class GenericLinker implements DocumentUtil.Linker {
 
     boolean linkAll(data, String key) {
         return DocumentUtil.findKey(data, key, DocumentUtil.link(this))
+    }
+
+    void loadDefinitions(Whelk whelk) {
+        def q = [
+                (TYPE_KEY): [type],
+                "q"       : ["*"],
+                '_sort'   : [ID_KEY]
+        ]
+
+        whelk.bulkLoad(new ESQuery(whelk).doQueryIds(q)).values().each { definition ->
+            addDefinition(definition.data[JsonLd.GRAPH_KEY][1])
+        }
     }
 
     void addDefinition(Map definition) {
@@ -117,7 +114,20 @@ class GenericLinker implements DocumentUtil.Linker {
         return null
     }
 
-    private List<String> findLinks(value, List existingLinks) {
+    List<Map> link(String blank) {
+        incrementCounter('single value encountered', blank)
+
+        List<String> links = findLinks(blank, [])
+        if (links) {
+            incrementCounter('mapped', blank)
+            return links.collect { [ID_KEY: it] }
+        }
+        else {
+            incrementCounter('not mapped (canonized  values)', canonize(blank))
+        }
+    }
+
+    protected List<String> findLinks(def value, List existingLinks) {
         if (value instanceof String && findLink(value, existingLinks)) {
             return [findLink(value, existingLinks)]
         }
@@ -130,7 +140,7 @@ class GenericLinker implements DocumentUtil.Linker {
         return null
     }
 
-    private String findLink(String s, List existingLinks) {
+    protected String findLink(String s, List existingLinks) {
         s = canonize(s)
         if (map.containsKey(s)) {
             return map[s]
@@ -145,7 +155,7 @@ class GenericLinker implements DocumentUtil.Linker {
         return null
     }
 
-    private boolean knownId(String id) {
+    protected boolean knownId(String id) {
         return map.values().contains(id)
     }
 
@@ -172,19 +182,19 @@ class GenericLinker implements DocumentUtil.Linker {
         return m.matches() ? m.group(1) : s
     }
 
-    Closure maybeCollection(Closure<?> c) {
+    protected void incrementCounter(String category, Object name) {
+        if (stats) {
+            stats.increment(category, name)
+        }
+    }
+
+    static Closure maybeCollection(Closure<?> c) {
         return { o ->
             if (o instanceof Collection) {
                 o.each(c)
             } else {
                 c.call(o)
             }
-        }
-    }
-
-    private void incrementCounter(String category, Object name) {
-        if (stats) {
-            stats.increment(category, name)
         }
     }
 }

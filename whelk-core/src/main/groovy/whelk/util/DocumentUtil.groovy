@@ -10,7 +10,20 @@ class DocumentUtil {
     }
 
     interface Linker {
+        /**
+         * Called for every blank node found in search
+         *
+         * @param blankNode
+         * @param existingLinks List of sibling node @ids. Can be used for disambiguation.
+         * @return
+         */
         List<Map> link(Map blankNode, List existingLinks)
+
+        /**
+         * This is called when the blank node search encounters
+         * a single string value where there would normally be a node
+         */
+        List<Map> link(String blank)
     }
 
     /**
@@ -89,16 +102,25 @@ class DocumentUtil {
         }
     }
 
-    private static Operation linkBlankNode(Map node, Linker mapper) {
+    private static Operation linkBlankNode(Map node, Linker linker) {
         if (isDefective(node)) {
             return new Remove()
         }
-
-        List<Map> replacement
-        if (isBlank(node) && (replacement = mapper.link(node, []))) {
-            return replacement.size() > 1 ? new Replace(replacement) : new Replace(replacement[0])
+        if (!isBlank(node)) {
+            return NOP
         }
-        return NOP
+
+        toOperation(linker.link(node, []))
+    }
+
+    private static Operation linkBlankNode(String singleValue, Linker linker) {
+        toOperation(linker.link(singleValue))
+    }
+
+    private static Operation toOperation(List<Map> replacement) {
+        replacement
+                ? replacement.size() > 1 ? new Replace(replacement) : new Replace(replacement[0])
+                : NOP
     }
 
     private static boolean isDefective(Map node) {
