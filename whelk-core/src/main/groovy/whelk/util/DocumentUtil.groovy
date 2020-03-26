@@ -1,5 +1,7 @@
 package whelk.util
 
+import static whelk.JsonLd.TYPE_KEY
+
 class DocumentUtil {
     public final static Operation NOP = new Nop()
 
@@ -68,6 +70,9 @@ class DocumentUtil {
 
         List<Map> newLinked
         for (node in nodes) {
+            if (isDefective(node)) {
+                continue // remove node
+            }
             if (isBlank(node) && (newLinked = linker.link(node, existingLinks))) {
                 result.addAll(newLinked.findAll { l ->
                     !existingLinks.contains(l['@id']) && !result.contains { it['@id'] == l['@id'] }
@@ -85,6 +90,10 @@ class DocumentUtil {
     }
 
     private static Operation linkBlankNode(Map node, Linker mapper) {
+        if (isDefective(node)) {
+            return new Remove()
+        }
+
         List<Map> replacement
         if (isBlank(node) && (replacement = mapper.link(node, []))) {
             return replacement.size() > 1 ? new Replace(replacement) : new Replace(replacement[0])
@@ -92,7 +101,9 @@ class DocumentUtil {
         return NOP
     }
 
-
+    private static boolean isDefective(Map node) {
+        node.size() == 0 || (node.size() == 1 && node.containsKey(TYPE_KEY))
+    }
 
     private static class DFS {
         Stack path

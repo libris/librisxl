@@ -1,9 +1,13 @@
 package datatool.scripts
 
 import datatool.util.Statistics
+import whelk.JsonLd
 import whelk.Whelk
 import whelk.search.ESQuery
 import whelk.util.DocumentUtil
+
+import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.TYPE_KEY
 
 class GenericLinker implements DocumentUtil.Linker {
     Map<String, List<String>> ignore = [:]
@@ -16,14 +20,14 @@ class GenericLinker implements DocumentUtil.Linker {
 
     static GenericLinker forType(String type, List<String> fields, Whelk whelk) {
         def q = [
-                "@type": [type],
-                "q"    : ["*"],
-                '_sort': ["@id"]
+                (TYPE_KEY): [type],
+                "q"       : ["*"],
+                '_sort'   : [ID_KEY]
         ]
 
         GenericLinker linker = new GenericLinker(fields, [:], new Statistics().printOnShutdown())
         whelk.bulkLoad(new ESQuery(whelk).doQueryIds(q)).values().each { definition ->
-            linker.addDefinition(definition.data['@graph'][1])
+            linker.addDefinition(definition.data[JsonLd.GRAPH_KEY][1])
         }
 
         return linker
@@ -62,7 +66,7 @@ class GenericLinker implements DocumentUtil.Linker {
             }
         }
 
-        String id = definition['@id']
+        String id = definition[ID_KEY]
         identifiers.each { addMapping(it, id) }
     }
 
@@ -93,7 +97,7 @@ class GenericLinker implements DocumentUtil.Linker {
                 List<String> links = findLinks(blank[key], existingLinks)
                 if (links) {
                     incrementCounter('mapped', blank[key])
-                    return links.collect { ['@id': it] }
+                    return links.collect { [ID_KEY: it] }
                 }
             }
         }
@@ -104,7 +108,7 @@ class GenericLinker implements DocumentUtil.Linker {
             }
         }
 
-        if (blank['sameAs'] && !blank['sameAs'].any { knownId(it['@id']) }) {
+        if (blank['sameAs'] && !blank['sameAs'].any { knownId(it[ID_KEY]) }) {
             incrementCounter('sameAs 404 - removed', blank['sameAs'])
             Map r = new HashMap(blank)
             r.remove('sameAs')
