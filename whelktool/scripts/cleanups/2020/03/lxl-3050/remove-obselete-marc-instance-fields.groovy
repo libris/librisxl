@@ -4,35 +4,31 @@ fieldsToRemove = ["marc:aspect", "marc:fileAspect", "marc:soundAspect", "marc:is
 
 selectByCollection('bib') { bib ->
     fieldsToRemove.each {
-        removeFieldFromRecord(bib, it)
+        removeFieldFromInstance(bib, it)
     }
-    removeFieldFromPath(bib, "marc:matter")
+    removeFieldFromWork(bib, "marc:matter")
 }
 
-private void removeFieldFromRecord(documentItem, fieldName) {
-    def record = documentItem.doc.data['@graph'][0]
-    if (record.remove(fieldName)) {
+private void removeFieldFromInstance(documentItem, fieldName) {
+    def instance = documentItem.doc.data['@graph'][1]
+    if (instance.remove(fieldName)) {
         documentItem.scheduleSave(onError: { e ->
-            failedIDs.println("Failed to save ${record[ID]} due to: $e")
+            failedIDs.println("Failed to save ${instance[ID]} due to: $e")
         })
-        scheduledForChange.println "Remove field $fieldName from ${record[ID]}"
+        scheduledForChange.println "Remove field $fieldName from ${instance[ID]}"
     }
 }
 
-private void removeFieldFromPath(documentItem, fieldName) {
-    def record = documentItem.doc.data['@graph'][0]
-
-    // There are 361 "marc:matter" occurrences in this path
-    def hasPartStillImage = record?.
-            instanceOf?.
-            StillImage?.
-            hasPart?.
-            StillImage
-
-    if (hasPartStillImage && hasPartStillImage.remove(fieldName)) {
-        documentItem.scheduleSave(onError: { e ->
-            failedIDs.println("Failed to save ${record[ID]} due to: $e")
-        })
-        scheduledForChange.println "Remove field $fieldName from ${record[ID]} on $hasPartStillImage"
+private void removeFieldFromWork(documentItem, fieldName) {
+    def work = documentItem.doc.data['@graph'][2]
+    if (work?.hasPart) {
+        work.hasPart.each {
+            if (it.remove(fieldName)) {
+                documentItem.scheduleSave(onError: { e ->
+                    failedIDs.println("Failed to save ${work[ID]} due to: $e")
+                })
+                scheduledForChange.println "Remove field $fieldName from ${work[ID]}"
+            }
+        }
     }
 }
