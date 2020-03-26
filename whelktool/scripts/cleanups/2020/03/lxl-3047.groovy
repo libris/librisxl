@@ -8,8 +8,16 @@ selectBySqlWhere(where) { data ->
     if (work.note != null) {
         if (work.hasNote == null) {
             work["hasNote"] = []
+        } else if ( ! (work.hasNote instanceof List) ) {
+            def tmp = work.hasNote
+            work["hasNote"] = [tmp]
         }
-        work.hasNote.add(work.note)
+        work.hasNote.add(
+                [
+                        "@type" : "note",
+                        "label" : work.note
+                ]
+        )
         work.remove("note")
         scheduledForUpdating.println("${data.doc.getURI()}")
         data.scheduleSave()
