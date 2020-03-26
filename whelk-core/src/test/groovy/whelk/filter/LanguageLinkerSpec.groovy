@@ -1,7 +1,8 @@
-package datatool.scripts.linkblanklanguages
+package whelk.filter
 
 import spock.lang.Specification
 import spock.lang.Unroll
+import whelk.filter.LanguageLinker
 
 @Unroll
 class LanguageLinkerSpec extends Specification {
@@ -89,7 +90,7 @@ class LanguageLinkerSpec extends Specification {
                         ]
 
                 ]
-        ].each(linker.&addLanguageDefinition)
+        ].each(linker.&addDefinition)
 
         linker.addSubstitutions([
                 'tyska (fornhögtyska)': 'fornhögtyska'
@@ -254,7 +255,7 @@ class LanguageLinkerSpec extends Specification {
                                 'en': 'Latin'
                         ]
                 ]
-        ].each(linker.&addLanguageDefinition)
+        ].each(linker.&addDefinition)
         linker.addMapping('grekiska', 'http://id/gre')
         linker.addMapping('grekiska', 'http://id/grc')
 
@@ -299,7 +300,7 @@ class LanguageLinkerSpec extends Specification {
                                 'sv': ['Svënskâ', 'Svénskã']
                         ]
                 ]
-        ].each(linker.&addLanguageDefinition)
+        ].each(linker.&addDefinition)
 
         expect:
         linker.linkLanguages(data) == change
@@ -328,7 +329,7 @@ class LanguageLinkerSpec extends Specification {
                                 'sv': 'Ẽîïŷ99 (wwwiska)'
                         ]
                 ]
-        ].each(linker.&addLanguageDefinition)
+        ].each(linker.&addDefinition)
         linker.linkLanguages(data)
 
         expect:

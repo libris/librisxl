@@ -1,8 +1,7 @@
-package datatool.scripts.linkblanklanguages
+package whelk.filter
 
-import datatool.scripts.GenericLinker
 import whelk.util.DocumentUtil
-import datatool.util.Statistics
+import whelk.util.Statistics
 
 class LanguageLinker extends GenericLinker implements DocumentUtil.Linker {
     List ignoreCodes = []

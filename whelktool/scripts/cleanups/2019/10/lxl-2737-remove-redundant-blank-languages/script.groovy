@@ -5,8 +5,8 @@
  *
  */
 
-import datatool.scripts.linkblanklanguages.LanguageLinker
-import datatool.util.Statistics
+import whelk.filter.LanguageLinker
+import whelk.util.Statistics
 
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -34,6 +34,7 @@ substitutions = [
         'suomi'                           : 'finska',
         'svensk'                          : 'svenska',
         'tigriniska'                      : 'tigrinska',
+        'tornedalsfinska'                  : 'meänkieli',
         'á íslensku'                      : 'isländska',
         'česky'                           : 'tjeckiska',
 

@@ -1,11 +1,11 @@
-package datatool.scripts
+package whelk.filter
 
-import datatool.util.Statistics
-import whelk.JsonLd
 import whelk.Whelk
 import whelk.search.ESQuery
 import whelk.util.DocumentUtil
+import whelk.util.Statistics
 
+import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.TYPE_KEY
 
@@ -31,12 +31,12 @@ class GenericLinker implements DocumentUtil.Linker {
     void loadDefinitions(Whelk whelk) {
         def q = [
                 (TYPE_KEY): [type],
-                "q"       : ["*"],
-                '_sort'   : [ID_KEY]
+                "q"              : ["*"],
+                '_sort'          : [ID_KEY]
         ]
 
         whelk.bulkLoad(new ESQuery(whelk).doQueryIds(q)).values().each { definition ->
-            addDefinition(definition.data[JsonLd.GRAPH_KEY][1])
+            addDefinition(definition.data[GRAPH_KEY][1])
         }
     }
 
@@ -93,14 +93,14 @@ class GenericLinker implements DocumentUtil.Linker {
                 List<String> links = findLinks(blank[key], existingLinks)
                 if (links) {
                     incrementCounter('mapped', blank[key])
-                    return links.collect { [ID_KEY: it] }
+                    return links.collect { [(ID_KEY): it] }
                 }
             }
         }
 
         for (String key : fields) {
             if (blank[key]) {
-                incrementCounter('not mapped (canonized  values)', canonize(blank[key].toString()))
+                incrementCounter('not mapped (canonized values)', canonize(blank[key].toString()))
             }
         }
 
@@ -120,10 +120,10 @@ class GenericLinker implements DocumentUtil.Linker {
         List<String> links = findLinks(blank, [])
         if (links) {
             incrementCounter('mapped', blank)
-            return links.collect { [ID_KEY: it] }
+            return links.collect { [(ID_KEY): it] }
         }
         else {
-            incrementCounter('not mapped (canonized  values)', canonize(blank))
+            incrementCounter('not mapped (canonized values)', canonize(blank))
         }
     }
 

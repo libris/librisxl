@@ -1,5 +1,5 @@
-import datatool.scripts.GenericLinker
-import datatool.util.Statistics
+import whelk.filter.GenericLinker
+import whelk.util.Statistics
 
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -7,6 +7,7 @@ PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 
 linker = linker('Role', ['code', 'label', 'prefLabelByLang', 'altLabelByLang', 'hiddenLabel'])
 
+// These are cases that won't be handled by metadata (definitions) improvements that we still want to clean up
 linker.addSubstitutions([
         'http://id.loc.gov/vocabulary/relators/edt' : 'edt',
         'http://id.loc.gov/vocabulary/relators/aut' : 'aut',
