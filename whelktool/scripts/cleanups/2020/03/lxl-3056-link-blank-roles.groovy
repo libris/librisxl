@@ -44,11 +44,10 @@ GenericLinker linker(String type, List<String> fields) {
             '_sort': ["@id"]
     ]
 
-    GenericLinker linker = new GenericLinker(fields, [:], new Statistics().printOnShutdown())
+    GenericLinker linker = new GenericLinker(type, fields, new Statistics().printOnShutdown())
     ConcurrentLinkedQueue<Map> definitions = new ConcurrentLinkedQueue<>()
     selectByIds(queryIds(q).collect()) { definitions.add(it.graph[1]) }
     definitions.forEach({d -> linker.addDefinition(d) } )
-
 
     return linker
 }

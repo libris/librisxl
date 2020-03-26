@@ -10,7 +10,7 @@ import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.TYPE_KEY
 
 class GenericLinker implements DocumentUtil.Linker {
-    Map<String, List<String>> ignore = [:]
+    String type
     Map map = [:]
     Map<String, List> ambiguousIdentifiers = [:]
     Map substitutions = [:]
@@ -25,7 +25,7 @@ class GenericLinker implements DocumentUtil.Linker {
                 '_sort'   : [ID_KEY]
         ]
 
-        GenericLinker linker = new GenericLinker(fields, [:], new Statistics().printOnShutdown())
+        GenericLinker linker = new GenericLinker(type, fields, new Statistics())
         whelk.bulkLoad(new ESQuery(whelk).doQueryIds(q)).values().each { definition ->
             linker.addDefinition(definition.data[JsonLd.GRAPH_KEY][1])
         }
@@ -33,9 +33,9 @@ class GenericLinker implements DocumentUtil.Linker {
         return linker
     }
 
-    GenericLinker(List<String> fields, Map<String, List<String>> ignoreFieldValues = [:], Statistics stats = null) {
+    GenericLinker(String type, List<String> fields, Statistics stats = null) {
+        this.type = type
         this.fields = fields
-        this.ignore = ignoreFieldValues
         this.stats = stats
     }
 
@@ -44,12 +44,6 @@ class GenericLinker implements DocumentUtil.Linker {
     }
 
     void addDefinition(Map definition) {
-        for (i in ignore) {
-            if (definition[i.getKey()] in i.getValue()) {
-                return
-            }
-        }
-
         Set<String> identifiers = [] as Set
         for (String field in fields) {
             // FIXME: get from context
@@ -87,6 +81,11 @@ class GenericLinker implements DocumentUtil.Linker {
 
     @Override
     List<Map> link(Map blank, List existingLinks) {
+        if (blank[TYPE_KEY] && blank[TYPE_KEY] != type) {
+            incrementCounter('unhandled type', blank[TYPE_KEY])
+            return
+        }
+
         if (!fields.any {blank.containsKey(it)}) {
             incrementCounter('unhandled shape', blank.keySet())
             throw new RuntimeException('unhandled shape: ' + blank.keySet())
@@ -104,7 +103,7 @@ class GenericLinker implements DocumentUtil.Linker {
 
         for (String key : fields) {
             if (blank[key]) {
-                incrementCounter('not mapped', canonize(blank[key].toString()))
+                incrementCounter('not mapped (canonized  values)', canonize(blank[key].toString()))
             }
         }
 
@@ -150,7 +149,7 @@ class GenericLinker implements DocumentUtil.Linker {
         return map.values().contains(id)
     }
 
-    private List split(value) {
+    protected List split(value) {
         if (value instanceof List) {
             return value
         }
@@ -158,7 +157,7 @@ class GenericLinker implements DocumentUtil.Linker {
         return []
     }
 
-    private String canonize(String s) {
+    protected String canonize(String s) {
         s = trim(s.toLowerCase())
         if (substitutions.containsKey(s)) {
             s = substitutions[s]
@@ -166,7 +165,7 @@ class GenericLinker implements DocumentUtil.Linker {
         return s
     }
 
-    private String trim(String s) {
+    protected String trim(String s) {
         // remove leading and trailing non-"alpha, digit or parentheses"
         def w = /\(\)\p{IsAlphabetic}\p{Digit}/
         def m = s =~ /[^${w}]*([${w} ]*[${w}])[^${w}]*/
