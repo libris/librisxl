@@ -7,6 +7,28 @@ PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 
 linker = linker('Role', ['code', 'label', 'prefLabelByLang', 'altLabelByLang', 'hiddenLabel'])
 
+linker.addSubstitutions([
+        'http://id.loc.gov/vocabulary/relators/edt' : 'edt',
+        'http://id.loc.gov/vocabulary/relators/aut' : 'aut',
+        'auth': 'aut', // Author
+        'ctb' : 'cbt', // Contributor
+        'ed'  : 'edt', // Editor
+        'il'  : 'ill', // Illustrator
+        'publ': 'pbl', // Publisher
+        'tr'  : 'trl', // Translator
+        'tra' : 'trl', // Translator
+
+        /*
+        Verify these by looking at samples
+        'resp' : 'rsp', // Respondent
+        'comp' : 'com', // Compiler
+        'dir   : 'drt'. // Director
+
+        eks
+
+        */
+])
+
 selectByCollection('bib') { bib ->
     try {
         def work = getWork(bib)
