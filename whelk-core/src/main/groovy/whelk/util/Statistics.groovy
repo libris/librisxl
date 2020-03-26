@@ -16,8 +16,10 @@ class Statistics {
         out.println("STATISTICS")
         out.println("========================")
         for (Map.Entry e : c.entrySet().sort { a, b -> a.getKey().toString() <=> b.getKey().toString() }) {
-            out.println(e.getKey())
-            out.println("------------------------")
+            long total = c.get(e.getKey()).values().collect{it.intValue()}.sum()
+            String header = "${e.getKey()} ($total)"
+            out.println(header)
+            out.println("-" * header.length())
             List<Map.Entry<String, AtomicInteger>> entries = new ArrayList(c.get(e.getKey()).entrySet())
             entries.sort { a, b -> a.getKey().toString() <=> b.getKey().toString() }
             entries.sort { a, b -> b.getValue().intValue() <=> a.getValue().intValue() }
