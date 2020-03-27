@@ -541,14 +541,14 @@ class PostgreSQLComponent implements Storage {
      * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
      * LOCKED while the update is in progress.
      */
-    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent) {
+    List<Document> storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent) {
         // Resources to be closed
         try
         {
             Connection connection = getConnection()
             connection.setAutoCommit(false)
 
-            Document result = storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent, connection)
+            List<Document> result = storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent, connection)
             connection.commit()
             return result
         }
@@ -557,7 +557,7 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent, Connection connection) {
+    List<Document> storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent, Connection connection) {
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
@@ -566,6 +566,7 @@ class PostgreSQLComponent implements Storage {
         ResultSet resultSet = null
 
         Document doc = null
+        List<Document> returnList = []
 
         try {
             selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
@@ -608,6 +609,8 @@ class PostgreSQLComponent implements Storage {
 
             saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
 
+            returnList.add(doc)
+
             // If the mainentity has changed URI (for example happens when new id.kb.se-uris are added to records)
             if ( preUpdateDoc.getThingIdentifiers()[0] &&
                     doc.getThingIdentifiers()[0] &&
@@ -618,7 +621,7 @@ class PostgreSQLComponent implements Storage {
                 saveIdentifiers(doc, connection, deleted)
                 SortedSet<String> idsLinkingToOldId = getDependencyData(id, GET_DEPENDERS, connection)
                 for (String dependerId : idsLinkingToOldId) {
-                    storeAtomicUpdate(dependerId, true, changedIn, changedBy, {}, connection)
+                    returnList.addAll(storeAtomicUpdate(dependerId, true, changedIn, changedBy, {}, connection))
                 }
             }
 
@@ -649,7 +652,7 @@ class PostgreSQLComponent implements Storage {
             close(resultSet, selectStatement, updateStatement)
         }
 
-        return doc
+        return returnList
     }
 
     /**

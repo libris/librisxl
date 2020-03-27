@@ -299,17 +299,19 @@ class Whelk implements Storage {
         return success
     }
 
-    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
+    List<Document> storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
         Set<Link> preUpdateLinks = elastic ? storage.load(id).getExternalRefs() : new HashSet<Link>()
-        Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
-        if (updated == null) {
+        List<Document> updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
+        if (updated == null || updated.isEmpty()) {
             return null
         }
 
         if (elastic) {
-            String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
-            elastic.index(updated, collection, this)
-            reindexAffected(updated, preUpdateLinks)
+            for (Document updatedDoc : updated) {
+                String collection = LegacyIntegrationTools.determineLegacyCollection(updatedDoc, jsonld)
+                elastic.index(updatedDoc, collection, this)
+                reindexAffected(updatedDoc, preUpdateLinks)
+            }
         }
 
         return updated

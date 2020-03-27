@@ -14,7 +14,7 @@ interface Storage {
         public void update(Document doc)
     }
 
-    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent)
+    List<Document> storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent)
     boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted)
 
 }
