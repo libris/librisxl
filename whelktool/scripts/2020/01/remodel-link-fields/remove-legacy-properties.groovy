@@ -25,9 +25,11 @@ String query = "collection = 'bib' AND ( ${subQueryInstance} OR ${subQueryWork} 
 
 selectBySqlWhere(query) { data ->
     boolean changed = false
-    def record = data.graph[0]
-    def thing = data.graph[1]
-    def work = thing.instanceOf
+    def (record, thing, work) = data.graph
+
+    if (work == null) {
+        return failedIDs.println("Failed to process ${record[ID]} due to missing graph[2]")
+    }
 
     thing.subMap(LINK_FIELDS_INSTANCE).each { key, val ->
         if (findAndRemoveLegacyProperties(val, key) && !changed)
