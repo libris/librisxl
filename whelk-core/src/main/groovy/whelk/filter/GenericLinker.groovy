@@ -178,7 +178,7 @@ class GenericLinker implements DocumentUtil.Linker {
     protected String trim(String s) {
         // remove leading and trailing non-"alpha, digit or parentheses"
         def w = /\(\)\p{IsAlphabetic}\p{Digit}/
-        def m = s =~ /[^${w}]*([${w} ]*[${w}])[^${w}]*/
+        def m = s =~ /[^${w}]*([${w}- ]*[${w}])[^${w}]*/
         return m.matches() ? m.group(1) : s
     }
 
