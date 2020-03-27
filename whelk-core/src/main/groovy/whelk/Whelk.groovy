@@ -181,6 +181,15 @@ class Whelk implements Storage {
         }
     }
 
+    private void reindexAllLinks(String id) {
+        SortedSet<String> links = storage.getDependencies(id)
+        links.addAll(storage.getDependers(id))
+        for (String idToReindex : links) {
+            Document docToReindex = storage.load(idToReindex)
+            elastic.index(docToReindex, storage.getCollectionBySystemID(idToReindex), this)
+        }
+    }
+
     private void reindexAffected(Document document, Set<Link> addedLinks, Set<Link> removedLinks) {
         removedLinks.findResults { storage.getSystemIdByIri(it.iri) }
                 .each{id -> elastic.decrementReverseLinks(id, storage.getCollectionBySystemID(id))}
@@ -300,7 +309,8 @@ class Whelk implements Storage {
     }
 
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
-        Set<Link> preUpdateLinks = elastic ? storage.load(id).getExternalRefs() : new HashSet<Link>()
+        Document preUpdateDoc = storage.load(id)
+        Set<Link> preUpdateLinks = elastic ? preUpdateDoc.getExternalRefs() : new HashSet<Link>()
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
         if (updated == null) {
             return null
@@ -309,7 +319,14 @@ class Whelk implements Storage {
         if (elastic) {
             String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
             elastic.index(updated, collection, this)
-            reindexAffected(updated, preUpdateLinks)
+
+            // The updated document has changed mainEntity URI (link targer)
+            if ( preUpdateDoc.getThingIdentifiers()[0] &&
+                    updated.getThingIdentifiers()[0] &&
+                    updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]) {
+                reindexAllLinks(id)
+            } else
+                reindexAffected(updated, preUpdateLinks)
         }
 
         return updated
