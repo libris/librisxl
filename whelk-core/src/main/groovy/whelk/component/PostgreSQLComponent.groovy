@@ -481,6 +481,17 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
+    void reDenormalize() {
+        Connection connection = getConnection()
+        try {
+            for (Document doc : loadAll(null, false, null, null)) {
+                refreshDerivativeTables(doc, connection, doc.getDeleted())
+            }
+        } finally {
+            close(connection)
+        }
+    }
+
     /**
      * This is a variant of createDocument that does no or minimal denormalization or indexing.
      * It should NOT be used to create records in a production environment. Its intended purpose is

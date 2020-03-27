@@ -83,6 +83,8 @@ class WhelkCopier {
         }
         flushSaveQueue()
         threadPool.joinAll()
+
+        dest.storage.reDenormalize()
         System.err.println "Copied $copied documents (from ${recordIds.size()} selected)."
     }
 
