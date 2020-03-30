@@ -12,14 +12,25 @@ selectBySqlWhere(where) { data ->
             def tmp = work.hasNote
             work["hasNote"] = [tmp]
         }
-        work.hasNote.add(
-                [
-                        "@type" : "note",
-                        "label" : work.note
-                ]
-        )
+
+        if (work.note instanceof List) {
+            for (String note : work.note)
+                transformNote(note, work)
+        } else {
+            transformNote(work.note, work)
+        }
         work.remove("note")
+
         scheduledForUpdating.println("${data.doc.getURI()}")
         data.scheduleSave()
     }
+}
+
+void transformNote( String note, Map work ) {
+    work.hasNote.add(
+            [
+                    "@type" : "note",
+                    "label" : note
+            ]
+    )
 }
