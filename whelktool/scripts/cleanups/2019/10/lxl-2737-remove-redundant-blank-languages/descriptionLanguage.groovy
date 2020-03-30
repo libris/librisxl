@@ -5,8 +5,8 @@
  *
  */
 
-import datatool.scripts.linkblanklanguages.LanguageLinker
-import datatool.util.Statistics
+import whelk.filter.LanguageLinker
+import whelk.util.Statistics
 
 PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 
