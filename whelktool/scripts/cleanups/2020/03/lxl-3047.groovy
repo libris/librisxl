@@ -29,7 +29,7 @@ selectBySqlWhere(where) { data ->
 void transformNote( String note, Map work ) {
     work.hasNote.add(
             [
-                    "@type" : "note",
+                    "@type" : "Note",
                     "label" : note
             ]
     )
