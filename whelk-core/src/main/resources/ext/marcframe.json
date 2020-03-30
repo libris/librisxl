@@ -22172,9 +22172,13 @@
     },
     "430": {
       "ignored": true,
-      "TODO": "alternativeForm a Work (like a structured altLabel)"
+      "TODO": "map, alternativeForm a Work (like a structured altLabel)"
     },
-    "447": {"ignored": true, "NOTE:record-count": 0},
+    "447": {
+      "NOTE:LC": "447 - See From Tracing - Named Event (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "448": {
       "include": ["termbase"],
       "addLink": "hasVariant",
@@ -22471,7 +22475,11 @@
         }
       ]
     },
-    "462": {"ignored": true, "NOTE:record-count": 0},
+    "462": {
+      "NOTE:LC": "462 - See From Tracing-Medium of Performance Term (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "480": {
       "addLink": "hasVariant",
       "resourceType": "TopicSubdivision",
@@ -22506,9 +22514,21 @@
         }
       ]
     },
-    "481": {"ignored": true, "NOTE:record-count": 0},
-    "482": {"ignored": true, "NOTE:record-count": 0},
-    "485": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "marc:hasSeeFromTracingFormSubdivision"},
+    "481": {
+      "NOTE:LC": "481 - See From Tracing - Geographic Subdivision (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "482": {
+      "NOTE:LC": "482 - See From Tracing - Chronological Subdivision (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "485": {
+      "NOTE:LC": "485 - See From Tracing-Form Subdivision (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
 
     "500": {
       "TODO:remnants-of-inherit": "bib:100",
