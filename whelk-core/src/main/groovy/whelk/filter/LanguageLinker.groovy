@@ -3,7 +3,7 @@ package whelk.filter
 import whelk.util.DocumentUtil
 import whelk.util.Statistics
 
-class LanguageLinker extends GenericLinker implements DocumentUtil.Linker {
+class LanguageLinker extends BlankNodeLinker implements DocumentUtil.Linker {
     List ignoreCodes = []
 
     LanguageLinker(List ignoreCodes = [], Statistics stats = null) {

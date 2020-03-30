@@ -9,7 +9,7 @@ import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.TYPE_KEY
 
-class GenericLinker implements DocumentUtil.Linker {
+class BlankNodeLinker implements DocumentUtil.Linker {
     String type
     Map map = [:]
     Map<String, List> ambiguousIdentifiers = [:]
@@ -18,7 +18,7 @@ class GenericLinker implements DocumentUtil.Linker {
 
     List<String> fields = []
 
-    GenericLinker(String type, List<String> fields, Statistics stats = null) {
+    BlankNodeLinker(String type, List<String> fields, Statistics stats = null) {
         this.type = type
         this.fields = fields
         this.stats = stats
