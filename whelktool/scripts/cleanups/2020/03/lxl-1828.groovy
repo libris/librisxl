@@ -9,13 +9,13 @@ selectBySqlWhere(where) { data ->
     if (mainEntity.hasTitle == null)
         mainEntity.hasTitle = []
 
-    Map prevTitleEnt = mainEntity.get("marc:previousTitle")
+    Object prevTitleEnt = mainEntity.get("marc:previousTitle")
     boolean changed = false
     if (prevTitleEnt instanceof List) {
         for (Object elem : prevTitleEnt)
             changed |= moveTitle( (Map) elem, mainEntity.hasTitle )
     } else {
-        changed = moveTitle(prevTitleEnt, mainEntity.hasTitle)
+        changed = moveTitle( (Map) prevTitleEnt, mainEntity.hasTitle)
     }
     mainEntity.remove("marc:previousTitle")
 
