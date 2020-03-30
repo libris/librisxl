@@ -1,8 +1,8 @@
 package whelk.filter
 
-
 import whelk.Whelk
 import whelk.search.ESQuery
+import whelk.search.ElasticFind
 import whelk.util.DocumentUtil
 import whelk.util.Statistics
 
@@ -48,12 +48,15 @@ class BlankNodeLinker implements DocumentUtil.Linker {
     void loadDefinitions(Whelk whelk) {
         def q = [
                 (TYPE_KEY): [type],
-                "q"              : ["*"],
-                '_sort'          : [ID_KEY]
+                "q"       : ["*"],
+                '_sort'   : [ID_KEY]
         ]
 
-        whelk.bulkLoad(new ESQuery(whelk).doQueryIds(q)).values().each { definition ->
-            addDefinition(definition.data[GRAPH_KEY][1])
+        new ElasticFind(new ESQuery(whelk)).findIds(q).each { id ->
+            def doc = whelk.getDocument(id)
+            if (doc) {
+                addDefinition(doc.data[GRAPH_KEY][1])
+            }
         }
     }
 
@@ -219,5 +222,10 @@ class BlankNodeLinker implements DocumentUtil.Linker {
                 c.call(o)
             }
         }
+    }
+
+    @Override
+    String toString() {
+        return "${TYPE_KEY}: $type (${map.size()} mappings)"
     }
 }

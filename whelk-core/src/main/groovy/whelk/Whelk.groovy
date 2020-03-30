@@ -3,12 +3,14 @@ package whelk
 import com.google.common.collect.Iterables
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
+import se.kb.libris.BlankNodeNormalizers
 import whelk.component.CachingPostgreSQLComponent
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LinkFinder
+import whelk.filter.NormalizerChain
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.util.LegacyIntegrationTools
@@ -121,7 +123,18 @@ class Whelk implements Storage {
         storage.setJsonld(jsonld)
         if (elastic) {
             elasticFind = new ElasticFind(new ESQuery(this))
+            initDocumentNormalizers()
         }
+    }
+
+    private void initDocumentNormalizers() {
+        storage.setNormalizer(new NormalizerChain(
+                [
+                        // This is KBV specific stuff
+                        BlankNodeNormalizers.language(this),
+                        BlankNodeNormalizers.contributionRole(this)
+                ]
+        ))
     }
 
     void loadContextData() {
@@ -138,7 +151,7 @@ class Whelk implements Storage {
 
     Document getDocument(String id) {
         Document doc = storage.load(id)
-        if (baseUri) {
+        if (doc && baseUri) {
             doc.baseUri = baseUri
         }
         return doc
@@ -368,6 +381,14 @@ class Whelk implements Storage {
 
     List<Document> getAttachedHoldings(List<String> thingIdentifiers) {
         return storage.getAttachedHoldings(thingIdentifiers).collect(this.&loadEmbellished)
+    }
+
+    void normalize(Document doc) {
+        try {
+            storage.normalizeDocument(doc)
+        } catch (Exception e) {
+            log.warn "Could not normalize document (${doc}: $e, e)"
+        }
     }
 
     private static boolean batchJobThread() {
