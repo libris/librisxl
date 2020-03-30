@@ -1,4 +1,4 @@
-import whelk.filter.GenericLinker
+import whelk.filter.BlankNodeLinker
 import whelk.util.Statistics
 
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -67,14 +67,14 @@ Map getWork(def bib) {
     return null
 }
 
-GenericLinker linker(String type, List<String> fields) {
+BlankNodeLinker linker(String type, List<String> fields) {
     def q = [
             "@type": [type],
             "q"    : ["*"],
             '_sort': ["@id"]
     ]
 
-    GenericLinker linker = new GenericLinker(type, fields, new Statistics().printOnShutdown())
+    BlankNodeLinker linker = new BlankNodeLinker(type, fields, new Statistics().printOnShutdown())
     ConcurrentLinkedQueue<Map> definitions = new ConcurrentLinkedQueue<>()
     selectByIds(queryIds(q).collect()) { definitions.add(it.graph[1]) }
     definitions.forEach({d -> linker.addDefinition(d) } )
