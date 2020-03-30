@@ -25,22 +25,25 @@ String query = "collection = 'bib' AND ( ${subQueryInstance} OR ${subQueryWork} 
 
 selectBySqlWhere(query) { data ->
     boolean changed = false
-    def (record, thing, work) = data.graph
+    def (record, thing, potentialWork) = data.graph
+    def work = getWork(thing, potentialWork)
 
     if (work == null) {
-        return failedIDs.println("Failed to process ${record[ID]} due to missing graph[2]")
+        return failedIDs.println("Failed to process ${record[ID]} due to missing work entity")
     }
 
     thing.subMap(LINK_FIELDS_INSTANCE).each { key, val ->
-        if (findAndRemoveLegacyProperties(val, key) && !changed)
+        if (findAndRemoveLegacyProperties(val, key) && !changed) {
             changed = true
+        }
     }
     //If empty after removing legacy properties, remove property
     thing.entrySet().removeIf { LINK_FIELDS_INSTANCE.contains(it.key) && it.value.size() == 0 }
 
     work.subMap(LINK_FIELDS_WORK + HAS_PART).each { key, val ->
-        if (findAndRemoveLegacyProperties(val, key) && !changed)
+        if (findAndRemoveLegacyProperties(val, key) && !changed) {
             changed = true
+        }
     }
     //If empty after removing legacy properties, remove property
     work.entrySet().removeIf { (LINK_FIELDS_WORK.contains(it.key) || it.key == HAS_PART) &&
@@ -59,18 +62,21 @@ boolean findAndRemoveLegacyProperties(linkFieldValue, propertyName) {
 
     if (linkFieldValue instanceof Map) {
         somethingWasRemoved = removeLegacyProperies(linkFieldValue, propertyName)
-        if (somethingWasRemoved && (linkFieldValue.keySet() - TYPE).size() == 0 )
+        if (somethingWasRemoved && (linkFieldValue.keySet() - TYPE).size() == 0 ) {
             linkFieldValue.clear()
+        }
     } else if (linkFieldValue instanceof List) {
         def listIter = linkFieldValue.listIterator()
         for (iter in listIter)  {
             boolean wasRemovedFromEntity = removeLegacyProperies(iter, propertyName)
             //Only @type remains - remove the entity completely
-            if (wasRemovedFromEntity && (iter.keySet() - TYPE).size() == 0 )
+            if (wasRemovedFromEntity && (iter.keySet() - TYPE).size() == 0 ) {
                 listIter.remove()
+            }
 
-            if (wasRemovedFromEntity && !somethingWasRemoved)
+            if (wasRemovedFromEntity && !somethingWasRemoved) {
                 somethingWasRemoved = true
+            }
         }
     }
     return somethingWasRemoved
@@ -79,7 +85,17 @@ boolean findAndRemoveLegacyProperties(linkFieldValue, propertyName) {
 boolean removeLegacyProperies(object, propertyName) {
     // If hasPart not contains hasInstance we asume the hasPart belongs to marc 700/710/711
     // and should not be updated
-    if (propertyName == HAS_PART && !object.containsKey(HAS_INSTANCE))
+    if (propertyName == HAS_PART && !object.containsKey(HAS_INSTANCE)) {
         return false
+    }
     return object.entrySet().removeIf { PROPERTIES_TO_REMOVE.contains(it.key) }
+}
+
+Map getWork(thing, work) {
+    if(thing && thing['instanceOf'] && isInstanceOf(thing['instanceOf'], 'Work')) {
+        return thing['instanceOf']
+    } else if (work && isInstanceOf(work, 'Work')) {
+        return work
+    }
+    return null
 }
