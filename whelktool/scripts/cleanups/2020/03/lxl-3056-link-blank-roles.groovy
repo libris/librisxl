@@ -7,28 +7,35 @@ PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 
 linker = linker('Role', ['code', 'label', 'prefLabelByLang', 'altLabelByLang', 'hiddenLabel'])
 
-// These are cases that won't be handled by metadata (definitions) improvements that we still want to clean up
 linker.addSubstitutions([
-        'http://id.loc.gov/vocabulary/relators/edt' : 'edt',
-        'http://id.loc.gov/vocabulary/relators/aut' : 'aut',
-        'auth': 'aut', // Author
-        'ctb' : 'cbt', // Contributor
-        'ed'  : 'edt', // Editor
-        'il'  : 'ill', // Illustrator
-        'publ': 'pbl', // Publisher
-        'tr'  : 'trl', // Translator
-        'tra' : 'trl', // Translator
+        'http://id.loc.gov/vocabulary/relators/edt': 'edt',
+        'http://id.loc.gov/vocabulary/relators/aut': 'aut',
+
+        'auth' : 'aut', // Author
+        'bpl'  : 'pbl', // Publisher
+        'ctb'  : 'cbt', // Contributor
+        'ed'   : 'edt', // Editor
+        'il'   : 'ill', // Illustrator
+        'prees': 'pra', // Preses
+        'resp' : 'rsp', // Respondent
+        'tr'   : 'trl', // Translator
+        'tra'  : 'trl', // Translator
 
         /*
-        Verify these by looking at samples
-        'resp' : 'rsp', // Respondent
-        'comp' : 'com', // Compiler
-        'dir   : 'drt'. // Director
+        'oprac': 'edt', // Editor (Polish)  verify
 
-        eks
+        dir - both Director & Dirigient
+        pres - both presenter and preses
+        comp - mostly Compiler and a few Composer
+        https://libris-qa.kb.se/katalogisering/search/libris?q=%2a&_limit=300&instanceOf.contribution.role.label=comp
+
+        117 eks - all from two records
+        https://libris-qa.kb.se/katalogisering/nzbx5d45l277bwtg
+        https://libris-qa.kb.se/katalogisering/lw8v4935jzg3tpq7
 
         */
 ])
+// These are cases that won't be handled by metadata (definitions) improvements that we still want to clean up
 
 selectByCollection('bib') { bib ->
     try {
