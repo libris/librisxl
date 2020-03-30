@@ -172,6 +172,9 @@ class PostgreSQLComponent implements Storage {
     private static final String GET_DEPENDENCIES_OF_TYPE =
             "SELECT dependsOnId FROM lddb__dependencies WHERE id = ? AND relation = ?"
 
+    private static final String GET_DEPENDENCIES =
+            "SELECT dependsOnId FROM lddb__dependencies WHERE id = ?"
+
     private static final String UPSERT_CARD = """
             INSERT INTO lddb__cards (id, data, checksum, changed)
             VALUES (?, ?, ?, ?) 
@@ -475,6 +478,17 @@ class PostgreSQLComponent implements Storage {
         } finally {
             connection.close()
             log.debug("[store] Closed connection.")
+        }
+    }
+
+    void reDenormalize() {
+        Connection connection = getConnection()
+        try {
+            for (Document doc : loadAll(null, false, null, null)) {
+                refreshDerivativeTables(doc, connection, doc.getDeleted())
+            }
+        } finally {
+            close(connection)
         }
     }
 
@@ -1494,6 +1508,14 @@ class PostgreSQLComponent implements Storage {
 
     List<String> getDependersOfType(String id, String relation) {
         return getDependencyDataOfType(id, relation, GET_DEPENDERS_OF_TYPE)
+    }
+
+    SortedSet<String> getDependencies(String id) {
+        return getDependencyData(id, GET_DEPENDENCIES, getConnection())
+    }
+
+    SortedSet<String> getDependers(String id) {
+        return getDependencyData(id, GET_DEPENDERS, getConnection())
     }
 
     Set<String> getByRelation(String iri, String relation) {
