@@ -137,13 +137,14 @@ selectByCollection('bib') { bib ->
 
 Runtime.getRuntime().addShutdownHook {
     notMapped.collect().sort { a,b -> a.getSecond() <=> b.getSecond()}.each { m ->
-        println(String.format("%-14s %s" , m.getSecond(), m.getFirst()))
+        if (shouldLog(m.getSecond())) {
+            println(String.format("%-14s %s" , m.getSecond(), m.getFirst()))
+        }
     }
 }
 
 boolean shouldLog(String s) {
     !s.contains(" & ") && !s.contains(" and ") && !s.contains(" och ")
-
 }
 
 LanguageLinker buildLanguageMap() {
