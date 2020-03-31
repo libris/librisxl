@@ -4,7 +4,7 @@
             "max_result_window": 100000,
             "mapping": {
                 "total_fields": {
-                    "limit": 10000
+                    "limit": 100000
                 }
             }
         },
