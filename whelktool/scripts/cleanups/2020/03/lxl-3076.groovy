@@ -110,7 +110,7 @@ selectByCollection('auth') { auth ->
     catch (Exception e) {
         //println "failed ${auth.doc.getURI()} : ${e}"
         //e.printStackTrace()
-        notMapped << new Tuple2<>(bib.doc.getURI(), e.getMessage())
+        notMapped << new Tuple2<>(auth.doc.getURI(), e.getMessage())
     }
 }
 
