@@ -1,4 +1,4 @@
-PrintWriter failedBibIDs = getReportWriter("failed-to-delete-bibIDs")
+PrintWriter failedBibIDs = getReportWriter("failed-to-update-bibIDs")
 PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 
 String where = "collection = 'bib' and data#>>'{@graph,2}' is not null"
