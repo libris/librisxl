@@ -198,7 +198,7 @@ class ElasticSearch {
 
     String getShapeForIndex(Document document, Whelk whelk, String collection) {
 
-        log.error("TEMP: Ska nu försöka indexera om " + doc.getId() + " DEL 3")
+        log.error("TEMP: Ska nu försöka indexera om " + document.getId() + " DEL 3")
 
         Document copy = document.clone()
 
@@ -209,6 +209,8 @@ class ElasticSearch {
         log.debug("Framing ${document.getShortId()}")
 
         Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri }
+
+        log.error("TEMP:       links: " + links)
 
         def graph = ((List) copy.data['@graph'])
         int originalSize = document.data['@graph'].size()
