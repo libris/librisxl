@@ -318,6 +318,7 @@ class Whelk implements Storage {
 
         if (elastic) {
             String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
+            log.error("TEMP: Ska nu försöka indexera om " + id)
             elastic.index(updated, collection, this)
 
             // The updated document has changed mainEntity URI (link targer)
