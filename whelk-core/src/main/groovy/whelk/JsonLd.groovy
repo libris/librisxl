@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import groovy.transform.Immutable
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
+import jline.internal.Log
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.codehaus.jackson.map.ObjectMapper
@@ -265,6 +266,7 @@ class JsonLd {
     }
 
     Set<Link> expandLinks(Set<Link> refs) {
+        Log.error("TEMP expandLinks(refs, (Map) displayData[CONTEXT_KEY]: " + expandLinks(refs, (Map) displayData[CONTEXT_KEY]))
         return expandLinks(refs, (Map) displayData[CONTEXT_KEY])
     }
 
@@ -317,14 +319,18 @@ class JsonLd {
 
     static Set<Link> getExternalReferences(Map jsonLd) {
         Set<Link> allReferences = getAllReferences(jsonLd)
+        Log.error("TEMP allReferences: " + allReferences)
         Set<Link> localObjects = getLocalObjects(jsonLd)
+        Log.error("TEMP localObjects: " + localObjects)
         Set<Link> externalRefs = allReferences.findAll { !localObjects.contains(it.getIri()) }
         // NOTE: this is necessary because some documents contain references to
         // bnodes that don't exist (in that document).
+        Log.error("TEMP filterOutDanglingBnodes(externalRefs): " + filterOutDanglingBnodes(externalRefs))
         return filterOutDanglingBnodes(externalRefs)
     }
 
     static Set<Link> expandLinks(Set<Link> refs, Map context) {
+
         return refs.collect{ it.withIri(expand(it.iri, context)) }.toSet()
     }
 
@@ -1191,6 +1197,11 @@ class Link {
         iri == this.iri
                 ? this
                 : new Link(iri: iri, relation: this.relation)
+    }
+
+    @Override
+    String toString() {
+        return iri + " with rel: " + relation + "\n"
     }
 }
 
