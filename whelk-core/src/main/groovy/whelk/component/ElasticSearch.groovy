@@ -219,6 +219,9 @@ class ElasticSearch {
                 graph.drop(originalSize).collect { toSearchCard(whelk, it, Collections.EMPTY_SET) }
 
         setComputedProperties(copy, links, whelk)
+
+        log.error("\n\nTEMP: EFTER ATT HA SATT _links: " + copy+"\n\n")
+
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = document.getThingIdentifiers()
         if (thingIds.isEmpty()) {
@@ -226,7 +229,11 @@ class ElasticSearch {
             return copy.data
         }
         String thingId = thingIds.get(0)
+
+        log.error("\n\nTEMP: INNAN FRAMING: " + copy+"\n\n")
         Map framed = JsonLd.frame(thingId, copy.data)
+
+        log.error("\n\nTEMP: EFTER FRAMING: " + copy+"\n\n")
 
         // TODO: replace with elastic ICU Analysis plugin?
         // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
