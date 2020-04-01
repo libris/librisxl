@@ -8,6 +8,7 @@ import jline.internal.Log
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.codehaus.jackson.map.ObjectMapper
+import whelk.component.PostgreSQLComponent
 import whelk.exception.FramingException
 import whelk.exception.WhelkRuntimeException
 
@@ -1003,6 +1004,7 @@ class JsonLd {
 
         Map framedData
         try {
+            log.error(" INTERNAL FRAMING REC STARTS WITH: " + mainId + " of " + PostgreSQLComponent.mapper.writeValueAsString(mainItem))
             framedData = embed(mainId, mainItem, idMap, new HashSet<String>())
             if (!framedData) {
                 throw new FramingException("Failed to frame JSONLD ($inData)")
