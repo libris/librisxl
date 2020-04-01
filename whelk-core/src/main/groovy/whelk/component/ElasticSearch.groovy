@@ -220,7 +220,7 @@ class ElasticSearch {
 
         setComputedProperties(copy, links, whelk)
 
-        log.error("\n\nTEMP: EFTER ATT HA SATT _links: " + copy+"\n\n")
+        log.error("\n\nTEMP: EFTER ATT HA SATT _links: " + copy.data+"\n\n")
 
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = document.getThingIdentifiers()
@@ -230,10 +230,10 @@ class ElasticSearch {
         }
         String thingId = thingIds.get(0)
 
-        log.error("\n\nTEMP: INNAN FRAMING: " + copy+"\n\n")
+        log.error("\n\nTEMP: INNAN FRAMING: " + copy.data+"\n\n")
         Map framed = JsonLd.frame(thingId, copy.data)
 
-        log.error("\n\nTEMP: EFTER FRAMING: " + copy+"\n\n")
+        log.error("\n\nTEMP: EFTER FRAMING: " + copy.data+"\n\n")
 
         // TODO: replace with elastic ICU Analysis plugin?
         // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
