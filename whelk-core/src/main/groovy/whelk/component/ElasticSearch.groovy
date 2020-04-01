@@ -251,6 +251,8 @@ class ElasticSearch {
 
         log.trace("Framed data: ${framed}")
 
+        log.error("\n\nTEMP: ELASTIC COMPONENT anser sig indexera: " + JsonOutput.toJson(framed)+"\n\n")
+
         return JsonOutput.toJson(framed)
     }
 
