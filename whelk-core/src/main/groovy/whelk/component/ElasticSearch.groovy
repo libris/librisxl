@@ -233,7 +233,7 @@ class ElasticSearch {
         log.error("\n\nTEMP: INNAN FRAMING: " + copy.data+"\n\n")
         Map framed = JsonLd.frame(thingId, copy.data)
 
-        log.error("\n\nTEMP: EFTER FRAMING: " + copy.data+"\n\n")
+        log.error("\n\nTEMP: EFTER FRAMING: " + framed+"\n\n")
 
         // TODO: replace with elastic ICU Analysis plugin?
         // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
@@ -245,6 +245,8 @@ class ElasticSearch {
 
         // FIXME: temporary fix to keep number of elastic field in check
         // Shrink all meta properties except for root document
+
+        log.error("\n\nTEMP: INNAN SHRINK: " + framed+"\n\n")
         DocumentUtil.findKey(framed, 'meta') { value, path ->
             if (path.size() > 1 && value instanceof Map) {
                 Map meta = (Map) value
@@ -255,6 +257,7 @@ class ElasticSearch {
             }
             return DocumentUtil.NOP
         }
+        log.error("\n\nTEMP: EFTER SHRINK: " + framed+"\n\n")
 
         log.trace("Framed data: ${framed}")
 
