@@ -201,9 +201,6 @@ class ElasticClient {
         }
 
         private HttpRequestBase buildRequest(String method, String path, String body, String contentType0 = null) {
-
-            log.error("\n\nTEMP: DET SISTA VI SER AV JSONSTRÄNGEN: " + body+"\n\n")
-
             switch (method) {
                 case 'GET':
                     return new HttpGet(host + path)

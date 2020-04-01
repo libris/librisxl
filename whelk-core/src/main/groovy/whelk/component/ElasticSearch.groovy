@@ -210,8 +210,6 @@ class ElasticSearch {
 
         Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri }
 
-        log.error("TEMP:       links: " + links)
-
         def graph = ((List) copy.data['@graph'])
         int originalSize = document.data['@graph'].size()
         copy.data['@graph'] =
@@ -219,8 +217,6 @@ class ElasticSearch {
                 graph.drop(originalSize).collect { toSearchCard(whelk, it, Collections.EMPTY_SET) }
 
         setComputedProperties(copy, links, whelk)
-
-        log.error("\n\nTEMP: EFTER ATT HA SATT _links: " + copy.data+"\n\n")
 
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = document.getThingIdentifiers()
@@ -230,10 +226,10 @@ class ElasticSearch {
         }
         String thingId = thingIds.get(0)
 
-        log.error("\n\nTEMP: INNAN FRAMING: " + copy.data+"\n\n")
+        log.error("\n\nTEMP: INNAN FRAMING: " + PostgreSQLComponent.mapper.writeValueAsString(copy.data) +"\n\n")
         Map framed = JsonLd.frame(thingId, copy.data)
 
-        log.error("\n\nTEMP: EFTER FRAMING: " + framed+"\n\n")
+        log.error("\n\nTEMP: EFTER FRAMING: " + PostgreSQLComponent.mapper.writeValueAsString(framed)+"\n\n")
 
         // TODO: replace with elastic ICU Analysis plugin?
         // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
@@ -246,7 +242,6 @@ class ElasticSearch {
         // FIXME: temporary fix to keep number of elastic field in check
         // Shrink all meta properties except for root document
 
-        log.error("\n\nTEMP: INNAN SHRINK: " + framed+"\n\n")
         DocumentUtil.findKey(framed, 'meta') { value, path ->
             if (path.size() > 1 && value instanceof Map) {
                 Map meta = (Map) value
@@ -257,11 +252,8 @@ class ElasticSearch {
             }
             return DocumentUtil.NOP
         }
-        log.error("\n\nTEMP: EFTER SHRINK: " + framed+"\n\n")
 
         log.trace("Framed data: ${framed}")
-
-        log.error("\n\nTEMP: ELASTIC COMPONENT anser sig indexera: " + JsonOutput.toJson(framed)+"\n\n")
 
         return JsonOutput.toJson(framed)
     }

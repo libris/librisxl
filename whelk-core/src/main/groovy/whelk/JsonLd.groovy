@@ -1037,6 +1037,7 @@ class JsonLd {
         embedChain.add(mainId)
         Map newItem = [:]
         mainItem.each { key, value ->
+            log.error(" FRAMING PASSING KEY: " + key)
             if (!key.equals(JSONLD_ALT_ID_KEY))
                 newItem.put(key, toEmbedded(value, idMap, embedChain))
             else
