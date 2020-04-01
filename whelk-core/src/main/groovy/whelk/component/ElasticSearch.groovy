@@ -133,6 +133,7 @@ class ElasticSearch {
 
         // The justification for this uncomfortable catch-all, is that an index-failure must raise an alert (log entry)
         // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
+        log.error("TEMP: Ska nu försöka indexera om " + doc.getId() + " DEL 2")
         try {
             def response = client.performRequest(
                     'PUT',
@@ -196,6 +197,9 @@ class ElasticSearch {
     }
 
     String getShapeForIndex(Document document, Whelk whelk, String collection) {
+
+        log.error("TEMP: Ska nu försöka indexera om " + doc.getId() + " DEL 3")
+
         Document copy = document.clone()
 
         if (collection != "hold") {
