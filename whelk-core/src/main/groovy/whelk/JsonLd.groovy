@@ -1090,6 +1090,7 @@ class JsonLd {
                 && !data.containsKey(GRAPH_KEY)
                ) {
                 idMap.put(data.get(key), data)
+                log.error("  POPULATE ID MAP: Putting on ID: " + data.get(key) + " data:\n" + data)
             } else if (key.equals(JSONLD_ALT_ID_KEY)
                     // Don't index graphs, since their @id:s do not denote them.
                     && !data.containsKey(GRAPH_KEY)
