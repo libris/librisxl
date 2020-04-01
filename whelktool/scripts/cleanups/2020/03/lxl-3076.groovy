@@ -129,9 +129,10 @@ selectByCollection('bib') { bib ->
         }
     }
     catch (Exception e) {
-        //println "failed ${bib.doc.getURI()} : ${e}"
-        notMapped << new Tuple2<>(bib.doc.getURI(), e.getMessage())
-        //e.printStackTrace()
+        String level = bib.doc.getEncodingLevel()
+        if (level in ["marc:FullLevel", "marc:MinimalLevel"]) {
+            notMapped << new Tuple2<>(bib.doc.getURI(), e.getMessage())
+        }
     }
 }
 
