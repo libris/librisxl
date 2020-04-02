@@ -1,0 +1,50 @@
+scheduledForChange = getReportWriter("scheduledForChange")
+musicFormatType = "https://id.kb.se/marc/MusicFormatType-"
+musicPartsType = "https://id.kb.se/marc/MusicPartsType-"
+audienceType = "https://id.kb.se/marc/AudienceType-"
+marcParts = "marc:parts"
+musicFormat = "musicFormat"
+intendedAudience = "intendedAudience"
+
+selectByCollection('bib') { bib ->
+    work = bib.doc.data['@graph'][2]
+    removeField(bib, work, musicFormat, musicFormatType)
+    removeField(bib, work, marcParts, musicPartsType)
+    removeField(bib, work, intendedAudience, audienceType)
+
+    if (work?.hasPart) {
+        work.hasPart.each {
+            removeField(bib, it, musicFormat, musicFormatType)
+            removeField(bib, it, marcParts, musicPartsType)
+            removeField(bib, it, intendedAudience, audienceType)
+        }
+    }
+}
+
+private void removeField(bib, obj, String fieldName, String fieldValue) {
+    def field = obj?."$fieldName"
+    def id = bib.doc.data['@graph'][0][ID]
+    if (!field) {
+        return
+    }
+
+    if (field instanceof List) {
+           if (field.size() == 1 && field.first()."@id"?.contains(fieldValue)) {
+               scheduledForChange.println "Remove field $fieldName from $id on object: $obj"
+               obj.remove(fieldName)
+               bib.scheduleSave()
+           } else {
+               field.each {
+                   if (it."@id"?.contains(fieldValue)) {
+                       scheduledForChange.println "Remove value $fieldValue on $id on object: $obj."
+                       it.remove("@id")
+                       bib.scheduleSave()
+                   }
+               }
+           }
+    } else if (field instanceof Map && field."@id"?.contains(fieldValue)) {
+        scheduledForChange.println "Remove field $fieldName from $id on object: $obj"
+        obj.remove(fieldName)
+        bib.scheduleSave()
+    }
+}
