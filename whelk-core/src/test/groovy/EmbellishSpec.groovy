@@ -165,6 +165,7 @@ digraph {
         ]
 
         def storage = new TestStorage(ld)
+        storage.add(doc)
         docs.each(storage.&add)
 
         def embellisher = new Embellisher(ld, storage.&getCards, storage.&getReverseLinks)
@@ -197,6 +198,48 @@ digraph {
 
         !find(result, '/thingX5')
         !find(result, '/thingX6')
+    }
+
+    def "should understand sameAs when avoiding loops in embellish graph"() {
+        given:
+        def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, DISPLAY_DATA, JsonLdSpec.VOCAB_DATA)
+
+        def doc = ['@graph': [['@type' : 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
+                              ['@type' : 'X',
+                               '@id'   : '/thing',
+                               'px1'   : ['@id': '/thingX1'],
+                               'sameAs': [['@id': '/thingAlias1'], ['@id': '/thingAlias2']]
+                              ]
+        ]]
+
+        def docs = [
+                ['@graph': [['@type' : 'R', '@id': '/recordX1', 'mainEntity': ['@id': '/thingX1']],
+                            ['@type' : 'X',
+                             '@id'   : '/thingX1',
+                             'sameAs': [['@id': '/thingX1Alias1']],
+                             'px1'   : [['@id': '/thingAlias1'], ['@id': '/thingX2']],
+                             'px2'   : ['@id': '/thingAlias2']]]],
+
+                ['@graph': [['@type' : 'R', '@id': '/recordX2', 'mainEntity': ['@id': '/thingX2']],
+                            ['@type' : 'X', '@id': '/thingX2',
+                             'px1'   : ['@id': '/thingX1Alias1']]]],
+        ]
+
+        def storage = new TestStorage(ld)
+        storage.add(doc)
+        docs.each(storage.&add)
+
+        def embellisher = new Embellisher(ld, storage.&getCards, storage.&getReverseLinks)
+
+        Document document = new Document(doc)
+
+        embellisher.embellish(document)
+        def result = document.data
+
+        expect:
+        result['@graph'].size() == 4
+        find(result, '/thingX1')
+        find(result, '/thingX2')
     }
 
     private Map find(Map graph, String id) {
@@ -245,13 +288,14 @@ digraph {
         }
 
         void add(Map document) {
-            String iri = new Document(document).getThingIdentifiers().first()
-
+            def iris = new Document(document).getThingIdentifiers()
             jsonld.getExternalReferences(document).each { l ->
-                reverseLinks.put(l, iri)
+                reverseLinks.put(l, iris.first())
             }
 
-            cards.put(iri, jsonld.toCard(document, false))
+            def card = jsonld.toCard(document, false)
+
+            iris.each { cards.put(it, card) }
         }
 
         Iterable<Map> getCards(Iterable<String> iris) {

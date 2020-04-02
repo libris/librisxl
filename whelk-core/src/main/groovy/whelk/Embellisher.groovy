@@ -36,7 +36,7 @@ class Embellisher {
         Iterable<Map> start = [document.data]
 
         Set<String> visitedIris = new HashSet<>()
-        visitedIris.add(document.getThingIdentifiers().first())
+        visitedIris.addAll(document.getThingIdentifiers())
 
         List<String> iris = getAllLinks(start)
         Iterable<Map> previousLevelDocs = start
@@ -44,6 +44,7 @@ class Embellisher {
         for (String lens : EMBELLISH_LEVELS) {
             def cards = getCards.apply((List<String>) iris).collect()
             visitedIris.addAll(iris)
+            visitedIris.addAll(cards.collectMany { new Document(it).getThingIdentifiers() })
 
             previousLevelDocs.each { insertInverseCards(lens, it, cards, visitedIris) }
 
