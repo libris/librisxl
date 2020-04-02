@@ -11,20 +11,57 @@ linker.addSubstitutions([
         'http://id.loc.gov/vocabulary/relators/edt': 'edt',
         'http://id.loc.gov/vocabulary/relators/aut': 'aut',
 
-        'auth' : 'aut', // Author
-        'bpl'  : 'pbl', // Publisher
-        'ctb'  : 'cbt', // Contributor
-        'ed'   : 'edt', // Editor
-        'il'   : 'ill', // Illustrator
-        'prees': 'pra', // Preses
-        'resp' : 'rsp', // Respondent
-        'tr'   : 'trl', // Translator
-        'tra'  : 'trl', // Translator
+        'unspecifiedcontributor'                   : 'unspecified contributor',
+        'editorial board member'                   : 'edt',
+        'funktionskod'                             : '',
+        'medarbetare'                              : 'oth',
+        'pht (expression)'                         : 'pht',
+        'photographer (expression)'                : 'pht',
+        'ritstjórn'                                : 'edt',
+        'sonstige person, familie und körperschaft': 'oth',
+        'teksti autor'                             : 'aut',
+        'translation'                              : 'trl',
+        'valokuvaaja (ekpressio)'                  : 'pht',  // Finnish Photographer (expression)
+
+        '0th'     : 'oth', // Other
+        '4aut'    : 'aut', // Author
+        '4 edt'   : 'edt', // Editor
+        '4edt'    : 'edt', // Editor
+        'auth'    : 'aut', // Author
+        'au'      : 'aut', // Author
+        'bpl'     : 'pbl', // Publisher
+        'ctb'     : 'cbt', // Contributor
+        'dt'      : 'edt', // Editor
+        'ed'      : 'edt', // Editor
+        'eth'     : 'edt', // Editor
+        'ed'      : 'edt', // Editor
+        'éd'      : 'edt', // Editor
+        'edit'    : 'edt', // Editor
+        'editors' : 'edt', // Editor
+        'etd'     : 'edt', // Editor
+        'etdh'    : 'edt', // Editor
+        'e dt'    : 'edt', // Editor
+        'ford'    : 'trl', // Translator (Hungarian fordító)
+        'il'      : 'ill', // Illustrator
+        'joint ed': 'edt', // Joint editor -> Editor
+        'oht'     : 'oth', // Other
+        'prees'   : 'pra', // Preses
+        'p bl'    : 'pbl', // Publisher
+        'pdb'     : 'pbd', // Publishing director
+        'plb'     : 'pbl', // Publisher
+        'pub'     : 'pbl', // Publisher  (verify)
+        'resp'    : 'rsp', // Respondent
+        'tr'      : 'trl', // Translator
+        'tra'     : 'trl', // Translator
+        'trsl'    : 'trl', // Translator
+        'wyd'     : 'pbl', // Puplisher (Polish wydawca)
 
         /*
+        //
+
         'oprac': 'edt', // Editor (Polish)  verify
 
-        dir - both Director & Dirigient
+        dir - both Director & Dirigient --> use film director for moving image
         pres - both presenter and preses
         comp - mostly Compiler and a few Composer
         https://libris-qa.kb.se/katalogisering/search/libris?q=%2a&_limit=300&instanceOf.contribution.role.label=comp
