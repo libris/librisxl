@@ -11513,7 +11513,6 @@
       "NOTE:local": "ANVÄNDS NORMALT INTE I BIBLIOGRAFISKA FORMATET",
       "NOTE:record-count": 350,
       "onRevertPrefer": "655",
-      "include": ["subjectbase"],
       "aboutEntity": "?work",
       "addLink": "genreForm",
       "resourceType": "GenreForm",
@@ -11527,12 +11526,17 @@
         }
       },
       "$a": {"about": "_:topic", "property": "prefLabel"},
+      "$2": {
+        "link": "inScheme",
+        "uriTemplate": "https://id.kb.se/term/{_}",
+        "resourceType": "ConceptScheme",
+        "property": "code"
+      },
       "_spec": [
         {
           "name": "GF inScheme",
           "source": {"380": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Novel"}, {"2": "lcgft"}]}},
-          "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Novel"}, {"2": "lcgft"}]}},
-
+          "normalized": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Novel"}, {"2": "lcgft"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
