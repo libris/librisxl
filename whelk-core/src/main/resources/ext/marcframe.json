@@ -17134,13 +17134,17 @@
             {"t": "Publikation"},
             {"c": "Särskiljande tillägg"},
             {"g": "s. 144-145"},
+            {"h": "Fysisk beskrivning"},
+            {"n": "Anmärkning"},
             {"x": "1401-9612"}
           ]}},
           "normalized": {"760": {"ind1": "0", "ind2": " ", "subfields": [
             {"i": "displayText"},
             {"t": "Publikation"},
             {"c": "Särskiljande tillägg"},
+            {"h": "Fysisk beskrivning"},
             {"g": "s. 144-145"},
+            {"n": "Anmärkning"},
             {"x": "1401-9612"}
           ]}},
           "result": {"mainEntity": {
@@ -17156,6 +17160,14 @@
               }],
               "part": ["s. 144-145"],
               "marc:displayText": ["displayText"],
+              "extent": [{
+                "@type": "Extent",
+                "label": "Fysisk beskrivning"
+              }],
+              "hasNote": [{
+                "@type": "Note",
+                "label": "Anmärkning"
+              }],
               "instanceOf": {
                 "@type": "Work",
                 "hasTitle": [{
@@ -17245,10 +17257,14 @@
         {
           "source": {"765": {"ind1": " ", "ind2": "8", "subfields": [
             {"t": "Tempelriddaren"},
+            {"h": "Fysisk beskrivning"},
+            {"n": "Anmärkning"},
             {"w": "000"}
           ]}},
           "normalized": {"765": {"ind1": "0", "ind2": " ", "subfields": [
             {"t": "Tempelriddaren"},
+            {"h": "Fysisk beskrivning"},
+            {"n": "Anmärkning"},
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
@@ -17265,6 +17281,14 @@
                   "describedBy": [{
                     "@type": "Record",
                     "controlNumber": "000"
+                  }],
+                  "extent": [{
+                    "@type": "Extent",
+                    "label": "Fysisk beskrivning"
+                  }],
+                  "hasNote": [{
+                    "@type": "Note",
+                    "label": "Anmärkning"
                   }]
                 }
               }]
@@ -17939,14 +17963,18 @@
             {"d": "1979"},
             {"g": "Övningsbok"},
             {"f": "Företagsekonomi 80"},
+            {"h": "Fysisk beskrivning"},
+            {"n": "Anmärkning"},
             {"z": "91-40-55055-9"},
             {"w": "1320351"}
           ]}},
           "normalized": {"775": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "Olsson, Jan"},
             {"d": "1979"},
+            {"h": "Fysisk beskrivning"},
             {"g": "Övningsbok"},
             {"f": "Företagsekonomi 80"},
+            {"n": "Anmärkning"},
             {"z": "91-40-55055-9"},
             {"w": "1320351"}
           ]}},
@@ -17970,6 +17998,14 @@
                 }
               },
               "provisionActivityStatement": "1979",
+              "extent": [{
+                "@type": "Extent",
+                "label": "Fysisk beskrivning"
+              }],
+              "hasNote": [{
+                "@type": "Note",
+                "label": "Anmärkning"
+              }],
               "instanceOf": {
                 "@type": "Work",
                 "contribution": [{
