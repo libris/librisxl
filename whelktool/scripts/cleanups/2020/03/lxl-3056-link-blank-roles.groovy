@@ -17,7 +17,9 @@ linker = linker('Role', ['code', 'label', 'prefLabelByLang', 'altLabelByLang', '
 
 // These are cases that won't be handled by metadata (definitions) improvements that we still want to clean up
 linker.addDeletions([
-        'funktionskod'
+        'funktionskod',
+        'funktionskod (läggs manuellt) oftast pbl',
+        'kssb/8'
 ])
 
 linker.addSubstitutions([
@@ -25,15 +27,20 @@ linker.addSubstitutions([
         'http://id.loc.gov/vocabulary/relators/aut': 'aut',
 
         'editorial board member'                   : 'edt',
+        'esitt©þj©þ'                               : 'esittäjä',
+        'illustrations / graphisme'                : 'ill',
+        'k©þ©þnt©þj©þ'                             : 'kääntäjä',
         'medarbetare'                              : 'oth',
         'pht (expression)'                         : 'pht',
         'photographer (expression)'                : 'pht',
         'ritstjórn'                                : 'edt',
+        'sarjakuvantekij©þ'                        : 'sarjakuvantekijä',
         'sonstige person, familie und körperschaft': 'oth',
         'teksti autor'                             : 'aut',
         'translation'                              : 'trl',
         'unspecifiedcontributor'                    : 'unspecified contributor',
-        'valokuvaaja (ekpressio)'                  : 'pht',  // Finnish Photographer (expression)
+        'valokuvaaja (ekspressio)'                 : 'pht',  // Finnish: Photographer (expression)
+        'valokuvaaja (ekpressio)'                  : 'pht',  // Finnish: Photographer (expression)
 
         '0th'     : 'oth', // Other
         '4aut'    : 'aut', // Author
@@ -43,6 +50,8 @@ linker.addSubstitutions([
         'au'      : 'aut', // Author
         'bpl'     : 'pbl', // Publisher
         'ctb'     : 'cbt', // Contributor
+        '[(ed.)]' : 'edt', // Editor
+        '(ed.)'   : 'edt', // Editor
         'dt'      : 'edt', // Editor
         'ed'      : 'edt', // Editor
         'eth'     : 'edt', // Editor
@@ -50,10 +59,12 @@ linker.addSubstitutions([
         'éd'      : 'edt', // Editor
         'edit'    : 'edt', // Editor
         'editors' : 'edt', // Editor
+        'edr'     : 'edt', // Editor
+        'eds'     : 'edt', // Editor
         'etd'     : 'edt', // Editor
         'etdh'    : 'edt', // Editor
         'e dt'    : 'edt', // Editor
-        'ford'    : 'trl', // Translator (Hungarian fordító)
+        'ford'    : 'trl', // Translator (Hungarian: fordító)
         'il'      : 'ill', // Illustrator
         'joint ed': 'edt', // Joint editor -> Editor
         'oht'     : 'oth', // Other
@@ -63,13 +74,17 @@ linker.addSubstitutions([
         'plb'     : 'pbl', // Publisher
         'pub'     : 'pbl', // Publisher
         'resp'    : 'rsp', // Respondent
+        't rl'    : 'trl', // Translator
         'tr'      : 'trl', // Translator
         'tra'     : 'trl', // Translator
+        'trk'     : 'trl', // Translator
         'trsl'    : 'trl', // Translator
-        'wyd'     : 'pbl', // Publisher (Polish wydawca)
+        'wyd'     : 'pbl', // Publisher (Polish: wydawca)
 
         /*
         //
+        760 arkivbildare
+        76 sarjakuvantekijä - serieskapare http://finto.fi/mts/fi/page/m1301
         'oprac' // Polish, lit. "Bearbetning" --> Adapter / Editor?
         dir - both Director & Dirigient --> use film director for moving image?
         pres - both presenter and preses
