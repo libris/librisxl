@@ -1,3 +1,11 @@
+/**
+ This script tries to link blank contribution.role nodes using
+    - Role labels in definitions
+    - clean-up mappings based on most common blank nodes in Libris data
+
+ See LXL-3056 for more info
+*/
+
 import whelk.filter.BlankNodeLinker
 import whelk.util.Statistics
 
@@ -7,13 +15,16 @@ PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 
 linker = linker('Role', ['code', 'label', 'prefLabelByLang', 'altLabelByLang', 'hiddenLabel'])
 
+// These are cases that won't be handled by metadata (definitions) improvements that we still want to clean up
+linker.addDeletions([
+        'funktionskod'
+])
+
 linker.addSubstitutions([
         'http://id.loc.gov/vocabulary/relators/edt': 'edt',
         'http://id.loc.gov/vocabulary/relators/aut': 'aut',
 
-        'unspecifiedcontributor'                   : 'unspecified contributor',
         'editorial board member'                   : 'edt',
-        'funktionskod'                             : '',
         'medarbetare'                              : 'oth',
         'pht (expression)'                         : 'pht',
         'photographer (expression)'                : 'pht',
@@ -21,6 +32,7 @@ linker.addSubstitutions([
         'sonstige person, familie und körperschaft': 'oth',
         'teksti autor'                             : 'aut',
         'translation'                              : 'trl',
+        'unspecifiedcontributor'                    : 'unspecified contributor',
         'valokuvaaja (ekpressio)'                  : 'pht',  // Finnish Photographer (expression)
 
         '0th'     : 'oth', // Other
@@ -49,19 +61,17 @@ linker.addSubstitutions([
         'p bl'    : 'pbl', // Publisher
         'pdb'     : 'pbd', // Publishing director
         'plb'     : 'pbl', // Publisher
-        'pub'     : 'pbl', // Publisher  (verify)
+        'pub'     : 'pbl', // Publisher
         'resp'    : 'rsp', // Respondent
         'tr'      : 'trl', // Translator
         'tra'     : 'trl', // Translator
         'trsl'    : 'trl', // Translator
-        'wyd'     : 'pbl', // Puplisher (Polish wydawca)
+        'wyd'     : 'pbl', // Publisher (Polish wydawca)
 
         /*
         //
-
-        'oprac': 'edt', // Editor (Polish)  verify
-
-        dir - both Director & Dirigient --> use film director for moving image
+        'oprac' // Polish, lit. "Bearbetning" --> Adapter / Editor?
+        dir - both Director & Dirigient --> use film director for moving image?
         pres - both presenter and preses
         comp - mostly Compiler and a few Composer
         https://libris-qa.kb.se/katalogisering/search/libris?q=%2a&_limit=300&instanceOf.contribution.role.label=comp
@@ -69,10 +79,8 @@ linker.addSubstitutions([
         117 eks - all from two records
         https://libris-qa.kb.se/katalogisering/nzbx5d45l277bwtg
         https://libris-qa.kb.se/katalogisering/lw8v4935jzg3tpq7
-
         */
 ])
-// These are cases that won't be handled by metadata (definitions) improvements that we still want to clean up
 
 selectByCollection('bib') { bib ->
     try {
