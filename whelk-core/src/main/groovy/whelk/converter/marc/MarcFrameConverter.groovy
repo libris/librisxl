@@ -2527,6 +2527,7 @@ class MarcSubFieldHandler extends ConversionPart {
     String definedElsewhereToken
     String marcDefault
     boolean ignored = false
+    boolean ignoreOnRevert = false
     boolean required = false
     boolean supplementary = false
     String requiresI1
@@ -2542,6 +2543,7 @@ class MarcSubFieldHandler extends ConversionPart {
         super.setTokenMap(fieldHandler, subDfn)
         aboutEntityName = subDfn.aboutEntity
         ignored = subDfn.ignored == true
+        ignoreOnRevert = subDfn.ignoreOnRevert == true
 
         trailingPunctuation = subDfn.trailingPunctuation
         leadingPunctuation = subDfn.leadingPunctuation
@@ -2829,6 +2831,10 @@ class MarcSubFieldHandler extends ConversionPart {
 
             if (checkResourceType && resourceType &&
                     !isInstanceOf(entity, resourceType)) {
+                continue
+            }
+
+            if (ignoreOnRevert) {
                 continue
             }
 
