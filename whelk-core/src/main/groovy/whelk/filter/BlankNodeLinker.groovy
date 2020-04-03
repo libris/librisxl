@@ -1,5 +1,6 @@
 package whelk.filter
 
+
 import whelk.Whelk
 import whelk.search.ESQuery
 import whelk.util.DocumentUtil
@@ -8,8 +9,14 @@ import whelk.util.Statistics
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.TYPE_KEY
+import static whelk.util.DocumentUtil.NOP
+import static whelk.util.DocumentUtil.Remove
+import static whelk.util.DocumentUtil.findKey
+import static whelk.util.DocumentUtil.link
 
 class BlankNodeLinker implements DocumentUtil.Linker {
+    static final String DELETE = '/dev/null'
+
     String type
     Map map = [:]
     Map<String, List> ambiguousIdentifiers = [:]
@@ -25,7 +32,17 @@ class BlankNodeLinker implements DocumentUtil.Linker {
     }
 
     boolean linkAll(data, String key) {
-        return DocumentUtil.findKey(data, key, DocumentUtil.link(this))
+        return findKey(data, key, link(this)) && removeDeleted(data)
+    }
+
+    static boolean removeDeleted(data) {
+        // clean up blank nodes that have been deleted (marked by linking to DELETE)
+        findKey(data, ID_KEY) { value, path ->
+            value == DELETE
+                    ? new Remove()
+                    : NOP
+        }
+        return true
     }
 
     void loadDefinitions(Whelk whelk) {
@@ -74,6 +91,12 @@ class BlankNodeLinker implements DocumentUtil.Linker {
 
     void addSubstitutions(Map s) {
         substitutions.putAll(s)
+    }
+
+    void addDeletions(List<String> deletions) {
+        deletions.each {
+            addMapping(it, DELETE)
+        }
     }
 
     @Override
