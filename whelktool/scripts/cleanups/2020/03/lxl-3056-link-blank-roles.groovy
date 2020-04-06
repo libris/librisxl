@@ -26,32 +26,66 @@ linker.addSubstitutions([
         'http://id.loc.gov/vocabulary/relators/edt': 'edt',
         'http://id.loc.gov/vocabulary/relators/aut': 'aut',
 
+        'aaut'                                     : 'aut',
+        'a ut'                                     : 'aut',
+        'artiste'                                  : 'art',
+        'artists'                                  : 'art',
+        'attributed anme'                          : 'att',
+        'auhtor'                                   : 'aut',
+        'auhor'                                    : 'aut',
+        'authors'                                  : 'aut',
+        'autt'                                     : 'aut',
+        'autr'                                     : 'aut',
+        'coeditor'                                 : 'edt',
+        'compositeur'                              : 'cmp',
+        'ditor'                                    : 'edt',
+        'e aut'                                    : 'aut',
+        'eauthor'                                  : 'aut',
+        'éditeur intellectuel'                     : 'edt',
+        'editor literari'                          : 'edt',
+        'editior'                                  : 'edt',
+        'editora'                                  : 'edt',
+        'editor of compilaton'                     : 'edc',
+        'editor of compliation'                    : 'edc',
+        'editor de la compilación'                 : 'edc',
         'editorial board member'                   : 'edt',
+        'edtitor'                                  : 'edt',
         'esitt©þj©þ'                               : 'esittäjä',
+        'f©œrfattare'                              : 'aut',
         'illustrations / graphisme'                : 'ill',
+        'komponistin'                              : 'cmp',
         'k©þ©þnt©þj©þ'                             : 'kääntäjä',
         'medarbetare'                              : 'oth',
         'pht (expression)'                         : 'pht',
         'photographer (expression)'                : 'pht',
+        'redakt©œr'                                : 'edt',
         'ritstjórn'                                : 'edt',
         'sarjakuvantekij©þ'                        : 'sarjakuvantekijä',
         'sonstige person, familie und körperschaft': 'oth',
+        'sponsorin'                                : 'spn',
         'teksti autor'                             : 'aut',
         'translation'                              : 'trl',
+        'translators'                              : 'trl',
         'unspecifiedcontributor'                    : 'unspecified contributor',
         'valokuvaaja (ekspressio)'                 : 'pht',  // Finnish: Photographer (expression)
         'valokuvaaja (ekpressio)'                  : 'pht',  // Finnish: Photographer (expression)
+        '(verfasser)'                              : 'aut',
+
 
         '0th'     : 'oth', // Other
         '4aut'    : 'aut', // Author
+        '4 aut'   : 'aut', // Author
         '4 edt'   : 'edt', // Editor
+        '4dt'     : 'edt', // Editor
         '4edt'    : 'edt', // Editor
+        '4oth'    : 'oth', // Other
         'auth'    : 'aut', // Author
         'au'      : 'aut', // Author
         'bpl'     : 'pbl', // Publisher
         'ctb'     : 'cbt', // Contributor
         '[(ed.)]' : 'edt', // Editor
         '(ed.)'   : 'edt', // Editor
+        '(edt)'   : 'edt', // Editor
         'dt'      : 'edt', // Editor
         'ed'      : 'edt', // Editor
         'eth'     : 'edt', // Editor
@@ -61,13 +95,21 @@ linker.addSubstitutions([
         'editors' : 'edt', // Editor
         'edr'     : 'edt', // Editor
         'eds'     : 'edt', // Editor
+        'edtor'   : 'edt', // Editor
+        'edt3'    : 'edt', // Editor
+        'edt6'    : 'edt', // Editor
+        'edt7'    : 'edt', // Editor
         'etd'     : 'edt', // Editor
+        'edty'    : 'edt', // Editor
         'etdh'    : 'edt', // Editor
         'e dt'    : 'edt', // Editor
         'ford'    : 'trl', // Translator (Hungarian: fordító)
+        'foto'    : 'pht', // Photo
         'il'      : 'ill', // Illustrator
         'joint ed': 'edt', // Joint editor -> Editor
+        'oaut'    : 'aut', // Author
         'oht'     : 'oth', // Other
+        'o th'    : 'oth', // Other
         'prees'   : 'pra', // Preses
         'p bl'    : 'pbl', // Publisher
         'pdb'     : 'pbd', // Publishing director
