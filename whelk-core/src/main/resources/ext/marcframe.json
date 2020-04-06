@@ -23520,7 +23520,32 @@
       "$a": {"addProperty": "citationSource"}
     },
     "677": {"ignored": true, "NOTE:record-count": 1},
-    "678": {"inherit": "bib:545"},
+    "678": {
+      "i1": null,
+      "$a": {"addProperty": "description"},
+      "$b": {"ignored": true, "NOTE:LC": "$b - Expansion (NR)"},
+      "$u": {"ignored": true, "NOTE:LC": "$u - Uniform Resource Identifier (R)"},
+      "_spec": [
+        {
+          "name": "previously BiographicalNote",
+          "source": {"678": {"ind1": "0", "ind2": " ", "subfields": [{"a": "Författare och bibliotekarie"}]}},
+          "normalized": {"678": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Författare och bibliotekarie"}]}},
+          "result": {"mainEntity": {
+            "@type": "Identity",
+            "description": [ "Författare och bibliotekarie" ]
+          }}
+        },
+        {
+          "name": "previously AdministrativeHistoryNote, repeated",
+          "source": {"678": {"ind1": "1", "ind2": " ", "subfields": [{"a": "1"},{"a": "2"}]}},
+          "normalized": {"678": {"ind1": " ", "ind2": " ", "subfields": [{"a": "1"},{"a": "2"}]}},
+          "result": {"mainEntity": {
+            "@type": "Identity",
+            "description": [ "1", "2" ]
+          }}
+        }
+      ]
+    },
     "680": {
       "addLink": "hasNote",
       "resourceType": "Note",
