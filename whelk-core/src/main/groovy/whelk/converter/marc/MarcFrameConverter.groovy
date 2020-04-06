@@ -2806,6 +2806,10 @@ class MarcSubFieldHandler extends ConversionPart {
 
             def propertyValue = getPropertyValue(entity, property)
 
+            if (ignoreOnRevert) {
+                continue
+            }
+
             if (propertyValue == null && castProperty)
                 propertyValue = entity[castProperty]
 
@@ -2831,10 +2835,6 @@ class MarcSubFieldHandler extends ConversionPart {
 
             if (checkResourceType && resourceType &&
                     !isInstanceOf(entity, resourceType)) {
-                continue
-            }
-
-            if (ignoreOnRevert) {
                 continue
             }
 
