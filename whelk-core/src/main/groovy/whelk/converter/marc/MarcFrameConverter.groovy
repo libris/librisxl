@@ -957,13 +957,37 @@ class ConversionPart {
         Map aboutEntity = (Map) aboutMap[aboutEntityName]?.get(0) ?: data
         if (fallbackEntityName) {
             Map fallbackEntity = (Map) aboutMap[fallbackEntityName]?.get(0)
-            def result = [:]
             if (fallbackEntity)
-                result.putAll(fallbackEntity)
-            result.putAll(aboutEntity)
-            return result
+                return deepMergedClone(fallbackEntity, aboutEntity)
         }
         return aboutEntity
+    }
+
+    Map deepMergedClone(Map keepSome, Map keepAll) {
+        def result = [:]
+        Set keySet = keepAll.keySet() + keepSome.keySet()
+        for (Object key : keySet) {
+
+            Object highPrioValue = keepAll[key]
+            Object lowPrioValue = keepSome[key]
+
+            if (!highPrioValue && lowPrioValue)
+                result.put(key, lowPrioValue)
+            else if (highPrioValue && !lowPrioValue)
+                result.put(key, highPrioValue)
+            else if (highPrioValue && lowPrioValue) {
+                if (highPrioValue instanceof Map && lowPrioValue instanceof Map) {
+                    result.put(key, deepMergedClone((Map)lowPrioValue, (Map)highPrioValue))
+                }
+                else if (highPrioValue instanceof List && lowPrioValue instanceof List) {
+                    List resultingList = (List) highPrioValue
+                    resultingList.addAll( (List) lowPrioValue )
+                    result.put(key, resultingList)
+                }
+            }
+        }
+
+        return result
     }
 
     def revertObject(obj) {
