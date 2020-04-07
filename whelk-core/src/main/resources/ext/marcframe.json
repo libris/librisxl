@@ -8659,14 +8659,14 @@
     "242": {
       "include": ["structuredtitle", "titlesearchelem", "i2-nonfiling"],
       "aboutEntity": "?thing",
-      "addLink": "marc:hasTranslatedTitle",
-      "resourceType": "Title",
+      "addLink": "hasTitle",
+      "resourceType": "TranslatedTitle",
       "aboutAlias": "_:title",
       "embedded": true,
-      "$c": {"property": "responsibilityStatement"},
-      "$h": {"property": "marc:mediaTerm"},
-      "$y": {"link": "language", "resourceType": "Language", "property": "code"},
-      "TODO": "Translation of? merge into 245?",
+      "$c": {"ignored": true, "NOTE:LC": "ignore - responsibilityStatement"},
+      "$h": {"ignored": true, "NOTE:LC": "ignore - medium"},
+      "$y": {"link": "language", "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$"},
+      "NOTE:LC": "Translation of the title proper that is made by the cataloging agency. Translated titles which appear on the piece as a parallel title would be recorded in field 245 (Title Statement).",
       "_spec": [
         {
           "source": {
@@ -8676,11 +8676,11 @@
               {"y": "eng"}
             ]}},
           "result": {"mainEntity": {
-            "marc:hasTranslatedTitle": [{
-              "@type": "Title",
+            "hasTitle": [{
+              "@type": "TranslatedTitle",
               "mainTitle": "New regulation on public order",
               "titleRemainder": "an addendum to the instruction of the ward chairmen.",
-              "language": {"@type": "Language", "code": "eng"}
+              "language": {"@id": "https://id.kb.se/language/eng"}
             }]
           }}
         },
@@ -8700,15 +8700,15 @@
               {"y": "eng"}
             ]}},
           "result": {"mainEntity": {
-            "marc:hasTranslatedTitle": [{
-              "@type": "Title",
+            "hasTitle": [{
+              "@type": "TranslatedTitle",
               "mainTitle": "Annals of chemistry",
               "hasPart" : [{
                 "@type" : "TitlePart",
                 "partName" : "Organic chemistry and biochemistry.",
                 "partNumber" : "Series C,."
               }],
-              "language": {"@type": "Language", "code": "eng"}
+              "language": {"@id": "https://id.kb.se/language/eng"}
             }]
           }}
         }
@@ -8779,7 +8779,7 @@
       "aboutEntity": "?thing",
       "addLink": "hasTitle",
       "resourceType": "Title",
-      "onRevertPrefer": ["247", "246"],
+      "onRevertPrefer": ["242", "247", "246"],
       "embedded": true,
       "aboutAlias": "_:title",
       "NOTE:prescribed-but-uncommon:subfieldOrder": "6 a n p h b c f g s",
