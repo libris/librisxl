@@ -7,19 +7,27 @@ import groovy.util.logging.Log4j2 as Log
 @Log
 class Embellisher {
     static final List<String> DEFAULT_EMBELLISH_LEVELS = ['cards', 'chips']
+    // FIXME: get from context
+    static final List<String> DEFAULT_CLOSE_RELATIONS = ['instanceOf']
+
     static final int MAX_REVERSE_LINKS = 512
 
     JsonLd jsonld
     List<String> embellishLevels = DEFAULT_EMBELLISH_LEVELS
+    List<String> closeRelations = DEFAULT_CLOSE_RELATIONS
+
+    Function<Iterable<String>, Iterable<Map>> getDocs
     Function<Iterable<String>, Iterable<Map>> getCards
     BiFunction<String, List<String>, Set<String>> getByReverseRelation
 
     Embellisher(
             JsonLd jsonld,
+            Function<Iterable<String>, Iterable<Map>> getDocs,
             Function<Iterable<String>, Iterable<Map>> getCards,
             BiFunction<String, List<String>, Set<String>> getByReverseRelation
     ) {
         this.jsonld = jsonld
+        this.getDocs = getDocs
         this.getCards = getCards
         this.getByReverseRelation = getByReverseRelation
     }
@@ -33,44 +41,69 @@ class Embellisher {
         this.embellishLevels = embellishLevels.collect()
     }
 
+    void setCloseRelations(List<String> closeRelations) {
+        this.closeRelations = closeRelations.collect()
+    }
+
     private List getEmbellishData(Document document) {
         if (document.getThingIdentifiers().isEmpty()) {
             return []
         }
 
-        Iterable<Map> start = [document.data]
+        List<Map> start = [document.data]
 
         Set<String> visitedIris = new HashSet<>()
         visitedIris.addAll(document.getThingIdentifiers())
 
-        List<String> iris = getAllLinks(start)
-        Iterable<Map> previousLevelDocs = start
-        List embellishData = []
+        def docs = fetchNonVisited('full', getCloseLinks(start), visitedIris).collect()
+
+        List result = docs
+        List<String> iris = getAllLinks(start + docs)
+        Iterable<Map> previousLevelDocs = start + docs
+
         for (String lens : embellishLevels) {
-            def cards = getCards.apply((List<String>) iris).collect()
-            visitedIris.addAll(iris)
-            visitedIris.addAll(cards.collectMany { new Document(it).getThingIdentifiers() })
+            docs = fetchNonVisited(lens, iris, visitedIris)
+            docs += fetchNonVisited(lens, getCloseLinks(docs), visitedIris)
 
-            previousLevelDocs.each { insertInverseCards(lens, it, cards, visitedIris) }
+            previousLevelDocs.each { insertInverseCards(lens, it, docs, visitedIris) }
+            previousLevelDocs = docs
 
-            if (lens == 'chips') {
-                cards = cards.collect{ (Map) jsonld.toChip(it) }
-            }
+            result.addAll(docs)
 
-            previousLevelDocs = cards
-            embellishData.addAll(cards)
-
-            iris = getAllLinks(cards)
-            iris.removeAll(visitedIris)
+            iris = getAllLinks(docs)
         }
         // Last level: add reverse links, but not the documents linking here
         previousLevelDocs.each { insertInverseCards(embellishLevels.last(), it, [], visitedIris) }
 
-        return embellishData
+        return result
     }
 
-    private List<String> getAllLinks(Iterable<Map> docs) {
+    private static List<String> getAllLinks(Iterable<Map> docs) {
         (List<String>) docs.collect{ JsonLd.getExternalReferences((Map) it).collect{ it.iri } }.flatten()
+    }
+
+    private List<String> getCloseLinks(Iterable<Map> docs) {
+        (List<String>) docs.collect{
+            JsonLd.getExternalReferences((Map) it).grep{ it.relation in closeRelations }.collect{ it.iri }
+        }.flatten()
+    }
+
+    private Iterable<Map> fetchNonVisited(String lens, Iterable<String> iris, Set<String> visitedIris) {
+        def data = load(lens, iris - visitedIris)
+        visitedIris.addAll(data.collectMany { new Document(it).getThingIdentifiers() })
+        return data
+    }
+
+    private Iterable<Map> load(String lens, Iterable<String> iris) {
+        def data = lens == 'full'
+                ? getDocs.apply(iris)
+                : getCards.apply(iris)
+
+        if (lens == 'chips') {
+            data = data.collect{ (Map) jsonld.toChip(it) }
+        }
+
+        return data
     }
 
     private void insertInverseCards(String lens, Map thing, List<Map> cards, Set<String> visitedIris) {
@@ -98,9 +131,7 @@ class Embellisher {
             }
 
             theThing[JsonLd.REVERSE_KEY][relation] = irisLinkingHere.collect { [(JsonLd.ID_KEY): it] }
-            irisLinkingHere.removeAll(visitedIris)
-            cards.addAll(getCards.apply(irisLinkingHere))
-            visitedIris.addAll(irisLinkingHere)
+            cards.addAll(fetchNonVisited(lens, irisLinkingHere, visitedIris))
         }
     }
 }
