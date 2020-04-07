@@ -43,7 +43,132 @@ class EmbellishSpec extends Specification{
                                            'showProperties' : ['fresnel:super', 'py2']
                                      ],
                              ]]]]
-    
+
+    /*
+
+                       ┌−−−−−−−−−−−−−−−−−┐
+                       ╎    embellish    ╎
+                       ╎                 ╎
+                       ╎ ┌─────────────┐ ╎
+                       ╎ │  Y0 (card)  │ ╎
+                       ╎ └─────────────┘ ╎
+                       ╎   │             ╎
+                       ╎   │ py1         ╎
+                       ╎   ▼             ╎
+                       ╎ ┌─────────────┐ ╎
+                       ╎ │ doc (START) │ ╎
+                       ╎ └─────────────┘ ╎
+                       ╎   │             ╎
+                       ╎   │ px1         ╎
+                       ╎   │             ╎
+┌−−−−−−−−−−−−−−−−−−−−−−    │              −−−−−−−−−−−−−−−−−−−−−−┐
+╎                          ▼                                    ╎
+╎ ┌───────────┐  py1     ┌─────────────┐   px2    ┌───────────┐ ╎
+╎ │ Y1 (chip) │ ───────▶ │  X1 (card)  │ ───────▶ │ X4 (chip) │ ╎
+╎ └───────────┘          └─────────────┘          └───────────┘ ╎
+╎                          │                                    ╎
+└−−−−−−−−−−−−−−−−−−−−−−    │              −−−−−−−−−−−−−−−−−−−−−−┘
+                       ╎   │             ╎
+                       ╎   │ px1         ╎
+                       ╎   ▼             ╎
+  ┌───────────┐  py1   ╎ ┌─────────────┐ ╎
+  │    Y2     │ ─────▶ ╎ │  X2 (chip)  │ ╎
+  └───────────┘        ╎ └─────────────┘ ╎
+                       ╎                 ╎
+                       └−−−−−−−−−−−−−−−−−┘
+                           │
+                           │ px1
+                           ▼
+                         ┌─────────────┐
+                         │     X3      │
+                         └─────────────┘
+Generated with: https://dot-to-ascii.ggerganov.com/
+
+.dot:
+digraph {
+    subgraph cluster_0 {
+        doc -> X1 [ label = "px1" ];
+        Y0 -> doc [ label = "py1" ];
+        X1 -> X2 [ label = "px1" ];
+        X1 -> X4 [ label = "px2" ];
+        Y1 -> X1 [ label = "py1" ];
+
+        label = "embellish";
+    }
+
+    X2 -> X3 [ label = "px1" ];
+    Y2 -> X2 [ label = "py1" ];
+    doc [label = "doc (START)"];
+    X1 [label = "X1 (card)"];
+    X2 [label = "X2 (chip)"];
+    X4 [label = "X4 (chip)"];
+    Y0 [label = "Y0 (card)"];
+    Y1 [label = "Y1 (chip)"];
+}
+
+*/
+
+    def "should by default embellish recursively, two levels, using cards, chips"() {
+        given:
+        def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, DISPLAY_DATA, JsonLdSpec.VOCAB_DATA)
+
+        def doc = ['@graph': [['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
+                              ['@type': 'X', '@id': '/thing', 'px1': ['@id': '/thingX1']]
+        ]]
+
+        def docs = [
+                ['@graph': [['@type': 'R', '@id': '/recordX1', 'mainEntity': ['@id': '/thingX1']],
+                            ['@type': 'X', '@id': '/thingX1', 'px1': ['@id': '/thingX2'], 'px2': ['@id': '/thingX4']]]],
+
+                ['@graph': [['@type': 'R', '@id': '/recordX2', 'mainEntity': ['@id': '/thingX2']],
+                            ['@type': 'X', '@id': '/thingX2', 'px1': ['@id': '/thingX3'], 'px2': ['@id': '/thingX5']]]],
+
+                ['@graph': [['@type': 'R', '@id': '/recordX3', 'mainEntity': ['@id': '/thingX3']],
+                            ['@type': 'X', '@id': '/thingX3', 'px1': ['@id': '/thingX6'], 'px2': 'foo']]],
+
+                ['@graph': [['@type': 'R', '@id': '/recordX4', 'mainEntity': ['@id': '/thingX4']],
+                            ['@type': 'X', '@id': '/thingX4', 'px1': 'foo', 'px2': 'foo']]],
+
+                ['@graph': [['@type': 'R', '@id': '/recordY0', 'mainEntity': ['@id': '/thingY0']],
+                            ['@type': 'Y', '@id': '/thingY0', 'py1': ['@id': '/thing'], 'py2': 'foo']]],
+
+                ['@graph': [['@type': 'R', '@id': '/recordY1', 'mainEntity': ['@id': '/thingY1']],
+                            ['@type': 'Y', '@id': '/thingY1', 'py1': ['@id': '/thingX1'], 'py2': 'foo']]],
+
+                ['@graph': [['@type': 'R', '@id': '/recordY2', 'mainEntity': ['@id': '/thingY2']],
+                            ['@type': 'Y', '@id': '/thingY2', 'py1': ['@id': '/thingX2'], 'py2': 'foo']]],
+        ]
+
+        def storage = new TestStorage(ld)
+        storage.add(doc)
+        docs.each(storage.&add)
+
+        def embellisher = new Embellisher(ld, storage.&getCards, storage.&getReverseLinks)
+
+        Document document = new Document(doc)
+
+        embellisher.embellish(document)
+        def result = document.data
+
+        expect:
+        def x1 = find(result, '/thingX1')
+        lens(x1) == 'card'
+        x1['@reverse'] == ['py1': [['@id': '/thingY1']]]
+
+        def x2 = find(result, '/thingX2')
+        lens(x2) == 'chip'
+        x2['@reverse'] == ['py1': [['@id': '/thingY2']]]
+
+        find(result, '/thing')['@reverse'] == ['py1': [['@id': '/thingY0']]]
+        lens(find(result, '/thingY0')) == 'card'
+
+        lens(find(result, '/thingX4')) == 'chip'
+        lens(find(result, '/thingY1')) == 'chip'
+
+        !find(result, '/thingX3')
+        !find(result, '/thingY2')
+    }
+
     /*
 
                        ┌−−−−−−−−−−−−−−−−−┐
@@ -169,6 +294,7 @@ digraph {
         docs.each(storage.&add)
 
         def embellisher = new Embellisher(ld, storage.&getCards, storage.&getReverseLinks)
+        embellisher.setEmbellishLevels(['cards', 'chips', 'chips'])
 
         Document document = new Document(doc)
 

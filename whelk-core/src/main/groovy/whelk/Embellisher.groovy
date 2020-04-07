@@ -6,10 +6,11 @@ import groovy.util.logging.Log4j2 as Log
 
 @Log
 class Embellisher {
-    static final List<String> EMBELLISH_LEVELS = ['cards', 'chips', 'chips']
+    static final List<String> DEFAULT_EMBELLISH_LEVELS = ['cards', 'chips']
     static final int MAX_REVERSE_LINKS = 512
 
     JsonLd jsonld
+    List<String> embellishLevels = DEFAULT_EMBELLISH_LEVELS
     Function<Iterable<String>, Iterable<Map>> getCards
     BiFunction<String, List<String>, Set<String>> getByReverseRelation
 
@@ -28,6 +29,10 @@ class Embellisher {
         jsonld.embellish(document.data, getEmbellishData(document))
     }
 
+    void setEmbellishLevels(List<String> embellishLevels) {
+        this.embellishLevels = embellishLevels.collect()
+    }
+
     private List getEmbellishData(Document document) {
         if (document.getThingIdentifiers().isEmpty()) {
             return []
@@ -41,7 +46,7 @@ class Embellisher {
         List<String> iris = getAllLinks(start)
         Iterable<Map> previousLevelDocs = start
         List embellishData = []
-        for (String lens : EMBELLISH_LEVELS) {
+        for (String lens : embellishLevels) {
             def cards = getCards.apply((List<String>) iris).collect()
             visitedIris.addAll(iris)
             visitedIris.addAll(cards.collectMany { new Document(it).getThingIdentifiers() })
@@ -59,7 +64,7 @@ class Embellisher {
             iris.removeAll(visitedIris)
         }
         // Last level: add reverse links, but not the documents linking here
-        previousLevelDocs.each { insertInverseCards(EMBELLISH_LEVELS.last(), it, [], visitedIris) }
+        previousLevelDocs.each { insertInverseCards(embellishLevels.last(), it, [], visitedIris) }
 
         return embellishData
     }
