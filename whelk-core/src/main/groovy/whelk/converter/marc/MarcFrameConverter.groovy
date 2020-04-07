@@ -882,6 +882,7 @@ class ConversionPart {
 
     MarcRuleSet ruleSet
     String aboutEntityName
+    String fallbackEntityName
     Map tokenMap
     String tokenMapName // TODO: remove in columns in favour of @type+code/uriTemplate ?
     Map reverseTokenMap
@@ -953,7 +954,16 @@ class ConversionPart {
             aboutMap = (Map<String, List>) state.aboutMap
         }
 
-        return (Map) aboutMap[aboutEntityName]?.get(0) ?: data
+        Map aboutEntity = (Map) aboutMap[aboutEntityName]?.get(0) ?: data
+        if (fallbackEntityName) {
+            Map fallbackEntity = (Map) aboutMap[fallbackEntityName]?.get(0)
+            def result = [:]
+            if (fallbackEntity)
+                result.putAll(fallbackEntity)
+            result.putAll(aboutEntity)
+            return result
+        }
+        return aboutEntity
     }
 
     def revertObject(obj) {
@@ -1083,6 +1093,8 @@ class ConversionPart {
             requiredOk = false
         }
 
+        // The about map is the whole embellished record N times, framed around the "pending keys", typically:
+        // ?record, ?thing, ?work, _:provision
         return new Tuple2<Boolean, Map>(requiredOk, aboutMap)
     }
 
@@ -1160,6 +1172,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
             definesDomainEntityType = fieldDfn.aboutType
         }
         aboutEntityName = fieldDfn.aboutEntity ?: '?thing'
+        fallbackEntityName = fieldDfn.fallbackEntity
 
         repeatable = fieldDfn.containsKey('addLink')
         link = linkTerm(fieldDfn.link ?: fieldDfn.addLink, repeatable)
@@ -2541,6 +2554,7 @@ class MarcSubFieldHandler extends ConversionPart {
         this.code = code
         super.setTokenMap(fieldHandler, subDfn)
         aboutEntityName = subDfn.aboutEntity
+        fallbackEntityName = subDfn.fallbackEntity
         ignored = subDfn.ignored == true
 
         trailingPunctuation = subDfn.trailingPunctuation
