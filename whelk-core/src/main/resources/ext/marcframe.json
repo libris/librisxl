@@ -7291,6 +7291,7 @@
 
     "082": {
       "aboutEntity": "?work",
+      "fallbackEntity": "?thing",
       "addLink": "classification",
       "match": [
         {
