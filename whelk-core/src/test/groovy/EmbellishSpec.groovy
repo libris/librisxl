@@ -205,6 +205,39 @@ digraph {
 ╎ └─────────────┘ ╎          └───────────┘
 ╎                 ╎
 └−−−−−−−−−−−−−−−−−┘
+Generated with: https://dot-to-ascii.ggerganov.com/
+
+.dot:
+digraph {
+    rankdir=LR;
+    subgraph cluster_0 {
+        doc -> X0 [ label = "CR" ];
+        doc -> X1 [ label = "px1" ];
+        X0 -> X3 [ label = "px1" ];
+        X0 -> X6 [ label = "px1" ];
+        X1 -> X2 [ label = "px1" ];
+        X1 -> X3 [ label = "px1" ];
+        X3 -> X4 [ label = "CR" ];
+        X4 -> X5 [ label = "px1" ];
+        X6 -> X7 [ label = "CR" ];
+        X7 -> X8 [ label = "px1" ];
+        label = "embellish";
+    }
+    X2 -> Y1 [ label = "px1" ];
+    X5 -> Y2 [ label = "px1" ];
+    X8 -> Y3 [ label = "px1" ];
+
+    doc [label = "doc (START)"];
+    X0 [label = "X0 (full)"];
+    X1 [label = "X1 (card)"];
+    X2 [label = "X2 (chip)"];
+    X3 [label = "X3 (card)"];
+    X4 [label = "X4 (card)"];
+    X5 [label = "X5 (chip)"];
+    X6 [label = "X6 (card)"];
+    X7 [label = "X7 (card)"];
+    X8 [label = "X8 (chip)"];
+}
 
 */
 
