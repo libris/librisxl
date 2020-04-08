@@ -17903,6 +17903,31 @@
               }
             }]
           }}
+        },
+        {
+          "name": "Linked entity containing marc:subordinateUnit should revert to subfield $a",
+          "normalized": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+            {"a": "Institutionen för psykologi"}
+          ]}},
+          "result": {"mainEntity": {
+            "isPartOf": [{
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Organization",
+                    "marc:subordinateUnit": ["Institutionen för psykologi"],
+                    "isPartOf": {
+                      "@type": "Organization",
+                      "name": "Uppsala universitet."
+                    }
+                  }
+                }]
+              }
+            }]
+          }}
         }
       ]
     },
