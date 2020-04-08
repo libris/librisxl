@@ -1428,11 +1428,11 @@
         "marcDefault": "0"
       },
       "$a": {"about": "_:agent", "property": "label", "infer": true, "TODO:targetMatch": "1xx"},
-      "$b": {"about": "_:instance", "property": "editionStatement", "TODO:targetMatch": "250"},
+      "$b": {"about": "_:instance", "property": "editionStatement", "ignoreOnRevert": true, "TODO:targetMatch": "250"},
       "$d": {"about": "_:instance", "property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
-      "$h": {"about": "_:instance", "addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
+      "$h": {"about": "_:instance", "addLink": "extent", "resourceType": "Extent", "property": "label", "ignoreOnRevert": true, "NOTE:marc-repeatable": false},
       "$m": {"about": "_:instance", "property": "marc:materialSpecificDetails"},
-      "$n": {"about": "_:instance", "addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$n": {"about": "_:instance", "addLink": "hasNote", "resourceType": "Note", "property": "label",  "ignoreOnRevert": true},
       "$o": {"NOTE:subfield-count (Libris)": 0, "NOTE": "Cannot ignore this field since we import Mimer data with $o (We have lost $o data between 1.14.0 and 1.15.0). See LXL-1517"},
       "$s": {"about": "_:workTitle", "property": "mainTitle", "TODO:targetMatch": "240"},
       "$t": {"about": "_:title", "property": "mainTitle", "TODO:targetMatch": "222, 245"},
@@ -1506,13 +1506,13 @@
     "workTitleQualifier": {
       "TODO": "Does $c relates to $t or $s?. Check statistics. Deviates from 'referenceToInstance'",
       "NOTE": "For now, continue to map $c together with $s - applies to all linkfields (except 776)",
-      "$c": {"about": "_:workTitle", "property": "qualifier", "NOTE:marc-repeatable": false}
+      "$c": {"about": "_:workTitle", "property": "qualifier", "ignoreOnRevert": true, "NOTE:marc-repeatable": false}
     },
 
     "instanceTitleQualifier": {
       "TODO": "Does $c relates to $t or $s?. Check statistics. Deviates from 'referenceToWork' and 'referenceToSeriesInstance'",
       "NOTE": "For now, continue to map bib 776 differently; $c together with $t",
-      "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false}
+      "$c": {"about": "_:title", "property": "qualifier", "ignoreOnRevert": true, "NOTE:marc-repeatable": false}
     }
   },
 
@@ -17141,10 +17141,7 @@
           "normalized": {"760": {"ind1": "0", "ind2": " ", "subfields": [
             {"i": "displayText"},
             {"t": "Publikation"},
-            {"c": "Särskiljande tillägg"},
-            {"h": "Fysisk beskrivning"},
             {"g": "s. 144-145"},
-            {"n": "Anmärkning"},
             {"x": "1401-9612"}
           ]}},
           "result": {"mainEntity": {
@@ -17263,8 +17260,6 @@
           ]}},
           "normalized": {"765": {"ind1": "0", "ind2": " ", "subfields": [
             {"t": "Tempelriddaren"},
-            {"h": "Fysisk beskrivning"},
-            {"n": "Anmärkning"},
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
@@ -17518,7 +17513,6 @@
           "normalized": {"772": {"ind1": "0", "ind2": "0", "subfields": [
             {"a": "Hellström, Lennart, 1942-"},
             {"t": "Grundläggande matematik för tillämpningar"},
-            {"c": "Lennart Hellström, Lars-Åke Lindahl"},
             {"d": "Uppsala : förf., cop. 1973"},
             {"w": "9901066360"}
           ]}},
@@ -17844,7 +17838,6 @@
           ]}},
           "normalized": {"774": {"ind1": "0", "ind2": "0", "subfields": [
             {"t": "Map of area with highlighted street"},
-            {"b": "3. ed."},
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
@@ -17971,10 +17964,8 @@
           "normalized": {"775": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "Olsson, Jan"},
             {"d": "1979"},
-            {"h": "Fysisk beskrivning"},
             {"g": "Övningsbok"},
             {"f": "Företagsekonomi 80"},
-            {"n": "Anmärkning"},
             {"z": "91-40-55055-9"},
             {"w": "1320351"}
           ]}},
@@ -18053,7 +18044,6 @@
           "normalized": {"775": {"ind1": "0", "ind2": " ", "subfields": [
             {"i": "Parallellutgåva"},
             {"t": "Tolkning och översättning vid straffrättsliga förfaranden"},
-            {"b": "genomförande av EU:s tolknings- och översättningsdirektiv : betänkande"},
             {"z": "9789138237748"},
             {"w": "13506478"}
           ]}},
@@ -18098,7 +18088,6 @@
           "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [
             {"i": "Print"},
             {"t": "War of Words: Dutch Pro-Boer Propaganda and the South African War (1899-1902)"},
-            {"b": "First edition"},
             {"z": "978-90-8964-412-1"}
           ]}},
           "result": {"mainEntity": {
@@ -18228,6 +18217,11 @@
             {"i": "Print"},
             {"t": "Entangled world"},
             {"c": "Original"},
+            {"z": "9783527404704"}
+          ]}},
+          "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [
+            {"i": "Print"},
+            {"t": "Entangled world"},
             {"z": "9783527404704"}
           ]}},
           "result": {"mainEntity": {
