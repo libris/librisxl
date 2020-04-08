@@ -230,21 +230,13 @@ class ElasticSearch {
             }
         }
 
-        /*
-        // FIXME: temporary fix to keep number of elastic field in check
-        // Shrink all meta properties except for root document
-        DocumentUtil.findKey(framed, 'meta') { value, path ->
-            if (path.size() > 1 && value instanceof Map) {
-                Map meta = (Map) value
-                meta.remove('created')
-                meta.remove('modified')
-                meta.remove('recordStatus')
-                meta.remove('mainEntity')
+        Set languageContainers = whelk.jsonld.langContainerAlias.values() as Set
+        Set languagesToKeep = ['sv', 'en'] // TODO: where do we define these?
+        DocumentUtil.traverse(framed, { value, path ->
+            if (path && path.last() in languageContainers) {
+                return new DocumentUtil.Replace(value.findAll {lang, str -> lang in languagesToKeep})
             }
-            return DocumentUtil.NOP
-        }
-
-         */
+        })
 
         log.trace("Framed data: ${framed}")
 
