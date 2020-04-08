@@ -199,7 +199,7 @@ class ElasticSearch {
         Document copy = document.clone()
 
         if (collection != "hold") {
-            whelk.embellish(copy)
+            whelk.embellish(copy, ['chips'])
         }
 
         log.debug("Framing ${document.getShortId()}")
