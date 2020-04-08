@@ -1142,7 +1142,8 @@
       "$9": {
         "addLink": "inCollection",
         "resourceType": "TermCollection",
-        "property": "code"
+        "property": "code",
+        "ignoreOnRevert": true
       },
       "constructProperties": {
         "prefLabel": {"property": "termComponentList.prefLabel", "join": "--"}
@@ -14513,6 +14514,9 @@
           "source": {"650": {"ind1": " ", "ind2": "7",
             "subfields": [{"a": "Fysik"}, {"2": "sao"}, {"9": "Fack"}]}
           },
+          "normalized": {"650": {"ind1": " ", "ind2": "7",
+            "subfields": [{"a": "Fysik"}, {"2": "sao"}]}
+          },
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -15189,6 +15193,10 @@
             {"a": "Deckare"},
             {"2": "saogf"},
             {"9": "Skon"}
+          ]}},
+          "normalized": {"655": {"ind1": " ", "ind2": "7", "subfields": [
+            {"a": "Deckare"},
+            {"2": "saogf"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
