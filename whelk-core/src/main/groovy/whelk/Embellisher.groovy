@@ -95,6 +95,10 @@ class Embellisher {
     }
 
     private Iterable<Map> load(String lens, Iterable<String> iris) {
+        if (iris.isEmpty()) {
+            return []
+        }
+
         def data = lens == 'full'
                 ? getDocs.apply(iris)
                 : getCards.apply(iris)

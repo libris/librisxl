@@ -356,10 +356,7 @@ class Whelk implements Storage {
     }
 
     void embellish(Document document) {
-        def docsByIris = { List<String> iris ->
-            def ids = storage.getSystemIdsByIris(iris).values().collect()
-            bulkLoad(ids).values().collect{ it.data }
-        }
+        def docsByIris = { List<String> iris -> bulkLoad(iris).values().collect{ it.data } }
         new Embellisher(jsonld, docsByIris, storage.&getCards, relations.&getByReverse).embellish(document)
     }
 
