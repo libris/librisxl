@@ -18450,6 +18450,50 @@
               "seriesStatement": ["Statens offentliga utredningar"]
             }]
           }}
+        },
+        {
+          "name": "Revert linked Meeting entity containing name and additionalName to $a",
+          "normalized": {"777": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Paris, Peace Conference"}
+          ]}},
+          "result": {"mainEntity": {
+            "issuedWith": [{
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Meeting",
+                    "name": "Paris",
+                    "additionalName": "Peace Conference"
+                  }
+                }]
+              }
+            }]
+          }}
+        },
+        {
+          "name": "Revert linked Meeting entity containing name and marc:subordinateUnit to $a",
+          "normalized": {"777": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Delegation from Sweden, World Peace Conference"}
+          ]}},
+          "result": {"mainEntity": {
+            "issuedWith": [{
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Meeting",
+                    "name": "World Peace Conference",
+                    "marc:subordinateUnit" : [ "Delegation from Sweden" ]
+                  }
+                }]
+              }
+            }]
+          }}
         }
       ]
     },
