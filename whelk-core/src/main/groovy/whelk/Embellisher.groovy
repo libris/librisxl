@@ -53,7 +53,7 @@ class Embellisher {
         List<Map> start = [document.data]
 
         Set<String> visitedIris = new HashSet<>()
-        visitedIris.addAll(document.getThingIdentifiers())
+        visitedIris.addAll(plusWithoutHash(document.getThingIdentifiers()))
 
         def docs = fetchNonVisited('full', getCloseLinks(start), visitedIris).collect()
 
@@ -90,7 +90,8 @@ class Embellisher {
 
     private Iterable<Map> fetchNonVisited(String lens, Iterable<String> iris, Set<String> visitedIris) {
         def data = load(lens, iris - visitedIris)
-        visitedIris.addAll(data.collectMany { new Document(it).getThingIdentifiers() })
+        visitedIris.addAll(data.collectMany { plusWithoutHash(new Document(it).getThingIdentifiers()) })
+        visitedIris.addAll(iris)
         return data
     }
 
@@ -137,5 +138,9 @@ class Embellisher {
             theThing[JsonLd.REVERSE_KEY][relation] = irisLinkingHere.collect { [(JsonLd.ID_KEY): it] }
             cards.addAll(fetchNonVisited(lens, irisLinkingHere, visitedIris))
         }
+    }
+
+    private static List<String> plusWithoutHash(List<String> iris) {
+        return iris + iris.findResults { if(it.contains('#')) {it.substring(0, it.indexOf('#'))} }
     }
 }
