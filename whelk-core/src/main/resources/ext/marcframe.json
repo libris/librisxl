@@ -7483,6 +7483,43 @@
               ]
             }
           }}
+        },
+        {
+          "name": "By using fallbackEntity, entities on both work and thing will be reverted",
+          "normalized": [{
+            "082": {"ind1": "0", "ind2": "0", "subfields": [
+              {"a": "158.1"},
+              {"2": "23"}
+            ]}},{
+            "082": {"ind1": " ", "ind2": "4", "subfields": [
+              {"a": "E184.S23"},
+              {"b": "A685"}
+            ]}}],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "classification": [
+                {
+                  "@type": "ClassificationDdc",
+                  "code": "158.1",
+                  "editionEnumeration": "23",
+                  "edition": "full",
+                  "source": {
+                    "@type": "Source",
+                    "@id": "http://id.loc.gov/vocabulary/organizations/dlc",
+                    "code": "dlc"
+                  }
+                }
+              ]
+            },
+            "classification": [
+              {
+                "@type": "ClassificationDdc",
+                "code": "E184.S23",
+                "itemPortion": "A685"
+              }
+            ]
+          }}
         }
       ]
     },
