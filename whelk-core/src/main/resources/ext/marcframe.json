@@ -14511,7 +14511,7 @@
       "_spec": [
         {
           "source": {"650": {"ind1": " ", "ind2": "7",
-            "subfields": [{"a": "Fysik"}, {"2": "sao"}]}
+            "subfields": [{"a": "Fysik"}, {"2": "sao"}, {"9": "Fack"}]}
           },
           "result": {"mainEntity": {
             "instanceOf": {
@@ -14525,6 +14525,10 @@
                     "@type": "ConceptScheme",
                     "code": "sao"
                   },
+                  "inCollection": [{
+                    "@type": "TermCollection",
+                    "code": "Fack"
+                  }],
                   "prefLabel": "Fysik"
                 }
               ]
@@ -15181,7 +15185,11 @@
       "subfieldOrder": "8 6 a x z y v 0 2 1",
       "_spec": [
         {
-          "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Deckare"}, {"2": "saogf"}]}},
+          "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [
+            {"a": "Deckare"},
+            {"2": "saogf"},
+            {"9": "Skon"}
+          ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -15194,6 +15202,10 @@
                     "@type": "ConceptScheme",
                     "code": "saogf"
                   },
+                  "inCollection": [{
+                    "@type": "TermCollection",
+                    "code": "Skon"
+                  }],
                   "prefLabel": "Deckare"
                 }
               ]
