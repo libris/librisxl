@@ -48,6 +48,8 @@ class BlankNodeLinkerSpec extends Specification {
         linker.addSubstitutions([
                 'auth': 'aut'
         ])
+
+        linker.addDeletions(['junk'])
     }
 
     def "handles basic cases"() {
@@ -56,10 +58,16 @@ class BlankNodeLinkerSpec extends Specification {
         data == expected
 
         where:
-        data                            | change | expected
-        [role: [label: 'Författare']]   | true   | [role: ['@id': 'http://id/aut']]
-        [role: [label: 'auth']]         | true   | [role: ['@id': 'http://id/aut']]
-        [role: [label: 'tłumacz']]      | true   | [role: ['@id': 'http://id/trl']]
-        [role: [label: 'Übersetzerin']] | true   | [role: ['@id': 'http://id/trl']]
+        data                                          | change | expected
+        [role: [label: 'not mapped']]                 | false  | [role: [label: 'not mapped']]
+        [role: [label: 'Författare']]                 | true   | [role: ['@id': 'http://id/aut']]
+        [role: [label: 'auth']]                       | true   | [role: ['@id': 'http://id/aut']]
+        [role: [label: 'tłumacz']]                    | true   | [role: ['@id': 'http://id/trl']]
+        [role: [label: 'Übersetzerin']]               | true   | [role: ['@id': 'http://id/trl']]
+        [role: [[label: 'auth'], [label: 'tłumacz']]] | true   | [role: [['@id': 'http://id/aut'], ['@id': 'http://id/trl']]]
+        [role: [label: 'junk'], x: 'y']               | true   | [x: 'y']
+
+        // because of how deletion is implemented now it will result in a list with one element
+        [role: [[label: 'auth'], [label: 'junk']]]    | true   | [role: [['@id': 'http://id/aut']]]
     }
 }
