@@ -103,7 +103,7 @@ private boolean hasNoGenreFormField(work) {
 }
 
 private boolean isSaogfSkonlitteratur(whelk, work) {
-    return work.genreForm && work.genreForm.any { gf -> whelk.isImpliedBy(SKONLITTERATUR, gf.'@id') }
+    return work.genreForm && work.genreForm.any { gf -> whelk.relations.isImpliedBy(SKONLITTERATUR, gf.'@id') }
 }
 
 private boolean hasAnySubjectAsGenreForm(work) {
