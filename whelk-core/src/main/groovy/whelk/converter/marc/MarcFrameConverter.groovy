@@ -882,6 +882,7 @@ class ConversionPart {
 
     MarcRuleSet ruleSet
     String aboutEntityName
+    String fallbackEntityName
     Map tokenMap
     String tokenMapName // TODO: remove in columns in favour of @type+code/uriTemplate ?
     Map reverseTokenMap
@@ -953,7 +954,41 @@ class ConversionPart {
             aboutMap = (Map<String, List>) state.aboutMap
         }
 
-        return (Map) aboutMap[aboutEntityName]?.get(0) ?: data
+        Map aboutEntity = (Map) aboutMap[aboutEntityName]?.get(0) ?: data
+        if (fallbackEntityName) {
+            Map fallbackEntity = (Map) aboutMap[fallbackEntityName]?.get(0)
+            if (fallbackEntity)
+                return deepMergedClone(fallbackEntity, aboutEntity)
+        }
+        return aboutEntity
+    }
+
+    Map deepMergedClone(Map keepSome, Map keepAll) {
+        def result = [:]
+        Set keySet = keepAll.keySet() + keepSome.keySet()
+        for (Object key : keySet) {
+
+            Object highPrioValue = keepAll[key]
+            Object lowPrioValue = keepSome[key]
+
+            if (!highPrioValue && lowPrioValue)
+                result.put(key, lowPrioValue)
+            else if (highPrioValue && !lowPrioValue)
+                result.put(key, highPrioValue)
+            else if (highPrioValue && lowPrioValue) {
+                if (highPrioValue instanceof Map && lowPrioValue instanceof Map) {
+                    result.put(key, deepMergedClone((Map)lowPrioValue, (Map)highPrioValue))
+                }
+                else if (highPrioValue instanceof List && lowPrioValue instanceof List) {
+                    List resultingList = []
+                    resultingList.addAll( (List) highPrioValue )
+                    resultingList.addAll( (List) lowPrioValue )
+                    result.put(key, resultingList)
+                }
+            }
+        }
+
+        return result
     }
 
     def revertObject(obj) {
@@ -1083,6 +1118,8 @@ class ConversionPart {
             requiredOk = false
         }
 
+        // The about map is the whole embellished record N times, framed around the "pending keys", typically:
+        // ?record, ?thing, ?work, _:provision
         return new Tuple2<Boolean, Map>(requiredOk, aboutMap)
     }
 
@@ -1160,6 +1197,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
             definesDomainEntityType = fieldDfn.aboutType
         }
         aboutEntityName = fieldDfn.aboutEntity ?: '?thing'
+        fallbackEntityName = fieldDfn.fallbackEntity
 
         repeatable = fieldDfn.containsKey('addLink')
         link = linkTerm(fieldDfn.link ?: fieldDfn.addLink, repeatable)
@@ -2542,6 +2580,7 @@ class MarcSubFieldHandler extends ConversionPart {
         this.code = code
         super.setTokenMap(fieldHandler, subDfn)
         aboutEntityName = subDfn.aboutEntity
+        fallbackEntityName = subDfn.fallbackEntity
         ignored = subDfn.ignored == true
         ignoreOnRevert = subDfn.ignoreOnRevert == true
 
