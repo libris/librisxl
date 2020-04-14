@@ -23731,7 +23731,11 @@
       "$5": {"addProperty": "marc:institutionToWhichFieldApplies"},
       "$9": {"ignored": true}
     },
-    "747": {"ignored": true, "NOTE:record-count": 0},
+    "747": {
+      "NOTE:LC": "747 - Established Heading Linking Entry - Named Event (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "748": {
       "addLink": "marc:hasEstablishedHeadingLinkingEntryChronologicalTerm",
       "resourceType": "marc:EstablishedHeadingLinkingEntryChronologicalTerm",
@@ -23820,7 +23824,11 @@
       "$0": {"addProperty": "marc:recordControlNumber"},
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/genre-form.html"
     },
-    "762": {"ignored": true, "NOTE:record-count": 0},
+    "762": {
+      "NOTE:LC": "762 - Established Heading Linking Entry - Medium of Performance Term (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "780": {
       "inherit": "750",
       "$x": {"property": "prefLabel"}
@@ -23839,7 +23847,11 @@
       "inherit": "755",
       "$v": {"property": "prefLabel"}
     },
-    "788": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "788": {
+      "NOTE:LC": "788 - Complex Linking Entry Data (NR) - nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
 
     "856": {
       "inherit": "bib",
