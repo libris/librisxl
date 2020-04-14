@@ -302,7 +302,7 @@
       "i1": {
         "about": "_:title",
         "property": "marc:searchElement",
-        "tokenMap": {"0": false, "2": null, "3": null, "4": null, "|": null},
+        "tokenMap": {"0": null, "2": null, "3": null, "4": null, "|": null},
         "marcDefault": "1"
       }
     },
@@ -8374,13 +8374,19 @@
             "210": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Plant prot. bull."} ,
               {"b": "(Faridabad)"}
-            ]}},
+            ]}
+          },
+          "normalized": {
+            "210": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Plant prot. bull."} ,
+              {"b": "(Faridabad)"}
+            ]}
+          },
           "result": {"mainEntity": {
             "hasTitle": [{
               "@type": "AbbreviatedTitle",
               "mainTitle":  "Plant prot. bull.",
               "qualifier": ["(Faridabad)"],
-              "marc:searchElement" : false,
               "source" : {
                 "@type" : "Source",
                 "code" : "issnkey"
@@ -8557,7 +8563,7 @@
               ]}}
           ],
           "normalized": [
-              {"240": {"ind1": "0", "ind2": "0", "subfields": [
+              {"240": {"ind1": "1", "ind2": "0", "subfields": [
                 {"a": "Moyen âge"},
                 {"l": "Engelska."}
               ]}}
@@ -8567,8 +8573,7 @@
               "@type": "Text",
               "hasTitle": [ {
                 "@type": "Title",
-                "mainTitle": "Moyen âge",
-                "marc:searchElement" : false
+                "mainTitle": "Moyen âge"
               } ],
               "language": {"@type": "Language", "label": "Engelska."},
               "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
@@ -8856,10 +8861,14 @@
               {"a": "Anteckningar från en ö /"},
               {"c": "Tove Jansson, Tuulikki Pietilä."}
           ]}},
+          "normalized": {
+            "245": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Anteckningar från en ö /"},
+              {"c": "Tove Jansson, Tuulikki Pietilä."}
+          ]}},
           "result": {"mainEntity": {
             "hasTitle": [ {"@type": "Title",
-              "mainTitle":  "Anteckningar från en ö",
-              "marc:searchElement": false
+              "mainTitle":  "Anteckningar från en ö"
             } ],
             "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
           }}
