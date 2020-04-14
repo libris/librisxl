@@ -980,7 +980,8 @@ class ConversionPart {
                     result.put(key, deepMergedClone((Map)lowPrioValue, (Map)highPrioValue))
                 }
                 else if (highPrioValue instanceof List && lowPrioValue instanceof List) {
-                    List resultingList = (List) highPrioValue
+                    List resultingList = []
+                    resultingList.addAll( (List) highPrioValue )
                     resultingList.addAll( (List) lowPrioValue )
                     result.put(key, resultingList)
                 }
