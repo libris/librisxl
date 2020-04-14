@@ -8930,10 +8930,9 @@
       "i1": {
         "property": "marc:searchControl",
         "tokenMap": {
-          "0": "marc:NoteNoAddedEntry",
-          "1": "marc:NoteAddedEntry",
-          "2": "marc:NoNoteNoAddedEntry",
-          "3": "marc:NoNoteAddedEntry"
+          "0": null,
+          "2": null,
+          "3": null
         },
         "marcDefault": "1"
       },
@@ -8972,13 +8971,18 @@
             "hasTitle": [{
               "@type": "CaptionTitle",
               "mainTitle": "Newspaper index",
-              "coverage": "January 1982-",
-              "marc:searchControl": "marc:NoteAddedEntry"
+              "coverage": "January 1982-"
             }]
           }}
         },
         {
           "source": {
+            "246": {"ind1": "0", "ind2": " ", "subfields": [
+              {"i": "At head of title:"},
+              {"a": "Science and public affairs"},
+              {"f": "January 1970-April 1974"}
+            ]}},
+          "normalized": {
             "246": {"ind1": "1", "ind2": " ", "subfields": [
               {"i": "At head of title:"},
               {"a": "Science and public affairs"},
@@ -8989,8 +8993,7 @@
               "@type": "VariantTitle",
               "typeNote": "At head of title:",
               "mainTitle": "Science and public affairs",
-              "coverage": "January 1970-April 1974",
-              "marc:searchControl": "marc:NoteAddedEntry"
+              "coverage": "January 1970-April 1974"
             }]
           }}
         }
