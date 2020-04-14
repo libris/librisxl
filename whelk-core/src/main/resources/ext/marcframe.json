@@ -2890,7 +2890,7 @@
         "[3]": {
           "link": "musicFormat",
           "uriTemplate": "https://id.kb.se/marc/MusicFormatType-{_}",
-          "matchUriToken": "^[_abcdeghijklm]$"
+          "matchUriToken": "^[abcdeghijklmp]$"
         },
         "[4]": {
           "link": "marc:parts",
@@ -4461,12 +4461,14 @@
         "[20]": {
           "aboutEntity": "?work",
           "link": "musicFormat",
-          "uriTemplate": "https://id.kb.se/marc/MusicFormatType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MusicFormatType-{_}",
+          "matchUriToken": "^[abcdeghijklmp]$"
         },
         "[21]": {
           "aboutEntity": "?work",
           "link": "marc:parts",
-          "uriTemplate": "https://id.kb.se/marc/MusicPartsType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MusicPartsType-{_}",
+          "matchUriToken": "^[def]$"
         },
         "[22]": {
           "aboutEntity": "?work",
