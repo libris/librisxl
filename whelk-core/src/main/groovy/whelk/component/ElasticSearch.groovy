@@ -199,7 +199,7 @@ class ElasticSearch {
         Document copy = document.clone()
 
         if (collection != "hold") {
-            whelk.embellish(copy)
+            whelk.embellish(copy, ['chips'])
         }
 
         log.debug("Framing ${document.getShortId()}")
@@ -210,7 +210,7 @@ class ElasticSearch {
         int originalSize = document.data['@graph'].size()
         copy.data['@graph'] =
                 graph.take(originalSize).collect { toSearchCard(whelk, it, links) } +
-                graph.drop(originalSize).collect { toSearchCard(whelk, it, Collections.EMPTY_SET) }
+                graph.drop(originalSize).collect { recordToChip(whelk, toSearchCard(whelk, it, Collections.EMPTY_SET)) }
 
         setComputedProperties(copy, links, whelk)
         copy.setThingMeta(document.getCompleteId())
@@ -230,31 +230,40 @@ class ElasticSearch {
             }
         }
 
-        // FIXME: temporary fix to keep number of elastic field in check
-        // Shrink all meta properties except for root document
-        DocumentUtil.findKey(framed, 'meta') { value, path ->
-            if (path.size() > 1 && value instanceof Map) {
-                Map meta = (Map) value
-                meta.remove('created')
-                meta.remove('modified')
-                meta.remove('recordStatus')
-                meta.remove('mainEntity')
+        Set languageContainers = whelk.jsonld.langContainerAlias.values() as Set
+        Set languagesToKeep = ['sv', 'en'] // TODO: where do we define these?
+        DocumentUtil.traverse(framed, { value, path ->
+            if (path && path.last() in languageContainers) {
+                return new DocumentUtil.Replace(value.findAll {lang, str -> lang in languagesToKeep})
             }
-            return DocumentUtil.NOP
-        }
+        })
 
         log.trace("Framed data: ${framed}")
 
         return JsonOutput.toJson(framed)
     }
 
-    private Map toSearchCard(Whelk whelk, Map thing, Set<String> preserveLinks) {
+    private static Map toSearchCard(Whelk whelk, Map thing, Set<String> preserveLinks) {
         boolean chipsify = false
         boolean addSearchKey = true
         boolean reduceKey = false
         def preservedPaths = preserveLinks ? JsonLd.findPaths(thing, '@id', preserveLinks) : []
 
-        return whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preservedPaths)
+        whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preservedPaths)
+    }
+
+    private static Map recordToChip(Whelk whelk, Map thing) {
+        if (thing[JsonLd.GRAPH_KEY]) {
+
+            // FIXME: this is a temporary workaround for documents from definitions that are missing @type in record.
+            //  Remove when LXL-3098 is fixed.
+            if (!thing[JsonLd.GRAPH_KEY][0][JsonLd.TYPE_KEY]) {
+                thing[JsonLd.GRAPH_KEY][0][JsonLd.TYPE_KEY] = 'Record'
+            }
+
+            thing[JsonLd.GRAPH_KEY][0] = whelk.jsonld.toChip(thing[JsonLd.GRAPH_KEY][0])
+        }
+        thing
     }
 
     private static void setComputedProperties(Document doc, Set<String> links, Whelk whelk) {
