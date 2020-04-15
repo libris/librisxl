@@ -1430,8 +1430,9 @@
       },
       "$a": {
         "about": "_:agent",
-        "property": "name",
-        "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
+        "property": "label",
+        "splitValueProperties": ["familyName", "givenName"],
+        "rejoin": ", ",
         "infer": true,
         "TODO:targetMatch": "1xx"
       },
@@ -17556,7 +17557,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Agent",
-                    "name": "Beckmann, Max"
+                    "label": "Beckmann, Max"
                   }
                 }]
               }]
@@ -17589,7 +17590,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Agent",
-                    "name": "Hellström, Lennart, 1942-"
+                    "label": "Hellström, Lennart, 1942-"
                   }
                 }],
                 "hasInstance": {
@@ -17740,7 +17741,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Agent",
-                    "name": "Robson, James,"
+                    "label": "Robson, James,"
                   }
                 }]
               }
@@ -17798,7 +17799,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Agent",
-                    "name": "Olofsson, Jonas"
+                    "label": "Olofsson, Jonas"
                   }
                 }],
                 "hasInstance": {
@@ -17991,7 +17992,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Agent",
-                    "name": "Bonnevie, Kristine"
+                    "label": "Bonnevie, Kristine"
                   }
                 }],
                 "hasInstance": {
@@ -18114,7 +18115,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Agent",
-                    "name": "Olsson, Jan"
+                    "label": "Olsson, Jan"
                   }
                 }]
               }
@@ -18265,7 +18266,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Agent",
-                    "name": "Andersson, Lennart"
+                    "label": "Andersson, Lennart"
                   }
                 }]
               },
@@ -18302,7 +18303,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Agent",
-                    "name": "Adam, von Bremen, 11th cent."
+                    "label": "Adam, von Bremen, 11th cent."
                   }
                 }],
                 "hasTitle": [{
@@ -18385,7 +18386,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Agent",
-                    "name": "Gerland, Gunilla"
+                    "label": "Gerland, Gunilla"
                   }
                 }]
               }
@@ -18426,7 +18427,7 @@
                   "@type": "PrimaryContribution",
                   "agent": {
                     "@type": "Agent",
-                    "name": "Andersson, Jan"
+                    "label": "Andersson, Jan"
                   }
                 }]
               },
