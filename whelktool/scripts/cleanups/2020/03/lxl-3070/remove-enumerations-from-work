@@ -7,7 +7,7 @@ musicFormat = "musicFormat"
 intendedAudience = "intendedAudience"
 
 selectByCollection('bib') { bib ->
-    work = getWork(bib)
+    def work = getWork(bib)
     removeField(bib, work, musicFormat, musicFormatType)
     removeField(bib, work, marcParts, musicPartsType)
     removeField(bib, work, intendedAudience, audienceType)
