@@ -343,7 +343,10 @@ class RemoteSearchAPI extends HttpServlet {
                         def jsonDoc = marcFrameConverter.convert(mapper.readValue(jsonRec.getBytes("UTF-8"), Map), generatedId)
                         log.trace("Marcframeconverter done")
 
-                        results.addHit(new Document(jsonDoc))
+                        Document doc = new Document(jsonDoc)
+                        whelk.normalize(doc)
+                        whelk.embellish(doc)
+                        results.addHit(doc)
                     }
                 } else {
                     log.warn("Received errorMessage from metaproxy: $errorMessage")

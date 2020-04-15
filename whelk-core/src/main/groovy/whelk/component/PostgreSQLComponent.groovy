@@ -281,6 +281,7 @@ class PostgreSQLComponent implements Storage {
     LinkFinder linkFinder
     DependencyCache dependencyCache
     JsonLd jsonld
+    DocumentNormalizer normalizer
 
     private AtomicLong cardsUpdated = new AtomicLong()
 
@@ -1777,13 +1778,27 @@ class PostgreSQLComponent implements Storage {
         return docList
     }
 
+    void normalizeDocument(Document doc) {
+        getConnection().withCloseable { connection ->
+            normalizeDocument(doc, connection)
+        }
+    }
+
+    void normalizeDocument(Document doc, Connection connection) {
+        doc.normalizeUnicode()
+
+        if (normalizer != null) {
+            normalizer.normalize(doc, connection)
+        }
+    }
+
     private void normalizeDocumentForStorage(Document doc, Connection connection) {
         // Synthetic property, should never be stored
         DocumentUtil.findKey(doc.data, JsonLd.REVERSE_KEY) { value, path ->
             new DocumentUtil.Remove()
         }
 
-        doc.normalizeUnicode()
+        normalizeDocument(doc, connection)
 
         if (linkFinder != null) {
             linkFinder.normalizeIdentifiers(doc, connection)

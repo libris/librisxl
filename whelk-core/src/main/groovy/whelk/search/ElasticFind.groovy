@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 class ElasticFind {
-    private static final int PAGE_SIZE = 50
+    private static final int PAGE_SIZE = 100
 
     ESQuery esQuery
 
