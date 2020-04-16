@@ -45,4 +45,20 @@ class Unicode {
     static String normalizeForSearch(String s) {
         return Normalizer.normalize(s, Normalizer.Form.NFKC)
     }
+
+    /**
+     * Removes leading and trailing non-"alpha, digit or parentheses".
+     */
+    static String trimNoise(String s) {
+        return trimLeadingNoise(trimLeadingNoise(s).reverse()).reverse()
+    }
+
+    /**
+     * Removes leading non-"alpha, digit or parentheses".
+     */
+    static String trimLeadingNoise(String s) {
+        def w = /\(\)\p{IsAlphabetic}\p{Digit}/
+        def m = s =~ /[^${w}]*(.*)/
+        return m.matches() ? m.group(1) : s
+    }
 }

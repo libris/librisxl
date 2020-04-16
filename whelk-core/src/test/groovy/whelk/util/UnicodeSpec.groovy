@@ -22,4 +22,13 @@ class UnicodeSpec extends Specification {
         Unicode.normalize(s) == norm
     }
 
+    def "trim noise()"() {
+        expect:
+        Unicode.trimNoise(dirty) == clean
+        where:
+        dirty                                    | clean
+        ' _.:;|{[Überzetsung]}|;:. '             | 'Überzetsung'
+        ' _.:;|(Überzetsung)|;:. '               | '(Überzetsung)'
+        ' _.:;| Ü b e r - z e t - s u n g |;:. ' | 'Ü b e r - z e t - s u n g'
+    }
 }
