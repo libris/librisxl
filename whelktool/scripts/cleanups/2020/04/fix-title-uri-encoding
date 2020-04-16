@@ -1,0 +1,18 @@
+scheduledForChange = getReportWriter("scheduledForChange")
+
+selectByCollection('auth') { auth ->
+    def (record, thing, work) = auth.graph
+    String id = record.mainEntity[ID]
+
+    if (id =~ "[()]") {
+        record.mainEntity[ID] = id.replaceAll("\\(", "%28").replaceAll("\\)", "%29")
+        //thing[ID] = record.mainEntity[ID]?
+        thing.sameAs.removeIf { sameAs -> areEquivalent(id, sameAs[ID])}
+        scheduledForChange.println "$id"
+        auth.scheduleSave()
+    }
+}
+
+Boolean areEquivalent(id, encodedId) {
+    return URLDecoder.decode(id, "UTF-8") == URLDecoder.decode(encodedId, "UTF-8")
+}
