@@ -22170,9 +22170,119 @@
         }
       ]
     },
-    "430": {
-      "ignored": true,
-      "TODO": "map, alternativeForm a Work (like a structured altLabel)"
+    "430" : {
+      "aboutEntity": "?thing",
+      "addLink": "hasVariant",
+      "include": ["i2-nonfiling"],
+      "resourceType": "Work",
+      "pendingResources": {
+        "_:title": {
+          "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
+      },
+      "$a": {"about": "_:title", "property": "mainTitle"},
+      "$d": {"addProperty": "legalDate"},
+      "$f": {"property": "originDate"},
+      "$g": {"link": "genreForm", "resourceType": "GenreForm", "property": "label"},
+      "$h": {"ignored": true},
+      "$k": {"addProperty": "natureOfContent"},
+      "$l": {"link": "language", "resourceType": "Language", "property": "label", "infer": true},
+      "$m": {"addLink": "musicMedium", "resourceType": "MusicMedium", "property": "label", "leadingPunctuation": ","},
+      "$n": {"about": "_:title", "addProperty": "partNumber", "punctuationChars": ",", "leadingPunctuation": ","},
+      "$p": {"about": "_:title", "addProperty": "partName", "punctuationChars": "/"},
+      "$o": {"property": "marc:arrangedStatementForMusic"},
+      "$r": {"property": "musicKey", "leadingPunctuation": ","},
+      "$s": {"property": "version"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "$1": {"ignored": true},
+      "subfieldOrder": "a d m n r p k l s f o",
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "name": "Simple hasVariant",
+          "source": [
+            {"430": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Bibeln"}, {"p": "Uppenbarelseboken"}, { "l": "Svenska." }, { "s": "Thomander." }, {"f": "1835"}]}}
+          ],
+          "normalized": [
+            {"430": {"ind1": " ", "ind2": "0", "subfields": [{"a": "Bibeln"}, {"p": "Uppenbarelseboken"}, { "l": "Svenska." }, { "s": "Thomander." }, {"f": "1835"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type" : "Identity",
+              "hasVariant": [
+                {
+                  "@type" : "Work",
+                  "hasTitle" : [{
+                    "@type" : "Title",
+                    "mainTitle" : "Bibeln",
+                    "partName" : ["Uppenbarelseboken"]
+                  }
+                ],
+                "language": {
+                  "@type": "Language",
+                  "label": "Svenska."
+                },
+                "originDate": "1835",
+                "version": "Thomander."
+              }]
+            }
+          }
+        },
+        {
+          "name": "hasVariant with 430 and 400",
+          "source": [
+            {"400": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Arne, Thomas Augustine"}, {"d": "1710-1778."}, {"t": "Fairy prince"}, {"p": "A wood nymph"}]}},
+            {"430": {"ind1": " ", "ind2": " ", "subfields": [{"a": "a"}, {"d": "d"}, {"p": "p"}, {"s": "s"}, {"f": "f"}]}}
+          ],
+          "normalized": [
+            {"400": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Arne, Thomas Augustine,"}, {"d": "1710-1778."}, {"t": "Fairy prince"}, {"p": "A wood nymph"}]}},
+            {"430": {"ind1": " ", "ind2": "0", "subfields": [{"a": "a"}, {"d": "d"}, {"p": "p"}, {"s": "s"}, {"f": "f"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type" : "Identity",
+              "hasVariant": [
+                {
+                  "@type" : "Work",
+                  "hasTitle" : [
+                    {
+                      "@type" : "Title",
+                      "mainTitle" : "Fairy prince",
+                      "partName" : ["A wood nymph"]
+                    }
+                  ],
+                  "contribution": [
+                    {
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Person",
+                        "familyName": "Arne",
+                        "givenName": "Thomas Augustine",
+                        "lifeSpan": "1710-1778."
+                      }
+                    }
+                  ]
+                },
+                {
+                  "@type" : "Work",
+                  "hasTitle" : [
+                    {
+                      "@type" : "Title",
+                      "mainTitle" : "a",
+                      "partName" : ["p"]
+                    }
+                  ],
+                  "legalDate": ["d"],
+                  "originDate": "f",
+                  "version": "s"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "447": {
       "NOTE:LC": "447 - See From Tracing - Named Event (R)",
