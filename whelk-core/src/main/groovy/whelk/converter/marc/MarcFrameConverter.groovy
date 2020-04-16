@@ -2640,7 +2640,7 @@ class MarcSubFieldHandler extends ConversionPart {
 
         infer = subDfn.infer == true
 
-        if (subDfn.splitValuePattern || subDfn.splitValueProperties) {
+        if (subDfn.splitValueProperties) {
             /*TODO: assert subDfn.splitValuePattern=~ /^\^.+\$$/,
                    'For explicit safety, these patterns must start with ^ and end with $' */
             // TODO: support repeatable?
