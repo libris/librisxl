@@ -23259,7 +23259,12 @@
         }
       ]
     },
-    "547": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris."},
+    "547": {
+      "NOTE:LC": "547 - See Also From Tracing - Named Event (R)",
+      "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris.",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "548": {
       "NOTE:record-count": 51,
       "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris.",
@@ -23500,14 +23505,26 @@
         }
       ]
     },
-    "562": {"ignored": true, "NOTE:record-count": 0},
+    "562": {
+      "NOTE:LC": "562 - See Also From Tracing - Medium of Performance Term (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "580": {
       "include": ["relation_from_w"],
       "resourceType": "TopicSubdivision",
       "$x": {"property": "prefLabel"}
     },
-    "581": {"ignored": true, "NOTE:record-count": 0},
-    "582": {"ignored": true, "NOTE:record-count": 0},
+    "581": {
+      "NOTE:LC": "581 - See Also From Tracing - Geographic Subdivision (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "582": {
+      "NOTE:LC": "582 - See Also From Tracing - Chronological Subdivision (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "585": {
       "addLink": "marc:hasSeeAlsoFromTracingFormSubdivision",
       "resourceType": "marc:SeeAlsoFromTracingFormSubdivision",
