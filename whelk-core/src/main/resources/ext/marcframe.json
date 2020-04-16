@@ -18453,11 +18453,11 @@
           }}
         },
         {
-          "name": "Revert linked Meeting entity containing name and additionalName to $a",
+          "TODO": "Revert linked Meeting entity containing name and additionalName to $a - Not in place yet. Only reverts one of them",
           "normalized": {"777": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "Paris, Peace Conference"}
           ]}},
-          "result": {"mainEntity": {
+          "TODO:result": {"mainEntity": {
             "issuedWith": [{
               "@type": "Instance",
               "instanceOf": {
@@ -18475,11 +18475,11 @@
           }}
         },
         {
-          "name": "Revert linked Meeting entity containing name and marc:subordinateUnit to $a",
+          "TODO": "Revert linked Meeting entity containing name and marc:subordinateUnit to $a - Not in place yet. Only reverts one of them",
           "normalized": {"777": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "Delegation from Sweden, World Peace Conference"}
           ]}},
-          "result": {"mainEntity": {
+          "TODO:result": {"mainEntity": {
             "issuedWith": [{
               "@type": "Instance",
               "instanceOf": {
