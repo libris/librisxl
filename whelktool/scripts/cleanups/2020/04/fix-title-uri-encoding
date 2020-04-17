@@ -4,6 +4,8 @@ selectByCollection('auth') { auth ->
     def (record, thing, work) = auth.graph
     String id = record.mainEntity[ID]
 
+    auth.whelk.storage.doVerifyDocumentIdRetention = false
+    
     if (id =~ "[()]") {
         record.mainEntity[ID] = id.replaceAll("\\(", "%28").replaceAll("\\)", "%29")
         //thing[ID] = record.mainEntity[ID]?
