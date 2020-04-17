@@ -1428,7 +1428,14 @@
         "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.16",
         "marcDefault": "0"
       },
-      "$a": {"about": "_:agent", "property": "label", "infer": true, "TODO:targetMatch": "1xx"},
+      "$a": {
+        "about": "_:agent",
+        "property": "label",
+        "splitValueProperties": ["familyName", "givenName"],
+        "rejoin": ", ",
+        "infer": true,
+        "TODO:targetMatch": "1xx"
+      },
       "$b": {"about": "_:instance", "property": "editionStatement", "ignoreOnRevert": true, "TODO:targetMatch": "250"},
       "$d": {"about": "_:instance", "property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
       "$h": {"about": "_:instance", "addLink": "extent", "resourceType": "Extent", "property": "label", "ignoreOnRevert": true, "NOTE:marc-repeatable": false},
@@ -17875,6 +17882,74 @@
               }]
             }
           }}
+        },
+        {
+          "name": "Linked entity containing familyName/givenName should revert to subfield $a",
+          "normalized": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+            {"a": "Sandemo, Margit"}
+          ]}},
+          "result": {"mainEntity": {
+            "isPartOf": [{
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Person",
+                    "familyName": "Sandemo",
+                    "givenName": "Margit"
+                  }
+                }]
+              }
+            }]
+          }}
+        },
+        {
+          "name": "Linked entity containing marc:subordinateUnit should revert to subfield $a",
+          "normalized": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+            {"a": "Institutionen för psykologi"}
+          ]}},
+          "result": {"mainEntity": {
+            "isPartOf": [{
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Organization",
+                    "marc:subordinateUnit": ["Institutionen för psykologi"]
+                  }
+                }]
+              }
+            }]
+          }}
+        },
+        {
+          "TODO": "Linked entity containing marc:subordinateUnit and isPartOf should revert to subfield $a",
+          "normalized": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+            {"a": "Institutionen för psykologi, Uppsala universitet."}
+          ]}},
+          "TODO:result": {"mainEntity": {
+            "isPartOf": [{
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Organization",
+                    "marc:subordinateUnit": ["Institutionen för psykologi"],
+                    "isPartOf": {
+                      "@type": "Organization",
+                      "name": "Uppsala universitet."
+                    }
+                  }
+                }]
+              }
+            }]
+          }}
         }
       ]
     },
@@ -18395,6 +18470,50 @@
                 "mainTitle": "Statliga betongbestämmelser"
               }],
               "seriesStatement": ["Statens offentliga utredningar"]
+            }]
+          }}
+        },
+        {
+          "TODO": "Revert linked Meeting entity containing name and additionalName to $a - Not in place yet. Only reverts one of them",
+          "normalized": {"777": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Paris, Peace Conference"}
+          ]}},
+          "TODO:result": {"mainEntity": {
+            "issuedWith": [{
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Meeting",
+                    "name": "Paris",
+                    "additionalName": "Peace Conference"
+                  }
+                }]
+              }
+            }]
+          }}
+        },
+        {
+          "TODO": "Revert linked Meeting entity containing name and marc:subordinateUnit to $a - Not in place yet. Only reverts one of them",
+          "normalized": {"777": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Delegation from Sweden, World Peace Conference"}
+          ]}},
+          "TODO:result": {"mainEntity": {
+            "issuedWith": [{
+              "@type": "Instance",
+              "instanceOf": {
+                "@type": "Work",
+                "contribution": [{
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Meeting",
+                    "name": "World Peace Conference",
+                    "marc:subordinateUnit" : [ "Delegation from Sweden" ]
+                  }
+                }]
+              }
             }]
           }}
         }
