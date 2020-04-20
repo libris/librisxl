@@ -1,4 +1,5 @@
 scheduledForChange = getReportWriter("scheduledForChange")
+failedIDs = getReportWriter("scheduledForChange")
 
 selectByCollection('auth') { auth ->
     def (record, thing, work) = auth.graph
@@ -11,7 +12,9 @@ selectByCollection('auth') { auth ->
         thing[ID] = record.mainEntity[ID]
         thing.sameAs.removeIf { sameAs -> areEquivalent(id, sameAs[ID])}
         scheduledForChange.println "$id"
-        auth.scheduleSave()
+        auth.scheduleSave(onError: { e ->
+            failedIDs.println("Failed to save ${record[ID]} due to: $e")
+        })
     }
 }
 
