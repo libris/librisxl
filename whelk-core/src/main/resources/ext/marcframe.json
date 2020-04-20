@@ -23742,15 +23742,48 @@
       "$4": {"ignored": true},
       "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
     },
-    "599": {"ignored": true, "NOTE:local": "MAKULERAT"},
+    "599": {
+      "NOTE:local": "599 Katalogisatörens anmärkning (R) MAKULERAT",
+      "ignored": true
+    },
 
-    "640": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS F.N. EJ"},
-    "641": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS F.N. EJ"},
-    "642": {"ignored": true, "NOTE:local": "ANVÄNDS F.N. EJ"},
-    "643": {"ignored": true, "NOTE:local": "ANVÄNDS F.N. EJ"},
-    "644": {"ignored": true, "NOTE:local": "ANVÄNDS F.N. EJ"},
-    "645": {"ignored": true, "NOTE:local": "ANVÄNDS F.N. EJ"},
-    "646": {"ignored": true, "NOTE:local": "ANVÄNDS F.N. EJ"},
+    "640": {
+      "NOTE": "640 - Series Dates of Publication and/or Sequential Designation (R)",
+      "NOTE:local": "ANVÄNDS F.N. EJ",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "641": {
+      "NOTE:LC": "641 - Series Numbering Peculiarities (R)",
+      "NOTE:local": "ANVÄNDS F.N. EJ",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "642": {
+      "NOTE:LC": "642 - Series Numbering Example (R)",
+      "NOTE:local": "ANVÄNDS F.N. EJ",
+      "ignored": true
+    },
+    "643": {
+      "NOTE:LC": "643 - Series Place and Publisher/Issuing Body (R)",
+      "NOTE:local": "ANVÄNDS F.N. EJ",
+      "ignored": true
+},
+    "644": {
+      "NOTE:LC": "644 - Series Analysis Practice (R)",
+      "NOTE:local": "ANVÄNDS F.N. EJ",
+      "ignored": true
+    },
+    "645": {
+      "NOTE:LC": "645 - Series Tracing Practice (R)",
+      "NOTE:local": "ANVÄNDS F.N. EJ",
+      "ignored": true
+    },
+    "646": {
+      "NOTE:LC": "646 - Series Classification Practice (R)",
+      "NOTE:local": "ANVÄNDS F.N. EJ",
+      "ignored": true
+    },
 
     "663": {
       "addLink": "marc:hasComplexSeeAlsoReferenceName",
@@ -23759,14 +23792,20 @@
       "$b": {"addProperty": "marc:headingReferredTo"},
       "$t": {"addProperty": "marc:titleReferredTo"}
     },
-    "664": {"ignored": true, "NOTE:record-count": 0},
+    "664": {
+      "NOTE:LC": "664 - Complex See Reference - Name (NR)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "665": {
       "addLink": "marc:hasHistoryReference",
       "resourceType": "marc:HistoryReference",
       "$a": {"addProperty": "marc:historyReference"}
     },
-    "666": {"ignored": true},
-
+    "666": {
+      "NOTE:LC": "666 - General Explanatory Reference - Name (NR)",
+      "ignored": true
+    },
     "667": {
       "aboutEntity": "?record",
       "$a": {"addProperty": "cataloguersNote"}
@@ -23782,8 +23821,16 @@
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"}
     },
-    "672": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
-    "673": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "672": {
+      "NOTE:LC": "672 - Title Related to the Entity (R) - nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "673": {
+      "NOTE:LC": "673 - Title Not Related to the Entity (R) - nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "675": {
       "aboutEntity": "?record",
       "addLink": "sourceConsulted",
@@ -23792,7 +23839,11 @@
       "resourceType": "SourceDataNotFound",
       "$a": {"addProperty": "citationSource"}
     },
-    "677": {"ignored": true, "NOTE:record-count": 1},
+    "677": {
+      "NOTE:LC": "677 - Definition (R)",
+      "ignored": true,
+      "NOTE:record-count": 1
+    },
     "678": {
       "i1": null,
       "$a": {"addProperty": "description"},
@@ -23825,8 +23876,16 @@
       "$a": {"addProperty": "marc:headingOrSubdivisionTerm"},
       "$i": {"addProperty": "scopeNote"}
     },
-    "681": {"ignored": true, "NOTE:record-count": 0},
-    "682": {"ignored": true, "NOTE:record-count": 0},
+    "681": {
+      "NOTE:LC": "681 - Subject Example Tracing Note (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "682": {
+      "NOTE:LC": "682 - Deleted Heading Information (NR)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "688": {
       "$a": {"addProperty": "historyNote"}
     },
