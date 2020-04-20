@@ -4400,7 +4400,8 @@
         "[18] [19] [20] [21]": {
           "TODO:aboutEntity": "?cartographic",
           "addLink": "marc:relief",
-          "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}",
+          "matchUriToken": "^[abcdefgijkmz]$"
         },
         "[22:24]": {
           "link": "projection",
