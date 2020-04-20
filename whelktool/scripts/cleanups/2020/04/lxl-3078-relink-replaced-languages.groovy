@@ -10,7 +10,7 @@ import whelk.util.DocumentUtil.Replace
 PrintWriter scheduledForUpdate = getReportWriter('scheduled-for-update')
 
 queryDocs(['@type': ['Language']])
-        .grep{it['isReplacedBy'] instanceof Map || it['isReplacedBy']?.size() == 1}
+        .grep(this.&isReplacedByExactlyOne)
         .each { obsolete ->
             String id = obsolete['@id']
             String replacedBy = obsolete['isReplacedBy']['@id']
@@ -30,3 +30,7 @@ queryDocs(['@type': ['Language']])
                 }
             }
         }
+
+boolean isReplacedByExactlyOne(thing) {
+    thing['isReplacedBy'] instanceof Map || thing['isReplacedBy']?.size() == 1
+}
