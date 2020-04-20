@@ -38,7 +38,6 @@ CREATE TABLE IF NOT EXISTS lddb__versions (
     created timestamp with time zone not null default now(),
     modified timestamp with time zone not null default now(),
     deleted boolean default false,
-    unique (id, checksum, modified)
 );
 
 CREATE TABLE IF NOT EXISTS lddb__embellished (
