@@ -302,7 +302,7 @@
       "i1": {
         "about": "_:title",
         "property": "marc:searchElement",
-        "tokenMap": {"0": false, "2": null, "3": null, "4": null, "|": null},
+        "tokenMap": {"0": null, "2": null, "3": null, "4": null, "|": null},
         "marcDefault": "1"
       }
     },
@@ -8381,13 +8381,19 @@
             "210": {"ind1": "0", "ind2": " ", "subfields": [
               {"a": "Plant prot. bull."} ,
               {"b": "(Faridabad)"}
-            ]}},
+            ]}
+          },
+          "normalized": {
+            "210": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Plant prot. bull."} ,
+              {"b": "(Faridabad)"}
+            ]}
+          },
           "result": {"mainEntity": {
             "hasTitle": [{
               "@type": "AbbreviatedTitle",
               "mainTitle":  "Plant prot. bull.",
               "qualifier": ["(Faridabad)"],
-              "marc:searchElement" : false,
               "source" : {
                 "@type" : "Source",
                 "code" : "issnkey"
@@ -8564,7 +8570,7 @@
               ]}}
           ],
           "normalized": [
-              {"240": {"ind1": "0", "ind2": "0", "subfields": [
+              {"240": {"ind1": "1", "ind2": "0", "subfields": [
                 {"a": "Moyen âge"},
                 {"l": "Engelska."}
               ]}}
@@ -8574,8 +8580,7 @@
               "@type": "Text",
               "hasTitle": [ {
                 "@type": "Title",
-                "mainTitle": "Moyen âge",
-                "marc:searchElement" : false
+                "mainTitle": "Moyen âge"
               } ],
               "language": {"@type": "Language", "label": "Engelska."},
               "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
@@ -8863,10 +8868,14 @@
               {"a": "Anteckningar från en ö /"},
               {"c": "Tove Jansson, Tuulikki Pietilä."}
           ]}},
+          "normalized": {
+            "245": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Anteckningar från en ö /"},
+              {"c": "Tove Jansson, Tuulikki Pietilä."}
+          ]}},
           "result": {"mainEntity": {
             "hasTitle": [ {"@type": "Title",
-              "mainTitle":  "Anteckningar från en ö",
-              "marc:searchElement": false
+              "mainTitle":  "Anteckningar från en ö"
             } ],
             "responsibilityStatement":  "Tove Jansson, Tuulikki Pietilä"
           }}
@@ -8928,10 +8937,9 @@
       "i1": {
         "property": "marc:searchControl",
         "tokenMap": {
-          "0": "marc:NoteNoAddedEntry",
-          "1": "marc:NoteAddedEntry",
-          "2": "marc:NoNoteNoAddedEntry",
-          "3": "marc:NoNoteAddedEntry"
+          "0": null,
+          "2": null,
+          "3": null
         },
         "marcDefault": "1"
       },
@@ -8970,13 +8978,18 @@
             "hasTitle": [{
               "@type": "CaptionTitle",
               "mainTitle": "Newspaper index",
-              "coverage": "January 1982-",
-              "marc:searchControl": "marc:NoteAddedEntry"
+              "coverage": "January 1982-"
             }]
           }}
         },
         {
           "source": {
+            "246": {"ind1": "0", "ind2": " ", "subfields": [
+              {"i": "At head of title:"},
+              {"a": "Science and public affairs"},
+              {"f": "January 1970-April 1974"}
+            ]}},
+          "normalized": {
             "246": {"ind1": "1", "ind2": " ", "subfields": [
               {"i": "At head of title:"},
               {"a": "Science and public affairs"},
@@ -8987,8 +9000,7 @@
               "@type": "VariantTitle",
               "typeNote": "At head of title:",
               "mainTitle": "Science and public affairs",
-              "coverage": "January 1970-April 1974",
-              "marc:searchControl": "marc:NoteAddedEntry"
+              "coverage": "January 1970-April 1974"
             }]
           }}
         }
