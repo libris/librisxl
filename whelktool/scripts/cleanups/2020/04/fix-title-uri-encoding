@@ -5,10 +5,10 @@ selectByCollection('auth') { auth ->
     String id = record.mainEntity[ID]
 
     auth.whelk.storage.doVerifyDocumentIdRetention = false
-    
+
     if (id =~ "[()]") {
         record.mainEntity[ID] = id.replaceAll("\\(", "%28").replaceAll("\\)", "%29")
-        //thing[ID] = record.mainEntity[ID]?
+        thing[ID] = record.mainEntity[ID]
         thing.sameAs.removeIf { sameAs -> areEquivalent(id, sameAs[ID])}
         scheduledForChange.println "$id"
         auth.scheduleSave()
