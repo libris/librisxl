@@ -20488,11 +20488,25 @@
       "inherit": "bib",
       "NOTE:local": "ANVÄNDS NORMALT EJ"
     },
-    "014": {"ignored": true, "NOTE:record-count": 1, "NOTE:LC": "nac"},
-    "016": {"ignored": true, "NOTE:record-count": 4, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
-    "020" : {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS EJ"},
-    "022" : {"inherit": "bib"},
-    "024" : {
+    "014": {
+      "NOTE:LC": "014 - Link to Bibliographic Record for Serial or Multipart Item (R) - nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "016": {
+      "NOTE:LC": "016 - National Bibliographic Agency Control Number (R) - nac",
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "020" : {
+      "NOTE:LC": "020 - International Standard Book Number (R)",
+      "NOTE:local": "ANVÄNDS EJ",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "022": {"inherit": "bib"},
+    "024": {
       "inherit": "bib",
       "i1": {
         "property": "@type",
@@ -20504,10 +20518,18 @@
       },
       "i2": null
     },
-    "031": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
-    "034": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac - not used for titles"},
-    "035" : {"inherit": "bib", "$6": null, "$8": null},
-    "040" : {
+    "031": {
+      "NOTE:LC": "031 - Musical Incipits Information (R) - nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "034": {
+      "NOTE:LC": "034 - Coded Cartographic Mathematical Data (R) - nac - not used for titles",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "035": {"inherit": "bib", "$6": null, "$8": null},
+    "040": {
       "inherit": "bib",
       "TODO": "if no $f, drop entire record (or mark as obsolete)",
       "$f": {
@@ -20547,7 +20569,7 @@
         "property": "code"
       }
     },
-    "043" : {
+    "043": {
       "aboutEntity": "?thing",
       "$a": {"addLink": "nationality", "uriTemplate": "https://id.kb.se/nationality/{_}", "matchUriToken": "^[a-z-]+$"},
       "repeatable": false,
@@ -20581,8 +20603,16 @@
         "$2": {"property": "marc:sourceOfDateScheme"},
         "TODO:edtf": "?"
     },
-    "050": {"ignored": true, "NOTE:record-count": 0},
-    "052": {"ignored": true, "NOTE:record-count": 0},
+    "050": {
+      "NOTE:LC": "050 - Library of Congress Call Number (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "052": {
+      "NOTE:LC": "052 - Geographic Classification (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "053": {
       "aboutEntity": "?thing",
       "addLink": "classification",
@@ -20592,8 +20622,17 @@
       "$b": {"property": "spanEnd"},
       "$c": {"property": "marc:explanatoryTerm"}
     },
-    "055": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
-    "060": {"ignored": true, "NOTE:record-count": 0},
+    "055": {
+      "NOTE:LC": "055 - Library and Archives Canada Call Number (R) - nac",
+      "NOTE:local": "ANVÄNDS NORMALT EJ",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "060": {
+      "NOTE:LC": "060 - National Library of Medicine Call Number (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "065": {
       "inherit": "bib:084",
       "aboutEntity": "?thing",
@@ -20625,9 +20664,22 @@
         }
       ]
     },
-    "066": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "ignore", "NOTE:local": "ANVÄNDS F.N. EJ"},
-    "070": {"ignored": true, "NOTE:record-count": 0},
-    "072": {"ignored": true, "NOTE:record-count": 0},
+    "066": {
+      "NOTE:LC": "066 - Character Sets Present (NR) - ignore",
+      "NOTE:local": "ANVÄNDS F.N. EJ",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "070": {
+      "NOTE:LC": "070 - National Agricultural Library Call Number (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "072": {
+      "NOTE:LC": "072 - Subject Category Code (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "073" : {
       "TODO": "ignore entirely (should be removed)",
       "onRevertPrefer": "550",
@@ -20637,8 +20689,16 @@
       "$z": {"link": "inScheme", "resourceType": "ConceptScheme", "property": "code"},
       "uriTemplate": "https://id.kb.se/term/{inScheme.code}/{prefLabel}"
     },
-    "075": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
-    "080": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
+    "075": {
+      "NOTE:LC": "075 - Type of Entity (R) - nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "080": {
+      "NOTE:LC": "080 - Universal Decimal Classification Number (R) - nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
     "082" : {
       "NOTE:local": "ANVÄNDS NORMALT EJ",
       "inherit": "bib",
@@ -20714,9 +20774,22 @@
         }
       ]
     },
-    "086": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac"},
-    "087": {"ignored": true, "NOTE:record-count": 0},
-    "094": {"ignored": true, "NOTE:record-count": 4, "NOTE:local": "OBSOLET"},
+    "086": {
+      "NOTE:LC": "086 - Government Document Call Number (R) - nac",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "087": {
+      "NOTE:LC": "087 - Government Document Classification Number (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
+    },
+    "094": {
+      "NOTE:LC": "09X - Local Call Numbers",
+      "NOTE:local": "OBSOLET",
+      "ignored": true,
+      "NOTE:record-count": 4
+    },
 
     "100" : {
       "match": [
