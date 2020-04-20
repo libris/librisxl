@@ -12,18 +12,18 @@ PrintWriter scheduledForUpdate = getReportWriter('scheduled-for-update')
 queryDocs(['@type': ['Language']])
         .grep(this.&isReplacedByExactlyOne)
         .each { obsolete ->
-            String id = obsolete['@id']
-            String replacedBy = obsolete['isReplacedBy']['@id']
+            String oldId = obsolete['@id']
+            String newId = obsolete['isReplacedBy']['@id']
 
-            selectByIds(queryIds(['o': [id]]).collect()) { d ->
+            selectByIds(queryIds(['o': [oldId]]).collect()) { d ->
                 boolean modified = DocumentUtil.findKey(d.doc.data, '@id') { value, path ->
-                    if (value == id) {
-                        new Replace(replacedBy)
+                    if (value == oldId) {
+                        new Replace(newId)
                     }
                 }
 
                 if (modified) {
-                    String msg = "${d.doc.shortId} : $id --> $replacedBy"
+                    String msg = "${d.doc.shortId} : $oldId --> $newId"
                     println(msg)
                     scheduledForUpdate.println(msg)
                     d.scheduleSave()
