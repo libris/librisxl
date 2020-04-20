@@ -22174,6 +22174,7 @@
       "aboutEntity": "?thing",
       "addLink": "hasVariant",
       "include": ["i2-nonfiling"],
+      "TODO": "Include titleDetails when refactored",
       "resourceType": "Work",
       "pendingResources": {
         "_:title": {
