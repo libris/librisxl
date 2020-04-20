@@ -330,10 +330,10 @@
 
       "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label", "infer": true},
       "$m": {"about": "_:work", "addLink": "musicMedium", "resourceType": "MusicMedium", "property": "label", "leadingPunctuation": ","},
-      "$o": {"about": "_:work", "property": "version"},
+      "$o": {"about": "_:work", "property": "version", "TODO": "musicArrangement?"},
 
       "$r": {"about": "_:work", "property": "musicKey", "leadingPunctuation": ","},
-      "$s": {"about": "_:work", "property": "marc:version"}
+      "$s": {"about": "_:work", "property": "marc:version", "TODO": "version"}
     },
     "i1-nonfiling": {
       "i1": {
@@ -355,7 +355,7 @@
     "titledetailsSansPartNumber": {
       "include": ["workdetails"],
       "$k": {"about": "_:title", "addProperty": "marc:formSubheading"},
-      "NOTE:k": "Should we map to bf2:natureOfContent instead?",
+      "TODO:k": "We should map to bf2:natureOfContent instead. See auth:430",
       "$p": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partName", "punctuationChars": "/"}
     },
 
@@ -421,7 +421,7 @@
       "$f": {"about": "_:agent", "property": "marc:originDate"},
       "$h": {"about": "_:agent", "property": "marc:mediaTerm"},
       "$l": {"about": "_:agent", "link": "language", "resourceType": "Language", "property": "label", "infer": true},
-      "$o": {"about": "_:agent", "property": "version"},
+      "$o": {"about": "_:agent", "property": "version", "TODO": "align with other $o?"},
       "$r": {"about": "_:agent", "property": "marc:musicKey"},
       "$s": {"about": "_:agent", "property": "version"}
     },
@@ -22185,7 +22185,7 @@
       "$d": {"addProperty": "legalDate"},
       "$f": {"property": "originDate"},
       "$g": {"link": "genreForm", "resourceType": "GenreForm", "property": "label"},
-      "$h": {"ignored": true},
+      "$h": {"ignored": true, "NOTE:record-count": 0},
       "$k": {"addProperty": "natureOfContent"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label", "infer": true},
       "$m": {"addLink": "musicMedium", "resourceType": "MusicMedium", "property": "label", "leadingPunctuation": ","},
