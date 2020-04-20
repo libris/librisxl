@@ -24,7 +24,7 @@ BEGIN
 
    -- ACTUAL SCHEMA CHANGES HERE:
    ALTER TABLE lddb__versions
-   DROP CONSTRAINT lddb__versions_id_checksum_modified_key;
+   DROP CONSTRAINT IF EXISTS lddb__versions_id_checksum_modified_key;
 
 END$$;
 
