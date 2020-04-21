@@ -330,10 +330,10 @@
 
       "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label", "infer": true},
       "$m": {"about": "_:work", "addLink": "musicMedium", "resourceType": "MusicMedium", "property": "label", "leadingPunctuation": ","},
-      "$o": {"about": "_:work", "property": "version"},
+      "$o": {"about": "_:work", "property": "version", "TODO": "musicArrangement?"},
 
       "$r": {"about": "_:work", "property": "musicKey", "leadingPunctuation": ","},
-      "$s": {"about": "_:work", "property": "marc:version"}
+      "$s": {"about": "_:work", "property": "marc:version", "TODO": "version"}
     },
     "i1-nonfiling": {
       "i1": {
@@ -355,7 +355,7 @@
     "titledetailsSansPartNumber": {
       "include": ["workdetails"],
       "$k": {"about": "_:title", "addProperty": "marc:formSubheading"},
-      "NOTE:k": "Should we map to bf2:natureOfContent instead?",
+      "TODO:k": "We should map to bf2:natureOfContent instead. See auth:430",
       "$p": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partName", "punctuationChars": "/"}
     },
 
@@ -421,7 +421,7 @@
       "$f": {"about": "_:agent", "property": "marc:originDate"},
       "$h": {"about": "_:agent", "property": "marc:mediaTerm"},
       "$l": {"about": "_:agent", "link": "language", "resourceType": "Language", "property": "label", "infer": true},
-      "$o": {"about": "_:agent", "property": "version"},
+      "$o": {"about": "_:agent", "property": "version", "TODO": "align with other $o?"},
       "$r": {"about": "_:agent", "property": "marc:musicKey"},
       "$s": {"about": "_:agent", "property": "version"}
     },
@@ -22469,9 +22469,120 @@
         }
       ]
     },
-    "430": {
-      "ignored": true,
-      "TODO": "map, alternativeForm a Work (like a structured altLabel)"
+    "430" : {
+      "aboutEntity": "?thing",
+      "addLink": "hasVariant",
+      "include": ["i2-nonfiling"],
+      "TODO": "Include titleDetails when refactored",
+      "resourceType": "Work",
+      "pendingResources": {
+        "_:title": {
+          "addLink": "hasTitle", "resourceType": "Title",
+          "embedded": true
+        }
+      },
+      "$a": {"about": "_:title", "property": "mainTitle"},
+      "$d": {"addProperty": "legalDate"},
+      "$f": {"property": "originDate"},
+      "$g": {"link": "genreForm", "resourceType": "GenreForm", "property": "label"},
+      "$h": {"ignored": true, "NOTE:record-count": 0},
+      "$k": {"addProperty": "natureOfContent"},
+      "$l": {"link": "language", "resourceType": "Language", "property": "label", "infer": true},
+      "$m": {"addLink": "musicMedium", "resourceType": "MusicMedium", "property": "label", "leadingPunctuation": ","},
+      "$n": {"about": "_:title", "addProperty": "partNumber", "punctuationChars": ",", "leadingPunctuation": ","},
+      "$p": {"about": "_:title", "addProperty": "partName", "punctuationChars": "/"},
+      "$o": {"property": "marc:arrangedStatementForMusic"},
+      "$r": {"property": "musicKey", "leadingPunctuation": ","},
+      "$s": {"property": "version"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$0": {"addLink": "identifiedBy", "resourceType": "Identifier", "property": "value"},
+      "$1": {"ignored": true},
+      "subfieldOrder": "a d m n r p k l s f o",
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "name": "Simple hasVariant",
+          "source": [
+            {"430": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Bibeln"}, {"p": "Uppenbarelseboken"}, { "l": "Svenska." }, { "s": "Thomander." }, {"f": "1835"}]}}
+          ],
+          "normalized": [
+            {"430": {"ind1": " ", "ind2": "0", "subfields": [{"a": "Bibeln"}, {"p": "Uppenbarelseboken"}, { "l": "Svenska." }, { "s": "Thomander." }, {"f": "1835"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type" : "Identity",
+              "hasVariant": [
+                {
+                  "@type" : "Work",
+                  "hasTitle" : [{
+                    "@type" : "Title",
+                    "mainTitle" : "Bibeln",
+                    "partName" : ["Uppenbarelseboken"]
+                  }
+                ],
+                "language": {
+                  "@type": "Language",
+                  "label": "Svenska."
+                },
+                "originDate": "1835",
+                "version": "Thomander."
+              }]
+            }
+          }
+        },
+        {
+          "name": "hasVariant with 430 and 400",
+          "source": [
+            {"400": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Arne, Thomas Augustine"}, {"d": "1710-1778."}, {"t": "Fairy prince"}, {"p": "A wood nymph"}]}},
+            {"430": {"ind1": " ", "ind2": " ", "subfields": [{"a": "a"}, {"d": "d"}, {"p": "p"}, {"s": "s"}, {"f": "f"}]}}
+          ],
+          "normalized": [
+            {"400": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Arne, Thomas Augustine,"}, {"d": "1710-1778."}, {"t": "Fairy prince"}, {"p": "A wood nymph"}]}},
+            {"430": {"ind1": " ", "ind2": "0", "subfields": [{"a": "a"}, {"d": "d"}, {"p": "p"}, {"s": "s"}, {"f": "f"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type" : "Identity",
+              "hasVariant": [
+                {
+                  "@type" : "Work",
+                  "hasTitle" : [
+                    {
+                      "@type" : "Title",
+                      "mainTitle" : "Fairy prince",
+                      "partName" : ["A wood nymph"]
+                    }
+                  ],
+                  "contribution": [
+                    {
+                      "@type": "PrimaryContribution",
+                      "agent": {
+                        "@type": "Person",
+                        "familyName": "Arne",
+                        "givenName": "Thomas Augustine",
+                        "lifeSpan": "1710-1778."
+                      }
+                    }
+                  ]
+                },
+                {
+                  "@type" : "Work",
+                  "hasTitle" : [
+                    {
+                      "@type" : "Title",
+                      "mainTitle" : "a",
+                      "partName" : ["p"]
+                    }
+                  ],
+                  "legalDate": ["d"],
+                  "originDate": "f",
+                  "version": "s"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "447": {
       "NOTE:LC": "447 - See From Tracing - Named Event (R)",
