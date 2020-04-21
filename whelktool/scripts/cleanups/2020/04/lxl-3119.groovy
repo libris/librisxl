@@ -71,7 +71,8 @@ boolean transform(Map mainEntity, Map entity) {
         if (entity.size() == 2 && entity.containsKey("label")) {
             Object labels = entity.get("label")
 
-            mainEntity.put("description", [])
+            if (mainEntity.description == null)
+                mainEntity.put("description", [])
 
             if (labels instanceof List)
                 mainEntity.description.addAll(labels)
