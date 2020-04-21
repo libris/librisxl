@@ -2,6 +2,7 @@ package whelk.component
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory
 import groovy.json.StringEscapeUtils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
@@ -313,6 +314,7 @@ class PostgreSQLComponent implements Storage {
             config.setJdbcUrl(sqlUrl.replaceAll(":\\/\\/\\w+:*.*@", ":\\/\\/"))
             config.setDriverClassName(driverClass)
             config.setConnectionTimeout(0)
+            config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory())
 
             log.info("Connecting to sql database at ${config.getJdbcUrl()}, using driver $driverClass. Pool size: $maxPoolSize")
             URI connURI = new URI(sqlUrl.substring(5))
