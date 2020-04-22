@@ -210,7 +210,7 @@ class ElasticSearch {
         int originalSize = document.data['@graph'].size()
         copy.data['@graph'] =
                 graph.take(originalSize).collect { toSearchCard(whelk, it, links) } +
-                graph.drop(originalSize).collect { recordToChip(whelk, toSearchCard(whelk, it, Collections.EMPTY_SET)) }
+                graph.drop(originalSize).collect { getShapeForEmbellishment(whelk, it) }
 
         setComputedProperties(copy, links, whelk)
         copy.setThingMeta(document.getCompleteId())
@@ -230,14 +230,6 @@ class ElasticSearch {
             }
         }
 
-        Set languageContainers = whelk.jsonld.langContainerAlias.values() as Set
-        Set languagesToKeep = ['sv', 'en'] // TODO: where do we define these?
-        DocumentUtil.traverse(framed, { value, path ->
-            if (path && path.last() in languageContainers) {
-                return new DocumentUtil.Replace(value.findAll {lang, str -> lang in languagesToKeep})
-            }
-        })
-
         log.trace("Framed data: ${framed}")
 
         return JsonOutput.toJson(framed)
@@ -252,7 +244,14 @@ class ElasticSearch {
         whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preservedPaths)
     }
 
-    private static Map recordToChip(Whelk whelk, Map thing) {
+    private static Map getShapeForEmbellishment(Whelk whelk, Map thing) {
+        Map e = toSearchCard(whelk, thing, Collections.EMPTY_SET)
+        recordToChip(whelk, e)
+        filterLanguages(whelk, e)
+        return e
+    }
+
+    private static void recordToChip(Whelk whelk, Map thing) {
         if (thing[JsonLd.GRAPH_KEY]) {
 
             // FIXME: this is a temporary workaround for documents from definitions that are missing @type in record.
@@ -263,7 +262,16 @@ class ElasticSearch {
 
             thing[JsonLd.GRAPH_KEY][0] = whelk.jsonld.toChip(thing[JsonLd.GRAPH_KEY][0])
         }
-        thing
+    }
+
+    private static void filterLanguages(Whelk whelk, Map thing) {
+        Set languageContainers = whelk.jsonld.langContainerAlias.values() as Set
+        Set languagesToKeep = ['sv', 'en'] // TODO: where do we define these?
+        DocumentUtil.traverse(thing, { value, path ->
+            if (path && path.last() in languageContainers) {
+                return new DocumentUtil.Replace(value.findAll {lang, str -> lang in languagesToKeep})
+            }
+        })
     }
 
     private static void setComputedProperties(Document doc, Set<String> links, Whelk whelk) {
