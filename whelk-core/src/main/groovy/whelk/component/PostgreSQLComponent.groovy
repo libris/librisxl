@@ -396,13 +396,13 @@ class PostgreSQLComponent implements Storage {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
 
         Connection connection = getConnection()
-        connection.setAutoCommit(false)
 
         /*
         If we're writing a holding post, obtain a (write) lock on the linked bibpost, and hold it until writing has finished.
         While under lock: first check that there is not already a holding for this sigel/bib-id combination.
          */
         try {
+            connection.setAutoCommit(false)
             normalizeDocumentForStorage(doc, connection)
 
             if (collection == "hold") {
@@ -502,8 +502,8 @@ class PostgreSQLComponent implements Storage {
      */
     boolean quickCreateDocument(Document doc, String changedIn, String changedBy, String collection) {
         Connection connection = getConnection()
-        connection.setAutoCommit(false)
         try {
+            connection.setAutoCommit(false)
             Date now = new Date()
             PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
             insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, false)
@@ -560,9 +560,9 @@ class PostgreSQLComponent implements Storage {
      */
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent) {
         // Resources to be closed
+        Connection connection = getConnection()
         try
         {
-            Connection connection = getConnection()
             connection.setAutoCommit(false)
 
             Document result = storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent, connection)
