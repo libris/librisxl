@@ -63,6 +63,7 @@ public class MarcCliExport
         {
             MarcRecordWriter output = new MarcXmlRecordWriter(System.out, "UTF-8");
             new MarcCliExport(Whelk.createLoadedCoreWhelk()).dumpSao(output);
+            output.close();
             return;
         }
 

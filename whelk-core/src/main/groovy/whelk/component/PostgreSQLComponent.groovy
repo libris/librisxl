@@ -2,6 +2,7 @@ package whelk.component
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory
 import groovy.json.StringEscapeUtils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
@@ -166,8 +167,14 @@ class PostgreSQLComponent implements Storage {
     private static final String GET_DEPENDERS_OF_TYPE =
             "SELECT id FROM lddb__dependencies WHERE dependsOnId = ? AND relation = ?"
 
+    private static final String GET_DEPENDERS =
+            "SELECT id FROM lddb__dependencies WHERE dependsOnId = ?"
+
     private static final String GET_DEPENDENCIES_OF_TYPE =
             "SELECT dependsOnId FROM lddb__dependencies WHERE id = ? AND relation = ?"
+
+    private static final String GET_DEPENDENCIES =
+            "SELECT dependsOnId FROM lddb__dependencies WHERE id = ?"
 
     private static final String UPSERT_CARD = """
             INSERT INTO lddb__cards (id, data, checksum, changed)
@@ -275,6 +282,7 @@ class PostgreSQLComponent implements Storage {
     LinkFinder linkFinder
     DependencyCache dependencyCache
     JsonLd jsonld
+    DocumentNormalizer normalizer
 
     private AtomicLong cardsUpdated = new AtomicLong()
 
@@ -306,6 +314,7 @@ class PostgreSQLComponent implements Storage {
             config.setJdbcUrl(sqlUrl.replaceAll(":\\/\\/\\w+:*.*@", ":\\/\\/"))
             config.setDriverClassName(driverClass)
             config.setConnectionTimeout(0)
+            config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory())
 
             log.info("Connecting to sql database at ${config.getJdbcUrl()}, using driver $driverClass. Pool size: $maxPoolSize")
             URI connURI = new URI(sqlUrl.substring(5))
@@ -387,13 +396,13 @@ class PostgreSQLComponent implements Storage {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
 
         Connection connection = getConnection()
-        connection.setAutoCommit(false)
 
         /*
         If we're writing a holding post, obtain a (write) lock on the linked bibpost, and hold it until writing has finished.
         While under lock: first check that there is not already a holding for this sigel/bib-id combination.
          */
         try {
+            connection.setAutoCommit(false)
             normalizeDocumentForStorage(doc, connection)
 
             if (collection == "hold") {
@@ -475,6 +484,17 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
+    void reDenormalize() {
+        Connection connection = getConnection()
+        try {
+            for (Document doc : loadAll(null, false, null, null)) {
+                refreshDerivativeTables(doc, connection, doc.getDeleted())
+            }
+        } finally {
+            close(connection)
+        }
+    }
+
     /**
      * This is a variant of createDocument that does no or minimal denormalization or indexing.
      * It should NOT be used to create records in a production environment. Its intended purpose is
@@ -482,8 +502,8 @@ class PostgreSQLComponent implements Storage {
      */
     boolean quickCreateDocument(Document doc, String changedIn, String changedBy, String collection) {
         Connection connection = getConnection()
-        connection.setAutoCommit(false)
         try {
+            connection.setAutoCommit(false)
             Date now = new Date()
             PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
             insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, false)
@@ -539,17 +559,31 @@ class PostgreSQLComponent implements Storage {
      * LOCKED while the update is in progress.
      */
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent) {
+        // Resources to be closed
+        Connection connection = getConnection()
+        try
+        {
+            connection.setAutoCommit(false)
+
+            Document result = storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent, connection)
+            connection.commit()
+            return result
+        }
+        finally {
+            close(connection)
+        }
+    }
+
+    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent, Connection connection) {
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
-        Connection connection = getConnection()
         PreparedStatement selectStatement = null
         PreparedStatement updateStatement = null
         ResultSet resultSet = null
 
         Document doc = null
 
-        connection.setAutoCommit(false)
         try {
             selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
             selectStatement.setString(1, id)
@@ -590,9 +624,25 @@ class PostgreSQLComponent implements Storage {
             updateStatement.execute()
 
             saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
+
+            // If the mainentity has changed URI (for example happens when new id.kb.se-uris are added to records)
+            if ( preUpdateDoc.getThingIdentifiers()[0] &&
+                    doc.getThingIdentifiers()[0] &&
+                    doc.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]) {
+                // This is normally done in refreshDerivativeTables, but the NEW id needs to be
+                // replaced early, so that it is available in the ID table, when all the dependers
+                // re-calculate their dependencies
+                saveIdentifiers(doc, connection, deleted)
+                SortedSet<String> idsLinkingToOldId = getDependencyData(id, GET_DEPENDERS, connection)
+                for (String dependerId : idsLinkingToOldId) {
+                    storeAtomicUpdate(dependerId, true, changedIn, changedBy, {}, connection)
+                }
+            }
+
             refreshDerivativeTables(doc, connection, deleted)
+
             dependencyCache.invalidate(preUpdateDoc)
-            connection.commit()
+
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {
             log.error("SQL failed: ${psqle.message}")
@@ -613,7 +663,7 @@ class PostgreSQLComponent implements Storage {
             connection.rollback()
             throw e
         } finally {
-            close(resultSet, selectStatement, updateStatement, connection)
+            close(resultSet, selectStatement, updateStatement)
         }
 
         return doc
@@ -1463,6 +1513,14 @@ class PostgreSQLComponent implements Storage {
         return getDependencyDataOfType(id, relation, GET_DEPENDERS_OF_TYPE)
     }
 
+    SortedSet<String> getDependencies(String id) {
+        return getDependencyData(id, GET_DEPENDENCIES, getConnection())
+    }
+
+    SortedSet<String> getDependers(String id) {
+        return getDependencyData(id, GET_DEPENDERS, getConnection())
+    }
+
     Set<String> getByRelation(String iri, String relation) {
         return dependencyCache.getDependenciesOfType(iri, relation)
     }
@@ -1722,13 +1780,27 @@ class PostgreSQLComponent implements Storage {
         return docList
     }
 
+    void normalizeDocument(Document doc) {
+        getConnection().withCloseable { connection ->
+            normalizeDocument(doc, connection)
+        }
+    }
+
+    void normalizeDocument(Document doc, Connection connection) {
+        doc.normalizeUnicode()
+
+        if (normalizer != null) {
+            normalizer.normalize(doc, connection)
+        }
+    }
+
     private void normalizeDocumentForStorage(Document doc, Connection connection) {
         // Synthetic property, should never be stored
         DocumentUtil.findKey(doc.data, JsonLd.REVERSE_KEY) { value, path ->
             new DocumentUtil.Remove()
         }
 
-        doc.normalizeUnicode()
+        normalizeDocument(doc, connection)
 
         if (linkFinder != null) {
             linkFinder.normalizeIdentifiers(doc, connection)

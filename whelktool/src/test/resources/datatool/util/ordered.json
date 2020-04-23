@@ -1,0 +1,19 @@
+{
+  "@id": "abc",
+  "x": [
+    {
+      "@type": "x"
+    },
+    {
+      "@type": "y",
+      "termComponentList": [
+        {
+          "b": "b"
+        },
+        {
+          "a": "a"
+        }
+      ]
+    }
+  ]
+}

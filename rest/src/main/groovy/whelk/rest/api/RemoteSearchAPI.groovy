@@ -7,6 +7,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import se.kb.libris.util.marc.Field
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.MarcXmlRecordReader
+import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.IdGenerator
 import whelk.Whelk
@@ -27,7 +28,6 @@ class RemoteSearchAPI extends HttpServlet {
     final static mapper = new ObjectMapper()
 
     MarcFrameConverter marcFrameConverter
-
     static final URL metaProxyInfoUrl = new URL("http://mproxy.libris.kb.se/db_Metaproxy.xml")
     static final String metaProxyBaseUrl = "http://mproxy.libris.kb.se:8000"
 
@@ -150,34 +150,6 @@ class RemoteSearchAPI extends HttpServlet {
         log.info("Started ...")
     }
 
-    List loadMetaProxyInfo(URL url) {
-        List databases = []
-        try {
-            def xml = new XmlSlurper(false, false).parse(url.newInputStream())
-
-            databases = xml.libraryCode.collect {
-                def map = ["database": createString(it.@id)]
-                it.children().each { node ->
-                    def n = node.name().toString()
-                    def o = node.text().toString()
-                    def v = map[n]
-                    if (v) {
-                        if (v instanceof String) {
-                            v = map[n] = [v]
-                        }
-                        v << o
-                    } else {
-                        map[n] = o
-                    }
-                }
-                return map
-            }
-        } catch (SocketException se) {
-            log.error("Unable to load database list.")
-        }
-        return databases
-    }
-
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         // Check that we have kat-rights.
@@ -209,8 +181,14 @@ class RemoteSearchAPI extends HttpServlet {
 
         log.trace("Query is $query")
         if (query) {
-            Map remoteURLs = loadMetaProxyInfo(metaProxyInfoUrl).inject([:]) { map, db ->
-                map << [(db.database): metaProxyBaseUrl + "/" + db.database]
+            def metaProxyInfo = loadMetaProxyInfo(metaProxyInfoUrl)
+
+            Map remoteURLs = metaProxyInfo.collectEntries {
+                [(it.database): metaProxyBaseUrl + "/" + it.database]
+            }
+
+            Map requiresDcIdentifer = metaProxyInfo.collectEntries {
+                [(it.database): it.requiresDcIdentifier]
             }
 
             // Weed out the unavailable databases
@@ -232,7 +210,12 @@ class RemoteSearchAPI extends HttpServlet {
                 def resultLists = []
                 try {
                     def futures = []
+
                     for (database in databaseList) {
+                        if (requiresDcIdentifer[database] == 'true' && isValidIsbn(query)) {
+                            query = "dc.identifier=" + query
+                        }
+
                         url = new URL(remoteURLs[database] + queryStr + "&query=" + URLEncoder.encode(query, "utf-8"))
                         log.debug("submitting to futures")
                         futures << queue.submit(new MetaproxyQuery(url, database))
@@ -248,30 +231,7 @@ class RemoteSearchAPI extends HttpServlet {
                     queue.shutdown()
                 }
                 // Merge results
-                def results = ['totalResults':[:],'items':[]]
-                int biggestList = 0
-                for (result in resultLists) { if (result.hits.size() > biggestList) { biggestList = result.hits.size() } }
-                def errors = [:]
-                for (int i = 0; i <= biggestList; i++) {
-                    for (result in resultLists) {
-                        results.totalResults[result.database] = result.numberOfHits
-                        try {
-                            if (result.error) {
-                                errors.get(result.database, [:]).put(""+i, result.error)
-                            } else if (i < result.hits.size()) {
-                                results.items << ['database':result.database,'data':result.hits[i].data]
-                            }
-                        } catch (ArrayIndexOutOfBoundsException aioobe) {
-                            log.debug("Overstepped array bounds.")
-                        } catch (NullPointerException npe) {
-                            log.trace("npe.")
-                        }
-                    }
-                }
-                if (errors) {
-                    results['errors'] = errors
-                }
-                output = mapper.writeValueAsString(results)
+                output = mergeResults(resultLists)
             }
         } else if (request.getParameter("databases")) {
             def databases = loadMetaProxyInfo(metaProxyInfoUrl)
@@ -284,6 +244,65 @@ class RemoteSearchAPI extends HttpServlet {
         } else {
             HttpTools.sendResponse(response, output, "application/json")
         }
+    }
+
+    String mergeResults(List<MetaproxySearchResult> resultsList) {
+        def results = ['totalResults': [:], 'items': []]
+        def errors = [:]
+
+        getRange(resultsList).collect { index ->
+            resultsList.each { result ->
+                if (result.error) {
+                    errors.get(result.database, [:]).put("" + index, result.error)
+                } else if (result.hits[index]) {
+                    results.items << ['database': result.database, 'data': result.hits[index].data]
+                }
+            }
+        }
+
+        resultsList.each { result ->
+            results.totalResults[result.database] = result.numberOfHits
+        }
+
+        if (errors) {
+            results.errors = errors
+        }
+
+        return mapper.writeValueAsString(results)
+    }
+
+    private List getRange(List resultsList) {
+        def hitList = resultsList*.hits
+        def largestNumberOfHits = hitList*.size().max()
+        return  0..<largestNumberOfHits
+    }
+
+    List loadMetaProxyInfo(URL url) {
+        List databases = []
+        try {
+            def xml = new XmlSlurper(false, false).parse(url.newInputStream())
+
+            databases = xml.libraryCode.collect {
+                def map = ["database": createString(it.@id)]
+                it.children().each { node ->
+                    def name = node.name().toString()
+                    def text = node.text().toString()
+                    def v = map[name]
+                    if (v) {
+                        if (v instanceof String) {
+                            v = map[name] = [v]
+                        }
+                        v << text
+                    } else {
+                        map[name] = text
+                    }
+                }
+                return map
+            }
+        } catch (SocketException se) {
+            log.error("Unable to load database list.")
+        }
+        return databases
     }
 
     class MetaproxyQuery implements Callable<MetaproxySearchResult> {
@@ -324,7 +343,10 @@ class RemoteSearchAPI extends HttpServlet {
                         def jsonDoc = marcFrameConverter.convert(mapper.readValue(jsonRec.getBytes("UTF-8"), Map), generatedId)
                         log.trace("Marcframeconverter done")
 
-                        results.addHit(new Document(jsonDoc))
+                        Document doc = new Document(jsonDoc)
+                        whelk.normalize(doc)
+                        whelk.embellish(doc)
+                        results.addHit(doc)
                     }
                 } else {
                     log.warn("Received errorMessage from metaproxy: $errorMessage")
@@ -381,6 +403,10 @@ class RemoteSearchAPI extends HttpServlet {
         return new StreamingMarkupBuilder().bind {
             out << root
         }
+    }
+
+    private boolean isValidIsbn(String query) {
+        return IsbnParser.parse(query.trim()) != null
     }
 
     String removeNamespacePrefixes(String xmlStr) {

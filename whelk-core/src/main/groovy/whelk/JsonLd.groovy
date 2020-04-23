@@ -1031,7 +1031,10 @@ class JsonLd {
         embedChain.add(mainId)
         Map newItem = [:]
         mainItem.each { key, value ->
-            newItem.put(key, toEmbedded(value, idMap, embedChain))
+            if (!key.equals(JSONLD_ALT_ID_KEY))
+                newItem.put(key, toEmbedded(value, idMap, embedChain))
+            else
+                newItem.put(key, value)
         }
         return newItem
     }
@@ -1061,7 +1064,7 @@ class JsonLd {
     }
 
     /*
-     * Traverse the data and index all non-reference objects on their @id:s.
+     * Traverse the data and index all non-reference objects on their @id:s and sameAs:s.
      */
     private static Map getIdMap(Map data) {
         Map idMap = new HashMap()
@@ -1077,8 +1080,16 @@ class JsonLd {
                 // Don't index graphs, since their @id:s do not denote them.
                 && !data.containsKey(GRAPH_KEY)
                ) {
-                idMap.put(data.get(key), data)
-                continue
+                addToIdMap(idMap, data, (String) data.get(key))
+            } else if (key.equals(JSONLD_ALT_ID_KEY)
+                    // Don't index graphs, since their @id:s do not denote them.
+                    && !data.containsKey(GRAPH_KEY)
+                    && data.get(key) instanceof List) {
+                List sameAsList = (List) data.get(key)
+                for (Object altIdObject : sameAsList) {
+                    Map altIdMap = (Map) altIdObject
+                    addToIdMap(idMap, data, (String) altIdMap.get(ID_KEY))
+                }
             }
             Object obj = data.get(key)
             if (obj instanceof List)
@@ -1086,6 +1097,16 @@ class JsonLd {
             else if (obj instanceof Map)
                 populateIdMap( (Map) obj, idMap )
         }
+    }
+
+    private static void addToIdMap(Map idMap, Map object, String id) {
+        // Do not replace a large object with a smaller one (with the same id).
+        // Doing so means data is lost in the framing.
+        Object preExisting = idMap.get(id)
+        if (preExisting != null && preExisting instanceof Map && preExisting.size() > object.size())
+            return
+
+        idMap.put(id, object)
     }
 
     private static void populateIdMap(List data, Map idMap) {

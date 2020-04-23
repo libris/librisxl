@@ -3,12 +3,14 @@ package whelk
 import com.google.common.collect.Iterables
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
+import se.kb.libris.BlankNodeNormalizers
 import whelk.component.CachingPostgreSQLComponent
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LinkFinder
+import whelk.filter.NormalizerChain
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.util.LegacyIntegrationTools
@@ -121,7 +123,18 @@ class Whelk implements Storage {
         storage.setJsonld(jsonld)
         if (elastic) {
             elasticFind = new ElasticFind(new ESQuery(this))
+            initDocumentNormalizers()
         }
+    }
+
+    private void initDocumentNormalizers() {
+        storage.setNormalizer(new NormalizerChain(
+                [
+                        // This is KBV specific stuff
+                        BlankNodeNormalizers.language(this),
+                        BlankNodeNormalizers.contributionRole(this)
+                ]
+        ))
     }
 
     void loadContextData() {
@@ -138,7 +151,7 @@ class Whelk implements Storage {
 
     Document getDocument(String id) {
         Document doc = storage.load(id)
-        if (baseUri) {
+        if (doc && baseUri) {
             doc.baseUri = baseUri
         }
         return doc
@@ -178,6 +191,15 @@ class Whelk implements Storage {
         } else {
             // else use a fire-and-forget thread
             new Thread(indexers, reindex).start()
+        }
+    }
+
+    private void reindexAllLinks(String id) {
+        SortedSet<String> links = storage.getDependencies(id)
+        links.addAll(storage.getDependers(id))
+        for (String idToReindex : links) {
+            Document docToReindex = storage.load(idToReindex)
+            elastic.index(docToReindex, storage.getCollectionBySystemID(idToReindex), this)
         }
     }
 
@@ -300,7 +322,8 @@ class Whelk implements Storage {
     }
 
     Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
-        Set<Link> preUpdateLinks = elastic ? storage.load(id).getExternalRefs() : new HashSet<Link>()
+        Document preUpdateDoc = storage.load(id)
+        Set<Link> preUpdateLinks = elastic ? preUpdateDoc.getExternalRefs() : new HashSet<Link>()
         Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
         if (updated == null) {
             return null
@@ -309,7 +332,14 @@ class Whelk implements Storage {
         if (elastic) {
             String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
             elastic.index(updated, collection, this)
-            reindexAffected(updated, preUpdateLinks)
+
+            // The updated document has changed mainEntity URI (link targer)
+            if ( preUpdateDoc.getThingIdentifiers()[0] &&
+                    updated.getThingIdentifiers()[0] &&
+                    updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]) {
+                reindexAllLinks(id)
+            } else
+                reindexAffected(updated, preUpdateLinks)
         }
 
         return updated
@@ -338,8 +368,15 @@ class Whelk implements Storage {
         }
     }
 
-    void embellish(Document document) {
-        new Embellisher(jsonld, storage.&getCards, relations.&getByReverse).embellish(document)
+    void embellish(Document document, List<String> levels = null) {
+        def docsByIris = { List<String> iris -> bulkLoad(iris).values().collect{ it.data } }
+        Embellisher e = new Embellisher(jsonld, docsByIris, storage.&getCards, relations.&getByReverse)
+
+        if(levels) {
+            e.setEmbellishLevels(levels)
+        }
+
+        e.embellish(document)
     }
 
     Document loadEmbellished(String systemId) {
@@ -350,6 +387,14 @@ class Whelk implements Storage {
 
     List<Document> getAttachedHoldings(List<String> thingIdentifiers) {
         return storage.getAttachedHoldings(thingIdentifiers).collect(this.&loadEmbellished)
+    }
+
+    void normalize(Document doc) {
+        try {
+            storage.normalizeDocument(doc)
+        } catch (Exception e) {
+            log.warn "Could not normalize document (${doc}: $e, e)"
+        }
     }
 
     private static boolean batchJobThread() {
