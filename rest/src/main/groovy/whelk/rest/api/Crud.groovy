@@ -16,6 +16,7 @@ import whelk.component.PostgreSQLComponent
 import whelk.exception.ElasticIOException
 import whelk.exception.InvalidQueryException
 import whelk.exception.ModelValidationException
+import whelk.exception.StaleUpdateException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.LinkValidationException
 import whelk.exception.WhelkAddException
@@ -689,8 +690,6 @@ class Crud extends HttpServlet {
         }
     }
 
-    private class EtagMissmatchException extends RuntimeException {}
-
     Document saveDocument(Document doc, HttpServletRequest request,
                           HttpServletResponse response, String collection,
                           boolean isUpdate, String httpMethod) {
@@ -699,23 +698,9 @@ class Crud extends HttpServlet {
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
 
                 if (isUpdate) {
-                    whelk.storeAtomicUpdate(doc.getShortId(), false, "xl", activeSigel, {
-                        Document _doc ->
-                            log.warn("If-Match: ${request.getHeader('If-Match')}")
-                            log.warn("Checksum: ${_doc.checksum}")
-
-                            if (_doc.getChecksum() != CrudUtils.cleanEtag(request.getHeader("If-Match"))) {
-                                log.debug("PUT performed on stale document.")
-
-                                throw new EtagMissmatchException()
-                            }
-
-                            log.debug("All checks passed.")
-                            log.debug("Saving UPDATE of document ("+ doc.getId() +")")
-
-                            // Replace our data with the incoming data.
-                            _doc.data = doc.data
-                    })
+                    String ifMatch = CrudUtils.cleanEtag(request.getHeader("If-Match"))
+                    log.info("If-Match: ${ifMatch}")
+                    whelk.storeAtomicUpdate(doc, false, "xl", activeSigel, ifMatch)
                 }
                 else {
                     log.debug("Saving NEW document ("+ doc.getId() +")")
@@ -742,7 +727,7 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE,
                     wae.message)
             return null
-        } catch (EtagMissmatchException eme) {
+        } catch (StaleUpdateException eme) {
             log.warn("Did not store document, because the ETAGs did not match.")
             failedRequests.labels(httpMethod, request.getRequestURI(),
                     HttpServletResponse.SC_PRECONDITION_FAILED.toString()).inc()

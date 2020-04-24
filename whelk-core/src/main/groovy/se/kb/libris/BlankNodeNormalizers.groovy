@@ -8,8 +8,6 @@ import whelk.component.DocumentNormalizer
 import whelk.filter.BlankNodeLinker
 import whelk.filter.LanguageLinker
 
-import java.sql.Connection
-
 @Log
 class BlankNodeNormalizers {
 
@@ -17,7 +15,7 @@ class BlankNodeNormalizers {
         LanguageLinker linker = new LanguageLinker()
         loadDefinitions(linker, whelk)
 
-        return { Document doc, Connection connection ->
+        return { Document doc ->
             linker.linkAll(doc.data, 'associatedLanguage')
             linker.linkAll(doc.data, 'language')
         }
@@ -28,7 +26,7 @@ class BlankNodeNormalizers {
                 'Role', ['code', 'label', 'prefLabelByLang', 'altLabelByLang', 'hiddenLabel'])
         loadDefinitions(linker, whelk)
 
-        return { Document doc, Connection connection ->
+        return { Document doc ->
             Map work = getWork(whelk.jsonld, doc)
             if (work && work['contribution']) {
                 linker.linkAll(work['contribution'], 'role')
