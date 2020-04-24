@@ -38,11 +38,9 @@ class Script {
     static final boolean GENERATE_BLANK_AGENTS = true
 
     static final List<String> BIOGRAPHICAL_FIELDS = [
+            'description',
             'fieldOfActivity',
-            'hasBiographicalInformation',
-            'hasHistoricalData',
             'hasOccupation',
-            'marc:hasBiographicalOrHistoricalData',
             'marc:titlesAndOtherWordsAssociatedWithAName'
     ]
 
