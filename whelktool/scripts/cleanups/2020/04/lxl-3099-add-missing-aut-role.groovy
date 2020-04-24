@@ -1,8 +1,12 @@
 /**
+ * Since 2016, practice is to add contribution.role for "author" in accordance with RDA.
+ *
  *  Add contribution.role "author" IFF
- *  - Work @type is 'Text'
  *  - There isn't any "author" in contribution
- *  - There is one contribution without role
+ *  - There is one primary contribution without role
+ *  - Work @type is 'Text'
+ *  - Instance type is one of 'Instance', 'Electronic'
+ *  - issuanceType is 'Monograph'
  *
  *  See LXL-3099 for more info
  */
@@ -13,8 +17,14 @@ PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 
 selectByCollection('bib') { bib ->
     Map work = getWork(bib)
+    Map instance = getInstance(bib)
 
-    if(!work || work['@type'] != 'Text' || !work['contribution']) {
+    if(!work || !instance
+            || work['@type'] != 'Text'
+            || !work['contribution']
+            || !(instance['@type'] in ['Instance', 'Electronic'])
+            || !instance['issuanceType'] != 'Monograph'
+    ) {
         return
     }
 
@@ -22,16 +32,10 @@ selectByCollection('bib') { bib ->
         return
     }
 
-    int numContributions = work['contribution'].size()
-    int numWithRole = work['contribution']['role'].grep().size()
-
-    if (numContributions - numWithRole == 1) {
+    List noRole = work['contribution'].findAll{!it['role']}
+    if (noRole.size() == 1 && noRole.first()['@type'] == "PrimaryContribution") {
         scheduledForUpdate.println("${bib.doc.getURI()} ${work['contribution']}")
-        work['contribution'].each {
-            if (!it['role']) {
-                it['role'] = ['@id': AUTHOR]
-            }
-        }
+        noRole.first()['role'] = ['@id': AUTHOR]
         bib.scheduleSave()
     }
 
@@ -48,6 +52,14 @@ Map getWork(def bib) {
     }
     else if (work && isInstanceOf(work, 'Work')) {
         return work
+    }
+    return null
+}
+
+Map getInstance(def bib) {
+    def (record, thing) = bib.graph
+    if (thing && isInstanceOf(thing, 'Instance')) {
+        return thing
     }
     return null
 }
