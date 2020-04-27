@@ -12273,11 +12273,29 @@
     },
 
     "507": {
-      "$a": {"aboutEntity": "?thing", "property": "scale"},
-      "NOTE:$b": "BF2 concatenate with a, record-count: 0",
-      "NOTE:$6": {"ignored": true, "NOTE:local": "scale property sits directly on thing, record-count: 0"}
+      "NOTE": "Moved to Work in BF2-conversion 1.5",
+      "aboutEntity": "?thing",
+      "addLink": "scale",
+      "resourceType": "Scale",
+      "$a": {"property": "label"},
+      "$b": {"property": "comment", "NOTE:LC": "Concatenate $ab, separated by space", "record-count": 0},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": [
+            {"507": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Scale 1:10 of the original."}]}}
+          ],
+          "result": {"mainEntity": {
+            "scale": [
+              {
+                "@type": "Scale",
+                "label": "Scale 1:10 of the original."
+              }
+            ]
+          }}
+        }
+      ]
     },
-
     "508": {
       "aboutEntity": "?work", 
       "addLink": "hasNote",
