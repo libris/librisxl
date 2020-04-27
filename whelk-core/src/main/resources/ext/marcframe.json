@@ -6337,27 +6337,27 @@
       "$e": {"property": "marc:easternmostLongitudeCoordinates"},
       "$f": {"property": "marc:northernmostLatitudeCoordinates"},
       "$g": {"property": "marc:southernmostLatitudeCoordinates"},
-      "$h": {"about": "_:scale", "addProperty": "marc:angularScale"},
-      "$j": {"property": "marc:declinationNorthernLimit"},
-      "$k": {"property": "marc:declinationSouthernLimit"},
-      "$m": {"property": "marc:rightAscensionEasternLimit"},
-      "$n": {"property": "marc:rightAscensionWesternLimit"},
-      "$p": {"property": "marc:cartographicEquinox"},
-      "$r": {"property": "marc:distanceFromEarth"},
-      "$s": {"addProperty": "marc:gRingLatitude"},
-      "$t": {"addProperty": "marc:gRingLongitude"},
-      "$x": {"property": "marc:beginningDate"},
-      "$y": {"property": "marc:endingDate"},
-      "$z": {"property": "marc:nameOfExtraterrestrialBody"},
-      "$0": {"addProperty": "marc:recordControlNumber"},
-      "$1": {"addProperty": "marc:rwoURI"},
-      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
+      "$h": {"ignored": true, "NOTE:LC": "Angular scale (R) ignore", "NOTE:record-count": 0},
+      "$j": {"ignored": true, "NOTE:LC": "Equinox (NR) ignore", "NOTE:record-count": 0},
+      "$k": {"ignored": true, "NOTE:LC": "Equinox (NR) ignore", "NOTE:record-count": 0},
+      "$m": {"ignored": true, "NOTE:LC": "Right ascension--eastern limit (NR) ignore", "NOTE:record-count": 0},
+      "$n": {"ignored": true, "NOTE:LC": "Right ascension--western limit (NR) ignore", "NOTE:record-count": 0},
+      "$p": {"ignored": true, "NOTE:LC": "Equinox (NR) ignore", "NOTE:record-count": 0},
+      "$r": {"ignored": true, "NOTE:LC": "Distance from earth (NR) ignore", "NOTE:record-count": 0},
+      "$s": {"ignored": true, "NOTE:LC": "G-ring latitude (R) ignore", "NOTE:record-count": 0},
+      "$t": {"ignored": true, "NOTE:LC": "G-ring longitude (R) ignore", "NOTE:record-count": 0},
+      "$x": {"ignored": true, "NOTE:LC": "Beginning date (NR) ignore",  "NOTE:record-count": 0},
+      "$y": {"ignored": true, "NOTE:LC": "Ending date (NR) ignore", "NOTE:record-count": 0},
+      "$z": {"ignored": true, "NOTE:LC": "Name of extraterrestrial body (NR) ignore", "NOTE:record-count": 0},
+      "$0": {"ignored": true, "NOTE:LC": "ignore"},
+      "$1": {"ignored": true, "NOTE:LC": "ignore"},
+      "$2": {"ignored": true, "NOTE:LC": "ignore"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"property": "marc:fieldref"},
+      "$6": {"ignored": true, "NOTE:LC": "ignore"},
       "_spec": [
         {
           "source": [
-            {"034": {"ind1": "1", "ind2": " ", "subfields": [{"a": "a"}, {"b": "110000"}]}}
+            {"034": {"ind1": "1", "ind2": " ", "subfields": [{"a": "a"}, {"b": "180000"},{"d": "e0111000"},{"e": "e0132200"},{"f": "n0521000"},{"g": "n0511800"}]}}
           ],
           "result": {
             "mainEntity": {
@@ -6366,9 +6366,13 @@
                 "cartographicAttributes": [
                   {
                     "@type": "Cartographic",
+                    "marc:easternmostLongitudeCoordinates": "e0132200",
+                    "marc:northernmostLatitudeCoordinates": "n0521000",
+                    "marc:southernmostLatitudeCoordinates": "n0511800",
+                    "marc:westernmostLongitudeCoordinates": "e0111000",
                     "scale": {
                       "@type": "marc:LinearScale",
-                      "marc:constantRatioLinearHorizontalScale": ["110000"]
+                      "marc:constantRatioLinearHorizontalScale": ["180000"]
                     }
                   }
                 ]
@@ -9174,7 +9178,7 @@
       "TODO:resourceType (to distinguish this 'free form' from 034)?": "marc:CartographicDescription",
       "resourceType": "Cartographic",
       "embedded": true,
-      "NOTE": "Scale sits directly on work in BF2 conversion",
+      "NOTE": "scale property sits directly on work in BF2 conversion",
       "$a": {"link": "scale", "resourceType": "Scale", "property": "label"},
       "$b": {"link": "projection", "resourceType": "Projection", "property": "label"},
       "$c": {"property": "coordinates"},
