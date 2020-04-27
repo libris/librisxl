@@ -12279,7 +12279,7 @@
     "507": {
       "NOTE": "Moved to Work in BF2-conversion 1.5",
       "aboutEntity": "?thing",
-      "addLink": "scale",
+      "link": "scale",
       "resourceType": "Scale",
       "$a": {"property": "label"},
       "$b": {"property": "comment", "NOTE:LC": "Concatenate $ab, separated by space", "record-count": 0},
@@ -12290,13 +12290,12 @@
             {"507": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Scale 1:10 of the original."}]}}
           ],
           "result": {"mainEntity": {
-            "scale": [
-              {
+            "scale": {
                 "@type": "Scale",
                 "label": "Scale 1:10 of the original."
               }
-            ]
-          }}
+            } 
+          }
         }
       ]
     },
