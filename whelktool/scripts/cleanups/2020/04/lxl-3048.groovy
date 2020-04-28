@@ -18,7 +18,7 @@ selectBySqlWhere(where) { data ->
                 changed = true
             }
         }
-    } else if ( (!work.illustrativeContent instanceof Map) || !work.illustrativeContent.containsKey("@id")) {
+    } else if ( !(work.illustrativeContent instanceof Map) || !work.illustrativeContent.containsKey("@id")) {
         work.remove("illustrativeContent")
         changed = true
     }
