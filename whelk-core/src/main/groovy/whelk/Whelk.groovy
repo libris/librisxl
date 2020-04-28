@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import se.kb.libris.BlankNodeNormalizers
 import whelk.component.CachingPostgreSQLComponent
+import whelk.component.DocumentNormalizer
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
@@ -23,7 +24,7 @@ import java.time.ZoneId
  */
 @Log
 @CompileStatic
-class Whelk implements Storage {
+class Whelk {
     ThreadGroup indexers = new ThreadGroup("dep-reindex")
     PostgreSQLComponent storage
     ElasticSearch elastic
@@ -33,6 +34,7 @@ class Whelk implements Storage {
     JsonLd jsonld
     MarcFrameConverter marcFrameConverter
     Relations relations
+    DocumentNormalizer normalizer
     ElasticFind elasticFind
     ZoneId timezone = ZoneId.of('Europe/Stockholm')
 
@@ -128,13 +130,13 @@ class Whelk implements Storage {
     }
 
     private void initDocumentNormalizers() {
-        storage.setNormalizer(new NormalizerChain(
+        normalizer = new NormalizerChain(
                 [
-                        // This is KBV specific stuff
+                        //FIXME: This is KBV specific stuff
                         BlankNodeNormalizers.language(this),
                         BlankNodeNormalizers.contributionRole(this)
                 ]
-        ))
+        )
     }
 
     void loadContextData() {
@@ -175,6 +177,21 @@ class Whelk implements Storage {
             }
         }
         return result
+    }
+
+    private void reindex(Document updated, Document preUpdateDoc) {
+        if (elastic) {
+            String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
+            elastic.index(updated, collection, this)
+
+            // The updated document has changed mainEntity URI (link target)
+            if (preUpdateDoc.getThingIdentifiers()[0] &&
+                    updated.getThingIdentifiers()[0] &&
+                    updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]) {
+                reindexAllLinks(updated.shortId)
+            } else
+                reindexAffected(updated, preUpdateDoc.getExternalRefs())
+        }
     }
 
     private void reindexAffected(Document document, Set<Link> preUpdateLinks) {
@@ -302,7 +319,7 @@ class Whelk implements Storage {
     /**
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
-    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean index = true) {
 
         boolean detectCollisionsOnTypedIDs = false
         List<Tuple2<String, String>> collidingIDs = getIdCollisions(document, detectCollisionsOnTypedIDs)
@@ -313,7 +330,7 @@ class Whelk implements Storage {
 
         boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
         if (success) {
-            if (elastic) {
+            if (elastic && index) {
                 elastic.index(document, collection, this)
                 reindexAffected(document, new TreeSet<>())
             }
@@ -321,28 +338,35 @@ class Whelk implements Storage {
         return success
     }
 
-    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
-        Document preUpdateDoc = storage.load(id)
-        Set<Link> preUpdateLinks = elastic ? preUpdateDoc.getExternalRefs() : new HashSet<Link>()
-        Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
-        if (updated == null) {
+    /**
+     * The UpdateAgent SHOULD be a pure function since the update will be retried in case the document
+     * was modified in another transaction.
+     */
+    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
+        Document preUpdateDoc = null
+        Document updated = storage.storeUpdate(id, minorUpdate, changedIn, changedBy, { Document doc ->
+            preUpdateDoc = doc.clone()
+            updateAgent.update(doc)
+            normalize(doc)
+        })
+
+        if (updated == null || preUpdateDoc == null) {
             return null
         }
 
-        if (elastic) {
-            String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
-            elastic.index(updated, collection, this)
+        reindex(updated, preUpdateDoc)
+    }
 
-            // The updated document has changed mainEntity URI (link targer)
-            if ( preUpdateDoc.getThingIdentifiers()[0] &&
-                    updated.getThingIdentifiers()[0] &&
-                    updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]) {
-                reindexAllLinks(id)
-            } else
-                reindexAffected(updated, preUpdateLinks)
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum, boolean index = true) {
+        normalize(doc)
+        Document preUpdateDoc = storage.load(doc.shortId)
+        Document updated = storage.storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum)
+        if (updated == null) {
+            return null
         }
-
-        return updated
+        if (index) {
+            reindex(updated, preUpdateDoc)
+        }
     }
 
     /**
@@ -391,7 +415,11 @@ class Whelk implements Storage {
 
     void normalize(Document doc) {
         try {
-            storage.normalizeDocument(doc)
+            doc.normalizeUnicode()
+
+            if (normalizer != null) {
+                normalizer.normalize(doc)
+            }
         } catch (Exception e) {
             log.warn "Could not normalize document (${doc}: $e, e)"
         }
