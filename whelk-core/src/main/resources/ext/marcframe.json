@@ -3959,7 +3959,7 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/TextMaterialType-{_}",
-          "matchUriToken": "^[_abcd]$",
+          "matchUriToken": "^[abcd]$",
           "silentRevert": false
         }
       },
