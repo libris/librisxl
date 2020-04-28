@@ -3572,24 +3572,26 @@
         "[1]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GlobeMaterialType-{_}",
-          "matchUriToken": "^[_abce]$"
+          "matchUriToken": "^[abce]$"
         },
         "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MapColorType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MapColorType-{_}",
+          "matchUriToken": "^[ac]$"
         },
         "[4]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/GlobeMediumType-{_}",
-          "matchUriToken": "^[_abcdefgilnpvw]$"
+          "matchUriToken": "^[abcdefgilnpvw]$"
         },
         "[5]": {
           "addLink": "generation",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/ReproductionType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ReproductionType-{_}",
+          "matchUriToken": "^[f]$"
         }
       },
       "Tactile": {
