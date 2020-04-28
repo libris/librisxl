@@ -3516,7 +3516,7 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ComputerMaterialType-{_}",
-          "matchUriToken": "^[_abcdefhjkmor]$",
+          "matchUriToken": "^[abcdefhjkmor]$",
           "silentRevert": false
         },
         "[2]": null,
@@ -3524,19 +3524,20 @@
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/ComputerColorType-{_}",
-          "matchUriToken": "^[_abcgm]$"
+          "matchUriToken": "^[abcgm]$"
         },
         "[4]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/ComputerDimensionsType-{_}",
-          "matchUriToken": "^[_aegijov]$"
+          "matchUriToken": "^[aegijov]$"
         },
         "[5]": {
           "link": "soundContent",
           "uriTemplate": "https://id.kb.se/marc/ComputerSoundType-{_}",
-          "matchUriToken": "^[ab]$"
+          "matchUriToken": "^[_a]$"
         },
         "[6:9]": {
+          "TODO": "I - digitalCharacteristic - bflc:ImageBitDepth rdf:value",
           "property": "imageBitDepth",
           "TODO:patternMap": "ComputerImageBitDepthType",
           "fixedDefault": "   "
