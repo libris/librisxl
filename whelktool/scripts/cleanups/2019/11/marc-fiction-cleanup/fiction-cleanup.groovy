@@ -25,6 +25,8 @@ selectBySqlWhere(query, silent: false) { data ->
                     "has broader to $SKONLITTERATUR. Replacing $NOT_FICTION with $FICTION..."
             work.genreForm.removeIf { gf -> gf.'@id' == NOT_FICTION }
             work.genreForm.add(['@id': FICTION])
+            scheduledForChange.println "$recordId"
+            data.scheduleSave()
         }
         return
     }
@@ -55,10 +57,10 @@ selectBySqlWhere(query, silent: false) { data ->
 
     if (wasRemoved) {
         if (hasAnyMarcFictionType(work)) {
-            report.println "Record $recordId with genreForm $work.genreForm" +
+            report.println "Record $recordId with genreForm $work.genreForm " +
                     "has a marc fiction type, removing $NOT_FICTION..."
         } else {
-            report.println "Record $recordId with genreForm $work.genreForm" +
+            report.println "Record $recordId with genreForm $work.genreForm " +
                     "has no marc fiction type. Replacing $NOT_FICTION with $FICTION..."
             work.genreForm.add(['@id': FICTION])
         }
