@@ -3892,51 +3892,51 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/SoundMaterialType-{_}",
-          "matchUriToken": "^[_degiqstw]$",
+          "matchUriToken": "^[degiqrstw]$",
           "silentRevert": false
         },
         "[2]": null,
         "[3]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundSpeedType-{_}",
-          "matchUriToken": "^[_abcdefhiklmopr]$"
+          "matchUriToken": "^[abcdefhiklmopr]$"
         },
         "[4]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundPlaybackChannelType-{_}",
-          "matchUriToken": "^[_mqs]$"
+          "matchUriToken": "^[mqs]$"
         },
         "[5]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundGrooveType-{_}",
-          "matchUriToken": "^[_ms]$"
+          "matchUriToken": "^[ms]$"
         },
         "[6]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/SoundDimensionsType-{_}",
-        "matchUriToken": "^[_abcdefgjos]$"
+          "matchUriToken": "^[abcdefgjos]$"
         },
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/SoundTapeWidthType-{_}",
-          "matchUriToken": "^[_lmop]$"
+          "matchUriToken": "^[lmop]$"
         },
         "[8]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundTapeConfigurationType-{_}",
-          "matchUriToken": "^[_abcdef]$"
+          "matchUriToken": "^[abcdef]$"
         },
         "[9]": {
           "addLink": "generation",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/SoundKindOfDiscType-{_}",
-          "matchUriToken": "^[_abdimrst]$"
+          "matchUriToken": "^[abdimrst]$"
         },
         "[10]": {
           "TODO": "Depending on value of tokenMap, map to appliedMaterial or baseMaterial?",
           "addLink": "baseMaterial",
           "uriTemplate": "https://id.kb.se/marc/SoundKindOfMaterialType-{_}",
-          "matchUriToken": "^[_abcgilmprsw]$"
+          "matchUriToken": "^[abcgilmprsw]$"
         },
         "[11]": {
           "addLink": "soundCharacteristic",
@@ -3946,14 +3946,13 @@
         "[12]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundPlaybackCharacterType-{_}",
-          "matchUriToken": "^[_abcdefgh]$"
+          "matchUriToken": "^[abcdefgh]$"
         },
         "[13]": {
-          "TODO": "Ensure not to clash with 340 $d",
-          "TODO:aboutEntity": "Work or Instance?",
+          "TODO": "I - soundCharacteristic - bflc:CaptureStorage",
           "link": "marc:soundCapture",
           "uriTemplate": "https://id.kb.se/marc/SoundCaptureType-{_}",
-          "matchUriToken": "^[_abde]$"
+          "matchUriToken": "^[abde]$"
         }
       },
       "TextInstance": {
