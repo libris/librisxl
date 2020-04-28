@@ -18,6 +18,8 @@ selectBySqlWhere(where) { data ->
                 changed = true
             }
         }
+        if (work.illustrativeContent.isEmpty())
+            work.remove("illustrativeContent")
     } else if ( !(work.illustrativeContent instanceof Map) || !work.illustrativeContent.containsKey("@id")) {
         work.remove("illustrativeContent")
         changed = true
