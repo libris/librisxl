@@ -3857,6 +3857,8 @@
         }
       },
       "RemoteSensingImage": {
+        "NOTE:LC": "007--REMOTE-SENSING IMAGE - nac",
+        "TODO": "drop this gracefully...",
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}",
@@ -3865,39 +3867,25 @@
         },
         "[2]": null,
         "[3]": {
-          "link": "marc:remoteSensImageAltitude",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageAltitudeType-{_}",
-          "matchUriToken": "^[_abc]$"
+          "ignored": true
         },
         "[4]": {
-          "link": "marc:remoteSensImageAttitude",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageAttitudeType-{_}",
-          "matchUriToken": "^[abc]$"
+          "ignored": true
         },
         "[5]": {
-          "link": "marc:remoteSensImageCloud",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageCloudType-{_}",
-        "matchUriToken": "^[0123456789]$"
+          "ignored": true
         },
         "[6]": {
-          "link": "marc:remoteSensImageConstruction",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageConstructionType-{_}",
-          "matchUriToken": "^[_abcdefghi]$"
+          "ignored": true
         },
         "[7]": {
-          "link": "marc:remoteSensImageUse",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageUseType-{_}",
-          "matchUriToken": "^[_abcm]$"
+          "ignored": true
         },
         "[8]": {
-          "link": "marc:remoteSensImageSensor",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageSensorType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "ignored": true
         },
         "[9:11]": {
-          "link": "marc:remoteSensImageData",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageDataType-{_}",
-          "matchUriToken": "^[abcdefgjmprstuvz]$"
+          "ignored": true
         }
       },
       "SoundRecording": {
