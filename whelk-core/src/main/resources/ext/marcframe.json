@@ -3752,7 +3752,7 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/MotionPicMaterialType-{_}",
-          "matchUriToken": "^[_cfor]$",
+          "matchUriToken": "^[cfor]$",
           "silentRevert": false
         },
         "[2]": null,
@@ -3760,78 +3760,85 @@
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicColorType-{_}",
-          "matchUriToken": "^[_bchm]$"
+          "matchUriToken": "^[bchm]$"
         },
         "[4]": {
           "addLink": "projectionCharacteristic",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicFormatType-{_}",
-        "matchUriToken": "^[_abcdef]$"
+          "matchUriToken": "^[abcdef]$"
         },
         "[5]": {
           "link": "soundContent",
-          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
+          "matchUriToken": "^[_ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}",
+          "matchUriToken": "^[abcdefghi]$"
         },
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/MotionPicDimensionsType-{_}",
-        "matchUriToken": "^[_abcefg]$"
+          "matchUriToken": "^[abcdefg]$"
         },
         "[8]": {
           "addLink": "soundCharacteristic",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-{_}",
-          "matchUriToken": "^[_kmqs]$"
+          "matchUriToken": "^[kmqs]$"
         },
         "[9]": {
           "addLink": "genreForm",
+          "NOTE": "LC ignores all but c & d",
           "uriTemplate": "https://id.kb.se/marc/MotionPicElementsType-{_}",
-          "matchUriToken": "^[_abcdefg]$"
+          "matchUriToken": "^[abcdefg]$"
         },
         "[10]": {
           "addLink": "polarity",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicPosNegType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "matchUriToken": "^[ab]$"
         },
         "[11]": {
           "addLink": "generation",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicGenerationType-{_}",
-          "matchUriToken": "^[_deor]$"
+          "matchUriToken": "^[deor]$"
         },
         "[12]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}",
+          "matchUriToken": "^[acdimprt]$"
         },
         "[13]": {
-          "link": "marc:motionPicCategories",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicCategoriesType-{_}",
-          "matchUriToken": "^[_abcdefghijklmpqrstv]$"
+          "NOTE:LC": "13 - Refined categories of color - nac",
+          "ignored": true,
+          "fixedDefault": "|"
         },
         "[14]": {
-          "link": "marc:motionPicColorStock",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicColorStockType-{_}",
-          "matchUriToken": "^[_abcd]$"
+          "NOTE:LC": "14 - Kind of color stock or print - nac",
+          "ignored": true,
+          "fixedDefault": "|"
         },
         "[15]": {
-          "link": "marc:motionPicDeterioration",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicDeteriorationType-{_}",
-          "matchUriToken": "^[abcdefghklm]$"
+          "NOTE:LC": "15 - Deterioration stage - nac",
+          "ignored": true,
+          "fixedDefault": "|"
         },
         "[16]": {
+          "NOTE:LC": "hasNote",
           "link": "marc:motionPicCompleteness",
           "uriTemplate": "https://id.kb.se/marc/MotionPicCompletenessType-{_}",
           "matchUriToken": "^[0123ci]$"
         },
         "[17:23]": {
-          "property": "marc:timeOfExamination"
+          "NOTE:LC": "17-22 - Film inspection date - ignore",
+          "ignored": true,
+          "fixedDefault": "||||||"
         }
       },
       "KitInstance": {
@@ -4142,7 +4149,7 @@
         {
           "name": "@type MovingImageInstance",
           "source": {"007":"m| ||||||||||||||"},
-          "normalized": {"007":"m| |||||||||||||||     "},
+          "normalized": {"007":"m| ||||||||||||||||||||"},
           "result": {
             "mainEntity": {
               "@type": "MovingImageInstance"
