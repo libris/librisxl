@@ -3967,38 +3967,42 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/VideoMaterialType-{_}",
-          "matchUriToken": "^[_cdfr]$",
+          "matchUriToken": "^[cdfr]$",
           "silentRevert": false
         },
         "[2]": null,
         "[3]": {
+          "TODO": "W - colorContent - ColorContent",
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/VideoColorType-{_}",
-          "matchUriToken": "^[_abcm]$"
+          "matchUriToken": "^[abcm]$"
         },
         "[4]": {
           "addLink": "videoCharacteristic",
-        "NOTE:marc-repeatable": false,
+          "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/VideoFormatType-{_}",
-          "matchUriToken": "^[_abcdefghijkmopqsv]$"
+          "matchUriToken": "^[abcdefghijkmopqsv]$"
         },
         "[5]": {
           "link": "soundContent",
-          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
+          "matchUriToken": "^[_ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
-          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}",
+          "matchUriToken": "^[abcdefghi]$"
         },
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/VideoDimensionsType-{_}",
-        "matchUriToken": "^[_amopqr]$"
+          "matchUriToken": "^[amopqr]$"
         },
         "[8]": {
           "addLink": "soundCharacteristic",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-{_}",
+          "matchUriToken": "^[kmqs]$"
         }
       },
       "marc:Unspecified": {},
