@@ -3595,11 +3595,12 @@
         }
       },
       "Tactile": {
+        "NOTE:LC": "nac",
         "[1]": {
           "TODO:layout": "Also more general mapping? Ensure that reconverting are able to handle this",
           "addLink": "layout",
           "uriTemplate": "https://id.kb.se/marc/TacMaterialType-{_}",
-          "matchUriToken": "^[_abcd]$"
+          "matchUriToken": "^[abcd]$"
         },
         "[2]": null,
         "[3] [4]": {
@@ -3610,17 +3611,17 @@
         "[5]": {
           "addLink": "layout",
           "uriTemplate": "https://id.kb.se/marc/TacContractionType-{_}",
-          "matchUriToken": "^[_abm]$"
+          "matchUriToken": "^[abmn]$"
         },
         "[6] [7] [8]": {
           "addLink": "hasNotation",
           "uriTemplate": "https://id.kb.se/marc/TacBrailleMusicType-{_}",
-          "matchUriToken": "^[abcdefghijklz]$"
+          "matchUriToken": "^[_abcdefghijkl]$"
         },
         "[9]": {
           "addLink": "hasNotation",
           "uriTemplate": "https://id.kb.se/marc/TacSpecPhysicalCharType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "matchUriToken": "^[ab]$"
         }
       },
       "ProjectedImageInstance": {
