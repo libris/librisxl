@@ -1446,8 +1446,8 @@
       "$t": {
         "about": "_:title",
         "property": "mainTitle",
-        "TODO:revertAllowedType": ["KeyTitle", "Title"],
-        "TODO:?revertOnLink": "hasTitle",
+        "allowedRevertTypes": ["KeyTitle", "Title"],
+        "revertForLink": "hasTitle",
         "TODO:targetMatch": "222, 245"
       },
       "$x": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "TODO:targetMatch": "022"},
@@ -16703,6 +16703,35 @@
               ]
             }
           }}
+        },
+        {
+          "source": {
+            "710": {"ind1": "2", "ind2": " ", "subfields": [
+              {"a": "Teologiska högskolan Stockholm."},
+              {"b": "Avdelningen för teologi."},
+              {"4": "org"}
+            ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "contribution" : [ {
+                "@type" : "Contribution",
+                "agent" : {
+                  "@type" : "Organization",
+                  "isPartOf" : {
+                    "@type" : "Organization",
+                    "name" : "Teologiska högskolan Stockholm."
+                  },
+                  "marc:subordinateUnit" : [ "Avdelningen för teologi." ]
+                },
+                "role" : [ {
+                  "@id" : "https://id.kb.se/relator/org",
+                  "@type" : "Role",
+                  "code" : "org"
+                } ]
+              } ]
+            }
+          }}
         }
       ]
     },
@@ -18416,24 +18445,92 @@
           }}
         },
         {
-          "name": "Should only revert KeyTitle",
-          "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [
-            {"t": "Plattform 1"}
-          ]}},
+          "name": "Should only revert KeyTitle as 776 $t",
+          "normalized": [
+            {"245": {"ind1": "1", "ind2": "0", "subfields": [{"a": "Instance title"}]}},
+            {"776": {"ind1": "0", "ind2": "8", "subfields": [{"t": "Title 1"}, {"z": "9783527404704"}]}}
+          ],
           "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "Title",
+              "mainTitle": "Instance title"
+            }],
             "otherPhysicalFormat": [{
               "@type": "Instance",
               "hasTitle": [{
                 "@type": "Title",
-                "mainTitle": "Plattform 2",
+                "mainTitle": "Title 2",
                 "subtitle": "för dig som arbetar med kakel och klinker"
               },{
                 "@type": "KeyTitle",
-                "mainTitle": "Plattform 1",
+                "mainTitle": "Title 1",
                 "qualifier": ["(Stockholm. Online)"]
               },{
                 "@type": "VariantTitle",
-                "mainTitle": "Plattform 3"
+                "mainTitle": "Title 3"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "9783527404704"
+              }]
+            }]
+          }}
+        },
+        {
+          "name": "Should only revert Title as 776 $t",
+          "normalized": [
+            {"245": {"ind1": "1", "ind2": "0", "subfields": [{"a": "Instance title"}]}},
+            {"776": {"ind1": "0", "ind2": "8", "subfields": [{"t": "Title 2"}]}}
+          ],
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "Title",
+              "mainTitle": "Instance title"
+            }],
+            "otherPhysicalFormat": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Title 2",
+                "subtitle": "för dig som arbetar med kakel och klinker"
+              },{
+                "@type": "SomeOtherTitle",
+                "mainTitle": "Title 1",
+                "qualifier": ["(Stockholm. Online)"]
+              },{
+                "@type": "VariantTitle",
+                "mainTitle": "Title 3"
+              }]
+            }]
+          }}
+        },
+        {
+          "name": "No appropriate title to revert - No 776 $t",
+          "normalized": [
+            {"245": {"ind1": "1", "ind2": "0", "subfields": [{"a": "Instance title"}]}},
+            {"776": {"ind1": "0", "ind2": "8", "subfields": [{"z": "9783527404704"}]}}
+          ],
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "Title",
+              "mainTitle": "Instance title"
+            }],
+            "otherPhysicalFormat": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "SpineTitle",
+                "mainTitle": "Title 2"
+              },{
+                "@type": "SomeOtherTitle",
+                "mainTitle": "Title 1",
+                "qualifier": ["(Stockholm. Online)"]
+              },{
+                "@type": "VariantTitle",
+                "mainTitle": "Title 3"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "9783527404704"
               }]
             }]
           }}

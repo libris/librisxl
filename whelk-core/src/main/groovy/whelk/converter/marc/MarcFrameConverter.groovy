@@ -2557,6 +2557,8 @@ class MarcSubFieldHandler extends ConversionPart {
     Pattern matchUriToken = null
     Pattern splitValuePattern
     List<String> splitValueProperties
+    List<String> allowedRevertTypes
+    String revertForLink
     Pattern castPattern
     String castProperty
     String rejoin
@@ -2650,6 +2652,10 @@ class MarcSubFieldHandler extends ConversionPart {
             rejoin = subDfn.rejoin
             joinEnd = subDfn.joinEnd
             allowEmpty = subDfn.allowEmpty
+        }
+        if (subDfn.allowedRevertTypes) {
+            allowedRevertTypes = subDfn.allowedRevertTypes
+            revertForLink = subDfn.revertForLink
         }
         if (subDfn.castPattern) {
             castPattern = Pattern.compile(subDfn.castPattern)
@@ -2878,6 +2884,29 @@ class MarcSubFieldHandler extends ConversionPart {
                 continue
             }
 
+            if (allowedRevertTypes) {
+                def wrappingEntity = getWrappingEntity(entity, data)
+                if (wrappingEntity) {
+                    String entityType = entity["@type"]
+                    if (!allowedRevertTypes.contains(entityType)) {
+                        continue
+                    }
+
+                    def pos = allowedRevertTypes.indexOf(entityType)
+
+                    // Get all existing @type values
+                    List existingTypes = wrappingEntity.getValue().findResults { (String) it["@type"]?.value }
+                    List allowedExistingTypes = existingTypes.intersect(allowedRevertTypes)
+
+                    //If pos already 0 we are good to go - else check if a more appropriate type exists
+                    if ((pos != 0) && allowedExistingTypes.size() > 1) {
+                        if (allowedExistingTypes.any { allowedRevertTypes.indexOf(it) < pos } ) {
+                            continue
+                        }
+                    }
+                }
+            }
+
             if (splitValueProperties && rejoin &&
                 (!propertyValue || property in splitValueProperties)) {
                 def vs = []
@@ -2947,6 +2976,41 @@ class MarcSubFieldHandler extends ConversionPart {
             return null
         else
             return values
+    }
+
+    def getWrappingEntity(Map entityToFind, def data) {
+        def foundEntity
+        if (data instanceof List) {
+            data.each {
+                foundEntity = getWrappingEntity(entityToFind, it)
+            }
+        } else if (data instanceof Map) {
+            for (Map.Entry entry in (Map) data) {
+                if (entry.key == revertForLink) {
+                    List possibleWrappingEntity = entry.value
+                    if (!(entry.value instanceof List)) {
+                        possibleWrappingEntity = [entry.value]
+                    }
+                    //List possibleWrappingEntity = (entry.value instanceof List) ? entry.value : [entry.value]
+                    if (checkIfValueInMap(entityToFind, possibleWrappingEntity)) {
+                        return entry
+                    }
+                } else {
+                    foundEntity = getWrappingEntity(entityToFind, entry.value)
+                }
+            }
+        }
+        return foundEntity
+    }
+
+    def checkIfValueInMap(Map entityToFind, List entities) {
+        boolean entityFound = false
+        entities.each {
+            if (it == entityToFind) {
+                entityFound |= true
+            }
+        }
+        return entityFound
     }
 
     def getPropertyValue(Map entity, String property) {
