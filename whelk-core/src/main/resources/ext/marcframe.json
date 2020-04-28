@@ -3628,34 +3628,37 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ProjGraphMaterialType-{_}",
-          "matchUriToken": "^[_cdfost]$",
+          "matchUriToken": "^[cdfost]$",
           "silentRevert": false
         },
         "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}",
+          "matchUriToken": "^[abchm]$"
         },
         "[4]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/ProjGraphEmulsionType-{_}",
-          "matchUriToken": "^[_dejkmo]$"
+          "matchUriToken": "^[dejkmo]$"
         },
         "[5]": {
           "link": "soundContent",
-          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
+          "matchUriToken": "^[_ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}",
+          "matchUriToken": "^[abcdefghi]$"
         },
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/ProjGraphDimensionsType-{_}",
-        "matchUriToken": "^[_abcefgjkstvwxy]$"
+          "matchUriToken": "^[abcdefgjkstvwxy]$"
         },
         "[8]": {
           "addLink": "mount",
@@ -3668,19 +3671,20 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/MicroformMaterialType-{_}",
-          "matchUriToken": "^[_abcdefghj]$",
+          "matchUriToken": "^[abcdefghj]$",
           "silentRevert": false
         },
         "[2]": null,
         "[3]": {
           "addLink": "polarity",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/PolarityType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/PolarityType-{_}",
+          "matchUriToken": "^[abm]$"
         },
         "[4]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/MicroformDimensionsType-{_}",
-        "matchUriToken": "^[_afghlmop]$"
+          "matchUriToken": "^[adfghlmop]$"
         },
         "[5]": {
           "addLink": "reductionRatio",
@@ -3697,12 +3701,12 @@
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MicroformColorType-{_}",
-          "matchUriToken": "^[_bcm]$"
+          "matchUriToken": "^[bcm]$"
         },
         "[10]": {
           "link": "emulsion",
           "uriTemplate": "https://id.kb.se/marc/MicroformEmulsionType-{_}",
-          "matchUriToken": "^[_abcm]$"
+          "matchUriToken": "^[abcm]$"
         },
         "[11]": {
           "addLink": "generation",
@@ -3714,32 +3718,34 @@
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}",
-          "matchUriToken": "^[_acdimprt]$"
+          "matchUriToken": "^[acdimprt]$"
         }
       },
       "StillImageInstance": {
         "[1]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/NonProjMaterialType-{_}",
-          "matchUriToken": "^[_acdefghijklnopqrsv]$",
+          "matchUriToken": "^[acdefghijklnopqrsv]$",
           "TODO:tokenMap": "Rename the uri:s of NonProjMaterialType (n and v) to not only contain the code"
         },
         "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}",
+          "matchUriToken": "^[abchm]$"
         },
         "[4]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/NonProjectedType-{_}",
-          "matchUriToken": "^[_abcdefghilmnopqrstvw]$"
+          "matchUriToken": "^[abcdefghilmnopqrstvw]$"
         },
         "[5]": {
           "addLink": "mount",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/NonProjectedType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/NonProjectedType-{_}",
+          "matchUriToken": "^[abcdefghilmnopqrstvw]$"
         }
       },
       "MovingImageInstance": {
