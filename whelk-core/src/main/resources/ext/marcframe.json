@@ -3478,32 +3478,32 @@
         "[1]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapMaterialType-{_}",
-          "matchUriToken": "^[_dgjkqrsy]$"
+          "matchUriToken": "^[dgjkqrsy]$"
         },
         "[2]": null,
         "[3]": {
-          "TODO:abou  tEntity (perhaps ideal for all colorContent (LoC does so), but more cumbersome and practically/statistically irrelevant)": "?work",
+          "TODO:aboutEntity (perhaps ideal for all colorContent (LoC does so), but more cumbersome and practically/statistically irrelevant)": "?work",
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MapColorType-{_}",
-          "matchUriToken": "^[_abchm]$"
+          "matchUriToken": "^[ac]$"
         },
         "[4]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MapMediumType-{_}",
-          "matchUriToken": "^[_abcdefghijlnpqrstvwy]$"
+          "matchUriToken": "^[abcdefgijlnpqrstvwy]$"
         },
         "[5]": {
           "addLink": "generation",
           "uriTemplate": "https://id.kb.se/marc/ReproductionType-{_}",
-          "matchUriToken": "^[_f]$"
+          "matchUriToken": "^[f]$"
         },
         "[6]": {
+          "TODO": "productionMethod in BF2",
           "addLink": "generation",
           "uriTemplate": "https://id.kb.se/marc/MapDetailsType-{_}",
-          "matchUriToken": "^[_abcd]$",
-          "fixedDefault": "|"
+          "matchUriToken": "^[abcd]$"
         },
         "[7]": {
           "addLink": "polarity",
