@@ -43,7 +43,7 @@ selectBySqlWhere(where) { data ->
                         classification["marc:typeCompletenessSourceOfClassCallNumber"] == "marc:IncompleteLcClassNumberAssignedByLac" )) {
             classification["source"] = classification["marc:typeCompletenessSourceOfClassCallNumber"]
         }
-        classification.remove("marc:classificationNumber")
+        classification.remove("marc:typeCompletenessSourceOfClassCallNumber")
     }
 
     scheduledForUpdating.println("${data.doc.getURI()}")
