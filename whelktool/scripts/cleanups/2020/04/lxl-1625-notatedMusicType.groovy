@@ -30,20 +30,32 @@ selectBySqlWhere(where) { data ->
 
     if (!changed) {
         instance["@type"] = "Instance"
-        changed = true
     }
 
-    if (instance["hasType"] != null) {
-        if (instance["hasType"]["@type"] == "NotatedMusicInstance") {
-            instance.remove("hasType")
-            changed = true
+    scheduledForUpdating.println("${data.doc.getURI()}")
+    data.scheduleSave(onError: { e ->
+        failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
+    })
+}
+
+where = "data#>'{@graph,1,hasPart}' @> '[{\"@type\":\"NotatedMusicInstance\"}]'"
+
+selectBySqlWhere(where) { data ->
+    def (record, instance) = data.graph
+    boolean changed = false
+
+    if (instance["hasPart"] != null) {
+        Iterator it = instance["hasPart"].iterator()
+        while (it.hasNext()) {
+            Map part = (Map) it.next()
+            if (part["@type"] == "NotatedMusicInstance") {
+                it.remove()
+            }
         }
     }
 
-    if (changed) {
-        scheduledForUpdating.println("${data.doc.getURI()}")
-        data.scheduleSave(onError: { e ->
-            failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
-        })
-    }
+    scheduledForUpdating.println("${data.doc.getURI()}")
+    data.scheduleSave(onError: { e ->
+        failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
+    })
 }
