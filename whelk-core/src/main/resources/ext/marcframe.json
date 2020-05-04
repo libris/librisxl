@@ -1415,6 +1415,7 @@
         "_:title": {
           "about": "_:instance",
           "addLink": "hasTitle", "resourceType": "Title",
+          "allowedTypesOnRevert": ["KeyTitle", "Title"],
           "embedded": true
         },
         "_:describedBy": {
@@ -1446,7 +1447,6 @@
       "$t": {
         "about": "_:title",
         "property": "mainTitle",
-        "allowedTypesOnRevert": ["KeyTitle", "Title"],
         "TODO:targetMatch": "222, 245"
       },
       "$x": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "TODO:targetMatch": "022"},

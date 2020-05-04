@@ -1107,6 +1107,23 @@ class ConversionPart {
                         }
                         aboutMap.get(key, []).add(item)
                     }
+                    def typeCandidates = pendingDfn.allowedTypesOnRevert
+                    if (typeCandidates) {
+                        def items = aboutMap.get(key)
+                        def selected = []
+                        for (type in typeCandidates) {
+                            // NOTE: using isInstanceOf would be preferable
+                            // over direct type comparison, but won't work
+                            // since a base type might be preferable to a
+                            // subtype in practise (due to a modeling issue).
+                            selected = items.findAll { it['@type'] == type  }
+                            if (selected) {
+                                items = selected
+                                break
+                            }
+                        }
+                        aboutMap[key] = selected
+                    }
                 }
             }
         }
@@ -2407,7 +2424,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     //subs << ['DEBUG:blockedSinceRevertedBy': selectedEntity._revertedBy]
                 }
 
-                List result = subhandler.revertWithSourcePosition(state, data, selectedEntity, pendingResources)
+                List result = subhandler.revertWithSourcePosition(state, data, selectedEntity)
 
                 def justAdded = null
                 String firstAddedValue = null
@@ -2557,7 +2574,6 @@ class MarcSubFieldHandler extends ConversionPart {
     Pattern matchUriToken = null
     Pattern splitValuePattern
     List<String> splitValueProperties
-    List<String> allowedTypesOnRevert
     Pattern castPattern
     String castProperty
     String rejoin
@@ -2651,9 +2667,6 @@ class MarcSubFieldHandler extends ConversionPart {
             rejoin = subDfn.rejoin
             joinEnd = subDfn.joinEnd
             allowEmpty = subDfn.allowEmpty
-        }
-        if (subDfn.allowedTypesOnRevert) {
-            allowedTypesOnRevert = subDfn.allowedTypesOnRevert
         }
         if (subDfn.castPattern) {
             castPattern = Pattern.compile(subDfn.castPattern)
@@ -2814,14 +2827,14 @@ class MarcSubFieldHandler extends ConversionPart {
 
     @CompileStatic(SKIP)
     List revert(Map state, Map data, Map currentEntity) {
-        List result = revertWithSourcePosition(state, data, currentEntity, null)
+        List result = revertWithSourcePosition(state, data, currentEntity)
         if (result == null)
             return null
         return result.collect { it[0] }
     }
 
     @CompileStatic(SKIP)
-    List revertWithSourcePosition(Map state, Map data, Map currentEntity, Map pendingResource) {
+    List revertWithSourcePosition(Map state, Map data, Map currentEntity) {
         currentEntity = aboutEntityName ? getEntity(state, data) : currentEntity
         if (currentEntity == null)
             return null
@@ -2880,40 +2893,6 @@ class MarcSubFieldHandler extends ConversionPart {
             if (checkResourceType && resourceType &&
                     !isInstanceOf(entity, resourceType)) {
                 continue
-            }
-
-            if (allowedTypesOnRevert) {
-
-                String revertForLink
-                if (link) {
-                    revertForLink = link
-                } else if (pendingResource[about]) {
-                    def pendingDfn = pendingResource[about]
-                    revertForLink = pendingDfn["link"] ? pendingDfn["link"] : pendingDfn["addLink"]
-                } else {
-                    continue
-                }
-
-                def wrappingEntity = getWrappingEntity(entity, data, revertForLink)
-                if (wrappingEntity) {
-                    String entityType = entity["@type"]
-                    if (!allowedTypesOnRevert.contains(entityType)) {
-                        continue
-                    }
-
-                    def pos = allowedTypesOnRevert.indexOf(entityType)
-
-                    // Get all existing @type values
-                    List existingTypes = wrappingEntity.getValue().findResults { (String) it["@type"]?.value }
-                    List allowedExistingTypes = existingTypes.intersect(allowedTypesOnRevert)
-
-                    //If pos already 0 we are good to go - else check if a more appropriate type exists
-                    if ((pos != 0) && allowedExistingTypes.size() > 1) {
-                        if (allowedExistingTypes.any { allowedTypesOnRevert.indexOf(it) < pos } ) {
-                            continue
-                        }
-                    }
-                }
             }
 
             if (splitValueProperties && rejoin &&
@@ -2985,40 +2964,6 @@ class MarcSubFieldHandler extends ConversionPart {
             return null
         else
             return values
-    }
-
-    def getWrappingEntity(Map entityToFind, def data, String revertForLink) {
-        def foundEntity
-        if (data instanceof List) {
-            data.each {
-                foundEntity = getWrappingEntity(entityToFind, it, revertForLink)
-            }
-        } else if (data instanceof Map) {
-            for (Map.Entry entry in (Map) data) {
-                if (entry.key == revertForLink) {
-                    List possibleWrappingEntity = entry.value
-                    if (!(entry.value instanceof List)) {
-                        possibleWrappingEntity = [entry.value]
-                    }
-                    if (checkIfValueInMap(entityToFind, possibleWrappingEntity)) {
-                        return entry
-                    }
-                } else {
-                    foundEntity = getWrappingEntity(entityToFind, entry.value, revertForLink)
-                }
-            }
-        }
-        return foundEntity
-    }
-
-    def checkIfValueInMap(Map entityToFind, List entities) {
-        boolean entityFound = false
-        entities.each {
-            if (it == entityToFind) {
-                entityFound |= true
-            }
-        }
-        return entityFound
     }
 
     def getPropertyValue(Map entity, String property) {
