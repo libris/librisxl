@@ -16702,35 +16702,6 @@
               ]
             }
           }}
-        },
-        {
-          "source": {
-            "710": {"ind1": "2", "ind2": " ", "subfields": [
-              {"a": "Teologiska högskolan Stockholm."},
-              {"b": "Avdelningen för teologi."},
-              {"4": "org"}
-            ]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "contribution" : [ {
-                "@type" : "Contribution",
-                "agent" : {
-                  "@type" : "Organization",
-                  "isPartOf" : {
-                    "@type" : "Organization",
-                    "name" : "Teologiska högskolan Stockholm."
-                  },
-                  "marc:subordinateUnit" : [ "Avdelningen för teologi." ]
-                },
-                "role" : [ {
-                  "@id" : "https://id.kb.se/relator/org",
-                  "@type" : "Role",
-                  "code" : "org"
-                } ]
-              } ]
-            }
-          }}
         }
       ]
     },
