@@ -7048,7 +7048,7 @@
       "resourceType": "marc:ClassificationNumbersAssignedInCanada",
       "i1": null,
       "i2": {
-        "property": "source",
+        "property": "marc:typeCompletenessSourceOfClassCallNumber",
         "tokenMap": {
           "0": "marc:LcBasedCallNumberAssignedByLac",
           "1": "marc:CompleteLcClassNumberAssignedByLac",
@@ -7082,6 +7082,26 @@
                   "@type": "marc:ClassificationNumbersAssignedInCanada",
                   "classificationPortion": "K347.9444",
                   "itemPortion": "C5164"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "_spec": [
+        {
+          "source": {
+            "055": {"ind1": "0", "ind2": "1", "subfields": [{"a": "HB31"}]}
+          },
+          "normalized": {
+            "055": {"ind1": " ", "ind2": "1", "subfields": [{"a": "HB31"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "classification": [{
+                  "@type": "marc:ClassificationNumbersAssignedInCanada",
+                  "classificationPortion": "HB31",
+                  "marc:typeCompletenessSourceOfClassCallNumber": "marc:CompleteLcClassNumberAssignedByLac"
                 }
               ]
             }
