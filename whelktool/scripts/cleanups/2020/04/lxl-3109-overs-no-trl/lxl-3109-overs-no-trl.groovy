@@ -181,15 +181,15 @@ String getNamesPart(String respPart) {
 }
 
 boolean noTranslator(def contribution) {
-    boolean found = false
+    boolean hasTranslator = false
     DocumentUtil.findKey(contribution, '@id') { value, path ->
         if (value == TRL) {
-            found = true
+            hasTranslator = true
         }
         DocumentUtil.NOP
     }
 
-    return !found
+    return !hasTranslator
 }
 
 void addRoleToContribution(List contributions, String agentName, String id) {
