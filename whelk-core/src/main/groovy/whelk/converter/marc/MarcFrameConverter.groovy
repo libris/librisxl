@@ -2557,7 +2557,7 @@ class MarcSubFieldHandler extends ConversionPart {
     Pattern matchUriToken = null
     Pattern splitValuePattern
     List<String> splitValueProperties
-    List<String> allowedRevertTypes
+    List<String> allowedTypesOnRevert
     Pattern castPattern
     String castProperty
     String rejoin
@@ -2652,8 +2652,8 @@ class MarcSubFieldHandler extends ConversionPart {
             joinEnd = subDfn.joinEnd
             allowEmpty = subDfn.allowEmpty
         }
-        if (subDfn.allowedRevertTypes) {
-            allowedRevertTypes = subDfn.allowedRevertTypes
+        if (subDfn.allowedTypesOnRevert) {
+            allowedTypesOnRevert = subDfn.allowedTypesOnRevert
         }
         if (subDfn.castPattern) {
             castPattern = Pattern.compile(subDfn.castPattern)
@@ -2882,7 +2882,7 @@ class MarcSubFieldHandler extends ConversionPart {
                 continue
             }
 
-            if (allowedRevertTypes) {
+            if (allowedTypesOnRevert) {
 
                 String revertForLink
                 if (link) {
@@ -2897,19 +2897,19 @@ class MarcSubFieldHandler extends ConversionPart {
                 def wrappingEntity = getWrappingEntity(entity, data, revertForLink)
                 if (wrappingEntity) {
                     String entityType = entity["@type"]
-                    if (!allowedRevertTypes.contains(entityType)) {
+                    if (!allowedTypesOnRevert.contains(entityType)) {
                         continue
                     }
 
-                    def pos = allowedRevertTypes.indexOf(entityType)
+                    def pos = allowedTypesOnRevert.indexOf(entityType)
 
                     // Get all existing @type values
                     List existingTypes = wrappingEntity.getValue().findResults { (String) it["@type"]?.value }
-                    List allowedExistingTypes = existingTypes.intersect(allowedRevertTypes)
+                    List allowedExistingTypes = existingTypes.intersect(allowedTypesOnRevert)
 
                     //If pos already 0 we are good to go - else check if a more appropriate type exists
                     if ((pos != 0) && allowedExistingTypes.size() > 1) {
-                        if (allowedExistingTypes.any { allowedRevertTypes.indexOf(it) < pos } ) {
+                        if (allowedExistingTypes.any { allowedTypesOnRevert.indexOf(it) < pos } ) {
                             continue
                         }
                     }

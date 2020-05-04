@@ -1446,7 +1446,7 @@
       "$t": {
         "about": "_:title",
         "property": "mainTitle",
-        "allowedRevertTypes": ["KeyTitle", "Title"],
+        "allowedTypesOnRevert": ["KeyTitle", "Title"],
         "TODO:targetMatch": "222, 245"
       },
       "$x": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "TODO:targetMatch": "022"},
