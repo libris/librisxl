@@ -2407,7 +2407,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                     //subs << ['DEBUG:blockedSinceRevertedBy': selectedEntity._revertedBy]
                 }
 
-                List result = subhandler.revertWithSourcePosition(state, data, selectedEntity)
+                List result = subhandler.revertWithSourcePosition(state, data, selectedEntity, pendingResources)
 
                 def justAdded = null
                 String firstAddedValue = null
@@ -2558,7 +2558,6 @@ class MarcSubFieldHandler extends ConversionPart {
     Pattern splitValuePattern
     List<String> splitValueProperties
     List<String> allowedRevertTypes
-    String revertForLink
     Pattern castPattern
     String castProperty
     String rejoin
@@ -2655,7 +2654,6 @@ class MarcSubFieldHandler extends ConversionPart {
         }
         if (subDfn.allowedRevertTypes) {
             allowedRevertTypes = subDfn.allowedRevertTypes
-            revertForLink = subDfn.revertForLink
         }
         if (subDfn.castPattern) {
             castPattern = Pattern.compile(subDfn.castPattern)
@@ -2816,14 +2814,14 @@ class MarcSubFieldHandler extends ConversionPart {
 
     @CompileStatic(SKIP)
     List revert(Map state, Map data, Map currentEntity) {
-        List result = revertWithSourcePosition(state, data, currentEntity)
+        List result = revertWithSourcePosition(state, data, currentEntity, null)
         if (result == null)
             return null
         return result.collect { it[0] }
     }
 
     @CompileStatic(SKIP)
-    List revertWithSourcePosition(Map state, Map data, Map currentEntity) {
+    List revertWithSourcePosition(Map state, Map data, Map currentEntity, Map pendingResource) {
         currentEntity = aboutEntityName ? getEntity(state, data) : currentEntity
         if (currentEntity == null)
             return null
@@ -2885,7 +2883,18 @@ class MarcSubFieldHandler extends ConversionPart {
             }
 
             if (allowedRevertTypes) {
-                def wrappingEntity = getWrappingEntity(entity, data)
+
+                String revertForLink
+                if (link) {
+                    revertForLink = link
+                } else if (pendingResource[about]) {
+                    def pendingDfn = pendingResource[about]
+                    revertForLink = pendingDfn["link"] ? pendingDfn["link"] : pendingDfn["addLink"]
+                } else {
+                    continue
+                }
+
+                def wrappingEntity = getWrappingEntity(entity, data, revertForLink)
                 if (wrappingEntity) {
                     String entityType = entity["@type"]
                     if (!allowedRevertTypes.contains(entityType)) {
@@ -2978,11 +2987,11 @@ class MarcSubFieldHandler extends ConversionPart {
             return values
     }
 
-    def getWrappingEntity(Map entityToFind, def data) {
+    def getWrappingEntity(Map entityToFind, def data, String revertForLink) {
         def foundEntity
         if (data instanceof List) {
             data.each {
-                foundEntity = getWrappingEntity(entityToFind, it)
+                foundEntity = getWrappingEntity(entityToFind, it, revertForLink)
             }
         } else if (data instanceof Map) {
             for (Map.Entry entry in (Map) data) {
@@ -2991,12 +3000,11 @@ class MarcSubFieldHandler extends ConversionPart {
                     if (!(entry.value instanceof List)) {
                         possibleWrappingEntity = [entry.value]
                     }
-                    //List possibleWrappingEntity = (entry.value instanceof List) ? entry.value : [entry.value]
                     if (checkIfValueInMap(entityToFind, possibleWrappingEntity)) {
                         return entry
                     }
                 } else {
-                    foundEntity = getWrappingEntity(entityToFind, entry.value)
+                    foundEntity = getWrappingEntity(entityToFind, entry.value, revertForLink)
                 }
             }
         }
