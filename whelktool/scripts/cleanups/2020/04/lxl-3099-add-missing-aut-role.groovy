@@ -7,11 +7,13 @@
  *  - Work @type is 'Text'
  *  - Instance type is one of 'Instance', 'Electronic'
  *  - issuanceType is 'Monograph'
+ *  - no 'musicFormat', 'musicKey' or 'musicMedium' field
  *
  *  See LXL-3099 for more info
  */
 
 final String AUTHOR = 'https://id.kb.se/relator/author'
+final List NON_TEXT_FIELDS = ['musicFormat', 'musicKey', 'musicMedium']
 
 PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 
@@ -24,6 +26,7 @@ selectByCollection('bib') { bib ->
             || !work['contribution']
             || !(instance['@type'] in ['Instance', 'Electronic'])
             || !instance['issuanceType'] != 'Monograph'
+            || NON_TEXT_FIELDS.any{ work.containsKey(it) || instance.containsKey(it) }
     ) {
         return
     }
