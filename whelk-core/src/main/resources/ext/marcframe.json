@@ -3483,32 +3483,32 @@
         "[1]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapMaterialType-{_}",
-          "matchUriToken": "^[_dgjkqrsy]$"
+          "matchUriToken": "^[dgjkqrsy]$"
         },
         "[2]": null,
         "[3]": {
-          "TODO:abou  tEntity (perhaps ideal for all colorContent (LoC does so), but more cumbersome and practically/statistically irrelevant)": "?work",
+          "TODO:aboutEntity (perhaps ideal for all colorContent (LoC does so), but more cumbersome and practically/statistically irrelevant)": "?work",
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MapColorType-{_}",
-          "matchUriToken": "^[_abchm]$"
+          "matchUriToken": "^[ac]$"
         },
         "[4]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MapMediumType-{_}",
-          "matchUriToken": "^[_abcdefghijlnpqrstvwy]$"
+          "matchUriToken": "^[abcdefgijlnpqrstvwy]$"
         },
         "[5]": {
           "addLink": "generation",
           "uriTemplate": "https://id.kb.se/marc/ReproductionType-{_}",
-          "matchUriToken": "^[_f]$"
+          "matchUriToken": "^[f]$"
         },
         "[6]": {
+          "TODO": "productionMethod in BF2",
           "addLink": "generation",
           "uriTemplate": "https://id.kb.se/marc/MapDetailsType-{_}",
-          "matchUriToken": "^[_abcd]$",
-          "fixedDefault": "|"
+          "matchUriToken": "^[abcd]$"
         },
         "[7]": {
           "addLink": "polarity",
@@ -3521,7 +3521,7 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ComputerMaterialType-{_}",
-          "matchUriToken": "^[_abcdefhjkmor]$",
+          "matchUriToken": "^[abcdefhjkmor]$",
           "silentRevert": false
         },
         "[2]": null,
@@ -3529,19 +3529,20 @@
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/ComputerColorType-{_}",
-          "matchUriToken": "^[_abcgm]$"
+          "matchUriToken": "^[abcgm]$"
         },
         "[4]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/ComputerDimensionsType-{_}",
-          "matchUriToken": "^[_aegijov]$"
+          "matchUriToken": "^[aegijov]$"
         },
         "[5]": {
           "link": "soundContent",
           "uriTemplate": "https://id.kb.se/marc/ComputerSoundType-{_}",
-          "matchUriToken": "^[ab]$"
+          "matchUriToken": "^[_a]$"
         },
         "[6:9]": {
+          "TODO": "I - digitalCharacteristic - bflc:ImageBitDepth rdf:value",
           "property": "imageBitDepth",
           "TODO:patternMap": "ComputerImageBitDepthType",
           "fixedDefault": "   "
@@ -3576,32 +3577,35 @@
         "[1]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GlobeMaterialType-{_}",
-          "matchUriToken": "^[_abce]$"
+          "matchUriToken": "^[abce]$"
         },
         "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MapColorType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MapColorType-{_}",
+          "matchUriToken": "^[ac]$"
         },
         "[4]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/GlobeMediumType-{_}",
-          "matchUriToken": "^[_abcdefgilnpvw]$"
+          "matchUriToken": "^[abcdefgilnpvw]$"
         },
         "[5]": {
           "addLink": "generation",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/ReproductionType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ReproductionType-{_}",
+          "matchUriToken": "^[f]$"
         }
       },
       "Tactile": {
+        "NOTE:LC": "nac",
         "[1]": {
           "TODO:layout": "Also more general mapping? Ensure that reconverting are able to handle this",
           "addLink": "layout",
           "uriTemplate": "https://id.kb.se/marc/TacMaterialType-{_}",
-          "matchUriToken": "^[_abcd]$"
+          "matchUriToken": "^[abcd]$"
         },
         "[2]": null,
         "[3] [4]": {
@@ -3612,51 +3616,54 @@
         "[5]": {
           "addLink": "layout",
           "uriTemplate": "https://id.kb.se/marc/TacContractionType-{_}",
-          "matchUriToken": "^[_abm]$"
+          "matchUriToken": "^[abmn]$"
         },
         "[6] [7] [8]": {
           "addLink": "hasNotation",
           "uriTemplate": "https://id.kb.se/marc/TacBrailleMusicType-{_}",
-          "matchUriToken": "^[abcdefghijklz]$"
+          "matchUriToken": "^[_abcdefghijkl]$"
         },
         "[9]": {
           "addLink": "hasNotation",
           "uriTemplate": "https://id.kb.se/marc/TacSpecPhysicalCharType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "matchUriToken": "^[ab]$"
         }
       },
       "ProjectedImageInstance": {
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ProjGraphMaterialType-{_}",
-          "matchUriToken": "^[_cdfost]$",
+          "matchUriToken": "^[cdfost]$",
           "silentRevert": false
         },
         "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}",
+          "matchUriToken": "^[abchm]$"
         },
         "[4]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/ProjGraphEmulsionType-{_}",
-          "matchUriToken": "^[_dejkmo]$"
+          "matchUriToken": "^[dejkmo]$"
         },
         "[5]": {
           "link": "soundContent",
-          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
+          "matchUriToken": "^[_ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}",
+          "matchUriToken": "^[abcdefghi]$"
         },
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/ProjGraphDimensionsType-{_}",
-        "matchUriToken": "^[_abcefgjkstvwxy]$"
+          "matchUriToken": "^[abcdefgjkstvwxy]$"
         },
         "[8]": {
           "addLink": "mount",
@@ -3669,19 +3676,20 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/MicroformMaterialType-{_}",
-          "matchUriToken": "^[_abcdefghj]$",
+          "matchUriToken": "^[abcdefghj]$",
           "silentRevert": false
         },
         "[2]": null,
         "[3]": {
           "addLink": "polarity",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/PolarityType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/PolarityType-{_}",
+          "matchUriToken": "^[abm]$"
         },
         "[4]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/MicroformDimensionsType-{_}",
-        "matchUriToken": "^[_afghlmop]$"
+          "matchUriToken": "^[adfghlmop]$"
         },
         "[5]": {
           "addLink": "reductionRatio",
@@ -3698,12 +3706,12 @@
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MicroformColorType-{_}",
-          "matchUriToken": "^[_bcm]$"
+          "matchUriToken": "^[bcm]$"
         },
         "[10]": {
           "link": "emulsion",
           "uriTemplate": "https://id.kb.se/marc/MicroformEmulsionType-{_}",
-          "matchUriToken": "^[_abcm]$"
+          "matchUriToken": "^[abcm]$"
         },
         "[11]": {
           "addLink": "generation",
@@ -3715,39 +3723,41 @@
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}",
-          "matchUriToken": "^[_acdimprt]$"
+          "matchUriToken": "^[acdimprt]$"
         }
       },
       "StillImageInstance": {
         "[1]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/NonProjMaterialType-{_}",
-          "matchUriToken": "^[_acdefghijklnopqrsv]$",
+          "matchUriToken": "^[acdefghijklnopqrsv]$",
           "TODO:tokenMap": "Rename the uri:s of NonProjMaterialType (n and v) to not only contain the code"
         },
         "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}",
+          "matchUriToken": "^[abchm]$"
         },
         "[4]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/NonProjectedType-{_}",
-          "matchUriToken": "^[_abcdefghilmnopqrstvw]$"
+          "matchUriToken": "^[abcdefghilmnopqrstvw]$"
         },
         "[5]": {
           "addLink": "mount",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/NonProjectedType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/NonProjectedType-{_}",
+          "matchUriToken": "^[abcdefghilmnopqrstvw]$"
         }
       },
       "MovingImageInstance": {
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/MotionPicMaterialType-{_}",
-          "matchUriToken": "^[_cfor]$",
+          "matchUriToken": "^[cfor]$",
           "silentRevert": false
         },
         "[2]": null,
@@ -3755,78 +3765,85 @@
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicColorType-{_}",
-          "matchUriToken": "^[_bchm]$"
+          "matchUriToken": "^[bchm]$"
         },
         "[4]": {
           "addLink": "projectionCharacteristic",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicFormatType-{_}",
-        "matchUriToken": "^[_abcdef]$"
+          "matchUriToken": "^[abcdef]$"
         },
         "[5]": {
           "link": "soundContent",
-          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
+          "matchUriToken": "^[_ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}",
+          "matchUriToken": "^[abcdefghi]$"
         },
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/MotionPicDimensionsType-{_}",
-        "matchUriToken": "^[_abcefg]$"
+          "matchUriToken": "^[abcdefg]$"
         },
         "[8]": {
           "addLink": "soundCharacteristic",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-{_}",
-          "matchUriToken": "^[_kmqs]$"
+          "matchUriToken": "^[kmqs]$"
         },
         "[9]": {
           "addLink": "genreForm",
+          "NOTE": "LC ignores all but c & d",
           "uriTemplate": "https://id.kb.se/marc/MotionPicElementsType-{_}",
-          "matchUriToken": "^[_abcdefg]$"
+          "matchUriToken": "^[abcdefg]$"
         },
         "[10]": {
           "addLink": "polarity",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicPosNegType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "matchUriToken": "^[ab]$"
         },
         "[11]": {
           "addLink": "generation",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicGenerationType-{_}",
-          "matchUriToken": "^[_deor]$"
+          "matchUriToken": "^[deor]$"
         },
         "[12]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}",
+          "matchUriToken": "^[acdimprt]$"
         },
         "[13]": {
-          "link": "marc:motionPicCategories",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicCategoriesType-{_}",
-          "matchUriToken": "^[_abcdefghijklmpqrstv]$"
+          "NOTE:LC": "13 - Refined categories of color - nac",
+          "ignored": true,
+          "fixedDefault": "|"
         },
         "[14]": {
-          "link": "marc:motionPicColorStock",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicColorStockType-{_}",
-          "matchUriToken": "^[_abcd]$"
+          "NOTE:LC": "14 - Kind of color stock or print - nac",
+          "ignored": true,
+          "fixedDefault": "|"
         },
         "[15]": {
-          "link": "marc:motionPicDeterioration",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicDeteriorationType-{_}",
-          "matchUriToken": "^[abcdefghklm]$"
+          "NOTE:LC": "15 - Deterioration stage - nac",
+          "ignored": true,
+          "fixedDefault": "|"
         },
         "[16]": {
+          "NOTE:LC": "hasNote",
           "link": "marc:motionPicCompleteness",
           "uriTemplate": "https://id.kb.se/marc/MotionPicCompletenessType-{_}",
           "matchUriToken": "^[0123ci]$"
         },
         "[17:23]": {
-          "property": "marc:timeOfExamination"
+          "NOTE:LC": "17-22 - Film inspection date - ignore",
+          "ignored": true,
+          "fixedDefault": "||||||"
         }
       },
       "KitInstance": {
@@ -3845,6 +3862,8 @@
         }
       },
       "RemoteSensingImage": {
+        "NOTE:LC": "007--REMOTE-SENSING IMAGE - nac",
+        "TODO": "drop this gracefully...",
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}",
@@ -3853,90 +3872,76 @@
         },
         "[2]": null,
         "[3]": {
-          "link": "marc:remoteSensImageAltitude",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageAltitudeType-{_}",
-          "matchUriToken": "^[_abc]$"
+          "ignored": true
         },
         "[4]": {
-          "link": "marc:remoteSensImageAttitude",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageAttitudeType-{_}",
-          "matchUriToken": "^[abc]$"
+          "ignored": true
         },
         "[5]": {
-          "link": "marc:remoteSensImageCloud",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageCloudType-{_}",
-        "matchUriToken": "^[0123456789]$"
+          "ignored": true
         },
         "[6]": {
-          "link": "marc:remoteSensImageConstruction",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageConstructionType-{_}",
-          "matchUriToken": "^[_abcdefghi]$"
+          "ignored": true
         },
         "[7]": {
-          "link": "marc:remoteSensImageUse",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageUseType-{_}",
-          "matchUriToken": "^[_abcm]$"
+          "ignored": true
         },
         "[8]": {
-          "link": "marc:remoteSensImageSensor",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageSensorType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "ignored": true
         },
         "[9:11]": {
-          "link": "marc:remoteSensImageData",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageDataType-{_}",
-          "matchUriToken": "^[abcdefgjmprstuvz]$"
+          "ignored": true
         }
       },
       "SoundRecording": {
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/SoundMaterialType-{_}",
-          "matchUriToken": "^[_degiqstw]$",
+          "matchUriToken": "^[degiqrstw]$",
           "silentRevert": false
         },
         "[2]": null,
         "[3]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundSpeedType-{_}",
-          "matchUriToken": "^[_abcdefhiklmopr]$"
+          "matchUriToken": "^[abcdefhiklmopr]$"
         },
         "[4]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundPlaybackChannelType-{_}",
-          "matchUriToken": "^[_mqs]$"
+          "matchUriToken": "^[mqs]$"
         },
         "[5]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundGrooveType-{_}",
-          "matchUriToken": "^[_ms]$"
+          "matchUriToken": "^[ms]$"
         },
         "[6]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/SoundDimensionsType-{_}",
-        "matchUriToken": "^[_abcdefgjos]$"
+          "matchUriToken": "^[abcdefgjos]$"
         },
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/SoundTapeWidthType-{_}",
-          "matchUriToken": "^[_lmop]$"
+          "matchUriToken": "^[lmop]$"
         },
         "[8]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundTapeConfigurationType-{_}",
-          "matchUriToken": "^[_abcdef]$"
+          "matchUriToken": "^[abcdef]$"
         },
         "[9]": {
           "addLink": "generation",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/SoundKindOfDiscType-{_}",
-          "matchUriToken": "^[_abdimrst]$"
+          "matchUriToken": "^[abdimrst]$"
         },
         "[10]": {
           "TODO": "Depending on value of tokenMap, map to appliedMaterial or baseMaterial?",
           "addLink": "baseMaterial",
           "uriTemplate": "https://id.kb.se/marc/SoundKindOfMaterialType-{_}",
-          "matchUriToken": "^[_abcgilmprsw]$"
+          "matchUriToken": "^[abcgilmprsw]$"
         },
         "[11]": {
           "addLink": "soundCharacteristic",
@@ -3946,21 +3951,20 @@
         "[12]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundPlaybackCharacterType-{_}",
-          "matchUriToken": "^[_abcdefgh]$"
+          "matchUriToken": "^[abcdefgh]$"
         },
         "[13]": {
-          "TODO": "Ensure not to clash with 340 $d",
-          "TODO:aboutEntity": "Work or Instance?",
+          "TODO": "I - soundCharacteristic - bflc:CaptureStorage",
           "link": "marc:soundCapture",
           "uriTemplate": "https://id.kb.se/marc/SoundCaptureType-{_}",
-          "matchUriToken": "^[_abde]$"
+          "matchUriToken": "^[abde]$"
         }
       },
       "TextInstance": {
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/TextMaterialType-{_}",
-          "matchUriToken": "^[_abcd]$",
+          "matchUriToken": "^[abcd]$",
           "silentRevert": false
         }
       },
@@ -3968,38 +3972,42 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/VideoMaterialType-{_}",
-          "matchUriToken": "^[_cdfr]$",
+          "matchUriToken": "^[cdfr]$",
           "silentRevert": false
         },
         "[2]": null,
         "[3]": {
+          "TODO": "W - colorContent - ColorContent",
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/VideoColorType-{_}",
-          "matchUriToken": "^[_abcm]$"
+          "matchUriToken": "^[abcm]$"
         },
         "[4]": {
           "addLink": "videoCharacteristic",
-        "NOTE:marc-repeatable": false,
+          "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/VideoFormatType-{_}",
-          "matchUriToken": "^[_abcdefghijkmopqsv]$"
+          "matchUriToken": "^[abcdefghijkmopqsv]$"
         },
         "[5]": {
           "link": "soundContent",
-          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
+          "matchUriToken": "^[_ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
-          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}",
+          "matchUriToken": "^[abcdefghi]$"
         },
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/VideoDimensionsType-{_}",
-        "matchUriToken": "^[_amopqr]$"
+          "matchUriToken": "^[amopqr]$"
         },
         "[8]": {
           "addLink": "soundCharacteristic",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-{_}",
+          "matchUriToken": "^[kmqs]$"
         }
       },
       "marc:Unspecified": {},
@@ -4137,7 +4145,7 @@
         {
           "name": "@type MovingImageInstance",
           "source": {"007":"m| ||||||||||||||"},
-          "normalized": {"007":"m| |||||||||||||||     "},
+          "normalized": {"007":"m| ||||||||||||||||||||"},
           "result": {
             "mainEntity": {
               "@type": "MovingImageInstance"
