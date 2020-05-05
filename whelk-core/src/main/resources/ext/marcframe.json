@@ -3476,6 +3476,9 @@
           "t": "TextInstance",
           "v": "VideoRecording",
           "z": null
+        },
+        "reverseTokenMapOverrides": {
+          "TextInstance": "|"
         }
       },
       "tokenTypeMap": "[0]",
@@ -3838,7 +3841,9 @@
           "NOTE:LC": "hasNote",
           "link": "marc:motionPicCompleteness",
           "uriTemplate": "https://id.kb.se/marc/MotionPicCompletenessType-{_}",
-          "matchUriToken": "^[0123ci]$"
+          "matchUriToken": "^[0123ci]$",
+          "TODO:ignoreOnRevert": true,
+          "TODO:fixedDefault": " "
         },
         "[17:23]": {
           "NOTE:LC": "17-22 - Film inspection date - ignore",
@@ -3965,6 +3970,7 @@
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/TextMaterialType-{_}",
           "matchUriToken": "^[abcd]$",
+          "ignoreOnRevert": true,
           "silentRevert": false
         }
       },
@@ -4207,9 +4213,9 @@
           }
         },
         {
-          "name": "@type TextInstance + RegularPrint",
+          "name": "@type TextInstance + RegularPrint should not be reverted",
           "source": {"007":"ta"},
-          "normalized": {"007":"ta                     "},
+          "normalized": [],
           "result": {
             "mainEntity": {
               "@type": "TextInstance",

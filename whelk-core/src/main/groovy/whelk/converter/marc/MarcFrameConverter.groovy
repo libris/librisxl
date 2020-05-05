@@ -1335,6 +1335,7 @@ class MarcFixedFieldHandler {
                 columns << new Column(this, obj, colNum.first, colNum.second,
                         obj['itemPos'] ?: colNums.size() > 1 ? i : null,
                         obj['fixedDefault'],
+                        obj['ignoreOnRevert'],
                         obj['matchAsDefault'])
 
                 if (colNum.second > fieldSize) {
@@ -1402,11 +1403,12 @@ class MarcFixedFieldHandler {
         int end
         Integer itemPos
         String fixedDefault
+        Boolean ignoreOnRevert = null
         Pattern matchAsDefault
         MarcFixedFieldHandler fixedFieldHandler
 
         Column(MarcFixedFieldHandler fixedFieldHandler, fieldDfn, int start, int end,
-               itemPos, fixedDefault, matchAsDefault = null) {
+               itemPos, fixedDefault, ignoreOnRevert, matchAsDefault = null) {
             super(fixedFieldHandler.ruleSet, "$fixedFieldHandler.tag-$start-$end", fieldDfn)
             this.fixedFieldHandler = fixedFieldHandler
             assert start > -1 && end >= start
@@ -1414,6 +1416,8 @@ class MarcFixedFieldHandler {
             this.end = end
             this.itemPos = (Integer) itemPos
             this.fixedDefault = fixedDefault
+            this.ignoreOnRevert = ignoreOnRevert
+
             if (fixedDefault) {
                 assert this.fixedDefault.size() == this.width
             }
@@ -1454,6 +1458,9 @@ class MarcFixedFieldHandler {
         @CompileStatic(SKIP)
         def revert(Map state, Map data) {
             def v = super.revert(state, data, null)
+            if (ignoreOnRevert && fixedDefault)
+                return fixedDefault
+
             if ((v == null || v.every { it == null }) && fixedDefault)
                 return fixedDefault
 
