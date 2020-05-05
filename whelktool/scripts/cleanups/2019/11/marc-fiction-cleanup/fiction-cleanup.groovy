@@ -78,11 +78,9 @@ private boolean everySabClassifcationIsH(work) {
 }
 
 boolean isSAB(classification) {
-    def type = classification.'@type' as String
-
-    if (type == "Classification") {
+    if (isInstanceOf(classification, 'Classification')) {
         def inSchemeCode = classification.inScheme?.code as String
-        return inSchemeCode && inSchemeCode == "kssb" && classification.inScheme?.'@type' == "ConceptScheme"
+        return inSchemeCode && inSchemeCode == "kssb" && isInstanceOf(classification.inScheme, 'ConceptScheme')
     }
     return false
 }
