@@ -1107,6 +1107,23 @@ class ConversionPart {
                         }
                         aboutMap.get(key, []).add(item)
                     }
+                    def typeCandidates = pendingDfn.allowedTypesOnRevert
+                    if (typeCandidates) {
+                        def items = aboutMap.get(key)
+                        def selected = []
+                        for (type in typeCandidates) {
+                            // NOTE: using isInstanceOf would be preferable
+                            // over direct type comparison, but won't work
+                            // since a base type might be preferable to a
+                            // subtype in practise (due to a modeling issue).
+                            selected = items.findAll { it['@type'] == type  }
+                            if (selected) {
+                                items = selected
+                                break
+                            }
+                        }
+                        aboutMap[key] = selected
+                    }
                 }
             }
         }
