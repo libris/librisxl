@@ -74,7 +74,8 @@ selectBySqlWhere(query, silent: false) { data ->
 private boolean everySabClassifcationIsH(work) {
     def classif = work.classification
     classif = classif instanceof Map ? [classif] : classif
-    return classif?.findAll { c -> isSAB(c) }?.every { c -> hasClassificationH(c) }
+    def sabClassifications = classif?.findAll { c -> isSAB(c) }
+    return sabClassifications ? sabClassifications?.every { c -> hasClassificationH(c) } : false
 }
 
 boolean isSAB(classification) {
