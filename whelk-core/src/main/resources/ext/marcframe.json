@@ -3478,6 +3478,7 @@
           "z": null
         },
         "reverseTokenMapOverrides": {
+          "NOTE": "N.B. Should not set to '|' unless all other pos are set to '|'. When all pos are set to '|' no 007 will be created by revert.",
           "TextInstance": "|"
         }
       },
