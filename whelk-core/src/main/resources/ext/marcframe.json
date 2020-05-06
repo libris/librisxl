@@ -3471,7 +3471,7 @@
           "m": "MovingImageInstance",
           "o": "KitInstance",
           "q": "NotatedMusicInstance",
-          "r": "RemoteSensingImage",
+          "r": null,
           "s": "SoundRecording",
           "t": "TextInstance",
           "v": "VideoRecording",
@@ -3868,12 +3868,8 @@
       },
       "RemoteSensingImage": {
         "NOTE:LC": "007--REMOTE-SENSING IMAGE - nac",
-        "TODO": "drop this gracefully...",
         "[1]": {
-          "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}",
-          "TODO:tokenMap? (empty, just as KitMaterialType)": "RemoteSensingImageMaterialType",
-          "silentRevert": false
+          "ignored": true
         },
         "[2]": null,
         "[3]": {
@@ -4182,11 +4178,9 @@
         {
           "name": "@type RemoteSensingImage",
           "source": {"007":"r| |||||||"},
-          "normalized": {"007":"r| |||||||             "},
+          "normalized": [],
           "result": {
-            "mainEntity": {
-              "@type": "RemoteSensingImage"
-            }
+            "mainEntity": {}
           }
         },
         {
