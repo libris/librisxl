@@ -3469,7 +3469,7 @@
           "h": "Microform",
           "k": "StillImageInstance",
           "m": "MovingImageInstance",
-          "o": "KitInstance",
+          "o": null,
           "q": "NotatedMusicInstance",
           "r": null,
           "s": "SoundRecording",
@@ -3853,9 +3853,7 @@
       },
       "KitInstance": {
         "[1]": {
-          "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}",
-          "silentRevert": false
+          "ignored": true
         }
       },
       "NotatedMusicInstance": {
@@ -4158,11 +4156,9 @@
         {
           "name": "@type KitInstance",
           "source": {"007":"o|"},
-          "normalized": {"007":"o|                     "},
+          "normalized": [],
           "result": {
-            "mainEntity": {
-              "@type": "KitInstance"
-            }
+            "mainEntity": {}
           }
         },
         {
