@@ -3559,7 +3559,8 @@
         "[10]": {
           "link": "marc:qATarget",
           "uriTemplate": "https://id.kb.se/marc/ComputerQATargetType-{_}",
-          "matchUriToken": "^[ap]$"
+          "matchUriToken": "^[ap]$",
+          "ignoreOnRevert": true
         },
         "[11]": {
           "link": "marc:antecedent",
@@ -4077,14 +4078,15 @@
           }
         },
         {
-          "name": "@type Electronic + OpticalDisc",
-          "source": {"007":"co |g|   |||||"},
+          "name": "@type Electronic + OpticalDisc + TestImagesEtcPresent",
+          "source": {"007":"co |g|   |p|||"},
           "normalized": {"007":"co |g|   |||||         "},
           "result": {
             "mainEntity": {
               "@type": "Electronic",
               "carrierType": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-o"}],
-              "hasDimensions": {"@id": "https://id.kb.se/marc/ComputerDimensionsType-g"}
+              "hasDimensions": {"@id": "https://id.kb.se/marc/ComputerDimensionsType-g"},
+              "marc:qATarget": {"@id": "https://id.kb.se/marc/ComputerQATargetType-p"}
             }
           }
         },
