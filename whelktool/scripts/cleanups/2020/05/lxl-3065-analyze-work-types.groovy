@@ -4,7 +4,7 @@ report = getReportWriter("report")
 
 selectByCollection('bib') { bib ->
     def work = getWork(bib)
-    def recordId = data.graph[0][ID]
+    def recordId = bib.graph[0][ID]
     def sabClassifications = getAllSAB(work)
     def codes = sabClassifications.collect { getSABcode(it)}
     report.println("SAB codes: $codes Type: $work Record ID: $recordId")
