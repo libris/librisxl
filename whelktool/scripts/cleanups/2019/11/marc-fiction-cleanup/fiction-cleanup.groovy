@@ -18,8 +18,7 @@ selectBySqlWhere(query, silent: false) { data ->
     def work = data.graph[2]
     def recordId = data.graph[0][ID]
 
-    if (!hasOnlyHClassifications(work)) {
-        //At least one classification is not H OR there are no classifications
+    if (!everySabClassifcationIsH(work)) {
         if (isSaogfSkonlitteratur(data.whelk, work) && !hasAnySubjectAsGenreForm(work) && hasAnyNotFictionGenreForm(work)) {
             report.println "Record $recordId with genreForm $work.genreForm and classification: ${work.classification?.code}" +
                     "has broader to $SKONLITTERATUR. Replacing $NOT_FICTION with $FICTION..."
@@ -72,24 +71,24 @@ selectBySqlWhere(query, silent: false) { data ->
     }
 }
 
-private boolean hasOnlyHClassifications(work) {
+private boolean everySabClassifcationIsH(work) {
     def classif = work.classification
     classif = classif instanceof Map ? [classif] : classif
-    return classif?.every { c -> hasClassificationH(c) }
+    def sabClassifications = classif?.findAll { c -> isSAB(c) }
+    return sabClassifications ? sabClassifications?.every { c -> hasClassificationH(c) } : false
+}
+
+boolean isSAB(classification) {
+    if (isInstanceOf(classification, 'Classification')) {
+        def inSchemeCode = classification.inScheme?.code as String
+        return inSchemeCode && inSchemeCode == "kssb" && isInstanceOf(classification.inScheme, 'ConceptScheme')
+    }
+    return false
 }
 
 boolean hasClassificationH(classification) {
-    def type = classification.'@type' as String
     def code = classification?.code instanceof String ? [classification.code] : classification.code
-
-    if (type == "Classification") {
-        def inSchemeCode = classification.inScheme?.code as String
-        if (inSchemeCode && inSchemeCode == "kssb" && classification.inScheme?.'@type' == "ConceptScheme") {
-            return code && code.every { c -> c.startsWith("H") || c.startsWith("uH") }
-        }
-    }
-
-    return false
+    return code && code.every { c -> c.startsWith("H") || c.startsWith("uH") }
 }
 
 private boolean hasAnyNotFictionGenreForm(work) {
