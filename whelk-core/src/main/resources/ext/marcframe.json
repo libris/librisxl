@@ -3470,7 +3470,7 @@
           "k": "StillImageInstance",
           "m": "MovingImageInstance",
           "o": null,
-          "q": "NotatedMusicInstance",
+          "q": null,
           "r": null,
           "s": "SoundRecording",
           "t": "TextInstance",
@@ -3858,10 +3858,7 @@
       },
       "NotatedMusicInstance": {
         "[1]": {
-          "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}",
-          "TODO:tokenMap? (empty, just as KitMaterialType)": "NotatedMusicMaterialType",
-          "silentRevert": false
+          "ignored": true
         }
       },
       "RemoteSensingImage": {
@@ -4164,11 +4161,9 @@
         {
           "name": "@type NotatedMusicInstance",
           "source": {"007":"q|"},
-          "normalized": {"007":"q|                     "},
+          "normalized": [],
           "result": {
-            "mainEntity": {
-              "@type": "NotatedMusicInstance"
-            }
+            "mainEntity": {}
           }
         },
         {
