@@ -4183,6 +4183,19 @@
           }
         },
         {
+          "name": "@type MovingImageInstance + Incomplete",
+          "source": {"007":"m| |||||||||||||i"},
+          "normalized": {"007":"m| |||||||||||||i||||||"},
+          "result": {
+            "mainEntity": {
+              "@type": "MovingImageInstance",
+              "marc:motionPicCompleteness": {
+                "@id" : "https://id.kb.se/marc/MotionPicCompletenessType-i"
+              }
+            }
+          }
+        },
+        {
           "name": "@type SoundRecording + SoundDisc",
           "source": {"007":"sd |||||||||||"},
           "normalized": {"007":"sd |||||||||||         "},
