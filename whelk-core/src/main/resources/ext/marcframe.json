@@ -7153,14 +7153,35 @@
       "$c": {"addProperty": "marc:alternateG0OrG1CharacterSet"}   
     },
     "070": {
-      "aboutEntity": "?work",
-      "link": "classification",
+      "aboutEntity": "?thing",
+      "addLink": "classification",
       "resourceType": "marc:NationalAgriculturalLibraryCallNumber",
-      "i1": {"marcDefault": " "},
+      "i1": null,
       "$a": {"addProperty": "classificationPortion"},
       "$b": {"property": "itemPortion"},
       "$0": {"property": "marc:recordControlNumber"},
-      "$1": {"property": "marc:rwoURI"}
+      "$1": {"ignore": true, "NOTE:LC": "nac"},
+      "_spec": [
+        {
+          "source": {
+            "070": {"ind1": "0", "ind2": " ", "subfields": [{"a": "QH301.A5"},{"b": "1981"}]}
+          },
+          "normalized": {
+            "070": {"ind1": " ", "ind2": " ", "subfields": [{"a": "QH301.A5"},{"b": "1981"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "classification": [
+                {
+                  "@type": "marc:NationalAgriculturalLibraryCallNumber",
+                  "classificationPortion": ["QH301.A5"],
+                  "itemPortion": "1981"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "071": {
       "NOTE:LC": "071 - NATIONAL AGRICULTURAL LIBRARY COPY STATEMENT (R) nac",
