@@ -24,7 +24,7 @@ boolean isSAB(classification) {
     return false
 }
 
-boolean getSABcode(classification) {
+def getSABcode(classification) {
     return classification?.code instanceof String ? [classification.code] : classification.code
 }
 
