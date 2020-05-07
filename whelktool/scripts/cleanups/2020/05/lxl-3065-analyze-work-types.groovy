@@ -11,7 +11,7 @@ selectByCollection('bib') { bib ->
 }
 
 private List getAllSAB(work) {
-    def classif = work.classification
+    def classif = work?.classification
     classif = classif instanceof Map ? [classif] : classif
     return classif?.findAll { c -> isSAB(c) }
 }
