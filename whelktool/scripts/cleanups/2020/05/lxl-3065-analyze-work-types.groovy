@@ -7,7 +7,7 @@ selectByCollection('bib') { bib ->
     def recordId = bib.graph[0][ID]
     def sabClassifications = getAllSAB(work)
     def codes = sabClassifications.collect { getSABcode(it)}
-    report.println("SAB codes: $codes Type: $work Record ID: $recordId")
+    report.println("SAB codes: $codes Type: ${work[TYPE]} Record ID: $recordId")
 }
 
 private List getAllSAB(work) {
