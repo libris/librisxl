@@ -25,7 +25,7 @@ selectByCollection('bib') { bib ->
             || work['@type'] != 'Text'
             || !work['contribution']
             || !(instance['@type'] in ['Instance', 'Electronic'])
-            || !instance['issuanceType'] != 'Monograph'
+            || instance['issuanceType'] != 'Monograph'
             || NON_TEXT_FIELDS.any{ work.containsKey(it) || instance.containsKey(it) }
     ) {
         return
