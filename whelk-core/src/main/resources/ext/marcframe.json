@@ -3469,13 +3469,17 @@
           "h": "Microform",
           "k": "StillImageInstance",
           "m": "MovingImageInstance",
-          "o": "KitInstance",
-          "q": "NotatedMusicInstance",
-          "r": "RemoteSensingImage",
+          "o": null,
+          "q": null,
+          "r": null,
           "s": "SoundRecording",
           "t": "TextInstance",
           "v": "VideoRecording",
           "z": null
+        },
+        "reverseTokenMapOverrides": {
+          "NOTE": "N.B. Should not set to '|' unless all other pos are set to '|'. When all pos are set to '|' no 007 will be created by revert.",
+          "TextInstance": "|"
         }
       },
       "tokenTypeMap": "[0]",
@@ -3555,7 +3559,8 @@
         "[10]": {
           "link": "marc:qATarget",
           "uriTemplate": "https://id.kb.se/marc/ComputerQATargetType-{_}",
-          "matchUriToken": "^[ap]$"
+          "matchUriToken": "^[ap]$",
+          "ignoreOnRevert": true
         },
         "[11]": {
           "link": "marc:antecedent",
@@ -3835,10 +3840,10 @@
           "fixedDefault": "|"
         },
         "[16]": {
-          "NOTE:LC": "hasNote",
-          "link": "marc:motionPicCompleteness",
+          "link": "hasNote",
           "uriTemplate": "https://id.kb.se/marc/MotionPicCompletenessType-{_}",
-          "matchUriToken": "^[0123ci]$"
+          "matchUriToken": "^[0123ci]$",
+          "ignoreOnRevert": true
         },
         "[17:23]": {
           "NOTE:LC": "17-22 - Film inspection date - ignore",
@@ -3848,27 +3853,18 @@
       },
       "KitInstance": {
         "[1]": {
-          "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}",
-          "silentRevert": false
+          "ignored": true
         }
       },
       "NotatedMusicInstance": {
         "[1]": {
-          "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}",
-          "TODO:tokenMap? (empty, just as KitMaterialType)": "NotatedMusicMaterialType",
-          "silentRevert": false
+          "ignored": true
         }
       },
       "RemoteSensingImage": {
         "NOTE:LC": "007--REMOTE-SENSING IMAGE - nac",
-        "TODO": "drop this gracefully...",
         "[1]": {
-          "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}",
-          "TODO:tokenMap? (empty, just as KitMaterialType)": "RemoteSensingImageMaterialType",
-          "silentRevert": false
+          "ignored": true
         },
         "[2]": null,
         "[3]": {
@@ -3965,6 +3961,7 @@
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/TextMaterialType-{_}",
           "matchUriToken": "^[abcd]$",
+          "ignoreOnRevert": true,
           "silentRevert": false
         }
       },
@@ -4072,14 +4069,15 @@
           }
         },
         {
-          "name": "@type Electronic + OpticalDisc",
-          "source": {"007":"co |g|   |||||"},
+          "name": "@type Electronic + OpticalDisc + TestImagesEtcPresent",
+          "source": {"007":"co |g|   |p|||"},
           "normalized": {"007":"co |g|   |||||         "},
           "result": {
             "mainEntity": {
               "@type": "Electronic",
               "carrierType": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-o"}],
-              "hasDimensions": {"@id": "https://id.kb.se/marc/ComputerDimensionsType-g"}
+              "hasDimensions": {"@id": "https://id.kb.se/marc/ComputerDimensionsType-g"},
+              "marc:qATarget": {"@id": "https://id.kb.se/marc/ComputerQATargetType-p"}
             }
           }
         },
@@ -4155,41 +4153,35 @@
         {
           "name": "@type KitInstance",
           "source": {"007":"o|"},
-          "normalized": {"007":"o|                     "},
+          "normalized": [],
           "result": {
-            "mainEntity": {
-              "@type": "KitInstance"
-            }
+            "mainEntity": {}
           }
         },
         {
           "name": "@type NotatedMusicInstance",
           "source": {"007":"q|"},
-          "normalized": {"007":"q|                     "},
+          "normalized": [],
           "result": {
-            "mainEntity": {
-              "@type": "NotatedMusicInstance"
-            }
+            "mainEntity": {}
           }
         },
         {
           "name": "@type RemoteSensingImage",
           "source": {"007":"r| |||||||"},
-          "normalized": {"007":"r| |||||||             "},
+          "normalized": [],
           "result": {
-            "mainEntity": {
-              "@type": "RemoteSensingImage"
-            }
+            "mainEntity": {}
           }
         },
         {
           "name": "@type MovingImageInstance + Incomplete",
           "source": {"007":"m| |||||||||||||i"},
-          "normalized": {"007":"m| |||||||||||||i||||||"},
+          "normalized": {"007":"m| ||||||||||||||||||||"},
           "result": {
             "mainEntity": {
               "@type": "MovingImageInstance",
-              "marc:motionPicCompleteness": {
+              "hasNote": {
                 "@id" : "https://id.kb.se/marc/MotionPicCompletenessType-i"
               }
             }
@@ -4207,9 +4199,9 @@
           }
         },
         {
-          "name": "@type TextInstance + RegularPrint",
+          "name": "@type TextInstance + RegularPrint should not be reverted",
           "source": {"007":"ta"},
-          "normalized": {"007":"ta                     "},
+          "normalized": [],
           "result": {
             "mainEntity": {
               "@type": "TextInstance",
