@@ -1525,7 +1525,7 @@
     "instanceTitleQualifier": {
       "TODO": "Does $c relates to $t or $s?. Check statistics. Deviates from 'referenceToWork' and 'referenceToSeriesInstance'",
       "NOTE": "For now, continue to map bib 776 differently; $c together with $t",
-      "$c": {"about": "_:title", "property": "qualifier", "ignoreOnRevert": true, "NOTE:marc-repeatable": false}
+      "$c": {"about": "_:title", "property": "qualifier", "NOTE:marc-repeatable": false}
     }
   },
 
@@ -18417,6 +18417,7 @@
           "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [
             {"i": "Print"},
             {"t": "Entangled world"},
+            {"c": "Original"},
             {"z": "9783527404704"}
           ]}},
           "result": {"mainEntity": {
@@ -18439,7 +18440,7 @@
           "name": "Should only revert KeyTitle as 776 $t",
           "normalized": [
             {"245": {"ind1": "1", "ind2": "0", "subfields": [{"a": "Instance title"}]}},
-            {"776": {"ind1": "0", "ind2": "8", "subfields": [{"t": "Title 1"}, {"z": "9783527404704"}]}}
+            {"776": {"ind1": "0", "ind2": "8", "subfields": [{"t": "Title 1"}, {"c": "(Stockholm. Online)"}, {"z": "9783527404704"}]}}
           ],
           "result": {"mainEntity": {
             "hasTitle": [{
@@ -18522,6 +18523,20 @@
               "identifiedBy": [{
                 "@type": "ISBN",
                 "value": "9783527404704"
+              }]
+            }]
+          }}
+        },
+        {
+          "name": "No appropriate title to revert - No 776 $t",
+          "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [{"t": "Vattenmagasinet"}, {"c": "(Bromma. Online)"}]}},
+          "result": {"mainEntity": {
+            "otherPhysicalFormat": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "KeyTitle",
+                "mainTitle": "Vattenmagasinet",
+                "qualifier": ["(Bromma. Online)"]
               }]
             }]
           }}
