@@ -1403,12 +1403,12 @@ class MarcFixedFieldHandler {
         int end
         Integer itemPos
         String fixedDefault
-        Boolean ignoreOnRevert = null
+        Boolean ignoreOnRevert
         Pattern matchAsDefault
         MarcFixedFieldHandler fixedFieldHandler
 
         Column(MarcFixedFieldHandler fixedFieldHandler, fieldDfn, int start, int end,
-               itemPos, fixedDefault, ignoreOnRevert, matchAsDefault = null) {
+               itemPos, fixedDefault, ignoreOnRevert = null, matchAsDefault = null) {
             super(fixedFieldHandler.ruleSet, "$fixedFieldHandler.tag-$start-$end", fieldDfn)
             this.fixedFieldHandler = fixedFieldHandler
             assert start > -1 && end >= start
