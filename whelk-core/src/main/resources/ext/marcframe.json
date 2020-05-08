@@ -5224,6 +5224,25 @@
       ]
     },
 
+    "009": {
+      "NOTE": "Swepub data only",
+      "aboutEntity": "?record",
+      "addLink": "indirectlyIdentifiedBy",
+      "resourceType": "Local",
+      "property": "value",
+      "_spec": [
+        {
+          "source": {"009": "oai:DIVA.org:kth-226820"},
+          "result": {
+            "indirectlyIdentifiedBy": [{
+              "@type": "Local",
+              "value": "oai:DIVA.org:kth-226820"
+            }]
+          }
+        }
+      ]
+    },
+
     "010": {
       "include": ["idbase"],
       "resourceType": "LCCN",
