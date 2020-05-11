@@ -3533,12 +3533,14 @@
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/ComputerColorType-{_}",
-          "matchUriToken": "^[abcgm]$"
+          "matchUriToken": "^[abcgm]$",
+          "ignoreOnRevert": true
         },
         "[4]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/ComputerDimensionsType-{_}",
-          "matchUriToken": "^[aegijov]$"
+          "matchUriToken": "^[aegijov]$",
+          "ignoreOnRevert": true
         },
         "[5]": {
           "link": "soundContent",
@@ -3546,15 +3548,17 @@
           "matchUriToken": "^[_a]$"
         },
         "[6:9]": {
-          "TODO": "I - digitalCharacteristic - bflc:ImageBitDepth rdf:value",
-          "property": "imageBitDepth",
-          "TODO:patternMap": "ComputerImageBitDepthType",
+          "link": "digitalCharacteristic",
+          "resourceType": "ImageBitDepth",
+          "property": "value",
+          "ignoreOnRevert": true,
           "fixedDefault": "   "
         },
         "[9]": {
           "link": "marc:fileFormats",
           "uriTemplate": "https://id.kb.se/marc/ComputerFileFormatsType-{_}",
-          "matchUriToken": "^[am]$"
+          "matchUriToken": "^[am]$",
+          "ignoreOnRevert": true
         },
         "[10]": {
           "link": "marc:qATarget",
@@ -3565,17 +3569,20 @@
         "[11]": {
           "link": "marc:antecedent",
           "uriTemplate": "https://id.kb.se/marc/ComputerAntecedentType-{_}",
-          "matchUriToken": "^[abcdm]$"
+          "matchUriToken": "^[abcdm]$",
+          "ignoreOnRevert": true
         },
         "[12]": {
           "link": "marc:compression",
           "uriTemplate": "https://id.kb.se/marc/ComputerCompressionType-{_}",
-          "matchUriToken": "^[abdm]$"
+          "matchUriToken": "^[abdm]$",
+          "ignoreOnRevert": true
         },
         "[13]": {
           "link": "marc:reformattingQuality",
           "uriTemplate": "https://id.kb.se/marc/ComputerReformattingQualityType-{_}",
-          "matchUriToken": "^[apr]$"
+          "matchUriToken": "^[apr]$",
+          "ignoreOnRevert": true
         }
       },
       "Globe": {
@@ -3798,31 +3805,36 @@
           "addLink": "soundCharacteristic",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-{_}",
-          "matchUriToken": "^[kmqs]$"
+          "matchUriToken": "^[kmqs]$",
+          "ignoreOnRevert": true
         },
         "[9]": {
           "addLink": "genreForm",
           "NOTE": "LC ignores all but c & d",
           "uriTemplate": "https://id.kb.se/marc/MotionPicElementsType-{_}",
-          "matchUriToken": "^[abcdefg]$"
+          "matchUriToken": "^[abcdefg]$",
+          "ignoreOnRevert": true
         },
         "[10]": {
           "addLink": "polarity",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicPosNegType-{_}",
-          "matchUriToken": "^[ab]$"
+          "matchUriToken": "^[ab]$",
+          "ignoreOnRevert": true
         },
         "[11]": {
           "addLink": "generation",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicGenerationType-{_}",
-          "matchUriToken": "^[deor]$"
+          "matchUriToken": "^[deor]$",
+          "ignoreOnRevert": true
         },
         "[12]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}",
-          "matchUriToken": "^[acdimprt]$"
+          "matchUriToken": "^[acdimprt]$",
+          "ignoreOnRevert": true
         },
         "[13]": {
           "NOTE:LC": "13 - Refined categories of color - nac",
@@ -4042,6 +4054,10 @@
             {"007": "aj |a|||               "},
             {"007": "cj |||   a||||         "}
           ],
+          "normalized": [
+            {"007": "aj |a|||               "},
+            {"007": "cj |||   |||||         "}
+          ],
           "result": {
             "mainEntity": {
               "@type": "Map",
@@ -4070,13 +4086,14 @@
         },
         {
           "name": "@type Electronic + OpticalDisc + TestImagesEtcPresent",
-          "source": {"007":"co |g|   |p|||"},
-          "normalized": {"007":"co |g|   |||||         "},
+          "source": {"007":"co |g|008|p|||"},
+          "normalized": {"007":"co |||   |||||         "},
           "result": {
             "mainEntity": {
               "@type": "Electronic",
               "carrierType": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-o"}],
               "hasDimensions": {"@id": "https://id.kb.se/marc/ComputerDimensionsType-g"},
+              "digitalCharacteristic": {"@type": "ImageBitDepth", "value": "008"},
               "marc:qATarget": {"@id": "https://id.kb.se/marc/ComputerQATargetType-p"}
             }
           }
@@ -4142,11 +4159,14 @@
         },
         {
           "name": "@type MovingImageInstance",
-          "source": {"007":"m| ||||||||||||||"},
+          "source": {"007":"m| |||||k||||||||"},
           "normalized": {"007":"m| ||||||||||||||||||||"},
           "result": {
             "mainEntity": {
-              "@type": "MovingImageInstance"
+              "@type": "MovingImageInstance",
+              "soundCharacteristic": [{
+                "@id": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-k"
+              }]
             }
           }
         },
