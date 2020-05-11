@@ -24617,16 +24617,16 @@
       },
       "[8]": null,
       "[9]": {
-        "aboutEntity": "?record",
-        "link": "marc:characterCoding",
-        "uriTemplate": "https://id.kb.se/marc/CharacterCodingType-{_}",
+        "NOTE": "Character coding scheme - a - UCS/Unicode",
+        "ignored": true,
         "fixedDefault": "a"
       },
       "NOTE:[10]": "see bib",
       "NOTE:[11]": "see bib",
       "NOTE:[12:17]": "see bib",
       "[17]": {
-        "NOTE": "No longer convert this position - just revert to fixedDefault",
+        "NOTE": "Encoding level - u - Unknown",
+        "ignored": true,
         "fixedDefault": "u"
       },
       "[18]": {
@@ -24637,10 +24637,9 @@
       },
       "[19]": null,
       "[20:24]": {
-        "aboutEntity": "?record",
-        "property": "marc:entryMap",
-        "fixedDefault": "4500",
-        "TODO:patternMap": "entryMap"
+        "NOTE": "Entry map - 4500 - Default value in MARC21",
+        "ignored": true,
+        "fixedDefault": "4500"
       },
       "repeatable": false,
       "_spec": [
