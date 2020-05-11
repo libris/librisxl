@@ -108,7 +108,7 @@ void tryAddTranslators(bib, Map work, String responsibilityStatement) {
         }
         else if (translators.containsKey(name)) {
             def id = translators[name]
-            work.contribution << [agent: ['@id': id], role: [['@id': TRL]]]
+            work.contribution << ['@type': 'Contribution', agent: ['@id': id + '#it'], role: [['@id': TRL]]]
             msg += "$msgBase add link to: $name\t$id\n"
             Script.stats.increment('names', 'link to auth')
             Script.stats.increment('z - link to auth', name)
@@ -140,8 +140,9 @@ Map tryMakeBlankContribution(String name) {
     (name =~ /($simpleName) ($simpleName)/).with {
         if (matches()) {
             [
-                    agent: ['@type': 'Person', givenName: group(1), familyName: group(2)],
-                    role: [['@id': TRL]]
+                    '@type': 'Contribution',
+                    agent  : ['@type': 'Person', givenName: group(1), familyName: group(2)],
+                    role   : [['@id': TRL]]
             ]
         }
     }
