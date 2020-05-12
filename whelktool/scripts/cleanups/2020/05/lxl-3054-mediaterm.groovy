@@ -86,8 +86,8 @@ void set(bib, String field, String value, StringBuilder msg) {
         case 'subTitle':
             if (value.indexOf('/') != -1) {
                 value.split('/').with { x ->
-                    set(bib, 'subTitle', x[0])
-                    set(bib, 'responsibilityStatement', x[1])
+                    set(bib, 'subTitle', x[0], msg)
+                    set(bib, 'responsibilityStatement', x[1], msg)
                 }
             }
             else {
