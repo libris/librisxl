@@ -12,11 +12,13 @@ class Script {
     static PrintWriter otherHoldingReport
     static PrintWriter deleteReport
     static PrintWriter holdReport
+    static PrintWriter failedReport
 }
 
 Script.otherHoldingReport = getReportWriter("has-other-holding")
 Script.deleteReport = getReportWriter("deleted")
 Script.holdReport = getReportWriter("hold-updated")
+Script.failedReport = getReportWriter("failed")
 
 TSV = 'SPI-5705-ids.tsv'
 new File(scriptDir, TSV).readLines().tail().collect{ it.split("\\t") }.each { columns ->
@@ -24,7 +26,9 @@ new File(scriptDir, TSV).readLines().tail().collect{ it.split("\\t") }.each { co
         process(getUri(columns[0]).toString(), getUri(columns[1]).toString())
     }
     catch (Exception e) {
+        println(e)
         e.printStackTrace()
+        Script.failedReport.println("${columns[0]} ${columns[1]} e")
     }
 }
 
@@ -44,6 +48,7 @@ void process(String duplicateUri, String keepUri) {
             bib.scheduleSave()
         }
     }
+    boolean found = false
     selectBySqlWhere(whereSHolding(duplicateUri)) { hold ->
         StringBuilder msg = new StringBuilder().append(hold.doc.getURI()).append("\n")
         hold.graph[1]['itemOf']['@id'] = keepUri + '#it'
@@ -53,6 +58,11 @@ void process(String duplicateUri, String keepUri) {
         add(msg, hold.graph[1], 'hasNote', hasNote)
         hold.scheduleSave()
         Script.holdReport.println(msg)
+        found = true
+    }
+
+    if(!found) {
+        Script.failedReport.println("No holding for S: $duplicateUri")
     }
 }
 
