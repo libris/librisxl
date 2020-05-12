@@ -1,5 +1,5 @@
 /**
- * Parse subTitle and responsibilityStatement from malformed marc:mediaterm created by
+ * Parse subtitle and responsibilityStatement from malformed marc:mediaterm created by
  * failed conversion from MARC21.
  *
  * See LXL-3054 for more information
@@ -13,7 +13,7 @@ class Script {
     static Map map = [
             // Order is significant. Will be matched in this order.
             'responsibilityStatement': ['/ ', '/c ', '/ c ', '/$c', '/'],
-            'subTitle': [':'],
+            'subtitle': [':'],
     ]
 }
 
@@ -46,7 +46,8 @@ selectByCollection('bib') { bib ->
         }
     }
     catch(Exception e) {
-        Script.s.increment('failed', e.getMessage())
+        Script.s.increment('FAILED', e.getMessage())
+        Script.s.increment('TOTAL', 'FAILED')
     }
 }
 
@@ -83,18 +84,18 @@ void set(bib, String field, String value, StringBuilder msg) {
             put(bib, instance, field, repairBrackets(value.trim()), msg)
             break;
 
-        case 'subTitle':
+        case 'subtitle':
             if (value.indexOf('/') != -1) {
                 value.split('/').with { x ->
-                    set(bib, 'subTitle', x[0], msg)
+                    set(bib, 'subtitle', x[0], msg)
                     set(bib, 'responsibilityStatement', x[1], msg)
                 }
             }
             else {
                 Map title = instance['hasTitle']?.find{ it['@type'] == 'Title' && it['mainTitle'] }
                 if(!title) {
-                    println("${bib.doc.getURI()} Could not set subTitle: No 'Title', hasTitle: ${instance['hasTitle']}\n")
-                    throw new RuntimeException("Could not set subTitle")
+                    println("${bib.doc.getURI()} Could not set subtitle: No 'Title', hasTitle: ${instance['hasTitle']}\n")
+                    throw new RuntimeException("Could not set subtitle")
                 }
                 put(bib, title, field, repairBrackets(value.trim()), msg)
             }
