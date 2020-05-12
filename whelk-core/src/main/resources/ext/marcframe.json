@@ -4414,6 +4414,7 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/ComputerTypeOfFileType-{_}",
+          "matchUriToken": "^[abcdefghijm]$",
           "silentRevert": false
         },
         "[27]": null,
@@ -4421,6 +4422,7 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$",
           "silentRevert": false
         },
         "[29] [30] [31] [32] [33] [34]": null
