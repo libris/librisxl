@@ -4512,17 +4512,20 @@
           "aboutEntity": "?work",
           "addLink": "intendedAudience",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}",
+          "matchUriToken": "^[abcdefgj]$"
         },
         "[23]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "matchUriToken": "^[abcdfoqrs]$",
           "silentRevert": false
         },
         "[24] [25] [26] [27] [28] [29]": {
           "TODO": "Decide if this should be Work or Instance. Compare with Text",
           "link": "supplementaryContent",
-          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}",
+          "matchUriToken": "^[abcdefghikrs]$"
         },
         "[30] [31]": {
           "aboutEntity": "?work",
@@ -4534,8 +4537,9 @@
         },
         "[32]": null,
         "[33]": {
-          "link": "marc:transposition",
-          "uriTemplate": "https://id.kb.se/marc/MusicTranspositionType-{_}"
+          "NOTE:LC": "Transposition and arrangement - # - nac",
+          "ignore": true,
+          "fixedDefault": "|"
         },
         "[34]": null
       },
