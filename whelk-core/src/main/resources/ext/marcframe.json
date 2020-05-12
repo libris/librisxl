@@ -4484,6 +4484,7 @@
           "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "matchUriToken": "^[abcdfoqrs]$",
           "silentRevert": false
         },
         "[24] [25] [26] [27] [28] [29] [30] [31] [32] [33] [34]": null
