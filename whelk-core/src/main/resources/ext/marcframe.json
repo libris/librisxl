@@ -4565,33 +4565,39 @@
           "TODO": "Decide if it should be Work or Instance",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsTypeOfSerialType-{_}",
+          "matchUriToken": "^[dlmnpw]$",
           "silentRevert": false
         },
         "[22]": {
-          "link": "marc:originalItem",
-          "uriTemplate": "https://id.kb.se/marc/SerialsOriginalItemType-{_}"
+          "link": "hasNote",
+          "uriTemplate": "https://id.kb.se/marc/SerialsOriginalItemType-{_}",
+          "matchUriToken": "^[abcdefoqs]$"
         },
         "[23]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "matchUriToken": "^[abcdfoqrs]$",
           "silentRevert": false
         },
         "[24]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsNatureType-{_}",
+          "matchUriToken": "^[abcdefghiklmopqrstuvwxyz56]$",
           "silentRevert": false
         },
         "[25] [26] [27]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsContentsType-{_}",
+          "matchUriToken": "^[abcdefghiklmopqrstuvwxyz56]$",
           "silentRevert": false
         },
         "[28]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$",
           "silentRevert": false
         },
         "[29]": {
@@ -4604,16 +4610,20 @@
         },
         "[30] [31] [32]": null,
         "[33]": {
+          "NOTE:LC": "W - notation - Script",
           "link": "marc:alphabet",
-          "uriTemplate": "https://id.kb.se/marc/SerialsAlphabetType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SerialsAlphabetType-{_}",
+          "matchUriToken": "^[abcdefghijkl]$"
         },
         "[34]": {
+          "NOTE:LC": "adminMetadata - note - Note",
           "link": "marc:typeOfEntry",
           "uriTemplate": "https://id.kb.se/marc/SerialsTypeOfEntryType-{_}"
         }
       },
       "Visual": {
         "[18:21]": {
+          "TODO": "hasDuration - Duration",
           "property": "marc:runningTime",
           "TODO:patternMap": "visualRunningTime"
         },
@@ -4622,18 +4632,21 @@
           "aboutEntity": "?work",
           "addLink": "intendedAudience",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}",
+          "matchUriToken": "^[abcdefgj]$"
         },
         "[23] [24] [25] [26] [27]": null,
         "[28]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$",
           "silentRevert": false
         },
         "[29]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "matchUriToken": "^[abcdfmos]$",
           "silentRevert": false
         },
         "[30] [31] [32]": null,
@@ -4641,11 +4654,15 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/VisualMaterialType-{_}",
+          "matchUriToken": "^[abcdfgiklmnopqrstvwyz]$",
           "silentRevert": false
         },
         "[34]": {
+          "NOTE:LC": "note - Note",
+          "ignoreOnRevert": true,
           "link": "marc:technique",
-          "uriTemplate": "https://id.kb.se/marc/VisualTechniqueType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/VisualTechniqueType-{_}",
+          "matchUriToken": "^[acl]$"
         }
       },
       "repeatable": false,
