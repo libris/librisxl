@@ -4430,11 +4430,13 @@
       "Cartography": {
         "[18] [19] [20] [21]": {
           "TODO:aboutEntity": "?cartographic",
+          "TODO": "cartographicAttributes on Work in BF conversion 1.5",
           "addLink": "marc:relief",
           "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}",
           "matchUriToken": "^[abcdefgijkmz]$"
         },
         "[22:24]": {
+          "TODO": "cartographicAttributes on Work in BF conversion 1.5, tokenmap combinations",
           "link": "projection",
           "uriTemplate": "https://id.kb.se/marc/MapsProjectionType-{_}"
         },
@@ -4444,6 +4446,7 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapsMaterialType-{_}",
+          "matchUriToken": "^[abcdefg]$",
           "silentRevert": false
         },
         "[26] [27]": null,
@@ -4451,11 +4454,13 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$",
           "silentRevert": false
         },
         "[29]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "matchUriToken": "^[abcdfoqrs]$",
           "silentRevert": false
         },
         "[30]": null,
