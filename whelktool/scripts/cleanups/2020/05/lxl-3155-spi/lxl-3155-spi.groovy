@@ -92,7 +92,7 @@ String systemIdFromLegacy(String id) {
 }
 
 boolean isLegacyId(String id) {
-    id ==~ /[0-9]+/
+    id ==~ /[0-9]{1,13}/
 }
 
 String whereNotSHolding(bibId) {
