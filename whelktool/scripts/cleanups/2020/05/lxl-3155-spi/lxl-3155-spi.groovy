@@ -51,7 +51,7 @@ void process(String duplicateUri, String keepUri) {
         boolean found = false
         selectBySqlWhere(whereSHolding(duplicateUri)) { hold ->
             StringBuilder msg = new StringBuilder().append(hold.doc.getURI()).append("\n")
-            msg.append("itemOf: $duplicateUri -> $keepUri")
+            msg.append("itemOf: $duplicateUri -> $keepUri").append("\n")
             hold.graph[1]['itemOf']['@id'] = keepUri + '#it'
             add(msg, hold.graph[0], 'identifiedBy', identifiedBy)
             add(msg, hold.graph[0], 'cataloguersNote', ['Katalog 56-86, SPI20191219. S bestånd flyttat från SPI-dubblett maskinellt. Fel kan förekomma.'])
