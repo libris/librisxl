@@ -38,9 +38,9 @@ selectBySqlWhere(query, silent: false) { data ->
 
     if (!everySabClassifcationIsH(work)) {
         if (isSaogfSkonlitteratur(data.whelk, work)
-                && !hasAnySubjectAsGenreForm(work)
+                && !hasAnySubjectAsGenreForm(work, recordId)
                 && hasAnyNotFictionGenreForm(work)
-                && !hasGfWithBothSkonAndFackTerm(work)
+                && !hasGfWithBothSkonAndFackTerm(work, recordId)
         ) {
             report.println "Record $recordId with genreForm $work.genreForm and classification: ${work.classification?.code}" +
                     "has broader to $SKONLITTERATUR. Replacing $NOT_FICTION with $FICTION..."
@@ -129,7 +129,7 @@ private boolean isSaogfSkonlitteratur(whelk, work) {
     return work.genreForm && work.genreForm.any { gf -> whelk.relations.isImpliedBy(SKONLITTERATUR, gf.'@id') }
 }
 
-private boolean hasAnySubjectAsGenreForm(work) {
+private boolean hasAnySubjectAsGenreForm(work, recordId) {
     if (work.genreForm && work.genreForm.any { gf -> gf.'@id'?.startsWith(SUBJECT_PREFIX)}) {
         report.println "Record $recordId with genreForm $work.genreForm " +
                 "has a subject as genreForm: not scheduling for change."
@@ -139,7 +139,7 @@ private boolean hasAnySubjectAsGenreForm(work) {
     }
 }
 
-private boolean hasGfWithBothSkonAndFackTerm(work) {
+private boolean hasGfWithBothSkonAndFackTerm(work, recordId) {
     if (work.genreForm && work.genreForm.any { gf -> GF_WITH_DOUBLE_TERMS.contains(gf.'@id')}) {
         report.println "Record $recordId with genreForm $work.genreForm " +
                 "has genreForm with inCollection containing both term/skon and term/fack: not scheduling for change."
