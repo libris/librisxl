@@ -28,7 +28,7 @@ new File(scriptDir, TSV).readLines().tail().collect{ it.split("\\t") }.each { co
     catch (Exception e) {
         println(e)
         e.printStackTrace()
-        Script.failedReport.println("${columns[0]} ${columns[1]} e")
+        Script.failedReport.println("${columns[0]} ${columns[1]} ${e}")
     }
 }
 
