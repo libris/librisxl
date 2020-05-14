@@ -18751,21 +18751,21 @@
       ]
     },
     "785": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "succeededBy",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "match": [
-        {"when": "i2=0", "addLink": "continuedBy", "resourceType": "Work"},
-        {"when": "i2=1", "addLink": "continuedInPartBy", "resourceType": "Work"},
-        {"when": "i2=2", "addLink": "succeededBy", "resourceType": "Work"},
-        {"when": "i2=3", "addLink": "succeededInPartBy", "resourceType": "Work"},
-        {"when": "i2=4", "addLink": "absorbedBy", "resourceType": "Work"},
-        {"when": "i2=5", "addLink": "absorbedInPartBy", "resourceType": "Work"},
-        {"when": "i2=6", "addLink": "splitInto", "resourceType": "Work"},
-        {"when": "i2=7", "addLink": "mergedToForm", "resourceType": "Work"},
-        {"when": "i2=8", "addLink": "continuedBy", "resourceType": "Work"}
+        {"when": "i2=0", "addLink": "continuedBy", "resourceType": "Instance"},
+        {"when": "i2=1", "addLink": "continuedInPartBy", "resourceType": "Instance"},
+        {"when": "i2=2", "addLink": "succeededBy", "resourceType": "Instance"},
+        {"when": "i2=3", "addLink": "succeededInPartBy", "resourceType": "Instance"},
+        {"when": "i2=4", "addLink": "absorbedBy", "resourceType": "Instance"},
+        {"when": "i2=5", "addLink": "absorbedInPartBy", "resourceType": "Instance"},
+        {"when": "i2=6", "addLink": "splitInto", "resourceType": "Instance"},
+        {"when": "i2=7", "addLink": "mergedToForm", "resourceType": "Instance"},
+        {"when": "i2=8", "addLink": "continuedBy", "resourceType": "Instance"}
       ],
       "i2": {"ignored": true, "marcDefault": "0"},
       "_spec": [
@@ -18775,128 +18775,80 @@
             {"x": "1937-6545"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "continuedBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Naysprayer"
-                  }],
-                  "identifiedBy": [{
-                    "@type" : "ISSN",
-                    "value" : "1937-6545"
-                  }]
-                }
+            "continuedBy": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Naysprayer"
+              }],
+              "identifiedBy": [{
+                "@type" : "ISSN",
+                "value" : "1937-6545"
               }]
-            }
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "1", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "continuedInPartBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "continuedInPartBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "2", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "succeededBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "succeededBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "3", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "succeededInPartBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "succeededInPartBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "4", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "absorbedBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "absorbedBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "5", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "absorbedInPartBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "absorbedInPartBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "6", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "splitInto": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "splitInto": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "7", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "mergedToForm": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "mergedToForm": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
@@ -18904,16 +18856,10 @@
           "source": {"785": {"ind1": "0", "ind2": "8", "subfields": [{"t": "A Title"}]}},
           "normalized": {"785": {"ind1": "0", "ind2": "0", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "continuedBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "continuedBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
@@ -18921,16 +18867,10 @@
           "source": {"785": {"ind1": "0", "ind2": " ", "subfields": [{"t": "A Title"}]}},
           "normalized": {"785": {"ind1": "0", "ind2": "2", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "succeededBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "succeededBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         }
       ]
