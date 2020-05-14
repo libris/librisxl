@@ -1876,6 +1876,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map<String, Map> pendingResources
     List<String> pendingKeys
     String aboutAlias
+    //NOTE: allowLinkOnRevert as list may be preferable, but there is currently no case for it. Update if needed.
+    String allowLinkOnRevert
     List<String> onRevertPrefer
     Set<String> sharesGroupIdWith = new HashSet<String>()
     boolean silentRevert
@@ -1899,9 +1901,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         aboutAlias = fieldDfn.aboutAlias
-
+        allowLinkOnRevert = fieldDfn.allowLinkOnRevert
         dependsOn = fieldDfn.dependsOn
-
         constructProperties = fieldDfn.constructProperties
 
         if (fieldDfn.uriTemplate) {
@@ -2280,6 +2281,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def results = []
 
         def useLinks = []
+
+        if (allowLinkOnRevert) {
+            useLinks << [link: allowLinkOnRevert, resourceType: resourceType]
+        }
+
         if (computeLinks && computeLinks.mapping instanceof Map) {
             computeLinks.mapping.each { code, compLink ->
                 if (compLink in topEntity) {
