@@ -17472,11 +17472,11 @@
       ]
     },
     "770": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "supplement",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
@@ -17491,27 +17491,21 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "supplement": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Journal of cellular biochemistry. Supplement"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "0733-1959"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }]
-                }
+            "supplement": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Journal of cellular biochemistry. Supplement"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "0733-1959"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
               }]
-            }
+            }]
           }}
         }
       ]
