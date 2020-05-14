@@ -17511,12 +17511,12 @@
       ]
     },
     "772": {
-      "include": ["referenceToWork"],
+      "include": ["referenceToInstance"],
       "NOTE:local": "Observera att fältet även har använts för att på ett enhetligt sätt konvertera delposter till flerbandsverk (med ind. 2 = 0) från ett ursprungligt LIBRISIII-format.",
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "supplementTo",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": "0"},
       "_spec": [
         {
@@ -17532,24 +17532,21 @@
             {"z": "00-0-000000-0"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "supplementTo": [{
+            "supplementTo": [{
+              "@type": "Instance",
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "00-0-000000-0"
+              }],
+              "part": ["part 1"],
+              "instanceOf": {
                 "@type": "Work",
                 "hasTitle": [{
                   "@type": "Title",
                   "mainTitle": "Main Thing"
-                }],
-                "hasInstance": {
-                  "@type": "Instance",
-                  "identifiedBy": [{
-                    "@type": "ISBN",
-                    "value": "00-0-000000-0"
-                  }],
-                  "part": ["part 1"]
-                }
-              }]
-            }
+                }]
+              }
+            }]
           }}
         },
         {
@@ -17567,22 +17564,19 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "supplementTo": [{
+            "supplementTo": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Briefec"
+              }],
+              "provisionActivityStatement": "provisionActivityStatement",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
+              }],
+              "instanceOf": {
                 "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Briefec"
-                  }],
-                  "provisionActivityStatement": "provisionActivityStatement",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }]
-                },
                 "contribution": [{
                   "@type": "PrimaryContribution",
                   "agent": {
@@ -17590,8 +17584,8 @@
                     "label": "Beckmann, Max"
                   }
                 }]
-              }]
-            }
+              }
+            }]
           }}
         },
         {
@@ -17612,9 +17606,19 @@
             {"w": "9901066360"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "supplementTo": [{
+            "supplementTo": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "9901066360"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Grundläggande matematik för tillämpningar",
+                "qualifier": "Lennart Hellström, Lars-Åke Lindahl"
+              }],
+              "provisionActivityStatement": "Uppsala : förf., cop. 1973",
+              "instanceOf": {
                 "@type": "Work",
                 "contribution": [{
                   "@type": "PrimaryContribution",
@@ -17622,25 +17626,9 @@
                     "@type": "Agent",
                     "label": "Hellström, Lennart, 1942-"
                   }
-                }],
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "9901066360"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Grundläggande matematik för tillämpningar"
-                  }],
-                  "provisionActivityStatement": "Uppsala : förf., cop. 1973"
-                },
-                "hasTitle": [{
-                  "@type": "Title",
-                  "qualifier": "Lennart Hellström, Lars-Åke Lindahl"
                 }]
-              }]
-            }
+              }
+            }]
           }}
         }
       ]
@@ -17897,20 +17885,14 @@
             {"w": "t4ztfxg6r7dw5sgd"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "supplementTo": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "t4ztfxg6r7dw5sgd"
-                  }]
-                },
-                "marc:displayText": ["channel record"]
-              }]
-            }
+            "supplementTo": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "t4ztfxg6r7dw5sgd"
+              }],
+              "marc:displayText": ["channel record"]
+            }]
           }}
         },
         {
