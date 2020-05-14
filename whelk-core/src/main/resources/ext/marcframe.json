@@ -18608,20 +18608,20 @@
       ]
     },
     "780": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "precededBy",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "match": [
-        {"when": "i2=0", "addLink": "continues", "resourceType": "Work"},
-        {"when": "i2=1", "addLink": "continuesInPart", "resourceType": "Work"},
-        {"when": "i2=2", "addLink": "precededBy", "resourceType": "Work"},
-        {"when": "i2=3", "addLink": "precededInPartBy", "resourceType": "Work"},
-        {"when": "i2=4", "addLink": "mergerOf", "resourceType": "Work"},
-        {"when": "i2=5", "addLink": "absorbed", "resourceType": "Work"},
-        {"when": "i2=6", "addLink": "absorbedInPart", "resourceType": "Work"},
-        {"when": "i2=7", "addLink": "separatedFrom", "resourceType": "Work"}
+        {"when": "i2=0", "addLink": "continues", "resourceType": "Instance"},
+        {"when": "i2=1", "addLink": "continuesInPart", "resourceType": "Instance"},
+        {"when": "i2=2", "addLink": "precededBy", "resourceType": "Instance"},
+        {"when": "i2=3", "addLink": "precededInPartBy", "resourceType": "Instance"},
+        {"when": "i2=4", "addLink": "mergerOf", "resourceType": "Instance"},
+        {"when": "i2=5", "addLink": "absorbed", "resourceType": "Instance"},
+        {"when": "i2=6", "addLink": "absorbedInPart", "resourceType": "Instance"},
+        {"when": "i2=7", "addLink": "separatedFrom", "resourceType": "Instance"}
       ],
       "i2": {"ignored": true, "marcDefault": "0"},
       "_spec": [
@@ -18630,34 +18630,22 @@
             {"t": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "continues": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"
-                  }]
-                }
+            "continues": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"
               }]
-            }
+            }]
           }}
         },
         {
           "source": {"780": {"ind1": "0", "ind2": "1", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "continuesInPart": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "continuesInPart": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
@@ -18666,38 +18654,26 @@
             {"x": "0022-3107"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "precededBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Journal of nuclear energy (1967)"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "0022-3107"
-                  }]
-                }
+            "precededBy": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Journal of nuclear energy (1967)"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "0022-3107"
               }]
-            }
+            }]
           }}
         },
         {
           "source": {"780": {"ind1": "0", "ind2": "3", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "precededInPartBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "precededInPartBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
@@ -18708,75 +18684,51 @@
             {"w": "(OCoLC)11405900"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "mergerOf": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "(DLC) 84647859"
-                  },{
-                    "@type": "Record",
-                    "controlNumber": "(OCoLC)11405900"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Field & stream (West edition)"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "8755-8610"
-                  }]
-                }
+            "mergerOf": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "(DLC) 84647859"
+              },{
+                "@type": "Record",
+                "controlNumber": "(OCoLC)11405900"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Field & stream (West edition)"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "8755-8610"
               }]
-            }
+            }]
           }}
         },
         {
           "source": {"780": {"ind1": "0", "ind2": "5", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "absorbed": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "absorbed": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"780": {"ind1": "0", "ind2": "6", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "absorbedInPart": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "absorbedInPart": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"780": {"ind1": "0", "ind2": "7", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "separatedFrom": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "separatedFrom": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
@@ -18787,20 +18739,13 @@
             {"t": "Bulletin mensuel"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "precededBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Bulletin mensuel"
-                  }]
-                }
-              }
-              ]
-            }
+            "precededBy": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Bulletin mensuel"
+              }]
+            }]
           }}
         }
       ]
