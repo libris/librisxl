@@ -17363,11 +17363,11 @@
       ]
     },
     "765": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "translationOf",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
@@ -17382,31 +17382,25 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "translationOf": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Tempelriddaren"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }],
-                  "extent": [{
-                    "@type": "Extent",
-                    "label": "Fysisk beskrivning"
-                  }],
-                  "hasNote": [{
-                    "@type": "Note",
-                    "label": "Anmärkning"
-                  }]
-                }
+            "translationOf": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Tempelriddaren"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
+              }],
+              "extent": [{
+                "@type": "Extent",
+                "label": "Fysisk beskrivning"
+              }],
+              "hasNote": [{
+                "@type": "Note",
+                "label": "Anmärkning"
               }]
-            }
+            }]
           }}
         },
         {
@@ -17418,38 +17412,32 @@
             {"w": "3736598"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "translationOf": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "3736598"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Färg och fernissa"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "0427-9107"
-                  } ]
-                },
-                "marc:displayText": ["Översättning av vissa artiklar ur"]
-              }]
-            }
+            "translationOf": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "3736598"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Färg och fernissa"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "0427-9107"
+              }],
+              "marc:displayText": ["Översättning av vissa artiklar ur"]
+            }]
           }}
         }
       ]
     },
     "767": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "translation",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
@@ -17464,27 +17452,21 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "translation": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Finance & development. French. Finances et développement"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "0430-473X"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }]
-                }
+            "translation": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Finance & development. French. Finances et développement"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "0430-473X"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
               }]
-            }
+            }]
           }}
         }
       ]
