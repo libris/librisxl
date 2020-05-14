@@ -17966,11 +17966,11 @@
       ]
     },
     "774": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "hasPart",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": "0"},
       "NOTE:domainIncludes": "Serial",
       "FIXME": "this is overeagerly reverted from a hasPart converted from 740; should only be added if issuanceType = 'Serial'...",
@@ -17986,24 +17986,18 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasPart": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "editionStatement" : "3. ed.",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Map of area with highlighted street"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }]
-                }
+            "hasPart": [{
+              "@type": "Instance",
+              "editionStatement" : "3. ed.",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Map of area with highlighted street"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
               }]
-            }
+            }]
           }}
         },
         {
@@ -18017,9 +18011,13 @@
             {"t": "Hydroida"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasPart": [{
+            "hasPart": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Hydroida"
+              }],
+              "instanceOf": {
                 "@type": "Work",
                 "contribution": [{
                   "@type": "PrimaryContribution",
@@ -18027,16 +18025,9 @@
                     "@type": "Agent",
                     "label": "Bonnevie, Kristine"
                   }
-                }],
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Hydroida"
-                  }]
-                }
-              }]
-            }
+                }]
+              }
+            }]
           }}
         },
         {
@@ -18049,29 +18040,23 @@
             {"w": "6200512"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasPart": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Swedes in the Twin Cities"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "6200512"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISBN",
-                    "value": "0-87351-399-1"
-                  }],
-                  "provisionActivityStatement": "2001"
-                },
-                "marc:displayText": ["Parallellutgåva:"]
-              }]
-            }
+            "hasPart": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Swedes in the Twin Cities"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "6200512"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "0-87351-399-1"
+              }],
+              "provisionActivityStatement": "2001",
+              "marc:displayText": ["Parallellutgåva:"]
+            }]
           }}
         }
       ]
