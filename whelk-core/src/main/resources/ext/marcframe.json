@@ -17809,9 +17809,22 @@
               "@type": "Title",
               "mainTitle": "Hur gammal är arbetslösheten?"
             }],
-            "instanceOf": {
-              "@type": "Text",
-              "relatedTo": [{
+            "relatedTo": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "7677734"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Arbetslöshetsfrågan i historisk belysning : en diskussion om arbetslöshet och social politik i Sverige 1830-1920"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "91-7966-400-8"
+              }],
+              "provisionActivityStatement": "1996",
+              "instanceOf": {
                 "@type": "Work",
                 "contribution": [{
                   "@type": "PrimaryContribution",
@@ -17819,26 +17832,10 @@
                     "@type": "Agent",
                     "label": "Olofsson, Jonas"
                   }
-                }],
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "7677734"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Arbetslöshetsfrågan i historisk belysning : en diskussion om arbetslöshet och social politik i Sverige 1830-1920"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISBN",
-                    "value": "91-7966-400-8"
-                  }],
-                  "provisionActivityStatement": "1996"
-                },
-                "marc:displayText": ["Recension av:"]
-              }]
-            },
+                }]
+              },
+              "marc:displayText": ["Recension av:"]
+            }],
             "part": ["2002(122):1, s. [99]-108"],
             "isPartOf": [{
               "@type": "Instance",
@@ -18915,11 +18912,11 @@
       ]
     },
     "787": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "relatedTo",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
@@ -18932,23 +18929,17 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "relatedTo": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Empire State report weekly"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }]
-                }
+            "relatedTo": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Empire State report weekly"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
               }]
-            }
+            }]
           }}
         },
         {
@@ -18958,17 +18949,11 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "relatedTo": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "State"}],
-                  "meta": [{"@type": "Record", "controlNumber": "000"}]
-                }
-              }]
-            }
+            "relatedTo": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "State"}],
+              "meta": [{"@type": "Record", "controlNumber": "000"}]
+            }]
           }}
         },
         {
@@ -18977,36 +18962,27 @@
             {"787": {"ind1": "0", "ind2": " ", "subfields": [{"t": "Symfoni, C-dur"}, {"w": "11862630"}]}}
           ],
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "relatedTo": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "11862622"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Symfoni, Ess-dur"
-                  }]
-                }
-              },{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "11862630"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Symfoni, C-dur"
-                  }]
-                }
+            "relatedTo": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "11862622"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Symfoni, Ess-dur"
               }]
-            }
+            },{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "11862630"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Symfoni, C-dur"
+              }]
+            }]
           }}
         }
       ]
