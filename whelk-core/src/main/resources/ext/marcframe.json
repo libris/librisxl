@@ -18282,6 +18282,7 @@
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "otherPhysicalFormat",
+      "allowLinkOnRevert": "reproductionOf",
       "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": "8"},
       "_spec": [
@@ -18535,6 +18536,34 @@
                 "@type": "ISBN",
                 "value": "9783527404704"
               }]
+            }]
+          }}
+        },
+        {
+          "name": "reproductionOf should revert to 776",
+          "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [
+            {"a": "name of agent"},
+            {"t": "Title of reproduction"},
+            {"w": "00000"}
+          ]}},
+          "result": {"mainEntity": {
+            "reproductionOf": [{
+              "@type": "Instance",
+              "meta": [{"@type": "Record", "controlNumber": "00000"}],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Title of reproduction"
+              }],
+              "instanceOf": {
+                "@type": "Work",
+                "contribution" : [ {
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Agent",
+                    "label": "name of agent"
+                  }
+                }]
+              }
             }]
           }}
         }
