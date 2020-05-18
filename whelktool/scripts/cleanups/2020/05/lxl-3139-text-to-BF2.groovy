@@ -41,7 +41,7 @@ selectBySqlWhere(where) { data ->
             if (part["@type"] == "TextInstance" && part["carrierType"]) {
                 for (Object carrierType : part["carrierType"]) {
                     if (carrierType["@id"] == "https://id.kb.se/marc/RegularPrint") {
-                        instance["@type"] = "Print" // <- Careful review point! Is this a correct interpretation of the spec?
+                        part["@type"] = "Print" // <- Careful review point! Is this a correct interpretation of the spec?
                         changed = true
                     }
                 }
