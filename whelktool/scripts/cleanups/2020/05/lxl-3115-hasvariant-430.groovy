@@ -80,6 +80,10 @@ Map toVariant(doc, Map _430) {
                     putValue(variant, 'version', value)
                     break
 
+                case 'x':
+                    // drop
+                    break
+
                 default:
                     throw new RuntimeException("${doc.getURI()} Unhandled subfield $key : $value")
             }
