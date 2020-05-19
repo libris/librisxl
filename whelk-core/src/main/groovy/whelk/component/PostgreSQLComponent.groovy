@@ -12,10 +12,10 @@ import org.postgresql.util.PSQLException
 import whelk.Document
 import whelk.IdType
 import whelk.JsonLd
-import whelk.Storage
 import whelk.exception.CancelUpdateException
 import whelk.exception.LinkValidationException
 import whelk.exception.MissingMainIriException
+import whelk.exception.StaleUpdateException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
 import whelk.exception.WhelkException
@@ -52,7 +52,12 @@ import static java.sql.Types.OTHER
 
 @Log
 @CompileStatic
-class PostgreSQLComponent implements Storage {
+class PostgreSQLComponent {
+    interface UpdateAgent {
+        void update(Document doc)
+    }
+    public static final int STALE_UPDATE_RETRIES = 10
+
     public static final String PROPERTY_SQL_URL = "sqlUrl"
     public static final String PROPERTY_SQL_MAX_POOL_SIZE = "sqlMaxPoolSize"
 
@@ -282,7 +287,6 @@ class PostgreSQLComponent implements Storage {
     LinkFinder linkFinder
     DependencyCache dependencyCache
     JsonLd jsonld
-    DocumentNormalizer normalizer
 
     private AtomicLong cardsUpdated = new AtomicLong()
 
@@ -554,18 +558,14 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    /*
-     * Take great care that the actions taken by your UpdateAgent are quick and not reliant on IO. The row will be
-     * LOCKED while the update is in progress.
-     */
-    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent) {
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum) {
         // Resources to be closed
         Connection connection = getConnection()
         try
         {
             connection.setAutoCommit(false)
 
-            Document result = storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent, connection)
+            Document result = storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum, connection)
             connection.commit()
             return result
         }
@@ -574,15 +574,36 @@ class PostgreSQLComponent implements Storage {
         }
     }
 
-    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent, Connection connection) {
+    Document storeUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent) {
+        int retriesLeft = STALE_UPDATE_RETRIES
+        while (true) {
+            try {
+                Document doc = load(id)
+                String checksum = doc.getChecksum()
+                updateAgent.update(doc)
+                Document updated = storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, checksum)
+                return updated
+            }
+            catch (StaleUpdateException e) {
+                if (retriesLeft-- == 0) {
+                    throw e
+                }
+            }
+            catch (CancelUpdateException ignored) {
+                /* An exception the called lambda/closure can throw to cancel a record update. NOT an indication of an error. */
+                return null
+            }
+        }
+    }
+
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum, Connection connection) {
+        String id = doc.shortId
         log.debug("Saving (atomic update) ${id}")
 
         // Resources to be closed
         PreparedStatement selectStatement = null
         PreparedStatement updateStatement = null
         ResultSet resultSet = null
-
-        Document doc = null
 
         try {
             selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
@@ -591,16 +612,17 @@ class PostgreSQLComponent implements Storage {
             if (!resultSet.next())
                 throw new SQLException("There is no document with the id: " + id)
 
-            doc = assembleDocument(resultSet)
+            Document preUpdateDoc = assembleDocument(resultSet)
+
+            if (preUpdateDoc.getChecksum() != oldChecksum) {
+                throw new StaleUpdateException("Document $doc.shortId has been modified. Checksum mismatch: ${preUpdateDoc.getChecksum()} <> $oldChecksum")
+            }
 
             String collection = resultSet.getString("collection")
             String oldChangedBy = resultSet.getString("changedBy")
             if (changedBy == null)
                 changedBy = oldChangedBy
 
-            // Performs the callers updates on the document
-            Document preUpdateDoc = doc.clone()
-            updateAgent.update(doc)
             normalizeDocumentForStorage(doc, connection)
 
             if (doVerifyDocumentIdRetention) {
@@ -635,7 +657,8 @@ class PostgreSQLComponent implements Storage {
                 saveIdentifiers(doc, connection, deleted)
                 SortedSet<String> idsLinkingToOldId = getDependencyData(id, GET_DEPENDERS, connection)
                 for (String dependerId : idsLinkingToOldId) {
-                    storeAtomicUpdate(dependerId, true, changedIn, changedBy, {}, connection)
+                    Document depender = load(dependerId, connection)
+                    storeAtomicUpdate(depender, true, changedIn, changedBy, depender.getChecksum(), connection)
                 }
             }
 
@@ -655,9 +678,6 @@ class PostgreSQLComponent implements Storage {
         } catch (TooHighEncodingLevelException e) {
             connection.rollback()
             throw e
-        } catch (CancelUpdateException ignored) {
-            /* An exception the called lambda/closure can throw to cancel a record update. NOT an indication of an error. */
-            connection.rollback()
         } catch (Exception e) {
             log.error("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
@@ -1780,27 +1800,11 @@ class PostgreSQLComponent implements Storage {
         return docList
     }
 
-    void normalizeDocument(Document doc) {
-        getConnection().withCloseable { connection ->
-            normalizeDocument(doc, connection)
-        }
-    }
-
-    void normalizeDocument(Document doc, Connection connection) {
-        doc.normalizeUnicode()
-
-        if (normalizer != null) {
-            normalizer.normalize(doc, connection)
-        }
-    }
-
     private void normalizeDocumentForStorage(Document doc, Connection connection) {
         // Synthetic property, should never be stored
         DocumentUtil.findKey(doc.data, JsonLd.REVERSE_KEY) { value, path ->
             new DocumentUtil.Remove()
         }
-
-        normalizeDocument(doc, connection)
 
         if (linkFinder != null) {
             linkFinder.normalizeIdentifiers(doc, connection)
@@ -1932,7 +1936,7 @@ class PostgreSQLComponent implements Storage {
 
             log.debug("Marking document with ID ${identifier} as deleted.")
             try {
-                storeAtomicUpdate(identifier, false, changedIn, changedBy,
+                storeUpdate(identifier, false, changedIn, changedBy,
                     { Document doc ->
                         doc.setDeleted(true)
                         // Add a tombstone marker (without removing anything) perhaps?

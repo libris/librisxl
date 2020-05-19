@@ -1415,6 +1415,7 @@
         "_:title": {
           "about": "_:instance",
           "addLink": "hasTitle", "resourceType": "Title",
+          "allowedTypesOnRevert": ["KeyTitle", "Title"],
           "embedded": true
         },
         "_:describedBy": {
@@ -1443,7 +1444,11 @@
       "$n": {"about": "_:instance", "addLink": "hasNote", "resourceType": "Note", "property": "label",  "ignoreOnRevert": true},
       "$o": {"NOTE:subfield-count (Libris)": 0, "NOTE": "Cannot ignore this field since we import Mimer data with $o (We have lost $o data between 1.14.0 and 1.15.0). See LXL-1517"},
       "$s": {"about": "_:workTitle", "property": "mainTitle", "TODO:targetMatch": "240"},
-      "$t": {"about": "_:title", "property": "mainTitle", "TODO:targetMatch": "222, 245"},
+      "$t": {
+        "about": "_:title",
+        "property": "mainTitle",
+        "TODO:targetMatch": "222, 245"
+      },
       "$x": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "TODO:targetMatch": "022"},
       "$y": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
       "$w": {"aboutNew": "_:describedBy", "property": "controlNumber"},
@@ -3464,13 +3469,17 @@
           "h": "Microform",
           "k": "StillImageInstance",
           "m": "MovingImageInstance",
-          "o": "KitInstance",
-          "q": "NotatedMusicInstance",
-          "r": "RemoteSensingImage",
+          "o": null,
+          "q": null,
+          "r": null,
           "s": "SoundRecording",
           "t": "TextInstance",
           "v": "VideoRecording",
           "z": null
+        },
+        "reverseTokenMapOverrides": {
+          "NOTE": "N.B. Should not set to '|' unless all other pos are set to '|'. When all pos are set to '|' no 007 will be created by revert.",
+          "TextInstance": "|"
         }
       },
       "tokenTypeMap": "[0]",
@@ -3478,32 +3487,32 @@
         "[1]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapMaterialType-{_}",
-          "matchUriToken": "^[_dgjkqrsy]$"
+          "matchUriToken": "^[dgjkqrsy]$"
         },
         "[2]": null,
         "[3]": {
-          "TODO:abou  tEntity (perhaps ideal for all colorContent (LoC does so), but more cumbersome and practically/statistically irrelevant)": "?work",
+          "TODO:aboutEntity (perhaps ideal for all colorContent (LoC does so), but more cumbersome and practically/statistically irrelevant)": "?work",
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MapColorType-{_}",
-          "matchUriToken": "^[_abchm]$"
+          "matchUriToken": "^[ac]$"
         },
         "[4]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MapMediumType-{_}",
-          "matchUriToken": "^[_abcdefghijlnpqrstvwy]$"
+          "matchUriToken": "^[abcdefgijlnpqrstvwy]$"
         },
         "[5]": {
           "addLink": "generation",
           "uriTemplate": "https://id.kb.se/marc/ReproductionType-{_}",
-          "matchUriToken": "^[_f]$"
+          "matchUriToken": "^[f]$"
         },
         "[6]": {
+          "TODO": "productionMethod in BF2",
           "addLink": "generation",
           "uriTemplate": "https://id.kb.se/marc/MapDetailsType-{_}",
-          "matchUriToken": "^[_abcd]$",
-          "fixedDefault": "|"
+          "matchUriToken": "^[abcd]$"
         },
         "[7]": {
           "addLink": "polarity",
@@ -3516,7 +3525,7 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ComputerMaterialType-{_}",
-          "matchUriToken": "^[_abcdefhjkmor]$",
+          "matchUriToken": "^[abcdefhjkmor]$",
           "silentRevert": false
         },
         "[2]": null,
@@ -3524,79 +3533,91 @@
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/ComputerColorType-{_}",
-          "matchUriToken": "^[_abcgm]$"
+          "matchUriToken": "^[abcgm]$",
+          "ignoreOnRevert": true
         },
         "[4]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/ComputerDimensionsType-{_}",
-          "matchUriToken": "^[_aegijov]$"
+          "matchUriToken": "^[aegijov]$",
+          "ignoreOnRevert": true
         },
         "[5]": {
           "link": "soundContent",
           "uriTemplate": "https://id.kb.se/marc/ComputerSoundType-{_}",
-          "matchUriToken": "^[ab]$"
+          "matchUriToken": "^[_a]$"
         },
         "[6:9]": {
-          "property": "imageBitDepth",
-          "TODO:patternMap": "ComputerImageBitDepthType",
+          "link": "digitalCharacteristic",
+          "resourceType": "ImageBitDepth",
+          "property": "value",
+          "ignoreOnRevert": true,
           "fixedDefault": "   "
         },
         "[9]": {
           "link": "marc:fileFormats",
           "uriTemplate": "https://id.kb.se/marc/ComputerFileFormatsType-{_}",
-          "matchUriToken": "^[am]$"
+          "matchUriToken": "^[am]$",
+          "ignoreOnRevert": true
         },
         "[10]": {
           "link": "marc:qATarget",
           "uriTemplate": "https://id.kb.se/marc/ComputerQATargetType-{_}",
-          "matchUriToken": "^[ap]$"
+          "matchUriToken": "^[ap]$",
+          "ignoreOnRevert": true
         },
         "[11]": {
           "link": "marc:antecedent",
           "uriTemplate": "https://id.kb.se/marc/ComputerAntecedentType-{_}",
-          "matchUriToken": "^[abcdm]$"
+          "matchUriToken": "^[abcdm]$",
+          "ignoreOnRevert": true
         },
         "[12]": {
           "link": "marc:compression",
           "uriTemplate": "https://id.kb.se/marc/ComputerCompressionType-{_}",
-          "matchUriToken": "^[abdm]$"
+          "matchUriToken": "^[abdm]$",
+          "ignoreOnRevert": true
         },
         "[13]": {
           "link": "marc:reformattingQuality",
           "uriTemplate": "https://id.kb.se/marc/ComputerReformattingQualityType-{_}",
-          "matchUriToken": "^[apr]$"
+          "matchUriToken": "^[apr]$",
+          "ignoreOnRevert": true
         }
       },
       "Globe": {
         "[1]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GlobeMaterialType-{_}",
-          "matchUriToken": "^[_abce]$"
+          "matchUriToken": "^[abce]$"
         },
         "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MapColorType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MapColorType-{_}",
+          "matchUriToken": "^[ac]$"
         },
         "[4]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/GlobeMediumType-{_}",
-          "matchUriToken": "^[_abcdefgilnpvw]$"
+          "matchUriToken": "^[abcdefgilnpvw]$"
         },
         "[5]": {
           "addLink": "generation",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/ReproductionType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ReproductionType-{_}",
+          "matchUriToken": "^[f]$"
         }
       },
       "Tactile": {
+        "NOTE:LC": "nac",
         "[1]": {
           "TODO:layout": "Also more general mapping? Ensure that reconverting are able to handle this",
           "addLink": "layout",
           "uriTemplate": "https://id.kb.se/marc/TacMaterialType-{_}",
-          "matchUriToken": "^[_abcd]$"
+          "matchUriToken": "^[abcd]$"
         },
         "[2]": null,
         "[3] [4]": {
@@ -3607,51 +3628,54 @@
         "[5]": {
           "addLink": "layout",
           "uriTemplate": "https://id.kb.se/marc/TacContractionType-{_}",
-          "matchUriToken": "^[_abm]$"
+          "matchUriToken": "^[abmn]$"
         },
         "[6] [7] [8]": {
           "addLink": "hasNotation",
           "uriTemplate": "https://id.kb.se/marc/TacBrailleMusicType-{_}",
-          "matchUriToken": "^[abcdefghijklz]$"
+          "matchUriToken": "^[_abcdefghijkl]$"
         },
         "[9]": {
           "addLink": "hasNotation",
           "uriTemplate": "https://id.kb.se/marc/TacSpecPhysicalCharType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "matchUriToken": "^[ab]$"
         }
       },
       "ProjectedImageInstance": {
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ProjGraphMaterialType-{_}",
-          "matchUriToken": "^[_cdfost]$",
+          "matchUriToken": "^[cdfost]$",
           "silentRevert": false
         },
         "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}",
+          "matchUriToken": "^[abchm]$"
         },
         "[4]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/ProjGraphEmulsionType-{_}",
-          "matchUriToken": "^[_dejkmo]$"
+          "matchUriToken": "^[dejkmo]$"
         },
         "[5]": {
           "link": "soundContent",
-          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
+          "matchUriToken": "^[_ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}",
+          "matchUriToken": "^[abcdefghi]$"
         },
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/ProjGraphDimensionsType-{_}",
-        "matchUriToken": "^[_abcefgjkstvwxy]$"
+          "matchUriToken": "^[abcdefgjkstvwxy]$"
         },
         "[8]": {
           "addLink": "mount",
@@ -3664,19 +3688,20 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/MicroformMaterialType-{_}",
-          "matchUriToken": "^[_abcdefghj]$",
+          "matchUriToken": "^[abcdefghj]$",
           "silentRevert": false
         },
         "[2]": null,
         "[3]": {
           "addLink": "polarity",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/PolarityType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/PolarityType-{_}",
+          "matchUriToken": "^[abm]$"
         },
         "[4]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/MicroformDimensionsType-{_}",
-        "matchUriToken": "^[_afghlmop]$"
+          "matchUriToken": "^[adfghlmop]$"
         },
         "[5]": {
           "addLink": "reductionRatio",
@@ -3693,12 +3718,12 @@
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MicroformColorType-{_}",
-          "matchUriToken": "^[_bcm]$"
+          "matchUriToken": "^[bcm]$"
         },
         "[10]": {
           "link": "emulsion",
           "uriTemplate": "https://id.kb.se/marc/MicroformEmulsionType-{_}",
-          "matchUriToken": "^[_abcm]$"
+          "matchUriToken": "^[abcm]$"
         },
         "[11]": {
           "addLink": "generation",
@@ -3710,39 +3735,41 @@
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}",
-          "matchUriToken": "^[_acdimprt]$"
+          "matchUriToken": "^[acdimprt]$"
         }
       },
       "StillImageInstance": {
         "[1]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/NonProjMaterialType-{_}",
-          "matchUriToken": "^[_acdefghijklnopqrsv]$",
+          "matchUriToken": "^[acdefghijklnopqrsv]$",
           "TODO:tokenMap": "Rename the uri:s of NonProjMaterialType (n and v) to not only contain the code"
         },
         "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}",
+          "matchUriToken": "^[abchm]$"
         },
         "[4]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/NonProjectedType-{_}",
-          "matchUriToken": "^[_abcdefghilmnopqrstvw]$"
+          "matchUriToken": "^[abcdefghilmnopqrstvw]$"
         },
         "[5]": {
           "addLink": "mount",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/NonProjectedType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/NonProjectedType-{_}",
+          "matchUriToken": "^[abcdefghilmnopqrstvw]$"
         }
       },
       "MovingImageInstance": {
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/MotionPicMaterialType-{_}",
-          "matchUriToken": "^[_cfor]$",
+          "matchUriToken": "^[cfor]$",
           "silentRevert": false
         },
         "[2]": null,
@@ -3750,188 +3777,179 @@
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicColorType-{_}",
-          "matchUriToken": "^[_bchm]$"
+          "matchUriToken": "^[bchm]$"
         },
         "[4]": {
           "addLink": "projectionCharacteristic",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicFormatType-{_}",
-        "matchUriToken": "^[_abcdef]$"
+          "matchUriToken": "^[abcdef]$"
         },
         "[5]": {
           "link": "soundContent",
-          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
+          "matchUriToken": "^[_ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}",
+          "matchUriToken": "^[abcdefghi]$"
         },
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/MotionPicDimensionsType-{_}",
-        "matchUriToken": "^[_abcefg]$"
+          "matchUriToken": "^[abcdefg]$"
         },
         "[8]": {
           "addLink": "soundCharacteristic",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-{_}",
-          "matchUriToken": "^[_kmqs]$"
+          "matchUriToken": "^[kmqs]$",
+          "ignoreOnRevert": true
         },
         "[9]": {
           "addLink": "genreForm",
+          "NOTE": "LC ignores all but c & d",
           "uriTemplate": "https://id.kb.se/marc/MotionPicElementsType-{_}",
-          "matchUriToken": "^[_abcdefg]$"
+          "matchUriToken": "^[abcdefg]$",
+          "ignoreOnRevert": true
         },
         "[10]": {
           "addLink": "polarity",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicPosNegType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "matchUriToken": "^[ab]$",
+          "ignoreOnRevert": true
         },
         "[11]": {
           "addLink": "generation",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicGenerationType-{_}",
-          "matchUriToken": "^[_deor]$"
+          "matchUriToken": "^[deor]$",
+          "ignoreOnRevert": true
         },
         "[12]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}",
+          "matchUriToken": "^[acdimprt]$",
+          "ignoreOnRevert": true
         },
         "[13]": {
-          "link": "marc:motionPicCategories",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicCategoriesType-{_}",
-          "matchUriToken": "^[_abcdefghijklmpqrstv]$"
+          "NOTE:LC": "13 - Refined categories of color - nac",
+          "ignored": true,
+          "fixedDefault": "|"
         },
         "[14]": {
-          "link": "marc:motionPicColorStock",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicColorStockType-{_}",
-          "matchUriToken": "^[_abcd]$"
+          "NOTE:LC": "14 - Kind of color stock or print - nac",
+          "ignored": true,
+          "fixedDefault": "|"
         },
         "[15]": {
-          "link": "marc:motionPicDeterioration",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicDeteriorationType-{_}",
-          "matchUriToken": "^[abcdefghklm]$"
+          "NOTE:LC": "15 - Deterioration stage - nac",
+          "ignored": true,
+          "fixedDefault": "|"
         },
         "[16]": {
-          "link": "marc:motionPicCompleteness",
+          "link": "hasNote",
           "uriTemplate": "https://id.kb.se/marc/MotionPicCompletenessType-{_}",
-          "matchUriToken": "^[0123ci]$"
+          "matchUriToken": "^[0123ci]$",
+          "ignoreOnRevert": true
         },
         "[17:23]": {
-          "property": "marc:timeOfExamination"
+          "NOTE:LC": "17-22 - Film inspection date - ignore",
+          "ignored": true,
+          "fixedDefault": "||||||"
         }
       },
       "KitInstance": {
         "[1]": {
-          "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}",
-          "silentRevert": false
+          "ignored": true
         }
       },
       "NotatedMusicInstance": {
         "[1]": {
-          "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}",
-          "TODO:tokenMap? (empty, just as KitMaterialType)": "NotatedMusicMaterialType",
-          "silentRevert": false
+          "ignored": true
         }
       },
       "RemoteSensingImage": {
+        "NOTE:LC": "007--REMOTE-SENSING IMAGE - nac",
         "[1]": {
-          "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}",
-          "TODO:tokenMap? (empty, just as KitMaterialType)": "RemoteSensingImageMaterialType",
-          "silentRevert": false
+          "ignored": true
         },
         "[2]": null,
         "[3]": {
-          "link": "marc:remoteSensImageAltitude",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageAltitudeType-{_}",
-          "matchUriToken": "^[_abc]$"
+          "ignored": true
         },
         "[4]": {
-          "link": "marc:remoteSensImageAttitude",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageAttitudeType-{_}",
-          "matchUriToken": "^[abc]$"
+          "ignored": true
         },
         "[5]": {
-          "link": "marc:remoteSensImageCloud",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageCloudType-{_}",
-        "matchUriToken": "^[0123456789]$"
+          "ignored": true
         },
         "[6]": {
-          "link": "marc:remoteSensImageConstruction",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageConstructionType-{_}",
-          "matchUriToken": "^[_abcdefghi]$"
+          "ignored": true
         },
         "[7]": {
-          "link": "marc:remoteSensImageUse",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageUseType-{_}",
-          "matchUriToken": "^[_abcm]$"
+          "ignored": true
         },
         "[8]": {
-          "link": "marc:remoteSensImageSensor",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageSensorType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "ignored": true
         },
         "[9:11]": {
-          "link": "marc:remoteSensImageData",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageDataType-{_}",
-          "matchUriToken": "^[abcdefgjmprstuvz]$"
+          "ignored": true
         }
       },
       "SoundRecording": {
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/SoundMaterialType-{_}",
-          "matchUriToken": "^[_degiqstw]$",
+          "matchUriToken": "^[degiqrstw]$",
           "silentRevert": false
         },
         "[2]": null,
         "[3]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundSpeedType-{_}",
-          "matchUriToken": "^[_abcdefhiklmopr]$"
+          "matchUriToken": "^[abcdefhiklmopr]$"
         },
         "[4]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundPlaybackChannelType-{_}",
-          "matchUriToken": "^[_mqs]$"
+          "matchUriToken": "^[mqs]$"
         },
         "[5]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundGrooveType-{_}",
-          "matchUriToken": "^[_ms]$"
+          "matchUriToken": "^[ms]$"
         },
         "[6]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/SoundDimensionsType-{_}",
-        "matchUriToken": "^[_abcdefgjos]$"
+          "matchUriToken": "^[abcdefgjos]$"
         },
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/SoundTapeWidthType-{_}",
-          "matchUriToken": "^[_lmop]$"
+          "matchUriToken": "^[lmop]$"
         },
         "[8]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundTapeConfigurationType-{_}",
-          "matchUriToken": "^[_abcdef]$"
+          "matchUriToken": "^[abcdef]$"
         },
         "[9]": {
           "addLink": "generation",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/SoundKindOfDiscType-{_}",
-          "matchUriToken": "^[_abdimrst]$"
+          "matchUriToken": "^[abdimrst]$"
         },
         "[10]": {
           "TODO": "Depending on value of tokenMap, map to appliedMaterial or baseMaterial?",
           "addLink": "baseMaterial",
           "uriTemplate": "https://id.kb.se/marc/SoundKindOfMaterialType-{_}",
-          "matchUriToken": "^[_abcgilmprsw]$"
+          "matchUriToken": "^[abcgilmprsw]$"
         },
         "[11]": {
           "addLink": "soundCharacteristic",
@@ -3941,21 +3959,21 @@
         "[12]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundPlaybackCharacterType-{_}",
-          "matchUriToken": "^[_abcdefgh]$"
+          "matchUriToken": "^[abcdefgh]$"
         },
         "[13]": {
-          "TODO": "Ensure not to clash with 340 $d",
-          "TODO:aboutEntity": "Work or Instance?",
+          "TODO": "I - soundCharacteristic - bflc:CaptureStorage",
           "link": "marc:soundCapture",
           "uriTemplate": "https://id.kb.se/marc/SoundCaptureType-{_}",
-          "matchUriToken": "^[_abde]$"
+          "matchUriToken": "^[abde]$"
         }
       },
       "TextInstance": {
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/TextMaterialType-{_}",
-          "matchUriToken": "^[_abcd]$",
+          "matchUriToken": "^[abcd]$",
+          "ignoreOnRevert": true,
           "silentRevert": false
         }
       },
@@ -3963,38 +3981,42 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/VideoMaterialType-{_}",
-          "matchUriToken": "^[_cdfr]$",
+          "matchUriToken": "^[cdfr]$",
           "silentRevert": false
         },
         "[2]": null,
         "[3]": {
+          "TODO": "W - colorContent - ColorContent",
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/VideoColorType-{_}",
-          "matchUriToken": "^[_abcm]$"
+          "matchUriToken": "^[abcm]$"
         },
         "[4]": {
           "addLink": "videoCharacteristic",
-        "NOTE:marc-repeatable": false,
+          "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/VideoFormatType-{_}",
-          "matchUriToken": "^[_abcdefghijkmopqsv]$"
+          "matchUriToken": "^[abcdefghijkmopqsv]$"
         },
         "[5]": {
           "link": "soundContent",
-          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
+          "matchUriToken": "^[_ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
-          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}",
+          "matchUriToken": "^[abcdefghi]$"
         },
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/VideoDimensionsType-{_}",
-        "matchUriToken": "^[_amopqr]$"
+          "matchUriToken": "^[amopqr]$"
         },
         "[8]": {
           "addLink": "soundCharacteristic",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-{_}",
+          "matchUriToken": "^[kmqs]$"
         }
       },
       "marc:Unspecified": {},
@@ -4032,6 +4054,10 @@
             {"007": "aj |a|||               "},
             {"007": "cj |||   a||||         "}
           ],
+          "normalized": [
+            {"007": "aj |a|||               "},
+            {"007": "cj |||   |||||         "}
+          ],
           "result": {
             "mainEntity": {
               "@type": "Map",
@@ -4059,14 +4085,16 @@
           }
         },
         {
-          "name": "@type Electronic + OpticalDisc",
-          "source": {"007":"co |g|   |||||"},
-          "normalized": {"007":"co |g|   |||||         "},
+          "name": "@type Electronic + OpticalDisc + TestImagesEtcPresent",
+          "source": {"007":"co |g|008|p|||"},
+          "normalized": {"007":"co |||   |||||         "},
           "result": {
             "mainEntity": {
               "@type": "Electronic",
               "carrierType": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-o"}],
-              "hasDimensions": {"@id": "https://id.kb.se/marc/ComputerDimensionsType-g"}
+              "hasDimensions": {"@id": "https://id.kb.se/marc/ComputerDimensionsType-g"},
+              "digitalCharacteristic": {"@type": "ImageBitDepth", "value": "008"},
+              "marc:qATarget": {"@id": "https://id.kb.se/marc/ComputerQATargetType-p"}
             }
           }
         },
@@ -4131,41 +4159,51 @@
         },
         {
           "name": "@type MovingImageInstance",
-          "source": {"007":"m| ||||||||||||||"},
-          "normalized": {"007":"m| |||||||||||||||     "},
+          "source": {"007":"m| |||||k||||||||"},
+          "normalized": {"007":"m| ||||||||||||||||||||"},
           "result": {
             "mainEntity": {
-              "@type": "MovingImageInstance"
+              "@type": "MovingImageInstance",
+              "soundCharacteristic": [{
+                "@id": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-k"
+              }]
             }
           }
         },
         {
           "name": "@type KitInstance",
           "source": {"007":"o|"},
-          "normalized": {"007":"o|                     "},
+          "normalized": [],
           "result": {
-            "mainEntity": {
-              "@type": "KitInstance"
-            }
+            "mainEntity": {}
           }
         },
         {
           "name": "@type NotatedMusicInstance",
           "source": {"007":"q|"},
-          "normalized": {"007":"q|                     "},
+          "normalized": [],
           "result": {
-            "mainEntity": {
-              "@type": "NotatedMusicInstance"
-            }
+            "mainEntity": {}
           }
         },
         {
           "name": "@type RemoteSensingImage",
           "source": {"007":"r| |||||||"},
-          "normalized": {"007":"r| |||||||             "},
+          "normalized": [],
+          "result": {
+            "mainEntity": {}
+          }
+        },
+        {
+          "name": "@type MovingImageInstance + Incomplete",
+          "source": {"007":"m| |||||||||||||i"},
+          "normalized": {"007":"m| ||||||||||||||||||||"},
           "result": {
             "mainEntity": {
-              "@type": "RemoteSensingImage"
+              "@type": "MovingImageInstance",
+              "hasNote": {
+                "@id" : "https://id.kb.se/marc/MotionPicCompletenessType-i"
+              }
             }
           }
         },
@@ -4181,9 +4219,9 @@
           }
         },
         {
-          "name": "@type TextInstance + RegularPrint",
+          "name": "@type TextInstance + RegularPrint should not be reverted",
           "source": {"007":"ta"},
-          "normalized": {"007":"ta                     "},
+          "normalized": [],
           "result": {
             "mainEntity": {
               "@type": "TextInstance",
@@ -6337,27 +6375,27 @@
       "$e": {"property": "marc:easternmostLongitudeCoordinates"},
       "$f": {"property": "marc:northernmostLatitudeCoordinates"},
       "$g": {"property": "marc:southernmostLatitudeCoordinates"},
-      "$h": {"about": "_:scale", "addProperty": "marc:angularScale"},
-      "$j": {"property": "marc:declinationNorthernLimit"},
-      "$k": {"property": "marc:declinationSouthernLimit"},
-      "$m": {"property": "marc:rightAscensionEasternLimit"},
-      "$n": {"property": "marc:rightAscensionWesternLimit"},
-      "$p": {"property": "marc:cartographicEquinox"},
-      "$r": {"property": "marc:distanceFromEarth"},
-      "$s": {"addProperty": "marc:gRingLatitude"},
-      "$t": {"addProperty": "marc:gRingLongitude"},
-      "$x": {"property": "marc:beginningDate"},
-      "$y": {"property": "marc:endingDate"},
-      "$z": {"property": "marc:nameOfExtraterrestrialBody"},
-      "$0": {"addProperty": "marc:recordControlNumber"},
-      "$1": {"addProperty": "marc:rwoURI"},
-      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
+      "$h": {"ignored": true, "NOTE:LC": "Angular scale (R) ignore", "NOTE:record-count": 0},
+      "$j": {"ignored": true, "NOTE:LC": "Equinox (NR) ignore", "NOTE:record-count": 0},
+      "$k": {"ignored": true, "NOTE:LC": "Equinox (NR) ignore", "NOTE:record-count": 0},
+      "$m": {"ignored": true, "NOTE:LC": "Right ascension--eastern limit (NR) ignore", "NOTE:record-count": 0},
+      "$n": {"ignored": true, "NOTE:LC": "Right ascension--western limit (NR) ignore", "NOTE:record-count": 0},
+      "$p": {"ignored": true, "NOTE:LC": "Equinox (NR) ignore", "NOTE:record-count": 0},
+      "$r": {"ignored": true, "NOTE:LC": "Distance from earth (NR) ignore", "NOTE:record-count": 0},
+      "$s": {"ignored": true, "NOTE:LC": "G-ring latitude (R) ignore", "NOTE:record-count": 0},
+      "$t": {"ignored": true, "NOTE:LC": "G-ring longitude (R) ignore", "NOTE:record-count": 0},
+      "$x": {"ignored": true, "NOTE:LC": "Beginning date (NR) ignore",  "NOTE:record-count": 0},
+      "$y": {"ignored": true, "NOTE:LC": "Ending date (NR) ignore", "NOTE:record-count": 0},
+      "$z": {"ignored": true, "NOTE:LC": "Name of extraterrestrial body (NR) ignore", "NOTE:record-count": 0},
+      "$0": {"ignored": true, "NOTE:LC": "ignore"},
+      "$1": {"ignored": true, "NOTE:LC": "ignore"},
+      "$2": {"ignored": true, "NOTE:LC": "ignore"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"property": "marc:fieldref"},
+      "$6": {"ignored": true, "NOTE:LC": "ignore"},
       "_spec": [
         {
           "source": [
-            {"034": {"ind1": "1", "ind2": " ", "subfields": [{"a": "a"}, {"b": "110000"}]}}
+            {"034": {"ind1": "1", "ind2": " ", "subfields": [{"a": "a"}, {"b": "180000"},{"d": "e0111000"},{"e": "e0132200"},{"f": "n0521000"},{"g": "n0511800"}]}}
           ],
           "result": {
             "mainEntity": {
@@ -6366,9 +6404,13 @@
                 "cartographicAttributes": [
                   {
                     "@type": "Cartographic",
+                    "marc:easternmostLongitudeCoordinates": "e0132200",
+                    "marc:northernmostLatitudeCoordinates": "n0521000",
+                    "marc:southernmostLatitudeCoordinates": "n0511800",
+                    "marc:westernmostLongitudeCoordinates": "e0111000",
                     "scale": {
                       "@type": "marc:LinearScale",
-                      "marc:constantRatioLinearHorizontalScale": ["110000"]
+                      "marc:constantRatioLinearHorizontalScale": ["180000"]
                     }
                   }
                 ]
@@ -9174,7 +9216,7 @@
       "TODO:resourceType (to distinguish this 'free form' from 034)?": "marc:CartographicDescription",
       "resourceType": "Cartographic",
       "embedded": true,
-      "NOTE": "Scale sits directly on work in BF2 conversion",
+      "NOTE": "scale property sits directly on work in BF2 conversion",
       "$a": {"link": "scale", "resourceType": "Scale", "property": "label"},
       "$b": {"link": "projection", "resourceType": "Projection", "property": "label"},
       "$c": {"property": "coordinates"},
@@ -12273,11 +12315,28 @@
     },
 
     "507": {
-      "$a": {"aboutEntity": "?thing", "property": "scale"},
-      "NOTE:$b": "BF2 concatenate with a, record-count: 0",
-      "NOTE:$6": {"ignored": true, "NOTE:local": "scale property sits directly on thing, record-count: 0"}
+      "NOTE": "Moved to Work in BF2-conversion 1.5",
+      "aboutEntity": "?thing",
+      "link": "scale",
+      "resourceType": "Scale",
+      "$a": {"property": "label"},
+      "$b": {"property": "comment", "NOTE:LC": "Concatenate $ab, separated by space", "record-count": 0},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": [
+            {"507": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Scale 1:10 of the original."}]}}
+          ],
+          "result": {"mainEntity": {
+            "scale": {
+                "@type": "Scale",
+                "label": "Scale 1:10 of the original."
+              }
+            } 
+          }
+        }
+      ]
     },
-
     "508": {
       "aboutEntity": "?work", 
       "addLink": "hasNote",
@@ -18223,6 +18282,7 @@
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "otherPhysicalFormat",
+      "allowLinkOnRevert": "reproductionOf",
       "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": "8"},
       "_spec": [
@@ -18385,6 +18445,125 @@
                 "mainTitle": "Entangled world",
                 "qualifier": "Original"
               }]
+            }]
+          }}
+        },
+        {
+          "name": "Should only revert KeyTitle as 776 $t",
+          "normalized": [
+            {"245": {"ind1": "1", "ind2": "0", "subfields": [{"a": "Instance title"}]}},
+            {"776": {"ind1": "0", "ind2": "8", "subfields": [{"t": "Title 1"}, {"z": "9783527404704"}]}}
+          ],
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "Title",
+              "mainTitle": "Instance title"
+            }],
+            "otherPhysicalFormat": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Title 2",
+                "subtitle": "för dig som arbetar med kakel och klinker"
+              },{
+                "@type": "KeyTitle",
+                "mainTitle": "Title 1",
+                "qualifier": ["(Stockholm. Online)"]
+              },{
+                "@type": "VariantTitle",
+                "mainTitle": "Title 3"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "9783527404704"
+              }]
+            }]
+          }}
+        },
+        {
+          "name": "Should only revert Title as 776 $t",
+          "normalized": [
+            {"245": {"ind1": "1", "ind2": "0", "subfields": [{"a": "Instance title"}]}},
+            {"776": {"ind1": "0", "ind2": "8", "subfields": [{"t": "Title 2"}]}}
+          ],
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "Title",
+              "mainTitle": "Instance title"
+            }],
+            "otherPhysicalFormat": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Title 2",
+                "subtitle": "för dig som arbetar med kakel och klinker"
+              },{
+                "@type": "SomeOtherTitle",
+                "mainTitle": "Title 1",
+                "qualifier": ["(Stockholm. Online)"]
+              },{
+                "@type": "VariantTitle",
+                "mainTitle": "Title 3"
+              }]
+            }]
+          }}
+        },
+        {
+          "name": "No appropriate title to revert - No 776 $t",
+          "normalized": [
+            {"245": {"ind1": "1", "ind2": "0", "subfields": [{"a": "Instance title"}]}},
+            {"776": {"ind1": "0", "ind2": "8", "subfields": [{"z": "9783527404704"}]}}
+          ],
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "Title",
+              "mainTitle": "Instance title"
+            }],
+            "otherPhysicalFormat": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "SpineTitle",
+                "mainTitle": "Title 2"
+              },{
+                "@type": "SomeOtherTitle",
+                "mainTitle": "Title 1",
+                "qualifier": ["(Stockholm. Online)"]
+              },{
+                "@type": "VariantTitle",
+                "mainTitle": "Title 3"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "9783527404704"
+              }]
+            }]
+          }}
+        },
+        {
+          "name": "reproductionOf should revert to 776",
+          "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [
+            {"a": "name of agent"},
+            {"t": "Title of reproduction"},
+            {"w": "00000"}
+          ]}},
+          "result": {"mainEntity": {
+            "reproductionOf": [{
+              "@type": "Instance",
+              "meta": [{"@type": "Record", "controlNumber": "00000"}],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Title of reproduction"
+              }],
+              "instanceOf": {
+                "@type": "Work",
+                "contribution" : [ {
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Agent",
+                    "label": "name of agent"
+                  }
+                }]
+              }
             }]
           }}
         }
@@ -21639,17 +21818,63 @@
     },
     "370": {
       "aboutEntity": "?thing",
-      "addLink": "marc:hasAssociatedPlace",
-      "resourceType": "marc:AssociatedPlace",
-      "TODO": "match and split $a&b",
-      "$a": {"property": "marc:placeOfBirth"},
-      "$b": {"property": "marc:placeOfDeath"},
-      "$c": {"addProperty": "marc:associatedCountry"},
-      "$e": {"addProperty": "marc:placeOfResidenceHeadquarters"},
-      "$f": {"addProperty": "marc:otherAssociatedPlace"},
-      "$s": {"property": "marc:startPeriod"},
-      "$t": {"property": "marc:endPeriod"},
-      "$2": {"property": "marc:sourceOfTerm"}
+      "aboutType": "Agent",
+      "pendingResources": {
+        "_:hasAssociatedPlace": {
+          "addLink": "marc:hasAssociatedPlace",
+          "resourceType": "marc:AssociatedPlace"
+        }
+      },
+      "$a": {"link": "birthPlace", "resourceType": "Place", "property": "label", "infer": true},
+      "$b": {"link": "deathPlace", "resourceType": "Place", "property": "label", "infer": true},
+      "$c": {"about": "_:hasAssociatedPlace", "addProperty": "marc:associatedCountry"},
+      "$e": {"about": "_:hasAssociatedPlace", "addProperty": "marc:placeOfResidenceHeadquarters"},
+      "$f": {"about": "_:hasAssociatedPlace", "addProperty": "marc:otherAssociatedPlace"},
+      "$s": {"about": "_:hasAssociatedPlace", "property": "marc:startPeriod"},
+      "$t": {"about": "_:hasAssociatedPlace", "property": "marc:endPeriod"},
+      "$2": {"about": "_:hasAssociatedPlace", "property": "marc:sourceOfTerm"},
+      "_spec": [
+        {
+          "name": "place of birth and place of death",
+          "source": {
+            "370": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Stockholm"},
+              {"b": "Lund"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Agent",
+              "birthPlace": {
+                "@type": "Place",
+                "label": "Stockholm"
+              },
+              "deathPlace": {
+                "@type": "Place",
+                "label": "Lund"
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "370": {"ind1": " ", "ind2": " ", "subfields": [
+              {"e": "Sweden"},
+              {"f": "Norway"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Agent",
+              "marc:hasAssociatedPlace": [
+                {
+                  "@type": "marc:AssociatedPlace",
+                  "marc:placeOfResidenceHeadquarters": ["Sweden"],
+                  "marc:otherAssociatedPlace": ["Norway"]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "371": {
       "NOTE:LC": "371 - Address (R)",
@@ -24441,16 +24666,16 @@
       },
       "[8]": null,
       "[9]": {
-        "aboutEntity": "?record",
-        "link": "marc:characterCoding",
-        "uriTemplate": "https://id.kb.se/marc/CharacterCodingType-{_}",
+        "NOTE": "Character coding scheme - a - UCS/Unicode",
+        "ignored": true,
         "fixedDefault": "a"
       },
       "NOTE:[10]": "see bib",
       "NOTE:[11]": "see bib",
       "NOTE:[12:17]": "see bib",
       "[17]": {
-        "NOTE": "No longer convert this position - just revert to fixedDefault",
+        "NOTE": "Encoding level - u - Unknown",
+        "ignored": true,
         "fixedDefault": "u"
       },
       "[18]": {
@@ -24461,10 +24686,9 @@
       },
       "[19]": null,
       "[20:24]": {
-        "aboutEntity": "?record",
-        "property": "marc:entryMap",
-        "fixedDefault": "4500",
-        "TODO:patternMap": "entryMap"
+        "NOTE": "Entry map - 4500 - Default value in MARC21",
+        "ignored": true,
+        "fixedDefault": "4500"
       },
       "repeatable": false,
       "_spec": [

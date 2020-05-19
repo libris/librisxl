@@ -5,8 +5,8 @@ import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.IdGenerator
-import whelk.Storage
 import whelk.Whelk
+import whelk.exception.StaleUpdateException
 import whelk.exception.WhelkException
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
@@ -260,7 +260,7 @@ class WhelkTool {
             if (limit > -1 && counter.readCount > limit) {
                 break
             }
-            DocumentItem item = new DocumentItem(number: counter.readCount, doc: doc, whelk: whelk)
+            DocumentItem item = new DocumentItem(number: counter.readCount, doc: doc, whelk: whelk, preUpdateChecksum: doc.getChecksum())
             item.existsInStorage = !newItems
             batch.items << item
             if (batch.items.size() == batchSize) {
@@ -386,7 +386,15 @@ class WhelkTool {
                     doDeletion(item)
                     counter.countDeleted()
                 } else if (item.existsInStorage) {
-                    doModification(item)
+                    try {
+                        doModification(item)
+                    }
+                    catch (StaleUpdateException e) {
+                        Document doc = whelk.getDocument(item.doc.shortId)
+                        item = new DocumentItem(number: item.number, doc: doc, whelk: whelk,
+                                preUpdateChecksum: doc.getChecksum(), existsInStorage: true)
+                        return doProcess(process, item, counter)
+                    }
                     counter.countModified()
                 } else {
                     doSaveNew(item)
@@ -456,10 +464,7 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            Storage component = skipIndex ? whelk.storage : whelk
-            component.storeAtomicUpdate(doc.shortId, !item.loud, changedIn, scriptJobUri, {
-                it.data = doc.data
-            })
+            whelk.storeAtomicUpdate(doc, !item.loud, changedIn, scriptJobUri, item.preUpdateChecksum, !skipIndex)
         }
     }
 
@@ -470,9 +475,8 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            Storage component = skipIndex ? whelk.storage : whelk
-            if (!component.createDocument(doc, changedIn, scriptJobUri,
-                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false))
+            if (!whelk.createDocument(doc, changedIn, scriptJobUri,
+                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false, !skipIndex))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
     }
@@ -645,6 +649,7 @@ class WhelkTool {
 class DocumentItem {
     int number
     Document doc
+    String preUpdateChecksum
     private Whelk whelk
     private boolean needsSaving = false
     private boolean doDelete = false

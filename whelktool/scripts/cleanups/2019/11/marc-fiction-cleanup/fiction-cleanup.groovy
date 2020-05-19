@@ -10,6 +10,24 @@ SKONLITTERATUR = "https://id.kb.se/term/saogf/Sk%C3%B6nlitteratur"
 FICTION = "https://id.kb.se/marc/FictionNotFurtherSpecified"
 SUBJECT_PREFIX = "https://id.kb.se/term/sao/"
 
+MARC_FICTION_TYPES = ["https://id.kb.se/marc/ShortStory", //j
+                      "https://id.kb.se/marc/HumorSatiresEtc", //h
+                      "https://id.kb.se/marc/FictionNotFurtherSpecified", //1
+                      "https://id.kb.se/marc/Novel", //f
+                      "https://id.kb.se/marc/ComicStrip", //c
+                      "https://id.kb.se/marc/Drama", //d
+                      "https://id.kb.se/marc/Essay", //e
+                      "https://id.kb.se/marc/MixedForms", //m
+                      "https://id.kb.se/marc/Poetry"] //p
+
+//Saogf terms with inCollection containing both term/fack and term/skon
+GF_WITH_DOUBLE_TERMS = ["https://id.kb.se/term/saogf/St%C3%A5uppkomik",
+                        "https://id.kb.se/term/saogf/Humor",
+                        "https://id.kb.se/term/saogf/Ordspr%C3%A5k%20och%20tales%C3%A4tt",
+                        "https://id.kb.se/term/saogf/Anekdoter",
+                        "https://id.kb.se/term/saogf/Ess%C3%A4er",
+                        "https://id.kb.se/term/saogf/Samlingsverk"]
+
 query = """collection = 'bib'
         AND data#>>'{@graph,2,@type}' = 'Text'
         AND data#>>'{@graph,1,issuanceType}' = 'Monograph'"""
@@ -18,9 +36,12 @@ selectBySqlWhere(query, silent: false) { data ->
     def work = data.graph[2]
     def recordId = data.graph[0][ID]
 
-    if (!hasOnlyHClassifications(work)) {
-        //At least one classification is not H OR there are no classifications
-        if (isSaogfSkonlitteratur(data.whelk, work) && !hasAnySubjectAsGenreForm(work) && hasAnyNotFictionGenreForm(work)) {
+    if (!everySabClassifcationIsH(work)) {
+        if (isSaogfSkonlitteratur(data.whelk, work)
+                && !hasAnySubjectAsGenreForm(work, recordId)
+                && hasAnyNotFictionGenreForm(work)
+                && !hasGfWithBothSkonAndFackTerm(work, recordId)
+        ) {
             report.println "Record $recordId with genreForm $work.genreForm and classification: ${work.classification?.code}" +
                     "has broader to $SKONLITTERATUR. Replacing $NOT_FICTION with $FICTION..."
             work.genreForm.removeIf { gf -> gf.'@id' == NOT_FICTION }
@@ -72,24 +93,24 @@ selectBySqlWhere(query, silent: false) { data ->
     }
 }
 
-private boolean hasOnlyHClassifications(work) {
+private boolean everySabClassifcationIsH(work) {
     def classif = work.classification
     classif = classif instanceof Map ? [classif] : classif
-    return classif?.every { c -> hasClassificationH(c) }
+    def sabClassifications = classif?.findAll { c -> isSAB(c) }
+    return sabClassifications ? sabClassifications?.every { c -> hasClassificationH(c) } : false
+}
+
+boolean isSAB(classification) {
+    if (isInstanceOf(classification, 'Classification')) {
+        def inSchemeCode = classification.inScheme?.code as String
+        return inSchemeCode && inSchemeCode == "kssb" && isInstanceOf(classification.inScheme, 'ConceptScheme')
+    }
+    return false
 }
 
 boolean hasClassificationH(classification) {
-    def type = classification.'@type' as String
     def code = classification?.code instanceof String ? [classification.code] : classification.code
-
-    if (type == "Classification") {
-        def inSchemeCode = classification.inScheme?.code as String
-        if (inSchemeCode && inSchemeCode == "kssb" && classification.inScheme?.'@type' == "ConceptScheme") {
-            return code && code.every { c -> c.startsWith("H") || c.startsWith("uH") }
-        }
-    }
-
-    return false
+    return code && code.every { c -> c.startsWith("H") || c.startsWith("uH") }
 }
 
 private boolean hasAnyNotFictionGenreForm(work) {
@@ -108,20 +129,26 @@ private boolean isSaogfSkonlitteratur(whelk, work) {
     return work.genreForm && work.genreForm.any { gf -> whelk.relations.isImpliedBy(SKONLITTERATUR, gf.'@id') }
 }
 
-private boolean hasAnySubjectAsGenreForm(work) {
-    return work.genreForm && work.genreForm.any { gf -> gf.'@id'?.startsWith(SUBJECT_PREFIX)}
+private boolean hasAnySubjectAsGenreForm(work, recordId) {
+    if (work.genreForm && work.genreForm.any { gf -> gf.'@id'?.startsWith(SUBJECT_PREFIX)}) {
+        report.println "Record $recordId with genreForm $work.genreForm " +
+                "has a subject as genreForm: not scheduling for change."
+        return true
+    } else {
+        return false
+    }
+}
+
+private boolean hasGfWithBothSkonAndFackTerm(work, recordId) {
+    if (work.genreForm && work.genreForm.any { gf -> GF_WITH_DOUBLE_TERMS.contains(gf.'@id')}) {
+        report.println "Record $recordId with genreForm $work.genreForm " +
+                "has genreForm with inCollection containing both term/skon and term/fack: not scheduling for change."
+        return true
+    } else {
+        return false
+    }
 }
 
 private boolean hasAnyMarcFictionType(work) {
-    def marcFictionTypes = ["https://id.kb.se/marc/ShortStory", //j
-                            "https://id.kb.se/marc/HumorSatiresEtc", //h
-                            "https://id.kb.se/marc/FictionNotFurtherSpecified", //1
-                            "https://id.kb.se/marc/Novel", //f
-                            "https://id.kb.se/marc/ComicStrip", //c
-                            "https://id.kb.se/marc/Drama", //d
-                            "https://id.kb.se/marc/Essay", //e
-                            "https://id.kb.se/marc/MixedForms", //m
-                            "https://id.kb.se/marc/Poetry"] //p
-
-    return work.genreForm.any { gf -> marcFictionTypes.contains(gf.'@id') }
+    return work.genreForm.any { gf -> MARC_FICTION_TYPES.contains(gf.'@id') }
 }

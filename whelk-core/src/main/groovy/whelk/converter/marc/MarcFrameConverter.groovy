@@ -1107,6 +1107,23 @@ class ConversionPart {
                         }
                         aboutMap.get(key, []).add(item)
                     }
+                    def typeCandidates = pendingDfn.allowedTypesOnRevert
+                    if (typeCandidates) {
+                        def items = aboutMap.get(key)
+                        def selected = []
+                        for (type in typeCandidates) {
+                            // NOTE: using isInstanceOf would be preferable
+                            // over direct type comparison, but won't work
+                            // since a base type might be preferable to a
+                            // subtype in practise (due to a modeling issue).
+                            selected = items.findAll { it['@type'] == type  }
+                            if (selected) {
+                                items = selected
+                                break
+                            }
+                        }
+                        aboutMap[key] = selected
+                    }
                 }
             }
         }
@@ -1318,6 +1335,7 @@ class MarcFixedFieldHandler {
                 columns << new Column(this, obj, colNum.first, colNum.second,
                         obj['itemPos'] ?: colNums.size() > 1 ? i : null,
                         obj['fixedDefault'],
+                        obj['ignoreOnRevert'],
                         obj['matchAsDefault'])
 
                 if (colNum.second > fieldSize) {
@@ -1385,11 +1403,12 @@ class MarcFixedFieldHandler {
         int end
         Integer itemPos
         String fixedDefault
+        Boolean ignoreOnRevert
         Pattern matchAsDefault
         MarcFixedFieldHandler fixedFieldHandler
 
         Column(MarcFixedFieldHandler fixedFieldHandler, fieldDfn, int start, int end,
-               itemPos, fixedDefault, matchAsDefault = null) {
+               itemPos, fixedDefault, ignoreOnRevert = null, matchAsDefault = null) {
             super(fixedFieldHandler.ruleSet, "$fixedFieldHandler.tag-$start-$end", fieldDfn)
             this.fixedFieldHandler = fixedFieldHandler
             assert start > -1 && end >= start
@@ -1397,6 +1416,8 @@ class MarcFixedFieldHandler {
             this.end = end
             this.itemPos = (Integer) itemPos
             this.fixedDefault = fixedDefault
+            this.ignoreOnRevert = ignoreOnRevert
+
             if (fixedDefault) {
                 assert this.fixedDefault.size() == this.width
             }
@@ -1437,6 +1458,9 @@ class MarcFixedFieldHandler {
         @CompileStatic(SKIP)
         def revert(Map state, Map data) {
             def v = super.revert(state, data, null)
+            if (ignoreOnRevert && fixedDefault)
+                return fixedDefault
+
             if ((v == null || v.every { it == null }) && fixedDefault)
                 return fixedDefault
 
@@ -1852,6 +1876,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map<String, Map> pendingResources
     List<String> pendingKeys
     String aboutAlias
+    //NOTE: allowLinkOnRevert as list may be preferable, but there is currently no case for it. Update if needed.
+    String allowLinkOnRevert
     List<String> onRevertPrefer
     Set<String> sharesGroupIdWith = new HashSet<String>()
     boolean silentRevert
@@ -1875,9 +1901,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         aboutAlias = fieldDfn.aboutAlias
-
+        allowLinkOnRevert = fieldDfn.allowLinkOnRevert
         dependsOn = fieldDfn.dependsOn
-
         constructProperties = fieldDfn.constructProperties
 
         if (fieldDfn.uriTemplate) {
@@ -2256,6 +2281,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def results = []
 
         def useLinks = []
+
+        if (allowLinkOnRevert) {
+            useLinks << [link: allowLinkOnRevert, resourceType: resourceType]
+        }
+
         if (computeLinks && computeLinks.mapping instanceof Map) {
             computeLinks.mapping.each { code, compLink ->
                 if (compLink in topEntity) {
