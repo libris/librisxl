@@ -38,7 +38,7 @@ selectBySqlWhere(where) { data ->
 
     if (work.genreForm instanceof List) {
         work.genreForm.each {
-            if (it["@id"].startsWith("https://id.kb.se/term/gmgpc%2F%2Fswe/")) {
+            if (it["@id"] && it["@id"].startsWith("https://id.kb.se/term/gmgpc%2F%2Fswe/")) {
                 it["@id"] = it["@id"].replace("%2F%2F", "/")
                 changed = true
             }
