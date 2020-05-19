@@ -36,17 +36,17 @@ Map toVariant(doc, Map _430) {
         subfield.each { String key, String value ->
             switch(key) {
                 case 'a':
-                    variant['hasTitle'] = variant['hasTitle'] ?: [['@type': 'Title']]
+                    addTitleIfMissing(variant)
                     putValue(variant['hasTitle'][0], 'mainTitle', value)
                     break
 
                 case 'p':
-                    variant['hasTitle'] = variant['hasTitle'] ?: [['@type': 'Title']]
+                    addTitleIfMissing(variant)
                     putInList( variant['hasTitle'][0], 'partName', value)
                     break
 
                 case 'n':
-                    variant['hasTitle'] = variant['hasTitle'] ?: [['@type': 'Title']]
+                    addTitleIfMissing(variant)
                     putInList(variant['hasTitle'][0], 'partNumber', value)
                     break
 
@@ -90,6 +90,11 @@ Map toVariant(doc, Map _430) {
         }
     }
 
+    if(Integer.parseInt(_430['ind2']) in 1..9) {
+        addTitleIfMissing(variant)
+        putValue(variant['hasTitle'][0], 'marc:nonfilingChars', "${_430['ind2']}")
+    }
+
     Script.mapped.println("${doc.getURI()}\n$_430\n$variant\n")
 }
 
@@ -101,4 +106,8 @@ void putInList(thing, key, value) {
 void putValue(thing, key, value) {
     assert !thing[key]
     thing[key] = value
+}
+
+void addTitleIfMissing(variant) {
+    variant['hasTitle'] = variant['hasTitle'] ?: [['@type': 'Title']]
 }
