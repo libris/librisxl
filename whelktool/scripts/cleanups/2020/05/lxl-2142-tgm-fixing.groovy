@@ -14,13 +14,13 @@ PrintWriter failedUpdating = getReportWriter("failed-updates")
 // Update the terms
 where = "data#>>'{@graph,1,inScheme,@id}' = 'https://id.kb.se/term/gmgpc%2F%2Fswe'"
 selectBySqlWhere(where) { data ->
-
+    
     data.graph[1].inScheme["@id"] = "https://id.kb.se/term/gmgpc-swe"
 
     if (! (data.graph[1]["sameAs"] instanceof List) ) {
         data.graph[1]["sameAs"] = []
     }
-    data.graph[1]["sameAs"].add(data.graph[1]["@id"])
+    data.graph[1]["sameAs"].add( ["@id" : data.graph[1]["@id"]])
     data.graph[1]["@id"] = data.graph[1]["@id"].replace("%2F%2F", "/")
 
     scheduledForUpdating.println("${data.doc.getURI()}")
