@@ -80,14 +80,15 @@ void process(String duplicateUri, String keepUri) {
         boolean found = false
         selectBySqlWhere(whereSHolding(duplicateUri)) { hold ->
             StringBuilder msg = new StringBuilder().append(hold.doc.getURI()).append("\n")
-            add(msg, hold.graph[1], 'hasNote', hasNote)
-
             // There is already a holding for S for the correct bib, add the holding from the duplicate as hasComponent
             if (hasSHolding(keepUri)) {
                 selectBySqlWhere(whereSHolding(keepUri)) { keepHold ->
                     msg.append("Merge with existing: ${keepHold.doc.getURI()}\n")
                     keepHold.graph[1] = merge(msg, keepHold.graph[1], hold.graph[1])
-                    setRecordFields(msg, keepHold, identifiedBy)
+
+                    // yes, these should be at the top level and not in hasComponent
+                    addFieldsFromDuplicate(msg, keepHold, identifiedBy, hasNote)
+
                     keepHold.scheduleSave()
                 }
 
@@ -99,7 +100,7 @@ void process(String duplicateUri, String keepUri) {
             else {
                 msg.append("itemOf: $duplicateUri -> $keepUri").append("\n")
                 hold.graph[1]['itemOf']['@id'] = keepUri + '#it'
-                setRecordFields(msg, hold, identifiedBy)
+                addFieldsFromDuplicate(msg, hold, identifiedBy, hasNote)
                 hold.scheduleSave()
             }
 
@@ -113,9 +114,10 @@ void process(String duplicateUri, String keepUri) {
     }
 }
 
-void setRecordFields(msg, hold, identifiedBy) {
+void addFieldsFromDuplicate(msg, hold, identifiedBy, hasNote) {
     add(msg, hold.graph[0], 'identifiedBy', identifiedBy)
     add(msg, hold.graph[0], 'cataloguersNote', ['Katalog 56-86, SPI20191219. S bestånd flyttat från SPI-dubblett maskinellt. Fel kan förekomma.'])
+    add(msg, hold.graph[1], 'hasNote', hasNote)
 }
 
 void add(msg, thing, field, value) {
