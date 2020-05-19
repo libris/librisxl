@@ -3,11 +3,15 @@ PrintWriter failedUpdating = getReportWriter("failed-updates")
 
 /*
 
-1. Bibposter ska länka till https://id.kb.se/term/gmgpc/swe/NÅNTING istället för https://id.kb.se/term/gmgpc%2F%2Fswe/NÅNTING
+_MÅSTE_ KÖRAS MED --skip-index !!
 
-2. Alla https://id.kb.se/term/gmgpc%2F%2Fswe/NÅNTING termer ska få nya idn: https://id.kb.se/term/gmgpc/swe/NÅNTING
+1. Alla https://id.kb.se/term/gmgpc%2F%2Fswe/NÅNTING termer ska få nya idn: https://id.kb.se/term/gmgpc/swe/NÅNTING
 
-3. Alla termer i 2 ska också länka inScheme till exakt https://id.kb.se/term/gmgpc-swe istället för https://id.kb.se/term/gmgpc%2F%2Fswe
+2. Bibposter ska länka till https://id.kb.se/term/gmgpc/swe/NÅNTING istället för https://id.kb.se/term/gmgpc%2F%2Fswe/NÅNTING
+(detta sköter systemet implict iomed att 1 utförs).
+
+3. Alla termer i 1 ska också länka inScheme till exakt https://id.kb.se/term/gmgpc/swe istället för https://id.kb.se/term/gmgpc%2F%2Fswe
+(https://id.kb.se/term/gmgpc/swe finns inte ännu, men ska vara huvudID på samma term, efter definitionsändring)
 
 */
 
@@ -15,7 +19,7 @@ PrintWriter failedUpdating = getReportWriter("failed-updates")
 where = "data#>>'{@graph,1,inScheme,@id}' = 'https://id.kb.se/term/gmgpc%2F%2Fswe'"
 selectBySqlWhere(where) { data ->
     
-    data.graph[1].inScheme["@id"] = "https://id.kb.se/term/gmgpc-swe"
+    data.graph[1].inScheme["@id"] = "https://id.kb.se/term/gmgpc/swe"
 
     if (! (data.graph[1]["sameAs"] instanceof List) ) {
         data.graph[1]["sameAs"] = []
@@ -27,30 +31,4 @@ selectBySqlWhere(where) { data ->
     data.scheduleSave(onError: { e ->
         failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
     })
-}
-
-// Update usages
-where = "collection = 'bib' and data::text like '%https://id.kb.se/term/gmgpc%2F%2Fswe/%'"
-selectBySqlWhere(where) { data ->
-    def (record, instance, work) = data.graph
-
-    boolean changed = false
-
-    if (work.genreForm instanceof List) {
-        work.genreForm.each {
-            if (it["@id"] && it["@id"].startsWith("https://id.kb.se/term/gmgpc%2F%2Fswe/")) {
-                it["@id"] = it["@id"].replace("%2F%2F", "/")
-                changed = true
-            }
-        }
-    }
-
-    if (changed) {
-        scheduledForUpdating.println("${data.doc.getURI()}")
-        data.scheduleSave(onError: { e ->
-            failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
-        })
-    } else {
-        failedUpdating.println("There seems to have been a gmgpc link in ${data.doc.shortId}, But found nothing to fix in @graph,2,genreForm.")
-    }
 }
