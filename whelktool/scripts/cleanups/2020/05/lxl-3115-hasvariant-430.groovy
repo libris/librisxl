@@ -96,6 +96,8 @@ Map toVariant(doc, Map _430) {
     }
 
     Script.mapped.println("${doc.getURI()}\n$_430\n$variant\n")
+    
+    return variant
 }
 
 void putInList(thing, key, value) {
