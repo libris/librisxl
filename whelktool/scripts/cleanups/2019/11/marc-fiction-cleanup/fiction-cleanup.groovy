@@ -4,6 +4,7 @@
 
 scheduledForChange = getReportWriter("scheduled-for-change")
 report = getReportWriter("report")
+failedUpdating = getReportWriter("failed-updating")
 
 NOT_FICTION = "https://id.kb.se/marc/NotFictionNotFurtherSpecified"
 SKONLITTERATUR = "https://id.kb.se/term/saogf/Sk%C3%B6nlitteratur"
@@ -54,11 +55,13 @@ selectBySqlWhere(query, silent: false) { data ->
 
     if (hasNoGenreFormField(work)) {
         report.println "No genreForm field for $recordId, creating one and setting it to $FICTION"
-        genreFormValue = []
+        def genreFormValue = []
         genreFormValue.add(['@id': FICTION])
         work.'genreForm' = genreFormValue
         scheduledForChange.println "$recordId"
-        data.scheduleSave()
+        data.scheduleSave(onError: { e ->
+            failedUpdating.println("Failed to update $recordId due to: $e")
+        })
         return
     }
 
