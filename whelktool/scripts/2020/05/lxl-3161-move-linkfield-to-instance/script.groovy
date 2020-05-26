@@ -116,7 +116,7 @@ Map remodelObjectToInstance(property, object, docID) {
             def qualifier = getAndRemoveQualifierFromWork(workProperties['hasTitle'])
             if (qualifier) {
                 if (!instanceProperties.containsKey('hasTitle')) {
-                    instanceProperties['hasTitle'] = [(TYPE): 'Title']
+                    instanceProperties['hasTitle'] = [[(TYPE): 'Title']]
                 }
                 instanceProperties['hasTitle'][0].put('qualifier', qualifier)
                 if ((workProperties['hasTitle'][0].keySet() - TYPE).size() == 0) {
