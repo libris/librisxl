@@ -5225,14 +5225,14 @@
     },
 
     "009": {
-      "NOTE": "Swepub data only",
+      "NOTE": "Swepub data only - needed for swepub search",
       "aboutEntity": "?record",
-      "addProperty": "relatedIdentifiers",
+      "addProperty": "marc:relatedIdentifier",
       "_spec": [
         {
           "source": {"009": "oai:DIVA.org:kth-226820"},
           "result": {
-            "relatedIdentifiers": ["oai:DIVA.org:kth-226820"]
+            "marc:relatedIdentifier": ["oai:DIVA.org:kth-226820"]
           }
         }
       ]
