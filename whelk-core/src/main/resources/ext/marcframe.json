@@ -5225,7 +5225,7 @@
     },
 
     "009": {
-      "NOTE": "Swepub data only - needed for swepub search",
+      "NOTE": "Swepub data only, needed for swepub search. If a need arises, strive for a better model e.g. indirectlyIdentifiedBy.Local.value",
       "aboutEntity": "?record",
       "addProperty": "marc:relatedIdentifier",
       "_spec": [
