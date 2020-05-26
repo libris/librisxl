@@ -5269,6 +5269,20 @@
       ]
     },
 
+    "009": {
+      "NOTE": "Swepub data only, needed for swepub search. If a need arises, strive for a better model e.g. indirectlyIdentifiedBy.Local.value",
+      "aboutEntity": "?record",
+      "addProperty": "marc:relatedIdentifier",
+      "_spec": [
+        {
+          "source": {"009": "oai:DIVA.org:kth-226820"},
+          "result": {
+            "marc:relatedIdentifier": ["oai:DIVA.org:kth-226820"]
+          }
+        }
+      ]
+    },
+
     "010": {
       "include": ["idbase"],
       "resourceType": "LCCN",
