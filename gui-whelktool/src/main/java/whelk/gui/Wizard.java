@@ -10,9 +10,14 @@ import java.util.Stack;
 
 class Wizard extends JDialog implements ActionListener
 {
+    public static String EXIT = "exit";
     public static String BACK = "back";
     public static String RUN_OR_CREATE = "runorcreate";
     public static String CREATE_WHAT = "createwhat";
+    public static String RUN = "runexisting";
+    public static String DELETE_BIB = "deletebibs";
+    public static String DELETE_HOLD = "deleteholds";
+    public static String CHANGE_SIGEL = "changesigel";
 
     private JPanel cardPanel;
     private JButton backButton;
@@ -24,6 +29,8 @@ class Wizard extends JDialog implements ActionListener
     private String currentCard;
     private HashMap<String, WizardCard> cardInstances;
 
+    private Object parameterFromPreviousCard;
+
     public Wizard()
     {
         cardStack = new Stack<>();
@@ -31,6 +38,10 @@ class Wizard extends JDialog implements ActionListener
 
         cardInstances.put(RUN_OR_CREATE, new RunOrCreatePanel(this));
         cardInstances.put(CREATE_WHAT, new CreateWhatPanel(this));
+        cardInstances.put(RUN, new RunPanel(this));
+        cardInstances.put(DELETE_BIB, new DeleteBibPanel(this));
+        cardInstances.put(DELETE_HOLD, new DeleteHoldPanel(this));
+        cardInstances.put(CHANGE_SIGEL, new ChangeSigelPanel(this));
 
         JPanel buttonPanel = new JPanel();
         Box buttonBox = new Box(BoxLayout.X_AXIS);
@@ -40,13 +51,15 @@ class Wizard extends JDialog implements ActionListener
 
         cardLayout = new CardLayout();
         cardPanel.setLayout(cardLayout);
-        backButton = new JButton("Back");
+        backButton = new JButton("Tillbaka");
         backButton.addActionListener(this);
         backButton.setActionCommand(BACK);
         backButton.setEnabled(false);
-        nextButton = new JButton("Next");
+        nextButton = new JButton("Nästa");
         nextButton.addActionListener(this);
-        cancelButton = new JButton("Cancel");
+        cancelButton = new JButton("Avsluta");
+        cancelButton.addActionListener(this);
+        cancelButton.setActionCommand(EXIT);
 
         for (String key : cardInstances.keySet())
         {
@@ -67,7 +80,11 @@ class Wizard extends JDialog implements ActionListener
         this.getContentPane().add(cardPanel, java.awt.BorderLayout.CENTER);
 
         currentCard = RUN_OR_CREATE;
-        cardInstances.get(RUN_OR_CREATE).onShow();
+        cardInstances.get(RUN_OR_CREATE).onShow(null);
+        cardLayout.show(cardPanel, RUN_OR_CREATE);
+
+        this.setTitle("LibrisXL globala ändringar");
+        this.setResizable(false);
 
         this.pack();
     }
@@ -77,30 +94,86 @@ class Wizard extends JDialog implements ActionListener
         nextButton.setActionCommand(card);
     }
 
+    public void setParameterForNextCard(Object parameterFromPreviousCard)
+    {
+        this.parameterFromPreviousCard = parameterFromPreviousCard;
+    }
+
+    public void enableNext()
+    {
+        nextButton.setEnabled(true);
+    }
+
+    public void disableNext()
+    {
+        nextButton.setEnabled(false);
+    }
+
+    public void enableBack()
+    {
+        backButton.setEnabled(true);
+    }
+
+    public void disableBack()
+    {
+        backButton.setEnabled(false);
+    }
+
+    public void enableCancel()
+    {
+        cancelButton.setEnabled(true);
+    }
+
+    public void disableCancel()
+    {
+        cancelButton.setEnabled(false);
+    }
+
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
         String actionCommand = actionEvent.getActionCommand();
+
+        if (actionCommand.equals(EXIT))
+        {
+            this.dispose();
+            return;
+        }
+
         CardLayout layout = (CardLayout)(cardPanel.getLayout());
 
         if (actionCommand.equals(BACK))
         {
             String toCard = cardStack.pop();
             currentCard = toCard;
-            cardInstances.get(toCard).onShow();
+            nextButton.setActionCommand("");
+            parameterFromPreviousCard = null;
+            if (cardStack.isEmpty()) disableBack();
+            else enableBack();
+            enableNext();
+            enableCancel();
+            cardInstances.get(toCard).onShow(null);
             layout.show(cardPanel, toCard);
-            if (cardStack.isEmpty())
-            {
-                backButton.setEnabled(false);
-            }
         } else {
             if (actionCommand.equals(currentCard))
                 return;
 
+            cardInstances.get(currentCard).beforeNext();
+
             cardStack.push(currentCard);
             currentCard = actionCommand;
-            cardInstances.get(actionCommand).onShow();
+            nextButton.setActionCommand("");
+            enableBack();
+            enableNext();
+            enableCancel();
+            cardInstances.get(actionCommand).onShow(parameterFromPreviousCard);
             layout.show(cardPanel, actionCommand);
-            backButton.setEnabled(true);
         }
+    }
+
+    static void exitFatal(String message)
+    {
+        // make window dialog instead
+        System.out.println(message);
+        System.exit(-1);
     }
 }

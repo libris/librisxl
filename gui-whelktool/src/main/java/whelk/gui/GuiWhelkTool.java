@@ -12,6 +12,7 @@ class GuiWhelkTool
             {
                 Wizard wizard = new Wizard();
                 wizard.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                wizard.setLocationRelativeTo(null);
                 wizard.setVisible(true);
             }
         });
