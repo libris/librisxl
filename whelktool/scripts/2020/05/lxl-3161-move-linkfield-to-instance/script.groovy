@@ -5,12 +5,13 @@
  *
  */
 
-LINK_FIELDS_WORK = ['translationOf', 'translation', 'supplement', 'supplementTo',
+LINK_FIELDS_WORK = ['translationOf', 'translation', 'supplement', 'supplementTo', 'hasPart',
                     'continues', 'continuesInPart', 'precededBy', 'precededInPartBy',
                     'mergerOf', 'absorbed', 'absorbedInPart', 'separatedFrom', 'continuedBy',
                     'continuedInPartBy', 'succeededBy', 'succeededInPartBy', 'absorbedBy',
                     'absorbedInPartBy', 'splitInto', 'mergedToForm', 'relatedTo' ]
 HAS_PART = 'hasPart'
+TRANSLATION_OF = 'translationOf'
 HAS_INSTANCE = 'hasInstance'
 DISPLAY_TEXT = 'marc:displayText'
 
@@ -19,8 +20,7 @@ scheduledForChange = getReportWriter("scheduled-for-change")
 deviantRecords = getReportWriter("deviant-records-to-analyze")
 
 String subQueryWork = LINK_FIELDS_WORK.collect {"data#>>'{@graph,2,${it}}' IS NOT NULL"}.join(" OR ")
-String subQueryHasPart = "data#>>'{@graph,2,${HAS_PART}}' LIKE '%${HAS_INSTANCE}%'"
-String query = "collection = 'bib' AND ( ${subQueryWork} OR ${subQueryHasPart} )"
+String query = "collection = 'bib' AND ( ${subQueryWork} )"
 
 selectBySqlWhere(query) { data ->
     boolean changed = false
@@ -81,7 +81,7 @@ Map remodelObjectToInstance(property, object, docID) {
         return
     }
 
-    if (property == HAS_PART &&
+    if ((property == HAS_PART || property == TRANSLATION_OF) &&
             !(object.containsKey(HAS_INSTANCE) || object.containsKey(DISPLAY_TEXT))) {
         return
     }
