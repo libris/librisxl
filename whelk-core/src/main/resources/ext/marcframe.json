@@ -17396,6 +17396,7 @@
       ]
     },
     "765": {
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
       "include": ["referenceToInstance"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
@@ -17466,6 +17467,7 @@
       ]
     },
     "767": {
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
       "include": ["referenceToInstance"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
@@ -17505,6 +17507,7 @@
       ]
     },
     "770": {
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
       "include": ["referenceToInstance"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
@@ -17544,6 +17547,7 @@
       ]
     },
     "772": {
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
       "include": ["referenceToInstance"],
       "NOTE:local": "Observera att fältet även har använts för att på ett enhetligt sätt konvertera delposter till flerbandsverk (med ind. 2 = 0) från ett ursprungligt LIBRISIII-format.",
       "aboutEntity": "?thing",
@@ -17996,6 +18000,7 @@
       ]
     },
     "774": {
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
       "include": ["referenceToInstance"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
@@ -18656,6 +18661,7 @@
       ]
     },
     "780": {
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
       "include": ["referenceToInstance"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
@@ -18799,6 +18805,7 @@
       ]
     },
     "785": {
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
       "include": ["referenceToInstance"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
@@ -18963,6 +18970,7 @@
       ]
     },
     "787": {
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
       "include": ["referenceToInstance"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
