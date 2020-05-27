@@ -9303,7 +9303,7 @@
       ]
     },
     "257": {
-      "onRevertPrefer": "264",
+      "onRevertPrefer": ["533", "264"],
       "NOTE": "Removing subfields incompatible with 264.",
       "aboutEntity": "?thing",
       "addLink": "production",
@@ -9804,7 +9804,7 @@
     },
 
     "261": {
-      "onRevertPrefer": "264",
+      "onRevertPrefer": ["533", "264"],
       "aboutEntity": "?thing",
       "NOTE:LC": "Also create statement: I - provisionActivityStatement - literal ($abd -- concatenate with blank -- add semicolon between subfields if no other punctuation -- keep order in field)",
       "pendingResources": {
@@ -9948,6 +9948,7 @@
     },
 
     "264": {
+    "onRevertPrefer": "533",
       "i1": {
         "property": "marc:sequenceStatus",
         "tokenMap": "sequenceStatus",
