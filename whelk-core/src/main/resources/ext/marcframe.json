@@ -12744,45 +12744,75 @@
       "$6": {"property": "marc:fieldref"}
     },
     "533": {
-      "addLink": "hasReproduction",
-      "embedded": true,
-      "resourceType": "Instance",
       "pendingResources": {
-        "_:event": {"addLink": "provisionActivity", "resourceType": "ProvisionActivity"}
+        "_:event": {"addLink": "production", "resourceType": "Reproduction"}
       },
-      "$a": {"property": "description", "punctuationChars": ":"},
+      "$a": {"property": "description", "punctuationChars": ":", "TODO": "analyze content"},
       "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label" , "punctuationChars": ":"},
       "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label" , "punctuationChars": ","},
       "$d": {"about": "_:event", "property": "date"},
-      "$e": {"addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
-      "$f": {"addProperty": "seriesStatement"},
-      "$m": {"addProperty": "marc:datesAndOrSequentialDesignationOfIssuesReproduced"},
-      "$n": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
+      "$e": {"ignoreOnRevert": true, "addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false, "NOTE": "should be part of the subject", "NOTE:record-count": 342},
+      "$f": {"TODO": "REWORK!", "addProperty": "seriesStatement"},
+      "$m": {"ignoreOnRevert": true, "addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE:record-count": 4},
+      "$n": {"about": "_:event", "addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE": "Need to be kept contained with correct 533?", "NOTE:record-count": 741721},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
-      "$7": {"property": "marc:fixedLengthDataElementsOfReproduction", "NOTE:LC": "ignore"},
+      "$7": {"property": "marc:fixedLengthDataElementsOfReproduction", "NOTE:LC": "ignore", "NOTE": "contain important year?"},
       "_spec": [
         {
-          "name": "group properties into nested entities",
+          "name": "Reproduction",
           "source": {
             "533": {"ind1": " ", "ind2": " ",
               "subfields": [
                 {"a": "Digitalt faksimil och elektronisk text"},
                 {"c": "Litteraturbanken"},
                 {"d": "2010"} ]}},
-          "result": {"mainEntity": {
-            "hasReproduction": [
-              {
-                "@type": "Instance",
-                "description":  "Digitalt faksimil och elektronisk text",
-                "provisionActivity":  [
-                    {"@type": "ProvisionActivity",
-                        "date":  "2010",
-                        "agent":  [{"@type": "Agent", "label": "Litteraturbanken"}]
-                    }]
-              }
-            ]
-          }}
+          "result": {
+            "mainEntity": {
+              "description":  "Digitalt faksimil och elektronisk text",
+              "production":  [
+                {
+                  "@type": "Reproduction",
+                  "date":  "2010",
+                  "agent":  [
+                    {
+                      "@type": "Agent", "label": "Litteraturbanken"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Digital reproduction",
+          "normalized": {
+            "533": {"ind1": " ", "ind2": " ",
+              "subfields": [
+                {"b": "Stockholm"},
+                {"c": "Kungliga biblioteket"},
+                {"d": "2019"} ]}},
+          "result": {
+            "mainEntity": {
+              "production":  [
+                {
+                  "@type": "DigitalReproduction",
+                  "place": [
+                    {
+                      "@type": "Place",
+                      "label": "Stockholm"
+                    }
+                  ],
+                  "date":  "2019",
+                  "agent": [
+                    {
+                      "@type": "Agent", "label": "Kungliga biblioteket"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
         }
       ]
     },
