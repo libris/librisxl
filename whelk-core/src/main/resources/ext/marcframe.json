@@ -1396,6 +1396,11 @@
 
     "referencedObjectDetails": {
       "pendingResources": {
+        "_:work": {
+          "about": "_:instance",
+          "link": "instanceOf",
+          "resourceType": "Work"
+        },
         "_:contribution": {
           "about": "_:work",
           "addLink": "contribution",
@@ -1467,33 +1472,25 @@
       "$z": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value", "TODO:targetMatch": "020"}
     },
 
-    "referenceToWork": {
-      "include": ["referencedObjectDetailsWithPart", "serialSpecificDetails", "workTitleQualifier", "workDisplayText"],
-      "pendingResources": {
-        "_:instance": {
-          "about": "_:work",
-          "link": "hasInstance",
-          "resourceType": "Instance"
-        }
-      }
-    },
-
     "referencedObjectDetailsWithPart": {
       "include": ["referencedObjectDetails"],
       "$g": {"about": "_:instance", "addProperty": "part"}
     },
 
     "referenceToInstance": {
-      "include": ["instanceOfObject", "referencedObjectDetailsWithPart", "instanceTitleQualifier", "serialSpecificDetails", "instanceDisplayText"]
+      "include": ["referencedObjectDetailsWithPart", "instanceTitleQualifier", "serialSpecificDetails", "instanceDisplayText"]
     },
 
     "referenceToInstanceSansDisplayText": {
-      "include": ["instanceOfObject", "referencedObjectDetails", "instanceTitleQualifier", "serialSpecificDetails"],
+      "include": ["referencedObjectDetails", "instanceTitleQualifier", "serialSpecificDetails"],
       "$g": {"aboutEntity": "?thing", "addProperty": "part"}
     },
 
     "referenceToSeriesInstance": {
-      "include": ["instanceOfObject", "referencedObjectDetailsWithPart", "workTitleQualifier", "instanceDisplayText"]
+      "include": ["referencedObjectDetailsWithPart", "instanceDisplayText"],
+      "TODO": "Deviates from 'referenceToInstance' - $c should be related to $t (not $s)",
+      "NOTE": "For now, continue to map $c together with $s - applies to bib 760 and 762",
+      "$c": {"about": "_:workTitle", "property": "qualifier", "ignoreOnRevert": true, "NOTE:marc-repeatable": false}
     },
 
     "instanceOfObject": {
@@ -1511,20 +1508,7 @@
       "$i": {"about": "_:instance", "addProperty": "marc:displayText"}
     },
 
-    "workDisplayText": {
-      "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
-      "$i": {"about": "_:work", "addProperty": "marc:displayText"}
-    },
-
-    "workTitleQualifier": {
-      "TODO": "Does $c relates to $t or $s?. Check statistics. Deviates from 'referenceToInstance'",
-      "NOTE": "For now, continue to map $c together with $s - applies to all linkfields (except 776)",
-      "$c": {"about": "_:workTitle", "property": "qualifier", "ignoreOnRevert": true, "NOTE:marc-repeatable": false}
-    },
-
     "instanceTitleQualifier": {
-      "TODO": "Does $c relates to $t or $s?. Check statistics. Deviates from 'referenceToWork' and 'referenceToSeriesInstance'",
-      "NOTE": "For now, continue to map bib 776 differently; $c together with $t",
       "$c": {"about": "_:title", "property": "qualifier", "ignoreOnRevert": true, "NOTE:marc-repeatable": false}
     }
   },
