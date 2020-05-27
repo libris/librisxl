@@ -49,10 +49,13 @@ selectBySqlWhere(where) { data ->
         }
     }
 
-    if (changed) {
-        scheduledForUpdating.println("${data.doc.getURI()}")
-        data.scheduleSave(onError: { e ->
-            failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
-        })
+    if (!changed) {
+        instance["@type"] = "Print"
+        changed = true
     }
+
+    scheduledForUpdating.println("${data.doc.getURI()}")
+    data.scheduleSave(onError: { e ->
+        failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
+    })
 }
