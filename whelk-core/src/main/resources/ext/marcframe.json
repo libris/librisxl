@@ -11006,8 +11006,9 @@
         "property": "label"
       },
       "$b": {
-        "TODO": "Clash with 300c, see _spec",
-        "link": "hasDimensions",
+        "NOTE:LC": "bf2marcSpec-3XX-v1.0: nac - Cannot be differeneted from 300 $c",
+        "ignoreOnRevert": true,
+        "addLink": "hasDimensions",
         "resourceType": "Dimensions",
         "property": "label",
         "punctuationChars": ":;+"
@@ -11081,28 +11082,31 @@
       },
       "_spec": [
         {
-          "name": "Property clash between 300c from 340b is now averted, due to revert no longer producing multiple non-repeatable subfields.",
+          "name": "Property clash between 300c from 340b producing doubled fields in MARC. (340 ignored on revert)",
           "source":  [
-            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film"}]}},
-            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "film"}]}}
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film 300"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "film 340"}]}}
+          ],
+          "normalized":  [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film 300"},{"c": "film 340"}]}}
           ],
           "result": {
             "mainEntity": {
               "hasDimensions": [
                 {
                   "@type": "Dimensions",
-                  "label": "film"
+                  "label": "film 300"
                 },
                 {
                   "@type": "Dimensions",
-                  "label": "film"
+                  "label": "film 340"
                 }
               ]
             }
           }
         },
         {
-          "name": "Unintended successful reconversion to 300c from 340b. Normalized is recreated error. Consider this a TODO",
+          "name": "Successful reconversion to 300c from 340b. Normalized is expected consequence of conflicting properties.",
           "source":  [
             {"340": {"ind1": " ", "ind2": " ", "subfields": [{"a": "film"}]}},
             {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "35 mm"}]}},
@@ -11124,11 +11128,12 @@
               "hasPart": [
                 {
                   "@type": "Instance",
-                  "hasDimensions": 
+                  "hasDimensions": [
                     {
                       "@type": "Dimensions",
                       "label": "35 mm"
                     }
+                  ]
                 },
                 {
                   "@type": "Instance",
