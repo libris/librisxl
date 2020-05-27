@@ -6783,6 +6783,39 @@
           }
         },
         {
+          "name": "Example from wd6wf9j75fhfw1c",
+          "source": [
+            {"008" : "|     |        |  |||||||||||000 ||swe| "},
+            {"041": { "ind1": "1", "ind2": " ", "subfields": [{"a": "swe"}, {"h": "rus"}, {"k": "ger"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "language": [{
+                  "@id": "https://id.kb.se/language/swe",
+                  "code": "swe"
+                }],
+                "marc:languageNote": "marc:ItemIsOrIncludesATranslation",
+                "originalVersion": {
+                  "@type": "Work",
+                  "language": [{
+                    "@id": "https://id.kb.se/language/rus",
+                    "code": "rus"
+                  }]
+                },
+                "translationOf": [{
+                  "@type": "Work",
+                  "language": [{
+                    "@id": "https://id.kb.se/language/ger",
+                    "code": "ger"
+                  }]
+                }]
+              }
+            }
+          }
+        },
+        {
           "name": "Produce multiple 041 as well as 730 on revert",
           "result": {
             "mainEntity": {
@@ -18053,6 +18086,24 @@
               }],
               "provisionActivityStatement": "2001",
               "marc:displayText": ["Parallellutgåva:"]
+            }]
+          }}
+        },
+        {
+          "name": "Should not collide with bib 774 - Example from bvnqrd8n4hkn61z",
+          "source": {"774": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Indices topographicos"}
+          ]}},
+          "normalized": {"774": {"ind1": "0", "ind2": "0", "subfields": [
+            {"t": "Indices topographicos"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasPart": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Indices topographicos"
+              }]
             }]
           }}
         }
