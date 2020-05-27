@@ -10156,11 +10156,11 @@
         "TODO": "bf2 is mapping note/noteType: 'Physical details'. Do we want to do something similarily?",
         "TODO:link": "hasNote",
         "TODO:resourceType": "Note",
-        "property": "marc:otherPhysicalDetails",
+        "property": "physicalDetailsNote",
         "punctuationChars": ";+"
       },
       "$c": {
-        "link": "hasDimensions",
+        "addLink": "hasDimensions",
         "resourceType": "Dimensions",
         "property": "label",
         "punctuationChars": ":;+"
@@ -10182,7 +10182,58 @@
         "property": "marc:sizeOfUnit"
       },
       "$6": {"about": "_:extent", "property": "marc:fieldref"},
-      "$8": {"about": "_:extent", "property": "marc:groupid"}
+      "$8": {"about": "_:extent", "property": "marc:groupid"},
+      "_spec": [
+        {
+          "Name": "Huvudsaklig resurs och medföljande",
+          "source": [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"a": "250 sidor"},{"e": "1 CD-ROM"}]}}
+          ],
+          "result": {
+            "mainEntity": 
+            {
+              "extent": [
+                {
+                  "@type": "Extent",
+                  "label": "250 sidor"
+                }
+              ],
+              "accompaniedBy":
+                {
+                  "@type": "Resource",
+                  "label": "1 CD-ROM"
+                }
+            }
+          }
+        },
+        {
+          "Name": "Import med interpunktion i flera fält",
+          "source": [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"a": "11 volumes :"},{"b": "illustrations ;"},{"c": "24 cm"}]}}
+          ],
+          "normalized": [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"a": "11 volumes"},{"b": "illustrations"},{"c": "24 cm"}]}}
+          ],
+          "result": {
+            "mainEntity": 
+            {
+              "hasDimensions": [
+                {
+                  "@type": "Dimensions",
+                  "label": "24 cm"
+                }
+              ],
+              "extent": [
+                {
+                  "@type": "Extent",
+                  "label": "11 volumes"
+                }
+              ],
+              "physicalDetailsNote": "illustrations"
+            }
+          }
+        }
+      ]
     },
 
     "306": {
