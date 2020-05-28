@@ -12748,7 +12748,7 @@
       "pendingResources": {
         "_:event": {"addLink": "production", "resourceType": "Reproduction"}
       },
-      "$a": {"property": "description", "punctuationChars": ":", "TODO": "analyze content"},
+      "$a": {"about": "_:event", "property": "typeNote", "punctuationChars": ":", "NOTE": "Talks about the subject but need to be kept together with the Activity for now since in MARC it is repeatable and *could* talk about the object depending on praxis."},
       "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label" , "punctuationChars": ":"},
       "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label" , "punctuationChars": ","},
       "$d": {"about": "_:event", "property": "date"},
@@ -12770,10 +12770,10 @@
                 {"d": "2010"} ]}},
           "result": {
             "mainEntity": {
-              "description":  "Digitalt faksimil och elektronisk text",
               "production":  [
                 {
                   "@type": "Reproduction",
+                  "typeNote":  "Digitalt faksimil och elektronisk text",
                   "date":  "2010",
                   "agent":  [
                     {
