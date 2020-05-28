@@ -1396,6 +1396,11 @@
 
     "referencedObjectDetails": {
       "pendingResources": {
+        "_:work": {
+          "about": "_:instance",
+          "link": "instanceOf",
+          "resourceType": "Work"
+        },
         "_:contribution": {
           "about": "_:work",
           "addLink": "contribution",
@@ -1467,33 +1472,25 @@
       "$z": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value", "TODO:targetMatch": "020"}
     },
 
-    "referenceToWork": {
-      "include": ["referencedObjectDetailsWithPart", "serialSpecificDetails", "workTitleQualifier", "workDisplayText"],
-      "pendingResources": {
-        "_:instance": {
-          "about": "_:work",
-          "link": "hasInstance",
-          "resourceType": "Instance"
-        }
-      }
-    },
-
     "referencedObjectDetailsWithPart": {
       "include": ["referencedObjectDetails"],
       "$g": {"about": "_:instance", "addProperty": "part"}
     },
 
     "referenceToInstance": {
-      "include": ["instanceOfObject", "referencedObjectDetailsWithPart", "instanceTitleQualifier", "serialSpecificDetails", "instanceDisplayText"]
+      "include": ["referencedObjectDetailsWithPart", "instanceTitleQualifier", "serialSpecificDetails", "instanceDisplayText"]
     },
 
     "referenceToInstanceSansDisplayText": {
-      "include": ["instanceOfObject", "referencedObjectDetails", "instanceTitleQualifier", "serialSpecificDetails"],
+      "include": ["referencedObjectDetails", "instanceTitleQualifier", "serialSpecificDetails"],
       "$g": {"aboutEntity": "?thing", "addProperty": "part"}
     },
 
     "referenceToSeriesInstance": {
-      "include": ["instanceOfObject", "referencedObjectDetailsWithPart", "workTitleQualifier", "instanceDisplayText"]
+      "include": ["referencedObjectDetailsWithPart", "instanceDisplayText"],
+      "TODO": "Deviates from 'referenceToInstance' - $c should be related to $t (not $s)",
+      "NOTE": "For now, continue to map $c together with $s - applies to bib 760 and 762",
+      "$c": {"about": "_:workTitle", "property": "qualifier", "ignoreOnRevert": true, "NOTE:marc-repeatable": false}
     },
 
     "instanceOfObject": {
@@ -1511,20 +1508,7 @@
       "$i": {"about": "_:instance", "addProperty": "marc:displayText"}
     },
 
-    "workDisplayText": {
-      "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
-      "$i": {"about": "_:work", "addProperty": "marc:displayText"}
-    },
-
-    "workTitleQualifier": {
-      "TODO": "Does $c relates to $t or $s?. Check statistics. Deviates from 'referenceToInstance'",
-      "NOTE": "For now, continue to map $c together with $s - applies to all linkfields (except 776)",
-      "$c": {"about": "_:workTitle", "property": "qualifier", "ignoreOnRevert": true, "NOTE:marc-repeatable": false}
-    },
-
     "instanceTitleQualifier": {
-      "TODO": "Does $c relates to $t or $s?. Check statistics. Deviates from 'referenceToWork' and 'referenceToSeriesInstance'",
-      "NOTE": "For now, continue to map bib 776 differently; $c together with $t",
       "$c": {"about": "_:title", "property": "qualifier", "ignoreOnRevert": true, "NOTE:marc-repeatable": false}
     }
   },
@@ -6845,6 +6829,39 @@
               "instanceOf": {
                 "@type": "Text",
                 "language": [{"@id": "https://id.kb.se/language/swe", "code": "swe"}]
+              }
+            }
+          }
+        },
+        {
+          "name": "Example from wd6wf9j75fhfw1c",
+          "source": [
+            {"008" : "|     |        |  |||||||||||000 ||swe| "},
+            {"041": { "ind1": "1", "ind2": " ", "subfields": [{"a": "swe"}, {"h": "rus"}, {"k": "ger"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "language": [{
+                  "@id": "https://id.kb.se/language/swe",
+                  "code": "swe"
+                }],
+                "marc:languageNote": "marc:ItemIsOrIncludesATranslation",
+                "originalVersion": {
+                  "@type": "Work",
+                  "language": [{
+                    "@id": "https://id.kb.se/language/rus",
+                    "code": "rus"
+                  }]
+                },
+                "translationOf": [{
+                  "@type": "Work",
+                  "language": [{
+                    "@id": "https://id.kb.se/language/ger",
+                    "code": "ger"
+                  }]
+                }]
               }
             }
           }
@@ -17430,11 +17447,12 @@
       ]
     },
     "765": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "translationOf",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
@@ -17449,31 +17467,25 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "translationOf": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Tempelriddaren"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }],
-                  "extent": [{
-                    "@type": "Extent",
-                    "label": "Fysisk beskrivning"
-                  }],
-                  "hasNote": [{
-                    "@type": "Note",
-                    "label": "Anmärkning"
-                  }]
-                }
+            "translationOf": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Tempelriddaren"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
+              }],
+              "extent": [{
+                "@type": "Extent",
+                "label": "Fysisk beskrivning"
+              }],
+              "hasNote": [{
+                "@type": "Note",
+                "label": "Anmärkning"
               }]
-            }
+            }]
           }}
         },
         {
@@ -17485,38 +17497,33 @@
             {"w": "3736598"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "translationOf": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "3736598"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Färg och fernissa"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "0427-9107"
-                  } ]
-                },
-                "marc:displayText": ["Översättning av vissa artiklar ur"]
-              }]
-            }
+            "translationOf": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "3736598"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Färg och fernissa"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "0427-9107"
+              }],
+              "marc:displayText": ["Översättning av vissa artiklar ur"]
+            }]
           }}
         }
       ]
     },
     "767": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "translation",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
@@ -17531,37 +17538,32 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "translation": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Finance & development. French. Finances et développement"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "0430-473X"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }]
-                }
+            "translation": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Finance & development. French. Finances et développement"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "0430-473X"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
               }]
-            }
+            }]
           }}
         }
       ]
     },
     "770": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "supplement",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
@@ -17576,38 +17578,33 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "supplement": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Journal of cellular biochemistry. Supplement"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "0733-1959"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }]
-                }
+            "supplement": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Journal of cellular biochemistry. Supplement"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "0733-1959"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
               }]
-            }
+            }]
           }}
         }
       ]
     },
     "772": {
-      "include": ["referenceToWork"],
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
       "NOTE:local": "Observera att fältet även har använts för att på ett enhetligt sätt konvertera delposter till flerbandsverk (med ind. 2 = 0) från ett ursprungligt LIBRISIII-format.",
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "supplementTo",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": "0"},
       "_spec": [
         {
@@ -17623,24 +17620,21 @@
             {"z": "00-0-000000-0"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "supplementTo": [{
+            "supplementTo": [{
+              "@type": "Instance",
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "00-0-000000-0"
+              }],
+              "part": ["part 1"],
+              "instanceOf": {
                 "@type": "Work",
                 "hasTitle": [{
                   "@type": "Title",
                   "mainTitle": "Main Thing"
-                }],
-                "hasInstance": {
-                  "@type": "Instance",
-                  "identifiedBy": [{
-                    "@type": "ISBN",
-                    "value": "00-0-000000-0"
-                  }],
-                  "part": ["part 1"]
-                }
-              }]
-            }
+                }]
+              }
+            }]
           }}
         },
         {
@@ -17658,22 +17652,19 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "supplementTo": [{
+            "supplementTo": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Briefec"
+              }],
+              "provisionActivityStatement": "provisionActivityStatement",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
+              }],
+              "instanceOf": {
                 "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Briefec"
-                  }],
-                  "provisionActivityStatement": "provisionActivityStatement",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }]
-                },
                 "contribution": [{
                   "@type": "PrimaryContribution",
                   "agent": {
@@ -17681,8 +17672,8 @@
                     "label": "Beckmann, Max"
                   }
                 }]
-              }]
-            }
+              }
+            }]
           }}
         },
         {
@@ -17703,9 +17694,19 @@
             {"w": "9901066360"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "supplementTo": [{
+            "supplementTo": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "9901066360"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Grundläggande matematik för tillämpningar",
+                "qualifier": "Lennart Hellström, Lars-Åke Lindahl"
+              }],
+              "provisionActivityStatement": "Uppsala : förf., cop. 1973",
+              "instanceOf": {
                 "@type": "Work",
                 "contribution": [{
                   "@type": "PrimaryContribution",
@@ -17713,25 +17714,9 @@
                     "@type": "Agent",
                     "label": "Hellström, Lennart, 1942-"
                   }
-                }],
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "9901066360"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Grundläggande matematik för tillämpningar"
-                  }],
-                  "provisionActivityStatement": "Uppsala : förf., cop. 1973"
-                },
-                "hasTitle": [{
-                  "@type": "Title",
-                  "qualifier": "Lennart Hellström, Lars-Åke Lindahl"
                 }]
-              }]
-            }
+              }
+            }]
           }}
         }
       ]
@@ -17912,9 +17897,22 @@
               "@type": "Title",
               "mainTitle": "Hur gammal är arbetslösheten?"
             }],
-            "instanceOf": {
-              "@type": "Text",
-              "relatedTo": [{
+            "relatedTo": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "7677734"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Arbetslöshetsfrågan i historisk belysning : en diskussion om arbetslöshet och social politik i Sverige 1830-1920"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "91-7966-400-8"
+              }],
+              "provisionActivityStatement": "1996",
+              "instanceOf": {
                 "@type": "Work",
                 "contribution": [{
                   "@type": "PrimaryContribution",
@@ -17922,26 +17920,10 @@
                     "@type": "Agent",
                     "label": "Olofsson, Jonas"
                   }
-                }],
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "7677734"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Arbetslöshetsfrågan i historisk belysning : en diskussion om arbetslöshet och social politik i Sverige 1830-1920"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISBN",
-                    "value": "91-7966-400-8"
-                  }],
-                  "provisionActivityStatement": "1996"
-                },
-                "marc:displayText": ["Recension av:"]
-              }]
-            },
+                }]
+              },
+              "marc:displayText": ["Recension av:"]
+            }],
             "part": ["2002(122):1, s. [99]-108"],
             "isPartOf": [{
               "@type": "Instance",
@@ -17988,20 +17970,14 @@
             {"w": "t4ztfxg6r7dw5sgd"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "supplementTo": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "t4ztfxg6r7dw5sgd"
-                  }]
-                },
-                "marc:displayText": ["channel record"]
-              }]
-            }
+            "supplementTo": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "t4ztfxg6r7dw5sgd"
+              }],
+              "marc:displayText": ["channel record"]
+            }]
           }}
         },
         {
@@ -18075,11 +18051,12 @@
       ]
     },
     "774": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "hasPart",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": "0"},
       "NOTE:domainIncludes": "Serial",
       "FIXME": "this is overeagerly reverted from a hasPart converted from 740; should only be added if issuanceType = 'Serial'...",
@@ -18095,24 +18072,18 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasPart": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "editionStatement" : "3. ed.",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Map of area with highlighted street"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }]
-                }
+            "hasPart": [{
+              "@type": "Instance",
+              "editionStatement" : "3. ed.",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Map of area with highlighted street"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
               }]
-            }
+            }]
           }}
         },
         {
@@ -18126,9 +18097,13 @@
             {"t": "Hydroida"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasPart": [{
+            "hasPart": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Hydroida"
+              }],
+              "instanceOf": {
                 "@type": "Work",
                 "contribution": [{
                   "@type": "PrimaryContribution",
@@ -18136,16 +18111,9 @@
                     "@type": "Agent",
                     "label": "Bonnevie, Kristine"
                   }
-                }],
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Hydroida"
-                  }]
-                }
-              }]
-            }
+                }]
+              }
+            }]
           }}
         },
         {
@@ -18158,29 +18126,41 @@
             {"w": "6200512"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasPart": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Swedes in the Twin Cities"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "6200512"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISBN",
-                    "value": "0-87351-399-1"
-                  }],
-                  "provisionActivityStatement": "2001"
-                },
-                "marc:displayText": ["Parallellutgåva:"]
+            "hasPart": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Swedes in the Twin Cities"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "6200512"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "0-87351-399-1"
+              }],
+              "provisionActivityStatement": "2001",
+              "marc:displayText": ["Parallellutgåva:"]
+            }]
+          }}
+        },
+        {
+          "name": "Should not collide with bib 774 - Example from 1kcdqdxc3cx2hw2",
+          "source": {"774": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Indices topographicos"}
+          ]}},
+          "normalized": {"774": {"ind1": "0", "ind2": "0", "subfields": [
+            {"t": "Indices topographicos"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasPart": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Indices topographicos"
               }]
-            }
+            }]
           }}
         }
       ]
@@ -18761,20 +18741,21 @@
       ]
     },
     "780": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "precededBy",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "match": [
-        {"when": "i2=0", "addLink": "continues", "resourceType": "Work"},
-        {"when": "i2=1", "addLink": "continuesInPart", "resourceType": "Work"},
-        {"when": "i2=2", "addLink": "precededBy", "resourceType": "Work"},
-        {"when": "i2=3", "addLink": "precededInPartBy", "resourceType": "Work"},
-        {"when": "i2=4", "addLink": "mergerOf", "resourceType": "Work"},
-        {"when": "i2=5", "addLink": "absorbed", "resourceType": "Work"},
-        {"when": "i2=6", "addLink": "absorbedInPart", "resourceType": "Work"},
-        {"when": "i2=7", "addLink": "separatedFrom", "resourceType": "Work"}
+        {"when": "i2=0", "addLink": "continues", "resourceType": "Instance"},
+        {"when": "i2=1", "addLink": "continuesInPart", "resourceType": "Instance"},
+        {"when": "i2=2", "addLink": "precededBy", "resourceType": "Instance"},
+        {"when": "i2=3", "addLink": "precededInPartBy", "resourceType": "Instance"},
+        {"when": "i2=4", "addLink": "mergerOf", "resourceType": "Instance"},
+        {"when": "i2=5", "addLink": "absorbed", "resourceType": "Instance"},
+        {"when": "i2=6", "addLink": "absorbedInPart", "resourceType": "Instance"},
+        {"when": "i2=7", "addLink": "separatedFrom", "resourceType": "Instance"}
       ],
       "i2": {"ignored": true, "marcDefault": "0"},
       "_spec": [
@@ -18783,34 +18764,22 @@
             {"t": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "continues": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"
-                  }]
-                }
+            "continues": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"
               }]
-            }
+            }]
           }}
         },
         {
           "source": {"780": {"ind1": "0", "ind2": "1", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "continuesInPart": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "continuesInPart": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
@@ -18819,38 +18788,26 @@
             {"x": "0022-3107"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "precededBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Journal of nuclear energy (1967)"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "0022-3107"
-                  }]
-                }
+            "precededBy": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Journal of nuclear energy (1967)"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "0022-3107"
               }]
-            }
+            }]
           }}
         },
         {
           "source": {"780": {"ind1": "0", "ind2": "3", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "precededInPartBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "precededInPartBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
@@ -18861,75 +18818,51 @@
             {"w": "(OCoLC)11405900"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "mergerOf": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "(DLC) 84647859"
-                  },{
-                    "@type": "Record",
-                    "controlNumber": "(OCoLC)11405900"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Field & stream (West edition)"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "8755-8610"
-                  }]
-                }
+            "mergerOf": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "(DLC) 84647859"
+              },{
+                "@type": "Record",
+                "controlNumber": "(OCoLC)11405900"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Field & stream (West edition)"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "8755-8610"
               }]
-            }
+            }]
           }}
         },
         {
           "source": {"780": {"ind1": "0", "ind2": "5", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "absorbed": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "absorbed": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"780": {"ind1": "0", "ind2": "6", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "absorbedInPart": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "absorbedInPart": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"780": {"ind1": "0", "ind2": "7", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "separatedFrom": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "separatedFrom": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
@@ -18940,40 +18873,34 @@
             {"t": "Bulletin mensuel"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "precededBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Bulletin mensuel"
-                  }]
-                }
-              }
-              ]
-            }
+            "precededBy": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Bulletin mensuel"
+              }]
+            }]
           }}
         }
       ]
     },
     "785": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "succeededBy",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "match": [
-        {"when": "i2=0", "addLink": "continuedBy", "resourceType": "Work"},
-        {"when": "i2=1", "addLink": "continuedInPartBy", "resourceType": "Work"},
-        {"when": "i2=2", "addLink": "succeededBy", "resourceType": "Work"},
-        {"when": "i2=3", "addLink": "succeededInPartBy", "resourceType": "Work"},
-        {"when": "i2=4", "addLink": "absorbedBy", "resourceType": "Work"},
-        {"when": "i2=5", "addLink": "absorbedInPartBy", "resourceType": "Work"},
-        {"when": "i2=6", "addLink": "splitInto", "resourceType": "Work"},
-        {"when": "i2=7", "addLink": "mergedToForm", "resourceType": "Work"},
-        {"when": "i2=8", "addLink": "continuedBy", "resourceType": "Work"}
+        {"when": "i2=0", "addLink": "continuedBy", "resourceType": "Instance"},
+        {"when": "i2=1", "addLink": "continuedInPartBy", "resourceType": "Instance"},
+        {"when": "i2=2", "addLink": "succeededBy", "resourceType": "Instance"},
+        {"when": "i2=3", "addLink": "succeededInPartBy", "resourceType": "Instance"},
+        {"when": "i2=4", "addLink": "absorbedBy", "resourceType": "Instance"},
+        {"when": "i2=5", "addLink": "absorbedInPartBy", "resourceType": "Instance"},
+        {"when": "i2=6", "addLink": "splitInto", "resourceType": "Instance"},
+        {"when": "i2=7", "addLink": "mergedToForm", "resourceType": "Instance"},
+        {"when": "i2=8", "addLink": "continuedBy", "resourceType": "Instance"}
       ],
       "i2": {"ignored": true, "marcDefault": "0"},
       "_spec": [
@@ -18983,128 +18910,80 @@
             {"x": "1937-6545"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "continuedBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Naysprayer"
-                  }],
-                  "identifiedBy": [{
-                    "@type" : "ISSN",
-                    "value" : "1937-6545"
-                  }]
-                }
+            "continuedBy": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Naysprayer"
+              }],
+              "identifiedBy": [{
+                "@type" : "ISSN",
+                "value" : "1937-6545"
               }]
-            }
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "1", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "continuedInPartBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "continuedInPartBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "2", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "succeededBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "succeededBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "3", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "succeededInPartBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "succeededInPartBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "4", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "absorbedBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "absorbedBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "5", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "absorbedInPartBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "absorbedInPartBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "6", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "splitInto": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "splitInto": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "7", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "mergedToForm": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "mergedToForm": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
@@ -19112,16 +18991,10 @@
           "source": {"785": {"ind1": "0", "ind2": "8", "subfields": [{"t": "A Title"}]}},
           "normalized": {"785": {"ind1": "0", "ind2": "0", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "continuedBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "continuedBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
@@ -19129,16 +19002,10 @@
           "source": {"785": {"ind1": "0", "ind2": " ", "subfields": [{"t": "A Title"}]}},
           "normalized": {"785": {"ind1": "0", "ind2": "2", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "succeededBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "succeededBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         }
       ]
@@ -19183,11 +19050,12 @@
       ]
     },
     "787": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "relatedTo",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
@@ -19200,23 +19068,17 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "relatedTo": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Empire State report weekly"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }]
-                }
+            "relatedTo": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Empire State report weekly"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
               }]
-            }
+            }]
           }}
         },
         {
@@ -19226,17 +19088,11 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "relatedTo": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "State"}],
-                  "meta": [{"@type": "Record", "controlNumber": "000"}]
-                }
-              }]
-            }
+            "relatedTo": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "State"}],
+              "meta": [{"@type": "Record", "controlNumber": "000"}]
+            }]
           }}
         },
         {
@@ -19245,36 +19101,27 @@
             {"787": {"ind1": "0", "ind2": " ", "subfields": [{"t": "Symfoni, C-dur"}, {"w": "11862630"}]}}
           ],
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "relatedTo": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "11862622"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Symfoni, Ess-dur"
-                  }]
-                }
-              },{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "11862630"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Symfoni, C-dur"
-                  }]
-                }
+            "relatedTo": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "11862622"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Symfoni, Ess-dur"
               }]
-            }
+            },{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "11862630"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Symfoni, C-dur"
+              }]
+            }]
           }}
         }
       ]
