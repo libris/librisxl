@@ -37,6 +37,7 @@ selectBySqlWhere(where) { data ->
             classification.remove("marc:classificationNumber")
         }
 
+        /* Leave "marc:typeCompletenessSourceOfClassCallNumber" be for now.
         if (classification["marc:typeCompletenessSourceOfClassCallNumber"] != null && (
                 classification["marc:typeCompletenessSourceOfClassCallNumber"] == "marc:LcBasedCallNumberAssignedByLac" ||
                         classification["marc:typeCompletenessSourceOfClassCallNumber"] == "marc:CompleteLcClassNumberAssignedByLac" ||
@@ -44,6 +45,7 @@ selectBySqlWhere(where) { data ->
             classification["source"] = classification["marc:typeCompletenessSourceOfClassCallNumber"]
         }
         classification.remove("marc:typeCompletenessSourceOfClassCallNumber")
+        */
     }
 
     scheduledForUpdating.println("${data.doc.getURI()}")
