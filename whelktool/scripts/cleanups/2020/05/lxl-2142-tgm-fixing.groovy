@@ -3,7 +3,7 @@ PrintWriter failedUpdating = getReportWriter("failed-updates")
 
 /*
 
-_MÅSTE_ KÖRAS MED --skip-index !!
+_MÅSTE_ KÖRAS MED --skip-index  _OCH_ --no-threads !!
 
 1. Alla https://id.kb.se/term/gmgpc%2F%2Fswe/NÅNTING termer ska få nya idn: https://id.kb.se/term/gmgpc/swe/NÅNTING
 
