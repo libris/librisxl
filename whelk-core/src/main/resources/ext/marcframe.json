@@ -7149,38 +7149,71 @@
     "055": {
       "NOTE:LC": "Is ClassificationLcc in BF2",
       "NOTE:local":"ANVÄNDS NORMALT EJ",
-      "aboutEntity": "?work",
-      "addLink": "marc:hasClassificationNumbersAssignedInCanada",
+      "aboutEntity": "?thing",
+      "addLink": "classification",
       "resourceType": "marc:ClassificationNumbersAssignedInCanada",
-      "i1": {
-        "property": "marc:existenceInLacCollection",
-        "marcDefault": " ",
-        "tokenMap": {
-          "0": true,
-          "1": false
-        }
-      },
+      "i1": null,
       "i2": {
         "property": "marc:typeCompletenessSourceOfClassCallNumber",
         "tokenMap": {
           "0": "marc:LcBasedCallNumberAssignedByLac",
           "1": "marc:CompleteLcClassNumberAssignedByLac",
           "2": "marc:IncompleteLcClassNumberAssignedByLac",
-          "3": "marc:LcBasedCallNumberAssignedByTheContributingLibrary",
-          "4": "marc:CompleteLcClassNumberAssignedByTheContributingLibrary",
-          "5": "marc:IncompleteLcClassNumberAssignedByTheContributingLibrary",
-          "6": "marc:OtherCallNumberAssignedByLac",
-          "7": "marc:OtherClassNumberAssignedByLac",
-          "8": "marc:OtherCallNumberAssignedByTheContributingLibrary",
-          "9": "marc:OtherClassNumberAssignedByTheContributingLibrary"
+          "3": null,
+          "4": null,
+          "5": null,
+          "6": null,
+          "7": null,
+          "8": null,
+          "9": null
         },
         "marcDefault": " "
       },
-      "$a": {"property": "marc:classificationNumber"},
-      "$b": {"property": "marc:itemNumber"},
-      "$1": null,
-      "$2": {"property": "marc:sourceOfCallClassNumber"},
-      "$6": null
+      "$a": {"property": "classificationPortion"},
+      "$b": {"property": "itemPortion"},
+      "$1": {"ignored": true, "NOTE:LC": "nac"},
+      "$2": {"ignored": true, "NOTE:LC": "nac"},
+      "$6": {"ignored": true, "NOTE:LC": "ignore"},
+      "_spec": [
+        {
+          "source": {
+            "055": {"ind1": "1", "ind2": "4", "subfields": [{"a": "K347.9444"},{"b": "C5164"}]}
+          },
+          "normalized": {
+            "055": {"ind1": " ", "ind2": " ", "subfields": [{"a": "K347.9444"},{"b": "C5164"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "classification": [{
+                  "@type": "marc:ClassificationNumbersAssignedInCanada",
+                  "classificationPortion": "K347.9444",
+                  "itemPortion": "C5164"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "_spec": [
+        {
+          "source": {
+            "055": {"ind1": "0", "ind2": "1", "subfields": [{"a": "HB31"}]}
+          },
+          "normalized": {
+            "055": {"ind1": " ", "ind2": "1", "subfields": [{"a": "HB31"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "classification": [{
+                  "@type": "marc:ClassificationNumbersAssignedInCanada",
+                  "classificationPortion": "HB31",
+                  "marc:typeCompletenessSourceOfClassCallNumber": "marc:CompleteLcClassNumberAssignedByLac"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "060": {
       "aboutEntity": "?work",
