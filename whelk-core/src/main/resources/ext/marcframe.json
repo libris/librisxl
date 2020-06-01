@@ -12748,14 +12748,14 @@
       "pendingResources": {
         "_:event": {"addLink": "production", "resourceType": "Reproduction"}
       },
-      "$a": {"about": "_:event", "property": "typeNote", "punctuationChars": ":", "NOTE": "Talks about the subject but need to be kept together with the Activity for now since in MARC it is repeatable and *could* talk about the object depending on praxis."},
+      "$a": {"about": "_:event", "property": "typeNote", "punctuationChars": ":", "NOTE": "Talks about the subject but need to be kept together with the Activity for now since in MARC it is repeatable and *could* talk about the object depending on praxis.", "NOTE:LC": "I - carrier - Carrier - rdfs:label"},
       "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label" , "punctuationChars": ":"},
       "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label" , "punctuationChars": ","},
       "$d": {"about": "_:event", "property": "date"},
       "$e": {"ignoreOnRevert": true, "addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false, "NOTE": "should be part of the subject", "NOTE:record-count": 342},
-      "$f": {"ignoreOnRevert": true, "TODO": "REWORK!", "addProperty": "seriesStatement"},
+      "$f": {"ignoreOnRevert": true, "addLink": "seriesMembership", "resourceType": "SeriesMembership", "property": "seriesStatement"},
       "$m": {"ignoreOnRevert": true, "addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE:record-count": 4},
-      "$n": {"ignoreOnRevert": true, "about": "_:event", "addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE": "Need to be kept contained with correct 533?", "NOTE:record-count": 741721},
+      "$n": {"ignoreOnRevert": true, "about": "_:event", "addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE:LC": "I - note - Note - rdfs:label", "NOTE:record-count": 741721},
       "$3": {"ignoreOnRevert": true, "link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"ignoreOnRevert": true, "link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
       "$7": {"ignoreOnRevert": true, "property": "marc:fixedLengthDataElementsOfReproduction", "NOTE:LC": "ignore", "NOTE": "contain important year?"},
