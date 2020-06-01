@@ -12753,12 +12753,12 @@
       "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label" , "punctuationChars": ","},
       "$d": {"about": "_:event", "property": "date"},
       "$e": {"ignoreOnRevert": true, "addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false, "NOTE": "should be part of the subject", "NOTE:record-count": 342},
-      "$f": {"TODO": "REWORK!", "addProperty": "seriesStatement"},
+      "$f": {"ignoreOnRevert": true, "TODO": "REWORK!", "addProperty": "seriesStatement"},
       "$m": {"ignoreOnRevert": true, "addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE:record-count": 4},
-      "$n": {"about": "_:event", "addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE": "Need to be kept contained with correct 533?", "NOTE:record-count": 741721},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
-      "$7": {"property": "marc:fixedLengthDataElementsOfReproduction", "NOTE:LC": "ignore", "NOTE": "contain important year?"},
+      "$n": {"ignoreOnRevert": true, "about": "_:event", "addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE": "Need to be kept contained with correct 533?", "NOTE:record-count": 741721},
+      "$3": {"ignoreOnRevert": true, "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$5": {"ignoreOnRevert": true, "link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
+      "$7": {"ignoreOnRevert": true, "property": "marc:fixedLengthDataElementsOfReproduction", "NOTE:LC": "ignore", "NOTE": "contain important year?"},
       "_spec": [
         {
           "name": "Reproduction",
