@@ -20,7 +20,8 @@ scheduledForChange = getReportWriter("scheduled-for-change")
 deviantRecords = getReportWriter("deviant-records-to-analyze")
 
 String subQueryWork = LINK_FIELDS_WORK.collect {"data#>>'{@graph,2,${it}}' IS NOT NULL"}.join(" OR ")
-String query = "collection = 'bib' AND ( ${subQueryWork} )"
+String subQueryLocalWork = LINK_FIELDS_WORK.collect {"data#>>'{@graph,1,instanceOf,${it}}' IS NOT NULL"}.join(" OR ")
+String query = "collection = 'bib' AND ( ${subQueryWork} OR ${subQueryLocalWork} )"
 
 selectBySqlWhere(query) { data ->
     boolean changed = false
