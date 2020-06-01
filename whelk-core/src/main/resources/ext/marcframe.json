@@ -12814,6 +12814,54 @@
               ]
             }
           }
+        },
+        {
+          "name": "Should ignore specific properties on revert - Example from tb444ns50lj3j6h",
+          "source": [
+            {"490": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Early English books online"}]}},
+            {"533": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Electronic reproduction."},
+              {"b": "Ann Arbor, Mich."},
+              {"c": "UMI"},
+              {"d": "1999-"},
+              {"f": "(Early English books online)"},
+              {"n": "Digital version of: (Early English books, 1475-1640 ; 589:02)"},
+              {"7": "s1999 miun s"}
+            ]}}
+          ],
+          "normalized": [
+            {"490": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Early English books online"}]}},
+            {"533": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Electronic reproduction."},
+              {"b": "Ann Arbor, Mich."},
+              {"c": "UMI"},
+              {"d": "1999-"}
+            ]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "marc:fixedLengthDataElementsOfReproduction": "s1999 miun s",
+              "production": [{
+                "@type": "Reproduction",
+                "agent": [{ "@type": "Agent", "label": "UMI" }],
+                "date": "1999-",
+                "hasNote": [{
+                  "@type": "Note",
+                  "label": "Digital version of: (Early English books, 1475-1640 ; 589:02)"
+                }],
+                "place": [{ "@type": "Place", "label": "Ann Arbor, Mich." }],
+                "typeNote": "Electronic reproduction."
+              }],
+              "seriesMembership": [{
+                "@type": "SeriesMembership",
+                "marc:seriesTracingPolicy": "1",
+                "seriesStatement": ["Early English books online"]
+              }, {
+                "@type": "SeriesMembership",
+                "seriesStatement": "(Early English books online)"
+              }]
+            }
+          }
         }
       ]
     },
