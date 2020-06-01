@@ -67,7 +67,10 @@ Map toProduction(mainEntity, current, docId) {
                 break
 
             case 'marc:datesAndOrSequentialDesignationOfIssuesReproduced': //5 occurrences
-                mainEntity['hasNote'] = mainEntity['hasNote'].addAll(value) ?: value
+                if (!mainEntity.containsKey('hasNote')) {
+                    mainEntity['hasNote'] = []
+                }
+                mainEntity['hasNote'].addAll( value.collect { [(TYPE): 'Note', 'label': it ] } )
                 break
 
             case 'extent':
