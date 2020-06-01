@@ -11,7 +11,7 @@
  * hasReproduction.applicableInstitution -> mainEntity.applicableInstitution ($5)
  * hasReproduction.marc:fixedLengthDataElementsOfReproduction -> mainEntity.marc:fixedLengthDataElementsOfReproduction ($7)
  *
- * hasReproduction.marc:datesAndOrSequentialDesignationOfIssuesReproduced -> mainEntity.hasNote ($m) ???
+ * hasReproduction.marc:datesAndOrSequentialDesignationOfIssuesReproduced -> mainEntity.hasNote ($m)
  *
  * See LXL-3072 for more info.
  */
