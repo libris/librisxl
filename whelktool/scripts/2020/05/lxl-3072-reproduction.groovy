@@ -115,7 +115,7 @@ void appendToThing(mainEntity, key, value) {
 
 void toNewObjectOnThing(mainEntity, value, moveToObj, objType, objProp) {
     if (!mainEntity.containsKey(moveToObj)) {
-        mainEntity[key] = []
+        mainEntity[moveToObj] = []
     }
     mainEntity[moveToObj].addAll( value.collect { [(TYPE): objType, (objProp): it ] } )
 }
