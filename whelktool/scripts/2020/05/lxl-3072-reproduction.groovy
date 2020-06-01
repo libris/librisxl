@@ -6,7 +6,7 @@
  * hasReproduction.hasNote -> production.Reproduction.hasNote
  *
  * hasReproduction.extent -> mainEntity.extent ($e)
- * hasReproduction.seriesStatement -> mainEntity.seriesStatement ($f) ?
+ * hasReproduction.seriesStatement -> mainEntity.seriesMembership.seriesStatement ($f)
  * hasReproduction.appliesTo -> mainEntity.appliesTo ($3)
  * hasReproduction.applicableInstitution -> mainEntity.applicableInstitution ($5)
  * hasReproduction.marc:fixedLengthDataElementsOfReproduction -> mainEntity.marc:fixedLengthDataElementsOfReproduction ($7)
@@ -50,7 +50,6 @@ Map toProduction(mainEntity, current, docId) {
     current.each { key, value ->
         switch(key) {
             case 'hasNote':
-            case 'marc:fixedLengthDataElementsOfReproduction':
                 reproduction << [(key):value]
                 break
 
@@ -67,26 +66,20 @@ Map toProduction(mainEntity, current, docId) {
                 break
 
             case 'marc:datesAndOrSequentialDesignationOfIssuesReproduced': //5 occurrences
-                if (!mainEntity.containsKey('hasNote')) {
-                    mainEntity['hasNote'] = []
-                }
-                mainEntity['hasNote'].addAll( value.collect { [(TYPE): 'Note', 'label': it ] } )
+                toNewObjectOnThing(mainEntity, value, 'hasNote', 'Note', 'label')
                 break
 
             case 'extent':
+                appendToThing(mainEntity, key, value)
+                break
+
             case 'seriesStatement':
-                if (mainEntity.containsKey(key) && mainEntity[key] instanceof Map) {
-                    deviantRecords.println "${docId} contains ${key} that´s not a list"
-                    break
-                }
-                if (!mainEntity.containsKey(key)) {
-                    mainEntity[key] = []
-                }
-                mainEntity[key].addAll(value)
+                toNewObjectOnThing(mainEntity, value, 'seriesMembership', 'SeriesMembership', key)
                 break
 
             case 'appliesTo': // 1 occurrences
             case 'applicableInstitution': //13 occurrences
+            case 'marc:fixedLengthDataElementsOfReproduction':
                 if (mainEntity.containsKey(key)) {
                     deviantRecords.println "${docId} already contains ${key}"
                 } else {
@@ -109,4 +102,20 @@ Map toProduction(mainEntity, current, docId) {
     return reproduction
 }
 
+void appendToThing(mainEntity, key, value) {
+    if (mainEntity.containsKey(key) && mainEntity[key] instanceof Map) {
+        deviantRecords.println "${docId} contains ${key} that´s not a list"
+        return
+    }
+    if (!mainEntity.containsKey(key)) {
+        mainEntity[key] = []
+    }
+    mainEntity[key].addAll(value)
+}
 
+void toNewObjectOnThing(mainEntity, value, moveToObj, objType, objProp) {
+    if (!mainEntity.containsKey(moveToObj)) {
+        mainEntity[key] = []
+    }
+    mainEntity[moveToObj].addAll( value.collect { [(TYPE): objType, (objProp): it ] } )
+}
