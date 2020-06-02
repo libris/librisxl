@@ -1,7 +1,7 @@
 /**
- * Delete duplicate SPI bib records (if other holding than sigel S then just log).
+ * Delete duplicate SPI bib records (if they have other holdings than sigel S then just log).
  * Move identifiedBy, technicalNote and hasNote fields from bib to holding for sigel S.
- * Link the S holding to the correct bib record.
+ * Link the S holding to the correct bib record. If it already has a holding for S then merge them.
  *
  * See LXL-3155 for more information
  */
@@ -13,6 +13,35 @@ class Script {
     static PrintWriter deleteReport
     static PrintWriter holdReport
     static PrintWriter failedReport
+    static List HAS_COMPONENT_FIELDS = [
+            'address',
+            'appliesTo',
+            'availability',
+            'callNumberPrefix',
+            'callNumberSuffix',
+            'cataloguersNote',
+            'codedLocationQualifier',
+            'copyNumber',
+            'copyrightArticleFeeCode',
+            'country',
+            'formerShelfLocation',
+            'hasNote',
+            'itemCondition',
+            'location',
+            'marc:fieldref',
+            'marc:groupid',
+            'marc:pieceDesignation',
+            'marc:shelvingOrder',
+            'marc:shelvingScheme',
+            'marc:sourceOfClassificationOrShelfMarkScheme',
+            'nonCodedLocationQualifier',
+            'organizationalUnit',
+            'physicalLocation',
+            'shelfControlNumber',
+            'shelfLabel',
+            'shelfMark',
+            'uri',
+    ]
 }
 
 Script.otherHoldingReport = getReportWriter("has-other-holding")
@@ -51,19 +80,44 @@ void process(String duplicateUri, String keepUri) {
         boolean found = false
         selectBySqlWhere(whereSHolding(duplicateUri)) { hold ->
             StringBuilder msg = new StringBuilder().append(hold.doc.getURI()).append("\n")
-            msg.append("itemOf: $duplicateUri -> $keepUri").append("\n")
-            hold.graph[1]['itemOf']['@id'] = keepUri + '#it'
-            add(msg, hold.graph[0], 'identifiedBy', identifiedBy)
-            add(msg, hold.graph[0], 'cataloguersNote', ['Katalog 56-86, SPI20191219. S bestånd flyttat från SPI-dubblett maskinellt. Fel kan förekomma.'])
-            add(msg, hold.graph[1], 'hasNote', hasNote)
-            hold.scheduleSave()
-            Script.holdReport.println(msg)
+            // There is already a holding for S for the correct bib, add the holding from the duplicate as hasComponent
+            if (hasSHolding(keepUri)) {
+                selectBySqlWhere(whereSHolding(keepUri)) { keepHold ->
+                    msg.append("Merge with existing: ${keepHold.doc.getURI()}\n")
+                    keepHold.graph[1] = merge(msg, keepHold.graph[1], hold.graph[1])
+
+                    // yes, these should be at the top level and not in hasComponent
+                    addFieldsFromDuplicate(msg, keepHold, identifiedBy, hasNote)
+
+                    keepHold.scheduleSave()
+                }
+
+                msg.append("Delete: ${hold.doc.getURI()}\n")
+                hold.scheduleDelete()
+            }
+
+            // There is no holding for S for the correct bib, point the holding for the duplicate to the correct bib
+            else {
+                msg.append("itemOf: $duplicateUri -> $keepUri").append("\n")
+                hold.graph[1]['itemOf']['@id'] = keepUri + '#it'
+                addFieldsFromDuplicate(msg, hold, identifiedBy, hasNote)
+                hold.scheduleSave()
+            }
+
+            Script.holdReport.println(msg.toString())
             found = true
         }
+
         if(!found) {
             Script.failedReport.println("No holding for S: $duplicateUri")
         }
     }
+}
+
+void addFieldsFromDuplicate(msg, hold, identifiedBy, hasNote) {
+    add(msg, hold.graph[0], 'identifiedBy', identifiedBy)
+    add(msg, hold.graph[0], 'cataloguersNote', ['Katalog 56-86, SPI20191219. S bestånd flyttat från SPI-dubblett maskinellt. Fel kan förekomma.'])
+    add(msg, hold.graph[1], 'hasNote', hasNote)
 }
 
 void add(msg, thing, field, value) {
@@ -71,7 +125,40 @@ void add(msg, thing, field, value) {
     msg.append("${field}: ").append(list).append(" -> ")
     list.addAll(value instanceof List ? value : [value])
     msg.append(list).append("\n")
-    thing[value] = list
+    thing[field] = list
+}
+
+/**
+ * Merge item2 into item1 by moving applicable fields from both to hasComponent
+ */
+Map merge(msg, Map item1, Map item2) {
+    Map merged = item1.findAll { field, value -> !(field in Script.HAS_COMPONENT_FIELDS) }
+
+    merged['hasComponent'] = item1['hasComponent'] ?: []
+
+    merged['hasComponent'].addAll([
+            item1.findAll { field, value -> field in Script.HAS_COMPONENT_FIELDS},
+            item2.findAll { field, value -> field in Script.HAS_COMPONENT_FIELDS}
+    ])
+
+    merged['hasComponent'].removeAll{ it.isEmpty() }
+
+    merged['hasComponent'].each {
+        it['@type'] = 'Item'
+        it['heldBy'] = item1['heldBy']
+    }
+
+    if (item2['hasComponent']) {
+        merged['hasComponent'].addAll(item2['hasComponent'])
+    }
+
+    item2.findAll { field, value ->
+        !(field in Script.HAS_COMPONENT_FIELDS + ['itemOf', 'sameAs', 'heldBy', 'hasComponent']) && !field.startsWith('@')
+    }.each { field, value ->
+        msg.append("WARNING: dropping field $field: $value\n")
+    }
+
+    return merged
 }
 
 String getUri(String id) {
@@ -120,6 +207,14 @@ String whereHolding(bibId, sigelOp) {
 boolean hasOtherHolding(String bibId) {
     AtomicInteger count = new AtomicInteger()
     selectBySqlWhere(whereNotSHolding(bibId), { hold ->
+        count.incrementAndGet()
+    })
+    return count.intValue() > 0
+}
+
+boolean hasSHolding(String bibId) {
+    AtomicInteger count = new AtomicInteger()
+    selectBySqlWhere(whereSHolding(bibId), { hold ->
         count.incrementAndGet()
     })
     return count.intValue() > 0
