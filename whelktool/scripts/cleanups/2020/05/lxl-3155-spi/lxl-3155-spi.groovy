@@ -72,7 +72,7 @@ void process(String duplicateUri, String keepUri) {
         hasNote = bib.graph[1].remove('hasNote')
 
         if (!hasOtherHolding(duplicateUri)) {
-            if (hasDependers(duplicateUri)) {
+            if (hasOtherDependers(duplicateUri)) {
                 Script.otherRelationReport.println(duplicateUri)
                 bib.scheduleSave()
             }
@@ -228,13 +228,14 @@ boolean hasSHolding(String bibId) {
     return count.intValue() > 0
 }
 
-boolean hasDependers(String bibId) {
+boolean hasOtherDependers(String bibId) {
     String where = """
     id in ( 
         select d.dependsonid
         from lddb__identifiers i, lddb__dependencies d
         where i.iri = '${bibId}'
         and d.dependsonid = i.id 
+        and d.relation <> 'itemOf'
     )
     """.stripIndent()
 
