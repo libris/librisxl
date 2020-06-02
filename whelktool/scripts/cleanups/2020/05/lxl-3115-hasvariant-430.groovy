@@ -92,7 +92,7 @@ Map toVariant(doc, Map _430) {
 
     if(Integer.parseInt(_430['ind2']) in 1..9) {
         addTitleIfMissing(variant)
-        putValue(variant['hasTitle'][0], 'marc:nonfilingChars', "${_430['ind2'].toString()}")
+        putValue(variant['hasTitle'][0], 'marc:nonfilingChars', "${_430['ind2']}".toString())
     }
 
     Script.mapped.println("${doc.getURI()}\n$_430\n$variant\n")
