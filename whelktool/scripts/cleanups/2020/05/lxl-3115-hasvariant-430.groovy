@@ -18,6 +18,10 @@ selectByCollection('auth') { auth ->
 
             auth.graph[0].get('_marcUncompleted').removeAll { it.get('430') }
 
+            if (auth.graph[0].get('_marcUncompleted').isEmpty()) {
+                auth.graph[0].remove('_marcUncompleted')
+            }
+
             auth.scheduleSave()
             Script.scheduledForUpdate.println(auth.doc.getURI())
         }
