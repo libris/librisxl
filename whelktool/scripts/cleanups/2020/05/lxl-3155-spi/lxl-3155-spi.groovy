@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class Script {
     static PrintWriter otherHoldingReport
+    static PrintWriter otherRelationReport
     static PrintWriter deleteReport
     static PrintWriter holdReport
     static PrintWriter failedReport
@@ -45,6 +46,7 @@ class Script {
 }
 
 Script.otherHoldingReport = getReportWriter("has-other-holding")
+Script.otherRelationReport = getReportWriter("has-other-relation")
 Script.deleteReport = getReportWriter("deleted")
 Script.holdReport = getReportWriter("hold-updated")
 Script.failedReport = getReportWriter("failed")
@@ -70,8 +72,14 @@ void process(String duplicateUri, String keepUri) {
         hasNote = bib.graph[1].remove('hasNote')
 
         if (!hasOtherHolding(duplicateUri)) {
-            Script.deleteReport.println(duplicateUri)
-            bib.scheduleDelete()
+            if (hasDependers(duplicateUri)) {
+                Script.otherRelationReport.println(duplicateUri)
+                bib.scheduleSave()
+            }
+            else {
+                Script.deleteReport.println(duplicateUri)
+                bib.scheduleDelete()
+            }
         } else {
             Script.otherHoldingReport.println(duplicateUri)
             bib.scheduleSave()
@@ -215,6 +223,23 @@ boolean hasOtherHolding(String bibId) {
 boolean hasSHolding(String bibId) {
     AtomicInteger count = new AtomicInteger()
     selectBySqlWhere(whereSHolding(bibId), { hold ->
+        count.incrementAndGet()
+    })
+    return count.intValue() > 0
+}
+
+boolean hasDependers(String bibId) {
+    String where = """
+    id in ( 
+        select d.dependsonid
+        from lddb__identifiers i, lddb__dependencies d
+        where i.iri = '${bibId}'
+        and d.dependsonid = i.id 
+    )
+    """.stripIndent()
+
+    AtomicInteger count = new AtomicInteger()
+    selectBySqlWhere(where, { record ->
         count.incrementAndGet()
     })
     return count.intValue() > 0
