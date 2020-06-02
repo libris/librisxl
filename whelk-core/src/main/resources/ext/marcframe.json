@@ -9353,7 +9353,7 @@
       ]
     },
     "257": {
-      "onRevertPrefer": "264",
+      "onRevertPrefer": ["533", "264"],
       "NOTE": "Removing subfields incompatible with 264.",
       "aboutEntity": "?thing",
       "addLink": "production",
@@ -9854,7 +9854,7 @@
     },
 
     "261": {
-      "onRevertPrefer": "264",
+      "onRevertPrefer": ["533", "264"],
       "aboutEntity": "?thing",
       "NOTE:LC": "Also create statement: I - provisionActivityStatement - literal ($abd -- concatenate with blank -- add semicolon between subfields if no other punctuation -- keep order in field)",
       "pendingResources": {
@@ -9998,6 +9998,7 @@
     },
 
     "264": {
+    "onRevertPrefer": "533",
       "i1": {
         "property": "marc:sequenceStatus",
         "tokenMap": "sequenceStatus",
@@ -12850,45 +12851,123 @@
       "$6": {"property": "marc:fieldref"}
     },
     "533": {
-      "addLink": "hasReproduction",
-      "embedded": true,
-      "resourceType": "Instance",
       "pendingResources": {
-        "_:event": {"addLink": "provisionActivity", "resourceType": "ProvisionActivity"}
+        "_:event": {"addLink": "production", "resourceType": "Reproduction"}
       },
-      "$a": {"property": "description", "punctuationChars": ":"},
+      "$a": {"about": "_:event", "property": "typeNote", "punctuationChars": ":", "NOTE": "Talks about the subject but need to be kept together with the Activity for now since in MARC it is repeatable and *could* talk about the object depending on praxis.", "NOTE:LC": "I - carrier - Carrier - rdfs:label"},
       "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label" , "punctuationChars": ":"},
       "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label" , "punctuationChars": ","},
       "$d": {"about": "_:event", "property": "date"},
-      "$e": {"addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
-      "$f": {"addProperty": "seriesStatement"},
-      "$m": {"addProperty": "marc:datesAndOrSequentialDesignationOfIssuesReproduced"},
-      "$n": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
-      "$7": {"property": "marc:fixedLengthDataElementsOfReproduction", "NOTE:LC": "ignore"},
+      "$e": {"ignoreOnRevert": true, "addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false, "NOTE": "should be part of the subject", "NOTE:record-count": 342},
+      "$f": {"ignoreOnRevert": true, "addLink": "seriesMembership", "resourceType": "SeriesMembership", "property": "seriesStatement"},
+      "$m": {"ignoreOnRevert": true, "addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE:record-count": 4},
+      "$n": {"ignoreOnRevert": true, "about": "_:event", "addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE:LC": "I - note - Note - rdfs:label", "NOTE:record-count": 741721},
+      "$3": {"ignoreOnRevert": true, "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$5": {"ignoreOnRevert": true, "link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
+      "$7": {"ignoreOnRevert": true, "property": "marc:fixedLengthDataElementsOfReproduction", "NOTE:LC": "ignore", "NOTE": "contain important year?"},
       "_spec": [
         {
-          "name": "group properties into nested entities",
+          "name": "Reproduction",
           "source": {
             "533": {"ind1": " ", "ind2": " ",
               "subfields": [
                 {"a": "Digitalt faksimil och elektronisk text"},
                 {"c": "Litteraturbanken"},
                 {"d": "2010"} ]}},
-          "result": {"mainEntity": {
-            "hasReproduction": [
-              {
-                "@type": "Instance",
-                "description":  "Digitalt faksimil och elektronisk text",
-                "provisionActivity":  [
-                    {"@type": "ProvisionActivity",
-                        "date":  "2010",
-                        "agent":  [{"@type": "Agent", "label": "Litteraturbanken"}]
-                    }]
-              }
-            ]
-          }}
+          "result": {
+            "mainEntity": {
+              "production":  [
+                {
+                  "@type": "Reproduction",
+                  "typeNote":  "Digitalt faksimil och elektronisk text",
+                  "date":  "2010",
+                  "agent":  [
+                    {
+                      "@type": "Agent", "label": "Litteraturbanken"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Digital reproduction",
+          "normalized": {
+            "533": {"ind1": " ", "ind2": " ",
+              "subfields": [
+                {"b": "Stockholm"},
+                {"c": "Kungliga biblioteket"},
+                {"d": "2019"} ]}},
+          "result": {
+            "mainEntity": {
+              "production":  [
+                {
+                  "@type": "DigitalReproduction",
+                  "place": [
+                    {
+                      "@type": "Place",
+                      "label": "Stockholm"
+                    }
+                  ],
+                  "date":  "2019",
+                  "agent": [
+                    {
+                      "@type": "Agent", "label": "Kungliga biblioteket"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Should ignore specific properties on revert - Example from tb444ns50lj3j6h",
+          "source": [
+            {"490": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Early English books online"}]}},
+            {"533": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Electronic reproduction."},
+              {"b": "Ann Arbor, Mich."},
+              {"c": "UMI"},
+              {"d": "1999-"},
+              {"f": "(Early English books online)"},
+              {"n": "Digital version of: (Early English books, 1475-1640 ; 589:02)"},
+              {"7": "s1999 miun s"}
+            ]}}
+          ],
+          "normalized": [
+            {"490": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Early English books online"}]}},
+            {"533": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Electronic reproduction."},
+              {"b": "Ann Arbor, Mich."},
+              {"c": "UMI"},
+              {"d": "1999-"}
+            ]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "marc:fixedLengthDataElementsOfReproduction": "s1999 miun s",
+              "production": [{
+                "@type": "Reproduction",
+                "agent": [{ "@type": "Agent", "label": "UMI" }],
+                "date": "1999-",
+                "hasNote": [{
+                  "@type": "Note",
+                  "label": "Digital version of: (Early English books, 1475-1640 ; 589:02)"
+                }],
+                "place": [{ "@type": "Place", "label": "Ann Arbor, Mich." }],
+                "typeNote": "Electronic reproduction."
+              }],
+              "seriesMembership": [{
+                "@type": "SeriesMembership",
+                "marc:seriesTracingPolicy": "1",
+                "seriesStatement": ["Early English books online"]
+              }, {
+                "@type": "SeriesMembership",
+                "seriesStatement": "(Early English books online)"
+              }]
+            }
+          }
         }
       ]
     },
