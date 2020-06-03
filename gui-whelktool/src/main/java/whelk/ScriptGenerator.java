@@ -6,7 +6,7 @@ public class ScriptGenerator
 {
     public static PortableScript generateDeleteHoldScript(String sigel, Set<String> controlNumbers)
     {
-        String where = "\"id in\n" +
+        String where = "\"\"\"id in\n" +
                 "(\n" +
                 " select lh.id\n" +
                 "  from\n" +
@@ -17,12 +17,12 @@ public class ScriptGenerator
                 " where lb.data#>>'{@graph,0,controlNumber}' in ( 'bibidstring' )\n" +
                 " and\n" +
                 " lh.data#>>'{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/Mde'\n" +
-                ")\"";
+                ")\"\"\"";
 
         String scriptText = "" +
                 "PrintWriter failedHoldIDs = getReportWriter(\"failed-to-delete-holdIDs\")\n" +
                 "PrintWriter scheduledForDeletion = getReportWriter(\"scheduled-for-deletion\")\n" +
-                "File bibids = new File(scriptDir, '£INPUT')\n" +
+                "File bibids = new File('£INPUT')\n" +
                 "\n" +
                 "String bibidstring = bibids.readLines().join(\"','\")\n" +
                 "\n" +

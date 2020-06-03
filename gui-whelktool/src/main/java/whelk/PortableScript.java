@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Set;
 
-class PortableScript implements Serializable
+public class PortableScript implements Serializable
 {
     final String scriptText;
     final Set<String> ids;
@@ -23,10 +23,16 @@ class PortableScript implements Serializable
         Path scriptWorkingDir = Files.createTempDirectory("xl_script");
         Path scriptFilePath = scriptWorkingDir.resolve("script.groovy");
         Path inputFilePath = scriptWorkingDir.resolve("input");
-        Files.write(scriptFilePath, scriptText.getBytes());
-        Files.write(inputFilePath, ids);
 
-        // EXECUTE
-        
+        Files.write(inputFilePath, ids);
+        String flattenedScriptText = scriptText.replace("£INPUT", inputFilePath.toString());
+        Files.write(scriptFilePath, flattenedScriptText.getBytes());
+
+        String[] args =
+                {
+                        scriptFilePath.toString()
+                };
+
+        whelk.datatool.WhelkTool.main(args);
     }
 }

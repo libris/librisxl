@@ -1,16 +1,16 @@
 package whelk.gui;
 
+import whelk.PortableScript;
 import whelk.Whelk;
+import whelk.util.PropertyLoader;
 import whelk.util.WhelkFactory;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.ByteArrayOutputStream;
-import java.io.FileDescriptor;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
+import java.io.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RunPanel extends WizardCard implements ActionListener {
 
@@ -20,6 +20,10 @@ public class RunPanel extends WizardCard implements ActionListener {
     private JScrollPane stdErrScroll;
     private JPasswordField passwordField;
     private JButton startButton;
+
+    private PortableScript scriptToRun;
+
+    private AtomicBoolean scriptIsDone = new AtomicBoolean(false);
 
     public RunPanel(Wizard wizard)
     {
@@ -62,7 +66,7 @@ public class RunPanel extends WizardCard implements ActionListener {
     @Override
     void onShow(Object parameterFromPreviousCard)
     {
-        JOptionPane.showMessageDialog(null, System.getProperty("secretSqlUrl"), "Message", JOptionPane.INFORMATION_MESSAGE);
+        scriptToRun = (PortableScript) parameterFromPreviousCard;
     }
 
     @Override
@@ -88,24 +92,49 @@ public class RunPanel extends WizardCard implements ActionListener {
                 {
                     try
                     {
-                        //PropertyLoader.setUserEnteredProperties("secret", null);
-                        Whelk whelk = WhelkFactory.getSingletonWhelk();
+                        String secretProperties = "sqlUrl = " +
+                                System.getProperty("secretSqlUrl").
+                                        replace("_XL_PASSWORD_", new String(passwordField.getPassword())) + "\n" +
+                                "baseUri = " +
+                                System.getProperty("secretBaseUri") + "\n" +
+                                "elasticHost = " +
+                                System.getProperty("secretElasticHost") + "\n" +
+                                "elasticCluster = " +
+                                System.getProperty("secretElasticCluster") + "\n" +
+                                "elasticIndex = " +
+                                System.getProperty("secretElasticIndex") + "\n";
 
-                        for (int i = 0; i < 25; ++i)
+                        System.out.println(secretProperties);
+
+                        PropertyLoader.setUserEnteredProperties("secret", new ByteArrayInputStream(secretProperties.getBytes()));
+
+                        scriptToRun.execute();
+                    } catch (IOException e) {
+                        JOptionPane.showMessageDialog(null, e.getMessage(), "Message", JOptionPane.INFORMATION_MESSAGE);
+                    }
+
+                    scriptIsDone.set(true);
+                    enableCancel();
+                    System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
+                    System.setErr(new PrintStream(new FileOutputStream(FileDescriptor.err)));
+                }
+            }).start();
+
+            new Thread(new Runnable() {
+                public void run()
+                {
+                    try
+                    {
+                        while (!scriptIsDone.get())
                         {
-                            Thread.sleep(1000);
-                            stdOutArea.append("yada.. " + i + "\n");
+                            Thread.sleep(500);
+                            stdOutArea.setText(stdOutStream.toString());
                             stdOutScroll.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
 
                             stdErrArea.setText(stdErrStream.toString());
-                            stdErrScroll.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
+                            //stdErrScroll.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
                         }
-                        enableCancel();
-                    } catch (InterruptedException e) {
-
-                    }
-
-                    System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
+                    } catch (InterruptedException e) { /* ignore */ }
                 }
             }).start();
         }
