@@ -14,8 +14,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RunPanel extends WizardCard implements ActionListener {
 
-    private JTextArea stdOutArea;
-    private JScrollPane stdOutScroll;
     private JTextArea stdErrArea;
     private JScrollPane stdErrScroll;
     private JPasswordField passwordField;
@@ -28,15 +26,6 @@ public class RunPanel extends WizardCard implements ActionListener {
     public RunPanel(Wizard wizard)
     {
         super(wizard);
-        stdOutArea = new JTextArea();
-        stdOutScroll = new JScrollPane(stdOutArea);
-        stdOutScroll.setPreferredSize(new Dimension(300, 300));
-        stdOutArea.setEditable(false);
-
-        Box stdOutBox = Box.createVerticalBox();
-        stdOutBox.add(new JLabel("stdout:"));
-        stdOutBox.add(stdOutScroll);
-        this.add(stdOutBox);
 
         stdErrArea = new JTextArea();
         stdErrScroll = new JScrollPane(stdErrArea);
@@ -104,13 +93,12 @@ public class RunPanel extends WizardCard implements ActionListener {
                                 "elasticIndex = " +
                                 System.getProperty("secretElasticIndex") + "\n";
 
-                        System.out.println(secretProperties);
-
                         PropertyLoader.setUserEnteredProperties("secret", new ByteArrayInputStream(secretProperties.getBytes()));
 
                         scriptToRun.execute();
                     } catch (IOException e) {
                         JOptionPane.showMessageDialog(null, e.getMessage(), "Message", JOptionPane.INFORMATION_MESSAGE);
+                        Wizard.exitFatal(e.getMessage());
                     }
 
                     scriptIsDone.set(true);
@@ -128,9 +116,7 @@ public class RunPanel extends WizardCard implements ActionListener {
                         while (!scriptIsDone.get())
                         {
                             Thread.sleep(500);
-                            stdOutArea.setText(stdOutStream.toString());
-                            stdOutScroll.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
-
+                            
                             stdErrArea.setText(stdErrStream.toString());
                             //stdErrScroll.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
                         }
