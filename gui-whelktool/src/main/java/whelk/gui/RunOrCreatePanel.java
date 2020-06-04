@@ -33,23 +33,20 @@ public class RunOrCreatePanel extends WizardCard implements ActionListener
     @Override
     void onShow(Object parameterFromPreviousCard)
     {
-        if (createSelected())
-            setNextCard(Wizard.CREATE_WHAT);
-        else
-            setNextCard(Wizard.RUN);
+        chooseNextCard();
     }
 
     @Override
     public void actionPerformed(ActionEvent actionEvent)
     {
-        if (createSelected())
-            setNextCard(Wizard.CREATE_WHAT);
-        else
-            setNextCard(Wizard.RUN);
+        chooseNextCard();
     }
 
-    public boolean createSelected()
+    private void chooseNextCard()
     {
-        return ! rRun.isSelected();
+        if (! rRun.isSelected())
+            setNextCard(Wizard.CREATE_WHAT);
+        else
+            setNextCard(Wizard.SELECT_SCRIPT);
     }
 }

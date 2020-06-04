@@ -18,6 +18,7 @@ class Wizard extends JDialog implements ActionListener
     public static String DELETE_BIB = "deletebibs";
     public static String DELETE_HOLD = "deleteholds";
     public static String CHANGE_SIGEL = "changesigel";
+    public static String SELECT_SCRIPT = "selectscript";
 
     private JPanel cardPanel;
     private JButton backButton;
@@ -42,6 +43,7 @@ class Wizard extends JDialog implements ActionListener
         cardInstances.put(DELETE_BIB, new DeleteBibPanel(this));
         cardInstances.put(DELETE_HOLD, new DeleteHoldPanel(this));
         cardInstances.put(CHANGE_SIGEL, new ChangeSigelPanel(this));
+        cardInstances.put(SELECT_SCRIPT, new SelectScriptPanel(this));
 
         JPanel buttonPanel = new JPanel();
         Box buttonBox = new Box(BoxLayout.X_AXIS);

@@ -34,6 +34,7 @@ public class RunPanel extends WizardCard implements ActionListener {
         super(wizard);
 
         stdErrArea = new JTextArea();
+        stdErrArea.setFont(new Font("monospaced", Font.PLAIN, 12));
         stdErrScroll = new JScrollPane(stdErrArea);
         stdErrScroll.setPreferredSize(new Dimension(300, 300));
         stdErrArea.setEditable(false);
