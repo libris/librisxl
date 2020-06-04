@@ -97,7 +97,7 @@ public class RunPanel extends WizardCard implements ActionListener {
                     oos.writeObject(scriptToRun);
                 } catch (IOException ioe)
                 {
-                    Wizard.exitFatal(ioe.getMessage());
+                    Wizard.exitFatal(ioe);
                 }
             }
             enableCancel();
@@ -137,7 +137,7 @@ public class RunPanel extends WizardCard implements ActionListener {
                         scriptToRun.execute();
                     } catch (IOException e) {
                         JOptionPane.showMessageDialog(null, e.getMessage(), "Message", JOptionPane.INFORMATION_MESSAGE);
-                        Wizard.exitFatal(e.getMessage());
+                        Wizard.exitFatal(e);
                     }
 
                     scriptIsDone.set(true);

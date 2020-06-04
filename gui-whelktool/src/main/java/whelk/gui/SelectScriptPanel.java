@@ -27,6 +27,7 @@ public class SelectScriptPanel extends WizardCard implements ActionListener
         loadButton.setActionCommand("load");
         vBox.add(loadButton);
 
+        vBox.add(Box.createVerticalStrut(10));
         vBox.add(new JLabel("Valt script:"));
         vBox.add(description);
 

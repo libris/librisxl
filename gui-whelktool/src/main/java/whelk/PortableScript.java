@@ -1,5 +1,6 @@
 package whelk;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
@@ -25,6 +26,7 @@ public class PortableScript implements Serializable
         Path scriptWorkingDir = Files.createTempDirectory("xl_script");
         Path scriptFilePath = scriptWorkingDir.resolve("script.groovy");
         Path inputFilePath = scriptWorkingDir.resolve("input");
+        Files.createDirectories(scriptWorkingDir.resolve("report"));
 
         Files.write(inputFilePath, ids);
         String flattenedScriptText = scriptText.replace("£INPUT", inputFilePath.toString());
@@ -32,7 +34,9 @@ public class PortableScript implements Serializable
 
         String[] args =
                 {
-                        scriptFilePath.toString()
+                        "--report",
+                        scriptWorkingDir.resolve("report").toString(),
+                        scriptFilePath.toString(),
                 };
 
         whelk.datatool.WhelkTool.main(args);
