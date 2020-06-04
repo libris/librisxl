@@ -16,7 +16,7 @@ public class ScriptGenerator
                 "  on lh.data#>>'{@graph,1,itemOf,@id}' = lb.data#>>'{@graph,1,@id}'\n" +
                 " where lb.data#>>'{@graph,0,controlNumber}' in ( 'bibidstring' )\n" +
                 " and\n" +
-                " lh.data#>>'{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/Mde'\n" +
+                " lh.data#>>'{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/" + sigel + "'\n" +
                 ")\"\"\"";
 
         String scriptText = "" +
@@ -33,7 +33,7 @@ public class ScriptGenerator
                 "    })\n" +
                 "})\n";
 
-        return new PortableScript(scriptText, controlNumbers);
+        return new PortableScript(scriptText, controlNumbers, "Radering av " + sigel + "-bestånd");
     }
 
 }

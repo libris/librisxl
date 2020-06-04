@@ -11,11 +11,13 @@ public class PortableScript implements Serializable
 {
     final String scriptText;
     final Set<String> ids;
+    final public String comment;
 
-    public PortableScript(String scriptText, Set<String> ids)
+    public PortableScript(String scriptText, Set<String> ids, String comment)
     {
         this.scriptText = scriptText;
         this.ids = Collections.unmodifiableSet(ids);
+        this.comment = comment;
     }
 
     public void execute() throws IOException
