@@ -22,25 +22,25 @@ selectByCollection('bib') { bib ->
 
     boolean updated = false
     if (mediaTerm.contains('Affisch')) {
-        instance['@type'] == 'Print'
+        instance['@type'] = 'Print'
         updatedReport.println("${bib.doc.getURI()} Affisch")
         updated = true
     }
     else if (mediaTerm == 'Musiktryck') {
-        work['@type'] == 'NotatedMusic'
-        instance['@type'] == 'Print'
+        work['@type'] = 'NotatedMusic'
+        instance['@type'] = 'Print'
         updatedReport.println("${bib.doc.getURI()} Musiktryck")
         updated = true
     }
     else if (mediaTerm.contains('ideoupptagning') || mediaTerm.startsWith('Hyrvideo')) {
-        work['@type'] == 'MovingImage'
-        instance['@type'] == 'VideoRecording'
+        work['@type'] = 'MovingImage'
+        instance['@type'] = 'VideoRecording'
         updatedReport.println("${bib.doc.getURI()} Video")
         updated = true
     }
     else if (mediaTerm.startsWith('Xbox') || mediaTerm.startsWith('Playstation') || mediaTerm == 'Wii') {
-        work['@type'] == 'Multimedia'
-        instance['@type'] == 'Electronic'
+        work['@type'] = 'Multimedia'
+        instance['@type'] = 'Electronic'
         updatedReport.println("${bib.doc.getURI()} TV-spel")
         updated = true
     }
