@@ -116,7 +116,7 @@ if [ -z $DESTHOST ]; then
         cat -
     }
 else
-    $TOOLDIR/postgresql/drop-tables-and-indexes-sql.sh | PGPASSWORD=$DESTPASSWORD psql -h $DESTHOST -U $DESTUSER $DESTDB
+    cat $TOOLDIR/postgresql/drop-all-lddb-tables.plsql | PGPASSWORD=$DESTPASSWORD psql -h $DESTHOST -U $DESTUSER $DESTDB
 
     handle_sql_dump() {
         PGPASSWORD=$DESTPASSWORD psql -h $DESTHOST -U $DESTUSER $DESTDB

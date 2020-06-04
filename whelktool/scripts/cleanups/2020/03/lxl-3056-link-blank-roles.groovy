@@ -71,7 +71,15 @@ linker.addSubstitutions([
         'valokuvaaja (ekpressio)'                  : 'pht',  // Finnish: Photographer (expression)
         '(verfasser)'                              : 'aut',
 
-
+        'joint author' : 'aut',
+        'jt. author'   : 'aut',
+        'jt. auth'     : 'aut',
+        'coaut'        : 'aut',
+        'coauthor'     : 'aut',
+        'medförfattare': 'aut',
+        'medforf'      : 'aut',
+        'medforfatter' : 'aut',
+        
         '0th'     : 'oth', // Other
         '4aut'    : 'aut', // Author
         '4 aut'   : 'aut', // Author

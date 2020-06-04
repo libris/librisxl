@@ -253,13 +253,6 @@ class ElasticSearch {
 
     private static void recordToChip(Whelk whelk, Map thing) {
         if (thing[JsonLd.GRAPH_KEY]) {
-
-            // FIXME: this is a temporary workaround for documents from definitions that are missing @type in record.
-            //  Remove when LXL-3098 is fixed.
-            if (!thing[JsonLd.GRAPH_KEY][0][JsonLd.TYPE_KEY]) {
-                thing[JsonLd.GRAPH_KEY][0][JsonLd.TYPE_KEY] = 'Record'
-            }
-
             thing[JsonLd.GRAPH_KEY][0] = whelk.jsonld.toChip(thing[JsonLd.GRAPH_KEY][0])
         }
     }

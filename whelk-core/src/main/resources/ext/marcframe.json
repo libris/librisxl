@@ -1396,6 +1396,11 @@
 
     "referencedObjectDetails": {
       "pendingResources": {
+        "_:work": {
+          "about": "_:instance",
+          "link": "instanceOf",
+          "resourceType": "Work"
+        },
         "_:contribution": {
           "about": "_:work",
           "addLink": "contribution",
@@ -1415,6 +1420,7 @@
         "_:title": {
           "about": "_:instance",
           "addLink": "hasTitle", "resourceType": "Title",
+          "allowedTypesOnRevert": ["KeyTitle", "Title"],
           "embedded": true
         },
         "_:describedBy": {
@@ -1443,7 +1449,11 @@
       "$n": {"about": "_:instance", "addLink": "hasNote", "resourceType": "Note", "property": "label",  "ignoreOnRevert": true},
       "$o": {"NOTE:subfield-count (Libris)": 0, "NOTE": "Cannot ignore this field since we import Mimer data with $o (We have lost $o data between 1.14.0 and 1.15.0). See LXL-1517"},
       "$s": {"about": "_:workTitle", "property": "mainTitle", "TODO:targetMatch": "240"},
-      "$t": {"about": "_:title", "property": "mainTitle", "TODO:targetMatch": "222, 245"},
+      "$t": {
+        "about": "_:title",
+        "property": "mainTitle",
+        "TODO:targetMatch": "222, 245"
+      },
       "$x": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "TODO:targetMatch": "022"},
       "$y": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
       "$w": {"aboutNew": "_:describedBy", "property": "controlNumber"},
@@ -1462,33 +1472,25 @@
       "$z": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value", "TODO:targetMatch": "020"}
     },
 
-    "referenceToWork": {
-      "include": ["referencedObjectDetailsWithPart", "serialSpecificDetails", "workTitleQualifier", "workDisplayText"],
-      "pendingResources": {
-        "_:instance": {
-          "about": "_:work",
-          "link": "hasInstance",
-          "resourceType": "Instance"
-        }
-      }
-    },
-
     "referencedObjectDetailsWithPart": {
       "include": ["referencedObjectDetails"],
       "$g": {"about": "_:instance", "addProperty": "part"}
     },
 
     "referenceToInstance": {
-      "include": ["instanceOfObject", "referencedObjectDetailsWithPart", "instanceTitleQualifier", "serialSpecificDetails", "instanceDisplayText"]
+      "include": ["referencedObjectDetailsWithPart", "instanceTitleQualifier", "serialSpecificDetails", "instanceDisplayText"]
     },
 
     "referenceToInstanceSansDisplayText": {
-      "include": ["instanceOfObject", "referencedObjectDetails", "instanceTitleQualifier", "serialSpecificDetails"],
+      "include": ["referencedObjectDetails", "instanceTitleQualifier", "serialSpecificDetails"],
       "$g": {"aboutEntity": "?thing", "addProperty": "part"}
     },
 
     "referenceToSeriesInstance": {
-      "include": ["instanceOfObject", "referencedObjectDetailsWithPart", "workTitleQualifier", "instanceDisplayText"]
+      "include": ["referencedObjectDetailsWithPart", "instanceDisplayText"],
+      "TODO": "Deviates from 'referenceToInstance' - $c should be related to $t (not $s)",
+      "NOTE": "For now, continue to map $c together with $s - applies to bib 760 and 762",
+      "$c": {"about": "_:workTitle", "property": "qualifier", "ignoreOnRevert": true, "NOTE:marc-repeatable": false}
     },
 
     "instanceOfObject": {
@@ -1506,20 +1508,7 @@
       "$i": {"about": "_:instance", "addProperty": "marc:displayText"}
     },
 
-    "workDisplayText": {
-      "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
-      "$i": {"about": "_:work", "addProperty": "marc:displayText"}
-    },
-
-    "workTitleQualifier": {
-      "TODO": "Does $c relates to $t or $s?. Check statistics. Deviates from 'referenceToInstance'",
-      "NOTE": "For now, continue to map $c together with $s - applies to all linkfields (except 776)",
-      "$c": {"about": "_:workTitle", "property": "qualifier", "ignoreOnRevert": true, "NOTE:marc-repeatable": false}
-    },
-
     "instanceTitleQualifier": {
-      "TODO": "Does $c relates to $t or $s?. Check statistics. Deviates from 'referenceToWork' and 'referenceToSeriesInstance'",
-      "NOTE": "For now, continue to map bib 776 differently; $c together with $t",
       "$c": {"about": "_:title", "property": "qualifier", "ignoreOnRevert": true, "NOTE:marc-repeatable": false}
     }
   },
@@ -3464,13 +3453,17 @@
           "h": "Microform",
           "k": "StillImageInstance",
           "m": "MovingImageInstance",
-          "o": "KitInstance",
-          "q": "NotatedMusicInstance",
-          "r": "RemoteSensingImage",
+          "o": null,
+          "q": null,
+          "r": null,
           "s": "SoundRecording",
           "t": "TextInstance",
           "v": "VideoRecording",
           "z": null
+        },
+        "reverseTokenMapOverrides": {
+          "NOTE": "N.B. Should not set to '|' unless all other pos are set to '|'. When all pos are set to '|' no 007 will be created by revert.",
+          "TextInstance": "|"
         }
       },
       "tokenTypeMap": "[0]",
@@ -3478,32 +3471,32 @@
         "[1]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapMaterialType-{_}",
-          "matchUriToken": "^[_dgjkqrsy]$"
+          "matchUriToken": "^[dgjkqrsy]$"
         },
         "[2]": null,
         "[3]": {
-          "TODO:abou  tEntity (perhaps ideal for all colorContent (LoC does so), but more cumbersome and practically/statistically irrelevant)": "?work",
+          "TODO:aboutEntity (perhaps ideal for all colorContent (LoC does so), but more cumbersome and practically/statistically irrelevant)": "?work",
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MapColorType-{_}",
-          "matchUriToken": "^[_abchm]$"
+          "matchUriToken": "^[ac]$"
         },
         "[4]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MapMediumType-{_}",
-          "matchUriToken": "^[_abcdefghijlnpqrstvwy]$"
+          "matchUriToken": "^[abcdefgijlnpqrstvwy]$"
         },
         "[5]": {
           "addLink": "generation",
           "uriTemplate": "https://id.kb.se/marc/ReproductionType-{_}",
-          "matchUriToken": "^[_f]$"
+          "matchUriToken": "^[f]$"
         },
         "[6]": {
+          "TODO": "productionMethod in BF2",
           "addLink": "generation",
           "uriTemplate": "https://id.kb.se/marc/MapDetailsType-{_}",
-          "matchUriToken": "^[_abcd]$",
-          "fixedDefault": "|"
+          "matchUriToken": "^[abcd]$"
         },
         "[7]": {
           "addLink": "polarity",
@@ -3516,7 +3509,7 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ComputerMaterialType-{_}",
-          "matchUriToken": "^[_abcdefhjkmor]$",
+          "matchUriToken": "^[abcdefhjkmor]$",
           "silentRevert": false
         },
         "[2]": null,
@@ -3524,79 +3517,91 @@
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/ComputerColorType-{_}",
-          "matchUriToken": "^[_abcgm]$"
+          "matchUriToken": "^[abcgm]$",
+          "ignoreOnRevert": true
         },
         "[4]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/ComputerDimensionsType-{_}",
-          "matchUriToken": "^[_aegijov]$"
+          "matchUriToken": "^[aegijov]$",
+          "ignoreOnRevert": true
         },
         "[5]": {
           "link": "soundContent",
           "uriTemplate": "https://id.kb.se/marc/ComputerSoundType-{_}",
-          "matchUriToken": "^[ab]$"
+          "matchUriToken": "^[_a]$"
         },
         "[6:9]": {
-          "property": "imageBitDepth",
-          "TODO:patternMap": "ComputerImageBitDepthType",
+          "link": "digitalCharacteristic",
+          "resourceType": "ImageBitDepth",
+          "property": "value",
+          "ignoreOnRevert": true,
           "fixedDefault": "   "
         },
         "[9]": {
           "link": "marc:fileFormats",
           "uriTemplate": "https://id.kb.se/marc/ComputerFileFormatsType-{_}",
-          "matchUriToken": "^[am]$"
+          "matchUriToken": "^[am]$",
+          "ignoreOnRevert": true
         },
         "[10]": {
           "link": "marc:qATarget",
           "uriTemplate": "https://id.kb.se/marc/ComputerQATargetType-{_}",
-          "matchUriToken": "^[ap]$"
+          "matchUriToken": "^[ap]$",
+          "ignoreOnRevert": true
         },
         "[11]": {
           "link": "marc:antecedent",
           "uriTemplate": "https://id.kb.se/marc/ComputerAntecedentType-{_}",
-          "matchUriToken": "^[abcdm]$"
+          "matchUriToken": "^[abcdm]$",
+          "ignoreOnRevert": true
         },
         "[12]": {
           "link": "marc:compression",
           "uriTemplate": "https://id.kb.se/marc/ComputerCompressionType-{_}",
-          "matchUriToken": "^[abdm]$"
+          "matchUriToken": "^[abdm]$",
+          "ignoreOnRevert": true
         },
         "[13]": {
           "link": "marc:reformattingQuality",
           "uriTemplate": "https://id.kb.se/marc/ComputerReformattingQualityType-{_}",
-          "matchUriToken": "^[apr]$"
+          "matchUriToken": "^[apr]$",
+          "ignoreOnRevert": true
         }
       },
       "Globe": {
         "[1]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GlobeMaterialType-{_}",
-          "matchUriToken": "^[_abce]$"
+          "matchUriToken": "^[abce]$"
         },
         "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MapColorType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MapColorType-{_}",
+          "matchUriToken": "^[ac]$"
         },
         "[4]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/GlobeMediumType-{_}",
-          "matchUriToken": "^[_abcdefgilnpvw]$"
+          "matchUriToken": "^[abcdefgilnpvw]$"
         },
         "[5]": {
           "addLink": "generation",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/ReproductionType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ReproductionType-{_}",
+          "matchUriToken": "^[f]$"
         }
       },
       "Tactile": {
+        "NOTE:LC": "nac",
         "[1]": {
           "TODO:layout": "Also more general mapping? Ensure that reconverting are able to handle this",
           "addLink": "layout",
           "uriTemplate": "https://id.kb.se/marc/TacMaterialType-{_}",
-          "matchUriToken": "^[_abcd]$"
+          "matchUriToken": "^[abcd]$"
         },
         "[2]": null,
         "[3] [4]": {
@@ -3607,51 +3612,54 @@
         "[5]": {
           "addLink": "layout",
           "uriTemplate": "https://id.kb.se/marc/TacContractionType-{_}",
-          "matchUriToken": "^[_abm]$"
+          "matchUriToken": "^[abmn]$"
         },
         "[6] [7] [8]": {
           "addLink": "hasNotation",
           "uriTemplate": "https://id.kb.se/marc/TacBrailleMusicType-{_}",
-          "matchUriToken": "^[abcdefghijklz]$"
+          "matchUriToken": "^[_abcdefghijkl]$"
         },
         "[9]": {
           "addLink": "hasNotation",
           "uriTemplate": "https://id.kb.se/marc/TacSpecPhysicalCharType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "matchUriToken": "^[ab]$"
         }
       },
       "ProjectedImageInstance": {
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ProjGraphMaterialType-{_}",
-          "matchUriToken": "^[_cdfost]$",
+          "matchUriToken": "^[cdfost]$",
           "silentRevert": false
         },
         "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}",
+          "matchUriToken": "^[abchm]$"
         },
         "[4]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/ProjGraphEmulsionType-{_}",
-          "matchUriToken": "^[_dejkmo]$"
+          "matchUriToken": "^[dejkmo]$"
         },
         "[5]": {
           "link": "soundContent",
-          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
+          "matchUriToken": "^[_ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}",
+          "matchUriToken": "^[abcdefghi]$"
         },
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/ProjGraphDimensionsType-{_}",
-        "matchUriToken": "^[_abcefgjkstvwxy]$"
+          "matchUriToken": "^[abcdefgjkstvwxy]$"
         },
         "[8]": {
           "addLink": "mount",
@@ -3664,19 +3672,20 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/MicroformMaterialType-{_}",
-          "matchUriToken": "^[_abcdefghj]$",
+          "matchUriToken": "^[abcdefghj]$",
           "silentRevert": false
         },
         "[2]": null,
         "[3]": {
           "addLink": "polarity",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/PolarityType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/PolarityType-{_}",
+          "matchUriToken": "^[abm]$"
         },
         "[4]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/MicroformDimensionsType-{_}",
-        "matchUriToken": "^[_afghlmop]$"
+          "matchUriToken": "^[adfghlmop]$"
         },
         "[5]": {
           "addLink": "reductionRatio",
@@ -3693,12 +3702,12 @@
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MicroformColorType-{_}",
-          "matchUriToken": "^[_bcm]$"
+          "matchUriToken": "^[bcm]$"
         },
         "[10]": {
           "link": "emulsion",
           "uriTemplate": "https://id.kb.se/marc/MicroformEmulsionType-{_}",
-          "matchUriToken": "^[_abcm]$"
+          "matchUriToken": "^[abcm]$"
         },
         "[11]": {
           "addLink": "generation",
@@ -3710,39 +3719,41 @@
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}",
-          "matchUriToken": "^[_acdimprt]$"
+          "matchUriToken": "^[acdimprt]$"
         }
       },
       "StillImageInstance": {
         "[1]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/NonProjMaterialType-{_}",
-          "matchUriToken": "^[_acdefghijklnopqrsv]$",
+          "matchUriToken": "^[acdefghijklnopqrsv]$",
           "TODO:tokenMap": "Rename the uri:s of NonProjMaterialType (n and v) to not only contain the code"
         },
         "[2]": null,
         "[3]": {
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ColorType-{_}",
+          "matchUriToken": "^[abchm]$"
         },
         "[4]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/NonProjectedType-{_}",
-          "matchUriToken": "^[_abcdefghilmnopqrstvw]$"
+          "matchUriToken": "^[abcdefghilmnopqrstvw]$"
         },
         "[5]": {
           "addLink": "mount",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/NonProjectedType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/NonProjectedType-{_}",
+          "matchUriToken": "^[abcdefghilmnopqrstvw]$"
         }
       },
       "MovingImageInstance": {
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/MotionPicMaterialType-{_}",
-          "matchUriToken": "^[_cfor]$",
+          "matchUriToken": "^[cfor]$",
           "silentRevert": false
         },
         "[2]": null,
@@ -3750,188 +3761,179 @@
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicColorType-{_}",
-          "matchUriToken": "^[_bchm]$"
+          "matchUriToken": "^[bchm]$"
         },
         "[4]": {
           "addLink": "projectionCharacteristic",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicFormatType-{_}",
-        "matchUriToken": "^[_abcdef]$"
+          "matchUriToken": "^[abcdef]$"
         },
         "[5]": {
           "link": "soundContent",
-          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
+          "matchUriToken": "^[_ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}",
+          "matchUriToken": "^[abcdefghi]$"
         },
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/MotionPicDimensionsType-{_}",
-        "matchUriToken": "^[_abcefg]$"
+          "matchUriToken": "^[abcdefg]$"
         },
         "[8]": {
           "addLink": "soundCharacteristic",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-{_}",
-          "matchUriToken": "^[_kmqs]$"
+          "matchUriToken": "^[kmqs]$",
+          "ignoreOnRevert": true
         },
         "[9]": {
           "addLink": "genreForm",
+          "NOTE": "LC ignores all but c & d",
           "uriTemplate": "https://id.kb.se/marc/MotionPicElementsType-{_}",
-          "matchUriToken": "^[_abcdefg]$"
+          "matchUriToken": "^[abcdefg]$",
+          "ignoreOnRevert": true
         },
         "[10]": {
           "addLink": "polarity",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicPosNegType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "matchUriToken": "^[ab]$",
+          "ignoreOnRevert": true
         },
         "[11]": {
           "addLink": "generation",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/MotionPicGenerationType-{_}",
-          "matchUriToken": "^[_deor]$"
+          "matchUriToken": "^[deor]$",
+          "ignoreOnRevert": true
         },
         "[12]": {
           "addLink": "baseMaterial",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/FilmBaseType-{_}",
+          "matchUriToken": "^[acdimprt]$",
+          "ignoreOnRevert": true
         },
         "[13]": {
-          "link": "marc:motionPicCategories",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicCategoriesType-{_}",
-          "matchUriToken": "^[_abcdefghijklmpqrstv]$"
+          "NOTE:LC": "13 - Refined categories of color - nac",
+          "ignored": true,
+          "fixedDefault": "|"
         },
         "[14]": {
-          "link": "marc:motionPicColorStock",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicColorStockType-{_}",
-          "matchUriToken": "^[_abcd]$"
+          "NOTE:LC": "14 - Kind of color stock or print - nac",
+          "ignored": true,
+          "fixedDefault": "|"
         },
         "[15]": {
-          "link": "marc:motionPicDeterioration",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicDeteriorationType-{_}",
-          "matchUriToken": "^[abcdefghklm]$"
+          "NOTE:LC": "15 - Deterioration stage - nac",
+          "ignored": true,
+          "fixedDefault": "|"
         },
         "[16]": {
-          "link": "marc:motionPicCompleteness",
+          "link": "hasNote",
           "uriTemplate": "https://id.kb.se/marc/MotionPicCompletenessType-{_}",
-          "matchUriToken": "^[0123ci]$"
+          "matchUriToken": "^[0123ci]$",
+          "ignoreOnRevert": true
         },
         "[17:23]": {
-          "property": "marc:timeOfExamination"
+          "NOTE:LC": "17-22 - Film inspection date - ignore",
+          "ignored": true,
+          "fixedDefault": "||||||"
         }
       },
       "KitInstance": {
         "[1]": {
-          "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}",
-          "silentRevert": false
+          "ignored": true
         }
       },
       "NotatedMusicInstance": {
         "[1]": {
-          "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}",
-          "TODO:tokenMap? (empty, just as KitMaterialType)": "NotatedMusicMaterialType",
-          "silentRevert": false
+          "ignored": true
         }
       },
       "RemoteSensingImage": {
+        "NOTE:LC": "007--REMOTE-SENSING IMAGE - nac",
         "[1]": {
-          "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/KitMaterialType-{_}",
-          "TODO:tokenMap? (empty, just as KitMaterialType)": "RemoteSensingImageMaterialType",
-          "silentRevert": false
+          "ignored": true
         },
         "[2]": null,
         "[3]": {
-          "link": "marc:remoteSensImageAltitude",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageAltitudeType-{_}",
-          "matchUriToken": "^[_abc]$"
+          "ignored": true
         },
         "[4]": {
-          "link": "marc:remoteSensImageAttitude",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageAttitudeType-{_}",
-          "matchUriToken": "^[abc]$"
+          "ignored": true
         },
         "[5]": {
-          "link": "marc:remoteSensImageCloud",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageCloudType-{_}",
-        "matchUriToken": "^[0123456789]$"
+          "ignored": true
         },
         "[6]": {
-          "link": "marc:remoteSensImageConstruction",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageConstructionType-{_}",
-          "matchUriToken": "^[_abcdefghi]$"
+          "ignored": true
         },
         "[7]": {
-          "link": "marc:remoteSensImageUse",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageUseType-{_}",
-          "matchUriToken": "^[_abcm]$"
+          "ignored": true
         },
         "[8]": {
-          "link": "marc:remoteSensImageSensor",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageSensorType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "ignored": true
         },
         "[9:11]": {
-          "link": "marc:remoteSensImageData",
-          "uriTemplate": "https://id.kb.se/marc/RemoteSensImageDataType-{_}",
-          "matchUriToken": "^[abcdefgjmprstuvz]$"
+          "ignored": true
         }
       },
       "SoundRecording": {
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/SoundMaterialType-{_}",
-          "matchUriToken": "^[_degiqstw]$",
+          "matchUriToken": "^[degiqrstw]$",
           "silentRevert": false
         },
         "[2]": null,
         "[3]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundSpeedType-{_}",
-          "matchUriToken": "^[_abcdefhiklmopr]$"
+          "matchUriToken": "^[abcdefhiklmopr]$"
         },
         "[4]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundPlaybackChannelType-{_}",
-          "matchUriToken": "^[_mqs]$"
+          "matchUriToken": "^[mqs]$"
         },
         "[5]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundGrooveType-{_}",
-          "matchUriToken": "^[_ms]$"
+          "matchUriToken": "^[ms]$"
         },
         "[6]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/SoundDimensionsType-{_}",
-        "matchUriToken": "^[_abcdefgjos]$"
+          "matchUriToken": "^[abcdefgjos]$"
         },
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/SoundTapeWidthType-{_}",
-          "matchUriToken": "^[_lmop]$"
+          "matchUriToken": "^[lmop]$"
         },
         "[8]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundTapeConfigurationType-{_}",
-          "matchUriToken": "^[_abcdef]$"
+          "matchUriToken": "^[abcdef]$"
         },
         "[9]": {
           "addLink": "generation",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/SoundKindOfDiscType-{_}",
-          "matchUriToken": "^[_abdimrst]$"
+          "matchUriToken": "^[abdimrst]$"
         },
         "[10]": {
           "TODO": "Depending on value of tokenMap, map to appliedMaterial or baseMaterial?",
           "addLink": "baseMaterial",
           "uriTemplate": "https://id.kb.se/marc/SoundKindOfMaterialType-{_}",
-          "matchUriToken": "^[_abcgilmprsw]$"
+          "matchUriToken": "^[abcgilmprsw]$"
         },
         "[11]": {
           "addLink": "soundCharacteristic",
@@ -3941,21 +3943,21 @@
         "[12]": {
           "addLink": "soundCharacteristic",
           "uriTemplate": "https://id.kb.se/marc/SoundPlaybackCharacterType-{_}",
-          "matchUriToken": "^[_abcdefgh]$"
+          "matchUriToken": "^[abcdefgh]$"
         },
         "[13]": {
-          "TODO": "Ensure not to clash with 340 $d",
-          "TODO:aboutEntity": "Work or Instance?",
+          "TODO": "I - soundCharacteristic - bflc:CaptureStorage",
           "link": "marc:soundCapture",
           "uriTemplate": "https://id.kb.se/marc/SoundCaptureType-{_}",
-          "matchUriToken": "^[_abde]$"
+          "matchUriToken": "^[abde]$"
         }
       },
       "TextInstance": {
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/TextMaterialType-{_}",
-          "matchUriToken": "^[_abcd]$",
+          "matchUriToken": "^[abcd]$",
+          "ignoreOnRevert": true,
           "silentRevert": false
         }
       },
@@ -3963,38 +3965,42 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/VideoMaterialType-{_}",
-          "matchUriToken": "^[_cdfr]$",
+          "matchUriToken": "^[cdfr]$",
           "silentRevert": false
         },
         "[2]": null,
         "[3]": {
+          "TODO": "W - colorContent - ColorContent",
           "addLink": "colorContent",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/VideoColorType-{_}",
-          "matchUriToken": "^[_abcm]$"
+          "matchUriToken": "^[abcm]$"
         },
         "[4]": {
           "addLink": "videoCharacteristic",
-        "NOTE:marc-repeatable": false,
+          "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/VideoFormatType-{_}",
-          "matchUriToken": "^[_abcdefghijkmopqsv]$"
+          "matchUriToken": "^[abcdefghijkmopqsv]$"
         },
         "[5]": {
           "link": "soundContent",
-          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
+          "matchUriToken": "^[_ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
-          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MediumType-{_}",
+          "matchUriToken": "^[abcdefghi]$"
         },
         "[7]": {
           "link": "hasDimensions",
           "uriTemplate": "https://id.kb.se/marc/VideoDimensionsType-{_}",
-        "matchUriToken": "^[_amopqr]$"
+          "matchUriToken": "^[amopqr]$"
         },
         "[8]": {
           "addLink": "soundCharacteristic",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-{_}",
+          "matchUriToken": "^[kmqs]$"
         }
       },
       "marc:Unspecified": {},
@@ -4032,6 +4038,10 @@
             {"007": "aj |a|||               "},
             {"007": "cj |||   a||||         "}
           ],
+          "normalized": [
+            {"007": "aj |a|||               "},
+            {"007": "cj |||   |||||         "}
+          ],
           "result": {
             "mainEntity": {
               "@type": "Map",
@@ -4059,14 +4069,16 @@
           }
         },
         {
-          "name": "@type Electronic + OpticalDisc",
-          "source": {"007":"co |g|   |||||"},
-          "normalized": {"007":"co |g|   |||||         "},
+          "name": "@type Electronic + OpticalDisc + TestImagesEtcPresent",
+          "source": {"007":"co |g|008|p|||"},
+          "normalized": {"007":"co |||   |||||         "},
           "result": {
             "mainEntity": {
               "@type": "Electronic",
               "carrierType": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-o"}],
-              "hasDimensions": {"@id": "https://id.kb.se/marc/ComputerDimensionsType-g"}
+              "hasDimensions": {"@id": "https://id.kb.se/marc/ComputerDimensionsType-g"},
+              "digitalCharacteristic": {"@type": "ImageBitDepth", "value": "008"},
+              "marc:qATarget": {"@id": "https://id.kb.se/marc/ComputerQATargetType-p"}
             }
           }
         },
@@ -4131,41 +4143,51 @@
         },
         {
           "name": "@type MovingImageInstance",
-          "source": {"007":"m| ||||||||||||||"},
-          "normalized": {"007":"m| |||||||||||||||     "},
+          "source": {"007":"m| |||||k||||||||"},
+          "normalized": {"007":"m| ||||||||||||||||||||"},
           "result": {
             "mainEntity": {
-              "@type": "MovingImageInstance"
+              "@type": "MovingImageInstance",
+              "soundCharacteristic": [{
+                "@id": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-k"
+              }]
             }
           }
         },
         {
           "name": "@type KitInstance",
           "source": {"007":"o|"},
-          "normalized": {"007":"o|                     "},
+          "normalized": [],
           "result": {
-            "mainEntity": {
-              "@type": "KitInstance"
-            }
+            "mainEntity": {}
           }
         },
         {
           "name": "@type NotatedMusicInstance",
           "source": {"007":"q|"},
-          "normalized": {"007":"q|                     "},
+          "normalized": [],
           "result": {
-            "mainEntity": {
-              "@type": "NotatedMusicInstance"
-            }
+            "mainEntity": {}
           }
         },
         {
           "name": "@type RemoteSensingImage",
           "source": {"007":"r| |||||||"},
-          "normalized": {"007":"r| |||||||             "},
+          "normalized": [],
+          "result": {
+            "mainEntity": {}
+          }
+        },
+        {
+          "name": "@type MovingImageInstance + Incomplete",
+          "source": {"007":"m| |||||||||||||i"},
+          "normalized": {"007":"m| ||||||||||||||||||||"},
           "result": {
             "mainEntity": {
-              "@type": "RemoteSensingImage"
+              "@type": "MovingImageInstance",
+              "hasNote": {
+                "@id" : "https://id.kb.se/marc/MotionPicCompletenessType-i"
+              }
             }
           }
         },
@@ -4181,9 +4203,9 @@
           }
         },
         {
-          "name": "@type TextInstance + RegularPrint",
+          "name": "@type TextInstance + RegularPrint should not be reverted",
           "source": {"007":"ta"},
-          "normalized": {"007":"ta                     "},
+          "normalized": [],
           "result": {
             "mainEntity": {
               "@type": "TextInstance",
@@ -4312,24 +4334,28 @@
           "aboutEntity": "?work",
           "addLink": "intendedAudience",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}",
+          "matchUriToken": "^[abcdefgj]$"
         },
         "[23]": {
           "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/BooksItemType-{_}",
+          "matchUriToken": "^[abcdfoqrs]$",
           "silentRevert": false
         },
         "[24] [25] [26] [27]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}",
+          "matchUriToken": "^[abcdefgijklmnopqrstuvwyz256]$",
           "silentRevert": false
         },
         "[28]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$",
           "silentRevert": false
         },
         "[29]": {
@@ -4392,6 +4418,7 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/ComputerTypeOfFileType-{_}",
+          "matchUriToken": "^[abcdefghijm]$",
           "silentRevert": false
         },
         "[27]": null,
@@ -4399,6 +4426,7 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$",
           "silentRevert": false
         },
         "[29] [30] [31] [32] [33] [34]": null
@@ -4406,11 +4434,13 @@
       "Cartography": {
         "[18] [19] [20] [21]": {
           "TODO:aboutEntity": "?cartographic",
+          "TODO": "cartographicAttributes on Work in BF conversion 1.5",
           "addLink": "marc:relief",
           "uriTemplate": "https://id.kb.se/marc/MapsReliefType-{_}",
           "matchUriToken": "^[abcdefgijkmz]$"
         },
         "[22:24]": {
+          "TODO": "cartographicAttributes on Work in BF conversion 1.5, tokenmap combinations",
           "link": "projection",
           "uriTemplate": "https://id.kb.se/marc/MapsProjectionType-{_}"
         },
@@ -4420,6 +4450,7 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapsMaterialType-{_}",
+          "matchUriToken": "^[abcdefg]$",
           "silentRevert": false
         },
         "[26] [27]": null,
@@ -4427,11 +4458,13 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$",
           "silentRevert": false
         },
         "[29]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "matchUriToken": "^[abcdfoqrs]$",
           "silentRevert": false
         },
         "[30]": null,
@@ -4455,6 +4488,7 @@
           "TODO": "add spec to ensure this doesn't conflict with 007[1].carrierType",
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "matchUriToken": "^[abcdfoqrs]$",
           "silentRevert": false
         },
         "[24] [25] [26] [27] [28] [29] [30] [31] [32] [33] [34]": null
@@ -4482,17 +4516,20 @@
           "aboutEntity": "?work",
           "addLink": "intendedAudience",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}",
+          "matchUriToken": "^[abcdefgj]$"
         },
         "[23]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "matchUriToken": "^[abcdfoqrs]$",
           "silentRevert": false
         },
         "[24] [25] [26] [27] [28] [29]": {
           "TODO": "Decide if this should be Work or Instance. Compare with Text",
           "link": "supplementaryContent",
-          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}",
+          "matchUriToken": "^[abcdefghikrs]$"
         },
         "[30] [31]": {
           "aboutEntity": "?work",
@@ -4504,8 +4541,9 @@
         },
         "[32]": null,
         "[33]": {
-          "link": "marc:transposition",
-          "uriTemplate": "https://id.kb.se/marc/MusicTranspositionType-{_}"
+          "NOTE:LC": "Transposition and arrangement - # - nac",
+          "ignore": true,
+          "fixedDefault": "|"
         },
         "[34]": null
       },
@@ -4531,33 +4569,39 @@
           "TODO": "Decide if it should be Work or Instance",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsTypeOfSerialType-{_}",
+          "matchUriToken": "^[dlmnpw]$",
           "silentRevert": false
         },
         "[22]": {
-          "link": "marc:originalItem",
-          "uriTemplate": "https://id.kb.se/marc/SerialsOriginalItemType-{_}"
+          "link": "hasNote",
+          "uriTemplate": "https://id.kb.se/marc/SerialsOriginalItemType-{_}",
+          "matchUriToken": "^[abcdefoqs]$"
         },
         "[23]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "matchUriToken": "^[abcdfoqrs]$",
           "silentRevert": false
         },
         "[24]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsNatureType-{_}",
+          "matchUriToken": "^[abcdefghiklmopqrstuvwxyz56]$",
           "silentRevert": false
         },
         "[25] [26] [27]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsContentsType-{_}",
+          "matchUriToken": "^[abcdefghiklmopqrstuvwxyz56]$",
           "silentRevert": false
         },
         "[28]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$",
           "silentRevert": false
         },
         "[29]": {
@@ -4570,16 +4614,20 @@
         },
         "[30] [31] [32]": null,
         "[33]": {
+          "NOTE:LC": "W - notation - Script",
           "link": "marc:alphabet",
-          "uriTemplate": "https://id.kb.se/marc/SerialsAlphabetType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/SerialsAlphabetType-{_}",
+          "matchUriToken": "^[abcdefghijkl]$"
         },
         "[34]": {
+          "NOTE:LC": "adminMetadata - note - Note",
           "link": "marc:typeOfEntry",
           "uriTemplate": "https://id.kb.se/marc/SerialsTypeOfEntryType-{_}"
         }
       },
       "Visual": {
         "[18:21]": {
+          "TODO": "hasDuration - Duration",
           "property": "marc:runningTime",
           "TODO:patternMap": "visualRunningTime"
         },
@@ -4588,18 +4636,21 @@
           "aboutEntity": "?work",
           "addLink": "intendedAudience",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}",
+          "matchUriToken": "^[abcdefgj]$"
         },
         "[23] [24] [25] [26] [27]": null,
         "[28]": {
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$",
           "silentRevert": false
         },
         "[29]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "matchUriToken": "^[abcdfmos]$",
           "silentRevert": false
         },
         "[30] [31] [32]": null,
@@ -4607,11 +4658,15 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/VisualMaterialType-{_}",
+          "matchUriToken": "^[abcdfgiklmnopqrstvwyz]$",
           "silentRevert": false
         },
         "[34]": {
+          "NOTE:LC": "note - Note",
+          "ignoreOnRevert": true,
           "link": "marc:technique",
-          "uriTemplate": "https://id.kb.se/marc/VisualTechniqueType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/VisualTechniqueType-{_}",
+          "matchUriToken": "^[acl]$"
         }
       },
       "repeatable": false,
@@ -5193,6 +5248,20 @@
                 "genreForm": [{ "@id" : "https://id.kb.se/marc/VisualMaterialType-i" }]
               }
             }
+          }
+        }
+      ]
+    },
+
+    "009": {
+      "NOTE": "Swepub data only, needed for swepub search. If a need arises, strive for a better model e.g. indirectlyIdentifiedBy.Local.value",
+      "aboutEntity": "?record",
+      "addProperty": "marc:relatedIdentifier",
+      "_spec": [
+        {
+          "source": {"009": "oai:DIVA.org:kth-226820"},
+          "result": {
+            "marc:relatedIdentifier": ["oai:DIVA.org:kth-226820"]
           }
         }
       ]
@@ -6337,27 +6406,27 @@
       "$e": {"property": "marc:easternmostLongitudeCoordinates"},
       "$f": {"property": "marc:northernmostLatitudeCoordinates"},
       "$g": {"property": "marc:southernmostLatitudeCoordinates"},
-      "$h": {"about": "_:scale", "addProperty": "marc:angularScale"},
-      "$j": {"property": "marc:declinationNorthernLimit"},
-      "$k": {"property": "marc:declinationSouthernLimit"},
-      "$m": {"property": "marc:rightAscensionEasternLimit"},
-      "$n": {"property": "marc:rightAscensionWesternLimit"},
-      "$p": {"property": "marc:cartographicEquinox"},
-      "$r": {"property": "marc:distanceFromEarth"},
-      "$s": {"addProperty": "marc:gRingLatitude"},
-      "$t": {"addProperty": "marc:gRingLongitude"},
-      "$x": {"property": "marc:beginningDate"},
-      "$y": {"property": "marc:endingDate"},
-      "$z": {"property": "marc:nameOfExtraterrestrialBody"},
-      "$0": {"addProperty": "marc:recordControlNumber"},
-      "$1": {"addProperty": "marc:rwoURI"},
-      "$2": {"link": "source", "resourceType": "Source", "property": "code"},
+      "$h": {"ignored": true, "NOTE:LC": "Angular scale (R) ignore", "NOTE:record-count": 0},
+      "$j": {"ignored": true, "NOTE:LC": "Equinox (NR) ignore", "NOTE:record-count": 0},
+      "$k": {"ignored": true, "NOTE:LC": "Equinox (NR) ignore", "NOTE:record-count": 0},
+      "$m": {"ignored": true, "NOTE:LC": "Right ascension--eastern limit (NR) ignore", "NOTE:record-count": 0},
+      "$n": {"ignored": true, "NOTE:LC": "Right ascension--western limit (NR) ignore", "NOTE:record-count": 0},
+      "$p": {"ignored": true, "NOTE:LC": "Equinox (NR) ignore", "NOTE:record-count": 0},
+      "$r": {"ignored": true, "NOTE:LC": "Distance from earth (NR) ignore", "NOTE:record-count": 0},
+      "$s": {"ignored": true, "NOTE:LC": "G-ring latitude (R) ignore", "NOTE:record-count": 0},
+      "$t": {"ignored": true, "NOTE:LC": "G-ring longitude (R) ignore", "NOTE:record-count": 0},
+      "$x": {"ignored": true, "NOTE:LC": "Beginning date (NR) ignore",  "NOTE:record-count": 0},
+      "$y": {"ignored": true, "NOTE:LC": "Ending date (NR) ignore", "NOTE:record-count": 0},
+      "$z": {"ignored": true, "NOTE:LC": "Name of extraterrestrial body (NR) ignore", "NOTE:record-count": 0},
+      "$0": {"ignored": true, "NOTE:LC": "ignore"},
+      "$1": {"ignored": true, "NOTE:LC": "ignore"},
+      "$2": {"ignored": true, "NOTE:LC": "ignore"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"property": "marc:fieldref"},
+      "$6": {"ignored": true, "NOTE:LC": "ignore"},
       "_spec": [
         {
           "source": [
-            {"034": {"ind1": "1", "ind2": " ", "subfields": [{"a": "a"}, {"b": "110000"}]}}
+            {"034": {"ind1": "1", "ind2": " ", "subfields": [{"a": "a"}, {"b": "180000"},{"d": "e0111000"},{"e": "e0132200"},{"f": "n0521000"},{"g": "n0511800"}]}}
           ],
           "result": {
             "mainEntity": {
@@ -6366,9 +6435,13 @@
                 "cartographicAttributes": [
                   {
                     "@type": "Cartographic",
+                    "marc:easternmostLongitudeCoordinates": "e0132200",
+                    "marc:northernmostLatitudeCoordinates": "n0521000",
+                    "marc:southernmostLatitudeCoordinates": "n0511800",
+                    "marc:westernmostLongitudeCoordinates": "e0111000",
                     "scale": {
                       "@type": "marc:LinearScale",
-                      "marc:constantRatioLinearHorizontalScale": ["110000"]
+                      "marc:constantRatioLinearHorizontalScale": ["180000"]
                     }
                   }
                 ]
@@ -6761,6 +6834,39 @@
           }
         },
         {
+          "name": "Example from wd6wf9j75fhfw1c",
+          "source": [
+            {"008" : "|     |        |  |||||||||||000 ||swe| "},
+            {"041": { "ind1": "1", "ind2": " ", "subfields": [{"a": "swe"}, {"h": "rus"}, {"k": "ger"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "language": [{
+                  "@id": "https://id.kb.se/language/swe",
+                  "code": "swe"
+                }],
+                "marc:languageNote": "marc:ItemIsOrIncludesATranslation",
+                "originalVersion": {
+                  "@type": "Work",
+                  "language": [{
+                    "@id": "https://id.kb.se/language/rus",
+                    "code": "rus"
+                  }]
+                },
+                "translationOf": [{
+                  "@type": "Work",
+                  "language": [{
+                    "@id": "https://id.kb.se/language/ger",
+                    "code": "ger"
+                  }]
+                }]
+              }
+            }
+          }
+        },
+        {
           "name": "Produce multiple 041 as well as 730 on revert",
           "result": {
             "mainEntity": {
@@ -7043,38 +7149,71 @@
     "055": {
       "NOTE:LC": "Is ClassificationLcc in BF2",
       "NOTE:local":"ANVÄNDS NORMALT EJ",
-      "aboutEntity": "?work",
-      "addLink": "marc:hasClassificationNumbersAssignedInCanada",
+      "aboutEntity": "?thing",
+      "addLink": "classification",
       "resourceType": "marc:ClassificationNumbersAssignedInCanada",
-      "i1": {
-        "property": "marc:existenceInLacCollection",
-        "marcDefault": " ",
-        "tokenMap": {
-          "0": true,
-          "1": false
-        }
-      },
+      "i1": null,
       "i2": {
         "property": "marc:typeCompletenessSourceOfClassCallNumber",
         "tokenMap": {
           "0": "marc:LcBasedCallNumberAssignedByLac",
           "1": "marc:CompleteLcClassNumberAssignedByLac",
           "2": "marc:IncompleteLcClassNumberAssignedByLac",
-          "3": "marc:LcBasedCallNumberAssignedByTheContributingLibrary",
-          "4": "marc:CompleteLcClassNumberAssignedByTheContributingLibrary",
-          "5": "marc:IncompleteLcClassNumberAssignedByTheContributingLibrary",
-          "6": "marc:OtherCallNumberAssignedByLac",
-          "7": "marc:OtherClassNumberAssignedByLac",
-          "8": "marc:OtherCallNumberAssignedByTheContributingLibrary",
-          "9": "marc:OtherClassNumberAssignedByTheContributingLibrary"
+          "3": null,
+          "4": null,
+          "5": null,
+          "6": null,
+          "7": null,
+          "8": null,
+          "9": null
         },
         "marcDefault": " "
       },
-      "$a": {"property": "marc:classificationNumber"},
-      "$b": {"property": "marc:itemNumber"},
-      "$1": null,
-      "$2": {"property": "marc:sourceOfCallClassNumber"},
-      "$6": null
+      "$a": {"property": "classificationPortion"},
+      "$b": {"property": "itemPortion"},
+      "$1": {"ignored": true, "NOTE:LC": "nac"},
+      "$2": {"ignored": true, "NOTE:LC": "nac"},
+      "$6": {"ignored": true, "NOTE:LC": "ignore"},
+      "_spec": [
+        {
+          "source": {
+            "055": {"ind1": "1", "ind2": "4", "subfields": [{"a": "K347.9444"},{"b": "C5164"}]}
+          },
+          "normalized": {
+            "055": {"ind1": " ", "ind2": " ", "subfields": [{"a": "K347.9444"},{"b": "C5164"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "classification": [{
+                  "@type": "marc:ClassificationNumbersAssignedInCanada",
+                  "classificationPortion": "K347.9444",
+                  "itemPortion": "C5164"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "_spec": [
+        {
+          "source": {
+            "055": {"ind1": "0", "ind2": "1", "subfields": [{"a": "HB31"}]}
+          },
+          "normalized": {
+            "055": {"ind1": " ", "ind2": "1", "subfields": [{"a": "HB31"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "classification": [{
+                  "@type": "marc:ClassificationNumbersAssignedInCanada",
+                  "classificationPortion": "HB31",
+                  "marc:typeCompletenessSourceOfClassCallNumber": "marc:CompleteLcClassNumberAssignedByLac"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "060": {
       "aboutEntity": "?work",
@@ -9174,7 +9313,7 @@
       "TODO:resourceType (to distinguish this 'free form' from 034)?": "marc:CartographicDescription",
       "resourceType": "Cartographic",
       "embedded": true,
-      "NOTE": "Scale sits directly on work in BF2 conversion",
+      "NOTE": "scale property sits directly on work in BF2 conversion",
       "$a": {"link": "scale", "resourceType": "Scale", "property": "label"},
       "$b": {"link": "projection", "resourceType": "Projection", "property": "label"},
       "$c": {"property": "coordinates"},
@@ -9214,7 +9353,7 @@
       ]
     },
     "257": {
-      "onRevertPrefer": "264",
+      "onRevertPrefer": ["533", "264"],
       "NOTE": "Removing subfields incompatible with 264.",
       "aboutEntity": "?thing",
       "addLink": "production",
@@ -9715,7 +9854,7 @@
     },
 
     "261": {
-      "onRevertPrefer": "264",
+      "onRevertPrefer": ["533", "264"],
       "aboutEntity": "?thing",
       "NOTE:LC": "Also create statement: I - provisionActivityStatement - literal ($abd -- concatenate with blank -- add semicolon between subfields if no other punctuation -- keep order in field)",
       "pendingResources": {
@@ -9859,6 +9998,7 @@
     },
 
     "264": {
+    "onRevertPrefer": "533",
       "i1": {
         "property": "marc:sequenceStatus",
         "tokenMap": "sequenceStatus",
@@ -10067,11 +10207,11 @@
         "TODO": "bf2 is mapping note/noteType: 'Physical details'. Do we want to do something similarily?",
         "TODO:link": "hasNote",
         "TODO:resourceType": "Note",
-        "property": "marc:otherPhysicalDetails",
+        "property": "physicalDetailsNote",
         "punctuationChars": ";+"
       },
       "$c": {
-        "link": "hasDimensions",
+        "addLink": "hasDimensions",
         "resourceType": "Dimensions",
         "property": "label",
         "punctuationChars": ":;+"
@@ -10093,7 +10233,58 @@
         "property": "marc:sizeOfUnit"
       },
       "$6": {"about": "_:extent", "property": "marc:fieldref"},
-      "$8": {"about": "_:extent", "property": "marc:groupid"}
+      "$8": {"about": "_:extent", "property": "marc:groupid"},
+      "_spec": [
+        {
+          "Name": "Huvudsaklig resurs och medföljande",
+          "source": [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"a": "250 sidor"},{"e": "1 CD-ROM"}]}}
+          ],
+          "result": {
+            "mainEntity": 
+            {
+              "extent": [
+                {
+                  "@type": "Extent",
+                  "label": "250 sidor"
+                }
+              ],
+              "accompaniedBy":
+                {
+                  "@type": "Resource",
+                  "label": "1 CD-ROM"
+                }
+            }
+          }
+        },
+        {
+          "Name": "Import med interpunktion i flera fält",
+          "source": [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"a": "11 volumes :"},{"b": "illustrations ;"},{"c": "24 cm"}]}}
+          ],
+          "normalized": [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"a": "11 volumes"},{"b": "illustrations"},{"c": "24 cm"}]}}
+          ],
+          "result": {
+            "mainEntity": 
+            {
+              "hasDimensions": [
+                {
+                  "@type": "Dimensions",
+                  "label": "24 cm"
+                }
+              ],
+              "extent": [
+                {
+                  "@type": "Extent",
+                  "label": "11 volumes"
+                }
+              ],
+              "physicalDetailsNote": "illustrations"
+            }
+          }
+        }
+      ]
     },
 
     "306": {
@@ -10866,8 +11057,9 @@
         "property": "label"
       },
       "$b": {
-        "TODO": "Clash with 300c, see _spec",
-        "link": "hasDimensions",
+        "NOTE:LC": "bf2marcSpec-3XX-v1.0: nac - Cannot be differeneted from 300 $c",
+        "ignoreOnRevert": true,
+        "addLink": "hasDimensions",
         "resourceType": "Dimensions",
         "property": "label",
         "punctuationChars": ":;+"
@@ -10941,28 +11133,31 @@
       },
       "_spec": [
         {
-          "name": "Property clash between 300c from 340b is now averted, due to revert no longer producing multiple non-repeatable subfields.",
+          "name": "Property clash between 300c from 340b producing doubled fields in MARC. (340 ignored on revert)",
           "source":  [
-            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film"}]}},
-            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "film"}]}}
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film 300"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "film 340"}]}}
+          ],
+          "normalized":  [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film 300"},{"c": "film 340"}]}}
           ],
           "result": {
             "mainEntity": {
               "hasDimensions": [
                 {
                   "@type": "Dimensions",
-                  "label": "film"
+                  "label": "film 300"
                 },
                 {
                   "@type": "Dimensions",
-                  "label": "film"
+                  "label": "film 340"
                 }
               ]
             }
           }
         },
         {
-          "name": "Unintended successful reconversion to 300c from 340b. Normalized is recreated error. Consider this a TODO",
+          "name": "Successful reconversion to 300c from 340b. Normalized is expected consequence of conflicting properties.",
           "source":  [
             {"340": {"ind1": " ", "ind2": " ", "subfields": [{"a": "film"}]}},
             {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "35 mm"}]}},
@@ -10984,11 +11179,12 @@
               "hasPart": [
                 {
                   "@type": "Instance",
-                  "hasDimensions": 
+                  "hasDimensions": [
                     {
                       "@type": "Dimensions",
                       "label": "35 mm"
                     }
+                  ]
                 },
                 {
                   "@type": "Instance",
@@ -12273,11 +12469,28 @@
     },
 
     "507": {
-      "$a": {"aboutEntity": "?thing", "property": "scale"},
-      "NOTE:$b": "BF2 concatenate with a, record-count: 0",
-      "NOTE:$6": {"ignored": true, "NOTE:local": "scale property sits directly on thing, record-count: 0"}
+      "NOTE": "Moved to Work in BF2-conversion 1.5",
+      "aboutEntity": "?thing",
+      "link": "scale",
+      "resourceType": "Scale",
+      "$a": {"property": "label"},
+      "$b": {"property": "comment", "NOTE:LC": "Concatenate $ab, separated by space", "record-count": 0},
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": [
+            {"507": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Scale 1:10 of the original."}]}}
+          ],
+          "result": {"mainEntity": {
+            "scale": {
+                "@type": "Scale",
+                "label": "Scale 1:10 of the original."
+              }
+            } 
+          }
+        }
+      ]
     },
-
     "508": {
       "aboutEntity": "?work", 
       "addLink": "hasNote",
@@ -12638,45 +12851,123 @@
       "$6": {"property": "marc:fieldref"}
     },
     "533": {
-      "addLink": "hasReproduction",
-      "embedded": true,
-      "resourceType": "Instance",
       "pendingResources": {
-        "_:event": {"addLink": "provisionActivity", "resourceType": "ProvisionActivity"}
+        "_:event": {"addLink": "production", "resourceType": "Reproduction"}
       },
-      "$a": {"property": "description", "punctuationChars": ":"},
+      "$a": {"about": "_:event", "property": "typeNote", "punctuationChars": ":", "NOTE": "Talks about the subject but need to be kept together with the Activity for now since in MARC it is repeatable and *could* talk about the object depending on praxis.", "NOTE:LC": "I - carrier - Carrier - rdfs:label"},
       "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label" , "punctuationChars": ":"},
       "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label" , "punctuationChars": ","},
       "$d": {"about": "_:event", "property": "date"},
-      "$e": {"addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false},
-      "$f": {"addProperty": "seriesStatement"},
-      "$m": {"addProperty": "marc:datesAndOrSequentialDesignationOfIssuesReproduced"},
-      "$n": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
-      "$7": {"property": "marc:fixedLengthDataElementsOfReproduction", "NOTE:LC": "ignore"},
+      "$e": {"ignoreOnRevert": true, "addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false, "NOTE": "should be part of the subject", "NOTE:record-count": 342},
+      "$f": {"ignoreOnRevert": true, "addLink": "seriesMembership", "resourceType": "SeriesMembership", "property": "seriesStatement"},
+      "$m": {"ignoreOnRevert": true, "addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE:record-count": 4},
+      "$n": {"ignoreOnRevert": true, "about": "_:event", "addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE:LC": "I - note - Note - rdfs:label", "NOTE:record-count": 741721},
+      "$3": {"ignoreOnRevert": true, "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$5": {"ignoreOnRevert": true, "link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
+      "$7": {"ignoreOnRevert": true, "property": "marc:fixedLengthDataElementsOfReproduction", "NOTE:LC": "ignore", "NOTE": "contain important year?"},
       "_spec": [
         {
-          "name": "group properties into nested entities",
+          "name": "Reproduction",
           "source": {
             "533": {"ind1": " ", "ind2": " ",
               "subfields": [
                 {"a": "Digitalt faksimil och elektronisk text"},
                 {"c": "Litteraturbanken"},
                 {"d": "2010"} ]}},
-          "result": {"mainEntity": {
-            "hasReproduction": [
-              {
-                "@type": "Instance",
-                "description":  "Digitalt faksimil och elektronisk text",
-                "provisionActivity":  [
-                    {"@type": "ProvisionActivity",
-                        "date":  "2010",
-                        "agent":  [{"@type": "Agent", "label": "Litteraturbanken"}]
-                    }]
-              }
-            ]
-          }}
+          "result": {
+            "mainEntity": {
+              "production":  [
+                {
+                  "@type": "Reproduction",
+                  "typeNote":  "Digitalt faksimil och elektronisk text",
+                  "date":  "2010",
+                  "agent":  [
+                    {
+                      "@type": "Agent", "label": "Litteraturbanken"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Digital reproduction",
+          "normalized": {
+            "533": {"ind1": " ", "ind2": " ",
+              "subfields": [
+                {"b": "Stockholm"},
+                {"c": "Kungliga biblioteket"},
+                {"d": "2019"} ]}},
+          "result": {
+            "mainEntity": {
+              "production":  [
+                {
+                  "@type": "DigitalReproduction",
+                  "place": [
+                    {
+                      "@type": "Place",
+                      "label": "Stockholm"
+                    }
+                  ],
+                  "date":  "2019",
+                  "agent": [
+                    {
+                      "@type": "Agent", "label": "Kungliga biblioteket"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Should ignore specific properties on revert - Example from tb444ns50lj3j6h",
+          "source": [
+            {"490": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Early English books online"}]}},
+            {"533": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Electronic reproduction."},
+              {"b": "Ann Arbor, Mich."},
+              {"c": "UMI"},
+              {"d": "1999-"},
+              {"f": "(Early English books online)"},
+              {"n": "Digital version of: (Early English books, 1475-1640 ; 589:02)"},
+              {"7": "s1999 miun s"}
+            ]}}
+          ],
+          "normalized": [
+            {"490": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Early English books online"}]}},
+            {"533": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Electronic reproduction."},
+              {"b": "Ann Arbor, Mich."},
+              {"c": "UMI"},
+              {"d": "1999-"}
+            ]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "marc:fixedLengthDataElementsOfReproduction": "s1999 miun s",
+              "production": [{
+                "@type": "Reproduction",
+                "agent": [{ "@type": "Agent", "label": "UMI" }],
+                "date": "1999-",
+                "hasNote": [{
+                  "@type": "Note",
+                  "label": "Digital version of: (Early English books, 1475-1640 ; 589:02)"
+                }],
+                "place": [{ "@type": "Place", "label": "Ann Arbor, Mich." }],
+                "typeNote": "Electronic reproduction."
+              }],
+              "seriesMembership": [{
+                "@type": "SeriesMembership",
+                "marc:seriesTracingPolicy": "1",
+                "seriesStatement": ["Early English books online"]
+              }, {
+                "@type": "SeriesMembership",
+                "seriesStatement": "(Early English books online)"
+              }]
+            }
+          }
         }
       ]
     },
@@ -17324,11 +17615,12 @@
       ]
     },
     "765": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "translationOf",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
@@ -17343,31 +17635,25 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "translationOf": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Tempelriddaren"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }],
-                  "extent": [{
-                    "@type": "Extent",
-                    "label": "Fysisk beskrivning"
-                  }],
-                  "hasNote": [{
-                    "@type": "Note",
-                    "label": "Anmärkning"
-                  }]
-                }
+            "translationOf": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Tempelriddaren"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
+              }],
+              "extent": [{
+                "@type": "Extent",
+                "label": "Fysisk beskrivning"
+              }],
+              "hasNote": [{
+                "@type": "Note",
+                "label": "Anmärkning"
               }]
-            }
+            }]
           }}
         },
         {
@@ -17379,38 +17665,33 @@
             {"w": "3736598"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "translationOf": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "3736598"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Färg och fernissa"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "0427-9107"
-                  } ]
-                },
-                "marc:displayText": ["Översättning av vissa artiklar ur"]
-              }]
-            }
+            "translationOf": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "3736598"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Färg och fernissa"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "0427-9107"
+              }],
+              "marc:displayText": ["Översättning av vissa artiklar ur"]
+            }]
           }}
         }
       ]
     },
     "767": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "translation",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
@@ -17425,37 +17706,32 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "translation": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Finance & development. French. Finances et développement"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "0430-473X"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }]
-                }
+            "translation": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Finance & development. French. Finances et développement"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "0430-473X"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
               }]
-            }
+            }]
           }}
         }
       ]
     },
     "770": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "supplement",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
@@ -17470,38 +17746,33 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "supplement": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Journal of cellular biochemistry. Supplement"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "0733-1959"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }]
-                }
+            "supplement": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Journal of cellular biochemistry. Supplement"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "0733-1959"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
               }]
-            }
+            }]
           }}
         }
       ]
     },
     "772": {
-      "include": ["referenceToWork"],
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
       "NOTE:local": "Observera att fältet även har använts för att på ett enhetligt sätt konvertera delposter till flerbandsverk (med ind. 2 = 0) från ett ursprungligt LIBRISIII-format.",
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "supplementTo",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": "0"},
       "_spec": [
         {
@@ -17517,24 +17788,21 @@
             {"z": "00-0-000000-0"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "supplementTo": [{
+            "supplementTo": [{
+              "@type": "Instance",
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "00-0-000000-0"
+              }],
+              "part": ["part 1"],
+              "instanceOf": {
                 "@type": "Work",
                 "hasTitle": [{
                   "@type": "Title",
                   "mainTitle": "Main Thing"
-                }],
-                "hasInstance": {
-                  "@type": "Instance",
-                  "identifiedBy": [{
-                    "@type": "ISBN",
-                    "value": "00-0-000000-0"
-                  }],
-                  "part": ["part 1"]
-                }
-              }]
-            }
+                }]
+              }
+            }]
           }}
         },
         {
@@ -17552,22 +17820,19 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "supplementTo": [{
+            "supplementTo": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Briefec"
+              }],
+              "provisionActivityStatement": "provisionActivityStatement",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
+              }],
+              "instanceOf": {
                 "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Briefec"
-                  }],
-                  "provisionActivityStatement": "provisionActivityStatement",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }]
-                },
                 "contribution": [{
                   "@type": "PrimaryContribution",
                   "agent": {
@@ -17575,8 +17840,8 @@
                     "label": "Beckmann, Max"
                   }
                 }]
-              }]
-            }
+              }
+            }]
           }}
         },
         {
@@ -17597,9 +17862,19 @@
             {"w": "9901066360"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "supplementTo": [{
+            "supplementTo": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "9901066360"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Grundläggande matematik för tillämpningar",
+                "qualifier": "Lennart Hellström, Lars-Åke Lindahl"
+              }],
+              "provisionActivityStatement": "Uppsala : förf., cop. 1973",
+              "instanceOf": {
                 "@type": "Work",
                 "contribution": [{
                   "@type": "PrimaryContribution",
@@ -17607,25 +17882,9 @@
                     "@type": "Agent",
                     "label": "Hellström, Lennart, 1942-"
                   }
-                }],
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "9901066360"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Grundläggande matematik för tillämpningar"
-                  }],
-                  "provisionActivityStatement": "Uppsala : förf., cop. 1973"
-                },
-                "hasTitle": [{
-                  "@type": "Title",
-                  "qualifier": "Lennart Hellström, Lars-Åke Lindahl"
                 }]
-              }]
-            }
+              }
+            }]
           }}
         }
       ]
@@ -17806,9 +18065,22 @@
               "@type": "Title",
               "mainTitle": "Hur gammal är arbetslösheten?"
             }],
-            "instanceOf": {
-              "@type": "Text",
-              "relatedTo": [{
+            "relatedTo": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "7677734"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Arbetslöshetsfrågan i historisk belysning : en diskussion om arbetslöshet och social politik i Sverige 1830-1920"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "91-7966-400-8"
+              }],
+              "provisionActivityStatement": "1996",
+              "instanceOf": {
                 "@type": "Work",
                 "contribution": [{
                   "@type": "PrimaryContribution",
@@ -17816,26 +18088,10 @@
                     "@type": "Agent",
                     "label": "Olofsson, Jonas"
                   }
-                }],
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "7677734"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Arbetslöshetsfrågan i historisk belysning : en diskussion om arbetslöshet och social politik i Sverige 1830-1920"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISBN",
-                    "value": "91-7966-400-8"
-                  }],
-                  "provisionActivityStatement": "1996"
-                },
-                "marc:displayText": ["Recension av:"]
-              }]
-            },
+                }]
+              },
+              "marc:displayText": ["Recension av:"]
+            }],
             "part": ["2002(122):1, s. [99]-108"],
             "isPartOf": [{
               "@type": "Instance",
@@ -17882,20 +18138,14 @@
             {"w": "t4ztfxg6r7dw5sgd"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "supplementTo": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "t4ztfxg6r7dw5sgd"
-                  }]
-                },
-                "marc:displayText": ["channel record"]
-              }]
-            }
+            "supplementTo": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "t4ztfxg6r7dw5sgd"
+              }],
+              "marc:displayText": ["channel record"]
+            }]
           }}
         },
         {
@@ -17969,11 +18219,12 @@
       ]
     },
     "774": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "hasPart",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": "0"},
       "NOTE:domainIncludes": "Serial",
       "FIXME": "this is overeagerly reverted from a hasPart converted from 740; should only be added if issuanceType = 'Serial'...",
@@ -17989,24 +18240,18 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasPart": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "editionStatement" : "3. ed.",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Map of area with highlighted street"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }]
-                }
+            "hasPart": [{
+              "@type": "Instance",
+              "editionStatement" : "3. ed.",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Map of area with highlighted street"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
               }]
-            }
+            }]
           }}
         },
         {
@@ -18020,9 +18265,13 @@
             {"t": "Hydroida"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasPart": [{
+            "hasPart": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Hydroida"
+              }],
+              "instanceOf": {
                 "@type": "Work",
                 "contribution": [{
                   "@type": "PrimaryContribution",
@@ -18030,16 +18279,9 @@
                     "@type": "Agent",
                     "label": "Bonnevie, Kristine"
                   }
-                }],
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Hydroida"
-                  }]
-                }
-              }]
-            }
+                }]
+              }
+            }]
           }}
         },
         {
@@ -18052,29 +18294,41 @@
             {"w": "6200512"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasPart": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Swedes in the Twin Cities"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "6200512"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISBN",
-                    "value": "0-87351-399-1"
-                  }],
-                  "provisionActivityStatement": "2001"
-                },
-                "marc:displayText": ["Parallellutgåva:"]
+            "hasPart": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Swedes in the Twin Cities"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "6200512"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "0-87351-399-1"
+              }],
+              "provisionActivityStatement": "2001",
+              "marc:displayText": ["Parallellutgåva:"]
+            }]
+          }}
+        },
+        {
+          "name": "Should not collide with bib 774 - Example from 1kcdqdxc3cx2hw2",
+          "source": {"774": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Indices topographicos"}
+          ]}},
+          "normalized": {"774": {"ind1": "0", "ind2": "0", "subfields": [
+            {"t": "Indices topographicos"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasPart": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Indices topographicos"
               }]
-            }
+            }]
           }}
         }
       ]
@@ -18223,6 +18477,7 @@
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "otherPhysicalFormat",
+      "allowLinkOnRevert": "reproductionOf",
       "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": "8"},
       "_spec": [
@@ -18387,6 +18642,125 @@
               }]
             }]
           }}
+        },
+        {
+          "name": "Should only revert KeyTitle as 776 $t",
+          "normalized": [
+            {"245": {"ind1": "1", "ind2": "0", "subfields": [{"a": "Instance title"}]}},
+            {"776": {"ind1": "0", "ind2": "8", "subfields": [{"t": "Title 1"}, {"z": "9783527404704"}]}}
+          ],
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "Title",
+              "mainTitle": "Instance title"
+            }],
+            "otherPhysicalFormat": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Title 2",
+                "subtitle": "för dig som arbetar med kakel och klinker"
+              },{
+                "@type": "KeyTitle",
+                "mainTitle": "Title 1",
+                "qualifier": ["(Stockholm. Online)"]
+              },{
+                "@type": "VariantTitle",
+                "mainTitle": "Title 3"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "9783527404704"
+              }]
+            }]
+          }}
+        },
+        {
+          "name": "Should only revert Title as 776 $t",
+          "normalized": [
+            {"245": {"ind1": "1", "ind2": "0", "subfields": [{"a": "Instance title"}]}},
+            {"776": {"ind1": "0", "ind2": "8", "subfields": [{"t": "Title 2"}]}}
+          ],
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "Title",
+              "mainTitle": "Instance title"
+            }],
+            "otherPhysicalFormat": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Title 2",
+                "subtitle": "för dig som arbetar med kakel och klinker"
+              },{
+                "@type": "SomeOtherTitle",
+                "mainTitle": "Title 1",
+                "qualifier": ["(Stockholm. Online)"]
+              },{
+                "@type": "VariantTitle",
+                "mainTitle": "Title 3"
+              }]
+            }]
+          }}
+        },
+        {
+          "name": "No appropriate title to revert - No 776 $t",
+          "normalized": [
+            {"245": {"ind1": "1", "ind2": "0", "subfields": [{"a": "Instance title"}]}},
+            {"776": {"ind1": "0", "ind2": "8", "subfields": [{"z": "9783527404704"}]}}
+          ],
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "Title",
+              "mainTitle": "Instance title"
+            }],
+            "otherPhysicalFormat": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "SpineTitle",
+                "mainTitle": "Title 2"
+              },{
+                "@type": "SomeOtherTitle",
+                "mainTitle": "Title 1",
+                "qualifier": ["(Stockholm. Online)"]
+              },{
+                "@type": "VariantTitle",
+                "mainTitle": "Title 3"
+              }],
+              "identifiedBy": [{
+                "@type": "ISBN",
+                "value": "9783527404704"
+              }]
+            }]
+          }}
+        },
+        {
+          "name": "reproductionOf should revert to 776",
+          "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [
+            {"a": "name of agent"},
+            {"t": "Title of reproduction"},
+            {"w": "00000"}
+          ]}},
+          "result": {"mainEntity": {
+            "reproductionOf": [{
+              "@type": "Instance",
+              "meta": [{"@type": "Record", "controlNumber": "00000"}],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Title of reproduction"
+              }],
+              "instanceOf": {
+                "@type": "Work",
+                "contribution" : [ {
+                  "@type": "PrimaryContribution",
+                  "agent": {
+                    "@type": "Agent",
+                    "label": "name of agent"
+                  }
+                }]
+              }
+            }]
+          }}
         }
       ]
     },
@@ -18535,20 +18909,21 @@
       ]
     },
     "780": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "precededBy",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "match": [
-        {"when": "i2=0", "addLink": "continues", "resourceType": "Work"},
-        {"when": "i2=1", "addLink": "continuesInPart", "resourceType": "Work"},
-        {"when": "i2=2", "addLink": "precededBy", "resourceType": "Work"},
-        {"when": "i2=3", "addLink": "precededInPartBy", "resourceType": "Work"},
-        {"when": "i2=4", "addLink": "mergerOf", "resourceType": "Work"},
-        {"when": "i2=5", "addLink": "absorbed", "resourceType": "Work"},
-        {"when": "i2=6", "addLink": "absorbedInPart", "resourceType": "Work"},
-        {"when": "i2=7", "addLink": "separatedFrom", "resourceType": "Work"}
+        {"when": "i2=0", "addLink": "continues", "resourceType": "Instance"},
+        {"when": "i2=1", "addLink": "continuesInPart", "resourceType": "Instance"},
+        {"when": "i2=2", "addLink": "precededBy", "resourceType": "Instance"},
+        {"when": "i2=3", "addLink": "precededInPartBy", "resourceType": "Instance"},
+        {"when": "i2=4", "addLink": "mergerOf", "resourceType": "Instance"},
+        {"when": "i2=5", "addLink": "absorbed", "resourceType": "Instance"},
+        {"when": "i2=6", "addLink": "absorbedInPart", "resourceType": "Instance"},
+        {"when": "i2=7", "addLink": "separatedFrom", "resourceType": "Instance"}
       ],
       "i2": {"ignored": true, "marcDefault": "0"},
       "_spec": [
@@ -18557,34 +18932,22 @@
             {"t": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "continues": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"
-                  }]
-                }
+            "continues": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Bulletin mensuel (Banque de la République du Burundi. Direction des études)"
               }]
-            }
+            }]
           }}
         },
         {
           "source": {"780": {"ind1": "0", "ind2": "1", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "continuesInPart": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "continuesInPart": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
@@ -18593,38 +18956,26 @@
             {"x": "0022-3107"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "precededBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Journal of nuclear energy (1967)"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "0022-3107"
-                  }]
-                }
+            "precededBy": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Journal of nuclear energy (1967)"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "0022-3107"
               }]
-            }
+            }]
           }}
         },
         {
           "source": {"780": {"ind1": "0", "ind2": "3", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "precededInPartBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "precededInPartBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
@@ -18635,75 +18986,51 @@
             {"w": "(OCoLC)11405900"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "mergerOf": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "(DLC) 84647859"
-                  },{
-                    "@type": "Record",
-                    "controlNumber": "(OCoLC)11405900"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Field & stream (West edition)"
-                  }],
-                  "identifiedBy": [{
-                    "@type": "ISSN",
-                    "value": "8755-8610"
-                  }]
-                }
+            "mergerOf": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "(DLC) 84647859"
+              },{
+                "@type": "Record",
+                "controlNumber": "(OCoLC)11405900"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Field & stream (West edition)"
+              }],
+              "identifiedBy": [{
+                "@type": "ISSN",
+                "value": "8755-8610"
               }]
-            }
+            }]
           }}
         },
         {
           "source": {"780": {"ind1": "0", "ind2": "5", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "absorbed": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "absorbed": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"780": {"ind1": "0", "ind2": "6", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "absorbedInPart": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "absorbedInPart": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"780": {"ind1": "0", "ind2": "7", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "separatedFrom": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "separatedFrom": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
@@ -18714,40 +19041,34 @@
             {"t": "Bulletin mensuel"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "precededBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Bulletin mensuel"
-                  }]
-                }
-              }
-              ]
-            }
+            "precededBy": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Bulletin mensuel"
+              }]
+            }]
           }}
         }
       ]
     },
     "785": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "succeededBy",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "match": [
-        {"when": "i2=0", "addLink": "continuedBy", "resourceType": "Work"},
-        {"when": "i2=1", "addLink": "continuedInPartBy", "resourceType": "Work"},
-        {"when": "i2=2", "addLink": "succeededBy", "resourceType": "Work"},
-        {"when": "i2=3", "addLink": "succeededInPartBy", "resourceType": "Work"},
-        {"when": "i2=4", "addLink": "absorbedBy", "resourceType": "Work"},
-        {"when": "i2=5", "addLink": "absorbedInPartBy", "resourceType": "Work"},
-        {"when": "i2=6", "addLink": "splitInto", "resourceType": "Work"},
-        {"when": "i2=7", "addLink": "mergedToForm", "resourceType": "Work"},
-        {"when": "i2=8", "addLink": "continuedBy", "resourceType": "Work"}
+        {"when": "i2=0", "addLink": "continuedBy", "resourceType": "Instance"},
+        {"when": "i2=1", "addLink": "continuedInPartBy", "resourceType": "Instance"},
+        {"when": "i2=2", "addLink": "succeededBy", "resourceType": "Instance"},
+        {"when": "i2=3", "addLink": "succeededInPartBy", "resourceType": "Instance"},
+        {"when": "i2=4", "addLink": "absorbedBy", "resourceType": "Instance"},
+        {"when": "i2=5", "addLink": "absorbedInPartBy", "resourceType": "Instance"},
+        {"when": "i2=6", "addLink": "splitInto", "resourceType": "Instance"},
+        {"when": "i2=7", "addLink": "mergedToForm", "resourceType": "Instance"},
+        {"when": "i2=8", "addLink": "continuedBy", "resourceType": "Instance"}
       ],
       "i2": {"ignored": true, "marcDefault": "0"},
       "_spec": [
@@ -18757,128 +19078,80 @@
             {"x": "1937-6545"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "continuedBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Naysprayer"
-                  }],
-                  "identifiedBy": [{
-                    "@type" : "ISSN",
-                    "value" : "1937-6545"
-                  }]
-                }
+            "continuedBy": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Naysprayer"
+              }],
+              "identifiedBy": [{
+                "@type" : "ISSN",
+                "value" : "1937-6545"
               }]
-            }
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "1", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "continuedInPartBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "continuedInPartBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "2", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "succeededBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "succeededBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "3", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "succeededInPartBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "succeededInPartBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "4", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "absorbedBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "absorbedBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "5", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "absorbedInPartBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "absorbedInPartBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "6", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "splitInto": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "splitInto": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
           "source": {"785": {"ind1": "0", "ind2": "7", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "mergedToForm": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "mergedToForm": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
@@ -18886,16 +19159,10 @@
           "source": {"785": {"ind1": "0", "ind2": "8", "subfields": [{"t": "A Title"}]}},
           "normalized": {"785": {"ind1": "0", "ind2": "0", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "continuedBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "continuedBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         },
         {
@@ -18903,16 +19170,10 @@
           "source": {"785": {"ind1": "0", "ind2": " ", "subfields": [{"t": "A Title"}]}},
           "normalized": {"785": {"ind1": "0", "ind2": "2", "subfields": [{"t": "A Title"}]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "succeededBy": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
-                }
-              }]
-            }
+            "succeededBy": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
+            }]
           }}
         }
       ]
@@ -18957,11 +19218,12 @@
       ]
     },
     "787": {
-      "include": ["referenceToWork"],
-      "aboutEntity": "?work",
-      "aboutAlias": "_:work",
+      "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
+      "include": ["referenceToInstance"],
+      "aboutEntity": "?thing",
+      "aboutAlias": "_:instance",
       "addLink": "relatedTo",
-      "resourceType": "Work",
+      "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
@@ -18974,23 +19236,17 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "relatedTo": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Empire State report weekly"
-                  }],
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "000"
-                  }]
-                }
+            "relatedTo": [{
+              "@type": "Instance",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Empire State report weekly"
+              }],
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "000"
               }]
-            }
+            }]
           }}
         },
         {
@@ -19000,17 +19256,11 @@
             {"w": "000"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "relatedTo": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "hasTitle": [{"@type": "Title", "mainTitle": "State"}],
-                  "meta": [{"@type": "Record", "controlNumber": "000"}]
-                }
-              }]
-            }
+            "relatedTo": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "State"}],
+              "meta": [{"@type": "Record", "controlNumber": "000"}]
+            }]
           }}
         },
         {
@@ -19019,36 +19269,27 @@
             {"787": {"ind1": "0", "ind2": " ", "subfields": [{"t": "Symfoni, C-dur"}, {"w": "11862630"}]}}
           ],
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "relatedTo": [{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "11862622"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Symfoni, Ess-dur"
-                  }]
-                }
-              },{
-                "@type": "Work",
-                "hasInstance": {
-                  "@type": "Instance",
-                  "describedBy": [{
-                    "@type": "Record",
-                    "controlNumber": "11862630"
-                  }],
-                  "hasTitle": [{
-                    "@type": "Title",
-                    "mainTitle": "Symfoni, C-dur"
-                  }]
-                }
+            "relatedTo": [{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "11862622"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Symfoni, Ess-dur"
               }]
-            }
+            },{
+              "@type": "Instance",
+              "describedBy": [{
+                "@type": "Record",
+                "controlNumber": "11862630"
+              }],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Symfoni, C-dur"
+              }]
+            }]
           }}
         }
       ]
@@ -21639,17 +21880,63 @@
     },
     "370": {
       "aboutEntity": "?thing",
-      "addLink": "marc:hasAssociatedPlace",
-      "resourceType": "marc:AssociatedPlace",
-      "TODO": "match and split $a&b",
-      "$a": {"property": "marc:placeOfBirth"},
-      "$b": {"property": "marc:placeOfDeath"},
-      "$c": {"addProperty": "marc:associatedCountry"},
-      "$e": {"addProperty": "marc:placeOfResidenceHeadquarters"},
-      "$f": {"addProperty": "marc:otherAssociatedPlace"},
-      "$s": {"property": "marc:startPeriod"},
-      "$t": {"property": "marc:endPeriod"},
-      "$2": {"property": "marc:sourceOfTerm"}
+      "aboutType": "Agent",
+      "pendingResources": {
+        "_:hasAssociatedPlace": {
+          "addLink": "marc:hasAssociatedPlace",
+          "resourceType": "marc:AssociatedPlace"
+        }
+      },
+      "$a": {"link": "birthPlace", "resourceType": "Place", "property": "label", "infer": true},
+      "$b": {"link": "deathPlace", "resourceType": "Place", "property": "label", "infer": true},
+      "$c": {"about": "_:hasAssociatedPlace", "addProperty": "marc:associatedCountry"},
+      "$e": {"about": "_:hasAssociatedPlace", "addProperty": "marc:placeOfResidenceHeadquarters"},
+      "$f": {"about": "_:hasAssociatedPlace", "addProperty": "marc:otherAssociatedPlace"},
+      "$s": {"about": "_:hasAssociatedPlace", "property": "marc:startPeriod"},
+      "$t": {"about": "_:hasAssociatedPlace", "property": "marc:endPeriod"},
+      "$2": {"about": "_:hasAssociatedPlace", "property": "marc:sourceOfTerm"},
+      "_spec": [
+        {
+          "name": "place of birth and place of death",
+          "source": {
+            "370": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Stockholm"},
+              {"b": "Lund"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Agent",
+              "birthPlace": {
+                "@type": "Place",
+                "label": "Stockholm"
+              },
+              "deathPlace": {
+                "@type": "Place",
+                "label": "Lund"
+              }
+            }
+          }
+        },
+        {
+          "source": {
+            "370": {"ind1": " ", "ind2": " ", "subfields": [
+              {"e": "Sweden"},
+              {"f": "Norway"}
+            ]}},
+          "result": {
+            "mainEntity": {
+              "@type": "Agent",
+              "marc:hasAssociatedPlace": [
+                {
+                  "@type": "marc:AssociatedPlace",
+                  "marc:placeOfResidenceHeadquarters": ["Sweden"],
+                  "marc:otherAssociatedPlace": ["Norway"]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "371": {
       "NOTE:LC": "371 - Address (R)",
@@ -24441,16 +24728,16 @@
       },
       "[8]": null,
       "[9]": {
-        "aboutEntity": "?record",
-        "link": "marc:characterCoding",
-        "uriTemplate": "https://id.kb.se/marc/CharacterCodingType-{_}",
+        "NOTE": "Character coding scheme - a - UCS/Unicode",
+        "ignored": true,
         "fixedDefault": "a"
       },
       "NOTE:[10]": "see bib",
       "NOTE:[11]": "see bib",
       "NOTE:[12:17]": "see bib",
       "[17]": {
-        "NOTE": "No longer convert this position - just revert to fixedDefault",
+        "NOTE": "Encoding level - u - Unknown",
+        "ignored": true,
         "fixedDefault": "u"
       },
       "[18]": {
@@ -24461,10 +24748,9 @@
       },
       "[19]": null,
       "[20:24]": {
-        "aboutEntity": "?record",
-        "property": "marc:entryMap",
-        "fixedDefault": "4500",
-        "TODO:patternMap": "entryMap"
+        "NOTE": "Entry map - 4500 - Default value in MARC21",
+        "ignored": true,
+        "fixedDefault": "4500"
       },
       "repeatable": false,
       "_spec": [

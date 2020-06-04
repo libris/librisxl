@@ -88,11 +88,11 @@ class CrudUtils {
     }
 
     static String cleanEtag(String str) {
-        return stripQuotes(str).replaceAll('-gzip', '')
+        return stripQuotes(str)?.replaceAll('-gzip', '')
     }
 
     private static String stripQuotes(String str) {
-        return str.replaceAll('"', '')
+        return str?.replaceAll('"', '')
     }
 
     /**
