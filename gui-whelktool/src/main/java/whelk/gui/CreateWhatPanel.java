@@ -1,6 +1,7 @@
 package whelk.gui;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -13,6 +14,8 @@ public class CreateWhatPanel extends WizardCard implements ActionListener
     public CreateWhatPanel(Wizard wizard)
     {
         super(wizard);
+
+        this.setLayout(new GridBagLayout());
 
         Box vbox = Box.createVerticalBox();
         rDeleteHolds = new JRadioButton("Radera Bestånd.");

@@ -1,6 +1,7 @@
 package whelk.gui;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -12,6 +13,8 @@ public class RunOrCreatePanel extends WizardCard implements ActionListener
     public RunOrCreatePanel(Wizard wizard)
     {
         super(wizard);
+
+        this.setLayout(new GridBagLayout());
 
         Box vbox = Box.createVerticalBox();
         rCreate = new JRadioButton("Skapa en körning.");
