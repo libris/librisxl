@@ -39,13 +39,13 @@ public class RunPanel extends WizardCard implements ActionListener {
         stdErrArea.setEditable(false);
 
         Box stdErrBox = Box.createVerticalBox();
-        stdErrBox.add(new JLabel("stderr:"));
+        stdErrBox.add(new JLabel("Körningslogg:"));
         stdErrBox.add(stdErrScroll);
         this.add(stdErrBox);
 
         Box vbox = Box.createVerticalBox();
 
-        vbox.add(new JLabel("Database password:"));
+        vbox.add(new JLabel("Databasens lösenord:"));
         passwordField = new JPasswordField();
         vbox.add(passwordField);
 
@@ -132,7 +132,7 @@ public class RunPanel extends WizardCard implements ActionListener {
                             Thread.sleep(500);
                             
                             stdErrArea.setText(stdErrStream.toString());
-                            //stdErrScroll.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
+                            stdErrScroll.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
                         }
                     } catch (InterruptedException e) { /* ignore */ }
                 }
