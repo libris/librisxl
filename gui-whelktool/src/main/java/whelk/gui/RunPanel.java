@@ -134,7 +134,8 @@ public class RunPanel extends WizardCard implements ActionListener {
 
                         PropertyLoader.setUserEnteredProperties("secret", new ByteArrayInputStream(secretProperties.getBytes()));
 
-                        scriptToRun.execute();
+                        File reportDir = scriptToRun.execute();
+                        Desktop.getDesktop().open(reportDir);
                     } catch (IOException e) {
                         JOptionPane.showMessageDialog(null, e.getMessage(), "Message", JOptionPane.INFORMATION_MESSAGE);
                         Wizard.exitFatal(e);

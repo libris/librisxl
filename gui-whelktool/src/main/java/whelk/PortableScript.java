@@ -21,12 +21,13 @@ public class PortableScript implements Serializable
         this.comment = comment;
     }
 
-    public void execute() throws IOException
+    public File execute() throws IOException
     {
         Path scriptWorkingDir = Files.createTempDirectory("xl_script");
         Path scriptFilePath = scriptWorkingDir.resolve("script.groovy");
         Path inputFilePath = scriptWorkingDir.resolve("input");
-        Files.createDirectories(scriptWorkingDir.resolve("report"));
+        Path reportPath = scriptWorkingDir.resolve("report");
+        Files.createDirectories(reportPath);
 
         Files.write(inputFilePath, ids);
         String flattenedScriptText = scriptText.replace("£INPUT", inputFilePath.toString());
@@ -35,10 +36,12 @@ public class PortableScript implements Serializable
         String[] args =
                 {
                         "--report",
-                        scriptWorkingDir.resolve("report").toString(),
+                        reportPath.toString(),
                         scriptFilePath.toString(),
                 };
 
         whelk.datatool.WhelkTool.main(args);
+
+        return reportPath.toFile();
     }
 }
