@@ -10,6 +10,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -22,8 +23,6 @@ public class RunPanel extends WizardCard implements ActionListener {
     private JScrollPane stdErrScroll;
     private JPasswordField passwordField;
     private JButton startButton;
-
-    private JButton saveButton;
 
     private PortableScript scriptToRun;
 
@@ -56,15 +55,6 @@ public class RunPanel extends WizardCard implements ActionListener {
         startButton.addActionListener(this);
         vbox.add(startButton);
 
-        vbox.add(Box.createVerticalStrut(10));
-        saveButton = new JButton("Spara");
-        saveButton.setActionCommand("save");
-        saveButton.addActionListener(this);
-        saveButton.setEnabled(false);
-        vbox.add(saveButton);
-
-
-
         this.add(vbox);
     }
 
@@ -77,32 +67,6 @@ public class RunPanel extends WizardCard implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent actionEvent)
     {
-        if (actionEvent.getActionCommand().equals("save"))
-        {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("Spara fil");
-
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            String strDate = dateFormat.format(new Date());
-
-            fileChooser.setSelectedFile(new File("Skapad " + dateFormat.format(new Date()) + " " + scriptToRun.comment + ".xlscript"));
-
-            int result = fileChooser.showSaveDialog(wizard);
-            if (result == JFileChooser.APPROVE_OPTION)
-            {
-                File saveFile = fileChooser.getSelectedFile();
-                try (FileOutputStream os = new FileOutputStream(saveFile);
-                     ObjectOutputStream oos = new ObjectOutputStream(os))
-                {
-                    oos.writeObject(scriptToRun);
-                } catch (IOException ioe)
-                {
-                    Wizard.exitFatal(ioe);
-                }
-            }
-            enableCancel();
-        }
-
         if (actionEvent.getActionCommand().equals("start"))
         {
             startButton.setEnabled(false);
@@ -134,16 +98,27 @@ public class RunPanel extends WizardCard implements ActionListener {
 
                         PropertyLoader.setUserEnteredProperties("secret", new ByteArrayInputStream(secretProperties.getBytes()));
 
-                        File reportDir = scriptToRun.execute();
-                        Desktop.getDesktop().open(reportDir);
+                        Path reportDir = scriptToRun.execute();
+
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                        try (FileOutputStream os = new FileOutputStream(reportDir.resolve("Skapad " + dateFormat.format(new Date()) + " " + scriptToRun.comment + ".xlscript").toFile());
+                             ObjectOutputStream oos = new ObjectOutputStream(os))
+                        {
+                            oos.writeObject(scriptToRun);
+                        } catch (IOException ioe)
+                        {
+                            Wizard.exitFatal(ioe);
+                        }
+
+                        Desktop.getDesktop().open(reportDir.toFile());
                     } catch (IOException e) {
                         JOptionPane.showMessageDialog(null, e.getMessage(), "Message", JOptionPane.INFORMATION_MESSAGE);
                         Wizard.exitFatal(e);
                     }
 
                     scriptIsDone.set(true);
-                    saveButton.setEnabled(true);
                     System.setErr(new PrintStream(new FileOutputStream(FileDescriptor.err)));
+                    enableCancel();
                 }
             }).start();
 

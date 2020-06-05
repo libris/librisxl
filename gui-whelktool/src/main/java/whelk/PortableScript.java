@@ -21,7 +21,7 @@ public class PortableScript implements Serializable
         this.comment = comment;
     }
 
-    public File execute() throws IOException
+    public Path execute() throws IOException
     {
         Path scriptWorkingDir = Files.createTempDirectory("xl_script");
         Path scriptFilePath = scriptWorkingDir.resolve("script.groovy");
@@ -42,6 +42,6 @@ public class PortableScript implements Serializable
 
         whelk.datatool.WhelkTool.main(args);
 
-        return reportPath.toFile();
+        return reportPath;
     }
 }
