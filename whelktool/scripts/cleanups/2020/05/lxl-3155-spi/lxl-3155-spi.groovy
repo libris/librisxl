@@ -1,4 +1,6 @@
 /**
+ * Has to be run with --allow-loud.
+ *
  * Delete duplicate SPI bib records (if they have other holdings than sigel S then just log).
  * Move identifiedBy, technicalNote and hasNote fields from bib to holding for sigel S.
  * Link the S holding to the correct bib record. If it already has a holding for S then merge them.
@@ -74,7 +76,7 @@ void process(String duplicateUri, String keepUri) {
         if (!hasOtherHolding(duplicateUri)) {
             if (hasOtherDependers(duplicateUri)) {
                 Script.otherRelationReport.println(duplicateUri)
-                bib.scheduleSave()
+                bib.scheduleSave(loud: true)
             }
             else {
                 Script.deleteReport.println(duplicateUri)
@@ -82,7 +84,7 @@ void process(String duplicateUri, String keepUri) {
             }
         } else {
             Script.otherHoldingReport.println(duplicateUri)
-            bib.scheduleSave()
+            bib.scheduleSave(loud: true)
         }
 
         boolean found = false
@@ -97,7 +99,7 @@ void process(String duplicateUri, String keepUri) {
                     // yes, these should be at the top level and not in hasComponent
                     addFieldsFromDuplicate(msg, keepHold, identifiedBy, hasNote)
 
-                    keepHold.scheduleSave()
+                    keepHold.scheduleSave(loud: true)
                 }
 
                 msg.append("Delete: ${hold.doc.getURI()}\n")
@@ -109,7 +111,7 @@ void process(String duplicateUri, String keepUri) {
                 msg.append("itemOf: $duplicateUri -> $keepUri").append("\n")
                 hold.graph[1]['itemOf']['@id'] = keepUri + '#it'
                 addFieldsFromDuplicate(msg, hold, identifiedBy, hasNote)
-                hold.scheduleSave()
+                hold.scheduleSave(loud: true)
             }
 
             Script.holdReport.println(msg.toString())
