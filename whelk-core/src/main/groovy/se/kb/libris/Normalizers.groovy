@@ -51,7 +51,9 @@ class Normalizers {
                     && thing['instanceOf'][ID_KEY] == legacyWork[ID_KEY])
 
             if (shouldMove) {
-                thing['instanceOf'] = doc.data[GRAPH_KEY].remove(2)
+                def work = doc.data[GRAPH_KEY].remove(2)
+                work.remove(ID_KEY)
+                thing['instanceOf'] = work
             }
         }
     }
