@@ -3,7 +3,7 @@ package whelk
 import com.google.common.collect.Iterables
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
-import se.kb.libris.BlankNodeNormalizers
+import se.kb.libris.Normalizers
 import whelk.component.CachingPostgreSQLComponent
 import whelk.component.DocumentNormalizer
 import whelk.component.ElasticSearch
@@ -133,8 +133,9 @@ class Whelk {
         normalizer = new NormalizerChain(
                 [
                         //FIXME: This is KBV specific stuff
-                        BlankNodeNormalizers.language(this),
-                        BlankNodeNormalizers.contributionRole(this)
+                        Normalizers.workPosition(jsonld),
+                        Normalizers.language(this),
+                        Normalizers.contributionRole(this)
                 ]
         )
     }
