@@ -34,6 +34,7 @@ class PropertyLoader {
                 propStream = new FileInputStream(System.getProperty(SYSTEM_PROPERTY_PREFIX + propName + PROPERTY_EXTENSION))
             } else if (userEnteredProperties.containsKey(propName)) {
                 propStream = userEnteredProperties.get(propName)
+                propStream.reset()
             } else {
                 propStream = PropertyLoader.class.getClassLoader().getResourceAsStream(propName + PROPERTY_EXTENSION)
             }
