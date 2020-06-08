@@ -14,7 +14,7 @@ public class ScriptGenerator
                 "  left join\n" +
                 "   lddb lh\n" +
                 "  on lh.data#>>'{@graph,1,itemOf,@id}' = lb.data#>>'{@graph,1,@id}'\n" +
-                " where lb.data#>>'{@graph,0,controlNumber}' in ( 'bibidstring' )\n" +
+                " where lb.data#>>'{@graph,0,controlNumber}' in ( '$bibidstring' )\n" +
                 " and\n" +
                 " lh.data#>>'{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/" + sigel + "'\n" +
                 ")\"\"\"";
