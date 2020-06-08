@@ -123,7 +123,7 @@ void process(String duplicateUri, String keepUri) {
 }
 
 void addFieldsFromDuplicate(msg, hold, identifiedBy, hasNote) {
-    add(msg, hold.graph[0], 'identifiedBy', identifiedBy)
+    add(msg, hold.graph[1], 'identifiedBy', identifiedBy)
     add(msg, hold.graph[0], 'cataloguersNote', ['Katalog 56-86, SPI20191219. S bestånd flyttat från SPI-dubblett maskinellt. Fel kan förekomma.'])
     add(msg, hold.graph[1], 'hasNote', hasNote)
 }
