@@ -125,8 +125,12 @@ void process(String duplicateUri, String keepUri) {
 }
 
 void addFieldsFromDuplicate(msg, hold, identifiedBy, hasNote) {
+    // Workaround for multiple cataloguersNote getting exported to MARC as 599 with repeated subfield a (LXL-1705).
+    // Should be repeated 599 with single subfield a.
+    // Workaround: concatenate the strings to get a single 599 with single subfield a.
+    appendToString(msg, hold.graph[0], 'cataloguersNote', 'Katalog 56-86, SPI20191219. S bestånd flyttat från SPI-dubblett maskinellt. Fel kan förekomma.')
+
     add(msg, hold.graph[1], 'identifiedBy', identifiedBy)
-    add(msg, hold.graph[0], 'cataloguersNote', ['Katalog 56-86, SPI20191219. S bestånd flyttat från SPI-dubblett maskinellt. Fel kan förekomma.'])
     add(msg, hold.graph[1], 'hasNote', hasNote)
 }
 
@@ -134,6 +138,19 @@ void add(msg, thing, field, value) {
     def list = (thing[field] ?: []).with {it instanceof List ? it : [it]}
     msg.append("${field}: ").append(list).append(" -> ")
     list.addAll(value instanceof List ? value : [value])
+    msg.append(list).append("\n")
+    thing[field] = list
+}
+
+void appendToString(msg, thing, field, String value) {
+    def list = (thing[field] ?: []).with {it instanceof List ? it : [it]}
+    msg.append("${field}: ").append(list).append(" -> ")
+    if (list.isEmpty()) {
+        list.add(value)
+    }
+    else {
+        list[0] = list[0] + " " + value
+    }
     msg.append(list).append("\n")
     thing[field] = list
 }
