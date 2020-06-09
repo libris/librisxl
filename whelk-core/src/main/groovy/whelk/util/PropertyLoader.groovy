@@ -8,13 +8,13 @@ class PropertyLoader {
     static final String SYSTEM_PROPERTY_PREFIX = "xl."
     static final String PROPERTY_EXTENSION = ".properties"
 
-    private static HashMap<String, InputStream> userEnteredProperties = [:]
+    private static HashMap<String, String> userEnteredProperties = [:]
 
     /**
      * MUST be called before loadProperties to have any effect.
      */
-    public static void setUserEnteredProperties(String name, InputStream propStream) {
-        userEnteredProperties.put(name, propStream)
+    public static void setUserEnteredProperties(String name, String propString) {
+        userEnteredProperties.put(name, propString)
     }
 
     static Properties loadProperties(String... propNames) {
@@ -33,8 +33,8 @@ class PropertyLoader {
                 systemProperty = true
                 propStream = new FileInputStream(System.getProperty(SYSTEM_PROPERTY_PREFIX + propName + PROPERTY_EXTENSION))
             } else if (userEnteredProperties.containsKey(propName)) {
-                propStream = userEnteredProperties.get(propName)
-                propStream.reset()
+                String propString = userEnteredProperties.get(propName)
+                propStream = new ByteArrayInputStream(propString.getBytes())
             } else {
                 propStream = PropertyLoader.class.getClassLoader().getResourceAsStream(propName + PROPERTY_EXTENSION)
             }

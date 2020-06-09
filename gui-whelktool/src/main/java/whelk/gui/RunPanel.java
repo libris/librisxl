@@ -96,7 +96,7 @@ public class RunPanel extends WizardCard implements ActionListener {
                                 "elasticIndex = " +
                                 System.getProperty("secretElasticIndex") + "\n";
 
-                        PropertyLoader.setUserEnteredProperties("secret", new ByteArrayInputStream(secretProperties.getBytes()));
+                        PropertyLoader.setUserEnteredProperties("secret", secretProperties);
 
                         Path reportDir = scriptToRun.execute();
 
