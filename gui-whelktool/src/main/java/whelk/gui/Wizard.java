@@ -176,6 +176,7 @@ class Wizard extends JDialog implements ActionListener
     {
         System.out.println(e.toString());
         e.printStackTrace();
+        System.exit(-1);
     }
 
     static void exitFatal(String message)

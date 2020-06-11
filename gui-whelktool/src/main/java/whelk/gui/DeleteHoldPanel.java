@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -68,7 +69,13 @@ public class DeleteHoldPanel extends WizardCard implements ActionListener, Docum
         } catch (Throwable e) {
             Wizard.exitFatal(e.toString());
         }
-        setParameterForNextCard(ScriptGenerator.generateDeleteHoldScript(sigelField.getText(), ids));
+        try
+        {
+            setParameterForNextCard(ScriptGenerator.generateDeleteHoldScript(sigelField.getText(), ids));
+        } catch (IOException ioe)
+        {
+            Wizard.exitFatal(ioe);
+        }
     }
 
     private void setState()
