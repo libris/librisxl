@@ -25,7 +25,7 @@ selectByCollection('auth') { data ->
 
         //Objects containing @type, prefLabel and sameAs
         def toRemove = instance[relation].findAll{ hasSaogfSameAs(it) }
-        def toAdd  = toRemove.collect{ ['@id' : gmgpcPrefixSwe + it.prefLabel] }
+        def toAdd  = toRemove.collect{ ['@id' : gmgpcPrefixSwe + it.sameAs[0][ID].tokenize('/').last()] }
 
         //Objects containing a single id key-value pair
         def toRemoveSimple = instance[relation].findAll{ it[ID]?.contains(saogfPrefix)}
