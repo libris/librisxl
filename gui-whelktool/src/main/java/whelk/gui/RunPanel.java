@@ -84,19 +84,22 @@ public class RunPanel extends WizardCard implements ActionListener {
                 {
                     try
                     {
-                        String secretProperties = "sqlUrl = " +
-                                System.getProperty("secretSqlUrl").
-                                        replace("_XL_PASSWORD_", new String(passwordField.getPassword())) + "\n" +
-                                "baseUri = " +
-                                System.getProperty("secretBaseUri") + "\n" +
-                                "elasticHost = " +
-                                System.getProperty("secretElasticHost") + "\n" +
-                                "elasticCluster = " +
-                                System.getProperty("secretElasticCluster") + "\n" +
-                                "elasticIndex = " +
-                                System.getProperty("secretElasticIndex") + "\n";
+                        if (System.getProperty("secretSqlUrl") != null)
+                        {
+                            String secretProperties = "sqlUrl = " +
+                                    System.getProperty("secretSqlUrl").
+                                            replace("_XL_PASSWORD_", new String(passwordField.getPassword())) + "\n" +
+                                    "baseUri = " +
+                                    System.getProperty("secretBaseUri") + "\n" +
+                                    "elasticHost = " +
+                                    System.getProperty("secretElasticHost") + "\n" +
+                                    "elasticCluster = " +
+                                    System.getProperty("secretElasticCluster") + "\n" +
+                                    "elasticIndex = " +
+                                    System.getProperty("secretElasticIndex") + "\n";
 
-                        PropertyLoader.setUserEnteredProperties("secret", secretProperties);
+                            PropertyLoader.setUserEnteredProperties("secret", secretProperties);
+                        }
 
                         Path reportDir = scriptToRun.execute();
 
