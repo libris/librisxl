@@ -1,9 +1,7 @@
 package whelk.gui;
 
 import whelk.PortableScript;
-import whelk.Whelk;
 import whelk.util.PropertyLoader;
-import whelk.util.WhelkFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,10 +13,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class RunPanel extends WizardCard implements ActionListener {
-
-    private Wizard wizard;
-
+public class RunPanel extends WizardCard implements ActionListener
+{
     private JTextArea stdErrArea;
     private JScrollPane stdErrScroll;
     private JPasswordField passwordField;
@@ -115,7 +111,6 @@ public class RunPanel extends WizardCard implements ActionListener {
 
                         Desktop.getDesktop().open(reportDir.toFile());
                     } catch (IOException e) {
-                        JOptionPane.showMessageDialog(null, e.getMessage(), "Message", JOptionPane.INFORMATION_MESSAGE);
                         Wizard.exitFatal(e);
                     }
 

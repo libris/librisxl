@@ -67,7 +67,7 @@ public class DeleteHoldPanel extends WizardCard implements ActionListener, Docum
                 ids.add(line);
             }
         } catch (Throwable e) {
-            Wizard.exitFatal(e.toString());
+            Wizard.exitFatal(e);
         }
         try
         {

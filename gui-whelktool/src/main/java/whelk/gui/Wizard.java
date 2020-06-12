@@ -176,13 +176,14 @@ class Wizard extends JDialog implements ActionListener
     {
         System.out.println(e.toString());
         e.printStackTrace();
+        JOptionPane.showMessageDialog(null, e.getMessage(), "Message", JOptionPane.INFORMATION_MESSAGE);
         System.exit(-1);
     }
 
     static void exitFatal(String message)
     {
-        // make window dialog instead
         System.out.println(message);
+        JOptionPane.showMessageDialog(null, message, "Message", JOptionPane.INFORMATION_MESSAGE);
         System.exit(-1);
     }
 }
