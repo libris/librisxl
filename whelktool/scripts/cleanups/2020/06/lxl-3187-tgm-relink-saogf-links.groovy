@@ -36,9 +36,11 @@ selectByCollection('auth') { data ->
 
         //Add if linked object exists
         (toAdd + toAddSimple).each {
-            selectByIds([it.'@id']) { auth ->
-                instance[relation].add(auth.graph[1][ID])
-                report.println "Corrected link: ${auth.graph[1][ID]} for $relation on ${instance[ID]}"
+            if (exists(it)) {
+                instance[relation].add(it[ID])
+                report.println "Corrected link: ${it[ID]} for $relation on ${instance[ID]}"
+            } else {
+                report.println "Failed to link: ${it[ID]}, was removed from ${instance[ID]}"
             }
         }
 
@@ -58,6 +60,16 @@ selectByCollection('auth') { data ->
     if (updated) {
         data.scheduleSave()
         report.println "${data.graph[0][ID]}, ${instance[ID]}"
+    }
+}
+
+private boolean exists(obj) {
+    selectByIds([obj[ID]]) { auth ->
+        if (auth) {
+            return true
+        } else {
+            return false
+        }
     }
 }
 
