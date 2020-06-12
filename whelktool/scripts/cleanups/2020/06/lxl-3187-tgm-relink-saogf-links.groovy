@@ -33,7 +33,14 @@ selectByCollection('auth') { data ->
 
         instance[relation].removeAll{ hasSaogfSameAs(it) }
         instance[relation].removeAll{ it[ID]?.contains(saogfPrefix) }
-        instance[relation].addAll(toAdd + toAddSimple)
+
+        //Add if linked object exists
+        (toAdd + toAddSimple).each {
+            selectByIds([it.'@id']) { auth ->
+                instance[relation].add(auth.graph[1][ID])
+                report.println "Corrected link: ${auth.graph[1][ID]} for $relation on ${instance[ID]}"
+            }
+        }
 
         if (toRemove || toRemoveSimple) {
             updated = true
