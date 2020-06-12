@@ -22,8 +22,8 @@ class PropertyLoader {
 
         /* Order of priority:
         1. Environment parameter pointing to a file, like so -Dxl.secret.properties=./secret.properties
-        2. Properties files on the classpath (for example in src/main/resources/secret.properties)
-        3. User entered parameters, registered through a previous call to setUserEnteredProperties()
+        2. User entered parameters, registered through a previous call to setUserEnteredProperties()
+        3. Properties files on the classpath (for example in src/main/resources/secret.properties)
          */
 
         for (propName in propNames) {
@@ -32,11 +32,11 @@ class PropertyLoader {
             if (System.getProperty(SYSTEM_PROPERTY_PREFIX + propName + PROPERTY_EXTENSION)) {
                 systemProperty = true
                 propStream = new FileInputStream(System.getProperty(SYSTEM_PROPERTY_PREFIX + propName + PROPERTY_EXTENSION))
-            } else if (PropertyLoader.class.getClassLoader().getResourceAsStream(propName + PROPERTY_EXTENSION) != null) {
-                propStream = PropertyLoader.class.getClassLoader().getResourceAsStream(propName + PROPERTY_EXTENSION)
             } else if (userEnteredProperties.containsKey(propName)) {
                 String propString = userEnteredProperties.get(propName)
                 propStream = new ByteArrayInputStream(propString.getBytes())
+            } else if (PropertyLoader.class.getClassLoader().getResourceAsStream(propName + PROPERTY_EXTENSION) != null) {
+                propStream = PropertyLoader.class.getClassLoader().getResourceAsStream(propName + PROPERTY_EXTENSION)
             }
             if (propStream == null) {
                 if (systemProperty) {
