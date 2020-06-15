@@ -15812,6 +15812,8 @@
           "resourceType": "Contribution",
           "aboutAlias": "_:contribution",
           "include": ["contributiondata"],
+          "$6": {"about": "_:contribution", "property": "marc:fieldref"},
+          "$8": {"about": "_:contribution", "property": "marc:groupid"},
           "$0": {"about": "_:agent", "addProperty": "marc:uri"}
         }
       ],
@@ -15819,6 +15821,8 @@
       "_spec": [
         {
           "source": {"700": {"ind1": "1", "ind2": " ", "subfields": [
+            {"8": "subfield 8"},
+            {"6": "subfield 6"},
             {"a": "Lindman, Mervi,"},
             {"d": "1971-"},
             {"4": "ill"},
@@ -15836,6 +15840,8 @@
                   "givenName": "Mervi",
                   "lifeSpan": "1971-"
                 },
+                "marc:fieldref": "subfield 6",
+                "marc:groupid": "subfield 8",
                 "role": [{
                   "@id": "https://id.kb.se/relator/ill",
                   "@type": "Role",
@@ -15919,6 +15925,8 @@
         {
           "source": {
             "700": {"ind1": "1", "ind2": " ", "subfields": [
+              {"8": "subfield 8"},
+              {"6": "subfield 6"},
               {"i": "Parafraserar"},
               {"a": "Jansson, Tove"},
               {"t": "Anteckningar från en ö"},
@@ -15941,6 +15949,8 @@
                       {
                         "@type": "PrimaryContribution",
                         "role": [{"@type": "Role", "label": "Skapad av"}],
+                        "marc:fieldref": "subfield 6",
+                        "marc:groupid": "subfield 8",
                         "agent": {"@type": "Person", "familyName":  "Jansson", "givenName":  "Tove"}
                       }
                     ]
@@ -16036,7 +16046,9 @@
               {"a": "Cyprianus av Kartago,"},
               {"d": "1914-1987"},
               {"t": "De idolorum vanitate."},
-              {"4": "ill"}
+              {"4": "ill"},
+              {"6": "subfield 6"},
+              {"8": "subfield 8"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -16058,6 +16070,8 @@
                           "name":  "Cyprianus av Kartago",
                           "lifeSpan": "1914-1987"
                         },
+                        "marc:fieldref": "subfield 6",
+                        "marc:groupid": "subfield 8",
                         "role": [{
                           "@id": "https://id.kb.se/relator/ill",
                           "@type": "Role",
