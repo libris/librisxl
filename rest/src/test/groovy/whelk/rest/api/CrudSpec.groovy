@@ -410,7 +410,7 @@ class CrudSpec extends Specification {
         response.getStatus() == SC_NOT_FOUND
     }
 
-    def "GET document with If-None-Match equal to ETag should return 304 Not Modified"() {
+    def "GET non-embellished document with If-None-Match equal to ETag should return 304 Not Modified"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         def doc = new Document(["@graph": [["@id": id]]])
@@ -419,11 +419,30 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> { '/' + id }
         request.getHeader("Accept") >> { "*/*" }
         request.getHeader("If-None-Match") >> { etag }
+        request.getParameter(_) >> {
+            return getParameter('?embellished=false', arguments[0])
+        }
         storage.load(_, _) >> { return doc }
         when:
         crud.doGet(request, response)
         then:
         response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED
+    }
+
+    def "GET embellished document with If-None-Match equal to ETag should return 200 Ok"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def doc = new Document(["@graph": [["@id": id]]])
+        doc.setModified(new Date())
+        def etag = doc.getChecksum()
+        request.getPathInfo() >> { '/' + id}
+        request.getHeader("Accept") >> { "*/*" }
+        request.getHeader("If-None-Match") >> { etag }
+        storage.load(_, _) >> { return doc }
+        when:
+        crud.doGet(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_OK
     }
 
     @Unroll
