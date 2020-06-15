@@ -37,7 +37,7 @@ selectByCollection('auth') { data ->
         //Add if linked object exists
         (toAdd + toAddSimple).each {
             if (exists(it)) {
-                instance[relation].add(it[ID])
+                instance[relation].add(it)
                 report.println "Corrected link: ${it[ID]} for $relation on ${instance[ID]}"
             } else {
                 report.println "Failed to link: ${it[ID]}, was removed from ${instance[ID]}"
