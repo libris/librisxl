@@ -205,7 +205,7 @@ class Crud extends HttpServlet {
             sendNotFound(response, request.getPath())
         } else if (!doc && loc) {
             sendRedirect(request.getHttpServletRequest(), response, loc)
-        } else if (request.getIfNoneMatch().map({ etag -> etag == doc.getChecksum() }).orElse(false)) {
+        } else if (!request.shouldEmbellish() && isNotModified(request, doc)) {
             sendNotModified(response, doc)
         } else if (doc.deleted) {
             failedRequests.labels("GET", request.getPath(),
@@ -220,6 +220,10 @@ class Crud extends HttpServlet {
                     request.getPath(),
                     request.getContentType())
         }
+    }
+
+    private static boolean isNotModified(CrudGetRequest request, Document doc) {
+        request.getIfNoneMatch().map({ etag -> etag == doc.getChecksum() }).orElse(false)
     }
 
     private void sendNotModified(HttpServletResponse response, Document doc) {
