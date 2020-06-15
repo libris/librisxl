@@ -6767,7 +6767,7 @@
       "pendingResources": {
         "_:accompaniedMaterial": {"link": "accompaniedBy", "resourceType": "Work"},
         "_:libretto": {"link": "marc:libretto", "resourceType": "marc:Libretto"},
-        "_:original": {"link": "originalVersion", "resourceType": "Work"},
+        "_:intermediate": {"addLink": "marc:intermediateLanguage", "resourceType": "Work"},
         "_:summary": {"addLink": "summary", "resourceType": "Summary"},
         "_:subtitlesOrCaptions": {"link": "marc:subtitlesOrCaptions", "resourceType": "marc:SubtitlesOrCaptions"},
         "_:sungOrSpokenText": {"link": "marc:sungOrSpokenText", "resourceType": "marc:SungOrSpokenText"},
@@ -6812,7 +6812,7 @@
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$h": {
-        "about": "_:original",
+        "about": "_:translationSource",
         "TODO": "originalVersion isn't normally used like this. This ought to be translationOf.",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
@@ -6823,7 +6823,7 @@
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$k": {
-        "about": "_:translationSource",
+        "about": "_:intermediate",
         "TODO": "if $h is mapped to translationOf, this needs to be something else (e.g. translationLanguge)",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
@@ -6860,14 +6860,14 @@
                   "code": "swe"
                 }],
                 "marc:languageNote": "marc:ItemIsOrIncludesATranslation",
-                "originalVersion": {
+                "translationOf": [{
                   "@type": "Work",
                   "language": [{
                     "@id": "https://id.kb.se/language/rus",
                     "code": "rus"
                   }]
-                },
-                "translationOf": [{
+                }],
+                "marc:intermediateLanguage": [{
                   "@type": "Work",
                   "language": [{
                     "@id": "https://id.kb.se/language/ger",
