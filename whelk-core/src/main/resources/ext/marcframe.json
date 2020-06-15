@@ -423,7 +423,8 @@
       "$l": {"about": "_:agent", "link": "language", "resourceType": "Language", "property": "label", "infer": true},
       "$o": {"about": "_:agent", "property": "version", "TODO": "align with other $o?"},
       "$r": {"about": "_:agent", "property": "marc:musicKey"},
-      "$s": {"about": "_:agent", "property": "version"}
+      "$s": {"about": "_:agent", "property": "version"},
+      "$0": {"about": "_:agent", "addProperty": "marc:uri"}
     },
 
     "agentpartnumber": {
@@ -16462,7 +16463,8 @@
               {"a": "National Fire Protection Association."},
               {"t": "National electrical code (1993)"},
               {"x": "1111-1111"},
-              {"4": "oth"}
+              {"4": "oth"},
+              {"0": "auth uri"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -16491,7 +16493,8 @@
                           "code": "oth"
                         }]
                       }
-                    ]
+                    ],
+                    "marc:uri": ["auth uri"]
                   }
                 }
               ]
@@ -16505,7 +16508,8 @@
               {"b": "Riksdagen."},
               {"b": "Borgarståndet."},
               {"t": "Protokoll,"},
-              {"n": "9"}
+              {"n": "9"},
+              {"0": "auth uri"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -16530,7 +16534,8 @@
                       "@type": "Title",
                       "mainTitle": "Protokoll",
                       "partNumber": ["9"]
-                    } ]
+                    } ],
+                    "marc:uri": ["auth uri"]
                   }
                 }
               ]
@@ -16543,14 +16548,16 @@
               {"a": "Nationell gammaldags organisation."},
               {"4": "oth"},
               {"t": "Handlingar 1920-1950"},
-              {"n": "10"}
+              {"n": "10"},
+              {"0": "auth uri"}
             ]}},
           "normalized": {
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Nationell gammaldags organisation."},
               {"t": "Handlingar 1920-1950,"},
               {"n": "10"},
-              {"4": "oth"}
+              {"4": "oth"},
+              {"0": "auth uri"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -16576,7 +16583,8 @@
                           "code": "oth"
                         }]
                       }
-                    ]
+                    ],
+                    "marc:uri": ["auth uri"]
                   }
                 }
               ]
@@ -16589,7 +16597,8 @@
               {"a": "National Fire Protection Association."},
               {"t": "National electrical code (1993),"},
               {"n": "42"},
-              {"4": "aut"}
+              {"4": "aut"},
+              {"0": "auth uri"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -16615,7 +16624,8 @@
                           "code": "aut"
                         }]
                       }
-                    ]
+                    ],
+                    "marc:uri": ["auth uri"]
                   }
                 }
               ]
@@ -16630,7 +16640,8 @@
               {"d": "1904"},
               {"c": "Berlin, Germany)"},
               {"n": "(1st :"},
-              {"e": "author."}
+              {"e": "author."},
+              {"0": "auth uri"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -16650,7 +16661,8 @@
                     "place": [{
                       "@type": "Place",
                       "label": "Berlin, Germany)"
-                    }]
+                    }],
+                    "marc:uri": ["auth uri"]
                   },
                   "role": [{
                     "@type": "Role",
@@ -16665,21 +16677,21 @@
           "source": {
             "710": {"ind1": "1", "ind2": " ", "subfields": [
               {"a": "National Fire Protection Association."},
-              {"n": "101"}
+              {"n": "101"},
+              {"0": "auth uri"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-                "contribution": [
-                  {
-                    "@type": "Contribution",
-                    "agent": {
-                      "@type": "Jurisdiction",
-                      "name": "National Fire Protection Association.",
-                      "marc:numeration": ["101"]
-                    }
-                  }
-                ]
+              "contribution": [{
+                "@type": "Contribution",
+                "agent": {
+                  "@type": "Jurisdiction",
+                  "name": "National Fire Protection Association.",
+                  "marc:numeration": ["101"],
+                  "marc:uri": ["auth uri"]
+                }
+              }]
             }
           }}
         },
@@ -16755,13 +16767,13 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-                "contribution": [
-                  {
-                    "@type": "Contribution",
-                    "agent":
-                      {"@type": "Jurisdiction", "name": "National Fire Protection Association."}
-                  }
-                ]
+              "contribution": [
+                {
+                  "@type": "Contribution",
+                  "agent":
+                    {"@type": "Jurisdiction", "name": "National Fire Protection Association."}
+                }
+              ]
             }
           }}
         },
@@ -16769,7 +16781,8 @@
           "source": {
             "710": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Schweizerische Käseunion AG (Bern)"},
-              {"l": "ger."}
+              {"l": "ger."},
+              {"0": "auth uri"}
             ]}
           },
           "result": {"mainEntity": {
@@ -16784,7 +16797,8 @@
                     "language" : {
                       "@type" : "Language",
                       "label" : "ger."
-                    }
+                    },
+                    "marc:uri": ["auth uri"]
                   }
                 }
               ]
@@ -16829,7 +16843,8 @@
               {"t": "Lagen om vissa kommunala befogenheter,"},
               {"n": "9"},
               {"x": "2222-2222"},
-              {"4": "oth"}
+              {"4": "oth"},
+              {"0": "auth uri"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -16858,7 +16873,8 @@
                         "code": "oth"
                       }]
                     }
-                  ]
+                  ],
+                  "marc:uri": ["auth uri"]
                 }
               ]
             }
@@ -16870,7 +16886,8 @@
               {"a": "Arbetsmarknadsverket."},
               {"t": "Arbetsmiljölagen,"},
               {"n": "9"},
-              {"4": "oth"}
+              {"4": "oth"},
+              {"0": "auth uri"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -16895,7 +16912,8 @@
                         "code": "oth"
                       }]
                     }
-                  ]
+                  ],
+                  "marc:uri": ["auth uri"]
                 }
               ]
             }
