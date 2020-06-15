@@ -16043,12 +16043,12 @@
         {
           "source": {
             "700": {"ind1": "0", "ind2": " ", "subfields": [
+              {"8": "subfield 8"},
+              {"6": "subfield 6"},
               {"a": "Cyprianus av Kartago,"},
               {"d": "1914-1987"},
               {"t": "De idolorum vanitate."},
-              {"4": "ill"},
-              {"6": "subfield 6"},
-              {"8": "subfield 8"}
+              {"4": "ill"}
             ]}},
           "result": {"mainEntity": {
             "instanceOf": {
