@@ -14366,7 +14366,7 @@
         }
       ],
       "$6": {"property": "marc:fieldref"},
-      "subfieldOrder": "6 a q d g c e u t n p k l s f x z y v 2 j 4 1 0",
+      "subfieldOrder": "6 a q n d g c e u j 4 t p l k f 1 0",
       "_spec": [
         {
           "source": {
@@ -14447,10 +14447,10 @@
           "normalized": {
             "611": {"ind1": "2", "ind2": "0", "subfields":[
               {"a": "Vatican Council"},
+              {"n": "(2nd :"},
               {"d": "1962-1965 :"},
               {"c": "Basilica di San Pietro in Vaticano)."},
               {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
-              {"n": "(2nd :"},
               {"l": "Italian"}]
             }
           },
@@ -17014,7 +17014,7 @@
       ],
       "i1": {"marcDefault": "2"},
       "$6": {"property": "marc:fieldref"},
-      "subfieldOrder": "6 i a q d g c e u t n p k l s f x j 4 1 0",
+      "subfieldOrder": "6 a q n d g c e u j 4 t p l k f 1 0",
       "_spec": [
         {
           "source": {
@@ -17040,12 +17040,12 @@
           "source": {
             "711": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Olympic Games."},
+              {"n": "21st :"},
               {"d": "1976:"},
               {"c": "Montréal, Québec)."},
               {"e": "Organizing Committee."},
               {"e": "Arts and Culture Program."},
               {"e": "Visual Arts Section."},
-              {"n": "21st :"},
               {"j": "author."}
             ]}},
           "result": {"mainEntity": {
@@ -17082,17 +17082,16 @@
               {"d": "1962-1965 :"},
               {"c": "Basilica di San Pietro in Vaticano)."},
               {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
-              {"i": "Facsimile (manifestation):"},
               {"x": "1111-1111"}
             ]}},
           "normalized": {
             "711": {"ind1": "2", "ind2": "2", "subfields": [
-              {"i": "Facsimile (manifestation):"},
               {"a": "Vatican Council"},
+              {"n": "(2nd :"},
               {"d": "1962-1965 :"},
               {"c": "Basilica di San Pietro in Vaticano)."},
               {"t": "Constitutio pastoralis de ecclesia in mundo huius temporis."},
-              {"n": "(2nd :"},
+
               {"x": "1111-1111"}
             ]}},
           "result": {"mainEntity": {
@@ -17101,7 +17100,6 @@
               "hasPart": [
                 {
                   "@type": "Work",
-                  "marc:relatedAs": [{"@type": "Relation", "label": "Facsimile (manifestation):"}],
                   "hasTitle": [ {
                     "@type": "Title",
                     "mainTitle": "Constitutio pastoralis de ecclesia in mundo huius temporis."
@@ -17136,6 +17134,13 @@
               {"n": "10"},
               {"x": "2222-2222"}
             ]}},
+            "source": {
+              "711": {"ind1": "2", "ind2": " ", "subfields": [
+                {"a": "Westminster Assembly,"},
+                {"n": "10"},
+                {"t": "Larger catechism."},
+                {"x": "2222-2222"}
+              ]}},
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
