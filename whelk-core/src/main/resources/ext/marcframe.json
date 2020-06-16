@@ -1510,6 +1510,17 @@
 
     "instanceTitleQualifier": {
       "$c": {"about": "_:title", "property": "qualifier", "ignoreOnRevert": true, "NOTE:marc-repeatable": false}
+    },
+
+    "onRevertInd2": {
+      "match": [
+        {
+          "when": {
+            "onRevert": {"marc:displayText": []},
+            "then": {"ind2": "8"}
+          }
+        }
+      ]
     }
   },
 
@@ -17509,7 +17520,7 @@
       "ignored": true
     },
     "760": {
-      "include": ["referenceToSeriesInstance"],
+      "include": ["referenceToSeriesInstance", "onRevertInd2"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "hasSeries",
@@ -17528,7 +17539,7 @@
             {"n": "Anmärkning"},
             {"x": "1401-9612"}
           ]}},
-          "normalized": {"760": {"ind1": "0", "ind2": " ", "subfields": [
+          "normalized": {"760": {"ind1": "0", "ind2": "8", "subfields": [
             {"i": "displayText"},
             {"t": "Publikation"},
             {"g": "s. 144-145"},
@@ -17568,7 +17579,7 @@
       ]
     },
     "762": {
-      "include": ["referenceToSeriesInstance"],
+      "include": ["referenceToSeriesInstance", "onRevertInd2"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "hasSubseries",
@@ -17582,7 +17593,7 @@
             {"t": "Rätt fart"},
             {"w": "9823877"}
           ]}},
-          "normalized": {"762": {"ind1": "0", "ind2": " ", "subfields": [
+          "normalized": {"762": {"ind1": "0", "ind2": "8", "subfields": [
             {"i": "displayText"},
             {"t": "Rätt fart"},
             {"w": "9823877"}
@@ -17635,7 +17646,7 @@
     },
     "765": {
       "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
-      "include": ["referenceToInstance"],
+      "include": ["referenceToInstance", "onRevertInd2"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "translationOf",
@@ -17683,6 +17694,12 @@
             {"x": "0427-9107"},
             {"w": "3736598"}
           ]}},
+          "normalized": {"765": {"ind1": "0", "ind2": "8", "subfields": [
+            {"i": "Översättning av vissa artiklar ur"},
+            {"t": "Färg och fernissa"},
+            {"x": "0427-9107"},
+            {"w": "3736598"}
+          ]}},
           "result": {"mainEntity": {
             "translationOf": [{
               "@type": "Instance",
@@ -17706,7 +17723,7 @@
     },
     "767": {
       "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
-      "include": ["referenceToInstance"],
+      "include": ["referenceToInstance", "onRevertInd2"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "translation",
@@ -17746,7 +17763,7 @@
     },
     "770": {
       "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
-      "include": ["referenceToInstance"],
+      "include": ["referenceToInstance", "onRevertInd2"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "supplement",
@@ -17786,22 +17803,25 @@
     },
     "772": {
       "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
-      "include": ["referenceToInstance"],
+      "include": ["referenceToInstance", "onRevertInd2"],
       "NOTE:local": "Observera att fältet även har använts för att på ett enhetligt sätt konvertera delposter till flerbandsverk (med ind. 2 = 0) från ett ursprungligt LIBRISIII-format.",
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "supplementTo",
       "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": "0"},
+      "TODO:i2": "How about empty string - Do we need to support this value?",
       "_spec": [
         {
           "source": {"772": {"ind1": " ", "ind2": " ", "subfields": [
-            {"6": "fieldref-värde"},
+            {"6": "fieldref value"},
+            {"i": "displaytext value"},
             {"s": "Main Thing"},
             {"g": "part 1"},
             {"z": "00-0-000000-0"}
           ]}},
-          "normalized": {"772": {"ind1": "0", "ind2": "0", "subfields": [
+          "normalized": {"772": {"ind1": "0", "ind2": "8", "subfields": [
+            {"i": "displaytext value"},
             {"s": "Main Thing"},
             {"g": "part 1"},
             {"z": "00-0-000000-0"}
@@ -17814,6 +17834,7 @@
                 "value": "00-0-000000-0"
               }],
               "part": ["part 1"],
+              "marc:displayText": ["displaytext value"],
               "instanceOf": {
                 "@type": "Work",
                 "hasTitle": [{
@@ -17915,7 +17936,7 @@
       "aboutAlias": "_:instance",
       "addLink": "isPartOf",
       "resourceType": "Instance",
-      "i2": {"ignored": true, "marcDefault": "0"},
+      "i2": {"ignored": true, "marcDefault": " "},
       "$i": {"ignored": true, "TODO": "Or do we want to make it a hasNote? Local libraries have given their OK to remove"},
       "$p": {"about": "_:instance", "addLink": "hasTitle", "resourceType": "AbbreviatedTitle", "property": "mainTitle",  "TODO:targetMatch": "210", "NOTE:LC":"ignore", "NOTE:marc-repeatable": false},
       "$q": {"about": "_:instance", "property": "marc:enumerationAndFirstPage", "NOTE:LC":"ignore"},
@@ -17928,7 +17949,7 @@
             {"w": "8258455"},
             {"g": "127:1964, s. 495-534"}
           ]}},
-          "normalized": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+          "normalized": {"773": {"ind1": "0", "ind2": " ", "subfields": [
             {"t": "Tidskrift i sjöväsendet"},
             {"g": "127:1964, s. 495-534"},
             {"x": "0040-6945"},
@@ -17955,7 +17976,7 @@
         },
         {
           "name": "Example from wf79kb670mwvqqw",
-          "source": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+          "source": {"773": {"ind1": "0", "ind2": " ", "subfields": [
             {"7": "n s"},
             {"t": "I Värend och Sunnerbo"},
             {"d": "Växjö : Kronobergs läns hembydsförbund, 1985-1995"},
@@ -17966,7 +17987,7 @@
             {"9": "1"},
             {"9": "34"}
           ]}},
-          "normalized": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+          "normalized": {"773": {"ind1": "0", "ind2": " ", "subfields": [
             {"t": "I Värend och Sunnerbo"},
             {"d": "Växjö : Kronobergs läns hembydsförbund, 1985-1995"},
             {"g": "1992 (33:1), s. 34-35 : ill."},
@@ -18003,7 +18024,7 @@
             {"w": "11899145"},
             {"g": "S.184-212"}
           ]}},
-          "normalized": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+          "normalized": {"773": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "Robson, James,"},
             {"t": "Power of place : the religious landscape of the Southern Sacred Peak (Nanyue) in medieval China /"},
             {"d": "cop. 2009"},
@@ -18065,13 +18086,13 @@
             {"245": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "Hur gammal är arbetslösheten?"}
             ]}},
-            {"773": {"ind1": "0", "ind2": "0", "subfields": [
+            {"773": {"ind1": "0", "ind2": " ", "subfields": [
               {"t": "Historisk tidskrift (Stockholm)"},
               {"g": "2002(122):1, s. [99]-108"},
               {"x": "0345-469X"},
               {"w": "8261328"}
             ]}},
-            {"787": {"ind1": "0", "ind2": " ", "subfields": [
+            {"787": {"ind1": "0", "ind2": "8", "subfields": [
               {"i": "Recension av:"},
               {"a": "Olofsson, Jonas"},
               {"t": "Arbetslöshetsfrågan i historisk belysning : en diskussion om arbetslöshet och social politik i Sverige 1830-1920"},
@@ -18131,7 +18152,7 @@
         },
         {
           "name": "Infer describedBy from meta",
-          "normalized": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+          "normalized": {"773": {"ind1": "0", "ind2": " ", "subfields": [
             {"t": "Tidskrift"},
             {"w": "8258455"}
           ]}},
@@ -18145,14 +18166,14 @@
         },
         {
           "name": "EPLK example",
-          "source": [{"772": {"ind1": "1", "ind2": "0", "subfields": [
+          "source": [{"772": {"ind1": "1", "ind2": "8", "subfields": [
             {"i": "channel record"},
             {"w": "t4ztfxg6r7dw5sgd"}
           ]}},
-            {"773": {"ind1": "0", "ind2": "0", "subfields": [
+            {"773": {"ind1": "0", "ind2": " ", "subfields": [
               {"i": "Värdpublikation"}
             ]}}],
-          "normalized": {"772": {"ind1": "0", "ind2": "0", "subfields": [
+          "normalized": {"772": {"ind1": "0", "ind2": "8", "subfields": [
             {"i": "channel record"},
             {"w": "t4ztfxg6r7dw5sgd"}
           ]}},
@@ -18169,7 +18190,7 @@
         },
         {
           "name": "Linked entity containing familyName/givenName should revert to subfield $a",
-          "normalized": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+          "normalized": {"773": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "Sandemo, Margit"}
           ]}},
           "result": {"mainEntity": {
@@ -18191,7 +18212,7 @@
         },
         {
           "name": "Linked entity containing marc:subordinateUnit should revert to subfield $a",
-          "normalized": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+          "normalized": {"773": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "Institutionen för psykologi"}
           ]}},
           "result": {"mainEntity": {
@@ -18212,7 +18233,7 @@
         },
         {
           "TODO": "Linked entity containing marc:subordinateUnit and isPartOf should revert to subfield $a",
-          "normalized": {"773": {"ind1": "0", "ind2": "0", "subfields": [
+          "normalized": {"773": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "Institutionen för psykologi, Uppsala universitet."}
           ]}},
           "TODO:result": {"mainEntity": {
@@ -18239,12 +18260,12 @@
     },
     "774": {
       "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
-      "include": ["referenceToInstance"],
+      "include": ["referenceToInstance", "onRevertInd2"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "hasPart",
       "resourceType": "Instance",
-      "i2": {"ignored": true, "marcDefault": "0"},
+      "i2": {"ignored": true, "marcDefault": " "},
       "NOTE:domainIncludes": "Serial",
       "FIXME": "this is overeagerly reverted from a hasPart converted from 740; should only be added if issuanceType = 'Serial'...",
       "_spec": [
@@ -18254,7 +18275,7 @@
             {"b": "3. ed."},
             {"w": "000"}
           ]}},
-          "normalized": {"774": {"ind1": "0", "ind2": "0", "subfields": [
+          "normalized": {"774": {"ind1": "0", "ind2": " ", "subfields": [
             {"t": "Map of area with highlighted street"},
             {"w": "000"}
           ]}},
@@ -18279,7 +18300,7 @@
             {"a": "Bonnevie, Kristine"},
             {"t": "Hydroida"}
           ]}},
-          "normalized": {"774": {"ind1": "0", "ind2": "0", "subfields": [
+          "normalized": {"774": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "Bonnevie, Kristine"},
             {"t": "Hydroida"}
           ]}},
@@ -18305,7 +18326,7 @@
         },
         {
           "name": "Example from 5ngcg35h0rdv299",
-          "source": {"774": {"ind1": "0", "ind2": "0", "subfields": [
+          "source": {"774": {"ind1": "0", "ind2": "8", "subfields": [
             {"i": "Parallellutgåva:"},
             {"t": "Swedes in the Twin Cities"},
             {"d": "2001"},
@@ -18337,7 +18358,7 @@
           "source": {"774": {"ind1": "0", "ind2": " ", "subfields": [
             {"t": "Indices topographicos"}
           ]}},
-          "normalized": {"774": {"ind1": "0", "ind2": "0", "subfields": [
+          "normalized": {"774": {"ind1": "0", "ind2": " ", "subfields": [
             {"t": "Indices topographicos"}
           ]}},
           "result": {"mainEntity": {
@@ -18354,7 +18375,7 @@
     },
     "775": {
       "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
-      "include": ["referenceToInstance"],
+      "include": ["referenceToInstance", "onRevertInd2"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "otherEdition",
@@ -18439,7 +18460,7 @@
             {"d": "[2008?]"},
             {"w": "10948597"}
           ]}},
-          "normalized": {"775": {"ind1": "0", "ind2": " ", "subfields": [
+          "normalized": {"775": {"ind1": "0", "ind2": "8", "subfields": [
             {"i": "Parallellupplaga"},
             {"t": "Hållbar utveckling nu!"},
             {"d": "[2008?]"},
@@ -18462,7 +18483,7 @@
           }}
         },
         {
-          "normalized": {"775": {"ind1": "0", "ind2": " ", "subfields": [
+          "normalized": {"775": {"ind1": "0", "ind2": "8", "subfields": [
             {"i": "Parallellutgåva"},
             {"t": "Tolkning och översättning vid straffrättsliga förfaranden"},
             {"z": "9789138237748"},
@@ -18492,13 +18513,13 @@
       ]
     },
     "776": {
-      "include": ["referenceToInstance"],
+      "include": ["referenceToInstance", "onRevertInd2"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "otherPhysicalFormat",
       "allowLinkOnRevert": "reproductionOf",
       "resourceType": "Instance",
-      "i2": {"ignored": true, "marcDefault": "8"},
+      "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
         {
           "source": {"776": {"ind1": "0", "ind2": "8", "subfields": [
@@ -18530,11 +18551,6 @@
         },
         {
           "source": {"776": {"ind1": "0", "ind2": " ", "subfields": [
-            {"t": "Hemmets journal (Online)"},
-            {"x": "2002-9659"},
-            {"w": "22176030"}
-          ]}},
-          "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [
             {"t": "Hemmets journal (Online)"},
             {"x": "2002-9659"},
             {"w": "22176030"}
@@ -18666,7 +18682,7 @@
           "name": "Should only revert KeyTitle as 776 $t",
           "normalized": [
             {"245": {"ind1": "1", "ind2": "0", "subfields": [{"a": "Instance title"}]}},
-            {"776": {"ind1": "0", "ind2": "8", "subfields": [{"t": "Title 1"}, {"z": "9783527404704"}]}}
+            {"776": {"ind1": "0", "ind2": " ", "subfields": [{"t": "Title 1"}, {"z": "9783527404704"}]}}
           ],
           "result": {"mainEntity": {
             "hasTitle": [{
@@ -18698,7 +18714,7 @@
           "name": "Should only revert Title as 776 $t",
           "normalized": [
             {"245": {"ind1": "1", "ind2": "0", "subfields": [{"a": "Instance title"}]}},
-            {"776": {"ind1": "0", "ind2": "8", "subfields": [{"t": "Title 2"}]}}
+            {"776": {"ind1": "0", "ind2": " ", "subfields": [{"t": "Title 2"}]}}
           ],
           "result": {"mainEntity": {
             "hasTitle": [{
@@ -18726,7 +18742,7 @@
           "name": "No appropriate title to revert - No 776 $t",
           "normalized": [
             {"245": {"ind1": "1", "ind2": "0", "subfields": [{"a": "Instance title"}]}},
-            {"776": {"ind1": "0", "ind2": "8", "subfields": [{"z": "9783527404704"}]}}
+            {"776": {"ind1": "0", "ind2": " ", "subfields": [{"z": "9783527404704"}]}}
           ],
           "result": {"mainEntity": {
             "hasTitle": [{
@@ -18755,7 +18771,7 @@
         },
         {
           "name": "reproductionOf should revert to 776",
-          "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [
+          "normalized": {"776": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "name of agent"},
             {"t": "Title of reproduction"},
             {"w": "00000"}
@@ -18784,7 +18800,7 @@
       ]
     },
     "777": {
-      "include": ["referenceToInstance"],
+      "include": ["referenceToInstance", "onRevertInd2"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "issuedWith",
@@ -18831,7 +18847,7 @@
             {"d": "1994"},
             {"w": "12033323"}
           ]}},
-          "normalized": {"777": {"ind1": "0", "ind2": " ", "subfields": [
+          "normalized": {"777": {"ind1": "0", "ind2": "8", "subfields": [
             {"i": "Online"},
             {"a": "Andersson, Jan"},
             {"t": "Personlig utveckling för alla medarbetare - Fallrapport (Länia AB, Örebro)"},
@@ -19199,7 +19215,7 @@
     },
     "786": {
       "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
-      "include": ["referenceToInstance"],
+      "include": ["referenceToInstance", "onRevertInd2"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "dataSource",
@@ -19210,11 +19226,6 @@
         {
           "name": "Example from 3ld26bgf09pcprr",
           "source": {"786": {"ind1": "0", "ind2": "8", "subfields": [
-            {"i": "Source"},
-            {"t": "The catalogue of the book collection of the Jesuit College in Braniewo held in the University Library in Uppsala"},
-            {"w": "13527363"}
-          ]}},
-          "normalized": {"786": {"ind1": "0", "ind2": " ", "subfields": [
             {"i": "Source"},
             {"t": "The catalogue of the book collection of the Jesuit College in Braniewo held in the University Library in Uppsala"},
             {"w": "13527363"}
@@ -19238,7 +19249,7 @@
     },
     "787": {
       "NOTE": "We deviate from https://www.loc.gov/bibframe/mtbf/ as we do not link from the Work with hasInstance.",
-      "include": ["referenceToInstance"],
+      "include": ["referenceToInstance", "onRevertInd2"],
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "relatedTo",
