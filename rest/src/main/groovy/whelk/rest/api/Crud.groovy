@@ -537,6 +537,8 @@ class Crud extends HttpServlet {
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
                                savedDoc.getChecksum())
+        } else {
+            sendNotFound(response, request.getContextPath())
         }
     }
 
@@ -708,7 +710,10 @@ class Crud extends HttpServlet {
                 }
                 else {
                     log.debug("Saving NEW document ("+ doc.getId() +")")
-                    whelk.createDocument(doc, "xl", activeSigel, collection, false)
+                    boolean success = whelk.createDocument(doc, "xl", activeSigel, collection, false)
+                    if (!success) {
+                        return null
+                    }
                 }
 
                 log.debug("Saving document (${doc.getShortId()})")
