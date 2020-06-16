@@ -13,6 +13,7 @@ import whelk.IdGenerator
 import whelk.Whelk
 import whelk.converter.MarcJSONConverter
 import whelk.converter.marc.MarcFrameConverter
+import whelk.util.LegacyIntegrationTools
 import whelk.util.WhelkFactory
 
 import javax.servlet.http.HttpServlet
@@ -416,8 +417,8 @@ class RemoteSearchAPI extends HttpServlet {
     String sanitizeMarcAndGenerateNewID(MarcRecord marcRecord) {
         List<Field> mutableFieldList = marcRecord.getFields()
 
-        // Replace any existing 001 fields, TODO: move 001 to 035$a instead?
         String generatedId = IdGenerator.generate()
+        LegacyIntegrationTools.makeRecordLibrisResident(marcRecord)
         if (marcRecord.getControlfields("001").size() != 0) {
             mutableFieldList.remove(marcRecord.getControlfields("001").get(0))
         }

@@ -282,6 +282,7 @@ class XL
     private Document convertToRDF(MarcRecord _marcRecord, String id)
     {
         MarcRecord marcRecord = cloneMarcRecord(_marcRecord);
+        LegacyIntegrationTools.makeRecordLibrisResident(marcRecord);
         while (marcRecord.getControlfields("001").size() > 0)
             marcRecord.getFields().remove(marcRecord.getControlfields("001").get(0));
         marcRecord.addField(marcRecord.createControlfield("001", id));
