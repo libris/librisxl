@@ -38,9 +38,9 @@ selectByCollection('auth') { data ->
         (toAdd + toAddSimple).each {
             if (exists(it)) {
                 instance[relation].add(it)
-                report.println "Corrected link: ${it[ID]} for $relation on ${instance[ID]}"
+                report.println "Corrected link: ${it[ID]} for relation :$relation on ${instance[ID]}"
             } else {
-                report.println "Failed to link: ${it[ID]}, was removed from ${instance[ID]}"
+                report.println "Failed to link: ${it[ID]}, for relation: $relation. Removed broken link from ${instance[ID]}"
             }
         }
 
@@ -64,13 +64,13 @@ selectByCollection('auth') { data ->
 }
 
 private boolean exists(obj) {
+    boolean exists = false
     selectByIds([obj[ID]]) { auth ->
         if (auth) {
-            return true
-        } else {
-            return false
+          exists = true
         }
     }
+    return exists
 }
 
 private boolean hasSaogfSameAs(relation) {
