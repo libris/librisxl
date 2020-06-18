@@ -123,24 +123,30 @@ class LegacyIntegrationTools {
         Controlfield field003 = (Controlfield) record.getControlfields("003")[0] // non-repeatable
         Controlfield field001 = (Controlfield) record.getControlfields("001")[0] // non-repeatable
 
-        boolean hasLibris035aAlready = false
-        record.getDatafields("035").each { f ->
-            f.getSubfields("a").each { sf ->
-                if (sf.getData().contains("(SE-LIBR)") || sf.getData().contains("(LIBRIS)"))
-                    hasLibris035aAlready = true
+        if (field001 != null && field003 != null && field001.getData()
+                != null && field003.getData() != null && field003.getData()
+                != "SE-LIBR" && field003.getData() != "LIBRIS") {
+
+            String idInOtherSystem = "(" + field003.getData() + ")" + field001.getData()
+
+            boolean hasRelevant035aAlready = false
+            record.getDatafields("035").each { f ->
+                f.getSubfields("a").each { sf ->
+                    if (sf.getData() == idInOtherSystem)
+                        hasRelevant035aAlready = true
+                }
             }
-        }
 
-        if (!hasLibris035aAlready && field001 != null && field003 != null && field001.getData()
-                != null && field003.getData() != null) {
-            Field field035 = new DatafieldImpl("035")
-            Subfield a = new SubfieldImpl("a".charAt(0), "(" + field003.getData() + ")" + field001.getData())
-            field035.addSubfield(a)
-            record.addField(field035)
-        }
+            if (!hasRelevant035aAlready) {
+                Field field035 = new DatafieldImpl("035")
+                Subfield a = new SubfieldImpl("a".charAt(0), idInOtherSystem)
+                field035.addSubfield(a)
+                record.addField(field035)
+            }
 
-        // Replace 003
-        record.getFields("003").clear() // Remove MARC 003
-        record.addField(new ControlfieldImpl("003", "SE-LIBR"))
+            // Replace 003
+            record.getFields("003").clear() // Remove MARC 003
+            record.addField(new ControlfieldImpl("003", "SE-LIBR"))
+        }
     }
 }
