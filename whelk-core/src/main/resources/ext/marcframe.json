@@ -6753,6 +6753,7 @@
             "onRevert": {"translationOf": {}},
             "then": {"ind1": "1"}
           },
+          "NOTE": "To avoid repeated revert of bib 041.",
           "silentRevert": false
         }
       ],
