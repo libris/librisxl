@@ -53,30 +53,17 @@ Related external repositories:
     $ brew install elasticsearch
     ```
 
-    For Debian, follow instructions on
-    https://www.elastic.co/guide/en/elasticsearch/reference/current/deb.html
-    first, then:
-    ```
-    apt-get install elasticsearch
-    ```
-
-    For Windows, download and install:
-    https://www.elastic.co/downloads/past-releases/elasticsearch-2-4-1
+    For Debian (or Ubuntu), download and install the .deb file at:
+    https://www.elastic.co/downloads/past-releases/elasticsearch-5-6-0
+    
+    For Windows, download and install the .zip file at:
+    https://www.elastic.co/downloads/past-releases/elasticsearch-5-6-0
 
     **NOTE:** You will also need to set `cluster.name` in
     `/etc/elasticsearch/elasticsearch.yml` to something unique on the
     network. This name is later specified when you configure the
     system. Don't forget to restart Elasticsearch after the change.
 
-    For Elasticsearch version 2.2 and greater, you must also install the
-    `delete-by-query` plugin. This functionality was removed in ElasticSearch
-    2.0 and needs to be added as a plugin:
-    ```
-    $ /path/to/elasticsearch/bin/plugin install delete-by-query
-    ```
-
-    **NOTE:** You will need to reinstall the plugin whenever you
-      upgrade ElasticSearch.
 
 3. [PostgreSQL](https://www.postgresql.org/) (version 9.4 or later)
 
