@@ -36,8 +36,6 @@ class MergeWorks {
         this.statistics = new Statistics()
     }
 
-    //overflow-x: auto;
-    //white-space: nowrap;
     void show(List<List<String>> diffPaths = []) {
         println("""<html><head>
                     <meta charset="UTF-8">
@@ -74,6 +72,10 @@ class MergeWorks {
                 try {
                     Collection<Collection<Doc>> docs = titleClusters(cluster)
                             .sort { a, b -> a.first().instanceDisplayTitle() <=> b.first().instanceDisplayTitle() }
+
+                    if (docs.isEmpty() || docs.size() == 1 && docs.first().size() == 1 ) {
+                        return
+                    }
 
                     println(docs
                             .collect { it.sort{ a, b -> a.getWork()['@type'] <=> b.getWork()['@type'] } }
@@ -152,7 +154,7 @@ class MergeWorks {
         })
     }
 
-    static def infoFields = ['instance title', 'work title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication']
+    static def infoFields = ['instance title', 'work title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication', 'identifiedBy']
     String clusterTable(Collection<Doc> cluster, List<List<String>> diffPaths = []) {
         Set<String> fields = new HashSet<>()
         cluster.each { fields.addAll(it.getWork().keySet()) }
@@ -221,12 +223,17 @@ class MergeWorks {
     void run(Function<List<String>, Runnable> f) {
         ExecutorService s = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4)
 
+        AtomicInteger i = new AtomicInteger()
         clusters.eachLine() {
             List<String> cluster = Arrays.asList(it.split(/[\t ]+/))
 
             s.submit({
                 try {
                     f.apply(cluster).run()
+                    int n = i.incrementAndGet()
+                    if (n % 100 == 0) {
+                        System.err.println("$n")
+                    }
                 }
                 catch (NoWorkException e) {
                     //println("No work:" + e.getMessage())
@@ -603,6 +610,9 @@ class Doc {
         }
         else if (field == 'publication') {
             return chipString(getInstance()['publication'] ?: [])
+        }
+        else if (field == 'identifiedBy') {
+            return chipString(getInstance()['identifiedBy'] ?: [])
         }
         else {
             return chipString(getWork().getOrDefault(field, []))
