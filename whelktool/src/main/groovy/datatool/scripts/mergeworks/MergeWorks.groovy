@@ -128,9 +128,9 @@ class MergeWorks {
 
                 for (titleCluster in titleClusters) {
                     if (titleCluster.size() > 1) {
-                        Set<String> diffProperties = getDiffProperties(titleCluster, ['contribution', 'genreForm'] as Set)
-                        if (!diffProperties.contains('contribution') && diffProperties.contains('genreForm')) {
-                            String gf = titleCluster.collect{ it.getProperty('genreForm') }.join(' ')
+                        Set<String> diffFields = getDiffFields(titleCluster, ['contribution', 'genreForm'] as Set)
+                        if (!diffFields.contains('contribution') && diffFields.contains('genreForm')) {
+                            String gf = titleCluster.collect{ it.get('genreForm') }.join(' ')
                             if (gf.contains('marc/FictionNotFurtherSpecified') && gf.contains('marc/NotFictionNotFurtherSpecified')) {
                                 println(titleCluster.collect{ it.getDoc().shortId }.join('\t'))
                             }
@@ -141,14 +141,11 @@ class MergeWorks {
         })
     }
 
-    String flattenedTitles(Map thing) {
-        thing['hasTitle'].collect { it['@type'] + ": " + it['flatTitle'] }.join(', ')
-    }
-
+    static def infoFields = ['instance title', 'work title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication']
     String clusterTable(Collection<Doc> cluster, List<List<String>> diffPaths = []) {
-        Set<String> properties = new HashSet<>()
-        cluster.each { properties.addAll(it.getWork().keySet()) }
-        Set<String> diffProperties = getDiffProperties(cluster, properties)
+        Set<String> fields = new HashSet<>()
+        cluster.each { fields.addAll(it.getWork().keySet()) }
+        Set<String> diffFields = getDiffFields(cluster, fields)
 
         String id = "${clusterId.incrementAndGet()}"
         String header = """
@@ -158,9 +155,9 @@ class MergeWorks {
             </tr>
            """.stripIndent()
 
-        String info = ['instance title', 'work title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication'].collect(propertyRows(cluster, "info")).join('\n')
-        String diff = diffProperties.collect(propertyRows(cluster, "diff")).join('\n')
-        String same = (properties - diffProperties).collect(propertyRows(cluster, cluster.size() > 1 ? "ok" : "")).join('\n')
+        String info = infoFields.collect(fieldRows(cluster, "info")).join('\n')
+        String diff = diffFields.collect(fieldRows(cluster, "diff")).join('\n')
+        String same = (fields - diffFields).collect(fieldRows(cluster, cluster.size() > 1 ? "ok" : "")).join('\n')
 
         return """
             <table>
@@ -173,57 +170,28 @@ class MergeWorks {
         """
     }
 
-    Set<String> getDiffProperties(Collection<Doc> cluster, Set<String> properties) {
-        Set<String> diffProperties = new TreeSet<>()
+    Set<String> getDiffFields(Collection<Doc> cluster, Set<String> fields) {
+        Set<String> diffFields = new TreeSet<>()
 
         [cluster, cluster].combinations().each { List combination ->
             Doc a = combination.first()
             Doc b = combination.last()
-            properties.each { p ->
+            fields.each { p ->
                 if (!equal(a, b, p)) {
-                    diffProperties.add(p)
+                    diffFields.add(p)
                 }
             }
         }
 
-        return diffProperties
+        return diffFields
     }
 
-    /*
-    String clusterTableOld(Collection<Doc> cluster, List<List<String>> diffPaths = []) {
-        """
-            <table>
-            <tr>
-                <th>Work</th>
-                <th>Instance</th>
-                <th>issuance</th>
-                <th>W</th>
-                <th>I</th>
-                <th>contribution</th>
-                ${diffPaths.collect { "<th>${it.join('.')}</th>" }.join('\n')}                                                             
-            </tr>
-            """.stripIndent() + cluster.collect { doc ->
-            """
-            <tr>
-                <td>${doc.getWork()['@type']}</td>
-                <td>${doc.doc.getThingType()}</td>
-                <td>${doc.doc.data['@graph'][1]['issuanceType']}</td>
-                <td>${doc.workDisplayTitle()}</td>
-                <td><a href="${doc.link()}">${doc.instanceDisplayTitle()}</a></td>
-                <td>${contributorStrings(doc.doc).join(' | ')}</td>
-                ${diffPaths.collect { "<th>${getPathSafe(doc.getWork(), it, '')}</th>" }.join('\\n')}
-            </tr> """.stripIndent()
-        }.join('\n') + "</table><br/><br/>\n"
-    }
-
-     */
-
-    def propertyRows (Collection<Doc> cluster, String cls) {
-        { property ->
+    def fieldRows(Collection<Doc> cluster, String cls) {
+        { field ->
             """
             <tr class="${cls}">
-                <td>${property}</td>
-                ${cluster.collect { "<td>${it.get(property)}</td>" }.join('\n')}   
+                <td>${field}</td>
+                ${cluster.collect { "<td>${it.get(field)}</td>" }.join('\n')}   
             </tr> """.stripIndent()
         }
     }
@@ -332,10 +300,10 @@ class MergeWorks {
         }
     }
 
-    boolean equal(Doc a, Doc b, String property) {
+    boolean equal(Doc a, Doc b, String field) {
         JSONCompareResult r = JSONCompare.compareJSON(
-                mapper.writeValueAsString(a.getWork().getOrDefault(property, "")),
-                mapper.writeValueAsString(b.getWork().getOrDefault(property, "")),
+                mapper.writeValueAsString(a.getWork().getOrDefault(field, "")),
+                mapper.writeValueAsString(b.getWork().getOrDefault(field, "")),
                 JSONCompareMode.NON_EXTENSIBLE)
 
         return !r.failed()
@@ -351,104 +319,6 @@ class MergeWorks {
         return partition(docs) { Doc a, Doc b ->
             !a.getTitleVariants().intersect(b.getTitleVariants()).isEmpty()
         }
-    }
-
-    void printTitle(Document a, Document b) {
-        Map wa = getWork(whelk, a)
-        Map wb = getWork(whelk, b)
-        List ta = wa['hasTitle']
-        List tb = wb['hasTitle']
-
-        if (ta != tb) {
-            StringBuilder s = new StringBuilder()
-            s.append(ta).append(' ' + a.shortId)
-            s.append('\n')
-            s.append(tb).append(' ' + b.shortId)
-            s.append('\n')
-            s.append('\n')
-            println(s.toString())
-
-            statistics.increment("title", "same")
-        } else {
-            statistics.increment("title", "diff")
-        }
-    }
-
-    void printDiff(Document a, Document b) {
-        Map wa = getWork(whelk, a)
-        Map wb = getWork(whelk, b)
-
-        JSONCompareResult r = JSONCompare.compareJSON(
-                mapper.writeValueAsString(wa),
-                mapper.writeValueAsString(wb),
-                JSONCompareMode.NON_EXTENSIBLE)
-
-
-        StringBuilder s = new StringBuilder()
-
-        s.append(String.format("%15s %s\t%s", a.getShortId(), a.getThingType(), wa['hasTitle'].collect { new TreeMap<>(it) }))
-        s.append('\n')
-        s.append(String.format("%15s %s\t%s", b.getShortId(), b.getThingType(), wb['hasTitle'].collect { new TreeMap<>(it) }))
-        s.append('\n')
-        s.append(whelk.baseUri.toString() + a.shortId)
-        s.append('\n')
-        s.append(whelk.baseUri.toString() + b.shortId)
-        s.append('\n')
-        s.append(r.getMessage())
-        s.append('\n')
-        /*
-        s.append('\n')
-        s.append('>>>\n')
-
-        r.getFieldMissing().each { f ->
-            s.append(f.getExpected()).append(': ').append(wa[f.getExpected()]).append('\n')
-        }
-        s.append('<<<\n')
-        r.getFieldUnexpected().each { f ->
-            s.append(f.getActual()).append(': ').append(wb[f.getActual()]).append('\n')
-        }
-
-         */
-
-        r.getMessage().split(';').each { m ->
-            String field = (m =~ /\s*(\w+)... Expected \d+ values but got \d+.*/).with { matches() ? it[0][1] : null }
-            if (field) {
-                s.append(field).append('\n').append(field.replaceAll('.', '-')).append('\n')
-                Set af = wa[field] as Set
-                Set bf = wb[field] as Set
-                if ((af - bf).size() > 0) {
-                    s.append(a.shortId + " extra: \n")
-                    (af - bf).each {
-                        s.append("\t$it\n")
-                    }
-                }
-                if ((bf - af).size() > 0) {
-                    s.append(b.shortId + " extra: \n")
-                    (bf - af).each {
-                        s.append("\t$it\n")
-                    }
-                    s.append('\n')
-                }
-            }
-        }
-
-        s.append('\n')
-        s.append('\n')
-        s.append('\n')
-
-        println(s.toString())
-    }
-
-    List<String> differentSizeFields(JSONCompareResult r) {
-        List<String> fields = r.getMessage().split(';').collect { m ->
-            (m =~ /\s*(\w+)... Expected \d+ values but got \d+.*/).with { matches() ? it[0][1] : null }
-        }.grep()
-
-        return fields
-    }
-
-    boolean sameWork(Document a, Document b) {
-        return new DocumentComparator().isEqual(getWork(whelk, a), getWork(whelk, b))
     }
 
     static Map getWork(Whelk whelk, Document d) {
@@ -467,16 +337,6 @@ class MergeWorks {
 
         //TODO works with already title
         //TODO 'marc:fieldref'
-
-        /*
-        work['hasTitle'].each {
-            it.remove('marc:searchElement')
-            it.remove('marc:nonfilingChars')
-            it.remove('marc:searchControl')
-            it.remove('marc:fieldref')
-        }
-    */
-
 
         work.remove('@id')
         return work
@@ -688,10 +548,6 @@ class Doc {
         displayTitle(['hasTitle': MergeWorks.flatTitles(getInstance())])
     }
 
-    String workDisplayTitle() {
-        getWork()['hasTitle'] ? displayTitle(['hasTitle': MergeWorks.flatTitles(getWork())]) : ''
-    }
-
     String link() {
         String base = Document.getBASE_URI().toString()
         String kat = "katalogisering/"
@@ -703,36 +559,36 @@ class Doc {
         getInstance()['issuanceType'] == 'Monograph'
     }
 
-    String get(String property) {
-        if (property == 'contribution') {
+    String get(String field) {
+        if (field == 'contribution') {
             return contributorStrings().join("<br>")
         }
-        else if (property == 'classification') {
+        else if (field == 'classification') {
             return classificationStrings().join("<br>")
         }
-        else if (property == 'instance title') {
+        else if (field == 'instance title') {
             return getInstance()['hasTitle'] ?: ''
         }
-        else if (property == 'work title') {
+        else if (field == 'work title') {
             return getFramed()['instanceOf']['hasTitle'] ?: ''
         }
-        else if (property == 'instance type') {
+        else if (field == 'instance type') {
             return getInstance()['@type']
         }
-        else if (property == 'editionStatement') {
+        else if (field == 'editionStatement') {
             return getInstance()['editionStatement'] ?: ''
         }
-        else if (property == 'responsibilityStatement') {
+        else if (field == 'responsibilityStatement') {
             return getInstance()['responsibilityStatement'] ?: ''
         }
-        else if (property == 'encodingLevel') {
+        else if (field == 'encodingLevel') {
             return doc.data['@graph'][0]['encodingLevel'] ?: ''
         }
-        else if (property == 'publication') {
+        else if (field == 'publication') {
             return chipString(getInstance()['publication'] ?: [])
         }
         else {
-            return chipString(getWork().getOrDefault(property, []))
+            return chipString(getWork().getOrDefault(field, []))
         }
     }
 
