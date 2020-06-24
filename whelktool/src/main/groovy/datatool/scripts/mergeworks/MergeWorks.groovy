@@ -141,6 +141,17 @@ class MergeWorks {
         })
     }
 
+    void fiction2() {
+        //statistics.printOnShutdown(10)
+        run({ cluster ->
+            return {
+                if (docs(cluster).any{ it.isFiction() }) {
+                    println(cluster.join('\t'))
+                }
+            }
+        })
+    }
+
     static def infoFields = ['instance title', 'work title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication']
     String clusterTable(Collection<Doc> cluster, List<List<String>> diffPaths = []) {
         Set<String> fields = new HashSet<>()
@@ -239,11 +250,15 @@ class MergeWorks {
         return t
     }
 
-    private Collection<Collection<Doc>> titleClusters(Collection<String> cluster) {
+    private Collection<Doc> docs(Collection<String> cluster) {
         whelk
                 .bulkLoad(cluster).values()
                 .collect { new Doc(whelk, it) }
-                .findAll { it.isMonograph() }
+                .findAll { it.isText() && it.isMonograph() }
+    }
+
+    private Collection<Collection<Doc>> titleClusters(Collection<String> cluster) {
+        docs(cluster)
                 .with { partitionByTitle(it) }
     }
 
@@ -507,6 +522,8 @@ ungdomsroman
 }
 
 class Doc {
+    public static final String SAOGF_SKÖN = 'https://id.kb.se/term/saogf/Sk%C3%B6nlitteratur'
+    public static final String MARC_FICTION = 'https://id.kb.se/marc/FictionNotFurtherSpecified'
     Whelk whelk
     Document doc
     Map work
@@ -692,5 +709,25 @@ class Doc {
         thing['@id']
                 ? """<a href="${thing['@id']}">$s</a>"""
                 : s
+    }
+
+    boolean isFiction() {
+        isMarcFiction() || isSaogfFiction() || isSabFiction()
+    }
+
+    boolean isMarcFiction() {
+        (getWork()['genreForm'] ?: []).any{ it['@id'] == MARC_FICTION }
+    }
+
+    boolean isSaogfFiction() {
+        (getWork()['genreForm'] ?: []).any{ whelk.relations.isImpliedBy(SAOGF_SKÖN, it['@id'] ?: '') }
+    }
+
+    boolean isSabFiction() {
+        classificationStrings().any{ it.contains('kssb') && it.contains(': H') }
+    }
+
+    boolean isText() {
+        getWork()['@type'] == 'Text'
     }
 }

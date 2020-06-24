@@ -13,7 +13,8 @@ class WorkTool {
         cli.d(longOpt:'diff', args: 1, argName:'diff', 'Field to diff')
         cli.e(longOpt:'edition', 'editionStatement')
         cli.t(longOpt:'subTitles', 'Subtitles')
-        cli.f(longOpt:'fiction', 'Fiction')
+        cli.f(longOpt:'fiction', 'Mixed marc/FictionNotFurtherSpecified and marc/NotFictionNotFurtherSpecified')
+        cli.f2(longOpt:'fiction2', 'Fiction')
 
         def options = cli.parse(args)
         if (options.h) {
@@ -42,6 +43,9 @@ class WorkTool {
         }
         else if (options.f) {
             m.fiction()
+        }
+        else if (options.f2) {
+            m.fiction2()
         }
         else {
             cli.usage()
