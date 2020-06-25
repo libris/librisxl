@@ -6822,6 +6822,7 @@
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$k": {
+        "NOTE:record-count": 295,
         "about": "_:intermediate",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
