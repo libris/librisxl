@@ -2596,6 +2596,7 @@ class MarcSubFieldHandler extends ConversionPart {
     String marcDefault
     boolean ignored = false
     boolean ignoreOnRevert = false
+    String onRevertAppendProperty
     boolean required = false
     boolean supplementary = false
     String requiresI1
@@ -2687,6 +2688,7 @@ class MarcSubFieldHandler extends ConversionPart {
         }
         marcDefault = subDfn.marcDefault
         definedElsewhereToken = subDfn.definedElsewhereToken
+        onRevertAppendProperty = subDfn.onRevertAppendProperty
         requiresI1 = subDfn['requires-i1']
         requiresI2 = subDfn['requires-i2']
         itemPos = subDfn.itemPos
@@ -2878,6 +2880,15 @@ class MarcSubFieldHandler extends ConversionPart {
 
             if (ignoreOnRevert) {
                 continue
+            }
+
+            if (onRevertAppendProperty) {
+                if (entity.containsKey(onRevertAppendProperty)) {
+                    String valueToAppend = entity[onRevertAppendProperty] instanceof List ?
+                            entity[onRevertAppendProperty].join(" ") : entity[onRevertAppendProperty]
+                    String mergedVal = "${entity[property]} ${valueToAppend}"
+                    propertyValue = mergedVal
+                }
             }
 
             if (propertyValue == null && castProperty)
