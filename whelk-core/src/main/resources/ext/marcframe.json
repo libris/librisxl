@@ -6767,7 +6767,7 @@
       "pendingResources": {
         "_:accompaniedMaterial": {"link": "accompaniedBy", "resourceType": "Work"},
         "_:libretto": {"link": "marc:libretto", "resourceType": "marc:Libretto"},
-        "_:original": {"link": "originalVersion", "resourceType": "Work"},
+        "_:intermediate": {"addLink": "marc:intermediateLanguage", "resourceType": "Work"},
         "_:summary": {"addLink": "summary", "resourceType": "Summary"},
         "_:subtitlesOrCaptions": {"link": "marc:subtitlesOrCaptions", "resourceType": "marc:SubtitlesOrCaptions"},
         "_:sungOrSpokenText": {"link": "marc:sungOrSpokenText", "resourceType": "marc:SungOrSpokenText"},
@@ -6812,8 +6812,7 @@
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$h": {
-        "about": "_:original",
-        "TODO": "originalVersion isn't normally used like this. This ought to be translationOf.",
+        "about": "_:translationSource",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
@@ -6823,8 +6822,8 @@
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
       "$k": {
-        "about": "_:translationSource",
-        "TODO": "if $h is mapped to translationOf, this needs to be something else (e.g. translationLanguge)",
+        "NOTE:record-count": 295,
+        "about": "_:intermediate",
         "addLink": "language",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
       },
@@ -6860,18 +6859,85 @@
                   "code": "swe"
                 }],
                 "marc:languageNote": "marc:ItemIsOrIncludesATranslation",
-                "originalVersion": {
+                "translationOf": [{
                   "@type": "Work",
                   "language": [{
                     "@id": "https://id.kb.se/language/rus",
                     "code": "rus"
                   }]
-                },
-                "translationOf": [{
+                }],
+                "marc:intermediateLanguage": [{
                   "@type": "Work",
                   "language": [{
                     "@id": "https://id.kb.se/language/ger",
                     "code": "ger"
+                  }]
+                }]
+              }
+            }
+          }
+        },
+        {
+          "name": "More than one translationOf",
+          "source": [
+            {"008" : "|     |        |  |||||||||||000 ||swe| "},
+            {"041": { "ind1": "1", "ind2": " ", "subfields": [{"a": "swe"}, {"h": "rus"}, {"h": "fin"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "language": [{
+                  "@id": "https://id.kb.se/language/swe",
+                  "code": "swe"
+                }],
+                "marc:languageNote" : "marc:ItemIsOrIncludesATranslation",
+                "translationOf": [{
+                  "@type": "Work",
+                  "language": [{
+                    "@id": "https://id.kb.se/language/rus",
+                    "code": "rus"
+                  },{
+                    "@id": "https://id.kb.se/language/fin",
+                    "code": "fin"
+                  }]
+                }]
+              }
+            }
+          }
+        },
+        {
+          "name": "Repeated 041",
+          "source": [
+            {"008" : "|     |        |  |||||||||||000 ||swe| "},
+            {"041": { "ind1": "1", "ind2": " ", "subfields": [{"a": "swe"}, {"h": "rus"}]}},
+            {"041": { "ind1": "1", "ind2": " ", "subfields": [{"h": "fin"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "language": [{
+                  "@id": "https://id.kb.se/language/swe",
+                  "code": "swe"
+                }],
+                "marc:languageNote" : "marc:ItemIsOrIncludesATranslation",
+                "translationOf": [{
+                  "@type": "Work",
+                  "language": [{
+                    "@id": "https://id.kb.se/language/rus",
+                    "code": "rus"
+                  }]
+                }],
+                "hasPart": [{
+                  "@type": "Work",
+                  "marc:languageNote" : "marc:ItemIsOrIncludesATranslation",
+                  "translationOf": [{
+                    "@type": "Work",
+                    "language": [{
+                      "@id": "https://id.kb.se/language/fin",
+                      "code": "fin"
+                    }]
                   }]
                 }]
               }
