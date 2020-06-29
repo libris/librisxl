@@ -6747,15 +6747,17 @@
         "resourceType": "Work",
         "embedded": true
       },
-      "i1": {
-        "property": "marc:languageNote",
-        "TODO": "Remove explicit data. Should be set to 1 when translationOf is present. See TODO on that and originalVersion. Equate absence and negation unless distinction is provably useful.",
-        "tokenMap": {
-          "0": "marc:ItemNotATranslationDoesNotIncludeATranslation",
-          "1": "marc:ItemIsOrIncludesATranslation"
+      "match": [
+        {
+          "when": {
+            "onRevert": {"translationOf": {}},
+            "then": {"ind1": "1"}
           },
-        "marcDefault": " "
-      },
+          "NOTE": "To avoid repeated revert of bib 041.",
+          "silentRevert": false
+        }
+      ],
+      "i1": {"ignored": true, "marcDefault": " "},
       "i2": {
         "property": "marc:languageCode",
         "marcDefault": " ",
@@ -6858,7 +6860,6 @@
                   "@id": "https://id.kb.se/language/swe",
                   "code": "swe"
                 }],
-                "marc:languageNote": "marc:ItemIsOrIncludesATranslation",
                 "translationOf": [{
                   "@type": "Work",
                   "language": [{
@@ -6891,7 +6892,6 @@
                   "@id": "https://id.kb.se/language/swe",
                   "code": "swe"
                 }],
-                "marc:languageNote" : "marc:ItemIsOrIncludesATranslation",
                 "translationOf": [{
                   "@type": "Work",
                   "language": [{
@@ -6921,7 +6921,6 @@
                   "@id": "https://id.kb.se/language/swe",
                   "code": "swe"
                 }],
-                "marc:languageNote" : "marc:ItemIsOrIncludesATranslation",
                 "translationOf": [{
                   "@type": "Work",
                   "language": [{
@@ -6931,7 +6930,6 @@
                 }],
                 "hasPart": [{
                   "@type": "Work",
-                  "marc:languageNote" : "marc:ItemIsOrIncludesATranslation",
                   "translationOf": [{
                     "@type": "Work",
                     "language": [{
@@ -8709,20 +8707,6 @@
         {
           "when": {
             "NOTE": "Sign of translation: use language label",
-            "TODO": "remove when translationOf is the sole marker of translation",
-            "onRevert": {"marc:languageNote": "marc:ItemIsOrIncludesATranslation"}
-          }
-        },
-        {
-          "when": {
-            "NOTE": "Sign of translation: use language label",
-            "TODO": "remove when translationOf is the sole marker of translation",
-            "onRevert": {"originalVersion": {}}
-          }
-        },
-        {
-          "when": {
-            "NOTE": "Sign of translation: use language label",
             "onRevert": {"translationOf": {}}
           }
         },
@@ -8802,13 +8786,12 @@
                 "@type": "Title",
                 "mainTitle": "Moyen âge"
               } ],
-              "language": {"@type": "Language", "label": "Engelska."},
-              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
+              "language": {"@type": "Language", "label": "Engelska."}
             }
           }}
         },
         {
-          "name": "Verify revert using infer for label from prefLabelByLang[locale]",
+          "name": "Verify revert using infer for label from prefLabelByLang[locale] - only produce $l if translationOf",
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8821,11 +8804,18 @@
                 "@id": "https://id.kb.se/language/swe",
                 "prefLabelByLang": {"sv": "Svenska"}
               },
-              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
+              "translationOf": [{
+                "@type": "Work",
+                "language": [{
+                  "@id": "https://id.kb.se/language/rus",
+                  "code": "rus"
+                }]
+              }]
             }
           }},
           "normalized": [
             {"008": "|     |        |  |||||||||||000 ||swe| "},
+            {"041": {"ind1": "1", "ind2": " ", "subfields": [{"h": "rus"}]}},
             {"240": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "En titel"},
               {"l": "Svenska"}
@@ -8833,7 +8823,7 @@
           ]
         },
         {
-          "name": "Verify revert using only one language since $l isn't repeatable.",
+          "name": "Verify revert using only one language since $l isn't repeatable - only produce $l if translationOf",
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8853,11 +8843,18 @@
                   "prefLabelByLang": {"sv": "Engelska"}
                 }
               ],
-              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
+              "translationOf": [{
+                "@type": "Work",
+                "language": [{
+                  "@id": "https://id.kb.se/language/rus",
+                  "code": "rus"
+                }]
+              }]
             }
           }},
           "normalized": [
             {"008": "|     |        |  |||||||||||000 ||swe| "},
+            {"041": {"ind1": "1", "ind2": " ", "subfields": [{"h": "rus"}]}},
             {"240": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "Swenglish text"},
               {"l": "Svenska"}
