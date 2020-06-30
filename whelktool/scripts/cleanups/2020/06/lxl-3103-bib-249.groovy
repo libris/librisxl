@@ -104,13 +104,25 @@ Map convert249(Map bib249) {
             result[v] = bib249[k]
         }
     }
-    if (result['mainTitle'] && result['subtitle'] && result['mainTitle'].endsWith(': ')) {
-        result['mainTitle'] = result['mainTitle'].substring(0, result['mainTitle'].length() - 2)
+    
+    if (result['mainTitle'] && result['subtitle']) {
+        result['mainTitle'] = stripSuffix(result['mainTitle'], ': ')
     }
+    result['mainTitle'] = stripSuffix(result['mainTitle'], '.')
+
     if (result['marc:nonfilingChars'] == "0") {
         result.remove('marc:nonfilingChars')
     }
     return result
+}
+
+static String stripSuffix(String s, String suffix) {
+    if (s.endsWith(suffix)) {
+        s.substring(0, s.length() - suffix.length())
+    }
+    else {
+        s
+    }
 }
 
 String comparisonTitle(Map title) {
