@@ -19,8 +19,10 @@ selectByCollection('bib') { bib ->
         process(bib)
     }
     catch(Exception e) {
-        System.err.println(e)
-        e.printStackTrace()
+        System.err.println("${bib.doc.shortId} $e")
+        if (e.getMessage() != "Already hasPart") {
+            e.printStackTrace()
+        }
     }
 
 }
