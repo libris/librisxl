@@ -78,6 +78,7 @@ List filterAndConvert(List _249s, Map work, StringBuilder msg) {
         listify(titles).eachWithIndex { title, i ->
             workTitles.put((path + i).join(', '), title)
         }
+        DocumentUtil.NOP
     })
 
     _249s.findResults { t ->
@@ -104,7 +105,7 @@ Map convert249(Map bib249) {
             result[v] = bib249[k]
         }
     }
-    
+
     if (result['mainTitle'] && result['subtitle']) {
         result['mainTitle'] = stripSuffix(result['mainTitle'], ': ')
     }
