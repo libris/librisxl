@@ -107,6 +107,9 @@ Map convert249(Map bib249) {
     if (result['mainTitle'] && result['subtitle'] && result['mainTitle'].endsWith(': ')) {
         result['mainTitle'] = result['mainTitle'].substring(0, result['mainTitle'].length() - 2)
     }
+    if (result['marc:nonfilingChars'] == "0") {
+        result.remove('marc:nonfilingChars')
+    }
     return result
 }
 
