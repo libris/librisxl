@@ -2882,6 +2882,8 @@ class MarcSubFieldHandler extends ConversionPart {
                 continue
             }
 
+            // TODO: Later, it may be desirable to add functionality
+            // to specify the punctuation mark to be used when merging.
             if (onRevertMergeWith) {
                 if (entity.containsKey(onRevertMergeWith)) {
                     String valueToAppend = entity[onRevertMergeWith] instanceof List ?
