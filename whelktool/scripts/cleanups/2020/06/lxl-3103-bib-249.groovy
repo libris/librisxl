@@ -2,7 +2,6 @@ import whelk.util.DocumentUtil
 import whelk.util.Statistics
 import org.apache.commons.lang3.StringUtils
 
-//s = new Statistics().printOnShutdown()
 class Script {
     static Map MAP_249 = [
             'marc:originalTitle' : 'mainTitle',
@@ -11,9 +10,10 @@ class Script {
             'marc:titlePart'     : 'partName',
             'marc:nonfilingChars': 'marc:nonfilingChars'
     ]
-
+    static Statistics s = new Statistics().printOnShutdown()
     static List TITLE_COMPONENTS = ['mainTitle', 'titleRemainder', 'subtitle', 'hasPart', 'partNumber', 'partName', 'marc:parallelTitle', 'marc:equalTitle']
 }
+
 selectByCollection('bib') { bib ->
     try {
         process(bib)
@@ -30,74 +30,68 @@ selectByCollection('bib') { bib ->
 void process(bib) {
     def (_record, instance) = bib.graph
     def work = getWork(bib)
+    List bib249s = asList(instance['marc:hasBib249'])
 
-    if(!work) {
+    if(!work || !bib249s) {
         return
     }
 
-    List _249s = listify(instance['marc:hasBib249'])
+    StringBuilder msg = new StringBuilder()
+    msg.append(bib.doc.shortId).append('\n')
+    msg.append(bib249s).append('\n')
 
-    if(_249s) {
-        StringBuilder msg = new StringBuilder()
-        msg.append(bib.doc.shortId).append('\n')
-        msg.append(_249s).append('\n')
+    def converted = bib249s.collect(this.&convert249)
+    msg.append(' --> ').append(converted).append('\n')
 
-        def converted = filterAndConvert(_249s, work, msg)
+    Map workTitles = allTitles(work)
 
-        if (converted.size() == 1) {
-            def title = converted.first()
-            work['hasTitle'] = listify(work['hasTitle'])
+    if (bib249s.size() == 1) {
+        def ogTitle = converted.first()
+        def matches = getExisting(ogTitle, workTitles)
+        if (!matches.isEmpty()) {
+            msg.append("$ogTitle ${comparisonTitle(ogTitle)}) already exists, dropping it: $matches ")
+            s.increment('Single 249 already exists', matches.keySet())
+        }
+        else {
+            work['hasTitle'] = asList(work['hasTitle'])
             if (work['hasTitle'].any{ it['@type'] == 'MainTitle' }) {
-                title['@type'] = 'VariantTitle'
+                ogTitle['@type'] = 'VariantTitle'
             }
 
-            work['hasTitle'].add(title)
-
-            msg.append("--> $title\n")
+            work['hasTitle'].add(ogTitle)
             msg.append("--> work['hasTitle']: ${work['hasTitle']}\n")
+            s.increment('Single 249 to hasTitle', ogTitle['@type'])
         }
-        else if (converted.size() > 1) {
-            if(work['hasPart']) {
-                throw new RuntimeException('Already hasPart')
-            }
-            work['hasPart'] = converted.collect {
-                [
-                        '@type': 'Work',
-                        'hasTitle': it
-                ]
-            }
-            msg.append("work['hasPart']: ${work['hasPart']}\n")
-        }
+    }
+    else {
+        // TODO
+        msg.append("MULTIPLE: $converted ${converted.collect { getExisting(it, workTitles) }}\n")
+        //msg.append("work['hasPart']: ${work['hasPart']}\n")
 
-        msg.append('\n')
-        println(msg.toString())
+    }
+
+    instance.remove('marc:hasBib249')
+    //bib.scheduleSave()
+
+    msg.append('\n')
+    println(msg.toString())
+}
+
+Map getExisting(Map ogTitle, Map workTitles) {
+    workTitles.findAll { path, title ->
+        comparisonTitle(ogTitle) == comparisonTitle(title)
     }
 }
 
-List filterAndConvert(List _249s, Map work, StringBuilder msg) {
+Map allTitles(Map work) {
     def workTitles = [:]
     DocumentUtil.findKey(work, 'hasTitle', { titles, path ->
-        listify(titles).eachWithIndex { title, i ->
+        asList(titles).eachWithIndex { title, i ->
             workTitles.put((path + i).join(', '), title)
         }
         DocumentUtil.NOP
     })
-
-    _249s.findResults { t ->
-        def c = convert249(t)
-
-        def matches = workTitles.findAll { path, title ->
-            comparisonTitle(title) == comparisonTitle(c)
-        }
-
-        if (!matches.isEmpty()) {
-            msg.append("$t ${comparisonTitle(c)}) already exists: $matches, dropping ")
-            return null
-        }
-        else {
-            return c
-        }
-    }
+    return workTitles
 }
 
 Map convert249(Map bib249) {
@@ -132,13 +126,14 @@ String comparisonTitle(Map title) {
     normalize(Script.TITLE_COMPONENTS.findResults { title.get(it, null) }.join(' '))
 }
 
-private static List listify(Object o) {
+private static List asList(Object o) {
     (o ?: []).with { it instanceof List ? it : [it] }
 }
 
 String normalize(String s) {
     StringUtils.normalizeSpace(s.replaceAll(/[^\p{IsAlphabetic}\p{Digit} ] /, '').toLowerCase().trim())
 }
+
 Map getWork(def bib) {
     def (record, thing, work) = bib.graph
     if(thing && thing['instanceOf'] && thing['instanceOf']['@type']) {
