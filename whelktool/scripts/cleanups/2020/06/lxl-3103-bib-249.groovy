@@ -47,27 +47,27 @@ void process(bib) {
 
     if (bib249s.size() == 1) {
         def ogTitle = converted.first()
-        def matches = getExisting(ogTitle, workTitles)
+        def matches = getExisting(ogTitle, workTitles, bib)
         if (!matches.isEmpty()) {
             msg.append("$ogTitle ${comparisonTitle(ogTitle)}) already exists, dropping it: $matches ")
-            s.increment('Single 249 already exists', matches.keySet())
+            Script.s.increment('Single 249 already exists', matches.keySet())
         }
         else {
             work['hasTitle'] = asList(work['hasTitle'])
-            if (work['hasTitle'].any{ it['@type'] == 'MainTitle' }) {
+            if (work['hasTitle'].any{ it['@type'] == 'Title' }) {
                 ogTitle['@type'] = 'VariantTitle'
             }
 
             work['hasTitle'].add(ogTitle)
             msg.append("--> work['hasTitle']: ${work['hasTitle']}\n")
-            s.increment('Single 249 to hasTitle', ogTitle['@type'])
+            Script.s.increment('Single 249 to hasTitle', ogTitle['@type'])
         }
     }
     else {
         // TODO
-        msg.append("MULTIPLE: $converted ${converted.collect { getExisting(it, workTitles) }}\n")
+        msg.append("MULTIPLE: $converted ${converted.collect { getExisting(it, workTitles, bib) }}\n")
         //msg.append("work['hasPart']: ${work['hasPart']}\n")
-
+        Script.s.increment('Multiple 249 to hasTitle', "${bib249s.size()}")
     }
 
     instance.remove('marc:hasBib249')
@@ -77,8 +77,9 @@ void process(bib) {
     println(msg.toString())
 }
 
-Map getExisting(Map ogTitle, Map workTitles) {
+Map getExisting(Map ogTitle, Map workTitles, bib) {
     workTitles.findAll { path, title ->
+        println ("CMP: ${bib.doc.shortId} ${comparisonTitle(ogTitle)} -- ${comparisonTitle(title)} (${ogTitle} == $path ${title})")
         comparisonTitle(ogTitle) == comparisonTitle(title)
     }
 }
@@ -95,7 +96,7 @@ Map allTitles(Map work) {
 }
 
 Map convert249(Map bib249) {
-    Map<String, String> result = ['@type': 'MainTitle']
+    Map<String, String> result = ['@type': 'Title']
     Script.MAP_249.each { k, v ->
         if (bib249[k]) {
             result[v] = bib249[k]
@@ -123,7 +124,7 @@ static String stripSuffix(String s, String suffix) {
 }
 
 String comparisonTitle(Map title) {
-    normalize(Script.TITLE_COMPONENTS.findResults { title.get(it, null) }.join(' '))
+    normalize(Script.TITLE_COMPONENTS.findResults { title.getOrDefault(it, null) }.join(' '))
 }
 
 private static List asList(Object o) {
@@ -131,7 +132,7 @@ private static List asList(Object o) {
 }
 
 String normalize(String s) {
-    StringUtils.normalizeSpace(s.replaceAll(/[^\p{IsAlphabetic}\p{Digit} ] /, '').toLowerCase().trim())
+    StringUtils.normalizeSpace(s.replaceAll(/[^\p{L} ] /, '').toLowerCase().trim())
 }
 
 Map getWork(def bib) {
