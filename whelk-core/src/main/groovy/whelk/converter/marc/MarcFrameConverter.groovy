@@ -2596,6 +2596,7 @@ class MarcSubFieldHandler extends ConversionPart {
     String marcDefault
     boolean ignored = false
     boolean ignoreOnRevert = false
+    String onRevertAppendValueFrom
     boolean required = false
     boolean supplementary = false
     String requiresI1
@@ -2687,6 +2688,7 @@ class MarcSubFieldHandler extends ConversionPart {
         }
         marcDefault = subDfn.marcDefault
         definedElsewhereToken = subDfn.definedElsewhereToken
+        onRevertAppendValueFrom = subDfn.onRevertAppendValueFrom
         requiresI1 = subDfn['requires-i1']
         requiresI2 = subDfn['requires-i2']
         itemPos = subDfn.itemPos
@@ -2878,6 +2880,17 @@ class MarcSubFieldHandler extends ConversionPart {
 
             if (ignoreOnRevert) {
                 continue
+            }
+
+            // TODO: Later, it may be desirable to add functionality
+            // to specify the punctuation mark to be used when merging.
+            if (onRevertAppendValueFrom) {
+                if (entity.containsKey(onRevertAppendValueFrom)) {
+                    String valueToAppend = entity[onRevertAppendValueFrom] instanceof List ?
+                            entity[onRevertAppendValueFrom].join(" ") : entity[onRevertAppendValueFrom]
+                    String mergedVal = "${entity[property]} ${valueToAppend}"
+                    propertyValue = mergedVal
+                }
             }
 
             if (propertyValue == null && castProperty)

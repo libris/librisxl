@@ -1453,7 +1453,7 @@
       "$t": {
         "about": "_:title",
         "property": "mainTitle",
-        "TODO:targetMatch": "222, 245"
+        "onRevertAppendValueFrom": "qualifier"
       },
       "$x": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "TODO:targetMatch": "022"},
       "$y": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
@@ -17981,7 +17981,7 @@
           ]}},
           "normalized": {"772": {"ind1": "0", "ind2": "0", "subfields": [
             {"a": "Hellström, Lennart, 1942-"},
-            {"t": "Grundläggande matematik för tillämpningar"},
+            {"t": "Grundläggande matematik för tillämpningar Lennart Hellström, Lars-Åke Lindahl"},
             {"d": "Uppsala : förf., cop. 1973"},
             {"w": "9901066360"}
           ]}},
@@ -18743,7 +18743,7 @@
           ]}},
           "normalized": {"776": {"ind1": "0", "ind2": "8", "subfields": [
             {"i": "Print"},
-            {"t": "Entangled world"},
+            {"t": "Entangled world Original"},
             {"z": "9783527404704"}
           ]}},
           "result": {"mainEntity": {
@@ -18766,7 +18766,7 @@
           "name": "Should only revert KeyTitle as 776 $t",
           "normalized": [
             {"245": {"ind1": "1", "ind2": "0", "subfields": [{"a": "Instance title"}]}},
-            {"776": {"ind1": "0", "ind2": " ", "subfields": [{"t": "Title 1"}, {"z": "9783527404704"}]}}
+            {"776": {"ind1": "0", "ind2": " ", "subfields": [{"t": "Title 1 (Stockholm. Online)"}, {"z": "9783527404704"}]}}
           ],
           "result": {"mainEntity": {
             "hasTitle": [{
