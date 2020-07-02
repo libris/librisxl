@@ -162,7 +162,7 @@ Map pathsOfTitles(Map work) {
 Map convert249(Map bib249) {
     Map<String, String> result = ['@type': 'Title']
     Script.MAP_249.each { k, v ->
-        if (bib249[k] && StringUtils.isNotBlank(bib249[k])) {
+        if (bib249[k] && isNotEmpty(bib249[k])) {
             result[v] = bib249[k]
         }
     }
@@ -180,6 +180,18 @@ Map convert249(Map bib249) {
     return (result['mainTitle'] || result['subtitle'])
             ? result
             : null
+}
+
+static boolean isNotEmpty(v) {
+    if (v instanceof String) {
+        StringUtils.isNotBlank(v)
+    }
+    else if (v instanceof Collection) {
+        !v.isEmpty()
+    }
+    else {
+        false
+    }
 }
 
 static String stripSuffix(String s, String suffix) {
