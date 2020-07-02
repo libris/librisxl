@@ -110,7 +110,7 @@ void process(bib) {
         def matches = converted.collect{ findMatchingTitles(it, workTitles) }
 
         if (matches.every{ !it.isEmpty() }) {
-            msg.append("All exist:\n  ${matches} \n")
+            msg.append("Matches:\n  ${matches} \n")
             print(Script.multipleAllExist, msg)
             Script.s.increment('Multiple 249', 'All exist (dropped)')
         }
@@ -132,6 +132,7 @@ void process(bib) {
             Script.s.increment('Multiple 249', 'None existing (to hasPart)')
         }
         else {
+            msg.append("Matches:\n  ${matches} \n")
             print(Script.multipleSomeExist, msg)
             Script.s.increment('Multiple 249', "Some exist (unhandled)")
             return
