@@ -53,9 +53,7 @@ selectByCollection('bib') { bib ->
     }
     catch(Exception e) {
         System.err.println("${bib.doc.shortId} $e")
-        if (e.getMessage() != "Already hasPart") {
-            e.printStackTrace()
-        }
+        e.printStackTrace()
     }
 
 }
