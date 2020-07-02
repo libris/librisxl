@@ -84,6 +84,7 @@ void process(bib) {
         def matches = findMatchingTitles(ogTitle, workTitles)
 
         if (!matches.isEmpty()) {
+            msg.append("Already exists: $matches\n")
             print(Script.singleExists, msg)
             Script.s.increment('Single 249 already exists (dropped)', matches.keySet())
         }
@@ -96,7 +97,7 @@ void process(bib) {
 
             work['hasTitle'].add(ogTitle)
 
-            msg.append("--> work['hasTitle']: ${work['hasTitle']}\n")
+            msg.append(" --> work['hasTitle']: ${work['hasTitle']}\n")
             print(variant ? Script.singleToVariantTitle : Script.singleToMainTitle, msg)
             Script.s.increment('Single 249 to hasTitle', ogTitle['@type'])
         }
@@ -169,10 +170,10 @@ Map convert249(Map bib249) {
     }
 
     if (result['mainTitle'] && result['subtitle']) {
-        result['mainTitle'] = stripSuffix(result['mainTitle'], ': ')
+        result['mainTitle'] = stripSuffix(result['mainTitle'].trim(), ':').trim()
     }
     if (result['mainTitle']) {
-        result['mainTitle'] = stripSuffix(result['mainTitle'], '.')
+        result['mainTitle'] = stripSuffix(result['mainTitle'].trim(), '.').trim()
     }
     if (result['marc:nonfilingChars'] == "0") {
         result.remove('marc:nonfilingChars')
