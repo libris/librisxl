@@ -190,7 +190,7 @@ static boolean isNotEmpty(v) {
         !v.isEmpty()
     }
     else {
-        false
+        true
     }
 }
 
