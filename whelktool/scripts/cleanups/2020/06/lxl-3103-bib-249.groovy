@@ -1,3 +1,17 @@
+/**
+ * Convert and move "original title" (obsolete marc field bib:249) from instance to work.
+ *
+ * If one 249 and not found anywhere in work
+ *  - If work hasTitle (@type: Title) move to VariantTitle else to Title
+ *
+ * If multiple 249
+ *  - If all found in work then drop
+ *  - If none found in work the move to hasPart unless work already contains hasPart
+ *  - If some are found then do nothing and log
+ *
+ * See LXL-3103 for more information.
+ */
+
 import whelk.util.DocumentUtil
 import whelk.util.Statistics
 import org.apache.commons.lang3.StringUtils
@@ -14,10 +28,24 @@ class Script {
     ]
     static Statistics s = new Statistics().printOnShutdown()
     static List TITLE_COMPONENTS = ['mainTitle', 'titleRemainder', 'subtitle', 'hasPart', 'partNumber', 'partName', 'marc:parallelTitle', 'marc:equalTitle']
-  //  PrintWriter failedUpdating
-}
-//Script.failedUpdating = getReportWriter("failed-updates")
 
+    static PrintWriter singleToMainTitle
+    static PrintWriter singleToVariantTitle
+    static PrintWriter singleExists
+    static PrintWriter broken
+    static PrintWriter multipleAllExist
+    static PrintWriter multipleNoneExist
+    static PrintWriter multipleSomeExist
+    static PrintWriter alreadyHasPart
+}
+Script.singleToMainTitle = getReportWriter("single-to-main-title.txt")
+Script.singleToVariantTitle = getReportWriter("single-to-variant-title.txt")
+Script.singleExists = getReportWriter("single-already-exists.txt")
+Script.broken = getReportWriter("all-broken.txt")
+Script.multipleAllExist = getReportWriter("multiple-all-exist.txt")
+Script.multipleNoneExist = getReportWriter("multiple-to-hasPart.txt")
+Script.multipleSomeExist = getReportWriter("multiple-some-exist.txt")
+Script.alreadyHasPart = getReportWriter("multiple-work-already-hasPart.txt")
 
 selectByCollection('bib') { bib ->
     try {
@@ -48,73 +76,80 @@ void process(bib) {
     def converted = bib249s.findResults(this.&convert249)
     msg.append(' --> ').append(converted).append('\n')
 
-    Map workTitles = allTitles(work)
+    Map workTitles = pathsOfTitles(work)
 
+    // ONE 249
     if (converted.size() == 1) {
         def ogTitle = converted.first()
-        def matches = getExisting(ogTitle, workTitles, bib)
+        def matches = findMatchingTitles(ogTitle, workTitles)
+
         if (!matches.isEmpty()) {
-            msg.append("$ogTitle ${comparisonTitle(ogTitle)}) already exists, dropping it: $matches ")
-            Script.s.increment('Single 249 already exists', matches.keySet())
+            print(Script.singleExists, msg)
+            Script.s.increment('Single 249 already exists (dropped)', matches.keySet())
         }
         else {
             work['hasTitle'] = asList(work['hasTitle'])
-            if (work['hasTitle'].any{ it['@type'] == 'Title' }) {
+            boolean variant = work['hasTitle'].any{ it['@type'] == 'Title' }
+            if (variant) {
                 ogTitle['@type'] = 'VariantTitle'
             }
 
             work['hasTitle'].add(ogTitle)
+
             msg.append("--> work['hasTitle']: ${work['hasTitle']}\n")
+            print(variant ? Script.singleToVariantTitle : Script.singleToMainTitle, msg)
             Script.s.increment('Single 249 to hasTitle', ogTitle['@type'])
         }
     }
+    // ALL 249 BROKEN
     else if (converted.size() == 0) {
-        msg.append("Broken 249, dropping\n")
+        print(Script.broken, msg)
         Script.s.increment('Broken', "total")
     }
+    // MULTIPLE 249
     else {
-        // TODO
-        msg.append("MULTIPLE: $converted ${converted.collect { getExisting(it, workTitles, bib) }}\n")
-        def matches = converted.collect{ getExisting(it, workTitles, bib) }
+        def matches = converted.collect{ findMatchingTitles(it, workTitles) }
+
         if (matches.every{ !it.isEmpty() }) {
-            msg.append("All titles already exist, dropping: $matches ")
-            Script.s.increment('Multiple 249 - All existing', matches)
+            msg.append("All exist:\n  ${matches} \n")
+            print(Script.multipleAllExist, msg)
+            Script.s.increment('Multiple 249', 'All exist (dropped)')
         }
         else if (matches.every{ it.isEmpty() }) {
             if (work['hasPart']) {
-                throw new Exception("Already hasPart")
+                print(Script.alreadyHasPart, msg)
+                Script.s.increment('Multiple 249', 'Already hasPart (unhandled)')
+                return
             }
 
-            msg.append("Multiple 249 - No title already exists")
-            Script.s.increment('Multiple 249', 'None existing')
             work['hasPart'] = converted.collect{
                 [
                         '@type': 'Work',
                         'hasTitle': it
                 ]
             }
+
+            print(Script.multipleNoneExist, msg)
+            Script.s.increment('Multiple 249', 'None existing (to hasPart)')
         }
         else {
-            msg.append("Multiple 249 - Some already exist")
-            Script.s.increment('Multiple 249', "Some exist")
+            print(Script.multipleSomeExist, msg)
+            Script.s.increment('Multiple 249', "Some exist (unhandled)")
+            return
         }
     }
 
     instance.remove('marc:hasBib249')
     //bib.scheduleSave()
-
-    msg.append('\n')
-    println(msg.toString())
 }
 
-Map getExisting(Map ogTitle, Map workTitles, bib) {
+Map findMatchingTitles(Map ogTitle, Map workTitles) {
     workTitles.findAll { path, title ->
-        println ("CMP: ${bib.doc.shortId} ${comparisonTitle(ogTitle)} -- ${comparisonTitle(title)} (${ogTitle} == $path ${title})")
         comparisonTitle(ogTitle) == comparisonTitle(title)
     }
 }
 
-Map allTitles(Map work) {
+Map pathsOfTitles(Map work) {
     def workTitles = [:]
     DocumentUtil.findKey(work, 'hasTitle', { titles, path ->
         asList(titles).eachWithIndex { title, i ->
@@ -155,6 +190,10 @@ static String stripSuffix(String s, String suffix) {
     else {
         s
     }
+}
+
+void print(PrintWriter p, StringBuilder msg) {
+    p.println(msg.toString() + '\n')
 }
 
 String comparisonTitle(Map title) {
