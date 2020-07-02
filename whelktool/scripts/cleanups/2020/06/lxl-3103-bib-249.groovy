@@ -118,6 +118,7 @@ void process(bib) {
         }
         else if (matches.every{ it.isEmpty() }) {
             if (work['hasPart']) {
+                msg.append("Existing hasPart:\n  ${work['hasPart']} \n")
                 print(Script.alreadyHasPart, msg)
                 Script.s.increment('Multiple 249', 'Already hasPart (unhandled)')
                 return
@@ -132,6 +133,7 @@ void process(bib) {
             msg.append("Matches:\n  ${matches} \n")
 
             if (work['hasPart']) {
+                msg.append("Existing hasPart:\n  ${work['hasPart']} \n")
                 print(Script.multipleSomeExistUnhandled, msg)
                 Script.s.increment('Multiple 249', "Some exist (unhandled)")
                 return
