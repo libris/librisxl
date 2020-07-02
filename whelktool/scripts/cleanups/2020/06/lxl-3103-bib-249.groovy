@@ -35,7 +35,8 @@ class Script {
     static PrintWriter broken
     static PrintWriter multipleAllExist
     static PrintWriter multipleNoneExist
-    static PrintWriter multipleSomeExist
+    static PrintWriter multipleSomeExistHandled
+    static PrintWriter multipleSomeExistUnhandled
     static PrintWriter alreadyHasPart
 }
 Script.singleToMainTitle = getReportWriter("single-to-main-title.txt")
@@ -44,7 +45,8 @@ Script.singleExists = getReportWriter("single-already-exists.txt")
 Script.broken = getReportWriter("all-broken.txt")
 Script.multipleAllExist = getReportWriter("multiple-all-exist.txt")
 Script.multipleNoneExist = getReportWriter("multiple-to-hasPart.txt")
-Script.multipleSomeExist = getReportWriter("multiple-some-exist.txt")
+Script.multipleSomeExistHandled = getReportWriter("multiple-some-exist-to-hasPart.txt")
+Script.multipleSomeExistUnhandled = getReportWriter("multiple-some-exist-already-hasPart.txt")
 Script.alreadyHasPart = getReportWriter("multiple-work-already-hasPart.txt")
 
 selectByCollection('bib') { bib ->
@@ -121,26 +123,40 @@ void process(bib) {
                 return
             }
 
-            work['hasPart'] = converted.collect{
-                [
-                        '@type': 'Work',
-                        'hasTitle': it
-                ]
-            }
+            setHasPart(work, converted)
 
             print(Script.multipleNoneExist, msg)
             Script.s.increment('Multiple 249', 'None existing (to hasPart)')
         }
         else {
             msg.append("Matches:\n  ${matches} \n")
-            print(Script.multipleSomeExist, msg)
-            Script.s.increment('Multiple 249', "Some exist (unhandled)")
-            return
+
+            if (work['hasPart']) {
+                print(Script.multipleSomeExistUnhandled, msg)
+                Script.s.increment('Multiple 249', "Some exist (unhandled)")
+                return
+            }
+            else {
+                setHasPart(work, converted)
+                print(Script.multipleSomeExistHandled, msg)
+                Script.s.increment('Multiple 249', "Some exist (to hasPart)")
+                return
+            }
         }
     }
 
     instance.remove('marc:hasBib249')
-    //bib.scheduleSave()
+
+    bib.scheduleSave()
+}
+
+void setHasPart(Map work, List converted) {
+    work['hasPart'] = converted.collect{
+        [
+                '@type': 'Work',
+                'hasTitle': it
+        ]
+    }
 }
 
 Map findMatchingTitles(Map ogTitle, Map workTitles) {
