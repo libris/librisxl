@@ -2,6 +2,8 @@ import whelk.util.DocumentUtil
 import whelk.util.Statistics
 import org.apache.commons.lang3.StringUtils
 
+import java.text.Normalizer
+
 class Script {
     static Map MAP_249 = [
             'marc:originalTitle' : 'mainTitle',
@@ -12,7 +14,10 @@ class Script {
     ]
     static Statistics s = new Statistics().printOnShutdown()
     static List TITLE_COMPONENTS = ['mainTitle', 'titleRemainder', 'subtitle', 'hasPart', 'partNumber', 'partName', 'marc:parallelTitle', 'marc:equalTitle']
+  //  PrintWriter failedUpdating
 }
+//Script.failedUpdating = getReportWriter("failed-updates")
+
 
 selectByCollection('bib') { bib ->
     try {
@@ -40,12 +45,12 @@ void process(bib) {
     msg.append(bib.doc.shortId).append('\n')
     msg.append(bib249s).append('\n')
 
-    def converted = bib249s.collect(this.&convert249)
+    def converted = bib249s.findResults(this.&convert249)
     msg.append(' --> ').append(converted).append('\n')
 
     Map workTitles = allTitles(work)
-
-    if (bib249s.size() == 1) {
+    
+    if (converted.size() == 1) {
         def ogTitle = converted.first()
         def matches = getExisting(ogTitle, workTitles, bib)
         if (!matches.isEmpty()) {
@@ -63,11 +68,37 @@ void process(bib) {
             Script.s.increment('Single 249 to hasTitle', ogTitle['@type'])
         }
     }
+    else if (converted.size() == 0) {
+        msg.append("Broken 249, dropping\n")
+        Script.s.increment('Broken', "total")
+    }
     else {
         // TODO
         msg.append("MULTIPLE: $converted ${converted.collect { getExisting(it, workTitles, bib) }}\n")
+        def matches = converted.collect{ getExisting(it, workTitles, bib) }
+        if (matches.every{ !it.isEmpty() }) {
+            msg.append("All titles already exist, dropping: $matches ")
+            Script.s.increment('Multiple 249 - All existing', matches)
+        }
+        else if (matches.every{ it.isEmpty() }) {
+            if (work['hasPart']) {
+                throw new Exception("Already hasPart")
+            }
+
+            msg.append("Multiple 249 - No title already exists")
+            Script.s.increment('Multiple 249', 'None existing')
+            work['hasPart'] = converted.collect{
+                [
+                        '@type': 'Work',
+                        'hasTitle': it
+                ]
+            }
+        }
+        else {
+            Script.s.increment('Multiple 249', "Some exist")
+        }
         //msg.append("work['hasPart']: ${work['hasPart']}\n")
-        Script.s.increment('Multiple 249 to hasTitle', "${bib249s.size()}")
+
     }
 
     instance.remove('marc:hasBib249')
@@ -98,7 +129,7 @@ Map allTitles(Map work) {
 Map convert249(Map bib249) {
     Map<String, String> result = ['@type': 'Title']
     Script.MAP_249.each { k, v ->
-        if (bib249[k]) {
+        if (bib249[k] && StringUtils.isNotBlank(bib249[k])) {
             result[v] = bib249[k]
         }
     }
@@ -106,12 +137,16 @@ Map convert249(Map bib249) {
     if (result['mainTitle'] && result['subtitle']) {
         result['mainTitle'] = stripSuffix(result['mainTitle'], ': ')
     }
-    result['mainTitle'] = stripSuffix(result['mainTitle'], '.')
-
+    if (result['mainTitle']) {
+        result['mainTitle'] = stripSuffix(result['mainTitle'], '.')
+    }
     if (result['marc:nonfilingChars'] == "0") {
         result.remove('marc:nonfilingChars')
     }
-    return result
+
+    return (result['mainTitle'] || result['subtitle'])
+            ? result
+            : null
 }
 
 static String stripSuffix(String s, String suffix) {
@@ -132,8 +167,16 @@ private static List asList(Object o) {
 }
 
 String normalize(String s) {
-    StringUtils.normalizeSpace(s.replaceAll(/[^\p{L} ] /, '').toLowerCase().trim())
+    StringUtils.normalizeSpace(asciiFold(s).replaceAll(/[^\p{L} ] /, '').toLowerCase().trim())
 }
+
+
+String asciiFold(String s) {
+    def unicodeMark = /\p{M}/
+    return Normalizer.normalize(s, Normalizer.Form.NFD).replaceAll(unicodeMark, '')
+}
+
+
 
 Map getWork(def bib) {
     def (record, thing, work) = bib.graph
