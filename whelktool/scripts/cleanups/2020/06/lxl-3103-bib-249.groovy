@@ -49,7 +49,7 @@ void process(bib) {
     msg.append(' --> ').append(converted).append('\n')
 
     Map workTitles = allTitles(work)
-    
+
     if (converted.size() == 1) {
         def ogTitle = converted.first()
         def matches = getExisting(ogTitle, workTitles, bib)
@@ -95,10 +95,9 @@ void process(bib) {
             }
         }
         else {
+            msg.append("Multiple 249 - Some already exist")
             Script.s.increment('Multiple 249', "Some exist")
         }
-        //msg.append("work['hasPart']: ${work['hasPart']}\n")
-
     }
 
     instance.remove('marc:hasBib249')
@@ -167,16 +166,13 @@ private static List asList(Object o) {
 }
 
 String normalize(String s) {
-    StringUtils.normalizeSpace(asciiFold(s).replaceAll(/[^\p{L} ] /, '').toLowerCase().trim())
+    StringUtils.normalizeSpace(asciiFold(s).replaceAll(/[^\p{L} ]/, '').toLowerCase().trim())
 }
-
 
 String asciiFold(String s) {
     def unicodeMark = /\p{M}/
     return Normalizer.normalize(s, Normalizer.Form.NFD).replaceAll(unicodeMark, '')
 }
-
-
 
 Map getWork(def bib) {
     def (record, thing, work) = bib.graph
