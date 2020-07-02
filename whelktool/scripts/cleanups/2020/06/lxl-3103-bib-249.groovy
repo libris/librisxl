@@ -140,7 +140,6 @@ void process(bib) {
                 setHasPart(work, converted)
                 print(Script.multipleSomeExistHandled, msg)
                 Script.s.increment('Multiple 249', "Some exist (to hasPart)")
-                return
             }
         }
     }
