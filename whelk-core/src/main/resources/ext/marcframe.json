@@ -7522,7 +7522,7 @@
         "marcDefault": " "
       },
       "$a": {"property": "code"},
-      "$b": {"property": "marc:itemNumber"},
+      "$b": {"ignored": true},
       "$x": {"addProperty": "marc:commonAuxiliarySubdivision"},
       "$2": {"property": "marc:editionIdentifier"},
       "_spec": [
@@ -7589,7 +7589,7 @@
           "0": "dlc"
         }
       },
-      "$b": {"property": "itemPortion"},
+      "$b": {"ignored": true},
       "$m": {"ignored": true, "NOTE:LC": "Standard or optional designation (NR) - nac"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
@@ -7680,7 +7680,6 @@
           "normalized": {
             "082": {"ind1": " ", "ind2": "4", "subfields": [
               {"a": "808"},
-              {"b": ".066"},
               {"2": "21"}
             ]}},
           "result": {"mainEntity": {
@@ -7691,8 +7690,7 @@
                   "@type": "ClassificationDdc",
                   "code": "808",
                   "edition": "other",
-                  "editionEnumeration": "21",
-                  "itemPortion": ".066"
+                  "editionEnumeration": "21"
                 }
               ]
             }
@@ -7798,6 +7796,7 @@
       "TODO": "Should we deprecate this altogether? BF2=nac",
       "addLink": "additionalClassificationDdc",
       "include": ["classification-ddc"],
+      "$b": {"ignored": true},
       "$c": {"ignored": true, "NOTE:record-count": 1, "NOTE:local": "Används normalt ej"},
       "$m": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Används normalt ej"},
       "$q": {"link": "source", "resourceType": "Source", "property": "label"},
