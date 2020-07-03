@@ -92,7 +92,10 @@ void process(bib) {
             work['hasTitle'] = asList(work['hasTitle'])
             boolean variant = work['hasTitle'].any{ it['@type'] == 'Title' }
             if (variant) {
-                ogTitle['@type'] = 'VariantTitle'
+                // TODO: handle (temporarily disabled - rule needs to be verified)
+                return
+
+                //ogTitle['@type'] = 'VariantTitle'
             }
 
             work['hasTitle'].add(ogTitle)
@@ -106,6 +109,8 @@ void process(bib) {
     else if (converted.size() == 0) {
         print(Script.broken, msg)
         Script.s.increment('Broken', "total")
+        // TODO: handle (temporarily disabled - rule needs to be verified)
+        return
     }
     // MULTIPLE 249
     else {
@@ -128,6 +133,9 @@ void process(bib) {
 
             print(Script.multipleNoneExist, msg)
             Script.s.increment('Multiple 249', 'None existing (to hasPart)')
+
+            // TODO: handle (temporarily disabled - rule needs to be verified)
+            return
         }
         else {
             msg.append("Matches:\n  ${matches} \n")
@@ -142,6 +150,9 @@ void process(bib) {
                 setHasPart(work, converted)
                 print(Script.multipleSomeExistHandled, msg)
                 Script.s.increment('Multiple 249', "Some exist (to hasPart)")
+
+                // TODO: handle (temporarily disabled - rule needs to be verified)
+                return
             }
         }
     }
