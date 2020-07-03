@@ -9310,15 +9310,9 @@
     },
 
     "249": {
-      "NOTE:Local": "LIBRIS-definierat fält, OBSOLET",
-      "addLink": "marc:hasBib249",
-      "resourceType": "marc:Bib249",
-      "i1": {"property": "marc:sequenceOfWork", "marcDefault": " "},
-      "i2": {"property": "marc:nonfilingChars", "marcDefault": "0"},
-      "$a": {"property": "marc:originalTitle"},
-      "$b": {"property": "marc:titleRemainder"},
-      "$n": {"addProperty": "marc:titleNumber"},
-      "$p": {"addProperty": "marc:titlePart"} 
+      "ignored": true,
+      "NOTE:Local": "LIBRIS-definierat fält, OBSOLET sedan 2004",
+      "NOTE": "Global cleanup of existing occurrences. See LXL-3103 for more info"
     },
 
     "250": {
