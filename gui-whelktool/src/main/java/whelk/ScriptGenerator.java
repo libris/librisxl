@@ -17,6 +17,14 @@ public class ScriptGenerator
         return new PortableScript(scriptText, controlNumbers, "Radering av " + sigel + "-bestånd");
     }
 
+    public static PortableScript generateDeleteBibScript(Set<String> controlNumbers) throws IOException
+    {
+        String scriptText = IOUtils.toString(new InputStreamReader(
+                ScriptGenerator.class.getClassLoader().getResourceAsStream("templates/delete-bib.groovy") ));
+
+        return new PortableScript(scriptText, controlNumbers, "Radering av " + controlNumbers.size() + " bibbliografiska IDn");
+    }
+
     public static PortableScript generateChangeSigelScript(String fromSigel, String toSigel) throws IOException
     {
         String scriptText = IOUtils.toString(new InputStreamReader(
