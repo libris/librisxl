@@ -143,10 +143,10 @@ class LegacyIntegrationTools {
                 field035.addSubfield(a)
                 record.addField(field035)
             }
-
-            // Replace 003
-            record.getFields("003").clear() // Remove MARC 003
-            record.addField(new ControlfieldImpl("003", "SE-LIBR"))
         }
+
+        // Replace 003
+        record.getFields("003").clear() // Remove MARC 003
+        record.addField(new ControlfieldImpl("003", "SE-LIBR"))
     }
 }
