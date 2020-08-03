@@ -17,4 +17,13 @@ public class ScriptGenerator
         return new PortableScript(scriptText, controlNumbers, "Radering av " + sigel + "-bestånd");
     }
 
+    public static PortableScript generateChangeSigelScript(String fromSigel, String toSigel) throws IOException
+    {
+        String scriptText = IOUtils.toString(new InputStreamReader(
+                ScriptGenerator.class.getClassLoader().getResourceAsStream("templates/change-sigel.groovy") ));
+        scriptText = scriptText.replace("£FROMSIGEL", fromSigel);
+        scriptText = scriptText.replace("£TOSIGEL", toSigel);
+
+        return new PortableScript(scriptText, null, "Byte av sigel " + fromSigel + " till " + toSigel);
+    }
 }

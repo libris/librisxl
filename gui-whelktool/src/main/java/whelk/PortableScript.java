@@ -17,7 +17,10 @@ public class PortableScript implements Serializable
     public PortableScript(String scriptText, Set<String> ids, String comment)
     {
         this.scriptText = scriptText;
-        this.ids = Collections.unmodifiableSet(ids);
+        if (ids != null)
+            this.ids = Collections.unmodifiableSet(ids);
+        else
+            this.ids = null;
         this.comment = comment;
     }
 
@@ -29,8 +32,12 @@ public class PortableScript implements Serializable
         Path reportPath = scriptWorkingDir.resolve("report");
         Files.createDirectories(reportPath);
 
-        Files.write(inputFilePath, ids);
-        String flattenedScriptText = scriptText.replace("£INPUT", inputFilePath.toString());
+        String flattenedScriptText = scriptText;
+        if (ids != null)
+        {
+            Files.write(inputFilePath, ids);
+            flattenedScriptText = scriptText.replace("£INPUT", inputFilePath.toString());
+        }
         Files.write(scriptFilePath, flattenedScriptText.getBytes());
 
         String[] args =
