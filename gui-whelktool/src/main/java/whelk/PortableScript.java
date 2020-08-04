@@ -42,6 +42,7 @@ public class PortableScript implements Serializable
 
         String[] args =
                 {
+                        "--allow-loud",
                         "--report",
                         reportPath.toString(),
                         scriptFilePath.toString(),

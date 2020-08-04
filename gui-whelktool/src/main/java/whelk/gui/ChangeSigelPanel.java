@@ -46,7 +46,7 @@ public class ChangeSigelPanel extends WizardCard implements DocumentListener
 
     private void setState()
     {
-        if (toSigelField.getText().matches("^[A-Za-z]+$") && !fromSigelField.getText().isEmpty())
+        if (toSigelField.getText().matches("^[A-Za-z0-9]+$") && !fromSigelField.getText().isEmpty())
         {
             enableNext();
         }
