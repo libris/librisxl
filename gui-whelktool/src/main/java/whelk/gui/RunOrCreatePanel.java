@@ -16,13 +16,23 @@ public class RunOrCreatePanel extends WizardCard implements ActionListener
 
         this.setLayout(new GridBagLayout());
 
+        boolean creationForbidden = System.getProperty("creationForbidden") != null &&
+                System.getProperty("creationForbidden").equals("true");
+
         Box vbox = Box.createVerticalBox();
-        rCreate = new JRadioButton("Skapa en körning.");
-        rCreate.addActionListener(this);
+        if (creationForbidden)
+        {
+            rCreate = new JRadioButton("Skapa en körning (ej tillåtet i denna miljö).");
+            rCreate.setEnabled(false);
+        }
+        else
+        {
+            rCreate = new JRadioButton("Skapa en körning.");
+            rCreate.addActionListener(this);
+            rCreate.setSelected(true);
+        }
         rRun = new JRadioButton("Kör en tidigare skapad körning.");
         rRun.addActionListener(this);
-
-        rCreate.setSelected(true);
 
         ButtonGroup group = new ButtonGroup();
         group.add(rCreate);
