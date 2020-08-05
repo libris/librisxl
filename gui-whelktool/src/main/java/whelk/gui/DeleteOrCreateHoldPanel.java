@@ -14,19 +14,21 @@ import java.util.Set;
 
 import whelk.ScriptGenerator;
 
-public class DeleteHoldPanel extends WizardCard implements ActionListener, DocumentListener
+public class DeleteOrCreateHoldPanel extends WizardCard implements ActionListener, DocumentListener
 {
     final Wizard window;
+    private final boolean createHoldInsteadOfDelete;
 
     private JFileChooser chooser = new JFileChooser();
     private File chosenFile;
     private JTextField chosenFileField;
     private JTextField sigelField;
 
-    public DeleteHoldPanel(Wizard wizard)
+    public DeleteOrCreateHoldPanel(Wizard wizard, boolean createHolds)
     {
         super(wizard);
         window = wizard;
+        createHoldInsteadOfDelete = createHolds;
 
         Box vbox = Box.createVerticalBox();
 
@@ -48,7 +50,13 @@ public class DeleteHoldPanel extends WizardCard implements ActionListener, Docum
 
         vbox.add(Box.createVerticalStrut(10));
 
-        vbox.add(new JLabel("Vänligen ange sigel för vilket bestånd ska tas bort."));
+        if (createHoldInsteadOfDelete)
+        {
+            vbox.add(new JLabel("Vänligen ange sigel för vilket bestånd ska läggas till."));
+        } else
+        {
+            vbox.add(new JLabel("Vänligen ange sigel för vilket bestånd ska tas bort."));
+        }
         sigelField = new JTextField();
         sigelField.getDocument().addDocumentListener(this);
         vbox.add(sigelField);
@@ -71,7 +79,10 @@ public class DeleteHoldPanel extends WizardCard implements ActionListener, Docum
         }
         try
         {
-            setParameterForNextCard(ScriptGenerator.generateDeleteHoldScript(sigelField.getText(), ids));
+            if (createHoldInsteadOfDelete)
+                setParameterForNextCard(ScriptGenerator.generateCreateHoldScript(sigelField.getText(), ids));
+            else
+                setParameterForNextCard(ScriptGenerator.generateDeleteHoldScript(sigelField.getText(), ids));
         } catch (IOException ioe)
         {
             Wizard.exitFatal(ioe);

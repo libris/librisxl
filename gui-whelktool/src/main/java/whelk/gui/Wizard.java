@@ -17,6 +17,7 @@ class Wizard extends JDialog implements ActionListener
     public static String RUN = "runexisting";
     public static String DELETE_BIB = "deletebibs";
     public static String DELETE_HOLD = "deleteholds";
+    public static String CREATE_HOLD = "createholds";
     public static String CHANGE_SIGEL = "changesigel";
     public static String SELECT_SCRIPT = "selectscript";
 
@@ -41,7 +42,8 @@ class Wizard extends JDialog implements ActionListener
         cardInstances.put(CREATE_WHAT, new CreateWhatPanel(this));
         cardInstances.put(RUN, new RunPanel(this));
         cardInstances.put(DELETE_BIB, new DeleteBibPanel(this));
-        cardInstances.put(DELETE_HOLD, new DeleteHoldPanel(this));
+        cardInstances.put(DELETE_HOLD, new DeleteOrCreateHoldPanel(this, false));
+        cardInstances.put(CREATE_HOLD, new DeleteOrCreateHoldPanel(this, true));
         cardInstances.put(CHANGE_SIGEL, new ChangeSigelPanel(this));
         cardInstances.put(SELECT_SCRIPT, new SelectScriptPanel(this));
 

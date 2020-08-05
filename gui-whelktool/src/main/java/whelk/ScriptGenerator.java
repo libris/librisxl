@@ -17,6 +17,15 @@ public class ScriptGenerator
         return new PortableScript(scriptText, controlNumbers, "Radering av " + sigel + "-bestånd");
     }
 
+    public static PortableScript generateCreateHoldScript(String sigel, Set<String> controlNumbers) throws IOException
+    {
+        String scriptText = IOUtils.toString(new InputStreamReader(
+                ScriptGenerator.class.getClassLoader().getResourceAsStream("templates/create-hold.groovy") ));
+        scriptText = scriptText.replace("£SIGEL", sigel);
+
+        return new PortableScript(scriptText, controlNumbers, "Skapande av " + sigel + "-bestånd");
+    }
+
     public static PortableScript generateDeleteBibScript(Set<String> controlNumbers) throws IOException
     {
         String scriptText = IOUtils.toString(new InputStreamReader(
