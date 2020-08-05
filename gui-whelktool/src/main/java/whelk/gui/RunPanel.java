@@ -58,6 +58,7 @@ public class RunPanel extends WizardCard implements ActionListener
     void onShow(Object parameterFromPreviousCard)
     {
         scriptToRun = (PortableScript) parameterFromPreviousCard;
+        disableNext();
     }
 
     @Override
