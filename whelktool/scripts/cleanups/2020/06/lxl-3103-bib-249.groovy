@@ -117,7 +117,7 @@ void process(bib) {
     else if (converted.size() == 0) {
         print(Script.broken, msg)
         Script.s.increment('Broken', "total")
-        // TODO: handle (temporarily disabled - rule needs to be verified)
+        // Corrected manually
         return
     }
     // MULTIPLE 249
@@ -134,6 +134,7 @@ void process(bib) {
                 msg.append("Existing hasPart:\n  ${work['hasPart']} \n")
                 print(Script.alreadyHasPart, msg)
                 Script.s.increment('Multiple 249', 'Already hasPart (unhandled)')
+                // Corrected manually
                 return
             }
 
@@ -141,9 +142,6 @@ void process(bib) {
 
             print(Script.multipleNoneExist, msg)
             Script.s.increment('Multiple 249', 'None existing (to hasPart)')
-
-            // TODO: handle (temporarily disabled - rule needs to be verified)
-            return
         }
         else {
             msg.append("Matches:\n  ${matches} \n")
@@ -152,15 +150,13 @@ void process(bib) {
                 msg.append("Existing hasPart:\n  ${work['hasPart']} \n")
                 print(Script.multipleSomeExistUnhandled, msg)
                 Script.s.increment('Multiple 249', "Some exist (unhandled)")
+                // Corrected manually
                 return
             }
             else {
                 setHasPart(work, converted)
                 print(Script.multipleSomeExistHandled, msg)
                 Script.s.increment('Multiple 249', "Some exist (to hasPart)")
-
-                // TODO: handle (temporarily disabled - rule needs to be verified)
-                return
             }
         }
     }
