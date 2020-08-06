@@ -140,6 +140,7 @@ void process(bib) {
 
             setHasPart(work, converted)
 
+            msg.append("hasPart:\n  ${work['hasPart']} \n")
             print(Script.multipleNoneExist, msg)
             Script.s.increment('Multiple 249', 'None existing (to hasPart)')
         }
@@ -155,6 +156,7 @@ void process(bib) {
             }
             else {
                 setHasPart(work, converted)
+                msg.append("hasPart:\n  ${work['hasPart']} \n")
                 print(Script.multipleSomeExistHandled, msg)
                 Script.s.increment('Multiple 249', "Some exist (to hasPart)")
             }
@@ -173,6 +175,23 @@ void setHasPart(Map work, List converted) {
                 'hasTitle': it
         ]
     }
+
+    if(work['language']) {
+        work['hasPart'].each {
+            it['language'] = work['language']
+        }
+    }
+
+    def primary = primaryContribution(work)
+    if(primary) {
+        work['hasPart'].each {
+            it['contribution'] = primary
+        }
+    }
+}
+
+Map primaryContribution(Map work) {
+    asList(work['contribution']).find { it['@type'] == 'PrimaryContribution' }
 }
 
 Map findMatchingTitles(Map ogTitle, Map workTitles) {
