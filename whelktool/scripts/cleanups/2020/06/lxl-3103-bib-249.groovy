@@ -17,6 +17,7 @@ import whelk.util.Statistics
 import org.apache.commons.lang3.StringUtils
 
 import java.text.Normalizer
+import java.util.concurrent.ConcurrentLinkedQueue
 
 class Script {
     static Map MAP_249 = [
@@ -29,6 +30,8 @@ class Script {
     static Statistics s = new Statistics().printOnShutdown()
     static List TITLE_COMPONENTS = ['mainTitle', 'titleRemainder', 'subtitle', 'hasPart', 'partNumber', 'partName', 'marc:parallelTitle', 'marc:equalTitle']
 
+    static Set<String> languages
+
     static PrintWriter singleToMainTitle
     static PrintWriter singleToVariantTitle
     static PrintWriter singleExists
@@ -38,7 +41,11 @@ class Script {
     static PrintWriter multipleSomeExistHandled
     static PrintWriter multipleSomeExistUnhandled
     static PrintWriter alreadyHasPart
+    static PrintWriter languageRemoved
 }
+
+Script.languages = swedishLanguageLabels()
+
 Script.singleToMainTitle = getReportWriter("single-to-main-title.txt")
 Script.singleToVariantTitle = getReportWriter("single-to-variant-title.txt")
 Script.singleExists = getReportWriter("single-already-exists.txt")
@@ -48,6 +55,7 @@ Script.multipleNoneExist = getReportWriter("multiple-to-hasPart.txt")
 Script.multipleSomeExistHandled = getReportWriter("multiple-some-exist-to-hasPart.txt")
 Script.multipleSomeExistUnhandled = getReportWriter("multiple-some-exist-already-hasPart.txt")
 Script.alreadyHasPart = getReportWriter("multiple-work-already-hasPart.txt")
+Script.languageRemoved = getReportWriter("language-removed.txt")
 
 selectByCollection('bib') { bib ->
     try {
@@ -202,6 +210,9 @@ Map convert249(Map bib249) {
     if (result['mainTitle']) {
         result['mainTitle'] = stripSuffix(result['mainTitle'].trim(), '.').trim()
     }
+    if (result['mainTitle']) {
+        result['mainTitle'] = stripLanguageParens(result['mainTitle'])
+    }
     if (result['marc:nonfilingChars'] == "0") {
         result.remove('marc:nonfilingChars')
     }
@@ -209,6 +220,24 @@ Map convert249(Map bib249) {
     return (result['mainTitle'] || result['subtitle'])
             ? result
             : null
+}
+
+String stripLanguageParens(String s) {
+    if (s.endsWith(')')) {
+        String result = s
+        for (String language : Script.languages) {
+            result = stripSuffix(result, "(${language})")
+            result = stripSuffix(result, "(${language.toLowerCase()})")
+        }
+        result = result.trim()
+        if (result != s) {
+            Script.languageRemoved.println("${s} -> ${result}")
+        }
+
+        return result
+    }
+
+    return s
 }
 
 static boolean isNotEmpty(v) {
@@ -262,4 +291,16 @@ Map getWork(def bib) {
         return work
     }
     return null
+}
+
+Set<String> swedishLanguageLabels() {
+    def q = [
+            "@type": ["Language"],
+            "q"    : ["*"],
+            '_sort': ["@id"]
+    ]
+
+    ConcurrentLinkedQueue<String> languages = new ConcurrentLinkedQueue<>()
+    selectByIds(queryIds(q).collect()) { languages.add(it.graph[1]['prefLabelByLang']['sv']) }
+    return new HashSet<String>(languages.collect())
 }
