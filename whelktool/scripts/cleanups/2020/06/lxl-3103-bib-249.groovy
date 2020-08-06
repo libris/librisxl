@@ -99,18 +99,20 @@ void process(bib) {
         else {
             work['hasTitle'] = asList(work['hasTitle'])
             boolean variant = work['hasTitle'].any{ it['@type'] == 'Title' }
-            if (variant) {
-                // TODO: handle (temporarily disabled - rule needs to be verified)
-                return
-
-                //ogTitle['@type'] = 'VariantTitle'
+            if(variant) {
+                ogTitle['@type'] = 'VariantTitle'
             }
 
             work['hasTitle'].add(ogTitle)
-
+            
             msg.append(" --> work['hasTitle']: ${work['hasTitle']}\n")
             print(variant ? Script.singleToVariantTitle : Script.singleToMainTitle, msg)
             Script.s.increment('Single 249 to hasTitle', ogTitle['@type'])
+
+            if (variant) {
+                // Corrected manually
+                return
+            }
         }
     }
     // ALL 249 BROKEN
