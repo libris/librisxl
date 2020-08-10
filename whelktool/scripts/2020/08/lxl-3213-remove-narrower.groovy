@@ -8,11 +8,13 @@ import whelk.util.DocumentUtil
 
 class Script {
     static PrintWriter report
-    static PrintWriter noBroader
+    static PrintWriter notBroader
+    static PrintWriter fixedBroader
     static PrintWriter error
 }
 Script.report = getReportWriter("report.txt")
-Script.noBroader = getReportWriter("no-broader.txt")
+Script.notBroader = getReportWriter("not-broader.txt")
+Script.fixedBroader = getReportWriter("fixed-broader.txt")
 Script.error = getReportWriter("error.txt")
 
 selectByCollection('auth') { auth ->
@@ -34,18 +36,20 @@ void process(auth) {
         return
     }
 
-    if (narrower.removeAll { it['@id'] && hasBroader(it['@id'], id) } ) {
+    boolean changed = narrower.removeAll { it['@id'] && (hasBroader(it['@id'], id) || fixBroader(it['@id'], id)) }
+
+    if (changed) {
         if (narrower.isEmpty()) {
             thing.remove('narrower')
         }
 
-        Script.report.println(auth.doc.shortId)
+        Script.report.println("auth.doc.shortId ${thing['prefLabel']}")
         auth.scheduleSave()
     }
 
     narrower.findResults{ it['@id'] }.each { String narrowerId ->
         Map n = getThing(narrowerId)
-        Script.noBroader.println("""
+        Script.notBroader.println("""
                 ${auth.doc.shortId} 
                 ${thing['prefLabel']} <-- ${n['prefLabel']} 
                 $id <-- $narrowerId
@@ -57,6 +61,20 @@ void process(auth) {
 
 boolean hasBroader(String narrower, String broader) {
     return (getThing(narrower)['broader'] ?: []).collect{ it['@id'] }.contains(broader)
+}
+
+boolean fixBroader(String narrower, String broader) {
+    boolean ok = false
+    selectByIds([narrower]) { auth ->
+        Map thing = auth.graph[1]
+        if (!thing['broader']) {
+            thing['broader'] = ['@id': broader]
+            Script.fixedBroader.println("$broader <-- $narrower")
+            auth.scheduleSave()
+            ok = true
+        }
+    }
+    return ok
 }
 
 Map getThing(String id) {
