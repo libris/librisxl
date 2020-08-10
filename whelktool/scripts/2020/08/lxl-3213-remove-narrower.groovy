@@ -23,7 +23,6 @@ selectByCollection('auth') { auth ->
     }
     catch(Exception e) {
         Script.error.println("${auth.doc.shortId} $e")
-        e.printStackTrace(Script.error)
     }
 }
 
@@ -43,7 +42,7 @@ void process(auth) {
             thing.remove('narrower')
         }
 
-        Script.report.println("auth.doc.shortId ${thing['prefLabel']}")
+        Script.report.println("$auth.doc.shortId ${thing['prefLabel']}  ${thing['narrower'] ?: ''}")
         auth.scheduleSave()
     }
 
