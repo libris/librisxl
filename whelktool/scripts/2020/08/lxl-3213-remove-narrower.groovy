@@ -1,7 +1,11 @@
 /**
- * Fix broken nationality links in agents.
+ * Remove 'narrower' links since @reverse.broader is now generated.
  *
- * See LXL-2901 for more information.
+ * Verifies that the linked thing has a corresponding 'broader' link
+ *  - If different 'broader': leave the narrower link, manually corrected
+ *  - If no 'broader': create 'broader' link
+ *
+ * See LXL-3213 for more information.
  */
 
 import whelk.util.DocumentUtil
