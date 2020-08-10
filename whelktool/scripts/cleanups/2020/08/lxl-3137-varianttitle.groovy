@@ -30,8 +30,8 @@ void process(bib) {
 
     DocumentUtil.traverse(thing['hasTitle']) { value, path ->
         if (value instanceof Map && changeTitleType(value, record)) {
-            Script.report.println("${bib.doc.shortId} ${path} ${value['@type']}")
-            value['@type'] == 'VariantTitle'
+            Script.report.println("${bib.doc.shortId} hasTitle${path} ${value['@type']}")
+            value['@type'] = 'VariantTitle'
             bib.scheduleSave()
         }
 
