@@ -37,7 +37,7 @@ public class PortableScript implements Serializable
         {
             Files.write(inputFilePath, ids);
             // On windows inputFilePath.toString() produces backslashes, which need to be escaped.
-            flattenedScriptText = scriptText.replace("£INPUT", inputFilePath.toString().replace("\\", "\\\\"));
+            flattenedScriptText = scriptText.replace("INPUT", inputFilePath.toString().replace("\\", "\\\\"));
         }
         Files.write(scriptFilePath, flattenedScriptText.getBytes());
 

@@ -1,6 +1,6 @@
 PrintWriter failedHoldIDs = getReportWriter("failed-to-create-holdIDs")
 PrintWriter createdHoldIDs = getReportWriter("attempted-to-create-holdIDs")
-File bibids = new File('£INPUT')
+File bibids = new File('INPUT')
 
 String bibidstring = bibids.readLines().join("','")
 
@@ -20,12 +20,12 @@ selectBySqlWhere("data#>>'{@graph,0,controlNumber}' in ( '$bibidstring' )", sile
                     [
                             "@id": "TEMPID#it",
                             "@type": "Item",
-                            "heldBy": ["@id": "https://libris.kb.se/library/£SIGEL"],
+                            "heldBy": ["@id": "https://libris.kb.se/library/SIGEL"],
                             "itemOf": ["@id": bibMainEntity],
                             "hasComponent": [
                                     [
                                             "@type": "Item",
-                                            "heldBy": ["@id": "https://libris.kb.se/library/£SIGEL"]
+                                            "heldBy": ["@id": "https://libris.kb.se/library/SIGEL"]
                                     ]
                             ]
                     ]

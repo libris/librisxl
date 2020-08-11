@@ -1,6 +1,6 @@
 PrintWriter failedBibIDs = getReportWriter("failed-to-delete-bibIDs")
 PrintWriter scheduledForDeletion = getReportWriter("scheduled-for-deletion")
-File bibids = new File('£INPUT')
+File bibids = new File('INPUT')
 
 String bibidstring = bibids.readLines().join("','")
 

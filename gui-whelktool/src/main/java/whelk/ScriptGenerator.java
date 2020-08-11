@@ -12,7 +12,7 @@ public class ScriptGenerator
     {
         String scriptText = IOUtils.toString(new InputStreamReader(
                 ScriptGenerator.class.getClassLoader().getResourceAsStream("templates/delete-hold.groovy") ));
-        scriptText = scriptText.replace("£SIGEL", sigel);
+        scriptText = scriptText.replace("SIGEL", sigel);
 
         return new PortableScript(scriptText, controlNumbers, "Radering av " + sigel + "-bestånd");
     }
@@ -21,7 +21,7 @@ public class ScriptGenerator
     {
         String scriptText = IOUtils.toString(new InputStreamReader(
                 ScriptGenerator.class.getClassLoader().getResourceAsStream("templates/create-hold.groovy") ));
-        scriptText = scriptText.replace("£SIGEL", sigel);
+        scriptText = scriptText.replace("SIGEL", sigel);
 
         return new PortableScript(scriptText, controlNumbers, "Skapande av " + sigel + "-bestånd");
     }
@@ -38,8 +38,8 @@ public class ScriptGenerator
     {
         String scriptText = IOUtils.toString(new InputStreamReader(
                 ScriptGenerator.class.getClassLoader().getResourceAsStream("templates/change-sigel.groovy") ));
-        scriptText = scriptText.replace("£FROMSIGEL", fromSigel);
-        scriptText = scriptText.replace("£TOSIGEL", toSigel);
+        scriptText = scriptText.replace("FROMSIGEL", fromSigel);
+        scriptText = scriptText.replace("TOSIGEL", toSigel);
 
         return new PortableScript(scriptText, null, "Byte av sigel " + fromSigel + " till " + toSigel);
     }
