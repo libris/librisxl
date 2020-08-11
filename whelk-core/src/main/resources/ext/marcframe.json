@@ -7882,7 +7882,7 @@
         "property": "code"
       },
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/classification.html",
-      "$b": {"property": "itemPortion"},
+      "$b": {"ignored": true},
       "$q": {"link": "source", "resourceType": "Source", "property": "label"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
