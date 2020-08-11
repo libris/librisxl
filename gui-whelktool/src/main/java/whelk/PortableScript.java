@@ -36,8 +36,8 @@ public class PortableScript implements Serializable
         if (ids != null)
         {
             Files.write(inputFilePath, ids);
-            // On windows inputFilePath.toString() produces backslashes, but the groovy script allows only forwardslashes.
-            flattenedScriptText = scriptText.replace("£INPUT", inputFilePath.toString().replace("\\", "/"));
+            // On windows inputFilePath.toString() produces backslashes, which need to be escaped.
+            flattenedScriptText = scriptText.replace("£INPUT", inputFilePath.toString().replace("\\", "\\\\"));
         }
         Files.write(scriptFilePath, flattenedScriptText.getBytes());
 
