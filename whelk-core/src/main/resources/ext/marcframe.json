@@ -9153,6 +9153,7 @@
       "include": ["structuredtitle"],
       "aboutEntity": "?thing",
       "addLink": "hasTitle",
+      "resourceType": "VariantTitle",
       "embedded": true,
       "i1": {
         "property": "marc:searchControl",
