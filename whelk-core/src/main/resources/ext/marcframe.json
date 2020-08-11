@@ -9153,6 +9153,7 @@
       "include": ["structuredtitle"],
       "aboutEntity": "?thing",
       "addLink": "hasTitle",
+      "resourceType": "VariantTitle",
       "embedded": true,
       "i1": {
         "property": "marc:searchControl",
@@ -9172,13 +9173,14 @@
           "0": "TitlePortion",
           "1": "ParallelTitle",
           "2": "DistinctiveTitle",
-          "3": "marc:OtherTitle",
+          "3": null,
           "4": "CoverTitle",
           "5": "AddedTitlePageTitle",
           "6": "CaptionTitle",
           "7": "RunningTitle",
           "8": "SpineTitle"
-        }
+        },
+        "marcDefault": " "
       },
       "$f": {"property": "coverage"},
       "$g": {"addProperty": "comment"},
@@ -9221,6 +9223,22 @@
               "typeNote": "At head of title:",
               "mainTitle": "Science and public affairs",
               "coverage": "January 1970-April 1974"
+            }]
+          }}
+        },
+        {
+          "source": {
+            "246": {"ind1": " ", "ind2": "3", "subfields": [
+              {"a": "Science and public affairs"}
+            ]}},
+          "normalized": {
+            "246": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Science and public affairs"}
+            ]}},
+          "result": {"mainEntity": {
+            "hasTitle": [{
+              "@type": "VariantTitle",
+              "mainTitle": "Science and public affairs"
             }]
           }}
         }
