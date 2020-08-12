@@ -24,11 +24,11 @@
 
 PrintWriter scheduledForChange = getReportWriter("scheduled-for-update")
 PrintWriter failedIDs = getReportWriter("failed-to-update")
+deviatedMediaExtensions = getReportWriter("deviatedMediaExtensions")
 
 TYPES_TO_INSTANCE = ['ClassificationLcc',
                      'ClassificationNlm',
                      'marc:NationalAgriculturalLibraryCallNumber']
-
 CLASSIFICATION = [ 'classification', 'additionalClassificationDdc', 'marc:hasGeographicClassification' ]
 
 String subQueryWork = CLASSIFICATION.collect {"data#>>'{@graph,2,${it}}' IS NOT NULL"}.join(" OR ")
@@ -52,8 +52,11 @@ selectBySqlWhere(query) { data ->
     }
 
     work.subMap(CLASSIFICATION).each { key, val ->
-        Iterator iter = val.iterator()
+        if (val instanceof Map) {
+            val = [val]
+        }
 
+        Iterator iter = val.iterator()
         while (iter.hasNext()) {
             Object classificationEntity = iter.next()
 
@@ -61,7 +64,7 @@ selectBySqlWhere(query) { data ->
             changed |= removeItemPortion(classificationEntity)
 
             //copy kssb --> classification Classification
-            classificationsToInstance.addAll(copyMediaExtensionsDetails(classificationEntity))
+            classificationsToInstance.addAll(copyMediaExtensionsDetails(classificationEntity, record[ID]))
 
             //move --> 'ClassificationLcc', 'ClassificationNlm', 'marc:NationalAgriculturalLibraryCallNumber'
             if (TYPES_TO_INSTANCE.contains(classificationEntity[TYPE])) {
@@ -69,7 +72,6 @@ selectBySqlWhere(query) { data ->
                 iter.remove()
                 changed |= true
             }
-
         }
     }
 
@@ -101,7 +103,6 @@ Map getWork(thing, work) {
     return null
 }
 
-//itemPortion
 boolean removeItemPortion(entity) {
     boolean wasRemoved = false
     //TODO: Should we remove all itemPortions or just some?
@@ -118,15 +119,15 @@ boolean removeItemPortion(entity) {
     return wasRemoved
 }
 
-//kssb
-List copyMediaExtensionsDetails(entity) {
+List copyMediaExtensionsDetails(entity, docId) {
     List copyToInstance = []
-    if (entity.inScheme?.code == 'kssb') {
-        //TODO: Check if more than 2 chars then log instead
-        if (entity['code'] && entity['code'].contains('/')) {
-            copyToInstance << entity.clone()
-            entity['code'] = entity['code'].split("/")[0]
+    if (entity.inScheme?.code == 'kssb' && entity['code'] && entity['code'].contains('/')) {
+        //log if more than 2 chars --> will be fixed manually
+        if (entity['code'].split("/")[1].size() > 2) {
+            deviatedMediaExtensions.println("${docId}")
         }
+        copyToInstance << entity.clone()
+        entity['code'] = entity['code'].split("/")[0]
     }
     return copyToInstance
 }
