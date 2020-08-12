@@ -122,12 +122,14 @@ boolean removeItemPortion(entity) {
 List copyMediaExtensionsDetails(entity, docId) {
     List copyToInstance = []
     if (entity.inScheme?.code == 'kssb' && entity['code'] && entity['code'].contains('/')) {
-        //log if more than 2 chars --> will be fixed manually
-        if (entity['code'].split("/")[1].size() > 2) {
+        //log if it does not follow practice --> will be fixed manually
+        def extensions = entity['code'].split("/")
+        if (extensions.size() == 2 && extensions[1].size() <= 2) {
+            copyToInstance << entity.clone()
+            entity['code'] = extensions[0]
+        } else {
             deviatedMediaExtensions.println("${docId}")
         }
-        copyToInstance << entity.clone()
-        entity['code'] = entity['code'].split("/")[0]
     }
     return copyToInstance
 }
