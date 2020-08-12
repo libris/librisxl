@@ -22811,7 +22811,7 @@
       "i1": {"marcDefault": "2"},
       "TODO:isPartOf": "marc:subordinateUnit",
       "TODO:role": "Add e and 4 when no work",
-      "subfieldOrder": "w i a n d c e g j 4 t n s l k f v x y z",
+      "subfieldOrder": "6 a q n d g c e u j 4 t p l k f 1 0",
       "match": [
         {
           "when": "$t",
