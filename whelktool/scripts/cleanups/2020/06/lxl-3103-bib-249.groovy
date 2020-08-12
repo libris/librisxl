@@ -100,7 +100,7 @@ void process(bib) {
             work['hasTitle'] = asList(work['hasTitle'])
             boolean variant = work['hasTitle'].any{ it['@type'] == 'Title' }
             if(variant) {
-                ogTitle['@type'] = 'VariantTitle'
+                ogTitle['@type'] = 'VariantTitle' // just for logging, never saved
             }
 
             work['hasTitle'].add(ogTitle)
@@ -110,7 +110,7 @@ void process(bib) {
             Script.s.increment('Single 249 to hasTitle', ogTitle['@type'])
 
             if (variant) {
-                // Corrected manually
+                // To be manually handled
                 return
             }
         }
@@ -119,7 +119,7 @@ void process(bib) {
     else if (converted.size() == 0) {
         print(Script.broken, msg)
         Script.s.increment('Broken', "total")
-        // Corrected manually
+        // To be manually handled
         return
     }
     // MULTIPLE 249
@@ -136,7 +136,7 @@ void process(bib) {
                 msg.append("Existing hasPart:\n  ${work['hasPart']} \n")
                 print(Script.alreadyHasPart, msg)
                 Script.s.increment('Multiple 249', 'Already hasPart (unhandled)')
-                // Corrected manually
+                // To be manually handled
                 return
             }
 
@@ -153,7 +153,7 @@ void process(bib) {
                 msg.append("Existing hasPart:\n  ${work['hasPart']} \n")
                 print(Script.multipleSomeExistUnhandled, msg)
                 Script.s.increment('Multiple 249', "Some exist (unhandled)")
-                // Corrected manually
+                // To be manually handled
                 return
             }
             else {
