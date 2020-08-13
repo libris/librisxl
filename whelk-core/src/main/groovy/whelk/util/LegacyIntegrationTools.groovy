@@ -1,6 +1,13 @@
 package whelk.util
 
 import groovy.transform.CompileStatic
+import se.kb.libris.util.marc.Controlfield
+import se.kb.libris.util.marc.Field
+import se.kb.libris.util.marc.MarcRecord
+import se.kb.libris.util.marc.Subfield
+import se.kb.libris.util.marc.impl.ControlfieldImpl
+import se.kb.libris.util.marc.impl.DatafieldImpl
+import se.kb.libris.util.marc.impl.SubfieldImpl
 import whelk.DateUtil
 import whelk.Document
 import whelk.IdGenerator
@@ -104,5 +111,44 @@ class LegacyIntegrationTools {
             uri = uri.replace("https:/", "https://")
         }
         return uri
+    }
+
+    /**
+     * Take a MARC record from another system, and make it a LIBRIS MARC record.
+     *
+     * After calling this on a record, you SHOULD IMMEDIATELY also set a new 001 on that record.
+     */
+    static void makeRecordLibrisResident(MarcRecord record) {
+        // Add new 035$a
+        Controlfield field003 = (Controlfield) record.getControlfields("003")[0] // non-repeatable
+        Controlfield field001 = (Controlfield) record.getControlfields("001")[0] // non-repeatable
+
+        if (field001 != null && field003 != null && field001.getData()
+                != null && field003.getData() != null && field003.getData()
+                != "SE-LIBR" && field003.getData() != "LIBRIS") {
+
+            String idInOtherSystem = "(" + field003.getData() + ")" + field001.getData()
+
+            boolean hasRelevant035aAlready = false
+            record.getDatafields("035").each { f ->
+                f.getSubfields("a").each { sf ->
+                    if (sf.getData() == idInOtherSystem)
+                        hasRelevant035aAlready = true
+                }
+            }
+
+            if (!hasRelevant035aAlready) {
+                Field field035 = new DatafieldImpl("035")
+                Subfield a = new SubfieldImpl("a".charAt(0), idInOtherSystem)
+                field035.addSubfield(a)
+                record.addField(field035)
+            }
+        }
+
+        // Replace 003
+        while (record.getControlfields("003").size() > 0)
+            record.getFields().remove(record.getControlfields("003").get(0));
+
+        record.addField(new ControlfieldImpl("003", "SE-LIBR"))
     }
 }

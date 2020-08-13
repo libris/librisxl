@@ -1,4 +1,6 @@
 /**
+ * Has to be run with --allow-loud.
+ *
  * Delete duplicate SPI bib records (if they have other holdings than sigel S then just log).
  * Move identifiedBy, technicalNote and hasNote fields from bib to holding for sigel S.
  * Link the S holding to the correct bib record. If it already has a holding for S then merge them.
@@ -74,7 +76,7 @@ void process(String duplicateUri, String keepUri) {
         if (!hasOtherHolding(duplicateUri)) {
             if (hasOtherDependers(duplicateUri)) {
                 Script.otherRelationReport.println(duplicateUri)
-                bib.scheduleSave()
+                bib.scheduleSave(loud: true)
             }
             else {
                 Script.deleteReport.println(duplicateUri)
@@ -82,7 +84,7 @@ void process(String duplicateUri, String keepUri) {
             }
         } else {
             Script.otherHoldingReport.println(duplicateUri)
-            bib.scheduleSave()
+            bib.scheduleSave(loud: true)
         }
 
         boolean found = false
@@ -97,7 +99,7 @@ void process(String duplicateUri, String keepUri) {
                     // yes, these should be at the top level and not in hasComponent
                     addFieldsFromDuplicate(msg, keepHold, identifiedBy, hasNote)
 
-                    keepHold.scheduleSave()
+                    keepHold.scheduleSave(loud: true)
                 }
 
                 msg.append("Delete: ${hold.doc.getURI()}\n")
@@ -109,7 +111,7 @@ void process(String duplicateUri, String keepUri) {
                 msg.append("itemOf: $duplicateUri -> $keepUri").append("\n")
                 hold.graph[1]['itemOf']['@id'] = keepUri + '#it'
                 addFieldsFromDuplicate(msg, hold, identifiedBy, hasNote)
-                hold.scheduleSave()
+                hold.scheduleSave(loud: true)
             }
 
             Script.holdReport.println(msg.toString())
@@ -123,8 +125,12 @@ void process(String duplicateUri, String keepUri) {
 }
 
 void addFieldsFromDuplicate(msg, hold, identifiedBy, hasNote) {
-    add(msg, hold.graph[0], 'identifiedBy', identifiedBy)
-    add(msg, hold.graph[0], 'cataloguersNote', ['Katalog 56-86, SPI20191219. S bestånd flyttat från SPI-dubblett maskinellt. Fel kan förekomma.'])
+    // Workaround for multiple cataloguersNote getting exported to MARC as 599 with repeated subfield a (LXL-1705).
+    // Should be repeated 599 with single subfield a.
+    // Workaround: concatenate the strings to get a single 599 with single subfield a.
+    appendToString(msg, hold.graph[0], 'cataloguersNote', 'Katalog 56-86, SPI20191219. S bestånd flyttat från SPI-dubblett maskinellt. Fel kan förekomma.')
+
+    add(msg, hold.graph[1], 'identifiedBy', identifiedBy)
     add(msg, hold.graph[1], 'hasNote', hasNote)
 }
 
@@ -132,6 +138,19 @@ void add(msg, thing, field, value) {
     def list = (thing[field] ?: []).with {it instanceof List ? it : [it]}
     msg.append("${field}: ").append(list).append(" -> ")
     list.addAll(value instanceof List ? value : [value])
+    msg.append(list).append("\n")
+    thing[field] = list
+}
+
+void appendToString(msg, thing, field, String value) {
+    def list = (thing[field] ?: []).with {it instanceof List ? it : [it]}
+    msg.append("${field}: ").append(list).append(" -> ")
+    if (list.isEmpty()) {
+        list.add(value)
+    }
+    else {
+        list[0] = list[0] + " " + value
+    }
     msg.append(list).append("\n")
     thing[field] = list
 }

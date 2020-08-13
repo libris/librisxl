@@ -115,7 +115,8 @@ class ESQuery {
         Map simpleQuery = [
             'simple_query_string': [
                 'query': q,
-                'default_operator':  'AND'
+                'default_operator':  'AND',
+                'analyze_wildcard' : true
             ]
         ]
 
@@ -137,7 +138,8 @@ class ESQuery {
                 'simple_query_string': [
                     'query': q,
                     'default_operator':  'AND',
-                    'fields': exactFields
+                    'fields': exactFields,
+                    'analyze_wildcard' : true
                 ]
             ]
 
@@ -146,7 +148,8 @@ class ESQuery {
                     'query': q,
                     'default_operator':  'AND',
                     'fields': softFields,
-                    'quote_field_suffix': ".exact"
+                    'quote_field_suffix': ".exact",
+                    'analyze_wildcard' : true
                 ]
             ]
 

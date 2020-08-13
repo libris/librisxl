@@ -2004,6 +2004,16 @@ class PostgreSQLComponent {
         if (changedBy.startsWith('https://libris.kb.se/sys/globalchanges/')) {
             return getDescriptionChangerId('SEK')
         }
+        else if (changedBy == "MimerProd" || changedBy == "Mimer" ||
+                changedBy == "KBDIGI" || changedBy == "oden" || changedBy == "MimerProdReadonly") {
+            return LegacyIntegrationTools.legacySigelToUri("S")
+        }
+        else if (changedBy == "GUProd" || changedBy == "GU") {
+            return LegacyIntegrationTools.legacySigelToUri("G")
+        }
+        else if (changedBy == "umu") {
+            return LegacyIntegrationTools.legacySigelToUri("Um")
+        }
         else if (isHttpUri(changedBy)) {
             return changedBy
         }

@@ -132,7 +132,9 @@ class WhelkTool {
     }
 
     DocumentItem create(Map data) {
-        DocumentItem item = new DocumentItem(number: counter.createdCount, doc: new Document(data), whelk: whelk)
+        Document doc = new Document(data)
+        doc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
+        DocumentItem item = new DocumentItem(number: counter.createdCount, doc: doc, whelk: whelk)
         item.existsInStorage = false
         return item
     }
@@ -470,7 +472,6 @@ class WhelkTool {
 
     private void doSaveNew(DocumentItem item) {
         Document doc = item.doc
-        doc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
         doc.setControlNumber(doc.getShortId())
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)

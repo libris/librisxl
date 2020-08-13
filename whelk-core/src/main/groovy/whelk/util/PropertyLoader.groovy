@@ -8,17 +8,34 @@ class PropertyLoader {
     static final String SYSTEM_PROPERTY_PREFIX = "xl."
     static final String PROPERTY_EXTENSION = ".properties"
 
+    private static HashMap<String, String> userEnteredProperties = [:]
+
+    /**
+     * MUST be called before loadProperties to have any effect.
+     */
+    public static void setUserEnteredProperties(String name, String propString) {
+        userEnteredProperties.put(name, propString)
+    }
+
     static Properties loadProperties(String... propNames) {
         Properties props = new Properties()
 
-        // If an environment parameter is set to point to a file, use that one. Otherwise load from classpath
+        /* Order of priority:
+        1. Environment parameter pointing to a file, like so -Dxl.secret.properties=./secret.properties
+        2. User entered parameters, registered through a previous call to setUserEnteredProperties()
+        3. Properties files on the classpath (for example in src/main/resources/secret.properties)
+         */
+
         for (propName in propNames) {
             InputStream propStream
             boolean systemProperty = false
             if (System.getProperty(SYSTEM_PROPERTY_PREFIX + propName + PROPERTY_EXTENSION)) {
                 systemProperty = true
                 propStream = new FileInputStream(System.getProperty(SYSTEM_PROPERTY_PREFIX + propName + PROPERTY_EXTENSION))
-            } else {
+            } else if (userEnteredProperties.containsKey(propName)) {
+                String propString = userEnteredProperties.get(propName)
+                propStream = new ByteArrayInputStream(propString.getBytes())
+            } else if (PropertyLoader.class.getClassLoader().getResourceAsStream(propName + PROPERTY_EXTENSION) != null) {
                 propStream = PropertyLoader.class.getClassLoader().getResourceAsStream(propName + PROPERTY_EXTENSION)
             }
             if (propStream == null) {

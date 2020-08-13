@@ -205,7 +205,7 @@ class Crud extends HttpServlet {
             sendNotFound(response, request.getPath())
         } else if (!doc && loc) {
             sendRedirect(request.getHttpServletRequest(), response, loc)
-        } else if (request.getIfNoneMatch().map({ etag -> etag == doc.getChecksum() }).orElse(false)) {
+        } else if (!request.shouldEmbellish() && isNotModified(request, doc)) {
             sendNotModified(response, doc)
         } else if (doc.deleted) {
             failedRequests.labels("GET", request.getPath(),
@@ -220,6 +220,10 @@ class Crud extends HttpServlet {
                     request.getPath(),
                     request.getContentType())
         }
+    }
+
+    private static boolean isNotModified(CrudGetRequest request, Document doc) {
+        request.getIfNoneMatch().map({ etag -> etag == doc.getChecksum() }).orElse(false)
     }
 
     private void sendNotModified(HttpServletResponse response, Document doc) {
@@ -533,6 +537,8 @@ class Crud extends HttpServlet {
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
                                savedDoc.getChecksum())
+        } else {
+            sendNotFound(response, request.getContextPath())
         }
     }
 
@@ -704,7 +710,10 @@ class Crud extends HttpServlet {
                 }
                 else {
                     log.debug("Saving NEW document ("+ doc.getId() +")")
-                    whelk.createDocument(doc, "xl", activeSigel, collection, false)
+                    boolean success = whelk.createDocument(doc, "xl", activeSigel, collection, false)
+                    if (!success) {
+                        return null
+                    }
                 }
 
                 log.debug("Saving document (${doc.getShortId()})")

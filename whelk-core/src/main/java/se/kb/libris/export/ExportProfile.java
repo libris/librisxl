@@ -162,7 +162,8 @@ public class ExportProfile {
 
 
     public static boolean isPrelInfo(MarcRecord mr) {
-        return mr.getLeader(17) == '8';
+        // marc:prePublicationlevel || marc:PartialPreliminaryLevel
+        return mr.getLeader(17) == '8' || mr.getLeader(17) == '5';
     }
 
     public boolean filter(MarcRecord mr) {
