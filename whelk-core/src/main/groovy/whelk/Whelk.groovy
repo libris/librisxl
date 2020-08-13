@@ -229,7 +229,9 @@ class Whelk {
             // TODO: when types (auth, bib...) have been removed from elastic, do bulk index in chunks of size N here
             getAffectedIds(document).each { id ->
                 Document doc = storage.load(id)
-                elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
+                if (doc) { // might not exist because of batch jobs without indexing
+                    elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
+                }
             }
         }
 
