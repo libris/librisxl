@@ -64,7 +64,9 @@ public class Helpers
             }
             else if (updatedCollection.equals("auth"))
             {
-                if (setSpec.getRootSet().equals("auth"))
+                String type = updated.getThingType();
+                if (setSpec.getRootSet().equals("auth") &&
+                        (type == null || OaiPmh.workDerivativeTypes.contains(type)))
                     resultingDocuments.push(updated);
                 if (includeDependenciesInTimeInterval && (setSpec.getRootSet().equals("bib") || setSpec.getRootSet().equals("hold")))
                 {

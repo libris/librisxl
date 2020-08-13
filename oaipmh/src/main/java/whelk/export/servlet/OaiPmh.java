@@ -13,6 +13,8 @@ import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -70,6 +72,10 @@ public class OaiPmh extends HttpServlet
     public final static String FORMAT_INCLUDE_HOLD_POSTFIX = "_includehold";
 
     public static Whelk s_whelk;
+
+    // Placed here, because the call to generate this is expensive, and should not be done on every request.
+    public static Set<String> workDerivativeTypes;
+
     private final Logger logger = LogManager.getLogger(this.getClass());
 
     static
@@ -102,6 +108,8 @@ public class OaiPmh extends HttpServlet
 
     public void init()
     {
+        this.workDerivativeTypes = new HashSet<>(s_whelk.getJsonld().getSubClasses("Work"));
+        this.workDerivativeTypes.add("Work");
     }
 
     public void destroy()
