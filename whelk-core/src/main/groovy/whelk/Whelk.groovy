@@ -265,7 +265,7 @@ class Whelk {
                 queries << elasticFind.findIds(['q': ["*"], (field): [iri]])
             }
         }
-        return Iterables.concat(queries)
+        return Iterables.filter(Iterables.concat(queries), { it != null })
     }
 
     /**
