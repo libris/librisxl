@@ -5352,6 +5352,7 @@
         "link": "source",
         "resourceType": "Source",
         "property": "code",
+        "NOTE:LC": "convert code to URI from http://id.loc.gov/vocabulary/nationalbibschemes ; if necessary convert to lower-case letters",
         "TODO": {
           "uriTemplate": "...{code}",
           "restrictedTo": "http://www.loc.gov/standards/sourcelist/national-bibliography.html"
@@ -5453,6 +5454,7 @@
       "resourceType": "CopyrightNumber",
       "i2": null,
       "$a": {"property": "value"},
+      "TODO": "$b is assigner / Agent in BF Conversion 1.6",
       "$b": {"link": "source", "resourceType": "Source", "property": "label", "required": true},
       "$d": {"property": "date"},
       "$i": {"addProperty": "comment"},
@@ -5842,6 +5844,7 @@
       "$a": {"property": "value"},
       "$l": {"property": "marc:issnL"},
       "$m": {"addProperty": "marc:canceledIssnL"},
+      "TODO": "$2 - assigner - Agent - bf:code in BF conversion 1.6",
       "$2": {"link": "source", "resourceType": "marc:NationalIssnCentre", "property": "code"},
       "$y": {"addProperty": "marc:incorrectIssn"},
       "TODO:$y?": {"TODO": "inherit:$z + specific: marc:incorrectIssn"},
@@ -5901,6 +5904,7 @@
       },
       "i2": null,
       "$c": {"property": "acquisitionTerms"},
+      "TODO": "$d note - Note - rdfs:label in BF2 conversion 1.6",
       "$d": {"property": "comment"},
       "$2": {
         "TODO:requires-i1": "7 (overwritten by 8)",
@@ -6146,6 +6150,7 @@
         "marcDefault": "1"
       },
       "$a": {"property": "value"},
+      "TODO": "$b assigner - Agent - rdfs:label in BF2 conversion 1.6",
       "$b": {"link": "agent", "resourceType": "Organization", "property": "name"},
       "$q": {"addProperty": "qualifier"},
       "$6": null,
@@ -6261,7 +6266,9 @@
       "include": ["idbase"],
       "resourceType": "PostalRegistration",
       "$a": {"property": "value"},
-      "$b": {"link": "source", "resourceType": "Source", "property": "label"}
+      "TODO": "$b assigner - Agent - rdfs:label in BF2 conversion 1.6",
+      "$b": {"link": "source", "resourceType": "Source", "property": "label"},
+      "$6": null
   },
     "033": {
       "NOTE:record-count": 852,
@@ -6531,7 +6538,7 @@
         }
       ],
       "$a": {"property": "value"},
-      "TODO:a": "extract value from parantheses and source as rdfs:label",
+      "TODO:a": "extract data in parentheses and output as ## - assigner - Agent",
       "$z": {"addProperty": "marc:hiddenValue"},
       "$6": {"property": "marc:bib035-fieldref", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
       "$8": {"addProperty": "marc:bib035-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
@@ -6644,6 +6651,7 @@
     "036": {
     "include": ["identifier"],
     "resourceType": "StudyNumber",
+    "TODO": "$b assigner - Agent - rdfs:label in BF2 conversion 1.6",
     "$b": {"link": "source", "resourceType": "Source", "property": "label"},
     "$6": null
     },
@@ -6652,6 +6660,7 @@
       "resourceType": "AcquisitionSource",
       "i1": {"marcDefault": " "},
       "$a": {"addLink": "identifiedBy", "resourceType": "StockNumber", "property": "value", "NOTE:marc-repeatable": false},
+      "TODO": "$b source - Source - rdfs:label in BF2 conversion 1.6",
       "$b": {"property": "label"},
       "$c": {"property": "acquisitionTerms", "NOTE:marc-repeatable": true},
       "$f": {"addProperty": "marc:formOfIssue"},
@@ -7050,6 +7059,7 @@
 
     "044": {
       "NOTE:LC": "044 - COUNTRY OF PUBLISHING/PRODUCING ENTITY CODE (NR) nac",
+      "TODO": "ignore",
       "link": "marc:hasCountryOfPublishingProducingEntityCode",
       "resourceType": "marc:CountryOfPublishingProducingEntityCode",
       "$a": {"addProperty": "marc:marcCountryCode"},
