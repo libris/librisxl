@@ -105,17 +105,14 @@ Map getWork(thing, work) {
 
 boolean removeItemPortion(entity) {
     boolean wasRemoved = false
-    //TODO: Should we remove all itemPortions or just some?
-    //if (ITEM_PORTION_TYPES.contains(entity[TYPE])) {
-        if (entity.containsKey('itemPortion')) {
-            entity.remove('itemPortion')
-            wasRemoved |= true
-        }
-        if (entity.containsKey('marc:itemNumber')) {
-            entity.remove('marc:itemNumber')
-            wasRemoved |= true
-        }
-    //}
+    if (entity.containsKey('itemPortion')) {
+        entity.remove('itemPortion')
+        wasRemoved |= true
+    }
+    if (entity.containsKey('marc:itemNumber')) {
+        entity.remove('marc:itemNumber')
+        wasRemoved |= true
+    }
     return wasRemoved
 }
 
@@ -124,7 +121,8 @@ List copyMediaExtensionsDetails(entity, docId) {
     if (entity.inScheme?.code == 'kssb' && entity['code'] && entity['code'].contains('/')) {
         //log if it does not follow practice --> will be fixed manually
         def extensions = entity['code'].split("/")
-        if (extensions.size() == 2 && extensions[1].size() <= 2) {
+        if (extensions.size() == 2 &&
+                (extensions[1].size() == 1 || extensions[1].size() == 2)) {
             copyToInstance << entity.clone()
             entity['code'] = extensions[0]
         } else {
