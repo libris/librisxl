@@ -163,11 +163,16 @@ public class ResponseCommon
         writer.writeEndElement(); // datestamp
 
         String dataset = LegacyIntegrationTools.determineLegacyCollection(document, OaiPmh.s_whelk.getJsonld());
+
         if (dataset != null)
         {
-            writer.writeStartElement("setSpec");
-            writer.writeCharacters(dataset);
-            writer.writeEndElement(); // setSpec
+            String type = document.getThingType();
+            if ( !(dataset.equals("auth") && OaiPmh.workDerivativeTypes.contains(type)))
+            {
+                writer.writeStartElement("setSpec");
+                writer.writeCharacters(dataset);
+                writer.writeEndElement(); // setSpec
+            }
         }
 
         String sigel = document.getSigel();
