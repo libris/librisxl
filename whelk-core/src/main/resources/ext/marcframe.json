@@ -25295,15 +25295,67 @@
       "inherit": "bib",
       "aboutEntity": "?thing",
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "$b": {"property": "itemPortion"},
       "$m": null,
-      "$q": null
+      "$q": null,
+      "_spec": [
+        {
+          "name": "In contrast to bib, continue to map $b to itemPortion ",
+          "source": {
+            "082": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "808"}, {"b": ".066"}, {"2": "21"}
+            ]}},
+          "normalized": {
+            "082": {"ind1": " ", "ind2": "4", "subfields": [
+              {"a": "808"}, {"b": ".066"}, {"2": "21"}
+            ]}},
+          "result": {"mainEntity": {
+            "@type": "Item",
+            "classification": [
+              {
+                "@type": "ClassificationDdc",
+                "code": "808",
+                "edition": "other",
+                "editionEnumeration": "21",
+                "itemPortion" : ".066"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "084": {
       "inherit": "bib",
       "aboutEntity": "?thing",
-      "NOTE:local": "LIBRIS-definierat beståndsfält."
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "$b": {"property": "itemPortion"},
+      "TODO:_spec": [
+        {
+          "TODO": "Add ignoreOnRevert. As it is now, it collides with 082. See bug issue LXL-3287",
+          "name": "In contrast to bib, continue to map $b to itemPortion.",
+          "source": {
+            "084": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Ncba/VP"}, {"b": "Nc"}, {"2": "kssb/8"}
+            ]}},
+          "result": {"mainEntity": {
+            "@type": "Item",
+            "classification": [
+              {
+                "@type": "Classification",
+                "code": "Ncba/VP",
+                "itemPortion": "Nc",
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/kssb%2F8/",
+                  "@type": "ConceptScheme",
+                  "code": "kssb",
+                  "version": "8"
+                }
+              }
+            ]
+          }}
+        }
+      ]
     },
-
     "337": {"ignored": true, "NOTE:record-count": 0, "NOTE:": "Media only on work or instance"},
     "338": {"ignored": true, "NOTE:record-count": 0, "NOTE:": "Carrier only on instance"},
     "347": {"ignored": true, "NOTE:record-count": 0},
