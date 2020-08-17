@@ -7177,7 +7177,7 @@
       "i1": {"property": "marc:existenceInLCCollection", "marcDefault": " ", "tokenMap": {"0": true, "1": false}},
       "i2": {"property": "marc:assignedByLC", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "code", "TODO:repeatable": true},
-      "$b": {"property": "itemPortion"},
+      "$b": {"ignored": true},
       "$0": {"property": "marc:recordControlNumber"},
       "$1": null,
       "$3": null,
@@ -7187,12 +7187,14 @@
           "source": {
             "050": {"ind1": " ", "ind2": "4", "subfields": [{"a": "NB933.F44"},{"b": "T6"}]}
           },
+          "normalized": {
+            "050": {"ind1": " ", "ind2": "4", "subfields": [{"a": "NB933.F44"}]}
+          },
           "result": {
             "mainEntity": {
               "classification": [{
                 "@type": "ClassificationLcc",
-                "code": "NB933.F44",
-                "itemPortion": "T6"
+                "code": "NB933.F44"
               }]
             }
           }
@@ -7272,7 +7274,7 @@
         "marcDefault": " "
       },
       "$a": {"property": "classificationPortion"},
-      "$b": {"property": "itemPortion"},
+      "$b": {"ignored": true},
       "$1": {"ignored": true, "NOTE:LC": "nac"},
       "$2": {"ignored": true, "NOTE:LC": "nac"},
       "$6": {"ignored": true, "NOTE:LC": "ignore"},
@@ -7282,21 +7284,18 @@
             "055": {"ind1": "1", "ind2": "4", "subfields": [{"a": "K347.9444"},{"b": "C5164"}]}
           },
           "normalized": {
-            "055": {"ind1": " ", "ind2": " ", "subfields": [{"a": "K347.9444"},{"b": "C5164"}]}
+            "055": {"ind1": " ", "ind2": " ", "subfields": [{"a": "K347.9444"}]}
           },
           "result": {
             "mainEntity": {
               "classification": [{
                   "@type": "marc:ClassificationNumbersAssignedInCanada",
-                  "classificationPortion": "K347.9444",
-                  "itemPortion": "C5164"
+                  "classificationPortion": "K347.9444"
                 }
               ]
             }
           }
-        }
-      ],
-      "_spec": [
+        },
         {
           "source": {
             "055": {"ind1": "0", "ind2": "1", "subfields": [{"a": "HB31"}]}
@@ -7307,10 +7306,10 @@
           "result": {
             "mainEntity": {
               "classification": [{
-                  "@type": "marc:ClassificationNumbersAssignedInCanada",
-                  "classificationPortion": "HB31",
-                  "marc:typeCompletenessSourceOfClassCallNumber": "marc:CompleteLcClassNumberAssignedByLac"
-                }
+                "@type": "marc:ClassificationNumbersAssignedInCanada",
+                "classificationPortion": "HB31",
+                "marc:typeCompletenessSourceOfClassCallNumber": "marc:CompleteLcClassNumberAssignedByLac"
+              }
               ]
             }
           }
@@ -7324,20 +7323,19 @@
       "i1": {"property": "marc:existenceInNlmCollection", "marcDefault": " ", "tokenMap": {"0": true, "1": false}},
       "i2": {"property": "marc:assignedByNlm", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "code"},
-      "$b": {"property": "itemPortion"},
+      "$b": {"ignored": true},
       "$0": {"property": "marc:recordControlNumber"},
       "$1": null,
       "_spec": [
         {
           "source": {
-            "060": {"ind1": " ", "ind2": "4", "subfields": [{"a": "W1"},{"b": "JO706M"}]}
+            "060": {"ind1": " ", "ind2": "4", "subfields": [{"a": "W1"}]}
           },
           "result": {
             "mainEntity": {
               "classification": [{
                 "@type": "ClassificationNlm",
-                "code": "W1",
-                "itemPortion": "JO706M"
+                "code": "W1"
               }]
             }
           }
@@ -7366,7 +7364,7 @@
       "resourceType": "marc:NationalAgriculturalLibraryCallNumber",
       "i1": null,
       "$a": {"addProperty": "classificationPortion"},
-      "$b": {"property": "itemPortion"},
+      "$b": {"ignored": true},
       "$0": {"property": "marc:recordControlNumber"},
       "$1": {"ignore": true, "NOTE:LC": "nac"},
       "_spec": [
@@ -7375,15 +7373,14 @@
             "070": {"ind1": "0", "ind2": " ", "subfields": [{"a": "QH301.A5"},{"b": "1981"}]}
           },
           "normalized": {
-            "070": {"ind1": " ", "ind2": " ", "subfields": [{"a": "QH301.A5"},{"b": "1981"}]}
+            "070": {"ind1": " ", "ind2": " ", "subfields": [{"a": "QH301.A5"}]}
           },
           "result": {
             "mainEntity": {
               "classification": [
                 {
                   "@type": "marc:NationalAgriculturalLibraryCallNumber",
-                  "classificationPortion": ["QH301.A5"],
-                  "itemPortion": "1981"
+                  "classificationPortion": ["QH301.A5"]
                 }
               ]
             }
@@ -7760,8 +7757,7 @@
               {"2": "23"}
             ]}},{
             "082": {"ind1": " ", "ind2": "4", "subfields": [
-              {"a": "E184.S23"},
-              {"b": "A685"}
+              {"a": "E184.S23"}
             ]}}],
           "TODO:result": {"mainEntity": {
             "instanceOf": {
@@ -7783,8 +7779,7 @@
             "classification": [
               {
                 "@type": "ClassificationDdc",
-                "code": "E184.S23",
-                "itemPortion": "A685"
+                "code": "E184.S23"
               }
             ]
           }}
