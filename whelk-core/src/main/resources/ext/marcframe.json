@@ -7230,10 +7230,9 @@
       "$c": {"property": "marc:copyInformation"}
     },
     "052": {
-      "NOTE:LC": "Is GeographicCoverage in BF2",
       "aboutEntity": "?thing",
-      "addLink": "marc:hasGeographicClassification",
-      "resourceType": "marc:GeographicClassification",
+      "addLink": "geographicCoverage",
+      "resourceType": "GeographicCoverage",
       "i1": {
         "property": "marc:i1codeSource",
         "tokenMap": {
@@ -7243,7 +7242,7 @@
           "7": "marc:SourceSpecifiedInSubfield2"
         }
       },
-      "$a": {"property": "marc:geographicClassificationAreaCode"},
+      "$a": {"property": "label"},
       "$b": {"addProperty": "marc:geographicClassificationSubareaCode"},
       "$d": {"addProperty": "marc:populatedPlaceName"},
       "$0": {"property": "marc:recordControlNumber"},
@@ -7256,9 +7255,9 @@
           },
           "result": {
             "mainEntity": {
-              "marc:hasGeographicClassification": [{
-                "@type": "marc:GeographicClassification",
-                "marc:geographicClassificationAreaCode": "6714",
+              "geographicCoverage": [{
+                "@type": "GeographicCoverage",
+                "label": "6714",
                 "marc:geographicClassificationSubareaCode": ["R7"],
                 "marc:i1codeSource": "marc:LibraryOfCongressClassification"
               }]

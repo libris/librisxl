@@ -44,8 +44,9 @@ selectBySqlWhere(query) { data ->
         return failedIDs.println("Failed to process ${record[ID]} due to missing work entity")
     }
 
+    //Move and remodel marc:hasGeographicClassification
     if (work.containsKey('marc:hasGeographicClassification')) {
-        thing.put('marc:hasGeographicClassification', work['marc:hasGeographicClassification'])
+        thing.put('geographicCoverage', remodelGeographicClassifcation(work['marc:hasGeographicClassification']))
         work.remove('marc:hasGeographicClassification')
         changed = true
     }
@@ -100,6 +101,19 @@ Map getWork(thing, work) {
         return work
     }
     return null
+}
+
+List remodelGeographicClassifcation(object) {
+    if (object instanceof Map) {
+        object = [object]
+    }
+    List updatedEntities = object.collect {
+        it[(TYPE)] = 'GeographicCoverage'
+        it['label'] = it['marc:geographicClassificationAreaCode']
+        it.remove('marc:geographicClassificationAreaCode')
+        return it
+    }
+    return updatedEntities
 }
 
 List copyMediaExtensionsDetails(entity, docId) {
