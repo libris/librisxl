@@ -7863,6 +7863,21 @@
       "$a": {"property": "code", "required": true},
       "match": [
         {
+          "NOTE": "For now, always map to instance when $a contains '/', no matter how the media extension code is",
+          "when": "$a =~ ^.*/.*$ & $2 =~ ^kssb/.+$",
+          "aboutEntity": "?thing",
+          "$2": {
+            "link": "inScheme",
+            "resourceType": "ConceptScheme",
+            "property": "code",
+            "uriTemplate": "https://id.kb.se/term/{_}/",
+            "uriTemplateDefaults": {"inScheme.code": "kssb"},
+            "splitValuePattern": "(\\w+)(?:/(5|6|7|8))?",
+            "splitValueProperties": ["code", "version"],
+            "rejoin": "/"
+          }
+        },
+        {
           "when": "$2 =~ ^kssb/.+$",
           "$2": {
             "link": "inScheme",
@@ -7909,6 +7924,50 @@
                 }
               ]
             }
+          }}
+        },
+        {
+          "name": "kssb classification with media extension should convert to Instance",
+          "source": {
+            "084": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Koafh-a.54/VK"},
+              {"2": "kssb/7"}
+            ]}},
+          "result": {"mainEntity": {
+            "classification": [
+              {
+                "@type": "Classification",
+                "code": "Koafh-a.54/VK",
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/kssb%2F7/",
+                  "@type": "ConceptScheme",
+                  "code": "kssb",
+                  "version": "7"
+                }
+              }
+            ]
+          }}
+        },
+        {
+          "name": "kssb classification with media extension should convert to Instance",
+          "source": {
+            "084": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Fvea(x)/O,u"},
+              {"2": "kssb/8"}
+            ]}},
+          "result": {"mainEntity": {
+            "classification": [
+              {
+                "@type": "Classification",
+                "code": "Fvea(x)/O,u",
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/kssb%2F8/",
+                  "@type": "ConceptScheme",
+                  "code": "kssb",
+                  "version": "8"
+                }
+              }
+            ]
           }}
         }
       ]
