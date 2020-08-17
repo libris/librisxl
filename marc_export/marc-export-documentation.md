@@ -88,4 +88,4 @@ Förklaring till (en del av) de olika inställningarna i exportprofilen:
 * biboperators=[list av sigel] - Ändringar av bibliografiska poster ska bara resultera i export om de gjorts av någon av följande sigel (lämnas tom för "alla")
 * move0359=on|off - Flytta värde ifrån 035$9 till 035$a
 * authupdate=on|off - Avgör om uppdateringar av auktoritetsposter ska leda till export
-* sab=o|offn - Avgör om SAB-titlar ska läggas till
+* sab=on|off - Avgör om SAB-titlar ska läggas till
