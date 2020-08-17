@@ -126,7 +126,7 @@ List copyMediaExtensionsDetails(entity, docId) {
             copyToInstance << entity.clone()
             entity['code'] = extensions[0]
         } else {
-            deviatedMediaExtensions.println("${docId}")
+            deviatedMediaExtensions.println("${docId} with code ${entity['code']}")
         }
     }
     return copyToInstance
