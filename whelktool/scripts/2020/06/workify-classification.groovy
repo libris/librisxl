@@ -9,11 +9,9 @@
  * classification ClassificationNlm (bib 060)
  * classification marc:NationalAgriculturalLibraryCallNumber (bib 070)
  *
- * Remain on work but remove itemPortion / marc:itemNumber
- * classification ClassificationUdc (bib 080) (OBS. $b mappad till "marc:itemNumber")
- * classification ClassificationDdc (bib 082)
- * additionalClassificationDdc AdditionaClassificationDdc (bib 083)
- * classification Classification (bib 084)
+ * Remove:
+ * marc:existenceInLCCollection (ind1) from classification ClassificationLcc (bib 050)
+ * all occurrences of itemPortion / marc:itemNumber
  *
  * SAB classification:
  * classification Classification (bib 084) with inScheme set to SAB -> if code ends with
@@ -29,7 +27,8 @@ deviatedMediaExtensions = getReportWriter("deviatedMediaExtensions")
 TYPES_TO_INSTANCE = ['ClassificationLcc',
                      'ClassificationNlm',
                      'marc:NationalAgriculturalLibraryCallNumber']
-CLASSIFICATION = [ 'classification', 'additionalClassificationDdc', 'marc:hasGeographicClassification' ]
+CLASSIFICATION = ['classification', 'additionalClassificationDdc', 'marc:hasGeographicClassification']
+PROPERTIES_TO_REMOVE = ['itemPortion', 'marc:itemNumber', 'marc:existenceInLCCollection']
 
 String subQueryWork = CLASSIFICATION.collect {"data#>>'{@graph,2,${it}}' IS NOT NULL"}.join(" OR ")
 String subQueryLocalWork = CLASSIFICATION.collect {"data#>>'{@graph,1,instanceOf,${it}}' IS NOT NULL"}.join(" OR ")
@@ -60,8 +59,8 @@ selectBySqlWhere(query) { data ->
         while (iter.hasNext()) {
             Object classificationEntity = iter.next()
 
-            //itemPortion - for all?
-            changed |= removeItemPortion(classificationEntity)
+            //Remove certain properties
+            changed |= classificationEntity.keySet().removeIf { PROPERTIES_TO_REMOVE.contains(it) }
 
             //copy kssb --> classification Classification
             classificationsToInstance.addAll(copyMediaExtensionsDetails(classificationEntity, record[ID]))
@@ -101,19 +100,6 @@ Map getWork(thing, work) {
         return work
     }
     return null
-}
-
-boolean removeItemPortion(entity) {
-    boolean wasRemoved = false
-    if (entity.containsKey('itemPortion')) {
-        entity.remove('itemPortion')
-        wasRemoved |= true
-    }
-    if (entity.containsKey('marc:itemNumber')) {
-        entity.remove('marc:itemNumber')
-        wasRemoved |= true
-    }
-    return wasRemoved
 }
 
 List copyMediaExtensionsDetails(entity, docId) {

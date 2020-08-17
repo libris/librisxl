@@ -7174,7 +7174,7 @@
       "aboutEntity": "?thing",
       "addLink": "classification",
       "resourceType": "ClassificationLcc",
-      "i1": {"property": "marc:existenceInLCCollection", "marcDefault": " ", "tokenMap": {"0": true, "1": false}},
+      "i1": {"ignored": true, "marcDefault": " "},
       "i2": {"property": "marc:assignedByLC", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "code", "TODO:repeatable": true},
       "$b": {"ignored": true},
@@ -7195,6 +7195,23 @@
               "classification": [{
                 "@type": "ClassificationLcc",
                 "code": "NB933.F44"
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "050": {"ind1": "0", "ind2": "0", "subfields": [{"a": "DS751"},{"b": ".C4468 1994"}]}
+          },
+          "normalized": {
+            "050": {"ind1": " ", "ind2": "0", "subfields": [{"a": "DS751"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "classification": [{
+                "@type": "ClassificationLcc",
+                "code": "DS751",
+                "marc:assignedByLC": true
               }]
             }
           }
