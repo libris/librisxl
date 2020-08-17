@@ -121,8 +121,7 @@ List copyMediaExtensionsDetails(entity, docId) {
     if (entity.inScheme?.code == 'kssb' && entity['code'] && entity['code'].contains('/')) {
         //log if it does not follow practice --> will be fixed manually
         def extensions = entity['code'].split("/")
-        if (extensions.size() == 2 &&
-                (extensions[1].size() == 1 || extensions[1].size() == 2)) {
+        if (extensions.size() == 2 && extensions[1] =~ /^[A-Za-z]{1,2}(,u(f|g)?)?$/) {
             copyToInstance << entity.clone()
             entity['code'] = extensions[0]
         } else {
