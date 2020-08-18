@@ -43,4 +43,9 @@ public class ScriptGenerator
 
         return new PortableScript(scriptText, null, "Byte av sigel " + fromSigel + " till " + toSigel);
     }
+
+    public static PortableScript generateChangeSubjectScript(String fromSigel, String toSigel) throws IOException
+    {
+        return null;
+    }
 }
