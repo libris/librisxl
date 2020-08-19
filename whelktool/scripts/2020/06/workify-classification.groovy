@@ -23,6 +23,7 @@
 PrintWriter scheduledForChange = getReportWriter("scheduled-for-update")
 PrintWriter failedIDs = getReportWriter("failed-to-update")
 deviatedMediaExtensions = getReportWriter("deviatedMediaExtensions")
+sanitizedSABCodes = getReportWriter("sanitizedSABCodes")
 
 TYPES_TO_INSTANCE = ['ClassificationLcc',
                      'ClassificationNlm',
@@ -64,7 +65,7 @@ selectBySqlWhere(query) { data ->
             changed |= classificationEntity.keySet().removeIf { PROPERTIES_TO_REMOVE.contains(it) }
 
             //copy kssb --> classification Classification
-            classificationsToInstance.addAll(copyMediaExtensionsDetails(classificationEntity, record[ID]))
+            classificationsToInstance.addAll(handleMediaExtensionsDetails(classificationEntity, record[ID]))
 
             //move --> 'ClassificationLcc', 'ClassificationNlm', 'marc:NationalAgriculturalLibraryCallNumber'
             if (TYPES_TO_INSTANCE.contains(classificationEntity[TYPE])) {
@@ -116,15 +117,20 @@ List remodelGeographicClassifcation(object) {
     return updatedEntities
 }
 
-List copyMediaExtensionsDetails(entity, docId) {
+List handleMediaExtensionsDetails(entity, docId) {
     List copyToInstance = []
     if (entity.inScheme?.code == 'kssb' && entity['code'] && entity['code'].contains('/')) {
-        //log if it does not follow practice --> will be fixed manually
-        def extensions = entity['code'].split("/")
-        if (extensions.size() == 2 && extensions[1] =~ /^[A-Za-z]{1,2}(,u(f|g)?)?$/) {
+        def existingCode = entity['code']
+        def extensions = existingCode.split("/")
+
+        if (extensions.size() == 1) {
+            entity['code'] = extensions[0].trim()
+            sanitizedSABCodes.println("${docId}: ${existingCode} --> ${entity['code']}")
+        } else if (extensions.size() == 2 && extensions[1] =~ /^[A-Za-z]{1,2}(,u(f|g)?)?$/) {
             copyToInstance << entity.clone()
             entity['code'] = extensions[0]
         } else {
+            //log if it does not follow practice --> will be fixed manually
             deviatedMediaExtensions.println("${docId} with code ${entity['code']}")
         }
     }
