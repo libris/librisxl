@@ -57,7 +57,7 @@ void handleWithSabCode(bib, work, bib81, bib976) {
         if (notIn81) {
             Script.notIn81.println("""
                 ${bib.doc.getURI()}
-                bib-976: $notIn81
+                bib-976: ${notIn81.collect{ "${it['marc:bib976-a']} (${it['marc:bib976-b']})" }}
                 classification/kssb: $bib81
             """.stripIndent())
         }
