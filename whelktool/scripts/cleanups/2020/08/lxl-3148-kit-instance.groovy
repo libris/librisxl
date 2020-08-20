@@ -17,7 +17,8 @@ PrintWriter failedUpdating = getReportWriter("failed-updates")
 String where = "data#>>'{@graph,1,@type}' = 'KitInstance' or data#>>'{@graph,1,@type}' = 'TextInstance'"
 
 selectBySqlWhere(where) { data ->
-    def (record, instance, work) = data.graph
+    def (record, instance) = data.graph
+    def work = instance['instanceOf']
     boolean changed = false
 
     instance.hasPart.each { part ->
