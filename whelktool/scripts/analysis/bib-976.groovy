@@ -15,25 +15,28 @@ selectByCollection('bib') { bib ->
 }
 
 void process(bib) {
-    def (record, thing, work) = bib.graph
+    def work = bib.graph[1]['instanceOf']
 
     if(!work) {
         return
     }
 
-    if(work['marc:hasBib976']) {
-        println ("""
-            ${bib.doc.getURI()}
-            ${work['marc:hasBib976']}
-            """.stripIndent())
+    def bib976 = work['marc:hasBib976']
+    if(bib976) {
+        def bib81 = sab(work)
+        def notIn81 = bib976.findAll { !bib81.contains(it['marc:bib976-a'] ?: '')  }
+        if(notIn81) {
+            notIn81.each{ s.increment('bib976 not in bib81', it) }
+            println ("${bib.doc.getURI()} $notIn81")
+        }
+
     }
 }
 
-String hasTitle(thing, work) {
-    if (work.hasTitle) {
-        isSameTitle(thing, work) ? "match" : "diff"
-    }
-    else {
-        "no"
-    }
+List sab(work) {
+    asList(work['classification']).findAll{ it['inScheme'] ?: '' == 'kssb' }.collect{ it['code'] }
+}
+
+def asList(x) {
+    (x ?: []).with {it instanceof List ? it : [it] }
 }
