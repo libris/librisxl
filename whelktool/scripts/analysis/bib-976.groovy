@@ -2,8 +2,8 @@ import whelk.util.DocumentUtil
 import whelk.util.Statistics
 
 class Script {
-    static PrintWriter notIn81 = getReportWriter("not-in-81.txt")
-    static PrintWriter noCode = getReportWriter("no-code.txt")
+    static PrintWriter notIn81
+    static PrintWriter noCode
 }
 Script.notIn81 = getReportWriter("not-in-81.txt")
 Script.noCode = getReportWriter("no-code.txt")
