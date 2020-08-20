@@ -51,6 +51,7 @@ void handleWithSabCode(bib, work, bib81, bib976) {
 
         notIn81.each {
             s.increment('bib976-a', 'not in classification')
+            s.increment('bib976-a not in classification', it)
         }
 
         if (notIn81) {
