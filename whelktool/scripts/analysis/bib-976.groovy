@@ -51,17 +51,26 @@ void handleWithSabCode(bib, work, bib81, bib976) {
 
         notIn81.each {
             s.increment('bib976-a', 'not in classification')
-            Script.notIn81.println("${bib.doc.getURI()} $it")
+        }
+
+        if (notIn81) {
+            Script.notIn81.println("""
+                ${bib.doc.getURI()}
+                bib-976: $notIn81
+                classification/kssb: $bib81
+            """.stripIndent())
         }
     }
 }
 
 void handleWithoutSabCode(bib, work, bib81, bib976) {
     if (bib976) {
-        s.increment('bib976 without code', bib.graph[0]['descriptionCreator'])
+        def creator = bib.graph[0]['descriptionCreator']['@id']
+        s.increment('bib976 without code', creator)
 
         bib976.each {
-            Script.noCode.println("${bib.doc.getURI()} $it")
+            def label = it['marc:bib976-b']
+            Script.noCode.println("${bib.doc.getURI()} $creator $label")
         }
     }
 }
