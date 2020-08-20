@@ -43,7 +43,10 @@ void process(bib) {
 void handleWithSabCode(bib, work, bib81, bib976) {
 
     bib976.each {
-        def (in81, notIn81) = bib976.split { bib81.contains(it['marc:bib976-a'])  }
+        def (in81, notIn81) = bib976.split { x ->
+            def code = x['marc:bib976-a']
+            bib81.findAll{ it.startsWith((code)) }
+        }
 
         in81.each {
             s.increment('bib976-a', 'in classification')
