@@ -1,6 +1,7 @@
 package whelk.util
 
 import groovy.util.logging.Log4j2
+import org.codehaus.groovy.runtime.memoize.LRUCache
 import org.postgresql.util.PSQLException
 import se.kb.libris.export.ExportProfile
 import se.kb.libris.util.marc.Field
@@ -13,6 +14,10 @@ import whelk.converter.marc.JsonLD2MarcXMLConverter
 
 @Log4j2
 class MarcExport {
+
+    // Assuming a marcrecord is around ~2Kb this will mean something like 1Gb of memory
+    static private LRUCache conversionCache = new LRUCache(500000)
+
     static Vector<MarcRecord> compileVirtualMarcRecord(ExportProfile profile, Document rootDocument,
                                                        Whelk whelk, JsonLD2MarcXMLConverter toMarcXmlConverter) {
         String bibXmlString = toXmlString(rootDocument, toMarcXmlConverter)
@@ -95,8 +100,20 @@ class MarcExport {
      * Make a marc xml string out of a whelk document
      */
     static String toXmlString(Document doc, JsonLD2MarcXMLConverter toMarcXmlConverter) {
+
+        String cacheKey = doc.getShortId() + doc.getModified() + doc.getGenerationDate()
+        synchronized (conversionCache) {
+            String marcData = conversionCache.get(doc.getShortId())
+            if (marcData != null)
+                return marcData
+        }
+
         try {
-            return (String) toMarcXmlConverter.convert(doc.data, doc.getShortId()).get(JsonLd.getNON_JSON_CONTENT_KEY())
+            String marcData = toMarcXmlConverter.convert(doc.data, doc.getShortId()).get(JsonLd.getNON_JSON_CONTENT_KEY())
+            synchronized (conversionCache) {
+                conversionCache.put(cacheKey, marcData)
+            }
+            return marcData
         }
         catch (Exception | Error e) { // Depending on the converter, a variety of problems may arise here
             log.error("Conversion error for: " + doc.getCompleteId() + " cause: ", e)
