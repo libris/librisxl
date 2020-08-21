@@ -40,20 +40,16 @@ class Whelk {
 
     URI baseUri = null
 
-    // useCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
-    // Any other use of this results in a "local" cache, which will not be invalidated when data changes elsewhere,
-    // resulting in potential serving of stale data.
-
     // TODO: encapsulate and configure (LXL-260)
     String vocabContextUri = "https://id.kb.se/vocab/context"
     String vocabDisplayUri = "https://id.kb.se/vocab/display"
     String vocabUri = "https://id.kb.se/vocab/"
 
-    static Whelk createLoadedCoreWhelk(String propName = "secret", boolean useCache = false) {
+    static Whelk createLoadedCoreWhelk(String propName = "secret", boolean useCache = true) {
         return createLoadedCoreWhelk(PropertyLoader.loadProperties(propName), useCache)
     }
 
-    static Whelk createLoadedCoreWhelk(Properties configuration, boolean useCache = false) {
+    static Whelk createLoadedCoreWhelk(Properties configuration, boolean useCache = true) {
         Whelk whelk = new Whelk(useCache ? new CachingPostgreSQLComponent(configuration) : new PostgreSQLComponent(configuration))
         if (configuration.baseUri) {
             whelk.baseUri = new URI((String) configuration.baseUri)
@@ -65,11 +61,11 @@ class Whelk {
         return whelk
     }
 
-    static Whelk createLoadedSearchWhelk(String propName = "secret", boolean useCache = false) {
+    static Whelk createLoadedSearchWhelk(String propName = "secret", boolean useCache = true) {
         return createLoadedSearchWhelk(PropertyLoader.loadProperties(propName), useCache)
     }
 
-    static Whelk createLoadedSearchWhelk(Properties configuration, boolean useCache = false) {
+    static Whelk createLoadedSearchWhelk(Properties configuration, boolean useCache = true) {
         Whelk whelk = new Whelk(configuration, useCache)
         if (configuration.baseUri) {
             whelk.baseUri = new URI((String) configuration.baseUri)
@@ -93,7 +89,7 @@ class Whelk {
         log.info("Started with storage: $storage")
     }
 
-    Whelk(Properties conf, useCache = false) {
+    Whelk(Properties conf, useCache = true) {
         this(useCache ? new CachingPostgreSQLComponent(conf) : new PostgreSQLComponent(conf), new ElasticSearch(conf))
     }
 
