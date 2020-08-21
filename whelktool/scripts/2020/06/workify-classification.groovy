@@ -1,7 +1,6 @@
 /*
  * This moves certain classifications from work to instance, remove
- * itemPortion and marc:itemNumber and handle SAB classification with
- * media extensions
+ * spec properties and handle SAB classification with media extensions
  *
  * Move:
  * classification ClassificationLcc (bib 050)
@@ -17,7 +16,7 @@
  * classification Classification (bib 084) with inScheme set to SAB -> if code ends with
  * /xx -> copy the entire entity to thing and remove everything after '/'
  *
- * See LXL-3254, LXL-3256 and LXL-3258 for more info.
+ * See LXL-3254, LXL-3256, LXL-3258 and LXL-3293 for more info.
  */
 
 PrintWriter scheduledForChange = getReportWriter("scheduled-for-update")
@@ -31,9 +30,8 @@ TYPES_TO_INSTANCE = ['ClassificationLcc',
 CLASSIFICATION = ['classification', 'additionalClassificationDdc', 'marc:hasGeographicClassification']
 PROPERTIES_TO_REMOVE = ['itemPortion', 'marc:itemNumber', 'marc:existenceInLCCollection']
 
-String subQueryWork = CLASSIFICATION.collect {"data#>>'{@graph,2,${it}}' IS NOT NULL"}.join(" OR ")
-String subQueryLocalWork = CLASSIFICATION.collect {"data#>>'{@graph,1,instanceOf,${it}}' IS NOT NULL"}.join(" OR ")
-String query = "collection = 'bib' AND ( ${subQueryWork} OR ${subQueryLocalWork} )"
+String subQuery = CLASSIFICATION.collect {"data#>>'{@graph,1,instanceOf,${it}}' IS NOT NULL"}.join(" OR ")
+String query = "collection = 'bib' AND ${subQuery}"
 
 selectBySqlWhere(query) { data ->
     boolean changed = false
@@ -61,13 +59,9 @@ selectBySqlWhere(query) { data ->
         while (iter.hasNext()) {
             Object classificationEntity = iter.next()
 
-            //Remove certain properties
             changed |= classificationEntity.keySet().removeIf { PROPERTIES_TO_REMOVE.contains(it) }
-
-            //copy kssb --> classification Classification
             classificationsToInstance.addAll(handleMediaExtensionsDetails(classificationEntity, record[ID]))
 
-            //move --> 'ClassificationLcc', 'ClassificationNlm', 'marc:NationalAgriculturalLibraryCallNumber'
             if (TYPES_TO_INSTANCE.contains(classificationEntity[TYPE])) {
                 classificationsToInstance << classificationEntity
                 iter.remove()
@@ -120,6 +114,7 @@ List remodelGeographicClassifcation(object) {
 List handleMediaExtensionsDetails(entity, docId) {
     List copyToInstance = []
     if (entity.inScheme?.code == 'kssb' && entity['code'] && entity['code'].contains('/')) {
+        entity['code'] = entity['code'].trim()
         def existingCode = entity['code']
         def extensions = existingCode.split("/")
 
