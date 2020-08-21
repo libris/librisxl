@@ -6,6 +6,7 @@ import com.google.common.cache.LoadingCache
 import groovy.util.logging.Log4j2 as Log
 import org.postgresql.PGConnection
 import whelk.Document
+import whelk.exception.WhelkRuntimeException
 
 import java.sql.Connection
 import java.sql.Statement
@@ -93,7 +94,8 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
             statement.execute("LISTEN $CARD_CHANGED_NOTIFICATION")
         }
         catch (Exception e) {
-            log.error("Error checking notifications: $e", e)
+            log.error("Error listening for notifications: $e", e)
+            throw new WhelkRuntimeException(e)
         }
         finally {
             close(statement, connection)
@@ -127,7 +129,7 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
                     .findAll { it.getName() == CARD_CHANGED_NOTIFICATION }
                     .each {
                         cardCache.invalidate(it.getParameter())
-                        log.debug("Card changed, invalidating cache: {}", it.getParameter())
+                        log.info("Card changed, invalidating cache: {}", it.getParameter())
                     }
         }
     }
