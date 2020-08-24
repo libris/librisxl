@@ -2,10 +2,12 @@ import whelk.util.DocumentUtil
 import whelk.util.Statistics
 
 class Script {
-    static PrintWriter notIn81
+    static PrintWriter notIn084
+    static PrintWriter in084
     static PrintWriter noCode
 }
-Script.notIn81 = getReportWriter("not-in-81.txt")
+Script.notIn084 = getReportWriter("not-in-084.txt")
+Script.in084 = getReportWriter("in-084.txt")
 Script.noCode = getReportWriter("no-code.txt")
 
 s = new Statistics().printOnShutdown()
@@ -40,34 +42,42 @@ void process(bib) {
     handleWithoutSabCode(bib, work, bib81, noCode)
 }
 
-void handleWithSabCode(bib, work, bib81, bib976) {
+void handleWithSabCode(bib, work, bib084, bib976) {
 
     bib976.each {
-        def (in81, notIn81) = bib976.split { x ->
+        def (in084, notIn084) = bib976.split { x ->
             def code = x['marc:bib976-a']
-            bib81.findAll{ it.startsWith((code)) }
+            bib084.findAll{ it.startsWith((code)) }
         }
 
-        in81.each {
+        in084.each {
             s.increment('bib976-a', 'in classification')
         }
 
-        notIn81.each {
+        notIn084.each {
             s.increment('bib976-a', 'not in classification')
             s.increment('bib976-a not in classification', it)
         }
 
-        if (notIn81) {
-            Script.notIn81.println("""
+        if (notIn084) {
+            Script.notIn084.println("""
                 ${bib.doc.getURI()}
-                bib-976: ${notIn81.collect{ "${it['marc:bib976-a']} (${it['marc:bib976-b']})" }}
-                classification/kssb: $bib81
+                bib-976: ${notIn084.collect{ "${it['marc:bib976-a']} (${it['marc:bib976-b']})" }}
+                classification/kssb: $bib084
+            """.stripIndent())
+        }
+
+        if (in084) {
+            Script.in084.println("""
+                ${bib.doc.getURI()}
+                bib-976: ${in084.collect{ "${it['marc:bib976-a']} (${it['marc:bib976-b']})" }}
+                classification/kssb: $bib084
             """.stripIndent())
         }
     }
 }
 
-void handleWithoutSabCode(bib, work, bib81, bib976) {
+void handleWithoutSabCode(bib, work, bib084, bib976) {
     if (bib976) {
         def creator = bib.graph[0]['descriptionCreator']['@id']
         s.increment('bib976 without code', creator)
