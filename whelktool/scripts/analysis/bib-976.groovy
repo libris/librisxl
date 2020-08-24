@@ -5,10 +5,12 @@ class Script {
     static PrintWriter notIn084
     static PrintWriter in084
     static PrintWriter noCode
+    static PrintWriter report
 }
 Script.notIn084 = getReportWriter("not-in-084.txt")
 Script.in084 = getReportWriter("in-084.txt")
 Script.noCode = getReportWriter("no-code.txt")
+Script.report = getReportWriter("report.txt")
 
 s = new Statistics().printOnShutdown()
 
@@ -74,7 +76,19 @@ void handleWithSabCode(bib, work, bib084, bib976) {
                 classification/kssb: $bib084
             """.stripIndent())
         }
+
+        Script.report.println("${bib.doc.shortId} ${handled(in084, notIn084)}")
     }
+}
+
+String handled(in084, notIn084) {
+    if (!in084 && notIn084) {
+        return "ingen"
+    }
+    if (in084 && !notIn084) {
+        return "alla"
+    }
+    return "delvis"
 }
 
 void handleWithoutSabCode(bib, work, bib084, bib976) {
