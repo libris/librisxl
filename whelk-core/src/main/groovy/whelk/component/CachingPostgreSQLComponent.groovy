@@ -7,6 +7,7 @@ import groovy.util.logging.Log4j2 as Log
 import org.postgresql.PGConnection
 import whelk.Document
 import whelk.exception.WhelkRuntimeException
+import whelk.util.Metrics
 
 import java.sql.Connection
 import java.sql.Statement
@@ -83,6 +84,8 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
                         return iris.collectEntries { [it, cards.get(irisToIds.get(it) ?: "NON-EXISTING")] }
                     }
                 })
+
+        Metrics.cacheMetrics.addCache('cardCache', cardCache)
     }
 
     private void startNotificationListener() {
