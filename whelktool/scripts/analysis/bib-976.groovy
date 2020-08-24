@@ -19,7 +19,7 @@ selectByCollection('bib') { bib ->
         process(bib)
     }
     catch(Exception e) {
-        System.err.println(e)
+        System.err.println("${bib.doc.shortId} $e")
         e.printStackTrace()
     }
 
