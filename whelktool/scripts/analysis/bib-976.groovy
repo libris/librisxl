@@ -6,11 +6,13 @@ class Script {
     static PrintWriter in084
     static PrintWriter noCode
     static PrintWriter report
+    static PrintWriter errors
 }
 Script.notIn084 = getReportWriter("not-in-084.txt")
 Script.in084 = getReportWriter("in-084.txt")
 Script.noCode = getReportWriter("no-code.txt")
 Script.report = getReportWriter("report.txt")
+Script.errors = getReportWriter("errors.txt")
 
 s = new Statistics().printOnShutdown()
 
@@ -19,8 +21,8 @@ selectByCollection('bib') { bib ->
         process(bib)
     }
     catch(Exception e) {
-        System.err.println("${bib.doc.shortId} $e")
-        e.printStackTrace()
+        Script.errors.println("${bib.doc.shortId} $e")
+        e.printStackTrace(Script.errors)
     }
 
 }
