@@ -26,8 +26,12 @@ BEGIN
    CREATE OR REPLACE FUNCTION lddb__notify_card()
        RETURNS trigger AS $$
    DECLARE
+       row RECORD;
    BEGIN
-       PERFORM pg_notify('lddb__cards_changed', OLD.id);
+       FOR row IN SELECT iri FROM lddb__identifiers WHERE id = OLD.id
+       LOOP
+           PERFORM pg_notify('lddb__cards_changed', row.iri);
+       END LOOP;
        RETURN NEW;
    END;
    $$ LANGUAGE plpgsql;

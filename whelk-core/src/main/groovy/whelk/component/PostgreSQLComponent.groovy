@@ -735,16 +735,17 @@ class PostgreSQLComponent {
     }
 
     void refreshDerivativeTables(Document doc, Connection connection, boolean deleted) {
-        saveIdentifiers(doc, connection, deleted)
-        saveDependencies(doc, connection)
-
         if (jsonld) {
+            // This needs to happen before identifiers are updated so that notifications for old IRIs can be sent.
             if (deleted) {
                 deleteCard(doc, connection)
             } else {
                 updateCard(new CardEntry(doc), connection)
             }
         }
+
+        saveIdentifiers(doc, connection, deleted)
+        saveDependencies(doc, connection)
     }
 
     /**

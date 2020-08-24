@@ -132,7 +132,7 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
                     .findAll { it.getName() == CARD_CHANGED_NOTIFICATION }
                     .each {
                         cardCache.invalidate(it.getParameter())
-                        log.info("Card changed, invalidating cache: {}", it.getParameter())
+                        log.debug("Card changed, invalidating cache: {}", it.getParameter())
                     }
         }
     }
