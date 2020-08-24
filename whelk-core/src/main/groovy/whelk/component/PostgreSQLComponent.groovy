@@ -406,6 +406,7 @@ class PostgreSQLComponent {
         finally {
             try {resultSet.close()} catch (Exception e) { /* ignore */ }
             try {selectStatement.close()} catch (Exception e) { /* ignore */ }
+            try {connection.close()} catch (Exception e) { /* ignore */ }
         }
     }
 
