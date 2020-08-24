@@ -62,7 +62,7 @@ class Embellisher {
         Iterable<Map> previousLevelDocs = start + docs
 
         for (String lens : embellishLevels) {
-            docs = fetchNonVisited(lens, iris, visitedIris)
+            docs = fetchNonVisited(lens, iris, visitedIris).collect()
             docs += fetchNonVisited(lens, getCloseLinks(docs), visitedIris)
 
             previousLevelDocs.each { insertInverseCards(lens, it, docs, visitedIris) }
