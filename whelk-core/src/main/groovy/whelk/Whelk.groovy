@@ -408,9 +408,7 @@ class Whelk {
     }
 
     Document loadEmbellished(String systemId) {
-        Document doc = getDocument(systemId)
-        embellish(doc)
-        return doc
+        return storage.loadEmbellished(systemId, this.&embellish)
     }
 
     List<Document> getAttachedHoldings(List<String> thingIdentifiers) {
