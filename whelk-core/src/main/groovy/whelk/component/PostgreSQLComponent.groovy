@@ -366,7 +366,7 @@ class PostgreSQLComponent {
     }
 
     private void cacheEmbellishedDocument(String id, Document embellishedDocument, Connection connection) {
-        PreparedStatement preparedStatement
+        PreparedStatement preparedStatement = null
 
         try {
             preparedStatement = connection.prepareStatement(INSERT_EMBELLISHED_DOCUMENT)
@@ -376,8 +376,7 @@ class PostgreSQLComponent {
             preparedStatement.execute()
         }
         finally {
-            if (preparedStatement != null)
-                preparedStatement.close()
+            close(preparedStatement)
         }
     }
 
@@ -389,8 +388,8 @@ class PostgreSQLComponent {
      */
     Document loadExportEmbellished(String id, Closure embellish) {
         Connection connection = getConnection()
-        PreparedStatement selectStatement
-        ResultSet resultSet
+        PreparedStatement selectStatement = null
+        ResultSet resultSet = null
 
         try {
             selectStatement = connection.prepareStatement(GET_EMBELLISHED_DOCUMENT)
@@ -408,9 +407,7 @@ class PostgreSQLComponent {
             return document
         }
         finally {
-            try {resultSet.close()} catch (Exception e) { /* ignore */ }
-            try {selectStatement.close()} catch (Exception e) { /* ignore */ }
-            try {connection.close()} catch (Exception e) { /* ignore */ }
+            close(resultSet, selectStatement, connection)
         }
     }
 
@@ -429,9 +426,8 @@ class PostgreSQLComponent {
             return
         }
 
-        PreparedStatement preparedStatement
+        PreparedStatement preparedStatement = null
         try {
-
             String query = EVICT_EMBELLISHED_DEPENDERS
             String replacement = "'" + jsonld.NON_DEPENDANT_RELATIONS.join("', '") + "'"
             query = query.replace("€", replacement)
@@ -442,8 +438,7 @@ class PostgreSQLComponent {
             preparedStatement.execute()
         }
         finally {
-            if (preparedStatement != null)
-                preparedStatement.close()
+            close(preparedStatement)
         }
     }
 
