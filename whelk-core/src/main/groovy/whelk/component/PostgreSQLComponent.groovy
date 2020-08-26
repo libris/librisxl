@@ -66,6 +66,8 @@ class PostgreSQLComponent {
     private static final int DEFAULT_MAX_POOL_SIZE = 16
     private static final String driverClass = "org.postgresql.Driver"
 
+    private Random random = new Random(System.currentTimeMillis())
+
     // SQL statements
     private static final String UPDATE_DOCUMENT = """
             UPDATE lddb 
@@ -120,6 +122,8 @@ class PostgreSQLComponent {
             )
             DELETE FROM lddb__export_embellished where id in (SELECT i FROM deps)
             """
+
+    private static final String CLEAR_EMBELLISHED = "TRUNCATE TABLE lddb__export_embellished"
 
     private static final String GET_DOCUMENT_VERSION_BY_MAIN_ID = """
             SELECT id, data 
@@ -411,6 +415,20 @@ class PostgreSQLComponent {
     }
 
     void evictDependersFromEmbellishedCache(String id, Connection connection) {
+
+        // On average once every 500000 calls, clear the whole cache instead, to keep it from growing.
+        if (random.nextInt(500000) == 0xDEAD) {
+            PreparedStatement preparedStatement
+            try {
+                preparedStatement = connection.prepareStatement(CLEAR_EMBELLISHED)
+                preparedStatement.execute()
+            } finally {
+                if (preparedStatement != null)
+                    preparedStatement.close()
+            }
+            return
+        }
+
         PreparedStatement preparedStatement
         try {
 

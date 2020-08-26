@@ -15,7 +15,7 @@ class Embellisher {
     JsonLd jsonld
     List<String> embellishLevels = DEFAULT_EMBELLISH_LEVELS
     List<String> closeRelations = DEFAULT_CLOSE_RELATIONS
-    boolean includeReverseRelations
+    boolean includeReverseRelations = true
 
     Function<Iterable<String>, Iterable<Map>> getDocs
     Function<Iterable<String>, Iterable<Map>> getCards
