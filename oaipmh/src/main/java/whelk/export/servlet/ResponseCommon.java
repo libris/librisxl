@@ -143,7 +143,7 @@ public class ResponseCommon
     {
         if (embellish)
         {
-            document = OaiPmh.s_whelk.loadEmbellished(document.getShortId());
+            document = OaiPmh.s_whelk.loadExportEmbellished(document.getShortId());
         }
 
         if (!onlyIdentifiers)
@@ -261,7 +261,7 @@ public class ResponseCommon
                     continue;
                 if (!OaiPmh.s_whelk.getStorage().getCollectionBySystemID(systemID).equals("auth"))
                     continue;
-                Document auth = OaiPmh.s_whelk.loadEmbellished(systemID);
+                Document auth = OaiPmh.s_whelk.loadExportEmbellished(systemID);
 
                 writer.writeStartElement("auth");
                 writer.writeAttribute("id", auth.getShortId());

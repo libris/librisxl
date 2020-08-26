@@ -105,10 +105,10 @@ class PostgreSQLComponent {
             "SELECT id, data FROM lddb__versions WHERE id = ? AND checksum = ?"
 
     private static final String GET_EMBELLISHED_DOCUMENT =
-            "SELECT data from lddb__embellished where id = ?"
+            "SELECT data from lddb__export_embellished where id = ?"
 
     private static final String INSERT_EMBELLISHED_DOCUMENT =
-            "INSERT INTO lddb__embellished (id, data) VALUES (?,?)"
+            "INSERT INTO lddb__export_embellished (id, data) VALUES (?,?)"
 
     private static final String EVICT_EMBELLISHED_DEPENDERS = """
             WITH RECURSIVE deps(i) AS (
@@ -118,7 +118,7 @@ class PostgreSQLComponent {
               FROM lddb__dependencies d
               INNER JOIN deps deps1 ON d.dependsonid = i AND d.relation NOT IN (€)
             )
-            DELETE FROM lddb__embellished where id in (SELECT i FROM deps)
+            DELETE FROM lddb__export_embellished where id in (SELECT i FROM deps)
             """
 
     private static final String GET_DOCUMENT_VERSION_BY_MAIN_ID = """
@@ -383,7 +383,7 @@ class PostgreSQLComponent {
      * If there isn't an embellished version cached already, one will be created
      * (lazy caching).
      */
-    Document loadEmbellished(String id, Closure embellish) {
+    Document loadExportEmbellished(String id, Closure embellish) {
         Connection connection = getConnection()
         PreparedStatement selectStatement
         ResultSet resultSet
@@ -399,7 +399,7 @@ class PostgreSQLComponent {
 
             // Cache-miss, embellish and store
             Document document = load(id, connection)
-            embellish(document)
+            embellish(document, null, false)
             cacheEmbellishedDocument(id, document, connection)
             return document
         }

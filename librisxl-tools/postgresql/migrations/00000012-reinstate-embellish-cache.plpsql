@@ -23,7 +23,7 @@ BEGIN
 
 
    -- ACTUAL SCHEMA CHANGES HERE:
-   CREATE TABLE IF NOT EXISTS lddb__embellished (
+   CREATE TABLE IF NOT EXISTS lddb__export_embellished (
       id text not null unique primary key,
       data jsonb not null
    );

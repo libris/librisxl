@@ -119,7 +119,7 @@ public class Utils
         String xlShortId = s_whelk.getStorage().getSystemIdByIri(xlUri);
         if (xlShortId == null)
             return null;
-        Document document = s_whelk.loadEmbellished(xlShortId);
+        Document document = s_whelk.loadExportEmbellished(xlShortId);
 
         if (document.getDeleted())
             return null;

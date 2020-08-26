@@ -15,6 +15,7 @@ class Embellisher {
     JsonLd jsonld
     List<String> embellishLevels = DEFAULT_EMBELLISH_LEVELS
     List<String> closeRelations = DEFAULT_CLOSE_RELATIONS
+    boolean includeReverseRelations
 
     Function<Iterable<String>, Iterable<Map>> getDocs
     Function<Iterable<String>, Iterable<Map>> getCards
@@ -45,6 +46,10 @@ class Embellisher {
         this.closeRelations = closeRelations.collect()
     }
 
+    void setIncludeReverseRelations(boolean includeReverse) {
+        this.includeReverseRelations = includeReverse
+    }
+
     private List getEmbellishData(Document document) {
         if (document.getThingIdentifiers().isEmpty()) {
             return []
@@ -65,15 +70,19 @@ class Embellisher {
             docs = fetchNonVisited(lens, iris, visitedIris)
             docs += fetchNonVisited(lens, getCloseLinks(docs), visitedIris)
 
-            previousLevelDocs.each { insertInverseCards(lens, it, docs, visitedIris) }
+            if (includeReverseRelations) {
+                previousLevelDocs.each { insertInverseCards(lens, it, docs, visitedIris) }
+            }
             previousLevelDocs = docs
 
             result.addAll(docs)
 
             iris = getAllLinks(docs)
         }
-        // Last level: add reverse links, but not the documents linking here
-        previousLevelDocs.each { insertInverseCards(embellishLevels.last(), it, [], visitedIris) }
+        if (includeReverseRelations) {
+            // Last level: add reverse links, but not the documents linking here
+            previousLevelDocs.each { insertInverseCards(embellishLevels.last(), it, [], visitedIris) }
+        }
 
         return result
     }

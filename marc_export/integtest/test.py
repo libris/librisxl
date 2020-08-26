@@ -29,7 +29,7 @@ def reset():
     queueSql("delete from lddb__identifiers where id in (select id from lddb where changedIn = $$integtest$$);")
     queueSql("delete from lddb__versions where changedIn = $$integtest$$;")
     queueSql("delete from lddb__dependencies where id in (select id from lddb where changedIn = $$integtest$$);")
-    queueSql("delete from lddb__embellished;")
+    queueSql("delete from lddb__export_embellished;")
     queueSql("delete from lddb where changedIn = $$integtest$$;")
 
 def newBib(jsonstring, agent, systemid, timestring):
