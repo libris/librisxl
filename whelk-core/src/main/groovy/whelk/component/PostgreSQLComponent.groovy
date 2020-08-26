@@ -415,13 +415,12 @@ class PostgreSQLComponent {
 
         // On average once every 500000 calls, clear the whole cache instead, to keep it from growing.
         if (random.nextInt(500000) == 0xDEAD) {
-            PreparedStatement preparedStatement
+            PreparedStatement preparedStatement = null
             try {
                 preparedStatement = connection.prepareStatement(CLEAR_EMBELLISHED)
                 preparedStatement.execute()
             } finally {
-                if (preparedStatement != null)
-                    preparedStatement.close()
+               close(preparedStatement)
             }
             return
         }
