@@ -10,7 +10,6 @@ import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.component.PostgreSQLComponent;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.util.MarcExport;
 import whelk.util.ThreadPool;
@@ -132,7 +131,7 @@ public class MarcCliExport
             while (resultSet.next())
             {
                 String id = resultSet.getString("id");
-                Document doc = m_whelk.loadEmbellished(id);
+                Document doc = m_whelk.loadExportEmbellished(id);
 
                 String marcXml = null;
                 try
@@ -225,7 +224,7 @@ public class MarcCliExport
                     continue;
                 }
 
-                Document document = m_whelk.loadEmbellished(systemID);
+                Document document = m_whelk.loadExportEmbellished(systemID);
 
                 Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(batch.profile, document, m_whelk, m_toMarcXmlConverter);
                 if (result == null) // A conversion error will already have been logged.

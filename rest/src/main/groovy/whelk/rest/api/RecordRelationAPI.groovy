@@ -98,7 +98,7 @@ class RecordRelationAPI extends HttpServlet {
         else if (returnMode.equals("embellished_record")) {
             List<Map> records = new ArrayList<>(result.size())
             for (String resultId : result) {
-                records.add( whelk.loadEmbellished(resultId).data )
+                records.add( whelk.loadExportEmbellished(resultId).data )
             }
             jsonString = PostgreSQLComponent.mapper.writeValueAsString(records)
         }
