@@ -14,11 +14,13 @@ class Script {
     static PrintWriter report
     static PrintWriter notBroader
     static PrintWriter fixedBroader
+    static PrintWriter selfRef
     static PrintWriter error
 }
 Script.report = getReportWriter("report.txt")
 Script.notBroader = getReportWriter("not-broader.txt")
 Script.fixedBroader = getReportWriter("fixed-broader.txt")
+Script.selfRef = getReportWriter("self-ref.txt")
 Script.error = getReportWriter("error.txt")
 
 selectByCollection('auth') { auth ->
@@ -39,7 +41,7 @@ void process(auth) {
         return
     }
 
-    boolean changed = narrower.removeAll { it['@id'] && (hasBroader(it['@id'], id) || fixBroader(it['@id'], id)) }
+    boolean changed = narrower.removeAll { it['@id'] && (shouldRemove(it['@id'], id)) }
 
     if (changed) {
         if (narrower.isEmpty()) {
@@ -60,6 +62,18 @@ void process(auth) {
                 \n""".stripIndent()
         )
     }
+}
+
+boolean shouldRemove(String narrower, String broader) {
+    isSelfLink(narrower, broader) || hasBroader(narrower, broader) || fixBroader(narrower, broader)
+}
+
+boolean isSelfLink(String narrower, String broader) {
+    boolean isSelf = narrower == broader
+    if (isSelf) {
+        Script.selfRef.println(broader)
+    }
+    return isSelf
 }
 
 boolean hasBroader(String narrower, String broader) {
