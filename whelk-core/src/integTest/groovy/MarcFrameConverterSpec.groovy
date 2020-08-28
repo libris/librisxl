@@ -392,6 +392,30 @@ class MarcFrameConverterSpec extends Specification {
         resultWithoutDollars != null
     }
 
+    def "should apply inverses"() {
+        Closure applyInverses = converter.conversion.&applyInverses
+        given:
+        def record = ['@id': null, controlNumber: "123"]
+        def thing = [
+            '@id': '1',
+            '@reverse': [
+                'broader': [['@id': '2'], ['@id': '3']]
+            ]
+        ]
+        when:
+        applyInverses(record, thing)
+        def revMap = thing.remove('@reverse')
+        then:
+        thing['narrower'] == [['@id': '2'], ['@id': '3']]
+
+        when: 'adding inverses to existing accumulates results'
+        thing['@reverse'] = revMap
+        applyInverses(record, thing)
+        thing.remove('@reverse')
+        then:
+        thing['narrower'] == [['@id': '2'], ['@id': '3'], ['@id': '2'], ['@id': '3']]
+    }
+
     void assertJsonEquals(result, expected) {
         def resultJson = json(result)
         def expectedJson = json(expected)
