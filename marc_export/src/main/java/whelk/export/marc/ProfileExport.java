@@ -203,15 +203,15 @@ public class ProfileExport
         String profileName = profile.getProperty("name", "unknown");
 
         if (profile.getProperty(collection+"create", "ON").equalsIgnoreCase("OFF") && created) {
-            logger.info("Not exporting created {} ({}) for {}", id, collection, profileName);
+            logger.debug("Not exporting created {} ({}) for {}", id, collection, profileName);
             return false; // Created records not requested
         }
         if (profile.getProperty(collection+"update", "ON").equalsIgnoreCase("OFF") && !created) {
-            logger.info("Not exporting updated {} ({}) for {}", id, collection, profileName);
+            logger.debug("Not exporting updated {} ({}) for {}", id, collection, profileName);
             return false; // Updated records not requested
         }
         if (profile.getProperty(collection+"delete", "ON").equalsIgnoreCase("OFF") && deleted) {
-            logger.info("Not exporting deleted {} ({}) for {}", id, collection, profileName);
+            logger.debug("Not exporting deleted {} ({}) for {}", id, collection, profileName);
             return false; // Deleted records not requested
         }
         Set<String> operators = profile.getSet(collection+"operators");
@@ -223,7 +223,7 @@ public class ProfileExport
                 operatorsInInterval.retainAll(operators);
                 // The intersection between chosen-operators and operators that changed the record is []
                 if (operatorsInInterval.isEmpty()) {
-                    logger.info("Not exporting {} ({}) for {} because of operator settings", id, collection,
+                    logger.debug("Not exporting {} ({}) for {} because of operator settings", id, collection,
                             profileName);
                     return false; // Updates from this operator/changedBy not requested
                 }
@@ -304,7 +304,7 @@ public class ProfileExport
         for (MarcRecord mr : result) {
             String filterName = profile.findFilter(mr);
             if (filterName != null) {
-                logger.info("Not exporting {} for {} because of {} setting", systemId, profileName, filterName);
+                logger.debug("Not exporting {} for {} because of {} setting", systemId, profileName, filterName);
                 continue;
             }
             try {
