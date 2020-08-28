@@ -7,8 +7,8 @@ import java.io.IOException;
 
 public class ChangeComplexSubject extends WizardCard
 {
-    private JTextField fromSigelField;
-    private JTextField toSigelField;
+    private JTextField fromMainTerm;
+    private JTextField toMainTerm;
 
     public ChangeComplexSubject(Wizard wizard)
     {
@@ -17,14 +17,14 @@ public class ChangeComplexSubject extends WizardCard
         Box vbox = Box.createVerticalBox();
 
         vbox.add(new JLabel("Huvudord i sammansatt term att byta ut"));
-        fromSigelField = new JTextField();
-        vbox.add(fromSigelField);
+        fromMainTerm = new JTextField();
+        vbox.add(fromMainTerm);
 
         vbox.add(Box.createVerticalStrut(10));
 
         vbox.add(new JLabel("Nytt huvudord att byta till"));
-        toSigelField = new JTextField();
-        vbox.add(toSigelField);
+        toMainTerm = new JTextField();
+        vbox.add(toMainTerm);
 
         add(vbox);
     }
@@ -40,7 +40,7 @@ public class ChangeComplexSubject extends WizardCard
     {
         try
         {
-            setParameterForNextCard(ScriptGenerator.generateChangeSubjectScript(fromSigelField.getText(), toSigelField.getText()));
+            setParameterForNextCard(ScriptGenerator.generateChangeSubjectScript(fromMainTerm.getText(), toMainTerm.getText()));
         } catch (IOException ioe)
         {
             Wizard.exitFatal(ioe);
