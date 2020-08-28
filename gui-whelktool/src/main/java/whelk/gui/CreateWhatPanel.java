@@ -25,7 +25,7 @@ public class CreateWhatPanel extends WizardCard implements ActionListener
         rCreateHolds.addActionListener(this);
         rDeleteBibs = new JRadioButton("Radera bibliografiska poster utan bestånd.");
         rDeleteBibs.addActionListener(this);
-        rChangeSigel = new JRadioButton("Byt ett sigel mot ett annat.");
+        rChangeSigel = new JRadioButton("Byt en sigel mot en annan.");
         rChangeSigel.addActionListener(this);
 
         rDeleteHolds.setSelected(true);

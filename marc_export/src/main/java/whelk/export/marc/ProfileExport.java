@@ -135,7 +135,7 @@ public class ProfileExport
 
         if (collection.equals("bib") && updateShouldBeExported(id, collection, profile, from, until, created, deleted, connection))
         {
-            exportDocument(m_whelk.loadEmbellished(id), profile,
+            exportDocument(m_whelk.loadExportEmbellished(id), profile,
                     output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
         }
         else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created, deleted, connection))
@@ -144,7 +144,7 @@ public class ProfileExport
             for (Tuple2 depender : dependers)
             {
                 String dependerId = (String) depender.getFirst();
-                Document dependerDoc = m_whelk.loadEmbellished(dependerId);
+                Document dependerDoc = m_whelk.loadExportEmbellished(dependerId);
                 String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, m_whelk.getJsonld());
                 if (dependerCollection == null || !dependerCollection.equals("bib"))
                     continue;
@@ -177,7 +177,7 @@ public class ProfileExport
                 // itemOfSystemId _can_ be null, if the bib linked record is deleted (no thing-uri left in the id table)
                 if (itemOfSystemId != null) {
                     exportDocument(
-                            m_whelk.loadEmbellished(itemOfSystemId)
+                            m_whelk.loadExportEmbellished(itemOfSystemId)
                             , profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
                 } else {
                     logger.info("Not exporting {} ({}) for {} because of missing itemOf systemID", id,

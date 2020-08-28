@@ -191,16 +191,13 @@ class Whelk {
                     updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]) {
                 reindexAllLinks(updated.shortId)
             } else
-                reindexAffected(updated, preUpdateDoc.getExternalRefs())
+                reindexAffected(updated, preUpdateDoc.getExternalRefs(), updated.getExternalRefs())
         }
     }
 
-    private void reindexAffected(Document document, Set<Link> preUpdateLinks) {
+    private void reindexAffected(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
         Runnable reindex = {
-            Set<Link> postUpdateLinks = document.getExternalRefs()
-            Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
-            Set<Link> addedLinks = (postUpdateLinks - preUpdateLinks)
-            reindexAffected(document, addedLinks, removedLinks)
+            reindexAffectedSync(document, preUpdateLinks, postUpdateLinks)
         }
 
         // If we are inside a batch job. Update them synchronously
@@ -221,7 +218,10 @@ class Whelk {
         }
     }
 
-    private void reindexAffected(Document document, Set<Link> addedLinks, Set<Link> removedLinks) {
+    private void reindexAffectedSync(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
+        Set<Link> addedLinks = (postUpdateLinks - preUpdateLinks)
+        Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
+
         removedLinks.findResults { storage.getSystemIdByIri(it.iri) }
                 .each{id -> elastic.decrementReverseLinks(id, storage.getCollectionBySystemID(id))}
 
@@ -336,7 +336,7 @@ class Whelk {
         if (success) {
             if (elastic && index) {
                 elastic.index(document, collection, this)
-                reindexAffected(document, new TreeSet<>())
+                reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
             }
         }
         return success
@@ -388,7 +388,7 @@ class Whelk {
         storage.remove(id, changedIn, changedBy)
         if (elastic) {
             elastic.remove(id)
-            reindexAffected(doc, doc.getExternalRefs())
+            reindexAffected(doc, doc.getExternalRefs(), new TreeSet<>())
             log.debug "Object ${id} was removed from Whelk"
         }
         else {
@@ -396,25 +396,24 @@ class Whelk {
         }
     }
 
-    void embellish(Document document, List<String> levels = null) {
+    void embellish(Document document, List<String> levels = null, boolean includeReverseRelations = true) {
         def docsByIris = { List<String> iris -> bulkLoad(iris).values().collect{ it.data } }
         Embellisher e = new Embellisher(jsonld, docsByIris, storage.&getCards, relations.&getByReverse)
 
         if(levels) {
             e.setEmbellishLevels(levels)
         }
+        e.setIncludeReverseRelations(includeReverseRelations)
 
         e.embellish(document)
     }
 
-    Document loadEmbellished(String systemId) {
-        Document doc = getDocument(systemId)
-        embellish(doc)
-        return doc
+    Document loadExportEmbellished(String systemId) {
+        return storage.loadExportEmbellished(systemId, this.&embellish)
     }
 
     List<Document> getAttachedHoldings(List<String> thingIdentifiers) {
-        return storage.getAttachedHoldings(thingIdentifiers).collect(this.&loadEmbellished)
+        return storage.getAttachedHoldings(thingIdentifiers).collect(this.&loadExportEmbellished)
     }
 
     void normalize(Document doc) {

@@ -66,6 +66,8 @@ class PostgreSQLComponent {
     private static final int DEFAULT_MAX_POOL_SIZE = 16
     private static final String driverClass = "org.postgresql.Driver"
 
+    private Random random = new Random(System.currentTimeMillis())
+
     // SQL statements
     private static final String UPDATE_DOCUMENT = """
             UPDATE lddb 
@@ -103,6 +105,25 @@ class PostgreSQLComponent {
 
     private static final String GET_DOCUMENT_VERSION =
             "SELECT id, data FROM lddb__versions WHERE id = ? AND checksum = ?"
+
+    private static final String GET_EMBELLISHED_DOCUMENT =
+            "SELECT data from lddb__export_embellished where id = ?"
+
+    private static final String INSERT_EMBELLISHED_DOCUMENT =
+            "INSERT INTO lddb__export_embellished (id, data) VALUES (?,?)"
+
+    private static final String EVICT_EMBELLISHED_DEPENDERS = """
+            WITH RECURSIVE deps(i) AS (
+             VALUES (?)
+             UNION
+             SELECT d.id
+              FROM lddb__dependencies d
+              INNER JOIN deps deps1 ON d.dependsonid = i AND d.relation NOT IN (€)
+            )
+            DELETE FROM lddb__export_embellished where id in (SELECT i FROM deps)
+            """
+
+    private static final String CLEAR_EMBELLISHED = "TRUNCATE TABLE lddb__export_embellished"
 
     private static final String GET_DOCUMENT_VERSION_BY_MAIN_ID = """
             SELECT id, data 
@@ -342,6 +363,82 @@ class PostgreSQLComponent {
         }
 
         this.dependencyCache = new DependencyCache(this)
+    }
+
+    private void cacheEmbellishedDocument(String id, Document embellishedDocument, Connection connection) {
+        PreparedStatement preparedStatement = null
+
+        try {
+            preparedStatement = connection.prepareStatement(INSERT_EMBELLISHED_DOCUMENT)
+            preparedStatement.setString(1, id)
+            preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), java.sql.Types.OTHER)
+
+            preparedStatement.execute()
+        }
+        finally {
+            close(preparedStatement)
+        }
+    }
+
+
+    /**
+     * Loads the embellished version of the stored document 'id'.
+     * If there isn't an embellished version cached already, one will be created
+     * (lazy caching).
+     */
+    Document loadExportEmbellished(String id, Closure embellish) {
+        Connection connection = getConnection()
+        PreparedStatement selectStatement = null
+        ResultSet resultSet = null
+
+        try {
+            selectStatement = connection.prepareStatement(GET_EMBELLISHED_DOCUMENT)
+            selectStatement.setString(1, id)
+            resultSet = selectStatement.executeQuery()
+
+            if (resultSet.next()) {
+                return new Document(mapper.readValue(resultSet.getString("data"), Map))
+            }
+
+            // Cache-miss, embellish and store
+            Document document = load(id, connection)
+            embellish(document, null, false)
+            cacheEmbellishedDocument(id, document, connection)
+            return document
+        }
+        finally {
+            close(resultSet, selectStatement, connection)
+        }
+    }
+
+    void evictDependersFromEmbellishedCache(String id, Connection connection) {
+
+        // On average once every 500000 calls, clear the whole cache instead, to keep it from growing.
+        if (random.nextInt(500000) == 0xDEAD) {
+            PreparedStatement preparedStatement = null
+            try {
+                preparedStatement = connection.prepareStatement(CLEAR_EMBELLISHED)
+                preparedStatement.execute()
+            } finally {
+               close(preparedStatement)
+            }
+            return
+        }
+
+        PreparedStatement preparedStatement = null
+        try {
+            String query = EVICT_EMBELLISHED_DEPENDERS
+            String replacement = "'" + jsonld.NON_DEPENDANT_RELATIONS.join("', '") + "'"
+            query = query.replace("€", replacement)
+
+            preparedStatement = connection.prepareStatement(query)
+            preparedStatement.setString(1, id)
+
+            preparedStatement.execute()
+        }
+        finally {
+            close(preparedStatement)
+        }
     }
 
     void logStats() {
@@ -737,6 +834,7 @@ class PostgreSQLComponent {
     void refreshDerivativeTables(Document doc, Connection connection, boolean deleted) {
         saveIdentifiers(doc, connection, deleted)
         saveDependencies(doc, connection)
+        evictDependersFromEmbellishedCache(doc.getShortId(), connection)
 
         if (jsonld) {
             if (deleted) {
