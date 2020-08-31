@@ -1,7 +1,7 @@
 PrintWriter failedBibIDs = getReportWriter("failed-to-update-bibIDs")
 PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 
-selectBySqlWhere("", silent: false, { bib ->
+selectBySqlWhere("data#>'{@graph,1,instanceOf,subject}' @> [{\"@type\":\"ComplexSubject\"}]", silent: false, { bib ->
     scheduledForUpdate.println("${bib.doc.getURI()}")
 
     // FROMTERM
@@ -36,11 +36,15 @@ selectBySqlWhere("", silent: false, { bib ->
                     },
 
      */
-    //List subjects = bib.graph[1].instanceOf.subject
+
+
+    // Ämnesordi verksposter ??
 
     bib.graph[1].instanceOf.subject.each { subj ->
         if (subj["@type"] == "ComplexSubject") {
-
+            //sameAs // Is there something at that ID ?
+            //prefLabel
+            //termCompnentList
         }
     }
 
