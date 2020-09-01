@@ -102,6 +102,38 @@ class JsonLd {
         this.locales = locales
     }
 
+    boolean isCyclic(Object data, TreeSet<String> passedIDs = null, Map<String, Map> idMap = null) {
+        if (passedIDs == null) {
+            return isCyclic( data, new TreeSet<String>(), getIdMap((Map)data) )
+        }
+
+        if (data instanceof Map) {
+            Map map = (Map)data
+            String id = map["@id"]
+            if (id != null) {
+                if ( map.size() == 1) { // This is a reference, keep going from the referred object!
+                    return isCyclic(idMap.get(id), passedIDs, idMap)
+                } else { // This is a full object
+                    if (passedIDs.contains(id)) // Cycle detected!
+                        return true
+                    passedIDs.add(id)
+                    for (String key : map.keySet()) {
+                        if (isCyclic(map.get(key), passedIDs, idMap))
+                            return true
+                    }
+                }
+            }
+        } else if (data instanceof List) {
+            List list = (List) data
+            for (Object obj : list) {
+                if (isCyclic(obj, passedIDs, idMap))
+                    return true
+            }
+        }
+
+        return false
+    }
+
     @TypeChecked(TypeCheckingMode.SKIP)
     void setSupportData(Map contextData, Map displayData, Map vocabData) {
         def contextObj = contextData[CONTEXT_KEY]
