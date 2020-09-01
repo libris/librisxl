@@ -765,7 +765,7 @@ class PostgreSQLComponent {
 
             refreshDerivativeTables(doc, connection, deleted)
 
-            dependencyCache.invalidate(preUpdateDoc)
+            dependencyCache.invalidate(preUpdateDoc, doc)
 
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {
