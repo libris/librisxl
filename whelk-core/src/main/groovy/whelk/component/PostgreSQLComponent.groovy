@@ -411,17 +411,21 @@ class PostgreSQLComponent {
         }
     }
 
+    void clearEmbellishedCache(Connection connection) {
+        PreparedStatement preparedStatement = null
+        try {
+            preparedStatement = connection.prepareStatement(CLEAR_EMBELLISHED)
+            preparedStatement.execute()
+        } finally {
+            close(preparedStatement)
+        }
+    }
+
     void evictDependersFromEmbellishedCache(String id, Connection connection) {
 
         // On average once every 500000 calls, clear the whole cache instead, to keep it from growing.
         if (random.nextInt(500000) == 0xDEAD) {
-            PreparedStatement preparedStatement = null
-            try {
-                preparedStatement = connection.prepareStatement(CLEAR_EMBELLISHED)
-                preparedStatement.execute()
-            } finally {
-               close(preparedStatement)
-            }
+            clearEmbellishedCache(connection)
             return
         }
 
@@ -831,10 +835,11 @@ class PostgreSQLComponent {
         refreshDerivativeTables(doc, getConnection(), doc.deleted)
     }
 
-    void refreshDerivativeTables(Document doc, Connection connection, boolean deleted) {
+    void refreshDerivativeTables(Document doc, Connection connection, boolean deleted, boolean leaveCacheAlone = false) {
         saveIdentifiers(doc, connection, deleted)
         saveDependencies(doc, connection)
-        evictDependersFromEmbellishedCache(doc.getShortId(), connection)
+        if (!leaveCacheAlone)
+            evictDependersFromEmbellishedCache(doc.getShortId(), connection)
 
         if (jsonld) {
             if (deleted) {
@@ -1256,10 +1261,12 @@ class PostgreSQLComponent {
                 }
                 batch = rigInsertStatement(batch, doc, now, changedIn, changedBy, collection, false)
                 batch.addBatch()
-                refreshDerivativeTables(doc, connection, false)
+                boolean leaveCacheAlone = true
+                refreshDerivativeTables(doc, connection, false, leaveCacheAlone)
             }
             batch.executeBatch()
             ver_batch.executeBatch()
+            clearEmbellishedCache(connection)
             connection.commit()
             log.debug("Stored ${docs.size()} documents in collection ${collection} (versioning: ${versioning})")
             return true
