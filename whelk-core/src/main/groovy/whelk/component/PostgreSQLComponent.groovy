@@ -60,11 +60,14 @@ class PostgreSQLComponent {
 
     public static final String PROPERTY_SQL_URL = "sqlUrl"
     public static final String PROPERTY_SQL_MAX_POOL_SIZE = "sqlMaxPoolSize"
+    public static final String PROPERTY_EMBELLISH_CACHE_MAX_SIZE = "embellishCacheMaxSizeBytes"
 
     public static final ObjectMapper mapper = new ObjectMapper()
 
     private static final int DEFAULT_MAX_POOL_SIZE = 16
     private static final String driverClass = "org.postgresql.Driver"
+
+    private int embellishCacheMaxSize = 100 * 1024 * 1024 * 1024 // default 100GB
 
     private Random random = new Random(System.currentTimeMillis())
 
@@ -114,6 +117,9 @@ class PostgreSQLComponent {
 
     private static final String EVICT_EMBELLISHED_DEPENDERS =
             "DELETE FROM lddb__embellished WHERE id = ? OR ids @> ?"
+
+    private static final String GET_TABLE_SIZE_BYTES =
+            "SELECT pg_total_relation_size(?)"
 
     private static final String CLEAR_EMBELLISHED = "TRUNCATE TABLE lddb__embellished"
 
@@ -315,6 +321,11 @@ class PostgreSQLComponent {
                 ? Integer.parseInt(properties.getProperty(PROPERTY_SQL_MAX_POOL_SIZE))
                 : DEFAULT_MAX_POOL_SIZE
 
+        if (properties.getProperty(PROPERTY_EMBELLISH_CACHE_MAX_SIZE)) {
+           embellishCacheMaxSize = Integer.parseInt(properties.getProperty(PROPERTY_EMBELLISH_CACHE_MAX_SIZE))
+        }
+        log.info("$PROPERTY_EMBELLISH_CACHE_MAX_SIZE: $embellishCacheMaxSize")
+
         setup(properties.getProperty(PROPERTY_SQL_URL), maxPoolSize)
     }
 
@@ -428,6 +439,7 @@ class PostgreSQLComponent {
     }
 
     void clearEmbellishedCache(Connection connection) {
+        log.info("Clearing embellish cache")
         PreparedStatement preparedStatement = null
         try {
             preparedStatement = connection.prepareStatement(CLEAR_EMBELLISHED)
@@ -438,11 +450,12 @@ class PostgreSQLComponent {
     }
 
     void evictDependersFromEmbellishedCache(String id, Connection connection) {
-
-        // On average once every 500000 calls, clear the whole cache instead, to keep it from growing.
-        if (random.nextInt(500000) == 0xDEAD) {
-            clearEmbellishedCache(connection)
-            return
+        if (random.nextInt(1000) == 0) { // check every 1000 calls on average
+            boolean isFull = totalTableSizeBytes('lddb__embellished', connection) > embellishCacheMaxSize
+            if(isFull) {
+                clearEmbellishedCache(connection)
+                return
+            }
         }
 
         PreparedStatement preparedStatement = null
@@ -507,6 +520,23 @@ class PostgreSQLComponent {
             return collections
         } finally {
             close(collectionResults, collectionStatement, connection)
+        }
+    }
+
+    int totalTableSizeBytes(String table, Connection connection) {
+        PreparedStatement preparedStatement = null
+        ResultSet resultSet = null
+        try {
+            preparedStatement = connection.prepareStatement(GET_TABLE_SIZE_BYTES)
+            preparedStatement.setString(1, table)
+            resultSet = preparedStatement.executeQuery()
+            if (!resultSet.next()) {
+                throw new WhelkRuntimeException("No such table $table")
+            }
+            return resultSet.getInt(1)
+        }
+        finally {
+            close(resultSet, preparedStatement)
         }
     }
 
