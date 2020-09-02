@@ -396,24 +396,23 @@ class Whelk {
         }
     }
 
-    void embellish(Document document, List<String> levels = null, boolean includeReverseRelations = true) {
+    void embellish(Document document, List<String> levels = null) {
         def docsByIris = { List<String> iris -> bulkLoad(iris).values().collect{ it.data } }
         Embellisher e = new Embellisher(jsonld, docsByIris, storage.&getCards, relations.&getByReverse)
 
         if(levels) {
             e.setEmbellishLevels(levels)
         }
-        e.setIncludeReverseRelations(includeReverseRelations)
 
         e.embellish(document)
     }
 
-    Document loadExportEmbellished(String systemId) {
-        return storage.loadExportEmbellished(systemId, this.&embellish)
+    Document loadEmbellished(String systemId) {
+        return storage.loadEmbellished(systemId, this.&embellish)
     }
 
     List<Document> getAttachedHoldings(List<String> thingIdentifiers) {
-        return storage.getAttachedHoldings(thingIdentifiers).collect(this.&loadExportEmbellished)
+        return storage.getAttachedHoldings(thingIdentifiers).collect(this.&loadEmbellished)
     }
 
     void normalize(Document doc) {
