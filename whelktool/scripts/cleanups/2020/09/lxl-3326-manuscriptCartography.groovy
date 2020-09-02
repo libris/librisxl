@@ -64,7 +64,7 @@ selectBySqlWhere(where) { data ->
 }
 
 boolean suitableForElectronic(instance) {
-    if (instance["marc:mediaTerm"].matches("^ele[ck]tron.?\$")) {
+    if (instance["marc:mediaTerm"].matches("^ele[ck]tron")) {
         return true
     }
 
