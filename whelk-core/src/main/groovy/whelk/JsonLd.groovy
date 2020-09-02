@@ -110,17 +110,19 @@ class JsonLd {
         if (data instanceof Map) {
             Map map = (Map)data
             String id = map["@id"]
-            if (id != null) {
-                if ( map.size() == 1) { // This is a reference, keep going from the referred object!
-                    return isCyclic(idMap.get(id), passedIDs, idMap)
-                } else { // This is a full object
-                    if (passedIDs.contains(id)) // Cycle detected!
+            if ( id != null && map.size() == 1 ) { // This is a reference, keep going from the referred object!
+                return isCyclic(idMap.get(id), passedIDs, idMap)
+            } else { // This is an ordinary object
+                if (id != null) {
+                    if (passedIDs.contains(id)) {// Cycle detected!
+                        System.out.println("* FOUND CYCLE")
                         return true
-                    passedIDs.add(id)
-                    for (String key : map.keySet()) {
-                        if (isCyclic(map.get(key), passedIDs, idMap))
-                            return true
                     }
+                    passedIDs.add(id)
+                }
+                for (String key : map.keySet()) {
+                    if (isCyclic(map.get(key), passedIDs, idMap))
+                        return true
                 }
             }
         } else if (data instanceof List) {

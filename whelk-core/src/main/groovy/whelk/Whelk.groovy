@@ -368,7 +368,7 @@ class Whelk {
 
     Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum, boolean index = true) {
         if (jsonld.isCyclic(doc.data))
-            return null
+            throw new LinkValidationException("Intra-post cyclic linking detected")
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
         Document updated = storage.storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum)
