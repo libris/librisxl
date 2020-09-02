@@ -131,7 +131,7 @@ public class MarcCliExport
             while (resultSet.next())
             {
                 String id = resultSet.getString("id");
-                Document doc = m_whelk.loadExportEmbellished(id);
+                Document doc = m_whelk.loadEmbellished(id);
 
                 String marcXml = null;
                 try
@@ -224,7 +224,7 @@ public class MarcCliExport
                     continue;
                 }
 
-                Document document = m_whelk.loadExportEmbellished(systemID);
+                Document document = m_whelk.loadEmbellished(systemID);
 
                 Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(batch.profile, document, m_whelk, m_toMarcXmlConverter);
                 if (result == null) // A conversion error will already have been logged.
