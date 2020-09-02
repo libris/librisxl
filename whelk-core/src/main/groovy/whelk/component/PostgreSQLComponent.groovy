@@ -67,7 +67,7 @@ class PostgreSQLComponent {
     private static final int DEFAULT_MAX_POOL_SIZE = 16
     private static final String driverClass = "org.postgresql.Driver"
 
-    private int embellishCacheMaxSize = 100 * 1024 * 1024 * 1024 // default 100GB
+    private int embellishCacheMaxSize = 10 * 1024 * 1024 * 1024 // default 10GB
 
     private Random random = new Random(System.currentTimeMillis())
 
