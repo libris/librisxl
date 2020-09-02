@@ -113,14 +113,18 @@ class PostgreSQLComponent {
             "INSERT INTO lddb__export_embellished (id, data) VALUES (?,?)"
 
     private static final String EVICT_EMBELLISHED_DEPENDERS = """
-            WITH RECURSIVE deps(i) AS (
-             VALUES (?)
-             UNION
-             SELECT d.id
-              FROM lddb__dependencies d
-              INNER JOIN deps deps1 ON d.dependsonid = i AND d.relation NOT IN (€)
+            WITH RECURSIVE dependers(i) AS (
+                VALUES (?)
+                UNION
+                SELECT d.id
+                FROM lddb__dependencies d
+                INNER JOIN dependers dependers1 ON d.dependsonid = i AND d.relation NOT IN (€)
+            ),
+            dependencies AS (
+                SELECT d.dependsonid AS i
+                FROM lddb__dependencies d WHERE d.id = ? AND d.relation NOT IN (€)
             )
-            DELETE FROM lddb__export_embellished where id in (SELECT i FROM deps)
+            DELETE FROM lddb__export_embellished WHERE id IN (SELECT i FROM dependers UNION SELECT i FROM dependencies ORDER BY i)
             """
 
     private static final String CLEAR_EMBELLISHED = "TRUNCATE TABLE lddb__export_embellished"
@@ -402,7 +406,7 @@ class PostgreSQLComponent {
 
             // Cache-miss, embellish and store
             Document document = load(id, connection)
-            embellish(document, null, false)
+            embellish(document, null)
             cacheEmbellishedDocument(id, document, connection)
             return document
         }
@@ -437,6 +441,7 @@ class PostgreSQLComponent {
 
             preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, id)
+            preparedStatement.setString(2, id)
 
             preparedStatement.execute()
         }
