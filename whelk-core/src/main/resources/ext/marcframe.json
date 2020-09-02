@@ -12831,7 +12831,8 @@
     },
 
     "520": {
-      "aboutEntity": "?work",
+      "aboutEntity": "?thing",
+      "fallbackEntity": "?work",
       "addLink": "summary",
       "resourceType": "Summary",
       "i1": {
@@ -12861,8 +12862,7 @@
             {"u": "http://example.org/thing-page"}, {"u": "http://example.org/another-thing-page"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
+              "@type": "Instance",
               "summary": [
                 {
                   "@type": "Summary",
@@ -12874,11 +12874,25 @@
                 }
               ]
             }
-          }}
+          }
         },
         {
           "source": {"520": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Dom är tillbaka och den här gången är det full fart från början till slut."}
+          ]}},
+          "result": {"mainEntity": {
+              "@type": "Instance",
+              "summary": [
+                {
+                  "@type": "Summary",
+                  "label": "Dom är tillbaka och den här gången är det full fart från början till slut."
+                }
+              ]
+          }}
+        },
+        {
+          "normalized": {"520": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "An illustrated collection of nursery rhymes set to music."}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -12886,7 +12900,30 @@
               "summary": [
                 {
                   "@type": "Summary",
-                  "label": "Dom är tillbaka och den här gången är det full fart från början till slut."
+                  "label": ["An illustrated collection of nursery rhymes set to music."]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "normalized": [
+            {"520": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Sammanfattning Instans"}]}},
+            {"520": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Sammanfattning Verk"}]}}
+          ],
+          "result": {"mainEntity": {
+            "summary": [
+              {
+                "@type": "Summary",
+                "label": "Sammanfattning Instans"
+              }
+            ],
+            "instanceOf": {
+              "@type": "Text",
+              "summary": [
+                {
+                  "@type": "Summary",
+                  "label": "Sammanfattning Verk"
                 }
               ]
             }
@@ -12894,7 +12931,6 @@
         }
       ]
     },
-
     "521": {
       "aboutEntity": "?thing",
       "embedded": true,

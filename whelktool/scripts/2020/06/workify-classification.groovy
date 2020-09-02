@@ -50,17 +50,19 @@ selectBySqlWhere(query) { data ->
         changed = true
     }
 
-    work.subMap(CLASSIFICATION).each { key, val ->
-        if (val instanceof Map) {
-            val = [val]
+    CLASSIFICATION.each {
+        if (work[it] instanceof Map) {
+            work[it] = [work[it]]
         }
 
-        Iterator iter = val.iterator()
+        Iterator iter = work[it].iterator()
         while (iter.hasNext()) {
             Object classificationEntity = iter.next()
 
             changed |= classificationEntity.keySet().removeIf { PROPERTIES_TO_REMOVE.contains(it) }
-            classificationsToInstance.addAll(handleMediaExtensionsDetails(classificationEntity, record[ID]))
+            def (boolean updated, List toMove) = handleMediaExtensionsDetails(classificationEntity, record[ID])
+            changed |= updated
+            classificationsToInstance.addAll(toMove)
 
             if (TYPES_TO_INSTANCE.contains(classificationEntity[TYPE])) {
                 classificationsToInstance << classificationEntity
@@ -75,7 +77,6 @@ selectBySqlWhere(query) { data ->
             thing.put('classification', [])
         }
         thing['classification'].addAll(classificationsToInstance)
-        changed |= true
     }
 
     //If empty after removing entities from classification, remove entire entry
@@ -111,8 +112,9 @@ List remodelGeographicClassifcation(object) {
     return updatedEntities
 }
 
-List handleMediaExtensionsDetails(entity, docId) {
+Tuple2<Boolean, List> handleMediaExtensionsDetails(entity, docId) {
     List copyToInstance = []
+    boolean updated = false
     if (entity.inScheme?.code == 'kssb' && entity['code'] && entity['code'].contains('/')) {
         entity['code'] = entity['code'].trim()
         def existingCode = entity['code']
@@ -121,13 +123,15 @@ List handleMediaExtensionsDetails(entity, docId) {
         if (extensions.size() == 1) {
             entity['code'] = extensions[0].trim()
             sanitizedSABCodes.println("${docId}: ${existingCode} --> ${entity['code']}")
+            updated = true
         } else if (extensions.size() == 2 && extensions[1] =~ /^[A-Za-z]{1,2}(,u(f|g)?)?$/) {
             copyToInstance << entity.clone()
             entity['code'] = extensions[0]
+            updated = true
         } else {
             //log if it does not follow practice --> will be fixed manually
             deviatedMediaExtensions.println("${docId} with code ${entity['code']}")
         }
     }
-    return copyToInstance
+    new Tuple2<Boolean, List>(updated, copyToInstance)
 }
