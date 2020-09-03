@@ -633,11 +633,19 @@ class PostgreSQLComponent {
     }
 
     void reDenormalize() {
+        log.info("Re-denormalizing data.")
         Connection connection = getConnection()
+        boolean leaveCacheAlone = true
         try {
+            long count = 0
             for (Document doc : loadAll(null, false, null, null)) {
-                refreshDerivativeTables(doc, connection, doc.getDeleted())
+                refreshDerivativeTables(doc, connection, doc.getDeleted(), leaveCacheAlone)
+
+                ++count
+                if (count % 500 == 0)
+                    log.info("$count records re-denormalized")
             }
+            clearEmbellishedCache(connection)
         } finally {
             close(connection)
         }
