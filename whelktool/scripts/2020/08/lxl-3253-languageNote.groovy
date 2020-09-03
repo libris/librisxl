@@ -124,7 +124,7 @@ boolean uniformToList(subject, key)  {
 boolean isNonLinguisticContent(listOfEntities) {
     boolean nonCodeExist = false
     listOfEntities.each {
-        if (it[ID].substring(it[ID].lastIndexOf('/') + 1) == 'zxx') {
+        if (it[ID] && it[ID].substring(it[ID].lastIndexOf('/') + 1) == 'zxx') {
             nonCodeExist |= true
         }
     }
@@ -132,7 +132,7 @@ boolean isNonLinguisticContent(listOfEntities) {
 }
 
 boolean isTranslationOf(obj, lang) {
-    if (obj && obj.size() == 1) {
+    if (obj && obj.size() == 1 && obj[0].containsKey(ID) && lang.containsKey(ID)) {
         return obj[0][ID] != lang[ID]
     }
 }
