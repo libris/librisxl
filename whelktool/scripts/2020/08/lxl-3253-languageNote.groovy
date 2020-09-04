@@ -76,7 +76,7 @@ void process(bib) {
         if (!containsDeviantLang) {
             if (listOfLanguages && listOfLanguages.size() > 1) {
                 Script.repeatedLanugages.println("${bib.graph[0][ID]} Repeated in translationOf: ${listOfLanguages}")
-            } else if (isTranslationOf(work?.language, listOfLanguages[0])) {
+            } else if (listOfLanguages && isTranslationOf(work?.language, listOfLanguages[0])) {
                 Script.ok.println("${bib.graph[0][ID]} -> language: ${work?.language} + translationOf: ${work?.translationOf}")
             } else {
                 Script.furtherAnalyze.println("${bib.graph[0][ID]} -> language: ${work?.language} + translationOf: ${work?.translationOf}")
