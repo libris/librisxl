@@ -9,7 +9,6 @@ import whelk.component.DocumentNormalizer
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
-import whelk.exception.LinkValidationException
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LinkFinder
 import whelk.filter.NormalizerChain
@@ -324,8 +323,6 @@ class Whelk {
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
     boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean index = true) {
-        if (jsonld.isCyclic(document.data))
-            return false
         normalize(document)
         
         boolean detectCollisionsOnTypedIDs = false
@@ -354,8 +351,6 @@ class Whelk {
         Document updated = storage.storeUpdate(id, minorUpdate, changedIn, changedBy, { Document doc ->
             preUpdateDoc = doc.clone()
             updateAgent.update(doc)
-            if (jsonld.isCyclic(doc.data))
-                throw new LinkValidationException("Intra-post cyclic linking detected")
             normalize(doc)
         })
 
@@ -367,8 +362,6 @@ class Whelk {
     }
 
     Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum, boolean index = true) {
-        if (jsonld.isCyclic(doc.data))
-            throw new LinkValidationException("Intra-post cyclic linking detected")
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
         Document updated = storage.storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum)
