@@ -9,12 +9,12 @@ class WorkTool {
         def cli = new CliBuilder(usage:'whelktool [options] <SCRIPT>')
         cli.h(longOpt: 'help', 'Print this help message and exit.')
         cli.m(longOpt:'merge', 'Merge')
-        cli.s(longOpt:'show', 'Show')
+        cli.s(longOpt:'show', 'Show. Generate HTML report with title clusters')
         cli.d(longOpt:'diff', args: 1, argName:'diff', 'Field to diff')
-        cli.e(longOpt:'edition', 'editionStatement')
-        cli.t(longOpt:'subTitles', 'Subtitles')
-        cli.f(longOpt:'fiction', 'Mixed marc/FictionNotFurtherSpecified and marc/NotFictionNotFurtherSpecified')
-        cli.f2(longOpt:'fiction2', 'Fiction')
+        cli.e(longOpt:'edition', 'Print editionStatement')
+        cli.t(longOpt:'subTitles', 'Print subtitles')
+        cli.nf(longOpt:'fiction-not-fiction', 'Filter: output clusters with mixed marc/FictionNotFurtherSpecified and marc/NotFictionNotFurtherSpecified')
+        cli.f(longOpt:'fiction', 'Filter: output clusters containing fiction')
 
         def options = cli.parse(args)
         if (options.h) {
@@ -41,11 +41,11 @@ class WorkTool {
         else if (options.e) {
             m.edition()
         }
+        else if (options.nf) {
+            m.fictionNotFiction()
+        }
         else if (options.f) {
             m.fiction()
-        }
-        else if (options.f2) {
-            m.fiction2()
         }
         else {
             cli.usage()

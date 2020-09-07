@@ -110,18 +110,18 @@ class MergeWorks {
         statistics.printOnShutdown(10)
         run({ cluster ->
             return {
-                String titles = cluster.collect(whelk.&getDocument).collect {
+                String editionStatment = cluster.collect(whelk.&getDocument).collect {
                     getPathSafe(it.data, ['@graph', 1, 'editionStatement'])
                 }.grep().join('\n')
 
-                if (!titles.isBlank()) {
-                    println(titles + '\n')
+                if (!editionStatment.isBlank()) {
+                    println(editionStatment + '\n')
                 }
             }
         })
     }
 
-    void fiction() {
+    void fictionNotFiction() {
         //statistics.printOnShutdown(10)
         run({ cluster ->
             return {
@@ -143,7 +143,7 @@ class MergeWorks {
         })
     }
 
-    void fiction2() {
+    void fiction() {
         //statistics.printOnShutdown(10)
         run({ cluster ->
             return {
