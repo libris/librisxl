@@ -58,14 +58,23 @@ void process(bib) {
         return
     }
 
-    if (work.containsKey('language') && work.containsKey('translationOf')) {
+    if (!work.containsKey('translationOf')) {
+        return
+    }
+
+    if (work.containsKey('language') || work.containsKey('translationOf')) {
         boolean containsDeviantLang = false
+        boolean translationOf = false
+
         //Uniform data and log deviant language entities
         changed |= uniformToList(work, 'language')
         containsDeviantLang |= isDeviantLanguageEntity(work, bib.graph[0][ID])
 
         changed |= uniformToList(work, 'translationOf')
         work.translationOf.each {
+            if (it.containsKey('marc:languageNote') && it['marc:languageNote'] == 'marc:ItemIsOrIncludesATranslation') {
+                translationOf |= true
+            }
             changed |= uniformToList(it, 'language')
             containsDeviantLang |= isDeviantLanguageEntity(it, bib.graph[0][ID])
         }
@@ -73,7 +82,7 @@ void process(bib) {
         //Check if translationOf contains several objects containing language. Log and return
         listOfLanguages = work?.translationOf.findResults { it.language }.flatten()
 
-        if (!containsDeviantLang) {
+        if (!containsDeviantLang && !translationOf) {
             if (listOfLanguages && listOfLanguages.size() > 1) {
                 Script.repeatedLanugages.println("${bib.graph[0][ID]} Repeated in translationOf: ${listOfLanguages}")
             } else if (listOfLanguages && isTranslationOf(work?.language, listOfLanguages[0])) {
