@@ -23,6 +23,9 @@ The project consists of:
         Servlet web application. OAIPMH service for Libris XL
     * `rest/`
         A servlet web application. The REST and other HTTP APIs
+    * `marc_export/`
+	A servlet (and CLI program) for exporting libris data as MARC.
+
 * Tools
     * `librisxl-tools/`
         Configuration and scripts used for setup, maintenance and operations.
@@ -54,10 +57,10 @@ Related external repositories:
     ```
 
     For Debian (or Ubuntu), download and install the .deb file at:
-    https://www.elastic.co/downloads/past-releases/elasticsearch-5-6-0
+    https://www.elastic.co/downloads/past-releases/elasticsearch-5-6-16
     
     For Windows, download and install the .zip file at:
-    https://www.elastic.co/downloads/past-releases/elasticsearch-5-6-0
+    https://www.elastic.co/downloads/past-releases/elasticsearch-5-6-16
 
     **NOTE:** You will also need to set `cluster.name` in
     `/etc/elasticsearch/elasticsearch.yml` to something unique on the
@@ -96,6 +99,10 @@ $ vim secret.properties
     ```
     $ postgres -D /usr/local/var/postgres
     ```
+    or (the service name may vary, postgresql, postgresql-[version] etc):
+    ```
+    $ systemctl start postgresql
+    ```
 
 1. Create database
 
@@ -128,13 +135,11 @@ Check out the devops repository (https://github.com/libris/devops), which is pri
 Put it in the same directory as the librisxl repo. Also make sure the definitions repository (https://github.com/libris/definitions)
 is checked out and placed in the same directory.
 
-To avoid entering the db user password multiple times, add it to the fabric local development configuration (conf.xl_local). 
-
-Give the postgres user access to your local database by editing: /etc/postgresql/9.X/main/pg_hba.conf, adding the lines:
+Give all users access to your local database by editing: /etc/postgresql/9.X/main/pg_hba.conf (location varies with your host OS), adding the lines:
 
 ```
-host    all             postgres        127.0.0.1/32            trust
-host    all             postgres        ::1/128                 trust
+host    all             all        127.0.0.1/32            trust
+host    all             all        ::1/128                 trust
 ```
 
 and do`$ service postgresql restart` for the changes to take effect.
@@ -145,7 +150,7 @@ Make sure Elasticsearch is running:
 $ service postgresql status
 ```
 
-Run the fabric task that sets up a new Elasticsearch index and imports example data:
+Run the fabric task that sets up a new Elasticsearch index and imports example data (requires python 2.X!):
 ```bash
 $ cd devops
 $ pip install -r requirements.txt
@@ -213,7 +218,7 @@ all data again (even locally).)
 ### Format updates
 
 If the MARC conversion process has been updated and needs to be run anew, the only
-option is to reload the data from vcopy using the importers application.
+option is to reload the data from production using the importers application.
 
 ### Statistics
 
