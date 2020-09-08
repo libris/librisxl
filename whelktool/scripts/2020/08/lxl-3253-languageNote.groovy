@@ -68,15 +68,18 @@ void process(bib) {
 
         //Uniform data and log deviant language entities
         changed |= uniformToList(work, 'language')
-        containsDeviantLang |= isDeviantLanguageEntity(work, bib.graph[0][ID])
+        containsDeviantLang |= isDeviantLanguageEntity(work, bib.graph[0][ID], 'instanceOf.language')
 
         changed |= uniformToList(work, 'translationOf')
+        if (work.containsKey('marc:languageNote') && work['marc:languageNote'] == 'marc:ItemIsOrIncludesATranslation') {
+            translationOf = true
+        } else if (work.hasPart &&
+                work?.hasPart.findResults { it['marc:languageNote'] }.contains('marc:ItemIsOrIncludesATranslation')) {
+            translationOf |= true
+        }
         work.translationOf.each {
-            if (it.containsKey('marc:languageNote') && it['marc:languageNote'] == 'marc:ItemIsOrIncludesATranslation') {
-                translationOf |= true
-            }
             changed |= uniformToList(it, 'language')
-            containsDeviantLang |= isDeviantLanguageEntity(it, bib.graph[0][ID])
+            containsDeviantLang |= isDeviantLanguageEntity(it, bib.graph[0][ID], 'instanceOf.translationOf.language')
         }
 
         //Check if translationOf contains several objects containing language. Log and return
@@ -111,10 +114,10 @@ Map getWork(bib) {
     return null
 }
 
-boolean isDeviantLanguageEntity(entity, docId) {
+boolean isDeviantLanguageEntity(entity, docId, loginfo) {
     boolean isDeviant = false
     if (entity['language'] && entity['language'].size() > 1) {
-        Script.repeatedLanugages.println("${docId} Repeated language: ${entity['language']}")
+        Script.repeatedLanugages.println("${docId} repeated in ${loginfo}: ${entity['language']}")
         isDeviant = true
     } else if (entity['language'] && isNonLinguisticContent(entity['language'])) {
         Script.nonLinguisticContent.println("${docId}: ${entity['language']}")
