@@ -112,8 +112,12 @@ class PostgreSQLComponent {
     private static final String GET_EMBELLISHED_DOCUMENT =
             "SELECT data from lddb__embellished where id = ?"
 
-    private static final String UPSERT_EMBELLISHED_DOCUMENT =
-            "INSERT INTO lddb__embellished (id, data, ids) VALUES (?,?,?) ON CONFLICT DO UPDATE"
+    private static final String UPSERT_EMBELLISHED_DOCUMENT = """
+            INSERT INTO lddb__embellished (id, data, ids) VALUES (?,?,?)
+            ON CONFLICT id DO UPDATE
+            SET (data, ids) = (EXCLUDED.data, EXCLUDED.ids)
+            WHERE lddb__embellished.id = EXCLUDED.id
+            """.stripIndent()
 
     private static final String EVICT_EMBELLISHED_DEPENDERS =
             "DELETE FROM lddb__embellished WHERE id = ? OR ids @> ?"
