@@ -69,7 +69,7 @@ void process(bib) {
 
             //Add extra field for codes like 'fast  (OCoLC)fst01726755'
             if (right.equals('fast') && code.contains('OCoLC')) {
-                gf["marc:recordControlNumber"] = "("+ code.split('(')[1]
+                gf["marc:recordControlNumber"] = "("+ code.split('\\(')[1]
                 report.println("Controlnumber added: " + "${bib.doc.shortId} ${code} ${gf["marc:recordControlNumber"]}")
             }
         }
