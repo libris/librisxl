@@ -120,7 +120,7 @@ boolean isDeviantLanguageEntity(entity, docId, loginfo) {
         Script.repeatedLanugages.println("${docId} repeated in ${loginfo}: ${entity['language']}")
         isDeviant = true
     } else if (entity['language'] && isNonLinguisticContent(entity['language'])) {
-        Script.nonLinguisticContent.println("${docId}: ${entity['language']}")
+        Script.nonLinguisticContent.println("${docId}: ${entity['language']} in ${loginfo}")
         isDeviant = true
     }
     return isDeviant
