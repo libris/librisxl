@@ -114,7 +114,7 @@ class PostgreSQLComponent {
 
     private static final String UPSERT_EMBELLISHED_DOCUMENT = """
             INSERT INTO lddb__embellished (id, data, ids) VALUES (?,?,?)
-            ON CONFLICT id DO UPDATE
+            ON CONFLICT (id) DO UPDATE
             SET (data, ids) = (EXCLUDED.data, EXCLUDED.ids)
             WHERE lddb__embellished.id = EXCLUDED.id
             """.stripIndent()
