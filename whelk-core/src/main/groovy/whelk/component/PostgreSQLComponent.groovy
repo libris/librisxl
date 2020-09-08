@@ -112,8 +112,8 @@ class PostgreSQLComponent {
     private static final String GET_EMBELLISHED_DOCUMENT =
             "SELECT data from lddb__embellished where id = ?"
 
-    private static final String INSERT_EMBELLISHED_DOCUMENT =
-            "INSERT INTO lddb__embellished (id, data, ids) VALUES (?,?,?)"
+    private static final String UPSERT_EMBELLISHED_DOCUMENT =
+            "INSERT INTO lddb__embellished (id, data, ids) VALUES (?,?,?) ON CONFLICT DO UPDATE"
 
     private static final String EVICT_EMBELLISHED_DEPENDERS =
             "DELETE FROM lddb__embellished WHERE id = ? OR ids @> ?"
@@ -368,13 +368,14 @@ class PostgreSQLComponent {
         this.dependencyCache = new DependencyCache(this)
     }
 
-    private void cacheEmbellishedDocument(String id, Document embellishedDocument, Connection connection) {
-        List<String> ids = embellishmentIds(embellishedDocument, connection)
-
+    private void cacheEmbellishedDocument(String id, Document embellishedDocument) {
+        Connection connection = getConnection()
         PreparedStatement preparedStatement = null
 
         try {
-            preparedStatement = connection.prepareStatement(INSERT_EMBELLISHED_DOCUMENT)
+            List<String> ids = embellishmentIds(embellishedDocument, connection)
+
+            preparedStatement = connection.prepareStatement(UPSERT_EMBELLISHED_DOCUMENT)
             preparedStatement.setString(1, id)
             preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), java.sql.Types.OTHER)
             preparedStatement.setArray(3, connection.createArrayOf("TEXT", ids as String[]))
@@ -382,7 +383,7 @@ class PostgreSQLComponent {
             preparedStatement.execute()
         }
         finally {
-            close(preparedStatement)
+            close(preparedStatement, connection)
         }
     }
 
@@ -420,22 +421,22 @@ class PostgreSQLComponent {
             if (resultSet.next()) {
                 return new Document(mapper.readValue(resultSet.getString("data"), Map))
             }
-
-            // Cache-miss, embellish and store
-            Document document = load(id, connection)
-            if (document) {
-                embellish(document)
-                cacheEmbellishedDocument(id, document, connection)
-            }
-            else {
-                log.error("loadEmbellished. No document with $id")
-            }
-
-            return document
         }
         finally {
             close(resultSet, selectStatement, connection)
         }
+
+        // Cache-miss, embellish and store
+        Document document = load(id)
+        if (document) {
+            embellish(document) // will open a connection
+            cacheEmbellishedDocument(id, document)
+        }
+        else {
+            log.error("loadEmbellished. No document with $id")
+        }
+
+        return document
     }
 
     void clearEmbellishedCache(Connection connection) {
