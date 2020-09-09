@@ -168,21 +168,19 @@ class JsonLd {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     private void expandAliasesInLensProperties() {
-        displayData['lensGroups']?.values().each { group ->
-            group.get('lenses')?.values().each { lens ->
-                lens['showProperties'] = lens['showProperties'].collect {
-                    def alias = langContainerAlias[it]
-                    return alias ? [it, alias] : it
-                }.flatten()
-            }
+        eachLens { lens ->
+            lens['showProperties'] = lens['showProperties'].collect {
+                def alias = langContainerAlias[it]
+                return alias ? [it, alias] : it
+            }.flatten()
         }
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
     expandInheritedLensProperties() {
         def lensesById = [:]
-        displayData['lensGroups']?.values()?.each { group ->
-            group.get('lenses')?.values()?.each { lens ->
+        eachLens { lens ->
+            if (lens['@id']) {
                 lensesById[lens['@id']] = lens
             }
         }
@@ -211,7 +209,7 @@ class JsonLd {
             }
         }
 
-        lensesById.values().each { Map lens ->
+        eachLens { lens ->
             lens.put('showProperties', flattenedProps(lens))
             lens.remove('fresnel:extends')
         }
@@ -219,11 +217,18 @@ class JsonLd {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     expandInverseLensProperties() {
+        eachLens { lens ->
+            lens['inverseProperties'] = ((Iterable) lens['showProperties']).findResults {
+                return (it instanceof Map ) && it['inverseOf'] ? it['inverseOf'] : null
+            }
+        }
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    private void eachLens(Closure c) {
         displayData['lensGroups']?.values().each { group ->
             group.get('lenses')?.values().each { lens ->
-                lens['inverseProperties'] = ((Iterable) lens['showProperties']).findResults {
-                    return (it instanceof Map ) && it['inverseOf'] ? it['inverseOf'] : null
-                }
+                c(lens)
             }
         }
     }
