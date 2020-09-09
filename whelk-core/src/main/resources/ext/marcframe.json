@@ -6840,6 +6840,7 @@
       },
       "$6": {"property": "marc:bib041-fieldref", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 2},
       "$8": {"property": "marc:bib041-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 0},
+      "subfieldOrder": "a k h ...",
       "_spec": [
         {
           "source": [
@@ -6856,10 +6857,14 @@
           }
         },
         {
-          "name": "Example from wd6wf9j75fhfw1c",
+          "name": "Intermediate language with correct subfieldorder. Example from wd6wf9j75fhfw1c",
           "source": [
             {"008" : "|     |        |  |||||||||||000 ||swe| "},
             {"041": { "ind1": "1", "ind2": " ", "subfields": [{"a": "swe"}, {"h": "rus"}, {"k": "ger"}]}}
+          ],
+          "normalized": [
+            {"008" : "|     |        |  |||||||||||000 ||swe| "},
+            {"041": { "ind1": "1", "ind2": " ", "subfields": [{"a": "swe"}, {"k": "ger"}, {"h": "rus"}]}}
           ],
           "result": {
             "mainEntity": {
