@@ -42,6 +42,21 @@ class EmbellishSpec extends Specification{
                                            'fresnel:extends': ['@id': 'Y-chips'],
                                            'showProperties' : ['fresnel:super', 'py2']
                                      ],
+                             ]],
+                     'full':
+                             ['lenses': [
+                                     'R': ['@type'          : 'fresnel:Lens',
+                                           'fresnel:extends': ['@id': 'R-cards'],
+                                           'showProperties' : ['fresnel:super']
+                                     ],
+                                     'X': ['@type'          : 'fresnel:Lens',
+                                           'fresnel:extends': ['@id': 'X-cards'],
+                                           'showProperties' : ['fresnel:super']
+                                     ],
+                                     'Y': ['@type'          : 'fresnel:Lens',
+                                           'fresnel:extends': ['@id': 'Y-cards'],
+                                           'showProperties' : ['fresnel:super']
+                                     ],
                              ]]]]
 
     /*

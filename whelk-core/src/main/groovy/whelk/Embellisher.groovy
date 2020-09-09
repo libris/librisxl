@@ -60,20 +60,22 @@ class Embellisher {
         List result = docs
         List<String> iris = getAllLinks(start + docs)
         Iterable<Map> previousLevelDocs = start + docs
+        String previousLens = 'full'
 
         for (String lens : embellishLevels) {
             docs = fetchNonVisited(lens, iris, visitedIris)
             docs += fetchNonVisited(lens, getCloseLinks(docs), visitedIris)
 
-            previousLevelDocs.each { insertInverseCards(lens, it, docs, visitedIris) }
+            previousLevelDocs.each { insertInverse(previousLens, it, lens, docs, visitedIris) }
             previousLevelDocs = docs
+            previousLens = lens
 
             result.addAll(docs)
 
             iris = getAllLinks(docs)
         }
-        // Last level: add reverse links, but not the documents linking here
-        previousLevelDocs.each { insertInverseCards(embellishLevels.last(), it, [], visitedIris) }
+        // Last level: add reverse links, but don't include documents linking here in embellish graph
+        previousLevelDocs.each { insertInverse(previousLens, it, null, [], visitedIris) }
 
         return result
     }
@@ -111,8 +113,8 @@ class Embellisher {
         return data
     }
 
-    private void insertInverseCards(String lens, Map thing, List<Map> cards, Set<String> visitedIris) {
-        Set<String> inverseRelations = jsonld.getInverseProperties(thing, lens)
+    private void insertInverse(String forLens, Map thing, String applyLens, List<Map> cards, Set<String> visitedIris) {
+        Set<String> inverseRelations = jsonld.getInverseProperties(thing, forLens)
         if (inverseRelations.isEmpty()) {
             return
         }
@@ -136,7 +138,9 @@ class Embellisher {
             }
 
             theThing[JsonLd.REVERSE_KEY][relation] = irisLinkingHere.collect { [(JsonLd.ID_KEY): it] }
-            cards.addAll(fetchNonVisited(lens, irisLinkingHere, visitedIris))
+            if(applyLens) {
+                cards.addAll(fetchNonVisited(applyLens, irisLinkingHere, visitedIris))
+            }
         }
     }
 
