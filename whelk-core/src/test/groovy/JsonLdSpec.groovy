@@ -348,8 +348,7 @@ class JsonLdSpec extends Specification {
                                  ]],
                          "cards":
                                  ["lenses": [
-                                         "Z": ["@type"          : "fresnel:Lens",
-                                               "@id"            : "Z-cards",
+                                         "Z": ["@type"          : "fresnel:Lens",  // no @id
                                                "fresnel:extends": ["@id": "X-chips"],
                                                "showProperties" : ["z1", "z2", "z3"]
                                          ],
