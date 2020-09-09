@@ -183,7 +183,9 @@ class JsonLd {
         def lensesById = [:]
         displayData['lensGroups']?.values()?.each { group ->
             group.get('lenses')?.values()?.each { lens ->
-                lensesById[lens['@id']] = lens
+                if (lens['@id']) {
+                    lensesById[lens['@id']] = lens
+                }
             }
         }
 
