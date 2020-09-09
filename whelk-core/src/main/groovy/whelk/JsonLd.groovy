@@ -211,9 +211,11 @@ class JsonLd {
             }
         }
 
-        lensesById.values().each { Map lens ->
-            lens.put('showProperties', flattenedProps(lens))
-            lens.remove('fresnel:extends')
+        displayData['lensGroups']?.values()?.each { group ->
+            group.get('lenses')?.values()?.each { lens ->
+                lens.put('showProperties', flattenedProps(lens))
+                lens.remove('fresnel:extends')
+            }
         }
     }
 
