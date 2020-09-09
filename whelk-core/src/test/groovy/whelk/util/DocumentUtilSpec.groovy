@@ -109,21 +109,32 @@ class DocumentUtilSpec extends Specification {
                         [x: 4],
                 ]],
                 [key: [x: 1]],
-                [key: [x: 2]]
+                [key: 'str'],
+                [key: [x: 2]],
         ]
 
-        DocumentUtil.findKey(data, 'key', DocumentUtil.link({ blankNode, existingLinks ->
-            switch (blankNode['x']) {
-                case 1:
-                    return [['@id': 7]]
-                case 2:
-                    return [['@id': 8], ['@id': 9]]
-                case 3:
-                    return []
-                default:
-                    return null
-            }
-        }))
+        DocumentUtil.findKey(data, 'key', DocumentUtil.link(
+                new DocumentUtil.Linker() {
+                    @Override
+                    List<Map> link(Map blankNode, List existingLinks) {
+                        switch (blankNode['x']) {
+                            case 1:
+                                return [['@id': 7]]
+                            case 2:
+                                return [['@id': 8], ['@id': 9]]
+                            case 3:
+                                return []
+                            default:
+                                return null
+                        }
+                    }
+
+                    @Override
+                    List<Map> link(String blank) {
+                        return [['@id': 's']]
+                    }
+                }
+        ))
 
         expect:
         data == [
@@ -136,6 +147,7 @@ class DocumentUtilSpec extends Specification {
                         [x: 4]]
                 ],
                 [key: ['@id': 7]],
+                [key: ['@id': 's']],
                 [key: [['@id': 8], ['@id': 9]]]
         ]
     }
