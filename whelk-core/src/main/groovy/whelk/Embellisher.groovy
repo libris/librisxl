@@ -8,7 +8,7 @@ import groovy.util.logging.Log4j2 as Log
 class Embellisher {
     static final List<String> DEFAULT_EMBELLISH_LEVELS = ['cards', 'chips']
     // FIXME: get from context
-    static final List<String> DEFAULT_CLOSE_RELATIONS = ['instanceOf']
+    static final List<String> DEFAULT_CLOSE_RELATIONS = ['instanceOf', 'translationOf']
 
     static final int MAX_REVERSE_LINKS = 512
 
