@@ -10,16 +10,26 @@ import se.kb.libris.util.marc.io.MarcRecordWriter;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.component.PostgreSQLComponent;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.util.LegacyIntegrationTools;
 import whelk.util.MarcExport;
 
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.Vector;
 import java.util.stream.Collectors;
 
 public class ProfileExport
