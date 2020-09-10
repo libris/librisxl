@@ -43,6 +43,12 @@ gretty {
     systemProperties 'xl.secret.properties': System.getProperty("xl.secret.properties")
     httpPort = 8580
     scanInterval = 0
+    afterEvaluate {
+        appRunDebug {
+            debugPort = 5006
+            debugSuspend = false
+        }
+    }
 }
 
 jar {
