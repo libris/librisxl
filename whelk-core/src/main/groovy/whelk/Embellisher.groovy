@@ -55,7 +55,7 @@ class Embellisher {
         Set<String> visitedIris = new HashSet<>()
         visitedIris.addAll(plusWithoutHash(document.getThingIdentifiers()))
 
-        def docs = fetchNonVisited('full', getCloseLinks(start), visitedIris).collect()
+        def docs = fetchClose('full', start, visitedIris).collect()
 
         List result = docs
         List<String> iris = getAllLinks(start + docs)
@@ -64,7 +64,7 @@ class Embellisher {
 
         for (String lens : embellishLevels) {
             docs = fetchNonVisited(lens, iris, visitedIris)
-            docs += fetchNonVisited(lens, getCloseLinks(docs), visitedIris)
+            docs += fetchClose(lens, docs, visitedIris)
 
             previousLevelDocs.each { insertInverse(previousLens, it, lens, docs, visitedIris) }
             previousLevelDocs = docs
@@ -95,6 +95,22 @@ class Embellisher {
         visitedIris.addAll(data.collectMany { plusWithoutHash(new Document(it).getThingIdentifiers()) })
         visitedIris.addAll(iris)
         return data
+    }
+
+    private Iterable<Map> fetchClose(String lens, Iterable<Map> docs, Set<String> visitedIris) {
+        def result = []
+        while(true) {
+            docs = fetchNonVisited(lens, getCloseLinks(docs), visitedIris)
+
+            if (docs.isEmpty()) {
+                break
+            }
+            else {
+                result.addAll(docs)
+            }
+        }
+
+        return result
     }
 
     private Iterable<Map> load(String lens, Iterable<String> iris) {
