@@ -248,6 +248,11 @@ class Crud extends HttpServlet {
         if (request.shouldEmbellish()) {
             doc = doc.clone() // FIXME: this is because ETag calculation is done on non-embellished doc...
             whelk.embellish(doc)
+
+            // reverse links are inserted by embellish, so can only do this when embellished
+            if (request.shouldApplyInverseOf()) {
+                doc.applyInverses(whelk.jsonld)
+            }
         }
 
         if (request.getLens() != Lens.NONE) {

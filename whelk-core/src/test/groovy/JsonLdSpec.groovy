@@ -787,6 +787,63 @@ class JsonLdSpec extends Specification {
         ld.toChip(data, preservePaths) == readMap("preserve-paths/dtestpost-chips-links.jsonld")
     }
 
+    def "should apply inverses"() {
+        def vocabData = [
+                "@graph": [
+                        ["@id": "http://example.org/ns/broader",
+                         "inverseOf": [ ["@id": "http://example.org/ns/narrower"] ]],
+                        ["@id": "http://example.org/ns/narrower"]
+                ]
+        ]
+
+        def ld = new JsonLd(CONTEXT_DATA, [:], vocabData)
+        Closure applyInverses =ld.&applyInverses
+        given:
+        def thing = [
+                '@id': '1',
+                '@reverse': [
+                        'broader': [['@id': '2'], ['@id': '3']]
+                ]
+        ]
+        when:
+        applyInverses(thing)
+        def revMap = thing.remove('@reverse')
+        then:
+        thing['narrower'] == [['@id': '2'], ['@id': '3']]
+
+        when: 'adding inverses to existing accumulates results'
+        thing['@reverse'] = revMap
+        applyInverses(thing)
+        thing.remove('@reverse')
+        then:
+        thing['narrower'] == [['@id': '2'], ['@id': '3'], ['@id': '2'], ['@id': '3']]
+    }
+
+    def "should apply owl inverses"() {
+        def vocabData = [
+                "@graph": [
+                        ["@id": "http://example.org/ns/thisWay",
+                         "owl:inverseOf": [ ["@id": "http://example.org/ns/thatWay"] ]],
+                        ["@id": "http://example.org/ns/thatWay",
+                         "owl:inverseOf": [ ["@id": "http://example.org/ns/thisWay"] ]]
+                ]
+        ]
+
+        def ld = new JsonLd(CONTEXT_DATA, [:], vocabData)
+        Closure applyInverses =ld.&applyInverses
+        given:
+        def thing = [
+                '@id': '1',
+                '@reverse': [
+                        'thisWay': [['@id': '2'], ['@id': '3']]
+                ]
+        ]
+        when:
+        applyInverses(thing)
+        then:
+        thing['thatWay'] == [['@id': '2'], ['@id': '3']]
+    }
+
     static Map readMap(String filename) {
         return mapper.readValue(readFile(filename), Map)
     }

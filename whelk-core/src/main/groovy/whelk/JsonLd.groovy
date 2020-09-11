@@ -565,6 +565,26 @@ class JsonLd {
         return true
     }
 
+    @TypeChecked(TypeCheckingMode.SKIP)
+    void applyInverses(Map thing) {
+        thing[REVERSE_KEY]?.each { rel, subjects ->
+            Map relDescription = vocabIndex[rel]
+            // NOTE: resilient in case we add inverseOf as a direct term
+            def inverseOf = relDescription['owl:inverseOf'] ?: relDescription.inverseOf
+            List revIds = asList(inverseOf)?.collect {
+                toTermKey((String) it[ID_KEY])
+            }
+            String rev = revIds.find { it in vocabIndex }
+            if (rev) {
+                asList(thing.get(rev, [])).addAll(subjects)
+            }
+        }
+    }
+
+    static List asList(o) {
+        return (o instanceof List) ? (List) o : o != null ? [o] : []
+    }
+
     static List<List<String>> findPaths(Map obj, String key, String value) {
         return findPaths(obj, key, [value].toSet())
     }
