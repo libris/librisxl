@@ -567,12 +567,12 @@ class JsonLd {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     void applyInverses(Map thing) {
-        thing['@reverse']?.each { rel, subjects ->
+        thing[REVERSE_KEY]?.each { rel, subjects ->
             Map relDescription = vocabIndex[rel]
             // NOTE: resilient in case we add inverseOf as a direct term
             def inverseOf = relDescription['owl:inverseOf'] ?: relDescription.inverseOf
             List revIds = asList(inverseOf)?.collect {
-                toTermKey((String) it['@id'])
+                toTermKey((String) it[ID_KEY])
             }
             String rev = revIds.find { it in vocabIndex }
             if (rev) {
