@@ -15,10 +15,22 @@ import whelk.util.LegacyIntegrationTools;
 import whelk.util.MarcExport;
 
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.Vector;
+import java.util.stream.Collectors;
 
 public class ProfileExport
 {
@@ -140,19 +152,9 @@ public class ProfileExport
         }
         else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created, deleted, connection))
         {
-            List<Tuple2<String, String>> dependers = m_whelk.getStorage().followDependers(id, JsonLd.getNON_DEPENDANT_RELATIONS());
-            for (Tuple2 depender : dependers)
+            for (String bibId : getAffectedBibIdsForAuth(id, profile))
             {
-                String dependerId = (String) depender.getFirst();
-                Document dependerDoc = m_whelk.loadEmbellished(dependerId);
-                String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDoc, m_whelk.getJsonld());
-                if (dependerCollection == null || !dependerCollection.equals("bib"))
-                    continue;
-
-                if (!isHeld(dependerDoc, profile))
-                    continue;
-
-                exportDocument(dependerDoc, profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
+                exportDocument(m_whelk.loadEmbellished(bibId), profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
             }
         }
         else if (collection.equals("hold") && updateShouldBeExported(id, collection, profile, from, until, created, deleted, connection))
@@ -230,27 +232,39 @@ public class ProfileExport
             }
         }
 
-        String locations = profile.getProperty("locations", "");
-        HashSet locationSet = new HashSet(Arrays.asList(locations.split(" ")));
-        if ( ! locationSet.contains("*") )
+        if ( ! profile.shouldExportAllLocations() )
         {
-            Document updatedDocument = m_whelk.getStorage().load(id);
-
             if (collection.equals("bib"))
             {
-                if (!isHeld(updatedDocument, profile)) {
+                if (!isHeld(id, profile)) {
                     return false;
                 }
             }
             if (collection.equals("hold"))
             {
-                if (!locationSet.contains(updatedDocument.getSigel())) {
+                Document updatedDocument = m_whelk.getStorage().load(id);
+                if (!profile.locations().contains(updatedDocument.getSigel())) {
                     return false;
                 }
             }
         }
 
         return true;
+    }
+
+    private Collection<String> getAffectedBibIdsForAuth(String authId, ExportProfile profile) {
+        List<String> allIds = m_whelk.getStorage()
+                .followDependers(authId, JsonLd.getNON_DEPENDANT_RELATIONS())
+                .stream().map(Tuple2::getFirst).collect(Collectors.toList());
+
+        if (profile.shouldExportAllLocations()) {
+            return allIds.stream()
+                    .filter(id -> "bib".equals(m_whelk.getStorage().getCollectionBySystemID(id)))
+                    .collect(Collectors.toList());
+        }
+        else {
+            return m_whelk.getStorage().filterBibIdsByHeldBy(allIds, locationLibraryUris(profile));
+        }
     }
 
     /**
@@ -267,12 +281,10 @@ public class ProfileExport
             return;
         exportedIDs.add(systemId);
 
-        String locations = profile.getProperty("locations", "");
-        HashSet locationSet = new HashSet(Arrays.asList(locations.split(" ")));
         DELETE_REASON deleteReason = DELETE_REASON.DELETED; // Default
-        if (doVirtualDeletions && !locationSet.contains("*"))
+        if (doVirtualDeletions && !profile.shouldExportAllLocations())
         {
-            if (!isHeld(document, profile)) {
+            if (!isHeld(systemId, profile)) {
                 if (deleteMode == DELETE_MODE.IGNORE)
                     logger.info("Not exporting {} for {} because of combined virtual deletions and ignore-deleted setting", systemId, profileName);
                 document.setDeleted(true);
@@ -317,20 +329,21 @@ public class ProfileExport
         }
     }
 
-    boolean isHeld(Document doc, ExportProfile profile)
+    boolean isHeld(String systemId, ExportProfile profile)
     {
-        String locations = profile.getProperty("locations", "");
-        HashSet locationSet = new HashSet(Arrays.asList(locations.split(" ")));
-
-	if ( locationSet.contains("*") ) return true; // KP 190401
-
-        List<Document> holdings = m_whelk.getAttachedHoldings(doc.getThingIdentifiers());
-        for (Document holding : holdings)
-        {
-            if (locationSet.contains(holding.getSigel()))
-                return true;
+        if(profile.shouldExportAllLocations()) {
+            return true;
         }
-        return false;
+
+        return m_whelk.getStorage()
+                .filterBibIdsByHeldBy(Collections.singleton(systemId), locationLibraryUris(profile))
+                .contains(systemId);
+    }
+
+    private List<String> locationLibraryUris(ExportProfile profile) {
+        return profile.locations().stream()
+                .map(LegacyIntegrationTools::legacySigelToUri)
+                .collect(Collectors.toList());
     }
 
     /**

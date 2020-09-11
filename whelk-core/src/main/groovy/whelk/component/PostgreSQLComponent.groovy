@@ -301,6 +301,14 @@ class PostgreSQLComponent {
     private static final String GET_LEGACY_PROFILE =
             "SELECT profile FROM lddb__profiles WHERE library_id = ?"
 
+    private static final String FILTER_BIB_IDS_BY_HELD_BY = """
+            SELECT d.dependsonid FROM lddb l, lddb__dependencies d
+            WHERE l.id = d.id
+            AND d.relation = 'itemOf'
+            AND d.dependsonid = ANY (?)
+            AND l.data #>> '{@graph,1,heldBy,@id}' = ANY(?);
+            """.stripIndent()
+
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
 
@@ -1875,6 +1883,27 @@ class PostgreSQLComponent {
                 holdings.add(rs.getString("id"))
             }
             return holdings
+        }
+        finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    Set<String> filterBibIdsByHeldBy(Collection<String> systemIds, Collection<String> libraryURIs) {
+        Connection connection = null
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            connection = getConnection()
+            preparedStatement = connection.prepareStatement(FILTER_BIB_IDS_BY_HELD_BY)
+            preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds as String[]))
+            preparedStatement.setArray(2, connection.createArrayOf("TEXT", libraryURIs as String[]))
+            rs = preparedStatement.executeQuery()
+            Set<String> result = new HashSet<>()
+            while (rs.next()) {
+                result.add(rs.getString(1))
+            }
+            return result
         }
         finally {
             close(rs, preparedStatement, connection)
