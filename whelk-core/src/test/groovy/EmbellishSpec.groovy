@@ -18,7 +18,7 @@ class EmbellishSpec extends Specification{
                                      ],
                                      'X': ['@type'         : 'fresnel:Lens',
                                            '@id'           : 'X-chips',
-                                           'showProperties': ['px1', ['inverseOf': 'py1'], 'CR']
+                                           'showProperties': ['px1', ['inverseOf': 'py1'], 'CR', 'CR2']
                                      ],
                                      'Y': ['@type'         : 'fresnel:Lens',
                                            '@id'           : 'Y-chips',
@@ -58,6 +58,9 @@ class EmbellishSpec extends Specification{
                                            'showProperties' : ['fresnel:super']
                                      ],
                              ]]]]
+
+
+
 
     /*
 
@@ -185,6 +188,9 @@ digraph {
 
         result['@graph'].size() == 2 + 5
     }
+
+
+
 
     /*
 
@@ -335,6 +341,159 @@ digraph {
 
         result['@graph'].size() == 2 + 9
     }
+
+
+
+
+    /*
+
+                         ┌−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−┐
+                         ╎                        embellish                          ╎
+                         ╎                                                           ╎
+                         ╎ ┌───────────┐  CR    ┌───────────┐   px1    ┌───────────┐ ╎
+                         ╎ │ X7 (full) │ ─────▶ │ X8 (full) │ ───────▶ │ X9 (card) │ ╎
+                         ╎ └───────────┘        └───────────┘          └───────────┘ ╎
+                         ╎   ▲                                                       ╎
+                         ╎   │ CR2                                                   ╎
+                         ╎   │                                                       ╎
+┌−−−−−−−−−−−−−−−−−−−−−−−−    │                                                        −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−┐
+╎                            │                                                                                                  ╎
+╎ ┌─────────────┐  CR      ┌───────────┐  px1   ┌───────────┐   CR     ┌───────────┐   CR    ┌───────────┐  px1   ┌───────────┐ ╎  px1   ┌────┐
+╎ │ doc (START) │ ───────▶ │ X0 (full) │ ─────▶ │ X3 (card) │ ───────▶ │ X4 (card) │ ──────▶ │ X5 (card) │ ─────▶ │ X6 (chip) │ ╎ ─────▶ │ Y1 │
+╎ └─────────────┘          └───────────┘        └───────────┘          └───────────┘         └───────────┘        └───────────┘ ╎        └────┘
+╎   │                                             ▲                                                                             ╎
+╎   │                                             │            −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−┘
+╎   │                                             │           ╎
+╎   │ px1                                         │           ╎
+╎   ▼                                             │           ╎
+╎ ┌─────────────┐  px1                            │           ╎
+╎ │  X1 (card)  │ ────────────────────────────────┘           ╎
+╎ └─────────────┘                                             ╎
+╎                                                             ╎
+└−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−┘
+
+
+Generated with: https://dot-to-ascii.ggerganov.com/
+
+.dot:
+digraph {
+    rankdir=LR;
+    subgraph cluster_0 {
+        doc -> X0 [ label = "CR" ];
+        doc -> X1 [ label = "px1" ];
+        X0 -> X3 [ label = "px1" ];
+        X0 -> X7 [ label = "CR2" ];
+        X1 -> X3 [ label = "px1" ];
+        X3 -> X4 [ label = "CR" ];
+        X4 -> X5 [ label = "CR" ];
+        X5 -> X6 [ label = "px1" ];
+        X7 -> X8 [ label = "CR" ];
+        X8 -> X9 [ label = "px1" ];
+        label = "embellish";
+    }
+
+    X6 -> Y1 [ label = "px1" ];
+
+    doc [label = "doc (START)"];
+    X0 [label = "X0 (full)"];
+    X1 [label = "X1 (card)"];
+    X3 [label = "X3 (card)"];
+    X4 [label = "X4 (card)"];
+    X5 [label = "X5 (card)"];
+    X6 [label = "X6 (chip)"];
+    X7 [label = "X7 (full)"];
+    X8 [label = "X8 (full)"];
+    X9 [label = "X9 (card)"];
+}
+*/
+
+    def "should handle multi-level close relations"() {
+        given:
+        def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, DISPLAY_DATA, JsonLdSpec.VOCAB_DATA)
+
+        def doc = ['@graph': [['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
+                              ['@type': 'X', '@id': '/thing', 'CR': ['@id': '/thingX0'], 'px1': ['@id': '/thingX1']]
+        ]]
+
+        def docs = [
+                ['@graph': [['@type': 'R', '@id': '/recordX0', 'mainEntity': ['@id': '/thingX0']],
+                            ['@type': 'X', '@id': '/thingX0',
+                             'CR2'  : [['@id': '/thingX7']],
+                             'px1'  : [['@id': '/thingX3']],
+                             'px2'  : 'foo']]],
+
+                ['@graph': [['@type': 'R', '@id': '/recordX1', 'mainEntity': ['@id': '/thingX1']],
+                            ['@type': 'X', '@id': '/thingX1',
+                             'px1'  : [['@id': '/thingX3']],
+                             'px2'  : 'foo']]],
+
+                ['@graph': [['@type': 'R', '@id': '/recordX3', 'mainEntity': ['@id': '/thingX3']],
+                            ['@type': 'X', '@id': '/thingX3',
+                             'CR'   : ['@id': '/thingX4'],
+                             'px1'  : 'foo',
+                             'px2'  : 'foo']]],
+
+                ['@graph': [['@type': 'R', '@id': '/recordX4', 'mainEntity': ['@id': '/thingX4']],
+                            ['@type': 'X', '@id': '/thingX4',
+                             'CR'   : ['@id': '/thingX5'],
+                             'px1'  : 'foo',
+                             'px2'  : 'foo']]],
+
+                ['@graph': [['@type': 'R', '@id': '/recordX5', 'mainEntity': ['@id': '/thingX5']],
+                            ['@type': 'X', '@id': '/thingX5',
+                             'px1'  : ['@id': '/thingX6'],
+                             'px2'  : 'foo']]],
+
+                ['@graph': [['@type': 'R', '@id': '/recordX6', 'mainEntity': ['@id': '/thingX6']],
+                            ['@type': 'X', '@id': '/thingX6',
+                             'px1'  : ['@id': '/thingY1'],
+                             'px2'  : 'foo']]],
+
+                ['@graph': [['@type': 'R', '@id': '/recordX7', 'mainEntity': ['@id': '/thingX7']],
+                            ['@type': 'X', '@id': '/thingX7', 'CR': ['@id': '/thingX8'], 'px1': 'foo', 'px2': 'foo']]],
+
+                ['@graph': [['@type': 'R', '@id': '/recordX8', 'mainEntity': ['@id': '/thingX8']],
+                            ['@type': 'X', '@id': '/thingX8', 'px1': ['@id': '/thingX9'], 'px2': 'foo']]],
+
+                ['@graph': [['@type': 'R', '@id': '/recordX9', 'mainEntity': ['@id': '/thingX9']],
+                            ['@type': 'X', '@id': '/thingX9', 'px1': 'foo', 'px1': 'foo', 'px2': 'foo']]],
+
+                ['@graph': [['@type': 'R', '@id': '/recordY1', 'mainEntity': ['@id': '/thingY1']],
+                            ['@type': 'Y', '@id': '/thingY1', 'py1': 'foo', 'px1': 'foo', 'py2': 'foo']]],
+        ]
+
+        def storage = new TestStorage(ld)
+        storage.add(doc)
+        docs.each(storage.&add)
+
+        def embellisher = new Embellisher(ld, storage.&getFull, storage.&getCards, storage.&getReverseLinks)
+        embellisher.setCloseRelations(['CR', 'CR2'])
+
+        Document document = new Document(doc)
+
+        embellisher.embellish(document)
+        def result = document.data
+
+        expect:
+        lens(find(result, '/thingX0')) == 'full'
+
+        lens(find(result, '/thingX1')) == 'card'
+
+        lens(find(result, '/thingX3')) == 'card'
+        lens(find(result, '/thingX4')) == 'card'
+        lens(find(result, '/thingX5')) == 'card'
+        lens(find(result, '/thingX6')) == 'chip'
+
+        lens(find(result, '/thingX7')) == 'full'
+        lens(find(result, '/thingX8')) == 'full'
+        lens(find(result, '/thingX9')) == 'card'
+
+        !find(result, '/thingY1')
+
+        result['@graph'].size() == 2 + 9
+    }
+
+
 
 
     /*
