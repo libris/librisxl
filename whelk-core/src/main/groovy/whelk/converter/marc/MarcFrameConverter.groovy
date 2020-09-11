@@ -471,7 +471,7 @@ class MarcConversion {
     }
 
     void applyInverses(Map record, Map thing) {
-        converter.ld.applyInverses(thing)
+        converter.ld?.applyInverses(thing)
     }
 }
 
