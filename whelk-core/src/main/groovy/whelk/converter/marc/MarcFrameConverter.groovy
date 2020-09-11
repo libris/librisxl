@@ -471,21 +471,8 @@ class MarcConversion {
     }
 
     void applyInverses(Map record, Map thing) {
-        JsonLd ld = converter.ld
-        thing['@reverse']?.each { rel, subjects ->
-            Map relDescription = ld.vocabIndex[rel]
-            // NOTE: resilient in case we add inverseOf as a direct term
-            def inverseOf = relDescription['owl:inverseOf'] ?: relDescription.inverseOf
-            List revIds = Util.asList(inverseOf)?.collect {
-                ld.toTermKey(it['@id'])
-            }
-            String rev = revIds.find { it in ld.vocabIndex }
-            if (rev) {
-                Util.asList(thing.get(rev, [])).addAll(subjects)
-            }
-        }
+        converter.ld.applyInverses(thing)
     }
-
 }
 
 class MarcRuleSet {
