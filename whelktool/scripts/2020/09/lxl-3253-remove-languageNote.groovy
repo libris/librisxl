@@ -27,6 +27,17 @@ selectByCollection('bib') { bib ->
         }
     }
 
+    if (work?.translationOf) {
+        if (work.translationOf instanceof Map) {
+            work.translationOf = [work.translationOf]
+        }
+        work.translationOf.each {
+            if (it.remove('marc:languageNote')) {
+                changed = true
+            }
+        }
+    }
+
     if (changed) {
         scheduledForChange.println "Record was updated ${bib.graph[0][ID]}"
         bib.scheduleSave(onError: { e ->
