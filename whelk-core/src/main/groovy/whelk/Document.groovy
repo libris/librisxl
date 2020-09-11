@@ -791,6 +791,12 @@ class Document {
         }
     }
 
+    void applyInverses(JsonLd jsonld) {
+        Map thing = get(thingPath)
+        jsonld.applyInverses(thing)
+        thing.remove(JsonLd.REVERSE_KEY)
+    }
+
     String getChecksum() {
         long checksum = calculateCheckSum(data, 1)
         return Long.toString(checksum)
