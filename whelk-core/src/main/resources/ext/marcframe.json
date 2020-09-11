@@ -15763,6 +15763,7 @@
     "655" : {
       "include": ["subjectbase"],
       "aboutEntity": "?work",
+      "fallbackEntity": "?thing",
       "addLink": "genreForm",
       "resourceType": "GenreForm",
       "pendingResources": {
@@ -15779,6 +15780,7 @@
       "subfieldOrder": "8 6 a x z y v 0 2 1",
       "_spec": [
         {
+          "name": "GenreForm with inScheme saogf",
           "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [
             {"a": "Deckare"},
             {"2": "saogf"},
@@ -15811,6 +15813,21 @@
           }}
         },
         {
+          "name": "Revert GenreForm from Instance",
+          "normalized": {"655": {"ind1": " ", "ind2": "4", "subfields": [
+            {"a": "E-böcker"}
+          ]}},
+          "result": {"mainEntity": {
+            "genreForm": [
+              {
+                "@type": "GenreForm",
+                "prefLabel": "E-böcker"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "GenreForm with inScheme barngf",
           "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Deckare"}, {"2": "barngf"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -15831,6 +15848,7 @@
           }}
         },
         {
+          "name": "GenreForm with inScheme gmgpc/swe",
           "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Postkartor"}, {"2": "gmgpc//swe"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
