@@ -47,9 +47,9 @@ This is a list of keys in Marcframe which control certain functionality like rep
 
 `fixedDefault` a fixed default value in fixed fields if none exists in the data. Only for conversion from RDF to MARC21.
 
-`ignored: true` the field, subfield or fixed field will not be converted.
+`ignored: true` the field, subfield or fixed field will not be converted to RDF.
 
-`ignoreOnRevert: true` This makes it possible to ignore conversion from RDF tol MARC21 for certain subfields and fixed field tokens.
+`ignoreOnRevert: true` This makes it possible to ignore conversion from RDF to MARC21 for certain subfields and fixed field tokens.
 
 `include` includes the pattern which match the value.
 
