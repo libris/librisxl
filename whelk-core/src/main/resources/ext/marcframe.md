@@ -37,9 +37,19 @@ This is a list of keys in Marcframe which control certain functionality like rep
 
 `addProperty`(R) and `property` (NR) is used to define whether a property is repeatable or not.
 
+`allowedTypesOnRevert` defines the only types that are allowed to be converted from RDF to MARC21. Defined together with `pendingResources`.
+
+`allowLinkOnRevert` allows another property (other than `link`/`addLink`) to convert to a specific field. Only for conversion from RDF to MARC21.
+
 `embedded` could be set to *true* which means that the entity is a so called structured value and it's value is always embedded locally to the graph and not linked to. In RDF also known as a b-node. The most common types is titles, identifiers and notes.
 
-`fixedDefault` a fixed default value in indicators and fixed fields if none exists in the data. Only for conversion from RDF to MARC21.  
+`fallbackEntity` this is a fallback of `aboutEntity`. This allows entities to be converted from RDF to MARC21, both if they are present on e.g. thing and/or work.
+
+`fixedDefault` a fixed default value in fixed fields if none exists in the data. Only for conversion from RDF to MARC21.
+
+`ignored: true` the field, subfield or fixed field will not be converted to RDF.
+
+`ignoreOnRevert: true` This makes it possible to ignore conversion from RDF to MARC21 for certain subfields and fixed field tokens.
 
 `include` includes the pattern which match the value.
 
@@ -49,7 +59,11 @@ This is a list of keys in Marcframe which control certain functionality like rep
 
 `link` see addLink.
 
+`marcdefault` a fixed default value of indicators and subfields if none exists in the data. Only for conversion from RDF to MARC21.
+
 `match` used for matching values in indicator or occurence of fields with a `when` construction. [See exemple 2, which illustrates matching the right type of agent or work in the **$100** field]
+
+`onRevertAppendValueFrom` makes it possible to append value of a specified property to a subfield. Only for conversion from RDF to MARC21.
 
 `pendingResource` makes it possible to create an hierarchical structure of entities.
 
@@ -140,7 +154,7 @@ So in total a 020 mapping could look like this.
 
 ### Example 2. BIB 100
 
-Match and When shows conditions for mapping depending on indicator value or presence of subfields.
+`match` and `when` shows conditions for mapping depending on indicator or subfield value or presence of subfields.
 ```
     "100" : {
       "match": [
