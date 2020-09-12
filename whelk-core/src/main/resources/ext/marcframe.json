@@ -2928,9 +2928,9 @@
         },
         "[15]": null,
         "[16]": {
-          "link": "marc:transposition",
-          "uriTemplate": "https://id.kb.se/marc/MusicTranspositionType-{_}",
-          "matchUriToken": "^[abc]$"
+          "NOTE:LC": "Transposition and arrangement - # - nac",
+          "ignore": true,
+          "fixedDefault": "|"
         },
         "[17]": null
       },
