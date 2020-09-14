@@ -109,9 +109,9 @@ Map createClassification(code, version) {
             "@type"   : "Classification",
             "code"    : code,
             "inScheme": [
-                    ["@type": "ConceptScheme"],
-                    ["code": "kssb"],
-                    ["version": version]
+                    "@type": "ConceptScheme",
+                    "code": "kssb",
+                    "version": version
             ]
     ]
 }
