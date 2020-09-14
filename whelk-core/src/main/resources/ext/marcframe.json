@@ -20502,14 +20502,39 @@
 
     "976": {
       "Note:local": "Librisdefinierat fält. Fältet är avsett för maskinell uppdatering och förekommer normalt endast i äldre poster konverterade från ett ursprungligt LIBRISIII-format, respektive i de MTM-poster som maskinellt har lästs in från Bibliotekstjänst.",
-      "aboutEntity": "?work",
+      "aboutEntity": "?thing",
       "addLink": "marc:hasBib976",
       "resourceType": "marc:Bib976",
+      "i1": {"marcDefault": " "},
       "i2": {"property": "marc:bib976-i2", "marcDefault": " "},
       "$a": {"property": "marc:bib976-a"},
-      "$b": {"property": "marc:bib976-b"}
+      "$b": {"property": "marc:bib976-b"},
+      "_spec": [
+        {
+          "source": {
+            "976": {
+              "subfields": [
+                {"a": "a"},
+                {"b": "b"}
+              ],
+              "ind1": " ",
+              "ind2": " "
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasBib976": [
+                {
+                  "@type": "marc:Bib976",
+                  "marc:bib976-a": "a",
+                  "marc:bib976-b": "b"
+                }
+              ]
+            }
+          }
+        }
+      ]
     }
-
   },
 
   "auth": {
