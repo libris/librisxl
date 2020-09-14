@@ -94,10 +94,7 @@ void copyToInstance(instance, it) {
 
 boolean haveEquivalentCodes(bib, code084, bib976) {
     def code976 = bib976['marc:bib976-a']
-    if (code084?.startsWith(code976) ||
-            (code084 == "He=c" && code976 == "Hcee") ||
-            (code084 == "Hcee" && code976 == "He=c")) {
-
+    if (code084?.startsWith(code976)) {
         print(["Classification code: " + code084, "bib976-a: " + code976],
                 bib,
                 Script.equivalentCodes)
