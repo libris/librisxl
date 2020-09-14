@@ -41,9 +41,9 @@ void process(bib) {
     }
 
     def (code, noCode) = bib976.split { it['marc:bib976-a'] }
-    def bib81 = sab(work)
+    def bib084 = sab(work)
 
-    handleWithSabCode(bib, work, bib81, code)
+    handleWithSabCode(bib, work, bib084, code)
     handleWithoutSabCode(bib, work, instance, noCode)
 }
 
@@ -68,10 +68,10 @@ void handleWithSabCode(bib, work, bib084, bib976) {
     notIn084.each {
         work['classification'] = work['classification'] ?: []
         work['classification'].add(createClassification(it['marc:bib976-a'], it['marc:bib976-i2'] ?: 'n/a'))
+        bib976.remove(it)
         print(['bib976-a: ' + it['marc:bib976-a']],
                 bib,
                 Script.movedToClassification)
-
         bib.scheduleSave()
     }
 }
