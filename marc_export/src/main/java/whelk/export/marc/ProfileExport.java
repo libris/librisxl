@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 public class ProfileExport
 {
     private final Logger logger = LogManager.getLogger(this.getClass());
+    private HashSet<String> workDerivativeTypes = null;
 
     public enum DELETE_REASON
     {
@@ -62,6 +63,10 @@ public class ProfileExport
     {
         m_whelk = whelk;
         m_toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
+
+        // _only_ the derivatives, not "Work" itself, as that is what the "classical" MARC works use, which we
+        // do not want to filter out as bib.
+        workDerivativeTypes = new HashSet<>(m_whelk.getJsonld().getSubClasses("Work"));
     }
 
     /**
@@ -92,6 +97,11 @@ public class ProfileExport
             {
                 String id = resultSet.getString("id");
                 String collection = resultSet.getString("collection");
+                String mainEntityType = resultSet.getString("mainEntityType");
+                if (collection == "auth" && workDerivativeTypes.contains(mainEntityType))
+                {
+                    collection = "bib";
+                }
                 Timestamp createdTime = resultSet.getTimestamp("created");
                 Boolean deleted = resultSet.getBoolean("deleted");
 
@@ -352,7 +362,7 @@ public class ProfileExport
     private PreparedStatement getAllChangedIDsStatement(Timestamp from, Timestamp until, Connection connection)
             throws SQLException
     {
-        String sql = "SELECT id, collection, created, deleted FROM lddb__versions WHERE modified >= ? AND modified <= ?";
+        String sql = "SELECT id, collection, created, deleted, data#>>'{@graph,1,@type}' AS mainEntityType FROM lddb__versions WHERE modified >= ? AND modified <= ?";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setTimestamp(1, from);
         preparedStatement.setTimestamp(2, until);
