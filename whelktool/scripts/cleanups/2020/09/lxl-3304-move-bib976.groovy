@@ -128,11 +128,15 @@ def asList(x) {
 
 def remove(work, item) {
     def bib976 = work["marc:hasBib976"]
-    if (bib976 instanceof List && bib976) {
+    if (bib976 instanceof List) {
         bib976.remove(item)
-        return
+        if (bib976.isEmpty()) {
+            work.remove('marc:hasBib976')
+        }
     }
-    work.remove('marc:hasBib976')
+    if (bib976 instanceof Map) {
+        work.remove('marc:hasBib976')
+    }
 }
 
 void print(lines, bib, writer) {
