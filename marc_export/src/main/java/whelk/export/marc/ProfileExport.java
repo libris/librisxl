@@ -210,24 +210,25 @@ public class ProfileExport
     {
         String profileName = profile.getProperty("name", "unknown");
 
+        String usingCollectionRules = collection;
         if (collection == "auth" && workDerivativeTypes.contains(mainEntityType))
         {
-            collection = "bib";
+            usingCollectionRules = "bib";
         }
 
-        if (profile.getProperty(collection+"create", "ON").equalsIgnoreCase("OFF") && created) {
+        if (profile.getProperty(usingCollectionRules+"create", "ON").equalsIgnoreCase("OFF") && created) {
             logger.debug("Not exporting created {} ({}) for {}", id, collection, profileName);
             return false; // Created records not requested
         }
-        if (profile.getProperty(collection+"update", "ON").equalsIgnoreCase("OFF") && !created) {
+        if (profile.getProperty(usingCollectionRules+"update", "ON").equalsIgnoreCase("OFF") && !created) {
             logger.debug("Not exporting updated {} ({}) for {}", id, collection, profileName);
             return false; // Updated records not requested
         }
-        if (profile.getProperty(collection+"delete", "ON").equalsIgnoreCase("OFF") && deleted) {
+        if (profile.getProperty(usingCollectionRules+"delete", "ON").equalsIgnoreCase("OFF") && deleted) {
             logger.debug("Not exporting deleted {} ({}) for {}", id, collection, profileName);
             return false; // Deleted records not requested
         }
-        Set<String> operators = profile.getSet(collection+"operators");
+        Set<String> operators = profile.getSet(usingCollectionRules+"operators");
         if ( !operators.isEmpty() )
         {
             Set<String> operatorsInInterval = getAllChangedBy(id, from, until, connection);
@@ -236,7 +237,7 @@ public class ProfileExport
                 operatorsInInterval.retainAll(operators);
                 // The intersection between chosen-operators and operators that changed the record is []
                 if (operatorsInInterval.isEmpty()) {
-                    logger.debug("Not exporting {} ({}) for {} because of operator settings", id, collection,
+                    logger.debug("Not exporting {} ({}) for {} because of operator settings", id, usingCollectionRules,
                             profileName);
                     return false; // Updates from this operator/changedBy not requested
                 }
