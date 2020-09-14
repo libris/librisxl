@@ -98,10 +98,6 @@ public class ProfileExport
                 String id = resultSet.getString("id");
                 String collection = resultSet.getString("collection");
                 String mainEntityType = resultSet.getString("mainEntityType");
-                if (collection == "auth" && workDerivativeTypes.contains(mainEntityType))
-                {
-                    collection = "bib";
-                }
                 Timestamp createdTime = resultSet.getTimestamp("created");
                 Boolean deleted = resultSet.getBoolean("deleted");
 
@@ -112,7 +108,7 @@ public class ProfileExport
 
                 int affected = exportAffectedDocuments(id, collection, created, deleted, fromTimeStamp,
                         untilTimeStamp, profile, output, deleteMode, doVirtualDeletions, exportedIDs,
-                        deletedNotifications, connection);
+                        deletedNotifications, mainEntityType, connection);
                 affectedCount.observe(affected);
             }
         }
@@ -131,14 +127,14 @@ public class ProfileExport
                                         Timestamp until, ExportProfile profile, MarcRecordWriter output,
                                         DELETE_MODE deleteMode, boolean doVirtualDeletions,
                                         TreeSet<String> exportedIDs, TreeMap<String, DELETE_REASON> deletedNotifications,
-                                        Connection connection)
+                                        String mainEntityType, Connection connection)
             throws IOException, SQLException
     {
         Summary.Timer requestTimer = singleExportLatency.labels(collection).startTimer();
         try
         {
             return exportAffectedDocuments2(id, collection, created, deleted, from, until, profile,
-                    output, deleteMode, doVirtualDeletions, exportedIDs, deletedNotifications, connection);
+                    output, deleteMode, doVirtualDeletions, exportedIDs, deletedNotifications, mainEntityType, connection);
         }
         finally
         {
@@ -150,24 +146,24 @@ public class ProfileExport
                                          Timestamp until, ExportProfile profile, MarcRecordWriter output,
                                          DELETE_MODE deleteMode, boolean doVirtualDeletions,
                                          TreeSet<String> exportedIDs, TreeMap<String, DELETE_REASON> deletedNotifications,
-                                         Connection connection)
+                                         String mainEntityType, Connection connection)
             throws IOException, SQLException
     {
         int oldCount = exportedIDs.size();
 
-        if (collection.equals("bib") && updateShouldBeExported(id, collection, profile, from, until, created, deleted, connection))
+        if (collection.equals("bib") && updateShouldBeExported(id, collection, mainEntityType, profile, from, until, created, deleted, connection))
         {
             exportDocument(m_whelk.loadEmbellished(id), profile,
                     output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
         }
-        else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created, deleted, connection))
+        else if (collection.equals("auth") && updateShouldBeExported(id, collection, mainEntityType, profile, from, until, created, deleted, connection))
         {
             for (String bibId : getAffectedBibIdsForAuth(id, profile))
             {
                 exportDocument(m_whelk.loadEmbellished(bibId), profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
             }
         }
-        else if (collection.equals("hold") && updateShouldBeExported(id, collection, profile, from, until, created, deleted, connection))
+        else if (collection.equals("hold") && updateShouldBeExported(id, collection, mainEntityType, profile, from, until, created, deleted, connection))
         {
             List<Document> versions = m_whelk.getStorage().loadAllVersions(id);
 
@@ -208,11 +204,16 @@ public class ProfileExport
     /**
      * Should an update of 'id' affect the collection of bibs being exported? 'id' may be any collection!
      */
-    private boolean updateShouldBeExported(String id, String collection, ExportProfile profile, Timestamp from,
+    private boolean updateShouldBeExported(String id, String collection, String mainEntityType, ExportProfile profile, Timestamp from,
                                            Timestamp until, boolean created, Boolean deleted, Connection connection)
             throws SQLException
     {
         String profileName = profile.getProperty("name", "unknown");
+
+        if (collection == "auth" && workDerivativeTypes.contains(mainEntityType))
+        {
+            collection = "bib";
+        }
 
         if (profile.getProperty(collection+"create", "ON").equalsIgnoreCase("OFF") && created) {
             logger.debug("Not exporting created {} ({}) for {}", id, collection, profileName);
