@@ -23,7 +23,6 @@ class ESQuery {
     private static final List RESERVED_PARAMS = [
         'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens'
     ]
-    private static final String OR_PREFIX = 'or-'
 
     private Map<String, List<String>> boostFieldsByType = [:]
     private ESQueryLensBoost lensBoost
@@ -395,15 +394,18 @@ class ESQuery {
         // We don't have that many nested mappings, so this is way to general.
         Map groups = queryParametersCopy.groupBy { p -> getPrefixIfExists(p.key) }
         Map nested = getNestedParams(groups)
-        Map notNested = (groups - nested).collect { it.value }.sum([:])
+        List notNested = (groups - nested).collect { it.value }
+
         nested.each { key, vals ->
             filters << createNestedBoolFilter(key, vals)
         }
 
-        notNested.removeAll {it.key in RESERVED_PARAMS}
-
-        getOrGroups(notNested).each { m ->
-            filters << createBoolFilter(m)
+        notNested.each { Map m ->
+            m.each {k, v ->
+                if (!(k in RESERVED_PARAMS)) {
+                    filters << createBoolFilter(k, v as String[])
+                }
+            }
         }
 
         if (filters) {
@@ -419,39 +421,6 @@ class ESQuery {
         } else {
             return key
         }
-    }
-
-    /**
-     * @return A list of parameter maps where the entries in each map
-     * should be combined with OR and the maps combined with AND
-     */
-    @CompileStatic(TypeCheckingMode.SKIP)
-    private List<Map> getOrGroups(Map<String, String[]> parameters) {
-        def or = [:]
-        def other = [:]
-
-        // explicit OR
-        parameters.each { String key, value ->
-            if (key.startsWith(OR_PREFIX)) {
-                or.put(key.substring(OR_PREFIX.size()), value)
-            }
-            else {
-                other.put(key, value)
-            }
-        }
-
-        // implicit OR - the same parameter exists with explicit OR
-        or.each { key, value ->
-            if (other.containsKey(key)) {
-                or[key] = or[key] + other.remove(key)
-            }
-        }
-
-        List result = other.collect {[(it.getKey()): it.getValue()]}
-        if (or.size() > 0) {
-            result.add(or)
-        }
-        return result
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
@@ -485,18 +454,15 @@ class ESQuery {
      *
      */
     @CompileStatic(TypeCheckingMode.SKIP)
-    public Map createBoolFilter(Map<String, String[]> fieldsAndVals) {
+    public Map createBoolFilter(String field, String[] vals) {
         List clauses = []
-        fieldsAndVals.each {field, vals ->
-            for (val in vals) {
-                clauses.add(['simple_query_string': [
-                        'query': val,
-                        'fields': [field],
-                        'default_operator': 'AND'
-                ]])
-            }
+        for (val in vals) {
+            clauses.add(['simple_query_string': [
+                'query': val,
+                'fields': [field],
+                'default_operator': 'AND'
+            ]])
         }
-
         return ['bool': ['should': clauses]]
     }
 

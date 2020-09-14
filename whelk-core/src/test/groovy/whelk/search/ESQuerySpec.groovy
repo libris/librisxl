@@ -85,7 +85,7 @@ class ESQuerySpec extends Specification {
 
     def "should create bool filter"(String key, String[] vals, Map result) {
         expect:
-        es.createBoolFilter([(key): vals]) == result
+        es.createBoolFilter(key, vals) == result
         where:
         key   | vals           | result
         'foo' | ['bar', 'baz'] | ['bool': ['should': [
