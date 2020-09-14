@@ -58,7 +58,7 @@ void handleWithSabCode(bib, work, bib084, bib976) {
     }
 
     in084.each {
-        bib976.remove(it)
+        remove(work, it)
         print(['bib976-a: ' + it['marc:bib976-a']],
                 bib,
                 Script.removed)
@@ -68,7 +68,7 @@ void handleWithSabCode(bib, work, bib084, bib976) {
     notIn084.each {
         work['classification'] = work['classification'] ?: []
         work['classification'].add(createClassification(it['marc:bib976-a'], it['marc:bib976-i2'] ?: 'n/a'))
-        bib976.remove(it)
+        remove(work, it)
         print(['bib976-a: ' + it['marc:bib976-a']],
                 bib,
                 Script.movedToClassification)
@@ -79,8 +79,8 @@ void handleWithSabCode(bib, work, bib084, bib976) {
 void handleWithoutSabCode(bib, work, instance, bib976) {
     bib976.each {
         copyToInstance(instance, it)
+        remove(work, it)
     }
-    work.remove('marc:hasBib976')
     print(["bib976-a:" + bib976['marc:bib976-a']],
             bib,
             Script.movedToInstance)
@@ -127,6 +127,15 @@ List sab(work) {
 
 def asList(x) {
     (x ?: []).with {it instanceof List ? it : [it] }
+}
+
+def remove(work, item) {
+    def bib976 = work["marc:hasBib976"]
+    if (bib976 instanceof List && bib976) {
+        bib976.remove(item)
+        return
+    }
+    work.remove('marc:hasBib976')
 }
 
 void print(lines, bib, writer) {
