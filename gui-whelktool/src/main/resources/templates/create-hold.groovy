@@ -4,7 +4,7 @@ File bibids = new File('INPUT')
 
 String bibidstring = bibids.readLines().join("','")
 
-def holdList = []
+Vector holdList = new Vector() // Vector because it must be synchronized
 
 selectBySqlWhere("data#>>'{@graph,0,controlNumber}' in ( '$bibidstring' )", silent: false, { bib ->
 
