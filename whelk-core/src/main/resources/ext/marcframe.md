@@ -1,6 +1,6 @@
 # MARCFRAME
 
-> The purpose of this document is for developers and others who need to understand the mechanisms of MARCFRAME, the configuration file which handles conversion of MARC21 to JSON-LD and the roundtrip JSON-LD to MARC21. The context is the Libris implementation of MARC21.
+> The purpose of this document is for developers and others who need to understand the mechanisms of MARCFRAME, the configuration file which handles conversion of MARC21 to JSON-LD and the roundtrip JSON-LD to MARC21. It has no aspirations of being a complete reference document but rather a guide to different functions available. The context is the Libris implementation of MARC21.
 
 ## Structure
 
@@ -15,7 +15,7 @@ Marcframe is comprised of mainly three sections which represents three different
 }
 ```
 
-For each section there is a chronological mapping of the fields 000-999 and their subfields to properties and classes which are definied either in the kbv: vocabulary or the group of terms which get a marc: prefix. Marc terms are used where the conversion do not fit in a Bibframe 2 form or the usage has in other ways been ambiguous.
+For each section there is a chronological mapping of the fields 000-999 and their subfields to properties and classes which are definied either in the `kbv:` vocabulary or the group of terms which get a `marc:` prefix. Marc terms are used where the conversion do not fit in a Bibframe 2 form or the usage has in other ways been ambiguous.
 
 The most common reason for a marc-prefix is LC combining two fields so it is not possible to separate the data making a reconversion impossible, or that they haven't made any attempts to code the information either with nac - no attempt to code, or ignore for things which have no meaning outside MARC21.
 
@@ -77,7 +77,7 @@ This is a list of keys in Marcframe which control certain functionality like rep
 
 `silentRevert` This lets a field revert entities without marking them as reverted. That allows for other fields to revert from the same entity. This is akin to the groupId mechanism, but allows for other fields to be more exclusive.
 
-[Example: bib 700$t and 730 are disjoint the former is preferred over the latter for the same entity, but a repeated 041 picks language from either of them without marking as reverted.]
+[Example: bib 700$t and 730 are disjoint, the former is preferred over the latter for the same entity, but a repeated 041 picks language from either of them without marking as reverted.]
 
 `spec` used to verify indata and outdata as MARC21 conforms to expected forms. Can be specified with `source` (indata) and `normalized` (outdata), if normalize is absent it is by default expected to look like the incoming MARC21 source. In the spec we also define how our expected JSON-LD form looks like. If you make several testcases you can name them to let others know if there is a particular scenario or deviation you are testing.
 
