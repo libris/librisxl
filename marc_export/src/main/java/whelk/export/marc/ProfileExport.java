@@ -223,7 +223,7 @@ public class ProfileExport
         hence:
          */
         String usingCollectionRules = collection;
-        if (collection == "auth" && workDerivativeTypes.contains(mainEntityType))
+        if (collection.equals("auth") && workDerivativeTypes.contains(mainEntityType))
         {
             usingCollectionRules = "bib";
         }
