@@ -210,6 +210,18 @@ public class ProfileExport
     {
         String profileName = profile.getProperty("name", "unknown");
 
+        /*
+        From a MARC perspective stuff that's now placed in the "work" section used to be a part of
+        the MARC "bib" dataset.
+
+        In order for the authupdate/bibupdate (on/off) etc settings to match what MARC-people expect,
+        changes in work-records need to be evaluated using the bib settings, even though work-records
+        within XL are really classified as "auth".
+
+        In other words, a change in a work, should result in an export, _even though_ authupdate=off.
+
+        hence:
+         */
         String usingCollectionRules = collection;
         if (collection == "auth" && workDerivativeTypes.contains(mainEntityType))
         {
