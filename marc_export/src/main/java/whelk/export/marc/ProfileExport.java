@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 public class ProfileExport
 {
     private final Logger logger = LogManager.getLogger(this.getClass());
+    private HashSet<String> workDerivativeTypes = null;
 
     public enum DELETE_REASON
     {
@@ -62,6 +63,10 @@ public class ProfileExport
     {
         m_whelk = whelk;
         m_toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
+
+        // _only_ the derivatives, not "Work" itself, as that is what the "classical" MARC works use, which we
+        // do not want to filter out as bib.
+        workDerivativeTypes = new HashSet<>(m_whelk.getJsonld().getSubClasses("Work"));
     }
 
     /**
@@ -92,6 +97,7 @@ public class ProfileExport
             {
                 String id = resultSet.getString("id");
                 String collection = resultSet.getString("collection");
+                String mainEntityType = resultSet.getString("mainEntityType");
                 Timestamp createdTime = resultSet.getTimestamp("created");
                 Boolean deleted = resultSet.getBoolean("deleted");
 
@@ -102,7 +108,7 @@ public class ProfileExport
 
                 int affected = exportAffectedDocuments(id, collection, created, deleted, fromTimeStamp,
                         untilTimeStamp, profile, output, deleteMode, doVirtualDeletions, exportedIDs,
-                        deletedNotifications, connection);
+                        deletedNotifications, mainEntityType, connection);
                 affectedCount.observe(affected);
             }
         }
@@ -121,14 +127,14 @@ public class ProfileExport
                                         Timestamp until, ExportProfile profile, MarcRecordWriter output,
                                         DELETE_MODE deleteMode, boolean doVirtualDeletions,
                                         TreeSet<String> exportedIDs, TreeMap<String, DELETE_REASON> deletedNotifications,
-                                        Connection connection)
+                                        String mainEntityType, Connection connection)
             throws IOException, SQLException
     {
         Summary.Timer requestTimer = singleExportLatency.labels(collection).startTimer();
         try
         {
             return exportAffectedDocuments2(id, collection, created, deleted, from, until, profile,
-                    output, deleteMode, doVirtualDeletions, exportedIDs, deletedNotifications, connection);
+                    output, deleteMode, doVirtualDeletions, exportedIDs, deletedNotifications, mainEntityType, connection);
         }
         finally
         {
@@ -140,24 +146,24 @@ public class ProfileExport
                                          Timestamp until, ExportProfile profile, MarcRecordWriter output,
                                          DELETE_MODE deleteMode, boolean doVirtualDeletions,
                                          TreeSet<String> exportedIDs, TreeMap<String, DELETE_REASON> deletedNotifications,
-                                         Connection connection)
+                                         String mainEntityType, Connection connection)
             throws IOException, SQLException
     {
         int oldCount = exportedIDs.size();
 
-        if (collection.equals("bib") && updateShouldBeExported(id, collection, profile, from, until, created, deleted, connection))
+        if (collection.equals("bib") && updateShouldBeExported(id, collection, mainEntityType, profile, from, until, created, deleted, connection))
         {
             exportDocument(m_whelk.loadEmbellished(id), profile,
                     output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
         }
-        else if (collection.equals("auth") && updateShouldBeExported(id, collection, profile, from, until, created, deleted, connection))
+        else if (collection.equals("auth") && updateShouldBeExported(id, collection, mainEntityType, profile, from, until, created, deleted, connection))
         {
             for (String bibId : getAffectedBibIdsForAuth(id, profile))
             {
                 exportDocument(m_whelk.loadEmbellished(bibId), profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
             }
         }
-        else if (collection.equals("hold") && updateShouldBeExported(id, collection, profile, from, until, created, deleted, connection))
+        else if (collection.equals("hold") && updateShouldBeExported(id, collection, mainEntityType, profile, from, until, created, deleted, connection))
         {
             List<Document> versions = m_whelk.getStorage().loadAllVersions(id);
 
@@ -198,25 +204,43 @@ public class ProfileExport
     /**
      * Should an update of 'id' affect the collection of bibs being exported? 'id' may be any collection!
      */
-    private boolean updateShouldBeExported(String id, String collection, ExportProfile profile, Timestamp from,
+    private boolean updateShouldBeExported(String id, String collection, String mainEntityType, ExportProfile profile, Timestamp from,
                                            Timestamp until, boolean created, Boolean deleted, Connection connection)
             throws SQLException
     {
         String profileName = profile.getProperty("name", "unknown");
 
-        if (profile.getProperty(collection+"create", "ON").equalsIgnoreCase("OFF") && created) {
+        /*
+        From a MARC perspective stuff that's now placed in the "work" section used to be a part of
+        the MARC "bib" dataset.
+
+        In order for the authupdate/bibupdate (on/off) etc settings to match what MARC-people expect,
+        changes in work-records need to be evaluated using the bib settings, even though work-records
+        within XL are really classified as "auth".
+
+        In other words, a change in a work, should result in an export, _even though_ authupdate=off.
+
+        hence:
+         */
+        String usingCollectionRules = collection;
+        if (collection.equals("auth") && workDerivativeTypes.contains(mainEntityType))
+        {
+            usingCollectionRules = "bib";
+        }
+
+        if (profile.getProperty(usingCollectionRules+"create", "ON").equalsIgnoreCase("OFF") && created) {
             logger.debug("Not exporting created {} ({}) for {}", id, collection, profileName);
             return false; // Created records not requested
         }
-        if (profile.getProperty(collection+"update", "ON").equalsIgnoreCase("OFF") && !created) {
+        if (profile.getProperty(usingCollectionRules+"update", "ON").equalsIgnoreCase("OFF") && !created) {
             logger.debug("Not exporting updated {} ({}) for {}", id, collection, profileName);
             return false; // Updated records not requested
         }
-        if (profile.getProperty(collection+"delete", "ON").equalsIgnoreCase("OFF") && deleted) {
+        if (profile.getProperty(usingCollectionRules+"delete", "ON").equalsIgnoreCase("OFF") && deleted) {
             logger.debug("Not exporting deleted {} ({}) for {}", id, collection, profileName);
             return false; // Deleted records not requested
         }
-        Set<String> operators = profile.getSet(collection+"operators");
+        Set<String> operators = profile.getSet(usingCollectionRules+"operators");
         if ( !operators.isEmpty() )
         {
             Set<String> operatorsInInterval = getAllChangedBy(id, from, until, connection);
@@ -225,7 +249,7 @@ public class ProfileExport
                 operatorsInInterval.retainAll(operators);
                 // The intersection between chosen-operators and operators that changed the record is []
                 if (operatorsInInterval.isEmpty()) {
-                    logger.debug("Not exporting {} ({}) for {} because of operator settings", id, collection,
+                    logger.debug("Not exporting {} ({}) for {} because of operator settings", id, usingCollectionRules,
                             profileName);
                     return false; // Updates from this operator/changedBy not requested
                 }
@@ -352,7 +376,7 @@ public class ProfileExport
     private PreparedStatement getAllChangedIDsStatement(Timestamp from, Timestamp until, Connection connection)
             throws SQLException
     {
-        String sql = "SELECT id, collection, created, deleted FROM lddb__versions WHERE modified >= ? AND modified <= ?";
+        String sql = "SELECT id, collection, created, deleted, data#>>'{@graph,1,@type}' AS mainEntityType FROM lddb__versions WHERE modified >= ? AND modified <= ?";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setTimestamp(1, from);
         preparedStatement.setTimestamp(2, until);
