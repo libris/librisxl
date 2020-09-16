@@ -59,7 +59,7 @@ class DependencyCache {
     }
 
     void invalidate(Document createdDoc) {
-        createdDoc.getThingIdentifiers().each {fromIri ->
+        createdDoc.getThingIdentifiers().each { fromIri ->
             createdDoc.getExternalRefs().each { link ->
                 invalidate(fromIri, link)
             }
