@@ -618,6 +618,8 @@ class PostgreSQLComponent {
                 doc.setModified((Date) status['modified'])
             }
 
+            dependencyCache.invalidate(doc)
+
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
             return true
         } catch (PSQLException psqle) {
@@ -729,9 +731,10 @@ class PostgreSQLComponent {
         try
         {
             connection.setAutoCommit(false)
-
-            Document result = storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum, connection)
+            List<Runnable> postCommitActions = []
+            Document result = storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum, connection, postCommitActions)
             connection.commit()
+            postCommitActions.each { it.run() }
             return result
         }
         finally {
@@ -761,7 +764,8 @@ class PostgreSQLComponent {
         }
     }
 
-    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum, Connection connection) {
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy,
+                                       String oldChecksum, Connection connection, List<Runnable> postCommitActions) {
         String id = doc.shortId
         log.debug("Saving (atomic update) ${id}")
 
@@ -823,13 +827,13 @@ class PostgreSQLComponent {
                 SortedSet<String> idsLinkingToOldId = getDependencyData(id, GET_DEPENDERS, connection)
                 for (String dependerId : idsLinkingToOldId) {
                     Document depender = load(dependerId, connection)
-                    storeAtomicUpdate(depender, true, changedIn, changedBy, depender.getChecksum(), connection)
+                    storeAtomicUpdate(depender, true, changedIn, changedBy, depender.getChecksum(), connection, postCommitActions)
                 }
             }
 
             refreshDerivativeTables(doc, connection, deleted)
 
-            dependencyCache.invalidate(preUpdateDoc, doc)
+            postCommitActions << { dependencyCache.invalidate(preUpdateDoc, doc) }
 
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {

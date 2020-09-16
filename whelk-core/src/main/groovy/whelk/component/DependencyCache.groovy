@@ -58,6 +58,14 @@ class DependencyCache {
         return dependersCache.getUnchecked(new Link(iri: iri, relation: typeOfRelation))
     }
 
+    void invalidate(Document createdDoc) {
+        createdDoc.getThingIdentifiers().each { fromIri ->
+            createdDoc.getExternalRefs().each { link ->
+                invalidate(fromIri, link)
+            }
+        }
+    }
+
     void invalidate(Document preUpdateDoc, Document postUpdateDoc) {
         Set thingIris = new HashSet<>()
         thingIris.addAll(preUpdateDoc.getThingIdentifiers())
