@@ -63,13 +63,10 @@ selectBySqlWhere(where) { data ->
         instance.instanceOf["genreForm"].add(["@id":"https://id.kb.se/term/saogf/Handskrifter"])
     }
 
-    if (instance["@type"] == "TextInstance" || instance["@type"] == "Instance") {
-        if (instance["marc:mediaTerm"].contains("handskrift")) {
-            instance["@type"] = "Manuscript"
-        }
-    }
-    else if (suitableForElectronic(instance)) {
+    if (suitableForElectronic(instance)) {
         instance["@type"] = "Electronic"
+    } else {
+        instance["@type"] = "Manuscript"
     }
 
     instance.instanceOf["@type"] = "Text"
