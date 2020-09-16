@@ -618,6 +618,8 @@ class PostgreSQLComponent {
                 doc.setModified((Date) status['modified'])
             }
 
+            dependencyCache.invalidate(doc)
+
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
             return true
         } catch (PSQLException psqle) {
