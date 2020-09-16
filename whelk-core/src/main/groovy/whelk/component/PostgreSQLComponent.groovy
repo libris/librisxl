@@ -734,7 +734,7 @@ class PostgreSQLComponent {
             List<Runnable> postCommitActions = []
             Document result = storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum, connection, postCommitActions)
             connection.commit()
-            postCommitActions.each {it.run() }
+            postCommitActions.each { it.run() }
             return result
         }
         finally {
