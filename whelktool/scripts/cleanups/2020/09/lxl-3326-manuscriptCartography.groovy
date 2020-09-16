@@ -68,21 +68,23 @@ boolean suitableForElectronic(instance) {
         return true
     }
 
-    instance.carrierType.each { ct ->
-        switch (ct["@id"]) {
-        case "https://id.kb.se/marc/DirectElectronic":
-        case "https://id.kb.se/marc/Electronic":
-        case "https://id.kb.se/marc/Online":
-        case "https://id.kb.se/marc/OnlineResource":
-        case "https://id.kb.se/marc/OpticalDisc":
-        case "https://id.kb.se/term/rda/ComputerDisc":
-        case "https://id.kb.se/term/rda/OnlineResource":
-        case "https://id.kb.se/term/rda/MicrofilmReel":
-        case "https://id.kb.se/term/rda/Microfiche":
-        case "https://id.kb.se/marc/Microfiche":
-        case "https://id.kb.se/marc/Microfilm":
-        case "https://id.kb.se/marc/Microopaque":
-                return true
+    if (instance.carrierType) {
+        for (Map ct : instance.carrierType) {
+            switch (ct["@id"]) {
+                case "https://id.kb.se/marc/DirectElectronic":
+                case "https://id.kb.se/marc/Electronic":
+                case "https://id.kb.se/marc/Online":
+                case "https://id.kb.se/marc/OnlineResource":
+                case "https://id.kb.se/marc/OpticalDisc":
+                case "https://id.kb.se/term/rda/ComputerDisc":
+                case "https://id.kb.se/term/rda/OnlineResource":
+                case "https://id.kb.se/term/rda/MicrofilmReel":
+                case "https://id.kb.se/term/rda/Microfiche":
+                case "https://id.kb.se/marc/Microfiche":
+                case "https://id.kb.se/marc/Microfilm":
+                case "https://id.kb.se/marc/Microopaque":
+                    return true
+            }
         }
     }
 
