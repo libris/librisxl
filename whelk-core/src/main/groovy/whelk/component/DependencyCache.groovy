@@ -58,12 +58,32 @@ class DependencyCache {
         return dependersCache.getUnchecked(new Link(iri: iri, relation: typeOfRelation))
     }
 
-    void invalidate(Document doc) {
-        String docIri = doc.getThingIdentifiers().first()
-        doc.getExternalRefs().each { Link link ->
-            dependersCache.invalidate(link)
-            dependenciesCache.invalidate(new Link(iri: docIri, relation: link.relation))
+    void invalidate(Document createdDoc) {
+        createdDoc.getThingIdentifiers().each { fromIri ->
+            createdDoc.getExternalRefs().each { link ->
+                invalidate(fromIri, link)
+            }
         }
+    }
+
+    void invalidate(Document preUpdateDoc, Document postUpdateDoc) {
+        Set thingIris = new HashSet<>()
+        thingIris.addAll(preUpdateDoc.getThingIdentifiers())
+        thingIris.addAll(postUpdateDoc.getThingIdentifiers())
+
+        Set<Link> added = (postUpdateDoc.getExternalRefs() - preUpdateDoc.getExternalRefs())
+        Set<Link> removed = (preUpdateDoc.getExternalRefs() - postUpdateDoc.getExternalRefs())
+
+        (added + removed).each { Link link ->
+            thingIris.each { fromIri ->
+                invalidate(fromIri, link)
+            }
+        }
+    }
+
+    void invalidate(String fromIri, Link link) {
+        dependersCache.invalidate(link)
+        dependenciesCache.invalidate(new Link(iri: fromIri, relation: link.relation))
     }
 
     private CacheLoader<Link, Set<String>> loader(BiFunction<String, String, Set> func) {

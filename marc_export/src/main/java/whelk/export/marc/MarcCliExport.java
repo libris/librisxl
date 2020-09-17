@@ -10,7 +10,6 @@ import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.component.PostgreSQLComponent;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.util.MarcExport;
 import whelk.util.ThreadPool;

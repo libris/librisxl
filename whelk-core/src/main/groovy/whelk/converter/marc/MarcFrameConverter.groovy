@@ -416,6 +416,7 @@ class MarcConversion {
         def marcRuleSet = getRuleSetFromJsonLd(data)
 
         if (doPostProcessing) {
+            applyInverses(data, data[marcRuleSet.thingLink])
             sharedPostProcSteps.each {
                 it.unmodify(data, data[marcRuleSet.thingLink])
             }
@@ -469,6 +470,9 @@ class MarcConversion {
         return marc
     }
 
+    void applyInverses(Map record, Map thing) {
+        converter.ld?.applyInverses(thing)
+    }
 }
 
 class MarcRuleSet {

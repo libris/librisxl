@@ -82,7 +82,8 @@ class CrudSpec extends Specification {
                 'some_term': 'some_value']]
         whelk.displayData = ['lensGroups': [
                 'chips': [lenses: ['Instance' : ['showProperties': ['prop1', 'prop2']]]],
-                'cards': [lenses: ['Instance' : ['showProperties': ['prop1', 'prop2', 'prop3']]]]
+                'cards': [lenses: ['Instance' : ['showProperties': ['prop1', 'prop2', 'prop3']]]],
+                'full': [lenses: [:]]
         ]]
         whelk.vocabData = ['@graph': []]
         whelk.setJsonld(new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData))

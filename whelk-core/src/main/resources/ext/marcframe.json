@@ -2928,9 +2928,9 @@
         },
         "[15]": null,
         "[16]": {
-          "link": "marc:transposition",
-          "uriTemplate": "https://id.kb.se/marc/MusicTranspositionType-{_}",
-          "matchUriToken": "^[abc]$"
+          "NOTE:LC": "Transposition and arrangement - # - nac",
+          "ignore": true,
+          "fixedDefault": "|"
         },
         "[17]": null
       },
@@ -5352,6 +5352,7 @@
         "link": "source",
         "resourceType": "Source",
         "property": "code",
+        "NOTE:LC": "convert code to URI from http://id.loc.gov/vocabulary/nationalbibschemes ; if necessary convert to lower-case letters",
         "TODO": {
           "uriTemplate": "...{code}",
           "restrictedTo": "http://www.loc.gov/standards/sourcelist/national-bibliography.html"
@@ -5453,6 +5454,7 @@
       "resourceType": "CopyrightNumber",
       "i2": null,
       "$a": {"property": "value"},
+      "TODO": "$b is assigner / Agent in BF Conversion 1.6",
       "$b": {"link": "source", "resourceType": "Source", "property": "label", "required": true},
       "$d": {"property": "date"},
       "$i": {"addProperty": "comment"},
@@ -5842,6 +5844,7 @@
       "$a": {"property": "value"},
       "$l": {"property": "marc:issnL"},
       "$m": {"addProperty": "marc:canceledIssnL"},
+      "TODO": "$2 - assigner - Agent - bf:code in BF conversion 1.6",
       "$2": {"link": "source", "resourceType": "marc:NationalIssnCentre", "property": "code"},
       "$y": {"addProperty": "marc:incorrectIssn"},
       "TODO:$y?": {"TODO": "inherit:$z + specific: marc:incorrectIssn"},
@@ -5901,6 +5904,7 @@
       },
       "i2": null,
       "$c": {"property": "acquisitionTerms"},
+      "TODO": "$d note - Note - rdfs:label in BF2 conversion 1.6",
       "$d": {"property": "comment"},
       "$2": {
         "TODO:requires-i1": "7 (overwritten by 8)",
@@ -6146,6 +6150,7 @@
         "marcDefault": "1"
       },
       "$a": {"property": "value"},
+      "TODO": "$b assigner - Agent - rdfs:label in BF2 conversion 1.6",
       "$b": {"link": "agent", "resourceType": "Organization", "property": "name"},
       "$q": {"addProperty": "qualifier"},
       "$6": null,
@@ -6261,7 +6266,9 @@
       "include": ["idbase"],
       "resourceType": "PostalRegistration",
       "$a": {"property": "value"},
-      "$b": {"link": "source", "resourceType": "Source", "property": "label"}
+      "TODO": "$b assigner - Agent - rdfs:label in BF2 conversion 1.6",
+      "$b": {"link": "source", "resourceType": "Source", "property": "label"},
+      "$6": null
   },
     "033": {
       "NOTE:record-count": 852,
@@ -6531,7 +6538,7 @@
         }
       ],
       "$a": {"property": "value"},
-      "TODO:a": "extract value from parantheses and source as rdfs:label",
+      "TODO:a": "extract data in parentheses and output as ## - assigner - Agent",
       "$z": {"addProperty": "marc:hiddenValue"},
       "$6": {"property": "marc:bib035-fieldref", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
       "$8": {"addProperty": "marc:bib035-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
@@ -6644,6 +6651,7 @@
     "036": {
     "include": ["identifier"],
     "resourceType": "StudyNumber",
+    "TODO": "$b assigner - Agent - rdfs:label in BF2 conversion 1.6",
     "$b": {"link": "source", "resourceType": "Source", "property": "label"},
     "$6": null
     },
@@ -6652,6 +6660,7 @@
       "resourceType": "AcquisitionSource",
       "i1": {"marcDefault": " "},
       "$a": {"addLink": "identifiedBy", "resourceType": "StockNumber", "property": "value", "NOTE:marc-repeatable": false},
+      "TODO": "$b source - Source - rdfs:label in BF2 conversion 1.6",
       "$b": {"property": "label"},
       "$c": {"property": "acquisitionTerms", "NOTE:marc-repeatable": true},
       "$f": {"addProperty": "marc:formOfIssue"},
@@ -6747,15 +6756,17 @@
         "resourceType": "Work",
         "embedded": true
       },
-      "i1": {
-        "property": "marc:languageNote",
-        "TODO": "Remove explicit data. Should be set to 1 when translationOf is present. See TODO on that and originalVersion. Equate absence and negation unless distinction is provably useful.",
-        "tokenMap": {
-          "0": "marc:ItemNotATranslationDoesNotIncludeATranslation",
-          "1": "marc:ItemIsOrIncludesATranslation"
+      "match": [
+        {
+          "when": {
+            "onRevert": {"translationOf": {}},
+            "then": {"ind1": "1"}
           },
-        "marcDefault": " "
-      },
+          "NOTE": "To avoid repeated revert of bib 041.",
+          "silentRevert": false
+        }
+      ],
+      "i1": {"ignored": true, "marcDefault": " "},
       "i2": {
         "property": "marc:languageCode",
         "marcDefault": " ",
@@ -6829,6 +6840,7 @@
       },
       "$6": {"property": "marc:bib041-fieldref", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 2},
       "$8": {"property": "marc:bib041-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 0},
+      "subfieldOrder": "a k h ...",
       "_spec": [
         {
           "source": [
@@ -6845,10 +6857,14 @@
           }
         },
         {
-          "name": "Example from wd6wf9j75fhfw1c",
+          "name": "Intermediate language with correct subfieldorder. Example from wd6wf9j75fhfw1c",
           "source": [
             {"008" : "|     |        |  |||||||||||000 ||swe| "},
             {"041": { "ind1": "1", "ind2": " ", "subfields": [{"a": "swe"}, {"h": "rus"}, {"k": "ger"}]}}
+          ],
+          "normalized": [
+            {"008" : "|     |        |  |||||||||||000 ||swe| "},
+            {"041": { "ind1": "1", "ind2": " ", "subfields": [{"a": "swe"}, {"k": "ger"}, {"h": "rus"}]}}
           ],
           "result": {
             "mainEntity": {
@@ -6858,7 +6874,6 @@
                   "@id": "https://id.kb.se/language/swe",
                   "code": "swe"
                 }],
-                "marc:languageNote": "marc:ItemIsOrIncludesATranslation",
                 "translationOf": [{
                   "@type": "Work",
                   "language": [{
@@ -6891,7 +6906,6 @@
                   "@id": "https://id.kb.se/language/swe",
                   "code": "swe"
                 }],
-                "marc:languageNote" : "marc:ItemIsOrIncludesATranslation",
                 "translationOf": [{
                   "@type": "Work",
                   "language": [{
@@ -6921,7 +6935,6 @@
                   "@id": "https://id.kb.se/language/swe",
                   "code": "swe"
                 }],
-                "marc:languageNote" : "marc:ItemIsOrIncludesATranslation",
                 "translationOf": [{
                   "@type": "Work",
                   "language": [{
@@ -6931,7 +6944,6 @@
                 }],
                 "hasPart": [{
                   "@type": "Work",
-                  "marc:languageNote" : "marc:ItemIsOrIncludesATranslation",
                   "translationOf": [{
                     "@type": "Work",
                     "language": [{
@@ -7050,6 +7062,7 @@
 
     "044": {
       "NOTE:LC": "044 - COUNTRY OF PUBLISHING/PRODUCING ENTITY CODE (NR) nac",
+      "TODO": "ignore",
       "link": "marc:hasCountryOfPublishingProducingEntityCode",
       "resourceType": "marc:CountryOfPublishingProducingEntityCode",
       "$a": {"addProperty": "marc:marcCountryCode"},
@@ -7161,13 +7174,13 @@
     "049": {"ignored": true, "NOTE": "OCLC - Local Holdings. Field 049 is not part of the standard MARC 21 format."},
 
     "050": {
-      "aboutEntity": "?work",
+      "aboutEntity": "?thing",
       "addLink": "classification",
       "resourceType": "ClassificationLcc",
-      "i1": {"property": "marc:existenceInLCCollection", "marcDefault": " ", "tokenMap": {"0": true, "1": false}},
+      "i1": {"ignored": true, "marcDefault": " "},
       "i2": {"property": "marc:assignedByLC", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "code", "TODO:repeatable": true},
-      "$b": {"property": "itemPortion"},
+      "$b": {"ignored": true},
       "$0": {"property": "marc:recordControlNumber"},
       "$1": null,
       "$3": null,
@@ -7177,16 +7190,32 @@
           "source": {
             "050": {"ind1": " ", "ind2": "4", "subfields": [{"a": "NB933.F44"},{"b": "T6"}]}
           },
+          "normalized": {
+            "050": {"ind1": " ", "ind2": "4", "subfields": [{"a": "NB933.F44"}]}
+          },
           "result": {
             "mainEntity": {
-              "instanceOf": {
-                "@type": "Text",
-                "classification": [{
-                  "@type": "ClassificationLcc",
-                  "code": "NB933.F44",
-                  "itemPortion": "T6"
-                }]
-              }
+              "classification": [{
+                "@type": "ClassificationLcc",
+                "code": "NB933.F44"
+              }]
+            }
+          }
+        },
+        {
+          "source": {
+            "050": {"ind1": "0", "ind2": "0", "subfields": [{"a": "DS751"},{"b": ".C4468 1994"}]}
+          },
+          "normalized": {
+            "050": {"ind1": " ", "ind2": "0", "subfields": [{"a": "DS751"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "classification": [{
+                "@type": "ClassificationLcc",
+                "code": "DS751",
+                "marc:assignedByLC": true
+              }]
             }
           }
         }
@@ -7204,10 +7233,9 @@
       "$c": {"property": "marc:copyInformation"}
     },
     "052": {
-      "NOTE:LC": "Is GeographicCoverage in BF2",
-      "aboutEntity": "?work",
-      "addLink": "marc:hasGeographicClassification",
-      "resourceType": "marc:GeographicClassification",
+      "aboutEntity": "?thing",
+      "addLink": "geographicCoverage",
+      "resourceType": "GeographicCoverage",
       "i1": {
         "property": "marc:i1codeSource",
         "tokenMap": {
@@ -7217,12 +7245,29 @@
           "7": "marc:SourceSpecifiedInSubfield2"
         }
       },
-      "$a": {"property": "marc:geographicClassificationAreaCode"},
+      "$a": {"property": "label"},
       "$b": {"addProperty": "marc:geographicClassificationSubareaCode"},
       "$d": {"addProperty": "marc:populatedPlaceName"},
       "$0": {"property": "marc:recordControlNumber"},
       "$1": {"property": "marc:rwoURI"},
-      "$2": {"property": "marc:codeSource"}
+      "$2": {"property": "marc:codeSource"},
+      "_spec": [
+        {
+          "source": {
+            "052": {"ind1": " ", "ind2": " ", "subfields": [{"a": "6714"},{"b": "R7"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "geographicCoverage": [{
+                "@type": "GeographicCoverage",
+                "label": "6714",
+                "marc:geographicClassificationSubareaCode": ["R7"],
+                "marc:i1codeSource": "marc:LibraryOfCongressClassification"
+              }]
+            }
+          }
+        }
+      ]
     },
     "055": {
       "NOTE:LC": "Is ClassificationLcc in BF2",
@@ -7248,7 +7293,7 @@
         "marcDefault": " "
       },
       "$a": {"property": "classificationPortion"},
-      "$b": {"property": "itemPortion"},
+      "$b": {"ignored": true},
       "$1": {"ignored": true, "NOTE:LC": "nac"},
       "$2": {"ignored": true, "NOTE:LC": "nac"},
       "$6": {"ignored": true, "NOTE:LC": "ignore"},
@@ -7258,21 +7303,18 @@
             "055": {"ind1": "1", "ind2": "4", "subfields": [{"a": "K347.9444"},{"b": "C5164"}]}
           },
           "normalized": {
-            "055": {"ind1": " ", "ind2": " ", "subfields": [{"a": "K347.9444"},{"b": "C5164"}]}
+            "055": {"ind1": " ", "ind2": " ", "subfields": [{"a": "K347.9444"}]}
           },
           "result": {
             "mainEntity": {
               "classification": [{
                   "@type": "marc:ClassificationNumbersAssignedInCanada",
-                  "classificationPortion": "K347.9444",
-                  "itemPortion": "C5164"
+                  "classificationPortion": "K347.9444"
                 }
               ]
             }
           }
-        }
-      ],
-      "_spec": [
+        },
         {
           "source": {
             "055": {"ind1": "0", "ind2": "1", "subfields": [{"a": "HB31"}]}
@@ -7283,10 +7325,10 @@
           "result": {
             "mainEntity": {
               "classification": [{
-                  "@type": "marc:ClassificationNumbersAssignedInCanada",
-                  "classificationPortion": "HB31",
-                  "marc:typeCompletenessSourceOfClassCallNumber": "marc:CompleteLcClassNumberAssignedByLac"
-                }
+                "@type": "marc:ClassificationNumbersAssignedInCanada",
+                "classificationPortion": "HB31",
+                "marc:typeCompletenessSourceOfClassCallNumber": "marc:CompleteLcClassNumberAssignedByLac"
+              }
               ]
             }
           }
@@ -7294,30 +7336,26 @@
       ]
     },
     "060": {
-      "aboutEntity": "?work",
+      "aboutEntity": "?thing",
       "addLink": "classification",
       "resourceType": "ClassificationNlm",
       "i1": {"property": "marc:existenceInNlmCollection", "marcDefault": " ", "tokenMap": {"0": true, "1": false}},
       "i2": {"property": "marc:assignedByNlm", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "code"},
-      "$b": {"property": "itemPortion"},
+      "$b": {"ignored": true},
       "$0": {"property": "marc:recordControlNumber"},
       "$1": null,
       "_spec": [
         {
           "source": {
-            "060": {"ind1": " ", "ind2": "4", "subfields": [{"a": "W1"},{"b": "JO706M"}]}
+            "060": {"ind1": " ", "ind2": "4", "subfields": [{"a": "W1"}]}
           },
           "result": {
             "mainEntity": {
-              "instanceOf": {
-                "@type": "Text",
-                "classification": [{
-                  "@type": "ClassificationNlm",
-                  "code": "W1",
-                  "itemPortion": "JO706M"
-                }]
-              }
+              "classification": [{
+                "@type": "ClassificationNlm",
+                "code": "W1"
+              }]
             }
           }
         }
@@ -7340,14 +7378,34 @@
       "$c": {"addProperty": "marc:alternateG0OrG1CharacterSet"}   
     },
     "070": {
-      "aboutEntity": "?work",
-      "link": "classification",
+      "aboutEntity": "?thing",
+      "addLink": "classification",
       "resourceType": "marc:NationalAgriculturalLibraryCallNumber",
-      "i1": {"marcDefault": " "},
+      "i1": null,
       "$a": {"addProperty": "classificationPortion"},
-      "$b": {"property": "itemPortion"},
+      "$b": {"ignored": true},
       "$0": {"property": "marc:recordControlNumber"},
-      "$1": {"property": "marc:rwoURI"}
+      "$1": {"ignore": true, "NOTE:LC": "nac"},
+      "_spec": [
+        {
+          "source": {
+            "070": {"ind1": "0", "ind2": " ", "subfields": [{"a": "QH301.A5"},{"b": "1981"}]}
+          },
+          "normalized": {
+            "070": {"ind1": " ", "ind2": " ", "subfields": [{"a": "QH301.A5"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "classification": [
+                {
+                  "@type": "marc:NationalAgriculturalLibraryCallNumber",
+                  "classificationPortion": ["QH301.A5"]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "071": {
       "NOTE:LC": "071 - NATIONAL AGRICULTURAL LIBRARY COPY STATEMENT (R) nac",
@@ -7480,7 +7538,7 @@
         "marcDefault": " "
       },
       "$a": {"property": "code"},
-      "$b": {"property": "marc:itemNumber"},
+      "$b": {"ignored": true},
       "$x": {"addProperty": "marc:commonAuxiliarySubdivision"},
       "$2": {"property": "marc:editionIdentifier"},
       "_spec": [
@@ -7547,7 +7605,7 @@
           "0": "dlc"
         }
       },
-      "$b": {"property": "itemPortion"},
+      "$b": {"ignored": true},
       "$m": {"ignored": true, "NOTE:LC": "Standard or optional designation (NR) - nac"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
@@ -7638,7 +7696,6 @@
           "normalized": {
             "082": {"ind1": " ", "ind2": "4", "subfields": [
               {"a": "808"},
-              {"b": ".066"},
               {"2": "21"}
             ]}},
           "result": {"mainEntity": {
@@ -7649,8 +7706,7 @@
                   "@type": "ClassificationDdc",
                   "code": "808",
                   "edition": "other",
-                  "editionEnumeration": "21",
-                  "itemPortion": ".066"
+                  "editionEnumeration": "21"
                 }
               ]
             }
@@ -7720,8 +7776,7 @@
               {"2": "23"}
             ]}},{
             "082": {"ind1": " ", "ind2": "4", "subfields": [
-              {"a": "E184.S23"},
-              {"b": "A685"}
+              {"a": "E184.S23"}
             ]}}],
           "TODO:result": {"mainEntity": {
             "instanceOf": {
@@ -7743,8 +7798,7 @@
             "classification": [
               {
                 "@type": "ClassificationDdc",
-                "code": "E184.S23",
-                "itemPortion": "A685"
+                "code": "E184.S23"
               }
             ]
           }}
@@ -7756,6 +7810,7 @@
       "TODO": "Should we deprecate this altogether? BF2=nac",
       "addLink": "additionalClassificationDdc",
       "include": ["classification-ddc"],
+      "$b": {"ignored": true},
       "$c": {"ignored": true, "NOTE:record-count": 1, "NOTE:local": "Används normalt ej"},
       "$m": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "Används normalt ej"},
       "$q": {"link": "source", "resourceType": "Source", "property": "label"},
@@ -7822,6 +7877,21 @@
       "$a": {"property": "code", "required": true},
       "match": [
         {
+          "NOTE": "For now, always map to instance when $a contains '/', no matter how the media extension code is",
+          "when": "$a =~ ^.*/.*$ & $2 =~ ^kssb/.+$",
+          "aboutEntity": "?thing",
+          "$2": {
+            "link": "inScheme",
+            "resourceType": "ConceptScheme",
+            "property": "code",
+            "uriTemplate": "https://id.kb.se/term/{_}/",
+            "uriTemplateDefaults": {"inScheme.code": "kssb"},
+            "splitValuePattern": "(\\w+)(?:/(5|6|7|8))?",
+            "splitValueProperties": ["code", "version"],
+            "rejoin": "/"
+          }
+        },
+        {
           "when": "$2 =~ ^kssb/.+$",
           "$2": {
             "link": "inScheme",
@@ -7841,7 +7911,7 @@
         "property": "code"
       },
       "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/classification.html",
-      "$b": {"property": "itemPortion"},
+      "$b": {"ignored": true},
       "$q": {"link": "source", "resourceType": "Source", "property": "label"},
       "$6": {"property": "marc:fieldref"},
       "$8": {"property": "marc:groupid"},
@@ -7868,6 +7938,50 @@
                 }
               ]
             }
+          }}
+        },
+        {
+          "name": "kssb classification with media extension should convert to Instance",
+          "source": {
+            "084": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Koafh-a.54/VK"},
+              {"2": "kssb/7"}
+            ]}},
+          "result": {"mainEntity": {
+            "classification": [
+              {
+                "@type": "Classification",
+                "code": "Koafh-a.54/VK",
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/kssb%2F7/",
+                  "@type": "ConceptScheme",
+                  "code": "kssb",
+                  "version": "7"
+                }
+              }
+            ]
+          }}
+        },
+        {
+          "name": "kssb classification with media extension should convert to Instance",
+          "source": {
+            "084": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Fvea(x)/O,u"},
+              {"2": "kssb/8"}
+            ]}},
+          "result": {"mainEntity": {
+            "classification": [
+              {
+                "@type": "Classification",
+                "code": "Fvea(x)/O,u",
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/kssb%2F8/",
+                  "@type": "ConceptScheme",
+                  "code": "kssb",
+                  "version": "8"
+                }
+              }
+            ]
           }}
         }
       ]
@@ -8709,20 +8823,6 @@
         {
           "when": {
             "NOTE": "Sign of translation: use language label",
-            "TODO": "remove when translationOf is the sole marker of translation",
-            "onRevert": {"marc:languageNote": "marc:ItemIsOrIncludesATranslation"}
-          }
-        },
-        {
-          "when": {
-            "NOTE": "Sign of translation: use language label",
-            "TODO": "remove when translationOf is the sole marker of translation",
-            "onRevert": {"originalVersion": {}}
-          }
-        },
-        {
-          "when": {
-            "NOTE": "Sign of translation: use language label",
             "onRevert": {"translationOf": {}}
           }
         },
@@ -8802,13 +8902,12 @@
                 "@type": "Title",
                 "mainTitle": "Moyen âge"
               } ],
-              "language": {"@type": "Language", "label": "Engelska."},
-              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
+              "language": {"@type": "Language", "label": "Engelska."}
             }
           }}
         },
         {
-          "name": "Verify revert using infer for label from prefLabelByLang[locale]",
+          "name": "Verify revert using infer for label from prefLabelByLang[locale] - only produce $l if translationOf",
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8821,11 +8920,18 @@
                 "@id": "https://id.kb.se/language/swe",
                 "prefLabelByLang": {"sv": "Svenska"}
               },
-              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
+              "translationOf": [{
+                "@type": "Work",
+                "language": [{
+                  "@id": "https://id.kb.se/language/rus",
+                  "code": "rus"
+                }]
+              }]
             }
           }},
           "normalized": [
             {"008": "|     |        |  |||||||||||000 ||swe| "},
+            {"041": {"ind1": "1", "ind2": " ", "subfields": [{"h": "rus"}]}},
             {"240": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "En titel"},
               {"l": "Svenska"}
@@ -8833,7 +8939,7 @@
           ]
         },
         {
-          "name": "Verify revert using only one language since $l isn't repeatable.",
+          "name": "Verify revert using only one language since $l isn't repeatable - only produce $l if translationOf",
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8853,11 +8959,18 @@
                   "prefLabelByLang": {"sv": "Engelska"}
                 }
               ],
-              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
+              "translationOf": [{
+                "@type": "Work",
+                "language": [{
+                  "@id": "https://id.kb.se/language/rus",
+                  "code": "rus"
+                }]
+              }]
             }
           }},
           "normalized": [
             {"008": "|     |        |  |||||||||||000 ||swe| "},
+            {"041": {"ind1": "1", "ind2": " ", "subfields": [{"h": "rus"}]}},
             {"240": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "Swenglish text"},
               {"l": "Svenska"}
@@ -12720,7 +12833,8 @@
     },
 
     "520": {
-      "aboutEntity": "?work",
+      "aboutEntity": "?thing",
+      "fallbackEntity": "?work",
       "addLink": "summary",
       "resourceType": "Summary",
       "i1": {
@@ -12750,8 +12864,7 @@
             {"u": "http://example.org/thing-page"}, {"u": "http://example.org/another-thing-page"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
+              "@type": "Instance",
               "summary": [
                 {
                   "@type": "Summary",
@@ -12763,11 +12876,25 @@
                 }
               ]
             }
-          }}
+          }
         },
         {
           "source": {"520": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Dom är tillbaka och den här gången är det full fart från början till slut."}
+          ]}},
+          "result": {"mainEntity": {
+              "@type": "Instance",
+              "summary": [
+                {
+                  "@type": "Summary",
+                  "label": "Dom är tillbaka och den här gången är det full fart från början till slut."
+                }
+              ]
+          }}
+        },
+        {
+          "normalized": {"520": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "An illustrated collection of nursery rhymes set to music."}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -12775,7 +12902,30 @@
               "summary": [
                 {
                   "@type": "Summary",
-                  "label": "Dom är tillbaka och den här gången är det full fart från början till slut."
+                  "label": ["An illustrated collection of nursery rhymes set to music."]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "normalized": [
+            {"520": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Sammanfattning Instans"}]}},
+            {"520": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Sammanfattning Verk"}]}}
+          ],
+          "result": {"mainEntity": {
+            "summary": [
+              {
+                "@type": "Summary",
+                "label": "Sammanfattning Instans"
+              }
+            ],
+            "instanceOf": {
+              "@type": "Text",
+              "summary": [
+                {
+                  "@type": "Summary",
+                  "label": "Sammanfattning Verk"
                 }
               ]
             }
@@ -12783,7 +12933,6 @@
         }
       ]
     },
-
     "521": {
       "aboutEntity": "?thing",
       "embedded": true,
@@ -15614,6 +15763,7 @@
     "655" : {
       "include": ["subjectbase"],
       "aboutEntity": "?work",
+      "fallbackEntity": "?thing",
       "addLink": "genreForm",
       "resourceType": "GenreForm",
       "pendingResources": {
@@ -15630,6 +15780,7 @@
       "subfieldOrder": "8 6 a x z y v 0 2 1",
       "_spec": [
         {
+          "name": "GenreForm with inScheme saogf",
           "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [
             {"a": "Deckare"},
             {"2": "saogf"},
@@ -15662,6 +15813,21 @@
           }}
         },
         {
+          "name": "Revert GenreForm from Instance",
+          "normalized": {"655": {"ind1": " ", "ind2": "4", "subfields": [
+            {"a": "E-böcker"}
+          ]}},
+          "result": {"mainEntity": {
+            "genreForm": [
+              {
+                "@type": "GenreForm",
+                "prefLabel": "E-böcker"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "GenreForm with inScheme barngf",
           "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Deckare"}, {"2": "barngf"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -15682,6 +15848,7 @@
           }}
         },
         {
+          "name": "GenreForm with inScheme gmgpc/swe",
           "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Postkartor"}, {"2": "gmgpc//swe"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -20335,14 +20502,39 @@
 
     "976": {
       "Note:local": "Librisdefinierat fält. Fältet är avsett för maskinell uppdatering och förekommer normalt endast i äldre poster konverterade från ett ursprungligt LIBRISIII-format, respektive i de MTM-poster som maskinellt har lästs in från Bibliotekstjänst.",
-      "aboutEntity": "?work",
+      "aboutEntity": "?thing",
       "addLink": "marc:hasBib976",
       "resourceType": "marc:Bib976",
+      "i1": {"marcDefault": " "},
       "i2": {"property": "marc:bib976-i2", "marcDefault": " "},
       "$a": {"property": "marc:bib976-a"},
-      "$b": {"property": "marc:bib976-b"}
+      "$b": {"property": "marc:bib976-b"},
+      "_spec": [
+        {
+          "source": {
+            "976": {
+              "subfields": [
+                {"a": "a"},
+                {"b": "b"}
+              ],
+              "ind1": " ",
+              "ind2": " "
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasBib976": [
+                {
+                  "@type": "marc:Bib976",
+                  "marc:bib976-a": "a",
+                  "marc:bib976-b": "b"
+                }
+              ]
+            }
+          }
+        }
+      ]
     }
-
   },
 
   "auth": {
@@ -20941,6 +21133,14 @@
       ]
     },
     "042": {
+      "match": [{
+          "when": {
+            "NOTE": "Drop uniformWorkTitle",
+            "onRevert": {"inCollection": {"@id": "https://id.kb.se/term/uniformWorkTitle"}}
+          },
+          "$9": {"ignoreOnRevert": true}
+        }
+      ],
       "NOTE:local": "ANVÄNDS NORMALT EJ I AUKTORITETSFORMATET",
       "NOTE:record-count": 34043,
       "$a": {"addLink": "descriptionAuthentication", "resourceType": "DescriptionAuthentication", "property": "code"},
@@ -20949,7 +21149,53 @@
         "resourceType": "TermCollection",
         "uriTemplate": "https://id.kb.se/term/{_}",
         "property": "code"
-      }
+      },
+      "_spec": [{
+        "name": "Do not produce subfield $9 with value 'uniformWorkTitle'",
+        "normalized": {
+          "042": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "xxx"}
+          ]}},
+        "result": {"mainEntity": {
+          "@type" : "Work",
+          "descriptionAuthentication": [
+            {
+              "@type": "DescriptionAuthentication",
+              "code": "xxx"
+            }
+          ],
+          "inCollection": [
+            {
+              "@id": "https://id.kb.se/term/uniformWorkTitle",
+              "@type": "TermCollection",
+              "code": "uniformWorkTitle"
+            }
+          ]
+        }}
+      },{
+        "name": "Produce subfield $9",
+        "normalized": {
+          "042": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "xxx"},
+            {"9": "fack"}
+          ]}},
+        "result": {"mainEntity": {
+          "@type" : "Identity",
+          "descriptionAuthentication": [
+            {
+              "@type": "DescriptionAuthentication",
+              "code": "xxx"
+            }
+          ],
+          "inCollection": [
+            {
+              "@id": "https://id.kb.se/term/zzz",
+              "@type": "TermCollection",
+              "code": "fack"
+            }
+          ]
+        }}
+      }]
     },
     "043": {
       "aboutEntity": "?thing",
@@ -25195,15 +25441,67 @@
       "inherit": "bib",
       "aboutEntity": "?thing",
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "$b": {"property": "itemPortion"},
       "$m": null,
-      "$q": null
+      "$q": null,
+      "_spec": [
+        {
+          "name": "In contrast to bib, continue to map $b to itemPortion ",
+          "source": {
+            "082": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "808"}, {"b": ".066"}, {"2": "21"}
+            ]}},
+          "normalized": {
+            "082": {"ind1": " ", "ind2": "4", "subfields": [
+              {"a": "808"}, {"b": ".066"}, {"2": "21"}
+            ]}},
+          "result": {"mainEntity": {
+            "@type": "Item",
+            "classification": [
+              {
+                "@type": "ClassificationDdc",
+                "code": "808",
+                "edition": "other",
+                "editionEnumeration": "21",
+                "itemPortion" : ".066"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "084": {
       "inherit": "bib",
       "aboutEntity": "?thing",
-      "NOTE:local": "LIBRIS-definierat beståndsfält."
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "$b": {"property": "itemPortion"},
+      "TODO:_spec": [
+        {
+          "TODO": "Add ignoreOnRevert. As it is now, it collides with 082. See bug issue LXL-3287",
+          "name": "In contrast to bib, continue to map $b to itemPortion.",
+          "source": {
+            "084": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Ncba/VP"}, {"b": "Nc"}, {"2": "kssb/8"}
+            ]}},
+          "result": {"mainEntity": {
+            "@type": "Item",
+            "classification": [
+              {
+                "@type": "Classification",
+                "code": "Ncba/VP",
+                "itemPortion": "Nc",
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/kssb%2F8/",
+                  "@type": "ConceptScheme",
+                  "code": "kssb",
+                  "version": "8"
+                }
+              }
+            ]
+          }}
+        }
+      ]
     },
-
     "337": {"ignored": true, "NOTE:record-count": 0, "NOTE:": "Media only on work or instance"},
     "338": {"ignored": true, "NOTE:record-count": 0, "NOTE:": "Carrier only on instance"},
     "347": {"ignored": true, "NOTE:record-count": 0},

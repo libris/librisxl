@@ -4,7 +4,17 @@ PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 selectBySqlWhere(" collection = 'hold' and data#>>'{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/FROMSIGEL'", silent: false, { hold ->
     scheduledForUpdate.println("${hold.doc.getURI()}")
     def heldBy = hold.graph[1].heldBy
+
     heldBy["@id"] = 'https://libris.kb.se/library/TOSIGEL'
+
+    if (hold.graph[1].hasComponent) {
+        hold.graph[1].hasComponent.each { component ->
+            if (component.heldBy) {
+                component.heldBy["@id"] = 'https://libris.kb.se/library/TOSIGEL'
+            }
+        }
+    }
+
     hold.scheduleSave(loud: true, onError: { e ->
         failedHoldIDs.println("Failed to update ${hold.doc.shortId} due to: $e")
     })

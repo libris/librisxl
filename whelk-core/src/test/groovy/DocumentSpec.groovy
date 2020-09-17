@@ -223,11 +223,13 @@ class DocumentSpec extends Specification {
                                    ["@graph": ["@id": "/externalBar",
                                                "@type": "Work",
                                                "hasTitle": "aTitle",
-                                               "language": "danska"]],
+                                               "language": "danska",
+                                               "someThirdValue": 3]],
                                    ["@graph": ["@id": "/externalBaz",
                                                "@type": "ProvisionActivity",
                                                "date": "aDate",
-                                               "place": "aPlace"]]]]
+                                               "place": "aPlace",
+                                               "someFourthValue": 4]]]]
 
         when:
 

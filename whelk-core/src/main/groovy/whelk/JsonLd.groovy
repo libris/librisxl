@@ -168,21 +168,19 @@ class JsonLd {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     private void expandAliasesInLensProperties() {
-        displayData['lensGroups']?.values().each { group ->
-            group.get('lenses')?.values().each { lens ->
-                lens['showProperties'] = lens['showProperties'].collect {
-                    def alias = langContainerAlias[it]
-                    return alias ? [it, alias] : it
-                }.flatten()
-            }
+        eachLens { lens ->
+            lens['showProperties'] = lens['showProperties'].collect {
+                def alias = langContainerAlias[it]
+                return alias ? [it, alias] : it
+            }.flatten()
         }
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
     expandInheritedLensProperties() {
         def lensesById = [:]
-        displayData['lensGroups']?.values()?.each { group ->
-            group.get('lenses')?.values()?.each { lens ->
+        eachLens { lens ->
+            if (lens['@id']) {
                 lensesById[lens['@id']] = lens
             }
         }
@@ -211,7 +209,7 @@ class JsonLd {
             }
         }
 
-        lensesById.values().each { Map lens ->
+        eachLens { lens ->
             lens.put('showProperties', flattenedProps(lens))
             lens.remove('fresnel:extends')
         }
@@ -219,11 +217,18 @@ class JsonLd {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     expandInverseLensProperties() {
+        eachLens { lens ->
+            lens['inverseProperties'] = ((Iterable) lens['showProperties']).findResults {
+                return (it instanceof Map ) && it['inverseOf'] ? it['inverseOf'] : null
+            }
+        }
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    private void eachLens(Closure c) {
         displayData['lensGroups']?.values().each { group ->
             group.get('lenses')?.values().each { lens ->
-                lens['inverseProperties'] = ((Iterable) lens['showProperties']).findResults {
-                    return (it instanceof Map ) && it['inverseOf'] ? it['inverseOf'] : null
-                }
+                c(lens)
             }
         }
     }
@@ -558,6 +563,26 @@ class JsonLd {
         }
         into.putAll(obj)
         return true
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    void applyInverses(Map thing) {
+        thing[REVERSE_KEY]?.each { rel, subjects ->
+            Map relDescription = vocabIndex[rel]
+            // NOTE: resilient in case we add inverseOf as a direct term
+            def inverseOf = relDescription['owl:inverseOf'] ?: relDescription.inverseOf
+            List revIds = asList(inverseOf)?.collect {
+                toTermKey((String) it[ID_KEY])
+            }
+            String rev = revIds.find { it in vocabIndex }
+            if (rev) {
+                asList(thing.get(rev, [])).addAll(subjects)
+            }
+        }
+    }
+
+    static List asList(o) {
+        return (o instanceof List) ? (List) o : o != null ? [o] : []
     }
 
     static List<List<String>> findPaths(Map obj, String key, String value) {
