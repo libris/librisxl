@@ -2,7 +2,11 @@ PrintWriter scheduledForUpdating = getReportWriter("scheduled-updates")
 PrintWriter failedUpdating = getReportWriter("failed-updates")
 PrintWriter needsManualReview = getReportWriter("remaining-records")
 
-String where = "collection='bib' and data#>>'{@graph,1,marc:mediaTerm}' is not null"
+String where = "collection='bib' and (" +
+        "data#>>'{@graph,1,marc:mediaTerm}' like '%/%' or " +
+        "data#>>'{@graph,1,marc:mediaTerm}' like '%=%' or " +
+        "data#>>'{@graph,1,marc:mediaTerm}' like '%;%' " +
+        ")"
 
 selectBySqlWhere(where) { data ->
     boolean changed = false
