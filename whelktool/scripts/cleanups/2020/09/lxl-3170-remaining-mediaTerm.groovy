@@ -1,3 +1,5 @@
+// import whelk.Document; DEBUG
+
 PrintWriter scheduledForUpdating = getReportWriter("scheduled-updates")
 PrintWriter failedUpdating = getReportWriter("failed-updates")
 PrintWriter needsManualReview = getReportWriter("remaining-records")
@@ -12,6 +14,11 @@ selectBySqlWhere(where) { data ->
     boolean changed = false
 
     Map instance = data.graph[1]
+
+    // Debug
+    /*String originalMediaTerm = instance["marc:mediaTerm"]
+    List originalTitle = Document.deepCopy(instance["hasTitle"])*/
+
     String mediaTerm = instance["marc:mediaTerm"]
     mediaTerm = balanceBrackets(mediaTerm)
 
@@ -48,11 +55,19 @@ selectBySqlWhere(where) { data ->
     }
 
     if (changed) {
-        instance["marc:mediaTerm"] = mediaTerm
+        instance["marc:mediaTerm"] = mediaTerm.trim()
         scheduledForUpdating.println("${data.doc.getURI()}")
         data.scheduleSave(onError: { e ->
             failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
         })
+
+        // Debug
+        /*
+        System.out.println("mediaterm: \"" + originalMediaTerm + "\"")
+        System.out.println("  changed to: \""+ instance["marc:mediaTerm"] +"\"")
+        System.out.println("  hasTitle:\n  " + originalTitle)
+        System.out.println("  changed to:\n  " + instance["hasTitle"])
+        */
     } else {
         needsManualReview.println("${data.doc.getURI()}")
     }
@@ -74,12 +89,12 @@ String balanceBrackets(String unbalanced) {
 
         if (level < 0)
             level = 0
-        else if (!Character.isWhitespace(charAtI))
+        else
             result.append(charAtI)
     }
 
     for (int i = 0; i < level; ++i)
         result.append(']')
 
-    return result.toString()
+    return result.toString().trim()
 }
