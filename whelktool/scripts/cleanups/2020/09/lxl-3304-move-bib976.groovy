@@ -114,7 +114,7 @@ Map createClassification(code, version) {
             "inScheme": [
                     "@type": "ConceptScheme",
                     "code": "kssb",
-                    "version": version
+                    "version": "6"
             ]
     ]
 }
