@@ -77,11 +77,14 @@ void handleWithSabCode(bib, work, bib084, bib976) {
 }
 
 void handleWithoutSabCode(bib, work, instance, bib976) {
+    if (bib976.isEmpty()) {
+        return
+    }
     bib976.each {
         copyToInstance(instance, it)
         remove(work, it)
     }
-    print(["bib976-a:" + bib976['marc:bib976-a']],
+    print(["bib976-a:" + bib976['marc:bib976-a'], "bib976-i2:" + bib976['marc:bib976-i2']],
             bib,
             Script.movedToInstance)
     bib.scheduleSave()
@@ -111,7 +114,7 @@ Map createClassification(code, version) {
             "inScheme": [
                     "@type": "ConceptScheme",
                     "code": "kssb",
-                    "version": version
+                    "version": "6"
             ]
     ]
 }
