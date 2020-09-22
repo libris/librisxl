@@ -23,19 +23,20 @@ boolean traverse(Object node, String idForLogging, Whelk whelk, PrintWriter link
     if (node instanceof Map) {
         Map map = node
 
-        // Correct references are all id.kb.se or ends with #it.
         if (map.size() == 1 &&
                 map["@id"] &&
                 map["@id"].startsWith(baseUri.toString()) &&
                 !map["@id"].endsWith("#it") ) {
             String correctLinkTarget = whelk.storage.getThingId(map["@id"])
-            linkChanges.println("In ${idForLogging}, changed a reference ${map["@id"]} , to ${correctLinkTarget}")
-            map["@id"] = correctLinkTarget
-            changed = true
+            if (correctLinkTarget != null) {
+                linkChanges.println("In ${idForLogging}, changed a reference ${map["@id"]} , to ${correctLinkTarget}")
+                map["@id"] = correctLinkTarget
+                changed = true
+            }
         }
 
         for (String key : map.keySet()) {
-            if (key != "generationProcess")
+            if (key != "generationProcess" && key != "heldBy")
                 changed |= traverse(map[key], idForLogging, whelk, linkChanges)
         }
     }
