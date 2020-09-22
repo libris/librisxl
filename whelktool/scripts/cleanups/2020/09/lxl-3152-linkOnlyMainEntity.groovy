@@ -28,7 +28,7 @@ boolean traverse(Object node, String idForLogging, Whelk whelk, PrintWriter link
                 map["@id"].startsWith(baseUri.toString()) &&
                 !map["@id"].endsWith("#it") ) {
             String correctLinkTarget = whelk.storage.getThingId(map["@id"])
-            if (correctLinkTarget != null) {
+            if (correctLinkTarget != null && correctLinkTarget != map["@id"]) {
                 linkChanges.println("In ${idForLogging}, changed a reference ${map["@id"]} , to ${correctLinkTarget}")
                 map["@id"] = correctLinkTarget
                 changed = true
