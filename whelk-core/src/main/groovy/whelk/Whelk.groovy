@@ -10,6 +10,7 @@ import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
+import whelk.exception.WhelkRuntimeException
 import whelk.filter.LinkFinder
 import whelk.filter.NormalizerChain
 import whelk.search.ESQuery
@@ -352,6 +353,13 @@ class Whelk {
             preUpdateDoc = doc.clone()
             updateAgent.update(doc)
             normalize(doc)
+
+            boolean detectCollisionsOnTypedIDs = false
+            List<Tuple2<String, String>> collidingIDs = getIdCollisions(doc, detectCollisionsOnTypedIDs)
+            if (!collidingIDs.isEmpty()) {
+                log.info("Refused update of " + doc.getShortId() + ". Document would have ID collision with : " + collidingIDs)
+                throw new WhelkRuntimeException("Update of ${doc.getShortId()} failed, due to ID collision with : " + collidingIDs)
+            }
         })
 
         if (updated == null || preUpdateDoc == null) {
@@ -364,6 +372,12 @@ class Whelk {
     Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum, boolean index = true) {
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
+        boolean detectCollisionsOnTypedIDs = false
+        List<Tuple2<String, String>> collidingIDs = getIdCollisions(doc, detectCollisionsOnTypedIDs)
+        if (!collidingIDs.isEmpty()) {
+            log.info("Refused update of " + doc.getShortId() + ". Document would have ID collision with : " + collidingIDs)
+            throw new WhelkRuntimeException("Update of ${doc.getShortId()} failed, due to ID collision with : " + collidingIDs)
+        }
         Document updated = storage.storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum)
         if (updated == null) {
             return null
