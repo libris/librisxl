@@ -3,6 +3,13 @@ package datatool
 import groovy.cli.commons.CliBuilder
 import datatool.scripts.mergeworks.MergeWorks
 
+/**
+
+  ENV=qa && time java -Xmx4G -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool -s reports/1000-fiction.tsv
+
+
+ */
+
 class WorkTool {
     public static void main(String[] args) {
         

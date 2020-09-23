@@ -1,5 +1,11 @@
 package datatool.scripts.mergeworks
 
+import datatool.scripts.mergeworks.compare.Classification
+import datatool.scripts.mergeworks.compare.Comp
+import datatool.scripts.mergeworks.compare.ContentType
+import datatool.scripts.mergeworks.compare.GenreForm
+import datatool.scripts.mergeworks.compare.No
+import datatool.scripts.mergeworks.compare.StuffSet
 import datatool.util.DocumentComparator
 import org.apache.commons.lang3.StringUtils
 import org.codehaus.jackson.map.ObjectMapper
@@ -20,7 +26,18 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Function
 
+import static datatool.scripts.mergeworks.FieldStatus.COMPATIBLE
+import static datatool.scripts.mergeworks.FieldStatus.DIFF
+import static datatool.scripts.mergeworks.FieldStatus.EQUAL
+
 class MergeWorks {
+    private static Set<String> IGNORED_SUBTITLES = MergeWorks.class.getClassLoader()
+            .getResourceAsStream('merge-works/ignored-subtitles.txt')
+            .readLines().grep().collect(this.&normalize) as Set
+
+    private String CSS = MergeWorks.class.getClassLoader()
+            .getResourceAsStream('merge-works/table.css').getText("UTF-8")
+
     Whelk whelk
     Statistics statistics
     File clusters
@@ -39,33 +56,7 @@ class MergeWorks {
     void show(List<List<String>> diffPaths = []) {
         println("""<html><head>
                     <meta charset="UTF-8">
-                    <style>
-                    table {
-                      border-collapse: collapse;
-                    }
-                    
-                    table, th, td {
-                      border: 1px solid grey;
-                    }
-                    th {
-                      text-align: left;
-                    }
-                    tr.info td{
-                      background-color: lightgrey;
-                    }
-                    tr.diff td{
-                      background-color: lightpink;
-                    }
-                    tr.ok td{
-                      background-color: lightgreen;
-                    }
-                    td {
-                      vertical-align: top;
-                    }
-                    hr {
-                      border: 4px solid;
-                    }
-                    </style>
+                    <style>$CSS</style>
                     </head><body>""")
         run({ cluster ->
             return {
@@ -84,6 +75,7 @@ class MergeWorks {
                 }
                 catch (Exception e) {
                     System.err.println(e.getMessage())
+                    e.printStackTrace(System.err)
                 }
             }
         })
@@ -102,6 +94,28 @@ class MergeWorks {
                 if (!titles.isBlank()) {
                     println(titles + '\n')
                 }
+            }
+        })
+    }
+
+    void merge() {
+        statistics.printOnShutdown(10)
+        run({ cluster ->
+            return {
+                statistics.increment('TOTAL', 'TOTAL CLUSTERS')
+                List<List<Document>> result = mergeWorks(cluster)
+                //statistics.increment(String.format("Cluster size %03d", cluster.size()) , String.format("Num works %03d", result.size()))
+            }
+        })
+    }
+
+    void splitClustersByWorks() {
+        statistics.printOnShutdown(10)
+        run({ cluster ->
+            return {
+                statistics.increment('TOTAL', 'TOTAL CLUSTERS')
+                List<List<Document>> result = mergeWorks(cluster)
+                //statistics.increment(String.format("Cluster size %03d", cluster.size()) , String.format("Num works %03d", result.size()))
             }
         })
     }
@@ -132,7 +146,7 @@ class MergeWorks {
                     if (titleCluster.size() > 1) {
                         Set<String> diffFields = getDiffFields(titleCluster, ['contribution', 'genreForm'] as Set)
                         if (!diffFields.contains('contribution') && diffFields.contains('genreForm')) {
-                            String gf = titleCluster.collect{ it.get('genreForm') }.join(' ')
+                            String gf = titleCluster.collect{ it.getDisplayText('genreForm') }.join(' ')
                             if (gf.contains('marc/FictionNotFurtherSpecified') && gf.contains('marc/NotFictionNotFurtherSpecified')) {
                                 println(titleCluster.collect{ it.getDoc().shortId }.join('\t'))
                             }
@@ -156,10 +170,6 @@ class MergeWorks {
 
     static def infoFields = ['instance title', 'work title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication', 'identifiedBy']
     String clusterTable(Collection<Doc> cluster, List<List<String>> diffPaths = []) {
-        Set<String> fields = new HashSet<>()
-        cluster.each { fields.addAll(it.getWork().keySet()) }
-        Set<String> diffFields = getDiffFields(cluster, fields)
-
         String id = "${clusterId.incrementAndGet()}"
         String header = """
             <tr>
@@ -168,14 +178,18 @@ class MergeWorks {
             </tr>
            """.stripIndent()
 
+        def statuses = WorkComparator.compare(cluster)
+
         String info = infoFields.collect(fieldRows(cluster, "info")).join('\n')
-        String diff = diffFields.collect(fieldRows(cluster, "diff")).join('\n')
-        String same = (fields - diffFields).collect(fieldRows(cluster, cluster.size() > 1 ? "ok" : "")).join('\n')
+        String equal = statuses.get(EQUAL, []).collect(fieldRows(cluster, cluster.size() > 1 ? EQUAL.toString() : "")).join('\n')
+        String compatible = statuses.get(COMPATIBLE, []).collect(fieldRows(cluster, COMPATIBLE.toString())).join('\n')
+        String diff = statuses.get(DIFF, []).collect(fieldRows(cluster, DIFF.toString())).join('\n')
 
         return """
             <table>
                 ${header}   
-                ${same}
+                ${equal}
+                ${compatible}
                 ${diff}
                 ${info}
             </table>
@@ -183,41 +197,14 @@ class MergeWorks {
         """
     }
 
-    Set<String> getDiffFields(Collection<Doc> cluster, Set<String> fields) {
-        Set<String> diffFields = new TreeSet<>()
-
-        [cluster, cluster].combinations().each { List combination ->
-            Doc a = combination.first()
-            Doc b = combination.last()
-            fields.each { p ->
-                if (!equal(a, b, p)) {
-                    diffFields.add(p)
-                }
-            }
-        }
-
-        return diffFields
-    }
-
     def fieldRows(Collection<Doc> cluster, String cls) {
         { field ->
             """
             <tr class="${cls}">
                 <td>${field}</td>
-                ${cluster.collect { "<td>${it.get(field)}</td>" }.join('\n')}   
+                ${cluster.collect { "<td>${it.getDisplayText(field)}</td>" }.join('\n')}   
             </tr> """.stripIndent()
         }
-    }
-
-    void merge() {
-        statistics.printOnShutdown(10)
-        run({ cluster ->
-            return {
-                statistics.increment('TOTAL', 'TOTAL CLUSTERS')
-                List<List<Document>> result = mergeWorks(cluster)
-                //statistics.increment(String.format("Cluster size %03d", cluster.size()) , String.format("Num works %03d", result.size()))
-            }
-        })
     }
 
     void run(Function<List<String>, Runnable> f) {
@@ -252,9 +239,18 @@ class MergeWorks {
         def t = titleClusters(cluster)
                 .grep { it.size() > 1 }
 
-        t.each(this.&tryMerge)
+        t.collect(this.&works)
 
         return t
+    }
+
+    Collection<Collection<Doc>> works(Collection<Doc> titleCluster) {
+        def d = new DocumentComparator()
+        Collection<Collection<Doc>> works = partition(titleCluster) { Doc a, Doc b ->
+            return d.isEqual(a.getWork(), b.getWork())
+        }
+
+        return works
     }
 
     private Collection<Doc> docs(Collection<String> cluster) {
@@ -451,81 +447,8 @@ class MergeWorks {
         if (s.startsWith("en ")) {
             s = s.substring("en ".length())
         }
-        return s in SUBTITLES
+        return s in IGNORED_SUBTITLES
     }
-
-    private static Set<String> SUBTITLES = """
-a comedy
-a history
-a novel
-a play
-a romance
-a tale
-aforismer
-berättelse
-berättelse för barn
-berättelse för flickor
-berättelse för pojkar
-berättelse för unga flickor
-berättelser
-bilderbok
-comédie
-contos
-deckare
-detektivroman
-dikt
-dikter
-drama
-ein coq-rouge-thriller
-ein roman
-eine erzählung
-erzählung
-erzählungen
-essays
-essäer
-ett fall för kay scarpetta
-fortælling
-historisk roman
-homandeckare
-jack reacher-thriller
-komedi
-komedi i fyra akter
-krimi
-kriminalroman
-kärlekshistoria
-kärleksroman
-kåserier
-lustspel i en akt
-nouvelles
-novela
-novell
-novelle
-noveller
-pjäs
-polisroman
-povesti
-powieść
-poėma
-reseguide
-resehandbok
-rikosromaani
-romaani
-romaani rikoksesta
-roman
-roman om skivvärlden
-romance
-romanzo
-runoja
-saga
-sagor
-sann historia
-skildringar
-skáldsaga
-spänningsroman
-stories
-thriller
-ungdomsroman
-""".readLines().grep() as Set
 }
 
 class Doc {
@@ -583,7 +506,7 @@ class Doc {
         getInstance()['issuanceType'] == 'Monograph'
     }
 
-    String get(String field) {
+    String getDisplayText(String field) {
         if (field == 'contribution') {
             return contributorStrings().join("<br>")
         }
@@ -741,3 +664,92 @@ class Doc {
         getWork()['@type'] == 'Text'
     }
 }
+
+enum FieldStatus {
+    EQUAL,
+    COMPATIBLE,
+    DIFF
+}
+
+class WorkComparator {
+    Set<String> fields
+    DocumentComparator c = new DocumentComparator()
+
+    Map<String, Comp> comparators = [
+            'classification': new Classification(),
+            'subject': new StuffSet(),
+            'genreForm': new GenreForm(),
+            'contentType': new ContentType('https://id.kb.se/term/rda/Text')
+    ]
+
+    static Comp NO = new No()
+
+    WorkComparator(Set<String> fields) {
+        this.fields = new HashSet<>(fields)
+    }
+
+    boolean sameWork(Doc a, Doc b) {
+        fields.every {compare(a, b, it).with {it == EQUAL || it == COMPATIBLE} }
+    }
+
+    FieldStatus compare(Doc a, Doc b, String field) {
+        Object oa = a.getWork().get(field)
+        Object ob = b.getWork().get(field)
+
+        if (oa == null && ob == null) {
+            return EQUAL
+        }
+
+        compareExact(oa, ob, field) == EQUAL
+                ? EQUAL
+                : compareDiff(a, b, field)
+    }
+
+    private FieldStatus compareDiff(Doc a, Doc b, String field) {
+        comparators.getOrDefault(field, NO).isCompatible(a.getWork().get(field), b.getWork().get(field))
+                ? COMPATIBLE
+                : DIFF
+    }
+
+    private FieldStatus compareExact(Object oa, Object ob, String field) {
+        c.isEqual([(field): oa], [(field): ob]) ? EQUAL : DIFF
+    }
+
+    static Map<FieldStatus, List<String>> compare(Collection<Doc> cluster) {
+        WorkComparator c = new WorkComparator(allFields(cluster))
+
+        Map<FieldStatus, List<String>> result = [:]
+        c.fieldStatuses(cluster).each {f, s -> result.get(s, []) << f}
+        return result
+    }
+
+    static Set<String> allFields(Collection<Doc> cluster) {
+        Set<String> fields = new HashSet<>()
+        cluster.each { fields.addAll(it.getWork().keySet()) }
+        return fields
+    }
+
+    Map<String, FieldStatus> fieldStatuses(Collection<Doc> cluster) {
+        fields.collectEntries {[it, fieldStatus(cluster, it)]}
+    }
+
+    FieldStatus fieldStatus(Collection<Doc> cluster, String field) {
+        boolean anyCompat = false
+        [cluster, cluster].combinations().findResult { List combination ->
+            Doc a = combination.first()
+            Doc b = combination.last()
+
+            def c = compare(a, b, field)
+            if (c == COMPATIBLE) {
+                anyCompat = true
+            }
+            c == DIFF ? c : null
+        } ?: (anyCompat ? COMPATIBLE : EQUAL)
+    }
+}
+
+
+
+
+
+
