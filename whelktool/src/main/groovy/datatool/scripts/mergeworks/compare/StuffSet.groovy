@@ -28,9 +28,10 @@ class StuffSet implements FieldHandler {
                     break
                 }
             }
-            if (!merged) {
+            if (merged == null) {
                 result << it
             }
         }
+        return result
     }
 }

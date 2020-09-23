@@ -4,7 +4,7 @@ import datatool.scripts.mergeworks.compare.Classification
 import datatool.scripts.mergeworks.compare.ContentType
 import datatool.scripts.mergeworks.compare.FieldHandler
 import datatool.scripts.mergeworks.compare.GenreForm
-import datatool.scripts.mergeworks.compare.No
+import datatool.scripts.mergeworks.compare.Default
 import datatool.scripts.mergeworks.compare.StuffSet
 import datatool.util.DocumentComparator
 
@@ -19,7 +19,7 @@ class WorkComparator {
             'contentType': new ContentType('https://id.kb.se/term/rda/Text')
     ]
 
-    static FieldHandler NO = new No()
+    static FieldHandler DEFAULT = new Default()
 
     WorkComparator(Set<String> fields) {
         this.fields = new HashSet<>(fields)
@@ -42,8 +42,22 @@ class WorkComparator {
                 : compareDiff(a, b, field)
     }
 
+    Map merge(Collection<Doc> docs) {
+        Map result = [:]
+        fields.each {field ->
+            FieldHandler h = comparators.getOrDefault(field, DEFAULT)
+            Object value = docs.first().getWork().get(field)
+            docs.drop(1).each {value = h.merge(value, it.getWork().get(field))}
+            if(value) {
+                result[field] = value
+            }
+        }
+
+        return result
+    }
+
     private FieldStatus compareDiff(Doc a, Doc b, String field) {
-        comparators.getOrDefault(field, NO).isCompatible(a.getWork().get(field), b.getWork().get(field))
+        comparators.getOrDefault(field, DEFAULT).isCompatible(a.getWork().get(field), b.getWork().get(field))
                 ? FieldStatus.COMPATIBLE
                 : FieldStatus.DIFF
     }

@@ -174,7 +174,7 @@ class Doc {
         }
         if (o instanceof Map) {
             return order
-                    .collect { o.get(it, null) }
+                    .collect { ((Map)o).get(it, null) }
                     .grep { it != null }
                     .collect { flatten(it, order) }
                     .join(mapSeparator)
@@ -215,5 +215,17 @@ class Doc {
 
     boolean isText() {
         getWork()['@type'] == 'Text'
+    }
+}
+
+//TODO
+class Doc2 extends Doc {
+    Doc2(Whelk whelk, Document doc) {
+        super(whelk, doc)
+    }
+
+    @Override
+    String getDisplayText(String field) {
+        return getWork()[field]
     }
 }

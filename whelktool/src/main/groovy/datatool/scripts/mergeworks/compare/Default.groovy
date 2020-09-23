@@ -1,6 +1,6 @@
 package datatool.scripts.mergeworks.compare
 
-class No implements FieldHandler {
+class Default implements FieldHandler {
     @Override
     boolean isCompatible(Object a, Object b) {
         return false
@@ -8,6 +8,6 @@ class No implements FieldHandler {
 
     @Override
     Object merge(Object a, Object b) {
-        throw new RuntimeException()
+        return a
     }
 }

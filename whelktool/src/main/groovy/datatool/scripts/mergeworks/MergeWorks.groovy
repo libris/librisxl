@@ -40,6 +40,8 @@ class MergeWorks {
 
     ObjectMapper mapper = new ObjectMapper()
 
+    boolean dryRun = true
+
     MergeWorks(File clusters) {
         this.clusters = clusters
 
@@ -66,6 +68,60 @@ class MergeWorks {
                             .collect { it.sort { a, b -> a.getWork()['@type'] <=> b.getWork()['@type'] } }
                             .collect { clusterTable(it, diffPaths) }
                             .join('') + "<hr/><br/>\n")
+                }
+                catch (Exception e) {
+                    System.err.println(e.getMessage())
+                    e.printStackTrace(System.err)
+                }
+            }
+        })
+        println("""</body""")
+        println('</html>')
+    }
+
+    Document makeWork(Map workData) {
+        workData['@id'] = "TEMPID#it"
+        Document d = new Document([
+                "@graph": [
+                        [
+                                "@id"       : "TEMPID",
+                                "@type"     : "Record",
+                                "mainEntity": ["@id": "TEMPID#it"],
+                        ],
+                        workData
+                ]
+        ])
+
+        d.setGenerationDate(new Date())
+        d.setGenerationProcess('https://libris.kb.se/sys/merge-works')
+        return d
+    }
+
+    void show2(List<List<String>> diffPaths = []) {
+        println("""<html><head>
+                    <meta charset="UTF-8">
+                    <style>$CSS</style>
+                    </head><body>""")
+        run({ cluster ->
+            return {
+                try {
+                    Collection<Collection<Doc>> docs = titleClusters(cluster)
+                    docs.each {titleCluster ->
+                        WorkComparator c = new WorkComparator(WorkComparator.allFields(titleCluster))
+                        Collection<Collection<Doc>> works = partition(titleCluster, {Doc a, Doc b -> c.sameWork(a, b)})
+
+                        works = works.findAll {it.size() > 1}.collect {
+                            def w = it.collect()
+                            w.add(0, new Doc2(whelk, makeWork(c.merge(it))))
+                            w
+                        }
+
+                        println(works
+                                .collect { clusterTable(it, diffPaths) }
+                                .join('') + "<hr/><br/>\n")
+                    }
+
+
                 }
                 catch (Exception e) {
                     System.err.println(e.getMessage())

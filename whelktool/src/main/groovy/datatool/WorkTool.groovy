@@ -17,6 +17,7 @@ class WorkTool {
         cli.h(longOpt: 'help', 'Print this help message and exit.')
         cli.m(longOpt:'merge', 'Merge')
         cli.s(longOpt:'show', 'Show. Generate HTML report with title clusters')
+        cli.s2(longOpt:'show', 'Show. Generate HTML report with works')
         cli.d(longOpt:'diff', args: 1, argName:'diff', 'Field to diff')
         cli.e(longOpt:'edition', 'Print editionStatement')
         cli.t(longOpt:'subTitles', 'Print subtitles')
@@ -41,6 +42,9 @@ class WorkTool {
             else {
                 m.show()
             }
+        }
+        else if (options.s2) {
+            m.show2()
         }
         else if (options.t) {
             m.subTitles()
