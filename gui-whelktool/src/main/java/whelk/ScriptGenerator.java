@@ -43,4 +43,12 @@ public class ScriptGenerator
 
         return new PortableScript(scriptText, null, "Byte av sigel " + fromSigel + " till " + toSigel);
     }
+
+    public static PortableScript generateReplaceRecordsScript(Set<String> controlNumbers) throws IOException
+    {
+        String scriptText = IOUtils.toString(new InputStreamReader(
+                ScriptGenerator.class.getClassLoader().getResourceAsStream("templates/replace-records.groovy") ));
+
+        return new PortableScript(scriptText, controlNumbers, "Ersättning av " + controlNumbers.size() + " poster");
+    }
 }
