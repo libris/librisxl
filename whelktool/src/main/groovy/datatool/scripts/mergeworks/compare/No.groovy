@@ -1,6 +1,6 @@
 package datatool.scripts.mergeworks.compare
 
-class No implements Comp {
+class No implements FieldHandler {
     @Override
     boolean isCompatible(Object a, Object b) {
         return false

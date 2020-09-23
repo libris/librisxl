@@ -1,6 +1,6 @@
 package datatool.scripts.mergeworks.compare
 
-interface Comp {
+interface FieldHandler {
     boolean isCompatible(Object a, Object b)
     Object merge(Object a, Object b)
 }

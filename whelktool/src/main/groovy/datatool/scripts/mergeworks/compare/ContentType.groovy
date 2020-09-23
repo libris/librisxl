@@ -2,7 +2,7 @@ package datatool.scripts.mergeworks.compare
 
 import static datatool.scripts.mergeworks.Util.asList
 
-class ContentType implements Comp {
+class ContentType implements FieldHandler {
     Object contentType
 
     ContentType(String contentType) {

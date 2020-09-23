@@ -4,7 +4,7 @@ import datatool.scripts.mergeworks.Util
 
 import java.util.function.BiFunction
 
-class StuffSet implements Comp {
+class StuffSet implements FieldHandler {
     @Override
     boolean isCompatible(Object a, Object b) {
         true
@@ -14,9 +14,7 @@ class StuffSet implements Comp {
     Object merge(Object a, Object b) {
         return ((asList(a) as Set) + (asList(b) as Set)).collect()
     }
-
-
-
+    
     static Object mergeCompatibleElements(Object o, BiFunction<Object, Object, Object> s) {
         List result = []
         Util.asList(o).each {
