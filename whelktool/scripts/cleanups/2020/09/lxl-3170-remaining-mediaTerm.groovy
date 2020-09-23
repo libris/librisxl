@@ -46,7 +46,7 @@ selectBySqlWhere(where) { data ->
         String titleRemainder = mediaTerm.substring(semiColonIndex).trim()
         for (Map title : instance["hasTitle"]) {
             if (title["@type"] == "Title" && title["mainTitle"]) {
-                title["mainTitle"] = title["mainTitle"] + titleRemainder
+                title["mainTitle"] = title["mainTitle"] + " " + titleRemainder
                 mediaTerm = mediaTerm.substring(0, semiColonIndex)
                 changed = true
                 break
