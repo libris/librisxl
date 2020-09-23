@@ -4,6 +4,8 @@ import datatool.scripts.mergeworks.Util
 
 import java.util.function.BiFunction
 
+import static datatool.scripts.mergeworks.Util.asList
+
 class StuffSet implements FieldHandler {
     @Override
     boolean isCompatible(Object a, Object b) {
@@ -14,10 +16,10 @@ class StuffSet implements FieldHandler {
     Object merge(Object a, Object b) {
         return ((asList(a) as Set) + (asList(b) as Set)).collect()
     }
-    
+
     static Object mergeCompatibleElements(Object o, BiFunction<Object, Object, Object> s) {
         List result = []
-        Util.asList(o).each {
+        asList(o).each {
             def merged = null
             for (int i = 0 ; i < result.size() ; i++) {
                 merged = s.apply(result[i], it)
