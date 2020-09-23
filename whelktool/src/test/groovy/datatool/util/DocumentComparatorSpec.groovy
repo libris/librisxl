@@ -14,6 +14,7 @@ class DocumentComparatorSpec extends Specification {
 
         expect:
         d.isEqual(a, b) == eq
+        d.isEqual(b, a) == eq
 
         where:
         a                    | b                    || eq
@@ -31,6 +32,9 @@ class DocumentComparatorSpec extends Specification {
         ["ordered": [1, 2]]  | ["ordered": [1, 2]]  || true
         ["ordered": [1, 2]]  | ["ordered": [2, 1]]  || false
 
+        // one element list equals element
+        ["x": ["a"]]         | ["x": "a"]           || true
+        ["x": [["n": 2]]]    | ["x": ["n": 2]]      || true
     }
 
     def "isSubset"() {
