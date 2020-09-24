@@ -53,11 +53,18 @@ for (String job : bibids.readLines()) {
         linksToReplace.addAll(disappearingRecordIDs)
         linksToReplace.addAll(disappearingThingIDs)
 
-        replaceLinks(item.data, item.whelk, preferedUriToReplaceWith, linksToReplace)
+        replaceLinks(item.graph, item.whelk, preferedUriToReplaceWith, linksToReplace)
 
         scheduledForRelinking.println("${item.doc.getURI()}")
-        item.scheduleUpdate(onError: { e ->
+        item.scheduleSave(onError: { e ->
             failedUpdates.println("Failed to update ${item.doc.shortId} due to: $e")
+        })
+    })
+
+    selectBySqlWhere("id = '$idToBeReplaced'", silent: true, { item ->
+        scheduledForDelete.println("${item.doc.getURI()}")
+        item.scheduleDelete(onError: { e ->
+            failedUpdates.println("Failed to remove ${item.doc.shortId} due to: $e")
         })
     })
 
@@ -69,15 +76,8 @@ for (String job : bibids.readLines()) {
             item.doc.addThingIdentifier(id)
 
         scheduledForUpdate.println("${item.doc.getURI()}")
-        item.scheduleUpdate(onError: { e ->
+        item.scheduleSave(onError: { e ->
             failedUpdates.println("Failed to update ${item.doc.shortId} due to: $e")
-        })
-    })
-
-    selectBySqlWhere("id = '$idToBeReplaced'", silent: true, { item ->
-        scheduledForDelete.println("${item.doc.getURI()}")
-        item.scheduleDelete(onError: { e ->
-            failedUpdates.println("Failed to remove ${item.doc.shortId} due to: $e")
         })
     })
 }
