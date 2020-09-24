@@ -56,6 +56,9 @@ class WorkComparator {
             }
         }
 
+
+        result['hasTitle'] = bestTitle(docs)
+
         return result
     }
 
@@ -99,5 +102,17 @@ class WorkComparator {
             }
             c == FieldStatus.DIFF ? c : null
         } ?: (anyCompat ? FieldStatus.COMPATIBLE : FieldStatus.EQUAL)
+    }
+
+    //FIXME
+    static Object bestTitle(Collection<Doc> docs) {
+        def t = docs.findResult {it.encodingLevel() == 'marc:FullLevel' ? it.getWork()['hasTitle'] : null }
+        if(t) { return t }
+        t = docs.findResult {it.encodingLevel() == 'marc:MinimalLevel' ? it.getWork()['hasTitle'] : null }
+        if(t) { return t }
+        t = docs.findResult {it.encodingLevel() == 'marc:FullLevel' ? it.getInstance()['hasTitle'] : null }
+        if(t) { return t }
+        t = docs.findResult {it.encodingLevel() == 'marc:MinimalLevel' ? it.getInstance()['hasTitle'] : null }
+        return t
     }
 }

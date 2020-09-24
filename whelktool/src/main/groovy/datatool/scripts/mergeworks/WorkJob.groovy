@@ -9,8 +9,12 @@ import org.skyscreamer.jsonassert.JSONCompareMode
 import org.skyscreamer.jsonassert.JSONCompareResult
 import se.kb.libris.Normalizers
 import whelk.Document
+import whelk.IdGenerator
+import whelk.JsonLd
 import whelk.Whelk
+import whelk.exception.WhelkRuntimeException
 import whelk.util.DocumentUtil
+import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
 import whelk.util.Unicode
 
@@ -41,7 +45,11 @@ class WorkJob {
 
     ObjectMapper mapper = new ObjectMapper()
 
+    String changedIn = "xl"
+    String changedBy = "SEK"
     boolean dryRun = true
+    boolean skipIndex = false
+    boolean loud = false
 
     WorkJob(File clusters) {
         this.clusters = clusters
@@ -102,6 +110,7 @@ class WorkJob {
 
         d.setGenerationDate(new Date())
         d.setGenerationProcess('https://libris.kb.se/sys/merge-works')
+        d.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
         return d
     }
 
@@ -128,15 +137,39 @@ class WorkJob {
     }
 
     void merge() {
-        statistics.printOnShutdown(10)
+        def s = statistics.printOnShutdown()
         run({ cluster ->
-
+            return {
+                works(cluster).each {
+                    s.increment('num derivedFrom', "${it.derivedFrom.size()}")
+                    store(it)
+                }
+            }
         })
     }
 
     class MergedWork {
         Document work
         Collection<Doc> derivedFrom
+    }
+
+    void store(MergedWork work) {
+        if (!dryRun) {
+            if (!whelk.createDocument(work.work, changedIn, changedBy,
+                    LegacyIntegrationTools.determineLegacyCollection(work.work, whelk.getJsonld()), false, !skipIndex)) {
+                throw new WhelkRuntimeException("Could not store new work: ${work.work.shortId}")
+            }
+
+            String workIri = work.work.thingIdentifiers.first()
+
+            work.derivedFrom
+                    .collect { it.doc }
+                    .each {
+                        def sum = it.checksum
+                        it.data[JsonLd.GRAPH_KEY][1]['instanceOf'] = [(JsonLd.ID_KEY): workIri]
+                        whelk.storeAtomicUpdate(it, !loud, changedIn, changedBy, sum, !skipIndex)
+                    }
+        }
     }
 
     Collection<MergedWork> works(List<String> cluster) {
@@ -381,15 +414,6 @@ class WorkJob {
         }
     }
 
-    boolean equal(Doc a, Doc b, String field) {
-        JSONCompareResult r = JSONCompare.compareJSON(
-                mapper.writeValueAsString(a.getWork().getOrDefault(field, "")),
-                mapper.writeValueAsString(b.getWork().getOrDefault(field, "")),
-                JSONCompareMode.NON_EXTENSIBLE)
-
-        return !r.failed()
-    }
-
     Map workNoTitle(Map work) {
         Map w = new HashMap<>(work)
         w.remove('hasTitle')
@@ -464,20 +488,19 @@ class WorkJob {
         }
         return item
     }
-
-
-    class NoWorkException extends RuntimeException {
-        NoWorkException(String msg) {
-            super(msg)
-        }
-    }
-
+    
     private boolean nonsenseSubtitle(String s) {
         s = normalize(s)
         if (s.startsWith("en ")) {
             s = s.substring("en ".length())
         }
         return s in IGNORED_SUBTITLES
+    }
+}
+
+class NoWorkException extends RuntimeException {
+    NoWorkException(String msg) {
+        super(msg)
     }
 }
 

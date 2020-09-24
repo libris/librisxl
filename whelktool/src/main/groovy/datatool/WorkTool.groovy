@@ -12,9 +12,12 @@ import datatool.scripts.mergeworks.WorkJob
 
 class WorkTool {
     public static void main(String[] args) {
-        
         def cli = new CliBuilder(usage:'whelktool [options] <SCRIPT>')
         cli.h(longOpt: 'help', 'Print this help message and exit.')
+        cli.I(longOpt:'skip-index', 'Do not index any changes, only write to storage.')
+        cli.d(longOpt:'dry-run', 'Do not save any modifications.')
+        cli.a(longOpt:'allow-loud', 'Do loud modifications.')
+
         cli.m(longOpt:'merge', 'Merge')
         cli.s(longOpt:'show', 'Show. Generate HTML report with title clusters')
         cli.s2(longOpt:'show', 'Show. Generate HTML report with works')
@@ -32,6 +35,10 @@ class WorkTool {
 
         def clustersPath = options.arguments()[0]
         def m = new WorkJob(new File(clustersPath))
+        m.skipIndex = options.I
+        m.dryRun = options.d
+        m.loud = options.a
+
         if (options.m) {
             m.merge()
         }
