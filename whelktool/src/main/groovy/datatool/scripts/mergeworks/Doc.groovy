@@ -20,7 +20,7 @@ class Doc {
 
     Map getWork() {
         if (!work) {
-            work = MergeWorks.getWork(whelk, doc)
+            work = WorkJob.getWork(whelk, doc)
         }
 
         return work
@@ -45,7 +45,7 @@ class Doc {
     }
 
     String instanceDisplayTitle() {
-        displayTitle(['hasTitle': MergeWorks.flatTitles(getInstance())])
+        displayTitle(['hasTitle': WorkJob.flatTitles(getInstance())])
     }
 
     String link() {
@@ -121,7 +121,7 @@ class Doc {
     }
 
     private List classificationStrings() {
-        List<Map> classification =  MergeWorks.getPathSafe(getFramed(), ['instanceOf', 'classification'], [])
+        List<Map> classification =  WorkJob.getPathSafe(getFramed(), ['instanceOf', 'classification'], [])
         classification.collect() { c ->
             StringBuilder s = new StringBuilder()
             s.append(flatMaybeLinked(c['inScheme'], ['code', 'version']).with { it.isEmpty() ? it : it + ': ' })
@@ -131,7 +131,7 @@ class Doc {
     }
 
     private List contributorStrings() {
-        List contribution = MergeWorks.getPathSafe(getFramed(), ['instanceOf', 'contribution'], [])
+        List contribution = WorkJob.getPathSafe(getFramed(), ['instanceOf', 'contribution'], [])
 
         return contribution.collect { Map c ->
             contributionStr(c)

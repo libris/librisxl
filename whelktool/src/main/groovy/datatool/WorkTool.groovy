@@ -1,7 +1,7 @@
 package datatool
 
 import groovy.cli.commons.CliBuilder
-import datatool.scripts.mergeworks.MergeWorks
+import datatool.scripts.mergeworks.WorkJob
 
 /**
 
@@ -31,7 +31,7 @@ class WorkTool {
         }
 
         def clustersPath = options.arguments()[0]
-        def m = new MergeWorks(new File(clustersPath))
+        def m = new WorkJob(new File(clustersPath))
         if (options.m) {
             m.merge()
         }

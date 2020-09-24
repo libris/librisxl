@@ -11,22 +11,26 @@ class Classification extends StuffSet {
             }
 
             if (isSab(c1) && isSab(c2) && (code1.startsWith(code2) || code2.startsWith(code1))) {
-                [
+                def result = [
                         '@type' : 'Classification',
                         'code'  : code1.size() > code2.size() ? code1 : code2,
                         inScheme: [
                                 '@type'  : 'ConceptScheme',
-                                'code'   : 'kssb',
-                                'version': maxSabVersion(c1, c2)
+                                'code'   : 'kssb'
                         ]
                 ]
+                def version = maxSabVersion(c1, c2)
+                if (version) {
+                    result['inScheme']['version'] = version
+                }
+                return result
             }
             else if (isDewey(c1) && isDewey(c2) && code1 == code2) {
                 Map result = [:]
                 result.putAll(c1)
                 result.putAll(c2)
                 result['editionEnumeration'] = maxDeweyEdition(c1, c2)
-                result
+                return result
             }
         }
     }
@@ -36,8 +40,8 @@ class Classification extends StuffSet {
     }
 
     String maxSabVersion(c1, c2) {
-        def v1 = c1['inScheme']['version'] ?: "8"
-        def v2 = c2['inScheme']['version'] ?: "8"
+        def v1 = c1['inScheme']['version'] ?: "-1"
+        def v2 = c2['inScheme']['version'] ?: "-1"
         Integer.parseInt(v1) > Integer.parseInt(v2) ? v1 : v2
     }
 

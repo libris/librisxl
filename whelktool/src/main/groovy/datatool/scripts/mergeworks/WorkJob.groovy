@@ -23,13 +23,14 @@ import java.util.function.Function
 import static datatool.scripts.mergeworks.FieldStatus.COMPATIBLE
 import static datatool.scripts.mergeworks.FieldStatus.DIFF
 import static datatool.scripts.mergeworks.FieldStatus.EQUAL
+import static datatool.scripts.mergeworks.Util.partition
 
-class MergeWorks {
-    private static Set<String> IGNORED_SUBTITLES = MergeWorks.class.getClassLoader()
+class WorkJob {
+    private static Set<String> IGNORED_SUBTITLES = WorkJob.class.getClassLoader()
             .getResourceAsStream('merge-works/ignored-subtitles.txt')
             .readLines().grep().collect(this.&normalize) as Set
 
-    private String CSS = MergeWorks.class.getClassLoader()
+    private String CSS = WorkJob.class.getClassLoader()
             .getResourceAsStream('merge-works/table.css').getText("UTF-8")
 
     Whelk whelk
@@ -42,7 +43,7 @@ class MergeWorks {
 
     boolean dryRun = true
 
-    MergeWorks(File clusters) {
+    WorkJob(File clusters) {
         this.clusters = clusters
 
         this.whelk = Whelk.createLoadedSearchWhelk('secret', true)
@@ -108,7 +109,7 @@ class MergeWorks {
                     Collection<Collection<Doc>> docs = titleClusters(cluster)
                     docs.each {titleCluster ->
                         WorkComparator c = new WorkComparator(WorkComparator.allFields(titleCluster))
-                        Collection<Collection<Doc>> works = partition(titleCluster, {Doc a, Doc b -> c.sameWork(a, b)})
+                        Collection<Collection<Doc>> works = partition(titleCluster, { Doc a, Doc b -> c.sameWork(a, b)})
 
                         works = works.findAll {it.size() > 1}.collect {
                             def w = it.collect()
@@ -453,39 +454,6 @@ class MergeWorks {
         return item
     }
 
-    /**
-     * Partition a collection based on equality condition
-     *
-     * NOTE: O(n^2)...
-     */
-    static <T> Collection<Collection<T>> partition(Collection<T> collection, Closure matcher) {
-        List<List<T>> result = []
-
-        for (T t : collection) {
-            boolean match = false
-            for (List<T> group : result) {
-                if (groupMatches(t, group, matcher)) {
-                    group.add(t)
-                    match = true
-                    break
-                }
-            }
-
-            if (!match) {
-                result.add([t])
-            }
-        }
-        return result
-    }
-
-    static <T> boolean groupMatches(T t, List<T> group, Closure matcher) {
-        for (T other : group) {
-            if (matcher(other, t)) {
-                return true
-            }
-        }
-        return false
-    }
 
     class NoWorkException extends RuntimeException {
         NoWorkException(String msg) {
