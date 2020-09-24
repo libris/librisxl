@@ -13,9 +13,13 @@ class Doc {
     Map framed
     List<String> titles
 
+    //FIXME
+    Document ogDoc
+
     Doc(Whelk whelk, Document doc) {
         this.whelk = whelk
         this.doc = doc
+        this.ogDoc = doc.clone()
     }
 
     Map getWork() {
@@ -30,11 +34,9 @@ class Doc {
         return doc.data['@graph'][1]
     }
 
-    def titleVariant = ['Title', 'ParallelTitle', 'VariantTitle', 'CoverTitle']
-
     List<String> getTitleVariants() {
         if (!titles) {
-            titles = getWork()['hasTitle'].grep { it['@type'] in titleVariant }.collect { it['flatTitle'] }
+            titles = Util.getTitleVariants(getInstance()['hasTitle'])
         }
 
         return titles
@@ -45,7 +47,7 @@ class Doc {
     }
 
     String instanceDisplayTitle() {
-        displayTitle(['hasTitle': WorkJob.flatTitles(getInstance())])
+        displayTitle(['hasTitle': Util.flatTitles(getInstance()['hasTitle'])])
     }
 
     String link() {
@@ -129,7 +131,7 @@ class Doc {
     }
 
     private List classificationStrings() {
-        List<Map> classification =  WorkJob.getPathSafe(getFramed(), ['instanceOf', 'classification'], [])
+        List<Map> classification =  Util.getPathSafe(getFramed(), ['instanceOf', 'classification'], [])
         classification.collect() { c ->
             StringBuilder s = new StringBuilder()
             s.append(flatMaybeLinked(c['inScheme'], ['code', 'version']).with { it.isEmpty() ? it : it + ': ' })
@@ -139,14 +141,14 @@ class Doc {
     }
 
     private List contributorStrings() {
-        List contribution = WorkJob.getPathSafe(getFramed(), ['instanceOf', 'contribution'], [])
+        List contribution = Util.getPathSafe(getFramed(), ['instanceOf', 'contribution'], [])
 
         return contribution.collect { Map c ->
             contributionStr(c)
         }
     }
 
-    private Map getFramed() {
+    protected Map getFramed() {
         if(!framed) {
             framed = JsonLd.frame(doc.getThingIdentifiers().first(), whelk.loadEmbellished(doc.shortId).data)
         }
@@ -224,6 +226,24 @@ class Doc {
     boolean isText() {
         getWork()['@type'] == 'Text'
     }
+
+    boolean hasDistinguishingEdition() {
+        (getInstance()['editionStatement'] ?: '').toString().toLowerCase().contains("förk")
+    }
+
+    void addComparisonProps() {
+        if(hasDistinguishingEdition()) {
+            addToWork('editionStatement')
+        }
+    }
+
+    void addToWork(String field) {
+        getWork()[field] = getInstance()[field]
+    }
+
+    void removeComparisonProps() {
+        getWork().remove('editionStatement')
+    }
 }
 
 //TODO
@@ -235,5 +255,15 @@ class Doc2 extends Doc {
     @Override
     String getDisplayText(String field) {
         return getWork()[field]
+    }
+
+    protected Map getFramed() {
+        if(!framed) {
+            Document copy = doc.clone()
+            whelk.embellish(copy)
+            framed = JsonLd.frame(doc.getThingIdentifiers().first(), copy.data)
+        }
+
+        return framed
     }
 }

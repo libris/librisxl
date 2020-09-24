@@ -6,6 +6,7 @@ import datatool.scripts.mergeworks.compare.FieldHandler
 import datatool.scripts.mergeworks.compare.GenreForm
 import datatool.scripts.mergeworks.compare.Default
 import datatool.scripts.mergeworks.compare.StuffSet
+import datatool.scripts.mergeworks.compare.WorkTitle
 import datatool.util.DocumentComparator
 
 class WorkComparator {
@@ -16,7 +17,8 @@ class WorkComparator {
             'classification': new Classification(),
             'subject': new StuffSet(),
             'genreForm': new GenreForm(),
-            'contentType': new ContentType('https://id.kb.se/term/rda/Text')
+            'contentType': new ContentType('https://id.kb.se/term/rda/Text'),
+            'hasTitle': new WorkTitle(),
     ]
 
     static FieldHandler DEFAULT = new Default()
@@ -56,8 +58,9 @@ class WorkComparator {
             }
         }
 
-
-        result['hasTitle'] = bestTitle(docs)
+        if (!result['hasTitle']) {
+            result['hasTitle'] = bestTitle(docs)
+        }
 
         return result
     }
@@ -106,11 +109,7 @@ class WorkComparator {
 
     //FIXME
     static Object bestTitle(Collection<Doc> docs) {
-        def t = docs.findResult {it.encodingLevel() == 'marc:FullLevel' ? it.getWork()['hasTitle'] : null }
-        if(t) { return t }
-        t = docs.findResult {it.encodingLevel() == 'marc:MinimalLevel' ? it.getWork()['hasTitle'] : null }
-        if(t) { return t }
-        t = docs.findResult {it.encodingLevel() == 'marc:FullLevel' ? it.getInstance()['hasTitle'] : null }
+        def t = docs.findResult {it.encodingLevel() == 'marc:FullLevel' ? it.getInstance()['hasTitle'] : null }
         if(t) { return t }
         t = docs.findResult {it.encodingLevel() == 'marc:MinimalLevel' ? it.getInstance()['hasTitle'] : null }
         return t

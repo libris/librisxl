@@ -9,6 +9,8 @@ class Classification extends StuffSet {
             if (!code1 || !code2) {
                 return
             }
+            code1 = code1.trim()
+            code2 = code2.trim()
 
             if (isSab(c1) && isSab(c2) && (code1.startsWith(code2) || code2.startsWith(code1))) {
                 def result = [

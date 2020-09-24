@@ -1,6 +1,5 @@
 package datatool.scripts.mergeworks
 
-
 import datatool.util.DocumentComparator
 import org.apache.commons.lang3.StringUtils
 import org.codehaus.jackson.map.ObjectMapper
@@ -13,10 +12,8 @@ import whelk.IdGenerator
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.WhelkRuntimeException
-import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
-import whelk.util.Unicode
 
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -30,10 +27,6 @@ import static datatool.scripts.mergeworks.FieldStatus.EQUAL
 import static datatool.scripts.mergeworks.Util.partition
 
 class WorkJob {
-    private static Set<String> IGNORED_SUBTITLES = WorkJob.class.getClassLoader()
-            .getResourceAsStream('merge-works/ignored-subtitles.txt')
-            .readLines().grep().collect(this.&normalize) as Set
-
     private String CSS = WorkJob.class.getClassLoader()
             .getResourceAsStream('merge-works/table.css').getText("UTF-8")
 
@@ -84,6 +77,9 @@ class WorkJob {
                             .collect { it.sort { a, b -> a.getWork()['@type'] <=> b.getWork()['@type'] } }
                             .collect { clusterTable(it, diffPaths) }
                             .join('') + "<hr/><br/>\n")
+                }
+                catch (NoWorkException e) {
+                    System.err.println(e.getMessage())
                 }
                 catch (Exception e) {
                     System.err.println(e.getMessage())
@@ -141,7 +137,7 @@ class WorkJob {
         run({ cluster ->
             return {
                 works(cluster).each {
-                    s.increment('num derivedFrom', "${it.derivedFrom.size()}")
+                    s.increment('num derivedFrom', "${it.derivedFrom.size()}", it.work.shortId)
                     store(it)
                 }
             }
@@ -163,7 +159,7 @@ class WorkJob {
             String workIri = work.work.thingIdentifiers.first()
 
             work.derivedFrom
-                    .collect { it.doc }
+                    .collect { it.ogDoc }
                     .each {
                         def sum = it.checksum
                         it.data[JsonLd.GRAPH_KEY][1]['instanceOf'] = [(JsonLd.ID_KEY): workIri]
@@ -175,6 +171,7 @@ class WorkJob {
     Collection<MergedWork> works(List<String> cluster) {
         def titleClusters = loadDocs(cluster)
                 .findAll(filter)
+                .each {it.addComparisonProps() }
                 .with { partitionByTitle(it) }
                 .findAll {it.size() > 1 }
 
@@ -184,18 +181,20 @@ class WorkJob {
 
             works.addAll(partition(titleCluster, { Doc a, Doc b -> c.sameWork(a, b)})
                     .findAll {it.size() > 1 }
+                    .each { work -> work.each {doc -> doc.removeComparisonProps()}}
                     .collect{new MergedWork(work: makeWork(c.merge(it)), derivedFrom: it)})
         }
 
         return works
     }
 
+
     void subTitles() {
         statistics.printOnShutdown(10)
         run({ cluster ->
             return {
                 String titles = cluster.collect(whelk.&getDocument).collect {
-                    getPathSafe(it.data, ['@graph', 1, 'hasTitle', 0, 'subtitle'])
+                    Util.getPathSafe(it.data, ['@graph', 1, 'hasTitle', 0, 'subtitle'])
                 }.grep().join('\n')
 
                 if (!titles.isBlank()) {
@@ -204,8 +203,6 @@ class WorkJob {
             }
         })
     }
-
-
 
     void splitClustersByWorks() {
         statistics.printOnShutdown(10)
@@ -223,7 +220,7 @@ class WorkJob {
         run({ cluster ->
             return {
                 String editionStatment = cluster.collect(whelk.&getDocument).collect {
-                    getPathSafe(it.data, ['@graph', 1, 'editionStatement'])
+                    Util.getPathSafe(it.data, ['@graph', 1, 'editionStatement'])
                 }.grep().join('\n')
 
                 if (!editionStatment.isBlank()) {
@@ -433,13 +430,13 @@ class WorkJob {
         }
         work = new HashMap<>(work)
         Map instance = d.data['@graph'][1]
-
+/*
         if (!work['hasTitle']) {
-            work['hasTitle'] = flatTitles(instance)
+            work['hasTitle'] = Util.flatTitles(instance)
         } else if (!work['hasTitle'].first().containsKey('flatTitle')) {
-            work['hasTitle'] = flatTitles(work)
+            work['hasTitle'] = Util.flatTitles(work)
         }
-
+*/
         //TODO works with already title
         //TODO 'marc:fieldref'
 
@@ -447,55 +444,8 @@ class WorkJob {
         return work
     }
 
-    static def titleComponents = ['mainTitle', 'titleRemainder', 'subtitle', 'hasPart', 'partNumber', 'partName', 'marc:parallelTitle', 'marc:equalTitle']
 
-    static private List flatTitles(thing) {
-        thing['hasTitle'].collect {
-            def old = new TreeMap(it)
 
-            if (it['subtitle']) {
-                DocumentUtil.traverse(it['subtitle']) { value, path ->
-                    if (path && value instanceof String && nonsenseSubtitle(value)) {
-                        new DocumentUtil.Remove()
-                    }
-                }
-            }
-
-            def title = new TreeMap<>()
-            title['flatTitle'] = normalize(Doc.flatten(old, titleComponents))
-            if (it['@type']) {
-                title['@type'] = it['@type']
-            }
-
-            title
-        }
-    }
-
-    static def noise =
-            [",", '"', "'", '[', ']', ',', '.', '.', ':', ';', '-', '(', ')', ' the ', '-', '–', '+', '!', '?'].collectEntries { [it, ' '] }
-
-    private static String normalize(String s) {
-        return Unicode.asciiFold(Unicode.normalizeForSearch(StringUtils.normalizeSpace(" $s ".toLowerCase().replace(noise))))
-    }
-
-    private static Object getPathSafe(item, path, defaultTo = null) {
-        for (p in path) {
-            if (item[p] != null) {
-                item = item[p]
-            } else {
-                return defaultTo
-            }
-        }
-        return item
-    }
-
-    private boolean nonsenseSubtitle(String s) {
-        s = normalize(s)
-        if (s.startsWith("en ")) {
-            s = s.substring("en ".length())
-        }
-        return s in IGNORED_SUBTITLES
-    }
 }
 
 class NoWorkException extends RuntimeException {
