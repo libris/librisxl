@@ -67,7 +67,7 @@ class PostgreSQLComponent {
     private static final int DEFAULT_MAX_POOL_SIZE = 16
     private static final String driverClass = "org.postgresql.Driver"
 
-    private int embellishCacheMaxSize = 10 * 1024 * 1024 * 1024 // default 10GB
+    private long embellishCacheMaxSize = 10L * 1024L * 1024L * 1024L // default 10GB
 
     private Random random = new Random(System.currentTimeMillis())
 
@@ -334,7 +334,7 @@ class PostgreSQLComponent {
                 : DEFAULT_MAX_POOL_SIZE
 
         if (properties.getProperty(PROPERTY_EMBELLISH_CACHE_MAX_SIZE)) {
-           embellishCacheMaxSize = Integer.parseInt(properties.getProperty(PROPERTY_EMBELLISH_CACHE_MAX_SIZE))
+           embellishCacheMaxSize = Long.parseLong(properties.getProperty(PROPERTY_EMBELLISH_CACHE_MAX_SIZE))
         }
         log.info("$PROPERTY_EMBELLISH_CACHE_MAX_SIZE: $embellishCacheMaxSize")
 
@@ -536,7 +536,7 @@ class PostgreSQLComponent {
         }
     }
 
-    int totalTableSizeBytes(String table, Connection connection) {
+    long totalTableSizeBytes(String table, Connection connection) {
         PreparedStatement preparedStatement = null
         ResultSet resultSet = null
         try {
@@ -546,7 +546,7 @@ class PostgreSQLComponent {
             if (!resultSet.next()) {
                 throw new WhelkRuntimeException("No such table $table")
             }
-            return resultSet.getInt(1)
+            return resultSet.getLong(1)
         }
         finally {
             close(resultSet, preparedStatement)
