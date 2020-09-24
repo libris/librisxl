@@ -47,7 +47,10 @@ class WorkComparator {
         fields.each {field ->
             FieldHandler h = comparators.getOrDefault(field, DEFAULT)
             Object value = docs.first().getWork().get(field)
-            docs.drop(1).each {value = h.merge(value, it.getWork().get(field))}
+            def rest = docs.drop(1)
+            rest.each {
+                value = h.merge(value, it.getWork().get(field))
+            }
             if(value) {
                 result[field] = value
             }
