@@ -488,7 +488,7 @@ class WorkJob {
         }
         return item
     }
-    
+
     private boolean nonsenseSubtitle(String s) {
         s = normalize(s)
         if (s.startsWith("en ")) {

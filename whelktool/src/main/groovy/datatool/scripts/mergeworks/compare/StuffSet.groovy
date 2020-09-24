@@ -18,6 +18,7 @@ class StuffSet implements FieldHandler {
     }
 
     static Object mergeCompatibleElements(Object o, BiFunction<Object, Object, Object> s) {
+        boolean changed = false
         List result = []
         asList(o).each {
             def merged = null
@@ -25,6 +26,7 @@ class StuffSet implements FieldHandler {
                 merged = s.apply(result[i], it)
                 if (merged) {
                     result[i] = merged
+                    changed = true
                     break
                 }
             }
@@ -32,6 +34,6 @@ class StuffSet implements FieldHandler {
                 result << it
             }
         }
-        return result
+        return changed ? mergeCompatibleElements(result, s) : result
     }
 }

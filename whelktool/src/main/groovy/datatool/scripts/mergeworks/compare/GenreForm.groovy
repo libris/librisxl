@@ -1,6 +1,12 @@
 package datatool.scripts.mergeworks.compare
 
+import datatool.util.DocumentComparator
+
+//FIXME
 class GenreForm extends StuffSet {
+    private static final DocumentComparator c = new DocumentComparator()
+
+    // Terms that will be merged, result is the one to right
     private static Map norm = [
             ['@id': 'https://id.kb.se/marc/NotFictionNotFurtherSpecified'] : ['@id': 'https://id.kb.se/marc/FictionNotFurtherSpecified'],
             ['@id': 'https://id.kb.se/marc/FictionNotFurtherSpecified'] : ['@id': 'https://id.kb.se/marc/Novel'],
@@ -10,17 +16,16 @@ class GenreForm extends StuffSet {
     @Override
     Object merge(Object a, Object b) {
         return mergeCompatibleElements(super.merge(a, b)) { gf1, gf2 ->
-            if (norm[gf1] == gf2) {
-                repl(gf2)
+            if (cmp(norm[gf1], gf2)) {
+                gf2
             }
-            else if (norm[gf2] == gf1) {
-                repl(gf1)
+            else if (cmp(norm[gf2], gf1)) {
+                gf1
             }
         }
     }
 
-    Object repl(Object o) {
-        def r = norm.getOrDefault(o, o)
-        o != r ? repl(r) : o
+    boolean cmp(a, b) {
+        a && b && c.isEqual(a, b)
     }
 }
