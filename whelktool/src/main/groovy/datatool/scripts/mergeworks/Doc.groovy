@@ -59,6 +59,14 @@ class Doc {
         getInstance()['issuanceType'] == 'Monograph'
     }
 
+    boolean hasPart() {
+        getWork()['hasPart'] != null
+    }
+
+    String encodingLevel() {
+        return doc.data['@graph'][0]['encodingLevel'] ?: ''
+    }
+
     String getDisplayText(String field) {
         if (field == 'contribution') {
             return contributorStrings().join("<br>")
@@ -82,7 +90,7 @@ class Doc {
             return getInstance()['responsibilityStatement'] ?: ''
         }
         else if (field == 'encodingLevel') {
-            return doc.data['@graph'][0]['encodingLevel'] ?: ''
+            return encodingLevel()
         }
         else if (field == 'publication') {
             return chipString(getInstance()['publication'] ?: [])

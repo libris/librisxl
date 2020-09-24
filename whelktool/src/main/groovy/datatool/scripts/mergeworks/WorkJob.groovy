@@ -50,6 +50,13 @@ class WorkJob {
         this.statistics = new Statistics()
     }
 
+    Closure filter = { Doc doc ->
+        (doc.isText()
+                && doc.isMonograph()
+                && !doc.hasPart()
+                && (doc.encodingLevel() == 'marc:MinimalLevel' || doc.encodingLevel() == 'marc:FullLevel'))
+    }
+
     void show(List<List<String>> diffPaths = []) {
         println("""<html><head>
                     <meta charset="UTF-8">
@@ -106,23 +113,9 @@ class WorkJob {
         run({ cluster ->
             return {
                 try {
-                    Collection<Collection<Doc>> docs = titleClusters(cluster)
-                    docs.each {titleCluster ->
-                        WorkComparator c = new WorkComparator(WorkComparator.allFields(titleCluster))
-                        Collection<Collection<Doc>> works = partition(titleCluster, { Doc a, Doc b -> c.sameWork(a, b)})
-
-                        works = works.findAll {it.size() > 1}.collect {
-                            def w = it.collect()
-                            w.add(0, new Doc2(whelk, makeWork(c.merge(it))))
-                            w
-                        }
-
-                        println(works
-                                .collect { clusterTable(it, diffPaths) }
-                                .join('') + "<hr/><br/>\n")
-                    }
-
-
+                    println(works(cluster).collect {[new Doc2(whelk, it.work)] + it.derivedFrom }
+                            .collect { clusterTable(it, diffPaths) }
+                            .join('') + "<hr/><br/>\n")
                 }
                 catch (Exception e) {
                     System.err.println(e.getMessage())
@@ -132,6 +125,36 @@ class WorkJob {
         })
         println("""</body""")
         println('</html>')
+    }
+
+    void merge() {
+        statistics.printOnShutdown(10)
+        run({ cluster ->
+
+        })
+    }
+
+    class MergedWork {
+        Document work
+        Collection<Doc> derivedFrom
+    }
+
+    Collection<MergedWork> works(List<String> cluster) {
+        def titleClusters = loadDocs(cluster)
+                .findAll(filter)
+                .with { partitionByTitle(it) }
+                .findAll {it.size() > 1 }
+
+        def works = []
+        titleClusters.each {titleCluster ->
+            WorkComparator c = new WorkComparator(WorkComparator.allFields(titleCluster))
+
+            works.addAll(partition(titleCluster, { Doc a, Doc b -> c.sameWork(a, b)})
+                    .findAll {it.size() > 1 }
+                    .collect{new MergedWork(work: makeWork(c.merge(it)), derivedFrom: it)})
+        }
+
+        return works
     }
 
     void subTitles() {
@@ -149,16 +172,7 @@ class WorkJob {
         })
     }
 
-    void merge() {
-        statistics.printOnShutdown(10)
-        run({ cluster ->
-            return {
-                statistics.increment('TOTAL', 'TOTAL CLUSTERS')
-                List<List<Document>> result = mergeWorks(cluster)
-                //statistics.increment(String.format("Cluster size %03d", cluster.size()) , String.format("Num works %03d", result.size()))
-            }
-        })
-    }
+
 
     void splitClustersByWorks() {
         statistics.printOnShutdown(10)
@@ -212,7 +226,7 @@ class WorkJob {
         //statistics.printOnShutdown(10)
         run({ cluster ->
             return {
-                if (docs(cluster).any { it.isFiction() }) {
+                if (textMonoDocs(cluster).any { it.isFiction() }) {
                     println(cluster.join('\t'))
                 }
             }
@@ -296,24 +310,21 @@ class WorkJob {
         return t
     }
 
-    Collection<Collection<Doc>> works(Collection<Doc> titleCluster) {
-        def d = new DocumentComparator()
-        Collection<Collection<Doc>> works = partition(titleCluster) { Doc a, Doc b ->
-            return d.isEqual(a.getWork(), b.getWork())
-        }
-
-        return works
-    }
-
-    private Collection<Doc> docs(Collection<String> cluster) {
+    private Collection<Doc> textMonoDocs(Collection<String> cluster) {
         whelk
                 .bulkLoad(cluster).values()
                 .collect { new Doc(whelk, it) }
                 .findAll { it.isText() && it.isMonograph() }
     }
 
+    private Collection<Doc> loadDocs(Collection<String> cluster) {
+        whelk
+                .bulkLoad(cluster).values()
+                .collect { new Doc(whelk, it) }
+    }
+
     private Collection<Collection<Doc>> titleClusters(Collection<String> cluster) {
-        docs(cluster)
+        textMonoDocs(cluster)
                 .with { partitionByTitle(it) }
     }
 
