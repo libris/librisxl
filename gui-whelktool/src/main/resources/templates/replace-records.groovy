@@ -44,6 +44,11 @@ for (String job : bibids.readLines()) {
     List<String> disappearingThingIDs
     selectBySqlWhere("id = '$idToBeReplaced'", silent: true, { item ->
         disappearingRecordIDs = item.doc.getRecordIdentifiers()
+        // Leave the MAIN (first) *RECORD* ID in place on the disappearing record, because:
+        // 1. It's neat to be able to answer 410 Gone when that record is requested.
+        // 2. Nothing within Libris should ever be linking to the record ID, link targets
+        //    are all on MainEntity-IDs, meaning those are the ones that need to move.
+        disappearingRecordIDs = disappearingRecordIDs.subList(1, disappearingRecordIDs.size())
         disappearingThingIDs = item.doc.getThingIdentifiers()
     })
 
