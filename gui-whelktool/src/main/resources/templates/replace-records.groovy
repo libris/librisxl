@@ -1,5 +1,3 @@
-import whelk.Whelk
-
 PrintWriter failedUpdates = getReportWriter("failed-updates")
 PrintWriter scheduledForDelete = getReportWriter("scheduled-for-delete")
 PrintWriter scheduledForRelinking = getReportWriter("scheduled-for-relinking")
@@ -58,7 +56,7 @@ for (String job : bibids.readLines()) {
         linksToReplace.addAll(disappearingRecordIDs)
         linksToReplace.addAll(disappearingThingIDs)
 
-        replaceLinks(item.graph, item.whelk, preferedUriToReplaceWith, linksToReplace)
+        replaceLinks(item.graph, preferedUriToReplaceWith, linksToReplace)
 
         scheduledForRelinking.println("${item.doc.getURI()}")
         item.scheduleSave(onError: { e ->
@@ -87,7 +85,7 @@ for (String job : bibids.readLines()) {
     })
 }
 
-boolean replaceLinks(Object node, Whelk whelk, String newLinkTarget, List<String> linksToReplace) {
+boolean replaceLinks(Object node, String newLinkTarget, List<String> linksToReplace) {
     if (node instanceof Map) {
         Map map = node
 
@@ -96,14 +94,14 @@ boolean replaceLinks(Object node, Whelk whelk, String newLinkTarget, List<String
         }
 
         for (String key : map.keySet()) {
-            replaceLinks(map[key], whelk, newLinkTarget, linksToReplace)
+            replaceLinks(map[key], newLinkTarget, linksToReplace)
         }
     }
 
     if (node instanceof List) {
         List list = node
         for (Object e : list) {
-            replaceLinks(e, whelk, newLinkTarget, linksToReplace)
+            replaceLinks(e, newLinkTarget, linksToReplace)
         }
     }
 }
