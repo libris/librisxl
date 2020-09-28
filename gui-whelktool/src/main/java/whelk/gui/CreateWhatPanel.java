@@ -11,6 +11,7 @@ public class CreateWhatPanel extends WizardCard implements ActionListener
     JRadioButton rCreateHolds;
     JRadioButton rDeleteBibs;
     JRadioButton rChangeSigel;
+    JRadioButton rChangeComplexSubject;
 
     public CreateWhatPanel(Wizard wizard)
     {
@@ -27,6 +28,8 @@ public class CreateWhatPanel extends WizardCard implements ActionListener
         rDeleteBibs.addActionListener(this);
         rChangeSigel = new JRadioButton("Byt en sigel mot en annan.");
         rChangeSigel.addActionListener(this);
+        rChangeComplexSubject = new JRadioButton("Ändra huvudterm i sammansatt ämnesord.");
+        rChangeComplexSubject.addActionListener(this);
 
         rDeleteHolds.setSelected(true);
 
@@ -35,11 +38,13 @@ public class CreateWhatPanel extends WizardCard implements ActionListener
         group.add(rCreateHolds);
         group.add(rDeleteBibs);
         group.add(rChangeSigel);
+        group.add(rChangeComplexSubject);
 
         vbox.add(rDeleteHolds);
         vbox.add(rCreateHolds);
         vbox.add(rDeleteBibs);
         vbox.add(rChangeSigel);
+        vbox.add(rChangeComplexSubject);
         this.add(vbox);
     }
 
@@ -64,6 +69,8 @@ public class CreateWhatPanel extends WizardCard implements ActionListener
             return Wizard.DELETE_HOLD;
         else if (rCreateHolds.isSelected())
             return Wizard.CREATE_HOLD;
+        else if (rChangeComplexSubject.isSelected())
+            return Wizard.CHANGE_COMPLEX_SUBJECT;
         return null;
     }
 }
