@@ -60,11 +60,14 @@ class PostgreSQLComponent {
 
     public static final String PROPERTY_SQL_URL = "sqlUrl"
     public static final String PROPERTY_SQL_MAX_POOL_SIZE = "sqlMaxPoolSize"
+    public static final String PROPERTY_EMBELLISH_CACHE_MAX_SIZE = "embellishCacheMaxSizeBytes"
 
     public static final ObjectMapper mapper = new ObjectMapper()
 
     private static final int DEFAULT_MAX_POOL_SIZE = 16
     private static final String driverClass = "org.postgresql.Driver"
+
+    private int embellishCacheMaxSize = 10 * 1024 * 1024 * 1024 // default 10GB
 
     private Random random = new Random(System.currentTimeMillis())
 
@@ -107,23 +110,22 @@ class PostgreSQLComponent {
             "SELECT id, data FROM lddb__versions WHERE id = ? AND checksum = ?"
 
     private static final String GET_EMBELLISHED_DOCUMENT =
-            "SELECT data from lddb__export_embellished where id = ?"
+            "SELECT data from lddb__embellished where id = ?"
 
-    private static final String INSERT_EMBELLISHED_DOCUMENT =
-            "INSERT INTO lddb__export_embellished (id, data) VALUES (?,?)"
+    private static final String UPSERT_EMBELLISHED_DOCUMENT = """
+            INSERT INTO lddb__embellished (id, data, ids) VALUES (?,?,?)
+            ON CONFLICT (id) DO UPDATE
+            SET (data, ids) = (EXCLUDED.data, EXCLUDED.ids)
+            WHERE lddb__embellished.id = EXCLUDED.id
+            """.stripIndent()
 
-    private static final String EVICT_EMBELLISHED_DEPENDERS = """
-            WITH RECURSIVE deps(i) AS (
-             VALUES (?)
-             UNION
-             SELECT d.id
-              FROM lddb__dependencies d
-              INNER JOIN deps deps1 ON d.dependsonid = i AND d.relation NOT IN (€)
-            )
-            DELETE FROM lddb__export_embellished where id in (SELECT i FROM deps)
-            """
+    private static final String EVICT_EMBELLISHED_DEPENDERS =
+            "DELETE FROM lddb__embellished WHERE id = ? OR ids @> ?"
 
-    private static final String CLEAR_EMBELLISHED = "TRUNCATE TABLE lddb__export_embellished"
+    private static final String GET_TABLE_SIZE_BYTES =
+            "SELECT pg_total_relation_size(?)"
+
+    private static final String CLEAR_EMBELLISHED = "TRUNCATE TABLE lddb__embellished"
 
     private static final String GET_DOCUMENT_VERSION_BY_MAIN_ID = """
             SELECT id, data 
@@ -299,6 +301,14 @@ class PostgreSQLComponent {
     private static final String GET_LEGACY_PROFILE =
             "SELECT profile FROM lddb__profiles WHERE library_id = ?"
 
+    private static final String FILTER_BIB_IDS_BY_HELD_BY = """
+            SELECT d.dependsonid FROM lddb l, lddb__dependencies d
+            WHERE l.id = d.id
+            AND d.relation = 'itemOf'
+            AND d.dependsonid = ANY (?)
+            AND l.data #>> '{@graph,1,heldBy,@id}' = ANY(?);
+            """.stripIndent()
+
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
 
@@ -322,6 +332,11 @@ class PostgreSQLComponent {
         int maxPoolSize = properties.getProperty(PROPERTY_SQL_MAX_POOL_SIZE)
                 ? Integer.parseInt(properties.getProperty(PROPERTY_SQL_MAX_POOL_SIZE))
                 : DEFAULT_MAX_POOL_SIZE
+
+        if (properties.getProperty(PROPERTY_EMBELLISH_CACHE_MAX_SIZE)) {
+           embellishCacheMaxSize = Integer.parseInt(properties.getProperty(PROPERTY_EMBELLISH_CACHE_MAX_SIZE))
+        }
+        log.info("$PROPERTY_EMBELLISH_CACHE_MAX_SIZE: $embellishCacheMaxSize")
 
         setup(properties.getProperty(PROPERTY_SQL_URL), maxPoolSize)
     }
@@ -365,28 +380,47 @@ class PostgreSQLComponent {
         this.dependencyCache = new DependencyCache(this)
     }
 
-    private void cacheEmbellishedDocument(String id, Document embellishedDocument, Connection connection) {
+    private void cacheEmbellishedDocument(String id, Document embellishedDocument) {
+        Connection connection = getConnection()
         PreparedStatement preparedStatement = null
 
         try {
-            preparedStatement = connection.prepareStatement(INSERT_EMBELLISHED_DOCUMENT)
+            List<String> ids = embellishmentIds(embellishedDocument, connection)
+
+            preparedStatement = connection.prepareStatement(UPSERT_EMBELLISHED_DOCUMENT)
             preparedStatement.setString(1, id)
             preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), java.sql.Types.OTHER)
+            preparedStatement.setArray(3, connection.createArrayOf("TEXT", ids as String[]))
 
             preparedStatement.execute()
         }
         finally {
-            close(preparedStatement)
+            close(preparedStatement, connection)
         }
     }
 
+    /**
+     * Get system IDs of all documents added to document graph by embellish
+     */
+    private List<String> embellishmentIds(Document embellishedDocument, Connection connection) {
+        // if it is a subgraph it has been added by embellish
+        List iris = embellishedDocument.data[JsonLd.GRAPH_KEY].collect()
+                .findAll{ it[JsonLd.GRAPH_KEY] }.collect{ JsonLd.findRecordURI((Map) it) }
+
+        List<String> ids = []
+        getSystemIds(iris, connection, { String iri, String systemId, deleted ->
+            ids.add(systemId)
+        })
+
+        return ids
+    }
 
     /**
      * Loads the embellished version of the stored document 'id'.
      * If there isn't an embellished version cached already, one will be created
      * (lazy caching).
      */
-    Document loadExportEmbellished(String id, Closure embellish) {
+    Document loadEmbellished(String id, Closure embellish) {
         Connection connection = getConnection()
         PreparedStatement selectStatement = null
         ResultSet resultSet = null
@@ -399,40 +433,49 @@ class PostgreSQLComponent {
             if (resultSet.next()) {
                 return new Document(mapper.readValue(resultSet.getString("data"), Map))
             }
-
-            // Cache-miss, embellish and store
-            Document document = load(id, connection)
-            embellish(document, null, false)
-            cacheEmbellishedDocument(id, document, connection)
-            return document
         }
         finally {
             close(resultSet, selectStatement, connection)
         }
+
+        // Cache-miss, embellish and store
+        Document document = load(id)
+        if (document) {
+            embellish(document) // will open a connection
+            cacheEmbellishedDocument(id, document)
+        }
+        else {
+            log.error("loadEmbellished. No document with $id")
+        }
+
+        return document
+    }
+
+    void clearEmbellishedCache(Connection connection) {
+        log.info("Clearing embellish cache")
+        PreparedStatement preparedStatement = null
+        try {
+            preparedStatement = connection.prepareStatement(CLEAR_EMBELLISHED)
+            preparedStatement.execute()
+        } finally {
+            close(preparedStatement)
+        }
     }
 
     void evictDependersFromEmbellishedCache(String id, Connection connection) {
-
-        // On average once every 500000 calls, clear the whole cache instead, to keep it from growing.
-        if (random.nextInt(500000) == 0xDEAD) {
-            PreparedStatement preparedStatement = null
-            try {
-                preparedStatement = connection.prepareStatement(CLEAR_EMBELLISHED)
-                preparedStatement.execute()
-            } finally {
-               close(preparedStatement)
+        if (random.nextInt(1000) == 0) { // check every 1000 calls on average
+            boolean isFull = totalTableSizeBytes('lddb__embellished', connection) > embellishCacheMaxSize
+            if(isFull) {
+                clearEmbellishedCache(connection)
+                return
             }
-            return
         }
 
         PreparedStatement preparedStatement = null
         try {
-            String query = EVICT_EMBELLISHED_DEPENDERS
-            String replacement = "'" + jsonld.NON_DEPENDANT_RELATIONS.join("', '") + "'"
-            query = query.replace("€", replacement)
-
-            preparedStatement = connection.prepareStatement(query)
+            preparedStatement = connection.prepareStatement(EVICT_EMBELLISHED_DEPENDERS)
             preparedStatement.setString(1, id)
+            preparedStatement.setArray(2, connection.createArrayOf('TEXT', [id] as String[]))
 
             preparedStatement.execute()
         }
@@ -490,6 +533,23 @@ class PostgreSQLComponent {
             return collections
         } finally {
             close(collectionResults, collectionStatement, connection)
+        }
+    }
+
+    int totalTableSizeBytes(String table, Connection connection) {
+        PreparedStatement preparedStatement = null
+        ResultSet resultSet = null
+        try {
+            preparedStatement = connection.prepareStatement(GET_TABLE_SIZE_BYTES)
+            preparedStatement.setString(1, table)
+            resultSet = preparedStatement.executeQuery()
+            if (!resultSet.next()) {
+                throw new WhelkRuntimeException("No such table $table")
+            }
+            return resultSet.getInt(1)
+        }
+        finally {
+            close(resultSet, preparedStatement)
         }
     }
 
@@ -558,6 +618,8 @@ class PostgreSQLComponent {
                 doc.setModified((Date) status['modified'])
             }
 
+            dependencyCache.invalidate(doc)
+
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
             return true
         } catch (PSQLException psqle) {
@@ -586,11 +648,19 @@ class PostgreSQLComponent {
     }
 
     void reDenormalize() {
+        log.info("Re-denormalizing data.")
         Connection connection = getConnection()
+        boolean leaveCacheAlone = true
         try {
+            long count = 0
             for (Document doc : loadAll(null, false, null, null)) {
-                refreshDerivativeTables(doc, connection, doc.getDeleted())
+                refreshDerivativeTables(doc, connection, doc.getDeleted(), leaveCacheAlone)
+
+                ++count
+                if (count % 500 == 0)
+                    log.info("$count records re-denormalized")
             }
+            clearEmbellishedCache(connection)
         } finally {
             close(connection)
         }
@@ -661,9 +731,10 @@ class PostgreSQLComponent {
         try
         {
             connection.setAutoCommit(false)
-
-            Document result = storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum, connection)
+            List<Runnable> postCommitActions = []
+            Document result = storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum, connection, postCommitActions)
             connection.commit()
+            postCommitActions.each { it.run() }
             return result
         }
         finally {
@@ -693,7 +764,8 @@ class PostgreSQLComponent {
         }
     }
 
-    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum, Connection connection) {
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy,
+                                       String oldChecksum, Connection connection, List<Runnable> postCommitActions) {
         String id = doc.shortId
         log.debug("Saving (atomic update) ${id}")
 
@@ -755,13 +827,13 @@ class PostgreSQLComponent {
                 SortedSet<String> idsLinkingToOldId = getDependencyData(id, GET_DEPENDERS, connection)
                 for (String dependerId : idsLinkingToOldId) {
                     Document depender = load(dependerId, connection)
-                    storeAtomicUpdate(depender, true, changedIn, changedBy, depender.getChecksum(), connection)
+                    storeAtomicUpdate(depender, true, changedIn, changedBy, depender.getChecksum(), connection, postCommitActions)
                 }
             }
 
             refreshDerivativeTables(doc, connection, deleted)
 
-            dependencyCache.invalidate(preUpdateDoc)
+            postCommitActions << { dependencyCache.invalidate(preUpdateDoc, doc) }
 
             log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
         } catch (PSQLException psqle) {
@@ -831,10 +903,11 @@ class PostgreSQLComponent {
         refreshDerivativeTables(doc, getConnection(), doc.deleted)
     }
 
-    void refreshDerivativeTables(Document doc, Connection connection, boolean deleted) {
+    void refreshDerivativeTables(Document doc, Connection connection, boolean deleted, boolean leaveCacheAlone = false) {
         saveIdentifiers(doc, connection, deleted)
         saveDependencies(doc, connection)
-        evictDependersFromEmbellishedCache(doc.getShortId(), connection)
+        if (!leaveCacheAlone)
+            evictDependersFromEmbellishedCache(doc.getShortId(), connection)
 
         if (jsonld) {
             if (deleted) {
@@ -1256,10 +1329,12 @@ class PostgreSQLComponent {
                 }
                 batch = rigInsertStatement(batch, doc, now, changedIn, changedBy, collection, false)
                 batch.addBatch()
-                refreshDerivativeTables(doc, connection, false)
+                boolean leaveCacheAlone = true
+                refreshDerivativeTables(doc, connection, false, leaveCacheAlone)
             }
             batch.executeBatch()
             ver_batch.executeBatch()
+            clearEmbellishedCache(connection)
             connection.commit()
             log.debug("Stored ${docs.size()} documents in collection ${collection} (versioning: ${versioning})")
             return true
@@ -1812,6 +1887,27 @@ class PostgreSQLComponent {
                 holdings.add(rs.getString("id"))
             }
             return holdings
+        }
+        finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    Set<String> filterBibIdsByHeldBy(Collection<String> systemIds, Collection<String> libraryURIs) {
+        Connection connection = null
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            connection = getConnection()
+            preparedStatement = connection.prepareStatement(FILTER_BIB_IDS_BY_HELD_BY)
+            preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds as String[]))
+            preparedStatement.setArray(2, connection.createArrayOf("TEXT", libraryURIs as String[]))
+            rs = preparedStatement.executeQuery()
+            Set<String> result = new HashSet<>()
+            while (rs.next()) {
+                result.add(rs.getString(1))
+            }
+            return result
         }
         finally {
             close(rs, preparedStatement, connection)

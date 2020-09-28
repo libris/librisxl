@@ -2928,9 +2928,9 @@
         },
         "[15]": null,
         "[16]": {
-          "link": "marc:transposition",
-          "uriTemplate": "https://id.kb.se/marc/MusicTranspositionType-{_}",
-          "matchUriToken": "^[abc]$"
+          "NOTE:LC": "Transposition and arrangement - # - nac",
+          "ignore": true,
+          "fixedDefault": "|"
         },
         "[17]": null
       },
@@ -6756,15 +6756,17 @@
         "resourceType": "Work",
         "embedded": true
       },
-      "i1": {
-        "property": "marc:languageNote",
-        "TODO": "Remove explicit data. Should be set to 1 when translationOf is present. See TODO on that and originalVersion. Equate absence and negation unless distinction is provably useful.",
-        "tokenMap": {
-          "0": "marc:ItemNotATranslationDoesNotIncludeATranslation",
-          "1": "marc:ItemIsOrIncludesATranslation"
+      "match": [
+        {
+          "when": {
+            "onRevert": {"translationOf": {}},
+            "then": {"ind1": "1"}
           },
-        "marcDefault": " "
-      },
+          "NOTE": "To avoid repeated revert of bib 041.",
+          "silentRevert": false
+        }
+      ],
+      "i1": {"ignored": true, "marcDefault": " "},
       "i2": {
         "property": "marc:languageCode",
         "marcDefault": " ",
@@ -6838,6 +6840,7 @@
       },
       "$6": {"property": "marc:bib041-fieldref", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 2},
       "$8": {"property": "marc:bib041-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!", "NOTE:record-count": 0},
+      "subfieldOrder": "a k h ...",
       "_spec": [
         {
           "source": [
@@ -6854,10 +6857,14 @@
           }
         },
         {
-          "name": "Example from wd6wf9j75fhfw1c",
+          "name": "Intermediate language with correct subfieldorder. Example from wd6wf9j75fhfw1c",
           "source": [
             {"008" : "|     |        |  |||||||||||000 ||swe| "},
             {"041": { "ind1": "1", "ind2": " ", "subfields": [{"a": "swe"}, {"h": "rus"}, {"k": "ger"}]}}
+          ],
+          "normalized": [
+            {"008" : "|     |        |  |||||||||||000 ||swe| "},
+            {"041": { "ind1": "1", "ind2": " ", "subfields": [{"a": "swe"}, {"k": "ger"}, {"h": "rus"}]}}
           ],
           "result": {
             "mainEntity": {
@@ -6867,7 +6874,6 @@
                   "@id": "https://id.kb.se/language/swe",
                   "code": "swe"
                 }],
-                "marc:languageNote": "marc:ItemIsOrIncludesATranslation",
                 "translationOf": [{
                   "@type": "Work",
                   "language": [{
@@ -6900,7 +6906,6 @@
                   "@id": "https://id.kb.se/language/swe",
                   "code": "swe"
                 }],
-                "marc:languageNote" : "marc:ItemIsOrIncludesATranslation",
                 "translationOf": [{
                   "@type": "Work",
                   "language": [{
@@ -6930,7 +6935,6 @@
                   "@id": "https://id.kb.se/language/swe",
                   "code": "swe"
                 }],
-                "marc:languageNote" : "marc:ItemIsOrIncludesATranslation",
                 "translationOf": [{
                   "@type": "Work",
                   "language": [{
@@ -6940,7 +6944,6 @@
                 }],
                 "hasPart": [{
                   "@type": "Work",
-                  "marc:languageNote" : "marc:ItemIsOrIncludesATranslation",
                   "translationOf": [{
                     "@type": "Work",
                     "language": [{
@@ -8820,20 +8823,6 @@
         {
           "when": {
             "NOTE": "Sign of translation: use language label",
-            "TODO": "remove when translationOf is the sole marker of translation",
-            "onRevert": {"marc:languageNote": "marc:ItemIsOrIncludesATranslation"}
-          }
-        },
-        {
-          "when": {
-            "NOTE": "Sign of translation: use language label",
-            "TODO": "remove when translationOf is the sole marker of translation",
-            "onRevert": {"originalVersion": {}}
-          }
-        },
-        {
-          "when": {
-            "NOTE": "Sign of translation: use language label",
             "onRevert": {"translationOf": {}}
           }
         },
@@ -8913,13 +8902,12 @@
                 "@type": "Title",
                 "mainTitle": "Moyen âge"
               } ],
-              "language": {"@type": "Language", "label": "Engelska."},
-              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
+              "language": {"@type": "Language", "label": "Engelska."}
             }
           }}
         },
         {
-          "name": "Verify revert using infer for label from prefLabelByLang[locale]",
+          "name": "Verify revert using infer for label from prefLabelByLang[locale] - only produce $l if translationOf",
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8932,11 +8920,18 @@
                 "@id": "https://id.kb.se/language/swe",
                 "prefLabelByLang": {"sv": "Svenska"}
               },
-              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
+              "translationOf": [{
+                "@type": "Work",
+                "language": [{
+                  "@id": "https://id.kb.se/language/rus",
+                  "code": "rus"
+                }]
+              }]
             }
           }},
           "normalized": [
             {"008": "|     |        |  |||||||||||000 ||swe| "},
+            {"041": {"ind1": "1", "ind2": " ", "subfields": [{"h": "rus"}]}},
             {"240": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "En titel"},
               {"l": "Svenska"}
@@ -8944,7 +8939,7 @@
           ]
         },
         {
-          "name": "Verify revert using only one language since $l isn't repeatable.",
+          "name": "Verify revert using only one language since $l isn't repeatable - only produce $l if translationOf",
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
@@ -8964,11 +8959,18 @@
                   "prefLabelByLang": {"sv": "Engelska"}
                 }
               ],
-              "marc:languageNote": "marc:ItemIsOrIncludesATranslation"
+              "translationOf": [{
+                "@type": "Work",
+                "language": [{
+                  "@id": "https://id.kb.se/language/rus",
+                  "code": "rus"
+                }]
+              }]
             }
           }},
           "normalized": [
             {"008": "|     |        |  |||||||||||000 ||swe| "},
+            {"041": {"ind1": "1", "ind2": " ", "subfields": [{"h": "rus"}]}},
             {"240": {"ind1": "1", "ind2": "0", "subfields": [
               {"a": "Swenglish text"},
               {"l": "Svenska"}
@@ -12831,7 +12833,8 @@
     },
 
     "520": {
-      "aboutEntity": "?work",
+      "aboutEntity": "?thing",
+      "fallbackEntity": "?work",
       "addLink": "summary",
       "resourceType": "Summary",
       "i1": {
@@ -12861,8 +12864,7 @@
             {"u": "http://example.org/thing-page"}, {"u": "http://example.org/another-thing-page"}
           ]}},
           "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
+              "@type": "Instance",
               "summary": [
                 {
                   "@type": "Summary",
@@ -12874,11 +12876,25 @@
                 }
               ]
             }
-          }}
+          }
         },
         {
           "source": {"520": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Dom är tillbaka och den här gången är det full fart från början till slut."}
+          ]}},
+          "result": {"mainEntity": {
+              "@type": "Instance",
+              "summary": [
+                {
+                  "@type": "Summary",
+                  "label": "Dom är tillbaka och den här gången är det full fart från början till slut."
+                }
+              ]
+          }}
+        },
+        {
+          "normalized": {"520": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "An illustrated collection of nursery rhymes set to music."}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -12886,7 +12902,30 @@
               "summary": [
                 {
                   "@type": "Summary",
-                  "label": "Dom är tillbaka och den här gången är det full fart från början till slut."
+                  "label": ["An illustrated collection of nursery rhymes set to music."]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "normalized": [
+            {"520": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Sammanfattning Instans"}]}},
+            {"520": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Sammanfattning Verk"}]}}
+          ],
+          "result": {"mainEntity": {
+            "summary": [
+              {
+                "@type": "Summary",
+                "label": "Sammanfattning Instans"
+              }
+            ],
+            "instanceOf": {
+              "@type": "Text",
+              "summary": [
+                {
+                  "@type": "Summary",
+                  "label": "Sammanfattning Verk"
                 }
               ]
             }
@@ -12894,7 +12933,6 @@
         }
       ]
     },
-
     "521": {
       "aboutEntity": "?thing",
       "embedded": true,
@@ -15725,6 +15763,7 @@
     "655" : {
       "include": ["subjectbase"],
       "aboutEntity": "?work",
+      "fallbackEntity": "?thing",
       "addLink": "genreForm",
       "resourceType": "GenreForm",
       "pendingResources": {
@@ -15741,6 +15780,7 @@
       "subfieldOrder": "8 6 a x z y v 0 2 1",
       "_spec": [
         {
+          "name": "GenreForm with inScheme saogf",
           "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [
             {"a": "Deckare"},
             {"2": "saogf"},
@@ -15773,6 +15813,21 @@
           }}
         },
         {
+          "name": "Revert GenreForm from Instance",
+          "normalized": {"655": {"ind1": " ", "ind2": "4", "subfields": [
+            {"a": "E-böcker"}
+          ]}},
+          "result": {"mainEntity": {
+            "genreForm": [
+              {
+                "@type": "GenreForm",
+                "prefLabel": "E-böcker"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "GenreForm with inScheme barngf",
           "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Deckare"}, {"2": "barngf"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -15793,6 +15848,7 @@
           }}
         },
         {
+          "name": "GenreForm with inScheme gmgpc/swe",
           "source": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Postkartor"}, {"2": "gmgpc//swe"}]}},
           "result": {"mainEntity": {
             "instanceOf": {
@@ -20446,14 +20502,39 @@
 
     "976": {
       "Note:local": "Librisdefinierat fält. Fältet är avsett för maskinell uppdatering och förekommer normalt endast i äldre poster konverterade från ett ursprungligt LIBRISIII-format, respektive i de MTM-poster som maskinellt har lästs in från Bibliotekstjänst.",
-      "aboutEntity": "?work",
+      "aboutEntity": "?thing",
       "addLink": "marc:hasBib976",
       "resourceType": "marc:Bib976",
+      "i1": {"marcDefault": " "},
       "i2": {"property": "marc:bib976-i2", "marcDefault": " "},
       "$a": {"property": "marc:bib976-a"},
-      "$b": {"property": "marc:bib976-b"}
+      "$b": {"property": "marc:bib976-b"},
+      "_spec": [
+        {
+          "source": {
+            "976": {
+              "subfields": [
+                {"a": "a"},
+                {"b": "b"}
+              ],
+              "ind1": " ",
+              "ind2": " "
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasBib976": [
+                {
+                  "@type": "marc:Bib976",
+                  "marc:bib976-a": "a",
+                  "marc:bib976-b": "b"
+                }
+              ]
+            }
+          }
+        }
+      ]
     }
-
   },
 
   "auth": {
@@ -21052,6 +21133,14 @@
       ]
     },
     "042": {
+      "match": [{
+          "when": {
+            "NOTE": "Drop uniformWorkTitle",
+            "onRevert": {"inCollection": {"@id": "https://id.kb.se/term/uniformWorkTitle"}}
+          },
+          "$9": {"ignoreOnRevert": true}
+        }
+      ],
       "NOTE:local": "ANVÄNDS NORMALT EJ I AUKTORITETSFORMATET",
       "NOTE:record-count": 34043,
       "$a": {"addLink": "descriptionAuthentication", "resourceType": "DescriptionAuthentication", "property": "code"},
@@ -21060,7 +21149,53 @@
         "resourceType": "TermCollection",
         "uriTemplate": "https://id.kb.se/term/{_}",
         "property": "code"
-      }
+      },
+      "_spec": [{
+        "name": "Do not produce subfield $9 with value 'uniformWorkTitle'",
+        "normalized": {
+          "042": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "xxx"}
+          ]}},
+        "result": {"mainEntity": {
+          "@type" : "Work",
+          "descriptionAuthentication": [
+            {
+              "@type": "DescriptionAuthentication",
+              "code": "xxx"
+            }
+          ],
+          "inCollection": [
+            {
+              "@id": "https://id.kb.se/term/uniformWorkTitle",
+              "@type": "TermCollection",
+              "code": "uniformWorkTitle"
+            }
+          ]
+        }}
+      },{
+        "name": "Produce subfield $9",
+        "normalized": {
+          "042": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "xxx"},
+            {"9": "fack"}
+          ]}},
+        "result": {"mainEntity": {
+          "@type" : "Identity",
+          "descriptionAuthentication": [
+            {
+              "@type": "DescriptionAuthentication",
+              "code": "xxx"
+            }
+          ],
+          "inCollection": [
+            {
+              "@id": "https://id.kb.se/term/zzz",
+              "@type": "TermCollection",
+              "code": "fack"
+            }
+          ]
+        }}
+      }]
     },
     "043": {
       "aboutEntity": "?thing",

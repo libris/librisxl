@@ -288,11 +288,12 @@ class SearchUtils {
 
     private Map addSlices(Map stats, Map aggregations, String baseUrl) {
         Map sliceMap = aggregations.inject([:]) { acc, key, aggregation ->
+            String baseUrlForKey = removeWildcardForKey(baseUrl, key)
             List observations = []
             Map sliceNode = ['dimension': key.replace(".${JsonLd.ID_KEY}", '')]
             aggregation['buckets'].each { bucket ->
                 String itemId = bucket['key']
-                String searchPageUrl = "${baseUrl}&${makeParam(key, itemId)}"
+                String searchPageUrl = "${baseUrlForKey}&${makeParam(key, itemId)}"
 
                 Map observation = ['totalItems': bucket.getAt('doc_count'),
                                    'view': [(JsonLd.ID_KEY): searchPageUrl],
@@ -317,6 +318,10 @@ class SearchUtils {
         }
 
         return stats
+    }
+
+    private String removeWildcardForKey(String url, String key) {
+        url.replace("&${makeParam(key, '*')}", "")
     }
 
     /*

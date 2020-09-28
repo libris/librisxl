@@ -109,7 +109,6 @@ public class OaiPmh extends HttpServlet
     public void init()
     {
         this.workDerivativeTypes = new HashSet<>(s_whelk.getJsonld().getSubClasses("Work"));
-        this.workDerivativeTypes.add("Work");
     }
 
     public void destroy()
