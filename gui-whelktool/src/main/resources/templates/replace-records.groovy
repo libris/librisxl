@@ -5,7 +5,7 @@ PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 File bibids = new File('INPUT')
 
 /*
- 1. Find the preffered URI of the replacing document
+ 1. Find the preferred URI of the replacing document
  2. Find everything linking to the disappearing record, relink it to the replacement
  3. Get all IDs from the disappearing record, add them as sameAs-IDs on the replacement
  4. Remove the disappearing record
@@ -20,19 +20,19 @@ for (String job : bibids.readLines()) {
     }
     String idToReplaceWith = parts[0].trim()
     String idToBeReplaced = parts[1].trim()
-    String preferedUriToReplaceWith = null
+    String preferredUriToReplaceWith = null
 
     // Find preferred URI
     selectBySqlWhere("id = '$idToReplaceWith'", silent: true, { item ->
         List<String> recordIDs = item.doc.getRecordIdentifiers()
         List<String> thingIDs = item.doc.getThingIdentifiers()
         if (!thingIDs.isEmpty()) {
-            preferedUriToReplaceWith = thingIDs[0]
+            preferredUriToReplaceWith = thingIDs[0]
         } else if (!recordIDs.isEmpty()) {
-            preferedUriToReplaceWith = recordIDs[0]
+            preferredUriToReplaceWith = recordIDs[0]
         }
     })
-    if (preferedUriToReplaceWith == null) {
+    if (preferredUriToReplaceWith == null) {
         System.err.println("Could not find preferred URI to use in: " + job)
         continue
     }
@@ -49,6 +49,10 @@ for (String job : bibids.readLines()) {
         disappearingRecordIDs = disappearingRecordIDs.subList(1, disappearingRecordIDs.size())
         disappearingThingIDs = item.doc.getThingIdentifiers()
     })
+    if (disappearingRecordIDs.isEmpty() || disappearingThingIDs.isEmpty()) {
+        System.err.println("Could not find any suitable URIs on the disappearing record: " + idToBeReplaced)
+        continue
+    }
 
     // Replace links in dependers, to the preferred URI
     selectBySqlWhere("id in (select id from lddb__dependencies where dependsonid = '$idToBeReplaced')", silent: true, { item ->
@@ -56,9 +60,10 @@ for (String job : bibids.readLines()) {
         linksToReplace.addAll(disappearingRecordIDs)
         linksToReplace.addAll(disappearingThingIDs)
 
-        replaceLinks(item.graph, preferedUriToReplaceWith, linksToReplace)
+        replaceLinks(item.graph, preferredUriToReplaceWith, linksToReplace)
 
         scheduledForRelinking.println("${item.doc.getURI()}")
+        // Not loud, because the dependers haven't actually changed (still linking to the same URI).
         item.scheduleSave(onError: { e ->
             failedUpdates.println("Failed to update ${item.doc.shortId} due to: $e")
         })
@@ -79,7 +84,7 @@ for (String job : bibids.readLines()) {
             item.doc.addThingIdentifier(id)
 
         scheduledForUpdate.println("${item.doc.getURI()}")
-        item.scheduleSave(onError: { e ->
+        item.scheduleSave(loud: true, onError: { e ->
             failedUpdates.println("Failed to update ${item.doc.shortId} due to: $e")
         })
     })
