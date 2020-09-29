@@ -7,7 +7,7 @@ PrintWriter linkChanges = getReportWriter("link-changes")
 String where = "collection <> 'definitions'"
 
 selectBySqlWhere(where) { data ->
-    boolean changed = traverse(data.graph, data.doc.shortId, data.whelk, linkChanges)
+    boolean changed = traverse(data.graph, data.doc.shortId, data.whelk, linkChanges, "root")
 
     if (changed) {
         scheduledForUpdating.println("${data.doc.getURI()}")
@@ -17,7 +17,7 @@ selectBySqlWhere(where) { data ->
     }
 }
 
-boolean traverse(Object node, String idForLogging, Whelk whelk, PrintWriter linkChanges) {
+boolean traverse(Object node, String idForLogging, Whelk whelk, PrintWriter linkChanges, String branchRelation) {
     boolean changed = false
 
     if (node instanceof Map) {
@@ -29,22 +29,22 @@ boolean traverse(Object node, String idForLogging, Whelk whelk, PrintWriter link
                 !map["@id"].endsWith("#it") ) {
             String correctLinkTarget = whelk.storage.getThingId(map["@id"])
             if (correctLinkTarget != null && correctLinkTarget != map["@id"]) {
-                linkChanges.println("In ${idForLogging}, changed a reference ${map["@id"]} , to ${correctLinkTarget}")
+                linkChanges.println("In ${idForLogging}, changed a ${branchRelation} reference ${map["@id"]} , to ${correctLinkTarget}")
                 map["@id"] = correctLinkTarget
                 changed = true
             }
         }
 
         for (String key : map.keySet()) {
-            if (key != "generationProcess" && key != "heldBy")
-                changed |= traverse(map[key], idForLogging, whelk, linkChanges)
+            if (key != "generationProcess" && key != "heldBy" && key != "derivedFrom")
+                changed |= traverse(map[key], idForLogging, whelk, linkChanges, key)
         }
     }
 
     if (node instanceof List) {
         List list = node
         for (Object e : list) {
-            changed |= traverse(e, idForLogging, whelk, linkChanges)
+            changed |= traverse(e, idForLogging, whelk, linkChanges, branchRelation)
         }
     }
 
