@@ -1,9 +1,10 @@
 PrintWriter failedBibIDs = getReportWriter("failed-to-update-bibIDs")
 PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 
-selectBySqlWhere(
+selectBySqlWhere( "collection = 'bib' AND (" +
         "data#>'{@graph,1,instanceOf,subject}' @> '[{\"@type\":\"ComplexSubject\"}]'::jsonb OR " +
-        "data#>'{@graph,1,subject}' @> '[{\"@type\":\"ComplexSubject\"}]'::jsonb",
+        "data#>'{@graph,1,subject}' @> '[{\"@type\":\"ComplexSubject\"}]'::jsonb" +
+        ")",
         silent: false, { bib ->
     boolean changed = false
 
@@ -22,6 +23,7 @@ selectBySqlWhere(
     }
 
     if (changed) {
+        scheduledForUpdate.println("${bib.doc.getURI()}")
         bib.scheduleSave(loud: true, onError: { e ->
             failedBibIDs.println("Failed to update ${bib.doc.shortId} due to: $e")
         })
@@ -29,59 +31,25 @@ selectBySqlWhere(
 })
 
 boolean fixSubject(Object subject) {
-
-/*
-@graph,1,instanceOf
-                "subject": [
-                {
-                    "@id": "https://id.kb.se/term/sao/1940-talet"
-                },
-                {
-                    "@type": "ComplexSubject",
-                    "sameAs": [
-                        {
-                            "@id": "https://id.kb.se/term/sao/S%C3%A4kerhetspolitik--historia"
-                        }
-                    ],
-                    "inScheme": {
-                        "@id": "https://id.kb.se/term/sao"
-                    },
-                    "prefLabel": "S\u00e4kerhetspolitik--historia",
-                    "termComponentList": [
-                        {
-                            "@type": "Topic",
-                            "prefLabel": "S\u00e4kerhetspolitik"
-                        },
-                        {
-                            "@type": "TopicSubdivision",
-                            "prefLabel": "historia"
-                        }
-                    ]
-                },
-
- */
-
-    // FROMTERM
-    // TOTERM
-
     boolean fixedSameAs = false
     boolean fixedPrefLabel = false
     boolean fixedTermComponentList = false
 
     if (subject["@type"] == "ComplexSubject") {
-        //sameAs // Is there something at that ID ? NO (placeholder)!
 
         if (subject.sameAs != null && subject.sameAs instanceof List) {
             for (Object ref : subject.sameAs) {
-                if (ref["@id"].contains("FROMTERM")) {
-                    ref["@id"] = ref["@id"].replace("FROMTERM", "TOTERM")
+                String encodedFrom = URLEncoder.encode("FROMTERM", "UTF-8")
+                String encodedTo = URLEncoder.encode("TOTERM", "UTF-8")
+                if (ref["@id"].contains(encodedFrom)) {
+                    ref["@id"] = ref["@id"].replaceFirst(encodedFrom, encodedTo)
                     fixedSameAs = true
                 }
             }
         }
 
-        if (subject.prefLabel != null && subject.prefLabel instanceof String) {
-            subject.prefLabel = subject.prefLabel.replace("FROMTERM", "TOTERM")
+        if (subject.prefLabel != null && subject.prefLabel instanceof String && subject.prefLabel.startsWith("FROMTERM")) {
+            subject.prefLabel = subject.prefLabel.replaceFirst("FROMTERM", "TOTERM")
             fixedPrefLabel = true
         }
 
