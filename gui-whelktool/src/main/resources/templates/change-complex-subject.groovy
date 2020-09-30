@@ -13,7 +13,7 @@ selectBySqlWhere( "collection = 'bib' AND (" +
             bib.graph[1].instanceOf.subject != null &&
             bib.graph[1].instanceOf.subject instanceof List) {
         for (Object subject : bib.graph[1].instanceOf.subject) {
-            changed |= fixSubject(subject)
+            changed |= fixSubject(subject, manualReviewLog, bib.doc.shortId)
         }
     }
 

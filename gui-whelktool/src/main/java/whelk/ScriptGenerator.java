@@ -60,6 +60,6 @@ public class ScriptGenerator
         scriptText = scriptText.replace("FROMTERM", fromMainTerm);
         scriptText = scriptText.replace("TOTERM", toMainTerm);
 
-        return new PortableScript(scriptText, null, "Byte av huvudterm från " + fromMainTerm + " till " + toMainTerm);
+        return new PortableScript(scriptText, null, "Byte av huvudterm från " + fromMainTerm + " till " + toMainTerm, true);
     }
 }
