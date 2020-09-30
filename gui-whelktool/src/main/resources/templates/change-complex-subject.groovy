@@ -59,9 +59,13 @@ boolean fixSubject(Object subject, PrintWriter manualReviewLog, String id) {
                         && subject.termComponentList[0]["prefLabel"] == "FROMTERM") {
                     subject.termComponentList[0]["prefLabel"] = "TOTERM"
                     fixedTermComponentList = true
-                } else if (subject.termComponentList[0].size() == 1 &&
-                        subject.termComponentList[0])["@id"] != null {
-                    // The term is linked. No need to update it.
+                } else if ( // The term is linked already
+                    subject.termComponentList[0].size() == 1 &&
+                    subject.termComponentList[0]["@id"] != null &&
+                    (
+                        subject.termComponentList[0]["@id"].endsWith("FROMTERM") || subject.termComponentList[0]["@id"].endsWith("TOTERM")
+                    )
+                ) {
                     fixedTermComponentList = true
                 }
             }
