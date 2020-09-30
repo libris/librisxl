@@ -36,7 +36,7 @@ boolean traverse(Object node, String idForLogging, Whelk whelk, PrintWriter link
         }
 
         for (String key : map.keySet()) {
-            if (key != "generationProcess" && key != "heldBy" && key != "derivedFrom")
+            if (key != "generationProcess" && key != "heldBy" && key != "derivedFrom" && key != "describedBy")
                 changed |= traverse(map[key], idForLogging, whelk, linkChanges, key)
         }
     }
