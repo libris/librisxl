@@ -1,5 +1,6 @@
 PrintWriter failedBibIDs = getReportWriter("failed-to-update-bibIDs")
 PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
+PrintWriter manualReviewLog = getReportWriter("needs-manual-review")
 
 selectBySqlWhere( "collection = 'bib' AND (" +
         "data#>'{@graph,1,instanceOf,subject}' @> '[{\"@type\":\"ComplexSubject\"}]'::jsonb OR " +
@@ -18,7 +19,7 @@ selectBySqlWhere( "collection = 'bib' AND (" +
 
     if (bib.graph[1].subject != null && bib.graph[1].subject instanceof List) {
         for (Object subject : bib.graph[1].subject) {
-            changed |= fixSubject(subject)
+            changed |= fixSubject(subject, manualReviewLog, bib.doc.shortId)
         }
     }
 
@@ -30,7 +31,7 @@ selectBySqlWhere( "collection = 'bib' AND (" +
     }
 })
 
-boolean fixSubject(Object subject) {
+boolean fixSubject(Object subject, PrintWriter manualReviewLog, String id) {
     boolean fixedSameAs = false
     boolean fixedPrefLabel = false
     boolean fixedTermComponentList = false
@@ -64,5 +65,13 @@ boolean fixSubject(Object subject) {
         }
     }
 
-    return fixedSameAs && fixedPrefLabel && fixedTermComponentList
+    boolean allDone = fixedSameAs && fixedPrefLabel && fixedTermComponentList
+    boolean someDone = fixedSameAs || fixedPrefLabel || fixedTermComponentList
+
+    if (someDone && !allDone)
+        manualReviewLog.println("Did not update ${id} because the term was used in strange way in this record: " +
+                "Found expected sameAs: $fixedSameAs, found expected: prefLabel $fixedPrefLabel, " +
+                "found expected termComponentList: $fixedTermComponentList")
+
+    return allDone
 }
