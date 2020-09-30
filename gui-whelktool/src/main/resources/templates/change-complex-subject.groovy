@@ -32,25 +32,24 @@ selectBySqlWhere( "collection = 'bib' AND (" +
 })
 
 boolean fixSubject(Object subject, PrintWriter manualReviewLog, String id) {
-    boolean fixedSameAs = false
     boolean fixedPrefLabel = false
     boolean fixedTermComponentList = false
 
     if (subject["@type"] == "ComplexSubject") {
 
+        // Fix sameAs URI if it exists (optional)
         if (subject.sameAs != null && subject.sameAs instanceof List) {
             for (Object ref : subject.sameAs) {
-                String encodedFrom = URLEncoder.encode("FROMTERM", "UTF-8")
-                String encodedTo = URLEncoder.encode("TOTERM", "UTF-8")
+                String encodedFrom = URLEncoder.encode("FROMTERM", "UTF-8") + "--"
+                String encodedTo = URLEncoder.encode("TOTERM", "UTF-8") + "--"
                 if (ref["@id"].contains(encodedFrom)) {
                     ref["@id"] = ref["@id"].replaceFirst(encodedFrom, encodedTo)
-                    fixedSameAs = true
                 }
             }
         }
 
-        if (subject.prefLabel != null && subject.prefLabel instanceof String && subject.prefLabel.startsWith("FROMTERM")) {
-            subject.prefLabel = subject.prefLabel.replaceFirst("FROMTERM", "TOTERM")
+        if (subject.prefLabel != null && subject.prefLabel instanceof String && subject.prefLabel.startsWith("FROMTERM"  + "--")) {
+            subject.prefLabel = subject.prefLabel.replaceFirst("FROMTERM"  + "--", "TOTERM"  + "--")
             fixedPrefLabel = true
         }
 
@@ -60,18 +59,22 @@ boolean fixSubject(Object subject, PrintWriter manualReviewLog, String id) {
                         && subject.termComponentList[0]["prefLabel"] == "FROMTERM") {
                     subject.termComponentList[0]["prefLabel"] = "TOTERM"
                     fixedTermComponentList = true
+                } else if (subject.termComponentList[0].size() == 1 &&
+                        subject.termComponentList[0])["@id"] != null {
+                    // The term is linked. No need to update it.
+                    fixedTermComponentList = true
                 }
             }
         }
     }
 
-    boolean allDone = fixedSameAs && fixedPrefLabel && fixedTermComponentList
-    boolean someDone = fixedSameAs || fixedPrefLabel || fixedTermComponentList
+    boolean allDone = fixedPrefLabel && fixedTermComponentList
+    boolean someDone = fixedPrefLabel || fixedTermComponentList
 
     if (someDone && !allDone)
-        manualReviewLog.println("Did not update ${id} because the term was used in strange way in this record: " +
-                "Found expected sameAs: $fixedSameAs, found expected: prefLabel $fixedPrefLabel, " +
-                "found expected termComponentList: $fixedTermComponentList")
+        manualReviewLog.println("Did not update ${id} : " +
+                "Found expected: prefLabel $fixedPrefLabel, " +
+                "found expected: termComponentList: $fixedTermComponentList")
 
     return allDone
 }
