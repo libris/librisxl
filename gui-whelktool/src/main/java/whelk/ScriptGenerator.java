@@ -51,4 +51,15 @@ public class ScriptGenerator
 
         return new PortableScript(scriptText, controlNumbers, "Ersättning av " + controlNumbers.size() + " poster", false);
     }
+
+    public static PortableScript generateChangeSubjectScript(String fromMainTerm, String toMainTerm) throws IOException
+    {
+        String scriptText = IOUtils.toString(new InputStreamReader(
+                ScriptGenerator.class.getClassLoader().getResourceAsStream("templates/change-complex-subject.groovy") ));
+
+        scriptText = scriptText.replace("FROMTERM", fromMainTerm);
+        scriptText = scriptText.replace("TOTERM", toMainTerm);
+
+        return new PortableScript(scriptText, null, "Byte av huvudterm från " + fromMainTerm + " till " + toMainTerm, true);
+    }
 }
