@@ -90,7 +90,7 @@ for (String job : bibids.readLines()) {
     })
 }
 
-boolean replaceLinks(Object node, String newLinkTarget, List<String> linksToReplace) {
+void replaceLinks(Object node, String newLinkTarget, List<String> linksToReplace) {
     if (node instanceof Map) {
         Map map = node
 
@@ -105,8 +105,20 @@ boolean replaceLinks(Object node, String newLinkTarget, List<String> linksToRepl
 
     if (node instanceof List) {
         List list = node
+
         for (Object e : list) {
             replaceLinks(e, newLinkTarget, linksToReplace)
+        }
+
+        // Check that we've not created a double link (in case there was one before we started)
+        boolean alreadyFound = false
+        Iterator it = list.iterator()
+        while (it.hasNext()) {
+            Object e = it.next()
+            if (e instanceof Map && e.size() == 1 && e["@id"] != null && e["@id"] == newLinkTarget) {
+                if (alreadyFound) { it.remove() }
+                else alreadyFound = true
+            }
         }
     }
 }
