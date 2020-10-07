@@ -2,7 +2,7 @@ PrintWriter failedBibIDs = getReportWriter("failed-to-update-bibIDs")
 PrintWriter scheduledForUpdate = getReportWriter("scheduled-for-update")
 PrintWriter manualReviewLog = getReportWriter("needs-manual-review")
 
-selectBySqlWhere( "collection = 'bib' AND (" +
+selectBySqlWhere( "collection = 'bib' AND data#>>'{@graph,1}' LIKE '%FROMTERM%' AND (" +
         "data#>'{@graph,1,instanceOf,subject}' @> '[{\"@type\":\"ComplexSubject\"}]'::jsonb OR " +
         "data#>'{@graph,1,subject}' @> '[{\"@type\":\"ComplexSubject\"}]'::jsonb" +
         ")",
@@ -35,7 +35,14 @@ boolean fixSubject(Object subject, PrintWriter manualReviewLog, String id) {
     boolean fixedPrefLabel = false
     boolean fixedTermComponentList = false
 
-    if (subject["@type"] == "ComplexSubject") {
+    if (
+        subject["@type"] == "ComplexSubject" &&
+        (
+                subject["inScheme"] == null ||
+                subject["inScheme"]["@id"] == null ||
+                subject["inScheme"]["@id"] == "https://id.kb.se/term/sao"
+        )
+    ) {
 
         // Fix sameAs URI if it exists (optional)
         if (subject.sameAs != null && subject.sameAs instanceof List) {
