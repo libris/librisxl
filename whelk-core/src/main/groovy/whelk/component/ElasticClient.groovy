@@ -156,7 +156,7 @@ class ElasticClient {
 
         private Tuple2<Integer, String> sendRequest(HttpRequestBase request) {
             try {
-                return sendRequestRetry429(request)
+                return sendRequestRetry4XX(request)
             }
             catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e)
@@ -167,13 +167,13 @@ class ElasticClient {
             }
         }
 
-        private Tuple2<Integer, String> sendRequestRetry429(HttpRequestBase request) {
+        private Tuple2<Integer, String> sendRequestRetry4XX(HttpRequestBase request) {
             int backOffSeconds = 1
             while (true) {
                 HttpResponse response = httpClient.execute(request)
                 int statusCode = response.getStatusLine().getStatusCode()
 
-                if (statusCode != 429) {
+                if (statusCode != 429 && statusCode != 409) {
                     def result = new Tuple2(statusCode, EntityUtils.toString(response.getEntity()))
 
                     if (log.isDebugEnabled()) {
@@ -187,7 +187,7 @@ class ElasticClient {
                     return result
                 } else {
                     if (backOffSeconds > MAX_BACKOFF_S) {
-                        throw new RetriesExceededException("Max retries exceeded: HTTP 429 from ElasticSearch")
+                        throw new RetriesExceededException("Max retries exceeded: HTTP 4XX from ElasticSearch")
                     }
 
                     request.reset()
