@@ -185,7 +185,7 @@ class ElasticSearch {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
         def response = client.performRequest('POST',
-                "/${indexName}/_delete_by_query?conflicts=proceed",
+                "/${indexName}/_delete_by_query",
                 JsonOutput.toJson(dsl)).second
         Map responseMap = mapper.readValue(response, Map)
         log.debug("Response: ${responseMap.deleted} of ${responseMap.total} " +
