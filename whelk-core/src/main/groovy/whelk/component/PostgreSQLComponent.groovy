@@ -900,7 +900,9 @@ class PostgreSQLComponent {
     }
 
     void refreshDerivativeTables(Document doc) {
-        refreshDerivativeTables(doc, getConnection(), doc.deleted)
+        getConnection().withCloseable { connection ->
+            refreshDerivativeTables(doc, connection, doc.deleted)
+        }
     }
 
     void refreshDerivativeTables(Document doc, Connection connection, boolean deleted, boolean leaveCacheAlone = false) {
@@ -1707,11 +1709,15 @@ class PostgreSQLComponent {
     }
 
     SortedSet<String> getDependencies(String id) {
-        return getDependencyData(id, GET_DEPENDENCIES, getConnection())
+        getConnection().withCloseable { connection ->
+            return getDependencyData(id, GET_DEPENDENCIES, connection)
+        }
     }
 
     SortedSet<String> getDependers(String id) {
-        return getDependencyData(id, GET_DEPENDERS, getConnection())
+        getConnection().withCloseable { connection ->
+            return getDependencyData(id, GET_DEPENDERS, connection)
+        }
     }
 
     Set<String> getByRelation(String iri, String relation) {
