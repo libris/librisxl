@@ -4,26 +4,9 @@ import json
 MAX_STATS = 512
 HARD_MAX_STATS = 8192
 STATS_FOR_ALL = {
-        # from auth 008
-        "marc:subdivision",
-        "marc:romanization",
-        "marc:languageOfCatalog",
-        "marc:kindOfRecord",
-        "descriptionConventions",
-        "marc:subjectHeading",
-        "marc:typeOfSeries",
-        "marc:numberedSeries",
-        "marc:headingSeries",
-        "marc:subjectSubdivision",
-        "marc:govtAgency",
-        "marc:reference",
-        "marc:recordUpdate",
-        "marc:personalName",
-        "marc:level",
-        "marc:modifiedRecord",
-        "marc:catalogingSource",
-        "marc:headingMain",
-        "marc:headingSubject",
+        # auth
+        "hasBiographicalInformation",
+        "marc:hasBiographicalOrHistoricalData",
         # "shouldn't" be too many...
         "marc:displayText",
         "part",
