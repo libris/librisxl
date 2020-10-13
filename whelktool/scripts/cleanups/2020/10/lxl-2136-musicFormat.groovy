@@ -41,8 +41,6 @@ selectBySqlWhere(where) { data ->
     ]
     instance["musicFormat"].add( newMusicFormat )
 
-    System.out.println(instance["musicFormat"])
-
     scheduledForUpdating.println("${data.doc.getURI()}")
     data.scheduleSave(onError: { e ->
         failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
