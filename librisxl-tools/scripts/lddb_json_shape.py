@@ -36,9 +36,9 @@ def reshape(data):
         thing =graph[1]
         thing['meta'] = graph[0]
 
-        if len(graph) > 2 and 'instanceOf' in thing:
-            work = graph[2]
-            assert thing['instanceOf']['@id'] == work['@id']
+        if 'instanceOf' in thing:
+            work = thing['instanceOf']
+            #assert thing['instanceOf']['@id'] == work['@id']
             thing['instanceOf'] = work
         else:
             work = None
