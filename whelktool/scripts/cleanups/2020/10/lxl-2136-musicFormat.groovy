@@ -14,7 +14,7 @@ selectBySqlWhere(where) { data ->
     String newCode
 
     data.graph[0]._marcUncompleted.each{ uncompleted ->
-        if (uncompleted["348"])
+        if (uncompleted instanceof Map && uncompleted.keySet().contains("348"))
         {
             uncompleted["348"].subfields.each { it ->
                 if (it["a"])
@@ -28,19 +28,21 @@ selectBySqlWhere(where) { data ->
         }
     }
 
-    HashMap newMusicFormat = [
-            "@type":"MusicFormat",
-            "label": [newLabel],
-            "source":
-                    [
-                            "@type": "Source",
-                            "code": newCode
-                    ]
-    ]
-    instance["musicFormat"].add( newMusicFormat )
+    if (newLabel != null && newCode != null) {
+        HashMap newMusicFormat = [
+                "@type":"MusicFormat",
+                "label": [newLabel],
+                "source":
+                        [
+                                "@type": "Source",
+                                "code": newCode
+                        ]
+        ]
+        instance["musicFormat"].add( newMusicFormat )
 
-    scheduledForUpdating.println("${data.doc.getURI()}")
-    data.scheduleSave(onError: { e ->
-        failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
-    })
+        scheduledForUpdating.println("${data.doc.getURI()}")
+        data.scheduleSave(onError: { e ->
+            failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
+        })
+    }
 }
