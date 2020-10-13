@@ -19,11 +19,9 @@ selectBySqlWhere(where) { data ->
             uncompleted["348"].subfields.each { it ->
                 if (it["a"])
                     if (it["a"]) {
-                        System.out.println("" + it["a"].getClass() + ": " + it["a"])
                         newLabel = it["a"]
                     }
                     if (it["2"]) {
-                        System.out.println(it["2"])
                         newCode = it["2"]
                     }
             }
