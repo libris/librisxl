@@ -15,8 +15,8 @@ STATS_FOR_ALL = {
 
 def reshape(data):
     if '@graph' in data:
-        graph =  data['@graph']
-        thing =graph[1]
+        graph = data['@graph']
+        thing = graph[1]
         thing['meta'] = graph[0]
 
         work = thing.get('instanceOf')
