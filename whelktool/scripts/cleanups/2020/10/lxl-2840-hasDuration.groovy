@@ -14,23 +14,14 @@ selectBySqlWhere(where) { data ->
 
     // Extract duration from marcUncompleted
     List<String> durations = []
-    data.graph[0]._marcUncompleted.each{ uncompleted ->
+    asList(data.graph[0]._marcUncompleted).each{ uncompleted ->
         if (uncompleted instanceof Map && uncompleted.keySet().contains("306"))
         {
-            if ( uncompleted["306"].subfields instanceof List ) {
-                if ( ! (uncompleted["306"].subfields.isEmpty()) ) {
-                    uncompleted["306"].subfields.each { it ->
-                        if (it["a"] != null) {
-                            durations.add(it["a"])
-                        }
-                    }
-                }
-            } else {
-                if (uncompleted["306"]["subfields"]["a"] != null) {
-                    durations.add(uncompleted["306"]["subfields"]["a"])
+            asList(uncompleted["306"].subfields).each { it ->
+                if (it["a"] != null) {
+                    durations.add(it["a"])
                 }
             }
-
         }
     }
     if (durations.size() == 0)
@@ -58,7 +49,7 @@ selectBySqlWhere(where) { data ->
     data.graph[1]["hasDuration"].add(newHasDuration)
     for (int i = data.graph[0]._marcUncompleted.size() -1; i > -1; --i) {
         def field = data.graph[0]._marcUncompleted[i]
-        if (field["306"] != null)
+        if (field != null && field["306"] != null)
             data.graph[0]._marcUncompleted.remove(i)
     }
 
@@ -66,4 +57,12 @@ selectBySqlWhere(where) { data ->
     data.scheduleSave(onError: { e ->
         failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
     })
+}
+
+private List asList(Object o) {
+    if (o == null)
+        return []
+    if (o instanceof List)
+        return o
+    return [o]
 }

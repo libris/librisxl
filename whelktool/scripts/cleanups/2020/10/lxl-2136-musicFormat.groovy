@@ -15,20 +15,25 @@ selectBySqlWhere(where) { data ->
     // Extract label and code from _marcUncompleted
     String newLabel
     String newCode
-    data.graph[0]._marcUncompleted.each{ uncompleted ->
+    asList(data.graph[0]._marcUncompleted).each{ uncompleted ->
         if (uncompleted instanceof Map && uncompleted.keySet().contains("348"))
         {
-            if ( uncompleted["348"].subfields instanceof List && ! (uncompleted["348"].subfields.isEmpty()) ) {
-                uncompleted["348"].subfields.each { it ->
-                    if (it["a"] != null) {
-                        newLabel = it["a"]
-                    }
-                    if (it["2"] != null) {
-                        newCode = it["2"]
-                    }
+            asList(uncompleted["348"].subfields).each { it ->
+                if (it["a"] != null) {
+                    newLabel = it["a"]
+                }
+                if (it["2"] != null) {
+                    newCode = it["2"]
                 }
             }
         }
+    }
+
+    // Clean up _marcUncompleted
+    for (int i = data.graph[0]._marcUncompleted.size() -1; i > -1; --i) {
+        def field = data.graph[0]._marcUncompleted[i]
+        if (field != null && field["348"] != null)
+            data.graph[0]._marcUncompleted.remove(i)
     }
 
     // Add MusicFormat entity
@@ -49,4 +54,12 @@ selectBySqlWhere(where) { data ->
             failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
         })
     }
+}
+
+private List asList(Object o) {
+    if (o == null)
+        return []
+    if (o instanceof List)
+        return o
+    return [o]
 }
