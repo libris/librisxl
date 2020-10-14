@@ -19,12 +19,12 @@ def reshape(data):
         thing =graph[1]
         thing['meta'] = graph[0]
 
-        if 'instanceOf' in thing:
-            work = thing['instanceOf']
-            #assert thing['instanceOf']['@id'] == work['@id']
-            thing['instanceOf'] = work
-        else:
-            work = None
+        work = thing.get('instanceOf')
+        if work and len(work) == 1 and '@id' in work:
+            for item in graph[2:]:
+                if item.get('@id') == work['@id']:
+                    work = thing['instanceOf'] = item
+                    break
 
         return thing, work
 
