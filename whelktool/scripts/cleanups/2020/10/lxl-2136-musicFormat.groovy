@@ -5,29 +5,33 @@ String where = "collection = 'bib' and deleted = false and data#>>'{@graph,0,_ma
 
 selectBySqlWhere(where) { data ->
 
+    // Make sure "musicFormat" is a list
     def instance = data.graph[1]
-    if (!instance["musicFormat"]) {
+    if (instance["musicFormat"] == null) {
         instance.put("musicFormat", [])
-    }
+    } else if (!(instance["musicFormat"] instanceof List))
+        instance.put("musicFormat", [instance["musicFormat"]])
 
+    // Extract label and code from _marcUncompleted
     String newLabel
     String newCode
-
     data.graph[0]._marcUncompleted.each{ uncompleted ->
         if (uncompleted instanceof Map && uncompleted.keySet().contains("348"))
         {
-            uncompleted["348"].subfields.each { it ->
-                if (it["a"])
-                    if (it["a"]) {
+            if ( uncompleted["348"].subfields instanceof List && ! (uncompleted["348"].subfields.isEmpty()) ) {
+                uncompleted["348"].subfields.each { it ->
+                    if (it["a"] != null) {
                         newLabel = it["a"]
                     }
-                    if (it["2"]) {
+                    if (it["2"] != null) {
                         newCode = it["2"]
                     }
+                }
             }
         }
     }
 
+    // Add MusicFormat entity
     if (newLabel != null && newCode != null) {
         HashMap newMusicFormat = [
                 "@type":"MusicFormat",
