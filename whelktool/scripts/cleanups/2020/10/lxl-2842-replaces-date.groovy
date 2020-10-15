@@ -7,7 +7,7 @@ selectBySqlWhere(where) { data ->
     boolean changed = false
 
     data.graph[1]["replaces"].each { it ->
-        if (it.containsKey("date")) {
+        if (it.containsKey("date") && it["@type"] == "Serial") {
             Object date = it["date"]
 
             // Missing frequency?
