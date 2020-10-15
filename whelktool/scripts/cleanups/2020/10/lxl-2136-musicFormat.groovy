@@ -12,15 +12,15 @@ selectBySqlWhere(where) { data ->
     } else if (!(instance["musicFormat"] instanceof List))
         instance.put("musicFormat", [instance["musicFormat"]])
 
-    // Extract label and code from _marcUncompleted
-    String newLabel
+    // Extract labels and code from _marcUncompleted
+    List<String> newLabels = []
     String newCode
     asList(data.graph[0]._marcUncompleted).each{ uncompleted ->
         if (uncompleted instanceof Map && uncompleted.keySet().contains("348"))
         {
             asList(uncompleted["348"].subfields).each { it ->
                 if (it["a"] != null) {
-                    newLabel = it["a"]
+                    newLabels.add(it["a"])
                 }
                 if (it["2"] != null) {
                     newCode = it["2"]
@@ -37,17 +37,19 @@ selectBySqlWhere(where) { data ->
     }
 
     // Add MusicFormat entity
-    if (newLabel != null && newCode != null) {
-        HashMap newMusicFormat = [
-                "@type":"MusicFormat",
-                "label": [newLabel],
-                "source":
-                        [
-                                "@type": "Source",
-                                "code": newCode
-                        ]
-        ]
-        instance["musicFormat"].add( newMusicFormat )
+    if (!newLabels.isEmpty() && newCode != null) {
+        for (String label : newLabels) {
+            HashMap newMusicFormat = [
+                    "@type":"MusicFormat",
+                    "label": [label],
+                    "source":
+                            [
+                                    "@type": "Source",
+                                    "code": newCode
+                            ]
+            ]
+            instance["musicFormat"].add( newMusicFormat )
+        }
 
         scheduledForUpdating.println("${data.doc.getURI()}")
         data.scheduleSave(onError: { e ->
