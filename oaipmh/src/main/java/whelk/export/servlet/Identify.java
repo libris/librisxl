@@ -36,7 +36,7 @@ public class Identify
         writer.writeEndElement(); // repositoryName
 
         writer.writeStartElement("baseURL");
-        writer.writeCharacters(request.getRequestURL().toString());
+        writer.writeCharacters("https://libris.kb.se/api/oaipmh/");
         writer.writeEndElement(); // baseURL
 
         writer.writeStartElement("protocolVersion");
