@@ -30,11 +30,17 @@ selectBySqlWhere(where) { data ->
     }
 
     // Clean up _marcUncompleted
-    for (int i = data.graph[0]._marcUncompleted.size() -1; i > -1; --i) {
-        def field = data.graph[0]._marcUncompleted[i]
-        if (field != null && field["348"] != null)
-            data.graph[0]._marcUncompleted.remove(i)
+    if (data.graph[0]._marcUncompleted instanceof List) {
+        for (int i = data.graph[0]._marcUncompleted.size() -1; i > -1; --i) {
+            def field = data.graph[0]._marcUncompleted[i]
+            if (field != null && field["348"] != null)
+                data.graph[0]._marcUncompleted.remove(i)
+        }
+    } else {
+        data.graph[0]._marcUncompleted.remove("348")
     }
+    if (data.graph[0]._marcUncompleted.size() == 0)
+        data.graph[0].remove("_marcUncompleted")
 
     // Add MusicFormat entity
     if (!newLabels.isEmpty() && newCode != null) {

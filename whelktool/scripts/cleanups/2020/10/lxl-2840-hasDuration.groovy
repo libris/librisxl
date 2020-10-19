@@ -45,13 +45,18 @@ selectBySqlWhere(where) { data ->
         newHasDuration["value"] = durations[0]
     }
 
-    // Clean up marcUncompleted
-    data.graph[1]["hasDuration"].add(newHasDuration)
-    for (int i = data.graph[0]._marcUncompleted.size() -1; i > -1; --i) {
-        def field = data.graph[0]._marcUncompleted[i]
-        if (field != null && field["306"] != null)
-            data.graph[0]._marcUncompleted.remove(i)
+    // Clean up _marcUncompleted
+    if (data.graph[0]._marcUncompleted instanceof List) {
+        for (int i = data.graph[0]._marcUncompleted.size() -1; i > -1; --i) {
+            def field = data.graph[0]._marcUncompleted[i]
+            if (field != null && field["306"] != null)
+                data.graph[0]._marcUncompleted.remove(i)
+        }
+    } else {
+        data.graph[0]._marcUncompleted.remove("306")
     }
+    if (data.graph[0]._marcUncompleted.size() == 0)
+        data.graph[0].remove("_marcUncompleted")
 
     scheduledForUpdating.println("${data.doc.getURI()}")
     data.scheduleSave(onError: { e ->
