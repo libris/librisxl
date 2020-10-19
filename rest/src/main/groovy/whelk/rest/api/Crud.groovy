@@ -497,6 +497,7 @@ class Crud extends HttpServlet {
 
         Document newDoc = new Document(requestBody)
         newDoc.normalizeUnicode()
+        newDoc.trimStrings()
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
         // TODO https://jira.kb.se/browse/LXL-1263
         newDoc.setControlNumber(newDoc.getShortId())
@@ -635,6 +636,7 @@ class Crud extends HttpServlet {
 
         Document updatedDoc = new Document(requestBody)
         updatedDoc.normalizeUnicode()
+        updatedDoc.trimStrings()
         updatedDoc.setId(documentId)
 
         log.debug("Checking permissions for ${updatedDoc}")

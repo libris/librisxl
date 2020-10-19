@@ -3,6 +3,7 @@ package whelk
 
 import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
+import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 import whelk.util.Unicode
@@ -88,6 +89,14 @@ class Document {
         String json = mapper.writeValueAsString(data)
         if (!Unicode.isNormalized(json)) {
             data = mapper.readValue(Unicode.normalize(json), Map)
+        }
+    }
+
+    void trimStrings() {
+        DocumentUtil.traverse(data) { value, path ->
+            if (value instanceof String && value != value.trim()) {
+                return new DocumentUtil.Replace(value.trim())
+            }
         }
     }
 
