@@ -56,11 +56,7 @@ List asList(o) {
 }
 
 void checkVariantShape(Map variant) {
-    if (variant['@type'] == 'Topic' && (variant.keySet() - ['@type', 'prefLabel', 'marc:controlSubfield']).size() == 0) {
-        return
+    if (variant['@type'] != 'Topic' || !variant['prefLabel'] || variant.size() != 2) {
+        throw new IllegalArgumentException("Unhandled shape: $variant")
     }
-    if (variant['@type'] == 'ComplexSubject' && variant.keySet() == ['@type', 'prefLabel', 'termComponentList'] as Set) {
-        return
-    }
-    throw new IllegalArgumentException("Unhandled shape: $variant")
 }
