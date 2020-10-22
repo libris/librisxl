@@ -17,7 +17,7 @@ import static whelk.util.DocumentUtil.link
 class BlankNodeLinker implements DocumentUtil.Linker {
     static final String DELETE = '/dev/null'
 
-    String type
+    List<String> types
     Map map = [:]
     Map<String, List> ambiguousIdentifiers = [:]
     Map substitutions = [:]
@@ -25,10 +25,14 @@ class BlankNodeLinker implements DocumentUtil.Linker {
 
     List<String> fields = []
 
-    BlankNodeLinker(String type, List<String> fields, Statistics stats = null) {
-        this.type = type
+    BlankNodeLinker(List<String> types, List<String> fields, Statistics stats = null) {
+        this.types = types.collect()
         this.fields = fields
         this.stats = stats
+    }
+
+    BlankNodeLinker(String type, List<String> fields, Statistics stats = null) {
+        this([type], fields, stats)
     }
 
     boolean linkAll(data, String key) {
@@ -46,16 +50,20 @@ class BlankNodeLinker implements DocumentUtil.Linker {
     }
 
     void loadDefinitions(Whelk whelk) {
-        def q = [
-                (TYPE_KEY): [type],
-                "q"       : ["*"],
-                '_sort'   : [ID_KEY]
-        ]
+        def finder = new ElasticFind(new ESQuery(whelk))
 
-        new ElasticFind(new ESQuery(whelk)).findIds(q).each { id ->
-            def doc = whelk.getDocument(id)
-            if (doc) {
-                addDefinition(doc.data[GRAPH_KEY][1])
+        types.each { type ->
+            def q = [
+                    (TYPE_KEY): [type],
+                    "q"       : ["*"],
+                    '_sort'   : [ID_KEY]
+            ]
+
+            finder.findIds(q).each { id ->
+                def doc = whelk.getDocument(id)
+                if (doc) {
+                    addDefinition(doc.data[GRAPH_KEY][1])
+                }
             }
         }
     }
@@ -83,6 +91,10 @@ class BlankNodeLinker implements DocumentUtil.Linker {
 
     void addMapping(String from, String to) {
         from = from.toLowerCase()
+        if (map[from] == to || (ambiguousIdentifiers[from] ?: []).contains(to)) {
+            return // seen the exact same mapping before
+        }
+
         if (ambiguousIdentifiers.containsKey(from)) {
             ambiguousIdentifiers[from] << to
         } else if (map.containsKey(from)) {
@@ -104,7 +116,7 @@ class BlankNodeLinker implements DocumentUtil.Linker {
 
     @Override
     List<Map> link(Map blank, List existingLinks) {
-        if (blank[TYPE_KEY] && blank[TYPE_KEY] != type) {
+        if (blank[TYPE_KEY] && !(blank[TYPE_KEY] in types)) {
             incrementCounter('unhandled type', blank[TYPE_KEY])
             return
         }
@@ -226,6 +238,6 @@ class BlankNodeLinker implements DocumentUtil.Linker {
 
     @Override
     String toString() {
-        return "${TYPE_KEY}: $type (${map.size()} mappings)"
+        return "${TYPE_KEY}: $types (${map.size()} mappings)"
     }
 }
