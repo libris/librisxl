@@ -19,6 +19,7 @@ import javax.script.ScriptEngineManager
 import javax.script.SimpleBindings
 import java.sql.SQLException
 import java.time.ZonedDateTime
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ScheduledExecutorService
@@ -50,7 +51,7 @@ class WhelkTool {
     File reportsDir
     PrintWriter mainLog
     PrintWriter errorLog
-    Map<String, PrintWriter> reports = [:]
+    ConcurrentHashMap<String, PrintWriter> reports = new ConcurrentHashMap<>()
 
     Counter counter = new Counter()
 
@@ -592,12 +593,7 @@ class WhelkTool {
     }
 
     private PrintWriter getReportWriter(String reportName) {
-        def report = reports[reportName]
-        if (!report) {
-            report = reports[reportName] = new PrintWriter(
-                    new File(reportsDir, reportName))
-        }
-        return report
+        reports.computeIfAbsent(reportName, { new PrintWriter(new File(reportsDir, it)) } )
     }
 
     private void log() {
