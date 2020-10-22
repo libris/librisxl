@@ -5,7 +5,7 @@
 
  */
 
-import com.sun.org.glassfish.external.statistics.Statistic
+import groovy.transform.Memoized
 import whelk.util.Statistics
 
 class Script {
@@ -37,8 +37,22 @@ void process(bib) {
 
     asList(thing['instanceOf']['subject']).each { subject ->
         if (subject instanceof Map && subject['inScheme'] && !subject['inScheme']['@id']) {
-            Script.modified.println("${bib.doc.shortId} ${subject['inScheme']}")
-            Script.s.increment('inScheme', subject['inScheme'])
+            Map inScheme = subject['inScheme']
+            Script.modified.println("${bib.doc.shortId} ${inScheme['inScheme']}")
+
+            List sameAs = asList(inScheme['sameAs'])
+            if (sameAs) {
+                if (sameAs.size() != 1) {
+                    Script.s.increment('sameAs - multiple', inScheme)
+                }
+                else {
+                    String link = sameAs.first()['@id']
+                    Script.s.increment(is404(link) ? 'sameAs - 404' : 'sameAs - 200', inScheme)
+                }
+            }
+            else {
+                Script.s.increment('no sameAs', inScheme)
+            }
         }
     }
 
@@ -47,4 +61,15 @@ void process(bib) {
 
 List asList(o) {
     (o instanceof List) ? (List) o : (o ? [o] : [])
+}
+
+
+
+@Memoized
+boolean is404(String link) {
+    boolean result = true
+    selectByIds([link]) {
+        result = false
+    }
+    return result
 }
