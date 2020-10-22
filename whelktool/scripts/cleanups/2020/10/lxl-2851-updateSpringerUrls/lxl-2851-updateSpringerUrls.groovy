@@ -8,30 +8,26 @@ List IDs = new File(scriptDir, BIB_ID_FILE).readLines()
 processIds(IDs)
 
 selectByIds(IDs) { bib ->
-
     // Correct urls in bib
     correctUrls(bib.graph[1])
     saveChanges(bib)
-
 
     // Find hold associated with bib id
     def bibId = bib.graph[1]['@id'];
 
     String where = """id in (select id from lddb 
             where data#>>'{@graph,1,itemOf,@id}' = '$bibId') AND 
+            data#>>'{@graph,1}' LIKE '%www.springerlink.com%' AND
             collection = 'hold'"""
 
-    selectBySqlWhere (where) { hold ->
-
+    selectBySqlWhere(where) { hold ->
         // Correct urls in hold
         correctUrls(hold.graph[1])
         saveChanges(hold)
-
     }
 }
 
-
-def processIds( List<String> idList ) {
+def processIds(List<String> idList) {
     idList.eachWithIndex{ it, i ->
         if (it.isNumber()) {
             idList[i] = 'http://libris.kb.se/bib/' + it
@@ -40,13 +36,12 @@ def processIds( List<String> idList ) {
 }
 
 def correctUrls(LinkedHashMap<String,String> data) {
-
     // Springerlink urls appear in many different paths, therefore traverse the whole graph
     DocumentUtil.traverse(data, {value, path ->
         if (value instanceof String) {
-            if ( value.contains("www.springerlink.com") ) {
-                new_url = value.replace("www.springerlink.com", "link.springer.com")
-                return new DocumentUtil.Replace(new_url)
+            if (value.contains("www.springerlink.com")) {
+                newUrl = value.replace("www.springerlink.com", "link.springer.com")
+                return new DocumentUtil.Replace(newUrl)
             }
         }
     })
@@ -54,7 +49,6 @@ def correctUrls(LinkedHashMap<String,String> data) {
 }
 
 def saveChanges(data) {
-
     PrintWriter scheduledForUpdating = getReportWriter("scheduled-updates")
     PrintWriter failedUpdating = getReportWriter("failed-updates")
 
@@ -62,5 +56,4 @@ def saveChanges(data) {
     data.scheduleSave(onError: { e ->
         failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
     })
-
 }
