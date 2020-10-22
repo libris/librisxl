@@ -17,19 +17,19 @@ class Statistics {
     }
 
     void increment(String category, Object name, Object example = null) {
+        String nameStr = name.toString()
         c.computeIfAbsent(category, { new ConcurrentHashMap<>() })
-        c.get(category).computeIfAbsent(name) { new AtomicInteger() }
-        c.get(category).get(name).incrementAndGet()
+                .computeIfAbsent(name) { new AtomicInteger() }.incrementAndGet()
 
         example = example ?: context.get()
         if (example != null && numExamples > 0) {
             examples.computeIfAbsent(category, { new ConcurrentHashMap<>() })
-            examples.get(category).computeIfAbsent(name) { new ArrayBlockingQueue<Object>(numExamples) }
-            examples.get(category).get(name).offer(example)
+                    .computeIfAbsent(name) { new ArrayBlockingQueue<Object>(numExamples) }
+                    .offer(example)
         }
     }
 
-    void withExample(Object example, Closure c) {
+    void withContext(Object example, Closure c) {
         try {
             context.set(example)
             c.run()
@@ -53,10 +53,10 @@ class Statistics {
             entries.sort { a, b -> b.getValue().intValue() <=> a.getValue().intValue() }
 
             int digitWidth = Math.min(10, entries.collect{ "${it.getValue().intValue()}".size() }.max())
-            int nameWidth = Math.min(60, entries.collect{ it.getKey().size() }.max())
+            int nameWidth = Math.min(60, entries.collect{ it.getKey().toString().size() }.max())
             String format = "%${digitWidth}s %-${nameWidth}s %s"
             entries.each {
-                String name = it.getKey()
+                Object name = it.getKey()
                 int value = it.getValue().intValue()
                 if (value > min) {
                     out.println(String.format(format, value, name,
