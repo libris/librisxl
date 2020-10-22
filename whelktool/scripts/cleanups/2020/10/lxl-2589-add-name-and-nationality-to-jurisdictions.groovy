@@ -34,6 +34,29 @@ void process(auth) {
             ]
     ]
 
+    def variant = auth.graph[1]["hasVariant"]
+
+    variant = variant ?: []
+
+    variant.each {
+        if (it["@type"] == "Jurisdiction") {
+            it["@type"] = "Organization"
+
+            if (it["marc:subordinateUnit"]) {
+                it["name"] = it["marc:subordinateUnit"][0]
+                it.remove("marc:subordinateUnit")
+            }
+        }
+    }
+
+    variant << [
+            "@type": "Organization",
+            "name" : auth.graph[1]["marc:subordinateUnit"][0]
+    ]
+
+    auth.graph[1]["hasVariant"] = variant
+
+    Script.modified.println("${auth.graph[1]["hasVariant"]}")
     Script.modified.println("${auth.graph[0][ID]}")
     auth.scheduleSave()
 }
