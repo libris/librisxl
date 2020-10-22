@@ -1,5 +1,5 @@
 /**
-
+ Link blank nodes in 'inScheme'
 
  See LXL-3390
 
@@ -11,14 +11,13 @@ import whelk.filter.BlankNodeLinker
 substitutions = [
         'gmgpc/ / swe'                    : 'gmgpc/swe',
         'sap'                             : 'sao',
-
 ]
 
 class Script {
     static BlankNodeLinker linker
-    static PrintWriter stats
     static PrintWriter modified
     static PrintWriter errors
+    static Statistics statistics = new Statistics(5).printOnShutdown()
 }
 
 Script.modified = getReportWriter("modified.txt")
@@ -27,7 +26,6 @@ Script.linker = buildLinker()
 
 println(Script.linker.map)
 println(Script.linker.ambiguousIdentifiers)
-
 
 selectByCollection('bib') { bib ->
     try {
@@ -42,16 +40,18 @@ selectByCollection('bib') { bib ->
 void process(bib) {
     Map thing = bib.graph[1]
 
-    if(Script.linker.linkAll(thing, 'inScheme')) {
-        Script.modified.println("${bib.doc.shortId}")
-        bib.scheduleSave()
+    Script.statistics.withExample(bib.doc.shortId) {
+        if(Script.linker.linkAll(thing, 'inScheme')) {
+            Script.modified.println("${bib.doc.shortId}")
+            bib.scheduleSave()
+        }
     }
 }
 
 def buildLinker() {
     def types = ['TopicScheme', 'ConceptScheme']
     def matchFields = ['code']
-    def linker = new BlankNodeLinker(types, matchFields, new Statistics().printOnShutdown())
+    def linker = new BlankNodeLinker(types, matchFields, Script.statistics)
 
     // A little hack to get a handle to whelk...
     def whelk = null
