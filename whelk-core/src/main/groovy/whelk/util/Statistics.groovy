@@ -8,21 +8,34 @@ class Statistics {
     ConcurrentHashMap<String, ConcurrentHashMap<Object, AtomicInteger>> c = new ConcurrentHashMap<>()
     ConcurrentHashMap<String, ConcurrentHashMap<Object, ArrayBlockingQueue<Object>>> examples = new ConcurrentHashMap<>()
 
+    ThreadLocal<Object> context = ThreadLocal.withInitial({ -> null });
+
     int numExamples
 
     Statistics(int numExamples = 1) {
         this.numExamples = numExamples
     }
 
-    void increment(String category, Object name, Object observation = null) {
+    void increment(String category, Object name, Object example = null) {
         c.computeIfAbsent(category, { new ConcurrentHashMap<>() })
         c.get(category).computeIfAbsent(name) { new AtomicInteger() }
         c.get(category).get(name).incrementAndGet()
 
-        if (observation != null && numExamples > 0) {
+        example = example ?: context.get()
+        if (example != null && numExamples > 0) {
             examples.computeIfAbsent(category, { new ConcurrentHashMap<>() })
             examples.get(category).computeIfAbsent(name) { new ArrayBlockingQueue<Object>(numExamples) }
-            examples.get(category).get(name).offer(observation)
+            examples.get(category).get(name).offer(example)
+        }
+    }
+
+    void withExample(Object example, Closure c) {
+        try {
+            context.set(example)
+            c.run()
+        }
+        finally {
+            context.remove()
         }
     }
 
