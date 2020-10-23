@@ -8,12 +8,13 @@ List IDs = new File(scriptDir, BIB_ID_FILE).readLines()
 processIds(IDs)
 
 selectByIds(IDs) { bib ->
-    // Correct urls in bib
-    correctUrls(bib.graph[1])
-    saveChanges(bib)
+    // Correct urls in bib and save if changes made
+    if (correctUrls(bib.graph[1])) {
+        saveChanges(bib, 'bib')
+    }
 
     // Find hold associated with bib id
-    def bibId = bib.graph[1]['@id'];
+    def bibId = bib.graph[1]['@id']
 
     String where = """id in (select id from lddb 
             where data#>>'{@graph,1,itemOf,@id}' = '$bibId') AND 
@@ -21,9 +22,10 @@ selectByIds(IDs) { bib ->
             collection = 'hold'"""
 
     selectBySqlWhere(where) { hold ->
-        // Correct urls in hold
-        correctUrls(hold.graph[1])
-        saveChanges(hold)
+        // Correct urls in hold and save if changes made
+        if (correctUrls(hold.graph[1])) {
+            saveChanges(hold, 'hold')
+        }
     }
 }
 
@@ -37,20 +39,20 @@ def processIds(List<String> idList) {
 
 def correctUrls(LinkedHashMap<String,String> data) {
     // Springerlink urls appear in many different paths, therefore traverse the whole graph
-    DocumentUtil.traverse(data, {value, path ->
+    boolean modified = DocumentUtil.traverse(data, {value, path ->
         if (value instanceof String) {
             if (value.contains("www.springerlink.com")) {
                 newUrl = value.replace("www.springerlink.com", "link.springer.com")
-                return new DocumentUtil.Replace(newUrl)
+                new DocumentUtil.Replace(newUrl)
             }
         }
     })
-
+    return modified
 }
 
-def saveChanges(data) {
-    PrintWriter scheduledForUpdating = getReportWriter("scheduled-updates")
-    PrintWriter failedUpdating = getReportWriter("failed-updates")
+def saveChanges(Object data, String collection) {
+    PrintWriter scheduledForUpdating = getReportWriter("updated-in-" + collection)
+    PrintWriter failedUpdating = getReportWriter("failed-updating-in-" + collection)
 
     scheduledForUpdating.println("${data.doc.getURI()}")
     data.scheduleSave(onError: { e ->
