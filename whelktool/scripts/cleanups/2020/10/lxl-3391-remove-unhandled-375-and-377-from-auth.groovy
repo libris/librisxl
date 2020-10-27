@@ -7,26 +7,25 @@ selectBySqlWhere(where) { auth ->
     // Make '_marcUncompleted' a list
     def marcUncompleted = asList(auth.graph[0]['_marcUncompleted'])
 
+    boolean modified = false
+
     // Remove all objects with '375' or '377' from '_marcUncompleted'
     marcUncompleted.removeAll { uncompleted ->
-        isRemovable(uncompleted)
+        if ("375" in uncompleted || "377" in uncompleted) {
+            modified = true
+        }
     }
 
     if (marcUncompleted.isEmpty()) {
         auth.graph[0].remove('_marcUncompleted')
     }
 
-    scheduledForUpdating.println("${auth.doc.getURI()}")
-    auth.scheduleSave(onError: { e ->
-        failedUpdating.println("Failed to update ${auth.doc.shortId} due to: $e")
-    })
-}
-
-private boolean isRemovable(Map uncompleted) {
-    if ("375" in uncompleted || "377" in uncompleted) {
-        return true
+    if (modified) {
+        scheduledForUpdating.println("${auth.doc.getURI()}")
+        auth.scheduleSave(onError: { e ->
+            failedUpdating.println("Failed to update ${auth.doc.shortId} due to: $e")
+        })
     }
-    return false
 }
 
 private List asList(Object o) {
