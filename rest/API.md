@@ -1,35 +1,20 @@
 # Libris XL 'REST' API
 
-**NOTE:** This document is a work in progress. It can be useful for testing,
-but the interface is likely to change.
+The APIs in this document are not versioned and hence this interface might
+change in the future.
 
 ## CRUD API
 
 Libris XL uses JSON-LD as data format, and we provide an API to create, read,
 update, and delete records. Read operations are available without authentication,
-but all other requests require an access token. There are two different
-permission levels for users: one for working with holding records and one for
-cataloging (which also allows working with holding records). User permissions are
-connected to sigels, and a user may only work with holding records belonging to a
-sigel that the user has permissions for. More information about authentication
-can be found in the Authentication section in this document.
-
-We have version handling of documents and for this we keep track of which sigel
-is responsible for the change. Because of this, we require the header
-`XL-Active-Sigel` to be set to the authenticated user's selected sigel.
-
-An example of how to work with the API can be found in our [integration
-tests](https://github.com/libris/lxl_api_tests).
+but all other requests require an access token.
 
 ### Reading a record
 
-You read a record by sending a `GET` request to the record's URI (e.g.
-`https://libris-qa.kb.se/fnrbrgl`) with the `Accept` header set to e.g.
+A record can be read by sending a `GET` request to the record's URI (e.g.
+`https://libris-qa.kb.se/<record-id>`) with the `Accept` header set to e.g.
 `application/ld+json`. The default content type is `text/html`, which would
 give you an HTML rendering of the record and not just the underlying data.
-
-The response also contains an `ETag` header, which you must use (as a
-If-Match header) if you are going to update the record.
 
 #### Parameters
 All parameters are optional and can be left out.
@@ -62,9 +47,22 @@ $ curl -XGET -H "Accept: application/ld+json" https://libris-qa.kb.se/s93ns5h436
 }
 ```
 
-### Creating a record - Requires authentication
+## Requests that require authentication – create, update and remove
 
-You create a new record by sending a `POST` request to the API root (`/`) with at least the
+In order to make requests that require authentication, an oauth client has to be registered
+in Libris. To register a client, contact Libris customer service and they will provide you
+with a new set of credentials (client id and client secret) as well as an instruction on
+how these can be used to obtain a bearer token. This bearer token is referred to in the examples
+below.
+
+There are two different permission levels for the client: one for working with holdings
+and one for cataloging (which also allows working with holdings). The client is connected
+to one or several sigels. Only holdings connected to any of these sigels can be created, updated or
+removed in the following examples.
+
+### Create
+
+A new record is created by sending a `POST` request to the API root (`/`) with at least the
 `Content-Type`, `Authorization`, and `XL-Active-Sigel` headers set.
 
 There are some checks in place, e.g. in order to prevent creation of duplicate
@@ -74,24 +72,30 @@ with an error message explaining the issue.
 A successful creation will get a `201 Created` response with a `Location`
 header containing the URI of the new record.
 
+
+#### Example
+
 ```
-$ curl -XPOST -H "Content-Type: application/ld+json" \
-    -H "Authorization: Bearer xxxx" -d@my_record.jsonld \
+$ curl -XPOST -H 'Content-Type: application/ld+json' \
+    -H 'Authorization: Bearer <token>' \ 
+    -H 'XL-Active-Sigel: <sigel>' \
+    -d@my_record.jsonld \
     https://libris-qa.kb.se/data/
-...
 ```
+* `<token>` - An active and valid bearer token (e.g. hW3IHc9PexxxFP2IkAAbqKvjLbW4thQ)
+* `<sigel>` - A sigel that is connected to your oauth klient (e.g. Doro)
 
+### Update
 
-### Updating a record - Requires authentication
-
-You update an existing record by sending a `PUT` request to the record URI (e.g.
-`https://libris-qa.kb.se/fnrbrgl`) with at least the `Content-Type`,
+An existing record can be updated by sending a `PUT` request to the record URI (e.g.
+`https://libris-qa.kb.se/s93ns5h436dxqsh`) with at least the `Content-Type`,
 `Authorization`, `If-Match`, and `XL-Active-Sigel` headers set.
 
 To prevent accidentally overwriting a record modified by someone else, you need
-to set the `If-Match` header to the value of the `ETag` header you got back
-when you read the record in question. If the record had been modified by someone
-else in, you will get a `409 Conflict` back.
+to set the record's `ETag` in the `If-Match` header. The `ETag` value can be obtained
+from the `ETag` header in the response of a `GET` request from a specific record.
+If the record had been modified by someone else in, you will get a `409 Conflict`
+back.
 
 You are not allowed to change the ID of a record, for that you must instead first
 delete the original record and then create the replacement.
@@ -103,17 +107,22 @@ will get a `400 Bad Request` response, with an error message.
 #### Example
 
 ```
-$ curl -XPUT -H "Content-Type: application/ld+json" \
-    -H "Authorization: Bearer xxxx" -d@my_updated_record.jsonld \
-    https://libris-qa.kb.se/fnrbrgl
-...
+$ curl -XPUT -H 'Content-Type: application/ld+json' \
+    -H 'If-Match: <etag>' \
+    -H 'Authorization: Bearer <token>' \ 
+    -H 'XL-Active-Sigel: <sigel>' \
+    -d@my_updated_record.jsonld \
+    https://libris-qa.kb.se/<id>
 ```
+* `<etag>` - The record's ETag (e.g. 1821177452)
+* `<token>` - An active and valid bearer token (e.g. hW3IHc9PexxxFP2IkAAbqKvjLbW4thQ)
+* `<sigel>` - A sigel that is connected to your oauth client (e.g. S)
+* `<id>` - Record ID (e.g. s93ns5h436dxqsh)
 
-
-### Deleting a record - Requires authentication
+### Delete
 
 You delete a record by sending a `DELETE` request to the record URI (e.g.
-`https://libris-qa.kb.se/fnrbrgl`) with the `Authorization` and
+`https://libris-qa.kb.se/<record-id>`) with the `Authorization` and
 `XL-Active-Sigel` headers set.
 
 You can only delete records that are not linked to by other records. That is, if
@@ -128,11 +137,14 @@ requests to the record's URI will get a `410 Gone` response.
 #### Example
 
 ```
-$ curl -XDELETE -H "Authorization: Bearer xxxx" \
-    https://libris.kb.se/fnrbrgl
-...
+$ curl -XDELETE 
+    -H 'Authorization: Bearer <token>' \
+    -H 'XL-Active-Sigel: <sigel>' \
+    https://libris-qa.kb.se/<id>
 ```
-
+* `<token>` - An active and valid bearer token (e.g. hW3IHc9PexxxFP2IkAAbqKvjLbW4thQ)
+* `<sigel>` - A sigel that is connected to your oauth client (e.g. T)
+* `<id>` - Record ID (e.g. https://libris-qa.kb.se/s93ns5h436dxqsh)
 
 ## Other API endpoints
 
@@ -341,22 +353,3 @@ $ curl -XGET 'https://libris-qa.kb.se/_compilemarc?id=http://libris.kb.se/bib/12
 01040cam a22002897  45000010005000000030008000050050017000130080041000300200015000710350015000860400008001010840013001090840014001220840016001360840017001520840018001690840017001872450047002042640038002513000021002897000029003107720121003398870107004608410051005678520020006188870112006381234SE-LIBR20180126135547.0011211s1971    xxu|||||||||||000 ||eng|   a0824711165  99900990307  aLi*  aUbb2sab  aUcef2sab  aUbb2kssb/5  aUcef2kssb/5  aUe.052kssb/5  aPpdc2kssb/500aWater and water pollution handbooknVol. 2 1aNew York :bMarcel Dekker ,c1971
  aS. 451-800bill.1 aCiaccio, Leonard L.4edt0 dNew York : Marcel Dekker, cop. 1971-1973w99000064967nn92ced. by L.L. CiacciotWater and water pollution handbook  a{"@id":"s93ns5h436dxqsh","modified":"2018-01-26T13:55:47.68+01:00","checksum":"12499440084"}2librisxl  5SEKax  ab150526||    |   1001||und|901128e4  5SEKbSEKhTEST2  5SEKa{"@id":"48h9kp894jm8kzz","modified":"2018-01-27T11:29:46.804+01:00","checksum":"-426929336"}2librisxl
 ```
-
-## Authentication
-
-The Libris CRUD API uses [Libris Login](https://login.libris.kb.se) as OAuth2 provider.
-For requests that require authentication, an account with with personal client credentials
-is needed.
-
-If the authentication is successful, you will obtain a bearer token
-and a list of permissions for the user. This list can be used to allow the user to select
-which sigel they want to work as. This information is required for creating, updating,
-and deleting records (see the CRUD API section in this document for more details).
-
-Once the user is authenticated, you include the bearer token in the API
-requests by setting the `Authentication` header to `Bearer: <the bearer
-token>`.
-
-If the API cannot validate the token, it will respond with a `401 Unauthorized`
-with a message saying either that the token is invalid, that it has expired, or
-that it is missing.
