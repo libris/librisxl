@@ -1,19 +1,17 @@
 package whelk
 
 import com.google.common.base.Preconditions
+import whelk.exception.InvalidJsonException
 
 class JsonValidator {
     private static JsonLd jsonLd
-    private Set errors
 
     JsonValidator(JsonLd jsonLd) {
         this.jsonLd = Preconditions.checkNotNull(jsonLd)
-        this.errors = new LinkedHashSet<>()
     }
 
-    Set validate(Document doc) {
+    Set validate(Document doc) throws InvalidJsonException {
         doValidate(doc.data)
-        return errors
     }
 
     private void doValidate(Map obj) {
@@ -39,7 +37,8 @@ class JsonValidator {
 
     private boolean keyIsInvalid(key) {
         if(!(key instanceof String)) {
-            errors << "Invalid key: $key"
+//            log debug
+//            errors << "Invalid key: $key"
             return true
         } else {
             return false
@@ -53,7 +52,8 @@ class JsonValidator {
 
     private boolean isUnexpected(key, value) { //Rename me
         if ((key == jsonLd.ID_KEY || key == jsonLd.TYPE_KEY) && !(value instanceof String)) {
-            errors << "Unexpected value of $key: ${value}"
+            //Log debug
+//            errors << "Unexpected value of $key: ${value}"
             return true
         } else {
             return false
@@ -78,9 +78,9 @@ class JsonValidator {
         if (firstValue && termDefinition
                 && termDefinition[jsonLd.TYPE_KEY] == 'ObjectProperty') {
             if (!isVocabTerm(key) && !valueIsObject) {
-                errors << "Expected value type of $key to be object (value: $value)."
+                throw new InvalidJsonException("Expected value type of $key to be object (value: $value).")
             } else if (isVocabTerm(key) && valueIsObject) {
-                errors << "Expected value type of $key to be a vocab string (value: $value)."
+                throw new InvalidJsonException("Expected value type of $key to be a vocab string (value: $value).")
             }
         }
     }
@@ -112,22 +112,22 @@ class JsonValidator {
     private void checkVocabTermInVocab(String key, value) {
         if ((key == jsonLd.TYPE_KEY || isVocabTerm(key))
                 && !jsonLd.vocabIndex.containsKey((String) value)) {
-            errors << "Unknown vocab value for $key: $value"
+            throw new InvalidJsonException("Unknown vocab value for $key: $value")
         }
     }
 
     private void checkHasDefinition(String key) {
         if (!getTermDefinition(key) && !jsonLd.LD_KEYS.contains(key)) {
-            errors << "Unknown term: $key"
+            throw new InvalidJsonException("Unknown term: $key")
         }
     }
 
     private void validateRepeatability(String key, value) {
         boolean expectRepeat = key == jsonLd.GRAPH_KEY || key in jsonLd.getRepeatableTerms()
         if (expectRepeat && !isRepeated(value)) {
-            errors << "Expected term $key to be an array. $key is declared as repeatable in context."
+            throw new InvalidJsonException("Expected term $key to be an array. $key is declared as repeatable in context.")
         } else if (!expectRepeat && isRepeated(value)) {
-            errors << "Unexpected array for $key. $key is not declared as repeatable in context."
+            throw new InvalidJsonException("Unexpected array for $key. $key is not declared as repeatable in context.")
         }
     }
 }

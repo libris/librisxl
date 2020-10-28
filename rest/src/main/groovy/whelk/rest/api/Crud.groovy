@@ -15,6 +15,7 @@ import whelk.JsonValidator
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ElasticIOException
+import whelk.exception.InvalidJsonException
 import whelk.exception.InvalidQueryException
 import whelk.exception.ModelValidationException
 import whelk.exception.StaleUpdateException
@@ -504,9 +505,12 @@ class Crud extends HttpServlet {
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
         // TODO https://jira.kb.se/browse/LXL-1263
         newDoc.setControlNumber(newDoc.getShortId())
-        def errors = validator.validate(newDoc)
-        if (errors) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, errors.join(", "))
+
+        try {
+            validator.validate(newDoc)
+        } catch (InvalidJsonException ive) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, ive.getMessage())
+            log.debug("Json validation failed:" + mve.getMessage())
             return
         }
 
