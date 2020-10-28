@@ -43,7 +43,7 @@ void process(auth) {
             it["@type"] = "Organization"
 
             if (it["marc:subordinateUnit"]) {
-                it["name"] = it["marc:subordinateUnit"][0]
+                it["name"] = it["marc:subordinateUnit"].join(" ")
                 it.remove("marc:subordinateUnit")
             }
         }
