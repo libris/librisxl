@@ -1,8 +1,14 @@
 /**
- For @type Topic: Move all hasVariant.prefLabel to altLabel
+ For @type Topic: Move hasVariant.prefLabel to altLabel
+
+ Existing data has three basic shapes in hasVariant
+    1) ['@type': 'Topic', 'prefLabel': "..."]
+    2) ['@type': 'Topic', 'prefLabel': "...", 'marc:controlSubfield': ...]
+    3) ['@type': 'ComplexSubject', 'prefLabel': "...", 'termComponentList': ...]
+
+ For now, we only handle case 1. The others are TBD.
 
  See LXL-3389
-
  */
 
 class Script {
