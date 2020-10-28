@@ -5,10 +5,10 @@
  which no longer exists. Some labels have chaged since the original draft.
 
  ssif-labels-2016.txt contains valid SSIF labels.
- Taken from the excel-file published by UKÄ and manually cleaned from typos invisible spaces and double spaces
+ Taken from the excel-file published by UKÄ and manually cleaned from typos, invisible spaces and double spaces
  https://www.uka.se/download/18.7391c377159bc0155b81ef8/1487841861615/forskningsamnen-standard-2011.xlsx
  (convert to tsv) | grep '^\s*[0-9]' | awk -F '\t' '{print $5"\n"$6}' > ssif-labels-2016.txt
- 
+
  ssif-labels-map.tsv maps labels found in Libris data to valid SSIF labels.
 
  See LXL-3272
