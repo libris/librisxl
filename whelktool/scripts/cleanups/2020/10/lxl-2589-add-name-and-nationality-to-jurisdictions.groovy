@@ -51,7 +51,7 @@ void process(auth) {
 
     variant << [
             "@type": "Organization",
-            "name" : auth.graph[1]["marc:subordinateUnit"][0]
+            "name" : auth.graph[1]["marc:subordinateUnit"].join(" ")
     ]
 
     auth.graph[1]["hasVariant"] = variant
