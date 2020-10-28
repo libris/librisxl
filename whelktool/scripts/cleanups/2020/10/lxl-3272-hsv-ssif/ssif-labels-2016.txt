@@ -151,7 +151,7 @@ Geotechnical Engineering
 Vattenteknik 
 Water Engineering
 Miljöanalys och bygginformationsteknik
-Environmental Analysis and  Construction Information Technology
+Environmental Analysis and Construction Information Technology
 Annan samhällsbyggnadsteknik
 Other Civil Engineering
 Elektroteknik och elektronik
@@ -210,7 +210,7 @@ Keramteknik
 Ceramics
 Kompositmaterial och -teknik
 Composite Science and Engineering
-Pappers-, massa-  och fiberteknik
+Pappers-, massa- och fiberteknik
 Paper, Pulp and Fiber Technology
 Textil-, gummi- och polymermaterial
 Textile, Rubber and Polymeric Materials
@@ -439,9 +439,9 @@ Fish and Aquacultural Science
 Landskapsarkitektur 
 Landscape Architecture
 Husdjursvetenskap
-Animal and Dairy Sience
+Animal and Dairy Science
 Husdjursvetenskap
-Animal and Dairy Science. 
+Animal and Dairy Science
 Veterinärmedicin
 Veterinary Science
 Medicinsk biovetenskap
@@ -466,7 +466,7 @@ Vilt- och fiskeförvaltning
 Fish and Wildlife Management 
 Lantbrukets arbetsmiljö och säkerhet 
 Agricultural Occupational Health and Safety
-Miljö- och  naturvårdsvetenskap 
+Miljö- och naturvårdsvetenskap
 Environmental Sciences related to Agriculture and Land-use
 Övrig annan lantbruksvetenskap
 Other Agricultural Sciences not elsewhere specified
@@ -536,7 +536,7 @@ Mänsklig interaktion med IKT
 Human Aspects of ICT
 Systemvetenskap, informationssystem och informatik med samhällsvetenskaplig inriktning
 Information Systems, Social aspects
-Biblioteks-och informationsvetenskap
+Biblioteks- och informationsvetenskap
 Information Studies
 Annan samhällsvetenskap
 Other Social Sciences
