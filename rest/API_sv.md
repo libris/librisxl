@@ -56,10 +56,10 @@ klienthemlighet samt en instruktion för hur dessa ska användas för att erhål
 en bearertoken. Det är denna bearertoken som det hänvisas till i exemplen nedan.
 
 Det finns två olika behörighetsnivåer för klienten: en för att arbeta med
-beståndsposter och en för katalogisering (som även tillåter arbete med
-beståndsposter). Klienten är knuten till en eller flera sigel, och det är enbart
-beståndsposter tillhörande den eller dessa sigel som kan skapas, ändras eller tas
-bort i exemplen som följer.
+beståndsposter och en för att arbeta med både bibliografiska poster och beståndsposter.
+Klienten är knuten till en eller flera sigel, och det är enbart beståndsposter
+tillhörande den eller dessa sigel som kan skapas, ändras eller tas bort i exemplen
+som följer.
 
 ### Skapa
 
@@ -98,7 +98,8 @@ För att göra ett `PUT`-anrop behöver man skicka med en `If-Match`-header som
 innehåller en`ETag`. Detta för att förhindra samtidiga uppdateringar av ett
 dokument. Det värde som ska fyllas i kan hämtas från `ETag`-headern i det svar
 som returneras när man gör ett `GET`-anrop mot en viss post. Om posten hunnit
-ändras av någon annan kommer API:et svara med `409 Conflict`.
+ändras av någon annan efter det att `ETag`:en hämtats kommer API:et svara med
+`409 Conflict`.
 
 Det går inte att uppdatera ID:t för en given post. Om ett nytt ID önskas behöver
 posten tas bort och en ny skapas i dess ställe.

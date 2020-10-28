@@ -56,7 +56,7 @@ how these can be used to obtain a bearer token. This bearer token is referred to
 below.
 
 There are two different permission levels for the client: one for working with holdings
-and one for cataloging (which also allows working with holdings). The client is connected
+and one for working with both holdings and bibliographic records. The client is connected
 to one or several sigels. Only holdings connected to any of these sigels can be created, updated or
 removed in the following examples.
 
@@ -83,7 +83,7 @@ $ curl -XPOST -H 'Content-Type: application/ld+json' \
     https://libris-qa.kb.se/data/
 ```
 * `<token>` - An active and valid bearer token (e.g. hW3IHc9PexxxFP2IkAAbqKvjLbW4thQ)
-* `<sigel>` - A sigel that is connected to your oauth klient (e.g. Doro)
+* `<sigel>` - A sigel that is connected to your oauth client (e.g. Doro)
 
 ### Update
 
@@ -94,8 +94,8 @@ An existing record can be updated by sending a `PUT` request to the record URI (
 To prevent accidentally overwriting a record modified by someone else, you need
 to set the record's `ETag` in the `If-Match` header. The `ETag` value can be obtained
 from the `ETag` header in the response of a `GET` request from a specific record.
-If the record had been modified by someone else in, you will get a `409 Conflict`
-back.
+If the record has been modified by someone else since the `ETag` was fetched, you will
+receive a `409 Conflict` response.
 
 You are not allowed to change the ID of a record, for that you must instead first
 delete the original record and then create the replacement.
