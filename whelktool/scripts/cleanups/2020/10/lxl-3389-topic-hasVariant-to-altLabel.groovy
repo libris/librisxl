@@ -6,7 +6,7 @@
     2) ['@type': 'Topic', 'prefLabel': "...", 'marc:controlSubfield': ...]
     3) ['@type': 'ComplexSubject', 'prefLabel': "...", 'termComponentList': ...]
 
- For now, we only handle case 1. The others are TBD.
+ For now, we only handle the case where all hasVariant have shape #1. The others are TBD.
 
  See LXL-3389
  */
