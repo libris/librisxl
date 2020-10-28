@@ -11,6 +11,7 @@ import whelk.Document
 import whelk.IdGenerator
 import whelk.IdType
 import whelk.JsonLd
+import whelk.JsonValidator
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ElasticIOException
@@ -70,6 +71,7 @@ class Crud extends HttpServlet {
     Map vocabData
     Map displayData
     JsonLd jsonld
+    JsonValidator validator
 
     SearchUtils search
     static final ObjectMapper mapper = new ObjectMapper()
@@ -92,6 +94,7 @@ class Crud extends HttpServlet {
         vocabData = whelk.vocabData
         jsonld = whelk.jsonld
         search = new SearchUtils(whelk)
+        validator = new JsonValidator(jsonld)
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response,
@@ -501,6 +504,11 @@ class Crud extends HttpServlet {
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
         // TODO https://jira.kb.se/browse/LXL-1263
         newDoc.setControlNumber(newDoc.getShortId())
+        def errors = validator.validate(newDoc)
+        if (errors) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, errors.join(", "))
+            return
+        }
 
         String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
         if ( !(collection in ["auth", "bib", "hold"]) ) {
