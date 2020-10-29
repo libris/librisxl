@@ -1,7 +1,7 @@
 PrintWriter scheduledForUpdating = getReportWriter("scheduled-updates")
 PrintWriter failedUpdating = getReportWriter("failed-updates")
 
-String where = "collection = 'bib' and ( " +
+String where = "(collection = 'bib' or collection = 'hold') and ( " +
         "data#>>'{@graph,0,descriptionCreator,@id}' = 'https://libris.kb.se/library/MimerProd' OR " +
         "data#>>'{@graph,0,descriptionCreator,@id}' = 'https://libris.kb.se/library/Mimer' OR " +
         "data#>>'{@graph,0,descriptionCreator,@id}' = 'https://libris.kb.se/library/KBDIGI' OR " +
