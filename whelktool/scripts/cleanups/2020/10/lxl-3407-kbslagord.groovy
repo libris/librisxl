@@ -16,6 +16,7 @@ notInSaoReport = getReportWriter("not-in-sao.txt")
 statistics = new Statistics(5).printOnShutdown()
 
 saoMap = saoLabelToSubject()
+saoSubdivisions = subdivisionLabelToSubject()
 
 File ids = new File(scriptDir, 'ids.txt')
 ids.exists() ? selectByIds(ids.readLines(), this.&handle) : selectByCollection('bib', this.&handle)
@@ -78,7 +79,7 @@ Map asLink(Map m) {
 }
 
 Map findInSao(Map subject) {
-    saoMap[normalize(subject['prefLabel'])]
+    saoMap.get(normalize(subject['prefLabel']))
 }
 
 Map tryLink(Map subject) {
@@ -115,19 +116,21 @@ Map tryMapSubdivision(Map subdivision) {
 }
 
 Map _tryMapSubdivision(Map subdivision) {
-    if(subdivision.size() == 1 && subdivision['@id'] && saoMap[subdivision['@id']]) {
-        return saoMap[subdivision['@id']]
+    if(subdivision.size() == 1 && subdivision['@id'] && saoMap.get(subdivision['@id'])) {
+        return saoMap.get(subdivision['@id'])
     }
     if(subdivision.size() != 2 || !subdivision['@type'] || !subdivision['prefLabel']) {
         statistics.increment('bad subdivision', subdivision)
         return null
     }
 
+    if (subdivision['@type'] == 'TopicSubdivision' && saoSubdivisions.get(normalize(subdivision['prefLabel']))) {
+        return saoSubdivisions.get(normalize(subdivision['prefLabel']))
+    }
+
     def inSao = findInSao(subdivision)
     if (inSao) {
-        return inSao['@type'] == 'TopicSubdivision'
-                ? inSao
-                : ['@type': subdivision['@type'], 'prefLabel': inSao['prefLabel']]
+        return inSao
     }
     else if (subdivision['@type'] in ['Temporal', 'TemporalSubdivision']) {
         return subdivision
@@ -137,9 +140,17 @@ Map _tryMapSubdivision(Map subdivision) {
     }
 }
 
-Map saoLabelToSubject() {
+PrefMap saoLabelToSubject() {
+    labelToSubject(['Topic', 'ComplexSubject', 'Geographic', 'Temporal'])
+}
+
+PrefMap subdivisionLabelToSubject() {
+    labelToSubject(['TopicSubdivision'])
+}
+
+PrefMap labelToSubject(types) {
     def q = [
-            //'@type'       : ['Topic', 'ComplexSubject', 'Geographic', 'Temporal'],
+            '@type'       : types,
             'inScheme.@id': [INSCHEME_SAO],
             'q'           : ['*'],
             '_sort'       : ['@id']
@@ -148,23 +159,27 @@ Map saoLabelToSubject() {
     ConcurrentLinkedQueue<Map> d = new ConcurrentLinkedQueue<>()
     selectByIds(queryIds(q).collect()) { d.add(it.graph[1]) }
 
-    Map m = [:]
+    PrefMap m = new PrefMap()
     d.forEach({subject ->
-        m[subject['@id']] = subject
+        m.put(subject['@id'], subject)
 
         asList(subject['prefLabel']).each {
-            m[normalize(it)] = subject
+            m.putPref(normalize(it), subject)
         }
 
         asList(subject['altLabel']).each {
-            m[normalize(it)] = subject
+            m.put(normalize(it), subject)
         }
 
         asList(subject['hasVariant']).each { variant ->
-            m[normalize(variant['prefLabel'])] = subject
+            if (variant['prefLabel']) {
+                m.put(normalize(variant['prefLabel']), subject)
+            }
         }
     } )
 
+    println("SAO ambigous labels")
+    m.ambigous().collect{ k, v -> "$k ${v.collect{ it['@id'] }}" }.sort().each {println(it) }
     return m
 }
 
@@ -182,4 +197,46 @@ Object getPathSafe(item, path, defaultTo = null) {
         }
     }
     return item
+}
+
+class PrefMap {
+    UniqueMap pref = new UniqueMap()
+    UniqueMap notPref = new UniqueMap()
+
+    Object put(k, v) {
+        notPref[k] = v
+    }
+
+    Object putPref(k, v) {
+        pref[k] = v
+        notPref[k] = v
+    }
+
+    Object get(k) {
+        return pref[k] ?: notPref[k]
+    }
+
+    Map ambigous() {
+        return pref.ambigous() + (notPref.ambigous().findAll { !pref.containsKey(it.key)})
+    }
+}
+
+class UniqueMap extends HashMap {
+    Map ambigous = [:]
+
+    @Override
+    Object put(k, v) {
+        if (ambigous.containsKey(k)) {
+            ambigous[k] << v
+        } else if (containsKey(k)) {
+            ambigous[k] = [v, remove(k)]
+        } else {
+            super.put(k, v)
+        }
+        return null
+    }
+
+    Map ambigous() {
+        return ambigous
+    }
 }
