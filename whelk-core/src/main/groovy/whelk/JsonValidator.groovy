@@ -10,35 +10,55 @@ class JsonValidator {
         this.jsonLd = Preconditions.checkNotNull(jsonLd)
     }
 
-    Set validate(Document doc) throws InvalidJsonException {
-        doValidate(doc.data)
-    }
+    class Validation {
+        Set errors
+        Mode mode
 
-    private void doValidate(Map obj) {
-        obj.each { key, value ->
-            if (!passedPreValidation(key, value)) {
-                return
-            }
-            checkHasDefinition(key)
+        enum Mode {
+            FAIL_FAST, // Fails with exception
+            LOG_ERROR   // Append to list of errors
+        }
 
-            checkVocabTermInVocab(key, value)
-
-            validateRepeatability(key, value)
-
-            validateObjectProperties(key, value)
-
-            validateNext(value)
+        Validation(Mode mode) {
+            this.errors = new LinkedHashSet()
+            this.mode = mode
         }
     }
 
-    private passedPreValidation(key, value) {
-        return !(isUnexpected(key, value) || keyIsInvalid(key) || isEmptyValueList(value))
+    private void doValidate(Map obj, validation) {
+        obj.each { key, value ->
+            if (!passedPreValidation(key, value, validation)) {
+                return
+            }
+            checkHasDefinition(key, validation)
+
+            checkVocabTermInVocab(key, value, validation)
+
+            validateRepeatability(key, value, validation)
+
+            validateObjectProperties(key, value, validation)
+
+            validateNext(value, validation)
+        }
     }
 
-    private boolean keyIsInvalid(key) {
+    void validate(Document doc) throws InvalidJsonException {
+        doValidate(doc.data, new Validation(Validation.Mode.FAIL_FAST))
+    }
+
+    Set validateAll(Map map) {
+        def validation = new Validation(Validation.Mode.LOG_ERROR)
+        doValidate(map, validation)
+        return validation.errors
+    }
+
+    private passedPreValidation(key, value, validation) {
+        return !(isUnexpected(key, value, validation) || keyIsInvalid(key, validation) || isEmptyValueList(value))
+    }
+
+    private boolean keyIsInvalid(key, validation) {
         if(!(key instanceof String)) {
-//            log debug
-//            errors << "Invalid key: $key"
+            handleError("Invalid key: $key", validation)
             return true
         } else {
             return false
@@ -50,10 +70,9 @@ class JsonValidator {
         return valueList && valueList.isEmpty()
     }
 
-    private boolean isUnexpected(key, value) { //Rename me
+    private boolean isUnexpected(key, value, validation) { //Rename me
         if ((key == jsonLd.ID_KEY || key == jsonLd.TYPE_KEY) && !(value instanceof String)) {
-            //Log debug
-//            errors << "Unexpected value of $key: ${value}"
+            handleError("Unexpected value of $key: ${value}", validation)
             return true
         } else {
             return false
@@ -70,7 +89,7 @@ class JsonValidator {
         return value instanceof List
     }
 
-    private void validateObjectProperties(String key, value) {
+    private void validateObjectProperties(String key, value, validation) {
         List valueList = isRepeated(value) ? (List) value : null
         Object firstValue = valueList?.getAt(0) ?: value
         boolean valueIsObject = firstValue instanceof Map
@@ -78,22 +97,22 @@ class JsonValidator {
         if (firstValue && termDefinition
                 && termDefinition[jsonLd.TYPE_KEY] == 'ObjectProperty') {
             if (!isVocabTerm(key) && !valueIsObject) {
-                throw new InvalidJsonException("Expected value type of $key to be object (value: $value).")
+                handleError("Expected value type of $key to be object (value: $value).", validation)
             } else if (isVocabTerm(key) && valueIsObject) {
-                throw new InvalidJsonException("Expected value type of $key to be a vocab string (value: $value).")
+                handleError("Expected value type of $key to be a vocab string (value: $value).", validation)
             }
         }
     }
 
-    private void validateNext(value) {
+    private void validateNext(value, Validation validation) {
         if (value instanceof List) {
             value.each {
                 if (it instanceof Map) {
-                    doValidate(it)
+                    doValidate(it, validation)
                 }
             }
         } else if (value instanceof Map) {
-            doValidate(value)
+            doValidate(value, validation)
         }
     }
 
@@ -112,22 +131,30 @@ class JsonValidator {
     private void checkVocabTermInVocab(String key, value) {
         if ((key == jsonLd.TYPE_KEY || isVocabTerm(key))
                 && !jsonLd.vocabIndex.containsKey((String) value)) {
-            throw new InvalidJsonException("Unknown vocab value for $key: $value")
+            handleError("Unknown vocab value for $key: $value")
         }
     }
 
-    private void checkHasDefinition(String key) {
+    private void checkHasDefinition(String key, validation) {
         if (!getTermDefinition(key) && !jsonLd.LD_KEYS.contains(key)) {
-            throw new InvalidJsonException("Unknown term: $key")
+            handleError("Unknown term: $key", validation)
         }
     }
 
-    private void validateRepeatability(String key, value) {
+    private void validateRepeatability(String key, value, validation) {
         boolean expectRepeat = key == jsonLd.GRAPH_KEY || key in jsonLd.getRepeatableTerms()
         if (expectRepeat && !isRepeated(value)) {
-            throw new InvalidJsonException("Expected term $key to be an array. $key is declared as repeatable in context.")
+            handleError("Expected term $key to be an array. $key is declared as repeatable in context.", validation)
         } else if (!expectRepeat && isRepeated(value)) {
-            throw new InvalidJsonException("Unexpected array for $key. $key is not declared as repeatable in context.")
+            handleError("Unexpected array for $key. $key is not declared as repeatable in context.", validation)
+        }
+    }
+
+    private void handleError(String error, Validation validation) {
+        if (validation.mode == Validation.Mode.FAIL_FAST) {
+            throw new InvalidJsonException(error)
+        } else if (validation.mode == Validation.Mode.LOG_ERROR) {
+            validation.errors << error
         }
     }
 }
