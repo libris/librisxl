@@ -28,7 +28,8 @@ void process(bib) {
     boolean modified = false
 
     asList(getPathSafe(bib.graph[1], ['instanceOf', 'subject'])).each { Map subject ->
-        if ('kbslagord' == getPathSafe(subject, ['inScheme', 'code'], '').toLowerCase().trim()) {
+        List inScheme = asList(subject['inScheme']) // sometimes list...
+        if (inScheme && 'kbslagord' == normalize(inScheme.first()['code'])) {
             String label = subject['prefLabel']
             String saoId = sao[normalize(label)]
             if (saoId) {
