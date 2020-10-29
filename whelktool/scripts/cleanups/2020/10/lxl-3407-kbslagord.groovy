@@ -1,3 +1,9 @@
+/**
+ * Try to link local subject with inScheme "KBslagord" to SAO.
+ *
+ * See LXL-3407 for more info.
+ */
+
 import java.util.concurrent.ConcurrentLinkedQueue
 import whelk.util.Statistics
 
