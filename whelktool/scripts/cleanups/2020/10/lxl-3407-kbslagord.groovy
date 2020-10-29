@@ -86,7 +86,10 @@ Map tryLink(Map subject) {
 }
 
 Map tryMapComplex(Map subject) {
-    if (subject['@type'] == 'ComplexSubject') {
+    if (subject['@type'] == 'ComplexSubject' && subject.keySet() != ['@type', 'prefLabel', 'inScheme', 'termComponentList'] as Set) {
+        statistics.increment("Bad shape", subject)
+    }
+    else if (subject['@type'] == 'ComplexSubject') {
         List ogTerms = subject['termComponentList']
         def mappedTerms = ogTerms.findResults {
             it['@type'] == 'Topic' ? findInSao(it) : tryMapSubdivision(it)
@@ -122,7 +125,9 @@ Map _tryMapSubdivision(Map subdivision) {
 
     def inSao = findInSao(subdivision)
     if (inSao) {
-        return ['@type': subdivision['@type'], 'prefLabel': inSao['prefLabel']]
+        return inSao['@type'] == 'TopicSubdivision'
+                ? inSao
+                : ['@type': subdivision['@type'], 'prefLabel': inSao['prefLabel']]
     }
     else if (subdivision['@type'] in ['Temporal', 'TemporalSubdivision']) {
         return subdivision
