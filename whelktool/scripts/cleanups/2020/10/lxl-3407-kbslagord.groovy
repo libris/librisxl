@@ -67,7 +67,7 @@ String normalize(String s) {
 
 Map saoLabelToId() {
     def q = [
-            '@type'       : ['Topic', 'ComplexSubject'],
+            '@type'       : ['Topic', 'ComplexSubject', 'Geographic', 'Temporal'],
             'inScheme.@id': ['https://id.kb.se/term/sao'],
             'q'           : ['*'],
             '_sort'       : ['@id']
