@@ -3,6 +3,7 @@ import whelk.util.Statistics
 
 modifiedReport = getReportWriter("modified.txt")
 errorReport = getReportWriter("errors.txt")
+notInSaoReport = getReportWriter("not-in-sao.txt")
 statistics = new Statistics(5).printOnShutdown()
 
 sao = saoLabelToId()
@@ -38,6 +39,7 @@ void process(bib) {
             }
             else {
                 statistics.increment('not in SAO', "$label")
+                notInSaoReport.println("${bib.doc.shortId} $label")
             }
         }
     }
