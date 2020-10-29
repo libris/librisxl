@@ -44,6 +44,7 @@ selectBySqlWhere(where) { data ->
     } else {
         newHasDuration["value"] = durations[0]
     }
+    data.graph[1]["hasDuration"].add(newHasDuration)
 
     // Clean up _marcUncompleted
     if (data.graph[0]._marcUncompleted instanceof List) {
