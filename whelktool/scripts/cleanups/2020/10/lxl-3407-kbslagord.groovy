@@ -27,9 +27,8 @@ void handle(bib) {
 void process(bib) {
     boolean modified = false
 
-    asList(getPathSafe(bib.graph[1], ['instanceOf', 'subject'])).each { Map subject ->
-        List inScheme = asList(subject['inScheme']) // sometimes list...
-        if (inScheme && 'kbslagord' == normalize(inScheme.first()['code'])) {
+    asList(getPathSafe(bib.graph[1], ['instanceOf', 'subject'], [])).each { Map subject ->
+        if (isKbSlagord(subject)) {
             String label = subject['prefLabel']
             String saoId = sao[normalize(label)]
             if (saoId) {
@@ -49,6 +48,11 @@ void process(bib) {
         modifiedReport.println(bib.doc.shortId)
         bib.scheduleSave()
     }
+}
+
+boolean isKbSlagord(Map subject) {
+    List inScheme = asList(subject['inScheme']) // sometimes list...
+    inScheme && 'kbslagord' == normalize(inScheme.first()['code'])
 }
 
 String normalize(String s) {
