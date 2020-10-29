@@ -92,12 +92,13 @@ Map tryMapComplex(Map subject) {
             it['@type'] == 'Topic' ? findInSao(it) : tryMapSubdivision(it)
         }
         if (mappedTerms.size() == ogTerms.size()) {
-            return [
+            def complex = [
                     '@type'            : 'ComplexSubject',
                     'prefLabel'        : mappedTerms.collect{ it['prefLabel'] }.join('--'),
                     'inScheme'         : INSCHEME_SAO,
                     'termComponentList': mappedTerms.collect{ asLink(it) ?: it }
             ]
+            return tryLink(complex) ?: complex
         }
     }
 
