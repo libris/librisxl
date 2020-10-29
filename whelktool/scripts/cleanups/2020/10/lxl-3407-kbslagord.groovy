@@ -4,15 +4,18 @@
  * See LXL-3407 for more info.
  */
 
+INSCHEME_SAO = 'https://id.kb.se/term/sao'
+
 import java.util.concurrent.ConcurrentLinkedQueue
 import whelk.util.Statistics
 
+modifiedIdsReport = getReportWriter("modified-ids.txt")
 modifiedReport = getReportWriter("modified.txt")
 errorReport = getReportWriter("errors.txt")
 notInSaoReport = getReportWriter("not-in-sao.txt")
 statistics = new Statistics(5).printOnShutdown()
 
-sao = saoLabelToId()
+saoMap = saoLabelToSubject()
 
 File ids = new File(scriptDir, 'ids.txt')
 ids.exists() ? selectByIds(ids.readLines(), this.&handle) : selectByCollection('bib', this.&handle)
@@ -26,6 +29,7 @@ void handle(bib) {
     catch(Exception e) {
         errorReport.println("${bib.doc.shortId} $e")
         e.printStackTrace(errorReport)
+        println("${bib.doc.shortId} $e")
         e.printStackTrace()
     }
 }
@@ -35,23 +39,25 @@ void process(bib) {
 
     asList(getPathSafe(bib.graph[1], ['instanceOf', 'subject'])).each { Map subject ->
         if (isKbSlagord(subject)) {
-            String label = subject['prefLabel']
-            String saoId = sao[normalize(label)]
-            if (saoId) {
-                statistics.increment('in SAO', "$label -> $saoId")
+            Map sao = tryLink(subject) ?: tryMapComplex(subject)
+            if(sao) {
+                String msg = "${subject['prefLabel']} -> ${sao['prefLabel'] ?: sao['@id']}"
+                modifiedReport.println("${bib.doc.shortId} $msg")
+                statistics.increment("in SAO", msg)
+
                 subject.clear()
-                subject['@id'] = saoId
+                subject.putAll(sao)
                 modified = true
             }
             else {
-                statistics.increment('not in SAO', "$label")
-                notInSaoReport.println("${bib.doc.shortId} $label")
+                statistics.increment("Not in SAO (${subject['@type']})", subject['prefLabel'])
+                notInSaoReport.println("${bib.doc.shortId} ${subject['prefLabel']}")
             }
         }
     }
 
     if (modified) {
-        modifiedReport.println(bib.doc.shortId)
+        modifiedIdsReport.println(bib.doc.shortId)
         bib.scheduleSave()
     }
 }
@@ -65,10 +71,70 @@ String normalize(String s) {
     s?.trim()?.toLowerCase()
 }
 
-Map saoLabelToId() {
+Map asLink(Map m) {
+    m && m['@id']
+            ? ['@id': m['@id']]
+            : null
+}
+
+Map findInSao(Map subject) {
+    saoMap[normalize(subject['prefLabel'])]
+}
+
+Map tryLink(Map subject) {
+    asLink(findInSao(subject))
+}
+
+Map tryMapComplex(Map subject) {
+    if (subject['@type'] == 'ComplexSubject') {
+        List ogTerms = subject['termComponentList']
+        def mappedTerms = ogTerms.findResults {
+            it['@type'] == 'Topic' ? findInSao(it) : tryMapSubdivision(it)
+        }
+        if (mappedTerms.size() == ogTerms.size()) {
+            return [
+                    '@type'            : 'ComplexSubject',
+                    'prefLabel'        : mappedTerms.collect{ it['prefLabel'] }.join('--'),
+                    'inScheme'         : INSCHEME_SAO,
+                    'termComponentList': mappedTerms.collect{ asLink(it) ?: it }
+            ]
+        }
+    }
+
+    return null
+}
+
+Map tryMapSubdivision(Map subdivision) {
+    Map result = _tryMapSubdivision(subdivision)
+    statistics.increment(result ? 'z subdivision found' : 'z subdivision not found', subdivision)
+    return result
+}
+
+Map _tryMapSubdivision(Map subdivision) {
+    if(subdivision.size() == 1 && subdivision['@id'] && saoMap[subdivision['@id']]) {
+        return saoMap[subdivision['@id']]
+    }
+    if(subdivision.size() != 2 || !subdivision['@type'] || !subdivision['prefLabel']) {
+        statistics.increment('bad subdivision', subdivision)
+        return null
+    }
+
+    def inSao = findInSao(subdivision)
+    if (inSao) {
+        return ['@type': subdivision['@type'], 'prefLabel': inSao['prefLabel']]
+    }
+    else if (subdivision['@type'] in ['Temporal', 'TemporalSubdivision']) {
+        return subdivision
+    }
+    else {
+        return null
+    }
+}
+
+Map saoLabelToSubject() {
     def q = [
-            '@type'       : ['Topic', 'ComplexSubject', 'Geographic', 'Temporal'],
-            'inScheme.@id': ['https://id.kb.se/term/sao'],
+            //'@type'       : ['Topic', 'ComplexSubject', 'Geographic', 'Temporal'],
+            'inScheme.@id': [INSCHEME_SAO],
             'q'           : ['*'],
             '_sort'       : ['@id']
     ]
@@ -78,14 +144,18 @@ Map saoLabelToId() {
 
     Map m = [:]
     d.forEach({subject ->
-        m[normalize(subject['prefLabel'])] = subject['@id']
+        m[subject['@id']] = subject
+
+        asList(subject['prefLabel']).each {
+            m[normalize(it)] = subject
+        }
 
         asList(subject['altLabel']).each {
-            m[normalize(it)] = subject['@id']
+            m[normalize(it)] = subject
         }
 
         asList(subject['hasVariant']).each { variant ->
-            m[normalize(variant['prefLabel'])] = subject['@id']
+            m[normalize(variant['prefLabel'])] = subject
         }
     } )
 
