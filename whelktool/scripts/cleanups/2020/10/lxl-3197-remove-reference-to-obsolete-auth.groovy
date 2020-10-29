@@ -72,3 +72,8 @@ selectBySqlWhere(where) { data ->
         })
     }
 }
+
+// Delete the actual mipfesd auth post as no references to it should remain
+selectByIds(['jgvxz1t25kg2znj']) {
+    it.scheduleDelete()
+}
