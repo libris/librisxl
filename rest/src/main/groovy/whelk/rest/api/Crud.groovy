@@ -509,7 +509,7 @@ class Crud extends HttpServlet {
         try {
             validator.validate(newDoc)
         } catch (InvalidJsonException ive) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, ive.getMessage())
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, ive.getMessage())
             log.debug("Json validation failed:" + ive.getMessage())
             return
         }

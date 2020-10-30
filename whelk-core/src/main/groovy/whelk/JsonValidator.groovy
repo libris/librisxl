@@ -13,6 +13,7 @@ class JsonValidator {
     class Validation {
         Set errors
         Mode mode
+        boolean seenGraph = false
 
         enum Mode {
             FAIL_FAST,
@@ -35,15 +36,17 @@ class JsonValidator {
         return validation.errors
     }
 
-
-    private void doValidate(Map obj, validation) {
-        obj.each { key, value ->
+    private void doValidate(Map data, validation) {
+        data.each { key, value ->
             if (!passedPreValidation(key, value, validation)) {
                 return
             }
+
+            checkIsNotNestedGraph(key, value, validation)
+
             checkHasDefinition(key, validation)
 
-            verifyVocabTerm(key, value)
+            verifyVocabTerm(key, value, validation)
 
             validateRepeatability(key, value, validation)
 
@@ -55,6 +58,15 @@ class JsonValidator {
 
     private passedPreValidation(key, value, validation) {
         return !(isUnexpected(key, value, validation) || keyIsInvalid(key, validation) || isEmptyValueList(value))
+    }
+
+    private checkIsNotNestedGraph(key, value, validation) {
+        if (key == jsonLd.GRAPH_KEY) {
+            if (validation.seenGraph) {
+                handleError("Nested graph element: $value", validation)
+            }
+            validation.seenGraph = true
+        }
     }
 
     private boolean keyIsInvalid(key, validation) {
@@ -92,10 +104,10 @@ class JsonValidator {
         return isVocabTerm
     }
 
-    private void verifyVocabTerm(String key, value) {
+    private void verifyVocabTerm(String key, value, validation) {
         if ((key == jsonLd.TYPE_KEY || isVocabTerm(key))
                 && !jsonLd.vocabIndex.containsKey((String) value)) {
-            handleError("Unknown vocab value for $key: $value")
+            handleError("Unknown vocab value for $key: $value", validation)
         }
     }
 
