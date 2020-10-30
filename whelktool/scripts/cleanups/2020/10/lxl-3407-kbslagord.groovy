@@ -189,7 +189,9 @@ PrefMap labelToSubject(types) {
     } )
 
     println("SAO duplicate labels")
-    m.duplicates().collect{ k, v -> "$k ${v.collect{ it['@id'] }}" }.sort().each {println(it) }
+    m.duplicates().collect{ k, v -> "$k ${v.collect{ it['prefLabel'] }} ${v.collect{ it['@id'] }}" }.sort()
+            .each {println(it) }
+    
     return m
 }
 
