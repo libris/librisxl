@@ -188,8 +188,8 @@ PrefMap labelToSubject(types) {
         }
     } )
 
-    println("SAO ambigous labels")
-    m.ambigous().collect{ k, v -> "$k ${v.collect{ it['@id'] }}" }.sort().each {println(it) }
+    println("SAO ambiguous labels")
+    m.ambiguous().collect{ k, v -> "$k ${v.collect{ it['@id'] }}" }.sort().each {println(it) }
     return m
 }
 
@@ -209,6 +209,29 @@ Object getPathSafe(item, path, defaultTo = null) {
     return item
 }
 
+// if same key is added more than once, remove it
+class UniqueMap extends HashMap {
+    Map ambiguous = [:]
+
+    @Override
+    Object put(k, v) {
+        if (ambiguous.containsKey(k)) {
+            ambiguous[k] << v
+        } else if (containsKey(k)) {
+            ambiguous[k] = [v, remove(k)]
+        } else {
+            super.put(k, v)
+        }
+        return null
+    }
+
+    Map ambiguous() {
+        return ambiguous
+    }
+}
+
+// two-tier version of "UniqueMap".
+// - if the same key is added with pref and putPref, get will return the value added with putPref
 class PrefMap {
     UniqueMap pref = new UniqueMap()
     UniqueMap notPref = new UniqueMap()
@@ -226,27 +249,7 @@ class PrefMap {
         return pref[k] ?: notPref[k]
     }
 
-    Map ambigous() {
-        return pref.ambigous() + (notPref.ambigous().findAll { !pref.containsKey(it.key)})
-    }
-}
-
-class UniqueMap extends HashMap {
-    Map ambigous = [:]
-
-    @Override
-    Object put(k, v) {
-        if (ambigous.containsKey(k)) {
-            ambigous[k] << v
-        } else if (containsKey(k)) {
-            ambigous[k] = [v, remove(k)]
-        } else {
-            super.put(k, v)
-        }
-        return null
-    }
-
-    Map ambigous() {
-        return ambigous
+    Map ambiguous() {
+        return pref.ambiguous() + (notPref.ambiguous().findAll { !pref.containsKey(it.key)})
     }
 }
