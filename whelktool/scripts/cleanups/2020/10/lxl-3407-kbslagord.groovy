@@ -1,6 +1,12 @@
 /**
  * Try to link local subject with inScheme "KBslagord" to SAO.
  *
+ * ComplexSubject
+ * The termComponents of post-coordinated ComplexSubjects cannot all be linked because as of now the MARC conversion
+ * needs the type (TopicSubdivision, GeographicSubdivision, TemporalSubdivision) to set the correct subfield.
+ * i.e linking GeographicSubdivision "Sverige" in Eldbegängelse--Sverige to sao/Sverige which is of type Geographic
+ * breaks the conversion. Instead we just check that the labels exist in SAO.
+ *
  * See LXL-3407 for more info.
  */
 
@@ -117,6 +123,7 @@ Map tryMapSubdivision(Map subdivision) {
 
 Map _tryMapSubdivision(Map subdivision) {
     if(subdivision.size() == 1 && subdivision['@id'] && saoMap.get(subdivision['@id'])) {
+        // already linked to SAO - get prefLabel
         return saoMap.get(subdivision['@id'])
     }
     if(subdivision.size() != 2 || !subdivision['@type'] || !subdivision['prefLabel']) {
@@ -125,14 +132,17 @@ Map _tryMapSubdivision(Map subdivision) {
     }
 
     if (subdivision['@type'] == 'TopicSubdivision' && saoSubdivisions.get(normalize(subdivision['prefLabel']))) {
+        // link to SAO
         return saoSubdivisions.get(normalize(subdivision['prefLabel']))
     }
 
     def inSao = findInSao(subdivision)
     if (inSao) {
+        // map to prefLabel in SAO
         return inSao
     }
     else if (subdivision['@type'] in ['Temporal', 'TemporalSubdivision']) {
+        // temporal is always OK
         return subdivision
     }
     else {
