@@ -15,30 +15,13 @@ class JsonValidator {
         Mode mode
 
         enum Mode {
-            FAIL_FAST, // Fails with exception
-            LOG_ERROR   // Append to list of errors
+            FAIL_FAST,
+            LOG_ERROR
         }
 
         Validation(Mode mode) {
             this.errors = new LinkedHashSet()
             this.mode = mode
-        }
-    }
-
-    private void doValidate(Map obj, validation) {
-        obj.each { key, value ->
-            if (!passedPreValidation(key, value, validation)) {
-                return
-            }
-            checkHasDefinition(key, validation)
-
-            checkVocabTermInVocab(key, value, validation)
-
-            validateRepeatability(key, value, validation)
-
-            validateObjectProperties(key, value, validation)
-
-            validateNext(value, validation)
         }
     }
 
@@ -50,6 +33,24 @@ class JsonValidator {
         def validation = new Validation(Validation.Mode.LOG_ERROR)
         doValidate(map, validation)
         return validation.errors
+    }
+
+
+    private void doValidate(Map obj, validation) {
+        obj.each { key, value ->
+            if (!passedPreValidation(key, value, validation)) {
+                return
+            }
+            checkHasDefinition(key, validation)
+
+            verifyVocabTerm(key, value)
+
+            validateRepeatability(key, value, validation)
+
+            validateObjectProperties(key, value, validation)
+
+            validateNext(value, validation)
+        }
     }
 
     private passedPreValidation(key, value, validation) {
@@ -79,14 +80,36 @@ class JsonValidator {
         }
     }
 
+    private void checkHasDefinition(String key, validation) {
+        if (!getTermDefinition(key) && !jsonLd.LD_KEYS.contains(key)) {
+            handleError("Unknown term: $key", validation)
+        }
+    }
+
     private boolean isVocabTerm(String key) {
         def contextDefinition = getContextDefinition(key)
         boolean isVocabTerm = contextDefinition && contextDefinition[jsonLd.TYPE_KEY] == jsonLd.VOCAB_KEY
         return isVocabTerm
     }
 
+    private void verifyVocabTerm(String key, value) {
+        if ((key == jsonLd.TYPE_KEY || isVocabTerm(key))
+                && !jsonLd.vocabIndex.containsKey((String) value)) {
+            handleError("Unknown vocab value for $key: $value")
+        }
+    }
+
     private boolean isRepeated(value) {
         return value instanceof List
+    }
+
+    private void validateRepeatability(String key, value, validation) {
+        boolean expectRepeat = key == jsonLd.GRAPH_KEY || key in jsonLd.getRepeatableTerms()
+        if (expectRepeat && !isRepeated(value)) {
+            handleError("Expected term $key to be an array. $key is declared as repeatable in context.", validation)
+        } else if (!expectRepeat && isRepeated(value)) {
+            handleError("Unexpected array for $key. $key is not declared as repeatable in context.", validation)
+        }
     }
 
     private void validateObjectProperties(String key, value, validation) {
@@ -104,18 +127,6 @@ class JsonValidator {
         }
     }
 
-    private void validateNext(value, Validation validation) {
-        if (value instanceof List) {
-            value.each {
-                if (it instanceof Map) {
-                    doValidate(it, validation)
-                }
-            }
-        } else if (value instanceof Map) {
-            doValidate(value, validation)
-        }
-    }
-
     private Map getContextDefinition(String key) {
         return jsonLd.context[key] instanceof Map ? jsonLd.context[key] : null
     }
@@ -128,25 +139,15 @@ class JsonValidator {
         return termDefinition
     }
 
-    private void checkVocabTermInVocab(String key, value) {
-        if ((key == jsonLd.TYPE_KEY || isVocabTerm(key))
-                && !jsonLd.vocabIndex.containsKey((String) value)) {
-            handleError("Unknown vocab value for $key: $value")
-        }
-    }
-
-    private void checkHasDefinition(String key, validation) {
-        if (!getTermDefinition(key) && !jsonLd.LD_KEYS.contains(key)) {
-            handleError("Unknown term: $key", validation)
-        }
-    }
-
-    private void validateRepeatability(String key, value, validation) {
-        boolean expectRepeat = key == jsonLd.GRAPH_KEY || key in jsonLd.getRepeatableTerms()
-        if (expectRepeat && !isRepeated(value)) {
-            handleError("Expected term $key to be an array. $key is declared as repeatable in context.", validation)
-        } else if (!expectRepeat && isRepeated(value)) {
-            handleError("Unexpected array for $key. $key is not declared as repeatable in context.", validation)
+    private void validateNext(value, Validation validation) {
+        if (value instanceof List) {
+            value.each {
+                if (it instanceof Map) {
+                    doValidate(it, validation)
+                }
+            }
+        } else if (value instanceof Map) {
+            doValidate(value, validation)
         }
     }
 
