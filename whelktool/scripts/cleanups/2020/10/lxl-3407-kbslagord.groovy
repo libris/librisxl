@@ -188,8 +188,8 @@ PrefMap labelToSubject(types) {
         }
     } )
 
-    println("SAO ambiguous labels")
-    m.ambiguous().collect{ k, v -> "$k ${v.collect{ it['@id'] }}" }.sort().each {println(it) }
+    println("SAO duplicate labels")
+    m.duplicates().collect{ k, v -> "$k ${v.collect{ it['@id'] }}" }.sort().each {println(it) }
     return m
 }
 
@@ -211,22 +211,22 @@ Object getPathSafe(item, path, defaultTo = null) {
 
 // if same key is added more than once, remove it
 class UniqueMap extends HashMap {
-    Map ambiguous = [:]
+    Map duplicates = [:]
 
     @Override
     Object put(k, v) {
-        if (ambiguous.containsKey(k)) {
-            ambiguous[k] << v
+        if (duplicates.containsKey(k)) {
+            duplicates[k] << v
         } else if (containsKey(k)) {
-            ambiguous[k] = [v, remove(k)]
+            duplicates[k] = [v, remove(k)]
         } else {
             super.put(k, v)
         }
         return null
     }
 
-    Map ambiguous() {
-        return ambiguous
+    Map duplicates() {
+        return duplicates
     }
 }
 
@@ -249,7 +249,7 @@ class PrefMap {
         return pref[k] ?: notPref[k]
     }
 
-    Map ambiguous() {
-        return pref.ambiguous() + (notPref.ambiguous().findAll { !pref.containsKey(it.key)})
+    Map duplicates() {
+        return pref.duplicates() + (notPref.duplicates().findAll { !pref.containsKey(it.key)})
     }
 }
