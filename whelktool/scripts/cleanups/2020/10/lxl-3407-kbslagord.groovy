@@ -21,6 +21,7 @@ errorReport = getReportWriter("errors.txt")
 notInSaoReport = getReportWriter("not-in-sao.txt")
 statistics = new Statistics(5).printOnShutdown()
 
+// There are two "Historia" in SAO, one Topic and one TopicSubdivision. So we need to keep these separate.
 saoMap = saoLabelToSubject()
 saoSubdivisions = subdivisionLabelToSubject()
 
@@ -191,7 +192,7 @@ PrefMap labelToSubject(types) {
     println("SAO duplicate labels")
     m.duplicates().collect{ k, v -> "$k ${v.collect{ it['prefLabel'] }} ${v.collect{ it['@id'] }}" }.sort()
             .each {println(it) }
-    
+
     return m
 }
 
