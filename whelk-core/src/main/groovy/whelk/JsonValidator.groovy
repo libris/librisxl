@@ -6,8 +6,15 @@ import whelk.exception.InvalidJsonException
 class JsonValidator {
     private static JsonLd jsonLd
 
-    JsonValidator(JsonLd jsonLd) {
-        this.jsonLd = Preconditions.checkNotNull(jsonLd)
+    private JsonValidator(JsonLd jsonLd) {
+        this.jsonLd = jsonLd
+    }
+
+    static JsonValidator from(JsonLd jsonLd) {
+        Preconditions.checkNotNull(jsonLd)
+        Preconditions.checkArgument(!jsonLd.context.isEmpty())
+        Preconditions.checkArgument(!jsonLd.vocabIndex.isEmpty())
+        return new JsonValidator(jsonLd)
     }
 
     class Validation {
@@ -41,7 +48,6 @@ class JsonValidator {
             if (!passedPreValidation(key, value, validation)) {
                 return
             }
-
             checkIsNotNestedGraph(key, value, validation)
 
             checkHasDefinition(key, validation)

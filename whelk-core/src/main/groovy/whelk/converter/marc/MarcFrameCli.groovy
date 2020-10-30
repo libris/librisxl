@@ -27,7 +27,7 @@ for (fpath in fpaths) {
     if (cmd == "revert") {
         if (converter.ld) {
             System.err.println "Validating JSON-LD ..."
-            def validator = new JsonValidator(converter.ld)
+            def validator = JsonValidator.from(converter.ld)
             def errors = validator.validateAll(source)
             if (errors) {
                 System.err.println "JSON-LD validation errors:"

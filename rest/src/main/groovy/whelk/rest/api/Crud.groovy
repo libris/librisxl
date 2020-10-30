@@ -95,7 +95,7 @@ class Crud extends HttpServlet {
         vocabData = whelk.vocabData
         jsonld = whelk.jsonld
         search = new SearchUtils(whelk)
-        validator = new JsonValidator(jsonld)
+        validator = JsonValidator.from(jsonld)
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response,
