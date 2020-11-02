@@ -12,7 +12,7 @@ Script.report = getReportWriter("report.txt")
 
 selectByCollection('bib') { bib ->
     if (!Script.isInitialized) {
-        Script.v = JsonValidator.from(bib.doc.whelk.jsonld)
+        Script.v = JsonValidator.from(bib.whelk.jsonld)
         Script.isInitialized = true
     }
     try {
@@ -29,5 +29,7 @@ void process(bib) {
     errors.each {
         Script.s.increment('errors', it)
     }
-    Script.report.println(bib.doc.shortId)
+    if (errors) {
+        Script.report.println(bib.doc.shortId)
+    }
 }
