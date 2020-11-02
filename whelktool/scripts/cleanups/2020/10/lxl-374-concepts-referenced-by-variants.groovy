@@ -9,13 +9,11 @@ class State
 {
     static PrintWriter scheduledForUpdating
     static PrintWriter failedUpdating
-    static PrintWriter collisions
     static Map<String, String> termToUri
     static Set<String> collidingLabels
 }
 State.scheduledForUpdating = getReportWriter("scheduled-updates")
 State.failedUpdating = getReportWriter("failed-updates")
-State.collisions = getReportWriter("preflabel-collisions")
 State.termToUri = new ConcurrentHashMap<>()
 State.collidingLabels = Collections.newSetFromMap(new ConcurrentHashMap<>())
 
@@ -73,18 +71,9 @@ void addToTermUriMap(String label, String uri, String inScheme, String type) {
 
     for (String key : keys) {
         if (State.termToUri[key] != null) {
-            if (inScheme == null) {
-                State.collisions.println("(unqualified) " + label + " collision, used by both " +
-                        State.termToUri[key] + " and "  + uri)
-            } else {
-                State.collisions.println("(inScheme: " + inScheme + ") " + label + " collision, used by both " +
-                        State.termToUri[key] + " and "  + uri)
-            }
             State.collidingLabels.add(key)
         }
-        else {
-            State.termToUri.put(key, uri)
-        }
+        State.termToUri.put(key, uri)
     }
 }
 
