@@ -35,7 +35,7 @@ void process(bib) {
             if (matches()) {
                 subject['marc:recordControlNumber'] = group(1)
                 subject.inScheme = ['@id': 'https://id.kb.se/term/fast']
-                subject.sameAs = [['@id': "http://id.worldcat.org/fast/${group(2)}"]]
+                subject.sameAs = [['@id': "http://id.worldcat.org/fast/${group(2)}".toString()]]
                 modifiedReport.println("$bib.doc.shortId $subject")
                 bib.scheduleSave()
             }
