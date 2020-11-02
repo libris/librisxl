@@ -1,6 +1,7 @@
 /*
  Link up local entities with "prefLabel", where a concept exists that have
  the label in question as either prefLabel, hasVariant -> prefLabel or altLabel.
+ and matches in terms of inScheme/@type (if such are available)
  */
 
 import java.util.concurrent.ConcurrentHashMap
@@ -10,12 +11,12 @@ class State
     static PrintWriter scheduledForUpdating
     static PrintWriter failedUpdating
     static Map<String, String> termToUri
-    static Set<String> collidingLabels
+    static Set<String> collidingKeys
 }
 State.scheduledForUpdating = getReportWriter("scheduled-updates")
 State.failedUpdating = getReportWriter("failed-updates")
 State.termToUri = new ConcurrentHashMap<>()
-State.collidingLabels = Collections.newSetFromMap(new ConcurrentHashMap<>())
+State.collidingKeys = Collections.newSetFromMap(new ConcurrentHashMap<>())
 
 selectBySqlWhere("collection = 'auth'") { data ->
     Map mainEntity = data.graph[1]
@@ -46,8 +47,8 @@ selectBySqlWhere("collection = 'auth'") { data ->
         }
     }
 
-    State.collidingLabels.each { term ->
-        State.termToUri.remove(term)
+    State.collidingKeys.each { key ->
+        State.termToUri.remove(key)
     }
 }
 
@@ -57,7 +58,8 @@ void addToTermUriMap(String label, String uri, String inScheme, String type) {
     if (
             inScheme != "https://id.kb.se/term/saogf" &&
             inScheme != "https://id.kb.se/term/sao" &&
-            inScheme != "https://id.kb.se/term/barn"
+            inScheme != "https://id.kb.se/term/barn" &&
+            inScheme != "https://id.kb.se/term/barngf"
     )
         inScheme = ""
     if (type == null)
@@ -71,7 +73,7 @@ void addToTermUriMap(String label, String uri, String inScheme, String type) {
 
     for (String key : keys) {
         if (State.termToUri[key] != null) {
-            State.collidingLabels.add(key)
+            State.collidingKeys.add(key)
         }
         State.termToUri.put(key, uri)
     }
