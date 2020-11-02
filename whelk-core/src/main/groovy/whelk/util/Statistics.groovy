@@ -1,5 +1,7 @@
 package whelk.util
 
+import com.google.common.base.Preconditions
+
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -17,6 +19,8 @@ class Statistics {
     }
 
     void increment(String category, Object name, Object example = null) {
+        Preconditions.checkNotNull(category)
+        Preconditions.checkNotNull(name)
         c.computeIfAbsent(category, { new ConcurrentHashMap<>() })
                 .computeIfAbsent(name) { new AtomicInteger() }.incrementAndGet()
 
@@ -29,6 +33,8 @@ class Statistics {
     }
 
     void withContext(Object example, Closure c) {
+        Preconditions.checkNotNull(example)
+        Preconditions.checkNotNull(c)
         try {
             context.set(example)
             c.run()
