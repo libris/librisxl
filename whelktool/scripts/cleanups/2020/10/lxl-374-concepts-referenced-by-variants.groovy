@@ -1,16 +1,31 @@
 /*
  Link up local entities with "prefLabel", where a concept exists that have
- the label in question as either hasVariant -> prefLabel or altLabel.
+ the label in question as either prefLabel, hasVariant -> prefLabel or altLabel.
  */
+
+
+/* PROB 1
+[@type:Topic, inScheme:[code:albt//swe, @type:ConceptScheme, sameAs:[[@id:https://id.kb.se/term/albt%2F%2Fswe]]], prefLabel:Europa]
+to:[@id:http://kblocalhost.kb.se:5000/rp354mt934f3fm1#it]
+ */
+
+// PROB 2, Subdivision
 
 import java.util.concurrent.ConcurrentHashMap
 
-PrintWriter scheduledForUpdating = getReportWriter("scheduled-updates")
-PrintWriter failedUpdating = getReportWriter("failed-updates")
-PrintWriter collisions = getReportWriter("preflabel-collisions")
-
-Map<String, String> termToUri = new ConcurrentHashMap<>()
-Set<String> collidingLabels = Collections.newSetFromMap(new ConcurrentHashMap<>())
+class State
+{
+    static PrintWriter scheduledForUpdating
+    static PrintWriter failedUpdating
+    static PrintWriter collisions
+    static Map<String, String> termToUri
+    static Set<String> collidingLabels
+}
+State.scheduledForUpdating = getReportWriter("scheduled-updates")
+State.failedUpdating = getReportWriter("failed-updates")
+State.collisions = getReportWriter("preflabel-collisions")
+State.termToUri = new ConcurrentHashMap<>()
+State.collidingLabels = Collections.newSetFromMap(new ConcurrentHashMap<>())
 
 selectBySqlWhere("collection = 'auth'") { data ->
     Map mainEntity = data.graph[1]
@@ -19,13 +34,8 @@ selectBySqlWhere("collection = 'auth'") { data ->
         asList(mainEntity.hasVariant).each { variant ->
             if (variant["prefLabel"] != null) {
                 asList(variant["prefLabel"]).each { prefLabel ->
-                    if (termToUri[prefLabel] != null) {
-                        collisions.println(prefLabel + " collision, used by both " +
-                                termToUri[prefLabel] + " and "  + mainEntity["@id"])
-                        collidingLabels.add(prefLabel)
-                    }
-                    else
-                        termToUri.put(prefLabel, mainEntity["@id"])
+                    String inScheme = mainEntity["inScheme"] ? mainEntity["inScheme"]["@id"] : null
+                    addToTermUriMap(prefLabel, mainEntity["@id"], inScheme)
                 }
             }
         }
@@ -33,38 +43,56 @@ selectBySqlWhere("collection = 'auth'") { data ->
 
     if (mainEntity.altLabel != null) {
         asList(mainEntity.altLabel).each { label ->
-            if (termToUri[label] != null) {
-                collisions.println(label + " collision, used by both " +
-                        termToUri[label] + " and "  + mainEntity["@id"])
-                collidingLabels.add(label)
-            }
-            else
-                termToUri.put(label, mainEntity["@id"])
+            String inScheme = mainEntity["inScheme"] ? mainEntity["inScheme"]["@id"] : null
+            addToTermUriMap(label, mainEntity["@id"], inScheme)
         }
     }
 
     // Map up proper term labels too, we'll link up "everyting we can"
     if (mainEntity.prefLabel != null) {
         asList(mainEntity.prefLabel).each { label ->
-            termToUri.put(label, mainEntity["@id"])
+            String inScheme = mainEntity["inScheme"] ? mainEntity["inScheme"]["@id"] : null
+            addToTermUriMap(label, mainEntity["@id"], inScheme)
         }
     }
 
-    collidingLabels.each { term ->
-        termToUri.remove(term)
+    State.collidingLabels.each { term ->
+        State.termToUri.remove(term)
+    }
+}
+
+void addToTermUriMap(String label, String uri, String inScheme) {
+
+    List keys = [ inScheme + "|" + label, label ]
+
+    for (String key : keys) {
+        if (State.termToUri[key] != null) {
+            if (inScheme == null) {
+                State.collisions.println("(unqualified) " + label + " collision, used by both " +
+                        State.termToUri[key] + " and "  + uri)
+            } else {
+                State.collisions.println("(inScheme: " + inScheme + ") " + label + " collision, used by both " +
+                        State.termToUri[key] + " and "  + uri)
+            }
+            State.collidingLabels.add(key)
+        }
+        else {
+            State.termToUri.put(key, uri)
+        }
     }
 }
 
 // Link up terms where possible
 selectByCollection("bib") { data ->
-    boolean changed = traverse(data.graph, termToUri)
+    boolean changed = traverse(data.graph, State.termToUri)
 
+    /*
     if (changed) {
-        scheduledForUpdating.println("${data.doc.getURI()}")
+        State.scheduledForUpdating.println("${data.doc.getURI()}")
         data.scheduleSave(onError: { e ->
-            failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
+            State.failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
         })
-    }
+    }*/
 }
 
 boolean traverse(Object node, Map termToUri) {
@@ -72,17 +100,25 @@ boolean traverse(Object node, Map termToUri) {
 
     if (node instanceof Map) {
 
-        if (node["@id"] == null && node["prefLabel"] != null && termToUri[node["prefLabel"]] != null) {
+        String inScheme = null
+        if (node["inScheme"])
+            inScheme = node["inScheme"]["@id"]
+        String prefLabel = node["prefLabel"]
+        String key = prefLabel
+        if (inScheme != null)
+            key = inScheme + "|" + prefLabel
 
-            String newUri = termToUri[node["prefLabel"]]
+        if (node["@id"] == null && node["prefLabel"] != null && termToUri[key] != null) {
+
+            String newUri = termToUri[key]
             System.out.println("Changing:\n" + node + "\nto:" + ["@id" : newUri] + "\n")
             node.clear()
             node["@id"] = newUri
             changed = true
         }
 
-        for (Object key : node.keySet()) {
-            changed |= traverse(node[key], termToUri)
+        for (Object k : node.keySet()) {
+            changed |= traverse(node[k], termToUri)
         }
     }
 
