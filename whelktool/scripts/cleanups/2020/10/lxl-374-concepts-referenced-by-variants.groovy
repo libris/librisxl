@@ -3,14 +3,6 @@
  the label in question as either prefLabel, hasVariant -> prefLabel or altLabel.
  */
 
-
-/* PROB 1
-[@type:Topic, inScheme:[code:albt//swe, @type:ConceptScheme, sameAs:[[@id:https://id.kb.se/term/albt%2F%2Fswe]]], prefLabel:Europa]
-to:[@id:http://kblocalhost.kb.se:5000/rp354mt934f3fm1#it]
- */
-
-// PROB 2, Subdivision
-
 import java.util.concurrent.ConcurrentHashMap
 
 class State
@@ -35,7 +27,7 @@ selectBySqlWhere("collection = 'auth'") { data ->
             if (variant["prefLabel"] != null) {
                 asList(variant["prefLabel"]).each { prefLabel ->
                     String inScheme = mainEntity["inScheme"] ? mainEntity["inScheme"]["@id"] : null
-                    addToTermUriMap(prefLabel, mainEntity["@id"], inScheme)
+                    addToTermUriMap(prefLabel, mainEntity["@id"], inScheme, mainEntity["@type"])
                 }
             }
         }
@@ -44,7 +36,7 @@ selectBySqlWhere("collection = 'auth'") { data ->
     if (mainEntity.altLabel != null) {
         asList(mainEntity.altLabel).each { label ->
             String inScheme = mainEntity["inScheme"] ? mainEntity["inScheme"]["@id"] : null
-            addToTermUriMap(label, mainEntity["@id"], inScheme)
+            addToTermUriMap(label, mainEntity["@id"], inScheme, mainEntity["@type"])
         }
     }
 
@@ -52,7 +44,7 @@ selectBySqlWhere("collection = 'auth'") { data ->
     if (mainEntity.prefLabel != null) {
         asList(mainEntity.prefLabel).each { label ->
             String inScheme = mainEntity["inScheme"] ? mainEntity["inScheme"]["@id"] : null
-            addToTermUriMap(label, mainEntity["@id"], inScheme)
+            addToTermUriMap(label, mainEntity["@id"], inScheme, mainEntity["@type"])
         }
     }
 
@@ -61,9 +53,23 @@ selectBySqlWhere("collection = 'auth'") { data ->
     }
 }
 
-void addToTermUriMap(String label, String uri, String inScheme) {
+void addToTermUriMap(String label, String uri, String inScheme, String type) {
 
-    List keys = [ inScheme + "|" + label, label ]
+    // Arrange the keys on which we wish to index this particular concept
+    if (
+            inScheme != "https://id.kb.se/term/saogf" &&
+            inScheme != "https://id.kb.se/term/sao" &&
+            inScheme != "https://id.kb.se/term/barn"
+    )
+        inScheme = ""
+    if (type == null)
+        type = ""
+    Set keys = [
+            inScheme + "|" + type + "£" + label, // both
+            inScheme + "|£" + label, // just inScheme
+            "|" + type + "£" + label, // just type
+            "|£" + label, // neither
+    ]
 
     for (String key : keys) {
         if (State.termToUri[key] != null) {
@@ -86,13 +92,12 @@ void addToTermUriMap(String label, String uri, String inScheme) {
 selectByCollection("bib") { data ->
     boolean changed = traverse(data.graph, State.termToUri)
 
-    /*
     if (changed) {
         State.scheduledForUpdating.println("${data.doc.getURI()}")
         data.scheduleSave(onError: { e ->
             State.failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
         })
-    }*/
+    }
 }
 
 boolean traverse(Object node, Map termToUri) {
@@ -101,17 +106,24 @@ boolean traverse(Object node, Map termToUri) {
     if (node instanceof Map) {
 
         String inScheme = null
-        if (node["inScheme"])
+        if (node["inScheme"]) {
             inScheme = node["inScheme"]["@id"]
-        String prefLabel = node["prefLabel"]
-        String key = prefLabel
-        if (inScheme != null)
-            key = inScheme + "|" + prefLabel
+            if (inScheme == null) {
+                // A scheme without @id, don't match against scheme-less concepts.
+                inScheme = "_non_authorized" // anything but null or empty string
+            }
+        }
+        if (inScheme == null)
+            inScheme = ""
+
+        String prefLabel = node["prefLabel"] ? node["prefLabel"] : ""
+        String type = node["@type"] ? node["@type"] : ""
+        String key = inScheme + "|" + type + "£" + prefLabel
 
         if (node["@id"] == null && node["prefLabel"] != null && termToUri[key] != null) {
 
             String newUri = termToUri[key]
-            System.out.println("Changing:\n" + node + "\nto:" + ["@id" : newUri] + "\n")
+            //System.out.println("Changing:\n" + node + "\nto:" + ["@id" : newUri] + "\n")
             node.clear()
             node["@id"] = newUri
             changed = true
