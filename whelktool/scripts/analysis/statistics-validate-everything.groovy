@@ -11,10 +11,7 @@ class Script {
 Script.report = getReportWriter("report.txt")
 
 selectByCollection('bib') { bib ->
-    if (!Script.isInitialized) {
-        Script.v = JsonValidator.from(bib.whelk.jsonld)
-        Script.isInitialized = true
-    }
+    init(bib)
     try {
         process(bib)
     }
@@ -24,10 +21,21 @@ selectByCollection('bib') { bib ->
     }
 }
 
+void init (bib) {
+    if (!Script.isInitialized) {
+        synchronized (this) {
+            if (!Script.isInitialized) {
+                Script.v = JsonValidator.from(bib.whelk.jsonld)
+                Script.isInitialized = true
+            }
+        }
+    }
+}
+
 void process(bib) {
     def errors = Script.v.validateAll(bib.doc.data)
     errors.each {
-        Script.s.increment('errors', it)
+        Script.s.increment(it.split().take(2).join(' '), it, bib.doc.shortId)
     }
     if (errors) {
         Script.report.println(bib.doc.shortId)

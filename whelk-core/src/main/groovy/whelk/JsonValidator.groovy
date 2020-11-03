@@ -45,6 +45,10 @@ class JsonValidator {
 
     private void doValidate(Map data, validation) {
         data.each { key, value ->
+            if (key == "_marcUncompleted" ) {
+                return
+            }
+
             if (!passedPreValidation(key, value, validation)) {
                 return
             }
