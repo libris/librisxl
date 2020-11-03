@@ -106,7 +106,7 @@ Map tryMapComplex(Map subject) {
             def complex = [
                     '@type'            : 'ComplexSubject',
                     'prefLabel'        : mappedTerms.collect{ it['prefLabel'] }.join('--'),
-                    'inScheme'         : INSCHEME_SAO,
+                    'inScheme'         : ['@id': INSCHEME_SAO],
                     'termComponentList': mappedTerms.collect{ asLink(it) ?: it }
             ]
             return tryLink(complex) ?: complex
@@ -140,7 +140,7 @@ Map _tryMapSubdivision(Map subdivision) {
     def inSao = findInSao(subdivision)
     if (inSao) {
         // map to prefLabel in SAO
-        return inSao
+        return ['@type': subdivision['@type'], 'prefLabel' : inSao.prefLabel]
     }
     else if (subdivision['@type'] in ['Temporal', 'TemporalSubdivision']) {
         // temporal is always OK
