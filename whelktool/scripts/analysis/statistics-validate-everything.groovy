@@ -3,7 +3,7 @@ import whelk.util.Statistics
 
 class Script {
     static PrintWriter report
-    static Statistics s = new Statistics().printOnShutdown()
+    static Statistics s = new Statistics(5).printOnShutdown()
     static JsonValidator v
     static boolean isInitialized = false
 }
