@@ -6,7 +6,7 @@ import whelk.exception.InvalidJsonException
 class JsonValidator {
     private static JsonLd jsonLd
 
-    private static final Set skipFields = ['_marcFailedFixedFields', '_marcUncompleted']
+    private static final Set skipFields = ['_marcFailedFixedFields', '_marcUncompleted'] as Set
 
     private JsonValidator(JsonLd jsonLd) {
         this.jsonLd = jsonLd
