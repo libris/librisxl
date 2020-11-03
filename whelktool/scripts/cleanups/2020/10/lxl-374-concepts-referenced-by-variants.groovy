@@ -67,7 +67,7 @@ void addToTermUriMap(String label, String uri, String inScheme, String type) {
     Set keys = [
             inScheme + "|" + type + "£" + label, // both
             inScheme + "|£" + label, // just inScheme
-            /* Not permitted by MSS (linking up scheme-less local terms to schemes ones with the same preflabel):
+            /* Not permitted by MSS (linking up scheme-less local terms to schemed ones with the same preflabel):
             "|" + type + "£" + label, // just type
             "|£" + label, // neither */
     ]
@@ -82,7 +82,7 @@ void addToTermUriMap(String label, String uri, String inScheme, String type) {
 
 // Link up terms where possible
 selectByCollection("bib") { data ->
-    boolean changed = traverse(data.graph, State.termToUri)
+    boolean changed = traverse(data.graph, State.termToUri, null)
 
     if (changed) {
         State.scheduledForUpdating.println("${data.doc.getURI()}")
@@ -92,34 +92,37 @@ selectByCollection("bib") { data ->
     }
 }
 
-boolean traverse(Object node, Map termToUri) {
+boolean traverse(Object node, Map termToUri, String inheritedInScheme) {
     boolean changed = false
 
     if (node instanceof Map) {
 
-        changed |= attemptLinkUp(node, termToUri)
+        /*
+         Some of these entities do not carry their own inScheme markers,
+         instead the inScheme sometimes sit on a parent object.
+         */
+        if (node["inScheme"]) {
+            inheritedInScheme = node["inScheme"]["@id"]
+        }
+
+        changed |= attemptLinkUp(node, termToUri, inheritedInScheme)
 
         for (Object k : node.keySet()) {
-            changed |= traverse(node[k], termToUri)
+            changed |= traverse(node[k], termToUri, inheritedInScheme)
         }
     }
 
     else if (node instanceof List) {
         for (int i = 0; i < node.size(); ++i) {
-            changed |= traverse(node[i], termToUri)
+            changed |= traverse(node[i], termToUri, inheritedInScheme)
         }
     }
     return changed
 }
 
-private boolean attemptLinkUp(Object node, Map termToUri) {
+private boolean attemptLinkUp(Object node, Map termToUri, String inScheme) {
     boolean changed = false
-    String inScheme = null
 
-    if (node["inScheme"]) {
-        inScheme = node["inScheme"]["@id"]
-        temp = inScheme
-    }
     // A scheme without @id, or in a scheme we're not allowed to touch?
     if (inScheme == null ||
             (inScheme != "https://id.kb.se/term/saogf" &&
@@ -134,9 +137,8 @@ private boolean attemptLinkUp(Object node, Map termToUri) {
     String key = inScheme + "|" + type + "£" + prefLabel
 
     if (node["@id"] == null && node["prefLabel"] != null && termToUri[key] != null) {
-
         String newUri = termToUri[key]
-        //System.out.println("Changing:\n" + node + "\nto:" + ["@id" : newUri] + "\n")
+        //System.out.println("Changing:\n" + node + " with inherited inScheme:" + inScheme + "\nto:" + ["@id" : newUri] + "\n")
         node.clear()
         node["@id"] = newUri
         changed = true
