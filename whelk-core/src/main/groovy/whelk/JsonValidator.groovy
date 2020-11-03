@@ -6,6 +6,8 @@ import whelk.exception.InvalidJsonException
 class JsonValidator {
     private static JsonLd jsonLd
 
+    private static final Set skipFields = ['_marcFailedFixedFields', '_marcUncompleted']
+
     private JsonValidator(JsonLd jsonLd) {
         this.jsonLd = jsonLd
     }
@@ -45,11 +47,7 @@ class JsonValidator {
 
     private void doValidate(Map data, validation) {
         data.each { key, value ->
-            if (key == "_marcUncompleted" ) {
-                return
-            }
-
-            if (!passedPreValidation(key, value, validation)) {
+            if (key in skipFields || !passedPreValidation(key, value, validation)) {
                 return
             }
             checkIsNotNestedGraph(key, value, validation)
