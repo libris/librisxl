@@ -32,7 +32,7 @@ selectByIds(newUris.keySet() as List) { data ->
     def id = data.graph[0].sameAs[0]["@id"]
 
     boolean changed = DocumentUtil.findKey(instance, "uri") { value, path ->
-        if (path[0] in ["associatedMedia", "marc:versionOfResource"]) {
+        if (path[0] in ["associatedMedia", "marc:versionOfResource", "electronicLocator"]) {
             for (int i = 0; i < value.size(); ++i) {
                 // startsWith because all old URIs in socialstyrelsen_ny_uri.txt have pdf at the end,
                 // but the actual instances sometimes don't  -- specifically, seemingly the ones that
@@ -69,6 +69,11 @@ selectByIds(deadUris) { data ->
             actualOldUri = instance.associatedMedia[0].uri[0]
         }
         instance.remove("associatedMedia")
+    } else if (instance.electronicLocator?.size() == 1) {
+        if (instance.electronicLocator[0].uri) {
+            actualOldUri = instance.electronicLocator[0].uri[0]
+        }
+        instance.remove("electronicLocator")
     } else if (instance["marc:versionOfResource"] instanceof List && instance["marc:versionOfResource"].size() == 1) {
         if (instance["marc:versionOfResource"][0].uri) {
             actualOldUri = instance["marc:versionOfResource"][0].uri
