@@ -65,6 +65,9 @@ void process(bib) {
     }
 
     if (modified) {
+        bib.graph[1]['instanceOf']['subject'] = asList(bib.graph[1]['instanceOf']['subject'])
+                .unique{ a, b -> a.toString() <=> b.toString() }
+
         modifiedIdsReport.println(bib.doc.shortId)
         bib.scheduleSave()
     }
