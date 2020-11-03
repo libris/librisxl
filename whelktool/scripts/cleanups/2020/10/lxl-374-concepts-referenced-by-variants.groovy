@@ -64,11 +64,15 @@ void addToTermUriMap(String label, String uri, String inScheme, String type) {
         inScheme = ""
     if (type == null)
         type = ""
+    boolean juvenile = false
+    if (inScheme.contains("barn")) {
+        juvenile = true
+    }
     Set keys = [
-            inScheme + "|" + type + "£" + label, // both
-            inScheme + "|£" + label, // just inScheme
-            "|" + type + "£" + label, // just type
-            "|£" + label, // neither
+            inScheme + "|" + type + "|" + juvenile + "|" +  label, // both inScheme and @type
+            inScheme + "||" + juvenile + "|" +  label, // just inScheme
+            "|" + type + "|" + juvenile + "|" +  label, // just @type
+            "||" + juvenile + "|" +  label, // neither
     ]
 
     for (String key : keys) {
@@ -81,17 +85,23 @@ void addToTermUriMap(String label, String uri, String inScheme, String type) {
 
 // Link up terms where possible
 selectByCollection("bib") { data ->
-    boolean changed = traverse(data.graph, State.termToUri)
+    boolean juvenile = false
+    def mainEntity = data.graph[1]
+    if (mainEntity["instanceOf"])
+        if (mainEntity["instanceOf"]["intendedAudience"])
+            if (mainEntity["instanceOf"]["intendedAudience"]["@id"] == "https://id.kb.se/marc/Juvenile")
+                juvenile = true
+    boolean changed = traverse(data.graph, State.termToUri, juvenile)
 
-    if (changed) {
+    /*if (changed) {
         State.scheduledForUpdating.println("${data.doc.getURI()}")
         data.scheduleSave(onError: { e ->
             State.failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
         })
-    }
+    }*/
 }
 
-boolean traverse(Object node, Map termToUri) {
+boolean traverse(Object node, Map termToUri, boolean juvenile) {
     boolean changed = false
 
     if (node instanceof Map) {
@@ -109,25 +119,31 @@ boolean traverse(Object node, Map termToUri) {
 
         String prefLabel = node["prefLabel"] ? node["prefLabel"] : ""
         String type = node["@type"] ? node["@type"] : ""
-        String key = inScheme + "|" + type + "£" + prefLabel
 
-        if (node["@id"] == null && node["prefLabel"] != null && termToUri[key] != null) {
+        List keys = [ inScheme + "|" + type + "|" + juvenile + "|" + prefLabel ]
+        if (juvenile) // It's ok for children's books to link normal SAO, but not the other way around.
+            keys.add( inScheme + "|" + type + "|" + false + "|" + prefLabel )
 
-            String newUri = termToUri[key]
-            //System.out.println("Changing:\n" + node + "\nto:" + ["@id" : newUri] + "\n")
-            node.clear()
-            node["@id"] = newUri
-            changed = true
+        for (String key : keys) {
+            if (node["@id"] == null && node["prefLabel"] != null && termToUri[key] != null) {
+
+                String newUri = termToUri[key]
+                System.out.println("Changing:\n" + node + "\nto:" + ["@id" : newUri] + "\n")
+                node.clear()
+                node["@id"] = newUri
+                changed = true
+            }
         }
 
+        // Keep scanning
         for (Object k : node.keySet()) {
-            changed |= traverse(node[k], termToUri)
+            changed |= traverse(node[k], termToUri, juvenile)
         }
     }
 
     else if (node instanceof List) {
         for (int i = 0; i < node.size(); ++i) {
-            changed |= traverse(node[i], termToUri)
+            changed |= traverse(node[i], termToUri, juvenile)
         }
     }
     return changed
