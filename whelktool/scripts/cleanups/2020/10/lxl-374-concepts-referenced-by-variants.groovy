@@ -67,8 +67,9 @@ void addToTermUriMap(String label, String uri, String inScheme, String type) {
     Set keys = [
             inScheme + "|" + type + "£" + label, // both
             inScheme + "|£" + label, // just inScheme
+            /* Not permitted by MSS (linking up scheme-less local terms to schemes ones with the same preflabel):
             "|" + type + "£" + label, // just type
-            "|£" + label, // neither
+            "|£" + label, // neither */
     ]
 
     for (String key : keys) {
@@ -96,29 +97,7 @@ boolean traverse(Object node, Map termToUri) {
 
     if (node instanceof Map) {
 
-        String inScheme = null
-        if (node["inScheme"]) {
-            inScheme = node["inScheme"]["@id"]
-            if (inScheme == null) {
-                // A scheme without @id, don't match against scheme-less concepts.
-                inScheme = "_non_authorized" // anything but null or empty string
-            }
-        }
-        if (inScheme == null)
-            inScheme = ""
-
-        String prefLabel = node["prefLabel"] ? node["prefLabel"] : ""
-        String type = node["@type"] ? node["@type"] : ""
-        String key = inScheme + "|" + type + "£" + prefLabel
-
-        if (node["@id"] == null && node["prefLabel"] != null && termToUri[key] != null) {
-
-            String newUri = termToUri[key]
-            //System.out.println("Changing:\n" + node + "\nto:" + ["@id" : newUri] + "\n")
-            node.clear()
-            node["@id"] = newUri
-            changed = true
-        }
+        changed |= attemptLinkUp(node, termToUri)
 
         for (Object k : node.keySet()) {
             changed |= traverse(node[k], termToUri)
@@ -130,6 +109,39 @@ boolean traverse(Object node, Map termToUri) {
             changed |= traverse(node[i], termToUri)
         }
     }
+    return changed
+}
+
+private boolean attemptLinkUp(Object node, Map termToUri) {
+    boolean changed = false
+    String inScheme = null
+
+    if (node["inScheme"]) {
+        inScheme = node["inScheme"]["@id"]
+        temp = inScheme
+    }
+    // A scheme without @id, or in a scheme we're not allowed to touch?
+    if (inScheme == null ||
+            (inScheme != "https://id.kb.se/term/saogf" &&
+                    inScheme != "https://id.kb.se/term/sao" &&
+                    inScheme != "https://id.kb.se/term/barn" &&
+                    inScheme != "https://id.kb.se/term/barngf") ) {
+        inScheme = "_non_authorized" // anything but null or empty string
+    }
+
+    String prefLabel = node["prefLabel"] ? node["prefLabel"] : ""
+    String type = node["@type"] ? node["@type"] : ""
+    String key = inScheme + "|" + type + "£" + prefLabel
+
+    if (node["@id"] == null && node["prefLabel"] != null && termToUri[key] != null) {
+
+        String newUri = termToUri[key]
+        //System.out.println("Changing:\n" + node + "\nto:" + ["@id" : newUri] + "\n")
+        node.clear()
+        node["@id"] = newUri
+        changed = true
+    }
+
     return changed
 }
 
