@@ -29,7 +29,7 @@ selectByIds(bibIDsFile.readLines()) { bib ->
 
     if (changed) {
         scheduledForUpdating.println("${bib.doc.getURI()}")
-        bib.scheduleSave(onError: { e ->
+        bib.scheduleSave(loud: true, onError: { e ->
             failedUpdating.println("Failed to update ${bib.doc.shortId} due to: $e")
         })
     }
