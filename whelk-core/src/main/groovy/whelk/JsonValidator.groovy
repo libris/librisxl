@@ -128,7 +128,7 @@ class JsonValidator {
         if (expectRepeat && !isRepeated(value)) {
             handleError("Expected term $key to be an array. $key is declared as repeatable in context.", validation)
         } else if (!expectRepeat && isRepeated(value)) {
-            handleError("Unexpected array for $key. $key is not declared as repeatable in context.", validation)
+            handleError("Unexpected array(${value.size()}) for $key. $key is not declared as repeatable in context.", validation)
         }
     }
 
