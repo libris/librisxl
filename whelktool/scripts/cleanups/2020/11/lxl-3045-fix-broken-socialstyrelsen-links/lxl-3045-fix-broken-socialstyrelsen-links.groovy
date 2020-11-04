@@ -80,9 +80,10 @@ selectByIds(deadUris) { data ->
             }
         } else if (instance[prop] instanceof Map) {
             if (instance[prop].uri) {
-                actualOldUri = instance[prop].uri
+                actualOldUri = instance[prop].uri[0]
                 instance.remove(prop)
             }
+
         }
     }
 
@@ -100,10 +101,10 @@ selectByIds(deadUris) { data ->
     String noteText
     String currentDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
     if (instance['@type'] == "Electronic")
-        noteText = "Tidigare fungerande URL. Socialstyrelsen tillhandahåller inte längre detta dokument. ${currentDate}"
+        noteText = "Tidigare fungerande URL. Socialstyrelsen tillhandahåller inte längre detta dokument. " + currentDate
     else
-        noteText = "Tidigare fungerande URL för digital utgåva. Socialstyrelsen tillhandahåller inte längre detta dokument. ${currentDate}"
-    instance.hasNote << ["@type": "Note", "label": "${actualOldUri} ${noteText}"]
+        noteText = "Tidigare fungerande URL för digital utgåva. Socialstyrelsen tillhandahåller inte längre detta dokument. " + currentDate
+    instance.hasNote << ["@type": "Note", "label": actualOldUri + " " + noteText]
 
     scheduledForUpdating.println("${data.doc.getURI()}")
     data.scheduleSave(onError: { e ->
