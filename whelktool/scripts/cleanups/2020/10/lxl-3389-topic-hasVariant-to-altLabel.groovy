@@ -11,9 +11,12 @@
  See LXL-3389
  */
 
+import whelk.util.Statistics
+
 class Script {
     static PrintWriter modified
     static PrintWriter errors
+    static Statistics stats = new Statistics(3).printOnShutdown()
 }
 
 Script.modified = getReportWriter("modified.txt")
@@ -21,7 +24,9 @@ Script.errors = getReportWriter("errors.txt")
 
 selectByCollection('auth') { auth ->
     try {
-        process(auth)
+        Script.stats.withContext(auth.doc.shortId) {
+            process(auth)
+        }
     }
     catch(Exception e) {
         Script.errors.println("${auth.doc.shortId} $e")
@@ -71,5 +76,10 @@ List asList(o) {
 }
 
 boolean shapeOk(Map variant) {
-    variant['@type'] == 'Topic' && variant['prefLabel'] && variant.size() == 2
+    if (variant['@type'] == 'Topic' && variant['prefLabel'] && variant.size() == 2) {
+        return true
+    }
+    else {
+        Script.stats.increment('unhandled shape', variant.keySet().collect().sort())
+    }
 }
