@@ -57,11 +57,11 @@ class JsonValidator {
                 return
             }
             def key = path.last() as String
-            validation.at = path
 
             if (!passedPreValidation(key, value, validation)) {
                 return
             }
+            validation.at = path
 
             checkIsNotNestedGraph(key, value, validation)
 
@@ -76,7 +76,8 @@ class JsonValidator {
     }
 
     private passedPreValidation(String key, value, validation) {
-        return !(isUnexpected(key, value, validation) || keyIsInvalid(key, validation) || isEmptyValueList(value))
+        boolean keyInMap = !(key.isNumber() && value instanceof Map)
+        return keyInMap || !(isUnexpected(key, value, validation) || keyIsInvalid(key, validation) || isEmptyValueList(value))
     }
 
     private checkIsNotNestedGraph(String key, value, validation) {
