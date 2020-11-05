@@ -2,25 +2,27 @@ package whelk
 
 import com.google.common.base.Preconditions
 import whelk.exception.InvalidJsonException
+import whelk.util.DocumentUtil
 
-class JsonValidator {
+class JsonLdValidator {
     private static JsonLd jsonLd
 
-    private JsonValidator(JsonLd jsonLd) {
+    private JsonLdValidator(JsonLd jsonLd) {
         this.jsonLd = jsonLd
     }
 
-    static JsonValidator from(JsonLd jsonLd) {
+    static JsonLdValidator from(JsonLd jsonLd) {
         Preconditions.checkNotNull(jsonLd)
         Preconditions.checkArgument(!jsonLd.context.isEmpty())
         Preconditions.checkArgument(!jsonLd.vocabIndex.isEmpty())
-        return new JsonValidator(jsonLd)
+        return new JsonLdValidator(jsonLd)
     }
 
     class Validation {
-        Set errors
+        List<Error> errors
         Mode mode
         boolean seenGraph = false
+        List at
 
         enum Mode {
             FAIL_FAST,
@@ -28,7 +30,7 @@ class JsonValidator {
         }
 
         Validation(Mode mode) {
-            this.errors = new LinkedHashSet()
+            this.errors = new ArrayList<>()
             this.mode = mode
         }
     }
@@ -37,17 +39,24 @@ class JsonValidator {
         doValidate(doc.data, new Validation(Validation.Mode.FAIL_FAST))
     }
 
-    Set validateAll(Map map) {
+    List<Error> validate(Map map) {
         def validation = new Validation(Validation.Mode.LOG_ERROR)
         doValidate(map, validation)
         return validation.errors
     }
 
-    private void doValidate(Map data, validation) {
-        data.each { key, value ->
+    private void doValidate(Map data, Validation validation) {
+        DocumentUtil.traverse(data, { value, path ->
+            if (!path) {
+                return
+            }
+            def key = path.last() as String
+
             if (!passedPreValidation(key, value, validation)) {
                 return
             }
+            validation.at = path
+
             checkIsNotNestedGraph(key, value, validation)
 
             checkHasDefinition(key, validation)
@@ -57,27 +66,26 @@ class JsonValidator {
             validateRepeatability(key, value, validation)
 
             validateObjectProperties(key, value, validation)
-
-            validateNext(value, validation)
-        }
+        })
     }
 
-    private passedPreValidation(key, value, validation) {
-        return !(isUnexpected(key, value, validation) || keyIsInvalid(key, validation) || isEmptyValueList(value))
+    private passedPreValidation(String key, value, validation) {
+        boolean keyInMap = !(key.isNumber() && value instanceof Map)
+        return keyInMap && !(isUnexpected(key, value, validation) || keyIsInvalid(key, validation) || isEmptyValueList(value))
     }
 
-    private checkIsNotNestedGraph(key, value, validation) {
+    private checkIsNotNestedGraph(String key, value, validation) {
         if (key == jsonLd.GRAPH_KEY) {
             if (validation.seenGraph) {
-                handleError("Nested graph element: $value", validation)
+                handleError(new Error(Error.Type.NESTED_GRAPH, key, value?.toString()), validation)
             }
             validation.seenGraph = true
         }
     }
 
-    private boolean keyIsInvalid(key, validation) {
+    private boolean keyIsInvalid(String key, validation) {
         if(!(key instanceof String)) {
-            handleError("Invalid key: $key", validation)
+            handleError(new Error(Error.Type.INVALID_KEY, key), validation)
             return true
         } else {
             return false
@@ -89,9 +97,9 @@ class JsonValidator {
         return valueList && valueList.isEmpty()
     }
 
-    private boolean isUnexpected(key, value, validation) { //Rename me
+    private boolean isUnexpected(String key, value, validation) { //Rename me
         if ((key == jsonLd.ID_KEY || key == jsonLd.TYPE_KEY) && !(value instanceof String)) {
-            handleError("Unexpected value of $key: ${value}", validation)
+            handleError(new Error(Error.Type.UNEXPECTED, key), validation)
             return true
         } else {
             return false
@@ -100,7 +108,7 @@ class JsonValidator {
 
     private void checkHasDefinition(String key, validation) {
         if (!getTermDefinition(key) && !jsonLd.LD_KEYS.contains(key)) {
-            handleError("Unknown term: $key", validation)
+            handleError(new Error(Error.Type.MISSING_DEFINITION, key), validation)
         }
     }
 
@@ -112,8 +120,8 @@ class JsonValidator {
 
     private void verifyVocabTerm(String key, value, validation) {
         if ((key == jsonLd.TYPE_KEY || isVocabTerm(key))
-                && !jsonLd.vocabIndex.containsKey((String) value)) {
-            handleError("Unknown vocab value for $key: $value", validation)
+                && !jsonLd.vocabIndex.containsKey(value?.toString())) {
+            handleError(new Error(Error.Type.UNKNOWN_VOCAB_VALUE, key, value?.toString()), validation)
         }
     }
 
@@ -124,9 +132,9 @@ class JsonValidator {
     private void validateRepeatability(String key, value, validation) {
         boolean expectRepeat = key == jsonLd.GRAPH_KEY || key in jsonLd.getRepeatableTerms()
         if (expectRepeat && !isRepeated(value)) {
-            handleError("Expected term $key to be an array. $key is declared as repeatable in context.", validation)
+            handleError(new Error(Error.Type.ARRAY_EXPECTED, key, value?.toString()), validation)
         } else if (!expectRepeat && isRepeated(value)) {
-            handleError("Unexpected array for $key. $key is not declared as repeatable in context.", validation)
+            handleError(new Error(Error.Type.UNEXPECTED_ARRAY, key, value?.toString()), validation)
         }
     }
 
@@ -138,9 +146,9 @@ class JsonValidator {
         if (firstValue && termDefinition
                 && termDefinition[jsonLd.TYPE_KEY] == 'ObjectProperty') {
             if (!isVocabTerm(key) && !valueIsObject) {
-                handleError("Expected value type of $key to be object (value: $value).", validation)
+                handleError(new Error(Error.Type.OBJECT_TYPE_EXPECTED, key, value?.toString()) , validation)
             } else if (isVocabTerm(key) && valueIsObject) {
-                handleError("Expected value type of $key to be a vocab string (value: $value).", validation)
+                handleError(new Error(Error.Type.VOCAB_STRING_EXPECTED, key, value?.toString()), validation)
             }
         }
     }
@@ -157,23 +165,55 @@ class JsonValidator {
         return termDefinition
     }
 
-    private void validateNext(value, Validation validation) {
-        if (value instanceof List) {
-            value.each {
-                if (it instanceof Map) {
-                    doValidate(it, validation)
-                }
-            }
-        } else if (value instanceof Map) {
-            doValidate(value, validation)
+    private void handleError(Error error, Validation validation) {
+        error.path = validation.at
+        if (validation.mode == Validation.Mode.FAIL_FAST) {
+            throw new InvalidJsonException(error.toString())
+        } else if (validation.mode == Validation.Mode.LOG_ERROR) {
+            validation.errors << error
         }
     }
 
-    private void handleError(String error, Validation validation) {
-        if (validation.mode == Validation.Mode.FAIL_FAST) {
-            throw new InvalidJsonException(error)
-        } else if (validation.mode == Validation.Mode.LOG_ERROR) {
-            validation.errors << error
+    class Error {
+        enum Type {
+            VOCAB_STRING_EXPECTED("Expected value type to be a vocab string"),
+            UNEXPECTED_ARRAY("Unexpected array. Key is not declared as repeatable in context"),
+            ARRAY_EXPECTED("Expected term to be an array. Key is declared as repeatable in context"),
+            OBJECT_TYPE_EXPECTED("Expected value type of key to be object"),
+            UNKNOWN_VOCAB_VALUE("Unknown vocab value"),
+            MISSING_DEFINITION("Unknown term. Missing definition"),
+            UNEXPECTED("Unexpected value of key"),
+            NESTED_GRAPH("Nested graph object found"),
+            INVALID_KEY("Invalid key")
+
+            final String description
+
+            private Type(String desc) {
+                this.description = desc
+            }
+        }
+
+        private Type type
+        private final String key
+        private final String value
+        List path
+
+        Error(Type type, String key, String value = "") {
+            this.type = type
+            this.key = key
+            this.value = value
+        }
+
+        String getDescription() {
+            return type.description
+        }
+
+        String toStringWithPath() {
+            return type.description +" at path: $path for KEY: $key VALUE: $value"
+        }
+
+        String toString() {
+            return type.description +" for KEY: $key VALUE: $value"
         }
     }
 }

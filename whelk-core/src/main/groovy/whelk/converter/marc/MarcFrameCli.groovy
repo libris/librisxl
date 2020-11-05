@@ -2,7 +2,8 @@ package whelk.converter.marc
 
 import whelk.Document
 import whelk.JsonLd
-import whelk.JsonValidator
+import whelk.JsonLdValidator
+import whelk.JsonLdValidator.Error
 import whelk.Whelk
 import whelk.filter.LinkFinder
 
@@ -27,11 +28,13 @@ for (fpath in fpaths) {
     if (cmd == "revert") {
         if (converter.ld) {
             System.err.println "Validating JSON-LD ..."
-            def validator = JsonValidator.from(converter.ld)
-            def errors = validator.validateAll(source)
+            def validator = JsonLdValidator.from(converter.ld)
+            List<Error> errors = validator.validate(source)
             if (errors) {
                 System.err.println "JSON-LD validation errors:"
-                errors.each System.err.&println
+                errors.each{
+                    System.err.println it.toStringWithPath()
+                }
             } else {
                 System.err.println "OK"
             }

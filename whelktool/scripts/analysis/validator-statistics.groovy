@@ -1,9 +1,10 @@
 import whelk.JsonValidator
+import whelk.JsonValidator.Error as JsonError
 import whelk.util.Statistics
 
 class Script {
     static PrintWriter report
-    static Statistics s = new Statistics().printOnShutdown()
+    static Statistics s = new Statistics(3).printOnShutdown()
     static JsonValidator v
     static boolean isInitialized = false
 }
@@ -25,9 +26,9 @@ selectByCollection('bib') { bib ->
 }
 
 void process(bib) {
-    def errors = Script.v.validateAll(bib.doc.data)
+    List<JsonError> errors = Script.v.validate(bib.doc.data)
     errors.each {
-        Script.s.increment('errors', it)
+        Script.s.increment(it.getDescription(), it.toStringWithPath(), bib.doc.getShortId())
     }
     if (errors) {
         Script.report.println(bib.doc.shortId)

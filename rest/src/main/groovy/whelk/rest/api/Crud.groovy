@@ -11,11 +11,9 @@ import whelk.Document
 import whelk.IdGenerator
 import whelk.IdType
 import whelk.JsonLd
-import whelk.JsonValidator
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ElasticIOException
-import whelk.exception.InvalidJsonException
 import whelk.exception.InvalidQueryException
 import whelk.exception.ModelValidationException
 import whelk.exception.StaleUpdateException
@@ -72,7 +70,6 @@ class Crud extends HttpServlet {
     Map vocabData
     Map displayData
     JsonLd jsonld
-    JsonValidator validator
 
     SearchUtils search
     static final ObjectMapper mapper = new ObjectMapper()
@@ -95,7 +92,6 @@ class Crud extends HttpServlet {
         vocabData = whelk.vocabData
         jsonld = whelk.jsonld
         search = new SearchUtils(whelk)
-        validator = JsonValidator.from(jsonld)
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response,
@@ -505,14 +501,6 @@ class Crud extends HttpServlet {
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
         // TODO https://jira.kb.se/browse/LXL-1263
         newDoc.setControlNumber(newDoc.getShortId())
-
-        try {
-            validator.validate(newDoc)
-        } catch (InvalidJsonException ive) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, ive.getMessage())
-            log.debug("Json validation failed:" + ive.getMessage())
-            return
-        }
 
         String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
         if ( !(collection in ["auth", "bib", "hold"]) ) {
