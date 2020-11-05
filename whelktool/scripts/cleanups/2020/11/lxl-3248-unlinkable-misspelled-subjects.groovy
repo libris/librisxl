@@ -61,7 +61,6 @@ String compactKey(String s, String inScheme) {
 
 void addToTermMap(String label, String inScheme) {
 
-    // Arrange the keys on which we wish to index this particular concept
     if (
     inScheme != "https://id.kb.se/term/saogf" &&
             inScheme != "https://id.kb.se/term/sao" &&
@@ -78,7 +77,6 @@ void addToTermMap(String label, String inScheme) {
     State.compactToProperTerm.put(key, label)
 }
 
-// Link up terms where possible
 selectByCollection("bib") { data ->
     boolean changed = traverse(data.graph, State.compactToProperTerm, null)
 
