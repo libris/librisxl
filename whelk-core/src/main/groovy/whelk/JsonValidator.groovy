@@ -39,12 +39,6 @@ class JsonValidator {
         doValidate(doc.data, new Validation(Validation.Mode.FAIL_FAST))
     }
 
-    Set validateAll(Map map) {
-        def validation = new Validation(Validation.Mode.LOG_ERROR)
-        doValidate(map, validation)
-        return validation.errors.collect {it.toStringWithPath()}.toSet()
-    }
-
     List<Error> validate(Map map) {
         def validation = new Validation(Validation.Mode.LOG_ERROR)
         doValidate(map, validation)
@@ -77,7 +71,7 @@ class JsonValidator {
 
     private passedPreValidation(String key, value, validation) {
         boolean keyInMap = !(key.isNumber() && value instanceof Map)
-        return keyInMap || !(isUnexpected(key, value, validation) || keyIsInvalid(key, validation) || isEmptyValueList(value))
+        return keyInMap && !(isUnexpected(key, value, validation) || keyIsInvalid(key, validation) || isEmptyValueList(value))
     }
 
     private checkIsNotNestedGraph(String key, value, validation) {

@@ -23,7 +23,7 @@ class JsonValidatorSpec extends Specification {
         given:
         def validator = setupValidator()
         when:
-        def errors = validator.validateAll(["ConceptScheme" : "someValue"])
+        def errors = validator.validate(["ConceptScheme" : "someValue"])
         then:
         assert errors.isEmpty()
     }
@@ -32,7 +32,7 @@ class JsonValidatorSpec extends Specification {
         given:
         def validator = setupValidator()
         when:
-        def errors = validator.validateAll(["SomeNoneKbvKey" : "someValue"])
+        def errors = validator.validate(["SomeNoneKbvKey" : "someValue"])
         then:
         assert !errors.isEmpty()
     }
@@ -41,7 +41,7 @@ class JsonValidatorSpec extends Specification {
         given:
         def validator = setupValidator()
         when:
-        def errors = validator.validateAll(["@list": "someValue"])
+        def errors = validator.validate(["@list": "someValue"])
         then:
         assert errors.isEmpty()
     }
@@ -50,7 +50,7 @@ class JsonValidatorSpec extends Specification {
         given:
         def validator = setupValidator()
         when:
-        def errors = validator.validateAll(["@graph": ["graph1, graph2"]])
+        def errors = validator.validate(["@graph": [["@id" : "value"]]])
         then:
         assert errors.isEmpty()
     }
@@ -59,7 +59,7 @@ class JsonValidatorSpec extends Specification {
         given:
         def validator = setupValidator()
         when:
-        def errors = validator.validateAll(["@graph": "graph2"])
+        def errors = validator.validate(["@graph": "graph2"])
         then:
         assert !errors.isEmpty()
     }
