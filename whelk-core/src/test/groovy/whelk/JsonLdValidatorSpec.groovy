@@ -2,10 +2,10 @@ package whelk
 
 import spock.lang.Specification
 
-class JsonValidatorSpec extends Specification {
+class JsonLdValidatorSpec extends Specification {
     Map vocabData = [
             "@graph": [
-                  ["@id" : "https://id.kb.se/vocab/ConceptScheme"]
+                    ["@id" : "https://id.kb.se/vocab/ConceptScheme"]
             ]
     ]
 
@@ -16,7 +16,7 @@ class JsonValidatorSpec extends Specification {
     ]
 
     def setupValidator() {
-        new JsonValidator(new JsonLd(contextData, [:], vocabData, [""]))
+        JsonLdValidator.from(new JsonLd(contextData, [:], vocabData, [""]))
     }
 
     def "key that exists in vocab should be valid"() {

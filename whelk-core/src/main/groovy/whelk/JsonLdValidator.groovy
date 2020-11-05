@@ -4,18 +4,18 @@ import com.google.common.base.Preconditions
 import whelk.exception.InvalidJsonException
 import whelk.util.DocumentUtil
 
-class JsonValidator {
+class JsonLdValidator {
     private static JsonLd jsonLd
 
-    private JsonValidator(JsonLd jsonLd) {
+    private JsonLdValidator(JsonLd jsonLd) {
         this.jsonLd = jsonLd
     }
 
-    static JsonValidator from(JsonLd jsonLd) {
+    static JsonLdValidator from(JsonLd jsonLd) {
         Preconditions.checkNotNull(jsonLd)
         Preconditions.checkArgument(!jsonLd.context.isEmpty())
         Preconditions.checkArgument(!jsonLd.vocabIndex.isEmpty())
-        return new JsonValidator(jsonLd)
+        return new JsonLdValidator(jsonLd)
     }
 
     class Validation {
