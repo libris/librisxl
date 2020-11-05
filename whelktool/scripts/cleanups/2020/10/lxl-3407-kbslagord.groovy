@@ -47,7 +47,9 @@ void process(bib) {
 
     asList(getPathSafe(bib.graph[1], ['instanceOf', 'subject'])).each { Map subject ->
         if (isKbSlagord(subject)) {
-            Map sao = tryLink(subject) ?: tryMapComplex(subject)
+            // skip ComplexSubject for now, see LXL-3407
+            // Map sao = tryLink(subject) ?: tryMapComplex(subject)
+            Map sao = tryLink(subject)
             if(sao) {
                 String msg = "${subject['prefLabel']} -> ${sao['prefLabel'] ?: sao['@id']}"
                 modifiedReport.println("${bib.doc.shortId} $msg")
