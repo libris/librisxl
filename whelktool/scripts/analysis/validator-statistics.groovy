@@ -1,5 +1,5 @@
 import whelk.JsonValidator
-import whelk.JsonValidator.Error as JsonError
+import whelk.JsonLdValidator.Error as JsonError
 import whelk.util.Statistics
 
 class Script {
@@ -13,7 +13,7 @@ Script.report = getReportWriter("report.txt")
 
 selectByCollection('bib') { bib ->
     if (!Script.isInitialized) {
-        Script.v = JsonValidator.from(bib.whelk.jsonld)
+        Script.v = JsonLdValidator.from(bib.whelk.jsonld)
         Script.isInitialized = true
     }
     try {
