@@ -1,17 +1,9 @@
 PrintWriter scheduledForUpdating = getReportWriter("scheduled-updates")
 PrintWriter failedUpdating = getReportWriter("failed-updates")
+PrintWriter scheduledForDeleting = getReportWriter("scheduled-deletions")
+PrintWriter failedDeleting = getReportWriter("failed-deletions")
 
 String mipfesd = 'https://id.kb.se/term/mipfesd%2F5/Economic%20conditions'
-String sao = 'https://id.kb.se/term/sao/Ekonomiska%20f%C3%B6rh%C3%A5llanden'
-
-Map newTopic =
-        [
-            '@type':'Topic',
-            'inScheme': [
-                    '@id':'https://id.kb.se/term/mipfesd'
-            ],
-            'prefLabel':'Economic conditions'
-        ]
 
 String where = """
        collection = 'bib' 
@@ -27,41 +19,28 @@ selectBySqlWhere(where) { data ->
     boolean hasMipfesd = false
     int mipfesdIdx
 
-    boolean hasSao = false
-
-    for (i = 0; i < subjects.size(); i++) {
+    for (int i = 0; i < subjects.size(); i++) {
         // If mipfesd is referenced directly under subject, save index for later removal
         if (subjects[i]['@id'] == mipfesd) {
             hasMipfesd = true
             mipfesdIdx = i
         }
-        // Check if sao term is also referenced, add later if missing
-        if (subjects[i]['@id'] == sao) {
-            hasSao = true
-        }
-        // If mipfesd is referenced in ComplexSubject, replace mipfesd with Topic and add new mipfesd as concept scheme
+
+        // If mipfesd is referenced in ComplexSubject, replace it with Topic
         if (subjects[i]['@type'] == 'ComplexSubject') {
-            termComps = subjects[i]['termComponentList']
-            for (j = 0; j < termComps.size(); j++) {
+            List termComps = subjects[i]['termComponentList']
+            for (int j = 0; j < termComps.size(); j++) {
                 if (termComps[j]['@id'] == mipfesd) {
                     termComps[j] = ['@type':'Topic', 'prefLabel':'Economic conditions']
-                    subjects[i]['inScheme'] = ['@id':'https://id.kb.se/term/mipfesd']
                     modified = true
                 }
             }
         }
     }
 
-    // Remove mipfesd, add sao if missing and add new Topic with new mipfesd as concept scheme
+    // Remove mipfesd reference from subjects
     if (hasMipfesd) {
-        if (hasSao) {
-            subjects.remove(mipfesdIdx)
-        } else{
-            subjects[mipfesdIdx]['@id'] = sao
-        }
-
-        subjects.add(newTopic)
-
+        subjects.remove(mipfesdIdx)
         modified = true
     }
 
@@ -74,6 +53,9 @@ selectBySqlWhere(where) { data ->
 }
 
 // Delete the actual mipfesd auth post as no references to it should remain
-selectByIds(['jgvxz1t25kg2znj']) {
-    it.scheduleDelete()
+selectByIds(['jgvxz1t25kg2znj']) { auth ->
+    scheduledForDeleting.println("${auth.doc.getURI()}")
+    auth.scheduleDelete(onError: { e ->
+        failedDeleting.println("Failed to update ${auth.doc.shortId} due to: $e")
+    })
 }
