@@ -6,7 +6,7 @@ String bibidstring = bibids.readLines().join("','")
 
 Vector holdList = new Vector() // Vector because it must be synchronized
 
-selectBySqlWhere("data#>>'{@graph,0,controlNumber}' in ( '$bibidstring' )", silent: false, { bib ->
+selectBySqlWhere("collection = 'bib' and data#>>'{@graph,0,controlNumber}' in ( '$bibidstring' )", silent: false, { bib ->
 
     def bibMainEntity = bib.graph[1]["@id"]
 
