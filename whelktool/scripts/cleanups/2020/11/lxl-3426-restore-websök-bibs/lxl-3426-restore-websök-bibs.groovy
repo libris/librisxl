@@ -20,15 +20,3 @@ selectByIds( holdsToDelete.readLines() ) { data ->
         failed.println("Failed to delete ${data.doc.shortId} due to: $e")
     })
 }
-
-/*
-  Resave those bib records that shared a controlnumber with a holding/auth,
-  on which we additionally added a new bad holding. These bib records
-  were overwritten in websök with holdings, and need to be resaved/restored.
- */
-selectByIds( bibsToResave.readLines() ) { data ->
-    scheduledForResave.println("${data.doc.getURI()}")
-    data.scheduleSave(loud: true, onError: { e ->
-        failed.println("Failed to update ${data.doc.shortId} due to: $e")
-    })
-}
