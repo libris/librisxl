@@ -80,4 +80,7 @@ class Statistics {
         return this
     }
 
+    boolean isEmpty() {
+        c.isEmpty()
+    }
 }

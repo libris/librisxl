@@ -11,6 +11,7 @@ import whelk.exception.WhelkException
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.util.LegacyIntegrationTools
+import whelk.util.Statistics
 
 import javax.script.Bindings
 import javax.script.Compilable
@@ -70,11 +71,12 @@ class WhelkTool {
     Map<String, Closure> compiledScripts = [:]
 
     ElasticFind elasticFind
+    Statistics statistics
 
     private ScheduledExecutorService timedLogger = MoreExecutors.getExitingScheduledExecutorService(
             Executors.newScheduledThreadPool(1))
 
-    WhelkTool(String scriptPath, File reportsDir=null) {
+    WhelkTool(String scriptPath, File reportsDir=null, int statsNumIds) {
         try {
             whelk = Whelk.createLoadedSearchWhelk()
         } catch (NullPointerException e) {
@@ -91,6 +93,14 @@ class WhelkTool {
         }
         catch (Exception e) {
             log "Could not initialize elasticsearch: " + e
+        }
+        statistics = new Statistics(statsNumIds)
+        Runtime.addShutdownHook {
+            if (!statistics.isEmpty()) {
+                new PrintWriter(new File(reportsDir, "STATISTICS.txt")).withCloseable {
+                    statistics.print(0, it)
+                }
+            }
         }
     }
 
@@ -372,7 +382,9 @@ class WhelkTool {
             ? jsonWriter.writeValueAsString(item.doc.data)
             : null
         counter.countProcessed()
-        process(item)
+        statistics.withContext(item.doc.shortId) {
+            process(item)
+        }
         if (item.needsSaving) {
             if (item.loud) {
                 assert allowLoud : "Loud changes need to be explicitly allowed"
@@ -554,6 +566,7 @@ class WhelkTool {
         bindings.put("create", this.&create)
         bindings.put("queryIds", this.&queryIds)
         bindings.put("queryDocs", this.&queryDocs)
+        bindings.put("incrementStats", statistics.&increment)
         return bindings
     }
 
@@ -621,6 +634,7 @@ class WhelkTool {
         cli.s(longOpt:'step', 'Change one document at a time, prompting to continue.')
         cli.l(longOpt:'limit', args:1, argName:'LIMIT', 'Amount of documents to process.')
         cli.a(longOpt:'allow-loud', 'Allow scripts to do loud modifications.')
+        cli.n(longOpt:'stats-num-ids', args:1, 'Number of ids to print per entry in STATISTICS.txt.')
 
         def options = cli.parse(args)
         if (options.h) {
@@ -630,7 +644,8 @@ class WhelkTool {
         def reportsDir = new File(options.r ?: 'reports')
         def scriptPath = options.arguments()[0]
 
-        def tool = new WhelkTool(scriptPath, reportsDir)
+        int statsNumIds = options.n ? Integer.parseInt(options.n) : 3
+        def tool = new WhelkTool(scriptPath, reportsDir, statsNumIds)
         tool.skipIndex = options.I
         tool.dryRun = options.d
         tool.stepWise = options.s
