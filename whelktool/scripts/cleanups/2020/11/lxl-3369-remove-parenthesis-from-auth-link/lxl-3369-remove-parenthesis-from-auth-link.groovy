@@ -4,7 +4,7 @@ PrintWriter scheduledForUpdating = getReportWriter("scheduled-updates")
 PrintWriter failedUpdating = getReportWriter("failed-updates")
 PrintWriter unmapped = getReportWriter("failed-to-map")
 
-ids = ['sb4lrlp45hc5zkf', 'q2thzmc6n26fvjgq', 'j2vbjxtv5s5qpbj', '9tm10vpm3x4mqhr', 'dnw2lrvlbfrll1k5']
+List ids = new File(scriptDir, 'have-link-to-parenthesis-uri.txt').readLines()
 
 selectByIds(ids) { data ->
 
