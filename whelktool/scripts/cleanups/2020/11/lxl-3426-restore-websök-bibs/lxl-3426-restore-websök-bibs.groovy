@@ -1,13 +1,12 @@
-// MUST be run with --allow-loud
-
 PrintWriter failed = getReportWriter("failed")
 PrintWriter scheduledForDeletion = getReportWriter("scheduled-deletes")
 PrintWriter scheduledForResave = getReportWriter("scheduled-updates")
 
-
-File bibsToResave = new File(scriptDir, "bibs-to-resave")
+/*
+ Obtainted using:
+ select id from lddb where data#>>'{@graph,0,generationProcess,@id}' = 'https://libris.kb.se/sys/globalchanges/r/folders/br/7my06pfs7wn0lmglq3_tmk380000gp/T/xl_script5190490847460028046/script.groovy'
+ */
 File holdsToDelete = new File(scriptDir, "holds-to-delete")
-
 
 /*
   Delete the whole set of holdings that were created by the bad script.
