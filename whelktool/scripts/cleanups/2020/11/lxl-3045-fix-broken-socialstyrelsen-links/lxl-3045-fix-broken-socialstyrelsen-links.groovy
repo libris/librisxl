@@ -54,7 +54,7 @@ selectByIds(newUris.keySet() as List) { data ->
 
     if (changed) {
         scheduledForUpdating.println("${data.doc.getURI()}")
-        data.scheduleSave(onError: { e ->
+        data.scheduleSave(loud: true, onError: { e ->
             failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
         })
     } else {
@@ -107,7 +107,7 @@ selectByIds(deadUris) { data ->
     instance.hasNote << ["@type": "Note", "label": actualOldUri + " " + noteText]
 
     scheduledForUpdating.println("${data.doc.getURI()}")
-    data.scheduleSave(onError: { e ->
+    data.scheduleSave(loud: true, onError: { e ->
         failedUpdating.println("Failed to update ${data.doc.shortId} due to: $e")
     })
 }
