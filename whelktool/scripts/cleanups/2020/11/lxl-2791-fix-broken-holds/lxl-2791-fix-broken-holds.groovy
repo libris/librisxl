@@ -27,10 +27,10 @@ selectByIds(holds.collect { "http://libris.kb.se/resource/bib/" + it.value.bibId
 selectByIds(holds.keySet() as List) { data ->
     boolean changed = false
     boolean shouldBeDeleted = false
-    def instance = data.graph[0]
+    def instance = data.graph[1]
     String legacyBibId = holds[data.doc.shortId].bibId
 
-    if (data.doc.sigel == "SEK")
+    if (data.doc.sigel in ["Hal", "SEK"])
         shouldBeDeleted = true
 
     if (legacyBibId in validBibs) {
