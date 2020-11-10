@@ -1239,6 +1239,13 @@
         },
         {
           "when": {
+            "onRevert": {"inScheme": {"code": "lcshac"}},
+            "then": {"ind2": "1"}
+          },
+          "include": ["termbase"]
+        },
+        {
+          "when": {
             "onRevert": {"inScheme": {"code": "mesh"}},
             "then": {"ind2": "2"}
           },
@@ -15246,6 +15253,28 @@
                     "code": "barn"
                   },
                   "prefLabel": "Fysik"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "normalized": {
+            "650": {"ind1": " ", "ind2": "1",
+              "subfields": [{"a": "Plays"}]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Topic",
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/lcshac",
+                    "@type": "TopicScheme",
+                    "code": "lcshac"
+                  },
+                  "prefLabel": "Plays"
                 }
               ]
             }
