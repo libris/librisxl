@@ -44,6 +44,18 @@ public class ScriptGenerator
         return new PortableScript(scriptText, null, "Byte av sigel " + fromSigel + " till " + toSigel, true);
     }
 
+    public static PortableScript generateChangeSigelFromListScript(Set<String> controlNumbers,
+                                                                   String fromSigel, String toSigel) throws IOException
+    {
+        String scriptText = IOUtils.toString(new InputStreamReader(
+                ScriptGenerator.class.getClassLoader().getResourceAsStream("templates/change-sigel-from-list.groovy") ));
+        scriptText = scriptText.replace("FROMSIGEL", fromSigel);
+        scriptText = scriptText.replace("TOSIGEL", toSigel);
+
+        return new PortableScript(scriptText, controlNumbers,
+                "Byte av sigel " + fromSigel + " till " + toSigel + " på " + controlNumbers.size() + " idn", true);
+    }
+
     public static PortableScript generateReplaceRecordsScript(Set<String> controlNumbers) throws IOException
     {
         String scriptText = IOUtils.toString(new InputStreamReader(
