@@ -125,7 +125,6 @@ public class ChangeSigelPanel extends WizardCard implements DocumentListener, Ac
             {
                 chosenFile = chooser.getSelectedFile();
                 chosenFileField.setText( chooser.getSelectedFile().getName() );
-                enableNext();
             }
         }
     }
