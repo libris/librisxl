@@ -12,15 +12,16 @@ PrintWriter failedDeleting = getReportWriter("failed-deleting")
 Map holds = [:]
 Map validBibs = [:]
 
+// Turn file with XL id - old hold id - old bib id into a map, keyed by XL id
 new File(scriptDir, "id-oldid-bibid.tsv").each {
     def (id, oldId, bibId) = it.split(/\t/).collect { it.trim() }
     holds[id] = ["oldId": oldId, "bibId": bibId]
 }
 
-// Make sure these references bib records still exist. Fetch them using the legacy IDs
-// we got from Voyager, and map them to their new XL shortIds.
+// Make sure the referenced bib records still exist. Fetch them using the legacy IDs
+// we got from Voyager, and map them to their XL shortIds.
 selectByIds(holds.collect { "http://libris.kb.se/resource/bib/" + it.value.bibId }) { data ->
-    if (data.graph[1]["@type"] == "Instance")
+    if (data.graph[1]["@type"] == "Instance" && data.graph[0].controlNumber)
         validBibs[data.graph[0].controlNumber] = data.doc.shortId
 }
 
@@ -30,10 +31,11 @@ selectByIds(holds.keySet() as List) { data ->
     def instance = data.graph[1]
     String legacyBibId = holds[data.doc.shortId].bibId
 
-    if (data.doc.sigel in ["Hal", "SEK"])
+    // Broken holds from certain sigels, or ones that link to a nonexistent bib record,
+    // should shuffle off this mortal coil
+    if (data.doc.sigel in ["Hal", "SEK"]) {
         shouldBeDeleted = true
-
-    if (legacyBibId in validBibs) {
+    } else if (legacyBibId in validBibs) {
         if (!(instance.itemOf instanceof Map))
             instance.itemOf = [:]
         instance.itemOf << ["@id": baseUri.resolve(validBibs[legacyBibId]).toString()]
