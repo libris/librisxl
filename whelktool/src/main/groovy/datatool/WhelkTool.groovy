@@ -52,6 +52,9 @@ class WhelkTool {
     File reportsDir
     PrintWriter mainLog
     PrintWriter errorLog
+    PrintWriter modifiedLog
+    PrintWriter createdLog
+    PrintWriter deletedLog
     ConcurrentHashMap<String, PrintWriter> reports = new ConcurrentHashMap<>()
 
     Counter counter = new Counter()
@@ -88,6 +91,13 @@ class WhelkTool {
         mainLog = new PrintWriter(new File(reportsDir, "MAIN.txt"))
         errorLog = new PrintWriter(new File(reportsDir, "ERRORS.txt"))
 
+        def modifiedLogFile = new File(reportsDir, "MODIFIED.txt")
+        modifiedLog = new PrintWriter(modifiedLogFile)
+        def createdLogFile = new File(reportsDir, "CREATED.txt")
+        createdLog = new PrintWriter(createdLogFile)
+        def deletedLogFile = new File(reportsDir, "DELETED.txt")
+        deletedLog = new PrintWriter(deletedLogFile)
+
         try {
             elasticFind = new ElasticFind(new ESQuery(whelk))
         }
@@ -101,6 +111,8 @@ class WhelkTool {
                     statistics.print(0, it)
                 }
             }
+
+            [modifiedLogFile, createdLogFile, deletedLogFile].each { if (it.length() == 0) it.delete() }
         }
     }
 
@@ -428,6 +440,7 @@ class WhelkTool {
     }
 
     private void doDeletion(DocumentItem item) {
+        deletedLog.println(item.doc.shortId)
         if (!dryRun) {
             whelk.remove(item.doc.shortId, changedIn, scriptJobUri)
         }
@@ -478,6 +491,7 @@ class WhelkTool {
         Document doc = item.doc
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
+        modifiedLog.println(doc.shortId)
         if (!dryRun) {
             whelk.storeAtomicUpdate(doc, !item.loud, changedIn, scriptJobUri, item.preUpdateChecksum, !skipIndex)
         }
@@ -488,6 +502,7 @@ class WhelkTool {
         doc.setControlNumber(doc.getShortId())
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
+        createdLog.println(doc.shortId)
         if (!dryRun) {
             if (!whelk.createDocument(doc, changedIn, scriptJobUri,
                     LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false, !skipIndex))
@@ -581,6 +596,7 @@ class WhelkTool {
             log "    index:   ${whelk.elastic.defaultIndex}"
         }
         log "Using script: $scriptFile"
+        log "Using report dir: $reportsDir"
         if (skipIndex) log "  skipIndex"
         if (dryRun) log "  dryRun"
         if (stepWise) log "  stepWise"
@@ -594,11 +610,8 @@ class WhelkTool {
     }
 
     private void finish() {
-        mainLog.flush()
-        mainLog.close()
-        errorLog.flush()
-        errorLog.close()
-        reports.values().each {
+        def logWriters = [mainLog, errorLog, modifiedLog, createdLog, deletedLog] + reports.values()
+        logWriters.each {
             it.flush()
             it.close()
         }
