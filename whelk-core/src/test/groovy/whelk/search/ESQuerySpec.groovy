@@ -71,10 +71,10 @@ class ESQuerySpec extends Specification {
         ['foo': ['bar', 'baz']] | [['bool': ['must': [
                                                 ['bool': [
                                                     'should': [
-                                                        ['simple_query_string': ['query': 'bar',
+                                                        ['query_string': ['query': 'bar',
                                                                                  'fields': ['foo'],
                                                                                  'default_operator': 'AND']],
-                                                        ['simple_query_string': ['query': 'baz',
+                                                        ['query_string': ['query': 'baz',
                                                                                  'fields': ['foo'],
                                                                                  'default_operator': 'AND']]
                                                     ]
@@ -89,10 +89,10 @@ class ESQuerySpec extends Specification {
         where:
         key   | vals           | result
         'foo' | ['bar', 'baz'] | ['bool': ['should': [
-                                              ['simple_query_string': ['query': 'bar',
+                                              ['query_string': ['query': 'bar',
                                                                        'fields': ['foo'],
                                                                        'default_operator': 'AND']],
-                                              ['simple_query_string': ['query': 'baz',
+                                              ['query_string': ['query': 'baz',
                                                                        'fields': ['foo'],
                                                                        'default_operator': 'AND']]]]]
     }

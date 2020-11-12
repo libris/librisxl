@@ -78,7 +78,7 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     Map getESQuery(Map<String, String[]> queryParameters) {
         // Legit params and their uses:
-        //   q - simple_query_string
+        //   q - query_string
         String q
         //   _limit, _offset - pagination
         int limit
@@ -114,7 +114,7 @@ class ESQuery {
         }
 
         Map simpleQuery = [
-            'simple_query_string': [
+            'query_string': [
                 'query': q,
                 'default_operator':  'AND',
                 'analyze_wildcard' : true
@@ -136,7 +136,7 @@ class ESQuery {
             }
 
             Map boostedExact = [
-                'simple_query_string': [
+                'query_string': [
                     'query': q,
                     'default_operator':  'AND',
                     'fields': exactFields,
@@ -145,7 +145,7 @@ class ESQuery {
             ]
 
             Map boostedSoft = [
-                'simple_query_string': [
+                'query_string': [
                     'query': q,
                     'default_operator':  'AND',
                     'fields': softFields,
@@ -486,10 +486,15 @@ class ESQuery {
      */
     @CompileStatic(TypeCheckingMode.SKIP)
     public Map createBoolFilter(Map<String, String[]> fieldsAndVals) {
+        final String ESreservedChars = "\\+-=&&||><!(){}[]^\"~*?:/" // Ordering is relevant, the escape char itself '\', must come first!
         List clauses = []
         fieldsAndVals.each {field, vals ->
             for (val in vals) {
-                clauses.add(['simple_query_string': [
+                for (int i = 0; i < ESreservedChars.size(); ++i) {
+                    char c = ESreservedChars.charAt(i)
+                    val = val.replace(""+c, "\\"+c)
+                }
+                clauses.add(['query_string': [
                         'query': val,
                         'fields': [field],
                         'default_operator': 'AND'
