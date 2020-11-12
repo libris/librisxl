@@ -26,7 +26,7 @@ selectByCollection('bib') { bib ->
 }
 
 void process(bib) {
-    List<JsonError> errors = Script.v.validate(bib.doc.data)
+    List<JsonError> errors = Script.v.validateAll(bib.doc.data)
     errors.each {
         Script.s.increment(it.getDescription(), it.toStringWithPath(), bib.doc.getShortId())
     }

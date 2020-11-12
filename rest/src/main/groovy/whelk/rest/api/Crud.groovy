@@ -1,5 +1,6 @@
 package whelk.rest.api
 
+
 import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
 import io.prometheus.client.Counter
@@ -11,6 +12,7 @@ import whelk.Document
 import whelk.IdGenerator
 import whelk.IdType
 import whelk.JsonLd
+import whelk.JsonLdValidator
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ElasticIOException
@@ -31,6 +33,7 @@ import javax.servlet.http.HttpServletResponse
 import java.lang.management.ManagementFactory
 
 import whelk.rest.api.CrudGetRequest.Lens
+
 import static whelk.rest.api.HttpTools.sendResponse
 
 /**
@@ -70,6 +73,7 @@ class Crud extends HttpServlet {
     Map vocabData
     Map displayData
     JsonLd jsonld
+    JsonLdValidator validator
 
     SearchUtils search
     static final ObjectMapper mapper = new ObjectMapper()
@@ -92,6 +96,7 @@ class Crud extends HttpServlet {
         vocabData = whelk.vocabData
         jsonld = whelk.jsonld
         search = new SearchUtils(whelk)
+        validator = JsonLdValidator.from(jsonld)
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response,
@@ -499,8 +504,8 @@ class Crud extends HttpServlet {
         newDoc.normalizeUnicode()
         newDoc.trimStrings()
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
-        // TODO https://jira.kb.se/browse/LXL-1263
         newDoc.setControlNumber(newDoc.getShortId())
+        validateJsonLd(newDoc, request, response)
 
         String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
         if ( !(collection in ["auth", "bib", "hold"]) ) {
@@ -545,6 +550,17 @@ class Crud extends HttpServlet {
                                savedDoc.getChecksum())
         } else {
             sendNotFound(response, request.getContextPath())
+        }
+    }
+
+    private void validateJsonLd(Document doc, HttpServletRequest request, HttpServletResponse response) {
+        List<JsonLdValidator.Error> errors = validator.validate(doc.data)
+        if (errors) {
+            def message = errors.collect { it.toStringWithPath() }
+            failedRequests.labels(request.getMethod(), request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Invalid JsonLd. Got errors:" + message)
         }
     }
 
@@ -638,6 +654,7 @@ class Crud extends HttpServlet {
         updatedDoc.normalizeUnicode()
         updatedDoc.trimStrings()
         updatedDoc.setId(documentId)
+        validateJsonLd(updatedDoc, request, response)
 
         log.debug("Checking permissions for ${updatedDoc}")
         try {

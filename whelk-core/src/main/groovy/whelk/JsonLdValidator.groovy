@@ -1,7 +1,6 @@
 package whelk
 
 import com.google.common.base.Preconditions
-import whelk.exception.InvalidJsonException
 import whelk.util.DocumentUtil
 
 class JsonLdValidator {
@@ -19,28 +18,29 @@ class JsonLdValidator {
     }
 
     class Validation {
-        List<Error> errors
-        Mode mode
+        List<Error> errors = new ArrayList<>()
         boolean seenGraph = false
         List at
+        Scope scope
 
-        enum Mode {
-            FAIL_FAST,
-            LOG_ERROR
+        enum Scope {
+            NESTED_GRAPH,
+            ALL
         }
 
-        Validation(Mode mode) {
-            this.errors = new ArrayList<>()
-            this.mode = mode
+        Validation(Scope scope) {
+            this.scope = scope
         }
     }
 
-    void validate(Document doc) throws InvalidJsonException {
-        doValidate(doc.data, new Validation(Validation.Mode.FAIL_FAST))
+    List<Error> validateAll(Map map) {
+        def validation = new Validation(Validation.Scope.ALL)
+        doValidate(map, validation)
+        return validation.errors
     }
 
     List<Error> validate(Map map) {
-        def validation = new Validation(Validation.Mode.LOG_ERROR)
+        def validation = new Validation(Validation.Scope.NESTED_GRAPH)
         doValidate(map, validation)
         return validation.errors
     }
@@ -57,15 +57,11 @@ class JsonLdValidator {
             }
             validation.at = path
 
-            checkIsNotNestedGraph(key, value, validation)
-
-            checkHasDefinition(key, validation)
-
-            verifyVocabTerm(key, value, validation)
-
-            validateRepeatability(key, value, validation)
-
-            validateObjectProperties(key, value, validation)
+            if (validation.scope == Validation.Scope.NESTED_GRAPH) {
+                checkIsNotNestedGraph(key, value, validation)
+            } else if (validation.scope == Validation.Scope.ALL) {
+                verifyAll(key, value, validation)
+            }
         })
     }
 
@@ -74,7 +70,19 @@ class JsonLdValidator {
         return keyInMap && !(isUnexpected(key, value, validation) || keyIsInvalid(key, validation) || isEmptyValueList(value))
     }
 
-    private checkIsNotNestedGraph(String key, value, validation) {
+    private void verifyAll(String key, value, Validation validation) {
+        checkIsNotNestedGraph(key, value, validation)
+
+        checkHasDefinition(key, validation)
+
+        verifyVocabTerm(key, value, validation)
+
+        validateRepeatability(key, value, validation)
+
+        validateObjectProperties(key, value, validation)
+    }
+
+    private void checkIsNotNestedGraph(String key, value, validation) {
         if (key == jsonLd.GRAPH_KEY) {
             if (validation.seenGraph) {
                 handleError(new Error(Error.Type.NESTED_GRAPH, key, value?.toString()), validation)
@@ -125,10 +133,6 @@ class JsonLdValidator {
         }
     }
 
-    private boolean isRepeated(value) {
-        return value instanceof List
-    }
-
     private void validateRepeatability(String key, value, validation) {
         boolean expectRepeat = key == jsonLd.GRAPH_KEY || key in jsonLd.getRepeatableTerms()
         if (expectRepeat && !isRepeated(value)) {
@@ -157,6 +161,10 @@ class JsonLdValidator {
         return jsonLd.context[key] instanceof Map ? jsonLd.context[key] : null
     }
 
+    private boolean isRepeated(value) {
+        return value instanceof List
+    }
+
     private Map getTermDefinition(String key) {
         Map termDefinition = jsonLd.vocabIndex[key] instanceof Map ? jsonLd.vocabIndex[key] : null
         if (!termDefinition && key.indexOf(':') > -1) {
@@ -167,11 +175,7 @@ class JsonLdValidator {
 
     private void handleError(Error error, Validation validation) {
         error.path = validation.at
-        if (validation.mode == Validation.Mode.FAIL_FAST) {
-            throw new InvalidJsonException(error.toString())
-        } else if (validation.mode == Validation.Mode.LOG_ERROR) {
-            validation.errors << error
-        }
+        validation.errors << error
     }
 
     class Error {
@@ -193,10 +197,11 @@ class JsonLdValidator {
             }
         }
 
-        private Type type
+        Type type
+        List path
+
         private final String key
         private final String value
-        List path
 
         Error(Type type, String key, String value = "") {
             this.type = type
