@@ -21,8 +21,8 @@ new File(scriptDir, "id-oldid-bibid.tsv").each {
 // Make sure the referenced bib records still exist. Fetch them using the legacy IDs
 // we got from Voyager, and map them to their XL shortIds.
 selectByIds(holds.collect { "http://libris.kb.se/resource/bib/" + it.value.bibId }) { data ->
-    if (data.graph[1]["@type"] == "Instance" && data.graph[0].controlNumber)
-        validBibs[data.graph[0].controlNumber] = data.doc.shortId
+    if (data.graph[0].controlNumber)
+        validBibs[data.graph[0].controlNumber] = data.graph[1]["@id"]
 }
 
 selectByIds(holds.keySet() as List) { data ->
@@ -38,7 +38,7 @@ selectByIds(holds.keySet() as List) { data ->
     } else if (legacyBibId in validBibs) {
         if (!(instance.itemOf instanceof Map))
             instance.itemOf = [:]
-        instance.itemOf << ["@id": baseUri.resolve(validBibs[legacyBibId]).toString()]
+        instance.itemOf << ["@id": validBibs[legacyBibId]]
         changed = true
     } else {
        shouldBeDeleted = true
