@@ -5,17 +5,20 @@ import whelk.util.Statistics
 class Script {
     static PrintWriter report
     static Statistics s = new Statistics(3).printOnShutdown()
-    static JsonValidator v
+    static JsonLdValidator v
     static boolean isInitialized = false
 }
 
 Script.report = getReportWriter("report.txt")
 
 selectByCollection('bib') { bib ->
-    if (!Script.isInitialized) {
-        Script.v = JsonLdValidator.from(bib.whelk.jsonld)
-        Script.isInitialized = true
+    synchronized (this) {
+        if (!Script.isInitialized) {
+            Script.v = JsonLdValidator.from(bib.whelk.jsonld)
+            Script.isInitialized = true
+        }
     }
+
     try {
         process(bib)
     }
@@ -28,7 +31,12 @@ selectByCollection('bib') { bib ->
 void process(bib) {
     List<JsonError> errors = Script.v.validateAll(bib.doc.data)
     errors.each {
-        Script.s.increment(it.getDescription(), it.toStringWithPath(), bib.doc.getShortId())
+        def message = "key: " + it.key
+        if (it.type == JsonError.Type.UNKNOWN_VOCAB_VALUE ||
+            it.type == JsonError.Type.UNEXPECTED) {
+            message = message + " value: " + it.value
+        }
+        Script.s.increment(it.getDescription(), message, bib.doc.getShortId())
     }
     if (errors) {
         Script.report.println(bib.doc.shortId)
