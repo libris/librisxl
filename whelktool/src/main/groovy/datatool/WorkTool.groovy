@@ -29,8 +29,8 @@ class WorkTool {
         cli.m(longOpt:'merge', 'Merge')
         cli.s(longOpt:'show', 'Show. Generate HTML report with title clusters')
         cli.s2(longOpt:'show', 'Show. Generate HTML report with works')
-        cli.d(longOpt:'diff', args: 1, argName:'diff', 'Field to diff')
-        cli.e(longOpt:'edition', 'Print editionStatement')
+        cli.dd(longOpt:'diff', args: 1, argName:'diff', 'Field to diff')
+        cli.i(longOpt:'instance-vals', args: 1, argName:'field', 'Instance field to print, e.g. editionStatement')
         cli.t(longOpt:'subTitles', 'Print subtitles')
         cli.nf(longOpt:'fiction-not-fiction', 'Filter: output clusters with mixed marc/FictionNotFurtherSpecified and marc/NotFictionNotFurtherSpecified')
         cli.f(longOpt:'fiction', 'Filter: output clusters containing fiction')
@@ -51,12 +51,7 @@ class WorkTool {
             m.merge()
         }
         else if (options.s) {
-            if (options.d) {
-                m.show(options.d.split('\\,').collect{it.split('\\.')})
-            }
-            else {
-                m.show()
-            }
+            m.show()
         }
         else if (options.s2) {
             m.show2()
@@ -64,8 +59,8 @@ class WorkTool {
         else if (options.t) {
             m.subTitles()
         }
-        else if (options.e) {
-            m.edition()
+        else if (options.i) {
+            m.printInstanceValue(options.i)
         }
         else if (options.nf) {
             m.fictionNotFiction()
