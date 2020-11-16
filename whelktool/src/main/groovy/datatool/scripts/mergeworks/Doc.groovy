@@ -56,7 +56,7 @@ class Doc {
         return titles
     }
 
-    private String displayTitle(Map thing) {
+    private static String displayTitle(Map thing) {
         thing['hasTitle'].collect { it['@type'] + ": " + it['flatTitle'] }.join(', ')
     }
 

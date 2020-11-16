@@ -79,27 +79,7 @@ class WorkJob {
                 }
             }
         })
-        println("""</body""")
-        println('</html>')
-    }
-
-    Document makeWork(Map workData) {
-        workData['@id'] = "TEMPID#it"
-        Document d = new Document([
-                "@graph": [
-                        [
-                                "@id"       : "TEMPID",
-                                "@type"     : "Record",
-                                "mainEntity": ["@id": "TEMPID#it"],
-                        ],
-                        workData
-                ]
-        ])
-
-        d.setGenerationDate(new Date())
-        d.setGenerationProcess('https://libris.kb.se/sys/merge-works')
-        d.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
-        return d
+        println('</body></html>')
     }
 
     void show2(List<List<String>> diffPaths = []) {
@@ -120,8 +100,7 @@ class WorkJob {
                 }
             }
         })
-        println("""</body""")
-        println('</html>')
+        println('</body></html>')
     }
 
     void merge() {
@@ -141,7 +120,26 @@ class WorkJob {
         Collection<Doc> derivedFrom
     }
 
-    void store(MergedWork work) {
+    private Document buildWorkDocument(Map workData) {
+        workData['@id'] = "TEMPID#it"
+        Document d = new Document([
+                "@graph": [
+                        [
+                                "@id"       : "TEMPID",
+                                "@type"     : "Record",
+                                "mainEntity": ["@id": "TEMPID#it"],
+                        ],
+                        workData
+                ]
+        ])
+
+        d.setGenerationDate(new Date())
+        d.setGenerationProcess('https://libris.kb.se/sys/merge-works')
+        d.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
+        return d
+    }
+
+    private void store(MergedWork work) {
         if (!dryRun) {
             if (!whelk.createDocument(work.work, changedIn, changedBy,
                     LegacyIntegrationTools.determineLegacyCollection(work.work, whelk.getJsonld()), false, !skipIndex)) {
@@ -160,7 +158,7 @@ class WorkJob {
         }
     }
 
-    Collection<MergedWork> works(List<String> cluster) {
+    private Collection<MergedWork> works(List<String> cluster) {
         def titleClusters = loadDocs(cluster)
                 .findAll(filter)
                 .each {it.addComparisonProps() }
@@ -174,7 +172,7 @@ class WorkJob {
             works.addAll(partition(titleCluster, { Doc a, Doc b -> c.sameWork(a, b)})
                     .findAll {it.size() > 1 }
                     .each { work -> work.each {doc -> doc.removeComparisonProps()}}
-                    .collect{new MergedWork(work: makeWork(c.merge(it)), derivedFrom: it)})
+                    .collect{new MergedWork(work: buildWorkDocument(c.merge(it)), derivedFrom: it)})
         }
 
         return works
@@ -245,7 +243,7 @@ class WorkJob {
 
     static def infoFields = ['instance title', 'work title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication', 'identifiedBy']
 
-    String clusterTable(Collection<Doc> cluster, List<List<String>> diffPaths = []) {
+    private String clusterTable(Collection<Doc> cluster, List<List<String>> diffPaths = []) {
         String id = "${clusterId.incrementAndGet()}"
         String header = """
             <tr>
@@ -273,7 +271,7 @@ class WorkJob {
         """
     }
 
-    def fieldRows(Collection<Doc> cluster, String cls) {
+    private def fieldRows(Collection<Doc> cluster, String cls) {
         { field ->
             """
             <tr class="${cls}">
@@ -283,7 +281,7 @@ class WorkJob {
         }
     }
 
-    void run(Function<List<String>, Runnable> f) {
+    private void run(Function<List<String>, Runnable> f) {
         ExecutorService s = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4)
 
         AtomicInteger i = new AtomicInteger()
@@ -311,15 +309,6 @@ class WorkJob {
         s.awaitTermination(1, TimeUnit.DAYS)
     }
 
-    List<List<Document>> mergeWorks(Collection<String> cluster) {
-        def t = titleClusters(cluster)
-                .grep { it.size() > 1 }
-
-        t.collect(this.&works)
-
-        return t
-    }
-
     private Collection<Doc> textMonoDocs(Collection<String> cluster) {
         whelk
                 .bulkLoad(cluster).values()
@@ -343,8 +332,6 @@ class WorkJob {
             !a.getTitleVariants().intersect(b.getTitleVariants()).isEmpty()
         }
     }
-
-
 }
 
 class NoWorkException extends RuntimeException {
