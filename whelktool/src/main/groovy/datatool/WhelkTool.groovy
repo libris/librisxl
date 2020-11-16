@@ -440,10 +440,10 @@ class WhelkTool {
     }
 
     private void doDeletion(DocumentItem item) {
-        deletedLog.println(item.doc.shortId)
         if (!dryRun) {
             whelk.remove(item.doc.shortId, changedIn, scriptJobUri)
         }
+        deletedLog.println(item.doc.shortId)
     }
 
     private boolean doRevertToTime(DocumentItem item) {
@@ -491,10 +491,10 @@ class WhelkTool {
         Document doc = item.doc
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
-        modifiedLog.println(doc.shortId)
         if (!dryRun) {
             whelk.storeAtomicUpdate(doc, !item.loud, changedIn, scriptJobUri, item.preUpdateChecksum, !skipIndex)
         }
+        modifiedLog.println(doc.shortId)
     }
 
     private void doSaveNew(DocumentItem item) {
@@ -502,12 +502,12 @@ class WhelkTool {
         doc.setControlNumber(doc.getShortId())
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
-        createdLog.println(doc.shortId)
         if (!dryRun) {
             if (!whelk.createDocument(doc, changedIn, scriptJobUri,
                     LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false, !skipIndex))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
+        createdLog.println(doc.shortId)
     }
 
     private boolean confirmNextStep(String inJsonStr, Document doc) {
