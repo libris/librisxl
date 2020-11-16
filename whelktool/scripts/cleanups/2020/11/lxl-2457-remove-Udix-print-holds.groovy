@@ -17,10 +17,10 @@ id in (
 """
 
 selectBySqlWhere(where) { hold ->
-    boolean bibIsConsideredPrint = false
 
-    selectBySqlWhere( "data#>>'{@graph,1,@id}' = '" + hold.doc.getHoldingFor() + "'") { bib ->
-        def instance = hold.graph[1]
+    boolean bibIsConsideredPrint = false
+    selectBySqlWhere( "id in (select dependsonid from lddb__dependencies where id = '" + hold.doc.getId() + "')") { bib ->
+        def instance = bib.graph[1]
         if (!suitableForElectronic(instance)) {
             bibIsConsideredPrint = true
         }
