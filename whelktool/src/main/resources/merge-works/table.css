@@ -7,16 +7,16 @@
  th {
    text-align: left;
  }
- tr.info td{
+ tr.info td {
    background-color: lightgrey;
  }
- tr.DIFF td{
+ tr.DIFF td {
    background-color: lightpink;
  }
- tr.COMPATIBLE td{
+ tr.COMPATIBLE td {
      background-color: greenyellow;
  }
- tr.EQUAL td{
+ tr.EQUAL td {
    background-color: lightgreen;
  }
  td {
