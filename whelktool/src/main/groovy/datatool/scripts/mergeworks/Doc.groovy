@@ -1,5 +1,6 @@
 package datatool.scripts.mergeworks
 
+import se.kb.libris.Normalizers
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
@@ -24,9 +25,22 @@ class Doc {
 
     Map getWork() {
         if (!work) {
-            work = WorkJob.getWork(whelk, doc)
+            work = getWork(whelk, doc)
         }
 
+        return work
+    }
+
+    static Map getWork(Whelk whelk, Document d) {
+        Map work = Normalizers.getWork(whelk.jsonld, d)
+        if (!work) {
+            throw new NoWorkException(d.shortId)
+        }
+        work = new HashMap<>(work)
+
+        //TODO 'marc:fieldref'
+
+        work.remove('@id')
         return work
     }
 

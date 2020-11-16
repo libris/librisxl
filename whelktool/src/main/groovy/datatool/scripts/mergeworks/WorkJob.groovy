@@ -1,12 +1,7 @@
 package datatool.scripts.mergeworks
 
-import datatool.util.DocumentComparator
-import org.apache.commons.lang3.StringUtils
+
 import org.codehaus.jackson.map.ObjectMapper
-import org.skyscreamer.jsonassert.JSONCompare
-import org.skyscreamer.jsonassert.JSONCompareMode
-import org.skyscreamer.jsonassert.JSONCompareResult
-import se.kb.libris.Normalizers
 import whelk.Document
 import whelk.IdGenerator
 import whelk.JsonLd
@@ -358,92 +353,11 @@ class WorkJob {
                 .with { partitionByTitle(it) }
     }
 
-    void tryMerge(Collection<Doc> docs) {
-        def d = new DocumentComparator()
-        Collection<Collection<Doc>> works = partition(docs) { Doc a, Doc b ->
-            return d.isEqual(a.getWork(), b.getWork())
-        }
-
-        if (works.size() > 1) {
-            works.eachWithIndex { a, i ->
-                works.eachWithIndex { b, j ->
-                    if (j <= i) {
-                        return
-                    }
-
-                    compare(a.first(), b.first())
-                    compare(b.first(), a.first())
-                }
-            }
-        }
-
-        statistics.increment("TITLE CLUSTERS - SIZE", docs.size().toString())
-        statistics.increment('TOTAL', 'TITLE CLUSTERS')
-
-
-        works.grep { it.size() > 1 }.each { work ->
-            statistics.increment("WORKS - NUM INSTANCES", work.size().toString())
-            statistics.increment('TOTAL', 'TOTAL WORKS')
-        }
-    }
-
-    void compare(Doc a, Doc b) {
-        JSONCompareResult r = JSONCompare.compareJSON(
-                mapper.writeValueAsString(workNoTitle(a.getWork())),
-                mapper.writeValueAsString(workNoTitle(b.getWork())),
-                JSONCompareMode.NON_EXTENSIBLE)
-
-        if (r.failed()) {
-            r.getMessage().replace('\n', '--').split(';').each { s ->
-                statistics.increment("diff", StringUtils.normalizeSpace(s))
-            }
-            /*
-            r.getFieldMissing().collect{it.getExpected()}.each { field ->
-                statistics.increment("exists in one but not the other", field.toString())
-            }
-            r.getFieldUnexpected().collect{it.getActual()}.each { field ->
-                statistics.increment("exists in one but not the other", field.toString())
-            }
-            differentSizeFields(r).each { field ->
-                statistics.increment("contents diff", field)
-            }
-             */
-        }
-    }
-
-    Map workNoTitle(Map work) {
-        Map w = new HashMap<>(work)
-        w.remove('hasTitle')
-        return w
-    }
-
     Collection<Collection<Doc>> partitionByTitle(Collection<Doc> docs) {
         return partition(docs) { Doc a, Doc b ->
             !a.getTitleVariants().intersect(b.getTitleVariants()).isEmpty()
         }
     }
-
-    static Map getWork(Whelk whelk, Document d) {
-        Map work = Normalizers.getWork(whelk.jsonld, d)
-        if (!work) {
-            throw new NoWorkException(d.shortId)
-        }
-        work = new HashMap<>(work)
-        Map instance = d.data['@graph'][1]
-/*
-        if (!work['hasTitle']) {
-            work['hasTitle'] = Util.flatTitles(instance)
-        } else if (!work['hasTitle'].first().containsKey('flatTitle')) {
-            work['hasTitle'] = Util.flatTitles(work)
-        }
-*/
-        //TODO works with already title
-        //TODO 'marc:fieldref'
-
-        work.remove('@id')
-        return work
-    }
-
 
 
 }
