@@ -71,16 +71,31 @@ class ESQuerySpec extends Specification {
         ['foo': ['bar', 'baz']] | [['bool': ['must': [
                                                 ['bool': [
                                                     'should': [
-                                                        ['query_string': ['query': 'bar',
+                                                        ['simple_query_string': ['query': 'bar',
                                                                                  'fields': ['foo'],
                                                                                  'default_operator': 'AND']],
-                                                        ['query_string': ['query': 'baz',
+                                                        ['simple_query_string': ['query': 'baz',
                                                                                  'fields': ['foo'],
                                                                                  'default_operator': 'AND']]
                                                     ]
                                                 ]]
                                             ]]
                                   ]]
+
+        ['foo': ['*bar', 'baz']] | [['bool': ['must': [
+                                                ['bool': [
+                                                    'should': [
+                                                        ['query_string'        : ['query': '*bar',
+                                                                                 'fields': ['foo'],
+                                                                                 'default_operator': 'AND']],
+                                                        ['simple_query_string' : ['query': 'baz',
+                                                                                 'fields': ['foo'],
+                                                                                 'default_operator': 'AND']]
+                                                    ]
+                                                ]]
+                                            ]]
+                                   ]]
+
     }
 
     def "should create bool filter"(String key, String[] vals, Map result) {
@@ -89,10 +104,17 @@ class ESQuerySpec extends Specification {
         where:
         key   | vals           | result
         'foo' | ['bar', 'baz'] | ['bool': ['should': [
-                                              ['query_string': ['query': 'bar',
+                                              ['simple_query_string': ['query': 'bar',
                                                                        'fields': ['foo'],
                                                                        'default_operator': 'AND']],
-                                              ['query_string': ['query': 'baz',
+                                              ['simple_query_string': ['query': 'baz',
+                                                                       'fields': ['foo'],
+                                                                       'default_operator': 'AND']]]]]
+        'foo' | ['bar', '*baz'] | ['bool': ['should': [
+                                              ['simple_query_string': ['query': 'bar',
+                                                                       'fields': ['foo'],
+                                                                       'default_operator': 'AND']],
+                                              ['query_string'       : ['query': '*baz',
                                                                        'fields': ['foo'],
                                                                        'default_operator': 'AND']]]]]
     }
@@ -216,5 +238,19 @@ class ESQuerySpec extends Specification {
         then:
         emptyExpected == es.hideKeywordFields(emptyEsResponse)
         expected == es.hideKeywordFields(esResponse)
+    }
+    
+    def "should recognize leading wildcard queries"() {
+        expect:
+        ESQuery.isSimple(query) == result
+
+        where:
+        query       | result
+        "*"         | true
+        "*   "      | true
+        "*foo"      | false
+        "foo *bar"  | false
+        "foo* bar"  | true
+        "foo* *bar" | false
     }
 }

@@ -113,8 +113,14 @@ class ESQuery {
             queryParameters.put('@type', originalTypeParam)
         }
 
+        def isSimple = isSimple(q)
+        String queryMode = isSimple ? 'simple_query_string' : 'query_string'
+        if (!isSimple) {
+            checkNonSimpleQueryString(q)
+        }
+
         Map simpleQuery = [
-            'query_string': [
+            (queryMode) : [
                 'query': q,
                 'default_operator':  'AND',
                 'analyze_wildcard' : true
@@ -136,7 +142,7 @@ class ESQuery {
             }
 
             Map boostedExact = [
-                'query_string': [
+                (queryMode): [
                     'query': q,
                     'default_operator':  'AND',
                     'fields': exactFields,
@@ -145,7 +151,7 @@ class ESQuery {
             ]
 
             Map boostedSoft = [
-                'query_string': [
+                (queryMode) : [
                     'query': q,
                     'default_operator':  'AND',
                     'fields': softFields,
@@ -478,6 +484,23 @@ class ESQuery {
     }
 
     /**
+     * Can this query string be handled by ES simple_query_string?
+     */
+    static boolean isSimple(String queryString) {
+        // leading wildcards e.g. "*foo" are removed by simple_query_string
+        def containsLeadingWildcard = queryString =~ /\*\S+/
+        return !containsLeadingWildcard
+    }
+
+    private static void checkNonSimpleQueryString(String queryString) {
+        if (queryString.findAll('\\"').size() % 2 != 0) {
+            throw new whelk.exception.InvalidQueryException("Unbalanced quotation marks")
+        }
+
+        // The following chars are ES operators and need to be escaped to be used as literals: \+-=|&><!(){}[]^"~*?:/
+    }
+
+    /**
      * Create a query to filter docs where `field` matches any of the
      * supplied `vals`
      *
@@ -485,16 +508,16 @@ class ESQuery {
      *
      */
     @CompileStatic(TypeCheckingMode.SKIP)
-    public Map createBoolFilter(Map<String, String[]> fieldsAndVals) {
-        final String ESreservedChars = "\\+-=&&||><!(){}[]^\"~*?:/" // Ordering is relevant, the escape char itself '\', must come first!
+    Map createBoolFilter(Map<String, String[]> fieldsAndVals) {
         List clauses = []
         fieldsAndVals.each {field, vals ->
             for (val in vals) {
-                for (int i = 0; i < ESreservedChars.size(); ++i) {
-                    char c = ESreservedChars.charAt(i)
-                    val = val.replace(""+c, "\\"+c)
+                boolean isSimple = isSimple(val)
+                if(!isSimple){
+                    checkNonSimpleQueryString(val)
                 }
-                clauses.add(['query_string': [
+
+                clauses.add([(isSimple ? 'simple_query_string' : 'query_string'): [
                         'query': val,
                         'fields': [field],
                         'default_operator': 'AND'
