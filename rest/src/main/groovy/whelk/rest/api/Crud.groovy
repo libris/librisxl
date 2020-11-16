@@ -120,7 +120,7 @@ class Crud extends HttpServlet {
                             "no elastic component is configured.")
             return
         } catch (InvalidQueryException e) {
-            log.error("Invalid query: ${queryParameters}", e)
+            log.warn("Invalid query: ${queryParameters}")
             failedRequests.labels("GET", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,

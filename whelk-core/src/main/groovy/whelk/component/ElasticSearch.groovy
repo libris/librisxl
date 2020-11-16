@@ -11,6 +11,7 @@ import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
@@ -333,9 +334,12 @@ class ElasticSearch {
         Tuple2<Integer, String> response = client.performRequest('POST',
                 queryUrl,
                 JsonOutput.toJson(jsonDsl))
+
         int statusCode = response.first
         String responseBody = response.second
-        if (statusCode != 200) {
+        if (statusCode == 400) {
+            throw new InvalidQueryException("")
+        } else if (statusCode != 200) {
             log.warn("Unexpected response from ES: ${statusCode} ${responseBody}")
             return [:]
         }

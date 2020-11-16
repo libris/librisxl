@@ -78,7 +78,7 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     Map getESQuery(Map<String, String[]> queryParameters) {
         // Legit params and their uses:
-        //   q - simple_query_string
+        //   q - query string, will be used as query_string or simple_query_string
         String q
         //   _limit, _offset - pagination
         int limit
@@ -113,8 +113,14 @@ class ESQuery {
             queryParameters.put('@type', originalTypeParam)
         }
 
+        def isSimple = isSimple(q)
+        String queryMode = isSimple ? 'simple_query_string' : 'query_string'
+        if (!isSimple) {
+            checkNonSimpleQueryString(q)
+        }
+
         Map simpleQuery = [
-            'simple_query_string': [
+            (queryMode) : [
                 'query': q,
                 'default_operator':  'AND',
                 'analyze_wildcard' : true
@@ -136,7 +142,7 @@ class ESQuery {
             }
 
             Map boostedExact = [
-                'simple_query_string': [
+                (queryMode): [
                     'query': q,
                     'default_operator':  'AND',
                     'fields': exactFields,
@@ -145,7 +151,7 @@ class ESQuery {
             ]
 
             Map boostedSoft = [
-                'simple_query_string': [
+                (queryMode) : [
                     'query': q,
                     'default_operator':  'AND',
                     'fields': softFields,
@@ -478,6 +484,21 @@ class ESQuery {
     }
 
     /**
+     * Can this query string be handled by ES simple_query_string?
+     */
+    static boolean isSimple(String queryString) {
+        // leading wildcards e.g. "*foo" are removed by simple_query_string
+        def containsLeadingWildcard = queryString =~ /\*\S+/
+        return !containsLeadingWildcard
+    }
+
+    private static void checkNonSimpleQueryString(String queryString) {
+        if (queryString.findAll('\\"').size() % 2 != 0) {
+            throw new whelk.exception.InvalidQueryException("Unbalanced quotation marks")
+        }
+    }
+
+    /**
      * Create a query to filter docs where `field` matches any of the
      * supplied `vals`
      *
@@ -485,11 +506,16 @@ class ESQuery {
      *
      */
     @CompileStatic(TypeCheckingMode.SKIP)
-    public Map createBoolFilter(Map<String, String[]> fieldsAndVals) {
+    Map createBoolFilter(Map<String, String[]> fieldsAndVals) {
         List clauses = []
         fieldsAndVals.each {field, vals ->
             for (val in vals) {
-                clauses.add(['simple_query_string': [
+                boolean isSimple = isSimple(val)
+                if(!isSimple){
+                    checkNonSimpleQueryString(val)
+                }
+
+                clauses.add([(isSimple ? 'simple_query_string' : 'query_string'): [
                         'query': val,
                         'fields': [field],
                         'default_operator': 'AND'
