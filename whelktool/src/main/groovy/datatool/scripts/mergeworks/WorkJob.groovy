@@ -197,13 +197,11 @@ class WorkJob {
     void printInstanceValue(String field) {
         run({ cluster ->
             return {
-                String vals = cluster.collect(whelk.&getDocument).collect {
-                    Util.getPathSafe(it.data, ['@graph', 1, field])
-                }.grep().join('\n')
+                String values = cluster.collect(whelk.&getDocument).collect {
+                    "${it.shortId}\t${Util.getPathSafe(it.data, ['@graph', 1, field])}"
+                }.join('\n')
 
-                if (!vals.isBlank()) {
-                    println(vals + '\n')
-                }
+                println(values + '\n')
             }
         })
     }
