@@ -496,8 +496,6 @@ class ESQuery {
         if (queryString.findAll('\\"').size() % 2 != 0) {
             throw new whelk.exception.InvalidQueryException("Unbalanced quotation marks")
         }
-
-        // The following chars are ES operators and need to be escaped to be used as literals: \+-=|&><!(){}[]^"~*?:/
     }
 
     /**
