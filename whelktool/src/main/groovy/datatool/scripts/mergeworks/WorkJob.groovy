@@ -1,7 +1,6 @@
 package datatool.scripts.mergeworks
 
 
-import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.IdGenerator
 import whelk.JsonLd
@@ -30,8 +29,6 @@ class WorkJob {
     File clusters
 
     AtomicInteger clusterId = new AtomicInteger()
-
-    ObjectMapper mapper = new ObjectMapper()
 
     String changedIn = "xl"
     String changedBy = "SEK"
@@ -199,17 +196,6 @@ class WorkJob {
         })
     }
 
-    void splitClustersByWorks() {
-        statistics.printOnShutdown(10)
-        run({ cluster ->
-            return {
-                statistics.increment('TOTAL', 'TOTAL CLUSTERS')
-                List<List<Document>> result = mergeWorks(cluster)
-                //statistics.increment(String.format("Cluster size %03d", cluster.size()) , String.format("Num works %03d", result.size()))
-            }
-        })
-    }
-
     void edition() {
         statistics.printOnShutdown(10)
         run({ cluster ->
@@ -226,7 +212,6 @@ class WorkJob {
     }
 
     void fictionNotFiction() {
-        //statistics.printOnShutdown(10)
         run({ cluster ->
             return {
                 Collection<Collection<Doc>> titleClusters = titleClusters(cluster)
