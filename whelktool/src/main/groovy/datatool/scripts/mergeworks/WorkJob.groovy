@@ -50,7 +50,7 @@ class WorkJob {
                 && (doc.encodingLevel() == 'marc:MinimalLevel' || doc.encodingLevel() == 'marc:FullLevel'))
     }
 
-    void show(List<List<String>> diffPaths = []) {
+    void show() {
         println("""<html><head>
                     <meta charset="UTF-8">
                     <style>$CSS</style>
@@ -67,7 +67,7 @@ class WorkJob {
 
                     println(docs
                             .collect { it.sort { a, b -> a.getWork()['@type'] <=> b.getWork()['@type'] } }
-                            .collect { clusterTable(it, diffPaths) }
+                            .collect { clusterTable(it) }
                             .join('') + "<hr/><br/>\n")
                 }
                 catch (NoWorkException e) {
@@ -82,7 +82,7 @@ class WorkJob {
         println('</body></html>')
     }
 
-    void show2(List<List<String>> diffPaths = []) {
+    void show2() {
         println("""<html><head>
                     <meta charset="UTF-8">
                     <style>$CSS</style>
@@ -91,7 +91,7 @@ class WorkJob {
             return {
                 try {
                     println(works(cluster).collect {[new Doc2(whelk, it.work)] + it.derivedFrom }
-                            .collect { clusterTable(it, diffPaths) }
+                            .collect { clusterTable(it) }
                             .join('') + "<hr/><br/>\n")
                 }
                 catch (Exception e) {
@@ -194,16 +194,15 @@ class WorkJob {
         })
     }
 
-    void edition() {
-        statistics.printOnShutdown(10)
+    void printInstanceValue(String field) {
         run({ cluster ->
             return {
-                String editionStatment = cluster.collect(whelk.&getDocument).collect {
-                    Util.getPathSafe(it.data, ['@graph', 1, 'editionStatement'])
+                String vals = cluster.collect(whelk.&getDocument).collect {
+                    Util.getPathSafe(it.data, ['@graph', 1, field])
                 }.grep().join('\n')
 
-                if (!editionStatment.isBlank()) {
-                    println(editionStatment + '\n')
+                if (!vals.isBlank()) {
+                    println(vals + '\n')
                 }
             }
         })
@@ -243,7 +242,7 @@ class WorkJob {
 
     static def infoFields = ['instance title', 'work title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication', 'identifiedBy']
 
-    private String clusterTable(Collection<Doc> cluster, List<List<String>> diffPaths = []) {
+    private String clusterTable(Collection<Doc> cluster) {
         String id = "${clusterId.incrementAndGet()}"
         String header = """
             <tr>
