@@ -78,7 +78,7 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     Map getESQuery(Map<String, String[]> queryParameters) {
         // Legit params and their uses:
-        //   q - query_string
+        //   q - query string, will be used as query_string or simple_query_string
         String q
         //   _limit, _offset - pagination
         int limit
