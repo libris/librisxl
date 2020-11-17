@@ -8,6 +8,7 @@
                 }
             }
         },
+        "index.query.default_field": "_all",
         "analysis": {
             "char_filter": {
                 "hyphen_mapping": {
@@ -76,7 +77,7 @@
                 "custom_edge_ngram": {
                     "max_gram": 50,
                     "min_gram": 2,
-                    "type": "edgeNGram"
+                    "type": "edge_ngram"
                 },
                 "numeric_keeper": {
                     "type": "pattern_capture",
@@ -101,172 +102,192 @@
         }
     },
     "mappings": {
-        "_default_": {
-            "_source": {
-                "enabled": true
+        "_source": {
+            "enabled": true
+        },
+        "properties": {
+            "index": {
+                "type": "object",
+                "enabled": false
             },
-            "_all": {
-                "enabled": true
+            "meta": {
+                "properties": {
+                    "created": {
+                      "type": "date",
+                      "copy_to": "_all"
+                    },
+                    "modified": {
+                      "type": "date",
+                      "copy_to": "_all"
+                    },
+                    "generationDate": {
+                      "type": "date",
+                      "copy_to": "_all"
+                    },
+                    "encodingLevel": {
+                      "type": "keyword",
+                      "copy_to": "_all"
+                    },
+                    "recordStatus": {
+                      "type": "keyword",
+                      "copy_to": "_all"
+                    }
+                }
             },
-            "properties": {
-                "index": {
-                    "type": "object",
-                    "enabled": false
-                },
-                "meta": {
-                    "properties": {
-                        "created": {
-                          "type": "date"
-                        },
-                        "modified": {
-                          "type": "date"
-                        },
-                        "generationDate": {
-                          "type": "date"
-                        },
-                        "encodingLevel": {
-                          "type": "keyword"
-                        },
-                        "recordStatus": {
-                          "type": "keyword"
-                        }
+            "issuanceType": {
+              "type": "keyword",
+              "copy_to": "_all"
+            },
+            "identifiedBy": {
+                "type": "nested",
+                "include_in_parent": true,
+                "properties": {
+                    "@type": {"type": "keyword"},
+                    "value": {
+                        "type": "text",
+                        "analyzer": "isbn_analyzer",
+                        "copy_to": "_all"
                     }
-                },
-                "issuanceType": {
-                  "type": "keyword"
-                },
-                "identifiedBy": {
-                    "type": "nested",
-                    "include_in_parent": true,
-                    "properties": {
-                        "@type": {"type": "keyword"},
-                        "value": {
-                            "type": "text",
-                            "analyzer": "isbn_analyzer"
-                        }
-                    }
-                },
-                "publication": {
-                    "properties": {
-                        "year": {
-                            "fields": {
-                                "keyword": {
-                                    "index": true,
-                                    "type": "keyword"
-                                }
-                            },
-                            "analyzer": "numeric_extractor",
-                            "index": true,
-                            "type": "text",
-                            "fielddata": true
+                }
+            },
+            "publication": {
+                "properties": {
+                    "year": {
+                        "fields": {
+                            "keyword": {
+                                "index": true,
+                                "type": "keyword"
+                            }
                         },
-                        "startYear": {
-                            "fields": {
-                                "keyword": {
-                                    "index": true,
-                                    "type": "keyword"
-                                }
-                            },
-                            "analyzer": "numeric_extractor",
-                            "index": true,
-                            "type": "text",
-                            "fielddata": true
+                        "analyzer": "numeric_extractor",
+                        "index": true,
+                        "type": "text",
+                        "fielddata": true,
+                        "copy_to": "_all"
+                    },
+                    "startYear": {
+                        "fields": {
+                            "keyword": {
+                                "index": true,
+                                "type": "keyword"
+                            }
                         },
-                        "endYear": {
-                            "fields": {
-                                "keyword": {
-                                    "index": true,
-                                    "type": "keyword"
-                                }
-                            },
-                            "analyzer": "numeric_extractor",
-                            "index": true,
-                            "type": "text",
-                            "fielddata": true
-                        }
+                        "analyzer": "numeric_extractor",
+                        "index": true,
+                        "type": "text",
+                        "fielddata": true,
+                        "copy_to": "_all"
+                    },
+                    "endYear": {
+                        "fields": {
+                            "keyword": {
+                                "index": true,
+                                "type": "keyword"
+                            }
+                        },
+                        "analyzer": "numeric_extractor",
+                        "index": true,
+                        "type": "text",
+                        "fielddata": true,
+                        "copy_to": "_all"
                     }
-                },
-                "hasTitle": {
-                    "type": "nested",
-                    "include_in_parent": true,
-                    "properties": {
-                        "@type": {"type": "keyword"},
-                        "mainTitle": {
-                            "type": "text",
-                            "fields": {
-                                "keyword": {
-                                    "type": "keyword"
-                                }
+                }
+            },
+            "hasTitle": {
+                "type": "nested",
+                "include_in_parent": true,
+                "properties": {
+                    "@type": {"type": "keyword"},
+                    "mainTitle": {
+                        "type": "text",
+                        "copy_to": "_all",
+                        "fields": {
+                            "keyword": {
+                                "type": "keyword"
                             }
                         }
                     }
-                },
-                "_links": {
-                    "type": "keyword"
-                },
-                "_outerEmbellishments": {
-                    "type": "keyword"
                 }
             },
-            "date_detection": false,
-            "dynamic_templates": [
-                {
-                    "context_template": {
-                        "mapping": {
-                            "type": "object",
-                            "enabled": false
-                        },
-                        "match": "@context"
-                    }
-                },
-                {
-                    "id_template": {
-                        "mapping": {
-                            "index": true,
-                            "type": "keyword"
-                        },
-                        "match": "@id",
-                        "match_mapping_type": "string"
-                    }
-                },
-                {
-                    "type_template": {
-                        "mapping": {
-                            "index": true,
-                            "type": "keyword"
-                        },
-                        "match": "@type",
-                        "match_mapping_type": "string"
-                    }
-                },
-                {
-                    "unknown_template": {
-                        "path_match": "_marc*.*.subfields.*",
-                        "mapping": {
-                            "type": "string",
-                            "index": "not_analyzed"
-                        },
-                        "match_mapping_type": "string"
-                    }
-                },
-                {
-                    "soft_template": {
-                        "mapping": {
-                            "fields": {
-                              "exact": {
-                                "type": "text",
-                                "analyzer": "standard"
-                              }
-                            },
-                            "analyzer": "softmatcher",
-                            "type": "text",
-                            "index": true
-                        },
-                        "match": "_str",
-                        "match_mapping_type": "string"
-                    }
+            "_links": {
+                "type": "keyword",
+                "copy_to": "_all"
+            },
+            "_outerEmbellishments": {
+                "type": "keyword",
+                "copy_to": "_all"
+            },
+            "_es_type": {
+                "type": "keyword",
+                "copy_to": "_all"
+            },
+            "_all": {
+                "type": "text",
+                "store": false
+            }
+        },
+        "date_detection": false,
+        "dynamic_templates": [
+            {
+                "context_template": {
+                    "mapping": {
+                        "type": "object",
+                        "enabled": false
+                    },
+                    "match": "@context"
                 }
-            ]
-        }
+            },
+            {
+                "id_template": {
+                    "mapping": {
+                        "index": true,
+                        "type": "keyword",
+                        "copy_to": "_all"
+                    },
+                    "match": "@id",
+                    "match_mapping_type": "string"
+                }
+            },
+            {
+                "type_template": {
+                    "mapping": {
+                        "index": true,
+                        "type": "keyword",
+                        "copy_to": "_all"
+                    },
+                    "match": "@type",
+                    "match_mapping_type": "string"
+                }
+            },
+            {
+                "unknown_template": {
+                    "path_match": "_marc*.*.subfields.*",
+                    "mapping": {
+                        "type": "keyword",
+                        "index": "true",
+                        "copy_to": "_all"
+                    },
+                    "match_mapping_type": "string"
+                }
+            },
+            {
+                "soft_template": {
+                    "mapping": {
+                        "fields": {
+                          "exact": {
+                            "type": "text",
+                            "analyzer": "standard"
+                          }
+                        },
+                        "analyzer": "softmatcher",
+                        "type": "text",
+                        "index": true,
+                        "copy_to": "_all"
+                    },
+                    "match": "_str",
+                    "match_mapping_type": "string"
+                }
+            }
+        ]
     }
 }
