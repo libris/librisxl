@@ -1,6 +1,7 @@
 package whelk
 
 import spock.lang.Specification
+import static whelk.JsonLdValidator.*
 
 class JsonLdValidatorSpec extends Specification {
     Map vocabData = [
@@ -16,51 +17,67 @@ class JsonLdValidatorSpec extends Specification {
     ]
 
     def setupValidator() {
-        JsonLdValidator.from(new JsonLd(contextData, [:], vocabData, [""]))
+        from(new JsonLd(contextData, [:], vocabData, [""]))
     }
 
-    def "key that exists in vocab should be valid"() {
+    def "key that exists in vocab should pass validation"() {
         given:
         def validator = setupValidator()
         when:
-        def errors = validator.validate(["ConceptScheme" : "someValue"])
+        def errors = validator.validateAll(["ConceptScheme": "someValue"])
         then:
         assert errors.isEmpty()
     }
 
-    def "key that does not exist in vocab should be invalid"() {
+    def "key that does not exist in vocab should return missing definition error"() {
         given:
         def validator = setupValidator()
         when:
-        def errors = validator.validate(["SomeNoneKbvKey" : "someValue"])
+        def errors = validator.validateAll(["SomeNoneKbvKey": "someValue"])
         then:
-        assert !errors.isEmpty()
-    }
+        assert errors.any {it.type == JsonLdValidator.Error.Type.MISSING_DEFINITION}    }
 
-    def "key that does not exist in vocab but is LD key should be valid"() {
+    def "key that does not exist in vocab but is LD key should pass validation"() {
         given:
         def validator = setupValidator()
         when:
-        def errors = validator.validate(["@list": "someValue"])
+        def errors = validator.validateAll(["@list": "someValue"])
         then:
         assert errors.isEmpty()
     }
 
-    def "repeatable term should be valid if declared as repeatable in context"() {
+    def "repeatable term should pass validation if declared as repeatable in context"() {
         given:
         def validator = setupValidator()
         when:
-        def errors = validator.validate(["@graph": [["@id" : "value"]]])
+        def errors = validator.validateAll(["@graph": [["@id": "value"]]])
         then:
         assert errors.isEmpty()
     }
 
-    def "non-repeatable term should be invalid if declared as repeatable in context"() {
+    def "non-repeatable term should not pass validation if declared as repeatable in context"() {
         given:
         def validator = setupValidator()
         when:
-        def errors = validator.validate(["@graph": "graph2"])
+        def errors = validator.validateAll(["@graph": "graph2"])
         then:
-        assert !errors.isEmpty()
+        assert errors.any {it.type == JsonLdValidator.Error.Type.ARRAY_EXPECTED}    }
+
+    def "data with nested graph should return nested graph error"() {
+        given:
+        def validator = setupValidator()
+        when:
+        def errors = validator.validate(["@graph": [["@id": "value"], ["@graph": []]]])
+        then:
+        assert errors.any {it.type == JsonLdValidator.Error.Type.NESTED_GRAPH}
+    }
+
+    def "data without nested graph should pass validation"() {
+        given:
+        def validator = setupValidator()
+        when:
+        def errors = validator.validate(["@graph": [["@id": "value"]]])
+        then:
+        assert errors.isEmpty()
     }
 }
