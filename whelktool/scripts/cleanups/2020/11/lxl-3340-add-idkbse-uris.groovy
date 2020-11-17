@@ -17,10 +17,11 @@ String where = """
 
 selectBySqlWhere(where) { data ->
     String librisUri = data.graph[1]['@id']
-    String idkbseUri = data.graph[1].inScheme['@id'] + '/' + data.graph[1].prefLabel
+    String idkbseUri = data.graph[1].inScheme['@id'] + '/' +
+            URLEncoder.encode(data.graph[1].prefLabel, 'UTF-8').replace('+', '%20')
 
     data.graph[1]['@id'] = idkbseUri
-    data.graph[1].sameAs += ['@id':librisUri]
+    data.graph[1].sameAs += ['@id': librisUri]
     data.graph[0].mainEntity['@id'] = idkbseUri
 
     scheduledForUpdating.println("${data.doc.getURI()}")
