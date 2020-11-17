@@ -505,7 +505,16 @@ class Crud extends HttpServlet {
         newDoc.trimStrings()
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
         newDoc.setControlNumber(newDoc.getShortId())
-        validateJsonLd(newDoc, request, response)
+
+        List<JsonLdValidator.Error> errors = validator.validate(newDoc.data)
+        if (errors) {
+            String message = errors.collect { it.toStringWithPath() }.join("\n")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Invalid JsonLd, got errors: " + message)
+            return
+        }
 
         String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
         if ( !(collection in ["auth", "bib", "hold"]) ) {
@@ -550,17 +559,6 @@ class Crud extends HttpServlet {
                                savedDoc.getChecksum())
         } else {
             sendNotFound(response, request.getContextPath())
-        }
-    }
-
-    private void validateJsonLd(Document doc, HttpServletRequest request, HttpServletResponse response) {
-        List<JsonLdValidator.Error> errors = validator.validate(doc.data)
-        if (errors) {
-            def message = errors.collect { it.toStringWithPath() }
-            failedRequests.labels(request.getMethod(), request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "Invalid JsonLd. Got errors:" + message)
         }
     }
 
@@ -654,7 +652,16 @@ class Crud extends HttpServlet {
         updatedDoc.normalizeUnicode()
         updatedDoc.trimStrings()
         updatedDoc.setId(documentId)
-        validateJsonLd(updatedDoc, request, response)
+
+        List<JsonLdValidator.Error> errors = validator.validate(updatedDoc.data)
+        if (errors) {
+            String message = errors.collect { it.toStringWithPath() }.join("\n")
+            failedRequests.labels("PUT", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Invalid JsonLd, got errors: " + message)
+            return
+        }
 
         log.debug("Checking permissions for ${updatedDoc}")
         try {
