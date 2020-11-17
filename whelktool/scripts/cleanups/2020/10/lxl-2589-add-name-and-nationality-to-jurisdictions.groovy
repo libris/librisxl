@@ -58,5 +58,5 @@ void process(auth) {
 
     Script.modified.println("${auth.graph[1]["hasVariant"]}")
     Script.modified.println("${auth.graph[0][ID]}")
-    auth.scheduleSave()
+    auth.scheduleSave(loud: true)
 }
