@@ -650,7 +650,9 @@ class ESQuery {
      */
     public Set getKeywordFields(Map mappings) {
         Set keywordFields = [] as Set
-        keywordFields = getKeywordFieldsFromProperties(mappings['properties'] as Map)
+        if (mappings) {
+            keywordFields = getKeywordFieldsFromProperties(mappings['properties'] as Map)
+        }
 
         return keywordFields
     }
