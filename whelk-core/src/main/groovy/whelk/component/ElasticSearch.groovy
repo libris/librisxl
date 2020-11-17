@@ -122,7 +122,6 @@ class ElasticSearch {
         }
 
         def action = ["index" : [ "_index" : indexName,
-                                  "_type" : collection,
                                   "_id" : toElasticId(doc.getShortId()) ]]
         return mapper.writeValueAsString(action)
     }
@@ -137,11 +136,11 @@ class ElasticSearch {
         try {
             def response = client.performRequest(
                     'PUT',
-                    "/${indexName}/${collection}/${toElasticId(doc.getShortId())}?pipeline=libris",
+                    "/${indexName}/_doc/${toElasticId(doc.getShortId())}?pipeline=libris",
                     getShapeForIndex(doc, whelk, collection)
             ).second
             Map responseMap = mapper.readValue(response, Map)
-            log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${responseMap['_id']} as version ${responseMap['_version']}")
+            log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
         } catch (Exception e) {
             log.error("Failed to index ${doc.getShortId()} in elastic, placing in retry queue.", e)
             indexingRetryQueue.add({ -> index(doc, collection, whelk) })
@@ -173,7 +172,7 @@ class ElasticSearch {
         try {
             client.performRequest(
                     'POST',
-                    "/${indexName}/${collection}/${toElasticId(shortId)}/_update",
+                    "/${indexName}/${toElasticId(shortId)}/_update",
                     body)
         }
         catch (Exception e) {
@@ -222,6 +221,7 @@ class ElasticSearch {
         }
         String thingId = thingIds.get(0)
         Map framed = JsonLd.frame(thingId, copy.data)
+        framed["_es_type"] = collection
 
         // TODO: replace with elastic ICU Analysis plugin?
         // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
@@ -351,7 +351,7 @@ class ElasticSearch {
         def results = [:]
 
         results.startIndex = jsonDsl.from
-        results.totalHits = responseMap.hits.total
+        results.totalHits = responseMap.hits.total.value
         results.items = responseMap.hits.hits.collect(hitCollector)
         results.aggregations = responseMap.aggregations
 
@@ -359,12 +359,7 @@ class ElasticSearch {
     }
 
     private String getQueryUrl(String collection) {
-        String maybeCollection  = ""
-        if (collection) {
-            maybeCollection = "${collection}/"
-        }
-
-        return "/${indexName}/${maybeCollection}_search"
+        return "/${indexName}/_search"
     }
 
     static String toElasticId(String id) {
