@@ -203,6 +203,8 @@ class ESQuery {
             query['aggs'] = aggQuery
         }
 
+        query['track_total_hits'] = true
+
         return query
     }
 
@@ -560,7 +562,7 @@ class ESQuery {
         }
 
         keys.each { key ->
-            String sort = tree[key]?.sort =='key' ? '_term' : '_count'
+            String sort = tree[key]?.sort =='key' ? '_key' : '_count'
             def sortOrder = tree[key]?.sortOrder =='asc' ? 'asc' : 'desc'
             String termPath = getInferredTermPath(key)
             query[termPath] = ['terms': [
@@ -612,7 +614,7 @@ class ESQuery {
 
     Set getDateFields(Map mappings) {
         Set dateFields = [] as Set
-        DocumentUtil.findKey(mappings['_default_']['properties'], 'type') { value, path ->
+        DocumentUtil.findKey(mappings['properties'], 'type') { value, path ->
             if (value == 'date') {
                 dateFields.add(path.dropRight(1).findAll{ it != 'properties'}.join('.'))
             }
@@ -634,9 +636,8 @@ class ESQuery {
      */
     public Set getKeywordFields(Map mappings) {
         Set keywordFields = [] as Set
-        mappings.each { docType, docMappings ->
-            keywordFields += getKeywordFieldsFromProperties(docMappings['properties'] as Map)
-        }
+        keywordFields = getKeywordFieldsFromProperties(mappings['properties'] as Map)
+
         return keywordFields
     }
 
