@@ -263,7 +263,7 @@ class SearchUtils {
         }
 
         keys.each { key ->
-            String sort = tree[key]?.sort =='key' ? '_term' : '_count'
+            String sort = tree[key]?.sort =='key' ? '_key' : '_count'
             def sortOrder = tree[key]?.sortOrder =='asc' ? 'asc' : 'desc'
             query[key] = ['terms': [
                     'field': key,
