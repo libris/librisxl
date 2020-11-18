@@ -5,8 +5,7 @@
  */
 
 selectBySqlWhere("""
-    data#>>'{@graph,1}' LIKE '%"controlNumber":%'
-    OR data#>>'{@graph,2}' LIKE '%"controlNumber":%'
+    data#>>'{@graph,1,isPartOf}' LIKE '%"controlNumber":%'
     AND collection = 'bib'
 """) { data ->
     boolean changed = traverse(data.graph)
