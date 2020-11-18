@@ -116,7 +116,7 @@ class ESQuery {
         def isSimple = isSimple(q)
         String queryMode = isSimple ? 'simple_query_string' : 'query_string'
         if (!isSimple) {
-            checkNonSimpleQueryString(q)
+            q = escapeNonSimpleQueryString(q)
         }
 
         Map simpleQuery = [
@@ -492,10 +492,28 @@ class ESQuery {
         return !containsLeadingWildcard
     }
 
-    private static void checkNonSimpleQueryString(String queryString) {
+    static String escapeNonSimpleQueryString(String queryString) {
         if (queryString.findAll('\\"').size() % 2 != 0) {
             throw new whelk.exception.InvalidQueryException("Unbalanced quotation marks")
         }
+
+        // The following chars are reserved in ES and need to be escaped to be used as literals: \+-=|&><!(){}[]^"~*?:/
+        // Escape the ones that are not part of our query language.
+        for (char c : '=&!{}[]^:/'.chars) {
+            queryString = queryString.replace(''+c, '\\'+c)
+        }
+
+        // Inside words, treat '-' as regular hyphen instead of "NOT" and escape it
+        queryString = queryString.replaceAll(/(^|\s+)-(\S+)/, '$1#ACTUAL_NOT#$2')
+        queryString = queryString.replace('-', '\\-')
+        queryString = queryString.replace('#ACTUAL_NOT#', '-')
+
+        // Strip un-escapable characters
+        for (char c : '<>'.chars) {
+            queryString = queryString.replace('' + c, '')
+        }
+
+        return queryString
     }
 
     /**
@@ -511,12 +529,8 @@ class ESQuery {
         fieldsAndVals.each {field, vals ->
             for (val in vals) {
                 boolean isSimple = isSimple(val)
-                if(!isSimple){
-                    checkNonSimpleQueryString(val)
-                }
-
                 clauses.add([(isSimple ? 'simple_query_string' : 'query_string'): [
-                        'query': val,
+                        'query': isSimple ? val : escapeNonSimpleQueryString(val),
                         'fields': [field],
                         'default_operator': 'AND'
                 ]])
