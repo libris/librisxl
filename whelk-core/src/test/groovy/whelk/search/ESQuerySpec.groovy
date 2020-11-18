@@ -253,4 +253,14 @@ class ESQuerySpec extends Specification {
         "foo* bar"  | true
         "foo* *bar" | false
     }
+
+    def "should escape queries as needed"() {
+        expect:
+        ESQuery.escapeNonSimpleQueryString(query) == result
+
+        where:
+        query                         | result
+        "([foo] | {bar}) | foo & bar" | "(\\[foo\\] | \\{bar\\}) | foo \\& bar"
+        "-not-this -foo--bar--baz-"   | "-not\\-this -foo\\-\\-bar\\-\\-baz\\-"
+    }
 }
