@@ -217,7 +217,7 @@
                 "type": "keyword",
                 "copy_to": "_all"
             },
-            "_es_type": {
+            "_collection": {
                 "type": "keyword",
                 "copy_to": "_all"
             },
