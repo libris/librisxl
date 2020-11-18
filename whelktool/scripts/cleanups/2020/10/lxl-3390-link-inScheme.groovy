@@ -1,8 +1,6 @@
 /**
  Link blank nodes in 'inScheme'
 
- TODO: more mappings
-
  See LXL-3390
  */
 
@@ -98,6 +96,7 @@ def substitutions() {
             '2 barn'      : 'barn',
             '2 sao'       : 'sao',
             '2 sfit'      : 'sfit',
+            '23 sao'      : 'sao',
             '2agrovoc'    : 'agrovoc',
             '2albt'       : 'albt',
             '2barn'       : 'barn',
@@ -173,6 +172,7 @@ def substitutions() {
             'arovoc'      : 'agrovoc',
             'asao'        : 'sao',
             'asc'         : 'msc',
+            'aso'         : 'sao',
             'baarn'       : 'barn',
             'baen'        : 'barn',
             'ban'         : 'barn',
@@ -312,21 +312,25 @@ def substitutions() {
             'sao )'       : 'sao',
             'sao 0'       : 'sao',
             'sao o'       : 'sao',
+            'sao sao'     : 'sao',
             'sao)'        : 'sao',
             'sao//eng'    : 'kao//eng',
             'sao/7'       : 'sao',
             'sao/s'       : 'sao',
             'sao0'        : 'sao',
+            'sao2 sao'    : 'sao',
             'sao2'        : 'sao',
             'sao3'        : 'sao',
             'sao4'        : 'sao',
             'sao5'        : 'sao',
             'sao6'        : 'sao',
             'sao65'       : 'sao',
+            'sao650'      : 'sao',
             'sao7'        : 'sao',
             'sao77'       : 'sao',
             'sao9'        : 'sao',
             'saoa'        : 'sao',
+            'saoao'       : 'sao',
             'saob'        : 'sao',
             'saoc'        : 'sao',
             'saod'        : 'sao',
@@ -341,6 +345,7 @@ def substitutions() {
             'saoo'        : 'sao',
             'saop'        : 'sao',
             'saos'        : 'sao',
+            'saosao'      : 'sao',
             'saot'        : 'sao',
             'saov'        : 'sao',
             'saoy'        : 'sao',
