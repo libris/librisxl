@@ -68,7 +68,7 @@ class JsonLdValidator {
 
     private passedPreValidation(String key, value, path, validation) {
         return  !skipTermIsInPath(path) &&
-                keyInMap(key, value) &&          // Continue if traverse is at a list element (key == 0, 1...)
+                !key.isNumber() &&          // Continue if traverse is at a list element (key == 0, 1...)
                 !(isUnexpected(key, value, validation) || keyIsInvalid(key, validation) || isEmptyValueList(value))
     }
 
@@ -194,10 +194,6 @@ class JsonLdValidator {
 
     private boolean skipTermIsInPath(path) {
         path.any { skipTerms.contains(it) }
-    }
-
-    private boolean keyInMap(key, value) {
-        !(key.isNumber() && value instanceof Map)
     }
 
     class Error {
