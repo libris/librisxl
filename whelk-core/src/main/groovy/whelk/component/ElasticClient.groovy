@@ -26,6 +26,7 @@ import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import org.apache.http.util.EntityUtils
 import whelk.exception.ElasticIOException
+import whelk.exception.ElasticStatusException
 
 import java.time.Duration
 import java.util.function.Function
@@ -107,7 +108,7 @@ class ElasticClient {
         log.info "ElasticSearch component initialized with ${elasticHosts.size()} nodes."
     }
 
-    Tuple2<Integer, String> performRequest(String method, String path, String body, String contentType0 = null) {
+    String performRequest(String method, String path, String body, String contentType0 = null) {
         try {
             def nodes = cycleNodes()
             if (useCircuitBreaker) {
@@ -116,6 +117,9 @@ class ElasticClient {
             else {
                 nodes.next().performRequest(method, path, body, contentType0)
             }
+        }
+        catch (ElasticStatusException e) {
+            throw e
         }
         catch (Exception e) {
             log.warn("Request to ElasticSearch failed: ${e}", e)
@@ -150,8 +154,14 @@ class ElasticClient {
             }
         }
 
-        Tuple2<Integer, String> performRequest(String method, String path, String body, String contentType0 = null) {
-            return send.apply(buildRequest(method, path, body, contentType0))
+        String performRequest(String method, String path, String body, String contentType0 = null) {
+            def (int statusCode, String resultBody) = send.apply(buildRequest(method, path, body, contentType0))
+            if (statusCode >= 200 && statusCode < 300) {
+                return resultBody
+            }
+            else {
+                throw new ElasticStatusException(resultBody, statusCode)
+            }
         }
 
         private Tuple2<Integer, String> sendRequest(HttpRequestBase request) {
@@ -182,8 +192,6 @@ class ElasticClient {
                             log.debug("Elastic response: $r")
                         }
                     }
-
-
                     return result
                 } else {
                     if (backOffSeconds > MAX_BACKOFF_S) {
