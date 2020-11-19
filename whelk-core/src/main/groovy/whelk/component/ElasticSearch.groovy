@@ -79,8 +79,8 @@ class ElasticSearch {
         Map response
         try {
             response = mapper.readValue(client.performRequest('GET', "/${indexName}/_mappings", ''), Map)
-        } catch (Exception e) {
-            log.warn("Failed to get ES mappings: $e", e)
+        } catch (ElasticStatusException e) {
+            log.warn("Got unexpected status code ${e.statusCode} when getting ES mappings", e)
             return null
         }
 
