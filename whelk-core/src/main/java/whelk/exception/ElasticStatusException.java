@@ -11,4 +11,9 @@ public class ElasticStatusException extends WhelkRuntimeException {
     public int getStatusCode() {
         return statusCode;
     }
+
+    @Override
+    public String getMessage() {
+        return statusCode + ": " + super.getMessage();
+    }
 }
