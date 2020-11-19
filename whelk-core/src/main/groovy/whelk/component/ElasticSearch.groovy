@@ -192,7 +192,7 @@ class ElasticSearch {
         }
     }
 
-    boolean isBadRequest(Exception e) {
+    static boolean isBadRequest(Exception e) {
         e instanceof ElasticStatusException && e.getStatusCode() == 400
     }
 
