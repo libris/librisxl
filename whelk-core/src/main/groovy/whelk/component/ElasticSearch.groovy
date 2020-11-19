@@ -11,6 +11,7 @@ import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.exception.ElasticStatusException
 import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
@@ -75,14 +76,13 @@ class ElasticSearch {
 	 *
 	 */
 	Map getMappings() {
-		Tuple2<Integer, String> res = client.performRequest('GET', "/${indexName}/_mappings", '')
-		int statusCode = res.first
-		if (statusCode != 200) {
-			log.warn("Got unexpected status code ${statusCode} when getting ES mappings.")
-			return null
-		}
-		String responseBody = res.second
-		Map response =  mapper.readValue(responseBody, Map)
+        Map response
+        try {
+            response = mapper.readValue(client.performRequest('GET', "/${indexName}/_mappings", ''), Map)
+        } catch (ElasticStatusException e) {
+            log.warn("Got unexpected status code ${e.statusCode} when getting ES mappings: ${e.message}", e)
+            return [:]
+        }
 
         // Since ES aliases return the name of the index rather than the alias,
         // we don't rely on names here.
@@ -110,7 +110,7 @@ class ElasticSearch {
                 }
             }.join('')
 
-            String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE).second
+            String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
             Map responseMap = mapper.readValue(response, Map)
             log.info("Bulk indexed ${docs.count{it}} docs in ${responseMap.took} ms")
         }
@@ -134,16 +134,22 @@ class ElasticSearch {
         // The justification for this uncomfortable catch-all, is that an index-failure must raise an alert (log entry)
         // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
         try {
-            def response = client.performRequest(
+            String response = client.performRequest(
                     'PUT',
                     "/${indexName}/_doc/${toElasticId(doc.getShortId())}",
-                    getShapeForIndex(doc, whelk, collection)
-            ).second
-            Map responseMap = mapper.readValue(response, Map)
-            log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
+                    getShapeForIndex(doc, whelk, collection))
+            if (log.isDebugEnabled()) {
+                Map responseMap = mapper.readValue(response, Map)
+                log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
+            }
         } catch (Exception e) {
-            log.error("Failed to index ${doc.getShortId()} in elastic, placing in retry queue.", e)
-            indexingRetryQueue.add({ -> index(doc, collection, whelk) })
+            if (!isBadRequest(e)) {
+                log.error("Failed to index ${doc.getShortId()} in elastic, placing in retry queue: $e", e)
+                indexingRetryQueue.add({ -> index(doc, collection, whelk) })
+            }
+            else {
+                log.error("Failed to index ${doc.getShortId()} in elastic: $e", e)
+            }
         }
     }
 
@@ -176,22 +182,38 @@ class ElasticSearch {
                     body)
         }
         catch (Exception e) {
-            log.warn("Failed to update reverse link counter for $shortId: $e, placing in retry queue.", e)
-            indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, collection, deltaCount) })
+            if (!isBadRequest(e)) {
+                log.warn("Failed to update reverse link counter for $shortId: $e, placing in retry queue.", e)
+                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, collection, deltaCount) })
+            }
+            else {
+                log.warn("Failed to update reverse link counter for $shortId: $e", e)
+            }
         }
+    }
+
+    static boolean isBadRequest(Exception e) {
+        e instanceof ElasticStatusException && e.getStatusCode() == 400
     }
 
     void remove(String identifier) {
         log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
-        def response = client.performRequest('POST',
-                "/${indexName}/_delete_by_query",
-                JsonOutput.toJson(dsl)).second
-        Map responseMap = mapper.readValue(response, Map)
-        log.debug("Response: ${responseMap.deleted} of ${responseMap.total} " +
-                  "objects deleted")
-        if (responseMap.deleted == 0) {
-            log.warn("Record with id $identifier was not deleted from the Elasticsearch index.")
+        try {
+            def response = client.performRequest('POST',
+                    "/${indexName}/_delete_by_query",
+                    JsonOutput.toJson(dsl))
+
+            Map responseMap = mapper.readValue(response, Map)
+            if (log.isDebugEnabled()) {
+                log.debug("Response: ${responseMap.deleted} of ${responseMap.total} objects deleted")
+            }
+            if (responseMap.deleted == 0) {
+                log.warn("Record with id $identifier was not deleted from the Elasticsearch index.")
+            }
+        }
+        catch(Exception e) {
+            log.warn("Record with id $identifier was not deleted from the Elasticsearch index: $e")
         }
     }
 
@@ -330,32 +352,35 @@ class ElasticSearch {
     }
 
     private Map performQuery(Map jsonDsl, String queryUrl, Closure<Map> hitCollector) {
-        def start = System.currentTimeMillis()
-        Tuple2<Integer, String> response = client.performRequest('POST',
-                queryUrl,
-                JsonOutput.toJson(jsonDsl))
+        try {
+            def start = System.currentTimeMillis()
+            String responseBody = client.performRequest('POST',
+                    queryUrl,
+                    JsonOutput.toJson(jsonDsl))
 
-        int statusCode = response.first
-        String responseBody = response.second
-        if (statusCode == 400) {
-            throw new InvalidQueryException("")
-        } else if (statusCode != 200) {
-            log.warn("Unexpected response from ES: ${statusCode} ${responseBody}")
-            return [:]
+            def duration = System.currentTimeMillis() - start
+            Map responseMap = mapper.readValue(responseBody, Map)
+
+            log.info("ES query took ${duration} (${responseMap.took} server-side)")
+
+            def results = [:]
+
+            results.startIndex = jsonDsl.from
+            results.totalHits = responseMap.hits.total.value
+            results.items = responseMap.hits.hits.collect(hitCollector)
+            results.aggregations = responseMap.aggregations
+            return results
         }
-        def duration = System.currentTimeMillis() - start
-        Map responseMap = mapper.readValue(responseBody, Map)
-
-        log.info("ES query took ${duration} (${responseMap.took} server-side)")
-
-        def results = [:]
-
-        results.startIndex = jsonDsl.from
-        results.totalHits = responseMap.hits.total.value
-        results.items = responseMap.hits.hits.collect(hitCollector)
-        results.aggregations = responseMap.aggregations
-
-        return results
+        catch (Exception e) {
+            if (isBadRequest(e)) {
+                log.debug("Invalid query: $e")
+                throw new InvalidQueryException("")
+            }
+            else {
+                log.warn("Failed to query ES: $e")
+                throw e
+            }
+        }
     }
 
     private String getQueryUrl(String collection) {
