@@ -102,7 +102,7 @@ class ElasticSearch {
             String bulkString = docs.findResults{ doc ->
                 try {
                     String shapedData = getShapeForIndex(doc, whelk, collection)
-                    String action = createActionRow(doc, collection)
+                    String action = createActionRow(doc)
                     return "${action}\n${shapedData}\n"
                 } catch (Exception e) {
                     log.error("Failed to index ${doc.getShortId()} in elastic: $e", e)
@@ -116,11 +116,7 @@ class ElasticSearch {
         }
     }
 
-    String createActionRow(Document doc, String collection) {
-        if (!collection) {
-            return
-        }
-
+    String createActionRow(Document doc) {
         def action = ["index" : [ "_index" : indexName,
                                   "_id" : toElasticId(doc.getShortId()) ]]
         return mapper.writeValueAsString(action)
@@ -153,19 +149,15 @@ class ElasticSearch {
         }
     }
 
-    void incrementReverseLinks(String shortId, String collection) {
-        updateReverseLinkCounter(shortId, collection, 1)
+    void incrementReverseLinks(String shortId) {
+        updateReverseLinkCounter(shortId, 1)
     }
 
-    void decrementReverseLinks(String shortId, String collection) {
-        updateReverseLinkCounter(shortId, collection, -1)
+    void decrementReverseLinks(String shortId) {
+        updateReverseLinkCounter(shortId, -1)
     }
 
-    private void updateReverseLinkCounter(String shortId, String collection, int deltaCount) {
-        if (!collection) {
-            return
-        }
-
+    private void updateReverseLinkCounter(String shortId, int deltaCount) {
         String body = """
         {
             "script" : {
@@ -184,7 +176,7 @@ class ElasticSearch {
         catch (Exception e) {
             if (!isBadRequest(e)) {
                 log.warn("Failed to update reverse link counter for $shortId: $e, placing in retry queue.", e)
-                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, collection, deltaCount) })
+                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, deltaCount) })
             }
             else {
                 log.warn("Failed to update reverse link counter for $shortId: $e", e)
@@ -330,18 +322,18 @@ class ElasticSearch {
         }
     }
 
-    Map query(Map jsonDsl, String collection) {
+    Map query(Map jsonDsl) {
         return performQuery(
                 jsonDsl,
-                getQueryUrl(collection),
+                getQueryUrl(),
                 { def d = it."_source"; d."_id" = it."_id"; return d }
         )
     }
 
-    Map queryIds(Map jsonDsl, String collection) {
+    Map queryIds(Map jsonDsl) {
         return performQuery(
                 jsonDsl,
-                getQueryUrl(collection) + '?filter_path=took,hits.total,hits.hits._id',
+                getQueryUrl() + '?filter_path=took,hits.total,hits.hits._id',
                 { it."_id" }
         )
     }
@@ -383,7 +375,7 @@ class ElasticSearch {
         }
     }
 
-    private String getQueryUrl(String collection) {
+    private String getQueryUrl() {
         return "/${indexName}/_search"
     }
 

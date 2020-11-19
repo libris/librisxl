@@ -13,12 +13,12 @@ class ElasticFind {
     }
 
     Iterable<String> findIds(Map<String, List<String>> parameters) {
-        def q = { int offset -> esQuery.doQueryIds(makeParams(parameters, offset), null) }
+        def q = { int offset -> esQuery.doQueryIds(makeParams(parameters, offset)) }
         return query(q)
     }
 
     Iterable<Map> find(Map<String, List<String>> parameters) {
-        def q = { int offset -> esQuery.doQuery(makeParams(parameters, offset), null) }
+        def q = { int offset -> esQuery.doQuery(makeParams(parameters, offset)) }
         return query(q)
     }
 

@@ -56,9 +56,9 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map doQuery(Map<String, String[]> queryParameters, String dataset) {
+    Map doQuery(Map<String, String[]> queryParameters) {
         Map esQuery = getESQuery(queryParameters)
-        Map esResponse = hideKeywordFields(whelk.elastic.query(esQuery, dataset))
+        Map esResponse = hideKeywordFields(whelk.elastic.query(esQuery))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
         }
@@ -66,9 +66,9 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map doQueryIds(Map<String, String[]> queryParameters, String dataset) {
+    Map doQueryIds(Map<String, String[]> queryParameters) {
         Map esQuery = getESQuery(queryParameters)
-        Map esResponse = hideKeywordFields(whelk.elastic.queryIds(esQuery, dataset))
+        Map esResponse = hideKeywordFields(whelk.elastic.queryIds(esQuery))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
         }

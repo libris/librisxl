@@ -100,12 +100,11 @@ class Crud extends HttpServlet {
         validator = JsonLdValidator.from(jsonld)
     }
 
-    void handleQuery(HttpServletRequest request, HttpServletResponse response,
-                     String dataset) {
+    void handleQuery(HttpServletRequest request, HttpServletResponse response) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
 
         try {
-            Map results = search.doSearch(queryParameters, dataset)
+            Map results = search.doSearch(queryParameters)
             def jsonResult = mapper.writeValueAsString(results)
             sendResponse(response, jsonResult, "application/json")
         } catch (ElasticIOException | ElasticStatusException e) {
@@ -165,8 +164,7 @@ class Crud extends HttpServlet {
         }
 
         if (request.pathInfo == "/find" || request.pathInfo == "/find.json") {
-            String collection = request.getParameter("collection")
-            handleQuery(request, response, collection)
+            handleQuery(request, response)
             return
         }
 
