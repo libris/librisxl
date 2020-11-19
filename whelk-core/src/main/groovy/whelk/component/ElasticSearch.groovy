@@ -136,7 +136,7 @@ class ElasticSearch {
         try {
             def response = client.performRequest(
                     'PUT',
-                    "/${indexName}/_doc/${toElasticId(doc.getShortId())}?pipeline=libris",
+                    "/${indexName}/_doc/${toElasticId(doc.getShortId())}",
                     getShapeForIndex(doc, whelk, collection)
             ).second
             Map responseMap = mapper.readValue(response, Map)
