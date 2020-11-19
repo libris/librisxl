@@ -373,6 +373,7 @@ class ElasticSearch {
         }
         catch (Exception e) {
             if (isBadRequest(e)) {
+                log.debug("Invalid query: $e")
                 throw new InvalidQueryException("")
             }
             else {
