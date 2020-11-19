@@ -81,7 +81,7 @@ class ElasticSearch {
             response = mapper.readValue(client.performRequest('GET', "/${indexName}/_mappings", ''), Map)
         } catch (ElasticStatusException e) {
             log.warn("Got unexpected status code ${e.statusCode} when getting ES mappings", e)
-            return null
+            return [:]
         }
 
         // Since ES aliases return the name of the index rather than the alias,
