@@ -172,7 +172,7 @@ class ElasticSearch {
         try {
             client.performRequest(
                     'POST',
-                    "/${indexName}/${toElasticId(shortId)}/_update",
+                    "/${indexName}/_update/${toElasticId(shortId)}",
                     body)
         }
         catch (Exception e) {
