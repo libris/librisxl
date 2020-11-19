@@ -4,7 +4,7 @@ import whelk.util.Statistics
 
 class Script {
     static PrintWriter report
-    static Statistics s = new Statistics(3).printOnShutdown()
+    static Statistics s = new Statistics(6).printOnShutdown()
     static JsonLdValidator v
     static boolean isInitialized = false
 }
@@ -15,6 +15,7 @@ selectByCollection('bib') { bib ->
     synchronized (this) {
         if (!Script.isInitialized) {
             Script.v = JsonLdValidator.from(bib.whelk.jsonld)
+            Script.v.skipUndefined()
             Script.isInitialized = true
         }
     }
@@ -30,6 +31,7 @@ selectByCollection('bib') { bib ->
 
 void process(bib) {
     List<JsonError> errors = Script.v.validateAll(bib.doc.data)
+
     errors.each {
         def message = "key: " + it.key
         if (it.type == JsonError.Type.UNKNOWN_VOCAB_VALUE ||

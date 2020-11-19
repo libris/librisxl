@@ -5,6 +5,7 @@ import whelk.util.DocumentUtil
 
 class JsonLdValidator {
     private static JsonLd jsonLd
+    private Collection skipTerms = []
 
     private JsonLdValidator(JsonLd jsonLd) {
         this.jsonLd = jsonLd
@@ -52,7 +53,7 @@ class JsonLdValidator {
             }
             def key = path.last() as String
 
-            if (!passedPreValidation(key, value, validation)) {
+            if (!passedPreValidation(key, value, path, validation)) {
                 return
             }
             validation.at = path
@@ -65,9 +66,10 @@ class JsonLdValidator {
         })
     }
 
-    private passedPreValidation(String key, value, validation) {
-        boolean keyInMap = !(key.isNumber() && value instanceof Map)
-        return keyInMap && !(isUnexpected(key, value, validation) || keyIsInvalid(key, validation) || isEmptyValueList(value))
+    private passedPreValidation(String key, value, path, validation) {
+        return  !skipTermIsInPath(path) &&
+                keyInMap(key, value) &&          // Continue if traverse is at a list element (key == 0, 1...)
+                !(isUnexpected(key, value, validation) || keyIsInvalid(key, validation) || isEmptyValueList(value))
     }
 
     private void verifyAll(String key, value, Validation validation) {
@@ -176,6 +178,26 @@ class JsonLdValidator {
     private void handleError(Error error, Validation validation) {
         error.path = validation.at
         validation.errors << error
+    }
+
+    private Collection getUndefinedContextTerms() {
+        return jsonLd.context.findAll {k, v -> v == null}.keySet()
+    }
+
+    public void setSkipTerms(Collection terms) {
+        this.skipTerms = terms
+    }
+
+    public void skipUndefined() {
+        setSkipTerms(getUndefinedContextTerms())
+    }
+
+    private boolean skipTermIsInPath(path) {
+        path.any { skipTerms.contains(it) }
+    }
+
+    private boolean keyInMap(key, value) {
+        !(key.isNumber() && value instanceof Map)
     }
 
     class Error {
