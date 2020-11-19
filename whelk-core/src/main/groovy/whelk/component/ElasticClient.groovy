@@ -108,11 +108,12 @@ class ElasticClient {
         log.info "ElasticSearch component initialized with ${elasticHosts.size()} nodes."
     }
 
-    String performRequest(String method, String path, String body, String contentType0 = null) {
+    String performRequest(String method, String path, String body, String contentType0 = null)
+        throws ElasticIOException, ElasticStatusException {
         try {
             def nodes = cycleNodes()
             if (useCircuitBreaker) {
-                return globalRetry.executeSupplier({ -> nodes.next().performRequest(method, path, body, contentType0) })
+                globalRetry.executeSupplier({ -> nodes.next().performRequest(method, path, body, contentType0) })
             }
             else {
                 nodes.next().performRequest(method, path, body, contentType0)

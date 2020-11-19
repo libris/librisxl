@@ -376,7 +376,7 @@ class ElasticSearch {
                 throw new InvalidQueryException("")
             }
             else {
-                log.warn("Failed to quuery ES: $e")
+                log.warn("Failed to query ES: $e")
                 throw e
             }
         }
