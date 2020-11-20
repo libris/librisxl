@@ -109,7 +109,7 @@ class JsonLdValidator {
 
     private boolean isUnexpected(String key, value, validation) { //Rename me
         if ((key == jsonLd.ID_KEY || key == jsonLd.TYPE_KEY) && !(value instanceof String)) {
-            handleError(new Error(Error.Type.UNEXPECTED, key), validation)
+            handleError(new Error(Error.Type.UNEXPECTED, key, value?.toString()), validation)
             return true
         } else {
             return false
