@@ -1,6 +1,6 @@
 package whelk
 
-import org.junit.Ignore
+import spock.lang.Ignore
 import spock.lang.Specification
 import static whelk.JsonLdValidator.*
 
