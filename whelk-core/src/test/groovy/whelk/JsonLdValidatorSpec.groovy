@@ -1,5 +1,6 @@
 package whelk
 
+import org.junit.Ignore
 import spock.lang.Specification
 import static whelk.JsonLdValidator.*
 
@@ -79,5 +80,24 @@ class JsonLdValidatorSpec extends Specification {
         def errors = validator.validate(["@graph": [["@id": "value"]]])
         then:
         assert errors.isEmpty()
+    }
+
+    def "should not validate list elements"() {
+        given:
+        def validator = setupValidator()
+        when:
+        def errors = validator.validateAll(["@graph": ["a"]])
+        then:
+        assert errors.isEmpty()
+    }
+
+    @Ignore // Currently can't handle this case
+    def "should validate numeric keys"() {
+        given:
+        def validator = setupValidator()
+        when:
+        def errors = validator.validateAll(["@graph": [["0" : "a"]]])
+        then:
+        assert errors.any {it.type == JsonLdValidator.Error.Type.MISSING_DEFINITION}
     }
 }
