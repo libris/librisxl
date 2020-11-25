@@ -225,16 +225,6 @@ class Whelk {
         removedLinks.findResults { storage.getSystemIdByIri(it.iri) }
                 .each{id -> elastic.decrementReverseLinks(id, storage.getCollectionBySystemID(id))}
 
-        if (storage.isCardChanged(document.getShortId())) {
-            // TODO: when types (auth, bib...) have been removed from elastic, do bulk index in chunks of size N here
-            getAffectedIds(document).each { id ->
-                Document doc = storage.load(id)
-                if (doc) { // might not exist because of batch jobs without indexing
-                    elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
-                }
-            }
-        }
-
         addedLinks.each { link ->
             String id = storage.getSystemIdByIri(link.iri)
             if (id) {
@@ -248,6 +238,16 @@ class Whelk {
                 else {
                     // just update link counter
                     elastic.incrementReverseLinks(id, storage.getCollectionBySystemID(id))
+                }
+            }
+        }
+
+        if (storage.isCardChanged(document.getShortId())) {
+            // TODO: when types (auth, bib...) have been removed from elastic, do bulk index in chunks of size N here
+            getAffectedIds(document).each { id ->
+                Document doc = storage.load(id)
+                if (doc) { // might not exist because of batch jobs without indexing
+                    elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
                 }
             }
         }
