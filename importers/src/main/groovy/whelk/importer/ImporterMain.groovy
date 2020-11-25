@@ -50,6 +50,13 @@ class ImporterMain {
         reindex.reindex(collection)
     }
 
+    @Command()
+    void loadSparql() {
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
+        SparqlLoader loader = new SparqlLoader(whelk)
+        loader.load()
+    }
+
     @Command(args='[COLLECTION]')
     void refreshCards(String collection=null) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
