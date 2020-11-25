@@ -287,6 +287,14 @@
                     "match": "_str",
                     "match_mapping_type": "string"
                 }
+            },
+            {
+                "catchall_template": {
+                    "match_mapping_type": "string",
+                    "mapping": {
+                        "copy_to": "_all"
+                    }
+                }
             }
         ]
     }
