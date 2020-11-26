@@ -82,7 +82,7 @@ class SparqlLoader {
             for (Document doc : documents) {
                 String converted = converter.convert(doc.data, doc.getShortId())[JsonLd.NON_JSON_CONTENT_KEY]
                 byte[] bytes = converted.getBytes("UTF-8")
-                TarEntry entry = new TarEntry(doc.getShortId())
+                TarEntry entry = new TarEntry(doc.getShortId()+".ttl")
                 entry.setSize(bytes.length)
                 synchronized (tarOut) {
                     tarOut.putNextEntry(entry)
