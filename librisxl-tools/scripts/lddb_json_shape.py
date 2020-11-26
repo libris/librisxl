@@ -4,26 +4,9 @@ import json
 MAX_STATS = 512
 HARD_MAX_STATS = 8192
 STATS_FOR_ALL = {
-        # from auth 008
-        "marc:subdivision",
-        "marc:romanization",
-        "marc:languageOfCatalog",
-        "marc:kindOfRecord",
-        "descriptionConventions",
-        "marc:subjectHeading",
-        "marc:typeOfSeries",
-        "marc:numberedSeries",
-        "marc:headingSeries",
-        "marc:subjectSubdivision",
-        "marc:govtAgency",
-        "marc:reference",
-        "marc:recordUpdate",
-        "marc:personalName",
-        "marc:level",
-        "marc:modifiedRecord",
-        "marc:catalogingSource",
-        "marc:headingMain",
-        "marc:headingSubject",
+        # auth
+        "hasBiographicalInformation",
+        "marc:hasBiographicalOrHistoricalData",
         # "shouldn't" be too many...
         "marc:displayText",
         "part",
@@ -32,16 +15,16 @@ STATS_FOR_ALL = {
 
 def reshape(data):
     if '@graph' in data:
-        graph =  data['@graph']
-        thing =graph[1]
+        graph = data['@graph']
+        thing = graph[1]
         thing['meta'] = graph[0]
 
-        if len(graph) > 2 and 'instanceOf' in thing:
-            work = graph[2]
-            assert thing['instanceOf']['@id'] == work['@id']
-            thing['instanceOf'] = work
-        else:
-            work = None
+        work = thing.get('instanceOf')
+        if work and len(work) == 1 and '@id' in work:
+            for item in graph[2:]:
+                if item.get('@id') == work['@id']:
+                    work = thing['instanceOf'] = item
+                    break
 
         return thing, work
 

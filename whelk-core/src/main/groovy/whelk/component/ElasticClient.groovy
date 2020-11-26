@@ -26,6 +26,7 @@ import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import org.apache.http.util.EntityUtils
 import whelk.exception.ElasticIOException
+import whelk.exception.ElasticStatusException
 
 import java.time.Duration
 import java.util.function.Function
@@ -107,15 +108,19 @@ class ElasticClient {
         log.info "ElasticSearch component initialized with ${elasticHosts.size()} nodes."
     }
 
-    Tuple2<Integer, String> performRequest(String method, String path, String body, String contentType0 = null) {
+    String performRequest(String method, String path, String body, String contentType0 = null)
+        throws ElasticIOException, ElasticStatusException {
         try {
             def nodes = cycleNodes()
             if (useCircuitBreaker) {
-                return globalRetry.executeSupplier({ -> nodes.next().performRequest(method, path, body, contentType0) })
+                globalRetry.executeSupplier({ -> nodes.next().performRequest(method, path, body, contentType0) })
             }
             else {
                 nodes.next().performRequest(method, path, body, contentType0)
             }
+        }
+        catch (ElasticStatusException e) {
+            throw e
         }
         catch (Exception e) {
             log.warn("Request to ElasticSearch failed: ${e}", e)
@@ -150,13 +155,19 @@ class ElasticClient {
             }
         }
 
-        Tuple2<Integer, String> performRequest(String method, String path, String body, String contentType0 = null) {
-            return send.apply(buildRequest(method, path, body, contentType0))
+        String performRequest(String method, String path, String body, String contentType0 = null) {
+            def (int statusCode, String resultBody) = send.apply(buildRequest(method, path, body, contentType0))
+            if (statusCode >= 200 && statusCode < 300) {
+                return resultBody
+            }
+            else {
+                throw new ElasticStatusException(resultBody, statusCode)
+            }
         }
 
         private Tuple2<Integer, String> sendRequest(HttpRequestBase request) {
             try {
-                return sendRequestRetry429(request)
+                return sendRequestRetry4XX(request)
             }
             catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e)
@@ -167,13 +178,13 @@ class ElasticClient {
             }
         }
 
-        private Tuple2<Integer, String> sendRequestRetry429(HttpRequestBase request) {
+        private Tuple2<Integer, String> sendRequestRetry4XX(HttpRequestBase request) {
             int backOffSeconds = 1
             while (true) {
                 HttpResponse response = httpClient.execute(request)
                 int statusCode = response.getStatusLine().getStatusCode()
 
-                if (statusCode != 429) {
+                if (statusCode != 429 && statusCode != 409) {
                     def result = new Tuple2(statusCode, EntityUtils.toString(response.getEntity()))
 
                     if (log.isDebugEnabled()) {
@@ -182,12 +193,10 @@ class ElasticClient {
                             log.debug("Elastic response: $r")
                         }
                     }
-
-
                     return result
                 } else {
                     if (backOffSeconds > MAX_BACKOFF_S) {
-                        throw new RetriesExceededException("Max retries exceeded: HTTP 429 from ElasticSearch")
+                        throw new RetriesExceededException("Max retries exceeded: HTTP 4XX from ElasticSearch")
                     }
 
                     request.reset()

@@ -43,7 +43,7 @@ class SearchUtils {
         }
     }
 
-    Map doSearch(Map queryParameters, String dataset) {
+    Map doSearch(Map queryParameters) {
         if (!whelk.elastic) {
             throw new WhelkRuntimeException("ElasticSearch not configured.")
         }
@@ -71,7 +71,6 @@ class SearchUtils {
         Map results = queryElasticSearch(
                 queryParameters,
                 pageParams,
-                dataset,
                 limit,
                 offset,
                 lens)
@@ -94,7 +93,6 @@ class SearchUtils {
 
     private Map queryElasticSearch(Map queryParameters,
                                    Map pageParams,
-                                   String dataset,
                                    int limit,
                                    int offset,
                                    String lens) {
@@ -110,7 +108,7 @@ class SearchUtils {
         // TODO Only manipulate `_limit` in one place
         queryParameters['_limit'] = [limit.toString()]
 
-        Map esResult = esQuery.doQuery(queryParameters, dataset)
+        Map esResult = esQuery.doQuery(queryParameters)
 
         List<Map> mappings = []
         if (query) {
@@ -263,7 +261,7 @@ class SearchUtils {
         }
 
         keys.each { key ->
-            String sort = tree[key]?.sort =='key' ? '_term' : '_count'
+            String sort = tree[key]?.sort =='key' ? '_key' : '_count'
             def sortOrder = tree[key]?.sortOrder =='asc' ? 'asc' : 'desc'
             query[key] = ['terms': [
                     'field': key,

@@ -1,5 +1,6 @@
 package whelk.rest.api
 
+
 import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
 import io.prometheus.client.Counter
@@ -11,9 +12,11 @@ import whelk.Document
 import whelk.IdGenerator
 import whelk.IdType
 import whelk.JsonLd
+import whelk.JsonLdValidator
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ElasticIOException
+import whelk.exception.ElasticStatusException
 import whelk.exception.InvalidQueryException
 import whelk.exception.ModelValidationException
 import whelk.exception.StaleUpdateException
@@ -31,6 +34,7 @@ import javax.servlet.http.HttpServletResponse
 import java.lang.management.ManagementFactory
 
 import whelk.rest.api.CrudGetRequest.Lens
+
 import static whelk.rest.api.HttpTools.sendResponse
 
 /**
@@ -70,6 +74,7 @@ class Crud extends HttpServlet {
     Map vocabData
     Map displayData
     JsonLd jsonld
+    JsonLdValidator validator
 
     SearchUtils search
     static final ObjectMapper mapper = new ObjectMapper()
@@ -92,18 +97,18 @@ class Crud extends HttpServlet {
         vocabData = whelk.vocabData
         jsonld = whelk.jsonld
         search = new SearchUtils(whelk)
+        validator = JsonLdValidator.from(jsonld)
     }
 
-    void handleQuery(HttpServletRequest request, HttpServletResponse response,
-                     String dataset) {
+    void handleQuery(HttpServletRequest request, HttpServletResponse response) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
 
         try {
-            Map results = search.doSearch(queryParameters, dataset)
+            Map results = search.doSearch(queryParameters)
             def jsonResult = mapper.writeValueAsString(results)
             sendResponse(response, jsonResult, "application/json")
-        } catch (ElasticIOException e) {
-            log.error("Attempted elastic query, but failed.", e)
+        } catch (ElasticIOException | ElasticStatusException e) {
+            log.error("Attempted elastic query, but failed: $e", e)
             failedRequests.labels("GET", request.getRequestURI(),
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
@@ -120,7 +125,7 @@ class Crud extends HttpServlet {
                             "no elastic component is configured.")
             return
         } catch (InvalidQueryException e) {
-            log.error("Invalid query: ${queryParameters}", e)
+            log.warn("Invalid query: ${queryParameters}")
             failedRequests.labels("GET", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
@@ -159,8 +164,7 @@ class Crud extends HttpServlet {
         }
 
         if (request.pathInfo == "/find" || request.pathInfo == "/find.json") {
-            String collection = request.getParameter("collection")
-            handleQuery(request, response, collection)
+            handleQuery(request, response)
             return
         }
 
@@ -497,9 +501,19 @@ class Crud extends HttpServlet {
 
         Document newDoc = new Document(requestBody)
         newDoc.normalizeUnicode()
+        newDoc.trimStrings()
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
-        // TODO https://jira.kb.se/browse/LXL-1263
         newDoc.setControlNumber(newDoc.getShortId())
+
+        List<JsonLdValidator.Error> errors = validator.validate(newDoc.data)
+        if (errors) {
+            String message = errors.collect { it.toStringWithPath() }.join("\n")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Invalid JsonLd, got errors: " + message)
+            return
+        }
 
         String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
         if ( !(collection in ["auth", "bib", "hold"]) ) {
@@ -635,7 +649,18 @@ class Crud extends HttpServlet {
 
         Document updatedDoc = new Document(requestBody)
         updatedDoc.normalizeUnicode()
+        updatedDoc.trimStrings()
         updatedDoc.setId(documentId)
+
+        List<JsonLdValidator.Error> errors = validator.validate(updatedDoc.data)
+        if (errors) {
+            String message = errors.collect { it.toStringWithPath() }.join("\n")
+            failedRequests.labels("PUT", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Invalid JsonLd, got errors: " + message)
+            return
+        }
 
         log.debug("Checking permissions for ${updatedDoc}")
         try {

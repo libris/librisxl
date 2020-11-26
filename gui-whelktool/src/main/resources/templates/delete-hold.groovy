@@ -12,7 +12,7 @@ selectBySqlWhere("""id in
   left join
    lddb lh
   on lh.data#>>'{@graph,1,itemOf,@id}' = lb.data#>>'{@graph,1,@id}'
- where lb.data#>>'{@graph,0,controlNumber}' in ( '$bibidstring' )
+ where lb.data#>>'{@graph,0,controlNumber}' in ( '$bibidstring' ) and lb.collection = 'bib'
  and
  lh.data#>>'{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/SIGEL'
 )""", silent: false, { hold ->

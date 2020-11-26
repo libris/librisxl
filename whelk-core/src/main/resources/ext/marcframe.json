@@ -1239,6 +1239,13 @@
         },
         {
           "when": {
+            "onRevert": {"inScheme": {"code": "lcshac"}},
+            "then": {"ind2": "1"}
+          },
+          "include": ["termbase"]
+        },
+        {
+          "when": {
             "onRevert": {"inScheme": {"code": "mesh"}},
             "then": {"ind2": "2"}
           },
@@ -5904,8 +5911,7 @@
       },
       "i2": null,
       "$c": {"property": "acquisitionTerms"},
-      "TODO": "$d note - Note - rdfs:label in BF2 conversion 1.6",
-      "$d": {"property": "comment"},
+      "$d": {"addLink": "hasNote", "resourceType": "Note", "property": "label", "NOTE:marc-repeatable": false},
       "$2": {
         "TODO:requires-i1": "7 (overwritten by 8)",
         "property": "typeNote",
@@ -5941,7 +5947,12 @@
                 {
                   "@type": "UPC",
                   "value":  "070993005955",
-                  "comment": "35740"
+                  "hasNote": [
+                    {
+                      "@type": "Note",
+                      "label": "35740"
+                    }
+                  ]
                 }
               ]
             }
@@ -5974,7 +5985,12 @@
                 {
                   "@type": "EAN",
                   "value":  "9780838934326",
-                  "comment": "90000"
+                  "hasNote": [
+                    {
+                      "@type": "Note",
+                      "label": "90000"
+                    }
+                  ]
                 }
               ]
             }
@@ -15246,6 +15262,28 @@
                     "code": "barn"
                   },
                   "prefLabel": "Fysik"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "normalized": {
+            "650": {"ind1": " ", "ind2": "1",
+              "subfields": [{"a": "Plays"}]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Topic",
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/lcshac",
+                    "@type": "TopicScheme",
+                    "code": "lcshac"
+                  },
+                  "prefLabel": "Plays"
                 }
               ]
             }

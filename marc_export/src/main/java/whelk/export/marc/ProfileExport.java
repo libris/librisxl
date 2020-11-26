@@ -299,6 +299,13 @@ public class ProfileExport
                                 TreeMap<String, DELETE_REASON> deletedNotifications)
             throws IOException
     {
+        String collection = LegacyIntegrationTools.determineLegacyCollection(document, m_whelk.getJsonld());
+        if (!collection.equals("bib"))
+        {
+            logger.error("CRITICALLY BROKEN DATA: Was asked (but skipping) to include non bib-record in export stream: " + document.getId());
+            return;
+        }
+
         String profileName = profile.getProperty("name", "unknown");
         String systemId = document.getShortId();
         if (exportedIDs.contains(systemId))

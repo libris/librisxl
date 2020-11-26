@@ -94,7 +94,7 @@ dependencies {
     compile 'commons-io:commons-io:2.4'
     compile 'org.apache.httpcomponents:httpclient:4.2.6'
     compile 'org.apache.httpcomponents:httpcore:4.2.5'
-    compile 'org.apache.jena:jena-core:3.0.1'
+    compile 'org.apache.jena:apache-jena-libs:3.0.1'
     compile 'org.codehaus.groovy:groovy-json:2.5.4'
     compile 'org.codehaus.groovy:groovy-xml:2.5.4'
     compile 'org.codehaus.groovy:groovy:2.5.4'

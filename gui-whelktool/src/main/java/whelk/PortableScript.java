@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
 
@@ -13,8 +14,9 @@ public class PortableScript implements Serializable
     final String scriptText;
     final Set<String> ids;
     final public String comment;
+    final boolean useThreads;
 
-    public PortableScript(String scriptText, Set<String> ids, String comment)
+    public PortableScript(String scriptText, Set<String> ids, String comment, boolean useThreads)
     {
         this.scriptText = scriptText;
         if (ids != null)
@@ -22,6 +24,7 @@ public class PortableScript implements Serializable
         else
             this.ids = null;
         this.comment = comment;
+        this.useThreads = useThreads;
     }
 
     public Path execute() throws IOException
@@ -41,15 +44,28 @@ public class PortableScript implements Serializable
         }
         Files.write(scriptFilePath, flattenedScriptText.getBytes());
 
-        String[] args =
-                {
-                        "--allow-loud",
-                        "--report",
-                        reportPath.toString(),
-                        scriptFilePath.toString(),
-                };
+        if (useThreads) {
+            String[] args =
+                    {
+                            "--allow-loud",
+                            "--report",
+                            reportPath.toString(),
+                            scriptFilePath.toString(),
+                    };
 
-        whelk.datatool.WhelkTool.main(args);
+            whelk.datatool.WhelkTool.main(args);
+        } else {
+            String[] args =
+                    {
+                            "--no-threads",
+                            "--allow-loud",
+                            "--report",
+                            reportPath.toString(),
+                            scriptFilePath.toString(),
+                    };
+
+            whelk.datatool.WhelkTool.main(args);
+        }
 
         return reportPath;
     }
