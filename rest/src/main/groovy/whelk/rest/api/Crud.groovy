@@ -16,6 +16,7 @@ import whelk.JsonLdValidator
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ElasticIOException
+import whelk.exception.ElasticStatusException
 import whelk.exception.InvalidQueryException
 import whelk.exception.ModelValidationException
 import whelk.exception.StaleUpdateException
@@ -99,16 +100,15 @@ class Crud extends HttpServlet {
         validator = JsonLdValidator.from(jsonld)
     }
 
-    void handleQuery(HttpServletRequest request, HttpServletResponse response,
-                     String dataset) {
+    void handleQuery(HttpServletRequest request, HttpServletResponse response) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
 
         try {
-            Map results = search.doSearch(queryParameters, dataset)
+            Map results = search.doSearch(queryParameters)
             def jsonResult = mapper.writeValueAsString(results)
             sendResponse(response, jsonResult, "application/json")
-        } catch (ElasticIOException e) {
-            log.error("Attempted elastic query, but failed.", e)
+        } catch (ElasticIOException | ElasticStatusException e) {
+            log.error("Attempted elastic query, but failed: $e", e)
             failedRequests.labels("GET", request.getRequestURI(),
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
@@ -164,8 +164,7 @@ class Crud extends HttpServlet {
         }
 
         if (request.pathInfo == "/find" || request.pathInfo == "/find.json") {
-            String collection = request.getParameter("collection")
-            handleQuery(request, response, collection)
+            handleQuery(request, response)
             return
         }
 
