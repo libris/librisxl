@@ -50,13 +50,6 @@ class ImporterMain {
         reindex.reindex(collection)
     }
 
-    @Command()
-    void loadSparql() {
-        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
-        SparqlLoader loader = new SparqlLoader(whelk)
-        loader.load()
-    }
-
     @Command(args='[COLLECTION]')
     void refreshCards(String collection=null) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
@@ -116,7 +109,7 @@ class ImporterMain {
     }
 
     @Command(args='FILE')
-    void lddbToTrig(String file, String collection) {
+    void lddbToTrig(String file, String collection = null) {
         def whelk = Whelk.createLoadedCoreWhelk(props)
 
         def ctx = JsonLdToTurtle.parseContext([
@@ -124,15 +117,18 @@ class ImporterMain {
         ])
         def opts = [useGraphKeyword: false, markEmptyBnode: true]
 
-        def handleSteam = !file || file == '-' ? { it(System.out) }
+        def handleStream = !file || file == '-' ? { it(System.out) }
                             : new File(file).&withOutputStream
-        handleSteam { out ->
+        handleStream { out ->
             def serializer = new JsonLdToTurtle(ctx, out, opts)
             serializer.prelude()
             int i = 0
             for (Document doc : whelk.storage.loadAll(collection)) {
                 def id = doc.completeId
-                System.err.println "[${++i}] $id"
+                if (i % 500 == 0) {
+                    System.err.println("$i records dumped.")
+                }
+                ++i
                 serializer.objectToTrig(id, doc.data)
             }
         }
