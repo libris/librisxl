@@ -209,6 +209,15 @@
                     }
                 }
             },
+            "prefLabel": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword"
+                    }
+                },
+                "copy_to": "_all"
+            },
             "_links": {
                 "type": "keyword",
                 "copy_to": "_all"
