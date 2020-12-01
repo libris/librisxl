@@ -129,7 +129,23 @@ class ImporterMain {
                     System.err.println("$i records dumped.")
                 }
                 ++i
+                filterGeneric(doc.data)
                 serializer.objectToTrig(id, doc.data)
+            }
+        }
+    }
+
+    private static void filterGeneric(data) {
+        if (data instanceof Map) {
+            data.removeAll { entry ->
+                return entry.key.startsWith("generic")
+            }
+            data.keySet().each { property ->
+                filterGeneric(data[property])
+            }
+        } else if (data instanceof List) {
+            data.each {
+                filterGeneric(it)
             }
         }
     }
