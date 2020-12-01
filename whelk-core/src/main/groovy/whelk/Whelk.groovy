@@ -190,14 +190,16 @@ class Whelk {
                     updated.getThingIdentifiers()[0] &&
                     updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]) {
                 reindexAllLinks(updated.shortId)
-            } else
-                reindexAffected(updated, preUpdateDoc.getExternalRefs(), updated.getExternalRefs())
+            } else {
+                reindexAffected(updated, preUpdateDoc.getExternalRefs(), updated.getExternalRefs(),
+                        preUpdateDoc.getChecksum() != updated.getChecksum())
+            }
         }
     }
 
-    private void reindexAffected(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
+    private void reindexAffected(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks, boolean checksumHasChanged) {
         Runnable reindex = {
-            reindexAffectedSync(document, preUpdateLinks, postUpdateLinks)
+            reindexAffectedSync(document, preUpdateLinks, postUpdateLinks, checksumHasChanged)
         }
 
         // If we are inside a batch job. Update them synchronously
@@ -218,7 +220,7 @@ class Whelk {
         }
     }
 
-    private void reindexAffectedSync(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
+    private void reindexAffectedSync(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks, boolean checksumHasChanged) {
         Set<Link> addedLinks = (postUpdateLinks - preUpdateLinks)
         Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
 
@@ -248,6 +250,15 @@ class Whelk {
                 Document doc = storage.load(id)
                 if (doc) { // might not exist because of batch jobs without indexing
                     elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
+                }
+            }
+        }
+
+        if (checksumHasChanged) {
+            storage.getDependersOfType(document.getShortId(), "instanceOf").each { idToReindex ->
+                Document doc = storage.load(idToReindex)
+                if (doc) {
+                    elastic.index(doc, storage.getCollectionBySystemID(idToReindex), this)
                 }
             }
         }
@@ -336,7 +347,7 @@ class Whelk {
         if (success) {
             if (elastic && index) {
                 elastic.index(document, collection, this)
-                reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
+                reindexAffected(document, new TreeSet<>(), document.getExternalRefs(), false)
             }
         }
         return success
@@ -388,7 +399,7 @@ class Whelk {
         storage.remove(id, changedIn, changedBy)
         if (elastic) {
             elastic.remove(id)
-            reindexAffected(doc, doc.getExternalRefs(), new TreeSet<>())
+            reindexAffected(doc, doc.getExternalRefs(), new TreeSet<>(), false)
             log.debug "Object ${id} was removed from Whelk"
         }
         else {
