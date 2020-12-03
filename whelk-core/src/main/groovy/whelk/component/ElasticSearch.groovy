@@ -14,6 +14,7 @@ import whelk.Whelk
 import whelk.exception.ElasticStatusException
 import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
+import whelk.util.LegacyIntegrationTools
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
@@ -96,12 +97,11 @@ class ElasticSearch {
         }
     }
 
-    void bulkIndex(List<Document> docs, String collection, Whelk whelk) {
-        assert collection
+    void bulkIndex(List<Document> docs, Whelk whelk) {
         if (docs) {
             String bulkString = docs.findResults{ doc ->
                 try {
-                    String shapedData = getShapeForIndex(doc, whelk, collection)
+                    String shapedData = getShapeForIndex(doc, whelk)
                     String action = createActionRow(doc)
                     return "${action}\n${shapedData}\n"
                 } catch (Exception e) {
@@ -122,18 +122,14 @@ class ElasticSearch {
         return mapper.writeValueAsString(action)
     }
 
-    void index(Document doc, String collection, Whelk whelk) {
-        if (!collection) {
-            return
-        }
-
+    void index(Document doc, Whelk whelk) {
         // The justification for this uncomfortable catch-all, is that an index-failure must raise an alert (log entry)
         // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
         try {
             String response = client.performRequest(
                     'PUT',
                     "/${indexName}/_doc/${toElasticId(doc.getShortId())}",
-                    getShapeForIndex(doc, whelk, collection))
+                    getShapeForIndex(doc, whelk))
             if (log.isDebugEnabled()) {
                 Map responseMap = mapper.readValue(response, Map)
                 log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
@@ -141,7 +137,7 @@ class ElasticSearch {
         } catch (Exception e) {
             if (!isBadRequest(e)) {
                 log.error("Failed to index ${doc.getShortId()} in elastic, placing in retry queue: $e", e)
-                indexingRetryQueue.add({ -> index(doc, collection, whelk) })
+                indexingRetryQueue.add({ -> index(doc, whelk) })
             }
             else {
                 log.error("Failed to index ${doc.getShortId()} in elastic: $e", e)
@@ -209,10 +205,10 @@ class ElasticSearch {
         }
     }
 
-    String getShapeForIndex(Document document, Whelk whelk, String collection) {
+    String getShapeForIndex(Document document, Whelk whelk) {
         Document copy = document.clone()
 
-        if (collection != "hold") {
+        if ("hold" != LegacyIntegrationTools.determineLegacyCollection(document, whelk.jsonld)) {
             whelk.embellish(copy, ['chips'])
         }
 
@@ -235,7 +231,6 @@ class ElasticSearch {
         }
         String thingId = thingIds.get(0)
         Map framed = JsonLd.frame(thingId, copy.data)
-        framed["_collection"] = collection
 
         // TODO: replace with elastic ICU Analysis plugin?
         // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
