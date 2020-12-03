@@ -8,6 +8,7 @@ import whelk.component.CachingPostgreSQLComponent
 import whelk.component.DocumentNormalizer
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
+import whelk.component.Virtuoso
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LinkFinder
@@ -27,6 +28,7 @@ class Whelk {
     ThreadGroup indexers = new ThreadGroup("dep-reindex")
     PostgreSQLComponent storage
     ElasticSearch elastic
+    Virtuoso virtuoso
     Map displayData
     Map vocabData
     Map contextData
@@ -117,6 +119,11 @@ class Whelk {
         loadVocabData()
         setJsonld(new JsonLd(contextData, displayData, vocabData))
         log.info("Loaded with core data")
+        initVirtuoso()
+    }
+
+    void initVirtuoso() {
+        this.virtuoso = new Virtuoso()
     }
 
     void setJsonld(JsonLd jsonld) {
@@ -363,11 +370,13 @@ class Whelk {
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
         Document updated = storage.storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum)
+
         if (updated == null) {
             return null
         }
         if (index) {
             reindex(updated, preUpdateDoc)
+            virtuoso.insertGraph(updated)
         }
     }
 
