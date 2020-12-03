@@ -7,7 +7,7 @@
                     "limit": 100000
                 }
             },
-            "number_of_shards": 4,
+            "number_of_shards": 6,
             "number_of_replicas": 1
         },
         "index.query.default_field": "_all",
