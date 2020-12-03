@@ -97,7 +97,7 @@ class ElasticSearch {
         }
     }
 
-    void bulkIndex(List<Document> docs, Whelk whelk) {
+    void bulkIndex(Collection<Document> docs, Whelk whelk) {
         if (docs) {
             String bulkString = docs.findResults{ doc ->
                 try {
@@ -113,6 +113,21 @@ class ElasticSearch {
             String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
             Map responseMap = mapper.readValue(response, Map)
             log.info("Bulk indexed ${docs.count{it}} docs in ${responseMap.took} ms")
+        }
+    }
+
+    void bulkIndexWithRetry(Collection<String> ids, Whelk whelk) {
+        Collection<Document> docs = whelk.bulkLoad(ids).values()
+        try {
+            bulkIndex(docs, whelk)
+        } catch (Exception e) {
+            if (!isBadRequest(e)) {
+                log.error("Failed to index batch ${ids} in elastic, placing in retry queue: $e", e)
+                indexingRetryQueue.add({ -> index(ids, whelk) })
+            }
+            else {
+                log.error("Failed to index ${ids} in elastic: $e", e)
+            }
         }
     }
 
