@@ -242,7 +242,7 @@ class Whelk {
             }
         }
 
-        if (storage.isCardChanged(document.getShortId())) {
+        if (storage.isCardChangedOrNonexistent(document.getShortId())) {
             // TODO: when types (auth, bib...) have been removed from elastic, do bulk index in chunks of size N here
             getAffectedIds(document).each { id ->
                 Document doc = storage.load(id)
