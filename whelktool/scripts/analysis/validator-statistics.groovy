@@ -13,31 +13,31 @@ class Script {
 
 Script.report = getReportWriter("report.txt")
 
-selectByCollection('bib') { bib ->
+selectByCollection('bib') { rec ->
     synchronized (this) {
         if (!Script.isInitialized) {
-            Script.v = JsonLdValidator.from(bib.whelk.jsonld)
+            Script.v = JsonLdValidator.from(rec.whelk.jsonld)
             Script.v.skipUndefined()
             Script.isInitialized = true
         }
     }
 
     try {
-        process(bib)
+        process(rec)
     }
     catch(Exception e) {
-        System.err.println("${bib.doc.shortId} $e")
+        System.err.println("${rec.doc.shortId} $e")
         e.printStackTrace()
     }
 }
 
-void process(bib) {
-    Set<String> pathsToConflictingSetTerms = getPathsToConflictingSetTerms(bib)
+void process(rec) {
+    Set<String> pathsToConflictingSetTerms = getPathsToConflictingSetTerms(rec)
     pathsToConflictingSetTerms.each {
-        Script.s.increment("Term with conflicting repeatability", it, bib.doc.getShortId())
+        Script.s.increment("Term with conflicting repeatability", it, rec.doc.getShortId())
     }
 
-    List<JsonError> errors = Script.v.validateAll(bib.doc.data)
+    List<JsonError> errors = Script.v.validateAll(rec.doc.data)
 
     errors.each {
         String valsize = ''
@@ -52,10 +52,10 @@ void process(bib) {
         if (message in pathsToConflictingSetTerms) {
             message += ' (KNOWN)'
         }
-        Script.s.increment(it.getDescription(), message, bib.doc.getShortId())
+        Script.s.increment(it.getDescription(), message, rec.doc.getShortId())
     }
     if (errors) {
-        Script.report.println(bib.doc.shortId)
+        Script.report.println(rec.doc.shortId)
     }
 }
 
@@ -71,16 +71,16 @@ String representSize(int size) {
     size > 4 ? '5+' : size > 1 ? '2+' : size.toString()
 }
 
-Set<String> getPathsToConflictingSetTerms(bib) {
+Set<String> getPathsToConflictingSetTerms(rec) {
     if (Script.expectsSetsWithConflicts.size() == 0) {
         synchronized (Script.expectsSetsWithConflicts) {
-            bib.whelk.marcFrameConverter.conversion.badRepeats.each {
+            rec.whelk.marcFrameConverter.conversion.badRepeats.each {
                 Script.expectsSetsWithConflicts << it.term
             }
         }
     }
     Set<String> pathsToSetsWithList = new HashSet<>()
-    DocumentUtil.traverse(bib.doc.data, { value, path ->
+    DocumentUtil.traverse(rec.doc.data, { value, path ->
         if (!path) {
             return
         }
