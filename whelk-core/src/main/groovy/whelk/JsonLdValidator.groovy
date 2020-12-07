@@ -87,7 +87,7 @@ class JsonLdValidator {
     private void checkIsNotNestedGraph(String key, value, validation) {
         if (key == jsonLd.GRAPH_KEY) {
             if (validation.seenGraph) {
-                handleError(new Error(Error.Type.NESTED_GRAPH, key, value?.toString()), validation)
+                handleError(new Error(Error.Type.NESTED_GRAPH, key, value), validation)
             }
             validation.seenGraph = true
         }
@@ -109,7 +109,7 @@ class JsonLdValidator {
 
     private boolean isUnexpected(String key, value, validation) { //Rename me
         if ((key == jsonLd.ID_KEY || key == jsonLd.TYPE_KEY) && !(value instanceof String)) {
-            handleError(new Error(Error.Type.UNEXPECTED, key, value?.toString()), validation)
+            handleError(new Error(Error.Type.UNEXPECTED, key, value), validation)
             return true
         } else {
             return false
@@ -131,16 +131,16 @@ class JsonLdValidator {
     private void verifyVocabTerm(String key, value, validation) {
         if ((key == jsonLd.TYPE_KEY || isVocabTerm(key))
                 && !jsonLd.vocabIndex.containsKey(value?.toString())) {
-            handleError(new Error(Error.Type.UNKNOWN_VOCAB_VALUE, key, value?.toString()), validation)
+            handleError(new Error(Error.Type.UNKNOWN_VOCAB_VALUE, key, value), validation)
         }
     }
 
     private void validateRepeatability(String key, value, validation) {
         boolean expectRepeat = key == jsonLd.GRAPH_KEY || key in jsonLd.getRepeatableTerms()
         if (expectRepeat && !isRepeated(value)) {
-            handleError(new Error(Error.Type.ARRAY_EXPECTED, key, value?.toString()), validation)
+            handleError(new Error(Error.Type.ARRAY_EXPECTED, key, value), validation)
         } else if (!expectRepeat && isRepeated(value)) {
-            handleError(new Error(Error.Type.UNEXPECTED_ARRAY, key, value?.toString()), validation)
+            handleError(new Error(Error.Type.UNEXPECTED_ARRAY, key, value), validation)
         }
     }
 
@@ -152,9 +152,9 @@ class JsonLdValidator {
         if (firstValue && termDefinition
                 && termDefinition[jsonLd.TYPE_KEY] == 'ObjectProperty') {
             if (!isVocabTerm(key) && !valueIsObject) {
-                handleError(new Error(Error.Type.OBJECT_TYPE_EXPECTED, key, value?.toString()) , validation)
+                handleError(new Error(Error.Type.OBJECT_TYPE_EXPECTED, key, value) , validation)
             } else if (isVocabTerm(key) && valueIsObject) {
-                handleError(new Error(Error.Type.VOCAB_STRING_EXPECTED, key, value?.toString()), validation)
+                handleError(new Error(Error.Type.VOCAB_STRING_EXPECTED, key, value), validation)
             }
         }
     }
@@ -219,9 +219,9 @@ class JsonLdValidator {
         List path
 
         private final String key
-        private final String value
+        private final Object value
 
-        Error(Type type, String key, String value = "") {
+        Error(Type type, String key, Object value = "") {
             this.type = type
             this.key = key
             this.value = value
