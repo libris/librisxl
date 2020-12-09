@@ -124,7 +124,7 @@ class ESQuerySpec extends Specification {
         Map emptyAggs = [:]
         Map emptyAggsResult = [(JsonLd.TYPE_KEY): ['terms': ['field': JsonLd.TYPE_KEY]]]
         Map simpleAggs = ['_statsrepr': ['{"foo": {"sort": "key", "sortOrder": "desc", "size": 5}}']]
-        Map simpleAggsResult = ['foo': ['terms': ['field': 'foo', 'size': 5, 'order': ['_term': 'desc']]]]
+        Map simpleAggsResult = ['foo': ['terms': ['field': 'foo', 'size': 5, 'order': ['_key': 'desc']]]]
         Map subAggs = ['_statsrepr': ['{"bar": {"subItems": {"foo": {"sort": "key"}}}}']]
         // `bar` has a keyword field in the mappings
         Map subAggsResult = ['bar.keyword': ['terms': ['field': 'bar.keyword',
@@ -133,7 +133,7 @@ class ESQuerySpec extends Specification {
                                      'aggs': [
                                         'foo': ['terms': ['field': 'foo',
                                                           'size': 10,
-                                                          'order': ['_term': 'desc']]]
+                                                          'order': ['_key': 'desc']]]
                                      ]]]
 
         then:
@@ -147,14 +147,12 @@ class ESQuerySpec extends Specification {
         Map emptyMappings = [:]
         Set emptyResult = [] as Set
         Map simpleMappings = [
-            'bib': [
-                'properties': [
-                    'foo': [
-                        'type': 'text',
-                        'fields': [
-                            'keyword': [
-                                'type': 'keyword'
-                            ]
+            'properties': [
+                'foo': [
+                    'type': 'text',
+                    'fields': [
+                        'keyword': [
+                            'type': 'keyword'
                         ]
                     ]
                 ]
@@ -162,39 +160,37 @@ class ESQuerySpec extends Specification {
         ]
         Set simpleResult = ['foo'] as Set
         Map nestedMappings = [
-            'bib': [
-                'properties': [
-                    'foo': [
-                        'type': 'text',
-                        'fields': [
-                            'keyword': [
-                                'type': 'keyword'
-                            ]
+            'properties': [
+                'foo': [
+                    'type': 'text',
+                    'fields': [
+                        'keyword': [
+                            'type': 'keyword'
+                        ]
+                    ],
+                    'properties': [
+                        '@type': [
+                            'type': 'keyword'
                         ],
-                        'properties': [
-                            '@type': [
-                                'type': 'keyword'
-                            ],
-                            'bar': [
-                                'properties': [
-                                    'baz': [
-                                        'type': 'text',
-                                        'fields': [
-                                            'keyword': [
-                                                'type': 'keyword'
-                                            ]
+                        'bar': [
+                            'properties': [
+                                'baz': [
+                                    'type': 'text',
+                                    'fields': [
+                                        'keyword': [
+                                            'type': 'keyword'
                                         ]
-                                    ],
-                                    'quux': [
-                                        'type': 'keyword'
                                     ]
+                                ],
+                                'quux': [
+                                    'type': 'keyword'
                                 ]
                             ]
                         ]
-                    ],
-                    'baz': [
-                        'type': 'keyword'
                     ]
+                ],
+                'baz': [
+                    'type': 'keyword'
                 ]
             ]
         ]

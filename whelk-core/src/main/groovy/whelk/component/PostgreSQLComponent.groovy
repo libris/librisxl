@@ -989,12 +989,12 @@ class PostgreSQLComponent {
     }
 
     /**
-     * Check if a card has changed
+     * Check if a card has changed or is nonexistent
      *
      * @param systemId
-     * @return true if the card changed after or at the same time as the document was modified
+     * @return true if the card changed after or at the same time as the document was modified, or is nonexistent
      */
-    boolean isCardChanged(String systemId) {
+    boolean isCardChangedOrNonexistent(String systemId) {
         Connection connection = getConnection()
         PreparedStatement preparedStatement = null
         ResultSet rs = null
@@ -1004,7 +1004,7 @@ class PostgreSQLComponent {
 
             rs = preparedStatement.executeQuery()
 
-            return rs.next() && rs.getBoolean(1)
+            return rs.next() ? rs.getBoolean(1) : true
         } finally {
             close(rs, preparedStatement, connection)
         }

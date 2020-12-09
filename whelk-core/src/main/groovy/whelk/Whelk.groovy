@@ -223,7 +223,7 @@ class Whelk {
         Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
 
         removedLinks.findResults { storage.getSystemIdByIri(it.iri) }
-                .each{id -> elastic.decrementReverseLinks(id, storage.getCollectionBySystemID(id))}
+                .each{id -> elastic.decrementReverseLinks(id)}
 
         addedLinks.each { link ->
             String id = storage.getSystemIdByIri(link.iri)
@@ -237,12 +237,12 @@ class Whelk {
                 }
                 else {
                     // just update link counter
-                    elastic.incrementReverseLinks(id, storage.getCollectionBySystemID(id))
+                    elastic.incrementReverseLinks(id)
                 }
             }
         }
 
-        if (storage.isCardChanged(document.getShortId())) {
+        if (storage.isCardChangedOrNonexistent(document.getShortId())) {
             // TODO: when types (auth, bib...) have been removed from elastic, do bulk index in chunks of size N here
             getAffectedIds(document).each { id ->
                 Document doc = storage.load(id)
