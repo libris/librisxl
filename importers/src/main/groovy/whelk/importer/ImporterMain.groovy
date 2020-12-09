@@ -108,6 +108,31 @@ class ImporterMain {
         copier.run()
     }
 
+    // Records that do not cleanly translate to trig/turtle (bad data).
+    // This obviously needs to be cleaned up!
+    def trigExcludeList = [
+            "b5qzm6mgd220mqq2", // @vocab:ISO639-2-T "sqi" ;
+            "htf4scsmk0n44qcq",
+            "b7f0m6mgd2q54bpd",
+            "m7g8xhxrp1f0lp7l",
+            "5qgtg1g97195wsm3",
+            "0qgn9v9421qh0jts",
+            "f8j3q9qkh342fhmg",
+            "7pcwj3jc92jmfccp",
+            "w0qj6r61z3kkbsrj",
+            "hdx4scsmk3c2bm5r",
+            "mw38xhxrp1s0b85x",
+            "1rvnbwb530j6k6nj",
+            "q8lc1l1vs3b7168t",
+            "mcd8xhxrp5k5zm44",
+            "qmjc1l1vs0hp5mck",
+            "1zbpbwb5313nlh3g",
+            "wbvj6r61z4zl0108",
+            "m468xhxrp3w9svn4",
+            "csk1n7nhf52nd4br",
+            "nq89zjzsq2fj5cjs"
+    ] as Set
+
     @Command(args='FILE')
     void lddbToTrig(String file, String collection = null) {
         def whelk = Whelk.createLoadedCoreWhelk(props)
@@ -124,6 +149,11 @@ class ImporterMain {
             serializer.prelude()
             int i = 0
             for (Document doc : whelk.storage.loadAll(collection)) {
+                if (doc.getShortId() in trigExcludeList) {
+                    System.err.println("Excluding: ${doc.getShortId()}")
+                    continue
+                }
+
                 def id = doc.completeId
                 if (i % 500 == 0) {
                     System.err.println("$i records dumped.")
