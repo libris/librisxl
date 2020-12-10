@@ -205,11 +205,6 @@ class Whelk {
         }
     }
 
-    private static boolean hasChangedMainEntityId(Document updated, Document preUpdateDoc) {
-        preUpdateDoc.getThingIdentifiers()[0] && updated.getThingIdentifiers()[0] &&
-                updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]
-    }
-
     private void reindexAffected(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
         Runnable reindex = {
             reindexAffectedSync(document, preUpdateLinks, postUpdateLinks)
