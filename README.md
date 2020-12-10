@@ -51,7 +51,9 @@ Related external repositories:
 
 2. [Elasticsearch](http://elasticsearch.org/) (version 7.x)
 
-    [Elasticsearch Reference - Installing Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/7.10/install-elasticsearch.html#install-elasticsearch)
+    [Elasticsearch Reference - Installing Elasticsearch](https://www.elastic.co/downloads/elasticsearch-oss)
+
+    **NOTE:** We use the elasticsearch-oss version.
 
     **NOTE:** You will also need to set `cluster.name` in
     `/etc/elasticsearch/elasticsearch.yml` to something unique on the
