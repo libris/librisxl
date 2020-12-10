@@ -28,7 +28,7 @@ class Whelk {
     ThreadGroup indexers = new ThreadGroup("dep-reindex")
     PostgreSQLComponent storage
     ElasticSearch elastic
-    Virtuoso virtuoso
+    Virtuoso sparql
     Map displayData
     Map vocabData
     Map contextData
@@ -114,21 +114,28 @@ class Whelk {
     }
 
     void loadCoreData() {
+        initVirtuoso()
         loadContextData()
         loadDisplayData()
         loadVocabData()
         setJsonld(new JsonLd(contextData, displayData, vocabData))
         log.info("Loaded with core data")
-        initVirtuoso()
     }
 
     void initVirtuoso() {
-        this.virtuoso = new Virtuoso()
+        Properties props = PropertyLoader.loadProperties("secret")
+        String sparqlCrudUrl = props.getProperty("sparqlCrudUrl")
+        if (sparqlCrudUrl) {
+            this.sparql = new Virtuoso(sparqlCrudUrl, props.getProperty("sparqlUser"), props.getProperty("sparqlPass"))
+        }
     }
 
     void setJsonld(JsonLd jsonld) {
         this.jsonld = jsonld
         storage.setJsonld(jsonld)
+        if (sparql) {
+            sparql.setJsonldContext(jsonld.context)
+        }
         if (elastic) {
             elasticFind = new ElasticFind(new ESQuery(this))
             initDocumentNormalizers()
@@ -190,6 +197,10 @@ class Whelk {
         if (elastic) {
             elastic.index(updated, this)
 
+<<<<<<< HEAD
+=======
+            // The updated document has changed mainEntity URI (link target)
+>>>>>>> Add changes in Whelk
             if (hasChangedMainEntityId(updated, preUpdateDoc)) {
                 reindexAllLinks(updated.shortId)
             } else
@@ -343,6 +354,9 @@ class Whelk {
                 elastic.index(document, this)
                 reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
             }
+            if (sparql) {
+                sparql.insertNamedGraph(document)
+            }
         }
         return success
     }
@@ -364,6 +378,10 @@ class Whelk {
         }
 
         reindex(updated, preUpdateDoc)
+
+        if (sparql) {
+            updateSparqlNamedGraph(updated, preUpdateDoc)
+        }
     }
 
     Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum, boolean index = true) {
@@ -376,7 +394,9 @@ class Whelk {
         }
         if (index) {
             reindex(updated, preUpdateDoc)
-            virtuoso.insertGraph(updated)
+        }
+        if (sparql) {
+            updateSparqlNamedGraph(updated, preUpdateDoc)
         }
     }
 
@@ -401,6 +421,26 @@ class Whelk {
         else {
             log.warn "No Elastic present when deleting. Skipping call to elastic.remove(${id})"
         }
+
+        if (sparql) {
+            sparql.deleteNamedGraph(doc)
+        }
+    }
+
+    void updateSparqlNamedGraph(Document updated, Document preUpdateDoc) {
+        sparql.insertNamedGraph(updated)
+
+        if (hasChangedMainEntityId(updated, preUpdateDoc)) {
+            for (String id : storage.getDependers(updated.shortId)) {
+                sparql.insertNamedGraph(storage.load(id))
+            }
+        }
+    }
+
+    boolean hasChangedMainEntityId(Document updated, Document preUpdateDoc) {
+        preUpdateDoc.getThingIdentifiers()[0] &&
+                updated.getThingIdentifiers()[0] &&
+                updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]
     }
 
     void embellish(Document document, List<String> levels = null) {
