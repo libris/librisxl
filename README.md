@@ -51,7 +51,7 @@ Related external repositories:
 
 2. [Elasticsearch](http://elasticsearch.org/) (version 7.x)
 
-    [Elasticsearch Reference - Installing Elasticsearch](https://www.elastic.co/downloads/elasticsearch-oss)
+    [Download Elasticsearch](https://www.elastic.co/downloads/elasticsearch-oss)
 
     **NOTE:** We use the elasticsearch-oss version.
 
