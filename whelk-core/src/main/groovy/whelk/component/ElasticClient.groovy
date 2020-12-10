@@ -26,7 +26,7 @@ import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import org.apache.http.util.EntityUtils
 import whelk.exception.ElasticIOException
-import whelk.exception.ElasticStatusException
+import whelk.exception.UnexpectedHttpStatusException
 
 import java.time.Duration
 import java.util.function.Function
@@ -109,7 +109,7 @@ class ElasticClient {
     }
 
     String performRequest(String method, String path, String body, String contentType0 = null)
-        throws ElasticIOException, ElasticStatusException {
+        throws ElasticIOException, UnexpectedHttpStatusException {
         try {
             def nodes = cycleNodes()
             if (useCircuitBreaker) {
@@ -119,7 +119,7 @@ class ElasticClient {
                 nodes.next().performRequest(method, path, body, contentType0)
             }
         }
-        catch (ElasticStatusException e) {
+        catch (UnexpectedHttpStatusException e) {
             throw e
         }
         catch (Exception e) {
@@ -161,7 +161,7 @@ class ElasticClient {
                 return resultBody
             }
             else {
-                throw new ElasticStatusException(resultBody, statusCode)
+                throw new UnexpectedHttpStatusException(resultBody, statusCode)
             }
         }
 

@@ -1,38 +1,44 @@
 package whelk.component
 
+import com.google.common.base.Preconditions
 import groovy.util.logging.Log4j2 as Log
 import org.apache.http.HttpResponse
 import org.apache.http.StatusLine
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.client.CredentialsProvider
+import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpDelete
 import org.apache.http.client.methods.HttpPut
 import org.apache.http.client.methods.HttpRequestBase
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.BasicCredentialsProvider
-import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.client.HttpClient
 import org.apache.http.util.EntityUtils
 import whelk.Document
 import whelk.converter.JsonLdToTurtle
+import whelk.exception.UnexpectedHttpStatusException
 
 import java.nio.charset.StandardCharsets
 
 @Log
 class Virtuoso {
-
     private String sparqlCrudEndpoint
 
     private HttpClient httpClient
 
-    Map jsonldContext
+    private Map jsonldContext
 
-    Virtuoso(String endpoint, String user, String pass) {
+    Virtuoso(Map jsonldContext, HttpClient httpClient, String endpoint, String user, String pass) {
+        Preconditions.checkNotNull(jsonldContext)
+        Preconditions.checkNotNull(httpClient)
+        Preconditions.checkNotNull(endpoint)
+        Preconditions.checkNotNull(user)
+        Preconditions.checkNotNull(pass)
+
+        this.jsonldContext = jsonldContext
         this.sparqlCrudEndpoint = endpoint
 
-        this.httpClient = new DefaultHttpClient()
-
+        this.httpClient = httpClient
         setCredentials(httpClient, user, pass)
     }
 
@@ -46,8 +52,12 @@ class Virtuoso {
 
     private void updateNamedGraph(String method, Document doc) {
         HttpRequestBase request = buildRequest(method, doc)
-        HttpResponse response = performRequest(request)
-        handleResponse(response, method, doc.completeId())
+        try {
+            handleResponse(httpClient.execute(request), method, doc.getCompleteId())
+        }
+        finally {
+            request.releaseConnection()
+        }
     }
 
     private String createGraphCrudURI(String docURI) {
@@ -55,7 +65,7 @@ class Virtuoso {
     }
 
     private HttpRequestBase buildRequest(String method, Document doc) {
-        String graphCrudURI = createGraphCrudURI(doc.completeId())
+        String graphCrudURI = createGraphCrudURI(doc.getCompleteId())
 
         if (method == 'DELETE') {
             return new HttpDelete(graphCrudURI)
@@ -69,29 +79,25 @@ class Virtuoso {
         }
     }
 
-    private HttpResponse performRequest(HttpRequestBase request) {
-        HttpResponse response = httpClient.execute(request)
-        request.releaseConnection()
-        return response
-    }
-
     private static void handleResponse(HttpResponse response, String method, String docURI) {
         StatusLine statusLine = response.getStatusLine()
         int statusCode = statusLine.getStatusCode()
-        //String body = EntityUtils.toString(response.getEntity())
-        if (method == 'PUT') {
-            if (statusCode == 201) {
-                log.info("New named graph " + docURI + " created successfully")
-            } else if (statusCode == 200) {
-                log.info("Named graph " + docURI + " updated successfully")
-            } else {
-                log.warn("Failed to named create/update graph " + docURI + ", response was " + statusLine.toString())
+
+        if ((statusCode >= 200 && statusCode < 300) || (method == 'DELETE' && statusCode == 404)) {
+            if (log.isDebugEnabled()) {
+                log.debug("Succeeded to $method $docURI, got: $statusLine")
             }
-        } else if (method == 'DELETE') {
-            if (response.getStatusLine().getStatusCode() == 200) {
-                log.info("Named graph " + docURI + " deleted successfully")
-            } else {
-                log.warn("Failed to delete named graph " + docURI + ", response was " + statusLine.toString())
+        }
+        else {
+            String body = EntityUtils.toString(response.getEntity())
+            String msg = "Failed to $method $docURI, got: $statusLine\n$body"
+
+            if (statusCode >= 500 || statusCode == 429) {
+                throw new UnexpectedHttpStatusException(msg, statusCode)
+            }
+            else {
+                // Cannot recover from these
+                log.warn(msg)
             }
         }
     }
@@ -113,5 +119,4 @@ class Virtuoso {
         provider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(sparqlUser, sparqlPassword))
         client.setCredentialsProvider(provider)
     }
-
 }

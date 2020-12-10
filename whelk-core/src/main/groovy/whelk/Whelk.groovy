@@ -8,6 +8,7 @@ import whelk.component.CachingPostgreSQLComponent
 import whelk.component.DocumentNormalizer
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
+import whelk.component.SparqlUpdater
 import whelk.component.Virtuoso
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
@@ -28,7 +29,8 @@ class Whelk {
     ThreadGroup indexers = new ThreadGroup("dep-reindex")
     PostgreSQLComponent storage
     ElasticSearch elastic
-    Virtuoso sparql
+    SparqlUpdater sparqlUpdater
+
     Map displayData
     Map vocabData
     Map contextData
@@ -114,7 +116,6 @@ class Whelk {
     }
 
     void loadCoreData() {
-        initVirtuoso()
         loadContextData()
         loadDisplayData()
         loadVocabData()
@@ -122,24 +123,30 @@ class Whelk {
         log.info("Loaded with core data")
     }
 
-    void initVirtuoso() {
+    void initVirtuoso(JsonLd jsonld) {
         Properties props = PropertyLoader.loadProperties("secret")
         String sparqlCrudUrl = props.getProperty("sparqlCrudUrl")
         if (sparqlCrudUrl) {
-            this.sparql = new Virtuoso(sparqlCrudUrl, props.getProperty("sparqlUser"), props.getProperty("sparqlPass"))
+            Virtuoso v = new Virtuoso(
+                    jsonld.context,
+                    SparqlUpdater.buildHttpClient(),
+                    sparqlCrudUrl,
+                    props.getProperty("sparqlUser"),
+                    props.getProperty("sparqlPass"))
+
+            this.sparqlUpdater = new SparqlUpdater(storage, v)
+            storage.sparqlQueueEnabled = true
         }
     }
 
     void setJsonld(JsonLd jsonld) {
         this.jsonld = jsonld
         storage.setJsonld(jsonld)
-        if (sparql) {
-            sparql.setJsonldContext(jsonld.context)
-        }
         if (elastic) {
             elasticFind = new ElasticFind(new ESQuery(this))
             initDocumentNormalizers()
         }
+        initVirtuoso(jsonld)
     }
 
     private void initDocumentNormalizers() {
@@ -346,8 +353,8 @@ class Whelk {
                 elastic.index(document, this)
                 reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
             }
-            if (sparql) {
-                sparql.insertNamedGraph(document)
+            if (sparqlUpdater) {
+                sparqlUpdater.poke()
             }
         }
         return success
@@ -370,9 +377,8 @@ class Whelk {
         }
 
         reindex(updated, preUpdateDoc)
-
-        if (sparql) {
-            updateSparqlNamedGraph(updated, preUpdateDoc)
+        if (sparqlUpdater) {
+            sparqlUpdater.poke()
         }
     }
 
@@ -387,8 +393,8 @@ class Whelk {
         if (index) {
             reindex(updated, preUpdateDoc)
         }
-        if (sparql) {
-            updateSparqlNamedGraph(updated, preUpdateDoc)
+        if (sparqlUpdater) {
+            sparqlUpdater.poke()
         }
     }
 
@@ -412,20 +418,6 @@ class Whelk {
         }
         else {
             log.warn "No Elastic present when deleting. Skipping call to elastic.remove(${id})"
-        }
-
-        if (sparql) {
-            sparql.deleteNamedGraph(doc)
-        }
-    }
-
-    void updateSparqlNamedGraph(Document updated, Document preUpdateDoc) {
-        sparql.insertNamedGraph(updated)
-
-        if (hasChangedMainEntityId(updated, preUpdateDoc)) {
-            for (String id : storage.getDependers(updated.shortId)) {
-                sparql.insertNamedGraph(storage.load(id))
-            }
         }
     }
 

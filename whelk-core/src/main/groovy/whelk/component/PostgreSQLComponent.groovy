@@ -56,6 +56,16 @@ class PostgreSQLComponent {
     interface UpdateAgent {
         void update(Document doc)
     }
+
+    interface QueueHandler {
+        /**
+         *
+         * @param doc Document from queue
+         * @return true if success
+         */
+        boolean handle(Document doc)
+    }
+
     public static final int STALE_UPDATE_RETRIES = 10
 
     public static final String PROPERTY_SQL_URL = "sqlUrl"
@@ -309,11 +319,26 @@ class PostgreSQLComponent {
             AND l.data #>> '{@graph,1,heldBy,@id}' = ANY(?);
             """.stripIndent()
 
+    private static final String SPARQL_QUEUE_ADD = "INSERT INTO lddb__sparql_q (id) VALUES (?)"
+
+    private static final String SPARQL_QUEUE_REMOVE = """
+            DELETE FROM lddb__sparql_q
+            WHERE pk = (
+              SELECT pk
+              FROM lddb__sparql_q
+              ORDER BY pk
+              FOR UPDATE SKIP LOCKED
+              LIMIT ?
+            )
+            RETURNING id;
+            """.stripIndent()
+
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
 
     boolean versioning = true
     boolean doVerifyDocumentIdRetention = true
+    boolean sparqlQueueEnabled = false
 
     LinkFinder linkFinder
     DependencyCache dependencyCache
@@ -918,6 +943,10 @@ class PostgreSQLComponent {
                 updateCard(new CardEntry(doc), connection)
             }
         }
+
+        if (sparqlQueueEnabled) {
+            sparqlQueueAdd(doc.getShortId(), connection)
+        }
     }
 
     /**
@@ -1352,6 +1381,74 @@ class PostgreSQLComponent {
             log.trace("[bulkStore] Closed connection.")
         }
         return false
+    }
+
+    private void sparqlQueueAdd(String systemId, Connection connection) {
+        PreparedStatement preparedStatement = null
+        try {
+            preparedStatement = connection.prepareStatement(SPARQL_QUEUE_ADD)
+            preparedStatement.setString(1, systemId)
+            preparedStatement.executeUpdate()
+        }
+        finally {
+            close(preparedStatement)
+        }
+    }
+
+    /**
+     *
+     * @param handler Document handler
+     * @param num Number of documents to take in one batch
+     * @param connectionPool
+     * @return true if there were any documents in the queue and the handler was successful
+     */
+    boolean sparqlQueueTake(QueueHandler handler, int num, DataSource connectionPool) {
+        Connection connection = null
+        try {
+            // Take <num> items in order from the queue table.
+            // Items are locked and then finally removed from the queue when we commit the transaction.
+            // If the handler fails on any item, the transaction is cancelled and all items remain in the queue.
+            // SKIP LOCKED in the query guarantees that we will take the first <num> unlocked rows.
+            connection = connectionPool.getConnection()
+            connection.setAutoCommit(false)
+            def ids = sparqlQueueTakeIds(num, connection)
+
+            for (String id : ids) {
+                Document doc = load(id, connection)
+                if (!doc) {
+                    log.warn("sparqlQueueTake: document with id $id does not exist")
+                }
+                else {
+                    if (!handler.handle(doc)) {
+                        connection.rollback()
+                        return false
+                    }
+                }
+            }
+
+            connection.commit()
+            return !ids.isEmpty()
+        }
+        finally {
+            close(connection)
+        }
+    }
+
+    private Collection<String> sparqlQueueTakeIds(int num, Connection connection) {
+        PreparedStatement statement = null
+        try {
+            statement = connection.prepareStatement(SPARQL_QUEUE_REMOVE)
+            statement.setInt(1, num)
+            ResultSet resultSet = statement.executeQuery()
+            List<String> result = new ArrayList<>(num)
+            while(resultSet.next()) {
+                result.add(resultSet.getString(1))
+            }
+            return result
+        }
+        finally {
+            close(statement)
+        }
     }
 
     /**
