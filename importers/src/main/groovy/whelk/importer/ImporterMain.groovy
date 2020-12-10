@@ -160,7 +160,12 @@ class ImporterMain {
                 }
                 ++i
                 filterGeneric(doc.data)
-                serializer.objectToTrig(id, doc.data)
+                try {
+                    serializer.objectToTrig(id, doc.data)
+                } catch (Throwable e) {
+                    // Part of the record may still have been written to the stream, which is now corrupt.
+                    System.err.println("${doc.getShortId()} conversion failed with ${e.toString()}")
+                }
             }
         }
     }
