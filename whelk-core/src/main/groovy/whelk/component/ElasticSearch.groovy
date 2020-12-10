@@ -200,7 +200,9 @@ class ElasticSearch {
     }
 
     void remove(String identifier) {
-        log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
+        if (log.isDebugEnabled()) {
+            log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
+        }
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
         try {
             def response = client.performRequest('POST',
@@ -227,7 +229,9 @@ class ElasticSearch {
             whelk.embellish(copy, ['chips'])
         }
 
-        log.debug("Framing ${document.getShortId()}")
+        if (log.isDebugEnabled()) {
+            log.debug("Framing ${document.getShortId()}")
+        }
 
         Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri }
 
@@ -255,7 +259,9 @@ class ElasticSearch {
             }
         }
 
-        log.trace("Framed data: ${framed}")
+        if (log.isTraceEnabled()) {
+            log.trace("Framed data: ${framed}")
+        }
 
         return JsonOutput.toJson(framed)
     }
