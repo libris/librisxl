@@ -59,19 +59,17 @@ Usage: ./manage-whelk-storage.sh -n <NAME> [-h <POSTGRES HOST>]
 EOF
 }
 
-delete_es_collection() {
-    collection=$1
-
+delete_definitions() {
     psql -h $DBHOST $DBUSER_ARG $WHELKNAME -c \
-         "DELETE FROM lddb__identifiers WHERE id in (SELECT id from lddb where collection = '$collection');"
+         "DELETE FROM lddb__identifiers WHERE id in (SELECT id from lddb where collection = 'definitions');"
     psql -h $DBHOST $DBUSER_ARG $WHELKNAME -c \
-         "DELETE FROM lddb where collection = '$collection';"
+         "DELETE FROM lddb where collection = 'definitions';"
     psql -h $DBHOST $DBUSER_ARG $WHELKNAME -c \
-         "DELETE FROM lddb__versions where collection = '$collection';"
+         "DELETE FROM lddb__versions where collection = 'definitions';"
 
     curl -XPOST http://$ESHOST:9200/$ESINDEX/_delete_by_query \
           -H 'Content-Type: application/json' \
-          -d '{ "query": { "match": { "_collection": "'${collection}'" } } }'
+          -d '{ "query": { "match": { "meta.inDataset.@id": "https://id.kb.se/dataset/definitions" } } }'
 }
 
 while [[ $# -gt 0 ]]
@@ -190,7 +188,7 @@ if [ "$NUKE_DEFINITIONS" = true ]; then
     echo "Nuking definitions data..."
     echo ""
 
-    delete_es_collection 'definitions'
+    delete_definitions
 
     echo ""
     echo ""

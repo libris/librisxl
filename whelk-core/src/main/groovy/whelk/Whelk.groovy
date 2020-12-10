@@ -14,7 +14,6 @@ import whelk.filter.LinkFinder
 import whelk.filter.NormalizerChain
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
-import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 
 import java.time.ZoneId
@@ -182,17 +181,18 @@ class Whelk {
 
     private void reindex(Document updated, Document preUpdateDoc) {
         if (elastic) {
-            String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
-            elastic.index(updated, collection, this)
+            elastic.index(updated, this)
 
-            // The updated document has changed mainEntity URI (link target)
-            if (preUpdateDoc.getThingIdentifiers()[0] &&
-                    updated.getThingIdentifiers()[0] &&
-                    updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]) {
+            if (hasChangedMainEntityId(updated, preUpdateDoc)) {
                 reindexAllLinks(updated.shortId)
             } else
                 reindexAffected(updated, preUpdateDoc.getExternalRefs(), updated.getExternalRefs())
         }
+    }
+
+    private static boolean hasChangedMainEntityId(Document updated, Document preUpdateDoc) {
+        preUpdateDoc.getThingIdentifiers()[0] && updated.getThingIdentifiers()[0] &&
+                updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]
     }
 
     private void reindexAffected(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
@@ -212,10 +212,7 @@ class Whelk {
     private void reindexAllLinks(String id) {
         SortedSet<String> links = storage.getDependencies(id)
         links.addAll(storage.getDependers(id))
-        for (String idToReindex : links) {
-            Document docToReindex = storage.load(idToReindex)
-            elastic.index(docToReindex, storage.getCollectionBySystemID(idToReindex), this)
-        }
+        bulkIndex(links)
     }
 
     private void reindexAffectedSync(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
@@ -223,7 +220,7 @@ class Whelk {
         Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
 
         removedLinks.findResults { storage.getSystemIdByIri(it.iri) }
-                .each{id -> elastic.decrementReverseLinks(id)}
+                .each{id -> elastic.decrementReverseLinks(id) }
 
         addedLinks.each { link ->
             String id = storage.getSystemIdByIri(link.iri)
@@ -233,7 +230,7 @@ class Whelk {
                 def reverseRelations = lenses.collect{ jsonld.getInverseProperties(doc.data, it) }.flatten()
                 if (reverseRelations.contains(link.relation)) {
                     // we added a link to a document that includes us in its @reverse relations, reindex it
-                    elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
+                    elastic.index(doc, this)
                 }
                 else {
                     // just update link counter
@@ -242,14 +239,9 @@ class Whelk {
             }
         }
 
+
         if (storage.isCardChangedOrNonexistent(document.getShortId())) {
-            // TODO: when types (auth, bib...) have been removed from elastic, do bulk index in chunks of size N here
-            getAffectedIds(document).each { id ->
-                Document doc = storage.load(id)
-                if (doc) { // might not exist because of batch jobs without indexing
-                    elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
-                }
-            }
+            bulkIndex(getAffectedIds(document))
         }
     }
 
@@ -266,6 +258,12 @@ class Whelk {
             }
         }
         return Iterables.filter(Iterables.concat(queries), { it != null })
+    }
+
+    private void bulkIndex(Iterable<String> ids) {
+        Iterables.partition(ids, 100).each {
+            elastic.bulkIndexWithRetry(it, this)
+        }
     }
 
     /**
@@ -335,7 +333,7 @@ class Whelk {
         boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
         if (success) {
             if (elastic && index) {
-                elastic.index(document, collection, this)
+                elastic.index(document, this)
                 reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
             }
         }
