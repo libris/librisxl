@@ -530,19 +530,21 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     Map createBoolFilter(Map<String, String[]> fieldsAndVals) {
         List clauses = []
-        fieldsAndVals.each {field, vals ->
-            for (val in vals) {
-                if (field.startsWith(EXISTS_PREFIX)) {
-                    def f = field.substring(EXISTS_PREFIX.length())
+        fieldsAndVals.each {field, values ->
+            if (field.startsWith(EXISTS_PREFIX)) {
+                def f = field.substring(EXISTS_PREFIX.length())
+                for (val in values) {
                     clauses.add(parseBoolean(field, val)
                             ? ['exists': ['field': f]]
                             : ['bool': ['must_not': ['exists': ['field': f]]]])
                 }
-                else {
+            }
+            else {
+                for (val in values) {
                     boolean isSimple = isSimple(val)
                     clauses.add([(isSimple ? 'simple_query_string' : 'query_string'): [
-                            'query': isSimple ? val : escapeNonSimpleQueryString(val),
-                            'fields': [field],
+                            'query'           : isSimple ? val : escapeNonSimpleQueryString(val),
+                            'fields'          : [field],
                             'default_operator': 'AND'
                     ]])
                 }
