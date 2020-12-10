@@ -1,6 +1,6 @@
 package whelk.search;
 
-public enum ParameterPrefix {
+public enum RangeParameterPrefix {
     MIN("min-"),
     MIN_EX("minEx-"),
     MAX("max-"),
@@ -9,7 +9,7 @@ public enum ParameterPrefix {
 
     String prefix;
 
-    ParameterPrefix(String prefix) {
+    RangeParameterPrefix(String prefix) {
         this.prefix = prefix;
     }
 
