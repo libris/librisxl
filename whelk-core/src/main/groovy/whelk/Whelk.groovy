@@ -197,14 +197,11 @@ class Whelk {
         if (elastic) {
             elastic.index(updated, this)
 
-<<<<<<< HEAD
-=======
-            // The updated document has changed mainEntity URI (link target)
->>>>>>> Add changes in Whelk
             if (hasChangedMainEntityId(updated, preUpdateDoc)) {
                 reindexAllLinks(updated.shortId)
-            } else
+            } else {
                 reindexAffected(updated, preUpdateDoc.getExternalRefs(), updated.getExternalRefs())
+            }
         }
     }
 
