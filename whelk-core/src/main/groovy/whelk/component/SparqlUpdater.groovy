@@ -77,7 +77,7 @@ class SparqlUpdater {
     void poke() {
         executorService.submit(task)
     }
-    
+
     static HttpClient buildHttpClient() {
         PoolingClientConnectionManager cm = new PoolingClientConnectionManager()
         cm.setMaxTotal(poolSize())

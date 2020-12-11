@@ -1396,6 +1396,8 @@ class PostgreSQLComponent {
     }
 
     /**
+     * Take <num> items in order from the queue and pass them one by one to the handler.
+     * If the handler fails on any item, all items remain in the queue.
      *
      * @param handler Document handler
      * @param num Number of documents to take in one batch
@@ -1405,8 +1407,7 @@ class PostgreSQLComponent {
     boolean sparqlQueueTake(QueueHandler handler, int num, DataSource connectionPool) {
         Connection connection = null
         try {
-            // Take <num> items in order from the queue table.
-            // Items are locked and then finally removed from the queue when we commit the transaction.
+            // Items (rows) are locked and then finally removed from the queue when we commit the transaction.
             // If the handler fails on any item, the transaction is cancelled and all items remain in the queue.
             // SKIP LOCKED in the query guarantees that we will take the first <num> unlocked rows.
             connection = connectionPool.getConnection()
