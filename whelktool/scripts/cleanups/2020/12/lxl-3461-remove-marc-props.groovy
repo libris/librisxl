@@ -9,18 +9,21 @@ properties = ["marc:hasCountryOfProducingEntityForArchivalFilms",
               "marc:soundAspect",
               "marc:transposition"]
 
-selectByCollection('bib') { bib ->
-    def instance = bib.doc.data['@graph'][1]
+PrintWriter report = getReportWriter("report")
+
+selectByCollection('bib') { rec ->
+    def instance = rec.doc.data['@graph'][1]
     boolean removed = DocumentUtil.traverse(instance) { value, List path ->
         if (!path) {
             return
         }
         def key = path.last() as String
         if (properties.contains(key)) {
+            report.println("${rec.doc.getShortId()}, $key")
             return new DocumentUtil.Remove()
         }
     }
     if (removed) {
-        bib.scheduleSave()
+        rec.scheduleSave()
     }
 }
