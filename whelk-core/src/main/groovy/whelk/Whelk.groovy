@@ -96,7 +96,7 @@ class Whelk {
             timezone = ZoneId.of((String) configuration.timezone)
         }
         loadCoreData()
-        initSparqlUpdater(configuration)
+        sparqlUpdater = SparqlUpdater.build(storage, jsonld.context, configuration)
     }
 
     synchronized MarcFrameConverter getMarcFrameConverter() {
@@ -117,21 +117,6 @@ class Whelk {
         loadVocabData()
         setJsonld(new JsonLd(contextData, displayData, vocabData))
         log.info("Loaded with core data")
-    }
-
-    void initSparqlUpdater(Properties props) {
-        String sparqlCrudUrl = props.getProperty("sparqlCrudUrl")
-        if (sparqlCrudUrl) {
-            Virtuoso virtuoso = new Virtuoso(
-                    jsonld.context,
-                    SparqlUpdater.buildHttpClient(),
-                    sparqlCrudUrl,
-                    props.getProperty("sparqlUser"),
-                    props.getProperty("sparqlPass"))
-
-            this.sparqlUpdater = new SparqlUpdater(storage, virtuoso)
-            storage.sparqlQueueEnabled = true
-        }
     }
 
     void setJsonld(JsonLd jsonld) {

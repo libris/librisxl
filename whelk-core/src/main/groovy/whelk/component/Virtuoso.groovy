@@ -13,6 +13,7 @@ import org.apache.http.client.methods.HttpPut
 import org.apache.http.client.methods.HttpRequestBase
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.BasicCredentialsProvider
+import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.util.EntityUtils
 import whelk.Document
 import whelk.converter.JsonLdToTurtle
@@ -25,19 +26,20 @@ class Virtuoso {
     private String sparqlCrudEndpoint
 
     private HttpClient httpClient
-
     private Map jsonldContext
+    private String user
+    private String pass
 
-    Virtuoso(Map jsonldContext, HttpClient httpClient, String endpoint, String user, String pass) {
-        Preconditions.checkNotNull(jsonldContext)
-        Preconditions.checkNotNull(httpClient)
-        Preconditions.checkNotNull(endpoint)
-        Preconditions.checkNotNull(user)
-        Preconditions.checkNotNull(pass)
+    Virtuoso(Map jsonldContext, String endpoint, String user, String pass) {
+        this.jsonldContext = Preconditions.checkNotNull(jsonldContext)
+        this.sparqlCrudEndpoint = Preconditions.checkNotNull(endpoint)
+        this.user = Preconditions.checkNotNull(user)
+        this.pass = Preconditions.checkNotNull(pass)
 
-        this.jsonldContext = jsonldContext
-        this.sparqlCrudEndpoint = endpoint
+        setHttpClient(new DefaultHttpClient())
+    }
 
+    void setHttpClient(HttpClient httpClient) {
         this.httpClient = httpClient
         setCredentials(httpClient, user, pass)
     }

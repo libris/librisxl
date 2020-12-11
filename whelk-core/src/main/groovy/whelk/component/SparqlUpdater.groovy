@@ -23,8 +23,8 @@ import java.util.concurrent.TimeUnit
 class SparqlUpdater {
     private static final long PERIODIC_CHECK_MS = 30 * 1000
 
-    private static final int NUM_WORKERS = 2
-    private static final int MAX_CONNECTION_POOL_SIZE = 8
+    private static final int MAX_CONNECTION_POOL_SIZE = 16
+    private static final int DEFAULT_NUM_WORKERS = 4
 
     // HTTP timeout parameters
     private static final int CONNECT_TIMEOUT_MS = 5 * 1000
@@ -33,12 +33,46 @@ class SparqlUpdater {
     // Number of items to take from queue each time
     private static final int QUEUE_TAKE_NUM = 1
 
-    private final ExecutorService executorService = buildExecutorService()
+    private final ExecutorService executorService
     private final Runnable task
     private final Timer timer = new Timer()
 
-    SparqlUpdater(PostgreSQLComponent storage, Virtuoso sparql) {
-        DataSource connectionPool = storage.createAdditionalConnectionPool(this.getClass().getSimpleName(), poolSize())
+    private final int numWorkers
+
+    static SparqlUpdater build(PostgreSQLComponent storage, Map jsonLdContext, Properties configuration) {
+        String sparqlCrudUrl = configuration.getProperty("sparqlCrudUrl")
+        if (sparqlCrudUrl) {
+            Virtuoso virtuoso = new Virtuoso(
+                    jsonLdContext,
+                    sparqlCrudUrl,
+                    configuration.getProperty("sparqlUser"),
+                    configuration.getProperty("sparqlPass"))
+
+            int numWorkers = configuration.getProperty("sparqlNumWorkers")
+                    ? Integer.parseInt(configuration.getProperty("sparqlNumWorkers"))
+                    : DEFAULT_NUM_WORKERS
+
+            return new SparqlUpdater(storage, virtuoso, numWorkers)
+        }
+        else {
+            return new SparqlUpdater()
+        }
+    }
+
+    private SparqlUpdater() {
+        executorService = null
+        task = null
+        numWorkers = 0
+    }
+
+    private SparqlUpdater(PostgreSQLComponent storage, Virtuoso sparql, int numWorkers) {
+        this.numWorkers = numWorkers
+        int poolSize = Math.min(numWorkers, MAX_CONNECTION_POOL_SIZE)
+
+        executorService = buildExecutorService(numWorkers)
+        sparql.setHttpClient(buildHttpClient(poolSize))
+        storage.sparqlQueueEnabled = true
+        DataSource connectionPool = storage.createAdditionalConnectionPool(this.getClass().getSimpleName(), poolSize)
 
         PostgreSQLComponent.QueueHandler handler = { Document doc ->
             try {
@@ -75,13 +109,15 @@ class SparqlUpdater {
      * Force polling SPARQL update queue now
      */
     void poke() {
-        executorService.submit(task)
+        if (executorService) {
+            executorService.submit(task)
+        }
     }
 
-    static HttpClient buildHttpClient() {
+    private static HttpClient buildHttpClient(final int poolSize) {
         PoolingClientConnectionManager cm = new PoolingClientConnectionManager()
-        cm.setMaxTotal(poolSize())
-        cm.setDefaultMaxPerRoute(poolSize())
+        cm.setMaxTotal(poolSize)
+        cm.setDefaultMaxPerRoute(poolSize)
 
         HttpClient httpClient = new DefaultHttpClient(cm)
         HttpParams httpParams = httpClient.getParams()
@@ -92,18 +128,15 @@ class SparqlUpdater {
         return httpClient
     }
 
-    private ExecutorService buildExecutorService() {
+    private static ExecutorService buildExecutorService(final int poolSize) {
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat("${getClass().getSimpleName()}-%d")
+                .setNameFormat("${SparqlUpdater.class.getSimpleName()}-%d")
                 .build()
 
         // A fixed-sized pool which allows queuing the same number of tasks as the pool size and drops additional tasks.
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(NUM_WORKERS, NUM_WORKERS, 0L, TimeUnit.MILLISECONDS,
-                new LinkedBlockingDeque<>(NUM_WORKERS), threadFactory, new ThreadPoolExecutor.DiscardPolicy())
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(poolSize, poolSize, 0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingDeque<>(poolSize), threadFactory, new ThreadPoolExecutor.DiscardPolicy())
         return MoreExecutors.getExitingExecutorService(executor, 5, TimeUnit.SECONDS)
     }
-
-    private static int poolSize() {
-        Math.min(NUM_WORKERS, MAX_CONNECTION_POOL_SIZE)
-    }
 }
+
