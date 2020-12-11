@@ -58,13 +58,7 @@ class Whelk {
 
     static Whelk createLoadedCoreWhelk(Properties configuration, boolean useCache = false) {
         Whelk whelk = new Whelk(useCache ? new CachingPostgreSQLComponent(configuration) : new PostgreSQLComponent(configuration))
-        if (configuration.baseUri) {
-            whelk.baseUri = new URI((String) configuration.baseUri)
-        }
-        if (configuration.timezone) {
-            whelk.timezone = ZoneId.of((String) configuration.timezone)
-        }
-        whelk.loadCoreData()
+        whelk.configureAndLoad(configuration)
         return whelk
     }
 
@@ -74,13 +68,7 @@ class Whelk {
 
     static Whelk createLoadedSearchWhelk(Properties configuration, boolean useCache = false) {
         Whelk whelk = new Whelk(configuration, useCache)
-        if (configuration.baseUri) {
-            whelk.baseUri = new URI((String) configuration.baseUri)
-        }
-        if (configuration.timezone) {
-            whelk.timezone = ZoneId.of((String) configuration.timezone)
-        }
-        whelk.loadCoreData()
+        whelk.configureAndLoad(configuration)
         return whelk
     }
 
@@ -100,7 +88,15 @@ class Whelk {
         this(useCache ? new CachingPostgreSQLComponent(conf) : new PostgreSQLComponent(conf), new ElasticSearch(conf))
     }
 
-    Whelk() {
+    private void configureAndLoad(Properties configuration) {
+        if (configuration.baseUri) {
+            baseUri = new URI((String) configuration.baseUri)
+        }
+        if (configuration.timezone) {
+            timezone = ZoneId.of((String) configuration.timezone)
+        }
+        loadCoreData()
+        initSparqlUpdater(configuration)
     }
 
     synchronized MarcFrameConverter getMarcFrameConverter() {
@@ -123,18 +119,17 @@ class Whelk {
         log.info("Loaded with core data")
     }
 
-    void initVirtuoso(JsonLd jsonld) {
-        Properties props = PropertyLoader.loadProperties("secret")
+    void initSparqlUpdater(Properties props) {
         String sparqlCrudUrl = props.getProperty("sparqlCrudUrl")
         if (sparqlCrudUrl) {
-            Virtuoso v = new Virtuoso(
+            Virtuoso virtuoso = new Virtuoso(
                     jsonld.context,
                     SparqlUpdater.buildHttpClient(),
                     sparqlCrudUrl,
                     props.getProperty("sparqlUser"),
                     props.getProperty("sparqlPass"))
 
-            this.sparqlUpdater = new SparqlUpdater(storage, v)
+            this.sparqlUpdater = new SparqlUpdater(storage, virtuoso)
             storage.sparqlQueueEnabled = true
         }
     }
@@ -146,7 +141,6 @@ class Whelk {
             elasticFind = new ElasticFind(new ESQuery(this))
             initDocumentNormalizers()
         }
-        initVirtuoso(jsonld)
     }
 
     private void initDocumentNormalizers() {

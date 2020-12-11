@@ -38,8 +38,7 @@ class SparqlUpdater {
     private final Timer timer = new Timer()
 
     SparqlUpdater(PostgreSQLComponent storage, Virtuoso sparql) {
-        int poolSize = Math.min(NUM_WORKERS, MAX_CONNECTION_POOL_SIZE)
-        DataSource connectionPool = storage.createAdditionalConnectionPool(this.getClass().getSimpleName(), poolSize)
+        DataSource connectionPool = storage.createAdditionalConnectionPool(this.getClass().getSimpleName(), poolSize())
 
         PostgreSQLComponent.QueueHandler handler = { Document doc ->
             try {
@@ -78,6 +77,20 @@ class SparqlUpdater {
     void poke() {
         executorService.submit(task)
     }
+    
+    static HttpClient buildHttpClient() {
+        PoolingClientConnectionManager cm = new PoolingClientConnectionManager()
+        cm.setMaxTotal(poolSize())
+        cm.setDefaultMaxPerRoute(poolSize())
+
+        HttpClient httpClient = new DefaultHttpClient(cm)
+        HttpParams httpParams = httpClient.getParams()
+
+        HttpConnectionParams.setConnectionTimeout(httpParams, CONNECT_TIMEOUT_MS)
+        HttpConnectionParams.setSoTimeout(httpParams, READ_TIMEOUT_MS)
+
+        return httpClient
+    }
 
     private ExecutorService buildExecutorService() {
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
@@ -90,18 +103,7 @@ class SparqlUpdater {
         return MoreExecutors.getExitingExecutorService(executor, 5, TimeUnit.SECONDS)
     }
 
-    static HttpClient buildHttpClient() {
-        PoolingClientConnectionManager cm = new PoolingClientConnectionManager()
-        int poolSize = Math.min(NUM_WORKERS, MAX_CONNECTION_POOL_SIZE)
-        cm.setMaxTotal(poolSize)
-        cm.setDefaultMaxPerRoute(poolSize)
-
-        HttpClient httpClient = new DefaultHttpClient(cm)
-        HttpParams httpParams = httpClient.getParams()
-
-        HttpConnectionParams.setConnectionTimeout(httpParams, CONNECT_TIMEOUT_MS)
-        HttpConnectionParams.setSoTimeout(httpParams, READ_TIMEOUT_MS)
-
-        return httpClient
+    private static int poolSize() {
+        Math.min(NUM_WORKERS, MAX_CONNECTION_POOL_SIZE)
     }
 }
