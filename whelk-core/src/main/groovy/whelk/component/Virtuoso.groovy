@@ -18,6 +18,7 @@ import org.apache.http.util.EntityUtils
 import whelk.Document
 import whelk.converter.JsonLdToTurtle
 import whelk.exception.UnexpectedHttpStatusException
+import whelk.util.Metrics
 
 import java.nio.charset.StandardCharsets
 
@@ -55,7 +56,15 @@ class Virtuoso {
     private void updateNamedGraph(String method, Document doc) {
         HttpRequestBase request = buildRequest(method, doc)
         try {
-            handleResponse(httpClient.execute(request), method, doc.getCompleteId())
+            Metrics.clientTimer.labels(Virtuoso.class.getSimpleName(), method).time {
+                handleResponse(httpClient.execute(request), method, doc.getCompleteId())
+            }
+        }
+        catch(Exception e) {
+            if (!(e instanceof UnexpectedHttpStatusException)) {
+                Metrics.clientCounter.labels(Virtuoso.class.getSimpleName(), method, e.getMessage()).inc()
+            }
+            throw e
         }
         finally {
             request.releaseConnection()
@@ -84,6 +93,7 @@ class Virtuoso {
     private static void handleResponse(HttpResponse response, String method, String docURI) {
         StatusLine statusLine = response.getStatusLine()
         int statusCode = statusLine.getStatusCode()
+        Metrics.clientCounter.labels(Virtuoso.class.getSimpleName(), method, "$statusCode").inc()
 
         if ((statusCode >= 200 && statusCode < 300) || (method == 'DELETE' && statusCode == 404)) {
             if (log.isDebugEnabled()) {
