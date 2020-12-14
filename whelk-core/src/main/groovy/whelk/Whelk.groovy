@@ -9,7 +9,6 @@ import whelk.component.DocumentNormalizer
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.component.SparqlUpdater
-import whelk.component.Virtuoso
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LinkFinder
@@ -332,9 +331,7 @@ class Whelk {
                 elastic.index(document, this)
                 reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
             }
-            if (sparqlUpdater) {
-                sparqlUpdater.poke()
-            }
+            sparqlUpdater?.pollNow()
         }
         return success
     }
@@ -356,9 +353,7 @@ class Whelk {
         }
 
         reindex(updated, preUpdateDoc)
-        if (sparqlUpdater) {
-            sparqlUpdater.poke()
-        }
+        sparqlUpdater?.pollNow()
     }
 
     Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum, boolean index = true) {
@@ -372,9 +367,7 @@ class Whelk {
         if (index) {
             reindex(updated, preUpdateDoc)
         }
-        if (sparqlUpdater) {
-            sparqlUpdater.poke()
-        }
+        sparqlUpdater?.pollNow()
     }
 
     /**

@@ -22,8 +22,6 @@ import java.util.concurrent.TimeUnit
 @CompileStatic
 class SparqlUpdater {
     private static final long PERIODIC_CHECK_MS = 30 * 1000
-
-    private static final int MAX_CONNECTION_POOL_SIZE = 16
     private static final int DEFAULT_NUM_WORKERS = 4
 
     // HTTP timeout parameters
@@ -35,22 +33,27 @@ class SparqlUpdater {
 
     private final ExecutorService executorService
     private final Runnable task
-    private final Timer timer = new Timer()
+    private final Timer timer = new Timer("${SparqlUpdater.class.getName()}-timer", true)
 
     private final int numWorkers
 
     static SparqlUpdater build(PostgreSQLComponent storage, Map jsonLdContext, Properties configuration) {
+        if (!(configuration.getProperty("sparqlEnabled")?.toLowerCase() == 'false')) {
+            storage.sparqlQueueEnabled = true
+        }
+
         String sparqlCrudUrl = configuration.getProperty("sparqlCrudUrl")
         if (sparqlCrudUrl) {
-            Virtuoso virtuoso = new Virtuoso(
-                    jsonLdContext,
-                    sparqlCrudUrl,
-                    configuration.getProperty("sparqlUser"),
-                    configuration.getProperty("sparqlPass"))
-
             int numWorkers = configuration.getProperty("sparqlNumWorkers")
                     ? Integer.parseInt(configuration.getProperty("sparqlNumWorkers"))
                     : DEFAULT_NUM_WORKERS
+
+            Virtuoso virtuoso = new Virtuoso(
+                    jsonLdContext,
+                    buildHttpClient(numWorkers),
+                    sparqlCrudUrl,
+                    configuration.getProperty("sparqlUser"),
+                    configuration.getProperty("sparqlPass"))
 
             return new SparqlUpdater(storage, virtuoso, numWorkers)
         }
@@ -67,12 +70,7 @@ class SparqlUpdater {
 
     private SparqlUpdater(PostgreSQLComponent storage, Virtuoso sparql, int numWorkers) {
         this.numWorkers = numWorkers
-        int poolSize = Math.min(numWorkers, MAX_CONNECTION_POOL_SIZE)
-
-        executorService = buildExecutorService(numWorkers)
-        sparql.setHttpClient(buildHttpClient(poolSize))
-        storage.sparqlQueueEnabled = true
-        DataSource connectionPool = storage.createAdditionalConnectionPool(this.getClass().getSimpleName(), poolSize)
+        this.executorService = buildExecutorService(numWorkers)
 
         PostgreSQLComponent.QueueHandler handler = { Document doc ->
             try {
@@ -90,11 +88,12 @@ class SparqlUpdater {
             }
         }
 
-        task = {
+        DataSource connectionPool = storage.createAdditionalConnectionPool(this.getClass().getSimpleName(), numWorkers)
+        this.task = {
             try {
-                // Run as long as there might be docs in the queue and we haven't failed
+                // Run as long as there still might be docs in the queue and we haven't failed
                 if (storage.sparqlQueueTake(handler, QUEUE_TAKE_NUM, connectionPool)) {
-                    poke()
+                    pollNow()
                 }
             }
             catch (Exception e) {
@@ -102,13 +101,13 @@ class SparqlUpdater {
             }
         }
 
-        timer.scheduleAtFixedRate({ poke() }, PERIODIC_CHECK_MS, PERIODIC_CHECK_MS)
+        timer.scheduleAtFixedRate({ pollNow() }, PERIODIC_CHECK_MS, PERIODIC_CHECK_MS)
     }
 
     /**
      * Force polling SPARQL update queue now
      */
-    void poke() {
+    void pollNow() {
         if (executorService) {
             executorService.submit(task)
         }
@@ -139,4 +138,3 @@ class SparqlUpdater {
         return MoreExecutors.getExitingExecutorService(executor, 5, TimeUnit.SECONDS)
     }
 }
-
