@@ -19,17 +19,20 @@ public class Helpers
         private final ResultSet resultSet;
         private final String requestedCollection;
         private final String mustBeHeldBy;
+        private final String explicitSet;
         private final boolean includeDependenciesInTimeInterval;
         private final Stack<Document> resultingDocuments = new Stack<>();
         private boolean firstAccess = true;
 
-        public ResultIterator(PreparedStatement statement, String requestedCollection, String mustBeHeldBy, boolean includeDependenciesInTimeInterval)
+        public ResultIterator(PreparedStatement statement, String requestedCollection, String mustBeHeldBy,
+                              boolean includeDependenciesInTimeInterval, String explicitSet)
                 throws SQLException {
             this.statement = statement;
             this.resultSet = statement.executeQuery();
             this.requestedCollection = requestedCollection;
             this.mustBeHeldBy = mustBeHeldBy;
             this.includeDependenciesInTimeInterval = includeDependenciesInTimeInterval;
+            this.explicitSet = explicitSet;
         }
 
         private boolean isHeld(Document doc, String bySigel)
@@ -50,6 +53,27 @@ public class Helpers
             return false;
         }
 
+        private void queueDocument(Document doc)
+        {
+            if (explicitSet == null)
+            {
+                resultingDocuments.push(doc);
+            }
+            // Beware: This <marc:..>-stuff is not future proof!
+            else if (explicitSet.equals("nb") &&
+                    doc.getEncodingLevel() != null &&
+                    doc.getEncodingLevel().equals("marc:FullLevel"))
+            {
+                resultingDocuments.push(doc);
+            }
+            else if (explicitSet.equals("sao") &&
+                    doc.getThingInScheme() != null &&
+                    doc.getThingInScheme().equals("https://id.kb.se/term/sao"))
+            {
+                resultingDocuments.push(doc);
+            }
+        }
+
         private void emitAffected(Document updated)
         {
             String updatedCollection = LegacyIntegrationTools.determineLegacyCollection(updated, OaiPmh.s_whelk.getJsonld());
@@ -62,7 +86,7 @@ public class Helpers
             if (requestedCollection == null)
             {
                 // If no collection is requested, all records matching the prepared statement are welcome.
-                resultingDocuments.push(updated);
+                queueDocument(updated);
             }
             else if (updatedCollection.equals("auth"))
             {
@@ -70,7 +94,7 @@ public class Helpers
 
                 if (requestedCollection.equals("auth") &&
                         (type == null || !OaiPmh.workDerivativeTypes.contains(type)))
-                    resultingDocuments.push(updated);
+                    queueDocument(updated);
                 if (includeDependenciesInTimeInterval && (requestedCollection.equals("bib") || requestedCollection.equals("hold")))
                 {
                     List<Tuple2<String, String>> dependers = OaiPmh.s_whelk.getStorage().followDependers(updated.getShortId(), JsonLd.getNON_DEPENDANT_RELATIONS());
@@ -82,14 +106,14 @@ public class Helpers
                         if (dependerCollection.equals("bib") && requestedCollection.equals("bib"))
                         {
                             if (mustBeHeldBy == null || isHeld(dependerDocument, mustBeHeldBy))
-                                resultingDocuments.push(dependerDocument);
+                                queueDocument(dependerDocument);
                         }
                         else if (dependerCollection.equals("hold") && requestedCollection.equals("hold"))
                         {
                             String sigel = dependerDocument.getSigel();
                             if (mustBeHeldBy == null || mustBeHeldBy.equals(sigel))
                             {
-                                resultingDocuments.push(dependerDocument);
+                                queueDocument(dependerDocument);
                             }
                         }
                     }
@@ -101,7 +125,7 @@ public class Helpers
                 {
                     if (mustBeHeldBy == null || isHeld(updated, mustBeHeldBy))
                     {
-                        resultingDocuments.push(updated);
+                        queueDocument(updated);
                     }
                 }
             }
@@ -112,7 +136,7 @@ public class Helpers
                     String sigel = updated.getSigel();
                     if (mustBeHeldBy == null || mustBeHeldBy.equals(sigel))
                     {
-                        resultingDocuments.push(updated);
+                        queueDocument(updated);
                     }
                 }
             }
@@ -230,16 +254,6 @@ public class Helpers
                 sql += " AND modified <= ? ";
             }
 
-            if (setSpec.getRootSet().equals(SetSpec.SET_NB))
-            {
-                // Beware: This <marc:..>-stuff is not future proof!
-                sql += " AND collection = 'bib' AND data#>>'{@graph,0,encodingLevel}' = 'marc:FullLevel' ";
-            }
-            if (setSpec.getRootSet().equals(SetSpec.SET_SAO))
-            {
-                sql += " AND collection = 'auth' AND data#>>'{@graph,1,inScheme,@id}' = 'https://id.kb.se/term/sao' ";
-            }
-
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setFetchSize(512);
             int parameterIndex = 1;
@@ -259,9 +273,10 @@ public class Helpers
             preparedStatement.setString(1, id);
         }
 
-        // Extract requested marc:collection from setSpec
+        // Extract requested marc:collection and explicit set, if any, from setSpec
         String requestedCollection = null;
         String mustBeHeldBy = null;
+        String explicitSet = null;
         switch (setSpec.getRootSet())
         {
             case SetSpec.SET_AUTH:
@@ -269,8 +284,18 @@ public class Helpers
             case SetSpec.SET_HOLD:
                 requestedCollection = setSpec.getRootSet();
                 mustBeHeldBy = setSpec.getSubset();
+                break;
+            case SetSpec.SET_NB:
+                requestedCollection = SetSpec.SET_BIB;
+                explicitSet = "nb";
+                break;
+            case SetSpec.SET_SAO:
+                requestedCollection = SetSpec.SET_AUTH;
+                explicitSet = "sao";
+                break;
         }
 
-        return new ResultIterator(preparedStatement, requestedCollection, mustBeHeldBy, includeDependenciesInTimeInterval);
+        return new ResultIterator(preparedStatement, requestedCollection, mustBeHeldBy,
+                includeDependenciesInTimeInterval, explicitSet);
     }
 }
