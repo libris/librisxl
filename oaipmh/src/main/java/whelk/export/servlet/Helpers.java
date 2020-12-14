@@ -17,16 +17,18 @@ public class Helpers
 
         private final PreparedStatement statement;
         private final ResultSet resultSet;
-        private final SetSpec setSpec;
+        private final String requestedCollection;
+        private final String mustBeHeldBy;
         private final boolean includeDependenciesInTimeInterval;
         private final Stack<Document> resultingDocuments = new Stack<>();
         private boolean firstAccess = true;
 
-        public ResultIterator(PreparedStatement statement, SetSpec setSpec, boolean includeDependenciesInTimeInterval)
+        public ResultIterator(PreparedStatement statement, String requestedCollection, String mustBeHeldBy, boolean includeDependenciesInTimeInterval)
                 throws SQLException {
             this.statement = statement;
             this.resultSet = statement.executeQuery();
-            this.setSpec = setSpec;
+            this.requestedCollection = requestedCollection;
+            this.mustBeHeldBy = mustBeHeldBy;
             this.includeDependenciesInTimeInterval = includeDependenciesInTimeInterval;
         }
 
@@ -57,19 +59,19 @@ public class Helpers
                 return;
             }
 
-            if (setSpec == null || setSpec.getRootSet() == null)
+            if (requestedCollection == null)
             {
-                // If no set is used, all records are welcome.
+                // If no collection is requested, all records matching the prepared statement are welcome.
                 resultingDocuments.push(updated);
             }
             else if (updatedCollection.equals("auth"))
             {
                 String type = updated.getThingType();
 
-                if (setSpec.getRootSet().equals("auth") &&
+                if (requestedCollection.equals("auth") &&
                         (type == null || !OaiPmh.workDerivativeTypes.contains(type)))
                     resultingDocuments.push(updated);
-                if (includeDependenciesInTimeInterval && (setSpec.getRootSet().equals("bib") || setSpec.getRootSet().equals("hold")))
+                if (includeDependenciesInTimeInterval && (requestedCollection.equals("bib") || requestedCollection.equals("hold")))
                 {
                     List<Tuple2<String, String>> dependers = OaiPmh.s_whelk.getStorage().followDependers(updated.getShortId(), JsonLd.getNON_DEPENDANT_RELATIONS());
                     for (Tuple2<String, String> depender : dependers)
@@ -77,15 +79,13 @@ public class Helpers
                         String dependerId = depender.getFirst();
                         Document dependerDocument = OaiPmh.s_whelk.getDocument(dependerId);
                         String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDocument, OaiPmh.s_whelk.getJsonld());
-                        if (dependerCollection.equals("bib") && setSpec.getRootSet().equals("bib"))
+                        if (dependerCollection.equals("bib") && requestedCollection.equals("bib"))
                         {
-                            String mustBeHeldBy = setSpec.getSubset();
                             if (mustBeHeldBy == null || isHeld(dependerDocument, mustBeHeldBy))
                                 resultingDocuments.push(dependerDocument);
                         }
-                        else if (dependerCollection.equals("hold") && setSpec.getRootSet().equals("hold"))
+                        else if (dependerCollection.equals("hold") && requestedCollection.equals("hold"))
                         {
-                            String mustBeHeldBy = setSpec.getSubset();
                             String sigel = dependerDocument.getSigel();
                             if (mustBeHeldBy == null || mustBeHeldBy.equals(sigel))
                             {
@@ -97,9 +97,8 @@ public class Helpers
             }
             else if (updatedCollection.equals("bib"))
             {
-                if (setSpec.getRootSet().equals("bib"))
+                if (requestedCollection.equals("bib"))
                 {
-                    String mustBeHeldBy = setSpec.getSubset();
                     if (mustBeHeldBy == null || isHeld(updated, mustBeHeldBy))
                     {
                         resultingDocuments.push(updated);
@@ -108,9 +107,8 @@ public class Helpers
             }
             else if (updatedCollection.equals("hold"))
             {
-                if (setSpec.getRootSet().equals("hold"))
+                if (requestedCollection.equals("hold"))
                 {
-                    String mustBeHeldBy = setSpec.getSubset();
                     String sigel = updated.getSigel();
                     if (mustBeHeldBy == null || mustBeHeldBy.equals(sigel))
                     {
@@ -226,10 +224,20 @@ public class Helpers
             String sql = "SELECT data FROM lddb WHERE collection <> 'definitions'";
 
             if (fromDateTime != null) {
-                sql += " AND modified >= ?";
+                sql += " AND modified >= ? ";
             }
             if (untilDateTime != null) {
-                sql += " AND modified <= ?";
+                sql += " AND modified <= ? ";
+            }
+
+            if (setSpec.getRootSet().equals(SetSpec.SET_NB))
+            {
+                // Beware: This <marc:..>-stuff is not future proof!
+                sql += " AND collection = 'bib' AND data#>>'{@graph,0,encodingLevel}' = 'marc:FullLevel' ";
+            }
+            if (setSpec.getRootSet().equals(SetSpec.SET_SAO))
+            {
+                sql += " AND collection = 'auth' AND data#>>'{@graph,1,inScheme,@id}' = 'https://id.kb.se/term/sao' ";
             }
 
             preparedStatement = connection.prepareStatement(sql);
@@ -251,6 +259,18 @@ public class Helpers
             preparedStatement.setString(1, id);
         }
 
-        return new ResultIterator(preparedStatement, setSpec, includeDependenciesInTimeInterval);
+        // Extract requested marc:collection from setSpec
+        String requestedCollection = null;
+        String mustBeHeldBy = null;
+        switch (setSpec.getRootSet())
+        {
+            case SetSpec.SET_AUTH:
+            case SetSpec.SET_BIB:
+            case SetSpec.SET_HOLD:
+                requestedCollection = setSpec.getRootSet();
+                mustBeHeldBy = setSpec.getSubset();
+        }
+
+        return new ResultIterator(preparedStatement, requestedCollection, mustBeHeldBy, includeDependenciesInTimeInterval);
     }
 }
