@@ -277,22 +277,25 @@ public class Helpers
         String requestedCollection = null;
         String mustBeHeldBy = null;
         String explicitSet = null;
-        switch (setSpec.getRootSet())
+        if (setSpec != null && setSpec.getRootSet() != null)
         {
-            case SetSpec.SET_AUTH:
-            case SetSpec.SET_BIB:
-            case SetSpec.SET_HOLD:
-                requestedCollection = setSpec.getRootSet();
-                mustBeHeldBy = setSpec.getSubset();
-                break;
-            case SetSpec.SET_NB:
-                requestedCollection = SetSpec.SET_BIB;
-                explicitSet = "nb";
-                break;
-            case SetSpec.SET_SAO:
-                requestedCollection = SetSpec.SET_AUTH;
-                explicitSet = "sao";
-                break;
+            switch (setSpec.getRootSet())
+            {
+                case SetSpec.SET_AUTH:
+                case SetSpec.SET_BIB:
+                case SetSpec.SET_HOLD:
+                    requestedCollection = setSpec.getRootSet();
+                    mustBeHeldBy = setSpec.getSubset();
+                    break;
+                case SetSpec.SET_NB:
+                    requestedCollection = SetSpec.SET_BIB;
+                    explicitSet = "nb";
+                    break;
+                case SetSpec.SET_SAO:
+                    requestedCollection = SetSpec.SET_AUTH;
+                    explicitSet = "sao";
+                    break;
+            }
         }
 
         return new ResultIterator(preparedStatement, requestedCollection, mustBeHeldBy,
