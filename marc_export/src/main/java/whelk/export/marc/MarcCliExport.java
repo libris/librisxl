@@ -66,6 +66,14 @@ public class MarcCliExport
             return;
         }
 
+        if (args[0].equals("--auth"))
+        {
+            MarcRecordWriter output = new Iso2709MarcRecordWriter(System.out, "UTF-8");
+            new MarcCliExport(Whelk.createLoadedCoreWhelk()).dumpAuth(output);
+            output.close();
+            return;
+        }
+
         ExportProfile profile = new ExportProfile(new File(args[0]));
         String encoding = profile.getProperty("characterencoding");
         if (encoding.equals("Latin1Strip")) {
@@ -116,6 +124,9 @@ public class MarcCliExport
         System.out.println("  To do an SAO export:");
         System.out.println("  java -Dxl.secret.properties=SECRETPROPSFILE -jar marc_export.jar --sao");
         System.out.println("");
+        System.out.println("  To do an AUTH export for regina/aleph:");
+        System.out.println("  java -Dxl.secret.properties=SECRETPROPSFILE -jar marc_export.jar --auth");
+        System.out.println("");
         System.out.println("For example:");
         System.out.println(" java -jar marc_export.jar export.properties");
         System.out.println("Would export all records held by whatever is in location=[] in export.properties.");
@@ -132,6 +143,41 @@ public class MarcCliExport
             {
                 String id = resultSet.getString("id");
                 Document doc = m_whelk.loadEmbellished(id);
+
+                String marcXml = null;
+                try
+                {
+                    marcXml = (String) m_toMarcXmlConverter.convert(doc.data, doc.getShortId()).get(JsonLd.getNON_JSON_CONTENT_KEY());
+                }
+                catch (Exception | Error e)
+                { // Depending on the converter, a variety of problems may arise here
+                    log.error("Conversion error for: " + doc.getCompleteId() + " cause: ", e);
+                    continue;
+                }
+
+                MarcRecord marcRecord = MarcXmlRecordReader.fromXml(marcXml);
+                output.writeRecord(marcRecord);
+            }
+        }
+    }
+
+    private void dumpAuth(MarcRecordWriter output) throws SQLException, IOException
+    {
+        HashSet<String> workDerivativeTypes = new HashSet<>(m_whelk.getJsonld().getSubClasses("Work"));
+
+        try(Connection connection = m_whelk.getStorage().getOuterConnection();
+            PreparedStatement preparedStatement = getAllAuthStatement(connection);
+            ResultSet resultSet = preparedStatement.executeQuery())
+        {
+            while (resultSet.next())
+            {
+                String id = resultSet.getString("id");
+                Document doc = m_whelk.loadEmbellished(id);
+
+                // We want to only dump traditional MARC auth records. No work-records whatsoever.
+                String mainEntityType = doc.getThingType();
+                if ( workDerivativeTypes.contains(mainEntityType) || mainEntityType.equals("Work") )
+                    continue;
 
                 String marcXml = null;
                 try
@@ -285,6 +331,16 @@ public class MarcCliExport
             throws SQLException
     {
         String sql = "SELECT id FROM lddb WHERE data#>>'{@graph,1,inScheme,@id}' = 'https://id.kb.se/term/sao' AND deleted = false";
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        preparedStatement.setFetchSize(100);
+
+        return preparedStatement;
+    }
+
+    private PreparedStatement getAllAuthStatement(Connection connection)
+            throws SQLException
+    {
+        String sql = "SELECT id FROM lddb WHERE collection = 'auth' AND deleted = false";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setFetchSize(100);
 
