@@ -76,6 +76,24 @@ public class ListSets
         writer.writeEndElement(); // setName
         writer.writeEndElement(); // set
 
+        writer.writeStartElement("set");
+        writer.writeStartElement("setSpec");
+        writer.writeCharacters("nb");
+        writer.writeEndElement(); // setSpec
+        writer.writeStartElement("setName");
+        writer.writeCharacters("Nationalbibliografin");
+        writer.writeEndElement(); // setName
+        writer.writeEndElement(); // set
+
+        writer.writeStartElement("set");
+        writer.writeStartElement("setSpec");
+        writer.writeCharacters("sao");
+        writer.writeEndElement(); // setSpec
+        writer.writeStartElement("setName");
+        writer.writeCharacters("Svenska ämnesord");
+        writer.writeEndElement(); // setName
+        writer.writeEndElement(); // set
+
         // Dynamic sigel-sets
         try (Connection dbconn = OaiPmh.s_whelk.getStorage().getOuterConnection();
              PreparedStatement preparedStatement = prepareStatement(dbconn);
