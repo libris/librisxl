@@ -5,11 +5,11 @@ import whelk.exception.InvalidQueryException
 import java.time.ZoneId
 import java.time.format.DateTimeParseException
 
-import static whelk.search.ParameterPrefix.MATCHES
-import static whelk.search.ParameterPrefix.MAX
-import static whelk.search.ParameterPrefix.MAX_EX
-import static whelk.search.ParameterPrefix.MIN
-import static whelk.search.ParameterPrefix.MIN_EX
+import static RangeParameterPrefix.MATCHES
+import static RangeParameterPrefix.MAX
+import static RangeParameterPrefix.MAX_EX
+import static RangeParameterPrefix.MIN
+import static RangeParameterPrefix.MIN_EX
 import static whelk.search.QueryDateTime.Precision.WEEK
 
 class Ranges {
@@ -31,7 +31,7 @@ class Ranges {
         new Ranges(fieldName, timezone)
     }
 
-    void add(ParameterPrefix operator, value) {
+    void add(RangeParameterPrefix operator, value) {
         switch (operator) {
             case MIN:
             case MIN_EX:
@@ -70,12 +70,12 @@ class Ranges {
     }
 
     private class EndPoint {
-        EndPoint(ParameterPrefix operator, String value) {
+        EndPoint(RangeParameterPrefix operator, String value) {
             this.operator = operator
             this.value = value
         }
 
-        ParameterPrefix operator
+        RangeParameterPrefix operator
         String value
 
         String elasticValue() {

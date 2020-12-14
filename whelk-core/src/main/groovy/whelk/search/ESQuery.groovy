@@ -8,6 +8,7 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
@@ -24,6 +25,7 @@ class ESQuery {
         'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens'
     ]
     private static final String OR_PREFIX = 'or-'
+    private static final String EXISTS_PREFIX = 'exists-'
 
     private Map<String, List<String>> boostFieldsByType = [:]
     private ESQueryLensBoost lensBoost
@@ -528,18 +530,40 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     Map createBoolFilter(Map<String, String[]> fieldsAndVals) {
         List clauses = []
-        fieldsAndVals.each {field, vals ->
-            for (val in vals) {
-                boolean isSimple = isSimple(val)
-                clauses.add([(isSimple ? 'simple_query_string' : 'query_string'): [
-                        'query': isSimple ? val : escapeNonSimpleQueryString(val),
-                        'fields': [field],
-                        'default_operator': 'AND'
-                ]])
+        fieldsAndVals.each {field, values ->
+            if (field.startsWith(EXISTS_PREFIX)) {
+                def f = field.substring(EXISTS_PREFIX.length())
+                for (val in values) {
+                    clauses.add(parseBoolean(field, val)
+                            ? ['exists': ['field': f]]
+                            : ['bool': ['must_not': ['exists': ['field': f]]]])
+                }
+            }
+            else {
+                for (val in values) {
+                    boolean isSimple = isSimple(val)
+                    clauses.add([(isSimple ? 'simple_query_string' : 'query_string'): [
+                            'query'           : isSimple ? val : escapeNonSimpleQueryString(val),
+                            'fields'          : [field],
+                            'default_operator': 'AND'
+                    ]])
+                }
             }
         }
 
         return ['bool': ['should': clauses]]
+    }
+
+    private static boolean parseBoolean(String parameterName, String value) {
+        if (value.toLowerCase() == 'true') {
+            true
+        }
+        else if (value.toLowerCase() == 'false') {
+            false
+        }
+        else {
+            throw new InvalidQueryException("$parameterName must be 'true' or 'false', got '$value'")
+        }
     }
 
     /**
@@ -591,7 +615,7 @@ class ESQuery {
     }
 
     /**
-     * Construct "range query" filters for parameters prefixed with any {@link ParameterPrefix}
+     * Construct "range query" filters for parameters prefixed with any {@link RangeParameterPrefix}
      * Ranges for different parameters are combined with AND
      * Multiple ranges for the same parameter are combined with OR
      *
@@ -605,7 +629,7 @@ class ESQuery {
         Set<String> handledParameters = new HashSet<>()
 
         queryParameters.each { parameter, values ->
-            parseRangeParameter(parameter) { String nameNoPrefix, ParameterPrefix prefix ->
+            parseRangeParameter(parameter) { String nameNoPrefix, RangeParameterPrefix prefix ->
                 Ranges r = ranges.computeIfAbsent(nameNoPrefix,
                         { p -> p in dateFields ? Ranges.date(p, whelk.getTimezone()) : Ranges.nonDate(p)})
                 values.collectMany{ it.tokenize(',') }.each { r.add(prefix, it.trim()) }
@@ -618,7 +642,7 @@ class ESQuery {
     }
 
     private void parseRangeParameter (String parameter, Closure handler) {
-        for (ParameterPrefix p : ParameterPrefix.values()) {
+        for (RangeParameterPrefix p : RangeParameterPrefix.values()) {
             if (parameter.startsWith(p.prefix())) {
                 handler(parameter.substring(p.prefix().size()), p)
                 return
