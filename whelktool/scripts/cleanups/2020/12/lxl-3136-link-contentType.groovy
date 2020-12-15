@@ -47,7 +47,7 @@ void process(bib) {
 
 def buildLinker() {
     def types = ['ContentType']
-    def matchFields = ['code', 'label']
+    def matchFields = ['code', 'label', 'prefLabelByLang']
     def linker = new BlankNodeLinker(types, matchFields, Script.statistics)
 
     linker.loadDefinitions(getWhelk())
