@@ -11,8 +11,10 @@ public class SetSpec
     public static final String SET_AUTH = "auth";
     public static final String SET_BIB = "bib";
     public static final String SET_HOLD = "hold";
+    public static final String SET_SAO = "sao";
+    public static final String SET_NB = "nb";
 
-    private static final String[] rootSets = {SET_AUTH, SET_BIB, SET_HOLD}; // add flattened/complete/rich hold with everything attached?
+    private static final String[] rootSets = {SET_AUTH, SET_BIB, SET_HOLD, SET_SAO, SET_NB};
 
     private boolean m_isValid = true;
     private String m_rootSet = null;

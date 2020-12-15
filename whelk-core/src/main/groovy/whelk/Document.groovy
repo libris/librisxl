@@ -48,6 +48,7 @@ class Document {
     static final List thingTypedIDsPath = ["@graph", 1, "identifiedBy"]
     static final List thingIndirectTypedIDsPath = ["@graph", 1, "indirectlyIdentifiedBy"]
     static final List thingCarrierTypesPath = ["@graph", 1, "carrierType"]
+    static final List thingInSchemePath = ["@graph",1,"inScheme","@id"]
     static final List recordIdPath = ["@graph", 0, "@id"]
     static final List workIdPath = ["@graph", 1, "instanceOf", "@id"]
     static final List thingMetaPath = ["@graph", 1, "meta", "@id"]
@@ -125,6 +126,10 @@ class Document {
     void setEncodingLevel(encLevel) { set(encLevelPath, encLevel) }
 
     String getEncodingLevel() { get(encLevelPath) }
+
+    void setThingInScheme(inScheme) { set(thingInSchemePath, inScheme) }
+
+    String getThingInScheme() { get(thingInSchemePath) }
 
     void setDescriptionCreator(creator) { set(descriptionCreatorPath, creator) }
 
