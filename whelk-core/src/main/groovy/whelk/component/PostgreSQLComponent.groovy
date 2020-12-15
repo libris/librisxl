@@ -58,12 +58,13 @@ class PostgreSQLComponent {
     }
 
     interface QueueHandler {
+        enum Result { HANDLED, FAIL_RETRY, FAIL_REQUEUE }
         /**
          *
          * @param doc Document from queue
          * @return true if success
          */
-        boolean handle(Document doc)
+        Result handle(Document doc)
     }
 
     public static final int STALE_UPDATE_RETRIES = 10
@@ -1414,21 +1415,27 @@ class PostgreSQLComponent {
             connection.setAutoCommit(false)
             def ids = sparqlQueueTakeIds(num, connection)
 
+            boolean anyReQueued = false
             for (String id : ids) {
                 Document doc = load(id, connection)
                 if (!doc) {
                     log.warn("sparqlQueueTake: document with id $id does not exist")
+                    continue
                 }
-                else {
-                    if (!handler.handle(doc)) {
-                        connection.rollback()
-                        return false
-                    }
+
+                def result = handler.handle(doc)
+                if (result == QueueHandler.Result.FAIL_REQUEUE) {
+                    sparqlQueueAdd(id, connection)
+                    anyReQueued = true
+                }
+                else if (result == QueueHandler.Result.FAIL_RETRY) {
+                    connection.rollback()
+                    return false
                 }
             }
 
             connection.commit()
-            return !ids.isEmpty()
+            return !ids.isEmpty() && !anyReQueued
         }
         finally {
             close(connection)

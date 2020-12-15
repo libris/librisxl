@@ -10,6 +10,7 @@ import org.apache.http.impl.conn.PoolingClientConnectionManager
 import org.apache.http.params.HttpConnectionParams
 import org.apache.http.params.HttpParams
 import whelk.Document
+import whelk.exception.UnexpectedHttpStatusException
 
 import javax.sql.DataSource
 import java.util.concurrent.ExecutorService
@@ -17,6 +18,10 @@ import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+
+import static whelk.component.PostgreSQLComponent.QueueHandler.Result.FAIL_REQUEUE
+import static whelk.component.PostgreSQLComponent.QueueHandler.Result.FAIL_RETRY
+import static whelk.component.PostgreSQLComponent.QueueHandler.Result.HANDLED
 
 @Log
 @CompileStatic
@@ -80,11 +85,15 @@ class SparqlUpdater {
                 else {
                     sparql.insertNamedGraph(doc)
                 }
-                return true
+                return HANDLED
+            }
+            catch (UnexpectedHttpStatusException e) {
+                log.warn("Failed, will requeue: $e")
+                return FAIL_REQUEUE
             }
             catch (Exception e) {
                 log.warn("Failed, will retry: $e")
-                return false
+                return FAIL_RETRY
             }
         }
 

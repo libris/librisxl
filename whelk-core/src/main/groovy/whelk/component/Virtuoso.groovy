@@ -57,9 +57,6 @@ class Virtuoso {
             if (!(e instanceof UnexpectedHttpStatusException)) {
                 Metrics.clientCounter.labels(Virtuoso.class.getSimpleName(), method, e.getMessage()).inc()
             }
-            else {
-                log.warn(convertToTurtle(doc, jsonldContext))
-            }
             throw e
         }
         finally {
@@ -98,7 +95,8 @@ class Virtuoso {
         }
         else {
             String body = EntityUtils.toString(response.getEntity())
-            String msg = "Failed to $method ${doc.getCompleteId()}, got: $statusLine\n$body"
+            String ttl = convertToTurtle(doc, jsonldContext)
+            String msg = "Failed to $method ${doc.getCompleteId()}, got: $statusLine\n$body\nsent:\n$ttl"
 
             // From experiments:
             // - Virtuoso responds with 500 for broken documents
@@ -108,7 +106,7 @@ class Virtuoso {
             }
             else {
                 // Cannot recover from these
-                log.warn("$msg\nsent:\n${convertToTurtle(doc, jsonldContext)}")
+                log.warn("$msg")
             }
         }
     }
