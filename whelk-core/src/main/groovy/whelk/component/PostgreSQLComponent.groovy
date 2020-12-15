@@ -59,11 +59,7 @@ class PostgreSQLComponent {
 
     interface QueueHandler {
         enum Result { HANDLED, FAIL_RETRY, FAIL_REQUEUE }
-        /**
-         *
-         * @param doc Document from queue
-         * @return true if success
-         */
+        
         Result handle(Document doc)
     }
 
