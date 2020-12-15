@@ -33,12 +33,12 @@ selectByCollection('bib') { bib ->
 
 void process(bib) {
     def thing = bib.graph[1]
-    if(!(thing['instanceOf'] && thing['instanceOf']['contentType'])) {
+    if(!(thing['carrierType'])) {
         return
     }
 
     Script.statistics.withContext(bib.doc.shortId) {
-        if(Script.linker.linkAll(thing['instanceOf'], 'contentType')) {
+        if(Script.linker.linkAll(thing, 'carrierType')) {
             Script.modified.println("${bib.doc.shortId}")
             bib.scheduleSave()
         }
@@ -46,7 +46,7 @@ void process(bib) {
 }
 
 def buildLinker() {
-    def types = ['ContentType']
+    def types = ['CarrierType']
     def matchFields = ['code', 'label']
     def linker = new BlankNodeLinker(types, matchFields, Script.statistics)
 
