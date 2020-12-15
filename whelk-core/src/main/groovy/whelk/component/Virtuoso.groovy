@@ -31,8 +31,10 @@ class Virtuoso {
     Virtuoso(Map jsonldContext, HttpClient httpClient, String endpoint, String user, String pass) {
         this.jsonldContext = Preconditions.checkNotNull(jsonldContext)
         this.sparqlCrudEndpoint = Preconditions.checkNotNull(endpoint)
+        Preconditions.checkNotNull(user, "user was null")
+        Preconditions.checkNotNull(pass, "password was null")
 
-        this.httpClient = httpClient
+        this.httpClient = Preconditions.checkNotNull(httpClient)
         setCredentials(httpClient, user, pass)
     }
 
@@ -48,12 +50,15 @@ class Virtuoso {
         HttpRequestBase request = buildRequest(method, doc)
         try {
             Metrics.clientTimer.labels(Virtuoso.class.getSimpleName(), method).time {
-                handleResponse(httpClient.execute(request), method, doc.getCompleteId())
+                handleResponse(httpClient.execute(request), method, doc)
             }
         }
         catch(Exception e) {
             if (!(e instanceof UnexpectedHttpStatusException)) {
                 Metrics.clientCounter.labels(Virtuoso.class.getSimpleName(), method, e.getMessage()).inc()
+            }
+            else {
+                log.warn(convertToTurtle(doc, jsonldContext))
             }
             throw e
         }
@@ -81,26 +86,29 @@ class Virtuoso {
         }
     }
 
-    private static void handleResponse(HttpResponse response, String method, String docURI) {
+    private void handleResponse(HttpResponse response, String method, Document doc) {
         StatusLine statusLine = response.getStatusLine()
         int statusCode = statusLine.getStatusCode()
         Metrics.clientCounter.labels(Virtuoso.class.getSimpleName(), method, "$statusCode").inc()
 
         if ((statusCode >= 200 && statusCode < 300) || (method == 'DELETE' && statusCode == 404)) {
             if (log.isDebugEnabled()) {
-                log.debug("Succeeded to $method $docURI, got: $statusLine")
+                log.debug("Succeeded to $method ${doc.getCompleteId()}, got: $statusLine")
             }
         }
         else {
             String body = EntityUtils.toString(response.getEntity())
-            String msg = "Failed to $method $docURI, got: $statusLine\n$body"
+            String msg = "Failed to $method ${doc.getCompleteId()}, got: $statusLine\n$body"
 
-            if (statusCode >= 500 || statusCode == 429) {
+            // From experiments:
+            // - Virtuoso responds with 500 for broken documents
+            // - PUT fails sporadically with 404
+            if (statusCode == 404) {
                 throw new UnexpectedHttpStatusException(msg, statusCode)
             }
             else {
                 // Cannot recover from these
-                log.warn(msg)
+                log.warn("$msg\nsent:\n${convertToTurtle(doc, jsonldContext)}")
             }
         }
     }
