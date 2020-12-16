@@ -21,12 +21,17 @@ import whelk.util.Metrics
 
 import java.nio.charset.StandardCharsets
 
+import static whelk.component.Virtuoso.Method.DELETE
+import static whelk.component.Virtuoso.Method.PUT
+
 @Log
 class Virtuoso {
-    private String sparqlCrudEndpoint
+    enum Method { PUT, DELETE }
 
-    private HttpClient httpClient
-    private Map jsonldContext
+    private final String sparqlCrudEndpoint
+
+    private final HttpClient httpClient
+    private final Map jsonldContext
 
     Virtuoso(Map jsonldContext, HttpClient httpClient, String endpoint, String user, String pass) {
         this.jsonldContext = Preconditions.checkNotNull(jsonldContext)
@@ -39,23 +44,23 @@ class Virtuoso {
     }
 
     void deleteNamedGraph(Document doc) {
-        updateNamedGraph('DELETE', doc)
+        updateNamedGraph(DELETE, doc)
     }
 
     void insertNamedGraph(Document doc) {
-        updateNamedGraph('PUT', doc)
+        updateNamedGraph(PUT, doc)
     }
 
-    private void updateNamedGraph(String method, Document doc) {
+    private void updateNamedGraph(Method method, Document doc) {
         HttpRequestBase request = buildRequest(method, doc)
         try {
-            Metrics.clientTimer.labels(Virtuoso.class.getSimpleName(), method).time {
+            Metrics.clientTimer.labels(Virtuoso.class.getSimpleName(), method.toString()).time {
                 handleResponse(httpClient.execute(request), method, doc)
             }
         }
         catch(Exception e) {
             if (!(e instanceof UnexpectedHttpStatusException)) {
-                Metrics.clientCounter.labels(Virtuoso.class.getSimpleName(), method, e.getMessage()).inc()
+                Metrics.clientCounter.labels(Virtuoso.class.getSimpleName(), method.toString(), e.getMessage()).inc()
             }
             throw e
         }
@@ -68,12 +73,12 @@ class Virtuoso {
         return sparqlCrudEndpoint + "?graph=" + docURI
     }
 
-    private HttpRequestBase buildRequest(String method, Document doc) {
+    private HttpRequestBase buildRequest(Method method, Document doc) {
         String graphCrudURI = createGraphCrudURI(doc.getCompleteId())
 
-        if (method == 'DELETE') {
+        if (method == DELETE) {
             return new HttpDelete(graphCrudURI)
-        } else if (method == 'PUT'){
+        } else if (method == PUT) {
             HttpPut request = new HttpPut(graphCrudURI)
             String turtleDoc = convertToTurtle(doc, jsonldContext)
             request.setEntity(new StringEntity(turtleDoc, StandardCharsets.UTF_8))
@@ -83,12 +88,12 @@ class Virtuoso {
         }
     }
 
-    private void handleResponse(HttpResponse response, String method, Document doc) {
+    private void handleResponse(HttpResponse response, Method method, Document doc) {
         StatusLine statusLine = response.getStatusLine()
         int statusCode = statusLine.getStatusCode()
-        Metrics.clientCounter.labels(Virtuoso.class.getSimpleName(), method, "$statusCode").inc()
+        Metrics.clientCounter.labels(Virtuoso.class.getSimpleName(), method.toString(), "$statusCode").inc()
 
-        if ((statusCode >= 200 && statusCode < 300) || (method == 'DELETE' && statusCode == 404)) {
+        if ((statusCode >= 200 && statusCode < 300) || (method == DELETE && statusCode == 404)) {
             if (log.isDebugEnabled()) {
                 log.debug("Succeeded to $method ${doc.getCompleteId()}, got: $statusLine")
             }
