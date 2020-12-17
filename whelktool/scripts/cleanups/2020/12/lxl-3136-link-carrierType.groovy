@@ -8,13 +8,11 @@ import whelk.util.Statistics
 import whelk.filter.BlankNodeLinker
 
 class Script {
-    static PrintWriter modified
     static PrintWriter errors
     static BlankNodeLinker linker
     static Statistics statistics = new Statistics(5).printOnShutdown()
 }
 
-Script.modified = getReportWriter("modified.txt")
 Script.errors = getReportWriter("errors.txt")
 Script.linker = buildLinker()
 
@@ -39,7 +37,6 @@ void process(bib) {
 
     Script.statistics.withContext(bib.doc.shortId) {
         if (Script.linker.linkAll(thing, 'carrierType')) {
-            Script.modified.println("${bib.doc.shortId}")
             bib.scheduleSave()
         }
     }
