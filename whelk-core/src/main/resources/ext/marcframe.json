@@ -14309,7 +14309,7 @@
           "include": ["worksubject", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
-          "when": "$b & i1=0",
+          "when": "$b & i1=2",
           "include": ["agentdataOrganizationSubUnit", "subjectbase"],
           "pendingResources": {
             "_:agent": {
@@ -14358,8 +14358,7 @@
         },
         {
           "when": "$b",
-          "TODO": "Correct modelled? Should it be treated as a Work when there is no $t?",
-          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
           "when": "i1=2",
@@ -14579,6 +14578,28 @@
               ]
             }
           }}
+        },
+        {
+          "source": [
+            {"610": {"ind1": "2", "ind2": "4", "subfields": [{"a": "Lunds tekniska högskola."}, {"b": "Avdelningen för rehabiliteringsteknik"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "subject": [
+                  {
+                    "@type": "Organization",
+                    "marc:subordinateUnit" : ["Avdelningen för rehabiliteringsteknik"],
+                    "isPartOf": {
+                      "@type": "Organization",
+                      "name": "Lunds tekniska högskola."
+                    }
+                  }
+                ]
+              }
+            }
+          }
         }
       ]
     },
