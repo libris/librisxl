@@ -1,7 +1,7 @@
 /**
- Link blank nodes in 'inScheme'
+ Link blank nodes in 'mediaType'
 
- See LXL-3390
+ See LXL-3136
  */
 
 import whelk.util.Statistics
