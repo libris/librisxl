@@ -844,7 +844,7 @@ class PostgreSQLComponent {
             } else {
                 throw psqle
             }
-        } catch (TooHighEncodingLevelException e) {
+        } catch (TooHighEncodingLevelException | StaleUpdateException e) {
             connection.rollback()
             throw e
         } catch (Exception e) {
