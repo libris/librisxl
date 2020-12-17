@@ -24910,10 +24910,32 @@
       "i1": null,
       "addLink": "closeMatch",
       "resourceType": "GenreForm",
-      "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
       "$a": {"property": "prefLabel"},
       "$0": {"addProperty": "marc:recordControlNumber"},
-      "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/genre-form.html"
+      "_spec": [
+        {
+          "name": "Example from: https://libris.kb.se/xv8ck97g139sm23",
+          "source": [
+            {"755": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Video installations (Art)"},{"2": "lcgft"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "closeMatch" : [
+                {
+                  "@type" : "GenreForm",
+                  "prefLabel" : "Video installations (Art)",
+                  "inScheme" : {
+                    "@id": "https://id.kb.se/term/lcgft",
+                    "@type": "ConceptScheme",
+                    "code": "lcgft"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "762": {
       "NOTE:LC": "762 - Established Heading Linking Entry - Medium of Performance Term (R)",
