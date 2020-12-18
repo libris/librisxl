@@ -68,7 +68,7 @@ boolean recreatePrefLabel(Map complexSubject, Whelk whelk) {
         }
     }
 
-    if (newPrefLabel != oldPrefLabel) {
+    if (oldPrefLabel != null && oldPrefLabel != "" && !newPrefLabel.equalsIgnoreCase(oldPrefLabel)) {
         complexSubject["prefLabel"] = newPrefLabel
 
         if (complexSubject["sameAs"]) {
