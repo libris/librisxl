@@ -795,14 +795,12 @@ class PostgreSQLComponent {
         PreparedStatement selectStatement = null
         PreparedStatement updateStatement = null
         ResultSet resultSet = null
-
         try {
             selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
             selectStatement.setString(1, id)
             resultSet = selectStatement.executeQuery()
             if (!resultSet.next())
                 throw new SQLException("There is no document with the id: " + id)
-
             Document preUpdateDoc = assembleDocument(resultSet)
 
             if (preUpdateDoc.getChecksum() != oldChecksum) {
@@ -874,11 +872,29 @@ class PostgreSQLComponent {
             connection.rollback()
             throw e
         } finally {
-            close(resultSet, selectStatement, updateStatement)
+            close(resultSet, updateStatement)
         }
 
         return doc
     }
+
+    private Document lockAndLoad(String id, Connection connection) throws DocumentNotFoundException {
+        PreparedStatement statement = null
+        ResultSet resultSet = null
+        try {
+            statement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
+            statement.setString(1, id)
+            resultSet = statement.executeQuery()
+            if (!resultSet.next())
+                throw new DocumentNotFoundException("There is no document with the id: " + id)
+
+            return assembleDocument(resultSet)
+        }
+        finally {
+            close(resultSet, statement)
+        }
+    }
+
 
     /**
      * Returns if the URIs pointing to 'doc' are acceptable for an update to 'pre_update_doc',
@@ -1396,37 +1412,43 @@ class PostgreSQLComponent {
      * Take <num> items in order from the queue and pass them one by one to the handler.
      * If the handler fails on any item, all items remain in the queue.
      *
-     * @param handler Document handler
+     * @param reader Document handler
      * @param num Number of documents to take in one batch
      * @param connectionPool
      * @return true if there were any documents in the queue and the handler was successful
      */
-    boolean sparqlQueueTake(QueueHandler handler, int num, DataSource connectionPool) {
+    boolean sparqlQueueTake(QueueHandler reader, int num, DataSource connectionPool) {
         Connection connection = null
         try {
+            // The queue contains document ids.
             // Items (rows) are locked and then finally removed from the queue when we commit the transaction.
             // If the handler fails on any item, the transaction is cancelled and all items remain in the queue.
             // SKIP LOCKED in the query guarantees that we will take the first <num> unlocked rows.
+            //
+            // Lock the actual documents while the reader is working on them. Otherwise two readers could end up
+            // working on two different versions of the same document concurrently.
+            // (T1 writes A, R1 starts working on A, T2 writes A', R2 starts working on A' => race between R1 and R2)
+            // Take locks in same order as lddb writers to avoid deadlocks.
             connection = connectionPool.getConnection()
             connection.setAutoCommit(false)
             def ids = sparqlQueueTakeIds(num, connection)
 
             boolean anyReQueued = false
-            for (String id : ids) {
-                Document doc = load(id, connection)
-                if (!doc) {
-                    log.warn("sparqlQueueTake: document with id $id does not exist")
-                    continue
+            for (String id : ids.sort()) {
+                try {
+                    Document doc = lockAndLoad(id, connection)
+                    def result = reader.handle(doc)
+                    if (result == QueueHandler.Result.FAIL_REQUEUE) {
+                        sparqlQueueAdd(id, connection)
+                        anyReQueued = true
+                    }
+                    else if (result == QueueHandler.Result.FAIL_RETRY) {
+                        connection.rollback()
+                        return false
+                    }
                 }
-
-                def result = handler.handle(doc)
-                if (result == QueueHandler.Result.FAIL_REQUEUE) {
-                    sparqlQueueAdd(id, connection)
-                    anyReQueued = true
-                }
-                else if (result == QueueHandler.Result.FAIL_RETRY) {
-                    connection.rollback()
-                    return false
+                catch (DocumentNotFoundException e) {
+                    log.warn("sparqlQueueTake: document with id $id does not exist: $e")
                 }
             }
 
@@ -2363,6 +2385,12 @@ class PostgreSQLComponent {
 
             this.card = new Document(jsonld.toCard(doc.data, false))
             this.changedTimestamp = changedTimestamp ?: doc.getModifiedTimestamp()
+        }
+    }
+
+    class DocumentNotFoundException extends SQLException {
+        DocumentNotFoundException(String msg) {
+            super (msg)
         }
     }
 }

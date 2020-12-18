@@ -31,7 +31,7 @@ class SparqlUpdater {
 
     // HTTP timeout parameters
     private static final int CONNECT_TIMEOUT_MS = 5 * 1000
-    private static final int READ_TIMEOUT_MS = 60 * 1000
+    private static final int READ_TIMEOUT_MS = 5 * 1000
 
     // Number of items to take from queue each time
     private static final int QUEUE_TAKE_NUM = 1
