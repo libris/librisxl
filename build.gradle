@@ -1,8 +1,10 @@
 plugins {
-    id "nebula.lint" version "16.0.2"
+    id "nebula.lint" version "16.16.0"
 }
 
 allprojects {
+    // Run manually with "./gradlew autoLintGradle"
+    // Unused dependency warning cannot always be trusted, always verify ("this dependency is unused and can be removed")
     gradleLint.rules = ['all-dependency']
     gradleLint.alwaysRun = false
 }
