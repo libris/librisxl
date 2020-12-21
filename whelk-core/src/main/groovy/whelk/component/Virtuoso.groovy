@@ -31,10 +31,11 @@ class Virtuoso {
     private final String sparqlCrudEndpoint
 
     private final HttpClient httpClient
-    private final Map jsonldContext
+    private final Map ctx
 
     Virtuoso(Map jsonldContext, HttpClient httpClient, String endpoint, String user, String pass) {
-        this.jsonldContext = Preconditions.checkNotNull(jsonldContext)
+        Preconditions.checkNotNull(jsonldContext)
+        this.ctx = JsonLdToTurtle.parseContext(['@context': jsonldContext])
         this.sparqlCrudEndpoint = Preconditions.checkNotNull(endpoint)
         Preconditions.checkNotNull(user, "user was null")
         Preconditions.checkNotNull(pass, "password was null")
@@ -60,7 +61,7 @@ class Virtuoso {
         }
         catch(Exception e) {
             if (!(e instanceof UnexpectedHttpStatusException)) {
-                Metrics.clientCounter.labels(Virtuoso.class.getSimpleName(), method.toString(), e.getMessage()).inc()
+                Metrics.clientCounter.labels(Virtuoso.class.getSimpleName(), method.toString(), "${e.getMessage()}").inc()
             }
             throw e
         }
@@ -80,7 +81,7 @@ class Virtuoso {
             return new HttpDelete(graphCrudURI)
         } else if (method == PUT) {
             HttpPut request = new HttpPut(graphCrudURI)
-            String turtleDoc = convertToTurtle(doc, jsonldContext)
+            String turtleDoc = convertToTurtle(doc)
             request.setEntity(new StringEntity(turtleDoc, StandardCharsets.UTF_8))
             return request
         } else {
@@ -100,7 +101,7 @@ class Virtuoso {
         }
         else {
             String body = EntityUtils.toString(response.getEntity())
-            String ttl = convertToTurtle(doc, jsonldContext)
+            String ttl = convertToTurtle(doc)
             String msg = "Failed to $method ${doc.getCompleteId()}, got: $statusLine\n$body\nsent:\n$ttl"
 
             // From experiments:
@@ -116,11 +117,9 @@ class Virtuoso {
         }
     }
 
-    private static String convertToTurtle(Document doc, Map context) {
-        Map ctx = JsonLdToTurtle.parseContext(['@context': context])
-        Map opts = [markEmptyBnode: true]
+    private String convertToTurtle(Document doc) {
+        final Map opts = [markEmptyBnode: true]
         ByteArrayOutputStream out = new ByteArrayOutputStream()
-
         JsonLdToTurtle serializer = new JsonLdToTurtle(ctx, out, opts)
 
         serializer.toTurtle(doc.data)
