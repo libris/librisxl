@@ -87,7 +87,6 @@ dependencies {
     compile "io.github.resilience4j:resilience4j-prometheus:${resilience4jVersion}"
     compile "io.github.resilience4j:resilience4j-retry:${resilience4jVersion}"
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
-    compile "stax:stax-api:1.0.1"
     compile 'com.damnhandy:handy-uri-templates:2.0.4'
     compile 'com.zaxxer:HikariCP:3.4.1'
     compile 'commons-codec:commons-codec:1.7'
