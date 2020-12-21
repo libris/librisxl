@@ -78,6 +78,8 @@ dependencies {
         exclude group: 'org.hamcrest'
         exclude group: 'junit'
         exclude group: 'com.lyncode', module: 'test-support'
+        // org.w3c.dom.UserDataHandler scanned from multiple locations: xml-apis, jaxen
+        exclude group: 'jaxen', module: 'jaxen'
     }
     compile group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
 
