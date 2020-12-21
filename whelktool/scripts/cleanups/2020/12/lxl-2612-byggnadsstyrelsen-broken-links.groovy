@@ -10,7 +10,16 @@ String where = """
 
 List keys856 = ['associatedMedia', 'marc:versionOfResource', 'isPrimaryTopicOf', 'relatedTo']
 
+List controlNumbers= []
+List ids = []
+
+// First get id and controlNumber of the fastighetswiki records
 selectBySqlWhere(where) { data ->
+    controlNumbers << data.doc.getControlNumber()
+    ids << data.doc.getShortId()
+}
+
+selectByIds(ids) { data ->
     Map instance = data.graph[1]
     Map _856 = instance.findAll { it.getKey() in keys856 }
 
@@ -22,8 +31,30 @@ selectBySqlWhere(where) { data ->
             if (instance['@type'] == 'Electronic') {
                 data.scheduleDelete()
             } else {
+                // Remove key containing the broken link
                 instance.remove(path.find { it in keys856 })
-                instance.remove('otherPhysicalFormat')
+
+                // Remove otherPhysicalFormat
+                if (instance.containsKey('otherPhysicalFormat')) {
+                    List otherPhysicalFormat = instance.otherPhysicalFormat
+                    // otherPhysicalFormat refers to only one thing
+                    assert otherPhysicalFormat.size() == 1
+
+                    if (otherPhysicalFormat[0].containsKey('describedBy')) {
+                        List describedBy = otherPhysicalFormat[0].describedBy
+                        assert describedBy.size() == 1 && describedBy[0].containsKey('controlNumber')
+                        String controlNumber = describedBy[0].controlNumber
+                        // otherPhysicalFormat refers to a fastighetswiki record
+                        assert controlNumber in controlNumbers
+                        // so we can remove otherPhysicalFormat
+                        instance.remove('otherPhysicalFormat')
+                    } else {
+                        // In one case (p712jz615vcjf7b), the describedBy property is missing in otherPhysicalFormat:
+                        // println(data.doc.getShortId() + " has no describedBy")
+                        // However it refers to a fastighetswiki record (looked up manually), thus otherPhysicalFormat can be removed
+                        instance.remove('otherPhysicalFormat')
+                    }
+                }
                 data.scheduleSave()
             }
         }
