@@ -4,7 +4,6 @@ apply plugin: 'war'
 apply plugin: 'jacoco'
 apply from: '../gretty.plugin'
 
-
 def getGitVersion() {
 	def stdout = new ByteArrayOutputStream()
 	exec {

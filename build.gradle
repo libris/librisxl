@@ -5,4 +5,11 @@ plugins {
 allprojects {
     gradleLint.rules = ['all-dependency']
     gradleLint.alwaysRun = false
+
+    apply plugin: 'codenarc'
+    codenarc {
+        toolVersion = "2.0"
+        configFile = new File("${project.projectDir}/../codenarc.config")
+        ignoreFailures = true
+    }
 }
