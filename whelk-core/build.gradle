@@ -61,6 +61,7 @@ configurations.all {
     resolutionStrategy {
         force "xml-apis:xml-apis:1.4.01"
     }
+
 }
 
 dependencies {
@@ -92,8 +93,8 @@ dependencies {
     compile 'com.zaxxer:HikariCP:3.4.1'
     compile 'commons-codec:commons-codec:1.7'
     compile 'commons-io:commons-io:2.4'
-    compile 'org.apache.httpcomponents:httpclient:4.2.6'
-    compile 'org.apache.httpcomponents:httpcore:4.2.5'
+    compile "org.apache.httpcomponents:httpclient:${httpComponentsVersion}"
+    compile "org.apache.httpcomponents:httpcore:${httpComponentsVersion}"
     compile 'org.apache.jena:apache-jena-libs:3.0.1'
     compile 'org.codehaus.groovy:groovy-json:2.5.4'
     compile 'org.codehaus.groovy:groovy-xml:2.5.4'
