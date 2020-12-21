@@ -8,7 +8,7 @@ allprojects {
 
     apply plugin: 'codenarc'
     codenarc {
-        toolVersion = "1.4"
+        toolVersion = "2.0"
         configFile = new File("${project.projectDir}/../codenarc.config")
         ignoreFailures = true
     }
