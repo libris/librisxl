@@ -8,7 +8,7 @@ import whelk.component.CachingPostgreSQLComponent
 import whelk.component.DocumentNormalizer
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
-import whelk.component.Virtuoso
+import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LinkFinder
@@ -28,7 +28,8 @@ class Whelk {
     ThreadGroup indexers = new ThreadGroup("dep-reindex")
     PostgreSQLComponent storage
     ElasticSearch elastic
-    Virtuoso sparql
+    SparqlUpdater sparqlUpdater
+
     Map displayData
     Map vocabData
     Map contextData
@@ -56,13 +57,7 @@ class Whelk {
 
     static Whelk createLoadedCoreWhelk(Properties configuration, boolean useCache = false) {
         Whelk whelk = new Whelk(useCache ? new CachingPostgreSQLComponent(configuration) : new PostgreSQLComponent(configuration))
-        if (configuration.baseUri) {
-            whelk.baseUri = new URI((String) configuration.baseUri)
-        }
-        if (configuration.timezone) {
-            whelk.timezone = ZoneId.of((String) configuration.timezone)
-        }
-        whelk.loadCoreData()
+        whelk.configureAndLoad(configuration)
         return whelk
     }
 
@@ -72,13 +67,7 @@ class Whelk {
 
     static Whelk createLoadedSearchWhelk(Properties configuration, boolean useCache = false) {
         Whelk whelk = new Whelk(configuration, useCache)
-        if (configuration.baseUri) {
-            whelk.baseUri = new URI((String) configuration.baseUri)
-        }
-        if (configuration.timezone) {
-            whelk.timezone = ZoneId.of((String) configuration.timezone)
-        }
-        whelk.loadCoreData()
+        whelk.configureAndLoad(configuration)
         return whelk
     }
 
@@ -98,7 +87,15 @@ class Whelk {
         this(useCache ? new CachingPostgreSQLComponent(conf) : new PostgreSQLComponent(conf), new ElasticSearch(conf))
     }
 
-    Whelk() {
+    private void configureAndLoad(Properties configuration) {
+        if (configuration.baseUri) {
+            baseUri = new URI((String) configuration.baseUri)
+        }
+        if (configuration.timezone) {
+            timezone = ZoneId.of((String) configuration.timezone)
+        }
+        loadCoreData()
+        sparqlUpdater = SparqlUpdater.build(storage, jsonld.context, configuration)
     }
 
     synchronized MarcFrameConverter getMarcFrameConverter() {
@@ -114,7 +111,6 @@ class Whelk {
     }
 
     void loadCoreData() {
-        initVirtuoso()
         loadContextData()
         loadDisplayData()
         loadVocabData()
@@ -122,20 +118,9 @@ class Whelk {
         log.info("Loaded with core data")
     }
 
-    void initVirtuoso() {
-        Properties props = PropertyLoader.loadProperties("secret")
-        String sparqlCrudUrl = props.getProperty("sparqlCrudUrl")
-        if (sparqlCrudUrl) {
-            this.sparql = new Virtuoso(sparqlCrudUrl, props.getProperty("sparqlUser"), props.getProperty("sparqlPass"))
-        }
-    }
-
     void setJsonld(JsonLd jsonld) {
         this.jsonld = jsonld
         storage.setJsonld(jsonld)
-        if (sparql) {
-            sparql.setJsonldContext(jsonld.context)
-        }
         if (elastic) {
             elasticFind = new ElasticFind(new ESQuery(this))
             initDocumentNormalizers()
@@ -346,9 +331,7 @@ class Whelk {
                 elastic.index(document, this)
                 reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
             }
-            if (sparql) {
-                sparql.insertNamedGraph(document)
-            }
+            sparqlUpdater?.pollNow()
         }
         return success
     }
@@ -370,10 +353,7 @@ class Whelk {
         }
 
         reindex(updated, preUpdateDoc)
-
-        if (sparql) {
-            updateSparqlNamedGraph(updated, preUpdateDoc)
-        }
+        sparqlUpdater?.pollNow()
     }
 
     Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum, boolean index = true) {
@@ -387,9 +367,7 @@ class Whelk {
         if (index) {
             reindex(updated, preUpdateDoc)
         }
-        if (sparql) {
-            updateSparqlNamedGraph(updated, preUpdateDoc)
-        }
+        sparqlUpdater?.pollNow()
     }
 
     /**
@@ -412,20 +390,6 @@ class Whelk {
         }
         else {
             log.warn "No Elastic present when deleting. Skipping call to elastic.remove(${id})"
-        }
-
-        if (sparql) {
-            sparql.deleteNamedGraph(doc)
-        }
-    }
-
-    void updateSparqlNamedGraph(Document updated, Document preUpdateDoc) {
-        sparql.insertNamedGraph(updated)
-
-        if (hasChangedMainEntityId(updated, preUpdateDoc)) {
-            for (String id : storage.getDependers(updated.shortId)) {
-                sparql.insertNamedGraph(storage.load(id))
-            }
         }
     }
 

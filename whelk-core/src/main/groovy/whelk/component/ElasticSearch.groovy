@@ -11,7 +11,7 @@ import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
-import whelk.exception.ElasticStatusException
+import whelk.exception.UnexpectedHttpStatusException
 import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
@@ -80,7 +80,7 @@ class ElasticSearch {
         Map response
         try {
             response = mapper.readValue(client.performRequest('GET', "/${indexName}/_mappings", ''), Map)
-        } catch (ElasticStatusException e) {
+        } catch (UnexpectedHttpStatusException e) {
             log.warn("Got unexpected status code ${e.statusCode} when getting ES mappings: ${e.message}", e)
             return [:]
         }
@@ -196,7 +196,7 @@ class ElasticSearch {
     }
 
     static boolean isBadRequest(Exception e) {
-        e instanceof ElasticStatusException && e.getStatusCode() == 400
+        e instanceof UnexpectedHttpStatusException && e.getStatusCode() == 400
     }
 
     void remove(String identifier) {
