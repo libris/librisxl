@@ -10,8 +10,8 @@ String where = """
 
 List keys856 = ['associatedMedia', 'marc:versionOfResource', 'isPrimaryTopicOf', 'relatedTo']
 
-List controlNumbers= []
-List ids = []
+List controlNumbers = Collections.synchronizedList([])
+List ids = Collections.synchronizedList([])
 
 // First get id and controlNumber of the fastighetswiki records
 selectBySqlWhere(where) { data ->
