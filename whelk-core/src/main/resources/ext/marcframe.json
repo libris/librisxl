@@ -14309,7 +14309,7 @@
           "include": ["worksubject", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
-          "when": "$b & i1=0",
+          "when": "$b & i1=2",
           "include": ["agentdataOrganizationSubUnit", "subjectbase"],
           "pendingResources": {
             "_:agent": {
@@ -14358,8 +14358,7 @@
         },
         {
           "when": "$b",
-          "TODO": "Correct modelled? Should it be treated as a Work when there is no $t?",
-          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
           "when": "i1=2",
@@ -14579,6 +14578,28 @@
               ]
             }
           }}
+        },
+        {
+          "source": [
+            {"610": {"ind1": "2", "ind2": "4", "subfields": [{"a": "Lunds tekniska högskola."}, {"b": "Avdelningen för rehabiliteringsteknik"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "subject": [
+                  {
+                    "@type": "Organization",
+                    "marc:subordinateUnit" : ["Avdelningen för rehabiliteringsteknik"],
+                    "isPartOf": {
+                      "@type": "Organization",
+                      "name": "Lunds tekniska högskola."
+                    }
+                  }
+                ]
+              }
+            }
+          }
         }
       ]
     },
@@ -24910,10 +24931,32 @@
       "i1": null,
       "addLink": "closeMatch",
       "resourceType": "GenreForm",
-      "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
       "$a": {"property": "prefLabel"},
       "$0": {"addProperty": "marc:recordControlNumber"},
-      "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/genre-form.html"
+      "_spec": [
+        {
+          "name": "Example from: https://libris.kb.se/xv8ck97g139sm23",
+          "source": [
+            {"755": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Video installations (Art)"},{"2": "lcgft"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "closeMatch" : [
+                {
+                  "@type" : "GenreForm",
+                  "prefLabel" : "Video installations (Art)",
+                  "inScheme" : {
+                    "@id": "https://id.kb.se/term/lcgft",
+                    "@type": "ConceptScheme",
+                    "code": "lcgft"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "762": {
       "NOTE:LC": "762 - Established Heading Linking Entry - Medium of Performance Term (R)",

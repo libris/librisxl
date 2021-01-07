@@ -1,11 +1,11 @@
 package whelk
 
 import com.google.common.base.Preconditions
-import whelk.exception.InvalidJsonException
 import whelk.util.DocumentUtil
 
 class JsonLdValidator {
     private static JsonLd jsonLd
+    private Collection skipTerms = []
 
     private JsonLdValidator(JsonLd jsonLd) {
         this.jsonLd = jsonLd
@@ -19,28 +19,29 @@ class JsonLdValidator {
     }
 
     class Validation {
-        List<Error> errors
-        Mode mode
+        List<Error> errors = new ArrayList<>()
         boolean seenGraph = false
         List at
+        Scope scope
 
-        enum Mode {
-            FAIL_FAST,
-            LOG_ERROR
+        enum Scope {
+            NESTED_GRAPH,
+            ALL
         }
 
-        Validation(Mode mode) {
-            this.errors = new ArrayList<>()
-            this.mode = mode
+        Validation(Scope scope) {
+            this.scope = scope
         }
     }
 
-    void validate(Document doc) throws InvalidJsonException {
-        doValidate(doc.data, new Validation(Validation.Mode.FAIL_FAST))
+    List<Error> validateAll(Map map) {
+        def validation = new Validation(Validation.Scope.ALL)
+        doValidate(map, validation)
+        return validation.errors
     }
 
     List<Error> validate(Map map) {
-        def validation = new Validation(Validation.Mode.LOG_ERROR)
+        def validation = new Validation(Validation.Scope.NESTED_GRAPH)
         doValidate(map, validation)
         return validation.errors
     }
@@ -52,32 +53,41 @@ class JsonLdValidator {
             }
             def key = path.last() as String
 
-            if (!passedPreValidation(key, value, validation)) {
+            if (!passedPreValidation(key, value, path, validation)) {
                 return
             }
             validation.at = path
 
-            checkIsNotNestedGraph(key, value, validation)
-
-            checkHasDefinition(key, validation)
-
-            verifyVocabTerm(key, value, validation)
-
-            validateRepeatability(key, value, validation)
-
-            validateObjectProperties(key, value, validation)
+            if (validation.scope == Validation.Scope.NESTED_GRAPH) {
+                checkIsNotNestedGraph(key, value, validation)
+            } else if (validation.scope == Validation.Scope.ALL) {
+                verifyAll(key, value, validation)
+            }
         })
     }
 
-    private passedPreValidation(String key, value, validation) {
-        boolean keyInMap = !(key.isNumber() && value instanceof Map)
-        return keyInMap && !(isUnexpected(key, value, validation) || keyIsInvalid(key, validation) || isEmptyValueList(value))
+    private passedPreValidation(String key, value, path, validation) {
+        return  !skipTermIsInPath(path) &&
+                !key.isNumber() &&          // Continue if traverse is at a list element (key == 0, 1...)
+                !(isUnexpected(key, value, validation) || keyIsInvalid(key, validation) || isEmptyValueList(value))
     }
 
-    private checkIsNotNestedGraph(String key, value, validation) {
+    private void verifyAll(String key, value, Validation validation) {
+        checkIsNotNestedGraph(key, value, validation)
+
+        checkHasDefinition(key, validation)
+
+        verifyVocabTerm(key, value, validation)
+
+        validateRepeatability(key, value, validation)
+
+        validateObjectProperties(key, value, validation)
+    }
+
+    private void checkIsNotNestedGraph(String key, value, validation) {
         if (key == jsonLd.GRAPH_KEY) {
             if (validation.seenGraph) {
-                handleError(new Error(Error.Type.NESTED_GRAPH, key, value?.toString()), validation)
+                handleError(new Error(Error.Type.NESTED_GRAPH, key, value), validation)
             }
             validation.seenGraph = true
         }
@@ -99,7 +109,7 @@ class JsonLdValidator {
 
     private boolean isUnexpected(String key, value, validation) { //Rename me
         if ((key == jsonLd.ID_KEY || key == jsonLd.TYPE_KEY) && !(value instanceof String)) {
-            handleError(new Error(Error.Type.UNEXPECTED, key), validation)
+            handleError(new Error(Error.Type.UNEXPECTED, key, value), validation)
             return true
         } else {
             return false
@@ -121,20 +131,16 @@ class JsonLdValidator {
     private void verifyVocabTerm(String key, value, validation) {
         if ((key == jsonLd.TYPE_KEY || isVocabTerm(key))
                 && !jsonLd.vocabIndex.containsKey(value?.toString())) {
-            handleError(new Error(Error.Type.UNKNOWN_VOCAB_VALUE, key, value?.toString()), validation)
+            handleError(new Error(Error.Type.UNKNOWN_VOCAB_VALUE, key, value), validation)
         }
-    }
-
-    private boolean isRepeated(value) {
-        return value instanceof List
     }
 
     private void validateRepeatability(String key, value, validation) {
         boolean expectRepeat = key == jsonLd.GRAPH_KEY || key in jsonLd.getRepeatableTerms()
         if (expectRepeat && !isRepeated(value)) {
-            handleError(new Error(Error.Type.ARRAY_EXPECTED, key, value?.toString()), validation)
+            handleError(new Error(Error.Type.ARRAY_EXPECTED, key, value), validation)
         } else if (!expectRepeat && isRepeated(value)) {
-            handleError(new Error(Error.Type.UNEXPECTED_ARRAY, key, value?.toString()), validation)
+            handleError(new Error(Error.Type.UNEXPECTED_ARRAY, key, value), validation)
         }
     }
 
@@ -146,15 +152,19 @@ class JsonLdValidator {
         if (firstValue && termDefinition
                 && termDefinition[jsonLd.TYPE_KEY] == 'ObjectProperty') {
             if (!isVocabTerm(key) && !valueIsObject) {
-                handleError(new Error(Error.Type.OBJECT_TYPE_EXPECTED, key, value?.toString()) , validation)
+                handleError(new Error(Error.Type.OBJECT_TYPE_EXPECTED, key, value) , validation)
             } else if (isVocabTerm(key) && valueIsObject) {
-                handleError(new Error(Error.Type.VOCAB_STRING_EXPECTED, key, value?.toString()), validation)
+                handleError(new Error(Error.Type.VOCAB_STRING_EXPECTED, key, value), validation)
             }
         }
     }
 
     private Map getContextDefinition(String key) {
         return jsonLd.context[key] instanceof Map ? jsonLd.context[key] : null
+    }
+
+    private boolean isRepeated(value) {
+        return value instanceof List
     }
 
     private Map getTermDefinition(String key) {
@@ -167,11 +177,23 @@ class JsonLdValidator {
 
     private void handleError(Error error, Validation validation) {
         error.path = validation.at
-        if (validation.mode == Validation.Mode.FAIL_FAST) {
-            throw new InvalidJsonException(error.toString())
-        } else if (validation.mode == Validation.Mode.LOG_ERROR) {
-            validation.errors << error
-        }
+        validation.errors << error
+    }
+
+    private Collection getUndefinedContextTerms() {
+        return jsonLd.context.findAll {k, v -> v == null}.keySet()
+    }
+
+    public void setSkipTerms(Collection terms) {
+        this.skipTerms = terms
+    }
+
+    public void skipUndefined() {
+        setSkipTerms(getUndefinedContextTerms())
+    }
+
+    private boolean skipTermIsInPath(path) {
+        path.any { skipTerms.contains(it) }
     }
 
     class Error {
@@ -193,12 +215,13 @@ class JsonLdValidator {
             }
         }
 
-        private Type type
-        private final String key
-        private final String value
+        Type type
         List path
 
-        Error(Type type, String key, String value = "") {
+        private final String key
+        private final Object value
+
+        Error(Type type, String key, Object value = "") {
             this.type = type
             this.key = key
             this.value = value

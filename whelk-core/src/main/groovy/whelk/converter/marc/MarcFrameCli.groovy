@@ -29,7 +29,7 @@ for (fpath in fpaths) {
         if (converter.ld) {
             System.err.println "Validating JSON-LD ..."
             def validator = JsonLdValidator.from(converter.ld)
-            List<Error> errors = validator.validate(source)
+            List<Error> errors = validator.validateAll(source)
             if (errors) {
                 System.err.println "JSON-LD validation errors:"
                 errors.each{

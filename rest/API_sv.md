@@ -175,7 +175,8 @@ innebär `ELLER`, `*` används för prefixsökningar, `""` matchar hela frasen o
 Sökningen kan filtreras på värdet på egenskaper i posten. Om flera egenskaper anges innebär det `OCH`.
 Om samma egenskap anges flera gånger innebär det `ELLER`. Samma egenskap kan anges flera gånger genom 
 att uppprepa parametern eller genom att komma-separera värdena.
-* `<egenskap>` - Egenskapen har exakt värdet.  
+* `<egenskap>` - Egenskapen har exakt värdet.
+* `exists-<egenskap>` - Egenskapen existerar. Ange ett booleskt värde, d.v.s. `true` eller `false`.
 * `min-<egenskap>` - Värdet är större eller lika med.
 * `minEx-<egenskap>` - Värdet är större än (Ex står för "Exclusive").
 * `max-<egenskap>` - Värdet är mindre eller lika med.
@@ -213,6 +214,15 @@ $ curl -XGET -H "Accept: application/ld+json" \
 
 #### Exempel
 
+Har medietyp (mediaType) men inte bärartyp (carrierType).
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find?exists-mediaType=true&exists-carrierType=false'
+...
+```
+
+#### Exempel
+
 Utgiven på 1760-talet.
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
@@ -240,7 +250,7 @@ $ curl -XGET -H "Accept: application/ld+json" -G \
 Katalogiserad av sigel "S" vecka åtta eller tio 2018.
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
-    'https://libris-qa.kb.se/find.jsonld?meta.descriptionCreator=https://libris.kb.se/library/S&matches-meta.created=2018-W08,2018W10&_limit=2'
+    'https://libris-qa.kb.se/find.jsonld?meta.descriptionCreator.@id=https://libris.kb.se/library/S&matches-meta.created=2018-W08,2018-W10&_limit=2'
 ...
 ```
 

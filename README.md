@@ -49,18 +49,11 @@ Related external repositories:
     [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html)
     to automatically get the specified version of Gradle and Groovy.
 
-2. [Elasticsearch](http://elasticsearch.org/)
+2. [Elasticsearch](http://elasticsearch.org/) (version 7.x)
 
-    For OS X:
-    ```
-    $ brew install elasticsearch
-    ```
+    [Download Elasticsearch](https://www.elastic.co/downloads/elasticsearch-oss)
 
-    For Debian (or Ubuntu), download and install the .deb file at:
-    https://www.elastic.co/downloads/past-releases/elasticsearch-5-6-16
-    
-    For Windows, download and install the .zip file at:
-    https://www.elastic.co/downloads/past-releases/elasticsearch-5-6-16
+    **NOTE:** We use the elasticsearch-oss version.
 
     **NOTE:** You will also need to set `cluster.name` in
     `/etc/elasticsearch/elasticsearch.yml` to something unique on the

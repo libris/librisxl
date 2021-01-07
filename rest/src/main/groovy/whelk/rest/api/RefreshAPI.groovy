@@ -4,7 +4,6 @@ import org.codehaus.jackson.JsonParseException
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.Whelk
-import whelk.util.LegacyIntegrationTools
 import whelk.util.WhelkFactory
 
 import javax.servlet.http.HttpServlet
@@ -101,7 +100,6 @@ class RefreshAPI extends HttpServlet
 
     void refreshLoudly(Document doc) {
         boolean minorUpdate = false
-        String collection = LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld())
         whelk.storeAtomicUpdate(doc.getShortId(), minorUpdate, "xl", "Libris admin", {
             Document _doc ->
                 _doc.data = doc.data
@@ -110,8 +108,6 @@ class RefreshAPI extends HttpServlet
 
     void refreshQuietly(Document doc) {
         whelk.storage.refreshDerivativeTables(doc)
-        String collection = LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld())
-        whelk.elastic.index(doc, collection, whelk)
-        whelk.reindexDependers(doc)
+        whelk.elastic.index(doc, whelk)
     }
 }

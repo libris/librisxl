@@ -8,6 +8,7 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
@@ -24,6 +25,7 @@ class ESQuery {
         'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens'
     ]
     private static final String OR_PREFIX = 'or-'
+    private static final String EXISTS_PREFIX = 'exists-'
 
     private Map<String, List<String>> boostFieldsByType = [:]
     private ESQueryLensBoost lensBoost
@@ -56,9 +58,9 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map doQuery(Map<String, String[]> queryParameters, String dataset) {
+    Map doQuery(Map<String, String[]> queryParameters) {
         Map esQuery = getESQuery(queryParameters)
-        Map esResponse = hideKeywordFields(whelk.elastic.query(esQuery, dataset))
+        Map esResponse = hideKeywordFields(whelk.elastic.query(esQuery))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
         }
@@ -66,9 +68,9 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map doQueryIds(Map<String, String[]> queryParameters, String dataset) {
+    Map doQueryIds(Map<String, String[]> queryParameters) {
         Map esQuery = getESQuery(queryParameters)
-        Map esResponse = hideKeywordFields(whelk.elastic.queryIds(esQuery, dataset))
+        Map esResponse = hideKeywordFields(whelk.elastic.queryIds(esQuery))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
         }
@@ -116,7 +118,7 @@ class ESQuery {
         def isSimple = isSimple(q)
         String queryMode = isSimple ? 'simple_query_string' : 'query_string'
         if (!isSimple) {
-            checkNonSimpleQueryString(q)
+            q = escapeNonSimpleQueryString(q)
         }
 
         Map simpleQuery = [
@@ -202,6 +204,8 @@ class ESQuery {
         if (aggQuery) {
             query['aggs'] = aggQuery
         }
+
+        query['track_total_hits'] = true
 
         return query
     }
@@ -492,10 +496,28 @@ class ESQuery {
         return !containsLeadingWildcard
     }
 
-    private static void checkNonSimpleQueryString(String queryString) {
+    static String escapeNonSimpleQueryString(String queryString) {
         if (queryString.findAll('\\"').size() % 2 != 0) {
             throw new whelk.exception.InvalidQueryException("Unbalanced quotation marks")
         }
+
+        // The following chars are reserved in ES and need to be escaped to be used as literals: \+-=|&><!(){}[]^"~*?:/
+        // Escape the ones that are not part of our query language.
+        for (char c : '=&!{}[]^:/'.chars) {
+            queryString = queryString.replace(''+c, '\\'+c)
+        }
+
+        // Inside words, treat '-' as regular hyphen instead of "NOT" and escape it
+        queryString = queryString.replaceAll(/(^|\s+)-(\S+)/, '$1#ACTUAL_NOT#$2')
+        queryString = queryString.replace('-', '\\-')
+        queryString = queryString.replace('#ACTUAL_NOT#', '-')
+
+        // Strip un-escapable characters
+        for (char c : '<>'.chars) {
+            queryString = queryString.replace('' + c, '')
+        }
+
+        return queryString
     }
 
     /**
@@ -508,22 +530,40 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     Map createBoolFilter(Map<String, String[]> fieldsAndVals) {
         List clauses = []
-        fieldsAndVals.each {field, vals ->
-            for (val in vals) {
-                boolean isSimple = isSimple(val)
-                if(!isSimple){
-                    checkNonSimpleQueryString(val)
+        fieldsAndVals.each {field, values ->
+            if (field.startsWith(EXISTS_PREFIX)) {
+                def f = field.substring(EXISTS_PREFIX.length())
+                for (val in values) {
+                    clauses.add(parseBoolean(field, val)
+                            ? ['exists': ['field': f]]
+                            : ['bool': ['must_not': ['exists': ['field': f]]]])
                 }
-
-                clauses.add([(isSimple ? 'simple_query_string' : 'query_string'): [
-                        'query': val,
-                        'fields': [field],
-                        'default_operator': 'AND'
-                ]])
+            }
+            else {
+                for (val in values) {
+                    boolean isSimple = isSimple(val)
+                    clauses.add([(isSimple ? 'simple_query_string' : 'query_string'): [
+                            'query'           : isSimple ? val : escapeNonSimpleQueryString(val),
+                            'fields'          : [field],
+                            'default_operator': 'AND'
+                    ]])
+                }
             }
         }
 
         return ['bool': ['should': clauses]]
+    }
+
+    private static boolean parseBoolean(String parameterName, String value) {
+        if (value.toLowerCase() == 'true') {
+            true
+        }
+        else if (value.toLowerCase() == 'false') {
+            false
+        }
+        else {
+            throw new InvalidQueryException("$parameterName must be 'true' or 'false', got '$value'")
+        }
     }
 
     /**
@@ -560,7 +600,7 @@ class ESQuery {
         }
 
         keys.each { key ->
-            String sort = tree[key]?.sort =='key' ? '_term' : '_count'
+            String sort = tree[key]?.sort =='key' ? '_key' : '_count'
             def sortOrder = tree[key]?.sortOrder =='asc' ? 'asc' : 'desc'
             String termPath = getInferredTermPath(key)
             query[termPath] = ['terms': [
@@ -575,7 +615,7 @@ class ESQuery {
     }
 
     /**
-     * Construct "range query" filters for parameters prefixed with any {@link ParameterPrefix}
+     * Construct "range query" filters for parameters prefixed with any {@link RangeParameterPrefix}
      * Ranges for different parameters are combined with AND
      * Multiple ranges for the same parameter are combined with OR
      *
@@ -589,7 +629,7 @@ class ESQuery {
         Set<String> handledParameters = new HashSet<>()
 
         queryParameters.each { parameter, values ->
-            parseRangeParameter(parameter) { String nameNoPrefix, ParameterPrefix prefix ->
+            parseRangeParameter(parameter) { String nameNoPrefix, RangeParameterPrefix prefix ->
                 Ranges r = ranges.computeIfAbsent(nameNoPrefix,
                         { p -> p in dateFields ? Ranges.date(p, whelk.getTimezone()) : Ranges.nonDate(p)})
                 values.collectMany{ it.tokenize(',') }.each { r.add(prefix, it.trim()) }
@@ -602,7 +642,7 @@ class ESQuery {
     }
 
     private void parseRangeParameter (String parameter, Closure handler) {
-        for (ParameterPrefix p : ParameterPrefix.values()) {
+        for (RangeParameterPrefix p : RangeParameterPrefix.values()) {
             if (parameter.startsWith(p.prefix())) {
                 handler(parameter.substring(p.prefix().size()), p)
                 return
@@ -612,7 +652,7 @@ class ESQuery {
 
     Set getDateFields(Map mappings) {
         Set dateFields = [] as Set
-        DocumentUtil.findKey(mappings['_default_']['properties'], 'type') { value, path ->
+        DocumentUtil.findKey(mappings['properties'], 'type') { value, path ->
             if (value == 'date') {
                 dateFields.add(path.dropRight(1).findAll{ it != 'properties'}.join('.'))
             }
@@ -634,9 +674,10 @@ class ESQuery {
      */
     public Set getKeywordFields(Map mappings) {
         Set keywordFields = [] as Set
-        mappings.each { docType, docMappings ->
-            keywordFields += getKeywordFieldsFromProperties(docMappings['properties'] as Map)
+        if (mappings) {
+            keywordFields = getKeywordFieldsFromProperties(mappings['properties'] as Map)
         }
+
         return keywordFields
     }
 

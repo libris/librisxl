@@ -59,7 +59,7 @@ class SearchUtilsSpec extends Specification {
         Map expected = ['@type': ['terms': [
                 'field': '@type',
                 'size' : 2000,
-                'order': ['_term': 'asc']]]]
+                'order': ['_key': 'asc']]]]
 
         then:
         assert search.buildAggQuery(tree) == expected
