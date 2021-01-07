@@ -118,7 +118,13 @@ class SparqlUpdater {
      */
     void pollNow() {
         if (executorService) {
-            executorService.submit(task)
+            try {
+                executorService.submit(task)
+            }
+            catch (Exception e) {
+                // this should never happen...
+                log.warn("Error calling executorService.submit: $e", e)
+            }
         }
     }
 
