@@ -323,7 +323,7 @@ class PostgreSQLComponent {
             WHERE pk = (
               SELECT pk
               FROM lddb__sparql_q
-              ORDER BY pk
+              ORDER BY pk ASC
               FOR UPDATE SKIP LOCKED
               LIMIT ?
             )
