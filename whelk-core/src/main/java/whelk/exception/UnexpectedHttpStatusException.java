@@ -1,9 +1,9 @@
 package whelk.exception;
 
-public class ElasticStatusException extends WhelkRuntimeException {
+public class UnexpectedHttpStatusException extends WhelkRuntimeException {
     private int statusCode;
 
-    public ElasticStatusException(String msg, int statusCode) {
+    public UnexpectedHttpStatusException(String msg, int statusCode) {
         super(msg);
         this.statusCode = statusCode;
     }
