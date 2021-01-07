@@ -18,6 +18,7 @@ import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.methods.HttpPut
 import org.apache.http.client.methods.HttpRequestBase
+import org.apache.http.client.params.ClientPNames
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.DefaultHttpClient
@@ -69,8 +70,7 @@ class ElasticClient {
 
         HttpConnectionParams.setConnectionTimeout(httpParams, CONNECT_TIMEOUT_MS)
         HttpConnectionParams.setSoTimeout(httpParams, READ_TIMEOUT_MS)
-        // FIXME: upgrade httpClient (and use RequestConfig)- https://issues.apache.org/jira/browse/HTTPCLIENT-1418
-        // httpParams.setParameter(ClientPNames.CONN_MANAGER_TIMEOUT, new Long(TIMEOUT_MS));
+        httpParams.setParameter(ClientPNames.CONN_MANAGER_TIMEOUT, new Long(READ_TIMEOUT_MS));
 
         return new ElasticClient(httpClient, elasticHosts, true)
     }
