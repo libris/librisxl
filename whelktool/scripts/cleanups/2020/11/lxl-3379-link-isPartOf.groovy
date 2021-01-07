@@ -8,48 +8,32 @@ selectBySqlWhere("""
     data#>>'{@graph,1,isPartOf}' LIKE '%"controlNumber":%'
     AND collection = 'bib'
 """) { data ->
-    boolean changed = traverse(data.graph)
+    boolean changed = false
+
+    def instance = data.graph[1]
+
+    asList(instance["isPartOf"]).each { part ->
+        asList(part["describedBy"]).each { describedBy ->
+            if (describedBy instanceof Map &&
+                    describedBy["controlNumber"] &&
+                    describedBy["controlNumber"] instanceof String &&
+                    !describedBy["@id"]) {
+                String controlNumber = sanitize(describedBy["controlNumber"])
+                String properUri = findMainEntityId(controlNumber)
+
+                if (properUri != null) {
+                    //System.out.println("Replacing: " + describedBy + " with: " + ["@id":properUri])
+                    describedBy.clear()
+                    describedBy["@id"] = properUri
+                    changed = true
+                }
+            }
+        }
+    }
 
     if (changed) {
         data.scheduleSave()
     }
-}
-
-boolean traverse(Object node) {
-    boolean changed = false
-
-    if (node instanceof Map) {
-
-        asList(node["isPartOf"]).each { part ->
-            asList(part["describedBy"]).each { describedBy ->
-                if (describedBy instanceof Map &&
-                    describedBy["controlNumber"] &&
-                    describedBy["controlNumber"] instanceof String &&
-                    !describedBy["@id"]) {
-                    String controlNumber = sanitize(describedBy["controlNumber"])
-                    String properUri = findMainEntityId(controlNumber)
-
-                    if (properUri != null) {
-                        //System.out.println("Replacing: " + describedBy + " with: " + ["@id":properUri])
-                        describedBy.clear()
-                        describedBy["@id"] = properUri
-                        changed = true
-                    }
-                }
-            }
-        }
-
-        for (Object k : node.keySet()) {
-            changed |= traverse(node[k])
-        }
-    }
-
-    else if (node instanceof List) {
-        for (int i = 0; i < node.size(); ++i) {
-            changed |= traverse(node[i])
-        }
-    }
-    return changed
 }
 
 String findMainEntityId(String ctrlNumber) {
