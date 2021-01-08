@@ -5,11 +5,11 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.component.DocumentNormalizer
+import whelk.exception.InvalidQueryException
 import whelk.filter.BlankNodeLinker
 import whelk.filter.LanguageLinker
 
 import static whelk.JsonLd.GRAPH_KEY
-import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.ID_KEY
 
 @Log
@@ -62,6 +62,9 @@ class Normalizers {
         try {
             linker.loadDefinitions(whelk)
             log.info("Loaded normalizer: $linker")
+        }
+        catch (InvalidQueryException e) {
+            log.warn("Failed to load definitions for $linker: $e. Newly created, empty ES index?")
         }
         catch (Exception e) {
             log.warn("Failed to load definitions for $linker: $e", e)
