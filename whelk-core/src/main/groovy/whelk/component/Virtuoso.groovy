@@ -104,10 +104,11 @@ class Virtuoso {
             String ttl = convertToTurtle(doc)
             String msg = "Failed to $method ${doc.getCompleteId()}, got: $statusLine\n$body\nsent:\n$ttl"
 
+            // 401 should be retried (can be fixed by correcting credentials in configuration)
             // From experiments:
             // - Virtuoso responds with 500 for broken documents
             // - PUT fails sporadically with 404
-            if (statusCode == 404) {
+            if (statusCode == 401 || statusCode == 404) {
                 throw new UnexpectedHttpStatusException(msg, statusCode)
             }
             else {
