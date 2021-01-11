@@ -121,8 +121,8 @@ class Virtuoso {
             // 401 should be retried (can be fixed by correcting credentials in configuration)
             // From experiments:
             // - Virtuoso responds with 500 for broken documents
-            // - PUT fails sporadically with 404
-            if (statusCode == 401 || statusCode == 404) {
+            // - PUT fails sporadically with 404 NOT FOUND and 501 NOT IMPLEMENTED
+            if (statusCode == 401 || statusCode == 404 || statusCode == 501) {
                 throw new UnexpectedHttpStatusException(msg, statusCode)
             }
             else {
