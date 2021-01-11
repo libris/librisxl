@@ -4,11 +4,8 @@ import com.google.common.util.concurrent.MoreExecutors
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
-import org.apache.http.client.HttpClient
-import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.impl.conn.PoolingClientConnectionManager
-import org.apache.http.params.HttpConnectionParams
-import org.apache.http.params.HttpParams
+import org.apache.http.conn.HttpClientConnectionManager
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import whelk.Document
 import whelk.exception.UnexpectedHttpStatusException
 
@@ -28,10 +25,6 @@ import static whelk.component.PostgreSQLComponent.QueueHandler.Result.HANDLED
 class SparqlUpdater {
     private static final long PERIODIC_CHECK_MS = 30 * 1000
     private static final int DEFAULT_NUM_WORKERS = 4
-
-    // HTTP timeout parameters
-    private static final int CONNECT_TIMEOUT_MS = 5 * 1000
-    private static final int READ_TIMEOUT_MS = 5 * 1000
 
     // Number of items to take from queue each time
     private static final int QUEUE_TAKE_NUM = 1
@@ -55,7 +48,7 @@ class SparqlUpdater {
 
             Virtuoso virtuoso = new Virtuoso(
                     jsonLdContext,
-                    buildHttpClient(numWorkers),
+                    buildHttpClientConnectionManager(numWorkers),
                     sparqlCrudUrl,
                     configuration.getProperty("sparqlUser"),
                     configuration.getProperty("sparqlPass"))
@@ -128,18 +121,11 @@ class SparqlUpdater {
         }
     }
 
-    private static HttpClient buildHttpClient(final int poolSize) {
-        PoolingClientConnectionManager cm = new PoolingClientConnectionManager()
+    private static HttpClientConnectionManager buildHttpClientConnectionManager(final int poolSize) {
+        HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager()
         cm.setMaxTotal(poolSize)
         cm.setDefaultMaxPerRoute(poolSize)
-
-        HttpClient httpClient = new DefaultHttpClient(cm)
-        HttpParams httpParams = httpClient.getParams()
-
-        HttpConnectionParams.setConnectionTimeout(httpParams, CONNECT_TIMEOUT_MS)
-        HttpConnectionParams.setSoTimeout(httpParams, READ_TIMEOUT_MS)
-
-        return httpClient
+        return cm
     }
 
     private static ExecutorService buildExecutorService(final int poolSize) {

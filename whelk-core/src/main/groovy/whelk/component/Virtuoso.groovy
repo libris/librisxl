@@ -7,12 +7,16 @@ import org.apache.http.StatusLine
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.client.CredentialsProvider
-import org.apache.http.client.HttpClient
+import org.apache.http.client.config.RequestConfig
+import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpDelete
 import org.apache.http.client.methods.HttpPut
 import org.apache.http.client.methods.HttpRequestBase
+import org.apache.http.conn.HttpClientConnectionManager
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.BasicCredentialsProvider
+import org.apache.http.impl.client.CloseableHttpClient
+import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 import whelk.Document
 import whelk.converter.JsonLdToTurtle
@@ -27,21 +31,24 @@ import static whelk.component.Virtuoso.Method.PUT
 @Log
 class Virtuoso {
     enum Method { PUT, DELETE }
-
+    
+    // HTTP timeout parameters
+    private static final int CONNECT_TIMEOUT_MS = 5 * 1000
+    private static final int READ_TIMEOUT_MS = 5 * 1000
+    
     private final String sparqlCrudEndpoint
 
-    private final HttpClient httpClient
+    private final CloseableHttpClient httpClient
     private final Map ctx
 
-    Virtuoso(Map jsonldContext, HttpClient httpClient, String endpoint, String user, String pass) {
+    Virtuoso(Map jsonldContext, HttpClientConnectionManager cm, String endpoint, String user, String pass) {
         Preconditions.checkNotNull(jsonldContext)
         this.ctx = JsonLdToTurtle.parseContext(['@context': jsonldContext])
         this.sparqlCrudEndpoint = Preconditions.checkNotNull(endpoint)
+        Preconditions.checkNotNull(cm)
         Preconditions.checkNotNull(user, "user was null")
         Preconditions.checkNotNull(pass, "password was null")
-
-        this.httpClient = Preconditions.checkNotNull(httpClient)
-        setCredentials(httpClient, user, pass)
+        this.httpClient = buildHttpClient(cm, user, pass)
     }
 
     void deleteNamedGraph(Document doc) {
@@ -56,7 +63,13 @@ class Virtuoso {
         HttpRequestBase request = buildRequest(method, doc)
         try {
             Metrics.clientTimer.labels(Virtuoso.class.getSimpleName(), method.toString()).time {
-                handleResponse(httpClient.execute(request), method, doc)
+                CloseableHttpResponse response = httpClient.execute(request)
+                try {
+                    handleResponse(response, method, doc)
+                }
+                finally {
+                    response.close()
+                }
             }
         }
         catch(Exception e) {
@@ -98,6 +111,7 @@ class Virtuoso {
             if (log.isDebugEnabled()) {
                 log.debug("Succeeded to $method ${doc.getCompleteId()}, got: $statusLine")
             }
+            EntityUtils.consume(response.getEntity())
         }
         else {
             String body = EntityUtils.toString(response.getEntity())
@@ -127,10 +141,23 @@ class Virtuoso {
 
         return new String(out.toByteArray(), StandardCharsets.UTF_8)
     }
+    
+    private static CloseableHttpClient buildHttpClient(HttpClientConnectionManager cm, String user, String password) {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(CONNECT_TIMEOUT_MS)
+                .setConnectionRequestTimeout(CONNECT_TIMEOUT_MS)
+                .setSocketTimeout(READ_TIMEOUT_MS)
+                .build()
 
-    private static void setCredentials(HttpClient client, String sparqlUser, String sparqlPassword) {
         CredentialsProvider provider = new BasicCredentialsProvider()
-        provider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(sparqlUser, sparqlPassword))
-        client.setCredentialsProvider(provider)
+        provider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password))
+
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setConnectionManager(cm)
+                .setDefaultRequestConfig(requestConfig)
+                .setDefaultCredentialsProvider(provider)
+                .build()
+
+        return httpClient
     }
 }
