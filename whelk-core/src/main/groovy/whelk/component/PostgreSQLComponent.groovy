@@ -330,6 +330,13 @@ class PostgreSQLComponent {
             RETURNING id;
             """.stripIndent()
 
+    private static final String SPARQL_QUEUE_ADD_UPDATES_SINCE = """
+            INSERT INTO lddb__sparql_q (id)
+            SELECT id FROM lddb
+            WHERE
+                modified > ? OR
+                (data#>>'{@graph,0,generationDate}')::timestamp > ?
+        """.stripIndent()
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
 
@@ -970,6 +977,23 @@ class PostgreSQLComponent {
             if (hasCard(doc.shortId, connection)) {
                 updateCard(new CardEntry(doc, timestamp), connection)
             }
+        }
+    }
+
+    void queueSparqlUpdatesFrom(long unixTime) {
+        Timestamp timestamp = new Timestamp(unixTime*1000)
+        getConnection().withCloseable { connection ->
+            PreparedStatement statement = null
+            try {
+                statement = connection.prepareStatement(SPARQL_QUEUE_ADD_UPDATES_SINCE)
+                statement.setTimestamp(1, timestamp);
+                statement.setTimestamp(2, timestamp);
+
+                statement.execute()
+            } finally {
+                close(statement)
+            }
+
         }
     }
 

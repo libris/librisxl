@@ -164,6 +164,13 @@ class ImporterMain {
         }
     }
 
+    @Command(args='[FROM]')
+    void queueSparqlUpdatesFrom(String from=null) {
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
+        long fromUnixTime = Long.parseLong(from)
+        whelk.storage.queueSparqlUpdatesFrom(fromUnixTime)
+    }
+
     private static void filterProblematicData(data) {
         if (data instanceof Map) {
             data.removeAll { entry ->
