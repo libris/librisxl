@@ -332,10 +332,15 @@ class PostgreSQLComponent {
 
     private static final String SPARQL_QUEUE_ADD_UPDATES_SINCE = """
             INSERT INTO lddb__sparql_q (id)
-            SELECT id FROM lddb
+            SELECT l.id FROM lddb l
+            LEFT JOIN lddb__sparql_q q on l.id = q.id
             WHERE
-                modified > ? OR
-                (data#>>'{@graph,0,generationDate}')::timestamp > ?
+                q.id IS NULL
+                AND
+                (
+                    modified > ? OR
+                    (data#>>'{@graph,0,generationDate}')::timestamp > ?
+                )
         """.stripIndent()
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
