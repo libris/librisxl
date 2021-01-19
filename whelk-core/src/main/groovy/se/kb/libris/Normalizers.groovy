@@ -58,6 +58,46 @@ class Normalizers {
         }
     }
 
+    static int getTypePrecisionScore(String type, JsonLd jsonLd) {
+        List superClasses = []
+        jsonLd.getSuperClasses(type, superClasses)
+        return superClasses.size()
+    }
+
+    // If an @type property containing a list is found anywhere in the data, replace it with the most
+    // "specific" (least general) member of the list.
+    static void enforceTypeSingularity(node, jsonLd) {
+        if (node instanceof Map) {
+            for (Object key: node.keySet()) {
+
+                if (key.equals("@type")) {
+                    Object type = node[key]
+                    if (type instanceof List) {
+                        List list = (List) type
+                        list.sort { a, b ->
+                            return getTypePrecisionScore( (String) b, jsonLd ) - getTypePrecisionScore( (String) a, jsonLd )
+                        }
+                        node[key] = list[0]
+                    }
+                }
+
+                else {
+                    enforceTypeSingularity(node[key], jsonLd)
+                }
+            }
+        } else if (node instanceof List) {
+            for (Object element : node) {
+                enforceTypeSingularity(element, jsonLd)
+            }
+        }
+    }
+
+    static DocumentNormalizer typeSingularity(JsonLd jsonLd) {
+        return { Document doc ->
+            enforceTypeSingularity(doc.data, jsonLd)
+        }
+    }
+
     static void loadDefinitions(BlankNodeLinker linker, Whelk whelk) {
         try {
             linker.loadDefinitions(whelk)
