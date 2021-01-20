@@ -6,6 +6,7 @@ import whelk.JsonLd
 import whelk.Whelk
 import whelk.component.DocumentNormalizer
 import whelk.exception.InvalidQueryException
+import whelk.exception.ModelValidationException
 import whelk.filter.BlankNodeLinker
 import whelk.filter.LanguageLinker
 
@@ -58,26 +59,27 @@ class Normalizers {
         }
     }
 
-    static int getTypePrecisionScore(String type, JsonLd jsonLd) {
-        List superClasses = []
-        jsonLd.getSuperClasses(type, superClasses)
-        return superClasses.size()
-    }
-
-    // If an @type property containing a list is found anywhere in the data, replace it with the most
-    // "specific" (least general) member of the list.
     static void enforceTypeSingularity(node, jsonLd) {
         if (node instanceof Map) {
             for (Object key: node.keySet()) {
 
                 if (key.equals("@type")) {
-                    Object type = node[key]
-                    if (type instanceof List) {
-                        List list = (List) type
-                        list.sort { a, b ->
-                            return getTypePrecisionScore( (String) b, jsonLd ) - getTypePrecisionScore( (String) a, jsonLd )
+                    Object typeObject = node[key]
+                    if (typeObject instanceof List) {
+                        List typeList = typeObject
+
+                        List typesToRemove = []
+                        for (Object type : typeList) {
+                            jsonLd.getSuperClasses(type, typesToRemove)
+                            typesToRemove.addAll(typesToRemove)
                         }
-                        node[key] = list[0]
+                        typeList.removeAll(typesToRemove)
+
+                        if (typeList.size() == 1)
+                            node[key] = typeList[0]
+                        else {
+                            throw new ModelValidationException("Could not reduce: " + typeList + " to a single type (required) by removing superclasses.")
+                        }
                     }
                 }
 
