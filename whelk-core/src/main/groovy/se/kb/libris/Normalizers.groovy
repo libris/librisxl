@@ -6,6 +6,7 @@ import whelk.JsonLd
 import whelk.Whelk
 import whelk.component.DocumentNormalizer
 import whelk.exception.InvalidQueryException
+import whelk.exception.ModelValidationException
 import whelk.filter.BlankNodeLinker
 import whelk.filter.LanguageLinker
 
@@ -55,6 +56,47 @@ class Normalizers {
                 work.remove(ID_KEY)
                 thing['instanceOf'] = work
             }
+        }
+    }
+
+    static void enforceTypeSingularity(node, jsonLd) {
+        if (node instanceof Map) {
+            for (Object key: node.keySet()) {
+
+                if (key.equals("@type")) {
+                    Object typeObject = node[key]
+                    if (typeObject instanceof List) {
+                        List typeList = typeObject
+
+                        List typesToRemove = []
+                        for (Object type : typeList) {
+                            jsonLd.getSuperClasses(type, typesToRemove)
+                            typesToRemove.addAll(typesToRemove)
+                        }
+                        typeList.removeAll(typesToRemove)
+
+                        if (typeList.size() == 1)
+                            node[key] = typeList[0]
+                        else {
+                            throw new ModelValidationException("Could not reduce: " + typeList + " to a single type (required) by removing superclasses.")
+                        }
+                    }
+                }
+
+                else {
+                    enforceTypeSingularity(node[key], jsonLd)
+                }
+            }
+        } else if (node instanceof List) {
+            for (Object element : node) {
+                enforceTypeSingularity(element, jsonLd)
+            }
+        }
+    }
+
+    static DocumentNormalizer typeSingularity(JsonLd jsonLd) {
+        return { Document doc ->
+            enforceTypeSingularity(doc.data, jsonLd)
         }
     }
 

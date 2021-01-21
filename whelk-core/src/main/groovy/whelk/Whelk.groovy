@@ -132,6 +132,7 @@ class Whelk {
                 [
                         //FIXME: This is KBV specific stuff
                         Normalizers.workPosition(jsonld),
+                        Normalizers.typeSingularity(jsonld),
                         Normalizers.language(this),
                         Normalizers.contributionRole(this)
                 ]
