@@ -71,7 +71,6 @@ class Normalizers {
                         List typesToRemove = []
                         for (Object type : typeList) {
                             jsonLd.getSuperClasses(type, typesToRemove)
-                            typesToRemove.addAll(typesToRemove)
                         }
                         typeList.removeAll(typesToRemove)
 
