@@ -14,6 +14,10 @@
 
 The project consists of:
 
+* Core
+    * `whelk-core/`
+        The root component of XL; a linked data store, including search and MARC conversion.
+
 * Applications
     * `apix_export/`
         Exports data from Libris XL back to Voyager (the old system).
@@ -24,16 +28,13 @@ The project consists of:
     * `rest/`
         A servlet web application. The REST and other HTTP APIs
     * `marc_export/`
-	A servlet (and CLI program) for exporting libris data as MARC.
+	    A servlet (and CLI program) for exporting libris data as MARC.
 
 * Tools
     * `librisxl-tools/`
         Configuration and scripts used for setup, maintenance and operations.
 
 Related external repositories:
-
-* The applications above depend on the [Whelk
-  Core](https://github.com/libris/whelk-core) repository.
 
 * Core metadata to be loaded is managed in the
   [definitions](https://github.com/libris/definitions) repository.
@@ -42,6 +43,9 @@ Related external repositories:
   for viewing and editing the datasets through the REST API.
 
 ## Dependencies
+
+The instructions below assume an Ubuntu 20.04 system (Debian should be identical), but should work
+for e.g. Fedora/CentOS/RHEL with minor adjustments.
 
 1. [Gradle](http://gradle.org/)
 
@@ -52,102 +56,144 @@ Related external repositories:
 2. [Elasticsearch](http://elasticsearch.org/) (version 7.x)
 
     [Download Elasticsearch](https://www.elastic.co/downloads/elasticsearch-oss)
+    (for Ubuntu/Debian, select "Install with apt-get"; before importing the Elasticsearch
+    PGP key you might have to do `sudo apt install gnupg` if you're running a minimal distribution.)
 
     **NOTE:** We use the elasticsearch-oss version.
-
-    **NOTE:** You will also need to set `cluster.name` in
-    `/etc/elasticsearch/elasticsearch.yml` to something unique on the
-    network. This name is later specified when you configure the
-    system. Don't forget to restart Elasticsearch after the change.
-
 
 3. [PostgreSQL](https://www.postgresql.org/) (version 9.4 or later)
 
     ```
-    # OS X
-    $ brew install postgresql
-    # Debian
-    $ apt-get install postgresql postgresql-client
+    # Ubuntu/Debian
+    sudo apt install postgresql postgresql-client
+    # macOS
+    brew install postgresql
     ```
     Windows:
     Download and install https://www.postgresql.org/download/windows/
 
+4. [Java](https://openjdk.java.net/) (version 8)
+
+    ```
+    sudo apt install openjdk-8-jdk # or openjdk-8-headless
+    ```
+
 ## Setup
 
-### Configuring secrets
+### Cloning repositories
 
-Use `librisxl/secret.properties.in` as a starting point:
+Make sure you check out this repository, and also [definitions](https://github.com/libris/definitions)
+and [devops](https://github.com/libris/devops):
 
 ```
-$ cd $LIBRISXL
-$ cp secret.properties.in secret.properties
-$ vim secret.properties
+git clone git@github.com:libris/librisxl.git
+git clone git@github.com:libris/definitions.git
+# devops repo is private; ask for access
+git clone git@github.com:libris/devops.git
+```
+
+You should now have the following directory structure:
+
+```
+.
+├── definitions
+├── devops
+├── librisxl
 ```
 
 ### Setting up PostgreSQL
 
-0. Ensure PostgreSQL is started
+Ensure PostgreSQL is started. In Debian/Ubuntu, this happens automatically after
+`apt install`. Otherwise, try `systemctl start postgresql` in any modern Linux system.
 
-    E.g.:
-    ```
-    $ postgres -D /usr/local/var/postgres
-    ```
-    or (the service name may vary, postgresql, postgresql-[version] etc):
-    ```
-    $ systemctl start postgresql
-    ```
+Create database and a database user and set up permissions:
+```
+sudo -u postgres bash
+createdb whelk_dev
+psql -c "CREATE SCHEMA whelk_dev;"
+psql -c "CREATE USER whelk PASSWORD 'whelk';"
+# !! Replace yourusername with your actual username (i.e., the user you'll run whelk, fab, etc. as)
+psql -c "CREATE USER yourusername;"
+psql -c "GRANT ALL ON SCHEMA whelk_dev TO whelk;"
+psql -c "GRANT ALL ON ALL TABLES IN SCHEMA whelk_dev TO whelk;"
+# Now find out where the pg_hba.conf file is:
+psql -t -P format=unaligned -c 'show hba_file;'
+exit
+```
 
-1. Create database
-
-    ```
-    # You might need to become the postgres user (e.g. sudo -u postgres bash) first
-    $ createdb whelk_dev
-    ```
-
-    (Optionally, create a database user)
-
-    ```
-    $ psql whelk_dev
-    psql (9.5.4)
-    Type "help" for help.
-
-    whelk=# CREATE SCHEMA whelk_dev;
-    CREATE SCHEMA
-    whelk=# CREATE USER whelk PASSWORD 'whelk';
-    CREATE ROLE
-    whelk=# GRANT ALL ON SCHEMA whelk_dev TO whelk;
-    GRANT
-    whelk=# GRANT ALL ON ALL TABLES IN SCHEMA whelk_dev TO whelk;
-    GRANT
-    whelk=# \q
-    ```
-
-### Setting up Elasticsearch and importing test data
-
-Check out the devops repository (https://github.com/libris/devops), which is private (ask a team member for access). 
-Put it in the same directory as the librisxl repo. Also make sure the definitions repository (https://github.com/libris/definitions)
-is checked out and placed in the same directory.
-
-Give all users access to your local database by editing: /etc/postgresql/9.X/main/pg_hba.conf (location varies with your host OS), adding the lines:
+Give all users access to your local database by editing `pg_hba.conf`. You got the path
+from the last `psql` command just above. It's probably something like
+`/etc/postgresql/12/main/pg_hba.conf`. Edit it and add the following _above_ any uncommented
+line (PostgreSQL uses the first match):
 
 ```
 host    all             all        127.0.0.1/32            trust
 host    all             all        ::1/128                 trust
 ```
 
-and do`$ service postgresql restart` for the changes to take effect.
-
-Make sure Elasticsearch is running:
+Restart PostgreSQL for the changes to take effect:
 
 ```
-$ service postgresql status
+sudo systemctl restart postgresql
 ```
+
+Test connectivity:
+
+```
+psql -h localhost -U whelk whelk_dev
+psql (12.5 (Ubuntu 12.5-0ubuntu0.20.04.1))
+SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, bits: 256, compression: off)
+Type "help" for help.
+
+whelk_dev=> \q
+```
+
+### Setting up Elasticsearch
+
+Edit `/etc/elasticsearch/elasticsearch.yml`. Uncomment `cluster.name` and set it to something unique
+on the network. This name is later specified when you configure the XL system. Then, (re)start
+Elasticsearch:
+
+```
+sudo systemctl restart elasticsearch
+```
+
+(To adjust the JVM heap size for Elasticsearch, edit `/etc/elasticsearch/jvm.options` and then restart
+Elasticsearch.)
+
+### Configuring secrets
+
+Use `librisxl/secret.properties.in` as a starting point:
+
+```
+cd librisxl
+cp secret.properties.in secret.properties
+# In secret.properties, set:
+# - elasticCluster to whatever you set cluster.name to in the Elasticsearch configuration above.
+vim secret.properties
+# Make sure kblocalhost.kb.se points to 127.0.0.1
+echo '127.0.0.1 kblocalhost.kb.se' | sudo tee -a /etc/hosts
+```
+
+### Importing test data
 
 Run the fabric task that sets up a new Elasticsearch index and imports example data (requires python 2.X!):
-```bash
-$ cd devops
-$ pip install -r requirements.txt
-$ fab conf.xl_local app.whelk.import_work_example_data
+
+```
+cd ../devops
+# Make sure you have Python 2.x (necessary for fabric) and virtualenv to make things easier,
+# plus ensure curl (used by fabfile) is installed
+sudo apt install python2.7 python3-virtualenv curl
+# Create virtual Python 2.7 environment for fab
+virtualenv -p /usr/bin/python2.7 venv
+# Activate virtual environment
+source venv/bin/activate
+# Install dependencies
+pip install -r requirements.txt
+# Create Elasticsearch index
+fab conf.xl_local app.whelk.create_es_index
+# Import test data
+fab conf.xl_local app.whelk.import_work_example_data
 ```
 
 ### Running
@@ -156,9 +202,9 @@ To start the CRUD part of the whelk, run the following commands:
 
 *NIX-systems:
 ```
-$ cd $LIBRISXL/rest
-$ export JAVA_OPTS="-Dfile.encoding=utf-8"
-$ ../gradlew -Dxl.secret.properties=../secret.properties appRun
+cd ../librisxl/rest
+export JAVA_OPTS="-Dfile.encoding=utf-8"
+../gradlew -Dxl.secret.properties=../secret.properties appRun
 ```
 
 Windows:
@@ -170,12 +216,12 @@ $ ../gradlew.bat -Dxl.secret.properties=../secret.properties appRun
 
 The system is then available on <http://localhost:8180>.
 
+To run the frontend, see [LXLViewer](https://github.com/libris/lxlviewer).
 
 ## Maintenance
 
 Everything you would want to do should be covered by the devops repo. This
 section is mostly kept as a reminder of alternate (less preferred) ways.
-
 
 ### Development Workflow
 

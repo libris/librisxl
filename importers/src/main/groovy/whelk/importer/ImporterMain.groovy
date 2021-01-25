@@ -4,19 +4,13 @@ import whelk.reindexer.CardRefresher
 
 import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 import groovy.util.logging.Log4j2 as Log
-import groovy.sql.Sql
-
 import whelk.Document
 import whelk.Whelk
-import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.JsonLdToTurtle
 import whelk.filter.LinkFinder
-import whelk.importer.DefinitionsImporter
 import whelk.reindexer.ElasticReindexer
 import whelk.util.PropertyLoader
 import whelk.util.Tools
@@ -159,7 +153,7 @@ class ImporterMain {
                     System.err.println("$i records dumped.")
                 }
                 ++i
-                filterGeneric(doc.data)
+                filterProblematicData(doc.data)
                 try {
                     serializer.objectToTrig(id, doc.data)
                 } catch (Throwable e) {
@@ -170,17 +164,24 @@ class ImporterMain {
         }
     }
 
-    private static void filterGeneric(data) {
+    @Command(args='[FROM]')
+    void queueSparqlUpdatesFrom(String from=null) {
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
+        long fromUnixTime = Long.parseLong(from)
+        whelk.storage.queueSparqlUpdatesFrom(fromUnixTime)
+    }
+
+    private static void filterProblematicData(data) {
         if (data instanceof Map) {
             data.removeAll { entry ->
-                return entry.key.startsWith("generic")
+                return entry.key.startsWith("generic") || entry.key.equals("marc:hasGovernmentDocumentClassificationNumber")
             }
             data.keySet().each { property ->
-                filterGeneric(data[property])
+                filterProblematicData(data[property])
             }
         } else if (data instanceof List) {
             data.each {
-                filterGeneric(it)
+                filterProblematicData(it)
             }
         }
     }

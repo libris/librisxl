@@ -417,6 +417,7 @@ class WhelkTool {
                         doModification(item)
                     }
                     catch (StaleUpdateException e) {
+                        logRetry(e, item)
                         Document doc = whelk.getDocument(item.doc.shortId)
                         item = new DocumentItem(number: item.number, doc: doc, whelk: whelk,
                                 preUpdateChecksum: doc.getChecksum(), existsInStorage: true)
@@ -437,6 +438,12 @@ class WhelkTool {
             storeScriptJob()
         }
         return true
+    }
+
+    private void logRetry(StaleUpdateException e, DocumentItem item) {
+        def msg = "Re-processing ${item.doc.shortId} because of concurrent modification. This is not a problem if script is correct (pure function of document) but might affect logs and statistics. $e"
+        errorLog.println(msg)
+        mainLog.println(msg)
     }
 
     private void doDeletion(DocumentItem item) {

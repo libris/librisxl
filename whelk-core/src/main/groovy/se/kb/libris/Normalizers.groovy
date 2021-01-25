@@ -5,11 +5,12 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.component.DocumentNormalizer
+import whelk.exception.InvalidQueryException
+import whelk.exception.ModelValidationException
 import whelk.filter.BlankNodeLinker
 import whelk.filter.LanguageLinker
 
 import static whelk.JsonLd.GRAPH_KEY
-import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.ID_KEY
 
 @Log
@@ -58,10 +59,53 @@ class Normalizers {
         }
     }
 
+    static void enforceTypeSingularity(node, jsonLd) {
+        if (node instanceof Map) {
+            for (Object key: node.keySet()) {
+
+                if (key.equals("@type")) {
+                    Object typeObject = node[key]
+                    if (typeObject instanceof List) {
+                        List typeList = typeObject
+
+                        List typesToRemove = []
+                        for (Object type : typeList) {
+                            jsonLd.getSuperClasses(type, typesToRemove)
+                        }
+                        typeList.removeAll(typesToRemove)
+
+                        if (typeList.size() == 1)
+                            node[key] = typeList[0]
+                        else {
+                            throw new ModelValidationException("Could not reduce: " + typeList + " to a single type (required) by removing superclasses.")
+                        }
+                    }
+                }
+
+                else {
+                    enforceTypeSingularity(node[key], jsonLd)
+                }
+            }
+        } else if (node instanceof List) {
+            for (Object element : node) {
+                enforceTypeSingularity(element, jsonLd)
+            }
+        }
+    }
+
+    static DocumentNormalizer typeSingularity(JsonLd jsonLd) {
+        return { Document doc ->
+            enforceTypeSingularity(doc.data, jsonLd)
+        }
+    }
+
     static void loadDefinitions(BlankNodeLinker linker, Whelk whelk) {
         try {
             linker.loadDefinitions(whelk)
             log.info("Loaded normalizer: $linker")
+        }
+        catch (InvalidQueryException e) {
+            log.warn("Failed to load definitions for $linker: $e. Newly created, empty ES index?")
         }
         catch (Exception e) {
             log.warn("Failed to load definitions for $linker: $e", e)

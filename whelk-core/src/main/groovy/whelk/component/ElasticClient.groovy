@@ -14,19 +14,20 @@ import io.prometheus.client.CollectorRegistry
 import org.apache.http.HttpEntity
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
+import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.methods.HttpPut
 import org.apache.http.client.methods.HttpRequestBase
+import org.apache.http.conn.HttpClientConnectionManager
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
-import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.impl.conn.PoolingClientConnectionManager
-import org.apache.http.params.HttpConnectionParams
-import org.apache.http.params.HttpParams
+import org.apache.http.impl.client.CloseableHttpClient
+import org.apache.http.impl.client.HttpClients
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.util.EntityUtils
 import whelk.exception.ElasticIOException
-import whelk.exception.ElasticStatusException
+import whelk.exception.UnexpectedHttpStatusException
 
 import java.time.Duration
 import java.util.function.Function
@@ -60,31 +61,39 @@ class ElasticClient {
     Retry globalRetry
 
     static ElasticClient withDefaultHttpClient(List<String> elasticHosts) {
-        PoolingClientConnectionManager cm = new PoolingClientConnectionManager()
+        HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager()
         cm.setMaxTotal(CONNECTION_POOL_SIZE)
         cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST)
 
-        HttpClient httpClient = new DefaultHttpClient(cm)
-        HttpParams httpParams = httpClient.getParams()
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(CONNECT_TIMEOUT_MS)
+                .setConnectionRequestTimeout(CONNECT_TIMEOUT_MS)
+                .setSocketTimeout(READ_TIMEOUT_MS)
+                .build()
 
-        HttpConnectionParams.setConnectionTimeout(httpParams, CONNECT_TIMEOUT_MS)
-        HttpConnectionParams.setSoTimeout(httpParams, READ_TIMEOUT_MS)
-        // FIXME: upgrade httpClient (and use RequestConfig)- https://issues.apache.org/jira/browse/HTTPCLIENT-1418
-        // httpParams.setParameter(ClientPNames.CONN_MANAGER_TIMEOUT, new Long(TIMEOUT_MS));
-
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setConnectionManager(cm)
+                .setDefaultRequestConfig(requestConfig)
+                .build()
+        
         return new ElasticClient(httpClient, elasticHosts, true)
     }
 
     static ElasticClient withBulkHttpClient(List<String> elasticHosts) {
-        PoolingClientConnectionManager cm = new PoolingClientConnectionManager()
+        HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager()
         cm.setMaxTotal(CONNECTION_POOL_SIZE)
         cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST)
 
-        HttpClient httpClient = new DefaultHttpClient(cm)
-        HttpParams httpParams = httpClient.getParams()
-        HttpConnectionParams.setConnectionTimeout(httpParams, 0)
-        HttpConnectionParams.setSoTimeout(httpParams, READ_TIMEOUT_MS * 20)
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(0)
+                .setSocketTimeout(READ_TIMEOUT_MS * 20)
+                .build()
 
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setConnectionManager(cm)
+                .setDefaultRequestConfig(requestConfig)
+                .build()
+        
         return new ElasticClient(httpClient, elasticHosts, false)
     }
 
@@ -109,7 +118,7 @@ class ElasticClient {
     }
 
     String performRequest(String method, String path, String body, String contentType0 = null)
-        throws ElasticIOException, ElasticStatusException {
+        throws ElasticIOException, UnexpectedHttpStatusException {
         try {
             def nodes = cycleNodes()
             if (useCircuitBreaker) {
@@ -119,7 +128,7 @@ class ElasticClient {
                 nodes.next().performRequest(method, path, body, contentType0)
             }
         }
-        catch (ElasticStatusException e) {
+        catch (UnexpectedHttpStatusException e) {
             throw e
         }
         catch (Exception e) {
@@ -161,7 +170,7 @@ class ElasticClient {
                 return resultBody
             }
             else {
-                throw new ElasticStatusException(resultBody, statusCode)
+                throw new UnexpectedHttpStatusException(resultBody, statusCode)
             }
         }
 

@@ -91,7 +91,9 @@ dependencies {
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
     compile 'commons-io:commons-io:2.4'
     compile "com.google.guava:guava:16.0.1"
-    compile "org.apache.httpcomponents:httpclient:4.3.1"
+    compile "org.apache.httpcomponents:httpclient:${httpComponentsVersion}"
+    compile "org.apache.httpcomponents:httpcore:${httpComponentsVersion}"
+
     // Integration
     /* Not needed?
     compile 'com.thoughtworks.paranamer:paranamer:2.7'
@@ -121,7 +123,6 @@ dependencies {
     executableWarDeps "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
     executableWarDeps "org.codehaus.groovy:groovy-all:${groovyVersion}"
     executableWarDeps 'commons-cli:commons-cli:1.2'
-    compile 'org.apache.httpcomponents:httpcore:4.3'
     compile 'org.codehaus.groovy:groovy-xml:2.5.4'
     compile 'org.codehaus.groovy:groovy:2.5.4'
     compile 'org.codehaus.jackson:jackson-core-asl:1.9.12'
