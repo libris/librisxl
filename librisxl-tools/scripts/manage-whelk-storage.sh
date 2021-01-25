@@ -59,18 +59,17 @@ Usage: ./manage-whelk-storage.sh -n <NAME> [-h <POSTGRES HOST>]
 EOF
 }
 
-delete_es_collection() {
-    collection=$1
+delete_definitions() {
+    psql -h $DBHOST $DBUSER_ARG $WHELKNAME -c \
+         "DELETE FROM lddb__identifiers WHERE id in (SELECT id from lddb where collection = 'definitions');"
+    psql -h $DBHOST $DBUSER_ARG $WHELKNAME -c \
+         "DELETE FROM lddb where collection = 'definitions';"
+    psql -h $DBHOST $DBUSER_ARG $WHELKNAME -c \
+         "DELETE FROM lddb__versions where collection = 'definitions';"
 
-    psql -h $DBHOST $DBUSER_ARG $WHELKNAME -c \
-         "DELETE FROM lddb__identifiers WHERE id in (SELECT id from lddb where collection = '$collection');"
-    psql -h $DBHOST $DBUSER_ARG $WHELKNAME -c \
-         "DELETE FROM lddb where collection = '$collection';"
-    psql -h $DBHOST $DBUSER_ARG $WHELKNAME -c \
-         "DELETE FROM lddb__versions where collection = '$collection';"
-
-    curl -XDELETE http://$ESHOST:9200/$ESINDEX/$collection/_query \
-         -d '{"query": {"match_all": {}}}'
+    curl -XPOST http://$ESHOST:9200/$ESINDEX/_delete_by_query \
+          -H 'Content-Type: application/json' \
+          -d '{ "query": { "match": { "meta.inDataset.@id": "https://id.kb.se/dataset/definitions" } } }'
 }
 
 while [[ $# -gt 0 ]]
@@ -156,19 +155,12 @@ if [ "$RECREATE_DB" = true ]; then
     echo "(Re)creating ElasticSearch database..."
     echo ""
 
-    curl -XDELETE http://$ESHOST:9200/_ingest/pipeline/libris
     curl -XDELETE http://$ESHOST:9200/$ESINDEX
-    
+
     echo ""
     echo ""
     curl -XPUT http://$ESHOST:9200/$ESINDEX \
          -d@$TOOLDIR/elasticsearch/libris_config.json \
-         --header "Content-Type: application/json"
-    echo ""
-    echo ""
-    
-    curl -XPUT http://$ESHOST:9200/_ingest/pipeline/libris \
-         -d@$TOOLDIR/elasticsearch/libris_ingest_configuration.json \
          --header "Content-Type: application/json"
     echo ""
     echo ""
@@ -196,7 +188,7 @@ if [ "$NUKE_DEFINITIONS" = true ]; then
     echo "Nuking definitions data..."
     echo ""
 
-    delete_es_collection 'definitions'
+    delete_definitions
 
     echo ""
     echo ""

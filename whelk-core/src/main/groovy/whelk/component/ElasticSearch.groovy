@@ -11,6 +11,11 @@ import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.exception.UnexpectedHttpStatusException
+import whelk.exception.InvalidQueryException
+import whelk.util.DocumentUtil
+import whelk.util.LegacyIntegrationTools
+import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
 
@@ -23,6 +28,7 @@ class ElasticSearch {
     private List<String> elasticHosts
     private String elasticCluster
     private ElasticClient client
+    private ElasticClient bulkClient
 
     private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
 
@@ -40,6 +46,7 @@ class ElasticSearch {
         this.defaultIndex = elasticIndex
 
         client = ElasticClient.withDefaultHttpClient(elasticHosts)
+        bulkClient = ElasticClient.withBulkHttpClient(elasticHosts)
 
         new Timer("ElasticIndexingRetries", true).schedule(new TimerTask() {
             void run() {
@@ -70,14 +77,13 @@ class ElasticSearch {
 	 *
 	 */
 	Map getMappings() {
-		Tuple2<Integer, String> res = client.performRequest('GET', "/${indexName}/_mappings", '')
-		int statusCode = res.first
-		if (statusCode != 200) {
-			log.warn("Got unexpected status code ${statusCode} when getting ES mappings.")
-			return null
-		}
-		String responseBody = res.second
-		Map response =  mapper.readValue(responseBody, Map)
+        Map response
+        try {
+            response = mapper.readValue(client.performRequest('GET', "/${indexName}/_mappings", ''), Map)
+        } catch (UnexpectedHttpStatusException e) {
+            log.warn("Got unexpected status code ${e.statusCode} when getting ES mappings: ${e.message}", e)
+            return [:]
+        }
 
         // Since ES aliases return the name of the index rather than the alias,
         // we don't rely on names here.
@@ -91,72 +97,78 @@ class ElasticSearch {
         }
     }
 
-    void bulkIndex(List<Document> docs, String collection, Whelk whelk) {
-        assert collection
+    void bulkIndex(Collection<Document> docs, Whelk whelk) {
         if (docs) {
-            String bulkString = docs.collect{ doc ->
+            String bulkString = docs.findResults{ doc ->
                 try {
-                    String shapedData = JsonOutput.toJson(
-                        getShapeForIndex(doc, whelk, collection))
-                    String action = createActionRow(doc, collection)
+                    String shapedData = getShapeForIndex(doc, whelk)
+                    String action = createActionRow(doc)
                     return "${action}\n${shapedData}\n"
                 } catch (Exception e) {
-                    log.error("Failed to index ${doc.getShortId()} in elastic.", e)
-                    throw e
+                    log.error("Failed to index ${doc.getShortId()} in elastic: $e", e)
+                    return null
                 }
             }.join('')
 
-            String response = client.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE).second
+            String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
             Map responseMap = mapper.readValue(response, Map)
             log.info("Bulk indexed ${docs.count{it}} docs in ${responseMap.took} ms")
         }
     }
 
-    String createActionRow(Document doc, String collection) {
-        if (!collection) {
-            return
+    void bulkIndexWithRetry(Collection<String> ids, Whelk whelk) {
+        Collection<Document> docs = whelk.bulkLoad(ids).values()
+        try {
+            bulkIndex(docs, whelk)
+        } catch (Exception e) {
+            if (!isBadRequest(e)) {
+                log.error("Failed to index batch ${ids} in elastic, placing in retry queue: $e", e)
+                indexingRetryQueue.add({ -> index(ids, whelk) })
+            }
+            else {
+                log.error("Failed to index ${ids} in elastic: $e", e)
+            }
         }
+    }
 
+    String createActionRow(Document doc) {
         def action = ["index" : [ "_index" : indexName,
-                                  "_type" : collection,
                                   "_id" : toElasticId(doc.getShortId()) ]]
         return mapper.writeValueAsString(action)
     }
 
-    void index(Document doc, String collection, Whelk whelk) {
-        if (!collection) {
-            return
-        }
-
+    void index(Document doc, Whelk whelk) {
         // The justification for this uncomfortable catch-all, is that an index-failure must raise an alert (log entry)
         // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
         try {
-            Map shapedData = getShapeForIndex(doc, whelk, collection)
-            def response = client.performRequest('PUT',
-                    "/${indexName}/${collection}" +
-                            "/${toElasticId(doc.getShortId())}?pipeline=libris",
-                    JsonOutput.toJson(shapedData)).second
-            Map responseMap = mapper.readValue(response, Map)
-            log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/${collection}/${responseMap['_id']} as version ${responseMap['_version']}")
+            String response = client.performRequest(
+                    'PUT',
+                    "/${indexName}/_doc/${toElasticId(doc.getShortId())}",
+                    getShapeForIndex(doc, whelk))
+            if (log.isDebugEnabled()) {
+                Map responseMap = mapper.readValue(response, Map)
+                log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
+            }
         } catch (Exception e) {
-            log.error("Failed to index ${doc.getShortId()} in elastic, placing in retry queue.", e)
-            indexingRetryQueue.add({ -> index(doc, collection, whelk) })
+            if (!isBadRequest(e)) {
+                log.error("Failed to index ${doc.getShortId()} in elastic, placing in retry queue: $e", e)
+                indexingRetryQueue.add({ -> index(doc, whelk) })
+            }
+            else {
+                log.error("Failed to index ${doc.getShortId()} in elastic: $e", e)
+            }
         }
     }
 
-    void incrementReverseLinks(String shortId, String collection) {
-        updateReverseLinkCounter(shortId, collection, 1)
+    void incrementReverseLinks(String shortId) {
+        updateReverseLinkCounter(shortId, 1)
     }
 
-    void decrementReverseLinks(String shortId, String collection) {
-        updateReverseLinkCounter(shortId, collection, -1)
+    void decrementReverseLinks(String shortId) {
+        updateReverseLinkCounter(shortId, -1)
     }
 
-    private void updateReverseLinkCounter(String shortId, String collection, int deltaCount) {
-        if (!collection) {
-            return
-        }
-
+    private void updateReverseLinkCounter(String shortId, int deltaCount) {
         String body = """
         {
             "script" : {
@@ -169,42 +181,67 @@ class ElasticSearch {
         try {
             client.performRequest(
                     'POST',
-                    "/${indexName}/${collection}/${toElasticId(shortId)}/_update",
+                    "/${indexName}/_update/${toElasticId(shortId)}",
                     body)
         }
         catch (Exception e) {
-            log.warn("Failed to update reverse link counter for $shortId: $e, placing in retry queue.", e)
-            indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, collection, deltaCount) })
+            if (!isBadRequest(e)) {
+                log.warn("Failed to update reverse link counter for $shortId: $e, placing in retry queue.", e)
+                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, deltaCount) })
+            }
+            else {
+                log.warn("Failed to update reverse link counter for $shortId: $e", e)
+            }
         }
+    }
+
+    static boolean isBadRequest(Exception e) {
+        e instanceof UnexpectedHttpStatusException && e.getStatusCode() == 400
     }
 
     void remove(String identifier) {
-        log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
+        if (log.isDebugEnabled()) {
+            log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
+        }
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
-        def response = client.performRequest('POST',
-                "/${indexName}/_delete_by_query?conflicts=proceed",
-                JsonOutput.toJson(dsl)).second
-        Map responseMap = mapper.readValue(response, Map)
-        log.debug("Response: ${responseMap.deleted} of ${responseMap.total} " +
-                  "objects deleted")
-        if (responseMap.deleted == 0) {
-            log.warn("Record with id $identifier was not deleted from the Elasticsearch index.")
+        try {
+            def response = client.performRequest('POST',
+                    "/${indexName}/_delete_by_query",
+                    JsonOutput.toJson(dsl))
+
+            Map responseMap = mapper.readValue(response, Map)
+            if (log.isDebugEnabled()) {
+                log.debug("Response: ${responseMap.deleted} of ${responseMap.total} objects deleted")
+            }
+            if (responseMap.deleted == 0) {
+                log.warn("Record with id $identifier was not deleted from the Elasticsearch index.")
+            }
+        }
+        catch(Exception e) {
+            log.warn("Record with id $identifier was not deleted from the Elasticsearch index: $e")
         }
     }
 
-    Map getShapeForIndex(Document document, Whelk whelk, String collection) {
+    String getShapeForIndex(Document document, Whelk whelk) {
         Document copy = document.clone()
 
-        if (!collection.equals("hold")) {
-            embellish(whelk, document, copy)
+        if ("hold" != LegacyIntegrationTools.determineLegacyCollection(document, whelk.jsonld)) {
+            whelk.embellish(copy, ['chips'])
         }
 
-        log.debug("Framing ${document.getShortId()}")
-        boolean chipsify = false
-        boolean addSearchKey = true
-        copy.data['@graph'] = copy.data['@graph'].collect { whelk.jsonld.toCard(it, chipsify, addSearchKey) }
+        if (log.isDebugEnabled()) {
+            log.debug("Framing ${document.getShortId()}")
+        }
 
-        setComputedProperties(copy, whelk)
+        Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri }
+
+        def graph = ((List) copy.data['@graph'])
+        int originalSize = document.data['@graph'].size()
+        copy.data['@graph'] =
+                graph.take(originalSize).collect { toSearchCard(whelk, it, links) } +
+                graph.drop(originalSize).collect { getShapeForEmbellishment(whelk, it) }
+
+        setComputedProperties(copy, links, whelk)
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = document.getThingIdentifiers()
         if (thingIds.isEmpty()) {
@@ -214,22 +251,62 @@ class ElasticSearch {
         String thingId = thingIds.get(0)
         Map framed = JsonLd.frame(thingId, copy.data)
 
-        log.trace("Framed data: ${framed}")
+        // TODO: replace with elastic ICU Analysis plugin?
+        // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
+        DocumentUtil.findKey(framed, JsonLd.SEARCH_KEY) { value, path ->
+            if (!Unicode.isNormalizedForSearch(value)) {
+                return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))
+            }
+        }
 
-        return framed
+        if (log.isTraceEnabled()) {
+            log.trace("Framed data: ${framed}")
+        }
+
+        return JsonOutput.toJson(framed)
     }
 
-    void embellish(Whelk whelk, Document document, Document copy) {
-        boolean filterOutNonChipTerms = true // Consider using false here, since cards-in-cards work now.
-        whelk.embellish(copy, filterOutNonChipTerms)
+    private static Map toSearchCard(Whelk whelk, Map thing, Set<String> preserveLinks) {
+        boolean chipsify = false
+        boolean addSearchKey = true
+        boolean reduceKey = false
+        def preservedPaths = preserveLinks ? JsonLd.findPaths(thing, '@id', preserveLinks) : []
+
+        whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preservedPaths)
     }
 
-    private static void setComputedProperties(Document doc, Whelk whelk) {
+    private static Map getShapeForEmbellishment(Whelk whelk, Map thing) {
+        Map e = toSearchCard(whelk, thing, Collections.EMPTY_SET)
+        recordToChip(whelk, e)
+        filterLanguages(whelk, e)
+        return e
+    }
+
+    private static void recordToChip(Whelk whelk, Map thing) {
+        if (thing[JsonLd.GRAPH_KEY]) {
+            thing[JsonLd.GRAPH_KEY][0] = whelk.jsonld.toChip(thing[JsonLd.GRAPH_KEY][0])
+        }
+    }
+
+    private static void filterLanguages(Whelk whelk, Map thing) {
+        Set languageContainers = whelk.jsonld.langContainerAlias.values() as Set
+        Set languagesToKeep = ['sv', 'en'] // TODO: where do we define these?
+        DocumentUtil.traverse(thing, { value, path ->
+            if (path && path.last() in languageContainers) {
+                return new DocumentUtil.Replace(value.findAll {lang, str -> lang in languagesToKeep})
+            }
+        })
+    }
+
+    private static void setComputedProperties(Document doc, Set<String> links, Whelk whelk) {
         getOtherIsbns(doc.getIsbnValues())
                 .each { doc.addTypedThingIdentifier('ISBN', it) }
 
         getOtherIsbns(doc.getIsbnHiddenValues())
                 .each { doc.addIndirectTypedThingIdentifier('ISBN', it) }
+
+        doc.data['@graph'][1]['_links'] = links
+        doc.data['@graph'][1]['_outerEmbellishments'] = doc.getEmbellishments() - links
 
         doc.data['@graph'][1]['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
@@ -261,18 +338,18 @@ class ElasticSearch {
         }
     }
 
-    Map query(Map jsonDsl, String collection) {
+    Map query(Map jsonDsl) {
         return performQuery(
                 jsonDsl,
-                getQueryUrl(collection),
+                getQueryUrl(),
                 { def d = it."_source"; d."_id" = it."_id"; return d }
         )
     }
 
-    Map queryIds(Map jsonDsl, String collection) {
+    Map queryIds(Map jsonDsl) {
         return performQuery(
                 jsonDsl,
-                getQueryUrl(collection) + '?filter_path=took,hits.total,hits.hits._id',
+                getQueryUrl() + '?filter_path=took,hits.total,hits.hits._id',
                 { it."_id" }
         )
     }
@@ -283,38 +360,39 @@ class ElasticSearch {
     }
 
     private Map performQuery(Map jsonDsl, String queryUrl, Closure<Map> hitCollector) {
-        def start = System.currentTimeMillis()
-        Tuple2<Integer, String> response = client.performRequest('POST',
-                queryUrl,
-                JsonOutput.toJson(jsonDsl))
-        int statusCode = response.first
-        String responseBody = response.second
-        if (statusCode != 200) {
-            log.warn("Unexpected response from ES: ${statusCode} ${responseBody}")
-            return [:]
+        try {
+            def start = System.currentTimeMillis()
+            String responseBody = client.performRequest('POST',
+                    queryUrl,
+                    JsonOutput.toJson(jsonDsl))
+
+            def duration = System.currentTimeMillis() - start
+            Map responseMap = mapper.readValue(responseBody, Map)
+
+            log.info("ES query took ${duration} (${responseMap.took} server-side)")
+
+            def results = [:]
+
+            results.startIndex = jsonDsl.from
+            results.totalHits = responseMap.hits.total.value
+            results.items = responseMap.hits.hits.collect(hitCollector)
+            results.aggregations = responseMap.aggregations
+            return results
         }
-        def duration = System.currentTimeMillis() - start
-        Map responseMap = mapper.readValue(responseBody, Map)
-
-        log.info("ES query took ${duration} (${responseMap.took} server-side)")
-
-        def results = [:]
-
-        results.startIndex = jsonDsl.from
-        results.totalHits = responseMap.hits.total
-        results.items = responseMap.hits.hits.collect(hitCollector)
-        results.aggregations = responseMap.aggregations
-
-        return results
+        catch (Exception e) {
+            if (isBadRequest(e)) {
+                log.debug("Invalid query: $e")
+                throw new InvalidQueryException("")
+            }
+            else {
+                log.warn("Failed to query ES: $e")
+                throw e
+            }
+        }
     }
 
-    private String getQueryUrl(String collection) {
-        String maybeCollection  = ""
-        if (collection) {
-            maybeCollection = "${collection}/"
-        }
-
-        return "/${indexName}/${maybeCollection}_search"
+    private String getQueryUrl() {
+        return "/${indexName}/_search"
     }
 
     static String toElasticId(String id) {

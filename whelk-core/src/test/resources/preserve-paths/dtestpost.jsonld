@@ -1,0 +1,350 @@
+{
+  "@context": "/context.jsonld",
+  "@graph": [
+    {
+      "@id": "https://libris-qa.kb.se/wd6wp1r75clmp21",
+      "@type": "Record",
+      "controlNumber": "3100087",
+      "created": "2001-12-11T00:00:00+01:00",
+      "descriptionConventions": [
+        {
+          "@id": "https://id.kb.se/marc/Aacr2"
+        }
+      ],
+      "descriptionCreator": {
+        "@id": "https://libris.kb.se/library/D"
+      },
+      "encodingLevel": "marc:AbbreviatedLevel",
+      "generationDate": "2018-10-31T18:42:17.986+01:00",
+      "generationProcess": {
+        "@id": "https://libris.kb.se/sys/globalchanges/2018/10/rewrite-hiddenvalue-identifiers.groovy"
+      },
+      "identifiedBy": [
+        {
+          "@type": "LibrisIIINumber",
+          "value": "9932489832"
+        }
+      ],
+      "mainEntity": {
+        "@id": "https://libris-qa.kb.se/wd6wp1r75clmp21#it"
+      },
+      "marc:catalogingSource": {
+        "@id": "https://id.kb.se/marc/CooperativeCatalogingProgram"
+      },
+      "modified": "2014-10-28T16:50:23+01:00",
+      "recordStatus": "marc:CorrectedOrRevised",
+      "sameAs": [
+        {
+          "@id": "http://libris.kb.se/bib/3100087"
+        }
+      ]
+    },
+    {
+      "@id": "https://libris-qa.kb.se/wd6wp1r75clmp21#it",
+      "@type": "Instance",
+      "accompaniedBy": {
+        "@type": "Resource",
+        "label": [
+          "1 karta (20 x 20 cm)"
+        ]
+      },
+      "electronicLocator": [
+        {
+          "@type": "Document",
+          "uri": [
+            "http://bibl.sh.se/"
+          ]
+        }
+      ],
+      "extent": [
+        {
+          "@type": "Extent",
+          "label": [
+            "456 s."
+          ]
+        }
+      ],
+      "hasNote": [
+        {
+          "@type": "Note",
+          "label": [
+            "500anmärkning"
+          ]
+        },
+        {
+          "@type": "marc:BibliographyEtcNote",
+          "label": [
+            "504bibliografi"
+          ]
+        },
+        {
+          "@type": "marc:IssuingBodyNote",
+          "label": [
+            "titelrubrik"
+          ]
+        }
+      ],
+      "hasTitle": [
+        {
+          "@type": "Title",
+          "mainTitle": "En dtestpost",
+          "marc:nonfilingChars": "3",
+          "marc:searchElement": false
+        },
+        {
+          "@type": "SpineTitle",
+          "mainTitle": "Prövoposten",
+          "marc:searchControl": "marc:NoteAddedEntry"
+        }
+      ],
+      "identifiedBy": [
+        {
+          "@type": "ISBN",
+          "qualifier": [
+            "inb."
+          ],
+          "value": "1234567890"
+        },
+        {
+          "@type": "STRN",
+          "value": "538-ORG-SR--1--SE"
+        }
+      ],
+      "indirectlyIdentifiedBy": [
+        {
+          "@type": "ISBN",
+          "value": "77"
+        }
+      ],
+      "instanceOf": {
+        "@id": "https://libris-qa.kb.se/wd6wp1r75clmp21#work"
+      },
+      "issuanceType": "Monograph",
+      "manufacture": [
+        {
+          "@type": "Manufacture",
+          "agent": {
+            "@type": "Agent",
+            "label": [
+              "Bratryck"
+            ]
+          },
+          "place": [
+            {
+              "@type": "Place",
+              "label": [
+                "Tryckby"
+              ]
+            }
+          ]
+        }
+      ],
+      "marc:hasBib249": {
+        "@type": "marc:Bib249",
+        "marc:nonfilingChars": "4",
+        "marc:originalTitle": "The test record.",
+        "marc:sequenceOfWork": " "
+      },
+      "marc:otherPhysicalDetails": "ill.",
+      "publication": [
+        {
+          "@type": "PrimaryPublication",
+          "agent": {
+            "@type": "Agent",
+            "label": [
+              "Förf."
+            ]
+          },
+          "country": {
+            "@id": "https://id.kb.se/country/sw"
+          },
+          "place": [
+            {
+              "@type": "Place",
+              "label": [
+                "Huddinge"
+              ]
+            }
+          ],
+          "year": "2000"
+        }
+      ],
+      "relatedTo": [
+        {
+          "@type": "Document",
+          "appliesTo": {
+            "@type": "Resource",
+            "label": [
+              "Bild"
+            ]
+          },
+          "cataloguersNote": [
+            "digipic"
+          ],
+          "uri": [
+            "http://www.algonet.se/~machete/bilder/test.jpg"
+          ]
+        }
+      ],
+      "relationship": [
+        {
+          "@type": "Relationship",
+          "entity": {
+            "@type": "Work",
+            "hasTitle": [
+              {
+                "@type": "Title",
+                "mainTitle": "Dtestposten"
+              }
+            ]
+          }
+        }
+      ],
+      "responsibilityStatement": "sammanställd av Mats Alexandersson",
+      "sameAs": [
+        {
+          "@id": "http://libris.kb.se/resource/bib/3100087"
+        }
+      ],
+      "tableOfContents": [
+        {
+          "@type": "TableOfContents",
+          "label": [
+            "cirkumflex: â ê ô û ; hacek: č Č ǧ Ǧ š Š ž Ž ; grav accent: à À è È ù Ù ; akut accent: á Á ć Ć é É í Í ń Ń ó Ó ś Ś ź Ź ; danskt ö: ø Ø ; danskt ä: æ Æ ; franskt oe: œ Œ ; struket l: ł Ł ; eth: ð Đ ; thorn: þ Þ ; svenska tecken: å Å ä Ä ö Ö ; (lett.) längdtecken ā Ā ē Ē ī Ī ū ;  trema/umlaut/diaresis: ë Ë ï Ï ü Ü ; tilde: ñ Ñ ã Ã ; cedilj: ç Ç ţ Ţ ; prick över: ż Ż ;  ogonek: ą Ą ę Ę ; mjagkij/tverdyj znak: ʹ ʺ ; turkiskt i: ı İ ; spanskt omvänt ? !: ¿ ¡ ; ungersk dubbel akut accent: ő Ő ű Ű"
+          ]
+        }
+      ]
+    },
+    {
+      "@id": "https://libris-qa.kb.se/wd6wp1r75clmp21#work",
+      "@type": "Text",
+      "contribution": [
+        {
+          "@type": "Contribution",
+          "agent": {
+            "@type": "Person",
+            "familyName": "Alexandersson",
+            "givenName": "Mats",
+            "lifeSpan": "1960-"
+          },
+          "role": [
+            {
+              "@id": "https://id.kb.se/relator/unspecifiedContributor"
+            }
+          ]
+        },
+        {
+          "@type": "Contribution",
+          "agent": {
+            "@type": "Organization",
+            "name": "Testpostinstitutet (Primus)"
+          },
+          "role": [
+            {
+              "@id": "https://id.kb.se/relator/unspecifiedContributor"
+            }
+          ]
+        },
+        {
+          "@type": "Contribution",
+          "agent": {
+            "@type": "Meeting",
+            "date": [
+              "1990 :"
+            ],
+            "marc:numeration": "(7 :",
+            "name": "Testpostning på hög nivå",
+            "place": [
+              {
+                "@type": "Place",
+                "label": [
+                  "Järkö)"
+                ]
+              }
+            ]
+          },
+          "role": [
+            {
+              "@id": "https://id.kb.se/relator/unspecifiedContributor"
+            }
+          ]
+        }
+      ],
+      "dissertation": [
+        {
+          "@type": "Dissertation",
+          "label": [
+            "Dissanm. Dissort : Dissuniv., Dispår"
+          ]
+        }
+      ],
+      "genreForm": [
+        {
+          "@id": "https://id.kb.se/marc/Thesis"
+        },
+        {
+          "@id": "https://id.kb.se/marc/ConferencePublication"
+        },
+        {
+          "@id": "https://id.kb.se/marc/NotFictionNotFurtherSpecified"
+        }
+      ],
+      "hasNote": [
+        {
+          "@type": "marc:LanguageNote",
+          "label": [
+            "språkanmärkning"
+          ]
+        }
+      ],
+      "language": [
+        {
+          "@id": "https://id.kb.se/language/swe"
+        }
+      ],
+      "marc:languageNote": "marc:ItemIsOrIncludesATranslation",
+      "originalVersion": {
+        "@type": "Work",
+        "language": [
+          {
+            "@id": "https://id.kb.se/language/eng"
+          }
+        ]
+      },
+      "relationship": [
+        {
+          "@type": "Relationship",
+          "entity": {
+            "@type": "Work",
+            "contribution": [
+              {
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Person",
+                  "familyName": "Arbunger",
+                  "givenName": "Druk."
+                }
+              }
+            ],
+            "hasTitle": [
+              {
+                "@type": "Title",
+                "mainTitle": "Att testposta"
+              }
+            ]
+          }
+        }
+      ],
+      "summary": [
+        {
+          "@type": "Summary",
+          "language": [
+            {
+              "@id": "https://id.kb.se/language/ger"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -12,7 +12,7 @@ class MarcFrameConverterLinkFinderIntegrationSpec extends Specification {
         // TODO: put properties in test/integration properties.
         // This also depends on example data being loaded.
         def whelk = new Whelk(
-                new PostgreSQLComponent('jdbc:postgresql:whelk', 'lddb'))
+                new PostgreSQLComponent('jdbc:postgresql:whelk'))
         whelk.loadCoreData()
         def converter = whelk.getMarcFrameConverter()
 

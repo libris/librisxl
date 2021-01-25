@@ -58,6 +58,10 @@ class CrudGetRequest {
         return getBoolParameter("framed").orElse(contentType == MimeTypes.JSON)
     }
 
+    boolean shouldApplyInverseOf() {
+        return getBoolParameter("_applyInverseOf").orElse(false)
+    }
+
     View getView() {
         return view
     }

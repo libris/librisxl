@@ -1,7 +1,9 @@
 package whelk
 
+
 import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
+import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 import whelk.util.Unicode
@@ -46,6 +48,7 @@ class Document {
     static final List thingTypedIDsPath = ["@graph", 1, "identifiedBy"]
     static final List thingIndirectTypedIDsPath = ["@graph", 1, "indirectlyIdentifiedBy"]
     static final List thingCarrierTypesPath = ["@graph", 1, "carrierType"]
+    static final List thingInSchemePath = ["@graph",1,"inScheme","@id"]
     static final List recordIdPath = ["@graph", 0, "@id"]
     static final List workIdPath = ["@graph", 1, "instanceOf", "@id"]
     static final List thingMetaPath = ["@graph", 1, "meta", "@id"]
@@ -90,6 +93,14 @@ class Document {
         }
     }
 
+    void trimStrings() {
+        DocumentUtil.traverse(data) { value, path ->
+            if (value instanceof String && value != value.trim()) {
+                return new DocumentUtil.Replace(value.trim())
+            }
+        }
+    }
+
     URI getURI() {
         return baseUri.resolve(getShortId())
     }
@@ -115,6 +126,10 @@ class Document {
     void setEncodingLevel(encLevel) { set(encLevelPath, encLevel) }
 
     String getEncodingLevel() { get(encLevelPath) }
+
+    void setThingInScheme(inScheme) { set(thingInSchemePath, inScheme) }
+
+    String getThingInScheme() { get(thingInSchemePath) }
 
     void setDescriptionCreator(creator) { set(descriptionCreatorPath, creator) }
 
@@ -507,24 +522,22 @@ class Document {
         return null
     }
 
+    Set<String> getEmbellishments() {
+        Set<String> result = new HashSet<>()
+        data[JsonLd.GRAPH_KEY].eachWithIndex{ def entry, int i ->
+            if (i > 1 && entry[JsonLd.GRAPH_KEY]) {
+                result.add(_get(thingIdPath2, entry))
+            }
+        }
+        return result
+    }
+
     /**
      * Return a list of external references in the doc.
      *
      */
-    List getExternalRefs() {
+    Set<Link> getExternalRefs() {
         return JsonLd.getExternalReferences(this.data)
-    }
-
-    /**
-     * Returns a String[2], first of which is the relation (itemOf, heldBy etc).
-     * The second string is the referenced URI.
-     */
-    List<String[]> getRefsWithRelation() {
-        List<String[]> references = new ArrayList<>()
-
-        addRefsWithRelation(this.data, references, null)
-
-        return references
     }
 
     private void addRefsWithRelation(Map node, List<String[]> references, String relation) {
@@ -792,6 +805,12 @@ class Document {
         }
     }
 
+    void applyInverses(JsonLd jsonld) {
+        Map thing = get(thingPath)
+        jsonld.applyInverses(thing)
+        thing.remove(JsonLd.REVERSE_KEY)
+    }
+
     String getChecksum() {
         long checksum = calculateCheckSum(data, 1)
         return Long.toString(checksum)
@@ -813,6 +832,7 @@ class Document {
         else if (node instanceof Map) {
             for (String key : node.keySet()) {
                 if (key != JsonLd.MODIFIED_KEY && key != JsonLd.CREATED_KEY && key != JsonLd.RECORD_STATUS_KEY) {
+
                     term += key.hashCode() * depth
                     term += calculateCheckSum(node[key], depth + 1)
                 }
@@ -829,4 +849,6 @@ class Document {
 
         return term
     }
+
+
 }

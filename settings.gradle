@@ -1,3 +1,4 @@
 rootProject.name = 'librisxl'
 include('apix_export', 'apix_server', 'batchimport', 'importers',
-        'marc_export', 'oaipmh', 'rest', 'whelk-core', 'whelktool')
+        'marc_export', 'oaipmh', 'rest', 'whelk-core', 'whelktool',
+	'gui-whelktool')

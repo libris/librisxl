@@ -1,6 +1,7 @@
 package whelk
 
 import groovy.transform.CompileStatic
+import groovy.transform.Immutable
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.apache.logging.log4j.LogManager
@@ -138,6 +139,7 @@ class JsonLd {
 
         expandAliasesInLensProperties()
         expandInheritedLensProperties()
+        expandInverseLensProperties()
     }
 
     private void setupPrefixes() {
@@ -167,21 +169,19 @@ class JsonLd {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     private void expandAliasesInLensProperties() {
-        displayData['lensGroups']?.values().each { group ->
-            group.get('lenses')?.values().each { lens ->
-                lens['showProperties'] = lens['showProperties'].collect {
-                    def alias = langContainerAlias[it]
-                    return alias ? [it, alias] : it
-                }.flatten()
-            }
+        eachLens { lens ->
+            lens['showProperties'] = lens['showProperties'].collect {
+                def alias = langContainerAlias[it]
+                return alias ? [it, alias] : it
+            }.flatten()
         }
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
     expandInheritedLensProperties() {
         def lensesById = [:]
-        displayData['lensGroups']?.values()?.each { group ->
-            group.get('lenses')?.values()?.each { lens ->
+        eachLens { lens ->
+            if (lens['@id']) {
                 lensesById[lens['@id']] = lens
             }
         }
@@ -210,9 +210,27 @@ class JsonLd {
             }
         }
 
-        lensesById.values().each { Map lens ->
+        eachLens { lens ->
             lens.put('showProperties', flattenedProps(lens))
             lens.remove('fresnel:extends')
+        }
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    expandInverseLensProperties() {
+        eachLens { lens ->
+            lens['inverseProperties'] = ((Iterable) lens['showProperties']).findResults {
+                return (it instanceof Map ) && it['inverseOf'] ? it['inverseOf'] : null
+            }
+        }
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    private void eachLens(Closure c) {
+        displayData['lensGroups']?.values().each { group ->
+            group.get('lenses')?.values().each { lens ->
+                c(lens)
+            }
         }
     }
 
@@ -252,14 +270,13 @@ class JsonLd {
         return termId.replace(vocabId, '')
     }
 
-    List expandLinks(List refs) {
+    Set<Link> expandLinks(Set<Link> refs) {
         return expandLinks(refs, (Map) displayData[CONTEXT_KEY])
     }
 
     String expand(String ref) {
         return expand(ref, (Map) displayData[CONTEXT_KEY])
     }
-
 
     static URI findRecordURI(Map jsonLd) {
         String foundIdentifier = findIdentifier(jsonLd)
@@ -304,17 +321,17 @@ class JsonLd {
         }
     }
 
-    static List getExternalReferences(Map jsonLd){
-        Set allReferences = getAllReferences(jsonLd)
-        Set localObjects = getLocalObjects(jsonLd)
-        List externalRefs = allReferences.minus(localObjects) as List
+    static Set<Link> getExternalReferences(Map jsonLd) {
+        Set<Link> allReferences = getAllReferences(jsonLd)
+        Set<Link> localObjects = getLocalObjects(jsonLd)
+        Set<Link> externalRefs = allReferences.findAll { !localObjects.contains(it.getIri()) }
         // NOTE: this is necessary because some documents contain references to
         // bnodes that don't exist (in that document).
         return filterOutDanglingBnodes(externalRefs)
     }
 
-    static List expandLinks(List refs, Map context) {
-        return refs.collect { expand( (String) it, context) }
+    static Set<Link> expandLinks(Set<Link> refs, Map context) {
+        return refs.collect{ it.withIri(expand(it.iri, context)) }.toSet()
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
@@ -383,42 +400,42 @@ class JsonLd {
         return result
     }
 
-    private static List filterOutDanglingBnodes(List refs) {
+    private static Set<Link> filterOutDanglingBnodes(Set<Link> refs) {
         return refs.findAll {
-            !((String)it).startsWith('_:')
+            !it.iri.startsWith('_:')
         }
     }
 
-    static Set getAllReferences(Map jsonLd) {
+    static Set<Link> getAllReferences(Map jsonLd) {
         List items
         if (jsonLd.containsKey(GRAPH_KEY)) {
             items = jsonLd.get(GRAPH_KEY)
         } else {
             throw new FramingException("Missing '@graph' key in input")
         }
-        return getAllReferencesFromList(items).flatten()
+        return getAllReferencesFromList(null, items)
     }
 
-    private static Set getRefs(Object o) {
+    private static Set<Link> getRefs(String parentKey, Object o) {
         if(o instanceof Map) {
-            return getAllReferencesFromMap(o)
+            return getAllReferencesFromMap(parentKey, o)
         } else if (o instanceof List){
-            return getAllReferencesFromList(o)
+            return getAllReferencesFromList(parentKey, o)
         } else {
-            return new HashSet()
+            return Collections.emptySet()
         }
     }
 
-    private static Set getAllReferencesFromMap(Map item) {
-        Set refs = []
+    private static Set<Link> getAllReferencesFromMap(String parentKey, Map item) {
+        Set<Link> refs = []
 
         if (isReference(item)) {
-            refs.add(item[ID_KEY])
+            refs.add(new Link(iri: item[ID_KEY], relation: parentKey))
             return refs
         } else {
             item.each { key, value ->
                 if (key != JSONLD_ALT_ID_KEY) {
-                    refs << getRefs(value)
+                    refs.addAll(getRefs((String) key, value))
                 }
             }
         }
@@ -434,90 +451,12 @@ class JsonLd {
         }
     }
 
-    private static Set getAllReferencesFromList(List items) {
-        Set result = []
+    private static Set<Link> getAllReferencesFromList(String parentKey, List items) {
+        Set<Link> result = []
         items.each { item ->
-            result << getRefs(item)
+            result.addAll(getRefs(parentKey, item))
         }
         return result
-    }
-
-
-    //==== Utils ====
-
-    Set validate(Map obj) {
-        Set<String> errors = new LinkedHashSet<>()
-        doValidate(obj, errors)
-        return errors
-    }
-
-    private void doValidate(Map obj, Set errors) {
-        for (Object keyObj : obj.keySet()) {
-            if (!(keyObj instanceof String)) {
-                errors << "Invalid key: $keyObj"
-                continue
-            }
-
-            String key = (String) keyObj
-            Object value = obj[key]
-
-            if ((key == ID_KEY || key == TYPE_KEY)
-                && !(value instanceof String)) {
-                errors << "Unexpected value of $key: ${value}"
-                continue
-            }
-
-            Map termDfn = vocabIndex[key] instanceof Map ? vocabIndex[key] : null
-            if (!termDfn && key.indexOf(':') > -1) {
-                termDfn = vocabIndex[expand(key)]
-            }
-
-            Map ctxDfn = context[key] instanceof Map ? context[key] : null
-            boolean isVocabTerm = ctxDfn && ctxDfn[TYPE_KEY] == VOCAB_KEY
-
-            if (!termDfn && !LD_KEYS.contains(key)) {
-                errors << "Unknown term: $key"
-            }
-
-            if ((key == TYPE_KEY || isVocabTerm)
-                && !vocabIndex.containsKey((String) value)) {
-                errors << "Unknown vocab value for $key: $value"
-            }
-
-            boolean expectRepeat = key == GRAPH_KEY || key in repeatableTerms
-            boolean isRepeated = value instanceof List
-            if (expectRepeat && !isRepeated) {
-                errors << "Expected $key to be an array."
-            } else if (!expectRepeat && isRepeated) {
-                errors << "Unexpected array for $key."
-            }
-
-            List valueList = isRepeated ? (List) value : null
-            if (valueList && valueList.size() == 0) {
-                continue
-            }
-            Object firstValue = valueList?.getAt(0) ?: value
-            boolean valueIsObject = firstValue instanceof Map
-
-            if (firstValue && termDfn
-                    && termDfn[TYPE_KEY] == 'ObjectProperty') {
-                if (!isVocabTerm && !valueIsObject) {
-                    errors << "Expected value type of $key to be object (value: $value)."
-                } else if (isVocabTerm && valueIsObject) {
-                    errors << "Expected value type of $key to be a vocab string (value: $value)."
-                }
-            }
-
-            if (value instanceof List) {
-                value.each {
-                    if (it instanceof Map) {
-                        doValidate((Map) it, errors)
-                    }
-                }
-            } else if (value instanceof Map) {
-                doValidate((Map) value, errors)
-            }
-        }
     }
 
     boolean softMerge(Map<String, Object> obj, Map<String, Object> into) {
@@ -549,10 +488,34 @@ class JsonLd {
         return true
     }
 
+    @TypeChecked(TypeCheckingMode.SKIP)
+    void applyInverses(Map thing) {
+        thing[REVERSE_KEY]?.each { rel, subjects ->
+            Map relDescription = vocabIndex[rel]
+            // NOTE: resilient in case we add inverseOf as a direct term
+            def inverseOf = relDescription['owl:inverseOf'] ?: relDescription.inverseOf
+            List revIds = asList(inverseOf)?.collect {
+                toTermKey((String) it[ID_KEY])
+            }
+            String rev = revIds.find { it in vocabIndex }
+            if (rev) {
+                asList(thing.get(rev, [])).addAll(subjects)
+            }
+        }
+    }
+
+    static List asList(o) {
+        return (o instanceof List) ? (List) o : o != null ? [o] : []
+    }
+
     static List<List<String>> findPaths(Map obj, String key, String value) {
+        return findPaths(obj, key, [value].toSet())
+    }
+
+    static List<List<String>> findPaths(Map obj, String key, Set<String> values) {
         List paths = []
         new DFS().search(obj, { List path, v ->
-            if (value == v && key == path[-1]) {
+            if (v in values && key == path[-1]) {
                 paths << new ArrayList(path)
             }
         })
@@ -685,30 +648,19 @@ class JsonLd {
 
     //==== Embellish ====
 
-    Map embellish(Map jsonLd, Iterable additionalObjects, boolean filterOutNonChipTerms = true) {
+    Map embellish(Map jsonLd, Iterable additionalObjects) {
         if (!jsonLd.get(GRAPH_KEY)) {
             return jsonLd
         }
 
         List graphItems = jsonLd.get(GRAPH_KEY)
 
-        if (filterOutNonChipTerms) {
-            additionalObjects.each { object ->
-                Map chip = (Map) toChip(object)
-                if (chip.containsKey('@graph')) {
-                    graphItems << chip
+        additionalObjects.each { object ->
+            if (object instanceof Map) {
+                if (((Map)object).containsKey('@graph')) {
+                    graphItems << object
                 } else {
-                    graphItems << ['@graph': chip]
-                }
-            }
-        } else {
-            additionalObjects.each { object ->
-                if (object instanceof Map) {
-                    if (((Map)object).containsKey('@graph')) {
-                        graphItems << object
-                    } else {
-                        graphItems << ['@graph': object]
-                    }
+                    graphItems << ['@graph': object]
                 }
             }
         }
@@ -745,7 +697,7 @@ class JsonLd {
                 if (value instanceof List) {
                     lensValue = ((List) value).withIndex().collect { it, index ->
                         it instanceof Map
-                        ? toCard((Map) it, chipsify, addSearchKey, reduceKey, pathRemainders([index, key], preservePaths))
+                        ? toCard((Map) it, chipsify, addSearchKey, reduceKey, pathRemainders([key, index], preservePaths))
                         : it
                     }
                 } else if (value instanceof Map) {
@@ -827,6 +779,17 @@ class JsonLd {
             }
         }
         return parts
+    }
+
+    Set getInverseProperties(Map data, String lensType) {
+        if (data[GRAPH_KEY]) {
+            return new LinkedHashSet(((List) data[GRAPH_KEY]).collect{ getInverseProperties((Map) it, lensType) }.flatten())
+        }
+
+        Map lensGroups = displayData.get('lensGroups')
+        Map lensGroup = lensGroups.get(lensType)
+        Map lens = getLensFor(data, lensGroup)
+        return new LinkedHashSet((List) lens?.get('inverseProperties') ?: [])
     }
 
     private static void restorePreserved(Map cardOrChip, Map thing, List<List> preservePaths) {
@@ -1016,7 +979,10 @@ class JsonLd {
         embedChain.add(mainId)
         Map newItem = [:]
         mainItem.each { key, value ->
-            newItem.put(key, toEmbedded(value, idMap, embedChain))
+            if (!key.equals(JSONLD_ALT_ID_KEY))
+                newItem.put(key, toEmbedded(value, idMap, embedChain))
+            else
+                newItem.put(key, value)
         }
         return newItem
     }
@@ -1046,7 +1012,7 @@ class JsonLd {
     }
 
     /*
-     * Traverse the data and index all non-reference objects on their @id:s.
+     * Traverse the data and index all non-reference objects on their @id:s and sameAs:s.
      */
     private static Map getIdMap(Map data) {
         Map idMap = new HashMap()
@@ -1062,8 +1028,16 @@ class JsonLd {
                 // Don't index graphs, since their @id:s do not denote them.
                 && !data.containsKey(GRAPH_KEY)
                ) {
-                idMap.put(data.get(key), data)
-                continue
+                addToIdMap(idMap, data, (String) data.get(key))
+            } else if (key.equals(JSONLD_ALT_ID_KEY)
+                    // Don't index graphs, since their @id:s do not denote them.
+                    && !data.containsKey(GRAPH_KEY)
+                    && data.get(key) instanceof List) {
+                List sameAsList = (List) data.get(key)
+                for (Object altIdObject : sameAsList) {
+                    Map altIdMap = (Map) altIdObject
+                    addToIdMap(idMap, data, (String) altIdMap.get(ID_KEY))
+                }
             }
             Object obj = data.get(key)
             if (obj instanceof List)
@@ -1071,6 +1045,16 @@ class JsonLd {
             else if (obj instanceof Map)
                 populateIdMap( (Map) obj, idMap )
         }
+    }
+
+    private static void addToIdMap(Map idMap, Map object, String id) {
+        // Do not replace a large object with a smaller one (with the same id).
+        // Doing so means data is lost in the framing.
+        Object preExisting = idMap.get(id)
+        if (preExisting != null && preExisting instanceof Map && preExisting.size() > object.size())
+            return
+
+        idMap.put(id, object)
     }
 
     private static void populateIdMap(List data, Map idMap) {
@@ -1154,3 +1138,17 @@ class JsonLd {
         }
     }
 }
+
+
+@Immutable
+class Link {
+    String iri
+    String relation
+
+    Link withIri(String iri) {
+        iri == this.iri
+                ? this
+                : new Link(iri: iri, relation: this.relation)
+    }
+}
+

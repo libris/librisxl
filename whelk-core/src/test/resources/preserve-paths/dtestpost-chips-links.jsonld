@@ -1,0 +1,152 @@
+{
+  "@context": "/context.jsonld",
+  "@graph": [
+    {
+      "@id": "https://libris-qa.kb.se/wd6wp1r75clmp21",
+      "@type": "Record",
+      "controlNumber": "3100087",
+      "encodingLevel": "marc:AbbreviatedLevel",
+      "mainEntity": {
+        "@id": "https://libris-qa.kb.se/wd6wp1r75clmp21#it"
+      },
+      "sameAs": [
+        {
+          "@id": "http://libris.kb.se/bib/3100087"
+        }
+      ],
+      "descriptionConventions": [
+        {
+          "@id": "https://id.kb.se/marc/Aacr2"
+        }
+      ],
+      "descriptionCreator": {
+        "@id": "https://libris.kb.se/library/D"
+      },
+      "generationProcess": {
+        "@id": "https://libris.kb.se/sys/globalchanges/2018/10/rewrite-hiddenvalue-identifiers.groovy"
+      },
+      "marc:catalogingSource": {
+        "@id": "https://id.kb.se/marc/CooperativeCatalogingProgram"
+      }
+    },
+    {
+      "@id": "https://libris-qa.kb.se/wd6wp1r75clmp21#it",
+      "@type": "Instance",
+      "hasTitle": [
+        {
+          "@type": "Title",
+          "mainTitle": "En dtestpost"
+        },
+        {
+          "@type": "SpineTitle"
+        }
+      ],
+      "sameAs": [
+        {
+          "@id": "http://libris.kb.se/resource/bib/3100087"
+        }
+      ],
+      "publication": [
+        {
+          "@type": "PrimaryPublication",
+          "agent": {
+            "@type": "Agent",
+            "label": [
+              "Förf."
+            ]
+          },
+          "place": [
+            {
+              "@type": "Place",
+              "label": [
+                "Huddinge"
+              ]
+            }
+          ],
+          "year": "2000",
+          "country": {
+            "@id": "https://id.kb.se/country/sw"
+          }
+        }
+      ]
+    },
+    {
+      "@id": "https://libris-qa.kb.se/wd6wp1r75clmp21#work",
+      "@type": "Text",
+      "language": [
+        {
+          "@id": "https://id.kb.se/language/swe"
+        }
+      ],
+      "contribution": [
+        {
+          "@type": "Contribution",
+          "agent": {
+            "@type": "Person",
+            "familyName": "Alexandersson",
+            "givenName": "Mats",
+            "lifeSpan": "1960-"
+          },
+          "role": [
+            {
+              "@id": "https://id.kb.se/relator/unspecifiedContributor"
+            }
+          ]
+        },
+        {
+          "@type": "Contribution",
+          "agent": {
+            "@type": "Organization",
+            "name": "Testpostinstitutet (Primus)"
+          },
+          "role": [
+            {
+              "@id": "https://id.kb.se/relator/unspecifiedContributor"
+            }
+          ]
+        },
+        {
+          "@type": "Contribution",
+          "agent": {
+            "@type": "Meeting",
+            "name": "Testpostning på hög nivå"
+          },
+          "role": [
+            {
+              "@id": "https://id.kb.se/relator/unspecifiedContributor"
+            }
+          ]
+        }
+      ],
+      "genreForm": [
+        {
+          "@id": "https://id.kb.se/marc/Thesis"
+        },
+        {
+          "@id": "https://id.kb.se/marc/ConferencePublication"
+        },
+        {
+          "@id": "https://id.kb.se/marc/NotFictionNotFurtherSpecified"
+        }
+      ],
+      "originalVersion": {
+        "@type": "Work",
+        "language": [
+          {
+            "@id": "https://id.kb.se/language/eng"
+          }
+        ]
+      },
+      "summary": [
+        {
+          "@type": "Summary",
+          "language": [
+            {
+              "@id": "https://id.kb.se/language/ger"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

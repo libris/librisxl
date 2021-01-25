@@ -33,7 +33,14 @@ dependencies {
 
     // Dependencies inherited from classic libris, due to profile handling
     compile group: 'com.ibm.icu', name: 'icu4j', version: '4.8.1.1'
-    compile group: 'org.dspace', name: 'xoai', version: '3.2.10'
+    compile(group: 'org.dspace', name: 'xoai', version: '3.2.10') {
+        exclude group: 'org.mockito'
+        exclude group: 'org.hamcrest'
+        exclude group: 'junit'
+        exclude group: 'com.lyncode', module: 'test-support'
+        // org.w3c.dom.UserDataHandler scanned from multiple locations: xml-apis, jaxen
+        exclude group: 'jaxen', module: 'jaxen'
+    }
     compile group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
     compile 'org.apache.commons:commons-lang3:3.3.2'
     compile 'org.codehaus.groovy:groovy:2.5.4'
@@ -43,11 +50,17 @@ gretty {
     systemProperties 'xl.secret.properties': System.getProperty("xl.secret.properties")
     httpPort = 8580
     scanInterval = 0
+    afterEvaluate {
+        appRunDebug {
+            debugPort = 5006
+            debugSuspend = false
+        }
+    }
 }
 
 jar {
     manifest {
-        attributes "Main-Class": "whelk.export.marc.TotalExport"
+        attributes "Main-Class": "whelk.export.marc.MarcCliExport"
     }
 
     from {

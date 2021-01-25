@@ -5,8 +5,8 @@
  *
  */
 
-import datatool.scripts.linkblanklanguages.LanguageLinker
-import datatool.util.Statistics
+import whelk.filter.LanguageLinker
+import whelk.util.Statistics
 
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -34,6 +34,7 @@ substitutions = [
         'suomi'                           : 'finska',
         'svensk'                          : 'svenska',
         'tigriniska'                      : 'tigrinska',
+        'tornedalsfinska'                  : 'meänkieli',
         'á íslensku'                      : 'isländska',
         'česky'                           : 'tjeckiska',
 
@@ -137,7 +138,7 @@ LanguageLinker buildLanguageMap() {
     LanguageLinker linker = new LanguageLinker(OBSOLETE_CODES, new Statistics().printOnShutdown())
     ConcurrentLinkedQueue<Map> languages = new ConcurrentLinkedQueue<>()
     selectByIds(queryIds(q).collect()) { languages.add(it.graph[1]) }
-    languages.forEach({l -> linker.addLanguageDefinition(l) } )
+    languages.forEach({l -> linker.addDefinition(l) } )
 
     linker.addSubstitutions(substitutions)
     linker.addMapping('grekiska', 'https://id.kb.se/language/gre')
@@ -150,10 +151,10 @@ LanguageLinker buildLanguageMap() {
 
 Map getWork(def bib) {
     def (record, thing, work) = bib.graph
-    if (isInstanceOf(thing, 'Work')) {
+    if (thing && isInstanceOf(thing, 'Work')) {
         return thing
     }
-    else if (isInstanceOf(work, 'Work')) {
+    else if (work && isInstanceOf(work, 'Work')) {
         return work
     }
     return null

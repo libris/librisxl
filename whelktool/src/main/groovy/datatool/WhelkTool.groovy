@@ -5,12 +5,13 @@ import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.IdGenerator
-import whelk.Storage
 import whelk.Whelk
+import whelk.exception.StaleUpdateException
 import whelk.exception.WhelkException
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.util.LegacyIntegrationTools
+import whelk.util.Statistics
 
 import javax.script.Bindings
 import javax.script.Compilable
@@ -19,6 +20,7 @@ import javax.script.ScriptEngineManager
 import javax.script.SimpleBindings
 import java.sql.SQLException
 import java.time.ZonedDateTime
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ScheduledExecutorService
@@ -50,7 +52,10 @@ class WhelkTool {
     File reportsDir
     PrintWriter mainLog
     PrintWriter errorLog
-    Map<String, PrintWriter> reports = [:]
+    PrintWriter modifiedLog
+    PrintWriter createdLog
+    PrintWriter deletedLog
+    ConcurrentHashMap<String, PrintWriter> reports = new ConcurrentHashMap<>()
 
     Counter counter = new Counter()
 
@@ -69,11 +74,12 @@ class WhelkTool {
     Map<String, Closure> compiledScripts = [:]
 
     ElasticFind elasticFind
+    Statistics statistics
 
     private ScheduledExecutorService timedLogger = MoreExecutors.getExitingScheduledExecutorService(
             Executors.newScheduledThreadPool(1))
 
-    WhelkTool(String scriptPath, File reportsDir=null) {
+    WhelkTool(String scriptPath, File reportsDir=null, int statsNumIds) {
         try {
             whelk = Whelk.createLoadedSearchWhelk()
         } catch (NullPointerException e) {
@@ -85,11 +91,28 @@ class WhelkTool {
         mainLog = new PrintWriter(new File(reportsDir, "MAIN.txt"))
         errorLog = new PrintWriter(new File(reportsDir, "ERRORS.txt"))
 
+        def modifiedLogFile = new File(reportsDir, "MODIFIED.txt")
+        modifiedLog = new PrintWriter(modifiedLogFile)
+        def createdLogFile = new File(reportsDir, "CREATED.txt")
+        createdLog = new PrintWriter(createdLogFile)
+        def deletedLogFile = new File(reportsDir, "DELETED.txt")
+        deletedLog = new PrintWriter(deletedLogFile)
+
         try {
             elasticFind = new ElasticFind(new ESQuery(whelk))
         }
         catch (Exception e) {
             log "Could not initialize elasticsearch: " + e
+        }
+        statistics = new Statistics(statsNumIds)
+        Runtime.addShutdownHook {
+            if (!statistics.isEmpty()) {
+                new PrintWriter(new File(reportsDir, "STATISTICS.txt")).withCloseable {
+                    statistics.print(0, it)
+                }
+            }
+
+            [modifiedLogFile, createdLogFile, deletedLogFile].each { if (it.length() == 0) it.delete() }
         }
     }
 
@@ -132,7 +155,9 @@ class WhelkTool {
     }
 
     DocumentItem create(Map data) {
-        DocumentItem item = new DocumentItem(number: counter.createdCount, doc: new Document(data), whelk: whelk)
+        Document doc = new Document(data)
+        doc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
+        DocumentItem item = new DocumentItem(number: counter.createdCount, doc: doc, whelk: whelk)
         item.existsInStorage = false
         return item
     }
@@ -145,7 +170,7 @@ class WhelkTool {
         def uriItems = uris.collect { "'$it'" }.join(',\n')
         def query = """
             SELECT id, iri
-            FROM ${whelk.storage.mainTableName}__identifiers
+            FROM lddb__identifiers
             WHERE iri IN ($uriItems)
             """
         def conn = whelk.storage.getConnection()
@@ -197,7 +222,7 @@ class WhelkTool {
             int batchSize = DEFAULT_BATCH_SIZE) {
         def query = """
             SELECT id, data, created, modified, deleted
-            FROM $whelk.storage.mainTableName
+            FROM lddb
             WHERE $whereClause
             """
         def conn = whelk.storage.getConnection()
@@ -260,7 +285,7 @@ class WhelkTool {
             if (limit > -1 && counter.readCount > limit) {
                 break
             }
-            DocumentItem item = new DocumentItem(number: counter.readCount, doc: doc, whelk: whelk)
+            DocumentItem item = new DocumentItem(number: counter.readCount, doc: doc, whelk: whelk, preUpdateChecksum: doc.getChecksum())
             item.existsInStorage = !newItems
             batch.items << item
             if (batch.items.size() == batchSize) {
@@ -369,7 +394,9 @@ class WhelkTool {
             ? jsonWriter.writeValueAsString(item.doc.data)
             : null
         counter.countProcessed()
-        process(item)
+        statistics.withContext(item.doc.shortId) {
+            process(item)
+        }
         if (item.needsSaving) {
             if (item.loud) {
                 assert allowLoud : "Loud changes need to be explicitly allowed"
@@ -386,7 +413,16 @@ class WhelkTool {
                     doDeletion(item)
                     counter.countDeleted()
                 } else if (item.existsInStorage) {
-                    doModification(item)
+                    try {
+                        doModification(item)
+                    }
+                    catch (StaleUpdateException e) {
+                        logRetry(e, item)
+                        Document doc = whelk.getDocument(item.doc.shortId)
+                        item = new DocumentItem(number: item.number, doc: doc, whelk: whelk,
+                                preUpdateChecksum: doc.getChecksum(), existsInStorage: true)
+                        return doProcess(process, item, counter)
+                    }
                     counter.countModified()
                 } else {
                     doSaveNew(item)
@@ -404,10 +440,17 @@ class WhelkTool {
         return true
     }
 
+    private void logRetry(StaleUpdateException e, DocumentItem item) {
+        def msg = "Re-processing ${item.doc.shortId} because of concurrent modification. This is not a problem if script is correct (pure function of document) but might affect logs and statistics. $e"
+        errorLog.println(msg)
+        mainLog.println(msg)
+    }
+
     private void doDeletion(DocumentItem item) {
         if (!dryRun) {
             whelk.remove(item.doc.shortId, changedIn, scriptJobUri)
         }
+        deletedLog.println(item.doc.shortId)
     }
 
     private boolean doRevertToTime(DocumentItem item) {
@@ -456,25 +499,22 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            Storage component = skipIndex ? whelk.storage : whelk
-            component.storeAtomicUpdate(doc.shortId, !item.loud, changedIn, scriptJobUri, {
-                it.data = doc.data
-            })
+            whelk.storeAtomicUpdate(doc, !item.loud, changedIn, scriptJobUri, item.preUpdateChecksum, !skipIndex)
         }
+        modifiedLog.println(doc.shortId)
     }
 
     private void doSaveNew(DocumentItem item) {
         Document doc = item.doc
-        doc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
         doc.setControlNumber(doc.getShortId())
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            Storage component = skipIndex ? whelk.storage : whelk
-            if (!component.createDocument(doc, changedIn, scriptJobUri,
-                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false))
+            if (!whelk.createDocument(doc, changedIn, scriptJobUri,
+                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false, !skipIndex))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
+        createdLog.println(doc.shortId)
     }
 
     private boolean confirmNextStep(String inJsonStr, Document doc) {
@@ -548,6 +588,7 @@ class WhelkTool {
         bindings.put("create", this.&create)
         bindings.put("queryIds", this.&queryIds)
         bindings.put("queryDocs", this.&queryDocs)
+        bindings.put("incrementStats", statistics.&increment)
         return bindings
     }
 
@@ -555,7 +596,6 @@ class WhelkTool {
         log "Running Whelk against:"
         log "  PostgreSQL:"
         log "    url:     ${whelk.storage.connectionPool.getJdbcUrl()}"
-        log "    table:   ${whelk.storage.mainTableName}"
         if (whelk.elastic) {
             log "  ElasticSearch:"
             log "    hosts:   ${whelk.elastic.elasticHosts}"
@@ -563,6 +603,7 @@ class WhelkTool {
             log "    index:   ${whelk.elastic.defaultIndex}"
         }
         log "Using script: $scriptFile"
+        log "Using report dir: $reportsDir"
         if (skipIndex) log "  skipIndex"
         if (dryRun) log "  dryRun"
         if (stepWise) log "  stepWise"
@@ -576,11 +617,8 @@ class WhelkTool {
     }
 
     private void finish() {
-        mainLog.flush()
-        mainLog.close()
-        errorLog.flush()
-        errorLog.close()
-        reports.values().each {
+        def logWriters = [mainLog, errorLog, modifiedLog, createdLog, deletedLog] + reports.values()
+        logWriters.each {
             it.flush()
             it.close()
         }
@@ -588,12 +626,7 @@ class WhelkTool {
     }
 
     private PrintWriter getReportWriter(String reportName) {
-        def report = reports[reportName]
-        if (!report) {
-            report = reports[reportName] = new PrintWriter(
-                    new File(reportsDir, reportName))
-        }
-        return report
+        reports.computeIfAbsent(reportName, { new PrintWriter(new File(reportsDir, it)) } )
     }
 
     private void log() {
@@ -621,6 +654,7 @@ class WhelkTool {
         cli.s(longOpt:'step', 'Change one document at a time, prompting to continue.')
         cli.l(longOpt:'limit', args:1, argName:'LIMIT', 'Amount of documents to process.')
         cli.a(longOpt:'allow-loud', 'Allow scripts to do loud modifications.')
+        cli.n(longOpt:'stats-num-ids', args:1, 'Number of ids to print per entry in STATISTICS.txt.')
 
         def options = cli.parse(args)
         if (options.h) {
@@ -630,7 +664,8 @@ class WhelkTool {
         def reportsDir = new File(options.r ?: 'reports')
         def scriptPath = options.arguments()[0]
 
-        def tool = new WhelkTool(scriptPath, reportsDir)
+        int statsNumIds = options.n ? Integer.parseInt(options.n) : 3
+        def tool = new WhelkTool(scriptPath, reportsDir, statsNumIds)
         tool.skipIndex = options.I
         tool.dryRun = options.d
         tool.stepWise = options.s
@@ -646,6 +681,7 @@ class WhelkTool {
 class DocumentItem {
     int number
     Document doc
+    String preUpdateChecksum
     private Whelk whelk
     private boolean needsSaving = false
     private boolean doDelete = false

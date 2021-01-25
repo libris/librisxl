@@ -1,5 +1,6 @@
 package whelk.search
 
+import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeCheckingMode
@@ -7,6 +8,9 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.exception.InvalidQueryException
+import whelk.util.DocumentUtil
+import whelk.util.Unicode
 
 @CompileStatic
 @Log
@@ -14,11 +18,14 @@ class ESQuery {
     private Whelk whelk
     private JsonLd jsonld
     private Set keywordFields
+    private Set dateFields
     private static final ObjectMapper mapper = new ObjectMapper()
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
-        'q', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost'
+        'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens'
     ]
+    private static final String OR_PREFIX = 'or-'
+    private static final String EXISTS_PREFIX = 'exists-'
 
     private Map<String, List<String>> boostFieldsByType = [:]
     private ESQueryLensBoost lensBoost
@@ -30,16 +37,18 @@ class ESQuery {
     ESQuery(Whelk whelk) {
         this.whelk = whelk
         this.jsonld = whelk.jsonld
-        this.keywordFields = getKeywords(this.whelk)
+        initFieldMappings(this.whelk)
         this.lensBoost = new ESQueryLensBoost(jsonld)
     }
 
-    Set getKeywords(Whelk whelk) {
+    void initFieldMappings(Whelk whelk) {
         if (whelk.elastic) {
             Map mappings = whelk.elastic.getMappings()
-            return getKeywordFields(mappings)
+            this.keywordFields =  getKeywordFields(mappings)
+            this.dateFields = getDateFields(mappings)
         } else {
-            return [] as Set
+            this.keywordFields = Collections.emptySet()
+            this.dateFields = Collections.emptySet()
         }
     }
 
@@ -49,9 +58,9 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map doQuery(Map<String, String[]> queryParameters, String dataset) {
+    Map doQuery(Map<String, String[]> queryParameters) {
         Map esQuery = getESQuery(queryParameters)
-        Map esResponse = hideKeywordFields(whelk.elastic.query(esQuery, dataset))
+        Map esResponse = hideKeywordFields(whelk.elastic.query(esQuery))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
         }
@@ -59,9 +68,9 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map doQueryIds(Map<String, String[]> queryParameters, String dataset) {
+    Map doQueryIds(Map<String, String[]> queryParameters) {
         Map esQuery = getESQuery(queryParameters)
-        Map esResponse = hideKeywordFields(whelk.elastic.queryIds(esQuery, dataset))
+        Map esResponse = hideKeywordFields(whelk.elastic.queryIds(esQuery))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
         }
@@ -71,7 +80,7 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     Map getESQuery(Map<String, String[]> queryParameters) {
         // Legit params and their uses:
-        //   q - simple_query_string
+        //   q - query string, will be used as query_string or simple_query_string
         String q
         //   _limit, _offset - pagination
         int limit
@@ -91,7 +100,11 @@ class ESQuery {
                     expandTypeParam(originalTypeParam, whelk.jsonld))
         }
 
-        q = getQueryString(queryParameters)
+        if (queryParameters.containsKey('o')) {
+            queryParameters.put('_links', queryParameters.get('o'))
+        }
+
+        q = Unicode.normalizeForSearch(getQueryString(queryParameters))
         (limit, offset) = getPaginationParams(queryParameters)
         sortBy = getSortClauses(queryParameters)
         siteFilter = getSiteFilter(queryParameters)
@@ -102,10 +115,17 @@ class ESQuery {
             queryParameters.put('@type', originalTypeParam)
         }
 
+        def isSimple = isSimple(q)
+        String queryMode = isSimple ? 'simple_query_string' : 'query_string'
+        if (!isSimple) {
+            q = escapeNonSimpleQueryString(q)
+        }
+
         Map simpleQuery = [
-            'simple_query_string': [
+            (queryMode) : [
                 'query': q,
-                'default_operator':  'AND'
+                'default_operator':  'AND',
+                'analyze_wildcard' : true
             ]
         ]
 
@@ -124,19 +144,21 @@ class ESQuery {
             }
 
             Map boostedExact = [
-                'simple_query_string': [
+                (queryMode): [
                     'query': q,
                     'default_operator':  'AND',
-                    'fields': exactFields
+                    'fields': exactFields,
+                    'analyze_wildcard' : true
                 ]
             ]
 
             Map boostedSoft = [
-                'simple_query_string': [
+                (queryMode) : [
                     'query': q,
                     'default_operator':  'AND',
                     'fields': softFields,
-                    'quote_field_suffix': ".exact"
+                    'quote_field_suffix': ".exact",
+                    'analyze_wildcard' : true
                 ]
             ]
 
@@ -182,6 +204,8 @@ class ESQuery {
         if (aggQuery) {
             query['aggs'] = aggQuery
         }
+
+        query['track_total_hits'] = true
 
         return query
     }
@@ -371,25 +395,25 @@ class ESQuery {
      *
      */
     @CompileStatic(TypeCheckingMode.SKIP)
-    public List getFilters(Map<String, String[]> queryParameters) {
+    List getFilters(Map<String, String[]> queryParameters) {
+        def queryParametersCopy = new HashMap<>(queryParameters)
         List filters = []
+
+        makeRangeFilters(queryParametersCopy, filters)
 
         // TODO This is copied from the old code and should be rewritten.
         // We don't have that many nested mappings, so this is way to general.
-        Map groups = queryParameters.groupBy { p -> getPrefixIfExists(p.key) }
+        Map groups = queryParametersCopy.groupBy { p -> getPrefixIfExists(p.key) }
         Map nested = getNestedParams(groups)
-        List notNested = (groups - nested).collect { it.value }
-
+        Map notNested = (groups - nested).collect { it.value }.sum([:])
         nested.each { key, vals ->
             filters << createNestedBoolFilter(key, vals)
         }
 
-        notNested.each { Map m ->
-            m.each {k, v ->
-                if (!(k in RESERVED_PARAMS)) {
-                    filters << createBoolFilter(k, v as String[])
-                }
-            }
+        notNested.removeAll {it.key in RESERVED_PARAMS}
+
+        getOrGroups(notNested).each { m ->
+            filters << createBoolFilter(m)
         }
 
         if (filters) {
@@ -405,6 +429,39 @@ class ESQuery {
         } else {
             return key
         }
+    }
+
+    /**
+     * @return A list of parameter maps where the entries in each map
+     * should be combined with OR and the maps combined with AND
+     */
+    @CompileStatic(TypeCheckingMode.SKIP)
+    private List<Map> getOrGroups(Map<String, String[]> parameters) {
+        def or = [:]
+        def other = [:]
+
+        // explicit OR
+        parameters.each { String key, value ->
+            if (key.startsWith(OR_PREFIX)) {
+                or.put(key.substring(OR_PREFIX.size()), value)
+            }
+            else {
+                other.put(key, value)
+            }
+        }
+
+        // implicit OR - the same parameter exists with explicit OR
+        or.each { key, value ->
+            if (other.containsKey(key)) {
+                or[key] = or[key] + other.remove(key)
+            }
+        }
+
+        List result = other.collect {[(it.getKey()): it.getValue()]}
+        if (or.size() > 0) {
+            result.add(or)
+        }
+        return result
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
@@ -431,6 +488,39 @@ class ESQuery {
     }
 
     /**
+     * Can this query string be handled by ES simple_query_string?
+     */
+    static boolean isSimple(String queryString) {
+        // leading wildcards e.g. "*foo" are removed by simple_query_string
+        def containsLeadingWildcard = queryString =~ /\*\S+/
+        return !containsLeadingWildcard
+    }
+
+    static String escapeNonSimpleQueryString(String queryString) {
+        if (queryString.findAll('\\"').size() % 2 != 0) {
+            throw new whelk.exception.InvalidQueryException("Unbalanced quotation marks")
+        }
+
+        // The following chars are reserved in ES and need to be escaped to be used as literals: \+-=|&><!(){}[]^"~*?:/
+        // Escape the ones that are not part of our query language.
+        for (char c : '=&!{}[]^:/'.chars) {
+            queryString = queryString.replace(''+c, '\\'+c)
+        }
+
+        // Inside words, treat '-' as regular hyphen instead of "NOT" and escape it
+        queryString = queryString.replaceAll(/(^|\s+)-(\S+)/, '$1#ACTUAL_NOT#$2')
+        queryString = queryString.replace('-', '\\-')
+        queryString = queryString.replace('#ACTUAL_NOT#', '-')
+
+        // Strip un-escapable characters
+        for (char c : '<>'.chars) {
+            queryString = queryString.replace('' + c, '')
+        }
+
+        return queryString
+    }
+
+    /**
      * Create a query to filter docs where `field` matches any of the
      * supplied `vals`
      *
@@ -438,16 +528,42 @@ class ESQuery {
      *
      */
     @CompileStatic(TypeCheckingMode.SKIP)
-    public Map createBoolFilter(String field, String[] vals) {
+    Map createBoolFilter(Map<String, String[]> fieldsAndVals) {
         List clauses = []
-        for (val in vals) {
-            clauses.add(['simple_query_string': [
-                'query': val,
-                'fields': [field],
-                'default_operator': 'AND'
-            ]])
+        fieldsAndVals.each {field, values ->
+            if (field.startsWith(EXISTS_PREFIX)) {
+                def f = field.substring(EXISTS_PREFIX.length())
+                for (val in values) {
+                    clauses.add(parseBoolean(field, val)
+                            ? ['exists': ['field': f]]
+                            : ['bool': ['must_not': ['exists': ['field': f]]]])
+                }
+            }
+            else {
+                for (val in values) {
+                    boolean isSimple = isSimple(val)
+                    clauses.add([(isSimple ? 'simple_query_string' : 'query_string'): [
+                            'query'           : isSimple ? val : escapeNonSimpleQueryString(val),
+                            'fields'          : [field],
+                            'default_operator': 'AND'
+                    ]])
+                }
+            }
         }
+
         return ['bool': ['should': clauses]]
+    }
+
+    private static boolean parseBoolean(String parameterName, String value) {
+        if (value.toLowerCase() == 'true') {
+            true
+        }
+        else if (value.toLowerCase() == 'false') {
+            false
+        }
+        else {
+            throw new InvalidQueryException("$parameterName must be 'true' or 'false', got '$value'")
+        }
     }
 
     /**
@@ -484,7 +600,7 @@ class ESQuery {
         }
 
         keys.each { key ->
-            String sort = tree[key]?.sort =='key' ? '_term' : '_count'
+            String sort = tree[key]?.sort =='key' ? '_key' : '_count'
             def sortOrder = tree[key]?.sortOrder =='asc' ? 'asc' : 'desc'
             String termPath = getInferredTermPath(key)
             query[termPath] = ['terms': [
@@ -496,6 +612,53 @@ class ESQuery {
             }
         }
         return query
+    }
+
+    /**
+     * Construct "range query" filters for parameters prefixed with any {@link RangeParameterPrefix}
+     * Ranges for different parameters are combined with AND
+     * Multiple ranges for the same parameter are combined with OR
+     *
+     * Range endpoints are matched in the order they appear
+     * e.g. minEx-x=1984&maxEx-x=1988&minEx-x=1993&min-x=2000&maxEx-x=1995
+     * means 1984 < x < 1988 OR 1993 < x < 1995 OR x >= 2000
+     */
+    @CompileDynamic // compiler doesn't get the collectMany construct below...
+    void makeRangeFilters(Map<String, String[]> queryParameters, List filters) {
+        Map<String, Ranges> ranges = [:]
+        Set<String> handledParameters = new HashSet<>()
+
+        queryParameters.each { parameter, values ->
+            parseRangeParameter(parameter) { String nameNoPrefix, RangeParameterPrefix prefix ->
+                Ranges r = ranges.computeIfAbsent(nameNoPrefix,
+                        { p -> p in dateFields ? Ranges.date(p, whelk.getTimezone()) : Ranges.nonDate(p)})
+                values.collectMany{ it.tokenize(',') }.each { r.add(prefix, it.trim()) }
+                handledParameters.add(parameter)
+            }
+        }
+
+        handledParameters.each {queryParameters.remove(it)}
+        filters.addAll(ranges.values().collect {it.toQuery()})
+    }
+
+    private void parseRangeParameter (String parameter, Closure handler) {
+        for (RangeParameterPrefix p : RangeParameterPrefix.values()) {
+            if (parameter.startsWith(p.prefix())) {
+                handler(parameter.substring(p.prefix().size()), p)
+                return
+            }
+        }
+    }
+
+    Set getDateFields(Map mappings) {
+        Set dateFields = [] as Set
+        DocumentUtil.findKey(mappings['properties'], 'type') { value, path ->
+            if (value == 'date') {
+                dateFields.add(path.dropRight(1).findAll{ it != 'properties'}.join('.'))
+            }
+            DocumentUtil.NOP
+        }
+        return dateFields
     }
 
     /**
@@ -511,9 +674,10 @@ class ESQuery {
      */
     public Set getKeywordFields(Map mappings) {
         Set keywordFields = [] as Set
-        mappings.each { docType, docMappings ->
-            keywordFields += getKeywordFieldsFromProperties(docMappings['properties'] as Map)
+        if (mappings) {
+            keywordFields = getKeywordFieldsFromProperties(mappings['properties'] as Map)
         }
+
         return keywordFields
     }
 

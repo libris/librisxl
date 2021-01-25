@@ -416,6 +416,7 @@ class MarcConversion {
         def marcRuleSet = getRuleSetFromJsonLd(data)
 
         if (doPostProcessing) {
+            applyInverses(data, data[marcRuleSet.thingLink])
             sharedPostProcSteps.each {
                 it.unmodify(data, data[marcRuleSet.thingLink])
             }
@@ -469,6 +470,9 @@ class MarcConversion {
         return marc
     }
 
+    void applyInverses(Map record, Map thing) {
+        converter.ld?.applyInverses(thing)
+    }
 }
 
 class MarcRuleSet {
@@ -882,6 +886,7 @@ class ConversionPart {
 
     MarcRuleSet ruleSet
     String aboutEntityName
+    String fallbackEntityName
     Map tokenMap
     String tokenMapName // TODO: remove in columns in favour of @type+code/uriTemplate ?
     Map reverseTokenMap
@@ -953,7 +958,41 @@ class ConversionPart {
             aboutMap = (Map<String, List>) state.aboutMap
         }
 
-        return (Map) aboutMap[aboutEntityName]?.get(0) ?: data
+        Map aboutEntity = (Map) aboutMap[aboutEntityName]?.get(0) ?: data
+        if (fallbackEntityName) {
+            Map fallbackEntity = (Map) aboutMap[fallbackEntityName]?.get(0)
+            if (fallbackEntity)
+                return deepMergedClone(fallbackEntity, aboutEntity)
+        }
+        return aboutEntity
+    }
+
+    Map deepMergedClone(Map keepSome, Map keepAll) {
+        def result = [:]
+        Set keySet = keepAll.keySet() + keepSome.keySet()
+        for (Object key : keySet) {
+
+            Object highPrioValue = keepAll[key]
+            Object lowPrioValue = keepSome[key]
+
+            if (!highPrioValue && lowPrioValue)
+                result.put(key, lowPrioValue)
+            else if (highPrioValue && !lowPrioValue)
+                result.put(key, highPrioValue)
+            else if (highPrioValue && lowPrioValue) {
+                if (highPrioValue instanceof Map && lowPrioValue instanceof Map) {
+                    result.put(key, deepMergedClone((Map)lowPrioValue, (Map)highPrioValue))
+                }
+                else if (highPrioValue instanceof List && lowPrioValue instanceof List) {
+                    List resultingList = []
+                    resultingList.addAll( (List) highPrioValue )
+                    resultingList.addAll( (List) lowPrioValue )
+                    result.put(key, resultingList)
+                }
+            }
+        }
+
+        return result
     }
 
     def revertObject(obj) {
@@ -1072,6 +1111,23 @@ class ConversionPart {
                         }
                         aboutMap.get(key, []).add(item)
                     }
+                    def typeCandidates = pendingDfn.allowedTypesOnRevert
+                    if (typeCandidates) {
+                        def items = aboutMap.get(key)
+                        def selected = []
+                        for (type in typeCandidates) {
+                            // NOTE: using isInstanceOf would be preferable
+                            // over direct type comparison, but won't work
+                            // since a base type might be preferable to a
+                            // subtype in practise (due to a modeling issue).
+                            selected = items.findAll { it['@type'] == type  }
+                            if (selected) {
+                                items = selected
+                                break
+                            }
+                        }
+                        aboutMap[key] = selected
+                    }
                 }
             }
         }
@@ -1083,6 +1139,8 @@ class ConversionPart {
             requiredOk = false
         }
 
+        // The about map is the whole embellished record N times, framed around the "pending keys", typically:
+        // ?record, ?thing, ?work, _:provision
         return new Tuple2<Boolean, Map>(requiredOk, aboutMap)
     }
 
@@ -1160,6 +1218,7 @@ abstract class BaseMarcFieldHandler extends ConversionPart {
             definesDomainEntityType = fieldDfn.aboutType
         }
         aboutEntityName = fieldDfn.aboutEntity ?: '?thing'
+        fallbackEntityName = fieldDfn.fallbackEntity
 
         repeatable = fieldDfn.containsKey('addLink')
         link = linkTerm(fieldDfn.link ?: fieldDfn.addLink, repeatable)
@@ -1280,6 +1339,7 @@ class MarcFixedFieldHandler {
                 columns << new Column(this, obj, colNum.first, colNum.second,
                         obj['itemPos'] ?: colNums.size() > 1 ? i : null,
                         obj['fixedDefault'],
+                        obj['ignoreOnRevert'],
                         obj['matchAsDefault'])
 
                 if (colNum.second > fieldSize) {
@@ -1347,11 +1407,12 @@ class MarcFixedFieldHandler {
         int end
         Integer itemPos
         String fixedDefault
+        Boolean ignoreOnRevert
         Pattern matchAsDefault
         MarcFixedFieldHandler fixedFieldHandler
 
         Column(MarcFixedFieldHandler fixedFieldHandler, fieldDfn, int start, int end,
-               itemPos, fixedDefault, matchAsDefault = null) {
+               itemPos, fixedDefault, ignoreOnRevert = null, matchAsDefault = null) {
             super(fixedFieldHandler.ruleSet, "$fixedFieldHandler.tag-$start-$end", fieldDfn)
             this.fixedFieldHandler = fixedFieldHandler
             assert start > -1 && end >= start
@@ -1359,6 +1420,8 @@ class MarcFixedFieldHandler {
             this.end = end
             this.itemPos = (Integer) itemPos
             this.fixedDefault = fixedDefault
+            this.ignoreOnRevert = ignoreOnRevert
+
             if (fixedDefault) {
                 assert this.fixedDefault.size() == this.width
             }
@@ -1399,6 +1462,9 @@ class MarcFixedFieldHandler {
         @CompileStatic(SKIP)
         def revert(Map state, Map data) {
             def v = super.revert(state, data, null)
+            if (ignoreOnRevert && fixedDefault)
+                return fixedDefault
+
             if ((v == null || v.every { it == null }) && fixedDefault)
                 return fixedDefault
 
@@ -1814,6 +1880,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     Map<String, Map> pendingResources
     List<String> pendingKeys
     String aboutAlias
+    //NOTE: allowLinkOnRevert as list may be preferable, but there is currently no case for it. Update if needed.
+    String allowLinkOnRevert
     List<String> onRevertPrefer
     Set<String> sharesGroupIdWith = new HashSet<String>()
     boolean silentRevert
@@ -1837,9 +1905,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
 
         aboutAlias = fieldDfn.aboutAlias
-
+        allowLinkOnRevert = fieldDfn.allowLinkOnRevert
         dependsOn = fieldDfn.dependsOn
-
         constructProperties = fieldDfn.constructProperties
 
         if (fieldDfn.uriTemplate) {
@@ -2218,6 +2285,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         def results = []
 
         def useLinks = []
+
+        if (allowLinkOnRevert) {
+            useLinks << [link: allowLinkOnRevert, resourceType: resourceType]
+        }
+
         if (computeLinks && computeLinks.mapping instanceof Map) {
             computeLinks.mapping.each { code, compLink ->
                 if (compLink in topEntity) {
@@ -2527,6 +2599,8 @@ class MarcSubFieldHandler extends ConversionPart {
     String definedElsewhereToken
     String marcDefault
     boolean ignored = false
+    boolean ignoreOnRevert = false
+    String onRevertAppendValueFrom
     boolean required = false
     boolean supplementary = false
     String requiresI1
@@ -2541,7 +2615,9 @@ class MarcSubFieldHandler extends ConversionPart {
         this.code = code
         super.setTokenMap(fieldHandler, subDfn)
         aboutEntityName = subDfn.aboutEntity
+        fallbackEntityName = subDfn.fallbackEntity
         ignored = subDfn.ignored == true
+        ignoreOnRevert = subDfn.ignoreOnRevert == true
 
         trailingPunctuation = subDfn.trailingPunctuation
         leadingPunctuation = subDfn.leadingPunctuation
@@ -2599,11 +2675,12 @@ class MarcSubFieldHandler extends ConversionPart {
 
         infer = subDfn.infer == true
 
-        if (subDfn.splitValuePattern) {
+        if (subDfn.splitValueProperties) {
             /*TODO: assert subDfn.splitValuePattern=~ /^\^.+\$$/,
                    'For explicit safety, these patterns must start with ^ and end with $' */
             // TODO: support repeatable?
-            splitValuePattern = Pattern.compile(subDfn.splitValuePattern)
+            if (subDfn.splitValuePattern)
+                splitValuePattern = Pattern.compile(subDfn.splitValuePattern)
             splitValueProperties = subDfn.splitValueProperties
             rejoin = subDfn.rejoin
             joinEnd = subDfn.joinEnd
@@ -2615,6 +2692,7 @@ class MarcSubFieldHandler extends ConversionPart {
         }
         marcDefault = subDfn.marcDefault
         definedElsewhereToken = subDfn.definedElsewhereToken
+        onRevertAppendValueFrom = subDfn.onRevertAppendValueFrom
         requiresI1 = subDfn['requires-i1']
         requiresI2 = subDfn['requires-i2']
         itemPos = subDfn.itemPos
@@ -2803,6 +2881,21 @@ class MarcSubFieldHandler extends ConversionPart {
             String entityId = entity['@id']
 
             def propertyValue = getPropertyValue(entity, property)
+
+            if (ignoreOnRevert) {
+                continue
+            }
+
+            // TODO: Later, it may be desirable to add functionality
+            // to specify the punctuation mark to be used when merging.
+            if (onRevertAppendValueFrom) {
+                if (entity.containsKey(onRevertAppendValueFrom)) {
+                    String valueToAppend = entity[onRevertAppendValueFrom] instanceof List ?
+                            entity[onRevertAppendValueFrom].join(" ") : entity[onRevertAppendValueFrom]
+                    String mergedVal = "${entity[property]} ${valueToAppend}"
+                    propertyValue = mergedVal
+                }
+            }
 
             if (propertyValue == null && castProperty)
                 propertyValue = entity[castProperty]

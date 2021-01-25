@@ -4,19 +4,13 @@ import whelk.reindexer.CardRefresher
 
 import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 import groovy.util.logging.Log4j2 as Log
-import groovy.sql.Sql
-
 import whelk.Document
 import whelk.Whelk
-import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.converter.JsonLdToTurtle
 import whelk.filter.LinkFinder
-import whelk.importer.DefinitionsImporter
 import whelk.reindexer.ElasticReindexer
 import whelk.util.PropertyLoader
 import whelk.util.Tools
@@ -54,42 +48,6 @@ class ImporterMain {
     void refreshCards(String collection=null) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
         new CardRefresher(whelk).refresh(collection)
-    }
-
-    @Command(args='[COLLECTION] [no-embellish|no-cache]')
-    void reindexToStdout(String collection=null, String directive=null) {
-        if (directive == null && collection?.indexOf('-') > -1) {
-            directive = collection
-            collection = null
-        }
-        boolean useCache = directive != 'no-cache'
-        boolean doEmbellish = directive != 'no-embellish'
-
-        Whelk whelk = Whelk.createLoadedCoreWhelk(props, useCache)
-
-        println "Creating whelk with dummy ElasticSearch"
-        println "- collection: $collection"
-        println "- directive: $directive"
-        println "- useCache: $useCache"
-        println "- doEmbellish: $doEmbellish"
-
-        whelk.elastic = new ElasticSearch("", "", "") {
-            Tuple2<Integer, String> performRequest(String method,
-                    String path, String body, String contentType0 = null) {
-                println "PATH: $path, CONTENT_TYPE: $contentType0, SIZE: ${body.size()}"
-                println body
-                return new Tuple2(-1, "{}")
-            }
-
-            void embellish(Whelk w, Document src, Document copy) {
-                if (doEmbellish) {
-                    super.embellish(w, src, copy)
-                }
-            }
-        }
-
-        def reindex = new ElasticReindexer(whelk)
-        reindex.reindex(collection)
     }
 
     @Command(args='[FROM]')
@@ -144,8 +102,33 @@ class ImporterMain {
         copier.run()
     }
 
+    // Records that do not cleanly translate to trig/turtle (bad data).
+    // This obviously needs to be cleaned up!
+    def trigExcludeList = [
+            "b5qzm6mgd220mqq2", // @vocab:ISO639-2-T "sqi" ;
+            "htf4scsmk0n44qcq",
+            "b7f0m6mgd2q54bpd",
+            "m7g8xhxrp1f0lp7l",
+            "5qgtg1g97195wsm3",
+            "0qgn9v9421qh0jts",
+            "f8j3q9qkh342fhmg",
+            "7pcwj3jc92jmfccp",
+            "w0qj6r61z3kkbsrj",
+            "hdx4scsmk3c2bm5r",
+            "mw38xhxrp1s0b85x",
+            "1rvnbwb530j6k6nj",
+            "q8lc1l1vs3b7168t",
+            "mcd8xhxrp5k5zm44",
+            "qmjc1l1vs0hp5mck",
+            "1zbpbwb5313nlh3g",
+            "wbvj6r61z4zl0108",
+            "m468xhxrp3w9svn4",
+            "csk1n7nhf52nd4br",
+            "nq89zjzsq2fj5cjs"
+    ] as Set
+
     @Command(args='FILE')
-    void lddbToTrig(String file, String collection) {
+    void lddbToTrig(String file, String collection = null) {
         def whelk = Whelk.createLoadedCoreWhelk(props)
 
         def ctx = JsonLdToTurtle.parseContext([
@@ -153,16 +136,52 @@ class ImporterMain {
         ])
         def opts = [useGraphKeyword: false, markEmptyBnode: true]
 
-        def handleSteam = !file || file == '-' ? { it(System.out) }
+        def handleStream = !file || file == '-' ? { it(System.out) }
                             : new File(file).&withOutputStream
-        handleSteam { out ->
+        handleStream { out ->
             def serializer = new JsonLdToTurtle(ctx, out, opts)
             serializer.prelude()
             int i = 0
             for (Document doc : whelk.storage.loadAll(collection)) {
+                if (doc.getShortId() in trigExcludeList) {
+                    System.err.println("Excluding: ${doc.getShortId()}")
+                    continue
+                }
+
                 def id = doc.completeId
-                System.err.println "[${++i}] $id"
-                serializer.objectToTrig(id, doc.data)
+                if (i % 500 == 0) {
+                    System.err.println("$i records dumped.")
+                }
+                ++i
+                filterProblematicData(doc.data)
+                try {
+                    serializer.objectToTrig(id, doc.data)
+                } catch (Throwable e) {
+                    // Part of the record may still have been written to the stream, which is now corrupt.
+                    System.err.println("${doc.getShortId()} conversion failed with ${e.toString()}")
+                }
+            }
+        }
+    }
+
+    @Command(args='[FROM]')
+    void queueSparqlUpdatesFrom(String from=null) {
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
+        long fromUnixTime = Long.parseLong(from)
+        whelk.storage.queueSparqlUpdatesFrom(fromUnixTime)
+    }
+
+    private static void filterProblematicData(data) {
+        if (data instanceof Map) {
+            data.removeAll { entry ->
+                return entry.key.startsWith("generic") || entry.key.equals("marc:hasGovernmentDocumentClassificationNumber")
+            }
+            data.keySet().each { property ->
+                filterProblematicData(data[property])
+            }
+        } else if (data instanceof List) {
+            data.each {
+                filterProblematicData(it)
             }
         }
     }

@@ -8,7 +8,7 @@ import whelk.util.ThreadPool
 @Log
 class ElasticReindexer {
 
-    static final int BATCH_SIZE = 1000
+    static final int BATCH_SIZE = 300
     static final int MAX_RETRIES = 5
     static final int RETRY_WAIT_MS = 3000
 
@@ -51,12 +51,12 @@ class ElasticReindexer {
                         if (counter % BATCH_SIZE == 0) {
                             double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
                             println("Indexing $docsPerSec documents per second (running average since process start). Total count: $counter.")
-                            bulkIndexWithRetries(documents, collection, whelk)
+                            bulkIndexWithRetries(documents, whelk)
                             documents = []
                         }
                 }
                 if (documents.size() > 0) {
-                    bulkIndexWithRetries(documents, collection, whelk)
+                    bulkIndexWithRetries(documents, whelk)
                 }
             }
         } catch (Throwable e) {
@@ -69,7 +69,7 @@ class ElasticReindexer {
             int counter = 0
             startTime = System.currentTimeMillis()
             List<String> collections = suppliedCollection ? [suppliedCollection] : whelk.storage.loadCollections()
-            ThreadPool threadPool = new ThreadPool(Runtime.getRuntime().availableProcessors() * 4)
+            ThreadPool threadPool = new ThreadPool(Runtime.getRuntime().availableProcessors() * 2)
             collections.each { collection ->
                 List<Document> documents = []
                 for (document in whelk.storage.loadAll(collection)) {
@@ -79,13 +79,13 @@ class ElasticReindexer {
                         if (counter % BATCH_SIZE == 0) {
                             double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
                             println("Indexing $docsPerSec documents per second (running average since process start). Total count: $counter.")
-                            threadPool.executeOnThread(new Batch(documents, collection), new BatchHandler())
+                            threadPool.executeOnThread(new Batch(documents), new BatchHandler())
                             documents = []
                         }
                     }
                 }
                 if (documents.size() > 0) {
-                    bulkIndexWithRetries(documents, collection, whelk)
+                    bulkIndexWithRetries(documents, whelk)
                 }
             }
             threadPool.joinAll()
@@ -96,11 +96,11 @@ class ElasticReindexer {
         }
     }
 
-    private void bulkIndexWithRetries(List<Document> docs, String collection, Whelk whelk) {
+    private void bulkIndexWithRetries(List<Document> docs, Whelk whelk) {
         int retriesLeft = MAX_RETRIES
 
         Exception error
-        while(error = tryBulkIndex(docs, collection, whelk)) {
+        while(error = tryBulkIndex(docs, whelk)) {
             if (retriesLeft-- > 0) {
                 log.warn("Failed to index batch: [${error}], retrying after ${RETRY_WAIT_MS} ms")
                 sleep()
@@ -111,9 +111,9 @@ class ElasticReindexer {
         }
     }
 
-    private Exception tryBulkIndex(List<Document> docs, String collection, Whelk whelk) {
+    private Exception tryBulkIndex(List<Document> docs, Whelk whelk) {
         try {
-            whelk.elastic.bulkIndex(docs, collection, whelk)
+            whelk.elastic.bulkIndex(docs, whelk)
             return null
         }
         catch (Exception e) {
@@ -131,17 +131,16 @@ class ElasticReindexer {
     }
 
     private class Batch {
-        Batch(List<Document> documents, String collection) {
-            this.documents = documents
-            this.collection = collection
-        }
         List<Document> documents
-        String collection
+
+        Batch(List<Document> documents) {
+            this.documents = documents
+        }
     }
 
     private class BatchHandler implements ThreadPool.Worker<Batch> {
         void doWork(Batch batch, int threadIndex) {
-            bulkIndexWithRetries(batch.documents, batch.collection, whelk)
+            bulkIndexWithRetries(batch.documents, whelk)
         }
     }
 }

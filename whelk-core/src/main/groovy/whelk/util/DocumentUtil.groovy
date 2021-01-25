@@ -1,5 +1,7 @@
 package whelk.util
 
+import static whelk.JsonLd.TYPE_KEY
+
 class DocumentUtil {
     public final static Operation NOP = new Nop()
 
@@ -8,7 +10,20 @@ class DocumentUtil {
     }
 
     interface Linker {
+        /**
+         * Called for every blank node found in search
+         *
+         * @param blankNode
+         * @param existingLinks List of sibling node @ids. Can be used for disambiguation.
+         * @return
+         */
         List<Map> link(Map blankNode, List existingLinks)
+
+        /**
+         * This is called when the blank node search encounters
+         * a single string value where there would normally be a node
+         */
+        List<Map> link(String blank)
     }
 
     /**
@@ -68,6 +83,9 @@ class DocumentUtil {
 
         List<Map> newLinked
         for (node in nodes) {
+            if (isDefective(node)) {
+                continue // remove node
+            }
             if (isBlank(node) && (newLinked = linker.link(node, existingLinks))) {
                 result.addAll(newLinked.findAll { l ->
                     !existingLinks.contains(l['@id']) && !result.contains { it['@id'] == l['@id'] }
@@ -84,15 +102,30 @@ class DocumentUtil {
         }
     }
 
-    private static Operation linkBlankNode(Map node, Linker mapper) {
-        List<Map> replacement
-        if (isBlank(node) && (replacement = mapper.link(node, []))) {
-            return replacement.size() > 1 ? new Replace(replacement) : new Replace(replacement[0])
+    private static Operation linkBlankNode(Map node, Linker linker) {
+        if (isDefective(node)) {
+            return new Remove()
         }
-        return NOP
+        if (!isBlank(node)) {
+            return NOP
+        }
+
+        toOperation(linker.link(node, []))
     }
 
+    private static Operation linkBlankNode(String singleValue, Linker linker) {
+        toOperation(linker.link(singleValue))
+    }
 
+    private static Operation toOperation(List<Map> replacement) {
+        replacement
+                ? replacement.size() > 1 ? new Replace(replacement) : new Replace(replacement[0])
+                : NOP
+    }
+
+    private static boolean isDefective(Map node) {
+        node.size() == 0 || (node.size() == 1 && node.containsKey(TYPE_KEY))
+    }
 
     private static class DFS {
         Stack path

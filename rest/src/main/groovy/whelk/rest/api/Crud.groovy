@@ -1,5 +1,6 @@
 package whelk.rest.api
 
+
 import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
 import io.prometheus.client.Counter
@@ -11,11 +12,14 @@ import whelk.Document
 import whelk.IdGenerator
 import whelk.IdType
 import whelk.JsonLd
+import whelk.JsonLdValidator
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ElasticIOException
+import whelk.exception.UnexpectedHttpStatusException
 import whelk.exception.InvalidQueryException
 import whelk.exception.ModelValidationException
+import whelk.exception.StaleUpdateException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.LinkValidationException
 import whelk.exception.WhelkAddException
@@ -30,6 +34,7 @@ import javax.servlet.http.HttpServletResponse
 import java.lang.management.ManagementFactory
 
 import whelk.rest.api.CrudGetRequest.Lens
+
 import static whelk.rest.api.HttpTools.sendResponse
 
 /**
@@ -69,6 +74,7 @@ class Crud extends HttpServlet {
     Map vocabData
     Map displayData
     JsonLd jsonld
+    JsonLdValidator validator
 
     SearchUtils search
     static final ObjectMapper mapper = new ObjectMapper()
@@ -91,18 +97,18 @@ class Crud extends HttpServlet {
         vocabData = whelk.vocabData
         jsonld = whelk.jsonld
         search = new SearchUtils(whelk)
+        validator = JsonLdValidator.from(jsonld)
     }
 
-    void handleQuery(HttpServletRequest request, HttpServletResponse response,
-                     String dataset) {
+    void handleQuery(HttpServletRequest request, HttpServletResponse response) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
 
         try {
-            Map results = search.doSearch(queryParameters, dataset, jsonld)
+            Map results = search.doSearch(queryParameters)
             def jsonResult = mapper.writeValueAsString(results)
             sendResponse(response, jsonResult, "application/json")
-        } catch (ElasticIOException e) {
-            log.error("Attempted elastic query, but failed.", e)
+        } catch (ElasticIOException | UnexpectedHttpStatusException e) {
+            log.error("Attempted elastic query, but failed: $e", e)
             failedRequests.labels("GET", request.getRequestURI(),
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
@@ -119,11 +125,11 @@ class Crud extends HttpServlet {
                             "no elastic component is configured.")
             return
         } catch (InvalidQueryException e) {
-            log.error("Invalid query: ${queryParameters}", e)
+            log.warn("Invalid query: ${queryParameters}")
             failedRequests.labels("GET", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "Invalid query, please check the documentation.")
+                    "Invalid query, please check the documentation. ${e.getMessage()}")
             return
         }
     }
@@ -158,8 +164,7 @@ class Crud extends HttpServlet {
         }
 
         if (request.pathInfo == "/find" || request.pathInfo == "/find.json") {
-            String collection = request.getParameter("collection")
-            handleQuery(request, response, collection)
+            handleQuery(request, response)
             return
         }
 
@@ -204,7 +209,7 @@ class Crud extends HttpServlet {
             sendNotFound(response, request.getPath())
         } else if (!doc && loc) {
             sendRedirect(request.getHttpServletRequest(), response, loc)
-        } else if (request.getIfNoneMatch().map({ etag -> etag == doc.getChecksum() }).orElse(false)) {
+        } else if (!request.shouldEmbellish() && isNotModified(request, doc)) {
             sendNotModified(response, doc)
         } else if (doc.deleted) {
             failedRequests.labels("GET", request.getPath(),
@@ -219,6 +224,10 @@ class Crud extends HttpServlet {
                     request.getPath(),
                     request.getContentType())
         }
+    }
+
+    private static boolean isNotModified(CrudGetRequest request, Document doc) {
+        request.getIfNoneMatch().map({ etag -> etag == doc.getChecksum() }).orElse(false)
     }
 
     private void sendNotModified(HttpServletResponse response, Document doc) {
@@ -243,6 +252,11 @@ class Crud extends HttpServlet {
         if (request.shouldEmbellish()) {
             doc = doc.clone() // FIXME: this is because ETag calculation is done on non-embellished doc...
             whelk.embellish(doc)
+
+            // reverse links are inserted by embellish, so can only do this when embellished
+            if (request.shouldApplyInverseOf()) {
+                doc.applyInverses(whelk.jsonld)
+            }
         }
 
         if (request.getLens() != Lens.NONE) {
@@ -487,9 +501,19 @@ class Crud extends HttpServlet {
 
         Document newDoc = new Document(requestBody)
         newDoc.normalizeUnicode()
+        newDoc.trimStrings()
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
-        // TODO https://jira.kb.se/browse/LXL-1263
         newDoc.setControlNumber(newDoc.getShortId())
+
+        List<JsonLdValidator.Error> errors = validator.validate(newDoc.data)
+        if (errors) {
+            String message = errors.collect { it.toStringWithPath() }.join("\n")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Invalid JsonLd, got errors: " + message)
+            return
+        }
 
         String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
         if ( !(collection in ["auth", "bib", "hold"]) ) {
@@ -532,6 +556,8 @@ class Crud extends HttpServlet {
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
                                savedDoc.getChecksum())
+        } else {
+            sendNotFound(response, request.getContextPath())
         }
     }
 
@@ -623,7 +649,18 @@ class Crud extends HttpServlet {
 
         Document updatedDoc = new Document(requestBody)
         updatedDoc.normalizeUnicode()
+        updatedDoc.trimStrings()
         updatedDoc.setId(documentId)
+
+        List<JsonLdValidator.Error> errors = validator.validate(updatedDoc.data)
+        if (errors) {
+            String message = errors.collect { it.toStringWithPath() }.join("\n")
+            failedRequests.labels("PUT", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Invalid JsonLd, got errors: " + message)
+            return
+        }
 
         log.debug("Checking permissions for ${updatedDoc}")
         try {
@@ -689,8 +726,6 @@ class Crud extends HttpServlet {
         }
     }
 
-    private class EtagMissmatchException extends RuntimeException {}
-
     Document saveDocument(Document doc, HttpServletRequest request,
                           HttpServletResponse response, String collection,
                           boolean isUpdate, String httpMethod) {
@@ -699,27 +734,16 @@ class Crud extends HttpServlet {
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
 
                 if (isUpdate) {
-                    whelk.storeAtomicUpdate(doc.getShortId(), false, "xl", activeSigel, {
-                        Document _doc ->
-                            log.warn("If-Match: ${request.getHeader('If-Match')}")
-                            log.warn("Checksum: ${_doc.checksum}")
-
-                            if (_doc.getChecksum() != CrudUtils.cleanEtag(request.getHeader("If-Match"))) {
-                                log.debug("PUT performed on stale document.")
-
-                                throw new EtagMissmatchException()
-                            }
-
-                            log.debug("All checks passed.")
-                            log.debug("Saving UPDATE of document ("+ doc.getId() +")")
-
-                            // Replace our data with the incoming data.
-                            _doc.data = doc.data
-                    })
+                    String ifMatch = CrudUtils.cleanEtag(request.getHeader("If-Match"))
+                    log.info("If-Match: ${ifMatch}")
+                    whelk.storeAtomicUpdate(doc, false, "xl", activeSigel, ifMatch)
                 }
                 else {
                     log.debug("Saving NEW document ("+ doc.getId() +")")
-                    whelk.createDocument(doc, "xl", activeSigel, collection, false)
+                    boolean success = whelk.createDocument(doc, "xl", activeSigel, collection, false)
+                    if (!success) {
+                        return null
+                    }
                 }
 
                 log.debug("Saving document (${doc.getShortId()})")
@@ -742,7 +766,7 @@ class Crud extends HttpServlet {
             response.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE,
                     wae.message)
             return null
-        } catch (EtagMissmatchException eme) {
+        } catch (StaleUpdateException eme) {
             log.warn("Did not store document, because the ETAGs did not match.")
             failedRequests.labels(httpMethod, request.getRequestURI(),
                     HttpServletResponse.SC_PRECONDITION_FAILED.toString()).inc()

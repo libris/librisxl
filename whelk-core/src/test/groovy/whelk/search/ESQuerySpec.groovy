@@ -81,11 +81,26 @@ class ESQuerySpec extends Specification {
                                                 ]]
                                             ]]
                                   ]]
+
+        ['foo': ['*bar', 'baz']] | [['bool': ['must': [
+                                                ['bool': [
+                                                    'should': [
+                                                        ['query_string'        : ['query': '*bar',
+                                                                                 'fields': ['foo'],
+                                                                                 'default_operator': 'AND']],
+                                                        ['simple_query_string' : ['query': 'baz',
+                                                                                 'fields': ['foo'],
+                                                                                 'default_operator': 'AND']]
+                                                    ]
+                                                ]]
+                                            ]]
+                                   ]]
+
     }
 
     def "should create bool filter"(String key, String[] vals, Map result) {
         expect:
-        es.createBoolFilter(key, vals) == result
+        es.createBoolFilter([(key): vals]) == result
         where:
         key   | vals           | result
         'foo' | ['bar', 'baz'] | ['bool': ['should': [
@@ -95,6 +110,13 @@ class ESQuerySpec extends Specification {
                                               ['simple_query_string': ['query': 'baz',
                                                                        'fields': ['foo'],
                                                                        'default_operator': 'AND']]]]]
+        'foo' | ['bar', '*baz'] | ['bool': ['should': [
+                                              ['simple_query_string': ['query': 'bar',
+                                                                       'fields': ['foo'],
+                                                                       'default_operator': 'AND']],
+                                              ['query_string'       : ['query': '*baz',
+                                                                       'fields': ['foo'],
+                                                                       'default_operator': 'AND']]]]]
     }
 
     def "should get agg query"() {
@@ -102,7 +124,7 @@ class ESQuerySpec extends Specification {
         Map emptyAggs = [:]
         Map emptyAggsResult = [(JsonLd.TYPE_KEY): ['terms': ['field': JsonLd.TYPE_KEY]]]
         Map simpleAggs = ['_statsrepr': ['{"foo": {"sort": "key", "sortOrder": "desc", "size": 5}}']]
-        Map simpleAggsResult = ['foo': ['terms': ['field': 'foo', 'size': 5, 'order': ['_term': 'desc']]]]
+        Map simpleAggsResult = ['foo': ['terms': ['field': 'foo', 'size': 5, 'order': ['_key': 'desc']]]]
         Map subAggs = ['_statsrepr': ['{"bar": {"subItems": {"foo": {"sort": "key"}}}}']]
         // `bar` has a keyword field in the mappings
         Map subAggsResult = ['bar.keyword': ['terms': ['field': 'bar.keyword',
@@ -111,7 +133,7 @@ class ESQuerySpec extends Specification {
                                      'aggs': [
                                         'foo': ['terms': ['field': 'foo',
                                                           'size': 10,
-                                                          'order': ['_term': 'desc']]]
+                                                          'order': ['_key': 'desc']]]
                                      ]]]
 
         then:
@@ -125,14 +147,12 @@ class ESQuerySpec extends Specification {
         Map emptyMappings = [:]
         Set emptyResult = [] as Set
         Map simpleMappings = [
-            'bib': [
-                'properties': [
-                    'foo': [
-                        'type': 'text',
-                        'fields': [
-                            'keyword': [
-                                'type': 'keyword'
-                            ]
+            'properties': [
+                'foo': [
+                    'type': 'text',
+                    'fields': [
+                        'keyword': [
+                            'type': 'keyword'
                         ]
                     ]
                 ]
@@ -140,39 +160,37 @@ class ESQuerySpec extends Specification {
         ]
         Set simpleResult = ['foo'] as Set
         Map nestedMappings = [
-            'bib': [
-                'properties': [
-                    'foo': [
-                        'type': 'text',
-                        'fields': [
-                            'keyword': [
-                                'type': 'keyword'
-                            ]
+            'properties': [
+                'foo': [
+                    'type': 'text',
+                    'fields': [
+                        'keyword': [
+                            'type': 'keyword'
+                        ]
+                    ],
+                    'properties': [
+                        '@type': [
+                            'type': 'keyword'
                         ],
-                        'properties': [
-                            '@type': [
-                                'type': 'keyword'
-                            ],
-                            'bar': [
-                                'properties': [
-                                    'baz': [
-                                        'type': 'text',
-                                        'fields': [
-                                            'keyword': [
-                                                'type': 'keyword'
-                                            ]
+                        'bar': [
+                            'properties': [
+                                'baz': [
+                                    'type': 'text',
+                                    'fields': [
+                                        'keyword': [
+                                            'type': 'keyword'
                                         ]
-                                    ],
-                                    'quux': [
-                                        'type': 'keyword'
                                     ]
+                                ],
+                                'quux': [
+                                    'type': 'keyword'
                                 ]
                             ]
                         ]
-                    ],
-                    'baz': [
-                        'type': 'keyword'
                     ]
+                ],
+                'baz': [
+                    'type': 'keyword'
                 ]
             ]
         ]
@@ -216,5 +234,29 @@ class ESQuerySpec extends Specification {
         then:
         emptyExpected == es.hideKeywordFields(emptyEsResponse)
         expected == es.hideKeywordFields(esResponse)
+    }
+    
+    def "should recognize leading wildcard queries"() {
+        expect:
+        ESQuery.isSimple(query) == result
+
+        where:
+        query       | result
+        "*"         | true
+        "*   "      | true
+        "*foo"      | false
+        "foo *bar"  | false
+        "foo* bar"  | true
+        "foo* *bar" | false
+    }
+
+    def "should escape queries as needed"() {
+        expect:
+        ESQuery.escapeNonSimpleQueryString(query) == result
+
+        where:
+        query                         | result
+        "([foo] | {bar}) | foo & bar" | "(\\[foo\\] | \\{bar\\}) | foo \\& bar"
+        "-not-this -foo--bar--baz-"   | "-not\\-this -foo\\-\\-bar\\-\\-baz\\-"
     }
 }

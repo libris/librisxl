@@ -16,14 +16,14 @@ for (String operation : ProgramLines) {
     // 918541283X	Jon	SKON	Anthologies BIG
 
     String[] part = operation.split("\\t")
-    String fuzzyID = part[0]
+    String fuzzyID = part[0].trim()
     String sigel = part[1] // "Jon" on all lines, ignore this value
     String newPhysicalLocation = part[2].trim()
-    String fuzzyShelfSomething = part[3]
-
-    String[] shelfParts = fuzzyShelfSomething.split(" ")
-    String newShelfLabel = shelfParts[shelfParts.length-1].trim() // The last part, separated by a space
-    String newShelfMark = fuzzyShelfSomething.substring(0, fuzzyShelfSomething.length() - newShelfLabel.length()).trim() // All but the last part
+    String fuzzyShelfSomething = part[3].trim()
+    
+    int breakShelfMessAt = fuzzyShelfSomething.indexOf(" ") // _first_ space
+    String newShelfMark = fuzzyShelfSomething.substring(0, breakShelfMessAt).trim() // The first part, separated by space
+    String newShelfLabel = fuzzyShelfSomething.substring(breakShelfMessAt, fuzzyShelfSomething.length()).trim() // The rest of the string
 
     String where = null
 

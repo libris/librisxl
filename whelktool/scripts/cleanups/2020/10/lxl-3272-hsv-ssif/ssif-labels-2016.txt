@@ -1,0 +1,616 @@
+Naturvetenskap
+Natural sciences 
+Matematik
+Mathematics
+Matematisk analys
+Mathematical Analysis
+Geometri
+Geometry
+Algebra och logik
+Algebra and Logic 
+Diskret matematik 
+Discrete Mathematics 
+Beräkningsmatematik
+Computational Mathematics 
+Sannolikhetsteori och statistik
+Probability Theory and Statistics 
+Annan matematik
+Other Mathematics
+Data- och informationsvetenskap (Datateknik)
+Computer and Information Sciences
+Datavetenskap (datalogi)
+Computer Sciences 
+Systemvetenskap, informationssystem och informatik
+Information Systems
+Bioinformatik (beräkningsbiologi)
+Bioinformatics (Computational Biology)
+Människa-datorinteraktion (interaktionsdesign)
+Human Computer Interaction
+Programvaruteknik
+Software Engineering 
+Datorteknik
+Computer Engineering 
+Datorseende och robotik (autonoma system)
+Computer Vision and Robotics (Autonomous Systems)
+Språkteknologi (språkvetenskaplig databehandling)
+Language Technology (Computational Linguistics)
+Medieteknik
+Media and Communication Technology 
+Annan data- och informationsvetenskap
+Other Computer and Information Science 
+Fysik
+Physical Sciences
+Subatomär fysik
+Subatomic Physics
+Atom- och molekylfysik och optik 
+Atom and Molecular Physics and Optics 
+Fusion, plasma och rymdfysik 
+Fusion, Plasma and Space Physics 
+Den kondenserade materiens fysik 
+Condensed Matter Physics 
+Astronomi, astrofysik och kosmologi
+Astronomy, Astrophysics and Cosmology
+Acceleratorfysik och instrumentering 
+Accelerator Physics and Instrumentation
+Annan fysik 
+Other Physics Topics
+Kemi
+Chemical Sciences
+Analytisk kemi
+Analytical Chemistry 
+Fysikalisk kemi
+Physical Chemistry
+Materialkemi 
+Materials Chemistry 
+Oorganisk kemi
+Inorganic Chemistry
+Organisk kemi
+Organic Chemistry 
+Polymerkemi 
+Polymer Chemistry 
+Teoretisk kemi
+Theoretical Chemistry
+Annan kemi
+Other Chemistry Topics
+Geovetenskap och miljövetenskap
+Earth and Related Environmental Sciences
+Klimatforskning
+Climate Research  
+Miljövetenskap
+Environmental Sciences
+Multidisciplinär geovetenskap 
+Geosciences, Multidisciplinary
+Geologi
+Geology
+Geofysik
+Geophysics
+Geokemi 
+Geochemistry
+Naturgeografi 
+Physical Geography
+Meteorologi och atmosfärforskning 
+Meteorology and Atmospheric Sciences 
+Oceanografi, hydrologi och vattenresurser 
+Oceanography, Hydrology and Water Resources
+Annan geovetenskap och miljövetenskap
+Other Earth and Related Environmental Sciences 
+Biologi
+Biological Sciences
+Strukturbiologi 
+Structural Biology
+Biokemi och molekylärbiologi
+Biochemistry and Molecular Biology
+Biofysik
+Biophysics
+Cellbiologi
+Cell Biology 
+Immunologi
+Immunology
+Mikrobiologi
+Microbiology
+Botanik 
+Botany 
+Zoologi
+Zoology
+Genetik
+Genetics
+Bioinformatik och systembiologi
+Bioinformatics and Systems Biology
+Ekologi 
+Ecology
+Biologisk systematik
+Biological Systematics
+Etologi 
+Behavioural Sciences Biology 
+Utvecklingsbiologi
+Developmental Biology 
+Evolutionsbiologi
+Evolutionary Biology
+Annan biologi
+Other Biological Topics
+Annan naturvetenskap
+Other Natural Sciences 
+Övrig annan naturvetenskap
+Other Natural Sciences not elsewhere specified
+Teknik  
+Engineering and Technology
+Samhällsbyggnadsteknik
+Civil Engineering 
+Arkitekturteknik
+Architectural Engineering
+Byggproduktion
+Construction Management
+Husbyggnad
+Building Technologies
+Infrastrukturteknik
+Infrastructure Engineering
+Transportteknik och logistik
+Transport Systems and Logistics
+Geoteknik
+Geotechnical Engineering
+Vattenteknik 
+Water Engineering
+Miljöanalys och bygginformationsteknik
+Environmental Analysis and Construction Information Technology
+Annan samhällsbyggnadsteknik
+Other Civil Engineering
+Elektroteknik och elektronik
+Electrical Engineering, Electronic Engineering, Information Engineering
+Robotteknik och automation
+Robotics
+Reglerteknik
+Control Engineering
+Kommunikationssystem
+Communication Systems
+Telekommunikation
+Telecommunications
+Signalbehandling
+Signal Processing
+Datorsystem
+Computer Systems
+Inbäddad systemteknik
+Embedded Systems
+Annan elektroteknik och elektronik
+Other Electrical Engineering, Electronic Engineering, Information Engineering
+Maskinteknik
+Mechanical Engineering
+Teknisk mekanik
+Applied Mechanics 
+Rymd- och flygteknik
+Aerospace Engineering
+Farkostteknik
+Vehicle Engineering 
+Energiteknik
+Energy Engineering
+Tillförlitlighets- och kvalitetsteknik
+Reliability and Maintenance
+Strömningsmekanik och akustik
+Fluid Mechanics and Acoustics
+Produktionsteknik, arbetsvetenskap och ergonomi
+Production Engineering, Human Work Science and Ergonomics
+Tribologi (ytteknik omfattande friktion, nötning och smörjning)
+Tribology (interacting surfaces including Friction, Lubrication and Wear)  
+Annan maskinteknik 
+Other Mechanical Engineering
+Kemiteknik
+Chemical Engineering
+Kemiska processer
+Chemical Process Engineering
+Korrosionsteknik
+Corrosion Engineering 
+Polymerteknologi
+Polymer Technologies
+Farmaceutisk synteskemi 
+Pharmaceutical Chemistry
+Annan kemiteknik
+Other Chemical Engineering
+Materialteknik
+Materials Engineering
+Keramteknik
+Ceramics
+Kompositmaterial och -teknik
+Composite Science and Engineering
+Pappers-, massa- och fiberteknik
+Paper, Pulp and Fiber Technology
+Textil-, gummi- och polymermaterial
+Textile, Rubber and Polymeric Materials
+Bearbetnings-, yt- och fogningsteknik
+Manufacturing, Surface and Joining Technology
+Metallurgi och metalliska material
+Metallurgy and Metallic Materials
+Annan materialteknik
+Other Materials Engineering
+Medicinteknik
+Medical Engineering
+Medicinsk laboratorie- och mätteknik
+Medical Laboratory and Measurements Technologies
+Medicinsk material- och protesteknik
+Medical Materials
+Medicinsk bildbehandling
+Medical Image Processing
+Medicinsk apparatteknik
+Medical Equipment Engineering
+Medicinsk ergonomi
+Medical Ergonomics
+Annan medicinteknik
+Other Medical Engineering
+Naturresursteknik
+Environmental Engineering
+Geofysisk teknik
+Geophysical Engineering
+Energisystem
+Energy Systems
+Fjärranalysteknik
+Remote Sensing
+Mineral- och gruvteknik
+Mineral and Mine Engineering
+Marin teknik
+Marine Engineering
+Havs- och vattendragsteknik
+Ocean and River Engineering
+Miljöledning
+Environmental Management
+Annan naturresursteknik
+Other Environmental Engineering
+Miljöbioteknik
+Environmental Biotechnology
+Biosanering
+Bioremediation
+Diagnostisk bioteknologi
+Diagnostic Biotechnology
+Vattenbehandling
+Water Treatment
+Bioteknisk etik
+Bioethics
+Annan miljöbioteknik
+Other Environmental Biotechnology
+Industriell bioteknik
+Industrial Biotechnology
+Bioprocessteknik
+Bioprocess Technology
+Biokemikalier
+Biochemicals
+Biomaterial
+Bio Materials
+Bioenergi
+Bioenergy
+Läkemedelsbioteknik
+Pharmaceutical Biotechnology
+Biokatalys och enzymteknik
+Biocatalysis and Enzyme Technology
+Bioteknisk apparatteknik
+Bioengineering Equipment
+Medicinsk bioteknik
+Medical Biotechnology
+Annan industriell bioteknik
+Other Industrial Biotechnology
+Nanoteknik
+Nano-technology
+Nanoteknik
+Nano-technology 
+Annan teknik
+Other Engineering and Technologies
+Livsmedelsteknik
+Food Engineering 
+Mediateknik
+Media Engineering
+Interaktionsteknik
+Interaction Technologies
+Övrig annan teknik
+Other Engineering and Technologies not elsewhere specified
+Medicin och hälsovetenskap
+Medical and Health Sciences 
+Medicinska och farmaceutiska grundvetenskaper
+Basic Medicine
+Farmaceutiska vetenskaper
+Pharmaceutical Sciences
+Farmakologi och toxikologi
+Pharmacology and Toxicology
+Läkemedelskemi
+Medicinal Chemistry
+Samhällsfarmaci och klinisk farmaci
+Social and Clinical Pharmacy
+Neurovetenskaper
+Neurosciences
+Fysiologi
+Physiology
+Medicinsk genetik
+Medical Genetics
+Cell- och molekylärbiologi
+Cell and Molecular Biology
+Mikrobiologi inom det medicinska området
+Microbiology in the medical area
+Immunologi inom det medicinska området
+Immunology in the medical area
+Andra medicinska och farmaceutiska grundvetenskaper
+Other Basic Medicine
+Klinisk medicin
+Clinical Medicine
+Anestesi och intensivvård
+Anesthesiology and Intensive Care
+Hematologi
+Hematology
+Cancer och onkologi
+Cancer and Oncology
+Dermatologi och venereologi
+Dermatology and Venereal Diseases
+Endokrinologi och diabetes
+Endocrinology and Diabetes
+Kardiologi
+Cardiac and Cardiovascular Systems
+Neurologi
+Neurology
+Radiologi och bildbehandling
+Radiology, Nuclear Medicine and Medical Imaging
+Infektionsmedicin 
+Infectious Medicine
+Reumatologi och inflammation
+Rheumatology and Autoimmunity
+Ortopedi
+Orthopaedics
+Kirurgi
+Surgery
+Gastroenterologi
+Gastroenterology and Hepatology
+Urologi och njurmedicin
+Urology and Nephrology
+Psykiatri
+Psychiatry
+Odontologi
+Dentistry
+Oftalmologi
+Ophthalmology
+Oto-rhino-laryngologi
+Otorhinolaryngology
+Lungmedicin och allergi
+Respiratory Medicine and Allergy
+Reproduktionsmedicin och gynekologi
+Obstetrics, Gynaecology and Reproductive Medicine
+Pediatrik
+Pediatrics
+Geriatrik 
+Geriatrics 
+Klinisk laboratoriemedicin
+Clinical Laboratory Medicine
+Allmänmedicin
+General Practice
+Annan klinisk medicin
+Other Clinical Medicine
+Hälsovetenskap
+Health Sciences
+Hälso- och sjukvårdsorganisation, hälsopolitik och hälsoekonomi
+Health Care Service and Management, Health Policy and Services and Health Economy
+Folkhälsovetenskap, global hälsa, socialmedicin och epidemiologi
+Public Health, Global Health, Social Medicine and Epidemiology
+Arbetsmedicin och miljömedicin
+Occupational Health and Environmental Health
+Näringslära
+Nutrition and Dietetics
+Omvårdnad
+Nursing
+Arbetsterapi
+Occupational Therapy
+Sjukgymnastik
+Physiotherapy
+Idrottsvetenskap
+Sport and Fitness Sciences
+Beroendelära
+Substance Abuse
+Medicinsk etik
+Medical Ethics
+Annan hälsovetenskap
+Other Health Sciences
+Medicinsk bioteknologi
+Medical Biotechnology
+Medicinsk bioteknologi (inriktn. mot cellbiologi (inkl. stamcellsbiologi), molekylärbiologi, mikrobiologi, biokemi eller biofarmaci)
+Medical Biotechnology (focus on Cell Biology (incl. Stem Cell Biology), Molecular Biology, Microbiology, Biochemistry or Biopharmacy)
+Biomedicinsk laboratorievetenskap/teknologi
+Biomedical Laboratory Science/Technology
+Biomaterialvetenskap
+Biomaterials Science
+Annan medicinsk bioteknologi
+Other Medical Biotechnology
+Annan medicin och hälsovetenskap
+Other Medical and Health Sciences
+Rättsmedicin
+Forensic Science
+Gerontologi, medicinsk/hälsovetenskaplig inriktning
+Gerontology, specialising in Medical and Health Sciences
+Övrig annan medicin och hälsovetenskap
+Other Medical and Health Sciences not elsewhere specified
+Lantbruksvetenskap och veterinärmedicin
+Agricultural and Veterinary sciences
+Lantbruksvetenskap, skogsbruk och fiske
+Agriculture, Forestry and Fisheries
+Jordbruksvetenskap
+Agricultural Science
+Trädgårdsvetenskap/hortikultur 
+Horticulture
+Livsmedelsvetenskap
+Food Science
+Skogsvetenskap
+Forest Science
+Trävetenskap
+Wood Science
+Markvetenskap
+Soil Science
+Fisk- och akvakulturforskning 
+Fish and Aquacultural Science
+Landskapsarkitektur 
+Landscape Architecture
+Husdjursvetenskap
+Animal and Dairy Science
+Husdjursvetenskap
+Animal and Dairy Science
+Veterinärmedicin
+Veterinary Science
+Medicinsk biovetenskap
+Medical Bioscience
+Patobiologi 
+Pathobiology
+Klinisk vetenskap
+Clinical Science
+Annan veterinärmedicin
+Other Veterinary Science
+Bioteknologi med applikationer på växter och djur
+Agricultural Biotechnology
+Växtbioteknologi
+Plant Biotechnology
+Genetik och förädling inom lantbruksvetenskap
+Genetics and Breeding in Agricultural Sciences
+Annan lantbruksvetenskap 
+Other Agricultural Sciences
+Förnyelsebar bioenergi
+Renewable Bioenergy Research
+Vilt- och fiskeförvaltning
+Fish and Wildlife Management 
+Lantbrukets arbetsmiljö och säkerhet 
+Agricultural Occupational Health and Safety
+Miljö- och naturvårdsvetenskap
+Environmental Sciences related to Agriculture and Land-use
+Övrig annan lantbruksvetenskap
+Other Agricultural Sciences not elsewhere specified
+Samhällsvetenskap
+Social Sciences
+Psykologi
+Psychology
+Psykologi (exklusive tillämpad psykologi)
+Psychology (excluding Applied Psychology)
+Tillämpad psykologi 
+Applied Psychology
+Ekonomi och näringsliv
+Economics and Business
+Nationalekonomi 
+Economics
+Företagsekonomi
+Business Administration
+Ekonomisk historia
+Economic History
+Utbildningsvetenskap
+Educational Sciences
+Pedagogik
+Pedagogy
+Didaktik 
+Didactics
+Lärande
+Learning 
+Pedagogiskt arbete
+Pedagogical Work 
+Sociologi
+Sociology
+Sociologi (exklusive socialt arbete, socialpsykologi och socialantropologi)
+Sociology (excluding Social Work, Social Psychology and Social Anthropology)
+Socialt arbete
+Social Work
+Socialpsykologi 
+Social Psychology
+Socialantropologi
+Social Anthropology
+Juridik
+Law
+Juridik (exklusive juridik och samhälle)
+Law (excluding Law and Society)
+Juridik och samhälle
+Law and Society 
+Statsvetenskap
+Political Science
+Statsvetenskap (exklusive studier av offentlig förvaltning och globaliseringsstudier)
+Political Science (excluding Public Administration Studies and Globalisation Studies)
+Studier av offentlig förvaltning
+Public Administration Studies
+Globaliseringsstudier
+Globalisation Studies
+Social och ekonomisk geografi
+Social and Economic Geography
+Kulturgeografi
+Human Geography
+Ekonomisk geografi
+Economic Geography
+Medie- och kommunikationsvetenskap
+Media and Communications
+Medievetenskap
+Media Studies
+Kommunikationsvetenskap
+Communication Studies
+Mänsklig interaktion med IKT
+Human Aspects of ICT
+Systemvetenskap, informationssystem och informatik med samhällsvetenskaplig inriktning
+Information Systems, Social aspects
+Biblioteks- och informationsvetenskap
+Information Studies
+Annan samhällsvetenskap
+Other Social Sciences
+Tvärvetenskapliga studier inom samhällsvetenskap
+Social Sciences Interdisciplinary 
+Genusstudier
+Gender Studies
+Arbetslivsstudier
+Work Sciences
+Internationell migration och etniska relationer (IMER)
+International Migration and Ethnic Relations
+Övrig annan samhällsvetenskap
+Other Social Sciences not elsewhere specified
+Humaniora och konst
+Humanities and the Arts
+Historia och arkeologi 
+History and Archaeology 
+Historia
+History
+Teknikhistoria
+History of Technology
+Arkeologi
+Archaeology
+Språk och litteratur
+Languages and Literature 
+Jämförande språkvetenskap och allmän lingvistik
+General Language Studies and Linguistics
+Studier av enskilda språk
+Specific Languages
+Litteraturvetenskap
+General Literary studies
+Litteraturstudier
+Specific Literatures
+Filosofi, etik och religion
+Philosophy, Ethics and Religion
+Filosofi
+Philosophy
+Etik
+Ethics
+Religionsvetenskap
+Religious Studies 
+Religionshistoria
+History of Religions
+Idé- och lärdomshistoria 
+History of Ideas
+Konst
+Arts
+Bildkonst
+Visual Arts
+Musik
+Music
+Litterär gestaltning 
+Literary Composition 
+Scenkonst
+Performing Arts
+Arkitektur
+Architecture
+Design
+Design
+Konstvetenskap
+Art History
+Musikvetenskap
+Musicology
+Teatervetenskap
+Performing Art Studies
+Filmvetenskap
+Studies on Film
+Annan humaniora 
+Other Humanities 
+Antikvetenskap
+Classical Archaeology and Ancient History
+Kulturstudier
+Cultural Studies 
+Etnologi
+Ethnology
+Övrig annan humaniora
+Other Humanities not elsewhere specified

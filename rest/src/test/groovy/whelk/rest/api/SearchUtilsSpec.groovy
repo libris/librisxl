@@ -59,7 +59,7 @@ class SearchUtilsSpec extends Specification {
         Map expected = ['@type': ['terms': [
                 'field': '@type',
                 'size' : 2000,
-                'order': ['_term': 'asc']]]]
+                'order': ['_key': 'asc']]]]
 
         then:
         assert search.buildAggQuery(tree) == expected
@@ -120,9 +120,6 @@ class SearchUtilsSpec extends Specification {
         ['a': ['1', '2']]              | SearchType.ELASTIC           | '/find?q=*&a=1&a=2'
         ['a': ['1'], 'b': ['2']]       | SearchType.ELASTIC           | '/find?q=*&a=1&b=2'
         ['a': null, 'b': ['2']]        | SearchType.ELASTIC           | '/find?q=*&b=2'
-        // as are 'p', 'o', and 'value'
-        ['p': 'foo', 'value': 'bar']   | SearchType.FIND_BY_VALUE     | '/find?p=foo&value=bar'
-        ['o': 'https://id.kb.se/country/vm', '_lens': 'cards'] | SearchType.FIND_REVERSE | '/find?o=https://id.kb.se/country/vm&_lens=cards'
     }
 
     def "Should make find URL with offset"() {

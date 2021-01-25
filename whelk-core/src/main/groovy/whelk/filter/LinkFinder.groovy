@@ -84,7 +84,6 @@ class LinkFinder {
     }
 
     void normalizeIdentifiers(Document document, Connection connection, boolean cacheAuthForever = false) {
-
         // Normalize ISBN and ISSN identifiers. No hyphens and upper case.
         for (List<String> path : [Document.thingTypedIDsPath, Document.thingIndirectTypedIDsPath]) {
             List typedIDs = document.get(path)
@@ -141,7 +140,7 @@ class LinkFinder {
             // sameAs objects are not links per se, and must not be replaced
             String keyString = (String) key
             if (keyString.equals("sameAs"))
-                return
+                continue
 
             Object value = data.get(key)
 

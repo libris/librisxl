@@ -162,7 +162,8 @@ public class ExportProfile {
 
 
     public static boolean isPrelInfo(MarcRecord mr) {
-        return mr.getLeader(17) == '8';
+        // marc:prePublicationlevel || marc:PartialPreliminaryLevel
+        return mr.getLeader(17) == '8' || mr.getLeader(17) == '5';
     }
 
     public boolean filter(MarcRecord mr) {
@@ -865,7 +866,7 @@ public class ExportProfile {
         for (String sigel: holdings.keySet()) {
             MarcRecord mfhd = holdings.get(sigel);
 
-            if (getSet("locations").contains(sigel) || getSet("locations").contains("*")) {
+            if (locations().contains(sigel) || shouldExportAllLocations()) {
                 if (getProperty("holdtype", "interleaved").equalsIgnoreCase("INTERLEAVED")) {
                     try {
                         bibRecord = mergeBibMfhd(bibRecord, sigel, mfhd);
@@ -898,6 +899,14 @@ public class ExportProfile {
         }
 
         return ret;
+    }
+
+    public boolean shouldExportAllLocations() {
+        return locations().contains("*");
+    }
+
+    public Set<String> locations() {
+        return getSet("locations");
     }
 
     // UGLY

@@ -49,4 +49,6 @@ dependencies {
 
 gretty {
     systemProperties 'xl.secret.properties': System.getProperty("xl.secret.properties")
+    httpPort = 8588
+    scanInterval = 0
 }

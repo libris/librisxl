@@ -116,7 +116,7 @@ if [ -z $DESTHOST ]; then
         cat -
     }
 else
-    $TOOLDIR/postgresql/drop-tables-and-indexes-sql.sh | PGPASSWORD=$DESTPASSWORD psql -h $DESTHOST -U $DESTUSER $DESTDB
+    cat $TOOLDIR/postgresql/drop-all-lddb-tables.plsql | PGPASSWORD=$DESTPASSWORD psql -h $DESTHOST -U $DESTUSER $DESTDB
 
     handle_sql_dump() {
         PGPASSWORD=$DESTPASSWORD psql -h $DESTHOST -U $DESTUSER $DESTDB
@@ -127,7 +127,7 @@ REPLACEID="s!\(\(\"@id\": \"\|\t\)https://libris\)\(-\w\+\)\?\(.kb.se/[bcdfghjkl
 
 # Using `--schema=public` excludes e.g. extensions.
 #-T lddb__versions
-PGPASSWORD=$SOURCEPASSWORD pg_dump --schema=public -h $SOURCEHOST -U $SOURCEUSER $SOURCEDB |
+PGPASSWORD=$SOURCEPASSWORD pg_dump --schema=public --exclude-table-data=lddb__embellished -h $SOURCEHOST -U $SOURCEUSER $SOURCEDB |
     ( read; cat - |
     sed "$REPLACEID" |
     handle_sql_dump )

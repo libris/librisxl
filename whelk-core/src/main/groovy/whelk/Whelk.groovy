@@ -1,31 +1,44 @@
 package whelk
 
+import com.google.common.collect.Iterables
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
+import se.kb.libris.Normalizers
 import whelk.component.CachingPostgreSQLComponent
+import whelk.component.DocumentNormalizer
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
+import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LinkFinder
-import whelk.util.LegacyIntegrationTools
+import whelk.filter.NormalizerChain
+import whelk.search.ESQuery
+import whelk.search.ElasticFind
 import whelk.util.PropertyLoader
+
+import java.time.ZoneId
 
 /**
  * The Whelk is the root component of the XL system.
  */
 @Log
 @CompileStatic
-class Whelk implements Storage {
+class Whelk {
     ThreadGroup indexers = new ThreadGroup("dep-reindex")
     PostgreSQLComponent storage
     ElasticSearch elastic
+    SparqlUpdater sparqlUpdater
+
     Map displayData
     Map vocabData
     Map contextData
     JsonLd jsonld
     MarcFrameConverter marcFrameConverter
     Relations relations
+    DocumentNormalizer normalizer
+    ElasticFind elasticFind
+    ZoneId timezone = ZoneId.of('Europe/Stockholm')
 
     URI baseUri = null
 
@@ -44,10 +57,7 @@ class Whelk implements Storage {
 
     static Whelk createLoadedCoreWhelk(Properties configuration, boolean useCache = false) {
         Whelk whelk = new Whelk(useCache ? new CachingPostgreSQLComponent(configuration) : new PostgreSQLComponent(configuration))
-        if (configuration.baseUri) {
-            whelk.baseUri = new URI((String) configuration.baseUri)
-        }
-        whelk.loadCoreData()
+        whelk.configureAndLoad(configuration)
         return whelk
     }
 
@@ -57,10 +67,7 @@ class Whelk implements Storage {
 
     static Whelk createLoadedSearchWhelk(Properties configuration, boolean useCache = false) {
         Whelk whelk = new Whelk(configuration, useCache)
-        if (configuration.baseUri) {
-            whelk.baseUri = new URI((String) configuration.baseUri)
-        }
-        whelk.loadCoreData()
+        whelk.configureAndLoad(configuration)
         return whelk
     }
 
@@ -80,7 +87,15 @@ class Whelk implements Storage {
         this(useCache ? new CachingPostgreSQLComponent(conf) : new PostgreSQLComponent(conf), new ElasticSearch(conf))
     }
 
-    Whelk() {
+    private void configureAndLoad(Properties configuration) {
+        if (configuration.baseUri) {
+            baseUri = new URI((String) configuration.baseUri)
+        }
+        if (configuration.timezone) {
+            timezone = ZoneId.of((String) configuration.timezone)
+        }
+        loadCoreData()
+        sparqlUpdater = SparqlUpdater.build(storage, jsonld.context, configuration)
     }
 
     synchronized MarcFrameConverter getMarcFrameConverter() {
@@ -106,6 +121,22 @@ class Whelk implements Storage {
     void setJsonld(JsonLd jsonld) {
         this.jsonld = jsonld
         storage.setJsonld(jsonld)
+        if (elastic) {
+            elasticFind = new ElasticFind(new ESQuery(this))
+            initDocumentNormalizers()
+        }
+    }
+
+    private void initDocumentNormalizers() {
+        normalizer = new NormalizerChain(
+                [
+                        //FIXME: This is KBV specific stuff
+                        Normalizers.workPosition(jsonld),
+                        Normalizers.typeSingularity(jsonld),
+                        Normalizers.language(this),
+                        Normalizers.contributionRole(this)
+                ]
+        )
     }
 
     void loadContextData() {
@@ -122,7 +153,7 @@ class Whelk implements Storage {
 
     Document getDocument(String id) {
         Document doc = storage.load(id)
-        if (baseUri) {
+        if (doc && baseUri) {
             doc.baseUri = baseUri
         }
         return doc
@@ -148,31 +179,21 @@ class Whelk implements Storage {
         return result
     }
 
-    private void reindexAffected(Document document, Set<String> preUpdateDependencies) {
+    private void reindex(Document updated, Document preUpdateDoc) {
+        if (elastic) {
+            elastic.index(updated, this)
+
+            if (hasChangedMainEntityId(updated, preUpdateDoc)) {
+                reindexAllLinks(updated.shortId)
+            } else {
+                reindexAffected(updated, preUpdateDoc.getExternalRefs(), updated.getExternalRefs())
+            }
+        }
+    }
+
+    private void reindexAffected(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
         Runnable reindex = {
-            elastic.index(document, storage.getCollectionBySystemID(document.shortId), this)
-
-            // FIXME: some day this will be too big too keep in memory...
-            // FIXME: state is lost on restart
-            Set<String> idsToReindex = storage.isCardChanged(document.getShortId())
-                    ? storage.followEmbellishDependers(document.getShortId())
-                    : new HashSet<String>()
-
-            long t1 = System.currentTimeMillis()
-            if (idsToReindex.size() > 100 ) {
-                log.info("Reindexing ${idsToReindex.size()} affected documents")
-            }
-
-            idsToReindex.each { id ->
-                Document doc = storage.load(id)
-                elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
-            }
-            updateLinkCount(document, preUpdateDependencies)
-
-            if (idsToReindex.size() > 100 ) {
-                long dt = (System.currentTimeMillis() - t1) / 1000 as long
-                log.info("Reindexed ${idsToReindex.size()} affected documents in $dt seconds")
-            }
+            reindexAffectedSync(document, preUpdateLinks, postUpdateLinks)
         }
 
         // If we are inside a batch job. Update them synchronously
@@ -184,14 +205,61 @@ class Whelk implements Storage {
         }
     }
 
-    private void updateLinkCount(Document document, Set<String> preUpdateDependencies) {
-        Set<String> postUpdateDependencies = storage.getDependencies(document.getShortId())
+    private void reindexAllLinks(String id) {
+        SortedSet<String> links = storage.getDependencies(id)
+        links.addAll(storage.getDependers(id))
+        bulkIndex(links)
+    }
 
-        (preUpdateDependencies - postUpdateDependencies)
-                .each { id -> elastic.decrementReverseLinks(id, storage.getCollectionBySystemID(id))}
+    private void reindexAffectedSync(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
+        Set<Link> addedLinks = (postUpdateLinks - preUpdateLinks)
+        Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
 
-        (postUpdateDependencies - preUpdateDependencies)
-                .each { id -> elastic.incrementReverseLinks(id, storage.getCollectionBySystemID(id))}
+        removedLinks.findResults { storage.getSystemIdByIri(it.iri) }
+                .each{id -> elastic.decrementReverseLinks(id) }
+
+        addedLinks.each { link ->
+            String id = storage.getSystemIdByIri(link.iri)
+            if (id) {
+                Document doc = storage.load(id)
+                def lenses = ['chips', 'cards', 'full']
+                def reverseRelations = lenses.collect{ jsonld.getInverseProperties(doc.data, it) }.flatten()
+                if (reverseRelations.contains(link.relation)) {
+                    // we added a link to a document that includes us in its @reverse relations, reindex it
+                    elastic.index(doc, this)
+                }
+                else {
+                    // just update link counter
+                    elastic.incrementReverseLinks(id)
+                }
+            }
+        }
+
+
+        if (storage.isCardChangedOrNonexistent(document.getShortId())) {
+            bulkIndex(getAffectedIds(document))
+        }
+    }
+
+    /**
+     * Find all other documents that need to be re-indexed because of a change in document
+     * @param document the changed document
+     * @return an Iterable of system IDs.
+     */
+    private Iterable<String> getAffectedIds(Document document) {
+        List<Iterable<String>> queries = []
+        for (String iri : document.getThingIdentifiers()) {
+            for (String field : ["_links", "_outerEmbellishments"]) {
+                queries << elasticFind.findIds(['q': ["*"], (field): [iri]])
+            }
+        }
+        return Iterables.filter(Iterables.concat(queries), { it != null })
+    }
+
+    private void bulkIndex(Iterable<String> ids) {
+        Iterables.partition(ids, 100).each {
+            elastic.bulkIndexWithRetry(it, this)
+        }
     }
 
     /**
@@ -248,8 +316,9 @@ class Whelk implements Storage {
     /**
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
-    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
-
+    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean index = true) {
+        normalize(document)
+        
         boolean detectCollisionsOnTypedIDs = false
         List<Tuple2<String, String>> collidingIDs = getIdCollisions(document, detectCollisionsOnTypedIDs)
         if (!collidingIDs.isEmpty()) {
@@ -259,27 +328,47 @@ class Whelk implements Storage {
 
         boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
         if (success) {
-            if (elastic) {
-                elastic.index(document, collection, this)
-                reindexAffected(document, new TreeSet<String>())
+            if (elastic && index) {
+                elastic.index(document, this)
+                reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
             }
+            sparqlUpdater?.pollNow()
         }
         return success
     }
 
-    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, Storage.UpdateAgent updateAgent) {
-        Collection<String> preUpdateDependencies = storage.getDependencies(id)
-        Document updated = storage.storeAtomicUpdate(id, minorUpdate, changedIn, changedBy, updateAgent)
+    /**
+     * The UpdateAgent SHOULD be a pure function since the update will be retried in case the document
+     * was modified in another transaction.
+     */
+    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
+        Document preUpdateDoc = null
+        Document updated = storage.storeUpdate(id, minorUpdate, changedIn, changedBy, { Document doc ->
+            preUpdateDoc = doc.clone()
+            updateAgent.update(doc)
+            normalize(doc)
+        })
+
+        if (updated == null || preUpdateDoc == null) {
+            return null
+        }
+
+        reindex(updated, preUpdateDoc)
+        sparqlUpdater?.pollNow()
+    }
+
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum, boolean index = true) {
+        normalize(doc)
+        Document preUpdateDoc = storage.load(doc.shortId)
+        Document updated = storage.storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum)
+
         if (updated == null) {
             return null
         }
-        String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
-        if (elastic) {
-            elastic.index(updated, collection, this)
-            reindexAffected(updated, preUpdateDependencies)
+        if (index) {
+            reindex(updated, preUpdateDoc)
         }
-
-        return updated
+        sparqlUpdater?.pollNow()
     }
 
     /**
@@ -290,27 +379,14 @@ class Whelk implements Storage {
     boolean quickCreateDocument(Document document, String changedIn, String changedBy, String collection) {
         return storage.quickCreateDocument(document, changedIn, changedBy, collection)
     }
-
-    void bulkStore(final List<Document> documents, String changedIn,
-                   String changedBy, String collection,
-                   @Deprecated boolean useDocumentCache = false) {
-        if (storage.bulkStore(documents, changedIn, changedBy, collection)) {
-            if (elastic) {
-                elastic.bulkIndex(documents, collection, this)
-                for (Document doc : documents) {
-                    reindexAffected(doc, new TreeSet<String>())
-                }
-            }
-        } else {
-            log.warn("Bulk store failed, not indexing : ${documents.first().id} - ${documents.last().id}")
-        }
-    }
-
+  
     void remove(String id, String changedIn, String changedBy) {
         log.debug "Deleting ${id} from Whelk"
+        Document doc = storage.load(id)
         storage.remove(id, changedIn, changedBy)
         if (elastic) {
             elastic.remove(id)
+            reindexAffected(doc, doc.getExternalRefs(), new TreeSet<>())
             log.debug "Object ${id} was removed from Whelk"
         }
         else {
@@ -318,80 +394,48 @@ class Whelk implements Storage {
         }
     }
 
-    void mergeExisting(String remainingID, String disappearingID, Document remainingDocument, String changedIn, String changedBy, String collection) {
-        storage.mergeExisting(remainingID, disappearingID, remainingDocument, changedIn, changedBy, collection, jsonld)
-
-        if (elastic) {
-            String remainingSystemID = storage.getSystemIdByIri(remainingID)
-            String disappearingSystemID = storage.getSystemIdByIri(disappearingID)
-            List<Tuple2<String, String>> dependerRows = storage.followDependers(remainingSystemID, JsonLd.NON_DEPENDANT_RELATIONS)
-            dependerRows.addAll( storage.followDependers(disappearingSystemID) )
-            List<String> dependerSystemIDs = []
-            for (Tuple2<String, String> dependerRow : dependerRows) {
-                dependerSystemIDs.add( (String) dependerRow.get(0) )
-            }
-            Map<String, Document> dependerDocuments = bulkLoad(dependerSystemIDs)
-
-            List<Document> authDocs = []
-            List<Document> bibDocs = []
-            List<Document> holdDocs = []
-            for (Object key : dependerDocuments.keySet()) {
-                Document doc = dependerDocuments.get(key)
-                String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
-                if (dependerCollection.equals("auth"))
-                    authDocs.add(doc)
-                else if (dependerCollection.equals("bib"))
-                    bibDocs.add(doc)
-                else if (dependerCollection.equals("hold"))
-                    holdDocs.add(doc)
-            }
-
-            elastic.bulkIndex(authDocs, "auth", this)
-            elastic.bulkIndex(bibDocs, "bib", this)
-            elastic.bulkIndex(holdDocs, "hold", this)
-        }
-
+    boolean hasChangedMainEntityId(Document updated, Document preUpdateDoc) {
+        preUpdateDoc.getThingIdentifiers()[0] &&
+                updated.getThingIdentifiers()[0] &&
+                updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]
     }
 
-    void embellish(Document document, boolean filterOutNonChipTerms = false) {
-        List convertedExternalLinks = jsonld.expandLinks(document.getExternalRefs())
-        def cards = storage.getCardsForEmbellish(convertedExternalLinks)
-        jsonld.embellish(document.data, cards, filterOutNonChipTerms)
+    void embellish(Document document, List<String> levels = null) {
+        def docsByIris = { List<String> iris -> bulkLoad(iris).values().collect{ it.data } }
+        Embellisher e = new Embellisher(jsonld, docsByIris, storage.&getCards, relations.&getByReverse)
+
+        if(levels) {
+            e.setEmbellishLevels(levels)
+        }
+
+        e.embellish(document)
     }
 
     Document loadEmbellished(String systemId) {
-        Document doc = getDocument(systemId)
-        embellish(doc)
-        return doc
-    }
-
-    long getIncomingLinkCount(String idOrIri) {
-        return storage.getIncomingLinkCount(tryGetSystemId(idOrIri))
-    }
-
-    List<String> findIdsLinkingTo(String idOrIri, int limit, int offset) {
-        return storage.getIncomingLinkIdsPaginated(tryGetSystemId(idOrIri), limit, offset)
+        return storage.loadEmbellished(systemId, this.&embellish)
     }
 
     List<Document> getAttachedHoldings(List<String> thingIdentifiers) {
         return storage.getAttachedHoldings(thingIdentifiers).collect(this.&loadEmbellished)
     }
 
-    private String tryGetSystemId(String id) {
-        String systemId = storage.getSystemIdByThingId(id)
-        if (systemId == null) {
-            systemId = stripBaseUri(id)
+    void normalize(Document doc) {
+        try {
+            doc.normalizeUnicode()
+
+            if (normalizer != null) {
+                normalizer.normalize(doc)
+            }
+        } catch (Exception e) {
+            log.warn "Could not normalize document (${doc}: $e, e)"
         }
-        return systemId
     }
 
-    private static String stripBaseUri(String identifier) {
-        return identifier.startsWith(Document.BASE_URI.toString())
-                ? identifier.substring(Document.BASE_URI.toString().length())
-                : identifier
-    }
-
-    private boolean batchJobThread() {
+    private static boolean batchJobThread() {
         return Thread.currentThread().getThreadGroup().getName().contains("whelktool")
+    }
+
+    ZoneId getTimezone() {
+        return timezone
     }
 }

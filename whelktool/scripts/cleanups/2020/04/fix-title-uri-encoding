@@ -1,0 +1,23 @@
+scheduledForChange = getReportWriter("scheduledForChange")
+failedIDs = getReportWriter("scheduledForChange")
+
+selectByCollection('auth') { auth ->
+    def (record, thing, work) = auth.graph
+    String id = record.mainEntity[ID]
+
+    auth.whelk.storage.doVerifyDocumentIdRetention = false
+
+    if (id =~ "[()]") {
+        record.mainEntity[ID] = id.replaceAll("\\(", "%28").replaceAll("\\)", "%29")
+        thing[ID] = record.mainEntity[ID]
+        thing.sameAs.removeIf { sameAs -> areEquivalent(id, sameAs[ID])}
+        scheduledForChange.println "$id"
+        auth.scheduleSave(onError: { e ->
+            failedIDs.println("Failed to save ${record[ID]} due to: $e")
+        })
+    }
+}
+
+Boolean areEquivalent(id, encodedId) {
+    return URLDecoder.decode(id, "UTF-8") == URLDecoder.decode(encodedId, "UTF-8")
+}

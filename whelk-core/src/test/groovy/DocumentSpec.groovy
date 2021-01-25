@@ -183,7 +183,7 @@ class DocumentSpec extends Specification {
                                  "someValue": 1],
                                 ["someOtherValue": 2]]]
         Document doc = new Document(input)
-        List expected = ["/externalBar", "/externalBaz"]
+        Set expected = [new Link("/externalBar", "bar"), new Link("/externalBaz", "baz")]
         expect:
         assert doc.getExternalRefs() == expected
 
@@ -224,11 +224,13 @@ class DocumentSpec extends Specification {
                                    ["@graph": ["@id": "/externalBar",
                                                "@type": "Work",
                                                "hasTitle": "aTitle",
-                                               "language": "danska"]],
+                                               "language": "danska",
+                                               "someThirdValue": 3]],
                                    ["@graph": ["@id": "/externalBaz",
                                                "@type": "ProvisionActivity",
                                                "date": "aDate",
-                                               "place": "aPlace"]]]]
+                                               "place": "aPlace",
+                                               "someFourthValue": 4]]]]
 
         when:
 

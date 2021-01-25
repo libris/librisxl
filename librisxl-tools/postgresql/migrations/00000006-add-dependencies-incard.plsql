@@ -21,9 +21,10 @@ BEGIN
    END IF;
    UPDATE lddb__schema SET version = new_version;
 
-
    -- ACTUAL SCHEMA CHANGES HERE:
-   ALTER TABLE lddb__dependencies ADD COLUMN inCard boolean DEFAULT false;
+
+   -- This was never part of a release, commented out
+   -- ALTER TABLE lddb__dependencies ADD COLUMN inCard boolean DEFAULT false;
 
 END$$;
 

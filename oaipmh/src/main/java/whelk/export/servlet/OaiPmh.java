@@ -4,6 +4,7 @@ import whelk.Whelk;
 import whelk.converter.FormatConverter;
 import whelk.converter.JsonLD2DublinCoreConverter;
 import whelk.converter.JsonLD2RdfXml;
+import whelk.converter.JsonLDTurtleConverter;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 
 import javax.servlet.http.HttpServlet;
@@ -13,6 +14,8 @@ import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -70,6 +73,10 @@ public class OaiPmh extends HttpServlet
     public final static String FORMAT_INCLUDE_HOLD_POSTFIX = "_includehold";
 
     public static Whelk s_whelk;
+
+    // Placed here, because the call to generate this is expensive, and should not be done on every request.
+    public static Set<String> workDerivativeTypes;
+
     private final Logger logger = LogManager.getLogger(this.getClass());
 
     static
@@ -80,6 +87,7 @@ public class OaiPmh extends HttpServlet
         supportedFormats.put("marcxml", new FormatDescription(new JsonLD2MarcXMLConverter(s_whelk.getMarcFrameConverter()), true, "http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd", "http://www.loc.gov/MARC21/slim"));
         supportedFormats.put("rdfxml", new FormatDescription(new JsonLD2RdfXml(), true, null, null));
         supportedFormats.put("jsonld", new FormatDescription(null, false, null, null));
+        supportedFormats.put("ttl", new FormatDescription(new JsonLDTurtleConverter(), false, null, null));
 
         // Add all formats with the "_includehold" and "_expanded" postfixes
         for (String format : new String[] {"marcxml", "oai_dc", "rdfxml", "jsonld"})
@@ -102,6 +110,7 @@ public class OaiPmh extends HttpServlet
 
     public void init()
     {
+        this.workDerivativeTypes = new HashSet<>(s_whelk.getJsonld().getSubClasses("Work"));
     }
 
     public void destroy()
@@ -156,7 +165,7 @@ public class OaiPmh extends HttpServlet
         {
             // These exceptions are to be expected in every case where a client/harvester closes or loses connection
             // while a response is being sent.
-            logger.warn("Broken client pipe {}:{}, response feed interrupted.", req.getRemoteAddr(), req.getRemotePort());
+            logger.debug("Broken client pipe {}:{}, response feed interrupted.", req.getRemoteAddr(), req.getRemotePort());
         }
         catch (SQLException e)
         {
