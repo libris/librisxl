@@ -77,7 +77,11 @@ class Normalizers {
                         if (typeList.size() == 1)
                             node[key] = typeList[0]
                         else {
-                            throw new ModelValidationException("Could not reduce: " + typeList + " to a single type (required) by removing superclasses.")
+
+                            //throw new ModelValidationException("Could not reduce: " + typeList + " to a single type (required) by removing superclasses.")
+                            // This must be reduced to a warning, because the assumption does not hold true: There are records in
+                            // libris that legitimately have unrelated multi-types (see definitions).
+                            log.warn("Could not reduce: " + typeList + " to a single type by removing superclasses.")
                         }
                     }
                 }

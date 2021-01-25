@@ -342,6 +342,11 @@ class PostgreSQLComponent {
                     (data#>>'{@graph,0,generationDate}')::timestamp > ?
                 )
         """.stripIndent()
+
+    private static final String GET_DATASET_ID_LIST = """
+            SELECT string_agg(id, ',') AS id FROM lddb WHERE data#>>'{@graph,0,indataSet,@id}' = ?
+        """.stripIndent()
+
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
 
@@ -1057,6 +1062,24 @@ class PostgreSQLComponent {
 
     Iterable<Map> getCards(Iterable<String> iris) {
         return createAndAddMissingCards(bulkLoadCards(getSystemIdsByIris(iris).values())).values()
+    }
+
+    void doForIdInDataset(String dataset, Closure c) {
+        PreparedStatement statement = null
+        ResultSet rs = null
+        Connection connection = getOuterConnection()
+        try {
+            statement = connection.prepareStatement(GET_DATASET_ID_LIST)
+            statement.setString(1, dataset)
+
+            rs = statement.executeQuery()
+            while (rs.next()) {
+                String id = rs.getString(1)
+                c(id)
+            }
+        } finally {
+            close(rs, statement, connection)
+        }
     }
 
     /**

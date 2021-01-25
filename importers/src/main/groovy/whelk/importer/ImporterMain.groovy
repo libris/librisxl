@@ -36,6 +36,12 @@ class ImporterMain {
         defsImporter.run("definitions")
     }
 
+    @Command(args='FNAME DATASET COLLECTION')
+    void dataset(String fname, String dataset, String collection) {
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
+        DatasetImporter.importDataset(whelk, fname, dataset, collection)
+    }
+
     @Command(args='[COLLECTION]')
     void reindex(String collection=null) {
         boolean useCache = true
