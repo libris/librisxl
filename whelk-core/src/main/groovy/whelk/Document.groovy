@@ -857,7 +857,8 @@ class Document {
             return node.longValue() * depth
         else if (node instanceof Map) {
             for (String key : node.keySet()) {
-                if (key != JsonLd.MODIFIED_KEY && key != JsonLd.CREATED_KEY) {
+                if (key != JsonLd.MODIFIED_KEY && key != JsonLd.CREATED_KEY && key != JsonLd.RECORD_STATUS_KEY) {
+
                     term += key.hashCode() * depth
                     term += calculateCheckSum(node[key], depth + 1)
                 }

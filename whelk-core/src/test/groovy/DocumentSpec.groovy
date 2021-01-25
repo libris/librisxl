@@ -1,5 +1,6 @@
 package whelk
 
+
 import spock.lang.Specification
 import spock.lang.Unroll
 import whelk.converter.marc.MarcFrameConverter
@@ -378,4 +379,22 @@ class DocumentSpec extends Specification {
 
     }
 
+    def "checksum"() {
+        given:
+        def doc = new Document(readFile("cryptosporidium.jsonld"))
+        def doc2 = doc.clone()
+        doc2.setCreated(new Date())
+        doc2.setModified(new Date())
+        def doc3 = doc2.clone()
+        doc3.setDescriptionCreator("Z")
+
+        expect:
+        doc.getChecksum() == doc2.getChecksum()
+        doc.getChecksum() != doc3.getChecksum()
+    }
+
+    static String readFile(String filename) {
+        return DocumentSpec.class.getClassLoader()
+                .getResourceAsStream(filename).getText("UTF-8")
+    }
 }
