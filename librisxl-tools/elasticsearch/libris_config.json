@@ -202,6 +202,7 @@
                     "@type": {"type": "keyword"},
                     "mainTitle": {
                         "type": "text",
+                        "analyzer": "softmatcher",
                         "copy_to": "_all",
                         "fields": {
                             "keyword": {
@@ -220,6 +221,17 @@
                 },
                 "copy_to": "_all"
             },
+            "responsibilityStatement": {
+                "fields": {
+                    "exact": {
+                        "type": "text",
+                        "analyzer": "standard"
+                    }
+                },
+                "type": "text",
+                "analyzer": "softmatcher",
+                "copy_to": ["_all", "_str"]
+            },
             "_links": {
                 "type": "keyword",
                 "copy_to": "_all"
@@ -230,6 +242,17 @@
             },
             "_collection": {
                 "type": "keyword",
+                "copy_to": "_all"
+            },
+            "_str": {
+                "fields": {
+                  "exact": {
+                    "type": "text",
+                    "analyzer": "standard"
+                  }
+                },
+                "analyzer": "softmatcher",
+                "type": "text",
                 "copy_to": "_all"
             },
             "_all": {
