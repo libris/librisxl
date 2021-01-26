@@ -14,7 +14,7 @@ class DatasetImporter {
 
         if ( ! ["auth", "bib", "hold", "definitions"].any{ it.equals(marcCollection) } )
             throw new RuntimeException("Unknown marc collection.")
-        
+
         if (Runtime.getRuntime().maxMemory() < 2l * 1024l * 1024l * 1024l) {
             Log.warn("This application may require substantial amounts of memory, " +
                     "if the dataset in question is large. Please start with -Xmx3G (at least).")
@@ -22,6 +22,9 @@ class DatasetImporter {
         }
 
         Set<String> idsInInput = []
+        long updatedCount = 0
+        long createdCount = 0
+        long deletedCount = 0
 
         File inDataFile = new File(filePath)
         inDataFile.eachLine { line ->
@@ -45,11 +48,13 @@ class DatasetImporter {
                     else {
                         throw new CancelUpdateException() // Not an error, merely cancels the update
                     }
+                    ++updatedCount
                 })
             } else {
 
                 // New document
                 whelk.createDocument(incomingDoc, "xl", null, marcCollection, false)
+                ++createdCount
             }
         }
 
@@ -61,6 +66,8 @@ class DatasetImporter {
             if (!idsInInput.contains(storedIdInDataset)) {
                 if (!remove(whelk, storedIdInDataset)) {
                     needsRetry.add(storedIdInDataset)
+                } else {
+                    deletedCount++
                 }
             }
         })
@@ -71,6 +78,7 @@ class DatasetImporter {
             needsRetry.removeAll { String storedIdInDataset ->
                 if (remove(whelk, storedIdInDataset)) {
                     anythingRemovedLastPass = true
+                    deletedCount++
                     return true
                 }
                 return false
@@ -81,6 +89,12 @@ class DatasetImporter {
             Log.warn("The following IDs SHOULD have been deleted, but doing so was not " +
                     "possible, so they were skipped (most likely they are still depended upon):\n" + needsRetry)
         }
+
+        System.err.println("Created: " + createdCount +" new,\n" +
+                "updated: " + updatedCount + " existing and\n" +
+                "deleted: " + deletedCount + " old records (should have been: " + (deletedCount + needsRetry.size()) + "),\n" +
+                "out of the: " + idsInInput.size() + " records in dataset: \"" + dataset + "\".\n" +
+                "Dataset now in sync.")
     }
 
     private static boolean remove(Whelk whelk, String id) {
