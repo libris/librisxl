@@ -344,12 +344,8 @@ class PostgreSQLComponent {
                 )
         """.stripIndent()
 
-    /*private static final String GET_DATASET_ID_LIST = """
-            SELECT id FROM lddb WHERE data#>'{@graph,0,inDataset}' @> '[{"@id": ? }]'::jsonb
-        """.stripIndent()*/
-
     private static final String GET_DATASET_ID_LIST = """
-            SELECT id FROM lddb WHERE data#>'{@graph,0,inDataset}' @> ?::jsonb
+            SELECT id FROM lddb WHERE data#>'{@graph,0,inDataset}' @> ?::jsonb AND deleted = false
         """.stripIndent()
 
     private HikariDataSource connectionPool
