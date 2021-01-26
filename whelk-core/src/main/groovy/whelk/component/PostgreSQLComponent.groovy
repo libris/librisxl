@@ -8,6 +8,7 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
+import org.postgresql.util.PGobject
 import org.postgresql.util.PSQLException
 import whelk.Document
 import whelk.IdType
@@ -343,8 +344,12 @@ class PostgreSQLComponent {
                 )
         """.stripIndent()
 
+    /*private static final String GET_DATASET_ID_LIST = """
+            SELECT id FROM lddb WHERE data#>'{@graph,0,inDataset}' @> '[{"@id": ? }]'::jsonb
+        """.stripIndent()*/
+
     private static final String GET_DATASET_ID_LIST = """
-            SELECT string_agg(id, ',') AS id FROM lddb WHERE data#>>'{@graph,0,indataSet,@id}' = ?
+            SELECT id FROM lddb WHERE data#>'{@graph,0,inDataset}' @> ?::jsonb
         """.stripIndent()
 
     private HikariDataSource connectionPool
@@ -1070,7 +1075,11 @@ class PostgreSQLComponent {
         Connection connection = getOuterConnection()
         try {
             statement = connection.prepareStatement(GET_DATASET_ID_LIST)
-            statement.setString(1, dataset)
+
+            PGobject jsonb = new PGobject()
+            jsonb.setType("jsonb")
+            jsonb.setValue("[{\"@id\":\""+ dataset +"\"}]")
+            statement.setObject(1, jsonb)
 
             rs = statement.executeQuery()
             while (rs.next()) {

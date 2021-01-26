@@ -9,6 +9,8 @@ import whelk.exception.CancelUpdateException
 class DatasetImporter {
     static final ObjectMapper mapper = new ObjectMapper()
 
+    // May need significant amounts of memory!
+
     static importDataset(Whelk whelk, String filePath, String dataset, String marcCollection) {
 
         if ( ! ["auth", "bib", "hold", "definitions"].any{ it.equals(marcCollection) } )
@@ -33,7 +35,6 @@ class DatasetImporter {
                 // Update (potentially) of existing document
                 whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, "xl", null, { doc ->
                     if (doc.getChecksum() != incomingDoc.getChecksum()) {
-                        //System.err.println("Did not match checksums:\n\n" + doc.getDataAsString() + "\n\n" + incomingDoc.getDataAsString())
                         doc.data = incomingDoc.data
                     }
                     else {
@@ -45,11 +46,40 @@ class DatasetImporter {
                 // New document
                 whelk.createDocument(incomingDoc, "xl", null, marcCollection, false)
             }
+        }
 
-            // Clear out anything that was previously stored in this dataset, but was not in the in-data now.
-            whelk.storage.doForIdInDataset(dataset, { String storedIdInDataset ->
-                System.err.println(storedIdInDataset)
-            })
+        // Clear out anything that was previously stored in this dataset, but was not in the in-data now.
+        // If faced with "can't delete depended on stuff", retry again later, after more other deletes have
+        // succeeded (there may be intra-set dependencies).
+        List<String> needsRetry = []
+        whelk.storage.doForIdInDataset(dataset, { String storedIdInDataset ->
+            if (!idsInInput.contains(storedIdInDataset)) {
+                if (!remove(whelk, storedIdInDataset)) {
+                    needsRetry.add(storedIdInDataset)
+                }
+            }
+        })
+
+        boolean anythingRemovedLastPass = true
+        while (anythingRemovedLastPass) {
+            anythingRemovedLastPass = false
+            needsRetry.removeAll { String storedIdInDataset ->
+                if (remove(whelk, storedIdInDataset)) {
+                    anythingRemovedLastPass = true
+                    return true
+                }
+                return false
+            }
+        }
+    }
+
+    private static boolean remove(Whelk whelk, String id) {
+        try {
+            whelk.remove(id, "xl", null)
+            return true
+        } catch ( RuntimeException re ) {
+            // The expected exception here is: java.lang.RuntimeException: Deleting depended upon records is not allowed.
+            return false
         }
     }
 
