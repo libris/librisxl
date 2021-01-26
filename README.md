@@ -240,6 +240,7 @@ you need to PUT the config to the index, like:
 
 ```
 $ curl -XPUT http://localhost:9200/indexname_versionnumber \
+    -H 'Content-Type: application/json' \
     -d @librisxl-tools/elasticsearch/libris_config.json
 ```
 
@@ -247,6 +248,7 @@ Create an alias for your index
 
 ```
 $ curl -XPOST http://localhost:9200/_aliases \
+    -H 'Content-Type: application/json' \
     -d  '{"actions":[{"add":{"index":"indexname_versionnumber","alias":"indexname"}}]}'
 ```
 
