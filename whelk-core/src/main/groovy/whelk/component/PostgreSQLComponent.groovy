@@ -2385,7 +2385,10 @@ class PostgreSQLComponent {
     private String getDescriptionChangerId(String changedBy) {
         //FIXME(?): hardcoded
         // for historical reasons changedBy is the script URI for global changes
-        if (changedBy.startsWith('https://libris.kb.se/sys/globalchanges/')) {
+        if (changedBy == null) {
+            return null
+        }
+        else if (changedBy.startsWith('https://libris.kb.se/sys/globalchanges/')) {
             return getDescriptionChangerId('SEK')
         }
         else if (changedBy == "MimerProd" || changedBy == "Mimer" ||
