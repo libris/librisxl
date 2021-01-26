@@ -1,5 +1,6 @@
 package whelk.importer
 
+import jline.internal.Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.IdGenerator
@@ -9,12 +10,16 @@ import whelk.exception.CancelUpdateException
 class DatasetImporter {
     static final ObjectMapper mapper = new ObjectMapper()
 
-    // May need significant amounts of memory!
-
-    static importDataset(Whelk whelk, String filePath, String dataset, String marcCollection) {
+    static void importDataset(Whelk whelk, String filePath, String dataset, String marcCollection) {
 
         if ( ! ["auth", "bib", "hold", "definitions"].any{ it.equals(marcCollection) } )
             throw new RuntimeException("Unknown marc collection.")
+        
+        if (Runtime.getRuntime().maxMemory() < 2l * 1024l * 1024l * 1024l) {
+            Log.warn("This application may require substantial amounts of memory, " +
+                    "if the dataset in question is large. Please start with -Xmx3G (at least).")
+            return
+        }
 
         Set<String> idsInInput = []
 
@@ -70,6 +75,11 @@ class DatasetImporter {
                 }
                 return false
             }
+        }
+
+        if (!needsRetry.isEmpty()) {
+            Log.warn("The following IDs SHOULD have been deleted, but doing so was not " +
+                    "possible, so they were skipped (most likely they are still depended upon):\n" + needsRetry)
         }
     }
 
