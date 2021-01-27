@@ -36,7 +36,7 @@ class ImporterMain {
         defsImporter.run("definitions")
     }
 
-    @Command(args='FNAME DATASET COLLECTION')
+    @Command(args='FNAME DATASET')
     void dataset(String fname, String dataset) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
         DatasetImporter.importDataset(whelk, fname, dataset)
