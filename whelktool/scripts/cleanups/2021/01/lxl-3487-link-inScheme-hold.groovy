@@ -12,13 +12,11 @@ import whelk.util.Statistics
 import whelk.filter.BlankNodeLinker
 
 class Script {
-    static PrintWriter modified
     static PrintWriter errors
     static BlankNodeLinker linker
     static Statistics statistics = new Statistics(5).printOnShutdown()
 }
 
-Script.modified = getReportWriter("modified.txt")
 Script.errors = getReportWriter("errors.txt")
 Script.linker = buildLinker()
 
@@ -45,7 +43,6 @@ void process(hold) {
 
     Script.statistics.withContext(hold.doc.shortId) {
         if(Script.linker.linkAll(subject, 'inScheme')) {
-            Script.modified.println("${hold.doc.shortId}")
             hold.scheduleSave()
         }
     }
