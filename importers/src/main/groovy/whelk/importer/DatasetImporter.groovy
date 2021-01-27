@@ -128,8 +128,7 @@ class DatasetImporter {
             doc.setId(slug)
             return
         }
-        // Mint a new system Id and set it.
-        def newId = sysBaseIri.resolve(IdGenerator.generate()).toString()
-        doc.addRecordIdentifier(newId)
+        // IDs need to be both reproducible and absolute!
+        throw new RuntimeException("Could not obtain a proper record ID for: " + doc.getURI().toString())
     }
 }
