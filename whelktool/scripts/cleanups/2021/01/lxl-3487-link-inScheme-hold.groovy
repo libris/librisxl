@@ -1,7 +1,9 @@
 /**
  Link blank nodes in 'inScheme'.
- Exact same as whelktool/scripts/cleanups/2020/10/lxl-3390-link-inScheme.groovy,
- but for 'hold' instead of 'bib', and {@graph,1,subject} instead of {@graph,1,instanceOf,subject}.
+ Copied from whelktool/scripts/cleanups/2020/10/lxl-3390-link-inScheme.groovy with minor changes:
+ - 'hold' instead of 'bib'
+ - narrower selectBy
+ - look for {@graph,1,subject} instead of {@graph,1,instanceOf,subject}.
 
  See LXL-3487 (and LXL-3390)
  */
@@ -23,7 +25,7 @@ Script.linker = buildLinker()
 println("Mappings: ${Script.linker.map}")
 println("Ambiguous: ${Script.linker.ambiguousIdentifiers}")
 
-selectByCollection('hold') { hold ->
+selectBySqlWhere("collection = 'hold' AND deleted = false AND data#>>'{@graph,1,subject}' is not null") { hold ->
     try {
         process(hold)
     }
