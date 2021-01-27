@@ -1,19 +1,20 @@
 package whelk.importer
 
-import jline.internal.Log
+import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.IdGenerator
 import whelk.Whelk
 import whelk.exception.CancelUpdateException
 
+@Log
 class DatasetImporter {
     static final ObjectMapper mapper = new ObjectMapper()
 
     static void importDataset(Whelk whelk, String filePath, String dataset) {
 
         if (Runtime.getRuntime().maxMemory() < 2l * 1024l * 1024l * 1024l) {
-            Log.warn("This application may require substantial amounts of memory, " +
+            log.warn("This application may require substantial amounts of memory, " +
                     "if the dataset in question is large. Please start with -Xmx3G (at least).")
             return
         }
@@ -94,7 +95,7 @@ class DatasetImporter {
         }
 
         if (!needsRetry.isEmpty()) {
-            Log.warn("The following IDs SHOULD have been deleted, but doing so was not " +
+            log.warn("The following IDs SHOULD have been deleted, but doing so was not " +
                     "possible, so they were skipped (most likely they are still depended upon):\n" + needsRetry)
         }
 
