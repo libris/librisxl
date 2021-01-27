@@ -37,9 +37,9 @@ class ImporterMain {
     }
 
     @Command(args='FNAME DATASET COLLECTION')
-    void dataset(String fname, String dataset, String collection) {
+    void dataset(String fname, String dataset) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
-        DatasetImporter.importDataset(whelk, fname, dataset, collection)
+        DatasetImporter.importDataset(whelk, fname, dataset)
     }
 
     @Command(args='[COLLECTION]')

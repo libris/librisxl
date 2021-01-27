@@ -110,7 +110,7 @@ class Document {
         return mapper.writeValueAsString(data)
     }
 
-    void setInDataSet(String dataset) {
+    void addInDataset(String dataset) {
 
         // Make datasetPath point to a list
         preparePath(datasetPath)
@@ -128,7 +128,7 @@ class Document {
             datasetList.add( idObject )
     }
 
-    List getInDataSet() {
+    List getInDataset() {
         def dataset = get(datasetPath)
         if (dataset instanceof List)
             return dataset

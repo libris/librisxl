@@ -10,10 +10,7 @@ import whelk.exception.CancelUpdateException
 class DatasetImporter {
     static final ObjectMapper mapper = new ObjectMapper()
 
-    static void importDataset(Whelk whelk, String filePath, String dataset, String marcCollection) {
-
-        if ( ! ["auth", "bib", "hold", "definitions"].any{ it.equals(marcCollection) } )
-            throw new RuntimeException("Unknown marc collection.")
+    static void importDataset(Whelk whelk, String filePath, String dataset) {
 
         if (Runtime.getRuntime().maxMemory() < 2l * 1024l * 1024l * 1024l) {
             Log.warn("This application may require substantial amounts of memory, " +
@@ -25,6 +22,7 @@ class DatasetImporter {
         long updatedCount = 0
         long createdCount = 0
         long deletedCount = 0
+        long lineCount = 0
 
         File inDataFile = new File(filePath)
         inDataFile.eachLine { line ->
@@ -32,7 +30,7 @@ class DatasetImporter {
             Document incomingDoc = new Document(data)
             ensureAbsoluteSystemId(incomingDoc)
             idsInInput.add(incomingDoc.getShortId())
-            incomingDoc.setInDataSet(dataset)
+            incomingDoc.addInDataset(dataset)
 
             // This race condition should be benign. If there is a document with
             // the same ID created in between the check and the creation, we'll
@@ -53,14 +51,21 @@ class DatasetImporter {
             } else {
 
                 // New document
-                whelk.createDocument(incomingDoc, "xl", null, marcCollection, false)
+                whelk.createDocument(incomingDoc, "xl", null, "definitions", false)
                 ++createdCount
             }
+
+            if ( lineCount % 100 == 0 ) {
+                System.err.println("Processed " + lineCount + " input records. " + createdCount + " created, " +
+                        updatedCount + " updated, " + (lineCount-createdCount-updatedCount) + " already up to date.")
+            }
+            ++lineCount
         }
 
         // Clear out anything that was previously stored in this dataset, but was not in the in-data now.
         // If faced with "can't delete depended on stuff", retry again later, after more other deletes have
-        // succeeded (there may be intra-set dependencies).
+        // succeeded (there may be intra-set dependencies). If the dataset contains circular dependencies,
+        // deletions will never be possible until the circle is unlinked/broken somewhere along the chain.
         List<String> needsRetry = []
         whelk.storage.doForIdInDataset(dataset, { String storedIdInDataset ->
             if (!idsInInput.contains(storedIdInDataset)) {
@@ -68,6 +73,9 @@ class DatasetImporter {
                     needsRetry.add(storedIdInDataset)
                 } else {
                     deletedCount++
+                    if (deletedCount % 50 == 0) {
+                        System.err.println("Cleaning up: " + deletedCount + " records deleted (they are no longer in the dataset).")
+                    }
                 }
             }
         })
