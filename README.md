@@ -110,12 +110,11 @@ Create database and a database user and set up permissions:
 ```
 sudo -u postgres bash
 createdb whelk_dev
-psql -c "CREATE SCHEMA whelk_dev;"
 psql -c "CREATE USER whelk PASSWORD 'whelk';"
 # !! Replace yourusername with your actual username (i.e., the user you'll run whelk, fab, etc. as)
 psql -c "CREATE USER yourusername;"
-psql -c "GRANT ALL ON SCHEMA whelk_dev TO whelk;"
-psql -c "GRANT ALL ON ALL TABLES IN SCHEMA whelk_dev TO whelk;"
+psql -c "GRANT ALL ON SCHEMA public TO whelk;" whelk_dev
+psql -c "GRANT ALL ON ALL TABLES IN SCHEMA public TO whelk;" whelk_dev
 # Now find out where the pg_hba.conf file is:
 psql -t -P format=unaligned -c 'show hba_file;'
 exit
