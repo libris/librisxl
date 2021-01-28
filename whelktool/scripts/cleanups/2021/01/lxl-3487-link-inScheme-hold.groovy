@@ -75,7 +75,7 @@ def substitutions() {
     [
             // Arbetslivsbibliotekets tesaurus - already in swedish
             'albt//swe'   : 'albt',
-            
+
             /**
              agrovoc / agrovocf / agrovocs ?
 
@@ -435,5 +435,30 @@ def substitutions() {
             'ysat'        : 'ysa',
             'ysax'        : 'ysa',
             'årvt'        : 'prvt',
+            // Additions 2021-01-28
+            'ao//eng'     : 'kao//eng',
+            'eng'         : 'kao//eng',
+            'ka0//eng'    : 'kao//eng',
+            'kai//eng'    : 'kao//eng',
+            'kao // eng'  : 'kao//eng',
+            'kao//eeng'   : 'kao//eng',
+            'kao//egn'    : 'kao//eng',
+            'kao//en'     : 'kao//eng',
+            'kao//enf'    : 'kao//eng',
+            'kao//eng cr' : 'kao//eng',
+            'kao//engcaring professions': 'kao//eng',
+            'kao//engp'   : 'kao//eng',
+            'kao//engs'   : 'kao//eng',
+            'kao//ent'    : 'kao//eng',
+            'kao//gender' : 'kao//eng',
+            'kao//rng'    : 'kao//eng',
+            'sao betyg'   : 'sao',
+            'sao flerspråkighet': 'sao',
+            'sao flerspråkighet hos barn': 'sao',
+            'sao hib'     : 'sao',
+            'sao idrottsundervisning': 'sao',
+            'sao malmö'   : 'sao',
+            'soa'         : 'sao',
+            'sos'         : 'sao',
     ]
 }
