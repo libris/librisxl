@@ -460,5 +460,11 @@ def substitutions() {
             'sao malmö'   : 'sao',
             'soa'         : 'sao',
             'sos'         : 'sao',
+            // Additions 2021-01-29
+            'barna'       : 'barn',
+            'kao//kao'    : 'kao//eng',
+            'kaoeng'      : 'kao//eng',
+            'post-war period kao//eng': 'kao//eng',
+            'quidning'    : 'quiding',
     ]
 }
