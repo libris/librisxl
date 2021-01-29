@@ -8,6 +8,7 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
+import org.postgresql.util.PGobject
 import org.postgresql.util.PSQLException
 import whelk.Document
 import whelk.IdType
@@ -342,6 +343,11 @@ class PostgreSQLComponent {
                     (data#>>'{@graph,0,generationDate}')::timestamp > ?
                 )
         """.stripIndent()
+
+    private static final String GET_DATASET_ID_LIST = """
+            SELECT id FROM lddb WHERE data#>'{@graph,0,inDataset}' @> ?::jsonb AND deleted = false
+        """.stripIndent()
+
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
 
@@ -1057,6 +1063,28 @@ class PostgreSQLComponent {
 
     Iterable<Map> getCards(Iterable<String> iris) {
         return createAndAddMissingCards(bulkLoadCards(getSystemIdsByIris(iris).values())).values()
+    }
+
+    void doForIdInDataset(String dataset, Closure c) {
+        PreparedStatement statement = null
+        ResultSet rs = null
+        Connection connection = getOuterConnection()
+        try {
+            statement = connection.prepareStatement(GET_DATASET_ID_LIST)
+
+            PGobject jsonb = new PGobject()
+            jsonb.setType("jsonb")
+            jsonb.setValue("[{\"@id\":\""+ dataset +"\"}]")
+            statement.setObject(1, jsonb)
+
+            rs = statement.executeQuery()
+            while (rs.next()) {
+                String id = rs.getString(1)
+                c(id)
+            }
+        } finally {
+            close(rs, statement, connection)
+        }
     }
 
     /**
@@ -2353,7 +2381,10 @@ class PostgreSQLComponent {
     private String getDescriptionChangerId(String changedBy) {
         //FIXME(?): hardcoded
         // for historical reasons changedBy is the script URI for global changes
-        if (changedBy.startsWith('https://libris.kb.se/sys/globalchanges/')) {
+        if (changedBy == null) {
+            return null
+        }
+        else if (changedBy.startsWith('https://libris.kb.se/sys/globalchanges/')) {
             return getDescriptionChangerId('SEK')
         }
         else if (changedBy == "MimerProd" || changedBy == "Mimer" ||

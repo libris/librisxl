@@ -55,6 +55,7 @@ class Document {
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
     static final List recordTypedIDsPath = ["@graph", 0, "identifiedBy"]
     static final List controlNumberPath = ["@graph", 0, "controlNumber"]
+    static final List datasetPath = ["@graph", 0, "inDataset"]
     static final List holdingForPath = ["@graph", 1, "itemOf", "@id"]
     static final List heldByPath = ["@graph", 1, "heldBy", "@id"]
     static final List createdPath = ["@graph", 0, "created"]
@@ -107,6 +108,31 @@ class Document {
 
     String getDataAsString() {
         return mapper.writeValueAsString(data)
+    }
+
+    void addInDataset(String dataset) {
+
+        // Make datasetPath point to a list
+        preparePath(datasetPath)
+        Object datasetList = get(datasetPath)
+        if (datasetList == null) {
+            datasetList = []
+            set(datasetPath, datasetList)
+        } else if ( ! (datasetList instanceof List) ) {
+            datasetList = [datasetList]
+        }
+
+        // Add to list, if not there already
+        Map idObject = ["@id" : dataset]
+        if (!datasetList.contains(idObject))
+            datasetList.add( idObject )
+    }
+
+    List getInDataset() {
+        def dataset = get(datasetPath)
+        if (dataset instanceof List)
+            return dataset
+        return [dataset]
     }
 
     void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber) }
@@ -831,7 +857,8 @@ class Document {
             return node.longValue() * depth
         else if (node instanceof Map) {
             for (String key : node.keySet()) {
-                if (key != JsonLd.MODIFIED_KEY && key != JsonLd.CREATED_KEY) {
+                if (key != JsonLd.MODIFIED_KEY && key != JsonLd.CREATED_KEY && key != JsonLd.RECORD_STATUS_KEY) {
+
                     term += key.hashCode() * depth
                     term += calculateCheckSum(node[key], depth + 1)
                 }
