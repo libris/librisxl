@@ -214,6 +214,8 @@ $ ../gradlew.bat -Dxl.secret.properties=../secret.properties appRun
 ```
 
 The system is then available on <http://localhost:8180>.
+(The OAI-PMH service is started in a similar way: just cd into `oaipmh`
+instead of `rest`.)
 
 To run the frontend, see [LXLViewer](https://github.com/libris/lxlviewer).
 
