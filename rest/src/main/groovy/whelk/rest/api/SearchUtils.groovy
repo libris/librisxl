@@ -9,6 +9,7 @@ import whelk.Whelk
 import whelk.exception.InvalidQueryException
 import whelk.exception.WhelkRuntimeException
 import whelk.search.ESQuery
+import whelk.search.ElasticFind
 import whelk.util.DocumentUtil
 
 @Log
@@ -138,8 +139,8 @@ class SearchUtils {
             }
         }
 
-        Map stats = buildStats(esResult['aggregations'],
-                           makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)))
+        Map stats = buildStats((Map) esResult['aggregations'],
+                           makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)), reverseObject)
         if (!stats) {
             log.debug("No stats found for query: ${queryParameters}, result: ${esResult}")
         }
@@ -278,13 +279,13 @@ class SearchUtils {
      * Build aggregation statistics for ES result.
      *
      */
-    private Map buildStats(Map aggregations, String baseUrl) {
+    private Map buildStats(Map aggregations, String baseUrl, String reverseObject) {
         Map result = [:]
-        result = addSlices([:], aggregations, baseUrl)
+        result = addSlices([:], aggregations, baseUrl, reverseObject)
         return result
     }
 
-    private Map addSlices(Map stats, Map aggregations, String baseUrl) {
+    private Map addSlices(Map stats, Map aggregations, String baseUrl, String reverseObject) {
         Map sliceMap = aggregations.inject([:]) { acc, key, aggregation ->
             String baseUrlForKey = removeWildcardForKey(baseUrl, key)
             List observations = []
@@ -296,10 +297,7 @@ class SearchUtils {
                 Map observation = ['totalItems': bucket.getAt('doc_count'),
                                    'view': [(JsonLd.ID_KEY): searchPageUrl],
                                    'object': ld.toChip(lookup(itemId))]
-
-                /*Map bucketAggs = bucket.getAggregations().asMap
-
-                observation = addSlices(observation, bucketAggs, searchPageUrl)*/
+                
                 observations << observation
             }
 
@@ -309,6 +307,24 @@ class SearchUtils {
             }
 
             return acc
+        }
+        
+        if (reverseObject && !hasHugeNumberOfIncomingLinks(reverseObject)) {
+            def baseUrlForThis = removeReverseParameter(baseUrl, reverseObject)
+            def counts = whelk.relations.getReverseCountByRelation(reverseObject) // TODO precompute and store in ES indexed doc?
+            Map sliceNode = [
+                    'dimension'  : JsonLd.REVERSE_KEY,
+                    'observation': counts.collect() { relation, count ->
+                        def view = baseUrlForThis + '&' + makeParam(".${relation}.${JsonLd.ID_KEY}", reverseObject)
+                        [
+                                'totalItems': count,
+                                'view'      : ['@id': view],
+                                'object'    : ld.toChip(lookup(relation))
+                        ]
+                    }
+            ]
+
+            sliceMap[JsonLd.REVERSE_KEY] = sliceNode
         }
 
         if (sliceMap) {
@@ -321,7 +337,27 @@ class SearchUtils {
     private String removeWildcardForKey(String url, String key) {
         url.replace("&${makeParam(key, '*')}", "")
     }
-
+    
+    private String removeReverseParameter(String url, String reverseObject) {
+        url.replace("&${makeParam('o', reverseObject)}", "")
+    }
+    
+    private boolean hasHugeNumberOfIncomingLinks(String iri) {
+        def num = numberOfIncomingLinks(iri)
+        return num < 0 || num > 500_000
+    }
+    
+    private int numberOfIncomingLinks(String iri) {
+        try {
+            def doc = new ElasticFind(esQuery).find([(JsonLd.ID_KEY): [iri]]).first()
+            return doc['reverseLinks']['totalItems']
+        }
+        catch (Exception e) {
+            log.warn("Error getting numberOfIncomingLinks for $iri: $e", e)
+            return -1
+        }
+    }
+    
     /*
      * Read vocab item from db.
      *
