@@ -16,14 +16,14 @@ genreForms.each { gf ->
     }
 
     selectBySqlWhere(where) { data ->
-        DocumentUtil.traverse(data.graph[1]) { value, path ->
+        List genreForm = data.graph[1]['instanceOf']['genreForm']
+
+        DocumentUtil.traverse(genreForm) { value, path ->
             if (path && path.last() == '@id' && value == oldUri) {
-                return new DocumentUtil.Replace(newUri)
+                // In case the new URI is already linked, don't create a duplicate
+                return ['@id':newUri] in genreForm ? new DocumentUtil.Remove() : new DocumentUtil.Replace(newUri)
             }
         }
-
-        // In case there was already a link to the new URI, remove duplicates
-        data.graph[1]['instanceOf']['genreForm'].unique()
 
         data.scheduleSave()
     }
