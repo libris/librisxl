@@ -212,32 +212,6 @@ class PostgreSQLComponent {
     private static final String GET_DEPENDENCIES =
             "SELECT dependsOnId FROM lddb__dependencies WHERE id = ?"
 
-    private static final String UPSERT_CARD = """
-            INSERT INTO lddb__cards (id, data, checksum, changed)
-            VALUES (?, ?, ?, ?) 
-            ON CONFLICT (id) DO UPDATE 
-            SET (data, checksum, changed) = (EXCLUDED.data, EXCLUDED.checksum, EXCLUDED.changed) 
-            WHERE lddb__cards.checksum != EXCLUDED.checksum
-            """.stripIndent()
-
-    private static final String UPDATE_CARD =
-            "UPDATE lddb__cards SET (data, checksum, changed) = (?, ?, ?) WHERE id = ? AND checksum != ?"
-
-    private static final String GET_CARD =
-            "SELECT data FROM lddb__cards WHERE ID = ?"
-
-    private static final String BULK_LOAD_CARDS =
-            "SELECT in_id as id, data from unnest(?) as in_id LEFT JOIN lddb__cards c ON in_id = c.id"
-
-    private static final String DELETE_CARD =
-            "DELETE FROM lddb__cards WHERE ID = ?"
-
-    private static final String CARD_EXISTS =
-            "SELECT EXISTS(SELECT 1 from lddb__cards where id = ?)"
-
-    private static final String IS_CARD_CHANGED =
-            "SELECT card.changed >= doc.modified FROM lddb__cards card, lddb doc WHERE doc.id = card.id AND doc.id = ?"
-
     private static final String INSERT_IDENTIFIERS =
             "INSERT INTO lddb__identifiers (id, iri, graphIndex, mainId) VALUES (?, ?, ?, ?)"
 
@@ -967,27 +941,8 @@ class PostgreSQLComponent {
         if (!leaveCacheAlone)
             evictDependersFromEmbellishedCache(doc.getShortId(), connection)
 
-        if (jsonld) {
-            if (deleted) {
-                deleteCard(doc, connection)
-            } else {
-                updateCard(new CardEntry(doc), connection)
-            }
-        }
-
         if (sparqlQueueEnabled) {
             sparqlQueueAdd(doc.getShortId(), connection)
-        }
-    }
-
-    /**
-     * Rewrite card. To be used when card definitions have changed
-     */
-    void refreshCardData(Document doc, Instant timestamp) {
-        getConnection().withCloseable { connection ->
-            if (hasCard(doc.shortId, connection)) {
-                updateCard(new CardEntry(doc, timestamp), connection)
-            }
         }
     }
 
@@ -1057,12 +1012,40 @@ class PostgreSQLComponent {
     }
 
     Map getCard(String iri) {
+        cacheUnavailableExternal([iri])
         String systemId = getSystemIdByIri(iri)
-        return loadCard(systemId) ?: makeCardData(systemId)
+        if (systemId == null)
+            return null
+
+        Document doc = load(systemId)
+        if (!doc) {
+            throw new WhelkException("Could not find document with id " + systemId)
+        }
+
+        CardEntry cardEntry = new CardEntry(doc, Instant.now())
+        return cardEntry.getCard().data
     }
 
     Iterable<Map> getCards(Iterable<String> iris) {
-        return createAndAddMissingCards(bulkLoadCards(getSystemIdsByIris(iris).values())).values()
+        List cards = []
+        for (String iri : iris) {
+            Map card = getCard(iri)
+            if (card != null)
+            cards.add(card)
+        }
+        return cards
+    }
+
+    /**
+     Any IRIs supplied to this function will receive a cached manifestation
+     (of some sort) in lddb if:
+     1. There wasn't one already.
+     2. The IRI matches some rule saying it is ok to fetch that data (pattern whitelisting).
+     3. There is some suitable data to actually be retrieved at that IRI on the web.
+     Already existing cache manifestations will _not_ be updated/invalidated from here.
+     */
+    void cacheUnavailableExternal(List<String> iris) {
+        System.err.println("Checking for external resources: " + iris)
     }
 
     void doForIdInDataset(String dataset, Closure c) {
@@ -1085,182 +1068,6 @@ class PostgreSQLComponent {
         } finally {
             close(rs, statement, connection)
         }
-    }
-
-    /**
-     * Check if a card has changed or is nonexistent
-     *
-     * @param systemId
-     * @return true if the card changed after or at the same time as the document was modified, or is nonexistent
-     */
-    boolean isCardChangedOrNonexistent(String systemId) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(IS_CARD_CHANGED)
-            preparedStatement.setString(1, systemId)
-
-            rs = preparedStatement.executeQuery()
-
-            return rs.next() ? rs.getBoolean(1) : true
-        } finally {
-            close(rs, preparedStatement, connection)
-        }
-    }
-
-    protected boolean storeCard(CardEntry cardEntry) {
-        return getConnection().withCloseable { connection -> storeCard(cardEntry, connection)}
-    }
-
-    protected boolean storeCard(CardEntry cardEntry, Connection connection) {
-        Document card = cardEntry.getCard()
-        Timestamp timestamp = new Timestamp(cardEntry.getChangedTimestamp().toEpochMilli())
-
-        PreparedStatement preparedStatement = null
-        try {
-            preparedStatement = connection.prepareStatement(UPSERT_CARD)
-            preparedStatement.setString(1, card.getShortId())
-            preparedStatement.setObject(2, card.dataAsString, OTHER)
-            preparedStatement.setString(3, card.getChecksum())
-            preparedStatement.setTimestamp(4, timestamp)
-
-            boolean createdOrUpdated = preparedStatement.executeUpdate() > 0
-
-            if (createdOrUpdated) {
-                cardsUpdated.incrementAndGet()
-            }
-
-            return createdOrUpdated
-        }
-        finally {
-            close(preparedStatement)
-        }
-    }
-
-    protected boolean updateCard(CardEntry cardEntry, Connection connection) {
-        Document card = cardEntry.getCard()
-        Timestamp timestamp = new Timestamp(cardEntry.getChangedTimestamp().toEpochMilli())
-
-        PreparedStatement preparedStatement = null
-        try {
-            String checksum = card.getChecksum()
-            preparedStatement = connection.prepareStatement(UPDATE_CARD)
-            preparedStatement.setObject(1, card.dataAsString, OTHER)
-            preparedStatement.setString(2, checksum)
-            preparedStatement.setTimestamp(3, timestamp)
-            preparedStatement.setString(4, card.getShortId())
-            preparedStatement.setString(5, checksum)
-
-            boolean updated = preparedStatement.executeUpdate() > 0
-
-            if (updated) {
-                cardsUpdated.incrementAndGet()
-            }
-
-            return updated
-        }
-        finally {
-            close(preparedStatement)
-        }
-    }
-
-    protected void deleteCard(Document doc, Connection connection) {
-        String systemId = getSystemIdByIri(doc.getThingIdentifiers().first())
-        PreparedStatement preparedStatement = null
-        try {
-            preparedStatement = connection.prepareStatement(DELETE_CARD)
-            preparedStatement.setString(1,systemId)
-
-            preparedStatement.executeUpdate()
-        }
-        finally {
-            close(preparedStatement)
-        }
-    }
-
-    protected Map loadCard(String id) {
-        Connection connection = getConnection()
-        try {
-            return loadCard(id, connection)
-        } finally {
-            close(connection)
-        }
-    }
-
-    protected Map<String, Map> bulkLoadCards(Iterable<String> ids) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(BULK_LOAD_CARDS)
-            preparedStatement.setArray(1,  connection.createArrayOf("TEXT", ids as String[]))
-
-            rs = preparedStatement.executeQuery()
-            SortedMap<String, Map> result = new TreeMap<>()
-            while(rs.next()) {
-                String card = rs.getString("data")
-                result[rs.getString("id")] = card != null ? mapper.readValue(card, Map) : null
-            }
-            return result
-        } finally {
-            close(rs, preparedStatement, connection)
-        }
-    }
-
-    protected boolean hasCard(String id, Connection connection) {
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(CARD_EXISTS)
-            preparedStatement.setString(1, id)
-
-            rs = preparedStatement.executeQuery()
-            rs.next()
-            return rs.getBoolean(1)
-        }
-        finally {
-            close(rs, preparedStatement)
-        }
-    }
-
-    protected Map loadCard(String id, Connection connection) {
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(GET_CARD)
-            preparedStatement.setString(1, id)
-
-            rs = preparedStatement.executeQuery()
-            if (rs.next()) {
-                return mapper.readValue(rs.getString("data"), Map)
-            }
-            else {
-                return null
-            }
-        }
-        finally {
-            close(rs, preparedStatement)
-        }
-    }
-
-    protected Map<String, Map> createAndAddMissingCards(Map<String, Map> cards) {
-        Map <String, Map> result = [:]
-        cards.each { id, card ->
-            result[id] = card ?: makeCardData(id)
-        }
-        return result
-    }
-
-    private Map makeCardData(String systemId) {
-        Document doc = load(systemId)
-        if (!doc) {
-            throw new WhelkException("Could not find document with id " + systemId)
-        }
-
-        CardEntry cardEntry = new CardEntry(doc, Instant.now())
-        storeCard(cardEntry)
-        return cardEntry.getCard().data
     }
 
     private void saveDependencies(Document doc, Connection connection) {

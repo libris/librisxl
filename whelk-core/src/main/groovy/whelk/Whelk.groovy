@@ -235,10 +235,7 @@ class Whelk {
             }
         }
 
-
-        if (storage.isCardChangedOrNonexistent(document.getShortId())) {
-            bulkIndex(getAffectedIds(document))
-        }
+        bulkIndex(getAffectedIds(document))
     }
 
     /**
@@ -401,7 +398,10 @@ class Whelk {
     }
 
     void embellish(Document document, List<String> levels = null) {
-        def docsByIris = { List<String> iris -> bulkLoad(iris).values().collect{ it.data } }
+        def docsByIris = { List<String> iris ->
+            storage.cacheUnavailableExternal(iris)
+            bulkLoad(iris).values().collect{ it.data }
+        }
         Embellisher e = new Embellisher(jsonld, docsByIris, storage.&getCards, relations.&getByReverse)
 
         if(levels) {

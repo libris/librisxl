@@ -34,25 +34,6 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
         return cardCache.get(iri)
     }
 
-    @Override
-    protected boolean storeCard(CardEntry cardEntry, Connection connection) {
-        boolean change = super.storeCard(cardEntry, connection)
-        Document card = cardEntry.getCard()
-        card.getThingIdentifiers().each { id ->
-            cardCache.put(id, card.data)
-        }
-
-        return change
-    }
-
-    @Override
-    protected void deleteCard(Document doc, Connection connection) {
-        super.deleteCard(doc, connection)
-        doc.getThingIdentifiers().each { id ->
-            cardCache.invalidate(id)
-        }
-    }
-
     private Map superGetCard(String iri) {
         return super.getCard(iri)
     }
