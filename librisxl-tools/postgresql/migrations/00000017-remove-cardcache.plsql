@@ -23,6 +23,8 @@ BEGIN
 
    -- ACTUAL SCHEMA CHANGES HERE:
    DROP TABLE lddb__cards;
+   ALTER TABLE lddb ADD COLUMN external BOOLEAN DEFAULT FALSE;
+   CREATE INDEX idx_lddb_external_ref_q ON lddb (external, modified);
    
 END$$;
 

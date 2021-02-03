@@ -11,6 +11,7 @@ import org.postgresql.PGStatement
 import org.postgresql.util.PGobject
 import org.postgresql.util.PSQLException
 import whelk.Document
+import whelk.ExternalReferences
 import whelk.IdType
 import whelk.JsonLd
 import whelk.exception.CancelUpdateException
@@ -83,12 +84,12 @@ class PostgreSQLComponent {
     private static final String UPDATE_DOCUMENT = """
             UPDATE lddb 
             SET data = ?, collection = ?, changedIn = ?, changedBy = ?, checksum = ?, deleted = ?, modified = ? 
-            WHERE id = ?
+            WHERE id = ? AND external = false
             """.stripIndent()
 
     private static final String INSERT_DOCUMENT = """
-            INSERT INTO lddb (id, data, collection, changedIn, changedBy, checksum, deleted, created, modified)
-            VALUES (?,?,?,?,?,?,?,?,?)
+            INSERT INTO lddb (id, data, collection, changedIn, changedBy, checksum, deleted, created, modified, external)
+            VALUES (?,?,?,?,?,?,?,?,?,?)
             """.stripIndent()
 
     private static final String INSERT_DOCUMENT_VERSION = """
@@ -567,10 +568,14 @@ class PostgreSQLComponent {
         }
     }
 
-    boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
-        log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
+    boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted, boolean cachedExternal = false) {
+        getConnection().withCloseable { connection ->
+            createDocument(connection, doc, changedIn, changedBy, collection, deleted, cachedExternal)
+        }
+    }
 
-        Connection connection = getConnection()
+    boolean createDocument(Connection connection, Document doc, String changedIn, String changedBy, String collection, boolean deleted, boolean cachedExternal) {
+        log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
 
         /*
         If we're writing a holding post, obtain a (write) lock on the linked bibpost, and hold it until writing has finished.
@@ -619,10 +624,12 @@ class PostgreSQLComponent {
             doc.setDeleted(deleted)
 
             PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
-            insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, deleted)
+            insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, deleted, cachedExternal)
             insert.executeUpdate()
 
-            saveVersion(doc, connection, now, now, changedIn, changedBy, collection, deleted)
+            if (!cachedExternal) {
+                saveVersion(doc, connection, now, now, changedIn, changedBy, collection, deleted)
+            }
             refreshDerivativeTables(doc, connection, deleted)
 
             connection.commit()
@@ -655,9 +662,6 @@ class PostgreSQLComponent {
             log.error("Failed to save document: ${e.message}. Rolling back.")
             connection.rollback()
             throw e
-        } finally {
-            connection.close()
-            log.debug("[store] Closed connection.")
         }
     }
 
@@ -691,7 +695,7 @@ class PostgreSQLComponent {
             connection.setAutoCommit(false)
             Date now = new Date()
             PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
-            insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, false)
+            insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, false, false)
             insert.executeUpdate()
 
             saveVersion(doc, connection, now, now, changedIn, changedBy, collection, false)
@@ -1012,18 +1016,23 @@ class PostgreSQLComponent {
     }
 
     Map getCard(String iri) {
-        cacheUnavailableExternal([iri])
-        String systemId = getSystemIdByIri(iri)
-        if (systemId == null)
-            return null
+        Document doc
+        Connection connection = getConnection()
+        try {
+            cacheUnavailableExternal([iri], connection)
+            String systemId = getSystemIdByIri(iri, connection)
+            if (systemId == null)
+                return null
 
-        Document doc = load(systemId)
-        if (!doc) {
-            throw new WhelkException("Could not find document with id " + systemId)
+            doc = load(systemId, connection)
+            if (!doc) {
+                throw new WhelkException("Could not find document with id " + systemId)
+            }
+        } finally {
+            close(connection)
         }
 
-        CardEntry cardEntry = new CardEntry(doc, Instant.now())
-        return cardEntry.getCard().data
+        return jsonld.toCard(doc.data, false)
     }
 
     Iterable<Map> getCards(Iterable<String> iris) {
@@ -1036,6 +1045,12 @@ class PostgreSQLComponent {
         return cards
     }
 
+    void cacheUnavailableExternal(List<String> iris) {
+        getConnection().withCloseable { connection ->
+            cacheUnavailableExternal(iris, connection)
+        }
+    }
+
     /**
      Any IRIs supplied to this function will receive a cached manifestation
      (of some sort) in lddb if:
@@ -1044,8 +1059,17 @@ class PostgreSQLComponent {
      3. There is some suitable data to actually be retrieved at that IRI on the web.
      Already existing cache manifestations will _not_ be updated/invalidated from here.
      */
-    void cacheUnavailableExternal(List<String> iris) {
-        System.err.println("Checking for external resources: " + iris)
+    void cacheUnavailableExternal(List<String> iris, Connection connection) {
+        for (String iri : iris) {
+            if (getSystemIdByIri(iri, connection) == null) {
+                if (ExternalReferences.iriIsWhitelisted(iri)) {
+                    Document doc = ExternalReferences.buildXlCacheObject(iri)
+                    if (!createDocument(connection, doc, "xl", null, "definitions", false, true)) {
+                        log.debug("Failed to save/cache an external entity: " + iri)
+                    }
+                }
+            }
+        }
     }
 
     void doForIdInDataset(String dataset, Closure c) {
@@ -1148,7 +1172,7 @@ class PostgreSQLComponent {
         }
     }
 
-    private static PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, Date timestamp, String changedIn, String changedBy, String collection, boolean deleted) {
+    private static PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, Date timestamp, String changedIn, String changedBy, String collection, boolean deleted, boolean cachedExternal) {
         insert.setString(1, doc.getShortId())
         insert.setObject(2, doc.dataAsString, OTHER)
         insert.setString(3, collection)
@@ -1158,6 +1182,7 @@ class PostgreSQLComponent {
         insert.setBoolean(7, deleted)
         insert.setTimestamp(8, new Timestamp(timestamp.getTime()))
         insert.setTimestamp(9, new Timestamp(timestamp.getTime()))
+        insert.setBoolean(10, cachedExternal)
         return insert
     }
 
@@ -1235,7 +1260,7 @@ class PostgreSQLComponent {
                     ver_batch = rigVersionStatement(ver_batch, doc, now, now, changedIn, changedBy, collection, false)
                     ver_batch.addBatch()
                 }
-                batch = rigInsertStatement(batch, doc, now, changedIn, changedBy, collection, false)
+                batch = rigInsertStatement(batch, doc, now, changedIn, changedBy, collection, false, false)
                 batch.addBatch()
                 boolean leaveCacheAlone = true
                 refreshDerivativeTables(doc, connection, false, leaveCacheAlone)
@@ -2238,20 +2263,6 @@ class PostgreSQLComponent {
                     log.debug("Error closing $resource : $e")
                 }
             }
-        }
-    }
-
-    private class CardEntry {
-        Document card
-        Instant changedTimestamp
-
-        CardEntry(Document doc, Instant changedTimestamp = null) {
-            if (!jsonld) {
-                throw new WhelkRuntimeException("jsonld not set")
-            }
-
-            this.card = new Document(jsonld.toCard(doc.data, false))
-            this.changedTimestamp = changedTimestamp ?: doc.getModifiedTimestamp()
         }
     }
 
