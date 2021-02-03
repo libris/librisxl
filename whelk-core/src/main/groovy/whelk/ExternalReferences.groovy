@@ -20,7 +20,7 @@ class ExternalReferences {
         System.err.println("Attempting to construct representation of: " + iri)
         return new Document(["@graph":[
                 [
-                        "@id" : IdGenerator.generate(),
+                        "@id" : Document.BASE_URI.resolve(IdGenerator.generate()),
                         "mainEntity" : ["@id" : iri],
                 ],
                 [
