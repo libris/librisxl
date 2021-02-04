@@ -1271,6 +1271,14 @@ class PostgreSQLComponent {
         return cardEntry.getCard().data
     }
 
+    // Temporary method for changing lddb__dependencies.relation to full "path" of relation
+    // e.g. agent -> instanceOf.contribution.agent
+    void recalculateDependencies(Document doc) {
+        getConnection().withCloseable { connection ->
+            saveDependencies(doc, connection)
+        }
+    }
+    
     private void saveDependencies(Document doc, Connection connection) {
         List dependencies = _calculateDependenciesSystemIDs(doc, connection)
 

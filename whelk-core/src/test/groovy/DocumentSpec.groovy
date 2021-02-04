@@ -183,7 +183,10 @@ class DocumentSpec extends Specification {
                                  "someValue": 1],
                                 ["someOtherValue": 2]]]
         Document doc = new Document(input)
-        Set expected = [new Link("/externalBar", "bar"), new Link("/externalBaz", "baz")]
+        Set expected = [
+                new Link("/externalBar", "meta.bar"),
+                new Link("/externalBaz", "meta.extra.baz")
+        ]
         expect:
         assert doc.getExternalRefs() == expected
 
