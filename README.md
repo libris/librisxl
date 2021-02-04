@@ -176,15 +176,14 @@ echo '127.0.0.1 kblocalhost.kb.se' | sudo tee -a /etc/hosts
 
 ### Importing test data
 
-Run the fabric task that sets up a new Elasticsearch index and imports example data (requires python 2.X!):
+Run the fabric task that sets up a new Elasticsearch index and imports example data:
 
 ```
 cd ../devops
-# Make sure you have Python 2.x (necessary for fabric) and virtualenv to make things easier,
-# plus ensure curl (used by fabfile) is installed
-sudo apt install python2.7 python3-virtualenv curl
-# Create virtual Python 2.7 environment for fab
-virtualenv -p /usr/bin/python2.7 venv
+# Make sure you have Python 3 and curl
+sudo apt install python3 python3-pip curl
+# Create virtual Python 3 environment for fab
+python3 -m venv venv
 # Activate virtual environment
 source venv/bin/activate
 # Install dependencies
