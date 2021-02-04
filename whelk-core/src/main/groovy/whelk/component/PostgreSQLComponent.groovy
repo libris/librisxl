@@ -1938,6 +1938,7 @@ class PostgreSQLComponent {
         def result = new TreeMap<String, Long>()
         try {
             preparedStatement = connection.prepareStatement(GET_INCOMING_LINK_COUNT_BY_RELATION)
+
             preparedStatement.setString(1, iri)
             rs = preparedStatement.executeQuery()
             while (rs.next()) {

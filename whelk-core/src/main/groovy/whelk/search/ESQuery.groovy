@@ -78,7 +78,8 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map getESQuery(Map<String, String[]> queryParameters) {
+    Map getESQuery(Map<String, String[]> ogQueryParameters) {
+        Map<String, String[]> queryParameters = new HashMap<>(ogQueryParameters)
         // Legit params and their uses:
         //   q - query string, will be used as query_string or simple_query_string
         String q
@@ -103,17 +104,13 @@ class ESQuery {
         if (queryParameters.containsKey('o')) {
             queryParameters.put('_links', queryParameters.get('o'))
         }
-
+        
         q = Unicode.normalizeForSearch(getQueryString(queryParameters))
         (limit, offset) = getPaginationParams(queryParameters)
         sortBy = getSortClauses(queryParameters)
         siteFilter = getSiteFilter(queryParameters)
         aggQuery = getAggQuery(queryParameters)
         filters = getFilters(queryParameters)
-
-        if (originalTypeParam != null) {
-            queryParameters.put('@type', originalTypeParam)
-        }
 
         def isSimple = isSimple(q)
         String queryMode = isSimple ? 'simple_query_string' : 'query_string'
@@ -439,10 +436,17 @@ class ESQuery {
     private List<Map> getOrGroups(Map<String, String[]> parameters) {
         def or = [:]
         def other = [:]
+        def p = [:]
 
         // explicit OR
+        // p is always implicitly OR
         parameters.each { String key, value ->
-            if (key.startsWith(OR_PREFIX)) {
+            if (key == 'p') {
+                value.each {
+                    p.put(it, parameters['_links'])    
+                }
+            }
+            else if (key.startsWith(OR_PREFIX)) {
                 or.put(key.substring(OR_PREFIX.size()), value)
             }
             else {
@@ -460,6 +464,9 @@ class ESQuery {
         List result = other.collect {[(it.getKey()): it.getValue()]}
         if (or.size() > 0) {
             result.add(or)
+        }
+        if (p.size() > 0) {
+            result.add(p)
         }
         return result
     }

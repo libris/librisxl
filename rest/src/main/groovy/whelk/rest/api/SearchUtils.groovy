@@ -49,18 +49,22 @@ class SearchUtils {
             throw new WhelkRuntimeException("ElasticSearch not configured.")
         }
 
-        String relation = getReservedQueryParameter('p', queryParameters)
+        List predicates = queryParameters['p']
         String object = getReservedQueryParameter('o', queryParameters)
         String value = getReservedQueryParameter('value', queryParameters)
         String query = getReservedQueryParameter('q', queryParameters)
         String sortBy = getReservedQueryParameter('_sort', queryParameters)
         String lens = getReservedQueryParameter('_lens', queryParameters)
 
+        if (queryParameters['p'] && !object) {
+            throw new InvalidQueryException("Parameter 'p' can only be used together with 'o'")
+        }
+        
         Tuple2 limitAndOffset = getLimitAndOffset(queryParameters)
         int limit = limitAndOffset.first
         int offset = limitAndOffset.second
 
-        Map pageParams = ['p'     : relation,
+        Map pageParams = ['p'     : predicates,
                           'value' : value,
                           'q'     : query,
                           'o'     : object,
@@ -99,6 +103,7 @@ class SearchUtils {
                                    String lens) {
         String query = pageParams['q']
         String reverseObject = pageParams['o']
+        List<String> predicates = pageParams['p']
         lens = lens ?: 'cards'
         log.debug("Querying ElasticSearch")
 
@@ -139,8 +144,10 @@ class SearchUtils {
             }
         }
 
-        Map stats = buildStats((Map) esResult['aggregations'],
-                           makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)), reverseObject)
+        
+        Map stats = buildStats((Map) esResult['aggregations'], 
+                makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
+                (total > 0 && !predicates) ? reverseObject : null)
         if (!stats) {
             log.debug("No stats found for query: ${queryParameters}, result: ${esResult}")
         }
@@ -152,6 +159,16 @@ class SearchUtils {
         }
 
 
+        if (reverseObject && predicates) {
+            String upUrl = makeFindUrl(SearchType.ELASTIC, pageParams - ['p' :  pageParams['p']], offset)
+            mappings << [
+                    'variable' : 'p',
+                    'object'   : reverseObject,
+                    'predicate': null,  //'predicate': termChip, (valueProp): value]
+                    'up'       : [(JsonLd.ID_KEY): upUrl],
+            ]
+        }
+        
         Map result = assembleSearchResults(SearchType.ELASTIC,
                                            items, mappings, pageParams,
                                            limit, offset, total)
@@ -310,12 +327,11 @@ class SearchUtils {
         }
         
         if (reverseObject && !hasHugeNumberOfIncomingLinks(reverseObject)) {
-            def baseUrlForThis = removeReverseParameter(baseUrl, reverseObject)
             def counts = whelk.relations.getReverseCountByRelation(reverseObject) // TODO precompute and store in ES indexed doc?
             Map sliceNode = [
                     'dimension'  : JsonLd.REVERSE_KEY,
                     'observation': counts.collect() { relation, count ->
-                        def view = baseUrlForThis + '&' + makeParam(".${relation}.${JsonLd.ID_KEY}", reverseObject)
+                        def view = baseUrl + '&' + makeParam("p", ".${relation}.${JsonLd.ID_KEY}")
                         [
                                 'totalItems': count,
                                 'view'      : ['@id': view],
@@ -607,6 +623,7 @@ class SearchUtils {
                 pageParams[param] << val
             }
         }
+                
         return new Tuple2(result, pageParams)
     }
 
