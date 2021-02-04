@@ -323,7 +323,7 @@ class JsonLd {
 
     static Set<Link> getExternalReferences(Map jsonLd) {
         Set<Link> allReferences = getAllReferences(jsonLd)
-        Set<Link> localObjects = getLocalObjects(jsonLd)
+        Set<String> localObjects = getLocalObjects(jsonLd)
         Set<Link> externalRefs = allReferences.findAll { !localObjects.contains(it.getIri()) }
         // NOTE: this is necessary because some documents contain references to
         // bnodes that don't exist (in that document).
