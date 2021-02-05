@@ -1,7 +1,11 @@
 import whelk.Document;
 import whelk.Whelk;
 
-String where = "collection = 'bib' and data#>'{@graph,1,instanceOf,subject}' @> '[{\"@type\":\"ComplexSubject\"}]'"
+String where = """
+    ( collection = 'bib' and data#>'{@graph,1,instanceOf,subject}' @> '[{"@type":"ComplexSubject"}]' )
+    or
+    ( collection = 'auth' and data#>'{@graph,1,subject}' @> '[{"@type":"ComplexSubject"}]' )
+"""
 
 selectBySqlWhere(where) { data ->
     def mainEntity = data.graph[1]
