@@ -13,6 +13,7 @@ import org.postgresql.util.PSQLException
 import whelk.Document
 import whelk.IdType
 import whelk.JsonLd
+import whelk.Link
 import whelk.exception.CancelUpdateException
 import whelk.exception.LinkValidationException
 import whelk.exception.MissingMainIriException
@@ -1019,16 +1020,19 @@ class PostgreSQLComponent {
     private List<String[]> _calculateDependenciesSystemIDs(Document doc, Connection connection) {
         List<String[]> dependencies = []
 
-        Map iriToRelation = doc.getExternalRefs()
+        Map<String, Set<Link>> linksByIri = [:]
+        doc.getExternalRefs()
             .findAll{ it.iri.startsWith("http") }
-            .collectEntries {  [ it.iri, it.relation ] }
+            .each { link ->
+                linksByIri.computeIfAbsent(link.iri, { iri -> new HashSet<>()}).add(link)
+            }
 
-        getSystemIds(iriToRelation.keySet(), connection) { String iri, String systemId, boolean deleted ->
+        getSystemIds(linksByIri.keySet(), connection) { String iri, String systemId, boolean deleted ->
             if (deleted) // doc refers to a deleted document which is not ok.
                 throw new LinkValidationException("Record supposedly depends on deleted record: ${systemId}, which is not allowed.")
 
             if (systemId != doc.getShortId()) // Exclude A -> A (self-references)
-                dependencies.add([iriToRelation[iri], systemId] as String[])
+                dependencies.addAll(linksByIri[iri].collect { [it.relation, systemId] as String[] })
         }
 
         return dependencies
