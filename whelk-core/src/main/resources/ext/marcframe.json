@@ -127,7 +127,9 @@
         "j": "marc:AbbreviatedLevel",
         "k": "marc:AbbreviatedLevel",
         "l": "marc:AbbreviatedLevel",
-        "m": "marc:AbbreviatedLevel"
+        "m": "marc:AbbreviatedLevel",
+        "u": "marc:AbbreviatedLevel",
+        "z": "marc:AbbreviatedLevel"
       },
       "EncLevelType-ReverseOverrides": {
         "marc:AbbreviatedLevel": "3",
