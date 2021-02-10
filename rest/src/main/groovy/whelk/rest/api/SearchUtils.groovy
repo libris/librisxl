@@ -327,15 +327,16 @@ class SearchUtils {
         }
         
         if (reverseObject && !hasHugeNumberOfIncomingLinks(reverseObject)) {
-            def counts = whelk.relations.getReverseCountByRelation(reverseObject) // TODO precompute and store in ES indexed doc?
+            def counts = groupRelations(whelk.relations.getReverseCountByRelation(reverseObject)) // TODO precompute and store in ES indexed doc?)
             Map sliceNode = [
                     'dimension'  : JsonLd.REVERSE_KEY,
-                    'observation': counts.collect() { relation, count ->
-                        def view = baseUrl + '&' + makeParam("p", ".${relation}.${JsonLd.ID_KEY}")
+                    'observation': counts.collect { List<String> relations, long count ->
+                        def viewUrl = baseUrl + '&' + 
+                                relations.collect{ makeParam('p', it + '.' + JsonLd.ID_KEY) }.join('&')
                         [
                                 'totalItems': count,
-                                'view'      : ['@id': view],
-                                'object'    : ld.toChip(lookup(relation))
+                                'view'      : ['@id': viewUrl],
+                                'object'    : ld.toChip(lookup(relations.first()))
                         ]
                     }
             ]
@@ -350,12 +351,40 @@ class SearchUtils {
         return stats
     }
 
+    /**
+     * Group together instanceOf.x and x 
+     */
+    static List<Tuple2<List<String>, Long>> groupRelations(Map<String, Long> counts) {
+        Map<String, Long> blankWork = [:]
+        Map<String, Long> other = [:]
+        counts.each {relation, count -> 
+            (relation.startsWith("$JsonLd.WORK_KEY.") ? blankWork : other)[relation] = count
+        }
+
+        List result = []
+        other.each { relation, count ->
+            String r = "$JsonLd.WORK_KEY.$relation"
+            if (blankWork.containsKey(r)) {
+                result.add(new Tuple2([relation, r], count + blankWork.remove(r)))
+            }
+            else {
+                result.add(new Tuple2([relation], count))
+            }
+        }
+
+        blankWork.each {relation, count ->
+            result.add(new Tuple2([stripPrefix(relation, "$JsonLd.WORK_KEY."), relation], count))
+        }
+
+        return result
+    }
+    
     private String removeWildcardForKey(String url, String key) {
         url.replace("&${makeParam(key, '*')}", "")
     }
     
-    private String removeReverseParameter(String url, String reverseObject) {
-        url.replace("&${makeParam('o', reverseObject)}", "")
+    private static String stripPrefix(String s, String prefix) {
+        s.startsWith(prefix) ? s.substring(prefix.length()) : s
     }
     
     private boolean hasHugeNumberOfIncomingLinks(String iri) {
@@ -373,7 +402,7 @@ class SearchUtils {
             return -1
         }
     }
-    
+
     /*
      * Read vocab item from db.
      *
