@@ -203,7 +203,7 @@
                     "mainTitle": {
                         "type": "text",
                         "analyzer": "softmatcher",
-                        "copy_to": "_all",
+                        "copy_to": ["_all", "_str"],
                         "fields": {
                             "keyword": {
                                 "type": "keyword"
