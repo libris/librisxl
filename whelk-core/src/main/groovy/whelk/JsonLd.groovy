@@ -417,7 +417,7 @@ class JsonLd {
                 def graphIndex = (Integer) path[0]
                 List p = path.findAll { !(it instanceof Integer) } // filter out list indices
                 if (graphIndex == 0) {
-                    p.add(0, 'meta')
+                    p.add(0, RECORD_KEY)
                 }
                 else if (graphIndex > 1) {
                     p.add(0, graphIndex) // Normally there should only be @graph,0 and @graph,1

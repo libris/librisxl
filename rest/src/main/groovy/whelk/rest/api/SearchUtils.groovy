@@ -164,7 +164,7 @@ class SearchUtils {
             mappings << [
                     'variable' : 'p',
                     'object'   : reverseObject,
-                    'predicate': null,  //'predicate': termChip, (valueProp): value]
+                    'predicate': null,
                     'up'       : [(JsonLd.ID_KEY): upUrl],
             ]
         }
