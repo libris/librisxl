@@ -12,9 +12,17 @@ selectBySqlWhere(where) { data ->
             // Assuming only one contribution
             Map agent = contribution[0]['agent']
 
-            if (agent && isOrganization(agent)) {
-                modified = true
-                return agent
+            if (agent) {
+                if (isLocalOrganization(agent)) {
+                    if (subject['inScheme'])
+                        agent['inScheme'] = subject['inScheme']
+                    modified = true
+                    return agent
+                }
+                else if (isLinkedOrganization(agent)) {
+                    modified = true
+                    return agent
+                }
             }
         }
         return subject
@@ -24,15 +32,19 @@ selectBySqlWhere(where) { data ->
         data.scheduleSave()
 }
 
-boolean isOrganization(Map agent) {
+boolean isLocalOrganization(Map agent) {
+    return agent['@type'] == 'Organization'
+}
+
+boolean isLinkedOrganization(Map agent) {
     if (agent.containsKey('@id')) {
-        boolean linkedEntityIsOrganization
+        boolean isOrganization
 
         selectByIds([agent['@id']]) {
-            linkedEntityIsOrganization = it.graph[1]['@type'] == 'Organization'
+            isOrganization = it.graph[1]['@type'] == 'Organization'
         }
 
-        return linkedEntityIsOrganization
+        return isOrganization
     }
-    return localEntityIsOrganization = agent['@type'] == 'Organization'
+    return false
 }
