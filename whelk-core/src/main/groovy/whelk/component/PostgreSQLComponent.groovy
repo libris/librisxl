@@ -1024,7 +1024,7 @@ class PostgreSQLComponent {
         doc.getExternalRefs()
             .findAll{ it.iri.startsWith("http") }
             .each { link ->
-                linksByIri.computeIfAbsent(link.iri, { iri -> new HashSet<>()}).add(link)
+                linksByIri.computeIfAbsent(link.iri, { iri -> new HashSet<>() }).add(link)
             }
 
         getSystemIds(linksByIri.keySet(), connection) { String iri, String systemId, boolean deleted ->
@@ -1450,11 +1450,13 @@ class PostgreSQLComponent {
                 }
                 batch = rigInsertStatement(batch, doc, now, changedIn, changedBy, collection, false)
                 batch.addBatch()
-                boolean leaveCacheAlone = true
-                refreshDerivativeTables(doc, connection, false, leaveCacheAlone)
             }
             batch.executeBatch()
             ver_batch.executeBatch()
+            docs.each { doc ->
+                boolean leaveCacheAlone = true
+                refreshDerivativeTables(doc, connection, false, leaveCacheAlone)
+            }
             clearEmbellishedCache(connection)
             connection.commit()
             log.debug("Stored ${docs.size()} documents in collection ${collection} (versioning: ${versioning})")
