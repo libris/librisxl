@@ -551,7 +551,7 @@ class ESQuery {
                     boolean isSimple = isSimple(val)
                     clauses.add([(isSimple ? 'simple_query_string' : 'query_string'): [
                             'query'           : isSimple ? val : escapeNonSimpleQueryString(val),
-                            'fields'          : [isWildFieldLocation(field) ? '*' + field : field],
+                            'fields'          : [field],
                             'default_operator': 'AND'
                     ]])
                 }
@@ -560,11 +560,7 @@ class ESQuery {
 
         return ['bool': ['should': clauses]]
     }
-    
-    private static boolean isWildFieldLocation(String field) {
-        field.startsWith('.')
-    }
-    
+
     private static boolean parseBoolean(String parameterName, String value) {
         if (value.toLowerCase() == 'true') {
             true
