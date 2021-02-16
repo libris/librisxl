@@ -6397,6 +6397,7 @@
       "addLink": "cartographicAttributes",
       "resourceType": "Cartographic",
       "embedded": true,
+      "NOTE:LC": "bf:cartographicAttributes could be mapped to 034 or 255. We'll map all cartographicAttributes properties to the 255.",
       "TODO": "how is this intuitively different from 255 [255 is in plain text], 006 and/or 008 [those are coded projection and more...]",
       "pendingResources": {
         "_:scale": {
@@ -6419,12 +6420,8 @@
           "pendingResources": {"_:scale": {"link": "scale", "resourceType": "marc:OtherCartographicScale"}}
         }
       ],
-      "i1": {"marcDefault": "1"},
-      "i2": {
-        "property": "marc:ringType",
-        "marcDefault": " ",
-        "tokenMap": {"0": "marc:OuterRing", "1": "marc:ExcludingRing"}
-      },
+      "i1": {"ignored": true, "marcDefault": "1"},
+      "i2": {"ignored": true, "marcDefault": " "},
       "$a": {
         "about": "_:scale",
         "property": "@type",
@@ -6490,6 +6487,9 @@
           "source": [
             {"034": {"ind1": "1", "ind2": "0", "subfields": [{"b": "11"}]}}
           ],
+          "normalized": [
+            {"034": {"ind1": "1", "ind2": " ", "subfields": [{"b": "11"}]}}
+          ],
           "result": {
             "mainEntity": {
               "instanceOf": {
@@ -6500,8 +6500,7 @@
                     "scale": {
                       "@type": "Scale",
                       "marc:constantRatioLinearHorizontalScale": ["11"]
-                    },
-                    "marc:ringType": "marc:OuterRing"
+                    }
                   }
                 ]
               }
