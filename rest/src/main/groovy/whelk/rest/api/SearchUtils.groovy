@@ -164,7 +164,7 @@ class SearchUtils {
             mappings << [
                     'variable' : 'p',
                     'object'   : reverseObject,
-                    'predicate': null,
+                    'predicate': ld.toChip(lookup(predicates.first())),
                     'up'       : [(JsonLd.ID_KEY): upUrl],
             ]
         }
@@ -414,6 +414,13 @@ class SearchUtils {
 
         if (entry) {
             return entry
+        } else if (itemId.contains('.')) {
+            def chain = itemId.split('\\.').findAll {it != JsonLd.ID_KEY}
+            return [
+                    'propertyChainAxiom': chain.collect(this.&lookup),
+                    'label': chain.join(' '),
+                    '_key': itemId,  // lxlviewer has some propertyChains of its own defined, this is used to match them 
+            ]
         } else {
             return [(JsonLd.ID_KEY): itemId, 'label': itemId]
         }
@@ -655,6 +662,8 @@ class SearchUtils {
                 
         return new Tuple2(result, pageParams)
     }
+    
+    
 
     /*
      * Return a list of reserved query params
