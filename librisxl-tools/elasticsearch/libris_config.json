@@ -203,7 +203,7 @@
                     "mainTitle": {
                         "type": "text",
                         "analyzer": "softmatcher",
-                        "copy_to": ["_all", "_str"],
+                        "copy_to": "_all",
                         "fields": {
                             "keyword": {
                                 "type": "keyword"
@@ -221,17 +221,6 @@
                 },
                 "copy_to": "_all"
             },
-            "responsibilityStatement": {
-                "fields": {
-                    "exact": {
-                        "type": "text",
-                        "analyzer": "standard"
-                    }
-                },
-                "type": "text",
-                "analyzer": "softmatcher",
-                "copy_to": ["_all", "_str"]
-            },
             "_links": {
                 "type": "keyword",
                 "copy_to": "_all"
@@ -244,20 +233,10 @@
                 "type": "keyword",
                 "copy_to": "_all"
             },
-            "_str": {
-                "fields": {
-                  "exact": {
-                    "type": "text",
-                    "analyzer": "standard"
-                  }
-                },
-                "analyzer": "softmatcher",
-                "type": "text",
-                "copy_to": "_all"
-            },
             "_all": {
                 "type": "text",
-                "store": false
+                "store": false,
+                "analyzer": "softmatcher"
             }
         },
         "date_detection": false,
