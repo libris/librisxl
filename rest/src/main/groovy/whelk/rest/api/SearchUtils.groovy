@@ -352,7 +352,12 @@ class SearchUtils {
     }
 
     /**
-     * Group together instanceOf.x and x 
+     * Group together instanceOf.x and x
+     * 
+     * Meaning there will be one predicate/facet for e.g. 'subject' and 'instanceOf.subject' called 'subject'.
+     * That is, it will match both works and instances with local works.
+     * Calling the relation 'subject' is of course not completely correct (it hides instanceOf) but the idea is that 
+     * it is more practical for now.
      */
     static List<Tuple2<List<String>, Long>> groupRelations(Map<String, Long> counts) {
         Map<String, Long> blankWork = [:]
