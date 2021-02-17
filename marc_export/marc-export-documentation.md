@@ -13,7 +13,7 @@ Dessa parametrar är:
 1. `deleted` vilket anger hur man vill att borttagningar ska hanteras. Parametern kan något utav värdena:
    1. `ignore` vilket innebär att borttagna poster helt enkelt ignoreras
    1. `export` vilket innebär att borttagna poster exporteras men är markerade som borttagna i MARC-leadern
-   1. `append` vilket innebär att borttagna posters IDn exporteras som en CSV-fil _efter_ den vanliga exportdatan (separerat av en null-byte).
+   1. `append` vilket innebär att borttagna posters ID:n exporteras som en CSV-fil _efter_ den vanliga exportdatan (separerat av en null-byte).
 1. `virtualDelete` som kan ha värde `true` eller `false`. Är `virtualDelete` satt till `true` så kommer poster anses vara borttagna i den genererade exporten, i dom fall där dom sigel som anges i profilen inte längre har bestånd på posterna. Flaggan används förslagsvis tillsammans med `deleted=export` i exportprofilen.
 
 Exempel på anrop:
