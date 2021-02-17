@@ -60,6 +60,24 @@ and one for working with both holdings and bibliographic records. The client is 
 to one or several sigels. Only holdings connected to any of these sigels can be created, updated or
 removed in the following examples.
 
+### Obtain a bearertoken
+
+Once you have obtained a client id and a client secret from Libris customer service, do the
+following to obtain a bearertoken:
+
+```
+$ curl -X POST -d 'client_id=<Your client id>&client_secret=<Your client secret>&grant_type=client_credentials' https://login.libris.kb.se/oauth/token'
+```
+
+The response to the above request should look something like: 
+
+```
+{"access_token": "tU77KXIxxxxxxxKh5qxqgxsS", "expires_in": 36000, "token_type": "Bearer", "scope": "read write", "app_version": "1.5.0"}
+```
+
+From that response you are expected to extract your access_token and pass it along with each
+subsequent request that requires authentication.
+
 ### Create
 
 A new record is created by sending a `POST` request to the API root (`/`) with at least the

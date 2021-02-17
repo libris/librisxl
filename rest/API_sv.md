@@ -61,6 +61,23 @@ Klienten är knuten till en eller flera sigel, och det är enbart beståndsposte
 tillhörande den eller dessa sigel som kan skapas, ändras eller tas bort i exemplen
 som följer.
 
+### Hämta ut en bearertoken
+
+När man har fått ett klientid och klienthemlighet ifrån kundtjänst gör man följande för att hämta
+en beartoken:
+
+```
+$ curl -X POST -d 'client_id=<Ert klientid>&client_secret=<Er klienthemlighet>&grant_type=client_credentials' https://login.libris.kb.se/oauth/token'
+```
+
+Svaret på anropet bör se ut ungefär som följande:
+
+```
+{"access_token": "tU77KXIxxxxxxxKh5qxqgxsS", "expires_in": 36000, "token_type": "Bearer", "scope": "read write", "app_version": "1.5.0"}
+```
+Utifrån svaret på anropet förväntas ni ta ut er access_token och skicka med den vid varje
+anrop som kräver autentisering.
+
 ### Skapa
 
 En ny post kan skapas genom att skicka ett `POST`-anrop till API:ets rot (`/`)
