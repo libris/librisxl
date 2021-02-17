@@ -9285,15 +9285,7 @@
       "addLink": "hasTitle",
       "resourceType": "VariantTitle",
       "embedded": true,
-      "i1": {
-        "property": "marc:searchControl",
-        "tokenMap": {
-          "0": null,
-          "2": null,
-          "3": null
-        },
-        "marcDefault": "1"
-      },
+      "i1": {"ignored": true, "marcDefault": "1"},
       "i2": {
         "property": "@type",
         "overwrite": true,
