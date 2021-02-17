@@ -62,6 +62,7 @@ sab=on
 ```
 
 Förklaring till (en del av) de olika inställningarna i exportprofilen:
+
 | parameter            | giltiga värden             | beskrivning |
 | -------------------- | -------------------------- | ----------- |
 | `authcreate`         | `on`\|`off`                | Ska nyskapade auktoritetsposter resultera i export.
