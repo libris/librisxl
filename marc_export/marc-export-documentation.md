@@ -65,7 +65,7 @@ sab=on
 Förklaring till (en del av) de olika inställningarna i exportprofilen:
 | parameter            | giltiga värden             | beskrivning |
 | -------------------- | -------------------------- | ----------- |
-| `authcreate`         | `on`\|`off`                | Ska skapande av auktoritetsposter kunna resultera i export
+| `authcreate`         | `on`\|`off`                | Avgör om skapande av auktoritetsposter ska kunna resultera i export
 | `authoperators`      | [lista med sigel]          | Blankstegsseparerad lista. Ändringar av auktoritetsposter ska bara resultera i export om de gjorts av någon av följande sigel (lämnas tom för "alla")
 | `authtype`           | `interleaved`\|`after`     | Avgör om auktoritetsinformation ska vara inbakad i bib-posten eller följa med som separat därefter
 | `authupdate`         | `on`\|`off`                | Avgör om uppdateringar av auktoritetsposter ska leda till export
