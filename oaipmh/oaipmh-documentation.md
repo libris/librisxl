@@ -6,7 +6,7 @@ Det här dokumentets syfte är att ge Libris-specifik information, om hur OAI-PM
 
 ## Set-parametern (delmängder):
 
-OAI-PMH-specifikationen beskriver hur skördning av delmängder fungerar generellet, men i Libris används dessa för vissa specifika ändamål.
+OAI-PMH-specifikationen beskriver hur skördning av delmängder fungerar generellt, men i Libris används dessa för vissa specifika ändamål.
 
 Libris OAI-PMH-implementation använder sig av tre huvudsakliga delmängder för sitt metadata. Dessa är `auth`, `bib`, och `hold`, vilka representerar auktoritetsposter, bibliografiska poster och beståndsposter. Det finns även ett par mindre delmängder, nämligen `sao` (Svenska ämnesord) och `nb` (Nationalbibliografin).
 

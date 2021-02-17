@@ -70,12 +70,12 @@ en beartoken:
 $ curl -X POST -d 'client_id=<Ert klientid>&client_secret=<Er klienthemlighet>&grant_type=client_credentials' https://login.libris.kb.se/oauth/token'
 ```
 
-Svaret på ovan bör se ut ungefär som följande:
+Svaret på anropet bör se ut ungefär som följande:
 
 ```
 {"access_token": "tU77KXIxxxxxxxKh5qxqgxsS", "expires_in": 36000, "token_type": "Bearer", "scope": "read write", "app_version": "1.5.0"}
 ```
-Utifrån svaret ovan förväntas ni ta ut er access_token och skicka med den vid varje
+Utifrån svaret på anropet förväntas ni ta ut er access_token och skicka med den vid varje
 anrop som kräver autentisering.
 
 ### Skapa
