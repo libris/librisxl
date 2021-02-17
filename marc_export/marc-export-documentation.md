@@ -69,7 +69,7 @@ Förklaring till (en del av) de olika inställningarna i exportprofilen:
 | `authoperators`      | [lista med sigel]          | Blankstegsseparerad lista. Ändringar av auktoritetsposter ska bara resultera i export om de gjorts av någon av följande sigel (lämnas tom för "alla")
 | `authtype`           | `interleaved`\|`after`     | Avgör om auktoritetsinformation ska vara inbakad i bib-posten eller följa med som separat därefter
 | `authupdate`         | `on`\|`off`                | Avgör om uppdateringar av auktoritetsposter ska leda till export
-| `bibcreate`          | `on`\|`off`                | Avgör om nyskapande av bib post ska resultera i export
+| `bibcreate`          | `on`\|`off`                | Avgör om nyskapande av bib-post ska resultera i export
 | `biboperators`       | [lista med sigel]          | Blankstegsseparerad lista. Ändringar av bibliografiska poster ska bara resultera i export om de gjorts av någon av följande sigel (lämnas tom för "alla")
 | `bibupdate`          | `on`\|`off`                | Avgör om uppdateringar av bibliografiska poster ska leda till export
 | `characterencoding`  | `UTF-8`\|`ISO-8859-1`      | Avgör tecken-kodning
