@@ -13,6 +13,7 @@ import org.postgresql.util.PSQLException
 import whelk.Document
 import whelk.IdType
 import whelk.JsonLd
+import whelk.Link
 import whelk.exception.CancelUpdateException
 import whelk.exception.LinkValidationException
 import whelk.exception.MissingMainIriException
@@ -200,6 +201,14 @@ class PostgreSQLComponent {
     private static final String GET_INCOMING_LINK_COUNT =
             "SELECT COUNT(id) FROM lddb__dependencies WHERE dependsOnId = ?"
 
+    private static final String GET_INCOMING_LINK_COUNT_BY_RELATION = """
+            SELECT d.relation, count(d.id)
+            FROM lddb__dependencies d, lddb__identifiers l
+            WHERE d.dependsonid = l.id
+            AND l.iri = ?
+            GROUP BY d.relation
+            """.stripIndent()
+    
     private static final String GET_DEPENDERS_OF_TYPE =
             "SELECT id FROM lddb__dependencies WHERE dependsOnId = ? AND relation = ?"
 
@@ -1011,16 +1020,19 @@ class PostgreSQLComponent {
     private List<String[]> _calculateDependenciesSystemIDs(Document doc, Connection connection) {
         List<String[]> dependencies = []
 
-        Map iriToRelation = doc.getExternalRefs()
+        Map<String, Set<Link>> linksByIri = [:]
+        doc.getExternalRefs()
             .findAll{ it.iri.startsWith("http") }
-            .collectEntries {  [ it.iri, it.relation ] }
+            .each { link ->
+                linksByIri.computeIfAbsent(link.iri, { iri -> new HashSet<>() }).add(link)
+            }
 
-        getSystemIds(iriToRelation.keySet(), connection) { String iri, String systemId, boolean deleted ->
+        getSystemIds(linksByIri.keySet(), connection) { String iri, String systemId, boolean deleted ->
             if (deleted) // doc refers to a deleted document which is not ok.
                 throw new LinkValidationException("Record supposedly depends on deleted record: ${systemId}, which is not allowed.")
 
             if (systemId != doc.getShortId()) // Exclude A -> A (self-references)
-                dependencies.add([iriToRelation[iri], systemId] as String[])
+                dependencies.addAll(linksByIri[iri].collect { [it.relation, systemId] as String[] })
         }
 
         return dependencies
@@ -1263,6 +1275,14 @@ class PostgreSQLComponent {
         return cardEntry.getCard().data
     }
 
+    // Temporary method for changing lddb__dependencies.relation to full "path" of relation
+    // e.g. agent -> instanceOf.contribution.agent
+    void recalculateDependencies(Document doc) {
+        getConnection().withCloseable { connection ->
+            saveDependencies(doc, connection)
+        }
+    }
+    
     private void saveDependencies(Document doc, Connection connection) {
         List dependencies = _calculateDependenciesSystemIDs(doc, connection)
 
@@ -1430,11 +1450,13 @@ class PostgreSQLComponent {
                 }
                 batch = rigInsertStatement(batch, doc, now, changedIn, changedBy, collection, false)
                 batch.addBatch()
-                boolean leaveCacheAlone = true
-                refreshDerivativeTables(doc, connection, false, leaveCacheAlone)
             }
             batch.executeBatch()
             ver_batch.executeBatch()
+            docs.each { doc ->
+                boolean leaveCacheAlone = true
+                refreshDerivativeTables(doc, connection, false, leaveCacheAlone)
+            }
             clearEmbellishedCache(connection)
             connection.commit()
             log.debug("Stored ${docs.size()} documents in collection ${collection} (versioning: ${versioning})")
@@ -1918,6 +1940,25 @@ class PostgreSQLComponent {
             rs = preparedStatement.executeQuery()
             rs.next()
             return rs.getInt(1)
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    Map<String, Long> getIncomingLinkCountByRelation(String iri) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        def result = new TreeMap<String, Long>()
+        try {
+            preparedStatement = connection.prepareStatement(GET_INCOMING_LINK_COUNT_BY_RELATION)
+
+            preparedStatement.setString(1, iri)
+            rs = preparedStatement.executeQuery()
+            while (rs.next()) {
+                result[rs.getString(1)] = (long) rs.getInt(2)
+            }
+            return result
         } finally {
             close(rs, preparedStatement, connection)
         }

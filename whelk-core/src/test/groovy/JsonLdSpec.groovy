@@ -49,7 +49,8 @@ class JsonLdSpec extends Specification {
                 ],
                 ['@id': '/second',
                     'foo': '/foo',
-                    'some': 'value'],
+                    'some': 'value',
+                    'bar': ['@id': '/ext1']],
                 ['@id': '/third',
                     'external': ['@id': '/external']],
                 ['@id': '/fourth',
@@ -58,7 +59,10 @@ class JsonLdSpec extends Specification {
                 ['@graph': ['@id': '/some_other_id']]
             ],
             '@context': 'base.jsonld']
-        Set expected = [new Link(iri: '/external', relation: 'external')]
+        Set expected = [
+                new Link(iri: '/ext1', relation: 'bar'),
+                new Link(iri: '/external', relation: '2.external')
+        ]
 
         expect:
         assert JsonLd.getExternalReferences(graph) == expected
@@ -103,10 +107,11 @@ class JsonLdSpec extends Specification {
                                ['@id': '/baz/',
                                 'someOtherValue': 2]]]
        Set expected = [
-               new Link(iri: '/quux', relation: 'quux'),
-               new Link(iri: '/quux2', relation: 'quux'),
-               new Link(iri: '/baz', relation: 'baz'),
-               new Link(iri: '/bar', relation: 'bar')
+               new Link(iri: '/quux', relation: 'meta.aList.quux'),
+               new Link(iri: '/quux', relation: 'meta.quux'),
+               new Link(iri: '/quux2', relation: 'meta.quux'),
+               new Link(iri: '/baz', relation: 'meta.extra.baz'),
+               new Link(iri: '/bar', relation: 'meta.bar')
        ]
        expect:
        assert JsonLd.getAllReferences(input) == expected
