@@ -4302,10 +4302,9 @@
         }
       },
       "[38]": {
-        "aboutEntity": "?record",
-        "link": "marc:modifiedRecord",
-        "uriTemplate": "https://id.kb.se/marc/ModifiedRecordType-{_}",
-        "matchUriToken": "^[dorsx]$"
+        "NOTE:local": "Modifieringar. Används ej!",
+        "NOTE": "Modified Record - # - Ignored",
+        "ignored": true
       },
       "[39]": {
         "aboutEntity": "?record",
@@ -6397,6 +6396,7 @@
       "addLink": "cartographicAttributes",
       "resourceType": "Cartographic",
       "embedded": true,
+      "NOTE:LC": "bf:cartographicAttributes could be mapped to 034 or 255. We'll map all cartographicAttributes properties to the 255.",
       "TODO": "how is this intuitively different from 255 [255 is in plain text], 006 and/or 008 [those are coded projection and more...]",
       "pendingResources": {
         "_:scale": {
@@ -6419,12 +6419,8 @@
           "pendingResources": {"_:scale": {"link": "scale", "resourceType": "marc:OtherCartographicScale"}}
         }
       ],
-      "i1": {"marcDefault": "1"},
-      "i2": {
-        "property": "marc:ringType",
-        "marcDefault": " ",
-        "tokenMap": {"0": "marc:OuterRing", "1": "marc:ExcludingRing"}
-      },
+      "i1": {"ignored": true, "marcDefault": "1"},
+      "i2": {"ignored": true, "marcDefault": " "},
       "$a": {
         "about": "_:scale",
         "property": "@type",
@@ -6490,6 +6486,9 @@
           "source": [
             {"034": {"ind1": "1", "ind2": "0", "subfields": [{"b": "11"}]}}
           ],
+          "normalized": [
+            {"034": {"ind1": "1", "ind2": " ", "subfields": [{"b": "11"}]}}
+          ],
           "result": {
             "mainEntity": {
               "instanceOf": {
@@ -6500,8 +6499,7 @@
                     "scale": {
                       "@type": "Scale",
                       "marc:constantRatioLinearHorizontalScale": ["11"]
-                    },
-                    "marc:ringType": "marc:OuterRing"
+                    }
                   }
                 ]
               }
@@ -9286,15 +9284,7 @@
       "addLink": "hasTitle",
       "resourceType": "VariantTitle",
       "embedded": true,
-      "i1": {
-        "property": "marc:searchControl",
-        "tokenMap": {
-          "0": null,
-          "2": null,
-          "3": null
-        },
-        "marcDefault": "1"
-      },
+      "i1": {"ignored": true, "marcDefault": "1"},
       "i2": {
         "property": "@type",
         "overwrite": true,
@@ -20930,11 +20920,8 @@
       },
       "[34:38]": null,
       "[38]": {
-        "aboutEntity": "?record",
-        "link": "marc:modifiedRecord",
-        "uriTemplate": "https://id.kb.se/marc/ModifiedRecordType-{_}",
-        "matchUriToken": "^[sx]$",
-        "fixedDefault": " "
+        "NOTE": "Modified Record - # - Ignored",
+        "ignored": true
       },
       "[39]": {
         "aboutEntity": "?record",
@@ -20951,7 +20938,7 @@
             {"008": "011206n| ac|nnaabn          |n an       "}
           ],
           "normalized": [
-            {"008": "011206n| ac|nnaabn          |n ana     |"}
+            {"008": "011206n| ac|nnaabn          |n ana    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -20972,7 +20959,7 @@
             {"008": "011206n| ac|nnaabn          fn ana      "}
           ],
           "normalized": [
-            {"008": "011206n| ac|nnaabn          fn ana     |"}
+            {"008": "011206n| ac|nnaabn          fn ana    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -20994,7 +20981,7 @@
             {"008": "141210n| ac|nnaabn          |n ana      "}
           ],
           "normalized": [
-            {"008": "141210n| ac|nnaabn          |n ana     |"}
+            {"008": "141210n| ac|nnaabn          |n ana    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -21015,7 +21002,7 @@
             {"008": "130110n| ac|nnaabn           n ana      "}
           ],
           "normalized": [
-            {"008": "130110n| ac|nnaabn          |n ana     |"}
+            {"008": "130110n| ac|nnaabn          |n ana    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -21037,7 +21024,7 @@
             {"008": "130612n| ac|nnaabn           n ana      "}
           ],
           "normalized": [
-            {"008": "130612n| ac|nnaabn          |n ana     |"}
+            {"008": "130612n| ac|nnaabn          |n ana    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -21059,7 +21046,7 @@
             {"008": "020409 | a||nnbabn          |n ana      "}
           ],
           "normalized": [
-            {"008": "020409n| az|nnaabn          |n ana     |"}
+            {"008": "020409n| az|nnaabn          |n ana    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -21080,7 +21067,7 @@
             {"008": "130904n| az|nnbabn           n ana      "}
           ],
           "normalized": [
-            {"008": "130904n| az|nnaabn          |n ana     |"}
+            {"008": "130904n| az|nnaabn          |n ana    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -21100,7 +21087,7 @@
             {"008": "110119nb ac|nnaabn           n ana      "}
           ],
           "normalized": [
-            {"008": "110119nb ac|nnaabn          |n ana     |"}
+            {"008": "110119nb ac|nnaabn          |n ana    ||"}
           ],
           "result": {
             "@type": "Record",
