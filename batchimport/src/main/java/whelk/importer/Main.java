@@ -7,6 +7,7 @@ import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.Iso2709MarcRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
+import whelk.component.PostgreSQLComponent;
 
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -232,39 +233,60 @@ public class Main
     private static void importBatch(List<MarcRecord> batch)
     {
         String lastKnownBibDocId = null;
-        for (MarcRecord marcRecord : batch)
-        {
-            try
-            {
-		if ( verbose ) {
-			String ids[][] = DigId.digIds(marcRecord);
-			if ( ids != null ) {
-				for (String r[] : ids ) {
-					if ( r != null ) {
-						for (String c : r) {
-							if ( c != null ) {
-								System.out.printf("%s ", c);
-							}
-						}
-					}
-				}
-			}
-			System.out.println();
-		}
-                String resultingId = s_librisXl.importISO2709(
-                        marcRecord,
-                        lastKnownBibDocId,
-                        importedBibRecords,
-                        importedHoldRecords,
-                        encounteredMulBibs);
-                if (resultingId != null)
-                    lastKnownBibDocId = resultingId;
-            } catch (Exception e)
-            {
-                System.err.println("Failed to convert or write the following MARC post:\n" + marcRecord.toString());
+        for (MarcRecord marcRecord : batch) {
+            try {
+                if (verbose) {
+                    dumpDigIds(marcRecord);
+                }
+                try {
+                    String resultingId = s_librisXl.importISO2709(
+                            marcRecord,
+                            lastKnownBibDocId,
+                            importedBibRecords,
+                            importedHoldRecords,
+                            encounteredMulBibs);
+                    if (resultingId != null)
+                        lastKnownBibDocId = resultingId;
+                } catch (PostgreSQLComponent.ConflictingHoldException e) {
+                    // If there are duplicate bib+hold records in the input and we run with -parallell 
+                    // there is a race if they end up in different batches
+                    // - batch A creates bib
+                    // - batch B finds bib via e.g. ISBN
+                    // - batch B checks for existing holding, not found
+                    // - batch A creates holding
+                    // - batch B creates holding  <-- ConflictingHoldException
+                    // As a workaround we retry the holding record (batch B) which will now be found and updated instead
+                    System.err.println("Duplicate bib+hold in file? retrying:\n" + marcRecord.toString());
+                    String resultingId = s_librisXl.importISO2709(
+                            marcRecord,
+                            lastKnownBibDocId,
+                            importedBibRecords,
+                            importedHoldRecords,
+                            encounteredMulBibs);
+                    if (resultingId != null)
+                        lastKnownBibDocId = resultingId;
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to convert or write the following MARC record:\n" + marcRecord.toString());
                 throw new RuntimeException(e);
             }
         }
+    }
+    
+    private static void dumpDigIds(MarcRecord marcRecord) {
+        String ids[][] = DigId.digIds(marcRecord);
+        if (ids != null) {
+            for (String r[] : ids) {
+                if (r != null) {
+                    for (String c : r) {
+                        if (c != null) {
+                            System.out.printf("%s ", c);
+                        }
+                    }
+                }
+            }
+        }
+        System.out.println();
     }
 
     private static File getTemporaryFile()

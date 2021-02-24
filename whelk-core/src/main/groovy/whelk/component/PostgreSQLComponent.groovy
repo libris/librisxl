@@ -618,24 +618,24 @@ class PostgreSQLComponent {
             if (collection == "hold") {
                 String holdingFor = doc.getHoldingFor()
                 if (holdingFor == null) {
-                    log.warn("Was asked to save a holding post linked to a bib post that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                    log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
                     return false
                 }
                 String holdingForRecordId = getRecordId(holdingFor, connection)
                 if (holdingForRecordId == null) {
-                    log.warn("Was asked to save a holding post linked to a bib post that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                    log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
                     return false
                 }
                 String holdingForSystemId = holdingForRecordId.substring(Document.BASE_URI.toString().length())
                 if (holdingForSystemId == null) {
-                    log.warn("Was asked to save a holding post linked to a bib post that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                    log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
                     return false
                 }
 
                 acquireRowLock(holdingForSystemId, connection)
 
                 if (getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) != null)
-                    throw new ConflictingHoldException("Already exists a holding post for ${doc.getHeldBy()} and bib: $holdingFor")
+                    throw new ConflictingHoldException("Already exists a holding record for ${doc.getHeldBy()} and bib: $holdingFor")
             }
 
             if (linkFinder != null)
