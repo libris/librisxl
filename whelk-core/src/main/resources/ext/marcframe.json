@@ -21409,6 +21409,7 @@
         "Place": {"addLink": "closeMatch"},
         "Work": {"addLink": "subject"}
       },
+      "subfieldOrder": "z a c 2",
       "_spec": [
         {
           "source": {
@@ -21417,7 +21418,16 @@
               {"c": "BroadMatch"},
               {"z": "1"},
               {"2": "23/swe"}
-            ]}},
+            ]}
+          },
+          "normalized": {
+            "083": {"ind1": "0", "ind2": "4", "subfields": [
+              {"z": "1"},
+              {"a": "085"},
+              {"c": "BroadMatch"},
+              {"2": "23/swe"}
+            ]}
+          },
           "result": {
             "mainEntity": {
               "@type": "Identity",
