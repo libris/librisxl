@@ -12350,7 +12350,7 @@
       "i1": {"property": "marc:seriesTracingPolicy", "NOTE:marcDefault": 0, "NOTE:postProcessing ": "SetFlagsByPatterns"},
       "i2": null,
       "$a": {"addProperty": "seriesStatement"},
-      "NOTE:remove?$l": {"link": "callno", "resourceType": "Concept", "property": "code"},
+      "$l": {"ignored": true},
       "$0": {"about": "_:seriesinstance", "addProperty": "marc:uri"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
