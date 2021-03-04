@@ -1,6 +1,12 @@
 List channelRecs = Collections.synchronizedList([])
 
-selectBySqlWhere("collection = 'bib' AND data#>>'{@graph,1,marc:mediaTerm}' = 'channel record'") { cRec ->
+String where = """
+    collection = 'bib'
+    AND data#>>'{@graph,1,marc:mediaTerm}' = 'channel record'
+    AND data#>'{@graph,0,bibliography}' @> '[{\"sigel\":\"EPLK\"}]'
+"""
+
+selectBySqlWhere(where) { cRec ->
     Map cRecData = [:]
 
     cRecData["id"] = cRec.graph[1]["@id"]
