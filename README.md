@@ -61,7 +61,7 @@ for e.g. Fedora/CentOS/RHEL with minor adjustments.
 
     **NOTE:** We use the elasticsearch-oss version.
 
-3. [PostgreSQL](https://www.postgresql.org/) (version 9.4 or later)
+3. [PostgreSQL](https://www.postgresql.org/) (version 9.6 or later)
 
     ```
     # Ubuntu/Debian
