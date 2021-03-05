@@ -615,7 +615,7 @@ class PostgreSQLComponent {
             connection.setAutoCommit(false)
             normalizeDocumentForStorage(doc, connection)
 
-            if (collection == "hold" && doc.getThingType() != "ShelfMarkSequence") {
+            if (collection == "hold") {
                 String holdingFor = doc.getHoldingFor()
                 if (holdingFor == null) {
                     log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
