@@ -76,8 +76,7 @@ shelfMarkSeqData.each { data ->
                     [
                             "@id"            : "TEMPID#it",
                             "@type"          : "ShelfMarkSequence",
-                            "heldBy"         : ["@id": "https://libris.kb.se/library/S"],
-                            "shelfMarkStatus": ["@type": "ActiveShelfMark"]
+                            "shelfMarkStatus": "ActiveShelfMark"
                     ]
             ]]
 
@@ -89,6 +88,12 @@ shelfMarkSeqData.each { data ->
 }
 
 selectFromIterable(shelfMarkSeqsAsRecords) { sms ->
+    sms.scheduleSave()
+}
+
+// Set descriptionCreator to the correct sigel
+selectBySqlWhere("collection = 'auth' AND data#>>'{@graph,1,@type}' = 'ShelfMarkSequence'") { sms ->
+    sms.graph[0]["descriptionCreator"] = ["@id": "https://libris.kb.se/library/S"]
     sms.scheduleSave()
 }
 
