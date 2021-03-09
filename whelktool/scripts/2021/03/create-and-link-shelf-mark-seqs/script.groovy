@@ -7,7 +7,7 @@ List<Map> shelfMarkSeqData = // Lägg in rätt löpnummer och beskrivningar
         [
                 ["label": "SLF", "nextShelfControlNumber": 1, "description": "Svensk liggfolio"],
                 ["label": "SLF", "nextShelfControlNumber": 1, "description": "Svensk liggfolio, broschyrer", "qualifier": "br"],
-                ["label": "LF", "nextShelfControlNumber": 1, "description": "Liggfolio"],
+                ["label": "LF", "nextShelfControlNumber": 1, "description": "Utländsk liggfolio"],
                 ["label": "öh", "nextShelfControlNumber": 1, "description": "Övrig hemlig"],
                 ["label": "öh F", "nextShelfControlNumber": 1, "description": "Övrig hemlig • Folio"]
         ]
@@ -109,7 +109,6 @@ shelfMarkSeqsAsRecords.each { sms ->
 
             if (shelfMarkLabelInHold == shelfMarkSeqLabel) {
                 if (!shelfMarkSeqQualifier && !hasQualifier) {
-                    println(shelfMarkSeqLabel)
                     comp["shelfMark"] = ["@id": shelfMarkSeqId]
                     modified = true
                     return
