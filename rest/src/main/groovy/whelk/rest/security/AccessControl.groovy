@@ -19,8 +19,8 @@ class AccessControl {
     boolean checkDocumentToPut(Document newDoc, Document oldDoc,
                                Map userPrivileges, JsonLd jsonld) {
         if (oldDoc.isHolding(jsonld)) {
-            def newDocSigel = newDoc.getSigel()
-            def oldDocSigel = oldDoc.getSigel()
+            def newDocSigel = newDoc.getHeldBySigel()
+            def oldDocSigel = oldDoc.getHeldBySigel()
 
             if (!newDoc.isHolding(jsonld)) {
                 // we don't allow changing from holding to non-holding
@@ -60,13 +60,14 @@ class AccessControl {
         }
 
         if (document.isHolding(jsonld)) {
-            String sigel = document.getSigel()
+            String sigel = document.getHeldBySigel()
             if (!sigel) {
                 throw new ModelValidationException('Missing sigel in document.')
             }
 
             return hasGlobalRegistrantPermission(userPrivileges) || hasPermissionForSigel(sigel, userPrivileges)
-        } else {
+        }
+        else {
             return hasCatalogingPermission(userPrivileges)
         }
     }

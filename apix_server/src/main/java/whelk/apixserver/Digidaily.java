@@ -72,7 +72,7 @@ public class Digidaily {
                     Document dup = Utils.getXlDocument(sf.getData(), "bib");
                     List<Document> attachedHoldings = Utils.s_whelk.getAttachedHoldings(dup.getThingIdentifiers());
                     for (Document attachedHolding : attachedHoldings) {
-                        if (attachedHolding.getSigel().equals(sigel)) {
+                        if (attachedHolding.getHeldBySigel().equals(sigel)) {
                             if (sf.getData() != null) {
                                 out.write("B" + bibid + "\tWARNING MULTIPLE DIGI RECORDS\n");
                                 continue;
