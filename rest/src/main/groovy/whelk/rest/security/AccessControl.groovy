@@ -4,6 +4,7 @@ import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
 import whelk.exception.ModelValidationException
+import whelk.util.LegacyIntegrationTools
 
 @Log
 class AccessControl {
@@ -66,6 +67,10 @@ class AccessControl {
             }
 
             return hasGlobalRegistrantPermission(userPrivileges) || hasPermissionForSigel(sigel, userPrivileges)
+        }
+        else if (document.getThingType() == 'ShelfMarkSequence') {
+            String ownedBySigel = LegacyIntegrationTools.uriToLegacySigel(document.getDescriptionCreator())
+            return hasGlobalRegistrantPermission(userPrivileges) || hasPermissionForSigel(ownedBySigel, userPrivileges)
         }
         else {
             return hasCatalogingPermission(userPrivileges)
