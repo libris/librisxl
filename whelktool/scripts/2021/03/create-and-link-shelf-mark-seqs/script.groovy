@@ -17,11 +17,13 @@ List shelfMarkSeqsAsRecords = []
 activeInOldDb.each { row ->
     List cols = row.split(",")
 
+    // Active shelf mark sequence as described in old db
     String prefixBeforeYear = cols[0]
     String prefixAfterYear = cols[1]
     String year = cols[3]
-    int lastSerialNumber = year == "2021" ? cols[2] as int : 0
+    int lastSerialNumber = year == "2021" ? cols[2] as int : 0 // Some have not (yet) been used in 2021
 
+    // See if sequence from old db is actually in given list with active sequences
     String shouldBeActiveShelfMarkSeq = shouldBeActive.find {
         String completeLabel = it.split(",")[0]
         String beforeYear = completeLabel.replaceAll("2021.*", "")
@@ -30,15 +32,18 @@ activeInOldDb.each { row ->
         beforeYear == prefixBeforeYear && afterYear == prefixAfterYear
     }
 
+    // Not all sequences marked as active in old db should be included (as per given list)
     if (!shouldBeActiveShelfMarkSeq)
         return
 
+    // Properties that should be included for new ShelfMarkSequence
     String label = prefixBeforeYear + "2021" + prefixAfterYear
     String nextShelfControlNumber = lastSerialNumber + 1
     List descriptionParts = shouldBeActiveShelfMarkSeq.split(",")
     String description = descriptionParts[1] + " • " + descriptionParts[2]
     String qualifier
 
+    // Move shelf control number prefix from label to separate property 'qualifier'
     if (label =~ / br$/) {
         label = label.replace(" br", "")
         qualifier = "br"
@@ -87,6 +92,7 @@ selectFromIterable(shelfMarkSeqsAsRecords) { sms ->
     sms.scheduleSave()
 }
 
+// Link holdings to the newly created sequences
 shelfMarkSeqsAsRecords.each { sms ->
     String shelfMarkSeqId = sms.graph[1]["@id"]
     String shelfMarkSeqLabel = sms.graph[1]["label"]
