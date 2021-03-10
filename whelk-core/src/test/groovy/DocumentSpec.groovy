@@ -300,7 +300,7 @@ class DocumentSpec extends Specification {
                                               ["notation": "S", "@id": "https://libris.kb.se/library/S"]]]]
         Document doc = new Document(content)
         expect:
-        assert doc.getSigel() == 'S'
+        assert doc.getHeldBySigel() == 'S'
     }
 
     def "should return null for holding without sigel, I"() {
@@ -319,7 +319,7 @@ class DocumentSpec extends Specification {
                                       "heldBy": []]]]
         Document doc = new Document(content)
         expect:
-        assert doc.getSigel() == null
+        assert doc.getHeldBySigel() == null
     }
 
     def "should return null for holding without sigel, II"() {
@@ -337,7 +337,7 @@ class DocumentSpec extends Specification {
                                       "contains": "some new other data"]]]
         Document doc = new Document(content)
         expect:
-        assert doc.getSigel() == null
+        assert doc.getHeldBySigel() == null
     }
 
     def "should return null sigel for non-holding"() {
@@ -357,7 +357,7 @@ class DocumentSpec extends Specification {
                                               ["notation": "S"]]]]
         Document doc = new Document(content)
         expect:
-        assert doc.getSigel() == null
+        assert doc.getHeldBySigel() == null
     }
 
     def "Cannot set created"() {

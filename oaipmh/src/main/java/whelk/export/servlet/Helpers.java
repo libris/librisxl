@@ -44,7 +44,7 @@ public class Helpers
 
             for (Document holding : holdings)
             {
-                String sigel = holding.getSigel();
+                String sigel = holding.getHeldBySigel();
                 if (bySigel.equals(sigel))
                 {
                     return true;
@@ -110,7 +110,7 @@ public class Helpers
                         }
                         else if (dependerCollection.equals("hold") && requestedCollection.equals("hold"))
                         {
-                            String sigel = dependerDocument.getSigel();
+                            String sigel = dependerDocument.getHeldBySigel();
                             if (mustBeHeldBy == null || mustBeHeldBy.equals(sigel))
                             {
                                 queueDocument(dependerDocument);
@@ -133,7 +133,7 @@ public class Helpers
             {
                 if (requestedCollection.equals("hold"))
                 {
-                    String sigel = updated.getSigel();
+                    String sigel = updated.getHeldBySigel();
                     if (mustBeHeldBy == null || mustBeHeldBy.equals(sigel))
                     {
                         queueDocument(updated);

@@ -320,7 +320,7 @@ class Document {
         return ("hold" == LegacyIntegrationTools.determineLegacyCollection(this, jsonld))
     }
 
-    String getSigel() {
+    String getHeldBySigel() {
         String uri = get(sigelPath)
         if (uri != null)
             return LegacyIntegrationTools.uriToLegacySigel( uri )

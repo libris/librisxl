@@ -59,7 +59,7 @@ class MarcExport {
 
         for (Document holding : holdingDocuments) {
             try {
-                holdings.put(holding.getSigel(), MarcXmlRecordReader.fromXml(toXmlString(holding, toMarcXmlConverter)))
+                holdings.put(holding.getHeldBySigel(), MarcXmlRecordReader.fromXml(toXmlString(holding, toMarcXmlConverter)))
             } catch (Exception e) {
                 log.warn("Failed adding holding record when compiling MARC for " + rootDocument.getShortId(), e)
             }

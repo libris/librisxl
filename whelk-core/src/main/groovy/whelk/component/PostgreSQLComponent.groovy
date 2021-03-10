@@ -616,6 +616,8 @@ class PostgreSQLComponent {
             normalizeDocumentForStorage(doc, connection)
 
             if (collection == "hold") {
+                checkLinkedShelfMarkOwnership(doc, connection)
+                
                 String holdingFor = doc.getHoldingFor()
                 if (holdingFor == null) {
                     log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
@@ -840,6 +842,10 @@ class PostgreSQLComponent {
                 changedBy = oldChangedBy
 
             normalizeDocumentForStorage(doc, connection)
+
+            if (collection == "hold") {
+                checkLinkedShelfMarkOwnership(doc, connection)
+            }
 
             if (doVerifyDocumentIdRetention) {
                 verifyDocumentIdRetention(preUpdateDoc, doc, connection)
@@ -2229,6 +2235,20 @@ class PostgreSQLComponent {
 
         if (linkFinder != null) {
             linkFinder.normalizeIdentifiers(doc, connection)
+        }
+    }
+
+    private void checkLinkedShelfMarkOwnership(Document doc, Connection connection) {
+        Map mainEntity = ((List) doc.data['@graph'])[1]
+        Collection<Map> items = (mainEntity.hasComponent ?: []).collect()
+        items.add(mainEntity)
+        items.each { Map item ->
+            if (item['type'] == 'Item' && doc.getHeldBy() && item.shelfMark && item.shelfMark['@id']) {
+                def s = getDocumentByIri((String) item.shelfMark['@id'], connection)
+                if (s && s.getDescriptionCreator() != doc.getHeldBy()) {
+                    throw new RuntimeException("Cannot link to shelf mark controlled by other sigel: ${s.getDescriptionCreator()} <> ${doc.getHeldBy()}")
+                }
+            }
         }
     }
 

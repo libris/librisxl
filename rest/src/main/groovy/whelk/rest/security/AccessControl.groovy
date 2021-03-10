@@ -4,6 +4,7 @@ import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
 import whelk.exception.ModelValidationException
+import whelk.util.LegacyIntegrationTools
 
 @Log
 class AccessControl {
@@ -19,8 +20,8 @@ class AccessControl {
     boolean checkDocumentToPut(Document newDoc, Document oldDoc,
                                Map userPrivileges, JsonLd jsonld) {
         if (oldDoc.isHolding(jsonld)) {
-            def newDocSigel = newDoc.getSigel()
-            def oldDocSigel = oldDoc.getSigel()
+            def newDocSigel = newDoc.getHeldBySigel()
+            def oldDocSigel = oldDoc.getHeldBySigel()
 
             if (!newDoc.isHolding(jsonld)) {
                 // we don't allow changing from holding to non-holding
@@ -60,13 +61,18 @@ class AccessControl {
         }
 
         if (document.isHolding(jsonld)) {
-            String sigel = document.getSigel()
+            String sigel = document.getHeldBySigel()
             if (!sigel) {
                 throw new ModelValidationException('Missing sigel in document.')
             }
 
             return hasGlobalRegistrantPermission(userPrivileges) || hasPermissionForSigel(sigel, userPrivileges)
-        } else {
+        }
+        else if (document.getThingType() == 'ShelfMarkSequence') {
+            String ownedBySigel = LegacyIntegrationTools.uriToLegacySigel(document.getDescriptionCreator())
+            return hasGlobalRegistrantPermission(userPrivileges) || hasPermissionForSigel(ownedBySigel, userPrivileges)
+        }
+        else {
             return hasCatalogingPermission(userPrivileges)
         }
     }

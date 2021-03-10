@@ -1,3 +1,4 @@
+
 PrintWriter failedHoldIDs = getReportWriter("failed-holdIDs")
 PrintWriter scheduledForUpdating = getReportWriter("scheduled-updates")
 
@@ -66,7 +67,7 @@ for (String operation : ProgramLines) {
 
     boolean foundSomeThing = false
     selectBySqlWhere(where, silent: true) { hold ->
-        if (hold.doc.getSigel() == "Jon") {
+        if (hold.doc.getHeldBySigel() == "Jon") {
 
             foundSomeThing = true
 
