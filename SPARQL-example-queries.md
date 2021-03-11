@@ -3,7 +3,7 @@
 ----
 
 Nedan följer ett antal exempelfrågor som demonstrerar hur vår [SPARQL endpoint](http://sparql01-qa.libris.kb.se:8890/sparql/) kan användas för uttag av statistik från Libris XL. 
-Vill man förstå syntaxen kan man med fördel läsa W3C:s [specifikation]('https://www.w3.org/TR/sparql11-query/) av SPARQL. 
+Vill man förstå syntaxen kan man med fördel läsa W3C:s [specifikation](https://www.w3.org/TR/sparql11-query/) av SPARQL. 
 Förekommande klasser och egenskaper står att finna i [vokabulären](https://id.kb.se/vocab/). 
 Samtliga namnrymdsprefix som används är [fördefinierade](http://sparql01-qa.libris.kb.se:8890/sparql/?help=nsdecl) i endpointen och behöver därför inte anges explicit i frågorna.
 
