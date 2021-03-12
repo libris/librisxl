@@ -3620,7 +3620,7 @@
         "NOTE:LC": "nac",
         "[1]": {
           "TODO:layout": "Also more general mapping? Ensure that reconverting are able to handle this",
-          "addLink": "layout",
+          "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/TacMaterialType-{_}",
           "matchUriToken": "^[abcd]$"
         },
@@ -4123,7 +4123,7 @@
           "result": {
             "mainEntity": {
               "@type": "Tactile",
-              "layout": [{"@id": "https://id.kb.se/marc/TacMaterialType-b"}]
+              "carrierType": [{"@id": "https://id.kb.se/marc/TacMaterialType-b"}]
             }
           }
         },
