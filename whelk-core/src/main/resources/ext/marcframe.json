@@ -13347,7 +13347,7 @@
         "marcDefault": " ",
         "tokenMap": {
           "0": true,
-          "1": false
+          "1": null
         }
       },
       "$a": {"property": "label"},
@@ -13380,6 +13380,23 @@
         {
           "name": "With indicator 1 set to blank",
           "source": {"541": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Foo"}
+          ]}},
+          "result": {"mainEntity": {
+            "marc:hasImmediateSourceOfAcquisitionNote": [
+              {
+                "@type": "marc:ImmediateSourceOfAcquisitionNote",
+                "label": "Foo"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "With indicator 1 set to 1",
+          "source": {"541": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Foo"}
+          ]}},
+          "normalized": {"541": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Foo"}
           ]}},
           "result": {"mainEntity": {
