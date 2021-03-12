@@ -25774,6 +25774,14 @@
         "embedded": true,
         "resourceType": "Item"
       },
+      "match": [
+        {
+          "when": {
+            "onRevert": {"shelfMark": {"@type": "ShelfMarkSequence"}}
+          },
+          "$h": {"link": "shelfMark", "resourceType": "ShelfMarkSequence", "property": "label"}
+        }
+      ],
       "i1": {"property": "marc:shelvingScheme", "marcDefault": " "},
       "i2": {"property": "marc:shelvingOrder", "marcDefault": " "},
       "$2": {"property": "marc:sourceOfClassificationOrShelfMarkScheme"},
@@ -25885,6 +25893,31 @@
             "ind1": " ",
             "ind2": " ",
             "subfields": [{"b": "H"}, {"c": "MAG"}, {"j": "65.465"}, {"t": "1"}]
+          }}
+        },
+        {
+          "name": "ShelfMarkSequence revert",
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
+              "hasComponent": [
+                {
+                  "@type": "Item",
+                  "heldBy": {
+                    "@id": "https://libris.kb.se/library/X", "@type": "Organization", "code": "X"},
+                  "shelfMark": {
+                    "@type": "ShelfMarkSequence",
+                    "label": "Z"
+                  },
+                  "shelfControlNumber": "br 5"
+                }
+              ]
+            }
+          },
+          "normalized": {"852": {
+            "ind1": " ",
+            "ind2": " ",
+            "subfields": [{"b": "X"}, {"h": "Z"}, {"j": "br 5"}]
           }}
         }
       ]
