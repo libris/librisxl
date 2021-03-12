@@ -337,7 +337,7 @@ public class MarcCliExport
                 "(data#>>'{@graph,1,inScheme,@id}' = 'https://id.kb.se/term/sao' OR data#>>'{@graph,1,@type}' = ANY(?) ) " +
                 "AND deleted = false";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
-        preparedStatement.setArray(1, connection.createArrayOf("TEXT", agentTypes.toArray()));//iris as String[]))
+        preparedStatement.setArray(1, connection.createArrayOf("TEXT", agentTypes.toArray()));
         preparedStatement.setFetchSize(100);
 
         return preparedStatement;
