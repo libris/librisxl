@@ -11,9 +11,16 @@ selectBySqlWhere(where) { data ->
     def mainEntity = data.graph[1]
     def subjectEntities = []
     if (mainEntity["subject"])
+    {
         subjectEntities.addAll ( asList(mainEntity["subject"]) )
-    if (mainEntity["instanceOf"]["subject"])
-        subjectEntities.addAll ( asList(mainEntity["instanceOf"]["subject"]) )
+    }
+    if (mainEntity["instanceOf"])
+    {
+        if (mainEntity["instanceOf"]["subject"])
+        {
+            subjectEntities.addAll ( asList(mainEntity["instanceOf"]["subject"]) )
+        }
+    }
 
     def modified = false
     subjectEntities.each { subject ->
