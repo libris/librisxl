@@ -211,6 +211,9 @@ class ESQuery {
         if (boostMode?.indexOf('^') > -1) {
             return boostMode.tokenize(',')
         }
+        if (boostMode == 'id.kb.se') {
+            return CONCEPT_BOOST
+        }
 
         String typeKey = types != null ? types.toUnique().sort().join(',') : ''
         typeKey += boostMode
@@ -228,13 +231,52 @@ class ESQuery {
                     'heldBy.sigel^100',
                 ]
             } else {
-                boostFields = lensBoost.computeBoostFieldsFromLenses(types)
+                boostFields = computeBoostFields(types)
             }
             boostFieldsByType[typeKey] = boostFields
         }
 
         return boostFields
     }
+
+    List<String> computeBoostFields(String[] types) {
+        boolean isConcept = types && types.length == 1 && types[0] && jsonld.isSubClassOf(types[0], 'Concept')
+        if (isConcept) {
+            /* FIXME:
+               lensBoost.computeBoostFieldsFromLenses does not give a good result for Concept. 
+               Use hand-tuned boosting instead until we improve boosting/ranking in general. See LXL-3399 for details. 
+            */
+            return CONCEPT_BOOST
+        }
+        else {
+            
+            return lensBoost.computeBoostFieldsFromLenses(types)
+        }
+    }
+    
+    private static final List<String> CONCEPT_BOOST = [
+            'prefLabel^1500',
+            'prefLabelByLang.sv^1500',
+            'label^500',
+            'labelByLang.sv^500',
+            'code^200',
+            'termComponentList._str.exact^150',
+            'altLabel^150',
+            'altLabelByLang.sv^150',
+            'hasVariant.prefLabel.exact^150',
+            '_str.exact^100',
+            'inScheme._str.exact^100',
+            'inScheme._str^100',
+            'inCollection._str.exact^10',
+            'broader._str.exact^10',
+            'exactMatch._str.exact^10',
+            'closeMatch._str.exact^10',
+            'broadMatch._str.exact^10',
+            'related._str.exact^10',
+            'scopeNote^10',
+            'keyword._str.exact^10',
+    ]
+    
 
     /**
      * Expand `@type` query parameter with subclasses.
