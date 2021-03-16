@@ -273,6 +273,16 @@
                 }
             },
             {
+                "shelfControlNumber_template": {
+                    "match": "shelfControlNumber",
+                    "mapping": {
+                        "index": true,
+                        "type": "text",
+                        "copy_to": "_all"
+                    }
+                }
+            },
+            {
                 "unknown_template": {
                     "path_match": "_marc*.*.subfields.*",
                     "mapping": {

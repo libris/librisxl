@@ -224,10 +224,8 @@ class ElasticSearch {
 
     String getShapeForIndex(Document document, Whelk whelk) {
         Document copy = document.clone()
-
-        if ("hold" != LegacyIntegrationTools.determineLegacyCollection(document, whelk.jsonld)) {
-            whelk.embellish(copy, ['chips'])
-        }
+        
+        whelk.embellish(copy, ['chips'])
 
         if (log.isDebugEnabled()) {
             log.debug("Framing ${document.getShortId()}")
