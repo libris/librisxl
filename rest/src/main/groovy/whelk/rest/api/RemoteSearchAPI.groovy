@@ -34,8 +34,8 @@ class RemoteSearchAPI extends HttpServlet {
     static final String metaProxyBaseUrl
     static {
         Properties props = PropertyLoader.loadProperties("secret")
-        metaProxyInfoUrl = new URL(props.getProperty("metaProxyInfoUrl"))
-        metaProxyBaseUrl = props.getProperty("metaProxyBaseUrl")
+        metaProxyInfoUrl = new URL(props.getProperty("metaProxyInfoUrl", "http://mproxy.libris.kb.se/db_Metaproxy.xml"))
+        metaProxyBaseUrl = props.getProperty("metaProxyBaseUrl", "http://mproxy.libris.kb.se:8000")
     }
 
     final String DEFAULT_DATABASE = "LC"
