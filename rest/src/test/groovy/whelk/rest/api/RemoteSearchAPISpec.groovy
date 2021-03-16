@@ -41,7 +41,7 @@ class RemoteSearchAPISpec extends Specification {
         output  == '{"totalResults":{"OCLC":1,"BNB":2,"CORNELL":3},"items":[{"database":"OCLC","data":{"@graph":[{"@id":"testId"}]}},{"database":"BNB","data":{"@graph":[{"@id":"testId"}]}},{"database":"CORNELL","data":{"@graph":[{"@id":"testId"}]}},{"database":"BNB","data":{"@graph":[{"@id":"testId2"}]}},{"database":"CORNELL","data":{"@graph":[{"@id":"testId2"}]}},{"database":"CORNELL","data":{"@graph":[{"@id":"testId3"}]}}]}'
     }
 
-    def "Merge results should append error message to output"() {
+    def "Merge results should add error message per database to output"() {
         given:
         def doc = new Document(['@graph': [['@id': "testId"]]])
         def resultBNB = createResult("BNB", 1, "Error message", [doc])
@@ -52,7 +52,7 @@ class RemoteSearchAPISpec extends Specification {
         def output = remote.mergeResults(resultLists)
 
         then:
-        output == '{"totalResults":{"OCLC":1,"BNB":1},"items":[{"database":"OCLC","data":{"@graph":[{"@id":"testId"}]}}],"errors":{"BNB":{"0":"Error message"}}}'
+        output == '{"totalResults":{"OCLC":1,"BNB":1},"items":[{"database":"OCLC","data":{"@graph":[{"@id":"testId"}]}}],"errors":{"BNB":"Error message"}}'
     }
 
     def "Merge results should handle empty results"() {

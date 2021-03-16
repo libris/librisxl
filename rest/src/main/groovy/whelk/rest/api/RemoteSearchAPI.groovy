@@ -14,6 +14,7 @@ import whelk.Whelk
 import whelk.converter.MarcJSONConverter
 import whelk.converter.marc.MarcFrameConverter
 import whelk.util.LegacyIntegrationTools
+import whelk.util.PropertyLoader
 import whelk.util.WhelkFactory
 
 import javax.servlet.http.HttpServlet
@@ -29,8 +30,13 @@ class RemoteSearchAPI extends HttpServlet {
     final static mapper = new ObjectMapper()
 
     MarcFrameConverter marcFrameConverter
-    static final URL metaProxyInfoUrl = new URL("http://mproxy.libris.kb.se/db_Metaproxy.xml")
-    static final String metaProxyBaseUrl = "http://mproxy.libris.kb.se:8000"
+    static final URL metaProxyInfoUrl
+    static final String metaProxyBaseUrl
+    static {
+        Properties props = PropertyLoader.loadProperties("secret")
+        metaProxyInfoUrl = new URL(props.getProperty("metaProxyInfoUrl", "http://mproxy.libris.kb.se/db_Metaproxy.xml"))
+        metaProxyBaseUrl = props.getProperty("metaProxyBaseUrl", "http://mproxy.libris.kb.se:8000")
+    }
 
     final String DEFAULT_DATABASE = "LC"
 
@@ -253,9 +259,7 @@ class RemoteSearchAPI extends HttpServlet {
 
         getRange(resultsList).collect { index ->
             resultsList.each { result ->
-                if (result.error) {
-                    errors.get(result.database, [:]).put("" + index, result.error)
-                } else if (result.hits[index]) {
+                if (!result.error && result.hits[index]) {
                     results.items << ['database': result.database, 'data': result.hits[index].data]
                 }
             }
@@ -263,6 +267,9 @@ class RemoteSearchAPI extends HttpServlet {
 
         resultsList.each { result ->
             results.totalResults[result.database] = result.numberOfHits
+            if (result.error) {
+                errors[result.database] = result.error
+            }
         }
 
         if (errors) {
