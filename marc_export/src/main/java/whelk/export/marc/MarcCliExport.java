@@ -135,8 +135,10 @@ public class MarcCliExport
 
     private void dumpSao(MarcRecordWriter output) throws SQLException, IOException
     {
+        Set<String> agentTypes = m_whelk.getJsonld().getSubClasses("Agent");
+        agentTypes.add("Agent");
         try(Connection connection = m_whelk.getStorage().getOuterConnection();
-            PreparedStatement preparedStatement = getAllSaoStatement(connection);
+            PreparedStatement preparedStatement = getAllSaoAndAgentsStatement(connection, agentTypes);
             ResultSet resultSet = preparedStatement.executeQuery())
         {
             while (resultSet.next())
@@ -327,11 +329,15 @@ public class MarcCliExport
         return preparedStatement;
     }
 
-    private PreparedStatement getAllSaoStatement(Connection connection)
+    private PreparedStatement getAllSaoAndAgentsStatement(Connection connection, Set<String> agentTypes)
             throws SQLException
     {
-        String sql = "SELECT id FROM lddb WHERE data#>>'{@graph,1,inScheme,@id}' = 'https://id.kb.se/term/sao' AND deleted = false";
+
+        String sql = "SELECT id FROM lddb WHERE " +
+                "(data#>>'{@graph,1,inScheme,@id}' = 'https://id.kb.se/term/sao' OR data#>>'{@graph,1,@type}' = ANY(?) ) " +
+                "AND deleted = false";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        preparedStatement.setArray(1, connection.createArrayOf("TEXT", agentTypes.toArray()));
         preparedStatement.setFetchSize(100);
 
         return preparedStatement;
