@@ -259,9 +259,7 @@ class RemoteSearchAPI extends HttpServlet {
 
         getRange(resultsList).collect { index ->
             resultsList.each { result ->
-                if (result.error) {
-                    errors.get(result.database, [:]).put("" + index, result.error)
-                } else if (result.hits[index]) {
+                if (!result.error && result.hits[index]) {
                     results.items << ['database': result.database, 'data': result.hits[index].data]
                 }
             }
@@ -269,6 +267,9 @@ class RemoteSearchAPI extends HttpServlet {
 
         resultsList.each { result ->
             results.totalResults[result.database] = result.numberOfHits
+            if (result.error) {
+                errors[result.database] = result.error
+            }
         }
 
         if (errors) {
