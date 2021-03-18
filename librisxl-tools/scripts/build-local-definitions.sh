@@ -12,6 +12,7 @@ fi
 
 ensurevenv() {
     if [[ ! -d .venv ]]; then
+        rm -f .venv
         python3 -m venv .venv
         .venv/bin/pip install wheel
     fi
@@ -43,8 +44,10 @@ else
         remote=$(git rev-parse "@{upstream}")
         if [[ $local != $remote ]]; then
             git pull
-            if [[ requirements.txt -nt .venv ]]; then
+            if [[ requirements.txt -nt .venv && -d .venv ]]; then
                 touch -r requirements.txt .venv
+                updatereqs
+            elif [[ ! -d .venv ]]; then
                 updatereqs
             fi
             builddefs
