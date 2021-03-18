@@ -3,7 +3,7 @@ import whelk.datatool.DocumentItem
 List activeInOldDb = new File(scriptDir, "active-in-old-db.csv").readLines()
 List shouldBeActive = new File(scriptDir, "should-be-active.csv").readLines()
 
-List<Map> shelfMarkSeqData = // Lägg in rätt löpnummer för dessa
+List<Map> shelfMarkSeqData =
         [
                 ["label": "SLF", "nextShelfControlNumber": 1, "description": "Svensk liggfolio"],
                 ["label": "SLF", "nextShelfControlNumber": 1, "description": "Svensk liggfolio, broschyrer", "qualifier": "br"],
