@@ -8,6 +8,7 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
@@ -24,6 +25,7 @@ class ESQuery {
         'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens'
     ]
     private static final String OR_PREFIX = 'or-'
+    private static final String EXISTS_PREFIX = 'exists-'
 
     private Map<String, List<String>> boostFieldsByType = [:]
     private ESQueryLensBoost lensBoost
@@ -76,7 +78,8 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map getESQuery(Map<String, String[]> queryParameters) {
+    Map getESQuery(Map<String, String[]> ogQueryParameters) {
+        Map<String, String[]> queryParameters = new HashMap<>(ogQueryParameters)
         // Legit params and their uses:
         //   q - query string, will be used as query_string or simple_query_string
         String q
@@ -101,17 +104,13 @@ class ESQuery {
         if (queryParameters.containsKey('o')) {
             queryParameters.put('_links', queryParameters.get('o'))
         }
-
+        
         q = Unicode.normalizeForSearch(getQueryString(queryParameters))
         (limit, offset) = getPaginationParams(queryParameters)
         sortBy = getSortClauses(queryParameters)
         siteFilter = getSiteFilter(queryParameters)
         aggQuery = getAggQuery(queryParameters)
         filters = getFilters(queryParameters)
-
-        if (originalTypeParam != null) {
-            queryParameters.put('@type', originalTypeParam)
-        }
 
         def isSimple = isSimple(q)
         String queryMode = isSimple ? 'simple_query_string' : 'query_string'
@@ -212,6 +211,9 @@ class ESQuery {
         if (boostMode?.indexOf('^') > -1) {
             return boostMode.tokenize(',')
         }
+        if (boostMode == 'id.kb.se') {
+            return CONCEPT_BOOST
+        }
 
         String typeKey = types != null ? types.toUnique().sort().join(',') : ''
         typeKey += boostMode
@@ -229,13 +231,64 @@ class ESQuery {
                     'heldBy.sigel^100',
                 ]
             } else {
-                boostFields = lensBoost.computeBoostFieldsFromLenses(types)
+                boostFields = computeBoostFields(types)
             }
             boostFieldsByType[typeKey] = boostFields
         }
 
         return boostFields
     }
+
+    List<String> computeBoostFields(String[] types) {
+        /* FIXME:
+           lensBoost.computeBoostFieldsFromLenses does not give a good result for Concept. 
+           Use hand-tuned boosting instead until we improve boosting/ranking in general. See LXL-3399 for details. 
+        */
+        def l = ((types ?: []) as List<String>).split { jsonld.isSubClassOf(it, 'Concept') }
+        def (conceptTypes, otherTypes) = [l[0], l[1]]
+        
+        if (conceptTypes) {
+            if (otherTypes) {
+                def fromLens = lensBoost.computeBoostFieldsFromLenses(otherTypes as String[])
+                def conceptFields = CONCEPT_BOOST.collect{ it.split('\\^')[0]}
+                def otherFieldsBoost = fromLens.findAll{!conceptFields.contains(it.split('\\^')[0]) }
+                return CONCEPT_BOOST + otherFieldsBoost
+            }
+            else {
+                return CONCEPT_BOOST
+            }
+        }
+        else {
+            return lensBoost.computeBoostFieldsFromLenses(types)
+        }
+    }
+        
+    private static final List<String> CONCEPT_BOOST = [
+            'prefLabel^1500',
+            'prefLabelByLang.sv^1500',
+            'label^500',
+            'labelByLang.sv^500',
+            'code^200',
+            'termComponentList._str.exact^125',
+            'termComponentList._str^75',
+            'altLabel^150',
+            'altLabelByLang.sv^150',
+            'hasVariant.prefLabel.exact^150',
+            '_str.exact^100',
+            'inScheme._str.exact^100',
+            'inScheme._str^100',
+            'inCollection._str.exact^10',
+            'broader._str.exact^10',
+            'exactMatch._str.exact^10',
+            'closeMatch._str.exact^10',
+            'broadMatch._str.exact^10',
+            'related._str.exact^10',
+            'scopeNote^10',
+            'keyword._str.exact^10',
+    ]
+    
+    private static final Set subjectRange = ["Person", "Family", "Meeting", "Organization", "Jurisdiction", "Subject", "Work"] as Set
+    
 
     /**
      * Expand `@type` query parameter with subclasses.
@@ -437,10 +490,17 @@ class ESQuery {
     private List<Map> getOrGroups(Map<String, String[]> parameters) {
         def or = [:]
         def other = [:]
+        def p = [:]
 
         // explicit OR
+        // p is always implicitly OR
         parameters.each { String key, value ->
-            if (key.startsWith(OR_PREFIX)) {
+            if (key == 'p') {
+                value.each {
+                    p.put(it, parameters['_links'])    
+                }
+            }
+            else if (key.startsWith(OR_PREFIX)) {
                 or.put(key.substring(OR_PREFIX.size()), value)
             }
             else {
@@ -458,6 +518,9 @@ class ESQuery {
         List result = other.collect {[(it.getKey()): it.getValue()]}
         if (or.size() > 0) {
             result.add(or)
+        }
+        if (p.size() > 0) {
+            result.add(p)
         }
         return result
     }
@@ -528,18 +591,40 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     Map createBoolFilter(Map<String, String[]> fieldsAndVals) {
         List clauses = []
-        fieldsAndVals.each {field, vals ->
-            for (val in vals) {
-                boolean isSimple = isSimple(val)
-                clauses.add([(isSimple ? 'simple_query_string' : 'query_string'): [
-                        'query': isSimple ? val : escapeNonSimpleQueryString(val),
-                        'fields': [field],
-                        'default_operator': 'AND'
-                ]])
+        fieldsAndVals.each {field, values ->
+            if (field.startsWith(EXISTS_PREFIX)) {
+                def f = field.substring(EXISTS_PREFIX.length())
+                for (val in values) {
+                    clauses.add(parseBoolean(field, val)
+                            ? ['exists': ['field': f]]
+                            : ['bool': ['must_not': ['exists': ['field': f]]]])
+                }
+            }
+            else {
+                for (val in values) {
+                    boolean isSimple = isSimple(val)
+                    clauses.add([(isSimple ? 'simple_query_string' : 'query_string'): [
+                            'query'           : isSimple ? val : escapeNonSimpleQueryString(val),
+                            'fields'          : [field],
+                            'default_operator': 'AND'
+                    ]])
+                }
             }
         }
 
         return ['bool': ['should': clauses]]
+    }
+
+    private static boolean parseBoolean(String parameterName, String value) {
+        if (value.toLowerCase() == 'true') {
+            true
+        }
+        else if (value.toLowerCase() == 'false') {
+            false
+        }
+        else {
+            throw new InvalidQueryException("$parameterName must be 'true' or 'false', got '$value'")
+        }
     }
 
     /**
@@ -591,7 +676,7 @@ class ESQuery {
     }
 
     /**
-     * Construct "range query" filters for parameters prefixed with any {@link ParameterPrefix}
+     * Construct "range query" filters for parameters prefixed with any {@link RangeParameterPrefix}
      * Ranges for different parameters are combined with AND
      * Multiple ranges for the same parameter are combined with OR
      *
@@ -605,7 +690,7 @@ class ESQuery {
         Set<String> handledParameters = new HashSet<>()
 
         queryParameters.each { parameter, values ->
-            parseRangeParameter(parameter) { String nameNoPrefix, ParameterPrefix prefix ->
+            parseRangeParameter(parameter) { String nameNoPrefix, RangeParameterPrefix prefix ->
                 Ranges r = ranges.computeIfAbsent(nameNoPrefix,
                         { p -> p in dateFields ? Ranges.date(p, whelk.getTimezone()) : Ranges.nonDate(p)})
                 values.collectMany{ it.tokenize(',') }.each { r.add(prefix, it.trim()) }
@@ -618,7 +703,7 @@ class ESQuery {
     }
 
     private void parseRangeParameter (String parameter, Closure handler) {
-        for (ParameterPrefix p : ParameterPrefix.values()) {
+        for (RangeParameterPrefix p : RangeParameterPrefix.values()) {
             if (parameter.startsWith(p.prefix())) {
                 handler(parameter.substring(p.prefix().size()), p)
                 return

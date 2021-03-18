@@ -30,6 +30,10 @@ class Relations {
         relations.each { result.addAll(storage.getByReverseRelation(iri, it)) }
         return result
     }
+    
+    Map<String, Long> getReverseCountByRelation(String iri) {
+        storage.getIncomingLinkCountByRelation(iri)
+    }
 
     private boolean isReachable(String fromIri, String toIri, List<String> relations) {
         Set<String> visited = []

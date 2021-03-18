@@ -267,7 +267,7 @@ public class ProfileExport
             if (collection.equals("hold"))
             {
                 Document updatedDocument = m_whelk.getStorage().load(id);
-                if (!profile.locations().contains(updatedDocument.getSigel())) {
+                if (!profile.locations().contains(updatedDocument.getHeldBySigel())) {
                     return false;
                 }
             }

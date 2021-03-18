@@ -3,6 +3,7 @@ package whelk.gui;
 import whelk.PortableScript;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -48,6 +49,7 @@ public class SelectScriptPanel extends WizardCard implements ActionListener
         if (actionEvent.getActionCommand().equals("load"))
         {
             JFileChooser chooser = new JFileChooser();
+            chooser.setPreferredSize(new Dimension(1024, 768));
             int returnVal = chooser.showOpenDialog(wizard);
             if(returnVal == JFileChooser.APPROVE_OPTION)
             {

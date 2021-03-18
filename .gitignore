@@ -9,6 +9,7 @@ Session.vim
 
 # Local Config
 /*.properties
+/*.properties-*
 !gradle.properties
 
 # Java/Gradle Artifacts

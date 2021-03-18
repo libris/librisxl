@@ -57,6 +57,11 @@ public class RunOrCreatePanel extends WizardCard implements ActionListener
 
     private void chooseNextCard()
     {
+        if (rRun.isSelected() || rCreate.isSelected())
+            enableNext();
+        else
+            disableNext();
+
         if (! rRun.isSelected())
             setNextCard(Wizard.CREATE_WHAT);
         else

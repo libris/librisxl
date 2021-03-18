@@ -95,7 +95,8 @@ public class GetRecord
                 writer.writeStartElement("GetRecord");
 
                 ResponseCommon.emitRecord(it.next(), writer, metadataPrefix, false,
-                        metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX), withDeletedData);
+                        metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX) || metadataPrefix.contains("marcxml"),
+                        withDeletedData);
 
                 writer.writeEndElement(); // GetRecord
                 ResponseCommon.writeOaiPmhClose(writer, request);

@@ -9,6 +9,7 @@ import whelk.Whelk
 import whelk.exception.InvalidQueryException
 import whelk.exception.WhelkRuntimeException
 import whelk.search.ESQuery
+import whelk.search.ElasticFind
 import whelk.util.DocumentUtil
 
 @Log
@@ -48,18 +49,22 @@ class SearchUtils {
             throw new WhelkRuntimeException("ElasticSearch not configured.")
         }
 
-        String relation = getReservedQueryParameter('p', queryParameters)
+        List predicates = queryParameters['p']
         String object = getReservedQueryParameter('o', queryParameters)
         String value = getReservedQueryParameter('value', queryParameters)
         String query = getReservedQueryParameter('q', queryParameters)
         String sortBy = getReservedQueryParameter('_sort', queryParameters)
         String lens = getReservedQueryParameter('_lens', queryParameters)
 
+        if (queryParameters['p'] && !object) {
+            throw new InvalidQueryException("Parameter 'p' can only be used together with 'o'")
+        }
+        
         Tuple2 limitAndOffset = getLimitAndOffset(queryParameters)
         int limit = limitAndOffset.first
         int offset = limitAndOffset.second
 
-        Map pageParams = ['p'     : relation,
+        Map pageParams = ['p'     : predicates,
                           'value' : value,
                           'q'     : query,
                           'o'     : object,
@@ -98,6 +103,7 @@ class SearchUtils {
                                    String lens) {
         String query = pageParams['q']
         String reverseObject = pageParams['o']
+        List<String> predicates = pageParams['p']
         lens = lens ?: 'cards'
         log.debug("Querying ElasticSearch")
 
@@ -138,8 +144,10 @@ class SearchUtils {
             }
         }
 
-        Map stats = buildStats(esResult['aggregations'],
-                           makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)))
+        
+        Map stats = buildStats((Map) esResult['aggregations'], 
+                makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
+                (total > 0 && !predicates) ? reverseObject : null)
         if (!stats) {
             log.debug("No stats found for query: ${queryParameters}, result: ${esResult}")
         }
@@ -151,6 +159,16 @@ class SearchUtils {
         }
 
 
+        if (reverseObject && predicates) {
+            String upUrl = makeFindUrl(SearchType.ELASTIC, pageParams - ['p' :  pageParams['p']], offset)
+            mappings << [
+                    'variable' : 'p',
+                    'object'   : reverseObject,
+                    'predicate': ld.toChip(lookup(predicates.first())),
+                    'up'       : [(JsonLd.ID_KEY): upUrl],
+            ]
+        }
+        
         Map result = assembleSearchResults(SearchType.ELASTIC,
                                            items, mappings, pageParams,
                                            limit, offset, total)
@@ -278,13 +296,13 @@ class SearchUtils {
      * Build aggregation statistics for ES result.
      *
      */
-    private Map buildStats(Map aggregations, String baseUrl) {
+    private Map buildStats(Map aggregations, String baseUrl, String reverseObject) {
         Map result = [:]
-        result = addSlices([:], aggregations, baseUrl)
+        result = addSlices([:], aggregations, baseUrl, reverseObject)
         return result
     }
 
-    private Map addSlices(Map stats, Map aggregations, String baseUrl) {
+    private Map addSlices(Map stats, Map aggregations, String baseUrl, String reverseObject) {
         Map sliceMap = aggregations.inject([:]) { acc, key, aggregation ->
             String baseUrlForKey = removeWildcardForKey(baseUrl, key)
             List observations = []
@@ -296,10 +314,7 @@ class SearchUtils {
                 Map observation = ['totalItems': bucket.getAt('doc_count'),
                                    'view': [(JsonLd.ID_KEY): searchPageUrl],
                                    'object': ld.toChip(lookup(itemId))]
-
-                /*Map bucketAggs = bucket.getAggregations().asMap
-
-                observation = addSlices(observation, bucketAggs, searchPageUrl)*/
+                
                 observations << observation
             }
 
@@ -310,6 +325,24 @@ class SearchUtils {
 
             return acc
         }
+        
+        if (reverseObject && !hasHugeNumberOfIncomingLinks(reverseObject)) {
+            def counts = groupRelations(whelk.relations.getReverseCountByRelation(reverseObject)) // TODO precompute and store in ES indexed doc?)
+            Map sliceNode = [
+                    'dimension'  : JsonLd.REVERSE_KEY,
+                    'observation': counts.collect { List<String> relations, long count ->
+                        def viewUrl = baseUrl + '&' + 
+                                relations.collect{ makeParam('p', it + '.' + JsonLd.ID_KEY) }.join('&')
+                        [
+                                'totalItems': count,
+                                'view'      : ['@id': viewUrl],
+                                'object'    : ld.toChip(lookup(relations.first()))
+                        ]
+                    }
+            ]
+
+            sliceMap[JsonLd.REVERSE_KEY] = sliceNode
+        }
 
         if (sliceMap) {
             stats['sliceByDimension'] = sliceMap
@@ -318,8 +351,61 @@ class SearchUtils {
         return stats
     }
 
+    /**
+     * Group together instanceOf.x and x
+     * 
+     * Meaning there will be one predicate/facet for e.g. 'subject' and 'instanceOf.subject' called 'subject'.
+     * That is, it will match both works and instances with local works.
+     * Calling the relation 'subject' is of course not completely correct (it hides instanceOf) but the idea is that 
+     * it is more practical for now.
+     */
+    static List<Tuple2<List<String>, Long>> groupRelations(Map<String, Long> counts) {
+        Map<String, Long> blankWork = [:]
+        Map<String, Long> other = [:]
+        counts.each {relation, count -> 
+            (relation.startsWith("$JsonLd.WORK_KEY.") ? blankWork : other)[relation] = count
+        }
+
+        List result = []
+        other.each { relation, count ->
+            String r = "$JsonLd.WORK_KEY.$relation"
+            if (blankWork.containsKey(r)) {
+                result.add(new Tuple2([relation, r], count + blankWork.remove(r)))
+            }
+            else {
+                result.add(new Tuple2([relation], count))
+            }
+        }
+
+        blankWork.each {relation, count ->
+            result.add(new Tuple2([stripPrefix(relation, "$JsonLd.WORK_KEY."), relation], count))
+        }
+
+        return result
+    }
+    
     private String removeWildcardForKey(String url, String key) {
         url.replace("&${makeParam(key, '*')}", "")
+    }
+    
+    private static String stripPrefix(String s, String prefix) {
+        s.startsWith(prefix) ? s.substring(prefix.length()) : s
+    }
+    
+    private boolean hasHugeNumberOfIncomingLinks(String iri) {
+        def num = numberOfIncomingLinks(iri)
+        return num < 0 || num > 500_000
+    }
+    
+    private int numberOfIncomingLinks(String iri) {
+        try {
+            def doc = new ElasticFind(esQuery).find([(JsonLd.ID_KEY): [iri]]).first()
+            return doc['reverseLinks']['totalItems']
+        }
+        catch (Exception e) {
+            log.warn("Error getting numberOfIncomingLinks for $iri: $e", e)
+            return -1
+        }
     }
 
     /*
@@ -333,6 +419,13 @@ class SearchUtils {
 
         if (entry) {
             return entry
+        } else if (itemId.contains('.')) {
+            def chain = itemId.split('\\.').findAll {it != JsonLd.ID_KEY}
+            return [
+                    'propertyChainAxiom': chain.collect(this.&lookup),
+                    'label': chain.join(' '),
+                    '_key': itemId,  // lxlviewer has some propertyChains of its own defined, this is used to match them 
+            ]
         } else {
             return [(JsonLd.ID_KEY): itemId, 'label': itemId]
         }
@@ -571,8 +664,11 @@ class SearchUtils {
                 pageParams[param] << val
             }
         }
+                
         return new Tuple2(result, pageParams)
     }
+    
+    
 
     /*
      * Return a list of reserved query params

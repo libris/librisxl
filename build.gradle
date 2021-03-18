@@ -1,8 +1,19 @@
 plugins {
-    id "nebula.lint" version "16.0.2"
+    id "nebula.lint" version "16.16.0"
 }
 
 allprojects {
+    // Run manually with "./gradlew autoLintGradle"
+    // Unused dependency warning cannot always be trusted, always verify ("this dependency is unused and can be removed")
     gradleLint.rules = ['all-dependency']
     gradleLint.alwaysRun = false
+
+    configurations.all {
+        // commons-logging and jcl-over-slf4j pulled in by different deps
+        // resulting in duplicate org.apache.commons.logging.impl.* classes
+        exclude group:"commons-logging", module:"commons-logging"
+
+        // Not needed since Java 6
+        exclude group:"stax", module:"stax-api"
+    }
 }

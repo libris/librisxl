@@ -1,30 +1,35 @@
 package whelk.converter
 
 import groovy.util.logging.Log4j2 as Log
-
+import org.codehaus.jackson.map.ObjectMapper
 import whelk.*
+import whelk.component.PostgreSQLComponent
+import whelk.util.PropertyLoader
 
 @Log
-class JsonLDTurtleConverter {
+class JsonLDTurtleConverter implements FormatConverter {
 
     String resultContentType = "text/turtle"
     String requiredContentType = "application/ld+json"
     def context
     def base
+    def mapper = new ObjectMapper()
 
-    JsonLDTurtleConverter(String contextPath, String base=null) {
-        def loader = getClass().classLoader
-        def contextSrc = loader.getResourceAsStream(contextPath).withStream {
-            mapper.readValue(it, Map)
-        }
-        context = JsonLdToTurtle.parseContext(contextSrc)
+    JsonLDTurtleConverter(String base = null) {
+        readContextFromDb()
         this.base = base
     }
 
-    Document doConvert(Document doc) {
-        def source = mapper.readValue(doc.data, Map)
-        def bytes = JsonLdToTurtle.toTurtle(context, source, base).toByteArray()
-        return whelk.createDocument(resultContentType).withData(bytes).withIdentifier(doc.identifier)
+    private synchronized readContextFromDb() {
+        if (context == null) {
+            Properties props = PropertyLoader.loadProperties("secret")
+            PostgreSQLComponent postgreSQLComponent = new PostgreSQLComponent(props.getProperty("sqlUrl"))
+            context = JsonLdToTurtle.parseContext( mapper.readValue(postgreSQLComponent.getContext(), HashMap.class) )
+        }
     }
 
+    Map convert(Map source, String id) {
+        def bytes = JsonLdToTurtle.toTurtle(context, source, base).toByteArray()
+        return [(JsonLd.NON_JSON_CONTENT_KEY) : (new String(bytes, "UTF-8"))]
+    }
 }

@@ -3,6 +3,7 @@ package whelk.gui;
 import whelk.ScriptGenerator;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -24,6 +25,8 @@ class ReplaceRecordsPanel extends WizardCard implements ActionListener
     {
         super(wizard);
         window = wizard;
+
+        chooser.setPreferredSize(new Dimension(1024, 768));
 
         Box vbox = Box.createVerticalBox();
 

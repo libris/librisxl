@@ -8,10 +8,12 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
+import org.postgresql.util.PGobject
 import org.postgresql.util.PSQLException
 import whelk.Document
 import whelk.IdType
 import whelk.JsonLd
+import whelk.Link
 import whelk.exception.CancelUpdateException
 import whelk.exception.LinkValidationException
 import whelk.exception.MissingMainIriException
@@ -56,6 +58,13 @@ class PostgreSQLComponent {
     interface UpdateAgent {
         void update(Document doc)
     }
+
+    interface QueueHandler {
+        enum Result { HANDLED, FAIL_RETRY, FAIL_REQUEUE }
+        
+        Result handle(Document doc)
+    }
+
     public static final int STALE_UPDATE_RETRIES = 10
 
     public static final String PROPERTY_SQL_URL = "sqlUrl"
@@ -192,6 +201,14 @@ class PostgreSQLComponent {
     private static final String GET_INCOMING_LINK_COUNT =
             "SELECT COUNT(id) FROM lddb__dependencies WHERE dependsOnId = ?"
 
+    private static final String GET_INCOMING_LINK_COUNT_BY_RELATION = """
+            SELECT d.relation, count(d.id)
+            FROM lddb__dependencies d, lddb__identifiers l
+            WHERE d.dependsonid = l.id
+            AND l.iri = ?
+            GROUP BY d.relation
+            """.stripIndent()
+    
     private static final String GET_DEPENDERS_OF_TYPE =
             "SELECT id FROM lddb__dependencies WHERE dependsOnId = ? AND relation = ?"
 
@@ -309,11 +326,43 @@ class PostgreSQLComponent {
             AND l.data #>> '{@graph,1,heldBy,@id}' = ANY(?);
             """.stripIndent()
 
+    private static final String SPARQL_QUEUE_ADD = "INSERT INTO lddb__sparql_q (id) VALUES (?)"
+
+    private static final String SPARQL_QUEUE_REMOVE = """
+            DELETE FROM lddb__sparql_q
+            WHERE pk = (
+              SELECT pk
+              FROM lddb__sparql_q
+              ORDER BY pk ASC
+              FOR UPDATE SKIP LOCKED
+              LIMIT ?
+            )
+            RETURNING id;
+            """.stripIndent()
+
+    private static final String SPARQL_QUEUE_ADD_UPDATES_SINCE = """
+            INSERT INTO lddb__sparql_q (id)
+            SELECT l.id FROM lddb l
+            LEFT JOIN lddb__sparql_q q on l.id = q.id
+            WHERE
+                q.id IS NULL
+                AND
+                (
+                    modified > ? OR
+                    (data#>>'{@graph,0,generationDate}')::timestamp > ?
+                )
+        """.stripIndent()
+
+    private static final String GET_DATASET_ID_LIST = """
+            SELECT id FROM lddb WHERE data#>'{@graph,0,inDataset}' @> ?::jsonb AND deleted = false
+        """.stripIndent()
+
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
 
     boolean versioning = true
     boolean doVerifyDocumentIdRetention = true
+    boolean sparqlQueueEnabled = false
 
     LinkFinder linkFinder
     DependencyCache dependencyCache
@@ -567,26 +616,28 @@ class PostgreSQLComponent {
             normalizeDocumentForStorage(doc, connection)
 
             if (collection == "hold") {
+                checkLinkedShelfMarkOwnership(doc, connection)
+                
                 String holdingFor = doc.getHoldingFor()
                 if (holdingFor == null) {
-                    log.warn("Was asked to save a holding post linked to a bib post that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                    log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
                     return false
                 }
                 String holdingForRecordId = getRecordId(holdingFor, connection)
                 if (holdingForRecordId == null) {
-                    log.warn("Was asked to save a holding post linked to a bib post that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                    log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
                     return false
                 }
                 String holdingForSystemId = holdingForRecordId.substring(Document.BASE_URI.toString().length())
                 if (holdingForSystemId == null) {
-                    log.warn("Was asked to save a holding post linked to a bib post that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                    log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
                     return false
                 }
 
                 acquireRowLock(holdingForSystemId, connection)
 
                 if (getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) != null)
-                    throw new ConflictingHoldException("Already exists a holding post for ${doc.getHeldBy()} and bib: $holdingFor")
+                    throw new ConflictingHoldException("Already exists a holding record for ${doc.getHeldBy()} and bib: $holdingFor")
             }
 
             if (linkFinder != null)
@@ -773,14 +824,12 @@ class PostgreSQLComponent {
         PreparedStatement selectStatement = null
         PreparedStatement updateStatement = null
         ResultSet resultSet = null
-
         try {
             selectStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
             selectStatement.setString(1, id)
             resultSet = selectStatement.executeQuery()
             if (!resultSet.next())
                 throw new SQLException("There is no document with the id: " + id)
-
             Document preUpdateDoc = assembleDocument(resultSet)
 
             if (preUpdateDoc.getChecksum() != oldChecksum) {
@@ -793,6 +842,10 @@ class PostgreSQLComponent {
                 changedBy = oldChangedBy
 
             normalizeDocumentForStorage(doc, connection)
+
+            if (collection == "hold") {
+                checkLinkedShelfMarkOwnership(doc, connection)
+            }
 
             if (doVerifyDocumentIdRetention) {
                 verifyDocumentIdRetention(preUpdateDoc, doc, connection)
@@ -844,7 +897,7 @@ class PostgreSQLComponent {
             } else {
                 throw psqle
             }
-        } catch (TooHighEncodingLevelException e) {
+        } catch (TooHighEncodingLevelException | StaleUpdateException e) {
             connection.rollback()
             throw e
         } catch (Exception e) {
@@ -857,6 +910,24 @@ class PostgreSQLComponent {
 
         return doc
     }
+
+    private Document lockAndLoad(String id, Connection connection) throws DocumentNotFoundException {
+        PreparedStatement statement = null
+        ResultSet resultSet = null
+        try {
+            statement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
+            statement.setString(1, id)
+            resultSet = statement.executeQuery()
+            if (!resultSet.next())
+                throw new DocumentNotFoundException("There is no document with the id: " + id)
+
+            return assembleDocument(resultSet)
+        }
+        finally {
+            close(resultSet, statement)
+        }
+    }
+
 
     /**
      * Returns if the URIs pointing to 'doc' are acceptable for an update to 'pre_update_doc',
@@ -918,6 +989,10 @@ class PostgreSQLComponent {
                 updateCard(new CardEntry(doc), connection)
             }
         }
+
+        if (sparqlQueueEnabled) {
+            sparqlQueueAdd(doc.getShortId(), connection)
+        }
     }
 
     /**
@@ -931,19 +1006,39 @@ class PostgreSQLComponent {
         }
     }
 
+    void queueSparqlUpdatesFrom(long unixTime) {
+        Timestamp timestamp = new Timestamp(unixTime*1000)
+        getConnection().withCloseable { connection ->
+            PreparedStatement statement = null
+            try {
+                statement = connection.prepareStatement(SPARQL_QUEUE_ADD_UPDATES_SINCE)
+                statement.setTimestamp(1, timestamp);
+                statement.setTimestamp(2, timestamp);
+
+                statement.execute()
+            } finally {
+                close(statement)
+            }
+
+        }
+    }
+
     private List<String[]> _calculateDependenciesSystemIDs(Document doc, Connection connection) {
         List<String[]> dependencies = []
 
-        Map iriToRelation = doc.getExternalRefs()
+        Map<String, Set<Link>> linksByIri = [:]
+        doc.getExternalRefs()
             .findAll{ it.iri.startsWith("http") }
-            .collectEntries {  [ it.iri, it.relation ] }
+            .each { link ->
+                linksByIri.computeIfAbsent(link.iri, { iri -> new HashSet<>() }).add(link)
+            }
 
-        getSystemIds(iriToRelation.keySet(), connection) { String iri, String systemId, boolean deleted ->
+        getSystemIds(linksByIri.keySet(), connection) { String iri, String systemId, boolean deleted ->
             if (deleted) // doc refers to a deleted document which is not ok.
                 throw new LinkValidationException("Record supposedly depends on deleted record: ${systemId}, which is not allowed.")
 
             if (systemId != doc.getShortId()) // Exclude A -> A (self-references)
-                dependencies.add([iriToRelation[iri], systemId] as String[])
+                dependencies.addAll(linksByIri[iri].collect { [it.relation, systemId] as String[] })
         }
 
         return dependencies
@@ -988,13 +1083,35 @@ class PostgreSQLComponent {
         return createAndAddMissingCards(bulkLoadCards(getSystemIdsByIris(iris).values())).values()
     }
 
+    void doForIdInDataset(String dataset, Closure c) {
+        PreparedStatement statement = null
+        ResultSet rs = null
+        Connection connection = getOuterConnection()
+        try {
+            statement = connection.prepareStatement(GET_DATASET_ID_LIST)
+
+            PGobject jsonb = new PGobject()
+            jsonb.setType("jsonb")
+            jsonb.setValue("[{\"@id\":\""+ dataset +"\"}]")
+            statement.setObject(1, jsonb)
+
+            rs = statement.executeQuery()
+            while (rs.next()) {
+                String id = rs.getString(1)
+                c(id)
+            }
+        } finally {
+            close(rs, statement, connection)
+        }
+    }
+
     /**
-     * Check if a card has changed
+     * Check if a card has changed or is nonexistent
      *
      * @param systemId
-     * @return true if the card changed after or at the same time as the document was modified
+     * @return true if the card changed after or at the same time as the document was modified, or is nonexistent
      */
-    boolean isCardChanged(String systemId) {
+    boolean isCardChangedOrNonexistent(String systemId) {
         Connection connection = getConnection()
         PreparedStatement preparedStatement = null
         ResultSet rs = null
@@ -1004,7 +1121,7 @@ class PostgreSQLComponent {
 
             rs = preparedStatement.executeQuery()
 
-            return rs.next() && rs.getBoolean(1)
+            return rs.next() ? rs.getBoolean(1) : true
         } finally {
             close(rs, preparedStatement, connection)
         }
@@ -1164,6 +1281,14 @@ class PostgreSQLComponent {
         return cardEntry.getCard().data
     }
 
+    // Temporary method for changing lddb__dependencies.relation to full "path" of relation
+    // e.g. agent -> instanceOf.contribution.agent
+    void recalculateDependencies(Document doc) {
+        getConnection().withCloseable { connection ->
+            saveDependencies(doc, connection)
+        }
+    }
+    
     private void saveDependencies(Document doc, Connection connection) {
         List dependencies = _calculateDependenciesSystemIDs(doc, connection)
 
@@ -1331,11 +1456,13 @@ class PostgreSQLComponent {
                 }
                 batch = rigInsertStatement(batch, doc, now, changedIn, changedBy, collection, false)
                 batch.addBatch()
-                boolean leaveCacheAlone = true
-                refreshDerivativeTables(doc, connection, false, leaveCacheAlone)
             }
             batch.executeBatch()
             ver_batch.executeBatch()
+            docs.each { doc ->
+                boolean leaveCacheAlone = true
+                refreshDerivativeTables(doc, connection, false, leaveCacheAlone)
+            }
             clearEmbellishedCache(connection)
             connection.commit()
             log.debug("Stored ${docs.size()} documents in collection ${collection} (versioning: ${versioning})")
@@ -1352,6 +1479,87 @@ class PostgreSQLComponent {
             log.trace("[bulkStore] Closed connection.")
         }
         return false
+    }
+
+    private void sparqlQueueAdd(String systemId, Connection connection) {
+        PreparedStatement preparedStatement = null
+        try {
+            preparedStatement = connection.prepareStatement(SPARQL_QUEUE_ADD)
+            preparedStatement.setString(1, systemId)
+            preparedStatement.executeUpdate()
+        }
+        finally {
+            close(preparedStatement)
+        }
+    }
+
+    /**
+     * Take <num> items in order from the queue and pass them one by one to the handler.
+     * If the handler fails on any item, all items remain in the queue.
+     *
+     * @param reader Document handler
+     * @param num Number of documents to take in one batch
+     * @param connectionPool
+     * @return true if there were any documents in the queue and the handler was successful
+     */
+    boolean sparqlQueueTake(QueueHandler reader, int num, DataSource connectionPool) {
+        Connection connection = null
+        try {
+            // The queue contains document ids.
+            // Items (rows) are locked and then finally removed from the queue when we commit the transaction.
+            // If the handler fails on any item, the transaction is cancelled and all items remain in the queue.
+            // SKIP LOCKED in the query guarantees that we will take the first <num> unlocked rows.
+            //
+            // Lock the actual documents while the reader is working on them. Otherwise two readers could end up
+            // working on two different versions of the same document concurrently.
+            // (T1 writes A, R1 starts working on A, T2 writes A', R2 starts working on A' => race between R1 and R2)
+            // Take locks in same order as lddb writers to avoid deadlocks.
+            connection = connectionPool.getConnection()
+            connection.setAutoCommit(false)
+            def ids = sparqlQueueTakeIds(num, connection)
+
+            boolean anyReQueued = false
+            for (String id : ids.sort()) {
+                try {
+                    Document doc = lockAndLoad(id, connection)
+                    def result = reader.handle(doc)
+                    if (result == QueueHandler.Result.FAIL_REQUEUE) {
+                        sparqlQueueAdd(id, connection)
+                        anyReQueued = true
+                    }
+                    else if (result == QueueHandler.Result.FAIL_RETRY) {
+                        connection.rollback()
+                        return false
+                    }
+                }
+                catch (DocumentNotFoundException e) {
+                    log.warn("sparqlQueueTake: document with id $id does not exist: $e")
+                }
+            }
+
+            connection.commit()
+            return !ids.isEmpty() && !anyReQueued
+        }
+        finally {
+            close(connection)
+        }
+    }
+
+    private Collection<String> sparqlQueueTakeIds(int num, Connection connection) {
+        PreparedStatement statement = null
+        try {
+            statement = connection.prepareStatement(SPARQL_QUEUE_REMOVE)
+            statement.setInt(1, num)
+            ResultSet resultSet = statement.executeQuery()
+            List<String> result = new ArrayList<>(num)
+            while(resultSet.next()) {
+                result.add(resultSet.getString(1))
+            }
+            return result
+        }
+        finally {
+            close(statement)
+        }
     }
 
     /**
@@ -1743,6 +1951,25 @@ class PostgreSQLComponent {
         }
     }
 
+    Map<String, Long> getIncomingLinkCountByRelation(String iri) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        def result = new TreeMap<String, Long>()
+        try {
+            preparedStatement = connection.prepareStatement(GET_INCOMING_LINK_COUNT_BY_RELATION)
+
+            preparedStatement.setString(1, iri)
+            rs = preparedStatement.executeQuery()
+            while (rs.next()) {
+                result[rs.getString(1)] = (long) rs.getInt(2)
+            }
+            return result
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
     private static SortedSet<String> getDependencyData(String id, String query, Connection connection) {
         PreparedStatement preparedStatement = null
         ResultSet rs = null
@@ -2011,6 +2238,20 @@ class PostgreSQLComponent {
         }
     }
 
+    private void checkLinkedShelfMarkOwnership(Document doc, Connection connection) {
+        Map mainEntity = ((List) doc.data['@graph'])[1]
+        Collection<Map> items = (mainEntity.hasComponent ?: []).collect()
+        items.add(mainEntity)
+        items.each { Map item ->
+            if (item['type'] == 'Item' && doc.getHeldBy() && item.shelfMark && item.shelfMark['@id']) {
+                def s = getDocumentByIri((String) item.shelfMark['@id'], connection)
+                if (s && s.getDescriptionCreator() != doc.getHeldBy()) {
+                    throw new RuntimeException("Cannot link to shelf mark controlled by other sigel: ${s.getDescriptionCreator()} <> ${doc.getHeldBy()}")
+                }
+            }
+        }
+    }
+
     private static Document assembleDocument(ResultSet rs) {
         Document doc = new Document(mapper.readValue(rs.getString("data"), Map))
         doc.setModified(new Date(rs.getTimestamp("modified").getTime()))
@@ -2201,7 +2442,10 @@ class PostgreSQLComponent {
     private String getDescriptionChangerId(String changedBy) {
         //FIXME(?): hardcoded
         // for historical reasons changedBy is the script URI for global changes
-        if (changedBy.startsWith('https://libris.kb.se/sys/globalchanges/')) {
+        if (changedBy == null) {
+            return null
+        }
+        else if (changedBy.startsWith('https://libris.kb.se/sys/globalchanges/')) {
             return getDescriptionChangerId('SEK')
         }
         else if (changedBy == "MimerProd" || changedBy == "Mimer" ||
@@ -2262,6 +2506,12 @@ class PostgreSQLComponent {
 
             this.card = new Document(jsonld.toCard(doc.data, false))
             this.changedTimestamp = changedTimestamp ?: doc.getModifiedTimestamp()
+        }
+    }
+
+    class DocumentNotFoundException extends SQLException {
+        DocumentNotFoundException(String msg) {
+            super (msg)
         }
     }
 }

@@ -202,6 +202,7 @@
                     "@type": {"type": "keyword"},
                     "mainTitle": {
                         "type": "text",
+                        "analyzer": "softmatcher",
                         "copy_to": "_all",
                         "fields": {
                             "keyword": {
@@ -234,7 +235,8 @@
             },
             "_all": {
                 "type": "text",
-                "store": false
+                "store": false,
+                "analyzer": "softmatcher"
             }
         },
         "date_detection": false,
@@ -268,6 +270,16 @@
                     },
                     "match": "@type",
                     "match_mapping_type": "string"
+                }
+            },
+            {
+                "shelfControlNumber_template": {
+                    "match": "shelfControlNumber",
+                    "mapping": {
+                        "index": true,
+                        "type": "text",
+                        "copy_to": "_all"
+                    }
                 }
             },
             {

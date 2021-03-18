@@ -12,7 +12,8 @@ fi
 
 ensurevenv() {
     if [[ ! -d .venv ]]; then
-        virtualenv .venv -p python2.7
+        python3 -m venv .venv
+        .venv/bin/pip install wheel
     fi
 }
 
