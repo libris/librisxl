@@ -240,27 +240,37 @@ class ESQuery {
     }
 
     List<String> computeBoostFields(String[] types) {
-        boolean isConcept = types && types.length == 1 && types[0] && jsonld.isSubClassOf(types[0], 'Concept')
-        if (isConcept) {
-            /* FIXME:
-               lensBoost.computeBoostFieldsFromLenses does not give a good result for Concept. 
-               Use hand-tuned boosting instead until we improve boosting/ranking in general. See LXL-3399 for details. 
-            */
-            return CONCEPT_BOOST
+        /* FIXME:
+           lensBoost.computeBoostFieldsFromLenses does not give a good result for Concept. 
+           Use hand-tuned boosting instead until we improve boosting/ranking in general. See LXL-3399 for details. 
+        */
+        def l = ((types ?: []) as List<String>).split { jsonld.isSubClassOf(it, 'Concept') }
+        def (conceptTypes, otherTypes) = [l[0], l[1]]
+        
+        if (conceptTypes) {
+            if (otherTypes) {
+                def fromLens = lensBoost.computeBoostFieldsFromLenses(otherTypes as String[])
+                def conceptFields = CONCEPT_BOOST.collect{ it.split('\\^')[0]}
+                def otherFieldsBoost = fromLens.findAll{!conceptFields.contains(it.split('\\^')[0]) }
+                return CONCEPT_BOOST + otherFieldsBoost
+            }
+            else {
+                return CONCEPT_BOOST
+            }
         }
         else {
-            
             return lensBoost.computeBoostFieldsFromLenses(types)
         }
     }
-    
+        
     private static final List<String> CONCEPT_BOOST = [
             'prefLabel^1500',
             'prefLabelByLang.sv^1500',
             'label^500',
             'labelByLang.sv^500',
             'code^200',
-            'termComponentList._str.exact^150',
+            'termComponentList._str.exact^125',
+            'termComponentList._str^75',
             'altLabel^150',
             'altLabelByLang.sv^150',
             'hasVariant.prefLabel.exact^150',
@@ -276,6 +286,8 @@ class ESQuery {
             'scopeNote^10',
             'keyword._str.exact^10',
     ]
+    
+    private static final Set subjectRange = ["Person", "Family", "Meeting", "Organization", "Jurisdiction", "Subject", "Work"] as Set
     
 
     /**
