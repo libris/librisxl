@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 class XL
 {
@@ -391,6 +392,14 @@ class XL
                     // Unique id number in another system.
                     duplicateIDs.addAll(getDuplicatesOnEAN(marcRecord));
                     break;
+                case DUPTYPE_URI:
+                    // Unique id number in another system.
+                    duplicateIDs.addAll(getDuplicatesOnURI(marcRecord));
+                    break;
+                case DUPTYPE_URN:
+                    // Unique id number in another system.
+                    duplicateIDs.addAll(getDuplicatesOnURN(marcRecord));
+                    break;
             }
 
             /* THIS FUNCTIONALITY IS TESTED (AND WAS USED IN PRODUCTION), BUT WAS DISABLED BECAUSE
@@ -504,6 +513,62 @@ class XL
 
                     try (Connection connection = m_whelk.getStorage().getConnection();
                          PreparedStatement statement = getOnEAN_ps(connection, incomingEan);
+                         ResultSet resultSet = statement.executeQuery())
+                    {
+                        results.addAll(collectIDs(resultSet));
+                    }
+                }
+            }
+        }
+        return results;
+    }
+
+    private List<String> getDuplicatesOnURI(MarcRecord marcRecord)
+            throws SQLException
+    {
+        List<String> results = new ArrayList<>();
+        for (Datafield field : marcRecord.getDatafields("024"))
+        {
+            if (field.getIndicator(0) == '7')
+            {
+                List<Subfield> sf2uri = field.getSubfields("2").stream().filter(sf -> sf.getData().toLowerCase().equals("uri")).collect(Collectors.toList());
+		if ( sf2uri.size() == 0 ) continue;
+
+                List<Subfield> subfields = field.getSubfields("a");
+                for (Subfield subfield : subfields)
+                {
+                    String incomingUri = subfield.getData();
+
+                    try (Connection connection = m_whelk.getStorage().getConnection();
+                         PreparedStatement statement = getOnURI_ps(connection, incomingUri);
+                         ResultSet resultSet = statement.executeQuery())
+                    {
+                        results.addAll(collectIDs(resultSet));
+                    }
+                }
+            }
+        }
+        return results;
+    }
+
+    private List<String> getDuplicatesOnURN(MarcRecord marcRecord)
+            throws SQLException
+    {
+        List<String> results = new ArrayList<>();
+        for (Datafield field : marcRecord.getDatafields("024"))
+        {
+            if (field.getIndicator(0) == '7')
+            {
+                List<Subfield> sf2urn = field.getSubfields("2").stream().filter(sf -> sf.getData().toLowerCase().equals("urn")).collect(Collectors.toList());
+		if ( sf2urn.size() == 0 ) continue;
+
+                List<Subfield> subfields = field.getSubfields("a");
+                for (Subfield subfield : subfields)
+                {
+                    String incomingUrn = subfield.getData();
+
+                    try (Connection connection = m_whelk.getStorage().getConnection();
+                         PreparedStatement statement = getOnURN_ps(connection, incomingUrn);
                          ResultSet resultSet = statement.executeQuery())
                     {
                         results.addAll(collectIDs(resultSet));
@@ -695,6 +760,28 @@ class XL
         PreparedStatement statement =  connection.prepareStatement(query);
 
         statement.setObject(1, "[{\"@type\": \"EAN\", \"value\": \"" + ean + "\"}]", java.sql.Types.OTHER);
+
+        return statement;
+    }
+
+    private PreparedStatement getOnURI_ps(Connection connection, String uri)
+            throws SQLException
+    {
+        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
+        PreparedStatement statement =  connection.prepareStatement(query);
+
+        statement.setObject(1, "[{\"@type\": \"Identifier\", \"typeNote\": \"uri\", \"value\": \"" + uri + "\"}]", java.sql.Types.OTHER);
+
+        return statement;
+    }
+
+    private PreparedStatement getOnURN_ps(Connection connection, String urn)
+            throws SQLException
+    {
+        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
+        PreparedStatement statement =  connection.prepareStatement(query);
+
+        statement.setObject(1, "[{\"@type\": \"Identifier\", \"typeNote\": \"urn\", \"value\": \"" + urn + "\"}]", java.sql.Types.OTHER);
 
         return statement;
     }

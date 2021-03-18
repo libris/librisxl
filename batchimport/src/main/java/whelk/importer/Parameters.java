@@ -58,6 +58,8 @@ class Parameters
         DUPTYPE_035A,
         DUPTYPE_LIBRISID,
         DUPTYPE_EAN,
+        DUPTYPE_URI,
+        DUPTYPE_URN,
     }
 
     Parameters(String[] args)
@@ -138,6 +140,8 @@ class Parameters
         System.err.println("                ISSNZ     ISSN number, obtained from MARC subfield $z of the incoming record");
         System.err.println("                035A      ID in other system, obtained from MARC 035 $a of the incoming record");
         System.err.println("                EAN       ID in other system, obtained from MARC 024 $a ind0 = 3 of the incoming record");
+        System.err.println("                URI       ID in other system, obtained from MARC 024 $a ind0 = 7 & $2 = uri of the incoming record");
+        System.err.println("                URN       ID in other system, obtained from MARC 024 $a ind0 = 7 & $2 = urn of the incoming record");
         System.err.println("                LIBRIS-ID ID in Libris.");
         System.err.println("");
         System.err.println("--live        Write to Whelk (without this flag operations against the Whelk are readonly");
@@ -264,6 +268,10 @@ class Parameters
                 return DUPLICATION_TYPE.DUPTYPE_LIBRISID;
             case "EAN":
                 return DUPLICATION_TYPE.DUPTYPE_EAN;
+            case "URI":
+                return DUPLICATION_TYPE.DUPTYPE_URI;
+            case "URN":
+                return DUPLICATION_TYPE.DUPTYPE_URN;
         }
         throw new IllegalArgumentException(typeString + " is not a valid value duplication type.");
     }
