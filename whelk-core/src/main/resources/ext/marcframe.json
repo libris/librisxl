@@ -127,7 +127,9 @@
         "j": "marc:AbbreviatedLevel",
         "k": "marc:AbbreviatedLevel",
         "l": "marc:AbbreviatedLevel",
-        "m": "marc:AbbreviatedLevel"
+        "m": "marc:AbbreviatedLevel",
+        "u": "marc:AbbreviatedLevel",
+        "z": "marc:AbbreviatedLevel"
       },
       "EncLevelType-ReverseOverrides": {
         "marc:AbbreviatedLevel": "3",
@@ -3618,7 +3620,7 @@
         "NOTE:LC": "nac",
         "[1]": {
           "TODO:layout": "Also more general mapping? Ensure that reconverting are able to handle this",
-          "addLink": "layout",
+          "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/TacMaterialType-{_}",
           "matchUriToken": "^[abcd]$"
         },
@@ -4121,7 +4123,7 @@
           "result": {
             "mainEntity": {
               "@type": "Tactile",
-              "layout": [{"@id": "https://id.kb.se/marc/TacMaterialType-b"}]
+              "carrierType": [{"@id": "https://id.kb.se/marc/TacMaterialType-b"}]
             }
           }
         },
@@ -4300,10 +4302,9 @@
         }
       },
       "[38]": {
-        "aboutEntity": "?record",
-        "link": "marc:modifiedRecord",
-        "uriTemplate": "https://id.kb.se/marc/ModifiedRecordType-{_}",
-        "matchUriToken": "^[dorsx]$"
+        "NOTE:local": "Modifieringar. Används ej!",
+        "NOTE": "Modified Record - # - Ignored",
+        "ignored": true
       },
       "[39]": {
         "aboutEntity": "?record",
@@ -6395,6 +6396,7 @@
       "addLink": "cartographicAttributes",
       "resourceType": "Cartographic",
       "embedded": true,
+      "NOTE:LC": "bf:cartographicAttributes could be mapped to 034 or 255. We'll map all cartographicAttributes properties to the 255.",
       "TODO": "how is this intuitively different from 255 [255 is in plain text], 006 and/or 008 [those are coded projection and more...]",
       "pendingResources": {
         "_:scale": {
@@ -6417,12 +6419,8 @@
           "pendingResources": {"_:scale": {"link": "scale", "resourceType": "marc:OtherCartographicScale"}}
         }
       ],
-      "i1": {"marcDefault": "1"},
-      "i2": {
-        "property": "marc:ringType",
-        "marcDefault": " ",
-        "tokenMap": {"0": "marc:OuterRing", "1": "marc:ExcludingRing"}
-      },
+      "i1": {"ignored": true, "marcDefault": "1"},
+      "i2": {"ignored": true, "marcDefault": " "},
       "$a": {
         "about": "_:scale",
         "property": "@type",
@@ -6488,6 +6486,9 @@
           "source": [
             {"034": {"ind1": "1", "ind2": "0", "subfields": [{"b": "11"}]}}
           ],
+          "normalized": [
+            {"034": {"ind1": "1", "ind2": " ", "subfields": [{"b": "11"}]}}
+          ],
           "result": {
             "mainEntity": {
               "instanceOf": {
@@ -6498,8 +6499,7 @@
                     "scale": {
                       "@type": "Scale",
                       "marc:constantRatioLinearHorizontalScale": ["11"]
-                    },
-                    "marc:ringType": "marc:OuterRing"
+                    }
                   }
                 ]
               }
@@ -9284,15 +9284,7 @@
       "addLink": "hasTitle",
       "resourceType": "VariantTitle",
       "embedded": true,
-      "i1": {
-        "property": "marc:searchControl",
-        "tokenMap": {
-          "0": null,
-          "2": null,
-          "3": null
-        },
-        "marcDefault": "1"
-      },
+      "i1": {"ignored": true, "marcDefault": "1"},
       "i2": {
         "property": "@type",
         "overwrite": true,
@@ -12358,7 +12350,7 @@
       "i1": {"property": "marc:seriesTracingPolicy", "NOTE:marcDefault": 0, "NOTE:postProcessing ": "SetFlagsByPatterns"},
       "i2": null,
       "$a": {"addProperty": "seriesStatement"},
-      "NOTE:remove?$l": {"link": "callno", "resourceType": "Concept", "property": "code"},
+      "$l": {"ignored": true},
       "$0": {"about": "_:seriesinstance", "addProperty": "marc:uri"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
@@ -13355,7 +13347,7 @@
         "marcDefault": " ",
         "tokenMap": {
           "0": true,
-          "1": false
+          "1": null
         }
       },
       "$a": {"property": "label"},
@@ -13388,6 +13380,23 @@
         {
           "name": "With indicator 1 set to blank",
           "source": {"541": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Foo"}
+          ]}},
+          "result": {"mainEntity": {
+            "marc:hasImmediateSourceOfAcquisitionNote": [
+              {
+                "@type": "marc:ImmediateSourceOfAcquisitionNote",
+                "label": "Foo"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "With indicator 1 set to 1",
+          "source": {"541": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "Foo"}
+          ]}},
+          "normalized": {"541": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Foo"}
           ]}},
           "result": {"mainEntity": {
@@ -14309,7 +14318,7 @@
           "include": ["worksubject", "subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
-          "when": "$b & i1=0",
+          "when": "$b & i1=2",
           "include": ["agentdataOrganizationSubUnit", "subjectbase"],
           "pendingResources": {
             "_:agent": {
@@ -14358,8 +14367,7 @@
         },
         {
           "when": "$b",
-          "TODO": "Correct modelled? Should it be treated as a Work when there is no $t?",
-          "include": ["worksubjectSansPartNumber", "subjectOrganization", "agentdataOrganizationSubUnit"]
+          "include": ["subjectOrganization", "agentdataOrganizationSubUnit"]
         },
         {
           "when": "i1=2",
@@ -14579,6 +14587,28 @@
               ]
             }
           }}
+        },
+        {
+          "source": [
+            {"610": {"ind1": "2", "ind2": "4", "subfields": [{"a": "Lunds tekniska högskola."}, {"b": "Avdelningen för rehabiliteringsteknik"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "subject": [
+                  {
+                    "@type": "Organization",
+                    "marc:subordinateUnit" : ["Avdelningen för rehabiliteringsteknik"],
+                    "isPartOf": {
+                      "@type": "Organization",
+                      "name": "Lunds tekniska högskola."
+                    }
+                  }
+                ]
+              }
+            }
+          }
         }
       ]
     },
@@ -20907,11 +20937,8 @@
       },
       "[34:38]": null,
       "[38]": {
-        "aboutEntity": "?record",
-        "link": "marc:modifiedRecord",
-        "uriTemplate": "https://id.kb.se/marc/ModifiedRecordType-{_}",
-        "matchUriToken": "^[sx]$",
-        "fixedDefault": " "
+        "NOTE": "Modified Record - # - Ignored",
+        "ignored": true
       },
       "[39]": {
         "aboutEntity": "?record",
@@ -20928,7 +20955,7 @@
             {"008": "011206n| ac|nnaabn          |n an       "}
           ],
           "normalized": [
-            {"008": "011206n| ac|nnaabn          |n ana     |"}
+            {"008": "011206n| ac|nnaabn          |n ana    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -20949,7 +20976,7 @@
             {"008": "011206n| ac|nnaabn          fn ana      "}
           ],
           "normalized": [
-            {"008": "011206n| ac|nnaabn          fn ana     |"}
+            {"008": "011206n| ac|nnaabn          fn ana    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -20971,7 +20998,7 @@
             {"008": "141210n| ac|nnaabn          |n ana      "}
           ],
           "normalized": [
-            {"008": "141210n| ac|nnaabn          |n ana     |"}
+            {"008": "141210n| ac|nnaabn          |n ana    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -20992,7 +21019,7 @@
             {"008": "130110n| ac|nnaabn           n ana      "}
           ],
           "normalized": [
-            {"008": "130110n| ac|nnaabn          |n ana     |"}
+            {"008": "130110n| ac|nnaabn          |n ana    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -21014,7 +21041,7 @@
             {"008": "130612n| ac|nnaabn           n ana      "}
           ],
           "normalized": [
-            {"008": "130612n| ac|nnaabn          |n ana     |"}
+            {"008": "130612n| ac|nnaabn          |n ana    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -21036,7 +21063,7 @@
             {"008": "020409 | a||nnbabn          |n ana      "}
           ],
           "normalized": [
-            {"008": "020409n| az|nnaabn          |n ana     |"}
+            {"008": "020409n| az|nnaabn          |n ana    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -21057,7 +21084,7 @@
             {"008": "130904n| az|nnbabn           n ana      "}
           ],
           "normalized": [
-            {"008": "130904n| az|nnaabn          |n ana     |"}
+            {"008": "130904n| az|nnaabn          |n ana    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -21077,7 +21104,7 @@
             {"008": "110119nb ac|nnaabn           n ana      "}
           ],
           "normalized": [
-            {"008": "110119nb ac|nnaabn          |n ana     |"}
+            {"008": "110119nb ac|nnaabn          |n ana    ||"}
           ],
           "result": {
             "@type": "Record",
@@ -21399,6 +21426,7 @@
         "Place": {"addLink": "closeMatch"},
         "Work": {"addLink": "subject"}
       },
+      "subfieldOrder": "z a c 2",
       "_spec": [
         {
           "source": {
@@ -21407,7 +21435,16 @@
               {"c": "BroadMatch"},
               {"z": "1"},
               {"2": "23/swe"}
-            ]}},
+            ]}
+          },
+          "normalized": {
+            "083": {"ind1": "0", "ind2": "4", "subfields": [
+              {"z": "1"},
+              {"a": "085"},
+              {"c": "BroadMatch"},
+              {"2": "23/swe"}
+            ]}
+          },
           "result": {
             "mainEntity": {
               "@type": "Identity",
@@ -24910,10 +24947,32 @@
       "i1": null,
       "addLink": "closeMatch",
       "resourceType": "GenreForm",
-      "uriTemplate": "https://id.kb.se/term/saogf/{prefLabel}",
       "$a": {"property": "prefLabel"},
       "$0": {"addProperty": "marc:recordControlNumber"},
-      "NOTE:$2:codeList": "http://www.loc.gov/standards/sourcelist/genre-form.html"
+      "_spec": [
+        {
+          "name": "Example from: https://libris.kb.se/xv8ck97g139sm23",
+          "source": [
+            {"755": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Video installations (Art)"},{"2": "lcgft"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "closeMatch" : [
+                {
+                  "@type" : "GenreForm",
+                  "prefLabel" : "Video installations (Art)",
+                  "inScheme" : {
+                    "@id": "https://id.kb.se/term/lcgft",
+                    "@type": "ConceptScheme",
+                    "code": "lcgft"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "762": {
       "NOTE:LC": "762 - Established Heading Linking Entry - Medium of Performance Term (R)",
@@ -25715,6 +25774,14 @@
         "embedded": true,
         "resourceType": "Item"
       },
+      "match": [
+        {
+          "when": {
+            "onRevert": {"shelfMark": {"@type": "ShelfMarkSequence"}}
+          },
+          "$h": {"link": "shelfMark", "resourceType": "ShelfMarkSequence", "property": "label"}
+        }
+      ],
       "i1": {"property": "marc:shelvingScheme", "marcDefault": " "},
       "i2": {"property": "marc:shelvingOrder", "marcDefault": " "},
       "$2": {"property": "marc:sourceOfClassificationOrShelfMarkScheme"},
@@ -25826,6 +25893,31 @@
             "ind1": " ",
             "ind2": " ",
             "subfields": [{"b": "H"}, {"c": "MAG"}, {"j": "65.465"}, {"t": "1"}]
+          }}
+        },
+        {
+          "name": "ShelfMarkSequence revert",
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
+              "hasComponent": [
+                {
+                  "@type": "Item",
+                  "heldBy": {
+                    "@id": "https://libris.kb.se/library/X", "@type": "Organization", "code": "X"},
+                  "shelfMark": {
+                    "@type": "ShelfMarkSequence",
+                    "label": "Z"
+                  },
+                  "shelfControlNumber": "br 5"
+                }
+              ]
+            }
+          },
+          "normalized": {"852": {
+            "ind1": " ",
+            "ind2": " ",
+            "subfields": [{"b": "X"}, {"h": "Z"}, {"j": "br 5"}]
           }}
         }
       ]

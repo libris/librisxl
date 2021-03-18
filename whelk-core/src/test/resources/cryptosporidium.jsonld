@@ -1,0 +1,77 @@
+{
+	"@context": "/context.jsonld",
+	"@graph": [
+		{
+			"@id": "https://libris.kb.se/TEMPID",
+			"@type": "Record",
+			"descriptionConventions": [
+				{
+					"@id": "https://id.kb.se/marc/Isbd"
+				},
+				{
+					"@type": "DescriptionConventions",
+					"code": "rda"
+				}
+			],
+			"descriptionCreator": {
+				"@id": "https://libris.kb.se/library/Jslu"
+			},
+			"descriptionLastModifier": {
+				"@id": "https//libris.kb.se/library/Jslu"
+			},
+			"encodingLevel": "marc:MinimalLevel",
+			"mainEntity": {
+				"@id": "https://libris.kb.se/TEMPID#it"
+			},
+			"marc:catalogingSource": {
+				"@id": "https://id.kb.se/marc/CooperativeCatalogingProgram"
+			},
+			"recordStatus": "marc:New",
+			"descriptionLanguage": [
+				{
+					"@id": "https://id.kb.se/language/swe"
+				}
+			]
+		},
+		{
+			"@id": "https://libris.kb.se/TEMPID#it",
+			"@type": "Electronic",
+			"hasTitle": [
+				{
+					"@type": "Title",
+					"mainTitle": "Infection dynamics of Cryptosporidium bovis and Cryptosporidium ryanae in cattle"
+				}
+			],
+			"identifiedBy": [
+				{
+					"@type": "ISBN",
+					"value": 9789157697004
+				},
+				{
+					"@type": "Identifier",
+					"typeNote": "urn",
+					"value": "urn:nbn:se:slu:epsilon-p-103377"
+				}
+			],
+			"otherPhysicalFormat": [
+				{
+					"@type": "Instance",
+					"hasTitle": [
+						{
+							"@type": "Title",
+							"mainTitle": "Infection dynamics of Cryptosporidium bovis and Cryptosporidium ryanae in cattle "
+						}
+					],
+					"identifiedBy": [
+						{
+							"@type": "ISBN",
+							"value": 9789157696991
+						}
+					],
+					"marc:displayText": "Även utgiven tryckt",
+					"marc:toDisplayNote": true
+				}
+			]
+		}
+	]
+}

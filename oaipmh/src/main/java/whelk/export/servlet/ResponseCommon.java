@@ -175,7 +175,7 @@ public class ResponseCommon
             }
         }
 
-        String sigel = document.getSigel();
+        String sigel = document.getHeldBySigel();
         if (sigel != null)
         {
             writer.writeStartElement("setSpec");
@@ -237,7 +237,7 @@ public class ResponseCommon
         writer.writeStartElement("about");
         for (Document holding : holdings)
         {
-            String sigel = holding.getSigel();
+            String sigel = holding.getHeldBySigel();
             if (sigel == null)
             {
                 logger.warn("Holding post without valid sigel! hold id: {}", holding.getShortId());

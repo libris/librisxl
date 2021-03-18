@@ -48,12 +48,14 @@ class Document {
     static final List thingTypedIDsPath = ["@graph", 1, "identifiedBy"]
     static final List thingIndirectTypedIDsPath = ["@graph", 1, "indirectlyIdentifiedBy"]
     static final List thingCarrierTypesPath = ["@graph", 1, "carrierType"]
+    static final List thingInSchemePath = ["@graph",1,"inScheme","@id"]
     static final List recordIdPath = ["@graph", 0, "@id"]
     static final List workIdPath = ["@graph", 1, "instanceOf", "@id"]
     static final List thingMetaPath = ["@graph", 1, "meta", "@id"]
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
     static final List recordTypedIDsPath = ["@graph", 0, "identifiedBy"]
     static final List controlNumberPath = ["@graph", 0, "controlNumber"]
+    static final List datasetPath = ["@graph", 0, "inDataset"]
     static final List holdingForPath = ["@graph", 1, "itemOf", "@id"]
     static final List heldByPath = ["@graph", 1, "heldBy", "@id"]
     static final List createdPath = ["@graph", 0, "created"]
@@ -108,6 +110,31 @@ class Document {
         return mapper.writeValueAsString(data)
     }
 
+    void addInDataset(String dataset) {
+
+        // Make datasetPath point to a list
+        preparePath(datasetPath)
+        Object datasetList = get(datasetPath)
+        if (datasetList == null) {
+            datasetList = []
+            set(datasetPath, datasetList)
+        } else if ( ! (datasetList instanceof List) ) {
+            datasetList = [datasetList]
+        }
+
+        // Add to list, if not there already
+        Map idObject = ["@id" : dataset]
+        if (!datasetList.contains(idObject))
+            datasetList.add( idObject )
+    }
+
+    List getInDataset() {
+        def dataset = get(datasetPath)
+        if (dataset instanceof List)
+            return dataset
+        return [dataset]
+    }
+
     void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber) }
 
     String getControlNumber() { get(controlNumberPath) }
@@ -125,6 +152,10 @@ class Document {
     void setEncodingLevel(encLevel) { set(encLevelPath, encLevel) }
 
     String getEncodingLevel() { get(encLevelPath) }
+
+    void setThingInScheme(inScheme) { set(thingInSchemePath, inScheme) }
+
+    String getThingInScheme() { get(thingInSchemePath) }
 
     void setDescriptionCreator(creator) { set(descriptionCreatorPath, creator) }
 
@@ -289,7 +320,7 @@ class Document {
         return ("hold" == LegacyIntegrationTools.determineLegacyCollection(this, jsonld))
     }
 
-    String getSigel() {
+    String getHeldBySigel() {
         String uri = get(sigelPath)
         if (uri != null)
             return LegacyIntegrationTools.uriToLegacySigel( uri )
@@ -826,7 +857,8 @@ class Document {
             return node.longValue() * depth
         else if (node instanceof Map) {
             for (String key : node.keySet()) {
-                if (key != JsonLd.MODIFIED_KEY && key != JsonLd.CREATED_KEY) {
+                if (key != JsonLd.MODIFIED_KEY && key != JsonLd.CREATED_KEY && key != JsonLd.RECORD_STATUS_KEY) {
+
                     term += key.hashCode() * depth
                     term += calculateCheckSum(node[key], depth + 1)
                 }

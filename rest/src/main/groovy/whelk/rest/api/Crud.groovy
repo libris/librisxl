@@ -16,7 +16,7 @@ import whelk.JsonLdValidator
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ElasticIOException
-import whelk.exception.ElasticStatusException
+import whelk.exception.UnexpectedHttpStatusException
 import whelk.exception.InvalidQueryException
 import whelk.exception.ModelValidationException
 import whelk.exception.StaleUpdateException
@@ -107,7 +107,7 @@ class Crud extends HttpServlet {
             Map results = search.doSearch(queryParameters)
             def jsonResult = mapper.writeValueAsString(results)
             sendResponse(response, jsonResult, "application/json")
-        } catch (ElasticIOException | ElasticStatusException e) {
+        } catch (ElasticIOException | UnexpectedHttpStatusException e) {
             log.error("Attempted elastic query, but failed: $e", e)
             failedRequests.labels("GET", request.getRequestURI(),
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
@@ -146,13 +146,13 @@ class Crud extends HttpServlet {
         requests.labels("GET").inc()
         ongoingRequests.labels("GET").inc()
         Summary.Timer requestTimer = requestsLatency.labels("GET").startTimer()
-        log.info("Handling GET request for ${request.pathInfo}")
+        log.debug("Handling GET request for ${request.pathInfo}")
         try {
             doGet2(request, response)
         } finally {
             ongoingRequests.labels("GET").dec()
             requestTimer.observeDuration()
-            log.info("Sending GET response with status " +
+            log.debug("Sending GET response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
     }
@@ -446,14 +446,14 @@ class Crud extends HttpServlet {
         requests.labels("POST").inc()
         ongoingRequests.labels("POST").inc()
         Summary.Timer requestTimer = requestsLatency.labels("POST").startTimer()
-        log.info("Handling POST request for ${request.pathInfo}")
+        log.debug("Handling POST request for ${request.pathInfo}")
 
         try {
             doPost2(request, response)
         } finally {
             ongoingRequests.labels("POST").dec()
             requestTimer.observeDuration()
-            log.info("Sending POST response with status " +
+            log.debug("Sending POST response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
     }
@@ -566,14 +566,14 @@ class Crud extends HttpServlet {
         requests.labels("PUT").inc()
         ongoingRequests.labels("PUT").inc()
         Summary.Timer requestTimer = requestsLatency.labels("PUT").startTimer()
-        log.info("Handling PUT request for ${request.pathInfo}")
+        log.debug("Handling PUT request for ${request.pathInfo}")
 
         try {
             doPut2(request, response)
         } finally {
             ongoingRequests.labels("PUT").dec()
             requestTimer.observeDuration()
-            log.info("Sending PUT response with status " +
+            log.debug("Sending PUT response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
 
@@ -900,14 +900,14 @@ class Crud extends HttpServlet {
         requests.labels("DELETE").inc()
         ongoingRequests.labels("DELETE").inc()
         Summary.Timer requestTimer = requestsLatency.labels("DELETE").startTimer()
-        log.info("Handling DELETE request for ${request.pathInfo}")
+        log.debug("Handling DELETE request for ${request.pathInfo}")
 
         try {
             doDelete2(request, response)
         } finally {
             ongoingRequests.labels("DELETE").dec()
             requestTimer.observeDuration()
-            log.info("Sending DELETE response with status " +
+            log.debug("Sending DELETE response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
     }

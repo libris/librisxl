@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.exception.FramingException
 import whelk.exception.WhelkRuntimeException
+import whelk.util.DocumentUtil
 
 import java.util.regex.Matcher
 
@@ -33,6 +34,7 @@ class JsonLd {
     static final String RECORD_KEY = "meta"
     static final String CREATED_KEY = "created"
     static final String MODIFIED_KEY = "modified"
+    static final String RECORD_STATUS_KEY = "recordStatus"
     static final String DELETED_KEY = "deleted"
     static final String COLLECTION_KEY = "collection"
     static final String CONTENT_TYPE_KEY = "contentType"
@@ -322,7 +324,7 @@ class JsonLd {
 
     static Set<Link> getExternalReferences(Map jsonLd) {
         Set<Link> allReferences = getAllReferences(jsonLd)
-        Set<Link> localObjects = getLocalObjects(jsonLd)
+        Set<String> localObjects = getLocalObjects(jsonLd)
         Set<Link> externalRefs = allReferences.findAll { !localObjects.contains(it.getIri()) }
         // NOTE: this is necessary because some documents contain references to
         // bnodes that don't exist (in that document).
@@ -406,56 +408,33 @@ class JsonLd {
     }
 
     static Set<Link> getAllReferences(Map jsonLd) {
-        List items
-        if (jsonLd.containsKey(GRAPH_KEY)) {
-            items = jsonLd.get(GRAPH_KEY)
-        } else {
+        if (!jsonLd.containsKey(GRAPH_KEY)) {
             throw new FramingException("Missing '@graph' key in input")
         }
-        return getAllReferencesFromList(null, items)
-    }
-
-    private static Set<Link> getRefs(String parentKey, Object o) {
-        if(o instanceof Map) {
-            return getAllReferencesFromMap(parentKey, o)
-        } else if (o instanceof List){
-            return getAllReferencesFromList(parentKey, o)
-        } else {
-            return Collections.emptySet()
-        }
-    }
-
-    private static Set<Link> getAllReferencesFromMap(String parentKey, Map item) {
-        Set<Link> refs = []
-
-        if (isReference(item)) {
-            refs.add(new Link(iri: item[ID_KEY], relation: parentKey))
-            return refs
-        } else {
-            item.each { key, value ->
-                if (key != JSONLD_ALT_ID_KEY) {
-                    refs.addAll(getRefs((String) key, value))
+        Set<Link> result = new HashSet<>() 
+        DocumentUtil.traverse(jsonLd[GRAPH_KEY]) { value, path ->
+            if (value instanceof Map && isReference(value) && !path.contains(JSONLD_ALT_ID_KEY)) {
+                def graphIndex = (Integer) path[0]
+                List p = path.findAll { !(it instanceof Integer) } // filter out list indices
+                if (graphIndex == 0) {
+                    p.add(0, RECORD_KEY)
                 }
+                else if (graphIndex > 1) {
+                    p.add(0, graphIndex) // Normally there should only be @graph,0 and @graph,1
+                }
+                result.add(new Link(relation: p.join('.'), iri: value[ID_KEY]))
             }
+            return DocumentUtil.NOP
         }
-
-        return refs
+        return result
     }
-
+    
     private static boolean isReference(Map map) {
         if(map.get(ID_KEY) && map.size() == 1) {
             return true
         } else {
             return false
         }
-    }
-
-    private static Set<Link> getAllReferencesFromList(String parentKey, List items) {
-        Set<Link> result = []
-        items.each { item ->
-            result.addAll(getRefs(parentKey, item))
-        }
-        return result
     }
 
     boolean softMerge(Map<String, Object> obj, Map<String, Object> into) {

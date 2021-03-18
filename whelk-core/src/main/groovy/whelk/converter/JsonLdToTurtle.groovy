@@ -167,11 +167,14 @@ class JsonLdToTurtle {
         if (isLangContainer(viaKey) && obj instanceof Map) {
             boolean first = true
             obj.each { lang, value ->
-                if (!first) write(' , ')
-                toLiteral(
-                        [(keys.value): value, (keys.lang): lang],
-                        viaKey)
-                first = false
+                def values = value instanceof List ? value : value != null ? [value] : []
+                values.each {
+                    if (!first) write(' , ')
+                    toLiteral(
+                            [(keys.value): it, (keys.lang): lang],
+                            viaKey)
+                    first = false
+                }
             }
             return Collections.emptyList()
         }

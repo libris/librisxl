@@ -1,14 +1,12 @@
 package whelk.util
 
-import java.text.*
-import java.util.concurrent.*
-import java.util.concurrent.atomic.*
-import org.codehaus.jackson.map.*
 
-import whelk.*
+import org.codehaus.jackson.map.ObjectMapper
+import whelk.Document
+
+import java.text.Normalizer
 
 class Tools {
-
     static ObjectMapper staticMapper = new ObjectMapper()
 
     /**

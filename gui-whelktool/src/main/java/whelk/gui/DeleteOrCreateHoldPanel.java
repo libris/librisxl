@@ -3,6 +3,7 @@ package whelk.gui;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -29,6 +30,8 @@ public class DeleteOrCreateHoldPanel extends WizardCard implements ActionListene
         super(wizard);
         window = wizard;
         createHoldInsteadOfDelete = createHolds;
+
+        chooser.setPreferredSize(new Dimension(1024, 768));
 
         Box vbox = Box.createVerticalBox();
 

@@ -8,13 +8,13 @@ import whelk.component.CachingPostgreSQLComponent
 import whelk.component.DocumentNormalizer
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
+import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LinkFinder
 import whelk.filter.NormalizerChain
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
-import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 
 import java.time.ZoneId
@@ -28,6 +28,8 @@ class Whelk {
     ThreadGroup indexers = new ThreadGroup("dep-reindex")
     PostgreSQLComponent storage
     ElasticSearch elastic
+    SparqlUpdater sparqlUpdater
+
     Map displayData
     Map vocabData
     Map contextData
@@ -55,13 +57,7 @@ class Whelk {
 
     static Whelk createLoadedCoreWhelk(Properties configuration, boolean useCache = false) {
         Whelk whelk = new Whelk(useCache ? new CachingPostgreSQLComponent(configuration) : new PostgreSQLComponent(configuration))
-        if (configuration.baseUri) {
-            whelk.baseUri = new URI((String) configuration.baseUri)
-        }
-        if (configuration.timezone) {
-            whelk.timezone = ZoneId.of((String) configuration.timezone)
-        }
-        whelk.loadCoreData()
+        whelk.configureAndLoad(configuration)
         return whelk
     }
 
@@ -71,13 +67,7 @@ class Whelk {
 
     static Whelk createLoadedSearchWhelk(Properties configuration, boolean useCache = false) {
         Whelk whelk = new Whelk(configuration, useCache)
-        if (configuration.baseUri) {
-            whelk.baseUri = new URI((String) configuration.baseUri)
-        }
-        if (configuration.timezone) {
-            whelk.timezone = ZoneId.of((String) configuration.timezone)
-        }
-        whelk.loadCoreData()
+        whelk.configureAndLoad(configuration)
         return whelk
     }
 
@@ -97,7 +87,15 @@ class Whelk {
         this(useCache ? new CachingPostgreSQLComponent(conf) : new PostgreSQLComponent(conf), new ElasticSearch(conf))
     }
 
-    Whelk() {
+    private void configureAndLoad(Properties configuration) {
+        if (configuration.baseUri) {
+            baseUri = new URI((String) configuration.baseUri)
+        }
+        if (configuration.timezone) {
+            timezone = ZoneId.of((String) configuration.timezone)
+        }
+        loadCoreData()
+        sparqlUpdater = SparqlUpdater.build(storage, jsonld.context, configuration)
     }
 
     synchronized MarcFrameConverter getMarcFrameConverter() {
@@ -134,6 +132,7 @@ class Whelk {
                 [
                         //FIXME: This is KBV specific stuff
                         Normalizers.workPosition(jsonld),
+                        Normalizers.typeSingularity(jsonld),
                         Normalizers.language(this),
                         Normalizers.contributionRole(this)
                 ]
@@ -182,16 +181,13 @@ class Whelk {
 
     private void reindex(Document updated, Document preUpdateDoc) {
         if (elastic) {
-            String collection = LegacyIntegrationTools.determineLegacyCollection(updated, jsonld)
-            elastic.index(updated, collection, this)
+            elastic.index(updated, this)
 
-            // The updated document has changed mainEntity URI (link target)
-            if (preUpdateDoc.getThingIdentifiers()[0] &&
-                    updated.getThingIdentifiers()[0] &&
-                    updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]) {
+            if (hasChangedMainEntityId(updated, preUpdateDoc)) {
                 reindexAllLinks(updated.shortId)
-            } else
+            } else {
                 reindexAffected(updated, preUpdateDoc.getExternalRefs(), updated.getExternalRefs())
+            }
         }
     }
 
@@ -212,10 +208,7 @@ class Whelk {
     private void reindexAllLinks(String id) {
         SortedSet<String> links = storage.getDependencies(id)
         links.addAll(storage.getDependers(id))
-        for (String idToReindex : links) {
-            Document docToReindex = storage.load(idToReindex)
-            elastic.index(docToReindex, storage.getCollectionBySystemID(idToReindex), this)
-        }
+        bulkIndex(links)
     }
 
     private void reindexAffectedSync(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
@@ -223,7 +216,7 @@ class Whelk {
         Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
 
         removedLinks.findResults { storage.getSystemIdByIri(it.iri) }
-                .each{id -> elastic.decrementReverseLinks(id)}
+                .each{id -> elastic.decrementReverseLinks(id) }
 
         addedLinks.each { link ->
             String id = storage.getSystemIdByIri(link.iri)
@@ -233,7 +226,7 @@ class Whelk {
                 def reverseRelations = lenses.collect{ jsonld.getInverseProperties(doc.data, it) }.flatten()
                 if (reverseRelations.contains(link.relation)) {
                     // we added a link to a document that includes us in its @reverse relations, reindex it
-                    elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
+                    elastic.index(doc, this)
                 }
                 else {
                     // just update link counter
@@ -242,14 +235,9 @@ class Whelk {
             }
         }
 
-        if (storage.isCardChanged(document.getShortId())) {
-            // TODO: when types (auth, bib...) have been removed from elastic, do bulk index in chunks of size N here
-            getAffectedIds(document).each { id ->
-                Document doc = storage.load(id)
-                if (doc) { // might not exist because of batch jobs without indexing
-                    elastic.index(doc, storage.getCollectionBySystemID(doc.shortId), this)
-                }
-            }
+
+        if (storage.isCardChangedOrNonexistent(document.getShortId())) {
+            bulkIndex(getAffectedIds(document))
         }
     }
 
@@ -266,6 +254,12 @@ class Whelk {
             }
         }
         return Iterables.filter(Iterables.concat(queries), { it != null })
+    }
+
+    private void bulkIndex(Iterable<String> ids) {
+        Iterables.partition(ids, 100).each {
+            elastic.bulkIndexWithRetry(it, this)
+        }
     }
 
     /**
@@ -335,9 +329,10 @@ class Whelk {
         boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
         if (success) {
             if (elastic && index) {
-                elastic.index(document, collection, this)
+                elastic.index(document, this)
                 reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
             }
+            sparqlUpdater?.pollNow()
         }
         return success
     }
@@ -359,18 +354,21 @@ class Whelk {
         }
 
         reindex(updated, preUpdateDoc)
+        sparqlUpdater?.pollNow()
     }
 
     Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum, boolean index = true) {
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
         Document updated = storage.storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum)
+
         if (updated == null) {
             return null
         }
         if (index) {
             reindex(updated, preUpdateDoc)
         }
+        sparqlUpdater?.pollNow()
     }
 
     /**
@@ -394,6 +392,12 @@ class Whelk {
         else {
             log.warn "No Elastic present when deleting. Skipping call to elastic.remove(${id})"
         }
+    }
+
+    boolean hasChangedMainEntityId(Document updated, Document preUpdateDoc) {
+        preUpdateDoc.getThingIdentifiers()[0] &&
+                updated.getThingIdentifiers()[0] &&
+                updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]
     }
 
     void embellish(Document document, List<String> levels = null) {

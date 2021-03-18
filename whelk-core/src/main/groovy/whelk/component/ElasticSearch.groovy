@@ -11,9 +11,10 @@ import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
-import whelk.exception.ElasticStatusException
+import whelk.exception.UnexpectedHttpStatusException
 import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
+import whelk.util.LegacyIntegrationTools
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
@@ -79,7 +80,7 @@ class ElasticSearch {
         Map response
         try {
             response = mapper.readValue(client.performRequest('GET', "/${indexName}/_mappings", ''), Map)
-        } catch (ElasticStatusException e) {
+        } catch (UnexpectedHttpStatusException e) {
             log.warn("Got unexpected status code ${e.statusCode} when getting ES mappings: ${e.message}", e)
             return [:]
         }
@@ -96,12 +97,11 @@ class ElasticSearch {
         }
     }
 
-    void bulkIndex(List<Document> docs, String collection, Whelk whelk) {
-        assert collection
+    void bulkIndex(Collection<Document> docs, Whelk whelk) {
         if (docs) {
             String bulkString = docs.findResults{ doc ->
                 try {
-                    String shapedData = getShapeForIndex(doc, whelk, collection)
+                    String shapedData = getShapeForIndex(doc, whelk)
                     String action = createActionRow(doc)
                     return "${action}\n${shapedData}\n"
                 } catch (Exception e) {
@@ -116,24 +116,35 @@ class ElasticSearch {
         }
     }
 
+    void bulkIndexWithRetry(Collection<String> ids, Whelk whelk) {
+        Collection<Document> docs = whelk.bulkLoad(ids).values()
+        try {
+            bulkIndex(docs, whelk)
+        } catch (Exception e) {
+            if (!isBadRequest(e)) {
+                log.error("Failed to index batch ${ids} in elastic, placing in retry queue: $e", e)
+                indexingRetryQueue.add({ -> index(ids, whelk) })
+            }
+            else {
+                log.error("Failed to index ${ids} in elastic: $e", e)
+            }
+        }
+    }
+
     String createActionRow(Document doc) {
         def action = ["index" : [ "_index" : indexName,
                                   "_id" : toElasticId(doc.getShortId()) ]]
         return mapper.writeValueAsString(action)
     }
 
-    void index(Document doc, String collection, Whelk whelk) {
-        if (!collection) {
-            return
-        }
-
+    void index(Document doc, Whelk whelk) {
         // The justification for this uncomfortable catch-all, is that an index-failure must raise an alert (log entry)
         // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
         try {
             String response = client.performRequest(
                     'PUT',
                     "/${indexName}/_doc/${toElasticId(doc.getShortId())}",
-                    getShapeForIndex(doc, whelk, collection))
+                    getShapeForIndex(doc, whelk))
             if (log.isDebugEnabled()) {
                 Map responseMap = mapper.readValue(response, Map)
                 log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
@@ -141,7 +152,7 @@ class ElasticSearch {
         } catch (Exception e) {
             if (!isBadRequest(e)) {
                 log.error("Failed to index ${doc.getShortId()} in elastic, placing in retry queue: $e", e)
-                indexingRetryQueue.add({ -> index(doc, collection, whelk) })
+                indexingRetryQueue.add({ -> index(doc, whelk) })
             }
             else {
                 log.error("Failed to index ${doc.getShortId()} in elastic: $e", e)
@@ -185,11 +196,13 @@ class ElasticSearch {
     }
 
     static boolean isBadRequest(Exception e) {
-        e instanceof ElasticStatusException && e.getStatusCode() == 400
+        e instanceof UnexpectedHttpStatusException && e.getStatusCode() == 400
     }
 
     void remove(String identifier) {
-        log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
+        if (log.isDebugEnabled()) {
+            log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
+        }
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
         try {
             def response = client.performRequest('POST',
@@ -209,14 +222,14 @@ class ElasticSearch {
         }
     }
 
-    String getShapeForIndex(Document document, Whelk whelk, String collection) {
+    String getShapeForIndex(Document document, Whelk whelk) {
         Document copy = document.clone()
+        
+        whelk.embellish(copy, ['chips'])
 
-        if (collection != "hold") {
-            whelk.embellish(copy, ['chips'])
+        if (log.isDebugEnabled()) {
+            log.debug("Framing ${document.getShortId()}")
         }
-
-        log.debug("Framing ${document.getShortId()}")
 
         Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri }
 
@@ -235,7 +248,6 @@ class ElasticSearch {
         }
         String thingId = thingIds.get(0)
         Map framed = JsonLd.frame(thingId, copy.data)
-        framed["_collection"] = collection
 
         // TODO: replace with elastic ICU Analysis plugin?
         // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
@@ -245,7 +257,9 @@ class ElasticSearch {
             }
         }
 
-        log.trace("Framed data: ${framed}")
+        if (log.isTraceEnabled()) {
+            log.trace("Framed data: ${framed}")
+        }
 
         return JsonOutput.toJson(framed)
     }

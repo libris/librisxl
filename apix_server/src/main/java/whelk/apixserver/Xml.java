@@ -98,7 +98,7 @@ public class Xml
             {
                 Element holding = xmlDoc.createElement("holding");
                 holdings.appendChild(holding);
-                holding.setAttribute("code", holdingDocument.getSigel());
+                holding.setAttribute("code", holdingDocument.getHeldBySigel());
                 holding.setAttribute("x-mfhd_id", holdingDocument.getShortId());
 
                 String holdingMarcXmlString = Utils.convertToMarcXml(holdingDocument);
@@ -180,7 +180,7 @@ public class Xml
                 {
                     Element holding = xmlDoc.createElement("holding");
                     holdings.appendChild(holding);
-                    holding.setAttribute("code", holdingDocument.getSigel());
+                    holding.setAttribute("code", holdingDocument.getHeldBySigel());
                     holding.setAttribute("x-mfhd_id", holdingDocument.getShortId());
 
                     String holdingMarcXmlString = Utils.convertToMarcXml(holdingDocument);

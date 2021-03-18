@@ -183,7 +183,6 @@ class MarcFrameConverterSpec extends Specification {
         def frame = converter.runConvert(marc)
         then:
         // NOTE: unhandled fixed field columns now stored as code strings
-        frame['marc:modifiedRecord']['code'] == 'E'
         frame._marcUncompleted == [
             //["008": "020409 | anznnbabn          |EEEEEEEEEEE"],
             ["100": ["ind1": "0", "subfields": [["a": "somebody"], ["?": "?"]]], "_unhandled": ["?"]],

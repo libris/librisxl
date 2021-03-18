@@ -420,7 +420,7 @@ public class ExportProfile {
             if (value != null) {
                 Datafield df976 = mr.createDatafield("976");
                 df976.setIndicator(0, ' ');
-                df976.setIndicator(0, '0');
+                df976.setIndicator(1, '0');
                 df976.addSubfield('a', sab);
                 df976.addSubfield('b', value);
                 // @todo: sort fields using comparator
