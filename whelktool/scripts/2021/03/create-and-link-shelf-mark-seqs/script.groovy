@@ -3,12 +3,12 @@ import whelk.datatool.DocumentItem
 List activeInOldDb = new File(scriptDir, "active-in-old-db.csv").readLines()
 List shouldBeActive = new File(scriptDir, "should-be-active.csv").readLines()
 
-List<Map> shelfMarkSeqData = // Lägg in korrekt löpnummer för dessa fem signumsviter
+List<Map> shelfMarkSeqData =
         [
-                ["label": "SLF", "nextShelfControlNumber": 1, "description": "Svensk liggfolio"],
-                ["label": "SLF", "nextShelfControlNumber": 1, "description": "Svensk liggfolio, broschyrer", "qualifier": "br"],
-                ["label": "LF", "nextShelfControlNumber": 1, "description": "Utländsk liggfolio"],
-                ["label": "öh", "nextShelfControlNumber": 1, "description": "Övrig hemlig"],
+                ["label": "SLF", "nextShelfControlNumber": 248, "description": "Svensk liggfolio"],
+                ["label": "SLF", "nextShelfControlNumber": 75, "description": "Svensk liggfolio, broschyrer", "qualifier": "br"],
+                ["label": "LF", "nextShelfControlNumber": 392, "description": "Utländsk liggfolio"],
+                ["label": "öh", "nextShelfControlNumber": 180, "description": "Övrig hemlig"],
                 ["label": "öh F", "nextShelfControlNumber": 1, "description": "Övrig hemlig • Folio"]
         ]
 
