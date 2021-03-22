@@ -21,7 +21,7 @@ import java.util.function.Supplier
 
 @Log
 class DependencyCache {
-    private static final int CACHE_SIZE = 10_000
+    private static final int CACHE_SIZE = 50_000
     private static final int REFRESH_INTERVAL_MINUTES = 5
 
     private static final CacheMetricsCollector cacheMetrics = new CacheMetricsCollector().register()
@@ -86,6 +86,11 @@ class DependencyCache {
         dependenciesCache.invalidate(new Link(iri: fromIri, relation: link.relation))
     }
 
+    void logStats() {
+        log.info("dependersCache: ${dependersCache.stats()}")
+        log.info("dependenciesCache: ${dependenciesCache.stats()}")
+    }
+    
     private CacheLoader<Link, Set<String>> loader(BiFunction<String, String, Set> func) {
         return new CacheLoader<Link, Set<String>>() {
             @Override
