@@ -61,11 +61,11 @@ EOF
 
 delete_definitions() {
     psql -h $DBHOST $DBUSER_ARG $WHELKNAME -c \
-         "DELETE FROM lddb__identifiers WHERE id in (SELECT id from lddb where collection = 'definitions');"
+         "DELETE FROM lddb__identifiers WHERE id in (SELECT id from lddb where ( data#>'{@graph,0,inDataset}' @> '[{\"@id\":\"https://id.kb.se/dataset/definitions\"}]' OR data#>>'{@graph,1,@id}' in ('https://id.kb.se/vocab/', 'https://id.kb.se/vocab/context', 'https://id.kb.se/vocab/display')) and collection = 'definitions');"
     psql -h $DBHOST $DBUSER_ARG $WHELKNAME -c \
-         "DELETE FROM lddb where collection = 'definitions';"
+         "DELETE FROM lddb where ( data#>'{@graph,0,inDataset}' @> '[{\"@id\":\"https://id.kb.se/dataset/definitions\"}]' OR data#>>'{@graph,1,@id}' in ('https://id.kb.se/vocab/', 'https://id.kb.se/vocab/context', 'https://id.kb.se/vocab/display')) and collection = 'definitions';"
     psql -h $DBHOST $DBUSER_ARG $WHELKNAME -c \
-         "DELETE FROM lddb__versions where collection = 'definitions';"
+         "DELETE FROM lddb__versions where ( data#>'{@graph,0,inDataset}' @> '[{\"@id\":\"https://id.kb.se/dataset/definitions\"}]' OR data#>>'{@graph,1,@id}' in ('https://id.kb.se/vocab/', 'https://id.kb.se/vocab/context', 'https://id.kb.se/vocab/display')) and collection = 'definitions' ;"
 
     curl -XPOST http://$ESHOST:9200/$ESINDEX/_delete_by_query \
           -H 'Content-Type: application/json' \
@@ -193,4 +193,3 @@ if [ "$NUKE_DEFINITIONS" = true ]; then
     echo ""
     echo ""
 fi
-
