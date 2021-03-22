@@ -534,6 +534,7 @@ class PostgreSQLComponent {
     }
 
     void logStats() {
+        dependencyCache.logStats()
         log.info("Cards created or changed: $cardsUpdated")
     }
 
