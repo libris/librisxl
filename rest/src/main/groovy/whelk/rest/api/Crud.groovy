@@ -205,11 +205,20 @@ class Crud extends HttpServlet {
         Document doc = docAndLocation.first
         String loc = docAndLocation.second
 
+        if (doc && request.shouldEmbellish()) {
+            whelk.embellish(doc)
+
+            // reverse links are inserted by embellish, so can only do this when embellished
+            if (request.shouldApplyInverseOf()) {
+                doc.applyInverses(whelk.jsonld)
+            }
+        }
+        
         if (!doc && !loc) {
             sendNotFound(response, request.getPath())
         } else if (!doc && loc) {
             sendRedirect(request.getHttpServletRequest(), response, loc)
-        } else if (!request.shouldEmbellish() && isNotModified(request, doc)) {
+        } else if (isNotModified(request, doc)) {
             sendNotModified(response, doc)
         } else if (doc.deleted) {
             failedRequests.labels("GET", request.getPath(),
@@ -220,19 +229,35 @@ class Crud extends HttpServlet {
             sendGetResponse(
                     maybeAddProposal25Headers(response, loc),
                     getFormattedResponseBody(request, doc),
-                    doc.getChecksum(),
+                    buildEtag(doc),
                     request.getPath(),
                     request.getContentType())
         }
     }
 
     private static boolean isNotModified(CrudGetRequest request, Document doc) {
-        request.getIfNoneMatch().map({ etag -> etag == doc.getChecksum() }).orElse(false)
+        request.getIfNoneMatch().map({ etag ->
+            doc.isEmbellished()
+                    ? etag == buildEtag(doc)
+                    : eTagDocPart(etag) == doc.getChecksum()
+        }).orElse(false)
+    }
+    
+    private static String buildEtag(Document doc) {
+        doc.isEmbellished()
+                ? doc.unEmbellished().getChecksum() + ':' + doc.getChecksum()
+                : doc.getChecksum()
+    }
+    
+    private static String eTagDocPart(String etag) {
+        etag.indexOf(':') >= 0 
+                ? etag.split(':')[0] 
+                : etag
     }
 
     private void sendNotModified(HttpServletResponse response, Document doc) {
         setVary(response)
-        response.setHeader("ETag", "\"${doc.getChecksum()}\"")
+        response.setHeader("ETag", "\"${buildEtag(doc)}\"")
         response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
         response.sendError(HttpServletResponse.SC_NOT_MODIFIED,
                 "Document has not been modified.")
@@ -246,19 +271,9 @@ class Crud extends HttpServlet {
     }
 
     private Object getFormattedResponseBody(CrudGetRequest request, Document doc) {
-        log.debug("Formatting document {}. embellished: {}, framed: {}, lens: {}",
-                doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame(), request.getLens())
-
-        if (request.shouldEmbellish()) {
-            doc = doc.clone() // FIXME: this is because ETag calculation is done on non-embellished doc...
-            whelk.embellish(doc)
-
-            // reverse links are inserted by embellish, so can only do this when embellished
-            if (request.shouldApplyInverseOf()) {
-                doc.applyInverses(whelk.jsonld)
-            }
-        }
-
+        log.debug("Formatting document {}. framed: {}, lens: {}",
+                doc.getCompleteId(), request.shouldFrame(), request.getLens())
+        
         if (request.getLens() != Lens.NONE) {
             return applyLens(frameThing(doc), request.getLens())
         }
@@ -734,7 +749,7 @@ class Crud extends HttpServlet {
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
 
                 if (isUpdate) {
-                    String ifMatch = CrudUtils.cleanEtag(request.getHeader("If-Match"))
+                    String ifMatch = eTagDocPart(CrudUtils.cleanEtag(request.getHeader("If-Match")))
                     log.info("If-Match: ${ifMatch}")
                     whelk.storeAtomicUpdate(doc, false, "xl", activeSigel, ifMatch)
                 }

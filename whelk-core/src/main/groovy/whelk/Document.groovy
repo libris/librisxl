@@ -557,6 +557,14 @@ class Document {
         }
         return result
     }
+    
+    boolean isEmbellished() {
+        ((List) data[JsonLd.GRAPH_KEY]).size() > 2
+    }
+    
+    Document unEmbellished() {
+        return new Document( [ (JsonLd.GRAPH_KEY): ((List) data[JsonLd.GRAPH_KEY]).take(2) ] )
+    }
 
     /**
      * Return a list of external references in the doc.
