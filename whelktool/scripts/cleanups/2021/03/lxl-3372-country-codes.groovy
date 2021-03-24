@@ -124,9 +124,8 @@ for (String postfix in orderedPhases) {
 
         // Check the "H611:kbretro" criterium
         Document holding = holdings.find { it.getHeldBySigel() == "S"}
-        if (holding && holding.data.graph) {
-            //if (holding.data.graph.size() > 1)
-            asList(holding.data.graph[1].subject).each { subj ->
+        if (holding && holding.data["@graph"]) {
+            asList(holding.data["@graph"][1].subject).each { subj ->
                 if (subj["@type"] == "Meeting" && subj["name"] == "kbretro") {
                     holdingCriteriaFilled = true
                 }
@@ -138,12 +137,14 @@ for (String postfix in orderedPhases) {
             String countryBase = "https://id.kb.se/country/"
             asList(data.graph[1].publication).each { publ ->
                 if (publ.containsKey("country")) {
-                    String oldCountry = publ.country["@id"].substring(countryBase.length())
-                    String newCountry = shouldBe[oldCountry]
-                    System.err.println("Replacing " + oldCountry + " with " + newCountry)
-                    if (newCountry) {
-                        publ.country["@id"] = countryBase + newCountry
-                        modified = true
+                    asList(publ.country).each{ country ->
+                        String oldCountry = country["@id"].substring(countryBase.length())
+                        String newCountry = shouldBe[oldCountry]
+                        if (newCountry) {
+                            //System.err.println("Replacing " + oldCountry + " with " + newCountry)
+                            country["@id"] = countryBase + newCountry
+                            modified = true
+                        }
                     }
                 }
             }
