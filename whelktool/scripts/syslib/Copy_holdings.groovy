@@ -3,7 +3,7 @@ String NEW_SIGEL = 'https://libris.kb.se/library/Mlc'
 
 File bibIDs = new File(scriptDir, "Copy_hold_bibID.txt")
 
-def holdList = [] // Eller behövs Vector???
+def holdList = []
 
 String bibidstring = bibIDs.readLines().join("','")
 
