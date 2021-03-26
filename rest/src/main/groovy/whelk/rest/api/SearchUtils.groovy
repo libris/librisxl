@@ -306,7 +306,7 @@ class SearchUtils {
         Map sliceMap = aggregations.inject([:]) { acc, key, aggregation ->
             String baseUrlForKey = removeWildcardForKey(baseUrl, key)
             List observations = []
-            Map sliceNode = ['dimension': key.replace(".${JsonLd.ID_KEY}", '')]
+            Map sliceNode = ['dimension': key]
             aggregation['buckets'].each { bucket ->
                 String itemId = bucket['key']
                 String searchPageUrl = "${baseUrlForKey}&${makeParam(key, itemId)}"
