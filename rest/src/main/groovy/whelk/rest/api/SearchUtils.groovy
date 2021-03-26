@@ -158,6 +158,14 @@ class SearchUtils {
             mapping['up'] = [ (JsonLd.ID_KEY): upUrl ]
         }
 
+        if (reverseObject) {
+            String upUrl = makeFindUrl(SearchType.ELASTIC, pageParams - ['o' :  pageParams['o']], offset)
+            mappings << [
+                    'variable' : 'o',
+                    'object'   : ld.toChip(lookup(reverseObject)),  // TODO: object/predicate/???
+                    'up'       : [(JsonLd.ID_KEY): upUrl],
+            ]
+        }
 
         if (reverseObject && predicates) {
             String upUrl = makeFindUrl(SearchType.ELASTIC, pageParams - ['p' :  pageParams['p']], offset)
