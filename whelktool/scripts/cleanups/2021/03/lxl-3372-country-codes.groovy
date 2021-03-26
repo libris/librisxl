@@ -42,6 +42,7 @@ The following codes are tangled: au is at ua
  */
 
 import whelk.Document
+import whelk.datatool.DocumentItem
 
 Map <String, String> shouldBe = [:]
 
@@ -115,25 +116,10 @@ PrintWriter phaseLog = getReportWriter("phase-log")
 for (String postfix in orderedPhases) {
     phaseLog.println("Starting phase:\n\t" + postfix)
     phaseLog.flush()
-    System.err.println("Will now try\n" + baseWhere + postfix + "\n\n")
     selectBySqlWhere(baseWhere + postfix) { data ->
         boolean modified = false
-        boolean holdingCriteriaFilled = false
 
-        List<Document> holdings = data.whelk.getAttachedHoldings(data.doc.getThingIdentifiers())
-
-        // Check the "H611:kbretro" criterium
-        Document holding = holdings.find { it.getHeldBySigel() == "S"}
-        if (holding && holding.data["@graph"]) {
-            asList(holding.data["@graph"][1].subject).each { subj ->
-                if (subj["@type"] == "Meeting" && subj["name"] == "kbretro") {
-                    holdingCriteriaFilled = true
-                }
-            }
-        }
-
-        // Replace country code
-        if (holdingCriteriaFilled) {
+        if (sHoldingHas611KbRetro(data)) {
             String countryBase = "https://id.kb.se/country/"
             asList(data.graph[1].publication).each { publ ->
                 if (publ.containsKey("country")) {
@@ -141,7 +127,6 @@ for (String postfix in orderedPhases) {
                         String oldCountry = country["@id"].substring(countryBase.length())
                         String newCountry = shouldBe[oldCountry]
                         if (newCountry) {
-                            //System.err.println("Replacing " + oldCountry + " with " + newCountry)
                             country["@id"] = countryBase + newCountry
                             modified = true
                         }
@@ -150,11 +135,49 @@ for (String postfix in orderedPhases) {
             }
         }
 
-        /*if (modified)
-            data.scheduleSave()*/
+        if (modified)
+            data.scheduleSave()
     }
     phaseLog.println("Finished phase:\n\t" + postfix)
     phaseLog.flush()
+}
+
+boolean sHoldingHas611KbRetro(DocumentItem bibItem) {
+    List<Document> holdings = bibItem.whelk.getAttachedHoldings(bibItem.doc.getThingIdentifiers())
+
+    // Check the "H611:kbretro" criterium
+    Document holding = holdings.find { it.getHeldBySigel() == "S"}
+    if (holding && holding.data["@graph"]) {
+        asList(holding.data["@graph"][1].subject).each { subj ->
+            if (subj["@type"] == "Meeting" && subj["name"] == "kbretro") {
+                return true
+            }
+        }
+    }
+}
+
+String langWhere = """
+collection = 'bib' and
+data#>>'{@graph,0,descriptionCreator,@id}' = 'https://libris.kb.se/library/SEK' and
+created > '2020-04-08' and
+created < '2020-04-09' and
+data#>'{@graph,1,instanceOf,language}' @> '[{"@id" : "https://id.kb.se/language/scr"}]'
+"""
+selectBySqlWhere(langWhere) { data ->
+    boolean modified = false
+
+    if (sHoldingHas611KbRetro(data)) {
+        String langBase = "https://id.kb.se/language/"
+        asList(data.graph[1].instanceOf.language).each { lang ->
+            if (lang["@id"] == langBase + "scr") {
+                lang["@id"] = langBase + "hrv"
+                modified = true
+            }
+        }
+    }
+
+    if (modified)
+        data.scheduleSave()
 }
 
 private List asList(Object o) {
