@@ -107,8 +107,10 @@
                 "elision_case_insensitive": {
                     "type": "elision",
                     "articles": [
-                        "l", "m", "t", "qu", "n", "s", "j", "d", "c",
-                        "jusqu", "quoiqu", "lorsqu", "puisqu"
+                        "b", "c", "d", "j", "l", "m", "n", "s", "t", "v",
+                        "qu", "jusqu", "quoiqu", "lorsqu", "puisqu",
+                        "all", "dall", "dell", "nell", "sull", "coll", "pell",
+                        "gl", "agl", "dagl", "degl", "negl", "sugl", "un"
                     ],
                     "articles_case": true
                 },
