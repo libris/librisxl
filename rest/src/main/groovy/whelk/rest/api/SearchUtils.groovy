@@ -427,7 +427,7 @@ class SearchUtils {
 
         if (entry) {
             return entry
-        } else if (itemId.contains('.')) {
+        } else if (!itemId.startsWith('http') && itemId.contains('.')) {
             def chain = itemId.split('\\.').findAll {it != JsonLd.ID_KEY}
             return [
                     'propertyChainAxiom': chain.collect(this.&lookup),
