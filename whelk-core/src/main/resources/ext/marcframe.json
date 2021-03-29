@@ -8643,35 +8643,229 @@
       "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
+          "name": "Translated treaty",
           "source": {
-            "130": {"ind1": " ", "ind2": " ", "subfields": [
-              {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
-              {"d": "(1968)."},
-              {"l": "Spanish."},
-              {"f": "1977."}
-            ]}},
+            "130": {
+              "ind1": " ",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
+                {"d": "(1968)."},
+                {"l": "Spanish."},
+                {"f": "1977."}
+              ]
+            }
+          },
           "normalized": {
-            "130": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
-              {"d": "(1968)."},
-              {"l": "Spanish."},
-              {"f": "1977."}
-            ]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "expressionOf": {
-                "@type": "Work",
-                "hasTitle" : [ {
-                  "@type" : "Title",
-                  "mainTitle" : "Treaty of the Non-proliferation of Nuclear Weapons"
-                } ],
-                "language": {"@type": "Language", "label": "Spanish."},
-                "legalDate": "(1968).",
-                "originDate": "1977."
+            "130": {
+              "ind1": "0",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
+                {"d": "(1968)."},
+                {"l": "Spanish."},
+                {"f": "1977."}
+              ]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "expressionOf": {
+                  "@type": "Work",
+                  "hasTitle": [
+                    {
+                      "@type": "Title",
+                      "mainTitle": "Treaty of the Non-proliferation of Nuclear Weapons"
+                    }
+                  ],
+                  "language": {
+                    "@type": "Language",
+                    "label": "Spanish."
+                  },
+                  "legalDate": "(1968).",
+                  "originDate": "1977."
+                }
               }
             }
-          }}
+          }
+        },
+        {
+          "name": "String concerto",
+          "source": {
+            "130": {
+              "ind1": " ",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Concertos,"},
+                {"m": "violin,string orchestra,"},
+                {"r": "D major."}
+              ]
+            }
+          },
+          "normalized": {
+            "130": {
+              "ind1": "0",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Concertos,"},
+                {"m": "violin,string orchestra,"},
+                {"r": "D major."}
+              ]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "expressionOf": {
+                  "@type": "Work",
+                  "hasTitle": [
+                    {
+                      "@type": "Title",
+                      "mainTitle": "Concertos"
+                    }
+                  ],
+                  "musicMedium": [
+                    {
+                      "@type": "MusicMedium",
+                      "label": "violin,string orchestra"
+                    }
+                  ],
+                  "musicKey": "D major."
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Swedish uniform title of the Bible from 81",
+          "source": {
+            "130": {
+              "ind1": " ",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Bibeln."},
+                {"p": "Nya Testamentet."},
+                {"l": "Svenska"},
+                {"s": "NT 81."}
+              ]
+            }
+          },
+          "normalized": {
+            "130": {
+              "ind1": "0",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Bibeln."},
+                {"p": "Nya Testamentet."},
+                {"l": "Svenska"},
+                {"s": "NT 81."}
+              ]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "expressionOf": {
+                  "@type": "Work",
+                  "hasTitle": [
+                    {
+                      "@type": "Title",
+                      "mainTitle": "Bibeln.",
+                      "partName": [
+                        "Nya Testamentet."
+                      ]
+                    }
+                  ],
+                  "language": {
+                    "@type": "Language",
+                    "label": "Svenska"
+                  },
+                  "marc:version": "NT 81."
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Traditional title, no author",
+          "source": {
+            "130": {
+              "ind1": " ",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Beowulf."}
+              ]
+            }
+          },
+          "normalized": {
+            "130": {
+              "ind1": "0",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Beowulf."}
+              ]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "expressionOf": {
+                  "@type": "Work",
+                  "hasTitle": [
+                    {
+                      "@type": "Title",
+                      "mainTitle": "Beowulf."
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Movie sound recording",
+          "source": {
+            "130": {
+              "ind1": " ",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Gone with the wind (Motion picture)."},
+                {"h": "Sound recording."}
+              ]
+            }
+          },
+          "normalized": {
+            "130": {
+              "ind1": "0",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Gone with the wind (Motion picture)."},
+                {"h": "Sound recording."}
+              ]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "expressionOf": {
+                  "@type": "Work",
+                  "hasTitle": [
+                    {
+                      "@type": "Title",
+                      "mainTitle": "Gone with the wind (Motion picture)."
+                    }
+                  ],
+                  "marc:mediaTerm": "Sound recording."
+                }
+              }
+            }
+          }
         }
       ]
     },
