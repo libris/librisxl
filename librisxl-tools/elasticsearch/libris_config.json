@@ -27,9 +27,7 @@
                 "apostrophe_and_okina_remover": {
                     "type": "mapping",
                     "mappings": [
-                        "\u0027=>",
                         "\u2018=>",
-                        "\u2019=>",
                         "\uFF07=>",
                         "\u02B9=>",
                         "\u02BB=>",
@@ -50,7 +48,13 @@
                     "type": "custom",
                     "char_filter": ["apostrophe_and_okina_remover"],
                     "tokenizer": "standard",
-                    "filter": ["lowercase", "ascii_folder", "swedish_snowball"]
+                    "filter": [
+                        "lowercase",
+                        "elision_case_insensitive",
+                        "apostrophe_remover",
+                        "ascii_folder",
+                        "swedish_snowball"
+                    ]
                 },
                 "isbn_analyzer": {
                     "tokenizer": "standard",
@@ -99,6 +103,19 @@
                 "ascii_folder": {
                     "type": "asciifolding",
                     "preserve_original": true
+                },
+                "elision_case_insensitive": {
+                    "type": "elision",
+                    "articles": [
+                        "l", "m", "t", "qu", "n", "s", "j", "d", "c",
+                        "jusqu", "quoiqu", "lorsqu", "puisqu"
+                    ],
+                    "articles_case": true
+                },
+                "apostrophe_remover": {
+                    "type": "pattern_replace",
+                    "pattern": "[\u0027|\u2019]",
+                    "replacement": ""
                 }
             }
         }
