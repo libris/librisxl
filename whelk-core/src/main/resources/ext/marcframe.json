@@ -8791,29 +8791,101 @@
           }
         },
         {
-          "name": "Traditional title, no author",
-          "source": {
-            "130": {
-              "ind1": " ",
-              "ind2": " ",
-              "subfields": [
-                {"a": "Beowulf."}
-              ]
+          "name": "Traditional title, translated, no PrimaryContribution",
+          "source": [
+            {
+              "008": "|     |        |  |||||||||||000 ||eng| "
+            },
+            {
+              "041": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "eng"},
+                  {"h": "ang"}
+                ]
+              }
+            },
+            {
+              "130": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "Beowulf."},
+                  {"l": "English"}
+                ]
+              }
+            },
+            {
+              "700": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "Morgan, Edwin,"},
+                  {"d": "1920-2010"},
+                  {"4": "trl"}
+                ]
+              }
             }
-          },
-          "normalized": {
-            "130": {
-              "ind1": "0",
-              "ind2": " ",
-              "subfields": [
-                {"a": "Beowulf."}
-              ]
+          ],
+          "normalized": [
+            {
+              "008": "|     |        |  |||||||||||000 ||eng| "
+            },
+            {
+              "041": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "eng"},
+                  {"h": "ang"}
+                ]
+              }
+            },
+            {
+              "130": {
+                "ind1": "0",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "Beowulf."},
+                  {"l": "English"}
+                ]
+              }
+            },
+            {
+              "700": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "Morgan, Edwin,"},
+                  {"d": "1920-2010"},
+                  {"4": "trl"}
+                ]
+              }
             }
-          },
+          ],
           "result": {
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text",
+                "contribution": [
+                  {
+                    "@type": "Contribution",
+                    "agent": {
+                      "@type": "Person",
+                      "familyName": "Morgan",
+                      "givenName": "Edwin",
+                      "lifeSpan": "1920-2010"
+                    },
+                    "role": [
+                      {
+                        "@id" : "https://id.kb.se/relator/trl",
+                        "@type": "Role",
+                        "code": "trl"
+                      }
+                    ]
+                  }
+                ],
                 "expressionOf": {
                   "@type": "Work",
                   "hasTitle": [
@@ -8821,8 +8893,23 @@
                       "@type": "Title",
                       "mainTitle": "Beowulf."
                     }
-                  ]
-                }
+                  ],
+                  "language": {
+                    "@type": "Language",
+                    "label": "English"
+                  }
+                },
+                "language" : [ {
+                  "@id" : "https://id.kb.se/language/eng",
+                  "code" : "eng"
+                } ],
+                "translationOf" : [ {
+                  "@type" : "Work",
+                  "language" : [ {
+                    "@id" : "https://id.kb.se/language/ang",
+                    "code" : "ang"
+                  } ]
+                } ]
               }
             }
           }
