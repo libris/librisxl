@@ -9333,6 +9333,126 @@
               {"l": "Svenska & swahili"}
             ]}}
           ]
+        },
+        {
+          "name": "Translated title, PrimaryContribution",
+          "source": [
+            {
+              "008": "|     |        |  |||||||||||000 ||swe| "
+            },
+            {
+              "041": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "swe"},
+                  {"h": "eng"}
+                ]
+              }
+            },
+            {
+              "240": {
+                "ind1": "1",
+                "ind2": "4",
+                "subfields": [
+                  {"a": "The lord of the rings."}
+                ]
+              }
+            },
+            {
+              "100": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "Tolkien, J.R.R."},
+                  {"d": "1892-1973"},
+                  {"4": "aut"}
+                ]
+              }
+            }
+          ],
+          "normalized": [
+            {
+              "008": "|     |        |  |||||||||||000 ||swe| "
+            },
+            {
+              "041": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "swe"},
+                  {"h": "eng"}
+                ]
+              }
+            },
+            {
+              "240": {
+                "ind1": "1",
+                "ind2": "4",
+                "subfields": [
+                  {"a": "The lord of the rings."}
+                ]
+              }
+            },
+            {
+              "100": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "Tolkien, J.R.R."},
+                  {"d": "1892-1973"},
+                  {"4": "aut"}
+                ]
+              }
+            }
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contribution": [
+                  {
+                    "@type": "PrimaryContribution",
+                    "agent": {
+                      "@type": "Person",
+                      "familyName": "Tolkien",
+                      "givenName": "J.R.R.",
+                      "lifeSpan": "1892-1973"
+                    },
+                    "role": [
+                      {
+                        "@id" : "https://id.kb.se/relator/aut",
+                        "@type": "Role",
+                        "code": "aut"
+                      }
+                    ]
+                  }
+                ],
+                "hasTitle": [
+                  {
+                    "@type": "Title",
+                    "mainTitle": "The lord of the rings.",
+                    "marc:nonfilingChars" : "4"
+                  }
+                ],
+                "language": [ 
+                  {
+                    "@id" : "https://id.kb.se/language/swe",
+                    "code" : "swe"
+                  }
+                ],
+                "translationOf": [ 
+                  {
+                    "@type" : "Work",
+                    "language" : [ {
+                      "@id" : "https://id.kb.se/language/eng",
+                      "code" : "eng"
+                      } ]
+                  }
+                ]
+              }
+            }
+          }
         }
       ]
     },
