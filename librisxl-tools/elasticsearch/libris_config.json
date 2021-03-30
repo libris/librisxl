@@ -226,6 +226,11 @@
                         "fields": {
                             "keyword": {
                                 "type": "keyword"
+                            },
+                            "sort": {
+                                "type": "icu_collation_keyword",
+                                "index": false,
+                                "language": "sv"
                             }
                         }
                     }
@@ -236,6 +241,11 @@
                 "fields": {
                     "keyword": {
                         "type": "keyword"
+                    },
+                    "sort": {
+                        "type": "icu_collation_keyword",
+                        "index": false,
+                        "language": "sv"
                     }
                 },
                 "copy_to": "_all"
