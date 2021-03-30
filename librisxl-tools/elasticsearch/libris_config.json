@@ -225,11 +225,7 @@
                         "copy_to": "_all",
                         "fields": {
                             "keyword": {
-                                "type": "keyword"
-                            },
-                            "sort": {
                                 "type": "icu_collation_keyword",
-                                "index": false,
                                 "language": "sv"
                             }
                         }
@@ -240,11 +236,7 @@
                 "type": "text",
                 "fields": {
                     "keyword": {
-                        "type": "keyword"
-                    },
-                    "sort": {
                         "type": "icu_collation_keyword",
-                        "index": false,
                         "language": "sv"
                     }
                 },

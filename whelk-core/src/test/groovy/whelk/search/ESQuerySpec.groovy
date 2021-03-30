@@ -44,9 +44,6 @@ class ESQuerySpec extends Specification {
         ['_sort': ['hasTitle.mainTitle']] | [['hasTitle.mainTitle': ['order': 'asc',
                                                                      'nested_path': 'hasTitle',
                                                                      'nested_filter': ['term': ['hasTitle.@type': 'Title']]]]]
-        ['_sort': ['hasTitle.mainTitle.sort']] | [['hasTitle.mainTitle.sort': ['order': 'asc',
-                                                                     'nested_path': 'hasTitle',
-                                                                     'nested_filter': ['term': ['hasTitle.@type': 'Title']]]]]
     }
 
     def "should get site filter"() {

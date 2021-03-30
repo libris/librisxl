@@ -394,9 +394,7 @@ class ESQuery {
         def (String field, String sortOrder) = getFieldAndSortOrder(sortParam)
         String termPath = getInferredTermPath(field)
         Map clause = [(termPath): ['order': sortOrder]]
-        if (field == 'hasTitle.mainTitle' ||
-                field == 'hasTitle.mainTitle.keyword' ||
-                field == 'hasTitle.mainTitle.sort') {
+        if (field == 'hasTitle.mainTitle' || field == 'hasTitle.mainTitle.keyword') {
             clause[termPath]['nested_path'] = 'hasTitle'
             clause[termPath]['nested_filter'] = ['term': ['hasTitle.@type': 'Title']]
         }
