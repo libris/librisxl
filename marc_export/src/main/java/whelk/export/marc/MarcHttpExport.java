@@ -105,33 +105,6 @@ public class MarcHttpExport extends HttpServlet
             return;
         }
 
-        ProfileExport.DELETE_MODE deleteMode = ProfileExport.DELETE_MODE.IGNORE; // default
-        if (parameterMap.get("deleted") != null)
-        {
-            switch (parameterMap.get("deleted"))
-            {
-                case "ignore":
-                    deleteMode = ProfileExport.DELETE_MODE.IGNORE;
-                    break;
-                case "export":
-                    deleteMode = ProfileExport.DELETE_MODE.EXPORT;
-                    break;
-                case "append":
-                    deleteMode = ProfileExport.DELETE_MODE.SEPARATE;
-                    break;
-                default:
-                    failedRequests.labels("Invalid option for 'deleted'",
-                            Integer.toString(HttpServletResponse.SC_BAD_REQUEST)).inc();
-                    res.sendError(HttpServletResponse.SC_BAD_REQUEST, "Valid options for \"deleted\" are \"ignore\", \"export\" or \"email\"");
-                    return;
-            }
-        }
-
-        // Virtual deletion means: If there exists no holding for any of the locations in the profile for a bib record, consider that bib record deleted.
-        boolean doVirtualDeletions = false;
-        if (parameterMap.get("virtualDelete") != null && parameterMap.get("virtualDelete").equalsIgnoreCase("true"))
-            doVirtualDeletions = true;
-
         // Body (export profile)
         StringBuilder body = new StringBuilder();
         BufferedReader reader = req.getReader();
@@ -145,6 +118,44 @@ public class MarcHttpExport extends HttpServlet
         Properties props = new Properties();
         props.load(new StringReader(body.toString()));
         se.kb.libris.export.ExportProfile profile = new se.kb.libris.export.ExportProfile(props);
+
+        ProfileExport.DELETE_MODE deleteMode = ProfileExport.DELETE_MODE.IGNORE; // Default
+        if (profile.getProperty("exportdeleted", "OFF").equalsIgnoreCase("ON"))
+            deleteMode = ProfileExport.DELETE_MODE.EXPORT;
+
+        // Virtual deletion means: If there exists no holding for any of the locations in the profile for a bib record, consider that bib record deleted.
+        boolean doVirtualDeletions = true; // Default
+        if (profile.getProperty("virtualdelete", "ON").equalsIgnoreCase("OFF"))
+            doVirtualDeletions = false;
+
+        // For backwards compatibility, respect any "deleted" and "virtualDelete" HTTP parameters.
+        // We now normally prefer these settings to live in the profile (exportdeleted/virtualdelete),
+        // but HTTP parameters take precedence, where they exist.
+        {
+            if (parameterMap.get("deleted") != null)
+            {
+                switch (parameterMap.get("deleted"))
+                {
+                    case "ignore":
+                        deleteMode = ProfileExport.DELETE_MODE.IGNORE;
+                        break;
+                    case "export":
+                        deleteMode = ProfileExport.DELETE_MODE.EXPORT;
+                        break;
+                    case "append":
+                        deleteMode = ProfileExport.DELETE_MODE.SEPARATE;
+                        break;
+                    default:
+                        failedRequests.labels("Invalid option for 'deleted'",
+                                Integer.toString(HttpServletResponse.SC_BAD_REQUEST)).inc();
+                        res.sendError(HttpServletResponse.SC_BAD_REQUEST, "Valid options for \"deleted\" are \"ignore\", \"export\" or \"append\"");
+                        return;
+                }
+            }
+
+            if (parameterMap.get("virtualDelete") != null && parameterMap.get("virtualDelete").equalsIgnoreCase("true"))
+                doVirtualDeletions = true;
+        }
 
         String encoding = profile.getProperty("characterencoding");
         if (encoding == null)
