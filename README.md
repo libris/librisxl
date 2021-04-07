@@ -59,7 +59,9 @@ for e.g. Fedora/CentOS/RHEL with minor adjustments.
     (for Ubuntu/Debian, select "Install with apt-get"; before importing the Elasticsearch
     PGP key you might have to do `sudo apt install gnupg` if you're running a minimal distribution.)
 
-    **NOTE:** We use the elasticsearch-oss version.
+    **NOTE:**
+    * We use the elasticsearch-oss version.
+    * The [ICU Analysis plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/7.12/analysis-icu.html) (`icu-analysis`) must be installed; see "Setting up Elasticsearch" below.
 
 3. [PostgreSQL](https://www.postgresql.org/) (version 9.6 or later)
 
@@ -150,8 +152,15 @@ whelk_dev=> \q
 ### Setting up Elasticsearch
 
 Edit `/etc/elasticsearch/elasticsearch.yml`. Uncomment `cluster.name` and set it to something unique
-on the network. This name is later specified when you configure the XL system. Then, (re)start
-Elasticsearch:
+on the network. This name is later specified when you configure the XL system.
+
+Next, install the ICU Analysis plugin:
+
+```
+sudo /usr/share/elasticsearch/bin/elasticsearch-plugin install analysis-icu
+```
+
+Finally, (re)start Elasticsearch:
 
 ```
 sudo systemctl restart elasticsearch

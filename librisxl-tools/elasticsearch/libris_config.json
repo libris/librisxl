@@ -225,7 +225,8 @@
                         "copy_to": "_all",
                         "fields": {
                             "keyword": {
-                                "type": "keyword"
+                                "type": "icu_collation_keyword",
+                                "language": "sv"
                             }
                         }
                     }
@@ -235,7 +236,8 @@
                 "type": "text",
                 "fields": {
                     "keyword": {
-                        "type": "keyword"
+                        "type": "icu_collation_keyword",
+                        "language": "sv"
                     }
                 },
                 "copy_to": "_all"
