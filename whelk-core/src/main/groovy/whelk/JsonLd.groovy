@@ -725,6 +725,50 @@ class JsonLd {
         }
     }
 
+    /**
+     * Returns the chip for a thing as a flat string with just the property values,
+     * in the same order as in the chip definition's showProperties, for use in a sort key when searching
+     */
+    String toChipAsString(Map thing) {
+        Map lensGroups = displayData.get('lensGroups')
+        Map lensGroup = lensGroups.get('chips')
+        Map lens = getLensFor((Map)thing, lensGroup)
+        Set languageContainers = langContainerAlias.values() as Set
+        List parts = []
+
+        if (lens) {
+            List propertiesToKeep = (List) lens.get("showProperties")
+            for (prop in propertiesToKeep) {
+                def values = thing[prop] instanceof List ? thing[prop] : [thing[prop]]
+                for (value in values) {
+                    if (value instanceof Map) {
+                        if (prop in languageContainers) {
+                            value.retainAll { it.key in ['sv', 'en'] }
+                        }
+
+                        parts << flattenMap(value)
+                                .findAll { !((String)it.key).startsWith("@") && !(it.key in ['subtitle']) }
+                                .values()
+                    } else if (value instanceof String) {
+                        parts << value
+                    }
+                }
+            }
+        }
+
+        return parts.flatten().join(" ")
+    }
+
+    private Map flattenMap(Map map) {
+        map.collectEntries { k, v ->
+            if (v instanceof Map) {
+                flattenMap(v).collectEntries { k1, v1 -> [(k1): v1] }
+            } else {
+                [(k): v]
+            }
+        }
+    }
+
     List makeSearchKeyParts(Map object) {
         Map lensGroups = displayData.get('lensGroups')
         Map lensGroup = lensGroups.get('chips')

@@ -224,7 +224,7 @@ class ElasticSearch {
 
     String getShapeForIndex(Document document, Whelk whelk) {
         Document copy = document.clone()
-        
+
         whelk.embellish(copy, ['chips'])
 
         if (log.isDebugEnabled()) {
@@ -309,6 +309,8 @@ class ElasticSearch {
         doc.data['@graph'][1]['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
                 'totalItems' : whelk.getStorage().getIncomingLinkCount(doc.getShortId())]
+
+        doc.data['@graph'][1]['_sortKeyByLang'] = whelk.jsonld.toChipAsString(doc.data['@graph'][1])
     }
 
     private static Collection<String> getOtherIsbns(List<String> isbns) {

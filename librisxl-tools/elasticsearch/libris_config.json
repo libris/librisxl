@@ -254,6 +254,10 @@
                 "type": "keyword",
                 "copy_to": "_all"
             },
+            "_sortKeyByLang": {
+                "type": "icu_collation_keyword",
+                "language": "sv"
+            },
             "_all": {
                 "type": "text",
                 "store": false,
