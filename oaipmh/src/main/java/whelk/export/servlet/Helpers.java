@@ -239,7 +239,10 @@ public class Helpers
         return preparedStatement;
     }
 
-    public static ResultIterator getMatchingDocuments(Connection connection, ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec, String id, boolean includeDependenciesInTimeInterval)
+    public static ResultIterator getMatchingDocuments(Connection connection, ZonedDateTime fromDateTime,
+                                                      ZonedDateTime untilDateTime, SetSpec setSpec, String id,
+                                                      boolean includeDependenciesInTimeInterval,
+                                                      boolean includeSilentChanges)
             throws SQLException
     {
         PreparedStatement preparedStatement;
@@ -248,10 +251,16 @@ public class Helpers
             String sql = "SELECT data FROM lddb WHERE collection <> 'definitions'";
 
             if (fromDateTime != null) {
-                sql += " AND modified >= ? ";
+                if (includeSilentChanges)
+                    sql += " AND ( modified >= ? OR totstz(data#>>'{@graph,0,generationDate}') >= ? ) ";
+                else
+                    sql += " AND modified >= ? ";
             }
             if (untilDateTime != null) {
-                sql += " AND modified <= ? ";
+                if (includeSilentChanges)
+                    sql += " AND ( modified <= ? OR totstz(data#>>'{@graph,0,generationDate}') <= ? ) ";
+                else
+                    sql += " AND modified <= ? ";
             }
 
             preparedStatement = connection.prepareStatement(sql);
@@ -260,10 +269,14 @@ public class Helpers
             if (fromDateTime != null) {
                 Timestamp fromTimeStamp = new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L);
                 preparedStatement.setTimestamp(parameterIndex++, fromTimeStamp);
+                if (includeSilentChanges)
+                    preparedStatement.setTimestamp(parameterIndex++, fromTimeStamp);
             }
             if (untilDateTime != null) {
                 Timestamp untilTimeStamp = new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L);
                 preparedStatement.setTimestamp(parameterIndex++, untilTimeStamp);
+                if (includeSilentChanges)
+                    preparedStatement.setTimestamp(parameterIndex++, untilTimeStamp);
             }
         }
         else
