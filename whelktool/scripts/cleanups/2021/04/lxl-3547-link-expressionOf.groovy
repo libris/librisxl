@@ -49,7 +49,7 @@ selectByIds(queryIds(q).collect()) { bib ->
         incrementStats('number of works found for expressionOf', works.size())
         
         if (works) {
-            def worksLang = filterOnLang(e, works)
+            def worksLang = compatibleLanguage(e, works)
             incrementStats('number of works found for expressionOf, filtered on lang', worksLang.size())
 
             if (worksLang.size() == 0) {
@@ -77,9 +77,9 @@ expr.each {key, value ->
     sameExpr.println(value.size() + " " + asString(key, true))
 }
 
-Collection<Map> filterOnLang(Map expr, Collection<Map> works) {
-    if (lang(expr)) {
-        def sameLang = works.findAll{ lang(it) == lang(expr)}
+Collection<Map> compatibleLanguage(Map expressionOf, Collection<Map> works) {
+    if (lang(expressionOf)) {
+        def sameLang = works.findAll{ lang(it) == lang(expressionOf)}
         return sameLang ?: works.findAll{ lang(it) == Collections.emptySet() }
     }
     else {
