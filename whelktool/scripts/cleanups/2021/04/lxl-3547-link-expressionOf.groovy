@@ -1,14 +1,6 @@
 /**
- * 
- * originDate, marc:version, marc:fieldref
- * 
- * 
- * 
- * 
- * 
+ *
  */
-
-
 import org.apache.commons.lang3.StringUtils
 import whelk.util.Unicode
 import java.text.Normalizer
@@ -17,6 +9,10 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.regex.Pattern
 
 
+PrintWriter linked = getReportWriter("linked.txt")
+PrintWriter noLang = getReportWriter("no-lang.txt")
+PrintWriter multiMatch = getReportWriter("multiple-matches.txt")
+PrintWriter sameExpr = getReportWriter("same-expr.txt")
 
 w = works()
 
@@ -27,7 +23,7 @@ def q = [
         '_sort'                                            : ['@id'],
 ]
 
-def expr = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Map>>()
+def expr = new ConcurrentHashMap<Map, ConcurrentLinkedQueue<Map>>()
 selectByIds(queryIds(q).collect()) { bib -> 
     List<Map> expressionOf = asList(getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf', 'expressionOf']))
 
@@ -45,18 +41,9 @@ selectByIds(queryIds(q).collect()) { bib ->
         if (expressionLang != workLang) {
             //incrementStats(workLang.toString(), expressionLang.toString())
         }
-        
-        def contribution = asList(getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf', 'contribution']))
-        if (contribution) {
-            e['contribution'] = contribution
-        }
-        
+
         // there is always exactly one title
         def cmpMap = Norm.cmpTitle(asList(e['hasTitle']).first()) + Norm.cmpOther(e)
-
-        expr.computeIfAbsent(cmpMap, { new ConcurrentLinkedQueue<Map>() })
-        expr.get(cmpMap).add(bib)
-        
         def works = w.getOrDefault(cmpMap, Collections.emptyList())
         
         incrementStats('number of works found for expressionOf', works.size())
@@ -64,31 +51,30 @@ selectByIds(queryIds(q).collect()) { bib ->
         if (works) {
             def worksLang = filterOnLang(e, works)
             incrementStats('number of works found for expressionOf, filtered on lang', worksLang.size())
-            /*
-            if (!worksLang) {
-                println("${bib.doc.shortId} ${e.hasTitle} ${lang(e)} vs ${works.collect{ lang(it )}}")
-            }
-            
-             */
-            if (worksLang.size() == 1) {
-                println("${bib.doc.id} ${e.hasTitle} ${lang(e)} --> ${worksLang[0].with {it['@id'] + " " + lang(it)}}")
-            }
-        }
-        
-        
-        //println(cmpMap)
 
-        
-        /*
-        incrementStats('numTitles', hasTitle.size())
-        hasTitle.each { t ->
-            incrementStats('title shape', t.keySet())   
-            println(t)
+            if (worksLang.size() == 0) {
+                noLang.println("${bib.doc.id} ${asString(e)} ??? ${works.collect {it['@id'] + " " + asString(it)}}")
+            }
+            else if (worksLang.size() == 1) {
+                linked.println("${bib.doc.id} ${asString(e)} --> ${worksLang[0].with {it['@id'] + " " + asString(it)}}")
+            }
+            else {
+                multiMatch.println("${bib.doc.id} ${asString(e)} ??? ${worksLang.collect {it['@id'] + " " + asString(it)}}")
+            }
         }
-       
-         */
-        
+        else {
+            def withLang = cmpMap + ['language': e['language']]
+            expr.computeIfAbsent(withLang, { new ConcurrentLinkedQueue<Map>() })
+            expr.get(withLang).add(bib.doc.shortId)
+        }
     }
+}
+
+expr.each {key, value ->
+    value.each {
+        incrementStats('same expr', asString(key, true), it)
+    }
+    sameExpr.println(value.size() + " " + asString(key, true))
 }
 
 Collection<Map> filterOnLang(Map expr, Collection<Map> works) {
@@ -101,19 +87,14 @@ Collection<Map> filterOnLang(Map expr, Collection<Map> works) {
     }
 }
 
-/*
-expr.values().each {
-    incrementStats('same expr', it.size(), it.tail().doc.shortId)
-}
-*/
 
 private Map<String, Collection<Map>> works() {
     def works = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Map>>()
     
-    selectByIds(queryIds(['inCollection.@id': ['https://id.kb.se/term/uniformWorkTitle'], '_sort': ['@id'],]).collect()) { doc ->
+    selectByIds(queryIds(['inCollection.@id': ['https://id.kb.se/term/uniformWorkTitle'], '_sort': ['@id']]).collect()) { doc ->
         Map work = getPathSafe(doc.doc.data, ['@graph', 1])
 
-        def titles = asList(work.hasTitle) + asList(work.hasVariant).collect{asList(it['hasTitle'])}.flatten().collect(Norm.&cmpTitle)
+        def titles = (asList(work.hasTitle) + asList(work.hasVariant).collect{asList(it['hasTitle'])}.flatten()).collect(Norm.&cmpTitle)
         def otherFields = Norm.cmpOther(work)
         def cmpMaps = titles.collect{otherFields + it} as Set
         cmpMaps.each { map ->
@@ -124,9 +105,10 @@ private Map<String, Collection<Map>> works() {
     return works
 }
 
-private String pr(Map work) {
-    getPathSafe(work, ['hasTitle', 'mainTitle'])
-    
+private String asString(Map work, flat = false) {
+    (((flat ? Norm.TITLE_KEYS : Norm.TITLE_KEYS.collect {['hasTitle', 0] + it }) + Norm.CMP_KEYS).collect {
+        getPathSafe(work, asList(it))
+    } + lang(work).collect{ (it['@id'] ?: '').split('/').last() }).grep().join(' · ')
 }
 
 private Object getPathSafe(item, path, defaultTo = null) {
@@ -155,8 +137,7 @@ private Set lang(Map work) {
 class Norm {
     static final Pattern UNICODE_MARK = Pattern.compile('\\p{M}')
 
-    // these are the ones found in the data.
-    // ignore @type and marc:nonfilingChars
+    // these are the ones found in the data. ignore @type and marc:nonfilingChars
     static final Set TITLE_KEYS = ['mainTitle', 'partName', 'partNumber', 'marc:formSubheading'] as Set
 
     static final Set CMP_KEYS = ['originDate', 'marc:version'] as Set 
