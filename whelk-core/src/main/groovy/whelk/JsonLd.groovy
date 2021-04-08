@@ -745,10 +745,7 @@ class JsonLd {
                         if (prop in languageContainers) {
                             value.retainAll { it.key in ['sv', 'en'] }
                         }
-
-                        parts << flattenMap(value)
-                                .findAll { !((String)it.key).startsWith("@") && !(it.key in ['subtitle']) }
-                                .values()
+                        parts << toChipAsString(value)
                     } else if (value instanceof String) {
                         parts << value
                     }
@@ -757,16 +754,6 @@ class JsonLd {
         }
 
         return parts.flatten().join(" ")
-    }
-
-    private Map flattenMap(Map map) {
-        map.collectEntries { k, v ->
-            if (v instanceof Map) {
-                flattenMap(v).collectEntries { k1, v1 -> [(k1): v1] }
-            } else {
-                [(k): v]
-            }
-        }
     }
 
     List makeSearchKeyParts(Map object) {
