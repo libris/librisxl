@@ -1,17 +1,12 @@
 selectByCollection('bib') { bib ->
     def (record, thing) = bib.graph
     if (thing.responsibilityStatement) {
-        println(bib.doc.shortId + ' ' + thing.responsibilityStatement)
+        int numContribution = asList(thing.instanceOf?.contribution).size()
+        String title = thing.hasTitle?.mainTitle ?: (thing.hasTitle ?: '') 
+        println(String.format("%s\t%3s\t%s\t\t%s", bib.doc.shortId, numContribution, thing.responsibilityStatement, title))
     }
 }
 
-private Object getPathSafe(item, path, defaultTo = null) {
-    for (p in path) {
-        if (item[p] != null) {
-            item = item[p]
-        } else {
-            return defaultTo
-        }
-    }
-    return item
+List asList(Object o) {
+    (o ?: []).with { it instanceof List ? it : [it] }
 }
