@@ -1,7 +1,7 @@
 selectByCollection('bib') { bib ->
-    def resp = getPathSafe(bib.doc.data, ['@graph', 1, 'responsibilityStatement'])
-    if (resp) {
-        println(resp)
+    def (record, thing) = bib.graph
+    if (thing.responsibilityStatement) {
+        println(bib.doc.shortId + ' ' + thing.responsibilityStatement)
     }
 }
 
