@@ -52,7 +52,7 @@ public class ListRecords
         boolean withSilentChanges = Boolean.parseBoolean(request.getParameter(INCLUDE_SILENT_PARAM));
 
         if (ResponseCommon.errorOnExtraParameters(request, response,
-                FROM_PARAM, UNTIL_PARAM, SET_PARAM, RESUMPTION_PARAM, FORMAT_PARAM, DELETED_DATA_PARAM))
+                FROM_PARAM, UNTIL_PARAM, SET_PARAM, RESUMPTION_PARAM, FORMAT_PARAM, DELETED_DATA_PARAM, INCLUDE_SILENT_PARAM))
             return;
 
         // We do not use resumption tokens.
