@@ -25,7 +25,7 @@ BEGIN
 
    CREATE OR REPLACE FUNCTION totstz(text)
    RETURNS timestamptz AS
-   $$SELECT $1::timestamptz$$
+   'SELECT $1::timestamptz'
    LANGUAGE sql IMMUTABLE;
 
    CREATE INDEX idx_lddb_generation_date ON lddb (totstz(data#>>'{@graph,0,generationDate}'));
