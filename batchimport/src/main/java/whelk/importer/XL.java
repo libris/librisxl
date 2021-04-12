@@ -161,6 +161,7 @@ class XL
 
     private String importNewRecord(MarcRecord marcRecord, String collection, String relatedWithBibResourceId, String replaceSystemId)
     {
+
         String incomingId = IdGenerator.generate();
         if (replaceSystemId != null)
             incomingId = replaceSystemId;
@@ -255,6 +256,7 @@ class XL
             return false;
 
         String specialRule = m_parameters.getSpecialRules().get(newEncodingLevel);
+
         if (specialRule != null && specialRule.equals(existingEncodingLevel))
             return true;
 
@@ -702,7 +704,7 @@ class XL
     {
         try
         {
-            String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
+            String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
             PreparedStatement statement = connection.prepareStatement(query);
 
             statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
@@ -717,7 +719,7 @@ class XL
     private PreparedStatement getOnIssn_ps(Connection connection, String issn)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
+        String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
         statement.setObject(1, "[{\"@type\": \"ISSN\", \"value\": \"" + issn + "\"}]", java.sql.Types.OTHER);
@@ -729,7 +731,7 @@ class XL
     {
         try
         {
-            String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,indirectlyIdentifiedBy}' @> ?";
+            String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,indirectlyIdentifiedBy}' @> ?";
             PreparedStatement statement = connection.prepareStatement(query);
 
             statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
@@ -744,7 +746,7 @@ class XL
     private PreparedStatement getOnIssnHidden_ps(Connection connection, String issn)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE deleted = false AND ( data#>'{@graph,1,identifiedBy}' @> ? OR data#>'{@graph,1,identifiedBy}' @> ?)";
+        String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND ( data#>'{@graph,1,identifiedBy}' @> ? OR data#>'{@graph,1,identifiedBy}' @> ?)";
         PreparedStatement statement =  connection.prepareStatement(query);
 
         statement.setObject(1, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": [\"" + issn + "\"]}]", java.sql.Types.OTHER);
@@ -756,7 +758,7 @@ class XL
     private PreparedStatement getOnEAN_ps(Connection connection, String ean)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
+        String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
         statement.setObject(1, "[{\"@type\": \"EAN\", \"value\": \"" + ean + "\"}]", java.sql.Types.OTHER);
@@ -767,7 +769,7 @@ class XL
     private PreparedStatement getOnURI_ps(Connection connection, String uri)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
+        String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
         statement.setObject(1, "[{\"@type\": \"Identifier\", \"typeNote\": \"uri\", \"value\": \"" + uri + "\"}]", java.sql.Types.OTHER);
@@ -778,7 +780,7 @@ class XL
     private PreparedStatement getOnURN_ps(Connection connection, String urn)
             throws SQLException
     {
-        String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
+        String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
         statement.setObject(1, "[{\"@type\": \"Identifier\", \"typeNote\": \"urn\", \"value\": \"" + urn + "\"}]", java.sql.Types.OTHER);
