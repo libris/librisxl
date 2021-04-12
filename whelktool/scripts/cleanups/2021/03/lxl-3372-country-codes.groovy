@@ -136,7 +136,7 @@ for (String postfix in orderedPhases) {
         }
 
         if (modified)
-            data.scheduleSave()
+            data.scheduleSave(loud: true)
     }
     phaseLog.println("Finished phase:\n\t" + postfix)
     phaseLog.flush()
@@ -177,7 +177,7 @@ selectBySqlWhere(langWhere) { data ->
     }
 
     if (modified)
-        data.scheduleSave()
+        data.scheduleSave(loud: true)
 }
 
 private List asList(Object o) {
