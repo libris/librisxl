@@ -1,5 +1,13 @@
 /**
- *
+ * Try to replace local instanceOf.expressionOf with links to "uniformWorkTitle" works.
+ * 
+ * originDate, marc:version and title (mainTitle, partName, partNumber, marc:formSubheading) have to match.
+ * expressionOf with language can link to work with same language or no language
+ * expressionOf without language can link to work without language
+ * 
+ * See LXL-3547 for more info
+ * 
+ * TODO: decide which non-linkable expressionOf should be extracted to new works and linked, i.e. how many identical expressionOf have to exist 
  */
 import org.apache.commons.lang3.StringUtils
 import whelk.util.Unicode
@@ -8,13 +16,12 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.regex.Pattern
 
-
 PrintWriter linked = getReportWriter("linked.txt")
 PrintWriter noLang = getReportWriter("no-lang.txt")
 PrintWriter multiMatch = getReportWriter("multiple-matches.txt")
 PrintWriter sameExpr = getReportWriter("same-expr.txt")
 
-w = works()
+uniformWorks = getUniformWorks()
 
 def q = [
         '@type'                                            : ['Instance'],
@@ -23,7 +30,7 @@ def q = [
         '_sort'                                            : ['@id'],
 ]
 
-def expr = new ConcurrentHashMap<Map, ConcurrentLinkedQueue<Map>>()
+def notLinkedExpr = new ConcurrentHashMap<Map, ConcurrentLinkedQueue<Map>>()
 selectByIds(queryIds(q).collect()) { bib -> 
     List<Map> expressionOf = asList(getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf', 'expressionOf']))
 
@@ -31,53 +38,56 @@ selectByIds(queryIds(q).collect()) { bib ->
         return
     }
     
+    boolean modified = false
     expressionOf.each { Map e -> 
         if (e['@id']) {
             return
         }
 
-        def expressionLang = asList(e['language']) as Set
-        def workLang = asList(getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf', 'language'])) as Set
-        if (expressionLang != workLang) {
-            //incrementStats(workLang.toString(), expressionLang.toString())
-        }
-
         // there is always exactly one title
         def cmpMap = Norm.cmpTitle(asList(e['hasTitle']).first()) + Norm.cmpOther(e)
-        def works = w.getOrDefault(cmpMap, Collections.emptyList())
+        def works = uniformWorks.getOrDefault(cmpMap, Collections.emptyList())
         
         incrementStats('number of works found for expressionOf', works.size())
         
         if (works) {
-            def worksLang = compatibleLanguage(e, works)
+            def worksLang = compatibleLanguages(e, works)
             incrementStats('number of works found for expressionOf, filtered on lang', worksLang.size())
 
             if (worksLang.size() == 0) {
-                noLang.println("${bib.doc.id} ${asString(e)} ??? ${works.collect {it['@id'] + " " + asString(it)}}")
+                noLang.println("${bib.doc.id} ${toString(e)} ??? ${works.collect {it['@id'] + " " + toString(it)}}")
             }
             else if (worksLang.size() == 1) {
-                linked.println("${bib.doc.id} ${asString(e)} --> ${worksLang[0].with {it['@id'] + " " + asString(it)}}")
+                linked.println("${bib.doc.id} ${toString(e)} --> ${worksLang[0].with {it['@id'] + " " + toString(it)}}")
+                e.clear()
+                e['@id'] = worksLang[0]['@id']
+                modified |= true
             }
             else {
-                multiMatch.println("${bib.doc.id} ${asString(e)} ??? ${worksLang.collect {it['@id'] + " " + asString(it)}}")
+                multiMatch.println("${bib.doc.id} ${toString(e)} ??? ${worksLang.collect {it['@id'] + " " + toString(it)}}")
             }
         }
         else {
-            def withLang = cmpMap + ['language': e['language']]
-            expr.computeIfAbsent(withLang, { new ConcurrentLinkedQueue<Map>() })
-            expr.get(withLang).add(bib.doc.shortId)
+            def contribution = asList(getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf', 'expressionOf'])).findAll{ it['@type'] == 'PrimaryContribution'}
+            def ee = contribution ? e + ['contribution': contribution] : e
+            notLinkedExpr.computeIfAbsent(ee, { new ConcurrentLinkedQueue<Map>() })
+            notLinkedExpr.get(ee).add(bib.doc.shortId)
         }
     }
-}
-
-expr.each {key, value ->
-    value.each {
-        incrementStats('same expr', asString(key, true), it)
+    
+    if (modified) {
+        bib.scheduleSave()
     }
-    sameExpr.println(value.size() + " " + asString(key, true))
 }
 
-Collection<Map> compatibleLanguage(Map expressionOf, Collection<Map> works) {
+notLinkedExpr.each {key, value ->
+    value.each {
+        incrementStats('same expr', toString(key), it)
+    }
+    sameExpr.println(value.size() + " " + toString(key))
+}
+
+Collection<Map> compatibleLanguages(Map expressionOf, Collection<Map> works) {
     if (lang(expressionOf)) {
         def sameLang = works.findAll{ lang(it) == lang(expressionOf)}
         return sameLang ?: works.findAll{ lang(it) == Collections.emptySet() }
@@ -88,10 +98,14 @@ Collection<Map> compatibleLanguage(Map expressionOf, Collection<Map> works) {
 }
 
 
-private Map<String, Collection<Map>> works() {
-    def works = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Map>>()
+private Map<String, Collection<Map>> getUniformWorks() {
+    def q = [
+            'inCollection.@id': ['https://id.kb.se/term/uniformWorkTitle'], 
+            '_sort': ['@id']
+    ]
     
-    selectByIds(queryIds(['inCollection.@id': ['https://id.kb.se/term/uniformWorkTitle'], '_sort': ['@id']]).collect()) { doc ->
+    def works = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Map>>()
+    selectByIds(queryIds(q).collect()) { doc ->
         Map work = getPathSafe(doc.doc.data, ['@graph', 1])
 
         def titles = (asList(work.hasTitle) + asList(work.hasVariant).collect{asList(it['hasTitle'])}.flatten()).collect(Norm.&cmpTitle)
@@ -105,10 +119,10 @@ private Map<String, Collection<Map>> works() {
     return works
 }
 
-private String asString(Map work, flat = false) {
-    (((flat ? Norm.TITLE_KEYS : Norm.TITLE_KEYS.collect {['hasTitle', 0] + it }) + Norm.CMP_KEYS).collect {
-        getPathSafe(work, asList(it))
-    } + lang(work).collect{ (it['@id'] ?: '').split('/').last() }).grep().join(' · ')
+private String toString(Map work) {
+    ((Norm.TITLE_KEYS.collect {['hasTitle', 0] + it } + Norm.CMP_KEYS)
+            .collect {getPathSafe(work, asList(it)) } + lang(work).collect{ (it['@id'] ?: '').split('/').last() })
+            .grep().join(' · ')
 }
 
 private Object getPathSafe(item, path, defaultTo = null) {
@@ -161,16 +175,15 @@ class Norm {
                     ]
                 }
     }
-
-    static String asciiFold(String s) {
-        return Normalizer.normalize(s, Normalizer.Form.NFD).replaceAll(UNICODE_MARK, '')
-    }
     
     static String normalize(String s) {
         return asciiFold(Unicode.normalizeForSearch(StringUtils.normalizeSpace(" $s ".toLowerCase().replace(noise))))
     }
-}
 
+    static String asciiFold(String s) {
+        return Normalizer.normalize(s, Normalizer.Form.NFD).replaceAll(UNICODE_MARK, '')
+    }
+}
 
 /*
 broken, fix manually:
