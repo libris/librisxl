@@ -96,7 +96,8 @@ class Document {
 
     boolean trimStrings() {
         DocumentUtil.traverse(data) { value, path ->
-            if (value instanceof String && value != value.trim()) {
+            // don't touch indX in _marcUncompleted ' '
+            if (value instanceof String && value != ' ' && value != value.trim()) {
                 return new DocumentUtil.Replace(value.trim())
             }
         }
