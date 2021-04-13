@@ -22,6 +22,9 @@ import java.util.concurrent.LinkedBlockingQueue
 @Log
 class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
+
+    static final Set<String> LANGUAGES_TO_INDEX = ["sv", "en"] as Set
+
     private static final ObjectMapper mapper = new ObjectMapper()
 
     String defaultIndex = null
@@ -224,7 +227,7 @@ class ElasticSearch {
 
     String getShapeForIndex(Document document, Whelk whelk) {
         Document copy = document.clone()
-        
+
         whelk.embellish(copy, ['chips'])
 
         if (log.isDebugEnabled()) {
@@ -288,10 +291,9 @@ class ElasticSearch {
 
     private static void filterLanguages(Whelk whelk, Map thing) {
         Set languageContainers = whelk.jsonld.langContainerAlias.values() as Set
-        Set languagesToKeep = ['sv', 'en'] // TODO: where do we define these?
         DocumentUtil.traverse(thing, { value, path ->
             if (path && path.last() in languageContainers) {
-                return new DocumentUtil.Replace(value.findAll {lang, str -> lang in languagesToKeep})
+                return new DocumentUtil.Replace(value.findAll {lang, str -> lang in LANGUAGES_TO_INDEX})
             }
         })
     }
@@ -309,6 +311,8 @@ class ElasticSearch {
         doc.data['@graph'][1]['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
                 'totalItems' : whelk.getStorage().getIncomingLinkCount(doc.getShortId())]
+
+        doc.data['@graph'][1]['_sortKeyByLang'] = whelk.jsonld.toChipAsMapByLang(doc.data['@graph'][1], LANGUAGES_TO_INDEX)
     }
 
     private static Collection<String> getOtherIsbns(List<String> isbns) {

@@ -254,6 +254,18 @@
                 "type": "keyword",
                 "copy_to": "_all"
             },
+            "_sortKeyByLang": {
+                "properties": {
+                    "sv": {
+                        "type": "icu_collation_keyword",
+                        "language": "sv"
+                    },
+                    "en": {
+                        "type": "icu_collation_keyword",
+                        "language": "en"
+                    }
+                }
+            },
             "_all": {
                 "type": "text",
                 "store": false,
