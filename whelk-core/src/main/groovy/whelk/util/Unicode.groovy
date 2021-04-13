@@ -12,7 +12,7 @@ class Unicode {
      * https://www.unicode.org/charts/PDF/UFB00.pdf
      * https://en.wikipedia.org/wiki/Orthographic_ligature
      */
-    private static final List FORBIDDEN_UNICODE_CHARS = [
+    private static final List NORMALIZE_UNICODE_CHARS = [
             'ﬀ', // 'LATIN SMALL LIGATURE FF'
             'ﬃ', // 'LATIN SMALL LIGATURE FFI'
             'ﬄ', // 'LATIN SMALL LIGATURE FFL'
@@ -22,12 +22,23 @@ class Unicode {
             'ﬆ', // 'LATIN SMALL LIGATURE ST'
     ]
 
+    /** 
+     * Characters that should be stripped.
+     * 
+     * According to the Unicode FAQ, U+FEFF BOM should be treated as ZWNBSP in the middle of data for backwards 
+     * compatibility (that use is deprecated in Unicode 3.2). https://www.unicode.org/faq/utf_bom.html#BOM
+     * In Libris data analyzed it turned out to always be garbage.
+     */
+    private static final List STRIP_UNICODE_CHARS = [
+            '\ufeff',
+    ]
+    
     private static final Map EXTRA_NORMALIZATION_MAP
 
     static {
-        EXTRA_NORMALIZATION_MAP = FORBIDDEN_UNICODE_CHARS.collectEntries {
+        EXTRA_NORMALIZATION_MAP = NORMALIZE_UNICODE_CHARS.collectEntries {
             [(it): Normalizer.normalize(it, Normalizer.Form.NFKC)]
-        }
+        } + STRIP_UNICODE_CHARS.collectEntries { [(it): ''] }
     }
 
     static boolean isNormalized(String s) {

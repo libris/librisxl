@@ -96,20 +96,12 @@ class Document {
 
     boolean trimStrings() {
         DocumentUtil.traverse(data) { value, path ->
-            if (value instanceof String && value != trimString(value)) {
-                return new DocumentUtil.Replace(trimString(value))
+            if (value instanceof String && value != value.trim()) {
+                return new DocumentUtil.Replace(value.trim())
             }
         }
     }
     
-    private static String trimString(String s) {
-        // Trim string + drop all U+FEFF / BOM characters. 
-        // According to the Unicode FAQ, BOM should be treated as ZWNBSP in the middle of data for backwards 
-        // compatibility (deprecated use in Unicode 3.2). https://www.unicode.org/faq/utf_bom.html#BOM
-        // In Libris data analyzed it turns out to always be garbage.
-        return s.replace('\ufeff', '').trim()
-    }
-
     URI getURI() {
         return baseUri.resolve(getShortId())
     }

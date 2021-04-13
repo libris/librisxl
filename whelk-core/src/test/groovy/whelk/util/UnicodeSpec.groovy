@@ -22,6 +22,15 @@ class UnicodeSpec extends Specification {
         Unicode.normalize(s) == norm
     }
 
+    def "strip BOM"() {
+        given:
+        String s = "9th Koli Calling International Conference on Computing Education Research\ufeff, October 29–November 1, 2009"
+        String norm = "9th Koli Calling International Conference on Computing Education Research, October 29–November 1, 2009"
+        expect:
+        Unicode.isNormalized(s) == false
+        Unicode.normalize(s) == norm
+    }
+
     def "trim noise()"() {
         expect:
         Unicode.trimNoise(dirty) == clean
