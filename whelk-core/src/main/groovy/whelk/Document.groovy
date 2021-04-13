@@ -94,14 +94,14 @@ class Document {
         }
     }
 
-    void trimStrings() {
+    boolean trimStrings() {
         DocumentUtil.traverse(data) { value, path ->
             if (value instanceof String && value != value.trim()) {
                 return new DocumentUtil.Replace(value.trim())
             }
         }
     }
-
+    
     URI getURI() {
         return baseUri.resolve(getShortId())
     }
