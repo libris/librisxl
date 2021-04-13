@@ -22,6 +22,7 @@ public class ListRecords
     private final static String RESUMPTION_PARAM = "resumptionToken";
     private final static String FORMAT_PARAM = "metadataPrefix";
     private final static String DELETED_DATA_PARAM = "x-withDeletedData";
+    private final static String INCLUDE_SILENT_PARAM = "x-withSilentUpdates";
 
     private static final Counter failedRequests = Counter.build()
             .name("oaipmh_failed_listrecords_requests_total").help("Total failed ListRecords requests.")
@@ -35,7 +36,8 @@ public class ListRecords
      * @param onlyIdentifiers When this is set to true, the response will be formatted as a ListIdentifiers response.
      *                        When it is false, the response will be formatted as a ListRecords response.
      */
-    public static void handleListRecordsRequest(HttpServletRequest request, HttpServletResponse response, boolean onlyIdentifiers)
+    public static void handleListRecordsRequest(HttpServletRequest request, HttpServletResponse response,
+                                                boolean onlyIdentifiers)
             throws IOException, XMLStreamException, SQLException
     {
         // Parse and verify the parameters allowed for this request
@@ -47,9 +49,10 @@ public class ListRecords
 
         // optional and not technically legal OAI-PMH
         boolean withDeletedData = Boolean.parseBoolean(request.getParameter(DELETED_DATA_PARAM));
+        boolean withSilentChanges = Boolean.parseBoolean(request.getParameter(INCLUDE_SILENT_PARAM));
 
         if (ResponseCommon.errorOnExtraParameters(request, response,
-                FROM_PARAM, UNTIL_PARAM, SET_PARAM, RESUMPTION_PARAM, FORMAT_PARAM, DELETED_DATA_PARAM))
+                FROM_PARAM, UNTIL_PARAM, SET_PARAM, RESUMPTION_PARAM, FORMAT_PARAM, DELETED_DATA_PARAM, INCLUDE_SILENT_PARAM))
             return;
 
         // We do not use resumption tokens.
@@ -83,7 +86,8 @@ public class ListRecords
         if (!OaiPmh.supportedFormats.keySet().contains(metadataPrefix))
         {
             failedRequests.labels(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT).inc();
-            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT, "Unsupported format: " + metadataPrefix,
+            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT,
+                    "Unsupported format: " + metadataPrefix,
                     request, response);
             return;
         }
@@ -97,18 +101,22 @@ public class ListRecords
         } catch (DateTimeParseException dtpe)
         {
             failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
-            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT, "Allowed time formats are: YYYY-MM-DD and YYYY-MM-DDThh:mm:ssZ.", request, response);
+            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
+                    "Allowed time formats are: YYYY-MM-DD and YYYY-MM-DDThh:mm:ssZ.", request, response);
             return;
         }
 
         try (Connection dbconn = OaiPmh.s_whelk.getStorage().getOuterConnection())
         {
             dbconn.setAutoCommit(false);
-            boolean includeDependencies = metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX) || metadataPrefix.contains("marcxml");
+            boolean includeDependencies = metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX) ||
+                    metadataPrefix.contains("marcxml");
 
-            try (Helpers.ResultIterator resultIterator = Helpers.getMatchingDocuments(dbconn, fromDateTime, untilDateTime, setSpec, null, includeDependencies))
+            try (Helpers.ResultIterator resultIterator = Helpers.getMatchingDocuments(dbconn, fromDateTime,
+                    untilDateTime, setSpec, null, includeDependencies, withSilentChanges))
             {
-                respond(request, response, metadataPrefix, onlyIdentifiers, includeDependencies, withDeletedData, resultIterator);
+                respond(request, response, metadataPrefix, onlyIdentifiers,
+                        includeDependencies, withDeletedData, resultIterator);
             } finally {
                 dbconn.commit();
             }
@@ -141,7 +149,8 @@ public class ListRecords
 
         while (resultIterator.hasNext())
         {
-            ResponseCommon.emitRecord(resultIterator.next(), writer, requestedFormat, onlyIdentifiers, embellish, withDeletedData);
+            ResponseCommon.emitRecord(resultIterator.next(), writer, requestedFormat,
+                    onlyIdentifiers, embellish, withDeletedData);
         }
 
         writer.writeEndElement(); // ListIdentifiers/ListRecords
