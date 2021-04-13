@@ -726,34 +726,64 @@ class JsonLd {
     }
 
     /**
-     * Returns the chip for a thing as a flat string with just the property values,
-     * in the same order as in the chip definition's showProperties, for use in a sort key when searching
+     * Returns the chip as a list of [<language>, <property value>] pairs.
      */
-    String toChipAsString(Map thing) {
+    private List toChipAsListByLang(Map thing) {
         Map lensGroups = displayData.get('lensGroups')
         Map lensGroup = lensGroups.get('chips')
         Map lens = getLensFor((Map)thing, lensGroup)
-        Set languageContainers = langContainerAlias.values() as Set
         List parts = []
 
         if (lens) {
-            List propertiesToKeep = (List) lens.get("showProperties")
+            List propertiesToKeep = (List) lens.get('showProperties').findAll({ String s -> !(s.endsWith('ByLang')) })
+            // Go through the properties in the order defined in the chip
             for (prop in propertiesToKeep) {
-                def values = thing[prop] instanceof List ? thing[prop] : [thing[prop]]
-                for (value in values) {
-                    if (value instanceof Map) {
-                        if (prop in languageContainers) {
-                            value.retainAll { it.key in ['sv', 'en'] }
+                String byLangKey = langContainerAlias.get(prop)
+                if (byLangKey && thing[byLangKey] instanceof Map) {
+                    for (String lang in ['sv', 'en']) {
+                        if (thing[byLangKey][lang]) {
+                            parts << [lang, thing[byLangKey][lang]]
+                        } else {
+                            parts << [lang, thing[prop]]
                         }
-                        parts << toChipAsString(value)
-                    } else if (value instanceof String) {
-                        parts << value
+                    }
+                } else {
+                    def values = thing[prop] instanceof List ? thing[prop] : [thing[prop]]
+                    for (value in values) {
+                        if (value instanceof Map) {
+                            // Check for a more specific chip
+                            parts << toChipAsListByLang((Map) value)
+                        } else if (value instanceof String) {
+                            // Add non-language-specific chip property values
+                            parts << ['sv', value] << ['en', value]
+                        }
                     }
                 }
             }
         }
 
-        return parts.flatten().join(" ")
+        return parts
+    }
+
+    /**
+     * Returns a map with two keys, "sv" and "en", each having as its value a string containing
+     * chip property values in (approximately) the order in which they would be displayed on the
+     * frontend. For use as search keys.
+     */
+    Map toChipAsMapByLang(Map thing) {
+        // Transform the list of language/property value pairs to a map
+        Map results = toChipAsListByLang(thing)
+            .flatten()
+            .collate(2)
+            .inject(['sv': [], 'en': []], { acc, it ->
+                String key = it.get(0)
+                if (it.size() == 2 && key in ['sv', 'en'])
+                    acc[key] << it.get(1)
+                acc
+            })
+
+        // Turn the map values into strings
+        return results.collectEntries({ k, v -> [(k): ((List) v).flatten().join(", ")] })
     }
 
     List makeSearchKeyParts(Map object) {

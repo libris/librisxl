@@ -255,8 +255,16 @@
                 "copy_to": "_all"
             },
             "_sortKeyByLang": {
-                "type": "icu_collation_keyword",
-                "language": "sv"
+                "properties": {
+                    "sv": {
+                        "type": "icu_collation_keyword",
+                        "language": "sv"
+                    },
+                    "en": {
+                        "type": "icu_collation_keyword",
+                        "language": "en"
+                    }
+                }
             },
             "_all": {
                 "type": "text",
