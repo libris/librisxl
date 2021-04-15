@@ -728,7 +728,7 @@ class JsonLd {
     /**
      * Returns the chip as a list of [<language>, <property value>] pairs.
      */
-    private List toChipAsListByLang(Map thing, Set<String> languagesToKeep) {
+    private List toChipAsListByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris) {
         Map lensGroups = displayData.get('lensGroups')
         Map lensGroup = lensGroups.get('chips')
         Map lens = getLensFor((Map)thing, lensGroup)
@@ -738,6 +738,8 @@ class JsonLd {
             List propertiesToKeep = (List) lens.get('showProperties').findAll({ String s -> !(s.endsWith('ByLang')) })
             // Go through the properties in the order defined in the chip
             for (prop in propertiesToKeep) {
+                // If prop (e.g., title) has a language-specific version (e.g., titleByLang),
+                // and the thing has that language-specific version, use that
                 String byLangKey = langContainerAlias.get(prop)
                 if (byLangKey && thing[byLangKey] instanceof Map) {
                     languagesToKeep.each { lang ->
@@ -751,8 +753,15 @@ class JsonLd {
                     def values = thing[prop] instanceof List ? thing[prop] : [thing[prop]]
                     values.each { value ->
                         if (value instanceof Map) {
-                            // Check for a more specific chip
-                            parts << toChipAsListByLang((Map) value, languagesToKeep)
+                            if (value.containsKey('@id') && !value.containsKey('@type')) {
+                                // e.g. heldBy, ..
+                                languagesToKeep.each {
+                                    parts << [it, removeDomain((String) value['@id'], removableBaseUris)]
+                                }
+                            } else {
+                                // Check for a more specific chip
+                                parts << toChipAsListByLang((Map) value, languagesToKeep, removableBaseUris)
+                            }
                         } else if (value instanceof String) {
                             // Add non-language-specific chip property values
                             languagesToKeep.each { parts << [it, value] }
@@ -770,10 +779,10 @@ class JsonLd {
      * chip property values in (approximately) the order in which they would be displayed on the
      * frontend. For use as search keys.
      */
-    Map toChipAsMapByLang(Map thing, Set<String> languagesToKeep) {
+    Map toChipAsMapByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris) {
         // Transform the list of language/property value pairs to a map
         Map initialResults = languagesToKeep.collectEntries { [(it): []] }
-        Map results = toChipAsListByLang(thing, languagesToKeep)
+        Map results = toChipAsListByLang(thing, languagesToKeep, removableBaseUris)
             .flatten()
             .collate(2)
             .inject(initialResults, { acc, it ->
@@ -784,7 +793,23 @@ class JsonLd {
             })
 
         // Turn the map values into strings
-        return results.collectEntries({ k, v -> [(k): ((List) v).flatten().join(", ")] })
+        return results.collectEntries { k, v ->
+            String result = ((List) v).flatten().join(", ")
+            // Use last URI components as fallback
+            if (!result && thing['@id']) {
+                result = removeDomain((String) thing['@id'], removableBaseUris)
+            }
+            [(k): result]
+        }
+    }
+
+    private static String removeDomain(String uri, List<String> removableBaseUris) {
+        for (removableUri in removableBaseUris) {
+            if (uri.startsWith(removableUri)) {
+                return uri.substring(removableUri.length())
+            }
+        }
+        return uri
     }
 
     List makeSearchKeyParts(Map object) {
