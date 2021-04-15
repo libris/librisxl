@@ -23,7 +23,15 @@ import java.util.concurrent.LinkedBlockingQueue
 class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
 
-    static final Set<String> LANGUAGES_TO_INDEX = ["sv", "en"] as Set
+    static final Set<String> LANGUAGES_TO_INDEX = ['sv', 'en'] as Set
+    static final List<String> REMOVABLE_BASE_URIS = [
+            'http://libris.kb.se/',
+            'https://libris.kb.se/',
+            'http://id.kb.se/vocab/',
+            'https://id.kb.se/vocab/',
+            'http://id.kb.se/',
+            'https://id.kb.se/',
+    ]
 
     private static final ObjectMapper mapper = new ObjectMapper()
 
@@ -312,7 +320,10 @@ class ElasticSearch {
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
                 'totalItems' : whelk.getStorage().getIncomingLinkCount(doc.getShortId())]
 
-        doc.data['@graph'][1]['_sortKeyByLang'] = whelk.jsonld.toChipAsMapByLang(doc.data['@graph'][1], LANGUAGES_TO_INDEX)
+        doc.data['@graph'][1]['_sortKeyByLang'] = whelk.jsonld.toChipAsMapByLang(
+                doc.data['@graph'][1],
+                LANGUAGES_TO_INDEX,
+                REMOVABLE_BASE_URIS)
     }
 
     private static Collection<String> getOtherIsbns(List<String> isbns) {
