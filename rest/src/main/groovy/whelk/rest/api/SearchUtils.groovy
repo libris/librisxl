@@ -652,11 +652,11 @@ class SearchUtils {
                 if (param == JsonLd.TYPE_KEY || param == JsonLd.ID_KEY) {
                     valueProp = 'object'
                     termKey = param
-                    value = ld.toChip(lookup(val))
+                    value = ld.toChip(lookup(val)).with { it[JsonLd.ID_KEY] = val; return it }
                 } else if (param.endsWith(".${JsonLd.ID_KEY}")) {
                     valueProp = 'object'
                     termKey = param[0..-5]
-                    value = ld.toChip(lookup(val))
+                    value = ld.toChip(lookup(val)).with { it[JsonLd.ID_KEY] = val; return it }
                 } else {
                     valueProp = 'value'
                     termKey = param
