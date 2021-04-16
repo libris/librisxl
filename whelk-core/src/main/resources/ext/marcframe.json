@@ -3355,11 +3355,11 @@
           "name": "Text/Monograph in (in 000,008) + Text (006)",
           "source": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"006": "a|||||||||||000 ||"},{"008": "171123s1898    swe     re    000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"006": "a|||||||||||000 ||"},{"008": "171123s1898    sw      re    000 ||   | "}]
           },
           "normalized": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"006": "a|||||||||||000 ||"},{"008": "171123s1898    swe|||||re||||000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"006": "a|||||||||||000 ||"},{"008": "171123s1898    sw |||||re||||000 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -3370,7 +3370,7 @@
               "carrierType": [{ "@id": "https://id.kb.se/marc/BooksItemType-r" }],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1898"
               },
@@ -3390,11 +3390,11 @@
           "name": "Text/Monograph in (in 000,008) + Multimedia (006), wiping erroneous XY",
           "source": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"006": "mXY  ||  j |"},{"008": "171123s1898    swe     re    000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"006": "mXY  ||  j |"},{"008": "171123s1898    sw      re    000 ||   | "}]
           },
           "normalized": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"006": "m        j |      "},{"008": "171123s1898    swe|||||re||||000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"006": "m        j |      "},{"008": "171123s1898    sw |||||re||||000 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -3405,7 +3405,7 @@
               "carrierType": [{ "@id": "https://id.kb.se/marc/BooksItemType-r" }],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1898"
               },
@@ -3426,11 +3426,11 @@
           "name": "NotatedMusic in (in 000,008) + Music (006)",
           "source": {
             "leader": "     ccm a        i 4500",
-            "fields": [{"001": "0000000"}, {"006": "j| | ||  | |"},{"008": "171123s1999    swe                    | "}]
+            "fields": [{"001": "0000000"}, {"006": "j| | ||  | |"},{"008": "171123s1999    sw                     | "}]
           },
           "normalized": {
             "leader": "     ccm a        i 4500",
-            "fields": [{"001": "0000000"}, {"006": "j| |||||||||||| | "},{"008": "171123s1999    swe| ||||||||||   |    | "}]
+            "fields": [{"001": "0000000"}, {"006": "j| |||||||||||| | "},{"008": "171123s1999    sw | ||||||||||   |    | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -3440,7 +3440,7 @@
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -4887,11 +4887,11 @@
           "name": "Text/Monograph in (in 000) + ct:Print + gf:Encyclopedia",
           "source": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1898    swe     re    000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1898    sw      re    000 ||   | "}]
           },
           "normalized": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1898    swe|||||re||||000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1898    sw |||||re||||000 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -4902,7 +4902,7 @@
               "carrierType": [{ "@id": "https://id.kb.se/marc/BooksItemType-r" }],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1898"
               },
@@ -4917,11 +4917,11 @@
           "name": "ManuscriptText/Monograph in (in 000) + gf:Encyclopedia",
           "source": {
             "leader": "     ctm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1898    swe      e    000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1898    sw       e    000 ||   | "}]
           },
           "normalized": {
             "leader": "     ctm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1898    swe||||||e||||000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1898    sw ||||||e||||000 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -4931,7 +4931,7 @@
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1898"
               },
@@ -4946,11 +4946,11 @@
           "name": "Multimedia (in 000), Electronic (in 007) + ct:Online + Juvenile, wiping erroneous ZX",
           "source": {
             "leader": "     cmm a        i 4500",
-            "fields": [{"001": "0000000"},{"007":"co |||   |||||"},{"008": "171123s1999    sweZX  jo  | |         | "}]
+            "fields": [{"001": "0000000"},{"007":"co |||   |||||"},{"008": "171123s1999    sw ZX  jo  | |         | "}]
           },
           "normalized": {
             "leader": "     cmm a        i 4500",
-            "fields": [{"001": "0000000"},{"007":"co |||   |||||         "},{"008": "171123s1999    swe    jo  | |         | "}]
+            "fields": [{"001": "0000000"},{"007":"co |||   |||||         "},{"008": "171123s1999    sw     jo  | |         | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -4962,7 +4962,7 @@
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -4977,11 +4977,11 @@
           "name": "Cartography (in 000) + Shading + Azimuthal Projection + gf:SingleMap",
           "source": {
             "leader": "     cem a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    sweb   ae a            | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw b   ae a            | "}]
           },
           "normalized": {
             "leader": "     cem a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    sweb|||ae a  || 0 ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw b|||ae a  || 0 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -4991,7 +4991,7 @@
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -5008,11 +5008,11 @@
           "name": "ManuscriptCartography (in 000) + Shading + Azimuthal Projection + gf:SingleMap",
           "source": {
             "leader": "     cfm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1899    sweb   ae a            | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1899    sw b   ae a            | "}]
           },
           "normalized": {
             "leader": "     cfm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1899    sweb|||ae a  || 0 ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1899    sw b|||ae a  || 0 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5022,7 +5022,7 @@
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1899"
               },
@@ -5039,11 +5039,11 @@
           "name": "MixedMaterial (in 000) + ct:Tactile",
           "source": {
             "leader": "     cpm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe     f              | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw      f              | "}]
           },
           "normalized": {
             "leader": "     cpm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe     f              | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw      f              | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5054,7 +5054,7 @@
               "carrierType": [{ "@id": "https://id.kb.se/marc/ItemType-f" }],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -5068,11 +5068,11 @@
           "name": "NotatedMusic (in 000) + gf:Carols + VocalScore + VocalPart + Adult",
           "source": {
             "leader": "     ccm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swecrkfer              | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw crkfer              | "}]
           },
           "normalized": {
             "leader": "     ccm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swecrkfer||||||   |    | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw crkfer||||||   |    | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5083,7 +5083,7 @@
               "carrierType": [{ "@id": "https://id.kb.se/marc/ItemType-r"}],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -5101,11 +5101,11 @@
           "name": "ManuscriptNotatedMusic (in 000) + gf:Madrigals",
           "source": {
             "leader": "     cdm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swemd                  | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw md                  | "}]
           },
           "normalized": {
             "leader": "     cdm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swemd||||||||||   |    | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw md||||||||||   |    | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5115,7 +5115,7 @@
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -5130,11 +5130,11 @@
           "name": "Music (in 000) + gf:NotApplicable",
           "source": {
             "leader": "     cim a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swenn                  | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw nn                  | "}]
           },
           "normalized": {
             "leader": "     cim a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swenn||||||||||   |    | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw nn||||||||||   |    | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5144,7 +5144,7 @@
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -5159,11 +5159,11 @@
           "name": "Music (in 000) + gf:Popular",
           "source": {
             "leader": "     cjm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swepp                  | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw pp                  | "}]
           },
           "normalized": {
             "leader": "     cjm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swepp||||||||||   |    | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw pp||||||||||   |    | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5173,7 +5173,7 @@
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -5188,7 +5188,7 @@
           "name": "Serial + frequency + gf:Periodical",
           "source": {
             "leader": "     cas a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123c1999    swea| p|||||||0   ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123c1999    sw a| p|||||||0   ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5199,7 +5199,7 @@
               "frequency": [{ "@id": "https://id.kb.se/marc/SerialsFrequencyType-a" }],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
                 "year": "1999"
               },
@@ -5214,11 +5214,11 @@
           "name": "MovingImage (in 000) + gf:MotionPicture",
           "source": {
             "leader": "     cgm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe---            m    | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw ---            m    | "}]
           },
           "normalized": {
             "leader": "     cgm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe--- |     ||   m|   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw --- |     ||   m|   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5229,7 +5229,7 @@
               "marc:runningTime": "---",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -5244,11 +5244,11 @@
           "name": "StillImage (in 000) + gf:Picture",
           "source": {
             "leader": "     ckm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe---            i    | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw ---            i    | "}]
           },
           "normalized": {
             "leader": "     ckm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe--- |     ||   i|   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw --- |     ||   i|   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5259,7 +5259,7 @@
               "marc:runningTime": "---",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
