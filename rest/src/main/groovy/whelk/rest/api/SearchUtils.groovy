@@ -144,8 +144,14 @@ class SearchUtils {
             }
         }
 
-        
-        Map stats = buildStats((Map) esResult['aggregations'], 
+        // Don't return facets on fields that already have an active facet.
+        // Now multiple conditions on the same field are always ORed, which means facets will behave weird.
+        // This can be changed if we add a way to have x=a AND x=b in the API. 
+        // Now: if x=a is selected, the facet for x=b will show the number for (x=a AND x=b) but when selected the 
+        // results will be (x=a OR x=b).
+        def selectedFacets = ((Map) mappingsAndPageParams.second).findAll {it.key != JsonLd.TYPE_KEY }.keySet()
+        def filteredAggregations = ((Map) esResult['aggregations']).findAll{ !selectedFacets.contains(it.key) }
+        Map stats = buildStats(filteredAggregations,
                 makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
                 (total > 0 && !predicates) ? reverseObject : null)
         if (!stats) {
@@ -646,11 +652,11 @@ class SearchUtils {
                 if (param == JsonLd.TYPE_KEY || param == JsonLd.ID_KEY) {
                     valueProp = 'object'
                     termKey = param
-                    value = [(JsonLd.ID_KEY): val]
+                    value = ld.toChip(lookup(val)).with { it[JsonLd.ID_KEY] = val; return it }
                 } else if (param.endsWith(".${JsonLd.ID_KEY}")) {
                     valueProp = 'object'
                     termKey = param[0..-5]
-                    value = [(JsonLd.ID_KEY): val]
+                    value = ld.toChip(lookup(val)).with { it[JsonLd.ID_KEY] = val; return it }
                 } else {
                     valueProp = 'value'
                     termKey = param
