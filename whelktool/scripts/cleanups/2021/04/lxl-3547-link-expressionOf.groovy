@@ -31,7 +31,8 @@ def q = [
 ]
 
 def notLinkedExpr = new ConcurrentHashMap<Map, ConcurrentLinkedQueue<Map>>()
-selectByIds(queryIds(q).collect()) { bib -> 
+//selectByIds(queryIds(q).collect()) { bib ->
+selectByCollection('bib') { bib ->
     List<Map> expressionOf = asList(getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf', 'expressionOf']))
 
     if (!expressionOf) {
