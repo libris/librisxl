@@ -45,6 +45,12 @@ selectByCollection('bib') { bib ->
             return
         }
 
+        incrementStats('shape', new TreeSet<>(e.keySet()))
+        
+        if (!e['hasTitle']) {
+            return
+        }
+
         // there is always exactly one title
         def cmpMap = Norm.cmpTitle(asList(e['hasTitle']).first()) + Norm.cmpOther(e)
         def works = uniformWorks.getOrDefault(cmpMap, Collections.emptyList())
