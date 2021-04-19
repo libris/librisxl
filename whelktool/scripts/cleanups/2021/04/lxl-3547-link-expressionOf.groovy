@@ -33,9 +33,10 @@ def q = [
 def notLinkedExpr = new ConcurrentHashMap<Map, ConcurrentLinkedQueue<Map>>()
 //selectByIds(queryIds(q).collect()) { bib ->
 selectByCollection('bib') { bib ->
+    Map work = getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf'])
     List<Map> expressionOf = asList(getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf', 'expressionOf']))
 
-    if (!expressionOf) {
+    if (!work || !expressionOf) {
         return
     }
     
@@ -53,6 +54,7 @@ selectByCollection('bib') { bib ->
 
         // there is always exactly one title
         def cmpMap = Norm.cmpTitle(asList(e['hasTitle']).first()) + Norm.cmpOther(e)
+        getPrimaryContributionString(work)?.with {cmpMap += ['primaryContribution': it] }
         def works = uniformWorks.getOrDefault(cmpMap, Collections.emptyList())
         
         incrementStats('number of works found for expressionOf', works.size())
@@ -114,9 +116,11 @@ private Map<String, Collection<Map>> getUniformWorks() {
     def works = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Map>>()
     selectByIds(queryIds(q).collect()) { doc ->
         Map work = getPathSafe(doc.doc.data, ['@graph', 1])
-
+        
         def titles = (asList(work.hasTitle) + asList(work.hasVariant).collect{asList(it['hasTitle'])}.flatten()).collect(Norm.&cmpTitle)
         def otherFields = Norm.cmpOther(work)
+        getPrimaryContributionString(work)?.with {otherFields += ['primaryContribution': it] }
+        
         def cmpMaps = titles.collect{otherFields + it} as Set
         cmpMaps.each { map ->
             works.computeIfAbsent(map, { new ConcurrentLinkedQueue<Map>() })
@@ -127,9 +131,11 @@ private Map<String, Collection<Map>> getUniformWorks() {
 }
 
 private String toString(Map work) {
-    ((Norm.TITLE_KEYS.collect {['hasTitle', 0] + it } + Norm.CMP_KEYS)
-            .collect {getPathSafe(work, asList(it)) } + lang(work).collect{ (it['@id'] ?: '').split('/').last() })
-            .grep().join(' · ')
+    def keys = (Norm.TITLE_KEYS.collect {['hasTitle', 0] + it } + Norm.CMP_KEYS) 
+    def props = keys.collect {getPathSafe(work, asList(it)) }
+    def langcode = lang(work).collect{ (it['@id'] ?: '').split('/').last() }
+    def contribution = asList(work['primaryContribution']) + asList(getPrimaryContributionString(work))
+    return (props + langcode + contribution).grep().join(' · ')
 }
 
 private Object getPathSafe(item, path, defaultTo = null) {
@@ -153,6 +159,33 @@ private List asList(Object o) {
 
 private Set lang(Map work) {
     (asList(work.language) + asList(work.associatedLanguage)) as Set
+}
+
+private String getPrimaryContributionString(Map work) {
+    List<Map> a = asList(work.contribution).find { it['@type'] == 'PrimaryContribution' }?.with { return asList(it.agent) }
+    if (a) {
+        def agent = a.first()
+        if (agent['@id']) {
+            agent = loadThing(agent['@id'])
+        }
+        
+        StringBuilder b = new StringBuilder()
+        for (def k : ['name', 'givenName', 'familyName']) {
+            if (agent.containsKey(k)) {
+                b.append(agent[k]).append(' ')
+            }
+        }
+        return (Norm.normalize(b.toString()))
+    }
+    return null
+}
+
+Map loadThing(def id) {
+    def thing = [:]
+    selectByIds([id]) { t ->
+        thing = t.graph[1]
+    }
+    return thing
 }
 
 class Norm {
@@ -184,9 +217,15 @@ class Norm {
     }
     
     static String normalize(String s) {
-        return asciiFold(Unicode.normalizeForSearch(StringUtils.normalizeSpace(" $s ".toLowerCase().replace(noise))))
+        return asciiFold(Unicode.normalizeForSearch(StringUtils.normalizeSpace(toLowerCase(" $s ").replace(noise).replace('æ', 'ae'))))
     }
 
+    static String toLowerCase(String s) {
+        // Don't touch abbreviations, e.g. LOU
+        boolean allUpperCase = s.toUpperCase(Locale.ROOT) == s
+        return allUpperCase ? s : s.toLowerCase(Locale.ROOT)
+    }
+    
     static String asciiFold(String s) {
         return Normalizer.normalize(s, Normalizer.Form.NFD).replaceAll(UNICODE_MARK, '')
     }
