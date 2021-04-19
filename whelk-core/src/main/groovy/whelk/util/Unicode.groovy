@@ -1,6 +1,7 @@
 package whelk.util
 
 import java.text.Normalizer
+import java.util.regex.Pattern
 
 class Unicode {
 
@@ -32,6 +33,9 @@ class Unicode {
     private static final List STRIP_UNICODE_CHARS = [
             '\ufeff',
     ]
+
+    private static final Pattern LEADING_SPACE = Pattern.compile('^[\\p{Blank}\u2060]+', Pattern.UNICODE_CHARACTER_CLASS)
+    private static final Pattern TRAILING_SPACE = Pattern.compile('[\\p{Blank}\u2060]+$', Pattern.UNICODE_CHARACTER_CLASS)
     
     private static final Map EXTRA_NORMALIZATION_MAP
 
@@ -40,7 +44,7 @@ class Unicode {
             [(it): Normalizer.normalize(it, Normalizer.Form.NFKC)]
         } + STRIP_UNICODE_CHARS.collectEntries { [(it): ''] }
     }
-
+    
     static boolean isNormalized(String s) {
         return Normalizer.isNormalized(s, Normalizer.Form.NFC) && !EXTRA_NORMALIZATION_MAP.keySet().any{ s.contains(it) }
     }
@@ -71,5 +75,9 @@ class Unicode {
         def w = /\(\)\p{IsAlphabetic}\p{Digit}/
         def m = s =~ /[^${w}]*(.*)/
         return m.matches() ? m.group(1) : s
+    }
+    
+    static String trim(String s) {
+        s.replaceFirst(LEADING_SPACE, '').replaceFirst(TRAILING_SPACE, '')
     }
 }

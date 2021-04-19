@@ -31,7 +31,7 @@ class UnicodeSpec extends Specification {
         Unicode.normalize(s) == norm
     }
 
-    def "trim noise()"() {
+    def "trim noise"() {
         expect:
         Unicode.trimNoise(dirty) == clean
         where:
@@ -39,5 +39,18 @@ class UnicodeSpec extends Specification {
         ' _.:;|{[Überzetsung]}|;:. '             | 'Überzetsung'
         ' _.:;|(Überzetsung)|;:. '               | '(Überzetsung)'
         ' _.:;| Ü b e r - z e t - s u n g |;:. ' | 'Ü b e r - z e t - s u n g'
+    }
+
+    def "trim"() {
+        expect:
+        Unicode.trim(dirty) == clean
+        where:
+        dirty                               | clean
+        ' SPACE '                           | 'SPACE'
+        '\u00A0NO-BREAK SPACE\u00A0'        | 'NO-BREAK SPACE'
+        '\u202FNARROW NO-BREAK SPACE\u202F' | 'NARROW NO-BREAK SPACE'
+        '\u2007FIGURE SPACE\u2007'          | 'FIGURE SPACE'
+        '\u2060WORD JOINER\u2060'           | 'WORD JOINER'
+        'a\u00A0\u202F\u2007\u2060b'        | 'a\u00A0\u202F\u2007\u2060b'
     }
 }
