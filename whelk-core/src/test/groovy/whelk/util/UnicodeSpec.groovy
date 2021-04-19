@@ -21,7 +21,7 @@ class UnicodeSpec extends Specification {
         Unicode.isNormalized(s) == false
         Unicode.normalize(s) == norm
     }
-
+    
     def "strip BOM"() {
         given:
         String s = "9th Koli Calling International Conference on Computing Education Research\ufeff, October 29–November 1, 2009"
@@ -45,12 +45,12 @@ class UnicodeSpec extends Specification {
         expect:
         Unicode.trim(dirty) == clean
         where:
-        dirty                               | clean
-        ' SPACE '                           | 'SPACE'
-        '\u00A0NO-BREAK SPACE\u00A0'        | 'NO-BREAK SPACE'
-        '\u202FNARROW NO-BREAK SPACE\u202F' | 'NARROW NO-BREAK SPACE'
-        '\u2007FIGURE SPACE\u2007'          | 'FIGURE SPACE'
-        '\u2060WORD JOINER\u2060'           | 'WORD JOINER'
-        'a\u00A0\u202F\u2007\u2060b'        | 'a\u00A0\u202F\u2007\u2060b'
+        dirty                                                       | clean
+        ' SPACE '                                                   | 'SPACE'
+        '\u00A0\u00A0\u00A0NO-BREAK SPACE\u00A0\u00A0\u00A0'        | 'NO-BREAK SPACE'
+        '\u202F\u202F\u202FNARROW NO-BREAK SPACE\u202F\u202F\u202F' | 'NARROW NO-BREAK SPACE'
+        '\u2007\u2007\u2007FIGURE SPACE\u2007\u2007\u2007'          | 'FIGURE SPACE'
+        '\u2060\u2060\u2060WORD JOINER\u2060\u2060\u2060'           | 'WORD JOINER'
+        'keep\u00A0\u202F\u2007\u2060us'                            | 'keep\u00A0\u202F\u2007\u2060us'
     }
 }
