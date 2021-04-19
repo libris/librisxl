@@ -7026,8 +7026,8 @@
       "$a": {"addLink": "descriptionAuthentication", "resourceType": "DescriptionAuthentication", "property": "code"},
       "$9": {
         "addLink": "bibliography",
-        "TODO:whenLinkable:uriTemplate": "https://libris.kb.se/library/{_}",
-        "resourceType": "Library",
+        "uriTemplate": "https://libris.kb.se/library/{_}",
+        "resourceType": "Bibliography",
         "property": "sigel"
       },
       "_spec": [
@@ -7037,7 +7037,7 @@
           },
           "result": {
               "bibliography": [
-                {"@type": "Library", "sigel": "NB"}
+                {"@id": "https://libris.kb.se/library/NB", "@type": "Bibliography", "sigel": "NB"}
               ],
             "mainEntity": {
               "instanceOf": {
@@ -7052,8 +7052,8 @@
           },
           "result": {
               "bibliography": [
-                {"@type": "Library", "sigel": "NB"},
-                {"@type": "Library", "sigel": "DIGI"}
+                {"@id": "https://libris.kb.se/library/NB", "@type": "Bibliography", "sigel": "NB"},
+                {"@id": "https://libris.kb.se/library/DIGI", "@type": "Bibliography", "sigel": "DIGI"}
               ],
             "mainEntity": {
               "instanceOf": {
