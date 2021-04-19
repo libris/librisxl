@@ -6,3 +6,8 @@ selectByCollection('bib') { data ->
         data.scheduleSave()
     }
 }
+selectByCollection('auth') { data ->
+    if (data.doc.trimStrings()) {
+        data.scheduleSave()
+    }
+}
