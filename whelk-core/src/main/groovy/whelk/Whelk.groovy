@@ -422,6 +422,7 @@ class Whelk {
     void normalize(Document doc) {
         try {
             doc.normalizeUnicode()
+            doc.trimStrings()
 
             if (normalizer != null) {
                 normalizer.normalize(doc)

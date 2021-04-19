@@ -501,10 +501,9 @@ class Crud extends HttpServlet {
 
         Document newDoc = new Document(requestBody)
         newDoc.normalizeUnicode()
-        newDoc.trimStrings()
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
         newDoc.setControlNumber(newDoc.getShortId())
-
+        
         List<JsonLdValidator.Error> errors = validator.validate(newDoc.data)
         if (errors) {
             String message = errors.collect { it.toStringWithPath() }.join("\n")
@@ -649,7 +648,6 @@ class Crud extends HttpServlet {
 
         Document updatedDoc = new Document(requestBody)
         updatedDoc.normalizeUnicode()
-        updatedDoc.trimStrings()
         updatedDoc.setId(documentId)
 
         List<JsonLdValidator.Error> errors = validator.validate(updatedDoc.data)
