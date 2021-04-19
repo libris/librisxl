@@ -97,12 +97,12 @@ class Document {
     boolean trimStrings() {
         DocumentUtil.traverse(data) { value, path ->
             // don't touch indX in _marcUncompleted ' '
-            if (value instanceof String && value != ' ' && value != value.trim()) {
-                return new DocumentUtil.Replace(value.trim())
+            if (value instanceof String && value != ' ' && value != Unicode.trim(value)) {
+                return new DocumentUtil.Replace(Unicode.trim(value))
             }
         }
     }
-    
+        
     URI getURI() {
         return baseUri.resolve(getShortId())
     }
