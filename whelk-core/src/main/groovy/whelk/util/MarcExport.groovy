@@ -88,7 +88,7 @@ class MarcExport {
         String recordId = whelk.storage.getRecordId(idOrSameAs)
         if (recordId == null)
             return null
-        return whelk.storage.loadDocumentByMainId(recordId)
+        return whelk.loadEmbellished(whelk.storage.getSystemIdByIri(recordId))
     }
 
     /**
