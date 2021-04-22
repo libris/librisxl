@@ -56,6 +56,17 @@ selectBySqlWhere(where) { data ->
         data.scheduleSave()
 }
 
+Map getRelevantProps(Map sm) {
+    Map props = [:]
+
+    props["title"] = asList(asList(sm.inSeries?.instanceOf)[0]?.hasTitle?.first()?.mainTitle)[0]
+    props["sStatement"] = asList(sm["seriesStatement"])[0]
+    props["sEnum"] = asList(sm["seriesEnumeration"])[0]
+    props["issn"] = sm.inSeries?.identifiedBy?.first()?.value
+
+    return props
+}
+
 boolean multipleValuesOrWrongType(Map sm) {
     List values =
             [
