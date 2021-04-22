@@ -23,6 +23,9 @@ BEGIN
 
    -- ACTUAL SCHEMA CHANGES HERE:
 
+   -- At the time of writing, there is an IRI conflict on 'https://id.kb.se/marc/SerialsFrequencyType-z'. This has now been fixed in the definitions repo, but the bad data is still live. As a failsafe, if this migrations is run _before_ the definitions are reloaded, delete the conflicting line, to make the constraint possible to add.
+   DELETE FROM lddb__identifiers WHERE id = 'kxq3td5nm2lnmx23' AND iri = 'https://id.kb.se/marc/SerialsFrequencyType-z';
+   
    ALTER TABLE lddb__identifiers ADD CONSTRAINT unique_uri UNIQUE (iri);
    
 END$$;
