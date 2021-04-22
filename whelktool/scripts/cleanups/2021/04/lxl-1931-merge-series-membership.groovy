@@ -28,63 +28,31 @@ selectBySqlWhere(where) { data ->
     if (seriesMembership.any { multipleValuesOrWrongType(it) })
         return
 
-    List from490 = []
-    List from830 = []
-
-    seriesMembership.each {
-        it.containsKey("seriesStatement") ? from490 << it : from830 << it
+    Map cmpMap = seriesMembership.collect {
+        [it, getRelevantProps(it)]
     }
 
-    if (from490.isEmpty() || from830.isEmpty())
-        return
-
+    List matchingPairs = seriesMembership.subsequences().findAll {
+        it.size() == 2 && isMatchingPair(cmpMap[it[0]], cmpMap[it[1]])
+    }
 
     // There can be multiple matches, keep track of these
-    Map matchCount = seriesMembership.collectEntries { [it, 0] }
-    List matchedPairs = []
+    Map matchCount = matchingPairs.flatten().countBy {it}
 
-    from490.each { Map sm490 ->
-        String a490 = asList(sm490["seriesStatement"])[0]
-        String v490 = asList(sm490["seriesEnumeration"])[0]
-        String x490 = sm490.inSeries?.identifiedBy?.find { it["@type"] == "ISSN" }?.value
-
-        from830.eachWithIndex { Map sm830, int idx ->
-            // Always only one Title. mainTitle sometimes (rarely) a list.
-            String a830 = asList(asList(sm830.inSeries?.instanceOf)[0]?.hasTitle?.find { it["@type"] == "Title" }?.mainTitle)[0]
-            String v830 = asList(sm830["seriesEnumeration"])[0]
-            String x830 = sm830.inSeries?.identifiedBy?.find { it["@type"] == "ISSN" }?.value
-
-            boolean aMatched = a490 && a830 ? aMatch(a490, a830) : null
-            boolean vMatched = v490 && v830 ? vMatch(v490, v830) : null
-            boolean xMatched = x490 && x830 ? xMatch(x490, x830) : null
-
-            List accepted = [[true, true, true], [true, null, true], [true, true, null]]
-
-            if ([aMatched, vMatched, xMatched] in accepted) {
-                matchedPairs << [sm490, sm830]
-                matchCount[sm490] += 1
-                matchCount[sm830] += 1
-            }
-        }
+    boolean multiMatch = matchingPairs.removeAll {
+        matchCount[it[0]] > 1 || matchCount[it[1]] > 1
     }
 
-    List validPairs = matchedPairs.findAll {
-        matchCount[it[0]] == 1 && matchCount[it[1]] == 1
-    }
+    if (multiMatch)
+        multipleMatches.println(id)
 
-    // Remove matched objects and add the merged pair
-    validPairs.each {
+    matchingPairs.each {
         seriesMembership.remove(it[0])
         seriesMembership.remove(it[1])
         seriesMembership << it[0] + it[1]
     }
 
-    // Save a report of ids with multiple matches, needs a closer look
-    if (matchCount.any { it.value > 1 })
-        multipleMatches.println(id)
-
-
-    if (!(validPairs.isEmpty()))
+    if (!matchingPairs.isEmpty())
         data.scheduleSave()
 }
 
