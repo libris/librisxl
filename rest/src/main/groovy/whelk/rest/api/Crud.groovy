@@ -733,10 +733,9 @@ class Crud extends HttpServlet {
 
                 if (isUpdate) {
 
-                    // You are not allowed to change definitions via API.
-                    String storedCollectionForId = whelk.storage.getCollectionBySystemID(doc.getShortId())
-                    if (!(storedCollectionForId in ["auth", "bib", "hold"])) {
-                        log.warn("Refused API update of document previously stored with collection $storedCollectionForId")
+                    // You are not allowed to change collection when updating a record
+                    if (collection != whelk.storage.getCollectionBySystemID(doc.getShortId()))
+                        log.warn("Refused API update of document due to changed 'collection'")
                         return null
                     }
 
