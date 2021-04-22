@@ -25,7 +25,7 @@ selectBySqlWhere(where) { data ->
     List seriesMembership = data.graph[1]["seriesMembership"]
 
     // Skip if any of the concerned properties have multiple values, we want only 1-1 comparison
-    if (seriesMembership.any { multipleValues(it) })
+    if (seriesMembership.any { multipleValuesOrWrongType(it) })
         return
 
     List from490 = []
@@ -88,20 +88,22 @@ selectBySqlWhere(where) { data ->
         data.scheduleSave()
 }
 
-boolean multipleValues(Map sm) {
+boolean multipleValuesOrWrongType(Map sm) {
     List values =
             [
                     sm.seriesEnumeration,
                     sm.seriesStatement,
                     sm.inSeries?.instanceOf,
                     sm.inSeries?.identifiedBy,
-                    asList(sm.inSeries?.instanceOf)[0]?.hasTitle?.find { it["@type"] == "Title" }?.mainTitle
+                    asList(sm.inSeries?.instanceOf)[0]?.hasTitle,
+                    asList(sm.inSeries?.instanceOf)[0]?.hasTitle[0].mainTitle
             ]
 
     if (values.any { it instanceof List && it.size() > 1 })
         return true
 
-    return false
+    return !(sm.inSeries?.identifiedBy?.first()?."@type" in ["ISSN", null]
+            && asList(sm.inSeries?.instanceOf)[0]?.hasTitle?.first()?."@type" in ["Title", null])
 }
 
 boolean aMatch(String a490, String a830) {
