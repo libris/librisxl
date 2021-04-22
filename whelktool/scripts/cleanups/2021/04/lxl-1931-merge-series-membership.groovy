@@ -95,15 +95,14 @@ boolean multipleValuesOrWrongType(Map sm) {
                     sm.seriesStatement,
                     sm.inSeries?.instanceOf,
                     sm.inSeries?.identifiedBy,
-                    asList(sm.inSeries?.instanceOf)[0]?.hasTitle,
-                    asList(sm.inSeries?.instanceOf)[0]?.hasTitle[0].mainTitle
+                    asList(sm.inSeries?.instanceOf)[0]?.hasTitle?.first().mainTitle
             ]
 
     if (values.any { it instanceof List && it.size() > 1 })
         return true
 
-    return !(sm.inSeries?.identifiedBy?.first()?."@type" in ["ISSN", null]
-            && asList(sm.inSeries?.instanceOf)[0]?.hasTitle?.first()?."@type" in ["Title", null])
+    return !(sm.inSeries?.identifiedBy?.first()."@type" in ["ISSN", null]
+            && asList(sm.inSeries?.instanceOf)[0]?.hasTitle?.first()."@type" in ["Title", null])
 }
 
 boolean aMatch(String a490, String a830) {
