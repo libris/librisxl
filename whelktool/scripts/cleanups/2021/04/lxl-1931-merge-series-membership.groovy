@@ -37,7 +37,7 @@ selectBySqlWhere(where) { data ->
     }
 
     // There can be multiple matches, keep track of these
-    Map matchCount = matchingPairs.flatten().countBy {it}
+    Map matchCount = matchingPairs.flatten().countBy { it }
 
     boolean multiMatch = matchingPairs.removeAll {
         matchCount[it[0]] > 1 || matchCount[it[1]] > 1
@@ -56,12 +56,46 @@ selectBySqlWhere(where) { data ->
         data.scheduleSave()
 }
 
+boolean isMatchingPair(Map part, Map counterpart) {
+
+    boolean titlesMatch = matchTitles(part.titles, counterpart.titles)
+    boolean sEnumMatch = part.sEnum && counterpart.sEnum
+            ? matchSeriesEnum(part.sEnum, counterpart.sEnum)
+            : null
+    boolean issnMatch = part.issn && counterpart.issn
+            ? matchIssn(part.issn, counterpart.issn)
+            : null
+
+    List accepted = [[true, true, true], [true, null, true], [true, true, null]]
+
+    if ([titlesMatch, sEnumMatch, issnMatch] in accepted)
+        return true
+
+    return false
+}
+
+boolean matchTitles(Map part, Map counterpart) {
+    List comparablePairs = [part, counterpart].combinations().findAll { c, cp -> c.value != null && cp.value != null}
+
+    // The usual case, where we compare mainTitle and seriesStatement
+    if (comparablePairs.size() == 1) {
+        List onlyComparablePair = comparablePairs[0]
+        return matchStrings(onlyComparablePair[0].value, onlyComparablePair[1].value)
+    }
+    // If there are properties common to both parts (e.g. both have mainTitle), compare them instead
+    if (comparablePairs.size() > 1)
+        return comparablePairs.findAll{c, cp -> c.key == cp.key}.every {c, cp -> matchStrings(c.value, cp.value)}
+
+    return false
+}
+
 Map getRelevantProps(Map sm) {
     Map props = [:]
 
-    props["title"] = asList(asList(sm.inSeries?.instanceOf)[0]?.hasTitle?.first()?.mainTitle)[0]
-    props["sStatement"] = asList(sm["seriesStatement"])[0]
-    props["sEnum"] = asList(sm["seriesEnumeration"])[0]
+    props["titles"] =
+            ["mainTitle" : asList(asList(sm.inSeries?.instanceOf)[0]?.hasTitle?.first()?.mainTitle)[0],
+             "sStatement": asList(sm.seriesStatement)[0]]
+    props["sEnum"] = asList(sm.seriesEnumeration)[0]
     props["issn"] = sm.inSeries?.identifiedBy?.first()?.value
 
     return props
@@ -84,70 +118,70 @@ boolean multipleValuesOrWrongType(Map sm) {
             && asList(sm.inSeries?.instanceOf)[0]?.hasTitle?.first()?."@type" in ["Title", null])
 }
 
-boolean aMatch(String a490, String a830) {
-    if (a490 == a830)
+boolean matchStrings(String a, String b) {
+    if (a == b)
         return true
 
-    List a490words = normalize(a490)
-    List a830words = normalize(a830)
+    List aWords = normalize(a)
+    List bWords = normalize(b)
 
-    if (a490words == a830words)
+    if (aWords == bWords)
         return true
 
     boolean match = true
-    int a490len = a490words.size()
-    int a830len = a830words.size()
+    int aLength = aWords.size()
+    int bLength = bWords.size()
     int i = 0
 
     // Compare the string, word for word
     // Accept spacing between words, e.g. "super hero" = "superhero"
     // Require an exact match when comparing concatenated (e.g. "för färdiga" != "förfärliga")
-    while (match && i < Math.min(a490len, a830len)) {
-        if (matchWords(a490words[i], a830words[i]))
+    while (match && i < Math.min(aLength, bLength)) {
+        if (matchWords(aWords[i], bWords[i]))
             i += 1
-        else if (i + 1 < a490len && a490words[i] + a490words[i + 1] == a830words[i]) {
-            a490words.remove(i + 1)
-            a490len -= 1
+        else if (i + 1 < aLength && aWords[i] + aWords[i + 1] == bWords[i]) {
+            aWords.remove(i + 1)
+            aLength -= 1
             i += 1
-        } else if (i + 1 < a830len && a490words[i] == a830words[i] + a830words[i + 1]) {
-            a830words.remove(i + 1)
-            a830len -= 1
+        } else if (i + 1 < bLength && aWords[i] == bWords[i] + bWords[i + 1]) {
+            bWords.remove(i + 1)
+            bLength -= 1
             i += 1
         } else
             match = false
     }
 
     // All words match and the number of words are the same ("super hero" counts as one word if matched with "superhero")
-    if (match && a490len == a830len)
+    if (match && aLength == bLength)
         return true
 
     return false
 }
 
-boolean vMatch(String v490, String v830) {
-    if (v490 == v830)
+boolean matchSeriesEnum(String se1, String se2) {
+    if (se1 == se2)
         return true
 
-    List v490numbers = getNumbers(v490).collect { it.replaceFirst(/^0+/, "") }
-    List v830numbers = getNumbers(v830).collect { it.replaceFirst(/^0+/, "") }
+    List se1numbers = getNumbers(se1).collect { it.replaceFirst(/^0+/, "") }
+    List se2numbers = getNumbers(se2).collect { it.replaceFirst(/^0+/, "") }
 
-    if (v490numbers.isEmpty() || v830numbers.isEmpty())
+    if (se1numbers.isEmpty() || se2numbers.isEmpty())
         return false
 
-    if (v490numbers == v830numbers)
+    if (se1numbers == se2numbers)
         return true
 
     return false
 }
 
-boolean xMatch(String x490, String x830) {
-    if (x490 == x830)
+boolean matchIssn(String issn1, String issn2) {
+    if (issn1 == issn2)
         return true
 
-    List x490numbers = getNumbers(x490)
-    List x830numbers = getNumbers(x830)
+    List issn1numbers = getNumbers(issn1)
+    List issn2numbers = getNumbers(issn2)
 
-    if (x490numbers == x830numbers)
+    if (issn1numbers == issn2numbers)
         return true
 
     return false
