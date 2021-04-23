@@ -25,18 +25,19 @@ selectBySqlWhere(where) { data ->
     List seriesMembership = data.graph[1]["seriesMembership"]
 
     // Skip if any of the concerned properties have multiple values, we want only 1-1 comparison
+    // Also skip if any single value has the wrong type, e.g. "TitlePart" instead of "Title"
     if (seriesMembership.any { multipleValuesOrWrongType(it) })
         return
 
-    Map cmpMap = seriesMembership.collect {
+    Map cmpMap = seriesMembership.collectEntries {
         [it, getRelevantProps(it)]
     }
 
     List matchingPairs = seriesMembership.subsequences().findAll {
         it.size() == 2 && isMatchingPair(cmpMap[it[0]], cmpMap[it[1]])
-    }
+    }.toList()
 
-    // There can be multiple matches, keep track of these
+    // There can be multiple matches, count how many times each object is paired
     Map matchCount = matchingPairs.flatten().countBy { it }
 
     boolean multiMatch = matchingPairs.removeAll {
