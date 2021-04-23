@@ -734,7 +734,7 @@ class Crud extends HttpServlet {
                 if (isUpdate) {
 
                     // You are not allowed to change collection when updating a record
-                    if (collection != whelk.storage.getCollectionBySystemID(doc.getShortId()))
+                    if (collection != whelk.storage.getCollectionBySystemID(doc.getShortId())) {
                         log.warn("Refused API update of document due to changed 'collection'")
                         return null
                     }
