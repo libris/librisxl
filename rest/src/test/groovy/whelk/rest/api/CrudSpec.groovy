@@ -1762,6 +1762,9 @@ class CrudSpec extends Specification {
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
         }
+        whelk.storage.getCollectionBySystemID(_) >> {
+            return "bib"
+        }
         request.getContentType() >> {
             "application/ld+json"
         }
@@ -2458,6 +2461,9 @@ class CrudSpec extends Specification {
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
+        whelk.storage.getCollectionBySystemID(_) >> {
+            return "hold"
+        }
         request.getContentType() >> {
             "application/ld+json"
         }
@@ -2523,6 +2529,9 @@ class CrudSpec extends Specification {
             "PUT"
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
+            return "hold"
+        }
+        whelk.storage.getCollectionBySystemID(_) >> {
             return "hold"
         }
         request.getContentType() >> {
@@ -2728,6 +2737,9 @@ class CrudSpec extends Specification {
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
+        whelk.storage.getCollectionBySystemID(_) >> {
+            return "hold"
+        }
         request.getContentType() >> {
             "application/ld+json"
         }
@@ -2820,6 +2832,9 @@ class CrudSpec extends Specification {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
+            return "bib"
+        }
+        whelk.storage.getCollectionBySystemID(_) >> {
             return "bib"
         }
         when:
@@ -3009,6 +3024,9 @@ class CrudSpec extends Specification {
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
+        whelk.storage.getCollectionBySystemID(_) >> {
+            return "hold"
+        }
         request.getContentType() >> {
             "application/ld+json"
         }
@@ -3141,6 +3159,9 @@ class CrudSpec extends Specification {
             "PUT"
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
+            return "hold"
+        }
+        whelk.storage.getCollectionBySystemID(_) >> {
             return "hold"
         }
         request.getContentType() >> {
