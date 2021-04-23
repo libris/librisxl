@@ -676,7 +676,9 @@ class JsonLd {
                     lensValue = ((List) value).withIndex().collect { it, index ->
                         it instanceof Map
                         ? toCard((Map) it, chipsify, addSearchKey, reduceKey, pathRemainders([key, index], preservePaths))
-                        : it
+                        : it instanceof List
+                            ? new ArrayList<>(it)
+                            : it
                     }
                 } else if (value instanceof Map) {
                     lensValue = toCard((Map) value, chipsify, addSearchKey, reduceKey, pathRemainders([key], preservePaths))
@@ -890,7 +892,7 @@ class JsonLd {
             }
             return result
         } else {
-            return thing
+            return new HashMap(thing)
         }
     }
 
