@@ -732,6 +732,13 @@ class Crud extends HttpServlet {
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
 
                 if (isUpdate) {
+
+                    // You are not allowed to change collection when updating a record
+                    if (collection != whelk.storage.getCollectionBySystemID(doc.getShortId())) {
+                        log.warn("Refused API update of document due to changed 'collection'")
+                        return null
+                    }
+
                     String ifMatch = CrudUtils.cleanEtag(request.getHeader("If-Match"))
                     log.info("If-Match: ${ifMatch}")
                     whelk.storeAtomicUpdate(doc, false, "xl", activeSigel, ifMatch)
