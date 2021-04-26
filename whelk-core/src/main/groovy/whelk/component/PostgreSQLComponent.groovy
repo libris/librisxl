@@ -221,6 +221,16 @@ class PostgreSQLComponent {
     private static final String GET_DEPENDENCIES =
             "SELECT dependsOnId FROM lddb__dependencies WHERE id = ?"
 
+    private static final String GET_USER_DATA =
+            "SELECT data FROM lddb__user_data WHERE id = ?"
+
+    private static final String UPSERT_USER_DATA = """
+            INSERT INTO lddb__user_data (id, data, modified)
+            VALUES (?, ?, ?)
+            ON CONFLICT (id) DO UPDATE
+            SET (data, modified) = (EXCLUDED.data, EXCLUDED.modified)
+            """.stripIndent()
+
     private static final String UPSERT_CARD = """
             INSERT INTO lddb__cards (id, data, checksum, changed)
             VALUES (?, ?, ?, ?) 
@@ -2402,6 +2412,46 @@ class PostgreSQLComponent {
             log.debug("Removed $numRemoved dependencies for id ${identifier}")
         } finally {
             close(removeDependencies, connection)
+        }
+    }
+
+    String getUserData(String id) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            preparedStatement = connection.prepareStatement(GET_USER_DATA)
+            preparedStatement.setString(1, id)
+
+            rs = preparedStatement.executeQuery()
+            if (rs.next()) {
+                return rs.getString("data")
+            }
+            else {
+                return null
+            }
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    boolean storeUserData(String id, String data) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        try {
+            PGobject jsonb = new PGobject()
+            jsonb.setType("jsonb")
+            jsonb.setValue(data)
+
+            preparedStatement = connection.prepareStatement(UPSERT_USER_DATA)
+            preparedStatement.setString(1, id)
+            preparedStatement.setObject(2, jsonb)
+            preparedStatement.setTimestamp(3, new Timestamp(new Date().getTime()))
+
+            boolean createdOrUpdated = preparedStatement.executeUpdate() > 0
+            return createdOrUpdated
+        } finally {
+            close(preparedStatement, connection)
         }
     }
 

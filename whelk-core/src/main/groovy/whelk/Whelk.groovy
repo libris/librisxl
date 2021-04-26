@@ -432,6 +432,14 @@ class Whelk {
         }
     }
 
+    String getUserData(String id) {
+        return storage.getUserData(id)
+    }
+
+    boolean storeUserData(String id, String data) {
+        return storage.storeUserData(id, data)
+    }
+
     private static boolean batchJobThread() {
         return Thread.currentThread().getThreadGroup().getName().contains("whelktool")
     }
