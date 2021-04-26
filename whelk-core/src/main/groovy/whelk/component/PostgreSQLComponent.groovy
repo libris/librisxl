@@ -221,16 +221,6 @@ class PostgreSQLComponent {
     private static final String GET_DEPENDENCIES =
             "SELECT dependsOnId FROM lddb__dependencies WHERE id = ?"
 
-    private static final String GET_USER_DATA =
-            "SELECT data FROM lddb__user_data WHERE id = ?"
-
-    private static final String UPSERT_USER_DATA = """
-            INSERT INTO lddb__user_data (id, data, modified)
-            VALUES (?, ?, ?)
-            ON CONFLICT (id) DO UPDATE
-            SET (data, modified) = (EXCLUDED.data, EXCLUDED.modified)
-            """.stripIndent()
-
     private static final String UPSERT_CARD = """
             INSERT INTO lddb__cards (id, data, checksum, changed)
             VALUES (?, ?, ?, ?) 
@@ -366,6 +356,19 @@ class PostgreSQLComponent {
     private static final String GET_DATASET_ID_LIST = """
             SELECT id FROM lddb WHERE data#>'{@graph,0,inDataset}' @> ?::jsonb AND deleted = false
         """.stripIndent()
+
+    private static final String GET_USER_DATA =
+            "SELECT data FROM lddb__user_data WHERE id = ?"
+
+    private static final String UPSERT_USER_DATA = """
+            INSERT INTO lddb__user_data (id, data, modified)
+            VALUES (?, ?, ?)
+            ON CONFLICT (id) DO UPDATE
+            SET (data, modified) = (EXCLUDED.data, EXCLUDED.modified)
+            """.stripIndent()
+
+    private static final String DELETE_USER_DATA =
+            "DELETE FROM lddb__user_data WHERE id = ?"
 
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
@@ -2450,6 +2453,19 @@ class PostgreSQLComponent {
 
             boolean createdOrUpdated = preparedStatement.executeUpdate() > 0
             return createdOrUpdated
+        } finally {
+            close(preparedStatement, connection)
+        }
+    }
+
+    void removeUserData(String id) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        try {
+            preparedStatement = connection.prepareStatement(DELETE_USER_DATA)
+            preparedStatement.setString(1, id)
+            int numRemoved = preparedStatement.executeUpdate()
+            log.debug("Removed ${numRemoved} user data record for id ${id}")
         } finally {
             close(preparedStatement, connection)
         }

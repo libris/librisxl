@@ -440,6 +440,10 @@ class Whelk {
         return storage.storeUserData(id, data)
     }
 
+    void removeUserData(String id) {
+        storage.removeUserData(id)
+    }
+
     private static boolean batchJobThread() {
         return Thread.currentThread().getThreadGroup().getName().contains("whelktool")
     }

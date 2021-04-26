@@ -84,6 +84,18 @@ class UserDataAPI extends HttpServlet {
         }
     }
 
+    @Override
+    void doDelete(HttpServletRequest request, HttpServletResponse response) {
+        log.info("Handling DELETE request for ${request.pathInfo}")
+
+        Map userInfo = request.getAttribute("user")
+        if (!isValidUserWithPermission(request, response, userInfo))
+            return
+
+        whelk.removeUserData(userInfo.email.digest(ID_HASH_FUNCTION))
+        response.setStatus(HttpServletResponse.SC_NO_CONTENT)
+    }
+
     private static boolean isValidUserWithPermission(HttpServletRequest request, HttpServletResponse response, Map userInfo) {
         if (!userInfo) {
             log.info("User authentication failed")
