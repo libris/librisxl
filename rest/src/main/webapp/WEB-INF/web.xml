@@ -19,7 +19,6 @@
             <param-value>GET, POST, PUT, DELETE</param-value>
         </init-param>
     </filter>
-
     <filter>
         <filter-name>AuthenticationFilter</filter-name>
         <filter-class>whelk.AuthenticationFilter</filter-class>
@@ -36,6 +35,19 @@
             <param-value>false</param-value>
         </init-param>
     </filter>
+    <filter>
+        <filter-name>AuthenticationFilterGet</filter-name>
+        <filter-class>whelk.AuthenticationFilter</filter-class>
+        <init-param>
+            <param-name>supportedMethods</param-name>
+            <param-value>GET</param-value>
+        </init-param>
+        <init-param>
+            <param-name>mockAuthentication</param-name>
+            <param-value>false</param-value>
+        </init-param>
+    </filter>
+
     <servlet>
         <servlet-name>WhelkServlet</servlet-name>
         <servlet-class>whelk.rest.api.Crud</servlet-class>
@@ -69,12 +81,22 @@
         <servlet-name>DuplicatesAPI</servlet-name>
         <servlet-class>whelk.rest.api.DuplicatesAPI</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>UserDataAPI</servlet-name>
+        <servlet-class>whelk.rest.api.UserDataAPI</servlet-class>
+    </servlet>
+
 
     <servlet>
         <servlet-name>PrometheusSimpleClientServlet</servlet-name>
         <servlet-class>io.prometheus.client.exporter.MetricsServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
+
+    <servlet-mapping>
+        <servlet-name>UserDataAPI</servlet-name>
+        <url-pattern>/_userdata/*</url-pattern>
+    </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>RemoteSearch</servlet-name>
@@ -124,6 +146,11 @@
     <filter-mapping>
         <filter-name>CORS</filter-name>
         <servlet-name>WhelkServlet</servlet-name>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>AuthenticationFilterGet</filter-name>
+        <url-pattern>/_userdata/*</url-pattern>
     </filter-mapping>
 
     <filter-mapping>
