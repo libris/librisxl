@@ -29,6 +29,9 @@ selectBySqlWhere(where) { data ->
     if (seriesMembership.any { multipleValuesOrWrongType(it) })
         return
 
+    // Remove exact duplicates
+    seriesMembership.unique()
+
     Map cmpMap = seriesMembership.collectEntries {
         [it, getRelevantProps(it)]
     }
@@ -76,7 +79,7 @@ boolean isMatchingPair(Map part, Map counterpart) {
 }
 
 boolean matchTitles(Map part, Map counterpart) {
-    List comparablePairs = [part, counterpart].combinations().findAll { c, cp -> c.value != null && cp.value != null}
+    List comparablePairs = [part, counterpart].combinations().findAll { p, cp -> p.value != null && cp.value != null}
 
     // The usual case, where we compare mainTitle and seriesStatement
     if (comparablePairs.size() == 1) {
@@ -85,7 +88,7 @@ boolean matchTitles(Map part, Map counterpart) {
     }
     // If there are properties common to both parts (e.g. both have mainTitle), compare them instead
     if (comparablePairs.size() > 1)
-        return comparablePairs.findAll{c, cp -> c.key == cp.key}.every {c, cp -> matchStrings(c.value, cp.value)}
+        return comparablePairs.findAll{p, cp -> p.key == cp.key}.every {p, cp -> matchStrings(p.value, cp.value)}
 
     return false
 }
