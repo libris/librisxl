@@ -57,7 +57,7 @@ public class AuthenticationFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-        if (httpRequest.getMethod().equals("POST") && whitelistedPostEndpoints.contains(httpRequest.getRequestURI())) {
+        if (httpRequest.getMethod().equals("POST") && whitelistedPostEndpoints != null && whitelistedPostEndpoints.contains(httpRequest.getRequestURI())) {
             chain.doFilter(request, response);
         } else if (!mockAuthMode && supportedMethods != null && supportedMethods.contains(httpRequest.getMethod())) {
             int response_code = 0;
