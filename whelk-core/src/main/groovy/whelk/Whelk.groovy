@@ -411,6 +411,28 @@ class Whelk {
         e.embellish(document)
     }
 
+    /**
+     * Get cards
+     * @param iris
+     * @return map from all thing and record identifiers (including sameAs) to corresponding card of whole document 
+     */
+    Map<String, Map> getCards(Iterable<String> iris) {
+        Map<String, Map> result = [:]
+        storage.getCards(iris).each { card ->
+            List<Map> graph = (List<Map>) card['@graph']
+            graph?.each { Map e ->
+                e['@id']?.with { result[(String) it] = card }
+                if (e.sameAs) {
+                    ((List<Map>) (e.sameAs)).each { Map sameAs ->
+                        sameAs['@id']?.with { result[(String) it] = card }
+                    }
+                }
+            }
+        }
+        
+        return result
+    }
+
     Document loadEmbellished(String systemId) {
         return storage.loadEmbellished(systemId, this.&embellish)
     }
