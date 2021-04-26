@@ -70,8 +70,8 @@ class UserDataAPI extends HttpServlet {
         try {
             new JsonSlurper().parseText(data)
         } catch (IllegalArgumentException | JsonException e) {
-            log.warn("${idAndEmail} sent invalid JSON: ${e.message}")
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,  "Invalid JSON: ${e.message}")
+            log.warn("${idAndEmail} sent invalid JSON")
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,  "Invalid JSON")
             return
         }
 
