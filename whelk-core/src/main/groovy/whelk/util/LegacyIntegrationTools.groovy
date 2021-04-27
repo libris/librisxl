@@ -63,16 +63,16 @@ class LegacyIntegrationTools {
     static String getMarcCollectionInHierarchy(String type, JsonLd jsonld) {
         Map termMap = jsonld.vocabIndex[type]
         if (termMap == null)
-            return null
+            return NO_MARC_COLLECTION
 
         String marcCategory = getMarcCollectionForTerm(termMap)
-        if (marcCategory != null) {
+        if (marcCategory != NO_MARC_COLLECTION) {
             return marcCategory
         }
 
         List superClasses = (List) termMap["subClassOf"]
         if (superClasses == null) {
-            return null
+            return NO_MARC_COLLECTION
         }
 
         for (superClass in superClasses) {
