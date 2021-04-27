@@ -78,11 +78,6 @@ public class Helpers
         {
             String updatedCollection = LegacyIntegrationTools.determineLegacyCollection(updated, OaiPmh.s_whelk.getJsonld());
 
-            if (updatedCollection == null)
-            {
-                return;
-            }
-
             if (requestedCollection == null)
             {
                 // If no collection is requested, all records matching the prepared statement are welcome.

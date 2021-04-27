@@ -628,7 +628,7 @@ class PostgreSQLComponent {
         try {
             connection.setAutoCommit(false)
             normalizeDocumentForStorage(doc, connection)
-
+            
             if (collection == "hold") {
                 checkLinkedShelfMarkOwnership(doc, connection)
                 

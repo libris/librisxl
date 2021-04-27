@@ -513,17 +513,7 @@ class Crud extends HttpServlet {
                     "Invalid JsonLd, got errors: " + message)
             return
         }
-
-        String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
-        if ( !(collection in ["auth", "bib", "hold"]) ) {
-            log.debug("Could not determine legacy collection")
-            failedRequests.labels("POST", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "Body could not be categorized as auth, bib or hold.")
-            return
-        }
-
+        
         // verify user permissions
         log.debug("Checking permissions for ${newDoc}")
         try {
@@ -546,12 +536,12 @@ class Crud extends HttpServlet {
             log.debug("Model validation check failed. Denying request: " + mve.getMessage())
             return
         }
-
+        
         // try store document
         // return 201 or error
         boolean isUpdate = false
         Document savedDoc;
-        savedDoc = saveDocument(newDoc, request, response, collection, isUpdate, "POST")
+        savedDoc = saveDocument(newDoc, request, response, isUpdate, "POST")
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
                                savedDoc.getChecksum())
@@ -682,20 +672,9 @@ class Crud extends HttpServlet {
                     mve.getMessage())
             return
         }
-
-        String collection = LegacyIntegrationTools.determineLegacyCollection(updatedDoc, jsonld)
-        if ( !(collection in ["auth", "bib", "hold"]) ) {
-            log.debug("Could not determine legacy collection")
-            failedRequests.labels("PUT", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "Body could not be categorized as auth, bib or hold.")
-            return
-        }
-
+        
         boolean isUpdate = true
-        Document savedDoc = saveDocument(updatedDoc, request, response,
-                                         collection, isUpdate, "PUT")
+        Document savedDoc = saveDocument(updatedDoc, request, response, isUpdate, "PUT")
         if (savedDoc != null) {
             sendUpdateResponse(response, savedDoc.getURI().toString(),
                                savedDoc.getChecksum())
@@ -725,12 +704,12 @@ class Crud extends HttpServlet {
     }
 
     Document saveDocument(Document doc, HttpServletRequest request,
-                          HttpServletResponse response, String collection,
+                          HttpServletResponse response,
                           boolean isUpdate, String httpMethod) {
         try {
             if (doc) {
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
-
+                String collection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
                 if (isUpdate) {
 
                     // You are not allowed to change collection when updating a record

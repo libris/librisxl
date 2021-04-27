@@ -139,7 +139,7 @@ class WhelkCopier {
         newDoc.id = newId
 
         def collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, dest.jsonld)
-        if (collection && collection != "definitions") {
+        if (collection != "definitions") {
             try {
                 dest.quickCreateDocument(newDoc, "xl", "WhelkCopier", collection)
             } catch (Exception e) {
