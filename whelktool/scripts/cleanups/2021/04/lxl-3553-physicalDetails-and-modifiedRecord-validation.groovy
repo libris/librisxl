@@ -14,7 +14,7 @@ selectBySqlWhere(where) { data ->
 
     changed |= removePhysical(instance)
     if (instance["hasPart"]) {
-        changed |= instance["hasPart"].each { removePhysical(it) }
+        instance["hasPart"].each { changed |= removePhysical(it) }
     }
 
     if (record["marc:modifiedRecord"]) {
@@ -30,5 +30,7 @@ boolean removePhysical(Map entity) {
     if (entity["marc:otherPhysicalDetails"]) {
         entity["physicalDetailsNote"] = entity["marc:otherPhysicalDetails"]
         entity.remove("marc:otherPhysicalDetails")
+        return true
     }
+    return false
 }
