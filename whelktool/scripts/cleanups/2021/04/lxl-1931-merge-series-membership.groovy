@@ -5,15 +5,16 @@
  * $a have to match, plus either $v or $x given that the other also match or is non-existent
  * We compare only strings
  *
- * $a is considered a match if all words match (although we allow minor differences when comparing words)
- * $v if all numeric value match
- * $x if all numeric value match
+ * $a (mainTitle or seriesStatement) is considered a match if all words match (although we allow minor differences when comparing words)
+ * $v (seriesEnumeration) if all numeric values match
+ * $x (issn) if all numeric values match
  *
  * See LXL-1931 for more info
  *
  */
 
 import java.text.Normalizer
+import whelk.Document
 
 PrintWriter multipleMatches = getReportWriter("multiple-matches.txt")
 
@@ -24,21 +25,21 @@ selectBySqlWhere(where) { data ->
 
     List seriesMembership = data.graph[1]["seriesMembership"]
 
-    // Skip if any of the concerned properties have multiple values, we want only 1-1 comparison
-    // Also skip if any single value has the wrong type, e.g. "TitlePart" instead of "Title"
-    if (seriesMembership.any { multipleValuesOrWrongType(it) })
-        return
+    int initialSize = seriesMembership.size()
 
-    // Remove exact duplicates
+    //Remove exact duplicates
     seriesMembership.unique()
 
-    Map cmpMap = seriesMembership.collectEntries {
-        [it, getRelevantProps(it)]
+    Map cmpData = seriesMembership.collectEntries {
+        [it, createCmpMap(it)]
+    }.findAll {
+        it.value
     }
 
-    List matchingPairs = seriesMembership.subsequences().findAll {
-        it.size() == 2 && isMatchingPair(cmpMap[it[0]], cmpMap[it[1]])
+    List matchingPairs = cmpData.keySet().toList().subsequences().findAll {
+        it.size() == 2 && matchProperties(cmpData[it[0]].leavesForCmp, cmpData[it[1]].leavesForCmp)
     }.toList()
+
 
     // There can be multiple matches, count how many times each object is paired
     Map matchCount = matchingPairs.flatten().countBy { it }
@@ -47,27 +48,127 @@ selectBySqlWhere(where) { data ->
         matchCount[it[0]] > 1 || matchCount[it[1]] > 1
     }
 
+    // Save a report of ids with multiple matches, needs a closer look
     if (multiMatch)
         multipleMatches.println(id)
 
     matchingPairs.each {
+        Map a = cmpData[it[0]]
+        Map b = cmpData[it[1]]
+
+        Map mergedTrees = merge(a.tree, b.tree)
+        Map leaves = a.leavesForCmp + b.leavesForCmp
+
+        // If merging failed due to conflicting values, abort
+        if (!mergedTrees)
+            return
+
         seriesMembership.remove(it[0])
         seriesMembership.remove(it[1])
-        seriesMembership << it[0] + it[1]
+
+        // Put the earlier removed properties back in place
+        Map mergedSM = rebuild(mergedTrees, leaves)
+
+        seriesMembership << mergedSM
     }
 
-    if (!matchingPairs.isEmpty())
+    if (initialSize > seriesMembership.size()) {
         data.scheduleSave()
+    }
 }
 
-boolean isMatchingPair(Map part, Map counterpart) {
+Map createCmpMap(Map sm) {
+    Map smCopy = Document.deepCopy(sm)
 
-    boolean titlesMatch = matchTitles(part.titles, counterpart.titles)
-    boolean sEnumMatch = part.sEnum && counterpart.sEnum
-            ? matchSeriesEnum(part.sEnum, counterpart.sEnum)
+    Map leavesForCmp = [:]
+
+    List paths =
+            [
+                    ["seriesEnumeration"],
+                    ["seriesStatement"],
+                    ["inSeries", "identifiedBy"],
+                    ["inSeries", "identifiedBy", "value"],
+                    ["inSeries", "instanceOf"],
+                    ["inSeries", "instanceOf", "hasTitle"],
+                    ["inSeries", "instanceOf", "hasTitle", "mainTitle"]
+            ]
+
+    Set leaves = ["seriesEnumeration", "seriesStatement", "value", "mainTitle"] as Set
+
+    // Get property values for comparison (and remove them to facilitate merging later on)
+    // Don't return anything if there are multiple values in any of the paths (we want only 1-1 comparison)
+    // Single element lists -> replace the list with its content (also to facilitate merging)
+    for (path in paths) {
+        def step = smCopy
+        def next = path.pop()
+        while (!path.isEmpty() && step[next] != null) {
+            step = step[next]
+            next = path.pop()
+        }
+        def value = step[next]
+        if (value) {
+            if (value instanceof List) {
+                if (value.size() > 1) {
+                    return
+                }
+                step[next] = value[0]
+            }
+            if (next in leaves)
+                leavesForCmp[next] = step.remove(next)
+        }
+    }
+
+    return ["leavesForCmp": leavesForCmp, "tree": smCopy]
+}
+
+Map merge(Map a, Map b) {
+    for (entry in b) {
+        def key = entry.key
+        def val = entry.value
+        if ((a[key] instanceof String || a[key] instanceof List) && a[key] != val) {
+            // We don't allow conflicting strings or lists
+            return
+        } else if (a[key] instanceof Map) {
+            a[key] = merge(a[key], val)
+            if (!a[key]) {
+                return
+            }
+        } else
+            a[key] = val
+    }
+    return a
+}
+
+Map rebuild(Map tree, Map leaves) {
+    leaves.each { prop, val ->
+        if (prop == "seriesStatement")
+            tree.seriesStatement = val
+        else if (prop == "seriesEnumeration")
+            tree.seriesEnumeration = val
+        else if (prop == "mainTitle") {
+            Map hasTitle = tree.inSeries.instanceOf.hasTitle
+            hasTitle.mainTitle = val
+            // Make hasTitle a list like it was originally
+            tree.inSeries.instanceOf.hasTitle = [hasTitle]
+        } else if (prop == "value") {
+            Map identifiedBy = tree.inSeries.identifiedBy
+            identifiedBy["value"] = val
+            // Make identifiedBy a list like it was originally
+            tree.inSeries.identifiedBy = [identifiedBy]
+        }
+    }
+
+    return tree
+}
+
+boolean matchProperties(Map a, Map b) {
+    boolean titlesMatch = matchTitles(a.subMap("mainTitle", "seriesStatement"),
+            b.subMap("mainTitle", "seriesStatement"))
+    boolean sEnumMatch = a.seriesEnumeration && b.seriesEnumeration
+            ? matchSeriesEnum(a.seriesEnumeration, b.seriesEnumeration)
             : null
-    boolean issnMatch = part.issn && counterpart.issn
-            ? matchIssn(part.issn, counterpart.issn)
+    boolean issnMatch = a["value"] && b["value"]
+            ? matchIssn(a["value"], b["value"])
             : null
 
     List accepted = [[true, true, true], [true, null, true], [true, true, null]]
@@ -78,48 +179,19 @@ boolean isMatchingPair(Map part, Map counterpart) {
     return false
 }
 
-boolean matchTitles(Map part, Map counterpart) {
-    List comparablePairs = [part, counterpart].combinations().findAll { p, cp -> p.value != null && cp.value != null}
-
+boolean matchTitles(Map a, Map b) {
+    if (a.isEmpty() || b.isEmpty())
+        return false
     // The usual case, where we compare mainTitle and seriesStatement
-    if (comparablePairs.size() == 1) {
-        List onlyComparablePair = comparablePairs[0]
-        return matchStrings(onlyComparablePair[0].value, onlyComparablePair[1].value)
-    }
+    if (a.size() == 1 && b.size() == 1)
+        return matchStrings(a.values()[0], b.values()[0])
     // If there are properties common to both parts (e.g. both have mainTitle), compare them instead
-    if (comparablePairs.size() > 1)
-        return comparablePairs.findAll{p, cp -> p.key == cp.key}.every {p, cp -> matchStrings(p.value, cp.value)}
-
-    return false
-}
-
-Map getRelevantProps(Map sm) {
-    Map props = [:]
-
-    props["titles"] =
-            ["mainTitle" : asList(asList(sm.inSeries?.instanceOf)[0]?.hasTitle?.first()?.mainTitle)[0],
-             "sStatement": asList(sm.seriesStatement)[0]]
-    props["sEnum"] = asList(sm.seriesEnumeration)[0]
-    props["issn"] = sm.inSeries?.identifiedBy?.first()?.value
-
-    return props
-}
-
-boolean multipleValuesOrWrongType(Map sm) {
-    List values =
-            [
-                    sm.seriesEnumeration,
-                    sm.seriesStatement,
-                    sm.inSeries?.instanceOf,
-                    sm.inSeries?.identifiedBy,
-                    asList(sm.inSeries?.instanceOf)[0]?.hasTitle?.first()?.mainTitle
-            ]
-
-    if (values.any { it instanceof List && it.size() > 1 })
-        return true
-
-    return !(sm.inSeries?.identifiedBy?.first()?."@type" in ["ISSN", null]
-            && asList(sm.inSeries?.instanceOf)[0]?.hasTitle?.first()?."@type" in ["Title", null])
+    return a.every { key, val ->
+        if (b[key])
+            return matchStrings(val, b[key])
+        else
+            return true
+    }
 }
 
 boolean matchStrings(String a, String b) {
@@ -255,20 +327,16 @@ String asciiFold(String s) {
     return Normalizer.normalize(s, Normalizer.Form.NFD).replaceAll('\\p{M}', '')
 }
 
-List getWords(String str) {
-    List words = str.split(/(:|\/|,|-| (& |and )?|\.|;|\[|\]|\(.*\))+/)
+List getWords(String s) {
+    List words = s.split(/(:|\/|,|-| (& |and )?|\.|;|\[|\]|\(.*\))+/)
     if (words[0] == "")
         words.remove(0)
     return words
 }
 
-List getNumbers(String str) {
-    List numbers = str.split(/\D+/)
+List getNumbers(String s) {
+    List numbers = s.split(/\D+/)
     if (numbers[0] == "")
         numbers.remove(0)
     return numbers
-}
-
-List asList(Object o) {
-    return o instanceof List ? o : [o]
 }
