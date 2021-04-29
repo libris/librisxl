@@ -11,6 +11,7 @@
  */
 import org.apache.commons.lang3.StringUtils
 import whelk.util.Unicode
+import whelk.Document
 import java.text.Normalizer
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -21,18 +22,19 @@ PrintWriter noLang = getReportWriter("no-lang.txt")
 PrintWriter multiMatch = getReportWriter("multiple-matches.txt")
 PrintWriter sameExpr = getReportWriter("same-expr.txt")
 
-uniformWorks = getUniformWorks()
+languageNames = loadLanguageNames()
+uniformWorks = [:] //getUniformWorks()
 
-def q = [
+def q = [ // this query doesn't find everything since expressionOf is normally not indexed
         '@type'                                            : ['Instance'],
         'exists-instanceOf.expressionOf.hasTitle.mainTitle': ['true'],
         'exists-instanceOf.expressionOf.@id'               : ['false'],
         '_sort'                                            : ['@id'],
 ]
 
-def notLinkedExpr = new ConcurrentHashMap<Map, ConcurrentLinkedQueue<Map>>()
-//selectByIds(queryIds(q).collect()) { bib ->
-selectByCollection('bib') { bib ->
+def notLinkedExpr = new ConcurrentHashMap<Map, ConcurrentLinkedQueue<String>>()
+selectByIds(queryIds(q).collect()) { bib -> 
+//selectByCollection('bib') { bib ->
     Map work = getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf'])
     List<Map> expressionOf = asList(getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf', 'expressionOf']))
 
@@ -53,7 +55,7 @@ selectByCollection('bib') { bib ->
         }
 
         // there is always exactly one title
-        def cmpMap = Norm.cmpTitle(asList(e['hasTitle']).first()) + Norm.cmpOther(e)
+        def cmpMap = Norm.cmpTitle(asList(e['hasTitle']).first(), languageNames) + Norm.cmpOther(e)
         getPrimaryContributionString(work)?.with {cmpMap += ['primaryContribution': it] }
         def works = uniformWorks.getOrDefault(cmpMap, Collections.emptyList())
         
@@ -77,9 +79,9 @@ selectByCollection('bib') { bib ->
             }
         }
         else {
-            def contribution = asList(getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf', 'expressionOf'])).findAll{ it['@type'] == 'PrimaryContribution'}
-            def ee = contribution ? e + ['contribution': contribution] : e
-            notLinkedExpr.computeIfAbsent(ee, { new ConcurrentLinkedQueue<Map>() })
+            Map ee = Document.deepCopy(e)
+            getPrimaryContributionString(work)?.with {ee += ['primaryContribution': it] }
+            notLinkedExpr.computeIfAbsent(ee, { new ConcurrentLinkedQueue<String>() })
             notLinkedExpr.get(ee).add(bib.doc.shortId)
         }
     }
@@ -89,12 +91,18 @@ selectByCollection('bib') { bib ->
     }
 }
 
-notLinkedExpr.each {key, value ->
-    value.each {
+List<String> uniqueUnmatchedIds = []
+notLinkedExpr.each {key, ids ->
+    ids.each {
         incrementStats('same expr', toString(key), it)
     }
-    sameExpr.println(value.size() + " " + toString(key))
+    sameExpr.println(ids.size() + " " + toString(key))
+    if (ids.size() == 1) {
+        uniqueUnmatchedIds.add(ids.poll())
+    }
 }
+
+
 
 Collection<Map> compatibleLanguages(Map expressionOf, Collection<Map> works) {
     if (lang(expressionOf)) {
@@ -117,7 +125,9 @@ private Map<String, Collection<Map>> getUniformWorks() {
     selectByIds(queryIds(q).collect()) { doc ->
         Map work = getPathSafe(doc.doc.data, ['@graph', 1])
         
-        def titles = (asList(work.hasTitle) + asList(work.hasVariant).collect{asList(it['hasTitle'])}.flatten()).collect(Norm.&cmpTitle)
+        def titles = (asList(work.hasTitle) + asList(work.hasVariant).collect{ asList(it['hasTitle']) }.flatten())
+        titles = titles.collect{ Norm.cmpTitle(it, languageNames) }
+        
         def otherFields = Norm.cmpOther(work)
         getPrimaryContributionString(work)?.with {otherFields += ['primaryContribution': it] }
         
@@ -126,8 +136,25 @@ private Map<String, Collection<Map>> getUniformWorks() {
             works.computeIfAbsent(map, { new ConcurrentLinkedQueue<Map>() })
             works.get(map).add(work)
         }
+        
     }
     return works
+}
+
+private Set<String> loadLanguageNames() {
+    def q = [
+            '@type': ['Language'],
+            '_sort': ['@id']
+    ]
+
+    def languages = Collections.synchronizedSet(new HashSet<String>())
+    selectByIds(queryIds(q).collect()) { d ->
+        def (record, thing) = d.graph
+        thing.prefLabelByLang?.sv?.with { String label ->
+            languages.add(label.toLowerCase())
+        }
+    }
+    return languages
 }
 
 private String toString(Map work) {
@@ -202,8 +229,20 @@ class Norm {
         normalize(work.findAll {it.key in CMP_KEYS})
     }
     
-    static Map cmpTitle(Map title) {
-        normalize(title.findAll {it.key in TITLE_KEYS})
+    static Map cmpTitle(Map title, Set<String> languageNames) {
+        def t = normalize(title.findAll {it.key in TITLE_KEYS})
+        
+        // Some records have the language in the title e.g. "Tusen och en natt. Svenska" drop the language part
+        t.mainTitle?.with { String m ->
+            def s = m.split(' ')
+            if (s.last() in languageNames) {
+                t.mainTitle = normalize(s.dropRight(1).join(' '))
+                println(m)
+                println(t.mainTitle)
+            }
+        }
+        
+        return t
     }
     
     static Map normalize(Map map) {
@@ -217,7 +256,14 @@ class Norm {
     }
     
     static String normalize(String s) {
-        return asciiFold(Unicode.normalizeForSearch(StringUtils.normalizeSpace(toLowerCase(" $s ").replace(noise).replace('æ', 'ae'))))
+        s = " $s "
+        s = toLowerCase(s)
+        s = s.replace(noise)
+        s = s.replace('æ', 'ae')
+        s = StringUtils.normalizeSpace(s)
+        s = Unicode.normalizeForSearch(s)
+        s = asciiFold(s)
+        return s
     }
 
     static String toLowerCase(String s) {
