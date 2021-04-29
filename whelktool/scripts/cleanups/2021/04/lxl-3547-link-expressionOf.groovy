@@ -26,7 +26,7 @@ PrintWriter movedTitles = getReportWriter("moved-titles.txt")
 PrintWriter otherExpressionLanguage = getReportWriter("other-expression-language.txt")
 
 languageNames = loadLanguageNames()
-uniformWorks = [:] //getUniformWorks()
+uniformWorks = getUniformWorks()
 
 def q = [ // this query doesn't find everything since expressionOf is normally not indexed
         '@type'                                            : ['Instance'],
