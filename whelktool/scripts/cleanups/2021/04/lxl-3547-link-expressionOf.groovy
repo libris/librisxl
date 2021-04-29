@@ -37,7 +37,8 @@ def q = [ // this query doesn't find everything since expressionOf is normally n
 
 def notLinkedExpr = new ConcurrentHashMap<Map, ConcurrentLinkedQueue<String>>()
 //selectByIds(queryIds(q).collect()) { bib -> 
-selectByCollection('bib') { bib ->
+//selectByCollection('bib') { bib ->
+selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bib ->
     Map work = getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf'])
     List<Map> expressionOf = asList(getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf', 'expressionOf']))
 
@@ -65,7 +66,7 @@ selectByCollection('bib') { bib ->
         // there is always exactly one title
         def cmpMap = Norm.cmpTitle(asList(e['hasTitle']).first(), languageNames) + Norm.cmpOther(e)
         getPrimaryContributionString(work)?.with {cmpMap += ['primaryContribution': it] }
-        List works = uniformWorks.getOrDefault(cmpMap, Collections.emptyList())
+        Collection works = uniformWorks.getOrDefault(cmpMap, Collections.emptyList())
         
         if (!works && cmpMap.primaryContribution) {
             // try without primary contribution
