@@ -21,6 +21,9 @@ PrintWriter linked = getReportWriter("linked.txt")
 PrintWriter noLang = getReportWriter("no-lang.txt")
 PrintWriter multiMatch = getReportWriter("multiple-matches.txt")
 PrintWriter sameExpr = getReportWriter("same-expr.txt")
+PrintWriter ignoredContribution = getReportWriter("ignored-primary-contribution.txt")
+PrintWriter movedTitles = getReportWriter("moved-titles.txt")
+PrintWriter otherExpressionLanguage = getReportWriter("other-expression-language.txt")
 
 languageNames = loadLanguageNames()
 uniformWorks = [:] //getUniformWorks()
@@ -54,10 +57,23 @@ selectByIds(queryIds(q).collect()) { bib ->
             return
         }
 
+        if (e.language && (asList(e.language).toSorted() != asList(work.language).toSorted())) {
+            otherExpressionLanguage.println("${bib.doc.shortId} ${e.language} ${work.language}" )
+            return
+        }
+
         // there is always exactly one title
         def cmpMap = Norm.cmpTitle(asList(e['hasTitle']).first(), languageNames) + Norm.cmpOther(e)
         getPrimaryContributionString(work)?.with {cmpMap += ['primaryContribution': it] }
-        def works = uniformWorks.getOrDefault(cmpMap, Collections.emptyList())
+        List works = uniformWorks.getOrDefault(cmpMap, Collections.emptyList())
+        
+        if (!works && cmpMap.primaryContribution) {
+            // try without primary contribution
+            works = uniformWorks.getOrDefault(cmpMap - ['primaryContribution': ''], Collections.emptyList())
+            if (works) {
+                ignoredContribution.println("${bib.doc.id} ${toString(e)} --> ${works.collect {it['@id'] + " " + toString(it)}}")
+            }
+        }
         
         incrementStats('number of works found for expressionOf', works.size())
         
@@ -102,7 +118,50 @@ notLinkedExpr.each {key, ids ->
     }
 }
 
+def title = ['@type', 'hasTitle'] as Set
+def titleAndLang = ['@type', 'hasTitle', 'language'] as Set
+selectByIds(uniqueUnmatchedIds) { bib ->
+    Map instance = bib.doc.data['@graph'][1]
+    Map work = instance.instanceOf
+    List<Map> expressionOf = asList(work.expressionOf)
 
+    if (!work || !expressionOf) {3
+        return
+    }
+    
+    List<Map> remove = []
+    expressionOf.each { Map expression ->
+        if (expression.keySet() == title || expression.keySet() == titleAndLang) {
+            if (work.hasTitle) {
+                if (work.hasTitle == expression.hasTitle) {
+                    remove.add(expression)
+                    bib.scheduleSave()
+                    movedTitles.println("$bib.doc.shortId SAME hasTitle W: ${toString(work)} E: ${toString(expression)}")
+                    incrementStats('unique titles', 'work already had same title')
+                }
+                else {
+                    movedTitles.println("$bib.doc.shortId ALREADY hasTitle W: ${toString(work)} E: ${toString(expression)}")
+                    incrementStats('unique titles', 'work already has title')
+                }
+            }
+            else {
+                work.hasTitle = expression.hasTitle
+                remove.add(expression)
+                bib.scheduleSave()
+                movedTitles.println("$bib.doc.shortId MOVED hasTitle E/W: ${toString(work)} I: ${toString(instance)}")
+                incrementStats('unique titles', 'moved')
+            }
+        }
+        else {
+            incrementStats('unique titles - bad shape', expression.keySet())
+        }
+    }
+    
+    expressionOf.removeAll(remove)
+    if (!expressionOf) {
+        work.remove('expressionOf')
+    }
+}
 
 Collection<Map> compatibleLanguages(Map expressionOf, Collection<Map> works) {
     if (lang(expressionOf)) {
@@ -237,8 +296,6 @@ class Norm {
             def s = m.split(' ')
             if (s.last() in languageNames) {
                 t.mainTitle = normalize(s.dropRight(1).join(' '))
-                println(m)
-                println(t.mainTitle)
             }
         }
         
