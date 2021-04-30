@@ -798,6 +798,15 @@ class JsonLd {
             // Use last URI components as fallback
             if (!result && thing['@id']) {
                 result = removeDomain((String) thing['@id'], removableBaseUris)
+            } else {
+                result = result
+                    // Remove leading non-alphanumeric characters
+                    .replaceFirst(/^[^\p{L}\p{N}]+/, "")
+                    // A string without alphanumerics should not have "" as its sort value, because
+                    // then we get messed up records on top when sorting A-Z. Workaround: use a character from
+                    // Unicode's Private Use Area, forcing such records to appear at the very end when sorting.
+                    // TODO: default to some sensible/explanatory string instead?
+                    .replaceFirst(/^$/, "\uE83A")
             }
             [(k): result]
         }
