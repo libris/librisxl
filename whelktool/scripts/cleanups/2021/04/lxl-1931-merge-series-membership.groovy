@@ -164,10 +164,10 @@ Map rebuild(Map tree, Map leaves) {
 boolean matchProperties(Map a, Map b) {
     boolean titlesMatch = matchTitles(a.subMap("mainTitle", "seriesStatement"),
             b.subMap("mainTitle", "seriesStatement"))
-    boolean sEnumMatch = a.seriesEnumeration && b.seriesEnumeration
+    def sEnumMatch = a.seriesEnumeration && b.seriesEnumeration
             ? matchSeriesEnum(a.seriesEnumeration, b.seriesEnumeration)
             : null
-    boolean issnMatch = a["value"] && b["value"]
+    def issnMatch = a["value"] && b["value"]
             ? matchIssn(a["value"], b["value"])
             : null
 
