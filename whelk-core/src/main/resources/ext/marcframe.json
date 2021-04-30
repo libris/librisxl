@@ -17142,6 +17142,47 @@
               ]
             }
           }}
+        },
+        {
+          "name": "language in hasPart Work",
+          "source": {"700": {"ind1": "1", "ind2": "2", "subfields": [
+            {"a": "Celan, Paul,"},
+            {"d": "1920-1970"},
+            {"t": "Atemwende"},
+            {"l": "Svenska"},
+            {"4": "aut"}
+          ]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart" : [ {
+                "@type" : "Work",
+                "contribution" : [ {
+                  "@type" : "PrimaryContribution",
+                  "agent" : {
+                    "@type" : "Person",
+                    "familyName" : "Celan",
+                    "givenName" : "Paul",
+                    "lifeSpan" : "1920-1970"
+                  },
+                  "role" : [ {
+                    "@id" : "https://id.kb.se/relator/aut",
+                    "@type" : "Role",
+                    "code" : "aut"
+                  } ]
+                } ],
+                "hasTitle" : [ {
+                  "@type" : "Title",
+                  "mainTitle" : "Atemwende"
+                } ],
+                "language" : {
+                  "@type": "Language",
+                  "label": "Svenska"
+                }
+              } ]
+            }
+          }}
         }
       ]
     },
