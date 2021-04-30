@@ -108,6 +108,28 @@ class ElasticSearch {
         }
     }
 
+    /**
+     * Get ES settings for associated index
+     */
+    Map getSettings() {
+        Map response
+        try {
+            response = mapper.readValue(client.performRequest('GET', "/${indexName}/_settings", ''), Map)
+        } catch (UnexpectedHttpStatusException e) {
+            log.warn("Got unexpected status code ${e.statusCode} when getting ES settings: ${e.message}", e)
+            return [:]
+        }
+
+        List<String> keys = response.keySet() as List
+
+        if (keys.size() == 1 && response[(keys[0])].containsKey('settings')) {
+            return response[(keys[0])]['settings']
+        } else {
+            log.warn("Couldn't get settings from ES index ${indexName}, response was ${response}.")
+            return [:]
+        }
+    }
+
     void bulkIndex(Collection<Document> docs, Whelk whelk) {
         if (docs) {
             String bulkString = docs.findResults{ doc ->

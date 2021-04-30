@@ -198,6 +198,8 @@ class SearchUtils {
             result['_debug'] = esResult['_debug']
         }
 
+        result['maxItems'] = esQuery.getMaxItems().toString()
+
         lookup.run()
         
         return result
@@ -258,7 +260,7 @@ class SearchUtils {
         result['search'] = ['mapping': mappings]
 
         Map paginationLinks = makePaginationLinks(st, pageParams, limit,
-                                                  offset, total)
+                                                  offset, Math.min(total, esQuery.getMaxItems()))
         result << paginationLinks
 
         result['items'] = items
