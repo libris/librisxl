@@ -59,7 +59,7 @@ selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bi
         }
 
         if (e.language && (asList(e.language).toSorted() != asList(work.language).toSorted())) {
-            otherExpressionLanguage.println("${bib.doc.shortId} ${e.language} ${work.language}" )
+            otherExpressionLanguage.println("${bib.doc.shortId} E: ${toString(e)} W: ${toString(work)}" )
             return
         }
 
@@ -319,8 +319,8 @@ class Norm {
         s = s.replace(noise)
         s = s.replace('æ', 'ae')
         s = StringUtils.normalizeSpace(s)
-        s = Unicode.normalizeForSearch(s)
         s = asciiFold(s)
+        s = Unicode.normalizeForSearch(s)
         return s
     }
 
