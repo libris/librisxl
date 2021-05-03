@@ -3,8 +3,10 @@ List channelRecs = Collections.synchronizedList([])
 String where = """
     collection = 'bib'
     AND data#>>'{@graph,1,marc:mediaTerm}' = 'channel record'
-    AND data#>'{@graph,0,bibliography}' @> '[{\"sigel\":\"EPLK\"}]'
+    AND data#>'{@graph,0,bibliography}' @> '[{\"@id\": \"https://libris.kb.se/bibliography/EPLK\"}]'
 """
+// We probably will have to use data#>'{@graph,0,bibliography}' @> '[{"sigel":"EPLK"}]' when we run this on PROD
+// depending on the status of LXL-2469
 
 selectBySqlWhere(where) { cRec ->
     Map cRecData = [:]
@@ -15,7 +17,7 @@ selectBySqlWhere(where) { cRec ->
         it.inScheme?."@id" == "https://id.kb.se/term/marcgt"
     }
     cRecData["856website"] = cRec.graph[1]["isPrimaryTopicOf"].find {
-        it["marc:publicNote"] == "web site"
+        asList(it["marc:publicNote"]).contains("web site")
     }
 
     channelRecs << cRecData
@@ -71,4 +73,12 @@ selectBySqlWhere("collection = 'bib' AND data#>'{@graph,1,supplementTo}' IS NOT 
 
     if (modified)
         data.scheduleSave()
+}
+
+List asList(Object o) {
+    if (o == null)
+        return []
+    if (o instanceof List)
+        return o
+    return [o]
 }
