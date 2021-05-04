@@ -282,6 +282,11 @@ class ElasticSearch {
         String thingId = thingIds.get(0)
         Map framed = JsonLd.frame(thingId, copy.data)
 
+        framed['_sortKeyByLang'] = whelk.jsonld.toChipAsMapByLang(
+                framed,
+                LANGUAGES_TO_INDEX,
+                REMOVABLE_BASE_URIS)
+        
         // TODO: replace with elastic ICU Analysis plugin?
         // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
         DocumentUtil.findKey(framed, JsonLd.SEARCH_KEY) { value, path ->
@@ -341,11 +346,6 @@ class ElasticSearch {
         doc.data['@graph'][1]['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
                 'totalItems' : whelk.getStorage().getIncomingLinkCount(doc.getShortId())]
-
-        doc.data['@graph'][1]['_sortKeyByLang'] = whelk.jsonld.toChipAsMapByLang(
-                doc.data['@graph'][1],
-                LANGUAGES_TO_INDEX,
-                REMOVABLE_BASE_URIS)
     }
 
     private static Collection<String> getOtherIsbns(List<String> isbns) {
