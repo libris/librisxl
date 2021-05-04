@@ -800,8 +800,10 @@ class JsonLd {
                 result = removeDomain((String) thing['@id'], removableBaseUris)
             } else {
                 result = result
-                    // Remove leading non-alphanumeric characters
-                    .replaceFirst(/^[^\p{L}\p{N}]+/, "")
+                    // Remove leading non-alphanumeric characters.
+                    // \p{L} = Lu, Ll, Lt, Lm, Lo; but we don't want Lm as it includes modifier letters like
+                    // MODIFIER LETTER PRIME (ʹ) that are sometimes erroneously used.
+                    .replaceFirst(/^[^\p{Lu}\p{Ll}\p{Lt}\p{Lo}\p{N}]+/, "")
                     // A string without alphanumerics should not have "" as its sort value, because
                     // then we get messed up records on top when sorting A-Z. Workaround: use a character from
                     // Unicode's Private Use Area, forcing such records to appear at the very end when sorting.
