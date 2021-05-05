@@ -159,17 +159,8 @@ class RemoteSearchAPI extends HttpServlet {
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
-        // Check that we have kat-rights.
-        boolean hasPermission = false
         Map userInfo = request.getAttribute("user")
-        if (userInfo != null) {
-            if (userInfo.permissions.any { item ->
-                item.get(whelk.rest.security.AccessControl.KAT_KEY)
-            } || Crud.isSystemUser(userInfo))
-                hasPermission = true
-        }
-
-        if (hasPermission){
+        if (!userInfo) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN)
             return
         }
