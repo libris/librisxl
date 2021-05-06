@@ -24,20 +24,13 @@ PrintWriter sameExpr = getReportWriter("same-expr.txt")
 PrintWriter ignoredContribution = getReportWriter("ignored-primary-contribution.txt")
 PrintWriter movedTitles = getReportWriter("moved-titles.txt")
 PrintWriter otherExpressionLanguage = getReportWriter("other-expression-language.txt")
+compareTitles = getReportWriter("compare-titles.txt")
 
 languageNames = loadLanguageNames()
 uniformWorks = getUniformWorks()
 
-def q = [ // this query doesn't find everything since expressionOf is normally not indexed
-        '@type'                                            : ['Instance'],
-        'exists-instanceOf.expressionOf.hasTitle.mainTitle': ['true'],
-        'exists-instanceOf.expressionOf.@id'               : ['false'],
-        '_sort'                                            : ['@id'],
-]
-
 def notLinkedExpr = new ConcurrentHashMap<Map, ConcurrentLinkedQueue<String>>()
-//selectByIds(queryIds(q).collect()) { bib -> 
-//selectByCollection('bib') { bib ->
+
 selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bib ->
     Map work = getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf'])
     List<Map> expressionOf = asList(getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf', 'expressionOf']))
@@ -151,6 +144,7 @@ selectByIds(uniqueUnmatchedIds) { bib ->
                 bib.scheduleSave()
                 movedTitles.println("$bib.doc.shortId MOVED hasTitle E/W: ${toString(work)} I: ${toString(instance)}")
                 incrementStats('unique titles', 'moved')
+                compareTitles(instance, expression)
             }
         }
         else {
@@ -342,3 +336,27 @@ broken, fix manually:
    1 [@type, subtitle, mainTitle, marc:formSubheading]            [2btjtjz00hlpvk19]
    1 [@type, subtitle, mainTitle]                                 [8m6b5z206blc8p4n]
  */
+
+
+
+/*
+issuanceType
+translationOf
+instance title prefix of
+instance exact same 
+ */
+
+void compareTitles(Map instance, Map expressionOf) {
+    String i = titleStr(instance)
+    String e = titleStr(expressionOf)
+    boolean isPrefix = e.startsWith(i)
+    boolean isSame = i == e 
+    boolean isTranslation = instance.instanceOf?.containsKey('translationOf')
+    compareTitles.println("issuanceType:${instance.issuanceType}\tisTranslation:${isTranslation}\tisPrefix:${isPrefix}\tisSame:${isSame}\tI:${i}\tE:${e}")
+}
+
+private String titleStr(Map thing) {
+    def keys = Norm.TITLE_KEYS.collect {['hasTitle', 0] + it }
+    def props = keys.collect {getPathSafe(thing, asList(it)) }
+    return props.grep().join(' ')
+}
