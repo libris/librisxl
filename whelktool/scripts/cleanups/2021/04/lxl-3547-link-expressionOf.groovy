@@ -338,21 +338,22 @@ broken, fix manually:
  */
 
 
-
-/*
-issuanceType
-translationOf
-instance title prefix of
-instance exact same 
- */
-
 void compareTitles(Map instance, Map expressionOf) {
     String i = titleStr(instance)
     String e = titleStr(expressionOf)
-    boolean isPrefix = e.startsWith(i)
-    boolean isSame = i == e 
+    boolean isSame = i == e
+    boolean isPrefix = e.startsWith(i) && !isSame
+    String suffix = isPrefix ? e.substring(i.size()) : ""
     boolean isTranslation = instance.instanceOf?.containsKey('translationOf')
-    compareTitles.println("issuanceType:${instance.issuanceType}\tisTranslation:${isTranslation}\tisPrefix:${isPrefix}\tisSame:${isSame}\tI:${i}\tE:${e}")
+    compareTitles.println([
+            "issuanceType:${instance.issuanceType}",
+            "isTranslation:${isTranslation}",
+            "isSame:${isSame}",
+            "isPrefix:${isPrefix}",
+            "suffix:${suffix}",
+            "I:${i}",
+            "E:${e}"
+    ].join('\t'))
 }
 
 private String titleStr(Map thing) {
