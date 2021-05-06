@@ -6,6 +6,20 @@ import whelk.util.DocumentUtil
 class JsonLdValidator {
     private static JsonLd jsonLd
     private Collection skipTerms = []
+    private Map<String, Set> scopesPerLegacyCollection = [
+            "all": [
+                    Validation.Scope.NESTED_GRAPH,
+            ],
+            "auth": [
+                    Validation.Scope.MISSING_DEFINITION,
+                    Validation.Scope.OBJECT_PROPERTIES,
+                    Validation.Scope.UNKNOWN_VOCAB_VALUE,
+            ],
+            "bib": [
+                    Validation.Scope.MISSING_DEFINITION,
+                    Validation.Scope.OBJECT_PROPERTIES,
+            ],
+    ]
 
     private JsonLdValidator(JsonLd jsonLd) {
         this.jsonLd = jsonLd
@@ -25,7 +39,11 @@ class JsonLdValidator {
         Scope scope
 
         enum Scope {
+            MISSING_DEFINITION,
             NESTED_GRAPH,
+            OBJECT_PROPERTIES,
+            REPEATABILITY,
+            UNKNOWN_VOCAB_VALUE,
             ALL
         }
 
@@ -41,9 +59,26 @@ class JsonLdValidator {
     }
 
     List<Error> validate(Map map) {
-        def validation = new Validation(Validation.Scope.NESTED_GRAPH)
-        doValidate(map, validation)
-        return validation.errors
+        return validate(map, null)
+    }
+
+    List<Error> validate(Map map, String collection) {
+        def scopes = []
+
+        // Scopes that all things should have
+        scopes.addAll(scopesPerLegacyCollection['all'])
+
+        // Scopes that only some types of things should have (for the moment!)
+        if (collection && collection in scopesPerLegacyCollection) {
+            scopes.addAll(scopesPerLegacyCollection[collection])
+        }
+
+        return scopes.inject([], { errors, value ->
+            def validation = new Validation(value)
+            doValidate(map, validation)
+            errors.addAll(validation.errors)
+            errors
+        }) as List<Error>
     }
 
     private void doValidate(Map data, Validation validation) {
@@ -58,10 +93,25 @@ class JsonLdValidator {
             }
             validation.at = path
 
-            if (validation.scope == Validation.Scope.NESTED_GRAPH) {
-                checkIsNotNestedGraph(key, value, validation)
-            } else if (validation.scope == Validation.Scope.ALL) {
-                verifyAll(key, value, validation)
+            switch (validation.scope) {
+                case Validation.Scope.NESTED_GRAPH:
+                    checkIsNotNestedGraph(key, value, validation)
+                    break
+                case Validation.Scope.MISSING_DEFINITION:
+                    checkHasDefinition(key, validation)
+                    break
+                case Validation.Scope.UNKNOWN_VOCAB_VALUE:
+                    verifyVocabTerm(key, value, validation)
+                    break
+                case Validation.Scope.REPEATABILITY:
+                    validateRepeatability(key, value, validation)
+                    break
+                case Validation.Scope.OBJECT_PROPERTIES:
+                    validateObjectProperties(key, value, validation)
+                    break
+                case Validation.Scope.ALL:
+                    verifyAll(key, value, validation)
+                    break
             }
         })
     }
