@@ -136,6 +136,7 @@ selectByIds(uniqueUnmatchedIds) { bib ->
                 else {
                     movedTitles.println("$bib.doc.shortId ALREADY hasTitle W: ${toString(work)} E: ${toString(expression)}")
                     incrementStats('unique titles', 'work already has title')
+                    printTitles(bib.doc.shortId, instance, expression)
                 }
             }
             else {
@@ -144,7 +145,7 @@ selectByIds(uniqueUnmatchedIds) { bib ->
                 bib.scheduleSave()
                 movedTitles.println("$bib.doc.shortId MOVED hasTitle E/W: ${toString(work)} I: ${toString(instance)}")
                 incrementStats('unique titles', 'moved')
-                compareTitles(instance, expression)
+                printTitles(bib.doc.shortId, instance, expression)
             }
         }
         else {
@@ -338,7 +339,7 @@ broken, fix manually:
  */
 
 
-void compareTitles(Map instance, Map expressionOf) {
+void printTitles(String id, Map instance, Map expressionOf) {
     String i = titleStr(instance)
     String e = titleStr(expressionOf)
     boolean isSame = i == e
@@ -346,6 +347,7 @@ void compareTitles(Map instance, Map expressionOf) {
     String suffix = isPrefix ? e.substring(i.size()) : ""
     boolean isTranslation = instance.instanceOf?.containsKey('translationOf')
     compareTitles.println([
+            id,
             "issuanceType:${instance.issuanceType}",
             "isTranslation:${isTranslation}",
             "isSame:${isSame}",
