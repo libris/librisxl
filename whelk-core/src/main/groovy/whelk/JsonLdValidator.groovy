@@ -6,19 +6,11 @@ import whelk.util.DocumentUtil
 class JsonLdValidator {
     private static JsonLd jsonLd
     private Collection skipTerms = []
-    private Map<String, Set> scopesPerLegacyCollection = [
-            "all": [
-                    Validation.Scope.NESTED_GRAPH,
-            ],
-            "auth": [
-                    Validation.Scope.MISSING_DEFINITION,
-                    Validation.Scope.OBJECT_PROPERTIES,
-                    Validation.Scope.UNKNOWN_VOCAB_VALUE,
-            ],
-            "bib": [
-                    Validation.Scope.MISSING_DEFINITION,
-                    Validation.Scope.OBJECT_PROPERTIES,
-            ],
+    private Map<String, Validation.Scope> legacyScopes = [
+            'auth': Validation.Scope.AUTH,
+            'bib': Validation.Scope.BIB,
+            'definitions': Validation.Scope.DEFINITIONS,
+            'hold': Validation.Scope.HOLD,
     ]
 
     private JsonLdValidator(JsonLd jsonLd) {
@@ -39,12 +31,12 @@ class JsonLdValidator {
         Scope scope
 
         enum Scope {
-            MISSING_DEFINITION,
-            NESTED_GRAPH,
-            OBJECT_PROPERTIES,
-            REPEATABILITY,
-            UNKNOWN_VOCAB_VALUE,
-            ALL
+            ALL,     // Every possible validation
+            DEFAULT, // Validations enabled for all collection types
+            AUTH,
+            BIB,
+            DEFINITIONS,
+            HOLD,
         }
 
         Validation(Scope scope) {
@@ -63,22 +55,14 @@ class JsonLdValidator {
     }
 
     List<Error> validate(Map map, String collection) {
-        def scopes = []
-
-        // Scopes that all things should have
-        scopes.addAll(scopesPerLegacyCollection['all'])
-
-        // Scopes that only some types of things should have (for the moment!)
-        if (collection && collection in scopesPerLegacyCollection) {
-            scopes.addAll(scopesPerLegacyCollection[collection])
+        def validation
+        if (collection && legacyScopes.containsKey(collection)) {
+            validation = new Validation(legacyScopes[collection])
+        } else {
+            validation = new Validation(Validation.Scope.DEFAULT)
         }
-
-        return scopes.inject([], { errors, value ->
-            def validation = new Validation(value)
-            doValidate(map, validation)
-            errors.addAll(validation.errors)
-            errors
-        }) as List<Error>
+        doValidate(map, validation)
+        return validation.errors
     }
 
     private void doValidate(Map data, Validation validation) {
@@ -93,24 +77,28 @@ class JsonLdValidator {
             }
             validation.at = path
 
+            if (validation.scope == Validation.Scope.ALL) {
+                verifyAll(key, value, validation)
+                return
+            }
+
+            // Validations enabled for all collections
+            checkIsNotNestedGraph(key, value, validation)
+
+            // Additional per-collection validations
             switch (validation.scope) {
-                case Validation.Scope.NESTED_GRAPH:
-                    checkIsNotNestedGraph(key, value, validation)
-                    break
-                case Validation.Scope.MISSING_DEFINITION:
+                case Validation.Scope.AUTH:
                     checkHasDefinition(key, validation)
-                    break
-                case Validation.Scope.UNKNOWN_VOCAB_VALUE:
+                    validateObjectProperties(key, value, validation)
                     verifyVocabTerm(key, value, validation)
                     break
-                case Validation.Scope.REPEATABILITY:
-                    validateRepeatability(key, value, validation)
-                    break
-                case Validation.Scope.OBJECT_PROPERTIES:
+                case Validation.Scope.BIB:
+                    checkHasDefinition(key, validation)
                     validateObjectProperties(key, value, validation)
                     break
-                case Validation.Scope.ALL:
-                    verifyAll(key, value, validation)
+                case Validation.Scope.DEFINITIONS:
+                    break
+                case Validation.Scope.HOLD:
                     break
             }
         })
