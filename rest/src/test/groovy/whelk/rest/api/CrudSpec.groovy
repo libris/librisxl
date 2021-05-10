@@ -85,7 +85,16 @@ class CrudSpec extends Specification {
                 'cards': [lenses: ['Instance' : ['showProperties': ['prop1', 'prop2', 'prop3']]]],
                 'full': [lenses: [:]]
         ]]
-        whelk.vocabData = ['@graph': [["@id" : "some_id"]]]
+        whelk.vocabData = ['@graph': [
+            ["@id": "some_id"],
+            ["@id": "controlNumber"],
+            ["@id": "created"],
+            ["@id": "modified"],
+            ["@id": "contains"],
+            ["@id": "heldBy"],
+            ["@id": "creationDate"],
+            ["@id": "code"],
+        ]]
         whelk.setJsonld(new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData))
         GroovySpy(LegacyIntegrationTools.class, global: true)
         crud = new Crud(whelk)
