@@ -22972,11 +22972,10 @@
   },
     "377": {
       "i2": {
-        "property": "marc:languageCode",
+        "TODO:property": "$2 - Source of code (NR), or only support MARC language code?",
+        "NOTE:LC": "# - MARC language code",
         "marcDefault": " ",
-        "tokenMap": {
-          "7": "marc:SourceSpecifiedInSubfield2"
-        }
+        "TODO:definedElsewhereToken": "7"
       },
       "aboutEntity": "?thing",
       "aboutType": "Agent",
