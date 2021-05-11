@@ -52,6 +52,9 @@ selectBySqlWhere(where) { data ->
             modified = hasNote.remove(pp)
     }
 
+    if (hasNote.isEmpty())
+        work.remove("hasNote")
+
     if (modified)
         data.scheduleSave()
 }
