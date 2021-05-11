@@ -14103,7 +14103,7 @@
         "marcDefault": " ",
         "tokenMap": {
           "0": true,
-          "1": false
+          "1": null
         }
       },
       "$a": {"property": "label"},
@@ -14132,12 +14132,14 @@
           "source": {"583": {"ind1": "1", "ind2": " ", "subfields": [
             {"a": "Foo"}
           ]}},
+          "source": {"583": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Foo"}
+          ]}},
           "result": {"mainEntity": {
             "hasNote": [
               {
                 "@type": "marc:ActionNote",
-                "label": "Foo",
-                "marc:isPrivate": false
+                "label": "Foo"
               }
             ]
           }}
@@ -26094,24 +26096,50 @@
     "538": {"inherit": "bib", "$5": null},
     "541": {
       "groupId": "?example-$seq",
+      "NOTE": "groupId has created only sameAs links in the actual converted data.",
       "i1": {
         "NOTE": "0 = Sekretessbelagd information. Används f.n. ej. = ca 5000 poster",
         "property": "marc:isPrivate",
         "marcDefault": " ",
         "tokenMap": {
           "0": true,
-          "1": false
+          "1": null
         }
       },
-      "addLink": "immediateAcquisition", "resourceType": "ImmediateAcquisition",
-      "$a": {"addProperty": "marc:sourceOfAcquisition"},
+      "addLink": "immediateAcquisition",
+      "resourceType": "ImmediateAcquisition",
+      "$a": {"property": "marc:sourceOfAcquisition"},
       "$b": {"property": "marc:address"},
       "$c": {"property": "marc:methodOfAcquisition"},
       "$d": {"property": "marc:dateOfAcquisition"},
       "$e": {"property": "marc:accessionNumber"},
       "$f": {"property": "marc:owner"},
       "$h": {"property": "marc:purchasePrice"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "source": {
+            "541": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Gåva"}, {"d": "2006"}
+            ]}},
+            "normalized": {
+              "541": {"ind1": "0", "ind2": " ", "subfields": [
+                {"a": "Gåva"}, {"d": "2006"}
+              ]}},
+          "result": {"mainEntity": {
+            "@type": "Item",
+            "immediateAcquisition": [
+              {
+                "@id" : "?example-g1-1",
+                "@type": "ImmediateAcquisition",
+                "marc:sourceOfAcquisition": "Gåva",
+                "marc:dateOfAcquisition": "2006",
+                "marc:isPrivate": true
+              }
+            ]
+          }}
+        }
+      ]
     },
     "546": {
       "aboutEntity": "?thing",
@@ -26164,13 +26192,34 @@
         "marcDefault": " ",
         "tokenMap": {
           "0": true,
-          "1": false
+          "1": null
         }
       },
       "$a": {"property": "label"},
       "$b": {"addProperty": "marc:actionIdentification"},
       "$x": {"addProperty": "marc:cataloguersNote", "TODO": "ignore?"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "source": {
+            "583": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "a"}
+            ]}},
+            "normalized": {
+              "583": {"ind1": " ", "ind2": " ", "subfields": [
+                {"a": "a"}
+              ]}},
+          "result": {"mainEntity": {
+            "@type": "Item",
+            "marc:hasActionNote": [
+              {
+                "@type": "marc:ActionNote",
+                "label": "a"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "599": {
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
