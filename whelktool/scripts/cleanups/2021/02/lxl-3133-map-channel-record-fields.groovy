@@ -3,7 +3,7 @@ List channelRecs = Collections.synchronizedList([])
 String where = """
     collection = 'bib'
     AND data#>>'{@graph,1,marc:mediaTerm}' = 'channel record'
-    AND data#>'{@graph,0,bibliography}' @> '[{\"sigel\":\"EPLK\"}]]'
+    AND data#>'{@graph,0,bibliography}' @> '[{\"sigel\":\"EPLK\"}]'
 """
 
 selectBySqlWhere(where) { cRec ->
