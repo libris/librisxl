@@ -32,7 +32,7 @@ The project consists of:
 
 * Tools
     * `whelktool/`
-        Tool for running scripted mass updates of data.
+        CLI tool for running scripted mass updates of data.
     * `librisxl-tools/`
         Configuration and scripts used for setup, maintenance and operations.
 
