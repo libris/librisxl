@@ -16,7 +16,7 @@ The project consists of:
 
 * Core
     * `whelk-core/`
-        The root component of XL; a linked data store, including search and MARC conversion.
+        The root component of XL; a linked data store, including search and [MARC conversion](whelk-core/src/main/resources/ext).
 
 * Applications
     * `apix_export/`
@@ -28,9 +28,11 @@ The project consists of:
     * `rest/`
         A servlet web application. The REST and other HTTP APIs
     * `marc_export/`
-	    A servlet (and CLI program) for exporting libris data as MARC.
+	A servlet (and CLI program) for exporting libris data as MARC.
 
 * Tools
+    * `whelktool/`
+        Tool for running scripted mass updates of data.
     * `librisxl-tools/`
         Configuration and scripts used for setup, maintenance and operations.
 
