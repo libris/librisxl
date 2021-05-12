@@ -168,7 +168,7 @@ selectByIds(ids) { d ->
 }
 ```
 
-Call `scheduleSave()` on `DocumentItem` to save changes.
+Call `scheduleSave()` on `DocumentItem` to save changes (you need to do this inside the scope of the closure).
 ```groovy
 selectByIds(ids) { d ->
     def (record, thing) = d.graph
