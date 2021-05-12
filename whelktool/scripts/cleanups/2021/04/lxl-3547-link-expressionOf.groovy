@@ -330,15 +330,6 @@ class Norm {
     }
 }
 
-/*
-broken, fix manually:
-   1 [@type, language, mainTitle]                                 [p0bg9szbmd1sv3wq]
-   1 [@type, mainTitle, qualifier, marc:nonfilingChars]           [nzjzj9mqln9q8mvl]
-   1 [@type, subtitle, mainTitle, marc:formSubheading]            [2btjtjz00hlpvk19]
-   1 [@type, subtitle, mainTitle]                                 [8m6b5z206blc8p4n]
- */
-
-
 void printTitles(String id, Map instance, Map expressionOf) {
     String i = titleStr(instance)
     String e = titleStr(expressionOf)
@@ -363,3 +354,10 @@ private String titleStr(Map thing) {
     def props = keys.collect {getPathSafe(thing, asList(it)) }
     return props.grep().join(' ')
 }
+
+
+/*
+broken, fix manually:
+   1 [@type, subtitle, mainTitle, marc:formSubheading]            [2btjtjz00hlpvk19]
+   1 [@type, subtitle, mainTitle]                                 [8m6b5z206blc8p4n]
+ */
