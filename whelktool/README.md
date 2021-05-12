@@ -80,7 +80,7 @@ Whelktool scripts are groovy scripts that have access to a couple of methods for
 A minimal script
 ```groovy
 selectByIds(['j2vzn03v08lfhrm']) {
-    it.graph[1].responsibilityStatment = 'Hello, world!'
+    it.graph[1].responsibilityStatement = 'Hello, world!'
     it.scheduleSave()
 }
 ```
