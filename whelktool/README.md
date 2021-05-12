@@ -55,6 +55,25 @@ usage: whelktool [options] <SCRIPT>
     * DELETED.txt - ids of deleted instances
     * STATISTICS.txt - things you counted with the default `Statistics` instance. See below.
 
+Example output
+```
+==> reports/qa-20201102-142402/MAIN.txt <==
+Running Whelk against:
+  PostgreSQL:
+    url:     jdbc:postgresql://pgsql01-qa.libris.kb.se/whelk
+  ElasticSearch:
+    hosts:   [http://kblxes01.kb.local:9200, http://kblxes02.kb.local:9200, http://kblxes03.kb.local:9200]
+    cluster: kblxes_cluster
+    index:   libris_qa
+Using script: scripts/cleanups/2020/10/lxl-3416-inScheme-fast.groovy
+  dryRun
+
+Select by 2042 IDs
+Processed batch 1 (read: 599, processed: 500, modified: 496, deleted: 0, new saved: 0 (at 20.35 docs/s))
+Processed batch 2 (read: 758, processed: 758, modified: 753, deleted: 0, new saved: 0 (at 29.57 docs/s))
+Processed selection: read: 758, processed: 758, modified: 753, deleted: 0, new saved: 0 (at 29.57 docs/s). Done in 25.637 s.
+```
+
 ## Writing scripts
 Whelktool scripts are groovy scripts that have access to a couple of methods for accessing and manipulating XL data.
 
