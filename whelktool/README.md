@@ -13,7 +13,7 @@ Minimal example
 java -Xmx2G -Dxl.secret.properties=<secret.properties> -jar build/libs/whelktool.jar <path/to/script.groovy>
 ```
 
-Example of using a timestamp base report dir
+Example of using a timestamp based report dir
 ```
  ENV=qa && time java -Xmx2G -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar build/libs/whelktool.jar --report reports/$ENV-$(date +%Y%m%d-%H%M%S) scripts/examples/statistics.groovy
 ```
@@ -59,7 +59,7 @@ usage: whelktool [options] <SCRIPT>
 Whelktool scripts are groovy scripts that have access to a couple of methods for accessing and manipulating XL data.
 
 A minimal script
-```
+```groovy
 selectByIds(['j2vzn03v08lfhrm']) {
     it.graph[1].responsibilityStatment = 'Hello, world!'
     it.scheduleSave()
@@ -72,7 +72,7 @@ Some example scripts can be found [here](scripts/examples).
 All `selectBy...` methods take a closure which is executed once per matching document.
 
 By entity id (IRI)
-```
+```groovy
 Collection<String> ids = [
   'https://libris-qa.kb.se/cwp44h7p4hwkrxr',
   'https://libris-qa.kb.se/j2vzn03v08lfhrm',
@@ -84,7 +84,7 @@ selectByIds(ids) { d ->
 ```
 
 By system ids
-```
+```groovy
 def ids = [
   'cwp44h7p4hwkrxr',
   'j2vzn03v08lfhrm',
@@ -96,7 +96,7 @@ selectByIds(ids) { d ->
 ```
 
 By legacy MARC collection (`bib`, `auth`, `hold`, `definitions` or `none`)
-```
+```groovy
 selectByCollection('auth') { auth ->
   // process
 }
@@ -105,7 +105,7 @@ selectByCollection('auth') { auth ->
 By SQL
 
 Defined as the `WHERE` clause to `SELECT data FROM lddb WHERE ...`
-```
+```groovy
 String where = "collection = 'bib' AND deleted = false AND data#>>'{@graph,0,_marcUncompleted}' LIKE '%\"024\"%'"
 selectBySqlWhere(where) { d ->
   // process
@@ -129,28 +129,28 @@ The object passed to the closure is a `DocumentItem` which is a wrapper around a
 document is accessed through the property `doc`.
 
 Document::data contains the JSON-LD document mapped to Java/Groovy objects (Map, List, String, etc).
-```
+```groovy
 selectByIds(ids) { d ->
     Map thing = d.doc.data['@graph'][1]
 }
 ```
 
 Using Groovy multiple assignment
-```
+```groovy
 selectByIds(ids) { d ->
     def (record, thing) = d.doc.data['@graph']
 }
 ```
 
 `DocumentItem` has a shorthand property `graph` for `doc.data['@graph']`
-```
+```groovy
 selectByIds(ids) { d ->
     def (record, thing) = d.graph
 }
 ```
 
 Call `scheduleSave()` on `DocumentItem` to save changes.
-```
+```groovy
 selectByIds(ids) { d ->
     def (record, thing) = d.graph
     thing['foo'] = 'bar'
@@ -159,7 +159,7 @@ selectByIds(ids) { d ->
 ```
 
 Doing "loud" updates. Has to be executed with `--allow-loud`, see [Running](#Running).
-```
+```groovy
 d.scheduleSave(loud: true)
 ```
 
@@ -175,7 +175,7 @@ skewed, but this is normally OK)
 [create.groovy](scripts/examples/create.groovy)
 
 Create `DocumentItem` with `create` then call `scheduleSave` inside a `selectFromIterable`.
-```
+```groovy
 def data =
         [ "@graph": [
                 [
@@ -198,14 +198,14 @@ selectFromIterable(itemList, { newlyCreatedItem ->
 ```
 ### Reporting
 Reports are written to the directory specified when running whelktool.
-```
+```groovy
 PrintWriter myReport = getReportWriter("my-report.txt")
 myReport.println("Hello, world!")
 ```
 
 Because of weird scoping in Groovy scripts, if the report writer is used inside a method it has to
 be specified like this (no type or `def`).
-```
+```groovy
 myReport = getReportWriter("my-report.txt")
 
 void myMethod() {
@@ -213,7 +213,7 @@ void myMethod() {
 }
 ```
 another way
-```
+```groovy
 class Context {
   static PrintWriter myReport
 }
@@ -227,7 +227,7 @@ void myMethod() {
 `void incrementStats(String category, Object name, Object example = null)`
 
 
-```
+```groovy
 incrementStats('category', 'name', 'example')
 
 // "example" is automatically set to doc system ID inside selectBy...
@@ -264,7 +264,7 @@ type (331265)
 
 ### Querying ElasticSearch
 Query parameters are specified as a Map<String, List<String>> with the same syntax as in the [`/find` API](../rest/API.md)
-```
+```groovy
 def q = [
     'foo'  : ['bar', 'baz'],
     'quux' : ['quuz'],
@@ -276,7 +276,7 @@ Iterable<Map> docs = queryDocs(q) // as in search API result "items"
 ```
 
 Combining with `selectById`
-```
+```groovy
 def q = [
     "@type": ["Language"],
     '_sort': ["@id"]
@@ -288,7 +288,7 @@ selectByIds(queryIds(q).collect()) { languageLabels.add(it.graph[1]['prefLabelBy
 
 ### Tips
 It is often helpful to define an `asList` helper to deal with properties being objects or lists or non-existing.
-```
+```groovy
 List asList(o) {
     (o instanceof List) ? (List) o : (o ? [o] : [])
 }
@@ -297,7 +297,7 @@ List asList(o) {
 Any exception thrown inside `selectBy...` will halt script execution. Sometimes this is what you want, sometimes
 it is easier to catch exceptions from edge cases and write them to an error report (with doc id). For example
 during development of a script that takes a long time to run.
-```
+```groovy
 errors = getReportWriter("errors.txt")
 selectByCollection('bib') { bib ->
     try {
@@ -316,7 +316,7 @@ TODO...
 
 `DocumentUtil` contains methods for traversing and manipulating the JSON structure.
 Values can be replaced or removed.
-```
+```groovy
      /**
      * Traverse a JSON-LD structure in depth-first order
      *
@@ -331,7 +331,7 @@ Values can be replaced or removed.
     }
 ```
 Examples
-```
+```groovy
 import whelk.util.DocumentUtil.Remove
 import whelk.util.DocumentUtil.Replace
 
