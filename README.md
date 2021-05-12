@@ -26,7 +26,7 @@ The project consists of:
     * `oaipmh/`
         Servlet web application. OAIPMH service for Libris XL
     * `rest/`
-        A servlet web application. The REST and other HTTP APIs
+        A servlet web application. [Search, RESTful CRUD and other HTTP APIs](rest/)
     * `marc_export/`
 	A servlet (and CLI program) for exporting libris data as MARC.
 
