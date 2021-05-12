@@ -1,3 +1,7 @@
+import groovy.json.JsonOutput
+
+//println(JsonOutput.prettyPrint(JsonOutput.toJson(digital.graph[0..1])))
+
 List tif = new File(scriptDir, "suecia-tif.csv").readLines()
 List pdf = new File(scriptDir, "suecia-pdf.csv").readLines()
 
@@ -40,8 +44,6 @@ pdf.drop(1).each {
 
 String controlNumbersPhysical = "('" + mappings.collect { it.key }.join("','") + "')"
 
-Set keys = Collections.synchronizedSet([] as Set)
-
 selectBySqlWhere("collection = 'bib' AND data#>>'{@graph,0,controlNumber}' IN $controlNumbersPhysical") { physical ->
     Map physicalRecord = physical.graph[0]
     Map physicalInstance = physical.graph[1]
@@ -59,22 +61,18 @@ selectBySqlWhere("collection = 'bib' AND data#>>'{@graph,0,controlNumber}' IN $c
         return
     }
 
-    // Template
-    Map digiObject =
-            ["@graph": [
-                    [
-                            "@id"       : "TEMPID",
-                            "@type"     : "Record",
-                            "mainEntity": ["@id": "TEMPID#it"]
-                    ],
-                    [
-                            "@id"  : "TEMPID#it",
-                            "@type": "Electronic"
-                    ]
-            ]]
-
-    Map digiRecord = digiObject["@graph"][0]
-    Map digiInstance = digiObject["@graph"][1]
+    // Templates
+    Map digiRecord =
+            [
+                    "@id"       : "TEMPID",
+                    "@type"     : "Record",
+                    "mainEntity": ["@id": "TEMPID#it"]
+            ]
+    Map digiInstance =
+            [
+                    "@id"  : "TEMPID#it",
+                    "@type": "Electronic"
+            ]
 
     // Add bibliography
     digiRecord["bibliography"] =
@@ -84,7 +82,22 @@ selectBySqlWhere("collection = 'bib' AND data#>>'{@graph,0,controlNumber}' IN $c
                             "sigel": "DIGI"
                     ]
             ]
-    digiRecord.bibliography += physicalRecord.bibliography.findAll { it.sigel in ["SAH", "SAHT", "SAHF"] }
+    digiRecord.bibliography +=
+            physicalRecord.bibliography.findAll {
+                it.sigel in ["SAH", "SAHT", "SAHF", "DIHS", "SVDA", "EOD"]
+            }
+
+    // Add other admin metadata
+    digiRecord["encodingLevel"] = "marc:MinimalLevel"
+    digiRecord["descriptionLanguage"] = ["@id": "https://id.kb.se/language/swe"]
+    //digiRecord["marc:catalogingSource"] = ["@id": "https://id.kb.se/marc/CooperativeCatalogingProgram"]
+    digiRecord["descriptionConventions"] =
+            [
+                    [
+                            "@type": "DescriptionConventions",
+                            "code" : "rda"
+                    ]
+            ]
 
     // Add properties from physical instance
     digiInstance += physicalInstance.subMap(
@@ -109,7 +122,7 @@ selectBySqlWhere("collection = 'bib' AND data#>>'{@graph,0,controlNumber}' IN $c
                     ["@id": "https://id.kb.se/marc/Online"],
                     ["@id": "https://id.kb.se/marc/OnlineResource"]
             ]
-    digiInstance["production"] = // Datum?
+    digiInstance["production"] =
             [
                     [
                             "@type"   : "Reproduction",
@@ -117,6 +130,7 @@ selectBySqlWhere("collection = 'bib' AND data#>>'{@graph,0,controlNumber}' IN $c
                                     "@type": "Agent",
                                     "label": ["Kungliga biblioteket"]
                             ],
+                            "date"    : ["2015"],
                             "place"   : [
                                     [
                                             "@type": "Place",
@@ -183,10 +197,18 @@ selectBySqlWhere("collection = 'bib' AND data#>>'{@graph,0,controlNumber}' IN $c
                     ]
     }
 
+    Map digiObject = ["@graph": [digiRecord, digiInstance]]
+
     newRecords << create(digiObject)
 }
 
 selectFromIterable(newRecords) {
+    it.scheduleSave()
+}
+
+// Set correct descriptionCreator
+selectByIds(newRecords.collect { it.doc.shortId }) {
+    it.graph[0].descriptionCreator = ["@id": "https://libris.kb.se/library/S"]
     it.scheduleSave()
 }
 
