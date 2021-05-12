@@ -6761,6 +6761,26 @@
               }
             }
           }
+        },
+        {
+          "name": "Reconversion of descriptionConventions where both leader/18 (Punctuation policy) and 040$e is present.",
+          "normalized": {
+            "leader": "     cam a        i 4500",
+            "fields": [
+              {"001": "0000000"},
+              {"040": {"ind1": " ", "ind2": " ", "subfields": [{"e": "rda"}]}}]
+          },
+          "result": {
+            "descriptionConventions": [
+              {"@id": "https://id.kb.se/marc/CatFormType-i"},
+              {"@type": "DescriptionConventions", "code": "rda"}
+            ],
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
         }
       ]
     },
