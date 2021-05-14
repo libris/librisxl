@@ -28,7 +28,7 @@ boolean clearEmptyNationality(Map mainEntity) {
 
 boolean clearRecordMarcGarbage(Map record) {
     boolean changed = false
-    for (String key : ["record.marc:typeOfSeries", "record.marc:numberedSeries", "record.marc:headingSeries"]) {
+    for (String key : ["marc:typeOfSeries", "marc:numberedSeries", "marc:headingSeries"]) {
         if (record[key] != null) {
             record.remove(key)
             changed = true
