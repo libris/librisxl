@@ -19,8 +19,8 @@ The project consists of:
         The root component of XL; a linked data store, including search and [MARC conversion](whelk-core/src/main/resources/ext).
 
 * Applications
-    * `apix_export/`
-        Exports data from Libris XL back to Voyager (the old system).
+    * `apix_server/`
+        XL reimplementation of the Libris legacy APIX API.
     * `importers/`
         Java application to load or reindex data into the system.
     * `oaipmh/`
