@@ -98,6 +98,39 @@ class DocumentUtilSpec extends Specification {
         ]
     }
 
+    def findKeys() {
+        given:
+        def data = [
+                a: [b: [c: 'q']],
+                r: [s: [t: [a: [q: 2]]]],
+                l: [[], [a: 2]]
+        ]
+
+        def visited = []
+        def values = []
+        DocumentUtil.findKey(data, ['a', 's', 'q'], { value, path ->
+            values << value
+            visited << path
+            return NOP
+        })
+
+        expect:
+        values == [
+                [b: [c: 'q']],
+                [t: [a: [q: 2]]],
+                [q: 2],
+                2,
+                2
+        ]
+        visited == [
+                ['a'],
+                ['r', 's'],
+                ['r', 's', 't', 'a'],
+                ['r', 's', 't', 'a', 'q'],
+                ['l', 1, 'a']
+        ]
+    }
+
     def "link"() {
         given:
         def data = [
