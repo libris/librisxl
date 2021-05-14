@@ -20,7 +20,7 @@ The project consists of:
 
 * Applications
     * `apix_server/`
-        XL reimplementation of the Libris legacy APIX API.
+        Servlet web application. XL reimplementation of the Libris legacy APIX API.
     * `importers/`
         Java application to load or reindex data into the system.
     * `oaipmh/`
