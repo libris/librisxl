@@ -19,16 +19,16 @@ The project consists of:
         The root component of XL; a linked data store, including search and [MARC conversion](whelk-core/src/main/resources/ext).
 
 * Applications
-    * `apix_server/`
-        Servlet web application. XL reimplementation of the Libris legacy APIX API.
-    * `importers/`
-        Java application to load or reindex data into the system.
     * `oaipmh/`
-        Servlet web application. OAIPMH service for Libris XL
+        A servlet web application. OAIPMH service for Libris XL
     * `rest/`
         A servlet web application. [Search, RESTful CRUD and other HTTP APIs](rest/)
     * `marc_export/`
 	A servlet (and CLI program) for exporting libris data as MARC.
+    * `importers/`
+        Java application to load or reindex data into the system.
+    * `apix_server/`
+        A servlet web application. XL reimplementation of the Libris legacy APIX API.
 
 * Tools
     * `whelktool/`
