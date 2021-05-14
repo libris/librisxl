@@ -89,7 +89,9 @@ void pruneEmptyStructure(Object from) {
                     toBeRemoved.add(key)
             }
         }
-        if (!toBeRemoved.isEmpty())
-            from.removeAll(toBeRemoved)
+        if (!toBeRemoved.isEmpty()) {
+            for (Object key : toBeRemoved)
+                from.remove(key)
+        }
     }
 }
