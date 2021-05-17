@@ -193,7 +193,12 @@ class Whelk {
 
     private void reindexAffected(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
         Runnable reindex = {
-            reindexAffectedSync(document, preUpdateLinks, postUpdateLinks)
+            try {
+                reindexAffectedSync(document, preUpdateLinks, postUpdateLinks)
+            } 
+            catch (Exception e) {
+                log.error("Error reindexing: $e", e)
+            }
         }
 
         // If we are inside a batch job. Update them synchronously
