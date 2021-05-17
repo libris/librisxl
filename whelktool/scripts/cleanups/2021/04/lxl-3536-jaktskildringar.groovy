@@ -40,7 +40,7 @@ void replaceLinks(Map work, String newLinkTarget, String linkToReplace) {
             work.put("genreForm", [work.genreForm])
 
         // Add the correct link
-        work.genreForm.add(["id" : newLinkTarget])
+        work.genreForm.add(["@id" : newLinkTarget])
 
         // Check that we've not created a double link (in case there was one before we started)
         boolean alreadyFound = false
