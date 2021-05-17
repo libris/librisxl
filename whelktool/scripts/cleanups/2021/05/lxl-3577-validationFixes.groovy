@@ -19,7 +19,7 @@ selectBySqlWhere(where) { data ->
 
 boolean clearEmptyNationality(Map mainEntity) {
     Object nationality = mainEntity["nationality"]
-    if (nationality != null && nationality instanceof List && nationality.isEmpty()) {
+    if (nationality != null && nationality instanceof List && nationality.size() == 1 && nationality[0].isEmpty()) {
         mainEntity.remove("nationality")
         return true
     }
