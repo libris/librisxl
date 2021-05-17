@@ -417,7 +417,7 @@ class ElasticSearch {
         catch (Exception e) {
             if (isBadRequest(e)) {
                 log.debug("Invalid query: $e")
-                throw new InvalidQueryException("")
+                throw new InvalidQueryException(e.getMessage(), e)
             }
             else {
                 log.warn("Failed to query ES: $e")
