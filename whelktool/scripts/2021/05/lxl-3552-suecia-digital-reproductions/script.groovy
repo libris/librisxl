@@ -12,12 +12,13 @@ tif.drop(1).each { row ->
     List cols = row.split(/,(?!.\.tif)/)
 
     String physicalId = cols[0]
-    if (physicalId == "saknas")
-        return
     String digitalId = cols[1]
     String webUrn = cols[4]
     String tifMaster = cols[5].replaceAll("\"", "")
     String tifMaster2 = cols[6].replaceAll("\"", "")
+
+    if (physicalId == "saknas")
+        return
 
     if (digitalId == "saknas") {
         mappings[physicalId] =
@@ -53,7 +54,7 @@ selectBySqlWhere("collection = 'bib' AND data#>>'{@graph,0,controlNumber}' IN $c
 
     Map mapping = mappings.remove(physicalControlNumber)
 
-    // If a digital version already exists, update hash table to facilitate linking later
+    // If a digital version exists, put it back in hash table as we want to link it later
     if (mapping.digitalId) {
         mapping["physicalMainEntityId"] = physicalMainEntityId
         String digitalId = mapping.remove("digitalId")
@@ -90,7 +91,7 @@ selectBySqlWhere("collection = 'bib' AND data#>>'{@graph,0,controlNumber}' IN $c
     // Add other admin metadata
     digiRecord["encodingLevel"] = "marc:MinimalLevel"
     digiRecord["descriptionLanguage"] = ["@id": "https://id.kb.se/language/swe"]
-    //digiRecord["marc:catalogingSource"] = ["@id": "https://id.kb.se/marc/CooperativeCatalogingProgram"]
+    digiRecord["marc:catalogingSource"] = ["@id": "https://id.kb.se/marc/CooperativeCatalogingProgram"]
     digiRecord["descriptionConventions"] =
             [
                     [
@@ -101,14 +102,12 @@ selectBySqlWhere("collection = 'bib' AND data#>>'{@graph,0,controlNumber}' IN $c
 
     // Add properties from physical instance
     digiInstance += physicalInstance.subMap(
-            [
-                    "instanceOf",
-                    "issuanceType",
-                    "hasTitle",
-                    "responsibilityStatement",
-                    "publication",
-                    "extent"
-            ]
+            "instanceOf",
+            "issuanceType",
+            "hasTitle",
+            "responsibilityStatement",
+            "publication",
+            "extent"
     )
     if (physicalInstance.identifiedBy)
         digiInstance["indirectlyIdentifiedBy"] = physicalInstance.identifiedBy
@@ -122,6 +121,7 @@ selectBySqlWhere("collection = 'bib' AND data#>>'{@graph,0,controlNumber}' IN $c
                     ["@id": "https://id.kb.se/marc/Online"],
                     ["@id": "https://id.kb.se/marc/OnlineResource"]
             ]
+    // Copied from https://libris.kb.se/6qjsfh7j257h21n:
     digiInstance["production"] =
             [
                     [
@@ -141,7 +141,7 @@ selectBySqlWhere("collection = 'bib' AND data#>>'{@graph,0,controlNumber}' IN $c
                     ]
             ]
 
-    // Add associated media either from physical instance or, if missing, from given tables
+    // Add associatedMedia either from physical instance or, if missing, from given tables
     if (physicalInstance.associatedMedia) {
         digiInstance["associatedMedia"] = physicalInstance.associatedMedia
     } else {
