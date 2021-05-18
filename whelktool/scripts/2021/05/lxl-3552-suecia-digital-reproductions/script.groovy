@@ -1,7 +1,3 @@
-import groovy.json.JsonOutput
-
-//println(JsonOutput.prettyPrint(JsonOutput.toJson(digital.graph[0..1])))
-
 List tif = new File(scriptDir, "suecia-tif.csv").readLines()
 List pdf = new File(scriptDir, "suecia-pdf.csv").readLines()
 
