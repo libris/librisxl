@@ -6717,7 +6717,7 @@
 
     "040": {
       "aboutEntity": "?record",
-      "$a": {"link": "descriptionCreator", "resourceType": "Library", "uriTemplate": "https://libris.kb.se/library/{_}", "property": "sigel"},
+      "$a": {"link": "descriptionCreator", "resourceType": "Agent", "uriTemplate": "https://libris.kb.se/library/{_}", "property": "sigel"},
       "$b": {
         "link": "descriptionLanguage",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
@@ -6739,7 +6739,7 @@
               "@type": "LibrisIIINumber",
               "value": "9927672551"
             }],
-            "descriptionCreator": {"@id": "https://libris.kb.se/library/Js", "@type": "Library", "sigel": "Js"},
+            "descriptionCreator": {"@id": "https://libris.kb.se/library/Js", "@type": "Agent", "sigel": "Js"},
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text"
@@ -6748,9 +6748,10 @@
           }
         },
         {
+          "name": "External code, and repeated descriptionUpgrader. TODO: code for imported records which is not sigel?",
           "source": {"040": {"ind1": " ", "ind2": " ", "subfields": [{"a": "DLC"}, {"d": "Kama"}, {"d": "S"}]}},
           "result": {
-            "descriptionCreator": {"@id": "https://libris.kb.se/library/DLC", "@type": "Library", "sigel": "DLC"},
+            "descriptionCreator": {"@id": "https://libris.kb.se/library/DLC", "@type": "Agent", "sigel": "DLC"},
             "descriptionUpgrader": [
               {"@type": "Library", "sigel": "Kama"},
               {"@type": "Library", "sigel": "S"}
@@ -6775,6 +6776,34 @@
               {"@id": "https://id.kb.se/marc/CatFormType-i"},
               {"@type": "DescriptionConventions", "code": "rda"}
             ],
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        },
+        {
+          "name": "Reconvert Bibliography type as descriptionCreator.",
+          "normalized": [
+            {"040": {"ind1": " ", "ind2": " ", "subfields": [{"a": "NB"}]}}
+          ],
+          "result": {
+            "descriptionCreator": {"@id": "https://libris.kb.se/library/NB", "@type": "Bibliography", "sigel": "NB"},
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        },
+        {
+          "name": "Reconvert Library type as descriptionCreator.",
+          "normalized": [
+            {"040": {"ind1": " ", "ind2": " ", "subfields": [{"a": "S"}]}}
+          ],
+          "result": {
+            "descriptionCreator": {"@id": "https://libris.kb.se/library/S", "@type": "Library", "sigel": "S"},
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text"
@@ -25577,9 +25606,9 @@
         "TODO:apply": "852-$b",
         "about": "?thing",
         "link": "heldBy",
-        "uriTemplate": "https://libris.kb.se/library/{code}",
-        "resourceType": "Organization",
-        "property": "code"
+        "uriTemplate": "https://libris.kb.se/library/{sigel}",
+        "resourceType": "Agent",
+        "property": "sigel"
       }
     },
 
@@ -26349,10 +26378,10 @@
       "$b": {
         "link": "heldBy",
         "NOTE:marc-repeatable": "true in MARC21, but not in Libris (although it's been in 0.06 % of our records)",
-        "resourceType": "Organization",
+        "resourceType": "Agent",
         "uriTemplate": "https://libris.kb.se/library/{_}",
         "matchUriToken": "^\\S+$",
-        "property": "code",
+        "property": "sigel",
         "TODO": "move to mainEntity and auto-repeat here",
         "NOTE": "libris deviates from standard (sublocationOrCollection)"
       },
@@ -26400,7 +26429,7 @@
             "mainEntity": {
               "@type": "Item",
               "copyNumber": "1",
-              "heldBy": {"@id": "https://libris.kb.se/library/H", "@type": "Organization", "code": "H"},
+              "heldBy": {"@id": "https://libris.kb.se/library/H", "@type": "Agent", "sigel": "H"},
               "shelfControlNumber": "65.465",
               "physicalLocation": ["MAG"]
             }
@@ -26419,7 +26448,7 @@
                   "@type": "Item",
                   "copyNumber": "1",
                   "heldBy": {
-                    "@id": "https://libris.kb.se/library/X", "@type": "Organization", "code": "X"},
+                    "@id": "https://libris.kb.se/library/X", "@type": "Agent", "sigel": "X"},
                   "shelfMark": {
                     "@type": "ShelfMark",
                     "label": "Z"
@@ -26428,7 +26457,7 @@
                 {
                   "@type": "Item",
                   "copyNumber": "2",
-                  "heldBy": {"@id": "https://libris.kb.se/library/Y", "@type": "Organization", "code": "Y"}
+                  "heldBy": {"@id": "https://libris.kb.se/library/Y", "@type": "Agent", "sigel": "Y"}
                 }
               ]
             }
@@ -26452,7 +26481,7 @@
           }}
         },
         {
-          "name": "ShelfMarkSequence revert",
+          "name": "ShelfMarkSequence revert (Library)",
           "result": {
             "mainEntity": {
               "@type": "Item",
@@ -26460,7 +26489,7 @@
                 {
                   "@type": "Item",
                   "heldBy": {
-                    "@id": "https://libris.kb.se/library/X", "@type": "Organization", "code": "X"},
+                    "@id": "https://libris.kb.se/library/X", "@type": "Library", "sigel": "X"},
                   "shelfMark": {
                     "@type": "ShelfMarkSequence",
                     "label": "Z"
@@ -26474,6 +26503,31 @@
             "ind1": " ",
             "ind2": " ",
             "subfields": [{"b": "X"}, {"h": "Z"}, {"j": "br 5"}]
+          }}
+        },
+        {
+          "name": "ShelfMarkSequence revert (Bibliography)",
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
+              "hasComponent": [
+                {
+                  "@type": "Item",
+                  "heldBy": {
+                    "@id": "https://libris.kb.se/library/NB", "@type": "Bibliography", "sigel": "NB"},
+                  "shelfMark": {
+                    "@type": "ShelfMarkSequence",
+                    "label": "Z"
+                  },
+                  "shelfControlNumber": "br 5"
+                }
+              ]
+            }
+          },
+          "normalized": {"852": {
+            "ind1": " ",
+            "ind2": " ",
+            "subfields": [{"b": "NB"}, {"h": "Z"}, {"j": "br 5"}]
           }}
         }
       ]
