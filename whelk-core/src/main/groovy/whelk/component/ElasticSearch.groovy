@@ -588,8 +588,8 @@ class ElasticSearch {
     }
 
     /**
-     * Use Point in time API to be able to retrieve more than {@link ElasticSearch#maxResultWindow} results
-     * Need to consume {@link ElasticSearch.Scroll#FETCH_SIZE} results in less time than 
+     * Use "search_after" + Point in time API to be able to retrieve more than {@link ElasticSearch#maxResultWindow} 
+     * results. Caller needs to consume {@link ElasticSearch.Scroll#FETCH_SIZE} results in less time than 
      * {@link PointInTimeScroll#keepAlive} otherwise the search context times out.
      */
     private class PointInTimeScroll<T> extends Scroll<T> {
