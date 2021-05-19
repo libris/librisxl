@@ -15,6 +15,7 @@ import org.apache.http.HttpEntity
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
 import org.apache.http.client.config.RequestConfig
+import org.apache.http.client.methods.HttpDelete
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.methods.HttpPut
@@ -224,11 +225,18 @@ class ElasticClient {
                     return new HttpGet(host + path)
                 case 'PUT':
                     HttpPut request = new HttpPut(host + path)
-                    request.setEntity(httpEntity(body, contentType0))
+                    if (body)
+                        request.setEntity(httpEntity(body, contentType0))
                     return request
                 case 'POST':
                     HttpPost request = new HttpPost(host + path)
-                    request.setEntity(httpEntity(body, contentType0))
+                    if (body)
+                        request.setEntity(httpEntity(body, contentType0))
+                    return request
+                case 'DELETE':
+                    HttpDeleteWithBody request = new HttpDeleteWithBody(host + path)
+                    if (body)
+                        request.setEntity(httpEntity(body, contentType0))
                     return request
                 default:
                     throw new IllegalArgumentException("Bad request method:" + method)
@@ -238,6 +246,17 @@ class ElasticClient {
         private static HttpEntity httpEntity(String body, String contentType) {
             return new StringEntity(body,
                     contentType ? ContentType.create(contentType) : ContentType.APPLICATION_JSON)
+        }
+    }
+    
+    class HttpDeleteWithBody extends HttpPost { // LOL
+        HttpDeleteWithBody(String uri) {
+            super(uri)
+        }
+        
+        @Override
+        String getMethod() {
+            return 'DELETE'
         }
     }
 

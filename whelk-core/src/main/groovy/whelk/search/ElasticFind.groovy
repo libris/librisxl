@@ -1,6 +1,8 @@
 package whelk.search
 
 import groovy.transform.CompileStatic
+import io.github.resilience4j.retry.MaxRetriesExceeded
+import whelk.component.ElasticSearch
 
 @CompileStatic
 class ElasticFind {
@@ -67,6 +69,10 @@ class ElasticFind {
             private void fetchFirst() {
                 def firstResult = getter(0)
                 total = firstResult['totalHits']
+                if (total > esQuery.getMaxItems()) {
+                    throw new ElasticSearch.TooManyResultsException(total, esQuery.getMaxItems())
+                }
+                
                 items = (List<T>) firstResult['items']
 
                 beforeFirstFetch = false
@@ -96,3 +102,4 @@ class ElasticFind {
         return p
     }
 }
+ 

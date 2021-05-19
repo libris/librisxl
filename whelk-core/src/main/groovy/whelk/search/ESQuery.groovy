@@ -19,8 +19,7 @@ class ESQuery {
     private JsonLd jsonld
     private Set keywordFields
     private Set dateFields
-    private int maxResultWindow = 10000 // Elasticsearch default (fallback value)
-
+    
     private static final ObjectMapper mapper = new ObjectMapper()
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
@@ -40,7 +39,6 @@ class ESQuery {
         this.whelk = whelk
         this.jsonld = whelk.jsonld
         initFieldMappings(this.whelk)
-        initIndexSettings(this.whelk)
 
         this.lensBoost = new ESQueryLensBoost(jsonld)
     }
@@ -55,18 +53,7 @@ class ESQuery {
             this.dateFields = Collections.emptySet()
         }
     }
-
-    void initIndexSettings(Whelk whelk) {
-        if (whelk.elastic) {
-            Map indexSettings = whelk.elastic.getSettings()
-            if (indexSettings.index &&
-                    indexSettings.index['max_result_window'] &&
-                    ((String) indexSettings.index['max_result_window']).isNumber()) {
-                maxResultWindow = ((String) indexSettings.index['max_result_window']).toInteger()
-            }
-        }
-    }
-
+    
     void setKeywords(Set keywordFields) {
         // NOTE: For unit tests only!
         this.keywordFields = keywordFields
@@ -825,6 +812,6 @@ class ESQuery {
     }
 
     int getMaxItems() {
-        return maxResultWindow
+        return whelk.elastic.maxResultWindow
     }
 }
