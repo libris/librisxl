@@ -1,6 +1,5 @@
 package whelk.component
 
-
 import groovy.json.JsonOutput
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.codec.binary.Base64
@@ -415,12 +414,12 @@ class ElasticSearch {
                 'bool': ['should': t1 + t2 ]
         ]
         
-        Scroll<String> ids = new Pagination(query)
+        Scroll<String> ids = new DefaultScroll(query)
         try {
             ids.hasNext()
         }
         catch (TooManyResultsException e) {
-            ids = new PointInTime(query)
+            ids = new PointInTimeScroll(query)
         }
         
         return new Iterable<String>() {
@@ -491,13 +490,13 @@ class ElasticSearch {
     }
     
     private abstract class Scroll<T> implements Iterator<T> {
-        final int PAGE_SIZE = 500
+        final int FETCH_SIZE = 500
 
         // TODO: change to _shard_doc when we upgrade to ES 7.12+
         protected final List SORT = [['_id': 'asc']]
         protected final List FILTER_PATH = ['took', 'hits.hits.sort', 'pit_id', 'hits.total.value']
 
-        Iterator<T> fetched
+        Iterator<T> fetchedItems
         boolean isBeforeFirstFetch = true
 
         Map query
@@ -522,7 +521,7 @@ class ElasticSearch {
                 isBeforeFirstFetch = false
             }
 
-            return fetched.hasNext() || !isAfterLast()
+            return fetchedItems.hasNext() || !isAfterLast()
         }
 
         @Override
@@ -536,90 +535,31 @@ class ElasticSearch {
                 throw new NoSuchElementException()
             }
 
-            if (!fetched.hasNext()) {
+            if (!fetchedItems.hasNext()) {
                 fetch()
             }
 
-            return fetched.next()
+            return fetchedItems.next()
         }
 
         void fetch() {
             Map response = performRequest('POST', queryPath(), nextRequest())
             updateState(response)
-            fetched = response.hits.hits.collect(hitCollector).iterator()
+            fetchedItems = response.hits.hits.collect(hitCollector).iterator()
         }
     }
     
-    private class PointInTime<T> extends Scroll<T> {
-        final String keepAlive = "1m"
-
-        String pitId = null
-        boolean isAfterLastFetch = false
-
-        def offset = null
-
-        PointInTime(Map query, List<String> hitsFilter = ['hits.hits._id'], Closure<T> hitCollector = { it['_id']}) {
-            super(query, hitsFilter, hitCollector)
-        }
-
-        @Override
-        boolean isAfterLast() {
-            return isAfterLastFetch
-        }
-
-        @Override
-        void updateState(Map response) {
-            pitId = response.pit_id
-            List items = (List) response.hits.hits
-            isAfterLastFetch = items.size() < PAGE_SIZE
-
-            if (isAfterLastFetch) {
-                deletePointInTime(pitId)
-            }
-            else {
-                offset = items.last()['sort']
-            }
-        }
-
-        @Override
-        String queryPath() {
-            "/_search?filter_path=$filterPath"
-        }
-
-        @Override
-        Map nextRequest() {
-            if (!pitId) {
-                pitId = createPointInTime(keepAlive)
-            }
-            
-            Map request = [
-                    'query': query,
-                    'size': PAGE_SIZE,
-                    'pit': [
-                            'id': pitId,
-                            'keep_alive': keepAlive
-                    ],
-                    'track_total_hits': false,
-                    'sort': SORT
-            ]
-            if (offset) {
-                request['search_after'] = offset
-            }
-            return request
-        }
-    }
-
-    private class Pagination<T> extends Scroll<T> {
+    private class DefaultScroll<T> extends Scroll<T> {
         int total = -1
         int page = 0
 
-        Pagination(Map query, List<String> hitsFilter = ['hits.hits._id'], Closure<T> hitCollector = { it['_id']}) {
+        DefaultScroll(Map query, List<String> hitsFilter = ['hits.hits._id'], Closure<T> hitCollector = { it['_id']}) {
             super(query, hitsFilter, hitCollector)
         }
 
         @Override
         boolean isAfterLast() {
-            return total >= 0 && page * PAGE_SIZE >= total
+            return total >= 0 && page * FETCH_SIZE >= total
         }
 
         @Override
@@ -639,11 +579,75 @@ class ElasticSearch {
         Map nextRequest() {
             return [
                     'query': query,
-                    'size': PAGE_SIZE,
-                    'from': page++ * PAGE_SIZE,
+                    'size': FETCH_SIZE,
+                    'from': page++ * FETCH_SIZE,
                     'track_total_hits': true,
                     'sort': SORT
             ]
+        }
+    }
+
+    /**
+     * Use Point in time API to be able to retrieve more than {@link ElasticSearch#maxResultWindow} results
+     * Need to consume {@link ElasticSearch.Scroll#FETCH_SIZE} results in less time than 
+     * {@link PointInTimeScroll#keepAlive} otherwise the search context times out.
+     */
+    private class PointInTimeScroll<T> extends Scroll<T> {
+        final String keepAlive = "1m"
+
+        String pitId = null
+        boolean isAfterLastFetch = false
+
+        def offset = null
+
+        PointInTimeScroll(Map query, List<String> hitsFilter = ['hits.hits._id'], Closure<T> hitCollector = { it['_id']}) {
+            super(query, hitsFilter, hitCollector)
+        }
+
+        @Override
+        boolean isAfterLast() {
+            return isAfterLastFetch
+        }
+
+        @Override
+        void updateState(Map response) {
+            pitId = response.pit_id
+            List items = (List) response.hits.hits
+            isAfterLastFetch = items.size() < FETCH_SIZE
+
+            if (isAfterLastFetch) {
+                deletePointInTime(pitId)
+            }
+            else {
+                offset = items.last()['sort']
+            }
+        }
+
+        @Override
+        String queryPath() {
+            "/_search?filter_path=$filterPath"
+        }
+
+        @Override
+        Map nextRequest() {
+            if (!pitId) {
+                pitId = createPointInTime(keepAlive)
+            }
+
+            Map request = [
+                    'query': query,
+                    'size': FETCH_SIZE,
+                    'pit': [
+                            'id': pitId,
+                            'keep_alive': keepAlive
+                    ],
+                    'track_total_hits': false,
+                    'sort': SORT
+            ]
+            if (offset) {
+                request['search_after'] = offset
+            }
+            return request
         }
     }
     

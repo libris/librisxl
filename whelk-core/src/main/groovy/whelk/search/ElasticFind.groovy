@@ -1,7 +1,6 @@
 package whelk.search
 
 import groovy.transform.CompileStatic
-import io.github.resilience4j.retry.MaxRetriesExceeded
 import whelk.component.ElasticSearch
 
 @CompileStatic
