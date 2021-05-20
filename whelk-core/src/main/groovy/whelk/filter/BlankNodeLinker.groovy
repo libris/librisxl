@@ -89,7 +89,7 @@ class BlankNodeLinker implements DocumentUtil.Linker {
             }
         }
 
-        String id = definition[ID_KEY]
+        String id = definition.isReplacedBy? definition.isReplacedBy[ID_KEY] : definition[ID_KEY]
         identifiers.each { addMapping(it, id) }
     }
 
