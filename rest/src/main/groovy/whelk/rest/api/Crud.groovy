@@ -226,7 +226,7 @@ class Crud extends HttpServlet {
         }
     }
 
-    private static boolean isNotModified(CrudGetRequest request, Document doc) {
+    private boolean isNotModified(CrudGetRequest request, Document doc) {
         request.getIfNoneMatch().map({ etag -> etag == doc.getChecksum(jsonld) }).orElse(false)
     }
 
