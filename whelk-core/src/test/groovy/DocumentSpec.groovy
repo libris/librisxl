@@ -1,10 +1,8 @@
 package whelk
 
-
 import spock.lang.Specification
 import spock.lang.Unroll
 import whelk.converter.marc.MarcFrameConverter
-import whelk.util.LegacyIntegrationTools
 
 import java.sql.Timestamp
 
@@ -68,7 +66,11 @@ class DocumentSpec extends Specification {
 
     def setup() {
         Map contextData = ["@context":
-            ["@vocab":"https://id.kb.se/vocab/"]
+            [
+                    "@vocab":"https://id.kb.se/vocab/",
+                    "iAmASet": ["@container": "@set"],
+                    "iAmAList": ["@container": "@list"],
+            ]
         ]
         Map displayData = ["lensGroups":
             ["chips": ["lenses":
@@ -368,21 +370,17 @@ class DocumentSpec extends Specification {
         String docString = "['leader':'01114cam a22002897ar4500', 'fields':[['001':'714'], ['005':'20100621095537.0'], ['008':'810114s1980    gw a          001 0 ger c'], ['020':['ind1':' ', 'ind2':' ', 'subfields':[['a':'3-13-200904-0']]]], ['035':['ind1':' ', 'ind2':' ', 'subfields':[['9':'3132009040']]]], ['040':['ind1':' ', 'ind2':' ', 'subfields':[['a':'Lkc']]]], ['080':['ind1':' ', 'ind2':' ', 'subfields':[['a':'547']]]], ['084':['ind1':' ', 'ind2':' ', 'subfields':[['a':'Uceb'], ['2':'kssb/6']]]], ['245':['ind1':'0', 'ind2':'0', 'subfields':[['a':'Methoden der organischen Chemie :'], ['b':'(Houben-Weyl) /'], ['c':'begründet von Eugen Müller und Otto Bayer. Bd 4. 1. c, Reduktion, T. 1 / bearbeitet von A.W. Frahm ... ; Herausgeber Heinz Kropf']]]], ['247':['ind1':'0', 'ind2':'0', 'subfields':[['a':'Methods of organic chemistry.']]]], ['250':['ind1':' ', 'ind2':' ', 'subfields':[['a':'4., völlig neu gest. Aufl.']]]], ['260':['ind1':' ', 'ind2':' ', 'subfields':[['a':'Stuttgart :'], ['b':'Thieme,'], ['c':'1980']]]], ['300':['ind1':' ', 'ind2':' ', 'subfields':[['a':'xxxi, 912 s.'], ['b':'ill.']]]], ['599':['ind1':' ', 'ind2':' ', 'subfields':[['a':'T: Särkatalogiseras ej fr.o.m. okt. 1980. Bestånd se fortsättningskatalogen']]]], ['650':['ind1':' ', 'ind2':'0', 'subfields':[['a':'Chemistry, Organic']]]], ['700':['ind1':'1', 'ind2':' ', 'subfields':[['a':'Müller, Eugen'], ['4':'edt']]]], ['700':['ind1':'1', 'ind2':' ', 'subfields':[['a':'Bayer, Otto'], ['4':'edt']]]], ['700':['ind1':'1', 'ind2':' ', 'subfields':[['a':'Frahm, August W.'], ['4':'aut']]]], ['700':['ind1':'1', 'ind2':' ', 'subfields':[['a':'Kropf, Heinz'], ['4':'edt']]]], ['740':['ind1':'0', 'ind2':' ', 'subfields':[['a':'Reduktion, T. 1']]]], ['772':['ind1':'0', 'ind2':'0', 'subfields':[['7':'nn'], ['t':'Methoden der organischen Chemie : (Houben-Weyl)'], ['b':'4., völlig neu gestaltete Aufl.'], ['d':'Stuttgart : Thieme, 1953-'], ['w':'9900002636'], ['9':'4'], ['9':'1'], ['9':'c']]]], ['976':['ind1':' ', 'ind2':'2', 'subfields':[['a':'Uceb'], ['b':'Kemi Organisk']]]]]]"
         String id = 'gzrbgsks3xl1ndb'
         def converter = new MarcFrameConverter()
-        def oldid = "/bib/451"
-
+        
         Map convertedData = converter.convert(Eval.me(docString),id)
         Document doc = new Document(convertedData)
-        def cs = doc.getChecksum()
-        def lgc = LegacyIntegrationTools.generateId(oldid)
+        
         doc.modified = Timestamp.valueOf("2001-12-11 00:00:00.0")
         expect:
         doc.modified != Timestamp.valueOf("2001-12-11 00:00:00.0")
-
-
-
+        
     }
 
-    def "checksum"() {
+    def "checksum is not affected by created/modified"() {
         given:
         def doc = new Document(readFile("cryptosporidium.jsonld"))
         def doc2 = doc.clone()
@@ -392,8 +390,23 @@ class DocumentSpec extends Specification {
         doc3.setDescriptionCreator("Z")
 
         expect:
-        doc.getChecksum() == doc2.getChecksum()
-        doc.getChecksum() != doc3.getChecksum()
+        doc.getChecksum(jsonld) == doc2.getChecksum(jsonld)
+        doc.getChecksum(jsonld) != doc3.getChecksum(jsonld)
+    }
+    
+    def "checksum handles @container @list/@set"() {
+        given: 
+        def set1 = new Document(["@graph": [["@id": "/id", "@type": "Record"], ["@id": "/itemId", "@type": "Work", "iAmASet": [1, 2, 3]]]])
+        def set2 = new Document(["@graph": [["@id": "/id", "@type": "Record"], ["@id": "/itemId", "@type": "Work", "iAmASet": [3, 1, 2]]]])
+        def list1 = new Document(["@graph": [["@id": "/id", "@type": "Record"], ["@id": "/itemId", "@type": "Work", "iAmAList": [1, 2, 3]]]])
+        def list2 = new Document(["@graph": [["@id": "/id", "@type": "Record"], ["@id": "/itemId", "@type": "Work", "iAmAList": [3, 1, 2]]]])
+        def implicitList1 = new Document(["@graph": [["@id": "/id", "@type": "Record"], ["@id": "/itemId", "@type": "Work", "iAmUndefined": [1, 2, 3]]]])
+        def implicitList2 = new Document(["@graph": [["@id": "/id", "@type": "Record"], ["@id": "/itemId", "@type": "Work", "iAmUndefined": [3, 1, 2]]]])
+
+        expect:
+        set1.getChecksum(jsonld) == set2.getChecksum(jsonld)
+        list1.getChecksum(jsonld) != list2.getChecksum(jsonld)
+        implicitList1.getChecksum(jsonld) != implicitList2.getChecksum(jsonld)
     }
 
     static String readFile(String filename) {

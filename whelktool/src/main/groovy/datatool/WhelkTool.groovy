@@ -285,7 +285,7 @@ class WhelkTool {
             if (limit > -1 && counter.readCount > limit) {
                 break
             }
-            DocumentItem item = new DocumentItem(number: counter.readCount, doc: doc, whelk: whelk, preUpdateChecksum: doc.getChecksum())
+            DocumentItem item = new DocumentItem(number: counter.readCount, doc: doc, whelk: whelk, preUpdateChecksum: doc.getChecksum(whelk.jsonld))
             item.existsInStorage = !newItems
             batch.items << item
             if (batch.items.size() == batchSize) {
@@ -420,7 +420,7 @@ class WhelkTool {
                         logRetry(e, item)
                         Document doc = whelk.getDocument(item.doc.shortId)
                         item = new DocumentItem(number: item.number, doc: doc, whelk: whelk,
-                                preUpdateChecksum: doc.getChecksum(), existsInStorage: true)
+                                preUpdateChecksum: doc.getChecksum(whelk.jsonld), existsInStorage: true)
                         return doProcess(process, item, counter)
                     }
                     counter.countModified()
