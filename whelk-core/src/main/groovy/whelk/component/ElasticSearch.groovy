@@ -14,7 +14,6 @@ import whelk.Whelk
 import whelk.exception.UnexpectedHttpStatusException
 import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
-import whelk.util.LegacyIntegrationTools
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
@@ -35,6 +34,8 @@ class ElasticSearch {
 
     private static final ObjectMapper mapper = new ObjectMapper()
 
+    public int maxResultWindow = 10000 // Elasticsearch default (fallback value)
+    
     String defaultIndex = null
     private List<String> elasticHosts
     private String elasticCluster
@@ -68,6 +69,17 @@ class ElasticSearch {
                 }
             }
         }, 60*1000, 10*1000)
+        
+        initIndexSettings()
+    }
+
+    void initIndexSettings() {
+        Map indexSettings = getSettings()
+        if (indexSettings.index &&
+                indexSettings.index['max_result_window'] &&
+                ((String) indexSettings.index['max_result_window']).isNumber()) {
+            maxResultWindow = ((String) indexSettings.index['max_result_window']).toInteger()
+        }
     }
 
     private List<String> getElasticHosts(String elasticHost) {
@@ -388,6 +400,35 @@ class ElasticSearch {
                 { it."_id" }
         )
     }
+    
+    /**
+     * Find all other documents that need to be re-indexed because 
+     * of changes in linked document(s)
+     * @param iris of changed document(s)
+     * @return an Iterable of system IDs.
+     */
+    Iterable<String> getAffectedIds(Collection<String> iris) {
+        def t1 = iris.collect {['term': ['_links': ['value': it]]]}
+        def t2 = iris.collect {['term': ['_outerEmbellishments': ['value': it]]]}
+        Map query = [
+                'bool': ['should': t1 + t2 ]
+        ]
+        
+        Scroll<String> ids = new DefaultScroll(query)
+        try {
+            ids.hasNext()
+        }
+        catch (TooManyResultsException e) {
+            ids = new PointInTimeScroll(query)
+        }
+        
+        return new Iterable<String>() {
+            @Override
+            Iterator<String> iterator() {
+                return ids
+            }
+        }
+    }
 
     @Override
     int hashCode() {
@@ -435,6 +476,225 @@ class ElasticSearch {
             return Base64.encodeBase64URLSafeString(id.getBytes("UTF-8"))
         } else {
             return id // If XL-minted identifier, use the same charsequence
+        }
+    }
+    
+    private Map performRequest(String method, String path, Map body = null) {
+        try {
+            return mapper.readValue(client.performRequest(method, path, body ? JsonOutput.toJson(body) : null), Map)    
+        }
+        catch (UnexpectedHttpStatusException e) {
+            tryMapAndThrow(e)
+            throw e
+        }
+    }
+    
+    private abstract class Scroll<T> implements Iterator<T> {
+        final int FETCH_SIZE = 500
+
+        // TODO: change to _shard_doc when we upgrade to ES 7.12+
+        protected final List SORT = [['_id': 'asc']]
+        protected final List FILTER_PATH = ['took', 'hits.hits.sort', 'pit_id', 'hits.total.value']
+
+        Iterator<T> fetchedItems
+        boolean isBeforeFirstFetch = true
+
+        Map query
+        String filterPath
+        Closure<T> hitCollector
+        
+        Scroll(Map query, List<String> hitsFilter = ['hits.hits._id'], Closure<T> hitCollector = { it['_id']}) {
+            this.query = query
+            this.filterPath = (FILTER_PATH + hitsFilter).join(',')
+            this.hitCollector = hitCollector
+        }
+
+        abstract boolean isAfterLast()
+        abstract void updateState(Map response)
+        abstract String queryPath()
+        abstract Map nextRequest()
+
+        @Override
+        boolean hasNext() {
+            if (isBeforeFirstFetch) {
+                fetch()
+                isBeforeFirstFetch = false
+            }
+
+            return fetchedItems.hasNext() || !isAfterLast()
+        }
+
+        @Override
+        T next() {
+            if (isBeforeFirstFetch) {
+                fetch()
+                isBeforeFirstFetch = false
+            }
+
+            if (!hasNext()) {
+                throw new NoSuchElementException()
+            }
+
+            if (!fetchedItems.hasNext()) {
+                fetch()
+            }
+
+            return fetchedItems.next()
+        }
+
+        void fetch() {
+            Map response = performRequest('POST', queryPath(), nextRequest())
+            updateState(response)
+            fetchedItems = response.hits.hits.collect(hitCollector).iterator()
+        }
+    }
+    
+    private class DefaultScroll<T> extends Scroll<T> {
+        int total = -1
+        int page = 0
+
+        DefaultScroll(Map query, List<String> hitsFilter = ['hits.hits._id'], Closure<T> hitCollector = { it['_id']}) {
+            super(query, hitsFilter, hitCollector)
+        }
+
+        @Override
+        boolean isAfterLast() {
+            return total >= 0 && page * FETCH_SIZE >= total
+        }
+
+        @Override
+        void updateState(Map response) {
+            total = response.hits.total.value
+            if (total > maxResultWindow) {
+                throw new TooManyResultsException(total, maxResultWindow)
+            }
+        }
+
+        @Override
+        String queryPath() {
+            "/${indexName}/_search?filter_path=$filterPath"
+        }
+
+        @Override
+        Map nextRequest() {
+            return [
+                    'query': query,
+                    'size': FETCH_SIZE,
+                    'from': page++ * FETCH_SIZE,
+                    'track_total_hits': true,
+                    'sort': SORT
+            ]
+        }
+    }
+
+    /**
+     * Use "search_after" + Point in time API to be able to retrieve more than {@link ElasticSearch#maxResultWindow} 
+     * results. Caller needs to consume {@link ElasticSearch.Scroll#FETCH_SIZE} results in less time than 
+     * {@link PointInTimeScroll#keepAlive} otherwise the search context times out.
+     */
+    private class PointInTimeScroll<T> extends Scroll<T> {
+        final String keepAlive = "1m"
+
+        String pitId = null
+        boolean isAfterLastFetch = false
+
+        def offset = null
+
+        PointInTimeScroll(Map query, List<String> hitsFilter = ['hits.hits._id'], Closure<T> hitCollector = { it['_id']}) {
+            super(query, hitsFilter, hitCollector)
+        }
+
+        @Override
+        boolean isAfterLast() {
+            return isAfterLastFetch
+        }
+
+        @Override
+        void updateState(Map response) {
+            pitId = response.pit_id
+            List items = (List) response.hits.hits
+            isAfterLastFetch = items.size() < FETCH_SIZE
+
+            if (isAfterLastFetch) {
+                deletePointInTime(pitId)
+            }
+            else {
+                offset = items.last()['sort']
+            }
+        }
+
+        @Override
+        String queryPath() {
+            "/_search?filter_path=$filterPath"
+        }
+
+        @Override
+        Map nextRequest() {
+            if (!pitId) {
+                pitId = createPointInTime(keepAlive)
+            }
+
+            Map request = [
+                    'query': query,
+                    'size': FETCH_SIZE,
+                    'pit': [
+                            'id': pitId,
+                            'keep_alive': keepAlive
+                    ],
+                    'track_total_hits': false,
+                    'sort': SORT
+            ]
+            if (offset) {
+                request['search_after'] = offset
+            }
+            return request
+        }
+    }
+    
+    private String createPointInTime(String keepAlive = "1m") {
+        try {
+            return performRequest('POST', "/$indexName/_pit?keep_alive=$keepAlive").id
+        }
+        catch (Exception e) {
+            log.warn("Failed to create Point In Time: $e")
+            throw e
+        }
+    }
+
+    private void deletePointInTime(String id) {
+        try {
+            Map response = performRequest('DELETE', "/_pit", ['id': id])
+            if (!response.succeeded) {
+                throw new RuntimeException("DELETE failed, got response: $response")
+            }
+        }
+        catch (UnexpectedHttpStatusException e) {
+            if (e.getStatusCode() != 404) {
+                log.warn("Failed to delete Point In Time: $e")
+                throw e
+            }
+        }
+        catch (Exception e) {
+            log.warn("Failed to create Point In Time: $e")
+            throw e
+        }
+    }
+
+    static class TooManyResultsException extends RuntimeException {
+        TooManyResultsException(int results, int max) {
+            super("Query resulted in $results results which is more than the $max that can be iterated")
+        }
+    }
+    
+    static class SearchContextExpiredException extends RuntimeException {
+        SearchContextExpiredException(String msg) {
+            super(msg)
+        }
+    }
+
+    static void tryMapAndThrow(UnexpectedHttpStatusException e) {
+        if (e.statusCode == 404 && e.getMessage().contains("search_context_missing_exception")) {
+            throw new SearchContextExpiredException(e.getMessage())
         }
     }
 }

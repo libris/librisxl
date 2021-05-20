@@ -239,28 +239,12 @@ class Whelk {
                 }
             }
         }
-
-
+        
         if (storage.isCardChangedOrNonexistent(document.getShortId())) {
-            bulkIndex(getAffectedIds(document))
+            bulkIndex(elastic.getAffectedIds(document.getThingIdentifiers() + document.getRecordIdentifiers()))
         }
     }
-
-    /**
-     * Find all other documents that need to be re-indexed because of a change in document
-     * @param document the changed document
-     * @return an Iterable of system IDs.
-     */
-    private Iterable<String> getAffectedIds(Document document) {
-        List<Iterable<String>> queries = []
-        for (String iri : document.getThingIdentifiers()) {
-            for (String field : ["_links", "_outerEmbellishments"]) {
-                queries << elasticFind.findIds(['q': ["*"], (field): [iri]])
-            }
-        }
-        return Iterables.filter(Iterables.concat(queries), { it != null })
-    }
-
+    
     private void bulkIndex(Iterable<String> ids) {
         Iterables.partition(ids, 100).each {
             elastic.bulkIndexWithRetry(it, this)
