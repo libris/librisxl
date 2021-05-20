@@ -41,7 +41,7 @@ class DatasetImporter {
 
                 // Update (potentially) of existing document
                 whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, "xl", null, { doc ->
-                    if (doc.getChecksum() != incomingDoc.getChecksum()) {
+                    if (doc.getChecksum(whelk.jsonld) != incomingDoc.getChecksum(whelk.jsonld)) {
                         doc.data = incomingDoc.data
                     }
                     else {

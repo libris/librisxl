@@ -812,7 +812,7 @@ class PostgreSQLComponent {
         while (true) {
             try {
                 Document doc = load(id)
-                String checksum = doc.getChecksum()
+                String checksum = doc.getChecksum(jsonld)
                 updateAgent.update(doc)
                 Document updated = storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, checksum)
                 return updated
@@ -846,8 +846,8 @@ class PostgreSQLComponent {
                 throw new SQLException("There is no document with the id: " + id)
             Document preUpdateDoc = assembleDocument(resultSet)
 
-            if (preUpdateDoc.getChecksum() != oldChecksum) {
-                throw new StaleUpdateException("Document $doc.shortId has been modified. Checksum mismatch: ${preUpdateDoc.getChecksum()} <> $oldChecksum")
+            if (preUpdateDoc.getChecksum(jsonld) != oldChecksum) {
+                throw new StaleUpdateException("Document $doc.shortId has been modified. Checksum mismatch: ${preUpdateDoc.getChecksum(jsonld)} <> $oldChecksum")
             }
 
             String collection = resultSet.getString("collection")
@@ -894,7 +894,7 @@ class PostgreSQLComponent {
                 SortedSet<String> idsLinkingToOldId = getDependencyData(id, GET_DEPENDERS, connection)
                 for (String dependerId : idsLinkingToOldId) {
                     Document depender = load(dependerId, connection)
-                    storeAtomicUpdate(depender, true, changedIn, changedBy, depender.getChecksum(), connection, postCommitActions)
+                    storeAtomicUpdate(depender, true, changedIn, changedBy, depender.getChecksum(jsonld), connection, postCommitActions)
                 }
             }
 
@@ -1154,7 +1154,7 @@ class PostgreSQLComponent {
             preparedStatement = connection.prepareStatement(UPSERT_CARD)
             preparedStatement.setString(1, card.getShortId())
             preparedStatement.setObject(2, card.dataAsString, OTHER)
-            preparedStatement.setString(3, card.getChecksum())
+            preparedStatement.setString(3, card.getChecksum(jsonld))
             preparedStatement.setTimestamp(4, timestamp)
 
             boolean createdOrUpdated = preparedStatement.executeUpdate() > 0
@@ -1176,7 +1176,7 @@ class PostgreSQLComponent {
 
         PreparedStatement preparedStatement = null
         try {
-            String checksum = card.getChecksum()
+            String checksum = card.getChecksum(jsonld)
             preparedStatement = connection.prepareStatement(UPDATE_CARD)
             preparedStatement.setObject(1, card.dataAsString, OTHER)
             preparedStatement.setString(2, checksum)
@@ -1381,25 +1381,25 @@ class PostgreSQLComponent {
         }
     }
 
-    private static PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, Date timestamp, String changedIn, String changedBy, String collection, boolean deleted) {
+    private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, Date timestamp, String changedIn, String changedBy, String collection, boolean deleted) {
         insert.setString(1, doc.getShortId())
         insert.setObject(2, doc.dataAsString, OTHER)
         insert.setString(3, collection)
         insert.setString(4, changedIn)
         insert.setString(5, changedBy)
-        insert.setString(6, doc.getChecksum())
+        insert.setString(6, doc.getChecksum(jsonld))
         insert.setBoolean(7, deleted)
         insert.setTimestamp(8, new Timestamp(timestamp.getTime()))
         insert.setTimestamp(9, new Timestamp(timestamp.getTime()))
         return insert
     }
 
-    private static void rigUpdateStatement(PreparedStatement update, Document doc, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
+    private void rigUpdateStatement(PreparedStatement update, Document doc, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
         update.setObject(1, doc.dataAsString, OTHER)
         update.setString(2, collection)
         update.setString(3, changedIn)
         update.setString(4, changedBy)
-        update.setString(5, doc.getChecksum())
+        update.setString(5, doc.getChecksum(jsonld))
         update.setBoolean(6, deleted)
         update.setTimestamp(7, new Timestamp(modTime.getTime()))
         update.setObject(8, doc.getShortId(), OTHER)
@@ -1411,7 +1411,7 @@ class PostgreSQLComponent {
         if (versioning) {
             PreparedStatement insVersion = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
             try {
-                log.debug("Trying to save a version of ${doc.getShortId() ?: ""} with checksum ${doc.getChecksum()}. Modified: $modTime")
+                log.debug("Trying to save a version of ${doc.getShortId() ?: ""} with checksum ${doc.getChecksum(jsonld)}. Modified: $modTime")
                 insVersion = rigVersionStatement(insVersion, doc, createdTime,
                                               modTime, changedIn, changedBy,
                                               collection, deleted)
@@ -1429,7 +1429,7 @@ class PostgreSQLComponent {
         }
     }
 
-    private static PreparedStatement rigVersionStatement(PreparedStatement insvers,
+    private PreparedStatement rigVersionStatement(PreparedStatement insvers,
                                                          Document doc, Date createdTime,
                                                          Date modTime, String changedIn,
                                                          String changedBy, String collection,
@@ -1439,7 +1439,7 @@ class PostgreSQLComponent {
         insvers.setString(3, collection)
         insvers.setString(4, changedIn)
         insvers.setString(5, changedBy)
-        insvers.setString(6, doc.getChecksum())
+        insvers.setString(6, doc.getChecksum(jsonld))
         insvers.setTimestamp(7, new Timestamp(createdTime.getTime()))
         insvers.setTimestamp(8, new Timestamp(modTime.getTime()))
         insvers.setBoolean(9, deleted)

@@ -220,19 +220,19 @@ class Crud extends HttpServlet {
             sendGetResponse(
                     maybeAddProposal25Headers(response, loc),
                     getFormattedResponseBody(request, doc),
-                    doc.getChecksum(),
+                    doc.getChecksum(jsonld),
                     request.getPath(),
                     request.getContentType())
         }
     }
 
     private static boolean isNotModified(CrudGetRequest request, Document doc) {
-        request.getIfNoneMatch().map({ etag -> etag == doc.getChecksum() }).orElse(false)
+        request.getIfNoneMatch().map({ etag -> etag == doc.getChecksum(jsonld) }).orElse(false)
     }
 
     private void sendNotModified(HttpServletResponse response, Document doc) {
         setVary(response)
-        response.setHeader("ETag", "\"${doc.getChecksum()}\"")
+        response.setHeader("ETag", "\"${doc.getChecksum(jsonld)}\"")
         response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
         response.sendError(HttpServletResponse.SC_NOT_MODIFIED,
                 "Document has not been modified.")
@@ -545,7 +545,7 @@ class Crud extends HttpServlet {
         savedDoc = saveDocument(newDoc, request, response, isUpdate, "POST")
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
-                               savedDoc.getChecksum())
+                               savedDoc.getChecksum(jsonld))
         } else {
             sendNotFound(response, request.getContextPath())
         }
@@ -679,7 +679,7 @@ class Crud extends HttpServlet {
         Document savedDoc = saveDocument(updatedDoc, request, response, isUpdate, "PUT")
         if (savedDoc != null) {
             sendUpdateResponse(response, savedDoc.getURI().toString(),
-                               savedDoc.getChecksum())
+                               savedDoc.getChecksum(jsonld))
         }
 
     }

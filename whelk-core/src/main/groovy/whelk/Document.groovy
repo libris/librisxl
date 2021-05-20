@@ -838,12 +838,12 @@ class Document {
         thing.remove(JsonLd.REVERSE_KEY)
     }
 
-    String getChecksum() {
-        long checksum = calculateCheckSum(data, 1)
+    String getChecksum(JsonLd jsonLd) {
+        long checksum = calculateCheckSum(data, 1, null, jsonLd)
         return Long.toString(checksum)
     }
 
-    private long calculateCheckSum(node, int depth) {
+    private long calculateCheckSum(node, int depth, parentKey, JsonLd jsonLd) {
         long term = 0
 
         if (node == null)
@@ -861,14 +861,17 @@ class Document {
                 if (key != JsonLd.MODIFIED_KEY && key != JsonLd.CREATED_KEY && key != JsonLd.RECORD_STATUS_KEY) {
 
                     term += key.hashCode() * depth
-                    term += calculateCheckSum(node[key], depth + 1)
+                    term += calculateCheckSum(node[key], depth + 1, key, jsonLd)
                 }
             }
         }
         else if (node instanceof List) {
             int i = 1
             for (entry in node)
-                term += calculateCheckSum(entry, depth + (i++))
+                if (isSet(parentKey, jsonLd))
+                    term += calculateCheckSum(entry, depth, null, jsonLd)
+                else
+                    term += calculateCheckSum(entry, depth + (i++), null, jsonLd)
         }
         else {
             return node.hashCode() * depth
@@ -877,5 +880,8 @@ class Document {
         return term
     }
 
+    private static boolean isSet(String key, JsonLd jsonLd) {
+        jsonLd && key && jsonLd.isSetContainer(key)
+    }
 
 }

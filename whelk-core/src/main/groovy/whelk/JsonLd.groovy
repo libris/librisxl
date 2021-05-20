@@ -235,6 +235,10 @@ class JsonLd {
         }
     }
 
+    boolean isSetContainer(String property) {
+        context?.get(property)?.with(this.&isSetContainer) ?: false
+    }
+    
     boolean isSetContainer(dfn) {
         return dfn instanceof Map && dfn[CONTAINER_KEY] == SET_KEY
     }

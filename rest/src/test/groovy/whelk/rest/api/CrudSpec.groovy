@@ -425,7 +425,7 @@ class CrudSpec extends Specification {
         def id = BASE_URI.resolve("/1234").toString()
         def doc = new Document(["@graph": [["@id": id]]])
         doc.setModified(new Date())
-        def etag = doc.getChecksum()
+        def etag = doc.getChecksum(whelk.jsonld)
         request.getPathInfo() >> { '/' + id }
         request.getHeader("Accept") >> { "*/*" }
         request.getHeader("If-None-Match") >> { etag }
@@ -444,7 +444,7 @@ class CrudSpec extends Specification {
         def id = BASE_URI.resolve("/1234").toString()
         def doc = new Document(["@graph": [["@id": id]]])
         doc.setModified(new Date())
-        def etag = doc.getChecksum()
+        def etag = doc.getChecksum(whelk.jsonld)
         request.getPathInfo() >> { '/' + id}
         request.getHeader("Accept") >> { "*/*" }
         request.getHeader("If-None-Match") >> { etag }
