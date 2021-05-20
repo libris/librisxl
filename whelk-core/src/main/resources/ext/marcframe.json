@@ -13910,12 +13910,30 @@
     },
     "546": {
       "aboutEntity": "?work",
-      "addLink": "hasNote",
-      "resourceType": "marc:LanguageNote",
-      "$a": {"property": "label"},
-      "$b": {"addLink": "hasNotation", "resourceType": "Notation", "property": "label"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"property": "marc:fieldref"},
+      "pendingResources": {
+        "_:languageNote": {"addLink": "hasNote", "resourceType": "marc:LanguageNote" },
+        "_:hasNotation": {"addLink": "hasNotation", "resourceType": "Notation" }
+      },
+      "match": [
+        {
+          "when": "$a",
+          "addLink": "hasNote", "resourceType": "marc:LanguageNote",
+          "$a": {"property": "label", "punctuationChars": ";."},
+          "$b": {"aboutNew": "_:hasNotation", "property": "label", "punctuationChars": ";."},
+          "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+          "$6": {"property": "marc:fieldref"}
+        },
+        {
+          "when": "$b",
+          "addLink": "hasNotation", "resourceType": "Notation",
+          "$b": {"property": "label", "punctuationChars": ";.", "infer": true},
+          "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+          "$6": {"property": "marc:fieldref"}
+        }
+      ],
+      "$3": {"about": "_:languageNote", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": {"about": "_:languageNote", "property": "marc:fieldref"},
+      "subfieldOrder": "6 3 ...",
       "_spec": [
         {
           "name": "Notation",
@@ -13925,15 +13943,10 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "hasNote": [
+              "hasNotation": [
                 {
-                  "@type": "marc:LanguageNote",
-                  "hasNotation": [
-                    {
-                      "@type": "Notation",
-                      "label": "Traditionell västerländsk notskrift"
-                    }
-                  ]
+                  "@type": "Notation",
+                  "label": "Traditionell västerländsk notskrift"
                 }
               ]
             }
@@ -13951,6 +13964,113 @@
                 {
                   "@type": "marc:LanguageNote",
                   "label": "Parallelltext på svenska och engelska"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "LanguageNote and Notation in same field.",
+          "source": {
+            "546": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Latin;"},{"b": "Roman alphabet."}]}
+          },
+          "source": {
+            "546": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Latin"},{"b": "Roman alphabet"}]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNote": [
+                {
+                  "@type": "marc:LanguageNote",
+                  "label": "Latin",
+                  "hasNotation": [
+                    {
+                      "@type": "Notation",
+                      "label": "Roman alphabet"
+                    }
+                  ]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "LanguageNote and repeated hasNotation in same field.",
+          "source": {"546": {"ind1": " ", "ind2": " ", "subfields": [
+            {"3": "John P. Harrington field notebooks"},{"a": "Zuni;"},{"b": "Pictograms;"},{"b": "Phonetic alphabet."}
+          ]}},
+          "normalized": {"546": {"ind1": " ", "ind2": " ", "subfields": [
+            {"3": "John P. Harrington field notebooks"},{"a": "Zuni"},{"b": "Pictograms"},{"b": "Phonetic alphabet"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNote": [
+                {
+                  "@type": "marc:LanguageNote",
+                  "label": "Zuni",
+                  "hasNotation": [
+                    {
+                      "@type": "Notation",
+                      "label": "Pictograms"
+                    },
+                    {
+                      "@type": "Notation",
+                      "label": "Phonetic alphabet"
+                    }
+                  ],
+                  "appliesTo": {
+                    "@type": "Resource",
+                    "label": "John P. Harrington field notebooks"
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "Repeated fields LanguageNote + Notation",
+          "source": [
+            {"546": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Innehållsförteckning även på engelska"}
+          ]}},
+            {"546": {"ind1": " ", "ind2": " ", "subfields": [{"b": "Traditionell västerländsk notskrift"}
+          ]}}],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNote": [
+                {
+                  "@type": "marc:LanguageNote",
+                  "label": "Innehållsförteckning även på engelska"
+                }
+              ],
+              "hasNotation": [
+                {
+                  "@type": "Notation",
+                  "label": "Traditionell västerländsk notskrift"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "Repeated fields Notation + Notation",
+          "source": [
+            {"546": {"ind1": " ", "ind2": " ", "subfields": [{"b": "Traditionell västerländsk notskrift"}]}},
+            {"546": {"ind1": " ", "ind2": " ", "subfields": [{"b": "Roman alphabet"}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNotation": [
+                {
+                  "@type": "Notation",
+                  "label": "Traditionell västerländsk notskrift"
+                },
+                {
+                  "@type": "Notation",
+                  "label": "Roman alphabet"
                 }
               ]
             }
