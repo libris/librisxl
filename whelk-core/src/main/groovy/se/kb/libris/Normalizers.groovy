@@ -6,7 +6,6 @@ import whelk.JsonLd
 import whelk.Whelk
 import whelk.component.DocumentNormalizer
 import whelk.exception.InvalidQueryException
-import whelk.exception.ModelValidationException
 import whelk.filter.BlankNodeLinker
 import whelk.filter.LanguageLinker
 
@@ -25,16 +24,16 @@ class Normalizers {
             linker.linkAll(doc.data, 'language')
         }
     }
+    
+    static Collection<DocumentNormalizer> heuristicLinkers(Whelk whelk) {
+        whelk.jsonld.getCategoryMembers('heuristicIdentity').collect{ type ->
+            BlankNodeLinker linker = new BlankNodeLinker(
+                    type, ['code', 'label', 'prefLabelByLang', 'altLabelByLang', 'hiddenLabel'])
+            loadDefinitions(linker, whelk)
 
-    static DocumentNormalizer contributionRole(Whelk whelk) {
-        BlankNodeLinker linker = new BlankNodeLinker(
-                'Role', ['code', 'label', 'prefLabelByLang', 'altLabelByLang', 'hiddenLabel'])
-        loadDefinitions(linker, whelk)
-
-        return { Document doc ->
-            Map work = getWork(whelk.jsonld, doc)
-            if (work && work['contribution']) {
-                linker.linkAll(work['contribution'], 'role')
+            Set<String> inRange = whelk.jsonld.getInRange(type)
+            return (DocumentNormalizer) { doc ->
+                linker.linkAll(doc.data, inRange)
             }
         }
     }

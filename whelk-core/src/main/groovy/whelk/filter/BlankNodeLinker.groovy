@@ -35,6 +35,10 @@ class BlankNodeLinker implements DocumentUtil.Linker {
         this([type], fields, stats)
     }
 
+    boolean linkAll(data, Collection<String> keys) {
+        return findKey(data, keys, link(this)) && removeDeleted(data)
+    }
+    
     boolean linkAll(data, String key) {
         return findKey(data, key, link(this)) && removeDeleted(data)
     }
