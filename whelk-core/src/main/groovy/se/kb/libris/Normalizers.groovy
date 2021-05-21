@@ -14,26 +14,14 @@ import static whelk.JsonLd.ID_KEY
 
 /*
 TODO: add support for linking blank nodes based on owl:hasKey
-example (only hasKey defined in vocab at the moment): 
-{
-  "@id": "https://id.kb.se/vocab/Concept",
-  "@type": "Class",
-  ...
-  "owl:hasKey": {
-    "@list": [
-      {
-        "@id": "https://id.kb.se/vocab/code"
-      },
-      {
-        "@id": "https://id.kb.se/vocab/prefLabel"
-      },
-      {
-        "@id": "https://id.kb.se/vocab/inScheme"
-      }
-    ]
-  },
-  ...
-}
+example: 
+:Concept a owl:Class;
+    rdfs:label "Concept"@en, "Koncept"@sv;
+    rdfs:subClassOf :Identity;
+    owl:equivalentClass skos:Concept;
+    owl:hasKey (:code :prefLabel :inScheme) .
+
+(only hasKey defined in vocab at the moment)
  */
 
 @Log
