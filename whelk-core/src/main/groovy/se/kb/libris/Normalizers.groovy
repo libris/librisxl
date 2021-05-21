@@ -12,6 +12,30 @@ import whelk.filter.LanguageLinker
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
 
+/*
+TODO: add support for linking blank nodes based on owl:hasKey
+example (only hasKey defined in vocab at the moment): 
+{
+  "@id": "https://id.kb.se/vocab/Concept",
+  "@type": "Class",
+  ...
+  "owl:hasKey": {
+    "@list": [
+      {
+        "@id": "https://id.kb.se/vocab/code"
+      },
+      {
+        "@id": "https://id.kb.se/vocab/prefLabel"
+      },
+      {
+        "@id": "https://id.kb.se/vocab/inScheme"
+      }
+    ]
+  },
+  ...
+}
+ */
+
 @Log
 class Normalizers {
 
@@ -24,11 +48,21 @@ class Normalizers {
             linker.linkAll(doc.data, 'language')
         }
     }
-    
+
+    /**
+     * Link blank nodes based on "heuristic identifiers"
+     * e.g. { "@type": "Role", "label": "Þýðandi"} matches https://id.kb.se/relator/trl on prefLabelByLang.is
+     * 
+     * For all types that have :category :heuristicIdentity in vocab:
+     * Link all blank nodes with that @type that match on a property that has :category :heuristicIdentifier.
+     * Only check blank nodes in properties where @type is in range (range or rangeIncludes).
+     */
     static Collection<DocumentNormalizer> heuristicLinkers(Whelk whelk) {
+        def properties = whelk.jsonld.getCategoryMembers('heuristicIdentifier').collect()
+        properties = properties + properties.findResults {(String) whelk.jsonld.langContainerAlias[it] }
+        
         whelk.jsonld.getCategoryMembers('heuristicIdentity').collect{ type ->
-            BlankNodeLinker linker = new BlankNodeLinker(
-                    type, ['code', 'label', 'prefLabelByLang', 'altLabelByLang', 'hiddenLabel'])
+            BlankNodeLinker linker = new BlankNodeLinker(type, properties)
             loadDefinitions(linker, whelk)
 
             Set<String> inRange = whelk.jsonld.getInRange(type)

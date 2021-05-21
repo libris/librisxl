@@ -25,13 +25,13 @@ class BlankNodeLinker implements DocumentUtil.Linker {
 
     List<String> fields = []
 
-    BlankNodeLinker(List<String> types, List<String> fields, Statistics stats = null) {
+    BlankNodeLinker(Collection<String> types, Collection<String> fields, Statistics stats = null) {
         this.types = types.collect()
-        this.fields = fields
+        this.fields = fields.collect()
         this.stats = stats
     }
 
-    BlankNodeLinker(String type, List<String> fields, Statistics stats = null) {
+    BlankNodeLinker(String type, Collection<String> fields, Statistics stats = null) {
         this([type], fields, stats)
     }
 

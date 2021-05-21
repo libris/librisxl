@@ -144,7 +144,7 @@ class JsonLd {
         inRange = zipMaps(generateSubTermLists('rangeIncludes'), generateSubTermLists('range'))
         
         buildLangContainerAliasMap()
-2
+
         expandAliasesInLensProperties()
         expandInheritedLensProperties()
         expandInverseLensProperties()
