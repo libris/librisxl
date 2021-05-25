@@ -8,6 +8,7 @@ import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.component.DocumentNormalizer
 import whelk.exception.InvalidQueryException
 import whelk.exception.WhelkRuntimeException
 import whelk.search.ESQuery
@@ -139,6 +140,10 @@ class SearchUtils {
         if (esResult['items']) {
             items = esResult['items'].collect {
                 def item = applyLens(it, lens, reverseObject)
+                
+                // ISNIs are indexed with and without spaces, remove the one with spaces.
+                item.identifiedBy?.with { List ids -> ids.removeAll { Document.isIsni(it) && it.value?.size() == 16+3 } }
+                
                 // This object must be re-added because it might get filtered out in applyLens().
                 item['reverseLinks'] = it['reverseLinks']
                 if (item['reverseLinks'] != null)

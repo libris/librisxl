@@ -352,6 +352,9 @@ class ElasticSearch {
         getOtherIsbns(doc.getIsbnHiddenValues())
                 .each { doc.addIndirectTypedThingIdentifier('ISBN', it) }
 
+        getFormattedIsnis(doc.getIsniValues())
+                .each { doc.addTypedThingIdentifier('ISNI', it) }
+        
         doc.data['@graph'][1]['_links'] = links
         doc.data['@graph'][1]['_outerEmbellishments'] = doc.getEmbellishments() - links
 
@@ -382,6 +385,15 @@ class ElasticSearch {
         } catch (ConvertException ignored) {
             //Exception thrown when trying to transform non-convertible ISBN13 (starting with 979) to ISBN10
             return null
+        }
+    }
+
+    /**
+     * @return ISNIs with with four groups of four digits separated by space
+     */
+    private static Collection<String> getFormattedIsnis(Collection<String> isnis) {
+        isnis.findAll{ it.size() == 16 }.collect{isni ->
+            isni.split("").collate(4).collect{ it.join() }.join(" ")
         }
     }
 

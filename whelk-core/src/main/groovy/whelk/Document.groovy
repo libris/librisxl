@@ -13,6 +13,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.function.Predicate
 
 /**
  * A document is represented as a data Map (containing Maps, Lists and Value objects).
@@ -227,7 +228,19 @@ class Document {
     List<String> getIsbnHiddenValues() { return getTypedIDValues("ISBN", thingIndirectTypedIDsPath, "value") }
     List<String> getIssnHiddenValues() { return getTypedIDValues("ISSN", thingTypedIDsPath, "marc:canceledIssn") }
 
+    List<String> getIsniValues() {
+        return getTypedIDValues(this.&isIsni, thingTypedIDsPath, "value")
+    }
+    
+    static boolean isIsni(Map identifier) { 
+         identifier['@type'] == 'ISNI' || identifier.typeNote?.with{ String n -> n.toLowerCase() } == 'isni'
+    }
+    
     private List<String> getTypedIDValues(String typeKey, List<String> idListPath, String valueKey) {
+        getTypedIDValues({ it['@type'] == typeKey }, idListPath, valueKey)
+    }
+        
+    private List<String> getTypedIDValues(Predicate<Map> condition, List<String> idListPath, String valueKey) {
         List<String> values = new ArrayList<>()
         List typedIDs = get(idListPath)
         for (Object element : typedIDs) {
@@ -235,12 +248,9 @@ class Document {
                 continue
             Map map = (Map) element
 
-            Object type = map.get("@type")
-            if (type == null)
+            if (!condition.test(map)) {
                 continue
-
-            if (!type.equals(typeKey))
-                continue
+            }
 
             Object value = map.get(valueKey)
             if (value != null) {
