@@ -5896,7 +5896,19 @@
     },
 
     "024": {
+      "TODO": "Add revert of @type to typeNote",
       "include": ["identifier"],
+      "match": [
+        {
+          "when": "i1=7 & $2",
+          "i1": {
+            "property": "@type",
+            "tokenMap": {
+              "7": "Identifier"
+            }
+          }
+        }
+      ],
       "i1": {
         "property": "@type",
         "tokenMap": {
@@ -5905,10 +5917,9 @@
           "2": "ISMN",
           "3": "EAN",
           "4": "SICI",
-          "7": "Identifier",
-          "8": "marc:OtherIdentifier"
+          "8": "Identifier"
         },
-        "TODO:definedElsewhereToken": "7"
+        "definedElsewhereToken": "7"
       },
       "i2": null,
       "$c": {"property": "acquisitionTerms"},
@@ -6031,6 +6042,22 @@
           }
         },
         {
+          "name": "Unspecified Identifier",
+          "source": {
+            "024": {"ind1": "8", "ind2": " ", "subfields": [{"a": "8"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {
+                  "@type": "Identifier",
+                  "value":  "8"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "Identifier with space",
           "source": {
             "024": {
@@ -6085,7 +6112,7 @@
         {
           "source": {
             "024": {
-              "ind1": "7", "ind2": " ",
+              "ind1": "8", "ind2": " ",
               "subfields": [{"a": "A(148)"}]
             }
           },
@@ -21795,18 +21822,29 @@
     },
     "022": {"inherit": "bib"},
     "024": {
+      "TODO": "Add revert of @type to typeNote",
       "include": ["identifier"],
+      "match": [
+        {
+          "when": "i1=7 & $2",
+          "i1": {
+            "property": "@type",
+            "tokenMap": {
+              "7": "Identifier"
+            }
+          }
+        }
+      ],
       "i1": {
         "property": "@type",
         "tokenMap": {
-          "7": "Identifier",
           "8": "Identifier"
         },
-        "TODO:definedElsewhereToken": "7"
+        "definedElsewhereToken": "7"
       },
       "i2": null,
       "$2": {
-        "TODO:requires-i1": "7 (overwritten by 8)",
+        "requires-i1": "7",
         "property": "typeNote",
         "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
       },
@@ -21829,12 +21867,9 @@
           }
         },
         {
-          "name": "VIAF, indicator from $2 when i1 = 7, TODO: fix ind1=8",
+          "name": "VIAF, indicator from $2 when i1 = 7",
           "source": {
             "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "1234567890"}, {"2": "viaf"}]}
-          },
-          "normalized": {
-            "024": {"ind1": "8", "ind2": " ", "subfields": [{"a": "1234567890"}, {"2": "viaf"}]}
           },
           "result": {
             "mainEntity": {
@@ -21850,12 +21885,9 @@
           }
         },
         {
-          "name": "ISNI, indicator from $2 when i1 = 7, TODO: fix ind1=8",
+          "name": "ISNI, indicator from $2 when i1 = 7",
           "source": {
             "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "0000 0000 0000 0000"}, {"2": "isni"}]}
-          },
-          "normalized": {
-            "024": {"ind1": "8", "ind2": " ", "subfields": [{"a": "0000 0000 0000 0000"}, {"2": "isni"}]}
           },
           "result": {
             "mainEntity": {
