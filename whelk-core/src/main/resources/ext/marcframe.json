@@ -21795,7 +21795,7 @@
     },
     "022": {"inherit": "bib"},
     "024": {
-      "inherit": "bib",
+      "include": ["identifier"],
       "i1": {
         "property": "@type",
         "tokenMap": {
@@ -21804,7 +21804,73 @@
         },
         "TODO:definedElsewhereToken": "7"
       },
-      "i2": null
+      "i2": null,
+      "$2": {
+        "TODO:requires-i1": "7 (overwritten by 8)",
+        "property": "typeNote",
+        "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
+      },
+      "_spec": [
+        {
+          "name": "Unspecified Identifier",
+          "source": {
+            "024": {"ind1": "8", "ind2": " ", "subfields": [{"a": "xyz"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Identity",
+              "identifiedBy": [
+                {
+                  "@type": "Identifier",
+                  "value":  "xyz"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "VIAF, indicator from $2 when i1 = 7, TODO: fix ind1=8",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "1234567890"}, {"2": "viaf"}]}
+          },
+          "normalized": {
+            "024": {"ind1": "8", "ind2": " ", "subfields": [{"a": "1234567890"}, {"2": "viaf"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Identity",
+              "identifiedBy": [
+                {
+                  "@type": "Identifier",
+                  "value":  "1234567890",
+                  "typeNote": "viaf"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "ISNI, indicator from $2 when i1 = 7, TODO: fix ind1=8",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "0000 0000 0000 0000"}, {"2": "isni"}]}
+          },
+          "normalized": {
+            "024": {"ind1": "8", "ind2": " ", "subfields": [{"a": "0000 0000 0000 0000"}, {"2": "isni"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Identity",
+              "identifiedBy": [
+                {
+                  "@type": "Identifier",
+                  "value":  "0000 0000 0000 0000",
+                  "typeNote": "isni"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "031": {
       "NOTE:LC": "031 - Musical Incipits Information (R) - nac",
