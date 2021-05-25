@@ -11,6 +11,7 @@ import whelk.filter.LanguageLinker
 
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.asList
 
 /*
 TODO: add support for linking blank nodes based on owl:hasKey
@@ -60,6 +61,19 @@ class Normalizers {
         }
     }
 
+    static DocumentNormalizer isni() {
+        // TODO: fix MARC conversion, then replace all typeNote: isni with @type: ISNI
+        
+        return { Document doc ->
+            def (_record, thing) = doc.data[GRAPH_KEY]
+            thing.identifiedBy?.with {
+                asList(it).findAll{ Document.&isIsni }.forEach { Map isni ->
+                    isni.value = ((String) isni.value)?.replace(' ', '')
+                }
+            }
+        }
+    }
+    
     /**
      * Historically locally defined Work was placed in @graph[2],
      * this normalizer makes sure it is always placed in mainEntity.instanceOf
