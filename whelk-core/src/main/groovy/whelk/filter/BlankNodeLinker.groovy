@@ -25,16 +25,20 @@ class BlankNodeLinker implements DocumentUtil.Linker {
 
     List<String> fields = []
 
-    BlankNodeLinker(List<String> types, List<String> fields, Statistics stats = null) {
+    BlankNodeLinker(Collection<String> types, Collection<String> fields, Statistics stats = null) {
         this.types = types.collect()
-        this.fields = fields
+        this.fields = fields.collect()
         this.stats = stats
     }
 
-    BlankNodeLinker(String type, List<String> fields, Statistics stats = null) {
+    BlankNodeLinker(String type, Collection<String> fields, Statistics stats = null) {
         this([type], fields, stats)
     }
 
+    boolean linkAll(data, Collection<String> keys) {
+        return findKey(data, keys, link(this)) && removeDeleted(data)
+    }
+    
     boolean linkAll(data, String key) {
         return findKey(data, key, link(this)) && removeDeleted(data)
     }
@@ -85,7 +89,7 @@ class BlankNodeLinker implements DocumentUtil.Linker {
             }
         }
 
-        String id = definition[ID_KEY]
+        String id = definition.isReplacedBy? definition.isReplacedBy[ID_KEY] : definition[ID_KEY]
         identifiers.each { addMapping(it, id) }
     }
 

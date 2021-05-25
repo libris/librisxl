@@ -86,6 +86,8 @@ class JsonLd {
     private Map<String, Set<String>> subClassesByType
     private Map<String, List<String>> superPropertyOf
     private Map<String, Set<String>> subPropertiesByType
+    private Map<String, Set<String>> categories
+    private Map<String, Set<String>> inRange
 
     Map langContainerAlias = [:]
 
@@ -136,6 +138,11 @@ class JsonLd {
         subPropertiesByType = new HashMap<String, Set>()
         superPropertyOf = generateSubTermLists("subPropertyOf")
 
+        categories = generateSubTermLists('category')
+        
+        def zipMaps = { a, b -> (a.keySet() + b.keySet()).collectEntries{k -> [k, a.get(k, []) + b.get(k, [])]}}
+        inRange = zipMaps(generateSubTermLists('rangeIncludes'), generateSubTermLists('range'))
+        
         buildLangContainerAliasMap()
 
         expandAliasesInLensProperties()
@@ -596,6 +603,14 @@ class JsonLd {
 
     Set<String> getSubProperties(String type) {
         return getSubTerms(type, superPropertyOf, subPropertiesByType)
+    }
+    
+    Set<String> getCategoryMembers(String category) {
+        return categories.get(category, Collections.EMPTY_SET)
+    }
+
+    Set<String> getInRange(String type) {
+        return inRange.get(type, Collections.EMPTY_SET)
     }
 
     private Set<String> getSubTerms(String type,
