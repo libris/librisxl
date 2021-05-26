@@ -27,7 +27,7 @@ selectBySqlWhere(where){ data ->
         instance."@type" = "VideoRecording"
         modified = true
     }
-    else if (mediaTerm ==~ /(?i).?elektronisk resurs.?/ && workType ==~ /Text|Multimedia/) {
+    else if (mediaTerm ==~ /(?i).?ele[ck]troni(c|sk) reso?ur(s|ce).?/ && workType ==~ /Text|Multimedia/) {
         instance."@type" = "Electronic"
         modified = true
     }
