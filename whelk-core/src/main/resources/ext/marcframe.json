@@ -21798,7 +21798,7 @@
       "include": ["identifier"],
       "match": [
         {
-          "when": "i1=7 & $2 =~ isni|ISNI|orcid|ORCID",
+          "when": "i1=7 & $2 =~ isni|ISNI|orcid|ORCID|viaf|VIAF|wikidata|WIKIDATA",
           "i1": null,
           "$2": {
             "property": "@type",
@@ -21807,7 +21807,11 @@
               "ISNI": "ISNI",
               "isni": "ISNI",
               "ORCID": "ORCID",
-              "orcid": "ORCID"
+              "orcid": "ORCID",
+              "VIAF": "VIAF",
+              "viaf": "VIAF",
+              "WIKIDATA": "WikidataID",
+              "wikidata": "WikidataID"
             }
           }
         }
