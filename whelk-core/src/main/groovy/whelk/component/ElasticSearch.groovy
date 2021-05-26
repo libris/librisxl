@@ -354,6 +354,9 @@ class ElasticSearch {
 
         getFormattedIsnis(doc.getIsniValues())
                 .each { doc.addTypedThingIdentifier('ISNI', it) }
+
+        getFormattedIsnis(doc.getOrcidValues()) // ORCID is a subset of ISNI, same format
+                .each { doc.addTypedThingIdentifier('ORCID', it) }
         
         doc.data['@graph'][1]['_links'] = links
         doc.data['@graph'][1]['_outerEmbellishments'] = doc.getEmbellishments() - links

@@ -235,6 +235,14 @@ class Document {
     static boolean isIsni(Map identifier) { 
          identifier['@type'] == 'ISNI' || identifier.typeNote?.with{ String n -> n.toLowerCase() } == 'isni'
     }
+
+    List<String> getOrcidValues() {
+        return getTypedIDValues(this.&isOrcid, thingTypedIDsPath, "value")
+    }
+
+    static boolean isOrcid(Map identifier) {
+        identifier['@type'] == 'ORCID' || identifier.typeNote?.with{ String n -> n.toLowerCase() } == 'orcid'
+    }
     
     private List<String> getTypedIDValues(String typeKey, List<String> idListPath, String valueKey) {
         getTypedIDValues({ it['@type'] == typeKey }, idListPath, valueKey)

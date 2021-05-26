@@ -61,13 +61,13 @@ class Normalizers {
         }
     }
 
-    static DocumentNormalizer isni() {
+    static DocumentNormalizer identifiedBy() {
         // TODO: fix MARC conversion, then replace all typeNote: isni with @type: ISNI
         
         return { Document doc ->
             def (_record, thing) = doc.data[GRAPH_KEY]
             thing.identifiedBy?.with {
-                asList(it).findAll{ Document.&isIsni }.forEach { Map isni ->
+                asList(it).findAll{ Document.&isIsni || Document.&isOrcid }.forEach { Map isni ->
                     isni.value = ((String) isni.value)?.replace(' ', '')
                 }
             }
