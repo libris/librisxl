@@ -41,6 +41,7 @@ class ElasticSearch {
     private String elasticCluster
     private ElasticClient client
     private ElasticClient bulkClient
+    private boolean isPitApiAvailable = false
 
     private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
 
@@ -70,15 +71,20 @@ class ElasticSearch {
             }
         }, 60*1000, 10*1000)
         
-        initIndexSettings()
+        initSettings()
     }
 
-    void initIndexSettings() {
+    void initSettings() {
         Map indexSettings = getSettings()
         if (indexSettings.index &&
                 indexSettings.index['max_result_window'] &&
                 ((String) indexSettings.index['max_result_window']).isNumber()) {
             maxResultWindow = ((String) indexSettings.index['max_result_window']).toInteger()
+        }
+        
+        Map clusterInfo = performRequest('GET', '/')
+        if (clusterInfo?.version?.build_flavor == 'default') {
+            isPitApiAvailable = true
         }
     }
 
@@ -434,7 +440,7 @@ class ElasticSearch {
             ids.hasNext()
         }
         catch (TooManyResultsException e) {
-            ids = new PointInTimeScroll(query)
+            ids = new SearchAfterScroll(query)
         }
         
         return new Iterable<String>() {
@@ -583,6 +589,8 @@ class ElasticSearch {
             if (total > maxResultWindow) {
                 throw new TooManyResultsException(total, maxResultWindow)
             }
+
+            page++
         }
 
         @Override
@@ -595,7 +603,7 @@ class ElasticSearch {
             return [
                     'query': query,
                     'size': FETCH_SIZE,
-                    'from': page++ * FETCH_SIZE,
+                    'from': page * FETCH_SIZE,
                     'track_total_hits': true,
                     'sort': SORT
             ]
@@ -603,11 +611,14 @@ class ElasticSearch {
     }
 
     /**
-     * Use "search_after" + Point in time API to be able to retrieve more than {@link ElasticSearch#maxResultWindow} 
-     * results. Caller needs to consume {@link ElasticSearch.Scroll#FETCH_SIZE} results in less time than 
-     * {@link PointInTimeScroll#keepAlive} otherwise the search context times out.
+     * Use "search_after" + Point in time API (if available) to be able to retrieve more than 
+     * {@link ElasticSearch#maxResultWindow} results. 
+     * 
+     * When using Point in time API (not available in ElasticSearch OSS version):
+     * Caller needs to consume {@link ElasticSearch.Scroll#FETCH_SIZE} results in less time than 
+     * {@link SearchAfterScroll#keepAlive} otherwise the search context times out.
      */
-    private class PointInTimeScroll<T> extends Scroll<T> {
+    private class SearchAfterScroll<T> extends Scroll<T> {
         final String keepAlive = "1m"
 
         String pitId = null
@@ -615,7 +626,7 @@ class ElasticSearch {
 
         def offset = null
 
-        PointInTimeScroll(Map query, List<String> hitsFilter = ['hits.hits._id'], Closure<T> hitCollector = { it['_id']}) {
+        SearchAfterScroll(Map query, List<String> hitsFilter = ['hits.hits._id'], Closure<T> hitCollector = { it['_id']}) {
             super(query, hitsFilter, hitCollector)
         }
 
@@ -630,10 +641,11 @@ class ElasticSearch {
             List items = (List) response.hits.hits
             isAfterLastFetch = items.size() < FETCH_SIZE
 
-            if (isAfterLastFetch) {
+            if (isAfterLastFetch && pitId) {
                 deletePointInTime(pitId)
             }
-            else {
+                
+            if (items) {
                 offset = items.last()['sort']
             }
         }
@@ -645,20 +657,23 @@ class ElasticSearch {
 
         @Override
         Map nextRequest() {
-            if (!pitId) {
+            if (!pitId && isPitApiAvailable) {
                 pitId = createPointInTime(keepAlive)
             }
 
             Map request = [
                     'query': query,
                     'size': FETCH_SIZE,
-                    'pit': [
-                            'id': pitId,
-                            'keep_alive': keepAlive
-                    ],
                     'track_total_hits': false,
                     'sort': SORT
             ]
+            
+            if (pitId) {
+                request['pit'] = [
+                        'id': pitId,
+                        'keep_alive': keepAlive
+                ]
+            }
             if (offset) {
                 request['search_after'] = offset
             }
