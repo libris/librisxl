@@ -186,6 +186,7 @@ class ImporterMain {
                 filterProblematicData(data[property])
             }
         } else if (data instanceof List) {
+            data.removeAll([null])
             data.each {
                 filterProblematicData(it)
             }

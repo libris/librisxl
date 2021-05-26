@@ -4,6 +4,9 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeJava
 
 import org.codehaus.jackson.map.ObjectMapper
 
+import groovy.util.logging.Log4j2 as Log
+
+@Log
 class JsonLdToTurtle {
 
     def INDENT = "  "
@@ -105,9 +108,7 @@ class JsonLdToTurtle {
         } else if (useVocab && ref.indexOf("/") == -1) {
             return ":" + ref
         }
-        ref = cleanValue(ref).
-            replaceAll(/ /, '+').
-            replaceAll("\\\\", "\\\\\\\\")
+        ref = cleanIri(cleanValue(ref).replaceAll(/ /, '+'))
         return "<${ref}>"
     }
 
@@ -120,6 +121,16 @@ class JsonLdToTurtle {
         return term.
             replaceAll(/%/, /0/).
             replaceAll(/\./, '')
+    }
+
+    // [8] IRIREF ::= '<' ([^#x00-#x20<>"{}|^`\] | UCHAR)* '>'
+    // https://www.w3.org/TR/n-triples/#grammar-production-IRIREF
+    String cleanIri(String iri) {
+        String cleanedIri = iri.replaceAll(/[\x00-\x20<>"{}|^`\\]/, '')
+        if (cleanedIri != iri) {
+            log.warn("Broken IRI ${iri}, changing to ${cleanedIri}")
+        }
+        return cleanedIri
     }
 
     String cleanValue(String v) {
