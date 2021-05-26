@@ -11,6 +11,7 @@ import whelk.filter.LanguageLinker
 
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 
 /*
@@ -62,11 +63,24 @@ class Normalizers {
     }
 
     static DocumentNormalizer identifiedBy() {
-        // TODO: fix MARC conversion, then replace all typeNote: isni with @type: ISNI
+        def OBSOLETE_TYPE_NOTES = [
+                'isni'    : 'ISNI',
+                'orcid'   : 'ORCID',
+                'viaf'    : 'VIAF',
+                'wikidata': 'WikidataID',
+        ]
         
         return { Document doc ->
             def (_record, thing) = doc.data[GRAPH_KEY]
             thing.identifiedBy?.with {
+                asList(it).forEach { Map id ->
+                    id.typeNote?.with { String tn -> 
+                        OBSOLETE_TYPE_NOTES[tn.toLowerCase()] 
+                    }?.with { type ->
+                        id[TYPE_KEY] = type
+                        id.remove('typeNote')
+                    }
+                }
                 asList(it).findAll{ Document.&isIsni || Document.&isOrcid }.forEach { Map isni ->
                     isni.value = ((String) isni.value)?.replace(' ', '')
                 }
