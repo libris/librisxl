@@ -21796,6 +21796,22 @@
     "022": {"inherit": "bib"},
     "024": {
       "include": ["identifier"],
+      "match": [
+        {
+          "when": "i1=7 & $2 =~ isni|ISNI|orcid|ORCID",
+          "i1": null,
+          "$2": {
+            "property": "@type",
+            "tokenMap": {
+              "NOTE": "NB! Order is significant. The last key for the same value will be used on revert",
+              "ISNI": "ISNI",
+              "isni": "ISNI",
+              "ORCID": "ORCID",
+              "orcid": "ORCID"
+            }
+          }
+        }
+      ],
       "i1": {
         "property": "@type",
         "tokenMap": {
@@ -21850,10 +21866,24 @@
           }
         },
         {
-          "name": "ISNI, indicator from $2 when i1 = 7, TODO: fix ind1=8",
+          "name": "ISNI, indicator from $2 when i1 = 7",
           "source": {
             "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "0000 0000 0000 0000"}, {"2": "isni"}]}
           },
+          "result": {
+            "mainEntity": {
+              "@type" : "Identity",
+              "identifiedBy": [
+                {
+                  "@type": "ISNI",
+                  "value":  "0000 0000 0000 0000"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "revert oldschool ISNI (Identifier with typeNote), TODO: fix ind1=8",
           "normalized": {
             "024": {"ind1": "8", "ind2": " ", "subfields": [{"a": "0000 0000 0000 0000"}, {"2": "isni"}]}
           },
