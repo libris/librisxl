@@ -5897,6 +5897,43 @@
 
     "024": {
       "include": ["identifier"],
+      "match": [
+        {
+          "when": "i1=7 & $2 =~ ansi|ANSI|doi|DOI|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|istwc|ISTWC|urn|URN",
+          "i1": null,
+          "$2": {
+            "property": "@type",
+            "tokenMap": {
+              "NOTE": "NB! Order is significant. The last key for the same value will be used on revert",
+              "ANSI": "ANSI",
+              "ansi": "ANSI",
+              "DOI": "DOI",
+              "doi": "DOI",
+              "HDL": "HDL",
+              "hdl": "HDL",
+              "ISAN": "ISAN",
+              "isan": "ISAN",
+              "ISO": "ISO",
+              "iso": "ISO",
+              "ISTC": "ISTC",
+              "istc": "ISTC",
+              "ISTWC": "ISTWC",
+              "istwc": "ISTWC",
+              "URN": "URN",
+              "urn": "URN"
+            }
+          }
+        },
+        {
+          "when": "i1=7 & $2",
+          "i1": {
+            "property": "@type",
+            "tokenMap": {
+              "7": "Identifier"
+            }
+          }
+        }
+      ],
       "i1": {
         "property": "@type",
         "tokenMap": {
@@ -5906,7 +5943,7 @@
           "3": "EAN",
           "4": "SICI",
           "7": "Identifier",
-          "8": "marc:OtherIdentifier"
+          "8": "Identifier"
         },
         "TODO:definedElsewhereToken": "7"
       },
@@ -6014,6 +6051,23 @@
           }
         },
         {
+          "name": "DOI, indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "10.1109/5.771073"}, {"2": "doi"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Instance",
+              "identifiedBy": [
+                {
+                  "@type": "DOI",
+                  "value":  "10.1109/5.771073"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "indicator from $2 when i1 = 7",
           "source": {
             "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "1234567890"}, {"2": "xyz"}]}
@@ -6025,6 +6079,41 @@
                   "@type": "Identifier",
                   "value":  "1234567890",
                   "typeNote": "xyz"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unspecified Identifier",
+          "source": {
+            "024": {"ind1": "8", "ind2": " ", "subfields": [{"a": "8"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {
+                  "@type": "Identifier",
+                  "value":  "8"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unspecified Identifier",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "actually ind1 8"}]}
+          },
+          "normalized": {
+            "024": {"ind1": "8", "ind2": " ", "subfields": [{"a": "actually ind1 8"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {
+                  "@type": "Identifier",
+                  "value":  "actually ind1 8"
                 }
               ]
             }
@@ -6085,7 +6174,7 @@
         {
           "source": {
             "024": {
-              "ind1": "7", "ind2": " ",
+              "ind1": "8", "ind2": " ",
               "subfields": [{"a": "A(148)"}]
             }
           },
