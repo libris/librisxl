@@ -25687,6 +25687,11 @@
     "751": {
       "addLink": "marc:hasAddedEntryGeographicName",
       "resourceType": "marc:AddedEntryGeographicName",
+      "i2": {
+        "property": "marc:thesaurus",
+        "tokenMap": "marcThesaurus",
+        "marcDefault": "4"
+      },
       "$a": {"property": "marc:geographicName"},
       "$e": {"addProperty": "marc:relatorTerm"},
       "$v": {"addProperty": "marc:formSubdivision"},
