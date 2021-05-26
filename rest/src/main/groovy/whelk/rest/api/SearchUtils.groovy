@@ -141,8 +141,8 @@ class SearchUtils {
             items = esResult['items'].collect {
                 def item = applyLens(it, lens, reverseObject)
                 
-                // ISNIs are indexed with and without spaces, remove the one with spaces.
-                item.identifiedBy?.with { List ids -> ids.removeAll { Document.isIsni(it) && it.value?.size() == 16+3 } }
+                // ISNIs and ORCIDs are indexed with and without spaces, remove the one with spaces.
+                item.identifiedBy?.with { List ids -> ids.removeAll { (Document.isIsni(it) || Document.isOrcid(it) ) && it.value?.size() == 16+3 } }
                 
                 // This object must be re-added because it might get filtered out in applyLens().
                 item['reverseLinks'] = it['reverseLinks']
