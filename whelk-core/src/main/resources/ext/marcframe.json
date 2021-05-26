@@ -21849,21 +21849,17 @@
           }
         },
         {
-          "name": "VIAF, indicator from $2 when i1 = 7, TODO: fix ind1=8",
+          "name": "VIAF, indicator from $2 when i1 = 7",
           "source": {
             "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "1234567890"}, {"2": "viaf"}]}
-          },
-          "normalized": {
-            "024": {"ind1": "8", "ind2": " ", "subfields": [{"a": "1234567890"}, {"2": "viaf"}]}
           },
           "result": {
             "mainEntity": {
               "@type" : "Identity",
               "identifiedBy": [
                 {
-                  "@type": "Identifier",
-                  "value":  "1234567890",
-                  "typeNote": "viaf"
+                  "@type": "VIAF",
+                  "value":  "1234567890"
                 }
               ]
             }
