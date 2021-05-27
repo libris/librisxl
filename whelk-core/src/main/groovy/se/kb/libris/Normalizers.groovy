@@ -64,10 +64,23 @@ class Normalizers {
 
     static DocumentNormalizer identifiedBy() {
         def OBSOLETE_TYPE_NOTES = [
+                'ansi'    : 'Ansi',
+                'doi'     : 'DOI',
+                'hdl'     : 'Hdl',
+                'isan'    : 'ISAN',
                 'isni'    : 'ISNI',
+                'iso'     : 'ISO',
+                'istc'    : 'ISTC',
+                'iswc'    : 'ISWC',
                 'orcid'   : 'ORCID',
+                'urn'     : 'URN',
                 'viaf'    : 'VIAF',
                 'wikidata': 'WikidataID',
+                // already typed in Marc bib 028 ind1:
+                //if $2=matrix-number, then I - identifiedBy - MatrixNumber;
+                //if $2=music-plate, then I - identifiedBy - MusicPlate;
+                //if $2=music-publisher, then I - identifiedBy - MusicPublisherNumber;
+                //if $2=videorecording-identifer, then I - identifiedBy - VideoRecordingNumber;
         ]
         
         return { Document doc ->

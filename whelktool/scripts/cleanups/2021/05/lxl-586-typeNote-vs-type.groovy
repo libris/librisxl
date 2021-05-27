@@ -1,9 +1,30 @@
 import whelk.Document
 
-def OBSOLETE_TYPE_NOTES = ['isni', 'orcid', 'viaf', 'wikidata']
+OBSOLETE_TYPE_NOTES = [
+        'ansi',
+        'doi',
+        'hdl',
+        'isan',
+        'isni',
+        'iso',
+        'istc',
+        'iswc',
+        'orcid',
+        'urn',
+        'viaf',
+        'wikidata',
+]
 
 selectByCollection('auth') { auth ->
-    def (_record, thing) = auth.graph
+    process(auth)
+}
+
+selectByCollection('bib') { bib ->
+    process(bib)
+}
+
+void process(docItem) {
+    def (_record, thing) = docItem.graph
     
     boolean needsUpdate = false
     thing.identifiedBy?.with {
@@ -22,7 +43,7 @@ selectByCollection('auth') { auth ->
     }
 
     if (needsUpdate) {
-        auth.scheduleSave()
+        docItem.scheduleSave()
     }
 }
 
