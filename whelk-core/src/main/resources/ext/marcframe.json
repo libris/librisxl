@@ -2866,7 +2866,7 @@
         "[11]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
-          "matchUriToken": "^[_acfilmosu]$"
+          "matchUriToken": "^[acfilmos]$"
         },
         "[12]": {
           "addLink": "genreForm",
@@ -2917,23 +2917,25 @@
         "[5]": {
           "addLink": "intendedAudience",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}",
+          "matchUriToken": "^[abcdefgj]$"
         },
         "[6]": {
           "TODO:about": "_:otherInstance",
           "link": "marc:additionalCarrierType",
-          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "matchUriToken": "^[abcdfoqrs]$"
         },
         "[7] [8] [9] [10] [11] [12]": {
           "TODO": "Decide if this should be Work or Instance",
           "link": "supplementaryContent",
           "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}",
-          "matchUriToken": "^[_abcdefghikrs]$"
+          "matchUriToken": "^[abcdefghikrs]$"
         },
         "[13] [14]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MusicTextType-{_}",
-          "matchUriToken": "^[_abcdefghijklmoprst]$"
+          "matchUriToken": "^[abcdefghijklmoprst]$"
         },
         "[15]": null,
         "[16]": {
@@ -2954,18 +2956,19 @@
           "TODO:about": "_:cartographic",
           "link": "projection",
           "uriTemplate": "https://id.kb.se/marc/MapsProjectionType-{_}",
-          "matchUriToken": "^[_abcdefghijklmnoprsuz]$"
+          "matchUriToken": "^[abcdefghijklmnoprsuz]$"
         },
         "[7]": null,
         "[8]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapsMaterialType-{_}",
-          "matchUriToken": "^[_abcdefg]$"
+          "matchUriToken": "^[abcdefg]$"
         },
         "[9] [10]": null,
         "[11]": {
           "addLink": "genreForm",
-          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$"
         },
         "[12]": {
           "TODO:about": "_:otherInstance",
@@ -2984,7 +2987,7 @@
           "TODO:ignore pos 17": "Not used in 008",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapsFormatType-{_}",
-          "matchUriToken": "^[_ejklnopr]$"
+          "matchUriToken": "^[ejklnopr]$"
         }
       },
       "Visual": {
@@ -2996,12 +2999,14 @@
         "[5]": {
           "addLink": "intendedAudience",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}",
+          "matchUriToken": "^[abcdefgj]$"
         },
         "[6] [7] [8] [9] [10]": null,
         "[11]": {
           "addLink": "genreForm",
-          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$"
         },
         "[12]": {
           "TODO:about": "_:otherInstance",
@@ -3012,7 +3017,7 @@
         "[16]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/VisualMaterialType-{_}",
-          "matchUriToken": "^[_abcdfgiklmnopqrstvw]$"
+          "matchUriToken": "^[abcdfgiklmnopqrstvw]$"
         },
         "[17]": {
           "TODO:about": "_:otherInstance",
@@ -3041,13 +3046,14 @@
         "[9]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/ComputerTypeOfFileType-{_}",
-          "matchUriToken": "^[_abcdefghijm]$",
+          "matchUriToken": "^[abcdefghijm]$",
           "silentRevert": false
         },
         "[10]": null,
         "[11]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$",
           "silentRevert": false
         },
         "[12] [13] [14] [15] [16] [17]": null
@@ -3057,7 +3063,8 @@
         "[6]": {
           "TODO:about": "_:otherInstance",
           "link": "marc:additionalCarrierType",
-          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "matchUriToken": "^[abcdfoqrs]$"
         },
         "[7] [8] [9] [10] [11] [12] [13] [14] [15] [16] [17]": null
       },
@@ -3093,7 +3100,8 @@
         "[6]": {
           "TODO:about": "_:otherInstance",
           "link": "marc:additionalCarrierType",
-          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "matchUriToken": "^[abcdfoqrs]$"
         },
         "[7]": {
           "addLink": "genreForm",
@@ -3107,7 +3115,8 @@
         },
         "[11]": {
           "addLink": "genreForm",
-          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$"
         },
         "[12]": {
           "addLink": "genreForm",
@@ -3119,7 +3128,7 @@
         "[16]": {
           "link": "marc:alphabet",
           "uriTemplate": "https://id.kb.se/marc/SerialsAlphabetType-{_}",
-          "matchUriToken": "^[_abcdefghijkl]$"
+          "matchUriToken": "^[abcdefghijkl]$"
         },
         "[17]": {
           "link": "marc:typeOfEntry",
@@ -3550,7 +3559,7 @@
         "[5]": {
           "link": "soundContent",
           "uriTemplate": "https://id.kb.se/marc/ComputerSoundType-{_}",
-          "matchUriToken": "^[_a]$"
+          "matchUriToken": "^[a]$"
         },
         "[6:9]": {
           "link": "digitalCharacteristic",
@@ -3628,7 +3637,7 @@
         "[3] [4]": {
           "addLink": "layout",
           "uriTemplate": "https://id.kb.se/marc/TacBrailleWritingType-{_}",
-          "matchUriToken": "^[_abcdem]$"
+          "matchUriToken": "^[abcdem]$"
         },
         "[5]": {
           "addLink": "layout",
@@ -3638,7 +3647,7 @@
         "[6] [7] [8]": {
           "addLink": "hasNotation",
           "uriTemplate": "https://id.kb.se/marc/TacBrailleMusicType-{_}",
-          "matchUriToken": "^[_abcdefghijkl]$"
+          "matchUriToken": "^[abcdefghijkl]$"
         },
         "[9]": {
           "addLink": "hasNotation",
@@ -3669,7 +3678,7 @@
         "[5]": {
           "link": "soundContent",
           "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "matchUriToken": "^[ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
@@ -3686,7 +3695,7 @@
           "addLink": "mount",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/ProjGraphSupportType-{_}",
-          "matchUriToken": "^[_cdehjkm]$"
+          "matchUriToken": "^[cdehjkm]$"
         }
       },
       "Microform": {
@@ -3793,7 +3802,7 @@
         "[5]": {
           "link": "soundContent",
           "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "matchUriToken": "^[ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
@@ -4006,7 +4015,7 @@
         "[5]": {
           "link": "soundContent",
           "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "matchUriToken": "^[ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
@@ -4310,7 +4319,7 @@
         "aboutEntity": "?record",
         "link": "marc:catalogingSource",
         "uriTemplate": "https://id.kb.se/marc/CatalogingSourceType-{_}",
-        "matchUriToken": "^[_cd]$",
+        "matchUriToken": "^[cd]$",
         "fixedDefault": " "
       },
 
@@ -4499,6 +4508,7 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapsFormatType-{_}",
+          "matchUriToken": "^[ejklnopr]$",
           "silentRevert": false
         }
       },
@@ -4555,7 +4565,7 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MusicTextType-{_}",
-          "matchUriToken": "^[_abcdefghijklmoprst]$",
+          "matchUriToken": "^[abcdefghijklmoprst]$",
           "fixedDefault": " ",
           "silentRevert": false
         },
