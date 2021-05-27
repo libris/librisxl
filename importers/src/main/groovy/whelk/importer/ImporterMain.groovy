@@ -159,7 +159,7 @@ class ImporterMain {
                     System.err.println("$i records dumped.")
                 }
                 ++i
-                filterProblematicData(doc.data)
+                filterProblematicData(id, doc.data)
                 try {
                     serializer.objectToTrig(id, doc.data)
                 } catch (Throwable e) {
@@ -177,18 +177,20 @@ class ImporterMain {
         whelk.storage.queueSparqlUpdatesFrom(fromUnixTime)
     }
 
-    private static void filterProblematicData(data) {
+    private static void filterProblematicData(id, data) {
         if (data instanceof Map) {
             data.removeAll { entry ->
                 return entry.key.startsWith("generic") || entry.key.equals("marc:hasGovernmentDocumentClassificationNumber")
             }
             data.keySet().each { property ->
-                filterProblematicData(data[property])
+                filterProblematicData(id, data[property])
             }
         } else if (data instanceof List) {
-            data.removeAll([null])
+            if (data.removeAll([null])) {
+                log.warn("Removing null value from ${id}")
+            }
             data.each {
-                filterProblematicData(it)
+                filterProblematicData(id, it)
             }
         }
     }
