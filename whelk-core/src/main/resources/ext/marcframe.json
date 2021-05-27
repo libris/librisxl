@@ -5909,26 +5909,26 @@
       "include": ["identifier"],
       "match": [
         {
-          "when": "i1=7 & $2 =~ ansi|ANSI|doi|DOI|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|istwc|ISTWC|urn|URN",
+          "when": "i1=7 & $2 =~ ansi|ANSI|doi|DOI|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|iswc|ISWC|urn|URN",
           "i1": null,
           "$2": {
             "property": "@type",
             "tokenMap": {
               "NOTE": "NB! Order is significant. The last key for the same value will be used on revert",
-              "ANSI": "ANSI",
-              "ansi": "ANSI",
+              "ANSI": "Ansi",
+              "ansi": "Ansi",
               "DOI": "DOI",
               "doi": "DOI",
-              "HDL": "HDL",
-              "hdl": "HDL",
+              "HDL": "Hdl",
+              "hdl": "Hdl",
               "ISAN": "ISAN",
               "isan": "ISAN",
               "ISO": "ISO",
               "iso": "ISO",
               "ISTC": "ISTC",
               "istc": "ISTC",
-              "ISTWC": "ISTWC",
-              "istwc": "ISTWC",
+              "ISWC": "ISWC",
+              "iswc": "ISWC",
               "URN": "URN",
               "urn": "URN"
             }
@@ -6061,6 +6061,23 @@
           }
         },
         {
+          "name": "Ansi, indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "xyz"}, {"2": "ansi"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Instance",
+              "identifiedBy": [
+                {
+                  "@type": "Ansi",
+                  "value":  "xyz"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "DOI, indicator from $2 when i1 = 7",
           "source": {
             "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "10.1109/5.771073"}, {"2": "doi"}]}
@@ -6072,6 +6089,55 @@
                 {
                   "@type": "DOI",
                   "value":  "10.1109/5.771073"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Hdl, indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "20.1000/100"}, {"2": "hdl"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Instance",
+              "identifiedBy": [
+                {
+                  "@type": "Hdl",
+                  "value":  "20.1000/100"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "ISO,ISAN,ISTC,ISWC, indicator from $2 when i1 = 7",
+          "source": [
+            {"024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "abc"}, {"2": "iso"}]}},
+            {"024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "def"}, {"2": "isan"}]}},
+            {"024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "ghi"}, {"2": "istc"}]}},
+            {"024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "jkl"}, {"2": "iswc"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type" : "Instance",
+              "identifiedBy": [
+                {
+                  "@type": "ISO",
+                  "value":  "abc"
+                },
+                {
+                  "@type": "ISAN",
+                  "value":  "def"
+                },
+                {
+                  "@type": "ISTC",
+                  "value":  "ghi"
+                },
+                {
+                  "@type": "ISWC",
+                  "value":  "jkl"
                 }
               ]
             }
