@@ -6,7 +6,7 @@
  * We compare only strings
  *
  * $a (mainTitle or seriesStatement) is considered a match if all words match (although we allow minor differences when comparing words)
- * $v (seriesEnumeration) if all numeric values match
+ * $v (seriesEnumeration) if the whole strings match (except trailing periods and leading zeros in numeric values)
  * $x (issn) if all numeric values match
  *
  * See LXL-1931 for more info
@@ -56,8 +56,8 @@ selectBySqlWhere(where) { data ->
         Map a = cmpData[it[0]]
         Map b = cmpData[it[1]]
 
-        Map mergedTrees = merge(a.tree, b.tree)
-        Map leaves = a.leavesForCmp + b.leavesForCmp
+        Map mergedLeaves = mergeLeaves(a.leavesForCmp, b.leavesForCmp, b.tree.inSeries?.instanceOf.asBoolean())
+        Map mergedTrees = mergeTrees(a.tree, b.tree)
 
         // If merging failed due to conflicting values, abort
         if (!mergedTrees)
@@ -67,7 +67,7 @@ selectBySqlWhere(where) { data ->
         seriesMembership.remove(it[1])
 
         // Put the earlier removed properties back in place
-        Map mergedSM = rebuild(mergedTrees, leaves)
+        Map mergedSM = rebuild(mergedTrees, mergedLeaves)
 
         seriesMembership << mergedSM
     }
@@ -121,7 +121,7 @@ Map createCmpMap(Map sm) {
     return ["leavesForCmp": leavesForCmp, "tree": smCopy]
 }
 
-Map merge(Map a, Map b) {
+Map mergeTrees(Map a, Map b) {
     for (entry in b) {
         def key = entry.key
         def val = entry.value
@@ -129,11 +129,19 @@ Map merge(Map a, Map b) {
             // We don't allow conflicting strings or lists
             return
         } else if (a[key] instanceof Map) {
-            a[key] = merge(a[key], val)
+            a[key] = mergeTrees(a[key], val)
             if (!a[key]) {
                 return
             }
         } else
+            a[key] = val
+    }
+    return a
+}
+
+Map mergeLeaves(Map a, Map b, boolean bTreeHasWork) {
+    b.each { key, val ->
+        if (!a[key] || (key == "seriesEnumeration" && !bTreeHasWork) || (key == "value" && bTreeHasWork))
             a[key] = val
     }
     return a
@@ -235,32 +243,11 @@ boolean matchStrings(String a, String b) {
 }
 
 boolean matchSeriesEnum(String se1, String se2) {
-    if (se1 == se2)
-        return true
-
-    List se1numbers = getNumbers(se1).collect { it.replaceFirst(/^0+/, "") }
-    List se2numbers = getNumbers(se2).collect { it.replaceFirst(/^0+/, "") }
-
-    if (se1numbers.isEmpty() || se2numbers.isEmpty())
-        return false
-
-    if (se1numbers == se2numbers)
-        return true
-
-    return false
+    return trimSeriesEnum(se1) == trimSeriesEnum(se2)
 }
 
 boolean matchIssn(String issn1, String issn2) {
-    if (issn1 == issn2)
-        return true
-
-    List issn1numbers = getNumbers(issn1)
-    List issn2numbers = getNumbers(issn2)
-
-    if (issn1numbers == issn2numbers)
-        return true
-
-    return false
+    return getNumbers(issn1) == getNumbers(issn2)
 }
 
 /**
@@ -339,4 +326,8 @@ List getNumbers(String s) {
     if (numbers[0] == "")
         numbers.remove(0)
     return numbers
+}
+
+String trimSeriesEnum(String se) {
+    return se.replaceAll(/\.$|(?<!\d)0+/, "")
 }
