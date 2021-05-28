@@ -38,16 +38,15 @@ class ImporterMain {
 
     @Command(args='FNAME DATASET [--skipIndex]')
     void dataset(String fname, String dataset, String skipIndexParam=null) {
-        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
-        if (skipIndexParam) {
-            if (skipIndexParam == '--skipIndex') {
-                whelk.setSkipIndex(true)
-            }
-            else {
-                throw new IllegalArgumentException("Third argument must be --skipIndex or nothing")
-            }
+        if (fname == '--skipIndex' || dataset == '--skipIndex' || (skipIndexParam && skipIndexParam != '--skipIndex')) {
+            throw new IllegalArgumentException("--skipIndex must be last argument")
         }
         
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
+        if (skipIndexParam == '--skipIndex') {
+            whelk.setSkipIndex(true)
+        }
+                
         DatasetImporter.importDataset(whelk, fname, dataset)
     }
 
