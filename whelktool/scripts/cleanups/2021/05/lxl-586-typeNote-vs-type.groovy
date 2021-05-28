@@ -29,7 +29,7 @@ selectBySqlWhere(where) { docItem ->
     thing.identifiedBy?.with {
         asList(it).forEach { Map id ->
             id.typeNote?.with { String tn ->
-                if (OBSOLETE_TYPE_NOTES.contains(tn)) {
+                if (OBSOLETE_TYPE_NOTES.contains(tn.toLowerCase())) {
                     needsUpdate = true
                 }
             }
