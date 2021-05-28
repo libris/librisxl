@@ -36,9 +36,18 @@ class ImporterMain {
         defsImporter.run("definitions")
     }
 
-    @Command(args='FNAME DATASET')
-    void dataset(String fname, String dataset) {
+    @Command(args='FNAME DATASET [--skipIndex]')
+    void dataset(String fname, String dataset, String skipIndexParam=null) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
+        if (skipIndexParam) {
+            if (skipIndexParam == '--skipIndex') {
+                whelk.setSkipIndex(true)
+            }
+            else {
+                throw new IllegalArgumentException("Third argument must be --skipIndex or nothing")
+            }
+        }
+        
         DatasetImporter.importDataset(whelk, fname, dataset)
     }
 

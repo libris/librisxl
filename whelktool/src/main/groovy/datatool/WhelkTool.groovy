@@ -85,6 +85,7 @@ class WhelkTool {
         } catch (NullPointerException e) {
             whelk = Whelk.createLoadedCoreWhelk()
         }
+        whelk.setSkipIndex(skipIndex)
         initScript(scriptPath)
         this.reportsDir = reportsDir
         reportsDir.mkdirs()
@@ -499,7 +500,7 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            whelk.storeAtomicUpdate(doc, !item.loud, changedIn, scriptJobUri, item.preUpdateChecksum, !skipIndex)
+            whelk.storeAtomicUpdate(doc, !item.loud, changedIn, scriptJobUri, item.preUpdateChecksum)
         }
         modifiedLog.println(doc.shortId)
     }
@@ -511,7 +512,7 @@ class WhelkTool {
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
             if (!whelk.createDocument(doc, changedIn, scriptJobUri,
-                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false, !skipIndex))
+                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
         createdLog.println(doc.shortId)
