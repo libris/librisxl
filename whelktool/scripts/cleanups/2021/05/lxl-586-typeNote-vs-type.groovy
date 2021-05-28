@@ -1,6 +1,6 @@
 import whelk.Document
 
-OBSOLETE_TYPE_NOTES = [
+Set<String> OBSOLETE_TYPE_NOTES = [
         'ansi',
         'doi',
         'hdl',
@@ -13,17 +13,16 @@ OBSOLETE_TYPE_NOTES = [
         'urn',
         'viaf',
         'wikidata',
-]
+] as Set
 
-selectByCollection('auth') { auth ->
-    process(auth)
-}
 
-selectByCollection('bib') { bib ->
-    process(bib)
-}
-
-void process(docItem) {
+def where = """
+    data #>> '{@graph,1,identifiedBy}' LIKE '%typeNote%' 
+    AND (collection = 'bib' OR collection = 'auth') 
+    AND deleted = false
+"""
+     
+selectBySqlWhere(where) { docItem ->
     def (_record, thing) = docItem.graph
     
     boolean needsUpdate = false
@@ -43,6 +42,7 @@ void process(docItem) {
     }
 
     if (needsUpdate) {
+        // document normalizer does all the changes
         docItem.scheduleSave()
     }
 }
