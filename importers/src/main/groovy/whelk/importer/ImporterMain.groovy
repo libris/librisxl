@@ -36,14 +36,14 @@ class ImporterMain {
         defsImporter.run("definitions")
     }
 
-    @Command(args='FNAME DATASET [--skipIndex]')
+    @Command(args='FNAME DATASET [--skip-index]')
     void dataset(String fname, String dataset, String skipIndexParam=null) {
-        if (fname == '--skipIndex' || dataset == '--skipIndex' || (skipIndexParam && skipIndexParam != '--skipIndex')) {
-            throw new IllegalArgumentException("--skipIndex must be third argument")
+        if (fname == '--skip-index' || dataset == '--skip-index' || (skipIndexParam && skipIndexParam != '--skip-index')) {
+            throw new IllegalArgumentException("--skip-index must be third argument")
         }
         
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
-        if (skipIndexParam == '--skipIndex') {
+        if (skipIndexParam == '--skip-index') {
             whelk.setSkipIndex(true)
         }
                 
