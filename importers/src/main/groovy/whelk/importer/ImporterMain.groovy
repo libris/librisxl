@@ -39,7 +39,7 @@ class ImporterMain {
     @Command(args='FNAME DATASET [--skipIndex]')
     void dataset(String fname, String dataset, String skipIndexParam=null) {
         if (fname == '--skipIndex' || dataset == '--skipIndex' || (skipIndexParam && skipIndexParam != '--skipIndex')) {
-            throw new IllegalArgumentException("--skipIndex must be last argument")
+            throw new IllegalArgumentException("--skipIndex must be third argument")
         }
         
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
