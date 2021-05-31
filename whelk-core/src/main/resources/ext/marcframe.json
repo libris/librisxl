@@ -3089,7 +3089,8 @@
         "[4]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsTypeOfSerialType-{_}",
-          "matchUriToken": "^[dlmnpw]$"
+          "matchUriToken": "^[dlmnpw]$",
+          "fixedDefault": " "
         },
         "[5]": {
           "TODO:about": "_:otherInstance",
@@ -4600,6 +4601,7 @@
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsTypeOfSerialType-{_}",
           "matchUriToken": "^[dlmnpw]$",
+          "fixedDefault": " ",
           "silentRevert": false
         },
         "[22]": {
@@ -4753,6 +4755,42 @@
               "instanceOf": {
                 "@type": "Text",
                 "genreForm": [{ "@id" : "https://id.kb.se/marc/SerialsTypeOfSerialType-p" }]
+              }
+            }
+          }
+        },
+        {
+          "name": "Serial with empty /21 for ISSN-IC export (+ SerialsNatureType-y which produces extra y but not in tests)",
+          "source": {
+            "leader": "     cas a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171122c20139999sw a|  ||y||||0   b0   | "}]
+          },
+          "result": {
+            "created": "2017-11-22T00:00:00.0+01:00",
+            "recordStatus" : "marc:CorrectedOrRevised",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Serial",
+              "marc:alphabet": {
+                "@id" : "https://id.kb.se/marc/SerialsAlphabetType-b"
+              },
+              "frequency": [{ "@id": "https://id.kb.se/marc/SerialsFrequencyType-a" }],
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [ {
+                  "@id": "https://id.kb.se/country/sw"
+                } ],
+                "marc:publicationStatus" : "marc:ContinuingResourceCurrentlyPublished",
+                "otherYear" : "9999",
+                "year" : "2013"
+              },
+              "marc:typeOfEntry" : {"@id" : "https://id.kb.se/marc/SerialsTypeOfEntryType-0"},
+              "instanceOf": {
+                "@type": "Text",
+                "genreForm": [
+                  {"@id": "https://id.kb.se/marc/SerialsNatureType-y"}
+                ]
               }
             }
           }
