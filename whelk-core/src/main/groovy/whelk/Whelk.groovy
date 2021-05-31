@@ -41,6 +41,7 @@ class Whelk {
     ZoneId timezone = ZoneId.of('Europe/Stockholm')
 
     URI baseUri = null
+    boolean skipIndex = false
 
     // useCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
     // Any other use of this results in a "local" cache, which will not be invalidated when data changes elsewhere,
@@ -126,7 +127,7 @@ class Whelk {
             initDocumentNormalizers()
         }
     }
-
+    
     private void initDocumentNormalizers() {
         normalizer = new NormalizerChain(
                 [
@@ -180,7 +181,7 @@ class Whelk {
     }
 
     private void reindex(Document updated, Document preUpdateDoc) {
-        if (elastic) {
+        if (elastic && !skipIndex) {
             elastic.index(updated, this)
 
             if (hasChangedMainEntityId(updated, preUpdateDoc)) {
@@ -317,7 +318,7 @@ class Whelk {
 
         boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
         if (success) {
-            if (elastic && index) {
+            if (elastic && !skipIndex) {
                 elastic.index(document, this)
                 reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
             }
@@ -346,7 +347,7 @@ class Whelk {
         sparqlUpdater?.pollNow()
     }
 
-    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum, boolean index = true) {
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum) {
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
         Document updated = storage.storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum)
@@ -354,9 +355,8 @@ class Whelk {
         if (updated == null) {
             return null
         }
-        if (index) {
-            reindex(updated, preUpdateDoc)
-        }
+        
+        reindex(updated, preUpdateDoc)
         sparqlUpdater?.pollNow()
     }
 
@@ -373,7 +373,7 @@ class Whelk {
         log.debug "Deleting ${id} from Whelk"
         Document doc = storage.load(id)
         storage.remove(id, changedIn, changedBy)
-        if (elastic) {
+        if (elastic && !skipIndex) {
             elastic.remove(id)
             reindexAffected(doc, doc.getExternalRefs(), new TreeSet<>())
             log.debug "Object ${id} was removed from Whelk"

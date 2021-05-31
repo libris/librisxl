@@ -3,7 +3,6 @@ package whelk.importer
 import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
-import whelk.IdGenerator
 import whelk.Whelk
 import whelk.exception.CancelUpdateException
 
