@@ -856,9 +856,29 @@ class PostgreSQLComponent {
                 changedBy = oldChangedBy
 
             normalizeDocumentForStorage(doc, connection)
-
+            
             if (collection == "hold") {
                 checkLinkedShelfMarkOwnership(doc, connection)
+                String holdingFor = doc.getHoldingFor()
+                if (holdingFor == null) {
+                    log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                    return null
+                }
+                String holdingForRecordId = getRecordId(holdingFor, connection)
+                if (holdingForRecordId == null) {
+                    log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                    return null
+                }
+                String holdingForSystemId = holdingForRecordId.substring(Document.BASE_URI.toString().length())
+                if (holdingForSystemId == null) {
+                    log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                    return null
+                }
+
+                acquireRowLock(holdingForSystemId, connection)
+
+                if (getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) != null)
+                    throw new ConflictingHoldException("Already exists a holding record for ${doc.getHeldBy()} and bib: $holdingFor")
             }
 
             if (doVerifyDocumentIdRetention) {
