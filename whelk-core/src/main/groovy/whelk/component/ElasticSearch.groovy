@@ -174,7 +174,7 @@ class ElasticSearch {
         } catch (Exception e) {
             if (!isBadRequest(e)) {
                 log.error("Failed to index batch ${ids} in elastic, placing in retry queue: $e", e)
-                indexingRetryQueue.add({ -> index(ids, whelk) })
+                indexingRetryQueue.add({ -> bulkIndexWithRetry(ids, whelk) })
             }
             else {
                 log.error("Failed to index ${ids} in elastic: $e", e)

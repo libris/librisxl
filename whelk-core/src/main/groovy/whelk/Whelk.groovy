@@ -160,7 +160,7 @@ class Whelk {
         return doc
     }
 
-    Map<String, Document> bulkLoad(List<String> ids) {
+    Map<String, Document> bulkLoad(Collection<String> ids) {
         Map<String, Document> result = [:]
         ids.each { id ->
             Document doc
