@@ -854,6 +854,8 @@ class PostgreSQLComponent {
             String oldChangedBy = resultSet.getString("changedBy")
             if (changedBy == null)
                 changedBy = oldChangedBy
+
+            normalizeDocumentForStorage(doc, connection)
             
             if (collection == "hold") {
                 checkLinkedShelfMarkOwnership(doc, connection)
@@ -877,12 +879,6 @@ class PostgreSQLComponent {
 
                 if (getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) != null)
                     throw new ConflictingHoldException("Already exists a holding record for ${doc.getHeldBy()} and bib: $holdingFor")
-            }
-
-            normalizeDocumentForStorage(doc, connection)
-
-            if (collection == "hold") {
-                checkLinkedShelfMarkOwnership(doc, connection)
             }
 
             if (doVerifyDocumentIdRetention) {
