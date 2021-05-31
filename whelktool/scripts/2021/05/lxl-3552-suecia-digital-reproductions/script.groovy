@@ -103,7 +103,8 @@ selectBySqlWhere("collection = 'bib' AND data#>>'{@graph,0,controlNumber}' IN $c
             "hasTitle",
             "responsibilityStatement",
             "publication",
-            "extent"
+            "extent",
+            "hasNote"
     )
     if (physicalInstance.identifiedBy)
         digiInstance["indirectlyIdentifiedBy"] = physicalInstance.identifiedBy
