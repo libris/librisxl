@@ -94,7 +94,7 @@ class Normalizers {
                         id.remove('typeNote')
                     }
                 }
-                asList(it).findAll{ Document.&isIsni || Document.&isOrcid }.forEach { Map isni ->
+                asList(it).findAll{ Map id -> Document.isIsni(id) || Document.isOrcid(id) }.forEach { Map isni ->
                     isni.value = ((String) isni.value)?.replace(' ', '')
                 }
             }

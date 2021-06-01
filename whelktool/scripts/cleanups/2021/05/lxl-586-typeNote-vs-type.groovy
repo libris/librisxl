@@ -33,10 +33,10 @@ selectBySqlWhere(where) { docItem ->
                     needsUpdate = true
                 }
             }
-            asList(it).findAll { Document.&isIsni || Document.&isOrcid }.forEach { Map isni ->
-                if (((String) isni.value)?.contains(' ')) {
-                    needsUpdate = true
-                }
+        }
+        asList(it).findAll { id -> Document.isIsni(id) || Document.isOrcid(id) }.forEach { Map isni ->
+            if (((String) isni.value)?.contains(' ')) {
+                needsUpdate = true
             }
         }
     }
