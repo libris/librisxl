@@ -877,8 +877,10 @@ class PostgreSQLComponent {
 
                 acquireRowLock(holdingForSystemId, connection)
 
-                if (getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) != null)
-                    throw new ConflictingHoldException("Already exists a holding record for ${doc.getHeldBy()} and bib: $holdingFor")
+                String holdingId = getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) 
+                if (holdingId != null && holdingId != doc.getShortId()) {
+                    throw new ConflictingHoldException("Already exists a holding record ($holdingId) for ${doc.getHeldBy()} and bib: $holdingFor")
+                }
             }
 
             if (doVerifyDocumentIdRetention) {
