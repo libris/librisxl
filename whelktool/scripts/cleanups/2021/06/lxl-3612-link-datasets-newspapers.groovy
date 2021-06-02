@@ -19,7 +19,7 @@ def datasets =
                             def (record, thing) = doc.graph
                             
                             asList(thing.hasTitle).any { Map title ->
-                                title.mainTitle ==~ /AFTONBLADET \d\d\d\d-\d\d\-\d\d/
+                                title.mainTitle ==~ /AFTONBLADET\s+\d\d\d\d-\d\d\-\d\d/
                             }
                         }
                 ],
@@ -38,7 +38,7 @@ def datasets =
                             def (record, thing) = doc.graph
 
                             asList(thing.hasTitle).any { Map title ->
-                                title.mainTitle ==~ /DAGENS NYHETER \d\d\d\d-\d\d\-\d\d/
+                                title.mainTitle ==~ /DAGENS NYHETER\s+\d\d\d\d-\d\d\-\d\d/
                             }
                         }
                 ],
@@ -57,7 +57,7 @@ def datasets =
                             def (record, thing) = doc.graph
 
                             asList(thing.hasTitle).any { Map title ->
-                                title.mainTitle ==~ /NORRKÖPINGS WECKOTIDNINGAR \d\d\d\d-\d\d\-\d\d/
+                                title.mainTitle ==~ /NORRKÖPINGS WECKOTIDNINGAR\s+\d\d\d\d-\d\d\-\d\d/
                             }
                         }
                 ],
@@ -76,7 +76,7 @@ def datasets =
                             def (record, thing) = doc.graph
 
                             asList(thing.hasTitle).any { Map title ->
-                                title.mainTitle ==~ /NORRKÖPINGS TIDNINGAR \d\d\d\d-\d\d\-\d\d/
+                                title.mainTitle ==~ /NORRKÖPINGS TIDNINGAR\s+\d\d\d\d-\d\d\-\d\d/
                             }
                         }
                 ],
@@ -95,7 +95,7 @@ def datasets =
                             def (record, thing) = doc.graph
 
                             asList(thing.hasTitle).any { Map title ->
-                                title.mainTitle ==~ /SVENSKA DAGBLADET \d\d\d\d-\d\d\-\d\d/
+                                title.mainTitle ==~ /SVENSKA DAGBLADET\s+\d\d\d\d-\d\d\-\d\d/
                             }
                         }
                 ],
