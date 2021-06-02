@@ -35,7 +35,7 @@ class Normalizers {
     static DocumentNormalizer nullRemover() {
         return { Document doc ->
             traverse(doc.data, { value, path ->
-                if (path && value == null) {
+                if (value == null) {
                     new Remove()
                 }
             })

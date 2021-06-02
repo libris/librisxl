@@ -63,7 +63,7 @@ class DocumentUtilSpec extends Specification {
         given:
         def o = [b: [a: 2, c: null, b: [[x: [2, null, 3]], 2]]]
         boolean modified = DocumentUtil.traverse(o, { value, path ->
-            if (path && value == null) {
+            if (value == null) {
                 new Remove()
             }
         })
