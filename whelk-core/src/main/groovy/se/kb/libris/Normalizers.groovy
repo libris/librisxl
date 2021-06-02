@@ -95,7 +95,9 @@ class Normalizers {
                     }
                 }
                 asList(it).findAll{ Map id -> Document.isIsni(id) || Document.isOrcid(id) }.forEach { Map isni ->
-                    isni.value = ((String) isni.value)?.replace(' ', '')
+                    if (isni.containsKey('value')) {
+                        isni.value = ((String) isni.value).replace(' ', '')
+                    }
                 }
             }
         }
