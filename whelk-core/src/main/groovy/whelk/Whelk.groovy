@@ -131,6 +131,7 @@ class Whelk {
     private void initDocumentNormalizers() {
         normalizer = new NormalizerChain(
                 [
+                        Normalizers.nullRemover(),
                         //FIXME: This is KBV specific stuff
                         Normalizers.workPosition(jsonld),
                         Normalizers.typeSingularity(jsonld),

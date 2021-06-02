@@ -59,6 +59,20 @@ class DocumentUtilSpec extends Specification {
         o == [:]
     }
 
+    def "removing null values"() {
+        given:
+        def o = [b: [a: 2, c: null, b: [[x: [2, null, 3]], 2]]]
+        boolean modified = DocumentUtil.traverse(o, { value, path ->
+            if (path && value == null) {
+                new Remove()
+            }
+        })
+
+        expect:
+        modified == true
+        o == [b: [a: 2, b: [[x: [2, 3]], 2]]]
+    }
+
     def "no op is nop"() {
         given:
         def o = [a: [b: [c: 'q']]]

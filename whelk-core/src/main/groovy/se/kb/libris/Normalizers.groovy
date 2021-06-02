@@ -8,11 +8,14 @@ import whelk.component.DocumentNormalizer
 import whelk.exception.InvalidQueryException
 import whelk.filter.BlankNodeLinker
 import whelk.filter.LanguageLinker
+import whelk.util.DocumentUtil
+import whelk.util.DocumentUtil.Remove
 
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
+import static whelk.util.DocumentUtil.traverse
 
 /*
 TODO: add support for linking blank nodes based on owl:hasKey
@@ -28,6 +31,16 @@ example:
 
 @Log
 class Normalizers {
+    
+    static DocumentNormalizer nullRemover() {
+        return { Document doc ->
+            traverse(doc.data, { value, path ->
+                if (path && value == null) {
+                    new Remove()
+                }
+            })
+        }
+    }
 
     static DocumentNormalizer language(Whelk whelk) {
         LanguageLinker linker = new LanguageLinker()
