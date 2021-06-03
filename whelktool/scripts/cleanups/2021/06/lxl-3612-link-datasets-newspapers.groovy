@@ -10,7 +10,7 @@ def datasets =
                                 [
                                         '@type'                     : ['Electronic'],
                                         'hasTitle.mainTitle'        : ['AFTONBLADET'],
-                                        'min-publication.year'      : ['1832'],
+                                        'min-publication.year'      : ['1831'],
                                         'max-publication.year'      : ['1900'],
                                         '@reverse.itemOf.heldBy.@id': ['https://libris.kb.se/library/APIS'],
                                         '_sort'                     : ['@id']
