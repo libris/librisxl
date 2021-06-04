@@ -852,7 +852,7 @@ class PostgreSQLComponent {
 
             String collection = resultSet.getString("collection")
             String oldChangedBy = resultSet.getString("changedBy")
-            if (changedBy == null)
+            if (changedBy == null || minorUpdate)
                 changedBy = oldChangedBy
 
             normalizeDocumentForStorage(doc, connection)
