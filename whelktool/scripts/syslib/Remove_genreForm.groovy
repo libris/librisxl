@@ -20,6 +20,8 @@ GF_ID.each { gf ->
 
       if (thing.instanceOf?.genreForm) {
          thing.instanceOf?.genreForm.removeIf {it['@id'] == gf['gfuri']}
+         if (thing.instanceOf.genreForm.isEmpty())
+             thing.instanceOf.remove('genreForm')
       }
 
       if (thing.instanceOf?.subject) {
