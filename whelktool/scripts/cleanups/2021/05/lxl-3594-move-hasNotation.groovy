@@ -68,7 +68,7 @@ selectBySqlWhere(where) { data ->
             }?.key
 
             if (matchedNotationUri) {
-                notationsToLink << matchedNotationUri
+                notationsToLink << ["@id":matchedNotationUri]
                 return true
             }
 
