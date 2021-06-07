@@ -95,7 +95,7 @@ class SearchUtils {
             case 'full':
                 return removeSystemInternalProperties(framedThing)
             default:
-                return ld.toCard(framedThing, false, false, false , preservedPaths)
+                return ld.toCard(framedThing, false, false, false , preservedPaths, true)
         }
     }
 
