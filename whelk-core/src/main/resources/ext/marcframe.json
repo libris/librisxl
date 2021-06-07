@@ -7607,7 +7607,7 @@
       "aboutEntity": "?thing",
       "addLink": "classification",
       "resourceType": "ClassificationNlm",
-      "i1": {"property": "marc:existenceInNlmCollection", "marcDefault": " ", "tokenMap": {"0": true, "1": false}},
+      "i1": {"ignored": true, "marcDefault": " ", "NOTE:LC": "ignore"},
       "i2": {"property": "marc:assignedByNlm", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "code"},
       "$b": {"ignored": true},
@@ -7616,6 +7616,9 @@
       "_spec": [
         {
           "source": {
+            "060": {"ind1": "1", "ind2": "4", "subfields": [{"a": "W1"}]}
+          },
+          "normalized": {
             "060": {"ind1": " ", "ind2": "4", "subfields": [{"a": "W1"}]}
           },
           "result": {
