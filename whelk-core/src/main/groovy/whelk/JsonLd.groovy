@@ -907,8 +907,7 @@ class JsonLd {
     private Map getLens(Map thing, List<String> lensTypes) {
         Map lensGroups = displayData.get('lensGroups')
         lensTypes.findResult { lensType ->
-            Map lensGroup = lensGroups.get(lensType)
-            getLensFor(thing, lensGroup)
+            lensGroups.get(lensType)?.with { getLensFor(thing, (Map) it) }
         }
     }
     
