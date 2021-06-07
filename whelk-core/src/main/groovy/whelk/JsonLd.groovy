@@ -672,7 +672,7 @@ class JsonLd {
     }
 
     Map toCard(Map thing, boolean chipsify = true, boolean addSearchKey = false,
-            boolean reduceKey = false, List<List> preservePaths = [], boolean searchCard = true) {
+            boolean reduceKey = false, List<List> preservePaths = [], boolean searchCard = false) {
         Map result = [:]
 
         Map card = removeProperties(thing, getLens(thing, searchCard ? ['search-cards', 'cards'] : ['cards']))
