@@ -672,14 +672,14 @@ class JsonLd {
     }
 
     Map toCard(Map thing, boolean chipsify = true, boolean addSearchKey = false,
-            boolean reduceKey = false, List<List> preservePaths = []) {
+            boolean reduceKey = false, List<List> preservePaths = [], boolean searchCard = false) {
         Map result = [:]
 
-        Map card = removeProperties(thing, 'cards')
+        Map card = removeProperties(thing, getLens(thing, searchCard ? ['search-cards', 'cards'] : ['cards']))
         // If result is too small, use chip instead.
         // TODO: Support and use extends + super in card defs instead.)
         if (card.size() < 2) {
-            card = removeProperties(thing, 'chips')
+            card = removeProperties(thing, getLens(thing, ['chips']))
         }
 
         restorePreserved(card, thing, preservePaths)
@@ -694,11 +694,11 @@ class JsonLd {
                 if (value instanceof List) {
                     lensValue = ((List) value).withIndex().collect { it, index ->
                         it instanceof Map
-                        ? toCard((Map) it, chipsify, addSearchKey, reduceKey, pathRemainders([key, index], preservePaths))
+                        ? toCard((Map) it, chipsify, addSearchKey, reduceKey, pathRemainders([key, index], preservePaths), searchCard)
                         : it
                     }
                 } else if (value instanceof Map) {
-                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduceKey, pathRemainders([key], preservePaths))
+                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduceKey, pathRemainders([key], preservePaths), searchCard)
                 }
             }
             result[key] = lensValue
@@ -733,7 +733,7 @@ class JsonLd {
             }
         } else if ((object instanceof Map)) {
             Map result = [:]
-            Map reduced = removeProperties(object, 'chips')
+            Map reduced = removeProperties(object, getLens(object, ['chips']))
             restorePreserved(reduced, (Map) object, preservePaths)
             reduced.each { key, value ->
                 result[key] = toChip(value, pathRemainders([key], preservePaths))
@@ -904,11 +904,14 @@ class JsonLd {
                 .collect{ it.drop(prefix.size()) }
     }
 
-    private Map removeProperties(Map thing, String lensType) {
+    private Map getLens(Map thing, List<String> lensTypes) {
         Map lensGroups = displayData.get('lensGroups')
-        Map lensGroup = lensGroups.get(lensType)
-        Map lens = getLensFor(thing, lensGroup)
-
+        lensTypes.findResult { lensType ->
+            lensGroups.get(lensType)?.with { getLensFor(thing, (Map) it) }
+        }
+    }
+    
+    private Map removeProperties(Map thing, Map lens) {
         Map result = [:]
         if (lens) {
             List propertiesToKeep = (List) lens.get("showProperties")

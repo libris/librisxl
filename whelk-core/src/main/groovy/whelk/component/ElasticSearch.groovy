@@ -325,8 +325,9 @@ class ElasticSearch {
         boolean addSearchKey = true
         boolean reduceKey = false
         def preservedPaths = preserveLinks ? JsonLd.findPaths(thing, '@id', preserveLinks) : []
-
-        whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preservedPaths)
+        boolean searchCard = true
+        
+        whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preservedPaths, searchCard)
     }
 
     private static Map getShapeForEmbellishment(Whelk whelk, Map thing) {
