@@ -26,6 +26,8 @@ GF_ID.each { gf ->
 
       if (thing.instanceOf?.subject) {
          thing.instanceOf?.subject.removeIf {it['@id'] == gf['gfuri']}
+         if (thing.instanceOf.subject.isEmpty())
+             thing.instanceOf.remove('subject')
       }
 
       data.scheduleSave(onError: { e ->
