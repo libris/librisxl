@@ -16,7 +16,6 @@ Dessa parametrar är:
    1. `append` som innebär att borttagna posters ID:n exporteras som en CSV-fil _efter_ den vanliga exportdatan (separerat av en null-byte).
 1. `virtualDelete` som kan ha värde `true` eller `false`. Är `virtualDelete` satt till `true` så kommer poster anses vara borttagna i den genererade exporten, i de fall där de sigel som anges i profilen inte längre har bestånd på posterna. Flaggan används förslagsvis tillsammans med `deleted=export`.
 
-
 Exempel på anrop:
 ```
 $ curl -Ss -XPOST "https://libris.kb.se/api/marc_export/?from=2019-10-05T22:00:00Z&until=2019-10-06T22:00:00Z&deleted=ignore&virtualDelete=false" --data-binary @./etc/export.properties > export.marc
@@ -74,6 +73,7 @@ Förklaring till (en del av) de olika inställningarna i exportprofilen:
 | `bibupdate`          | `on`\|`off`                | Ska uppdateringar av bibliografiska poster leda till export.
 | `characterencoding`  | `UTF-8`\|`ISO-8859-1`      | Avgör teckenkodning.
 | `composestrategy`    | `compose`\|`decompose`     | Avgör ifall unicode-tecken ska vara composed eller decomposed.
+| `exportdeleted`      | `on`\|`off`                | Motsvarar HTTP-parametern `deleted`=`ignore|export` som prioriteras framför värdet här om båda anges.
 | `f003`               | [sträng]                   | Blankstegsseparerad lista. Tvinga fält 003 att anta ett visst värde.
 | `format`             | `ISO2709`\|`MARCXML`       | Avgör serialiseringsformat för MARC-data.
 | `holdcreate`         | `on`\|`off`                | Ska nyskapade bestånd leda till export.
@@ -91,3 +91,4 @@ Förklaring till (en del av) de olika inställningarna i exportprofilen:
 | `move240to244`       | `off`|`on`                 | Flytta MARC-fältet 240 till 244.
 | `nameform`           | `Forskningsbiblioteksform` | Tvinga namnformer att anta Forskningsbiblioteksform.
 | `sab`                | `on`\|`off`                | Ska SAB-titlar (976) läggas till.
+| `virtualdelete`      | `on`\|`off`                | Motsvarar HTTP-parametern `virtualDelete` som prioriteras framför värdet här om båda anges.
