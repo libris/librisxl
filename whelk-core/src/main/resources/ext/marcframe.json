@@ -6929,7 +6929,7 @@
       "$d": {"addLink": "descriptionUpgrader", "resourceType": "Library", "property": "sigel"},
       "$e": {"addLink": "descriptionConventions", "NOTE:marc-repeatable": false, "resourceType": "DescriptionConventions", "property": "code"},
       "$6": {"property": "marc:fieldref"},
-      "NOTE:$9": {"property": "license", "NOTE": "Removed after bibliographic review"},
+      "$9": {"addProperty": "marc:agreementName", "NOTE": "Local Libris field"},
       "_spec": [
         {
           "name": "ensure multiple fields matching a top entity convert and revert OK",
@@ -7007,6 +7007,20 @@
           ],
           "result": {
             "descriptionCreator": {"@id": "https://libris.kb.se/library/S", "@type": "Library", "sigel": "S"},
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        },
+        {
+          "name": "040-9",
+          "normalized": [
+            {"040": {"ind1": " ", "ind2": " ", "subfields": [{"9": "x"}]}}
+          ],
+          "result": {
+            "marc:agreementName": ["x"],
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text"
@@ -12080,7 +12094,7 @@
       "$e": {"addProperty": "marc:tactileAssistiveFeatures"},
       "$2": {"link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
       "$3": {"property": "typeNote", "supplementary": true},
-      "$6": {"property": "marc:fieldref", "supplementary": true},
+      "$6": {"ignored": true, "NOTE:LC": "ignore"},
       "_spec": [
         {
           "source": {"341": {"ind1": "0", "ind2": " ", "subfields": [
