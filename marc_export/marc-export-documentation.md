@@ -73,7 +73,7 @@ Förklaring till (en del av) de olika inställningarna i exportprofilen:
 | `bibupdate`          | `on`\|`off`                | Ska uppdateringar av bibliografiska poster leda till export.
 | `characterencoding`  | `UTF-8`\|`ISO-8859-1`      | Avgör teckenkodning.
 | `composestrategy`    | `compose`\|`decompose`     | Avgör ifall unicode-tecken ska vara composed eller decomposed.
-| `exportdeleted`      | `on`\|`off`                | Motsvarar HTTP-parametern `deleted`=`ignore|export` som prioriteras framför värdet här om båda anges.
+| `exportdeleted`      | `on`\|`off`                | Motsvarar HTTP-parametern `deleted=export` resp. `deleted=ignore` som prioriteras framför värdet här om båda anges.
 | `f003`               | [sträng]                   | Blankstegsseparerad lista. Tvinga fält 003 att anta ett visst värde.
 | `format`             | `ISO2709`\|`MARCXML`       | Avgör serialiseringsformat för MARC-data.
 | `holdcreate`         | `on`\|`off`                | Ska nyskapade bestånd leda till export.
