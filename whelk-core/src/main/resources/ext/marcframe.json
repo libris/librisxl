@@ -21269,22 +21269,6 @@
           }}
         },
         {
-          "name": "uri + encodingFormat",
-          "source": {"856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://www.cdc.gov/ncidod/EID/eid.htm"}, {"q": "text/html"}]}},
-          "result": {"mainEntity": {
-            "associatedMedia": [
-              {
-                "@type": "MediaObject",
-                "uri": ["http://www.cdc.gov/ncidod/EID/eid.htm"],
-                "encodingFormat" : {
-                  "@type" : "EncodingFormat",
-                  "label" : "text/html"
-                }
-              }
-            ]
-          }}
-        },
-        {
           "name": "ftp + contentSize",
           "source": {"856": {"ind1": "1", "ind2": " ", "subfields": [{"u": "ftp://example.com"}, {"s": "16874 bytes"}]}},
           "result": {"mainEntity": {
