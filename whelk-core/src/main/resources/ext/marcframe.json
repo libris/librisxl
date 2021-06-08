@@ -21168,6 +21168,10 @@
       "$8": {"property": "marc:groupid"},
       "$a": {"addProperty": "marc:hostName"},
       "$f": {"addProperty": "marc:electronicName"},
+      "$q": {"link": "encodingFormat", "resourceType": "EncodingFormat", "property": "label", "infer": true},
+      "$r": {"ignored": true, "NOTE:LC": "$r - Settings [OBSOLETE, 2020]"},
+      "$s": {"addProperty": "contentSize"},
+      "$t": {"ignored": true, "NOTE:LC": "$t - Terminal emulation [OBSOLETE, 2020]"},
       "$u": {"addProperty": "uri"},
       "$x": {"addProperty": "cataloguersNote"},
       "$y": {"addProperty": "marc:linkText"},
@@ -21246,6 +21250,36 @@
           "source": {"856": {"ind1": "4", "ind2": "8", "subfields": [{"u": "http://example.com/doc.pdf"}]}},
           "result": {"mainEntity": {
             "relatedTo": [{"@type": "Document", "uri": ["http://example.com/doc.pdf"]}]
+          }}
+        },
+        {
+          "name": "URI + encodingFormat",
+          "source": {"856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://www.cdc.gov/ncidod/EID/eid.htm"}, {"q": "text/html"}]}},
+          "result": {"mainEntity": {
+            "associatedMedia": [
+              {
+                "@type": "MediaObject",
+                "uri": ["http://www.cdc.gov/ncidod/EID/eid.htm"],
+                "encodingFormat" : {
+                  "@type" : "EncodingFormat",
+                  "label" : "text/html"
+                }
+              }
+            ]
+          }}
+        },
+        {
+          "name": "ftp + contentSize",
+          "source": {"856": {"ind1": "1", "ind2": " ", "subfields": [{"u": "ftp://example.com"}, {"s": "16874 bytes"}]}},
+          "result": {"mainEntity": {
+            "electronicLocator": [
+              {
+                "@type": "Document",
+                "uri": ["ftp://example.com"],
+                "marc:electronicLocatorType" : "ftp",
+                "contentSize" : ["16874 bytes"]
+              }
+            ]
           }}
         }
       ]
