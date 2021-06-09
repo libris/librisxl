@@ -85,7 +85,6 @@ class WhelkTool {
         } catch (NullPointerException e) {
             whelk = Whelk.createLoadedCoreWhelk()
         }
-        whelk.setSkipIndex(skipIndex)
         initScript(scriptPath)
         this.reportsDir = reportsDir
         reportsDir.mkdirs()
@@ -594,6 +593,8 @@ class WhelkTool {
     }
 
     private void run() {
+        whelk.setSkipIndex(skipIndex)
+        
         log "Running Whelk against:"
         log "  PostgreSQL:"
         log "    url:     ${whelk.storage.connectionPool.getJdbcUrl()}"
