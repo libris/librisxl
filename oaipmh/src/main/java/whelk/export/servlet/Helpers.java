@@ -78,11 +78,6 @@ public class Helpers
         {
             String updatedCollection = LegacyIntegrationTools.determineLegacyCollection(updated, OaiPmh.s_whelk.getJsonld());
 
-            if (updatedCollection == null)
-            {
-                return;
-            }
-
             if (requestedCollection == null)
             {
                 // If no collection is requested, all records matching the prepared statement are welcome.
@@ -239,32 +234,95 @@ public class Helpers
         return preparedStatement;
     }
 
-    public static ResultIterator getMatchingDocuments(Connection connection, ZonedDateTime fromDateTime, ZonedDateTime untilDateTime, SetSpec setSpec, String id, boolean includeDependenciesInTimeInterval)
+    private static PreparedStatement getOpenIntervalStatement(Connection connection, ZonedDateTime fromDateTime,
+                                                                ZonedDateTime untilDateTime, boolean includeSilentChanges)
+            throws SQLException
+    {
+        PreparedStatement preparedStatement;
+        String sql = "SELECT data FROM lddb WHERE collection <> 'definitions'";
+
+        if (fromDateTime != null)
+        {
+            if (includeSilentChanges)
+                sql += " AND ( modified >= ? OR totstz(data#>>'{@graph,0,generationDate}') >= ? ) ";
+            else
+                sql += " AND modified >= ? ";
+        }
+        if (untilDateTime != null)
+        {
+            if (includeSilentChanges)
+                sql += " AND ( modified <= ? OR totstz(data#>>'{@graph,0,generationDate}') <= ? ) ";
+            else
+                sql += " AND modified <= ? ";
+        }
+
+        preparedStatement = connection.prepareStatement(sql);
+        preparedStatement.setFetchSize(512);
+        int parameterIndex = 1;
+        if (fromDateTime != null)
+        {
+            Timestamp fromTimeStamp = new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L);
+            preparedStatement.setTimestamp(parameterIndex++, fromTimeStamp);
+            if (includeSilentChanges)
+                preparedStatement.setTimestamp(parameterIndex++, fromTimeStamp);
+        }
+        if (untilDateTime != null)
+        {
+            Timestamp untilTimeStamp = new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L);
+            preparedStatement.setTimestamp(parameterIndex++, untilTimeStamp);
+            if (includeSilentChanges)
+                preparedStatement.setTimestamp(parameterIndex++, untilTimeStamp);
+        }
+
+        return preparedStatement;
+    }
+
+    private static PreparedStatement getClosedIntervalStatement(Connection connection, ZonedDateTime fromDateTime,
+                                                      ZonedDateTime untilDateTime, boolean includeSilentChanges)
+            throws SQLException
+    {
+        PreparedStatement preparedStatement;
+        String sql = "SELECT data FROM lddb WHERE collection <> 'definitions'";
+
+        if (includeSilentChanges)
+        {
+            sql += " AND ( modified BETWEEN ? AND ? OR totstz(data#>>'{@graph,0,generationDate}') BETWEEN ? AND ? ) ";
+        }
+        else
+        {
+            sql += " AND ( modified BETWEEN ? AND ? ) ";
+        }
+
+        preparedStatement = connection.prepareStatement(sql);
+        preparedStatement.setFetchSize(512);
+
+        Timestamp fromTimeStamp = new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L);
+        Timestamp untilTimeStamp = new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L);
+        int parameterIndex = 1;
+        preparedStatement.setTimestamp(parameterIndex++, fromTimeStamp);
+        preparedStatement.setTimestamp(parameterIndex++, untilTimeStamp);
+        if (includeSilentChanges)
+        {
+            preparedStatement.setTimestamp(parameterIndex++, fromTimeStamp);
+            preparedStatement.setTimestamp(parameterIndex++, untilTimeStamp);
+        }
+
+        return preparedStatement;
+    }
+
+    public static ResultIterator getMatchingDocuments(Connection connection, ZonedDateTime fromDateTime,
+                                                      ZonedDateTime untilDateTime, SetSpec setSpec, String id,
+                                                      boolean includeDependenciesInTimeInterval,
+                                                      boolean includeSilentChanges)
             throws SQLException
     {
         PreparedStatement preparedStatement;
         if (id == null)
         {
-            String sql = "SELECT data FROM lddb WHERE collection <> 'definitions'";
-
-            if (fromDateTime != null) {
-                sql += " AND modified >= ? ";
-            }
-            if (untilDateTime != null) {
-                sql += " AND modified <= ? ";
-            }
-
-            preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.setFetchSize(512);
-            int parameterIndex = 1;
-            if (fromDateTime != null) {
-                Timestamp fromTimeStamp = new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L);
-                preparedStatement.setTimestamp(parameterIndex++, fromTimeStamp);
-            }
-            if (untilDateTime != null) {
-                Timestamp untilTimeStamp = new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L);
-                preparedStatement.setTimestamp(parameterIndex++, untilTimeStamp);
-            }
+            if (fromDateTime == null || untilDateTime == null)
+                preparedStatement = getOpenIntervalStatement(connection, fromDateTime, untilDateTime, includeSilentChanges);
+            else
+                preparedStatement = getClosedIntervalStatement(connection, fromDateTime, untilDateTime, includeSilentChanges);
         }
         else
         {

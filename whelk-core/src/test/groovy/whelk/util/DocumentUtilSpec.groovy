@@ -59,6 +59,20 @@ class DocumentUtilSpec extends Specification {
         o == [:]
     }
 
+    def "removing null values"() {
+        given:
+        def o = [b: [a: 2, c: null, b: [[x: [2, null, 3]], 2]]]
+        boolean modified = DocumentUtil.traverse(o, { value, path ->
+            if (value == null) {
+                new Remove()
+            }
+        })
+
+        expect:
+        modified == true
+        o == [b: [a: 2, b: [[x: [2, 3]], 2]]]
+    }
+
     def "no op is nop"() {
         given:
         def o = [a: [b: [c: 'q']]]
@@ -94,6 +108,39 @@ class DocumentUtilSpec extends Specification {
         visited == [
                 ['a'],
                 ['r', 's', 't', 'a'],
+                ['l', 1, 'a']
+        ]
+    }
+
+    def findKeys() {
+        given:
+        def data = [
+                a: [b: [c: 'q']],
+                r: [s: [t: [a: [q: 2]]]],
+                l: [[], [a: 2]]
+        ]
+
+        def visited = []
+        def values = []
+        DocumentUtil.findKey(data, ['a', 's', 'q'], { value, path ->
+            values << value
+            visited << path
+            return NOP
+        })
+
+        expect:
+        values == [
+                [b: [c: 'q']],
+                [t: [a: [q: 2]]],
+                [q: 2],
+                2,
+                2
+        ]
+        visited == [
+                ['a'],
+                ['r', 's'],
+                ['r', 's', 't', 'a'],
+                ['r', 's', 't', 'a', 'q'],
                 ['l', 1, 'a']
         ]
     }

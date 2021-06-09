@@ -46,8 +46,21 @@ class DocumentUtil {
      * @return true if obj was changed
      */
     static boolean findKey(data, String key, Visitor visitor) {
+        return findKey(data, [key], visitor)
+    }
+
+    /**
+     * Search keys in JSON-LD structure
+     *
+     * @param data JSON-LD structure
+     * @param keys
+     * @param visitor function to call with value for found keys
+     * @return true if obj was changed
+     */
+    static boolean findKey(data, Collection<String> keys, Visitor visitor) {
+        Set<String> k = keys instanceof Set ? keys : new HashSet<>(keys) 
         return traverse(data, { value, path ->
-            if (path && path.last() == key) {
+            if (path && path.last() instanceof String && k.contains(path.last())) {
                 return visitor.visitElement(value, path)
             }
         })

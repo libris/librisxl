@@ -85,6 +85,7 @@ class WhelkTool {
         } catch (NullPointerException e) {
             whelk = Whelk.createLoadedCoreWhelk()
         }
+        whelk.setSkipIndex(skipIndex)
         initScript(scriptPath)
         this.reportsDir = reportsDir
         reportsDir.mkdirs()
@@ -285,7 +286,7 @@ class WhelkTool {
             if (limit > -1 && counter.readCount > limit) {
                 break
             }
-            DocumentItem item = new DocumentItem(number: counter.readCount, doc: doc, whelk: whelk, preUpdateChecksum: doc.getChecksum())
+            DocumentItem item = new DocumentItem(number: counter.readCount, doc: doc, whelk: whelk, preUpdateChecksum: doc.getChecksum(whelk.jsonld))
             item.existsInStorage = !newItems
             batch.items << item
             if (batch.items.size() == batchSize) {
@@ -420,7 +421,7 @@ class WhelkTool {
                         logRetry(e, item)
                         Document doc = whelk.getDocument(item.doc.shortId)
                         item = new DocumentItem(number: item.number, doc: doc, whelk: whelk,
-                                preUpdateChecksum: doc.getChecksum(), existsInStorage: true)
+                                preUpdateChecksum: doc.getChecksum(whelk.jsonld), existsInStorage: true)
                         return doProcess(process, item, counter)
                     }
                     counter.countModified()
@@ -499,7 +500,7 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            whelk.storeAtomicUpdate(doc, !item.loud, changedIn, scriptJobUri, item.preUpdateChecksum, !skipIndex)
+            whelk.storeAtomicUpdate(doc, !item.loud, changedIn, scriptJobUri, item.preUpdateChecksum)
         }
         modifiedLog.println(doc.shortId)
     }
@@ -511,7 +512,7 @@ class WhelkTool {
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
             if (!whelk.createDocument(doc, changedIn, scriptJobUri,
-                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false, !skipIndex))
+                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
         createdLog.println(doc.shortId)

@@ -14,7 +14,6 @@ import whelk.Whelk
 import whelk.exception.UnexpectedHttpStatusException
 import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
-import whelk.util.LegacyIntegrationTools
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
@@ -22,13 +21,27 @@ import java.util.concurrent.LinkedBlockingQueue
 @Log
 class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
+
+    static final Set<String> LANGUAGES_TO_INDEX = ['sv', 'en'] as Set
+    static final List<String> REMOVABLE_BASE_URIS = [
+            'http://libris.kb.se/',
+            'https://libris.kb.se/',
+            'http://id.kb.se/vocab/',
+            'https://id.kb.se/vocab/',
+            'http://id.kb.se/',
+            'https://id.kb.se/',
+    ]
+
     private static final ObjectMapper mapper = new ObjectMapper()
 
+    public int maxResultWindow = 10000 // Elasticsearch default (fallback value)
+    
     String defaultIndex = null
     private List<String> elasticHosts
     private String elasticCluster
     private ElasticClient client
     private ElasticClient bulkClient
+    private boolean isPitApiAvailable = false
 
     private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
 
@@ -57,6 +70,22 @@ class ElasticSearch {
                 }
             }
         }, 60*1000, 10*1000)
+        
+        initSettings()
+    }
+
+    void initSettings() {
+        Map indexSettings = getSettings()
+        if (indexSettings.index &&
+                indexSettings.index['max_result_window'] &&
+                ((String) indexSettings.index['max_result_window']).isNumber()) {
+            maxResultWindow = ((String) indexSettings.index['max_result_window']).toInteger()
+        }
+        
+        Map clusterInfo = performRequest('GET', '/')
+        if (clusterInfo?.version?.build_flavor == 'default') {
+            isPitApiAvailable = true
+        }
     }
 
     private List<String> getElasticHosts(String elasticHost) {
@@ -97,6 +126,28 @@ class ElasticSearch {
         }
     }
 
+    /**
+     * Get ES settings for associated index
+     */
+    Map getSettings() {
+        Map response
+        try {
+            response = mapper.readValue(client.performRequest('GET', "/${indexName}/_settings", ''), Map)
+        } catch (UnexpectedHttpStatusException e) {
+            log.warn("Got unexpected status code ${e.statusCode} when getting ES settings: ${e.message}", e)
+            return [:]
+        }
+
+        List<String> keys = response.keySet() as List
+
+        if (keys.size() == 1 && response[(keys[0])].containsKey('settings')) {
+            return response[(keys[0])]['settings']
+        } else {
+            log.warn("Couldn't get settings from ES index ${indexName}, response was ${response}.")
+            return [:]
+        }
+    }
+
     void bulkIndex(Collection<Document> docs, Whelk whelk) {
         if (docs) {
             String bulkString = docs.findResults{ doc ->
@@ -123,7 +174,7 @@ class ElasticSearch {
         } catch (Exception e) {
             if (!isBadRequest(e)) {
                 log.error("Failed to index batch ${ids} in elastic, placing in retry queue: $e", e)
-                indexingRetryQueue.add({ -> index(ids, whelk) })
+                indexingRetryQueue.add({ -> bulkIndexWithRetry(ids, whelk) })
             }
             else {
                 log.error("Failed to index ${ids} in elastic: $e", e)
@@ -224,7 +275,7 @@ class ElasticSearch {
 
     String getShapeForIndex(Document document, Whelk whelk) {
         Document copy = document.clone()
-        
+
         whelk.embellish(copy, ['chips'])
 
         if (log.isDebugEnabled()) {
@@ -249,6 +300,11 @@ class ElasticSearch {
         String thingId = thingIds.get(0)
         Map framed = JsonLd.frame(thingId, copy.data)
 
+        framed['_sortKeyByLang'] = whelk.jsonld.toChipAsMapByLang(
+                framed,
+                LANGUAGES_TO_INDEX,
+                REMOVABLE_BASE_URIS)
+        
         // TODO: replace with elastic ICU Analysis plugin?
         // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
         DocumentUtil.findKey(framed, JsonLd.SEARCH_KEY) { value, path ->
@@ -269,8 +325,9 @@ class ElasticSearch {
         boolean addSearchKey = true
         boolean reduceKey = false
         def preservedPaths = preserveLinks ? JsonLd.findPaths(thing, '@id', preserveLinks) : []
-
-        whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preservedPaths)
+        boolean searchCard = true
+        
+        whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preservedPaths, searchCard)
     }
 
     private static Map getShapeForEmbellishment(Whelk whelk, Map thing) {
@@ -288,10 +345,9 @@ class ElasticSearch {
 
     private static void filterLanguages(Whelk whelk, Map thing) {
         Set languageContainers = whelk.jsonld.langContainerAlias.values() as Set
-        Set languagesToKeep = ['sv', 'en'] // TODO: where do we define these?
         DocumentUtil.traverse(thing, { value, path ->
             if (path && path.last() in languageContainers) {
-                return new DocumentUtil.Replace(value.findAll {lang, str -> lang in languagesToKeep})
+                return new DocumentUtil.Replace(value.findAll {lang, str -> lang in LANGUAGES_TO_INDEX})
             }
         })
     }
@@ -303,6 +359,12 @@ class ElasticSearch {
         getOtherIsbns(doc.getIsbnHiddenValues())
                 .each { doc.addIndirectTypedThingIdentifier('ISBN', it) }
 
+        getFormattedIsnis(doc.getIsniValues())
+                .each { doc.addTypedThingIdentifier('ISNI', it) }
+
+        getFormattedIsnis(doc.getOrcidValues()) // ORCID is a subset of ISNI, same format
+                .each { doc.addTypedThingIdentifier('ORCID', it) }
+        
         doc.data['@graph'][1]['_links'] = links
         doc.data['@graph'][1]['_outerEmbellishments'] = doc.getEmbellishments() - links
 
@@ -336,6 +398,15 @@ class ElasticSearch {
         }
     }
 
+    /**
+     * @return ISNIs with with four groups of four digits separated by space
+     */
+    private static Collection<String> getFormattedIsnis(Collection<String> isnis) {
+        isnis.findAll{ it.size() == 16 }.collect{isni ->
+            isni.split("").collate(4).collect{ it.join() }.join(" ")
+        }
+    }
+
     Map query(Map jsonDsl) {
         return performQuery(
                 jsonDsl,
@@ -350,6 +421,35 @@ class ElasticSearch {
                 getQueryUrl() + '?filter_path=took,hits.total,hits.hits._id',
                 { it."_id" }
         )
+    }
+    
+    /**
+     * Find all other documents that need to be re-indexed because 
+     * of changes in linked document(s)
+     * @param iris of changed document(s)
+     * @return an Iterable of system IDs.
+     */
+    Iterable<String> getAffectedIds(Collection<String> iris) {
+        def t1 = iris.collect {['term': ['_links': ['value': it]]]}
+        def t2 = iris.collect {['term': ['_outerEmbellishments': ['value': it]]]}
+        Map query = [
+                'bool': ['should': t1 + t2 ]
+        ]
+        
+        Scroll<String> ids = new DefaultScroll(query)
+        try {
+            ids.hasNext()
+        }
+        catch (TooManyResultsException e) {
+            ids = new SearchAfterScroll(query)
+        }
+        
+        return new Iterable<String>() {
+            @Override
+            Iterator<String> iterator() {
+                return ids
+            }
+        }
     }
 
     @Override
@@ -380,7 +480,7 @@ class ElasticSearch {
         catch (Exception e) {
             if (isBadRequest(e)) {
                 log.debug("Invalid query: $e")
-                throw new InvalidQueryException("")
+                throw new InvalidQueryException(e.getMessage(), e)
             }
             else {
                 log.warn("Failed to query ES: $e")
@@ -398,6 +498,234 @@ class ElasticSearch {
             return Base64.encodeBase64URLSafeString(id.getBytes("UTF-8"))
         } else {
             return id // If XL-minted identifier, use the same charsequence
+        }
+    }
+    
+    private Map performRequest(String method, String path, Map body = null) {
+        try {
+            return mapper.readValue(client.performRequest(method, path, body ? JsonOutput.toJson(body) : null), Map)    
+        }
+        catch (UnexpectedHttpStatusException e) {
+            tryMapAndThrow(e)
+            throw e
+        }
+    }
+    
+    private abstract class Scroll<T> implements Iterator<T> {
+        final int FETCH_SIZE = 500
+
+        // TODO: change to _shard_doc when we upgrade to ES 7.12+
+        protected final List SORT = [['_id': 'asc']]
+        protected final List FILTER_PATH = ['took', 'hits.hits.sort', 'pit_id', 'hits.total.value']
+
+        Iterator<T> fetchedItems
+        boolean isBeforeFirstFetch = true
+
+        Map query
+        String filterPath
+        Closure<T> hitCollector
+        
+        Scroll(Map query, List<String> hitsFilter = ['hits.hits._id'], Closure<T> hitCollector = { it['_id']}) {
+            this.query = query
+            this.filterPath = (FILTER_PATH + hitsFilter).join(',')
+            this.hitCollector = hitCollector
+        }
+
+        abstract boolean isAfterLast()
+        abstract void updateState(Map response)
+        abstract String queryPath()
+        abstract Map nextRequest()
+
+        @Override
+        boolean hasNext() {
+            if (isBeforeFirstFetch) {
+                fetch()
+                isBeforeFirstFetch = false
+            }
+
+            return fetchedItems.hasNext() || !isAfterLast()
+        }
+
+        @Override
+        T next() {
+            if (isBeforeFirstFetch) {
+                fetch()
+                isBeforeFirstFetch = false
+            }
+
+            if (!hasNext()) {
+                throw new NoSuchElementException()
+            }
+
+            if (!fetchedItems.hasNext()) {
+                fetch()
+            }
+
+            return fetchedItems.next()
+        }
+
+        void fetch() {
+            Map response = performRequest('POST', queryPath(), nextRequest())
+            updateState(response)
+            fetchedItems = response.hits.hits.collect(hitCollector).iterator()
+        }
+    }
+    
+    private class DefaultScroll<T> extends Scroll<T> {
+        int total = -1
+        int page = 0
+
+        DefaultScroll(Map query, List<String> hitsFilter = ['hits.hits._id'], Closure<T> hitCollector = { it['_id']}) {
+            super(query, hitsFilter, hitCollector)
+        }
+
+        @Override
+        boolean isAfterLast() {
+            return total >= 0 && page * FETCH_SIZE >= total
+        }
+
+        @Override
+        void updateState(Map response) {
+            total = response.hits.total.value
+            if (total > maxResultWindow) {
+                throw new TooManyResultsException(total, maxResultWindow)
+            }
+
+            page++
+        }
+
+        @Override
+        String queryPath() {
+            "/${indexName}/_search?filter_path=$filterPath"
+        }
+
+        @Override
+        Map nextRequest() {
+            return [
+                    'query': query,
+                    'size': FETCH_SIZE,
+                    'from': page * FETCH_SIZE,
+                    'track_total_hits': true,
+                    'sort': SORT
+            ]
+        }
+    }
+
+    /**
+     * Use "search_after" + Point in time API (if available) to be able to retrieve more than 
+     * {@link ElasticSearch#maxResultWindow} results. 
+     * 
+     * When using Point in time API (not available in ElasticSearch OSS version):
+     * Caller needs to consume {@link ElasticSearch.Scroll#FETCH_SIZE} results in less time than 
+     * {@link SearchAfterScroll#keepAlive} otherwise the search context times out.
+     */
+    private class SearchAfterScroll<T> extends Scroll<T> {
+        final String keepAlive = "1m"
+
+        String pitId = null
+        boolean isAfterLastFetch = false
+
+        def offset = null
+
+        SearchAfterScroll(Map query, List<String> hitsFilter = ['hits.hits._id'], Closure<T> hitCollector = { it['_id']}) {
+            super(query, hitsFilter, hitCollector)
+        }
+
+        @Override
+        boolean isAfterLast() {
+            return isAfterLastFetch
+        }
+
+        @Override
+        void updateState(Map response) {
+            pitId = response.pit_id
+            List items = (List) response.hits.hits
+            isAfterLastFetch = items.size() < FETCH_SIZE
+
+            if (isAfterLastFetch && pitId) {
+                deletePointInTime(pitId)
+            }
+                
+            if (items) {
+                offset = items.last()['sort']
+            }
+        }
+
+        @Override
+        String queryPath() {
+            "/_search?filter_path=$filterPath"
+        }
+
+        @Override
+        Map nextRequest() {
+            if (!pitId && isPitApiAvailable) {
+                pitId = createPointInTime(keepAlive)
+            }
+
+            Map request = [
+                    'query': query,
+                    'size': FETCH_SIZE,
+                    'track_total_hits': false,
+                    'sort': SORT
+            ]
+            
+            if (pitId) {
+                request['pit'] = [
+                        'id': pitId,
+                        'keep_alive': keepAlive
+                ]
+            }
+            if (offset) {
+                request['search_after'] = offset
+            }
+            return request
+        }
+    }
+    
+    private String createPointInTime(String keepAlive = "1m") {
+        try {
+            return performRequest('POST', "/$indexName/_pit?keep_alive=$keepAlive").id
+        }
+        catch (Exception e) {
+            log.warn("Failed to create Point In Time: $e")
+            throw e
+        }
+    }
+
+    private void deletePointInTime(String id) {
+        try {
+            Map response = performRequest('DELETE', "/_pit", ['id': id])
+            if (!response.succeeded) {
+                throw new RuntimeException("DELETE failed, got response: $response")
+            }
+        }
+        catch (UnexpectedHttpStatusException e) {
+            if (e.getStatusCode() != 404) {
+                log.warn("Failed to delete Point In Time: $e")
+                throw e
+            }
+        }
+        catch (Exception e) {
+            log.warn("Failed to create Point In Time: $e")
+            throw e
+        }
+    }
+
+    static class TooManyResultsException extends RuntimeException {
+        TooManyResultsException(int results, int max) {
+            super("Query resulted in $results results which is more than the $max that can be iterated")
+        }
+    }
+    
+    static class SearchContextExpiredException extends RuntimeException {
+        SearchContextExpiredException(String msg) {
+            super(msg)
+        }
+    }
+
+    static void tryMapAndThrow(UnexpectedHttpStatusException e) {
+        if (e.statusCode == 404 && e.getMessage().contains("search_context_missing_exception")) {
+            throw new SearchContextExpiredException(e.getMessage())
         }
     }
 }

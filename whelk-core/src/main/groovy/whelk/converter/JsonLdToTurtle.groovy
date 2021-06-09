@@ -1,9 +1,13 @@
 package whelk.converter
 
 import static org.apache.commons.lang3.StringEscapeUtils.escapeJava
+import org.apache.jena.iri.*
 
 import org.codehaus.jackson.map.ObjectMapper
 
+import groovy.util.logging.Log4j2 as Log
+
+@Log
 class JsonLdToTurtle {
 
     def INDENT = "  "
@@ -18,6 +22,7 @@ class JsonLdToTurtle {
     boolean useGraphKeyword
     boolean markEmptyBnode
     String emptyMarker = '_:Nothing'
+    static IRIFactory iriFactory = IRIFactory.iriImplementation()
 
     JsonLdToTurtle(Map context, OutputStream outStream, Map opts = null) {
         this(context, outStream, opts?.base, opts)
@@ -105,9 +110,7 @@ class JsonLdToTurtle {
         } else if (useVocab && ref.indexOf("/") == -1) {
             return ":" + ref
         }
-        ref = cleanValue(ref).
-            replaceAll(/ /, '+').
-            replaceAll("\\\\", "\\\\\\\\")
+        ref = cleanIri(cleanValue(ref).replaceAll(/ /, '+'))
         return "<${ref}>"
     }
 
@@ -120,6 +123,28 @@ class JsonLdToTurtle {
         return term.
             replaceAll(/%/, /0/).
             replaceAll(/\./, '')
+    }
+
+    String cleanIri(String iriString) {
+        // [8] IRIREF ::= '<' ([^#x00-#x20<>"{}|^`\] | UCHAR)* '>'
+        // https://www.w3.org/TR/n-triples/#grammar-production-IRIREF
+        // Also gets rid of some of the reserved URI characters (RFC 3986 2.2):
+        // '[', ']', '@'. E.g. '[' and ']' are only allowed for identifying
+        // IPv6 addresses. While these characters *can* be valid ("https://[2001:db8::1]",
+        // "http://foo@bar:example.com"), their presence most likely indicates bad data.
+        String cleanedIriString = iriString.replaceAll(/[\x00-\x20<>"{}|^`\\\[\]@]/, '')
+
+        // Now catch things that are too broken to sensibly do anything about, e.g.,
+        // "http://foo:", http://", etc.
+        IRI iri = iriFactory.create(cleanedIriString)
+        if (iri.hasViolation(false)) { // false = ignore warnings, care only about errors
+            cleanedIriString = "https://BROKEN-IRI/"
+        }
+
+        if (cleanedIriString != iriString) {
+            log.warn("Broken IRI ${iri}, changing to ${cleanedIriString}")
+        }
+        return cleanedIriString
     }
 
     String cleanValue(String v) {

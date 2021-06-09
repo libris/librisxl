@@ -220,19 +220,19 @@ class Crud extends HttpServlet {
             sendGetResponse(
                     maybeAddProposal25Headers(response, loc),
                     getFormattedResponseBody(request, doc),
-                    doc.getChecksum(),
+                    doc.getChecksum(jsonld),
                     request.getPath(),
                     request.getContentType())
         }
     }
 
-    private static boolean isNotModified(CrudGetRequest request, Document doc) {
-        request.getIfNoneMatch().map({ etag -> etag == doc.getChecksum() }).orElse(false)
+    private boolean isNotModified(CrudGetRequest request, Document doc) {
+        request.getIfNoneMatch().map({ etag -> etag == doc.getChecksum(jsonld) }).orElse(false)
     }
 
     private void sendNotModified(HttpServletResponse response, Document doc) {
         setVary(response)
-        response.setHeader("ETag", "\"${doc.getChecksum()}\"")
+        response.setHeader("ETag", "\"${doc.getChecksum(jsonld)}\"")
         response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
         response.sendError(HttpServletResponse.SC_NOT_MODIFIED,
                 "Document has not been modified.")
@@ -501,11 +501,11 @@ class Crud extends HttpServlet {
 
         Document newDoc = new Document(requestBody)
         newDoc.normalizeUnicode()
-        newDoc.trimStrings()
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
         newDoc.setControlNumber(newDoc.getShortId())
 
-        List<JsonLdValidator.Error> errors = validator.validate(newDoc.data)
+        String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
+        List<JsonLdValidator.Error> errors = validator.validate(newDoc.data, collection)
         if (errors) {
             String message = errors.collect { it.toStringWithPath() }.join("\n")
             failedRequests.labels("POST", request.getRequestURI(),
@@ -514,17 +514,7 @@ class Crud extends HttpServlet {
                     "Invalid JsonLd, got errors: " + message)
             return
         }
-
-        String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
-        if ( !(collection in ["auth", "bib", "hold"]) ) {
-            log.debug("Could not determine legacy collection")
-            failedRequests.labels("POST", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "Body could not be categorized as auth, bib or hold.")
-            return
-        }
-
+        
         // verify user permissions
         log.debug("Checking permissions for ${newDoc}")
         try {
@@ -547,15 +537,15 @@ class Crud extends HttpServlet {
             log.debug("Model validation check failed. Denying request: " + mve.getMessage())
             return
         }
-
+        
         // try store document
         // return 201 or error
         boolean isUpdate = false
         Document savedDoc;
-        savedDoc = saveDocument(newDoc, request, response, collection, isUpdate, "POST")
+        savedDoc = saveDocument(newDoc, request, response, isUpdate, "POST")
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
-                               savedDoc.getChecksum())
+                               savedDoc.getChecksum(jsonld))
         } else {
             sendNotFound(response, request.getContextPath())
         }
@@ -649,10 +639,10 @@ class Crud extends HttpServlet {
 
         Document updatedDoc = new Document(requestBody)
         updatedDoc.normalizeUnicode()
-        updatedDoc.trimStrings()
         updatedDoc.setId(documentId)
 
-        List<JsonLdValidator.Error> errors = validator.validate(updatedDoc.data)
+        String collection = LegacyIntegrationTools.determineLegacyCollection(updatedDoc, jsonld)
+        List<JsonLdValidator.Error> errors = validator.validate(updatedDoc.data, collection)
         if (errors) {
             String message = errors.collect { it.toStringWithPath() }.join("\n")
             failedRequests.labels("PUT", request.getRequestURI(),
@@ -684,23 +674,12 @@ class Crud extends HttpServlet {
                     mve.getMessage())
             return
         }
-
-        String collection = LegacyIntegrationTools.determineLegacyCollection(updatedDoc, jsonld)
-        if ( !(collection in ["auth", "bib", "hold"]) ) {
-            log.debug("Could not determine legacy collection")
-            failedRequests.labels("PUT", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "Body could not be categorized as auth, bib or hold.")
-            return
-        }
-
+        
         boolean isUpdate = true
-        Document savedDoc = saveDocument(updatedDoc, request, response,
-                                         collection, isUpdate, "PUT")
+        Document savedDoc = saveDocument(updatedDoc, request, response, isUpdate, "PUT")
         if (savedDoc != null) {
             sendUpdateResponse(response, savedDoc.getURI().toString(),
-                               savedDoc.getChecksum())
+                               savedDoc.getChecksum(jsonld))
         }
 
     }
@@ -727,13 +706,20 @@ class Crud extends HttpServlet {
     }
 
     Document saveDocument(Document doc, HttpServletRequest request,
-                          HttpServletResponse response, String collection,
+                          HttpServletResponse response,
                           boolean isUpdate, String httpMethod) {
         try {
             if (doc) {
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
-
+                String collection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
                 if (isUpdate) {
+
+                    // You are not allowed to change collection when updating a record
+                    if (collection != whelk.storage.getCollectionBySystemID(doc.getShortId())) {
+                        log.warn("Refused API update of document due to changed 'collection'")
+                        return null
+                    }
+
                     String ifMatch = CrudUtils.cleanEtag(request.getHeader("If-Match"))
                     log.info("If-Match: ${ifMatch}")
                     whelk.storeAtomicUpdate(doc, false, "xl", activeSigel, ifMatch)

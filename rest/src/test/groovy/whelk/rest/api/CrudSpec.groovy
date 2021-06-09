@@ -85,7 +85,16 @@ class CrudSpec extends Specification {
                 'cards': [lenses: ['Instance' : ['showProperties': ['prop1', 'prop2', 'prop3']]]],
                 'full': [lenses: [:]]
         ]]
-        whelk.vocabData = ['@graph': [["@id" : "some_id"]]]
+        whelk.vocabData = ['@graph': [
+            ["@id": "some_id"],
+            ["@id": "controlNumber"],
+            ["@id": "created"],
+            ["@id": "modified"],
+            ["@id": "contains"],
+            ["@id": "heldBy"],
+            ["@id": "creationDate"],
+            ["@id": "code"],
+        ]]
         whelk.setJsonld(new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData))
         GroovySpy(LegacyIntegrationTools.class, global: true)
         crud = new Crud(whelk)
@@ -416,7 +425,7 @@ class CrudSpec extends Specification {
         def id = BASE_URI.resolve("/1234").toString()
         def doc = new Document(["@graph": [["@id": id]]])
         doc.setModified(new Date())
-        def etag = doc.getChecksum()
+        def etag = doc.getChecksum(whelk.jsonld)
         request.getPathInfo() >> { '/' + id }
         request.getHeader("Accept") >> { "*/*" }
         request.getHeader("If-None-Match") >> { etag }
@@ -435,7 +444,7 @@ class CrudSpec extends Specification {
         def id = BASE_URI.resolve("/1234").toString()
         def doc = new Document(["@graph": [["@id": id]]])
         doc.setModified(new Date())
-        def etag = doc.getChecksum()
+        def etag = doc.getChecksum(whelk.jsonld)
         request.getPathInfo() >> { '/' + id}
         request.getHeader("Accept") >> { "*/*" }
         request.getHeader("If-None-Match") >> { etag }
@@ -1762,6 +1771,9 @@ class CrudSpec extends Specification {
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
         }
+        whelk.storage.getCollectionBySystemID(_) >> {
+            return "bib"
+        }
         request.getContentType() >> {
             "application/ld+json"
         }
@@ -2458,6 +2470,9 @@ class CrudSpec extends Specification {
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
+        whelk.storage.getCollectionBySystemID(_) >> {
+            return "hold"
+        }
         request.getContentType() >> {
             "application/ld+json"
         }
@@ -2523,6 +2538,9 @@ class CrudSpec extends Specification {
             "PUT"
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
+            return "hold"
+        }
+        whelk.storage.getCollectionBySystemID(_) >> {
             return "hold"
         }
         request.getContentType() >> {
@@ -2728,6 +2746,9 @@ class CrudSpec extends Specification {
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
+        whelk.storage.getCollectionBySystemID(_) >> {
+            return "hold"
+        }
         request.getContentType() >> {
             "application/ld+json"
         }
@@ -2820,6 +2841,9 @@ class CrudSpec extends Specification {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
+            return "bib"
+        }
+        whelk.storage.getCollectionBySystemID(_) >> {
             return "bib"
         }
         when:
@@ -3009,6 +3033,9 @@ class CrudSpec extends Specification {
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
+        whelk.storage.getCollectionBySystemID(_) >> {
+            return "hold"
+        }
         request.getContentType() >> {
             "application/ld+json"
         }
@@ -3141,6 +3168,9 @@ class CrudSpec extends Specification {
             "PUT"
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
+            return "hold"
+        }
+        whelk.storage.getCollectionBySystemID(_) >> {
             return "hold"
         }
         request.getContentType() >> {

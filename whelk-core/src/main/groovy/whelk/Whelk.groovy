@@ -41,6 +41,7 @@ class Whelk {
     ZoneId timezone = ZoneId.of('Europe/Stockholm')
 
     URI baseUri = null
+    boolean skipIndex = false
 
     // useCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
     // Any other use of this results in a "local" cache, which will not be invalidated when data changes elsewhere,
@@ -126,16 +127,17 @@ class Whelk {
             initDocumentNormalizers()
         }
     }
-
+    
     private void initDocumentNormalizers() {
         normalizer = new NormalizerChain(
                 [
+                        Normalizers.nullRemover(),
                         //FIXME: This is KBV specific stuff
                         Normalizers.workPosition(jsonld),
                         Normalizers.typeSingularity(jsonld),
                         Normalizers.language(this),
-                        Normalizers.contributionRole(this)
-                ]
+                        Normalizers.identifiedBy(),
+                ] + Normalizers.heuristicLinkers(this)
         )
     }
 
@@ -159,7 +161,7 @@ class Whelk {
         return doc
     }
 
-    Map<String, Document> bulkLoad(List<String> ids) {
+    Map<String, Document> bulkLoad(Collection<String> ids) {
         Map<String, Document> result = [:]
         ids.each { id ->
             Document doc
@@ -180,7 +182,7 @@ class Whelk {
     }
 
     private void reindex(Document updated, Document preUpdateDoc) {
-        if (elastic) {
+        if (elastic && !skipIndex) {
             elastic.index(updated, this)
 
             if (hasChangedMainEntityId(updated, preUpdateDoc)) {
@@ -193,7 +195,12 @@ class Whelk {
 
     private void reindexAffected(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
         Runnable reindex = {
-            reindexAffectedSync(document, preUpdateLinks, postUpdateLinks)
+            try {
+                reindexAffectedSync(document, preUpdateLinks, postUpdateLinks)
+            } 
+            catch (Exception e) {
+                log.error("Error reindexing: $e", e)
+            }
         }
 
         // If we are inside a batch job. Update them synchronously
@@ -234,28 +241,12 @@ class Whelk {
                 }
             }
         }
-
-
+        
         if (storage.isCardChangedOrNonexistent(document.getShortId())) {
-            bulkIndex(getAffectedIds(document))
+            bulkIndex(elastic.getAffectedIds(document.getThingIdentifiers() + document.getRecordIdentifiers()))
         }
     }
-
-    /**
-     * Find all other documents that need to be re-indexed because of a change in document
-     * @param document the changed document
-     * @return an Iterable of system IDs.
-     */
-    private Iterable<String> getAffectedIds(Document document) {
-        List<Iterable<String>> queries = []
-        for (String iri : document.getThingIdentifiers()) {
-            for (String field : ["_links", "_outerEmbellishments"]) {
-                queries << elasticFind.findIds(['q': ["*"], (field): [iri]])
-            }
-        }
-        return Iterables.filter(Iterables.concat(queries), { it != null })
-    }
-
+    
     private void bulkIndex(Iterable<String> ids) {
         Iterables.partition(ids, 100).each {
             elastic.bulkIndexWithRetry(it, this)
@@ -328,7 +319,7 @@ class Whelk {
 
         boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
         if (success) {
-            if (elastic && index) {
+            if (elastic && !skipIndex) {
                 elastic.index(document, this)
                 reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
             }
@@ -357,7 +348,7 @@ class Whelk {
         sparqlUpdater?.pollNow()
     }
 
-    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum, boolean index = true) {
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum) {
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
         Document updated = storage.storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum)
@@ -365,9 +356,8 @@ class Whelk {
         if (updated == null) {
             return null
         }
-        if (index) {
-            reindex(updated, preUpdateDoc)
-        }
+        
+        reindex(updated, preUpdateDoc)
         sparqlUpdater?.pollNow()
     }
 
@@ -384,7 +374,7 @@ class Whelk {
         log.debug "Deleting ${id} from Whelk"
         Document doc = storage.load(id)
         storage.remove(id, changedIn, changedBy)
-        if (elastic) {
+        if (elastic && !skipIndex) {
             elastic.remove(id)
             reindexAffected(doc, doc.getExternalRefs(), new TreeSet<>())
             log.debug "Object ${id} was removed from Whelk"
@@ -411,6 +401,28 @@ class Whelk {
         e.embellish(document)
     }
 
+    /**
+     * Get cards
+     * @param iris
+     * @return map from all thing and record identifiers (including sameAs) to corresponding card of whole document 
+     */
+    Map<String, Map> getCards(Iterable<String> iris) {
+        Map<String, Map> result = [:]
+        storage.getCards(iris).each { card ->
+            List<Map> graph = (List<Map>) card['@graph']
+            graph?.each { Map e ->
+                e['@id']?.with { result[(String) it] = card }
+                if (e.sameAs) {
+                    ((List<Map>) (e.sameAs)).each { Map sameAs ->
+                        sameAs['@id']?.with { result[(String) it] = card }
+                    }
+                }
+            }
+        }
+        
+        return result
+    }
+
     Document loadEmbellished(String systemId) {
         return storage.loadEmbellished(systemId, this.&embellish)
     }
@@ -422,6 +434,7 @@ class Whelk {
     void normalize(Document doc) {
         try {
             doc.normalizeUnicode()
+            doc.trimStrings()
 
             if (normalizer != null) {
                 normalizer.normalize(doc)
@@ -429,6 +442,18 @@ class Whelk {
         } catch (Exception e) {
             log.warn "Could not normalize document (${doc}: $e, e)"
         }
+    }
+
+    String getUserData(String id) {
+        return storage.getUserData(id)
+    }
+
+    boolean storeUserData(String id, String data) {
+        return storage.storeUserData(id, data)
+    }
+
+    void removeUserData(String id) {
+        storage.removeUserData(id)
     }
 
     private static boolean batchJobThread() {

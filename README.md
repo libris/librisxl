@@ -16,21 +16,23 @@ The project consists of:
 
 * Core
     * `whelk-core/`
-        The root component of XL; a linked data store, including search and MARC conversion.
+        The root component of XL; a linked data store, including search and [MARC conversion](whelk-core/src/main/resources/ext).
 
 * Applications
-    * `apix_export/`
-        Exports data from Libris XL back to Voyager (the old system).
+    * `oaipmh/`
+        A servlet web application. OAIPMH service for Libris XL
+    * `rest/`
+        A servlet web application. [Search, RESTful CRUD and other HTTP APIs](rest/)
+    * `marc_export/`
+	A servlet (and CLI program) for exporting libris data as MARC.
     * `importers/`
         Java application to load or reindex data into the system.
-    * `oaipmh/`
-        Servlet web application. OAIPMH service for Libris XL
-    * `rest/`
-        A servlet web application. The REST and other HTTP APIs
-    * `marc_export/`
-	    A servlet (and CLI program) for exporting libris data as MARC.
+    * `apix_server/`
+        A servlet web application. XL reimplementation of the Libris legacy APIX API.
 
 * Tools
+    * `whelktool/`
+        CLI tool for running scripted mass updates of data.
     * `librisxl-tools/`
         Configuration and scripts used for setup, maintenance and operations.
 
@@ -59,7 +61,9 @@ for e.g. Fedora/CentOS/RHEL with minor adjustments.
     (for Ubuntu/Debian, select "Install with apt-get"; before importing the Elasticsearch
     PGP key you might have to do `sudo apt install gnupg` if you're running a minimal distribution.)
 
-    **NOTE:** We use the elasticsearch-oss version.
+    **NOTE:**
+    * We use the elasticsearch-oss version.
+    * The [ICU Analysis plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/7.12/analysis-icu.html) (`icu-analysis`) must be installed; see "Setting up Elasticsearch" below.
 
 3. [PostgreSQL](https://www.postgresql.org/) (version 9.6 or later)
 
@@ -150,8 +154,15 @@ whelk_dev=> \q
 ### Setting up Elasticsearch
 
 Edit `/etc/elasticsearch/elasticsearch.yml`. Uncomment `cluster.name` and set it to something unique
-on the network. This name is later specified when you configure the XL system. Then, (re)start
-Elasticsearch:
+on the network. This name is later specified when you configure the XL system.
+
+Next, install the ICU Analysis plugin:
+
+```
+sudo /usr/share/elasticsearch/bin/elasticsearch-plugin install analysis-icu
+```
+
+Finally, (re)start Elasticsearch:
 
 ```
 sudo systemctl restart elasticsearch

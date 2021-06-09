@@ -3,7 +3,6 @@ package whelk.importer
 import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
-import whelk.IdGenerator
 import whelk.Whelk
 import whelk.exception.CancelUpdateException
 
@@ -41,7 +40,7 @@ class DatasetImporter {
 
                 // Update (potentially) of existing document
                 whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, "xl", null, { doc ->
-                    if (doc.getChecksum() != incomingDoc.getChecksum()) {
+                    if (doc.getChecksum(whelk.jsonld) != incomingDoc.getChecksum(whelk.jsonld)) {
                         doc.data = incomingDoc.data
                     }
                     else {

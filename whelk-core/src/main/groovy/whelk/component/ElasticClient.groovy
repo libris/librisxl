@@ -224,11 +224,18 @@ class ElasticClient {
                     return new HttpGet(host + path)
                 case 'PUT':
                     HttpPut request = new HttpPut(host + path)
-                    request.setEntity(httpEntity(body, contentType0))
+                    if (body)
+                        request.setEntity(httpEntity(body, contentType0))
                     return request
                 case 'POST':
                     HttpPost request = new HttpPost(host + path)
-                    request.setEntity(httpEntity(body, contentType0))
+                    if (body)
+                        request.setEntity(httpEntity(body, contentType0))
+                    return request
+                case 'DELETE':
+                    HttpDeleteWithBody request = new HttpDeleteWithBody(host + path)
+                    if (body)
+                        request.setEntity(httpEntity(body, contentType0))
                     return request
                 default:
                     throw new IllegalArgumentException("Bad request method:" + method)
@@ -238,6 +245,17 @@ class ElasticClient {
         private static HttpEntity httpEntity(String body, String contentType) {
             return new StringEntity(body,
                     contentType ? ContentType.create(contentType) : ContentType.APPLICATION_JSON)
+        }
+    }
+    
+    class HttpDeleteWithBody extends HttpPost { // LOL
+        HttpDeleteWithBody(String uri) {
+            super(uri)
+        }
+        
+        @Override
+        String getMethod() {
+            return 'DELETE'
         }
     }
 

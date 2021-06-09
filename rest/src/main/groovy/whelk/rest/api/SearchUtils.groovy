@@ -1,11 +1,14 @@
 package whelk.rest.api
 
+import com.google.common.collect.ArrayListMultimap
+import com.google.common.collect.Multimap
 import com.google.common.escape.Escaper
 import com.google.common.net.UrlEscapers
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.component.DocumentNormalizer
 import whelk.exception.InvalidQueryException
 import whelk.exception.WhelkRuntimeException
 import whelk.search.ESQuery
@@ -92,7 +95,7 @@ class SearchUtils {
             case 'full':
                 return removeSystemInternalProperties(framedThing)
             default:
-                return ld.toCard(framedThing, false, false, false , preservedPaths)
+                return ld.toCard(framedThing, false, false, false , preservedPaths, true)
         }
     }
 
@@ -115,15 +118,16 @@ class SearchUtils {
         queryParameters['_limit'] = [limit.toString()]
 
         Map esResult = esQuery.doQuery(queryParameters)
-
+        Lookup lookup = new Lookup()
+        
         List<Map> mappings = []
         if (query) {
             mappings << ['variable' : 'q',
-                         'predicate': ld.toChip(getVocabEntry('textQuery')),
+                         'predicate': lookup.chip('textQuery'),
                          'value'    : query]
         }
 
-        Tuple2 mappingsAndPageParams = mapParams(queryParameters)
+        Tuple2 mappingsAndPageParams = mapParams(lookup, queryParameters)
         mappings.addAll(mappingsAndPageParams.first)
         pageParams << mappingsAndPageParams.second
 
@@ -136,6 +140,10 @@ class SearchUtils {
         if (esResult['items']) {
             items = esResult['items'].collect {
                 def item = applyLens(it, lens, reverseObject)
+                
+                // ISNIs and ORCIDs are indexed with and without spaces, remove the one with spaces.
+                item.identifiedBy?.with { List ids -> ids.removeAll { (Document.isIsni(it) || Document.isOrcid(it) ) && it.value?.size() == 16+3 } }
+                
                 // This object must be re-added because it might get filtered out in applyLens().
                 item['reverseLinks'] = it['reverseLinks']
                 if (item['reverseLinks'] != null)
@@ -144,8 +152,14 @@ class SearchUtils {
             }
         }
 
-        
-        Map stats = buildStats((Map) esResult['aggregations'], 
+        // Don't return facets on fields that already have an active facet.
+        // Now multiple conditions on the same field are always ORed, which means facets will behave weird.
+        // This can be changed if we add a way to have x=a AND x=b in the API. 
+        // Now: if x=a is selected, the facet for x=b will show the number for (x=a AND x=b) but when selected the 
+        // results will be (x=a OR x=b).
+        def selectedFacets = ((Map) mappingsAndPageParams.second).findAll {it.key != JsonLd.TYPE_KEY }.keySet()
+        def filteredAggregations = ((Map) esResult['aggregations']).findAll{ !selectedFacets.contains(it.key) }
+        Map stats = buildStats(lookup, filteredAggregations,
                 makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
                 (total > 0 && !predicates) ? reverseObject : null)
         if (!stats) {
@@ -158,13 +172,21 @@ class SearchUtils {
             mapping['up'] = [ (JsonLd.ID_KEY): upUrl ]
         }
 
+        if (reverseObject) {
+            String upUrl = makeFindUrl(SearchType.ELASTIC, pageParams - ['o' :  pageParams['o']], offset)
+            mappings << [
+                    'variable' : 'o',
+                    'object'   : lookup.chip(reverseObject),  // TODO: object/predicate/???
+                    'up'       : [(JsonLd.ID_KEY): upUrl],
+            ]
+        }
 
         if (reverseObject && predicates) {
             String upUrl = makeFindUrl(SearchType.ELASTIC, pageParams - ['p' :  pageParams['p']], offset)
             mappings << [
                     'variable' : 'p',
                     'object'   : reverseObject,
-                    'predicate': ld.toChip(lookup(predicates.first())),
+                    'predicate': lookup.chip(predicates.first()),
                     'up'       : [(JsonLd.ID_KEY): upUrl],
             ]
         }
@@ -181,6 +203,10 @@ class SearchUtils {
             result['_debug'] = esResult['_debug']
         }
 
+        result['maxItems'] = esQuery.getMaxItems().toString()
+
+        lookup.run()
+        
         return result
     }
 
@@ -239,7 +265,7 @@ class SearchUtils {
         result['search'] = ['mapping': mappings]
 
         Map paginationLinks = makePaginationLinks(st, pageParams, limit,
-                                                  offset, total)
+                                                  offset, Math.min(total, esQuery.getMaxItems()))
         result << paginationLinks
 
         result['items'] = items
@@ -296,24 +322,24 @@ class SearchUtils {
      * Build aggregation statistics for ES result.
      *
      */
-    private Map buildStats(Map aggregations, String baseUrl, String reverseObject) {
+    private Map buildStats(Lookup lookup, Map aggregations, String baseUrl, String reverseObject) {
         Map result = [:]
-        result = addSlices([:], aggregations, baseUrl, reverseObject)
+        result = addSlices(lookup, [:], aggregations, baseUrl, reverseObject)
         return result
     }
 
-    private Map addSlices(Map stats, Map aggregations, String baseUrl, String reverseObject) {
+    private Map addSlices(Lookup lookup, Map stats, Map aggregations, String baseUrl, String reverseObject) {
         Map sliceMap = aggregations.inject([:]) { acc, key, aggregation ->
             String baseUrlForKey = removeWildcardForKey(baseUrl, key)
             List observations = []
-            Map sliceNode = ['dimension': key.replace(".${JsonLd.ID_KEY}", '')]
+            Map sliceNode = ['dimension': key]
             aggregation['buckets'].each { bucket ->
                 String itemId = bucket['key']
                 String searchPageUrl = "${baseUrlForKey}&${makeParam(key, itemId)}"
 
                 Map observation = ['totalItems': bucket.getAt('doc_count'),
                                    'view': [(JsonLd.ID_KEY): searchPageUrl],
-                                   'object': ld.toChip(lookup(itemId))]
+                                   'object': lookup.chip(itemId)]
                 
                 observations << observation
             }
@@ -336,7 +362,7 @@ class SearchUtils {
                         [
                                 'totalItems': count,
                                 'view'      : ['@id': viewUrl],
-                                'object'    : ld.toChip(lookup(relations.first()))
+                                'object'    : lookup.chip(relations.first())
                         ]
                     }
             ]
@@ -408,27 +434,47 @@ class SearchUtils {
         }
     }
 
-    /*
-     * Read vocab item from db.
-     *
-     * Default to dummy value if not found.
-     *
-     */
-    private Map lookup(String itemId) {
-        Map entry = getVocabEntry(itemId)
+    private class Lookup {
+        private Multimap<String, Map> iriPos = ArrayListMultimap.create()
+        
+        Map chip(String itemId) {
+            def termKey = ld.toTermKey(itemId)
+            if (termKey in ld.vocabIndex) {
+                return ld.vocabIndex[termKey]
+            }
 
-        if (entry) {
-            return entry
-        } else if (itemId.contains('.')) {
-            def chain = itemId.split('\\.').findAll {it != JsonLd.ID_KEY}
-            return [
-                    'propertyChainAxiom': chain.collect(this.&lookup),
-                    'label': chain.join(' '),
-                    '_key': itemId,  // lxlviewer has some propertyChains of its own defined, this is used to match them 
-            ]
-        } else {
-            return [(JsonLd.ID_KEY): itemId, 'label': itemId]
+            if (!itemId.startsWith('http') && itemId.contains('.')) {
+                def chain = itemId.split('\\.').findAll {it != JsonLd.ID_KEY}
+                return [
+                        'propertyChainAxiom': chain.collect{ Lookup.this.chip(it) },
+                        'label': chain.join(' '),
+                        '_key': itemId,  // lxlviewer has some propertyChains of its own defined, this is used to match them 
+                ]
+            }
+
+            String iri = getFullUri(itemId)
+
+            if(!iri) {
+                return dummyChip(itemId)
+            }
+
+            Map m = [:]
+            iriPos.put(iri, m)
+            return m
         }
+        
+        void run() {
+            Map<String, Map> cards = whelk.getCards(iriPos.keySet())
+            iriPos.entries().each {
+                def thing = cards.get(it.key)?.with { card -> getEntry(card, it.key) } ?: dummyChip(it.key)
+                def chip = (Map) ld.toChip(thing)
+                it.value.putAll(chip)
+            }
+        }
+    }
+    
+    private Map dummyChip(String itemId) {
+        [(JsonLd.ID_KEY): itemId, 'label': itemId]
     }
 
     /*
@@ -437,15 +483,10 @@ class SearchUtils {
      * Returns null if not found.
      *
      */
-    private Map getVocabEntry(String id) {
-        def termKey = ld.toTermKey(id)
-        if (termKey in ld.vocabIndex) {
-            return ld.vocabIndex[termKey]
-        }
-        String fullId
+    private String getFullUri(String id) {
         try {
             if (vocabUri) {
-                fullId = vocabUri.resolve(id).toString()
+                return vocabUri.resolve(id).toString()
             }
         }
         catch (IllegalArgumentException e) {
@@ -453,15 +494,8 @@ class SearchUtils {
             // No need to check the db.
             return null
         }
-        Document doc = whelk.storage.getDocumentByIri(fullId)
-
-        if (doc) {
-            return getEntry(doc.data, fullId)
-        } else {
-            return null
-        }
     }
-
+    
     // FIXME move to Document or JsonLd
     private Map getEntry(Map jsonLd, String entryId) {
         // we rely on this convention for the time being.
@@ -622,7 +656,7 @@ class SearchUtils {
      * filtered out.
      *
      */
-    private Tuple2 mapParams(Map params) {
+    private Tuple2 mapParams(Lookup lookup, Map params) {
         List result = []
         Map pageParams = [:]
         List reservedParams = getReservedParameters()
@@ -638,24 +672,18 @@ class SearchUtils {
                 if (param == JsonLd.TYPE_KEY || param == JsonLd.ID_KEY) {
                     valueProp = 'object'
                     termKey = param
-                    value = [(JsonLd.ID_KEY): val]
+                    value = lookup.chip(val).with { it[JsonLd.ID_KEY] = val; return it }
                 } else if (param.endsWith(".${JsonLd.ID_KEY}")) {
                     valueProp = 'object'
                     termKey = param[0..-5]
-                    value = [(JsonLd.ID_KEY): val]
+                    value = lookup.chip(val).with { it[JsonLd.ID_KEY] = val; return it }
                 } else {
                     valueProp = 'value'
                     termKey = param
                     value = val
                 }
-
-                Map termChip
-                Map termDef = getVocabEntry(termKey)
-                if (termDef) {
-                    termChip = ld.toChip(termDef)
-                }
-
-                result << ['variable': param, 'predicate': termChip,
+                
+                result << ['variable': param, 'predicate': lookup.chip(termKey),
                            (valueProp): value]
 
                 if (!(param in pageParams)) {

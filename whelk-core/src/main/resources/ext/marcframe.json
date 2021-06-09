@@ -2866,7 +2866,7 @@
         "[11]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
-          "matchUriToken": "^[_acfilmosu]$"
+          "matchUriToken": "^[acfilmos]$"
         },
         "[12]": {
           "addLink": "genreForm",
@@ -2917,23 +2917,25 @@
         "[5]": {
           "addLink": "intendedAudience",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}",
+          "matchUriToken": "^[abcdefgj]$"
         },
         "[6]": {
           "TODO:about": "_:otherInstance",
           "link": "marc:additionalCarrierType",
-          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "matchUriToken": "^[abcdfoqrs]$"
         },
         "[7] [8] [9] [10] [11] [12]": {
           "TODO": "Decide if this should be Work or Instance",
           "link": "supplementaryContent",
           "uriTemplate": "https://id.kb.se/marc/MusicMatterType-{_}",
-          "matchUriToken": "^[_abcdefghikrs]$"
+          "matchUriToken": "^[abcdefghikrs]$"
         },
         "[13] [14]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MusicTextType-{_}",
-          "matchUriToken": "^[_abcdefghijklmoprst]$"
+          "matchUriToken": "^[abcdefghijklmoprst]$"
         },
         "[15]": null,
         "[16]": {
@@ -2954,18 +2956,19 @@
           "TODO:about": "_:cartographic",
           "link": "projection",
           "uriTemplate": "https://id.kb.se/marc/MapsProjectionType-{_}",
-          "matchUriToken": "^[_abcdefghijklmnoprsuz]$"
+          "matchUriToken": "^[abcdefghijklmnoprsuz]$"
         },
         "[7]": null,
         "[8]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapsMaterialType-{_}",
-          "matchUriToken": "^[_abcdefg]$"
+          "matchUriToken": "^[abcdefg]$"
         },
         "[9] [10]": null,
         "[11]": {
           "addLink": "genreForm",
-          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$"
         },
         "[12]": {
           "TODO:about": "_:otherInstance",
@@ -2984,7 +2987,7 @@
           "TODO:ignore pos 17": "Not used in 008",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapsFormatType-{_}",
-          "matchUriToken": "^[_ejklnopr]$"
+          "matchUriToken": "^[ejklnopr]$"
         }
       },
       "Visual": {
@@ -2996,12 +2999,14 @@
         "[5]": {
           "addLink": "intendedAudience",
           "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/AudienceType-{_}",
+          "matchUriToken": "^[abcdefgj]$"
         },
         "[6] [7] [8] [9] [10]": null,
         "[11]": {
           "addLink": "genreForm",
-          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$"
         },
         "[12]": {
           "TODO:about": "_:otherInstance",
@@ -3012,7 +3017,7 @@
         "[16]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/VisualMaterialType-{_}",
-          "matchUriToken": "^[_abcdfgiklmnopqrstvw]$"
+          "matchUriToken": "^[abcdfgiklmnopqrstvw]$"
         },
         "[17]": {
           "TODO:about": "_:otherInstance",
@@ -3041,13 +3046,14 @@
         "[9]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/ComputerTypeOfFileType-{_}",
-          "matchUriToken": "^[_abcdefghijm]$",
+          "matchUriToken": "^[abcdefghijm]$",
           "silentRevert": false
         },
         "[10]": null,
         "[11]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$",
           "silentRevert": false
         },
         "[12] [13] [14] [15] [16] [17]": null
@@ -3057,7 +3063,8 @@
         "[6]": {
           "TODO:about": "_:otherInstance",
           "link": "marc:additionalCarrierType",
-          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "matchUriToken": "^[abcdfoqrs]$"
         },
         "[7] [8] [9] [10] [11] [12] [13] [14] [15] [16] [17]": null
       },
@@ -3082,7 +3089,8 @@
         "[4]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsTypeOfSerialType-{_}",
-          "matchUriToken": "^[dlmnpw]$"
+          "matchUriToken": "^[dlmnpw]$",
+          "fixedDefault": " "
         },
         "[5]": {
           "TODO:about": "_:otherInstance",
@@ -3093,7 +3101,8 @@
         "[6]": {
           "TODO:about": "_:otherInstance",
           "link": "marc:additionalCarrierType",
-          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/ItemType-{_}",
+          "matchUriToken": "^[abcdfoqrs]$"
         },
         "[7]": {
           "addLink": "genreForm",
@@ -3107,7 +3116,8 @@
         },
         "[11]": {
           "addLink": "genreForm",
-          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}"
+          "uriTemplate": "https://id.kb.se/marc/GovernmentPublicationType-{_}",
+          "matchUriToken": "^[acfilmos]$"
         },
         "[12]": {
           "addLink": "genreForm",
@@ -3119,7 +3129,7 @@
         "[16]": {
           "link": "marc:alphabet",
           "uriTemplate": "https://id.kb.se/marc/SerialsAlphabetType-{_}",
-          "matchUriToken": "^[_abcdefghijkl]$"
+          "matchUriToken": "^[abcdefghijkl]$"
         },
         "[17]": {
           "link": "marc:typeOfEntry",
@@ -3355,11 +3365,11 @@
           "name": "Text/Monograph in (in 000,008) + Text (006)",
           "source": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"006": "a|||||||||||000 ||"},{"008": "171123s1898    swe     re    000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"006": "a|||||||||||000 ||"},{"008": "171123s1898    sw      re    000 ||   | "}]
           },
           "normalized": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"006": "a|||||||||||000 ||"},{"008": "171123s1898    swe|||||re||||000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"006": "a|||||||||||000 ||"},{"008": "171123s1898    sw |||||re||||000 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -3370,7 +3380,7 @@
               "carrierType": [{ "@id": "https://id.kb.se/marc/BooksItemType-r" }],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1898"
               },
@@ -3390,11 +3400,11 @@
           "name": "Text/Monograph in (in 000,008) + Multimedia (006), wiping erroneous XY",
           "source": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"006": "mXY  ||  j |"},{"008": "171123s1898    swe     re    000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"006": "mXY  ||  j |"},{"008": "171123s1898    sw      re    000 ||   | "}]
           },
           "normalized": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"006": "m        j |      "},{"008": "171123s1898    swe|||||re||||000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"006": "m        j |      "},{"008": "171123s1898    sw |||||re||||000 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -3405,7 +3415,7 @@
               "carrierType": [{ "@id": "https://id.kb.se/marc/BooksItemType-r" }],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1898"
               },
@@ -3426,11 +3436,11 @@
           "name": "NotatedMusic in (in 000,008) + Music (006)",
           "source": {
             "leader": "     ccm a        i 4500",
-            "fields": [{"001": "0000000"}, {"006": "j| | ||  | |"},{"008": "171123s1999    swe                    | "}]
+            "fields": [{"001": "0000000"}, {"006": "j| | ||  | |"},{"008": "171123s1999    sw                     | "}]
           },
           "normalized": {
             "leader": "     ccm a        i 4500",
-            "fields": [{"001": "0000000"}, {"006": "j| |||||||||||| | "},{"008": "171123s1999    swe| ||||||||||   |    | "}]
+            "fields": [{"001": "0000000"}, {"006": "j| |||||||||||| | "},{"008": "171123s1999    sw | ||||||||||   |    | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -3440,7 +3450,7 @@
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -3550,7 +3560,7 @@
         "[5]": {
           "link": "soundContent",
           "uriTemplate": "https://id.kb.se/marc/ComputerSoundType-{_}",
-          "matchUriToken": "^[_a]$"
+          "matchUriToken": "^[a]$"
         },
         "[6:9]": {
           "link": "digitalCharacteristic",
@@ -3628,7 +3638,7 @@
         "[3] [4]": {
           "addLink": "layout",
           "uriTemplate": "https://id.kb.se/marc/TacBrailleWritingType-{_}",
-          "matchUriToken": "^[_abcdem]$"
+          "matchUriToken": "^[abcdem]$"
         },
         "[5]": {
           "addLink": "layout",
@@ -3638,7 +3648,7 @@
         "[6] [7] [8]": {
           "addLink": "hasNotation",
           "uriTemplate": "https://id.kb.se/marc/TacBrailleMusicType-{_}",
-          "matchUriToken": "^[_abcdefghijkl]$"
+          "matchUriToken": "^[abcdefghijkl]$"
         },
         "[9]": {
           "addLink": "hasNotation",
@@ -3669,7 +3679,7 @@
         "[5]": {
           "link": "soundContent",
           "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "matchUriToken": "^[ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
@@ -3686,7 +3696,7 @@
           "addLink": "mount",
           "NOTE:marc-repeatable": false,
           "uriTemplate": "https://id.kb.se/marc/ProjGraphSupportType-{_}",
-          "matchUriToken": "^[_cdehjkm]$"
+          "matchUriToken": "^[cdehjkm]$"
         }
       },
       "Microform": {
@@ -3793,7 +3803,7 @@
         "[5]": {
           "link": "soundContent",
           "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "matchUriToken": "^[ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
@@ -4006,7 +4016,7 @@
         "[5]": {
           "link": "soundContent",
           "uriTemplate": "https://id.kb.se/marc/SoundType-{_}",
-          "matchUriToken": "^[_ab]$"
+          "matchUriToken": "^[ab]$"
         },
         "[6]": {
           "addLink": "soundCharacteristic",
@@ -4310,7 +4320,7 @@
         "aboutEntity": "?record",
         "link": "marc:catalogingSource",
         "uriTemplate": "https://id.kb.se/marc/CatalogingSourceType-{_}",
-        "matchUriToken": "^[_cd]$",
+        "matchUriToken": "^[cd]$",
         "fixedDefault": " "
       },
 
@@ -4499,6 +4509,7 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapsFormatType-{_}",
+          "matchUriToken": "^[ejklnopr]$",
           "silentRevert": false
         }
       },
@@ -4555,7 +4566,7 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MusicTextType-{_}",
-          "matchUriToken": "^[_abcdefghijklmoprst]$",
+          "matchUriToken": "^[abcdefghijklmoprst]$",
           "fixedDefault": " ",
           "silentRevert": false
         },
@@ -4590,6 +4601,7 @@
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsTypeOfSerialType-{_}",
           "matchUriToken": "^[dlmnpw]$",
+          "fixedDefault": " ",
           "silentRevert": false
         },
         "[22]": {
@@ -4748,6 +4760,42 @@
           }
         },
         {
+          "name": "Serial with empty /21 for ISSN-IC export (+ SerialsNatureType-y which produces extra y but not in tests)",
+          "source": {
+            "leader": "     cas a        i 4500",
+            "fields": [{"001": "0000000"}, {"008": "171122c20139999sw a|  ||y||||0   b0   | "}]
+          },
+          "result": {
+            "created": "2017-11-22T00:00:00.0+01:00",
+            "recordStatus" : "marc:CorrectedOrRevised",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatFormType-i" }],
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "issuanceType": "Serial",
+              "marc:alphabet": {
+                "@id" : "https://id.kb.se/marc/SerialsAlphabetType-b"
+              },
+              "frequency": [{ "@id": "https://id.kb.se/marc/SerialsFrequencyType-a" }],
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [ {
+                  "@id": "https://id.kb.se/country/sw"
+                } ],
+                "marc:publicationStatus" : "marc:ContinuingResourceCurrentlyPublished",
+                "otherYear" : "9999",
+                "year" : "2013"
+              },
+              "marc:typeOfEntry" : {"@id" : "https://id.kb.se/marc/SerialsTypeOfEntryType-0"},
+              "instanceOf": {
+                "@type": "Text",
+                "genreForm": [
+                  {"@id": "https://id.kb.se/marc/SerialsNatureType-y"}
+                ]
+              }
+            }
+          }
+        },
+        {
           "name": "create uri for frequency in series and export to the same token",
           "source": {
             "leader": "     cas a        i 4500",
@@ -4887,11 +4935,11 @@
           "name": "Text/Monograph in (in 000) + ct:Print + gf:Encyclopedia",
           "source": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1898    swe     re    000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1898    sw      re    000 ||   | "}]
           },
           "normalized": {
             "leader": "     cam a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1898    swe|||||re||||000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1898    sw |||||re||||000 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -4902,7 +4950,7 @@
               "carrierType": [{ "@id": "https://id.kb.se/marc/BooksItemType-r" }],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1898"
               },
@@ -4917,11 +4965,11 @@
           "name": "ManuscriptText/Monograph in (in 000) + gf:Encyclopedia",
           "source": {
             "leader": "     ctm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1898    swe      e    000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1898    sw       e    000 ||   | "}]
           },
           "normalized": {
             "leader": "     ctm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1898    swe||||||e||||000 ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1898    sw ||||||e||||000 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -4931,7 +4979,7 @@
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1898"
               },
@@ -4946,11 +4994,11 @@
           "name": "Multimedia (in 000), Electronic (in 007) + ct:Online + Juvenile, wiping erroneous ZX",
           "source": {
             "leader": "     cmm a        i 4500",
-            "fields": [{"001": "0000000"},{"007":"co |||   |||||"},{"008": "171123s1999    sweZX  jo  | |         | "}]
+            "fields": [{"001": "0000000"},{"007":"co |||   |||||"},{"008": "171123s1999    sw ZX  jo  | |         | "}]
           },
           "normalized": {
             "leader": "     cmm a        i 4500",
-            "fields": [{"001": "0000000"},{"007":"co |||   |||||         "},{"008": "171123s1999    swe    jo  | |         | "}]
+            "fields": [{"001": "0000000"},{"007":"co |||   |||||         "},{"008": "171123s1999    sw     jo  | |         | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -4962,7 +5010,7 @@
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -4977,11 +5025,11 @@
           "name": "Cartography (in 000) + Shading + Azimuthal Projection + gf:SingleMap",
           "source": {
             "leader": "     cem a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    sweb   ae a            | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw b   ae a            | "}]
           },
           "normalized": {
             "leader": "     cem a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    sweb|||ae a  || 0 ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw b|||ae a  || 0 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -4991,7 +5039,7 @@
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -5008,11 +5056,11 @@
           "name": "ManuscriptCartography (in 000) + Shading + Azimuthal Projection + gf:SingleMap",
           "source": {
             "leader": "     cfm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1899    sweb   ae a            | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1899    sw b   ae a            | "}]
           },
           "normalized": {
             "leader": "     cfm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1899    sweb|||ae a  || 0 ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1899    sw b|||ae a  || 0 ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5022,7 +5070,7 @@
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1899"
               },
@@ -5039,11 +5087,11 @@
           "name": "MixedMaterial (in 000) + ct:Tactile",
           "source": {
             "leader": "     cpm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe     f              | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw      f              | "}]
           },
           "normalized": {
             "leader": "     cpm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe     f              | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw      f              | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5054,7 +5102,7 @@
               "carrierType": [{ "@id": "https://id.kb.se/marc/ItemType-f" }],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -5068,11 +5116,11 @@
           "name": "NotatedMusic (in 000) + gf:Carols + VocalScore + VocalPart + Adult",
           "source": {
             "leader": "     ccm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swecrkfer              | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw crkfer              | "}]
           },
           "normalized": {
             "leader": "     ccm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swecrkfer||||||   |    | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw crkfer||||||   |    | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5083,7 +5131,7 @@
               "carrierType": [{ "@id": "https://id.kb.se/marc/ItemType-r"}],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -5101,11 +5149,11 @@
           "name": "ManuscriptNotatedMusic (in 000) + gf:Madrigals",
           "source": {
             "leader": "     cdm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swemd                  | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw md                  | "}]
           },
           "normalized": {
             "leader": "     cdm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swemd||||||||||   |    | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw md||||||||||   |    | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5115,7 +5163,7 @@
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -5130,11 +5178,11 @@
           "name": "Music (in 000) + gf:NotApplicable",
           "source": {
             "leader": "     cim a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swenn                  | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw nn                  | "}]
           },
           "normalized": {
             "leader": "     cim a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swenn||||||||||   |    | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw nn||||||||||   |    | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5144,7 +5192,7 @@
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -5159,11 +5207,11 @@
           "name": "Music (in 000) + gf:Popular",
           "source": {
             "leader": "     cjm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swepp                  | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw pp                  | "}]
           },
           "normalized": {
             "leader": "     cjm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swepp||||||||||   |    | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw pp||||||||||   |    | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5173,7 +5221,7 @@
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -5188,7 +5236,7 @@
           "name": "Serial + frequency + gf:Periodical",
           "source": {
             "leader": "     cas a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123c1999    swea| p|||||||0   ||   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123c1999    sw a| p|||||||0   ||   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5199,7 +5247,7 @@
               "frequency": [{ "@id": "https://id.kb.se/marc/SerialsFrequencyType-a" }],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
                 "year": "1999"
               },
@@ -5214,11 +5262,11 @@
           "name": "MovingImage (in 000) + gf:MotionPicture",
           "source": {
             "leader": "     cgm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe---            m    | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw ---            m    | "}]
           },
           "normalized": {
             "leader": "     cgm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe--- |     ||   m|   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw --- |     ||   m|   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5229,7 +5277,7 @@
               "marc:runningTime": "---",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -5244,11 +5292,11 @@
           "name": "StillImage (in 000) + gf:Picture",
           "source": {
             "leader": "     ckm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe---            i    | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw ---            i    | "}]
           },
           "normalized": {
             "leader": "     ckm a        i 4500",
-            "fields": [{"001": "0000000"}, {"008": "171123s1999    swe--- |     ||   i|   | "}]
+            "fields": [{"001": "0000000"}, {"008": "171123s1999    sw --- |     ||   i|   | "}]
           },
           "result": {
             "created": "2017-11-23T00:00:00.0+01:00",
@@ -5259,7 +5307,7 @@
               "marc:runningTime": "---",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
-                "country": [{ "@id": "https://id.kb.se/country/swe" }],
+                "country": [{ "@id": "https://id.kb.se/country/sw" }],
                 "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
                 "year": "1999"
               },
@@ -5897,6 +5945,43 @@
 
     "024": {
       "include": ["identifier"],
+      "match": [
+        {
+          "when": "i1=7 & $2 =~ ansi|ANSI|doi|DOI|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|iswc|ISWC|urn|URN",
+          "i1": null,
+          "$2": {
+            "property": "@type",
+            "tokenMap": {
+              "NOTE": "NB! Order is significant. The last key for the same value will be used on revert",
+              "ANSI": "Ansi",
+              "ansi": "Ansi",
+              "DOI": "DOI",
+              "doi": "DOI",
+              "HDL": "Hdl",
+              "hdl": "Hdl",
+              "ISAN": "ISAN",
+              "isan": "ISAN",
+              "ISO": "ISO",
+              "iso": "ISO",
+              "ISTC": "ISTC",
+              "istc": "ISTC",
+              "ISWC": "ISWC",
+              "iswc": "ISWC",
+              "URN": "URN",
+              "urn": "URN"
+            }
+          }
+        },
+        {
+          "when": "i1=7 & $2",
+          "i1": {
+            "property": "@type",
+            "tokenMap": {
+              "7": "Identifier"
+            }
+          }
+        }
+      ],
       "i1": {
         "property": "@type",
         "tokenMap": {
@@ -5906,7 +5991,7 @@
           "3": "EAN",
           "4": "SICI",
           "7": "Identifier",
-          "8": "marc:OtherIdentifier"
+          "8": "Identifier"
         },
         "TODO:definedElsewhereToken": "7"
       },
@@ -6014,6 +6099,89 @@
           }
         },
         {
+          "name": "Ansi, indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "xyz"}, {"2": "ansi"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Instance",
+              "identifiedBy": [
+                {
+                  "@type": "Ansi",
+                  "value":  "xyz"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "DOI, indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "10.1109/5.771073"}, {"2": "doi"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Instance",
+              "identifiedBy": [
+                {
+                  "@type": "DOI",
+                  "value":  "10.1109/5.771073"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Hdl, indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "20.1000/100"}, {"2": "hdl"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Instance",
+              "identifiedBy": [
+                {
+                  "@type": "Hdl",
+                  "value":  "20.1000/100"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "ISO,ISAN,ISTC,ISWC, indicator from $2 when i1 = 7",
+          "source": [
+            {"024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "abc"}, {"2": "iso"}]}},
+            {"024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "def"}, {"2": "isan"}]}},
+            {"024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "ghi"}, {"2": "istc"}]}},
+            {"024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "jkl"}, {"2": "iswc"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "@type" : "Instance",
+              "identifiedBy": [
+                {
+                  "@type": "ISO",
+                  "value":  "abc"
+                },
+                {
+                  "@type": "ISAN",
+                  "value":  "def"
+                },
+                {
+                  "@type": "ISTC",
+                  "value":  "ghi"
+                },
+                {
+                  "@type": "ISWC",
+                  "value":  "jkl"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "indicator from $2 when i1 = 7",
           "source": {
             "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "1234567890"}, {"2": "xyz"}]}
@@ -6025,6 +6193,41 @@
                   "@type": "Identifier",
                   "value":  "1234567890",
                   "typeNote": "xyz"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unspecified Identifier",
+          "source": {
+            "024": {"ind1": "8", "ind2": " ", "subfields": [{"a": "8"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {
+                  "@type": "Identifier",
+                  "value":  "8"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unspecified Identifier",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "actually ind1 8"}]}
+          },
+          "normalized": {
+            "024": {"ind1": "8", "ind2": " ", "subfields": [{"a": "actually ind1 8"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "identifiedBy": [
+                {
+                  "@type": "Identifier",
+                  "value":  "actually ind1 8"
                 }
               ]
             }
@@ -6085,7 +6288,7 @@
         {
           "source": {
             "024": {
-              "ind1": "7", "ind2": " ",
+              "ind1": "8", "ind2": " ",
               "subfields": [{"a": "A(148)"}]
             }
           },
@@ -6717,7 +6920,7 @@
 
     "040": {
       "aboutEntity": "?record",
-      "$a": {"link": "descriptionCreator", "resourceType": "Library", "uriTemplate": "https://libris.kb.se/library/{_}", "property": "sigel"},
+      "$a": {"link": "descriptionCreator", "resourceType": "Agent", "uriTemplate": "https://libris.kb.se/library/{_}", "property": "sigel"},
       "$b": {
         "link": "descriptionLanguage",
         "uriTemplate": "https://id.kb.se/language/{_}", "matchUriToken": "^\\w{2,3}$", "property": "code"
@@ -6726,7 +6929,7 @@
       "$d": {"addLink": "descriptionUpgrader", "resourceType": "Library", "property": "sigel"},
       "$e": {"addLink": "descriptionConventions", "NOTE:marc-repeatable": false, "resourceType": "DescriptionConventions", "property": "code"},
       "$6": {"property": "marc:fieldref"},
-      "NOTE:$9": {"property": "license", "NOTE": "Removed after bibliographic review"},
+      "$9": {"addProperty": "marc:agreementName", "NOTE": "Local Libris field"},
       "_spec": [
         {
           "name": "ensure multiple fields matching a top entity convert and revert OK",
@@ -6739,7 +6942,7 @@
               "@type": "LibrisIIINumber",
               "value": "9927672551"
             }],
-            "descriptionCreator": {"@id": "https://libris.kb.se/library/Js", "@type": "Library", "sigel": "Js"},
+            "descriptionCreator": {"@id": "https://libris.kb.se/library/Js", "@type": "Agent", "sigel": "Js"},
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text"
@@ -6748,13 +6951,76 @@
           }
         },
         {
+          "name": "External code, and repeated descriptionUpgrader. TODO: code for imported records which is not sigel?",
           "source": {"040": {"ind1": " ", "ind2": " ", "subfields": [{"a": "DLC"}, {"d": "Kama"}, {"d": "S"}]}},
           "result": {
-            "descriptionCreator": {"@id": "https://libris.kb.se/library/DLC", "@type": "Library", "sigel": "DLC"},
+            "descriptionCreator": {"@id": "https://libris.kb.se/library/DLC", "@type": "Agent", "sigel": "DLC"},
             "descriptionUpgrader": [
               {"@type": "Library", "sigel": "Kama"},
               {"@type": "Library", "sigel": "S"}
             ],
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        },
+        {
+          "name": "Reconversion of descriptionConventions where both leader/18 (Punctuation policy) and 040$e is present.",
+          "normalized": {
+            "leader": "     cam a        i 4500",
+            "fields": [
+              {"001": "0000000"},
+              {"040": {"ind1": " ", "ind2": " ", "subfields": [{"e": "rda"}]}}]
+          },
+          "result": {
+            "descriptionConventions": [
+              {"@id": "https://id.kb.se/marc/CatFormType-i"},
+              {"@type": "DescriptionConventions", "code": "rda"}
+            ],
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        },
+        {
+          "name": "Reconvert Bibliography type as descriptionCreator.",
+          "normalized": [
+            {"040": {"ind1": " ", "ind2": " ", "subfields": [{"a": "NB"}]}}
+          ],
+          "result": {
+            "descriptionCreator": {"@id": "https://libris.kb.se/library/NB", "@type": "Bibliography", "sigel": "NB"},
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        },
+        {
+          "name": "Reconvert Library type as descriptionCreator.",
+          "normalized": [
+            {"040": {"ind1": " ", "ind2": " ", "subfields": [{"a": "S"}]}}
+          ],
+          "result": {
+            "descriptionCreator": {"@id": "https://libris.kb.se/library/S", "@type": "Library", "sigel": "S"},
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text"
+              }
+            }
+          }
+        },
+        {
+          "name": "040-9",
+          "normalized": [
+            {"040": {"ind1": " ", "ind2": " ", "subfields": [{"9": "x"}]}}
+          ],
+          "result": {
+            "marc:agreementName": ["x"],
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text"
@@ -7026,8 +7292,8 @@
       "$a": {"addLink": "descriptionAuthentication", "resourceType": "DescriptionAuthentication", "property": "code"},
       "$9": {
         "addLink": "bibliography",
-        "TODO:whenLinkable:uriTemplate": "https://libris.kb.se/library/{_}",
-        "resourceType": "Library",
+        "uriTemplate": "https://libris.kb.se/library/{_}",
+        "resourceType": "Bibliography",
         "property": "sigel"
       },
       "_spec": [
@@ -7037,7 +7303,7 @@
           },
           "result": {
               "bibliography": [
-                {"@type": "Library", "sigel": "NB"}
+                {"@id": "https://libris.kb.se/library/NB", "@type": "Bibliography", "sigel": "NB"}
               ],
             "mainEntity": {
               "instanceOf": {
@@ -7052,8 +7318,8 @@
           },
           "result": {
               "bibliography": [
-                {"@type": "Library", "sigel": "NB"},
-                {"@type": "Library", "sigel": "DIGI"}
+                {"@id": "https://libris.kb.se/library/NB", "@type": "Bibliography", "sigel": "NB"},
+                {"@id": "https://libris.kb.se/library/DIGI", "@type": "Bibliography", "sigel": "DIGI"}
               ],
             "mainEntity": {
               "instanceOf": {
@@ -7355,7 +7621,7 @@
       "aboutEntity": "?thing",
       "addLink": "classification",
       "resourceType": "ClassificationNlm",
-      "i1": {"property": "marc:existenceInNlmCollection", "marcDefault": " ", "tokenMap": {"0": true, "1": false}},
+      "i1": {"ignored": true, "marcDefault": " ", "NOTE:LC": "ignore"},
       "i2": {"property": "marc:assignedByNlm", "marcDefault": "4", "tokenMap": {"0": true}},
       "$a": {"property": "code"},
       "$b": {"ignored": true},
@@ -7364,6 +7630,9 @@
       "_spec": [
         {
           "source": {
+            "060": {"ind1": "1", "ind2": "4", "subfields": [{"a": "W1"}]}
+          },
+          "normalized": {
             "060": {"ind1": " ", "ind2": "4", "subfields": [{"a": "W1"}]}
           },
           "result": {
@@ -8643,35 +8912,316 @@
       "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
+          "name": "Translated treaty",
           "source": {
-            "130": {"ind1": " ", "ind2": " ", "subfields": [
-              {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
-              {"d": "(1968)."},
-              {"l": "Spanish."},
-              {"f": "1977."}
-            ]}},
+            "130": {
+              "ind1": " ",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
+                {"d": "(1968)."},
+                {"l": "Spanish."},
+                {"f": "1977."}
+              ]
+            }
+          },
           "normalized": {
-            "130": {"ind1": "0", "ind2": " ", "subfields": [
-              {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
-              {"d": "(1968)."},
-              {"l": "Spanish."},
-              {"f": "1977."}
-            ]}},
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "expressionOf": {
-                "@type": "Work",
-                "hasTitle" : [ {
-                  "@type" : "Title",
-                  "mainTitle" : "Treaty of the Non-proliferation of Nuclear Weapons"
-                } ],
-                "language": {"@type": "Language", "label": "Spanish."},
-                "legalDate": "(1968).",
-                "originDate": "1977."
+            "130": {
+              "ind1": "0",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Treaty of the Non-proliferation of Nuclear Weapons"},
+                {"d": "(1968)."},
+                {"l": "Spanish."},
+                {"f": "1977."}
+              ]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "expressionOf": {
+                  "@type": "Work",
+                  "hasTitle": [
+                    {
+                      "@type": "Title",
+                      "mainTitle": "Treaty of the Non-proliferation of Nuclear Weapons"
+                    }
+                  ],
+                  "language": {
+                    "@type": "Language",
+                    "label": "Spanish."
+                  },
+                  "legalDate": "(1968).",
+                  "originDate": "1977."
+                }
               }
             }
-          }}
+          }
+        },
+        {
+          "name": "String concerto",
+          "source": {
+            "130": {
+              "ind1": " ",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Concertos,"},
+                {"m": "violin,string orchestra,"},
+                {"r": "D major."}
+              ]
+            }
+          },
+          "normalized": {
+            "130": {
+              "ind1": "0",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Concertos,"},
+                {"m": "violin,string orchestra,"},
+                {"r": "D major."}
+              ]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "expressionOf": {
+                  "@type": "Work",
+                  "hasTitle": [
+                    {
+                      "@type": "Title",
+                      "mainTitle": "Concertos"
+                    }
+                  ],
+                  "musicMedium": [
+                    {
+                      "@type": "MusicMedium",
+                      "label": "violin,string orchestra"
+                    }
+                  ],
+                  "musicKey": "D major."
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Swedish uniform title of the Bible from 81",
+          "source": {
+            "130": {
+              "ind1": " ",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Bibeln."},
+                {"p": "Nya Testamentet."},
+                {"l": "Svenska"},
+                {"s": "NT 81."}
+              ]
+            }
+          },
+          "normalized": {
+            "130": {
+              "ind1": "0",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Bibeln."},
+                {"p": "Nya Testamentet."},
+                {"l": "Svenska"},
+                {"s": "NT 81."}
+              ]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "expressionOf": {
+                  "@type": "Work",
+                  "hasTitle": [
+                    {
+                      "@type": "Title",
+                      "mainTitle": "Bibeln.",
+                      "partName": [
+                        "Nya Testamentet."
+                      ]
+                    }
+                  ],
+                  "language": {
+                    "@type": "Language",
+                    "label": "Svenska"
+                  },
+                  "marc:version": "NT 81."
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Traditional title, translated, no PrimaryContribution",
+          "source": [
+            {
+              "008": "|     |        |  |||||||||||000 ||eng| "
+            },
+            {
+              "041": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "eng"},
+                  {"h": "ang"}
+                ]
+              }
+            },
+            {
+              "130": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "Beowulf."},
+                  {"l": "English"}
+                ]
+              }
+            },
+            {
+              "700": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "Morgan, Edwin,"},
+                  {"d": "1920-2010"},
+                  {"4": "trl"}
+                ]
+              }
+            }
+          ],
+          "normalized": [
+            {
+              "008": "|     |        |  |||||||||||000 ||eng| "
+            },
+            {
+              "041": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "eng"},
+                  {"h": "ang"}
+                ]
+              }
+            },
+            {
+              "130": {
+                "ind1": "0",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "Beowulf."},
+                  {"l": "English"}
+                ]
+              }
+            },
+            {
+              "700": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "Morgan, Edwin,"},
+                  {"d": "1920-2010"},
+                  {"4": "trl"}
+                ]
+              }
+            }
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contribution": [
+                  {
+                    "@type": "Contribution",
+                    "agent": {
+                      "@type": "Person",
+                      "familyName": "Morgan",
+                      "givenName": "Edwin",
+                      "lifeSpan": "1920-2010"
+                    },
+                    "role": [
+                      {
+                        "@id" : "https://id.kb.se/relator/trl",
+                        "@type": "Role",
+                        "code": "trl"
+                      }
+                    ]
+                  }
+                ],
+                "expressionOf": {
+                  "@type": "Work",
+                  "hasTitle": [
+                    {
+                      "@type": "Title",
+                      "mainTitle": "Beowulf."
+                    }
+                  ],
+                  "language": {
+                    "@type": "Language",
+                    "label": "English"
+                  }
+                },
+                "language" : [ {
+                  "@id" : "https://id.kb.se/language/eng",
+                  "code" : "eng"
+                } ],
+                "translationOf" : [ {
+                  "@type" : "Work",
+                  "language" : [ {
+                    "@id" : "https://id.kb.se/language/ang",
+                    "code" : "ang"
+                  } ]
+                } ]
+              }
+            }
+          }
+        },
+        {
+          "name": "Movie sound recording",
+          "source": {
+            "130": {
+              "ind1": " ",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Gone with the wind (Motion picture)."},
+                {"h": "Sound recording."}
+              ]
+            }
+          },
+          "normalized": {
+            "130": {
+              "ind1": "0",
+              "ind2": " ",
+              "subfields": [
+                {"a": "Gone with the wind (Motion picture)."},
+                {"h": "Sound recording."}
+              ]
+            }
+          },
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "expressionOf": {
+                  "@type": "Work",
+                  "hasTitle": [
+                    {
+                      "@type": "Title",
+                      "mainTitle": "Gone with the wind (Motion picture)."
+                    }
+                  ],
+                  "marc:mediaTerm": "Sound recording."
+                }
+              }
+            }
+          }
         }
       ]
     },
@@ -9052,6 +9602,126 @@
               {"l": "Svenska & swahili"}
             ]}}
           ]
+        },
+        {
+          "name": "Translated title, PrimaryContribution",
+          "source": [
+            {
+              "008": "|     |        |  |||||||||||000 ||swe| "
+            },
+            {
+              "041": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "swe"},
+                  {"h": "eng"}
+                ]
+              }
+            },
+            {
+              "240": {
+                "ind1": "1",
+                "ind2": "4",
+                "subfields": [
+                  {"a": "The lord of the rings."}
+                ]
+              }
+            },
+            {
+              "100": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "Tolkien, J.R.R."},
+                  {"d": "1892-1973"},
+                  {"4": "aut"}
+                ]
+              }
+            }
+          ],
+          "normalized": [
+            {
+              "008": "|     |        |  |||||||||||000 ||swe| "
+            },
+            {
+              "041": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "swe"},
+                  {"h": "eng"}
+                ]
+              }
+            },
+            {
+              "240": {
+                "ind1": "1",
+                "ind2": "4",
+                "subfields": [
+                  {"a": "The lord of the rings."}
+                ]
+              }
+            },
+            {
+              "100": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "Tolkien, J.R.R."},
+                  {"d": "1892-1973"},
+                  {"4": "aut"}
+                ]
+              }
+            }
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "contribution": [
+                  {
+                    "@type": "PrimaryContribution",
+                    "agent": {
+                      "@type": "Person",
+                      "familyName": "Tolkien",
+                      "givenName": "J.R.R.",
+                      "lifeSpan": "1892-1973"
+                    },
+                    "role": [
+                      {
+                        "@id" : "https://id.kb.se/relator/aut",
+                        "@type": "Role",
+                        "code": "aut"
+                      }
+                    ]
+                  }
+                ],
+                "hasTitle": [
+                  {
+                    "@type": "Title",
+                    "mainTitle": "The lord of the rings.",
+                    "marc:nonfilingChars" : "4"
+                  }
+                ],
+                "language": [ 
+                  {
+                    "@id" : "https://id.kb.se/language/swe",
+                    "code" : "swe"
+                  }
+                ],
+                "translationOf": [ 
+                  {
+                    "@type" : "Work",
+                    "language" : [ {
+                      "@id" : "https://id.kb.se/language/eng",
+                      "code" : "eng"
+                      } ]
+                  }
+                ]
+              }
+            }
+          }
         }
       ]
     },
@@ -11424,7 +12094,7 @@
       "$e": {"addProperty": "marc:tactileAssistiveFeatures"},
       "$2": {"link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
       "$3": {"property": "typeNote", "supplementary": true},
-      "$6": {"property": "marc:fieldref", "supplementary": true},
+      "$6": {"ignored": true, "NOTE:LC": "ignore"},
       "_spec": [
         {
           "source": {"341": {"ind1": "0", "ind2": " ", "subfields": [
@@ -13460,12 +14130,173 @@
     },
     "546": {
       "aboutEntity": "?work",
-      "addLink": "hasNote",
-      "resourceType": "marc:LanguageNote",
-      "$a": {"property": "label"},
-      "$b": {"addLink": "hasNotation", "resourceType": "Notation", "property": "label"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$6": {"property": "marc:fieldref"}
+      "pendingResources": {
+        "_:languageNote": {"addLink": "hasNote", "resourceType": "marc:LanguageNote" },
+        "_:hasNotation": {"addLink": "hasNotation", "resourceType": "Notation" }
+      },
+      "match": [
+        {
+          "when": "$a",
+          "addLink": "hasNote", "resourceType": "marc:LanguageNote",
+          "$a": {"property": "label", "punctuationChars": ";."},
+          "$b": {"aboutNew": "_:hasNotation", "property": "label", "punctuationChars": ";."},
+          "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+          "$6": {"property": "marc:fieldref"}
+        },
+        {
+          "when": "$b",
+          "addLink": "hasNotation", "resourceType": "Notation",
+          "$b": {"property": "label", "punctuationChars": ";.", "infer": true},
+          "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+          "$6": {"property": "marc:fieldref"}
+        }
+      ],
+      "$3": {"about": "_:languageNote", "link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "$6": {"about": "_:languageNote", "property": "marc:fieldref"},
+      "subfieldOrder": "6 3 ...",
+      "_spec": [
+        {
+          "name": "Notation",
+          "source": {"546": {"ind1": " ", "ind2": " ", "subfields": [
+            {"b": "Traditionell västerländsk notskrift"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNotation": [
+                {
+                  "@type": "Notation",
+                  "label": "Traditionell västerländsk notskrift"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "LanguageNote",
+          "source": {"546": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Parallelltext på svenska och engelska"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNote": [
+                {
+                  "@type": "marc:LanguageNote",
+                  "label": "Parallelltext på svenska och engelska"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "LanguageNote and Notation in same field.",
+          "source": {
+            "546": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Latin;"},{"b": "Roman alphabet."}]}
+          },
+          "source": {
+            "546": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Latin"},{"b": "Roman alphabet"}]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNote": [
+                {
+                  "@type": "marc:LanguageNote",
+                  "label": "Latin",
+                  "hasNotation": [
+                    {
+                      "@type": "Notation",
+                      "label": "Roman alphabet"
+                    }
+                  ]
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "LanguageNote and repeated hasNotation in same field.",
+          "source": {"546": {"ind1": " ", "ind2": " ", "subfields": [
+            {"3": "John P. Harrington field notebooks"},{"a": "Zuni;"},{"b": "Pictograms;"},{"b": "Phonetic alphabet."}
+          ]}},
+          "normalized": {"546": {"ind1": " ", "ind2": " ", "subfields": [
+            {"3": "John P. Harrington field notebooks"},{"a": "Zuni"},{"b": "Pictograms"},{"b": "Phonetic alphabet"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNote": [
+                {
+                  "@type": "marc:LanguageNote",
+                  "label": "Zuni",
+                  "hasNotation": [
+                    {
+                      "@type": "Notation",
+                      "label": "Pictograms"
+                    },
+                    {
+                      "@type": "Notation",
+                      "label": "Phonetic alphabet"
+                    }
+                  ],
+                  "appliesTo": {
+                    "@type": "Resource",
+                    "label": "John P. Harrington field notebooks"
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "Repeated fields LanguageNote + Notation",
+          "source": [
+            {"546": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Innehållsförteckning även på engelska"}
+          ]}},
+            {"546": {"ind1": " ", "ind2": " ", "subfields": [{"b": "Traditionell västerländsk notskrift"}
+          ]}}],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNote": [
+                {
+                  "@type": "marc:LanguageNote",
+                  "label": "Innehållsförteckning även på engelska"
+                }
+              ],
+              "hasNotation": [
+                {
+                  "@type": "Notation",
+                  "label": "Traditionell västerländsk notskrift"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "Repeated fields Notation + Notation",
+          "source": [
+            {"546": {"ind1": " ", "ind2": " ", "subfields": [{"b": "Traditionell västerländsk notskrift"}]}},
+            {"546": {"ind1": " ", "ind2": " ", "subfields": [{"b": "Roman alphabet"}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNotation": [
+                {
+                  "@type": "Notation",
+                  "label": "Traditionell västerländsk notskrift"
+                },
+                {
+                  "@type": "Notation",
+                  "label": "Roman alphabet"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "547": {
       "aboutEntity": "?thing",
@@ -13661,7 +14492,7 @@
         "marcDefault": " ",
         "tokenMap": {
           "0": true,
-          "1": false
+          "1": null
         }
       },
       "$a": {"property": "label"},
@@ -13690,12 +14521,14 @@
           "source": {"583": {"ind1": "1", "ind2": " ", "subfields": [
             {"a": "Foo"}
           ]}},
+          "source": {"583": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Foo"}
+          ]}},
           "result": {"mainEntity": {
             "hasNote": [
               {
                 "@type": "marc:ActionNote",
-                "label": "Foo",
-                "marc:isPrivate": false
+                "label": "Foo"
               }
             ]
           }}
@@ -16698,6 +17531,47 @@
                   ]
                 }
               ]
+            }
+          }}
+        },
+        {
+          "name": "language in hasPart Work",
+          "source": {"700": {"ind1": "1", "ind2": "2", "subfields": [
+            {"a": "Celan, Paul,"},
+            {"d": "1920-1970"},
+            {"t": "Atemwende"},
+            {"l": "Svenska"},
+            {"4": "aut"}
+          ]}
+          },
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart" : [ {
+                "@type" : "Work",
+                "contribution" : [ {
+                  "@type" : "PrimaryContribution",
+                  "agent" : {
+                    "@type" : "Person",
+                    "familyName" : "Celan",
+                    "givenName" : "Paul",
+                    "lifeSpan" : "1920-1970"
+                  },
+                  "role" : [ {
+                    "@id" : "https://id.kb.se/relator/aut",
+                    "@type" : "Role",
+                    "code" : "aut"
+                  } ]
+                } ],
+                "hasTitle" : [ {
+                  "@type" : "Title",
+                  "mainTitle" : "Atemwende"
+                } ],
+                "language" : {
+                  "@type": "Language",
+                  "label": "Svenska"
+                }
+              } ]
             }
           }}
         }
@@ -20308,6 +21182,10 @@
       "$8": {"property": "marc:groupid"},
       "$a": {"addProperty": "marc:hostName"},
       "$f": {"addProperty": "marc:electronicName"},
+      "$q": {"link": "encodingFormat", "resourceType": "EncodingFormat", "property": "label", "infer": true},
+      "$r": {"ignored": true, "NOTE:LC": "$r - Settings [OBSOLETE, 2020]"},
+      "$s": {"addProperty": "contentSize"},
+      "$t": {"ignored": true, "NOTE:LC": "$t - Terminal emulation [OBSOLETE, 2020]"},
       "$u": {"addProperty": "uri"},
       "$x": {"addProperty": "cataloguersNote"},
       "$y": {"addProperty": "marc:linkText"},
@@ -20386,6 +21264,36 @@
           "source": {"856": {"ind1": "4", "ind2": "8", "subfields": [{"u": "http://example.com/doc.pdf"}]}},
           "result": {"mainEntity": {
             "relatedTo": [{"@type": "Document", "uri": ["http://example.com/doc.pdf"]}]
+          }}
+        },
+        {
+          "name": "URI + encodingFormat",
+          "source": {"856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://www.cdc.gov/ncidod/EID/eid.htm"}, {"q": "text/html"}]}},
+          "result": {"mainEntity": {
+            "associatedMedia": [
+              {
+                "@type": "MediaObject",
+                "uri": ["http://www.cdc.gov/ncidod/EID/eid.htm"],
+                "encodingFormat" : {
+                  "@type" : "EncodingFormat",
+                  "label" : "text/html"
+                }
+              }
+            ]
+          }}
+        },
+        {
+          "name": "ftp + contentSize",
+          "source": {"856": {"ind1": "1", "ind2": " ", "subfields": [{"u": "ftp://example.com"}, {"s": "16874 bytes"}]}},
+          "result": {"mainEntity": {
+            "electronicLocator": [
+              {
+                "@type": "Document",
+                "uri": ["ftp://example.com"],
+                "marc:electronicLocatorType" : "ftp",
+                "contentSize" : ["16874 bytes"]
+              }
+            ]
           }}
         }
       ]
@@ -20860,17 +21768,13 @@
         "TODO": "Add z as default if subjects, could be computed from 040#f"
       },
       "[12]": {
-        "aboutEntity": "?record",
-        "link": "marc:typeOfSeries",
-        "uriTemplate": "https://id.kb.se/marc/TypeOfSeriesType-{_}",
-        "matchUriToken": "^[abc]$",
+        "NOTE:local": "Typ av serie - n - Ej tillämplig.",
+        "NOTE": "previously marc:typeOfSeries",
         "fixedDefault": "n"
       },
       "[13]": {
-        "aboutEntity": "?record",
-        "link": "marc:numberedSeries",
-        "uriTemplate": "https://id.kb.se/marc/NumberedSeriesType-{_}",
-        "matchUriToken": "^[abc]$",
+        "NOTE:local": "Numrering i serie - n - Ej tillämplig.",
+        "NOTE": "previously marc:numberedSeries",
         "fixedDefault": "n"
       },
       "[14]": {
@@ -20886,9 +21790,8 @@
         "fixedDefault": "a"
       },
       "[16]": {
-        "aboutEntity": "?record",
-        "property": "marc:headingSeries",
-        "tokenMap": {"a": true, "b": false},
+        "NOTE:local": "Användningsområde: seriesökelement - b - Kan inte användas som seriebiuppslag",
+        "NOTE": "previously marc:headingSeries",
         "fixedDefault": "b"
       },
       "[17]": {
@@ -21146,16 +22049,120 @@
     },
     "022": {"inherit": "bib"},
     "024": {
-      "inherit": "bib",
+      "include": ["identifier"],
+      "match": [
+        {
+          "when": "i1=7 & $2 =~ isni|ISNI|orcid|ORCID|viaf|VIAF|wikidata|WIKIDATA",
+          "i1": null,
+          "$2": {
+            "property": "@type",
+            "tokenMap": {
+              "NOTE": "NB! Order is significant. The last key for the same value will be used on revert",
+              "ISNI": "ISNI",
+              "isni": "ISNI",
+              "ORCID": "ORCID",
+              "orcid": "ORCID",
+              "VIAF": "VIAF",
+              "viaf": "VIAF",
+              "WIKIDATA": "WikidataID",
+              "wikidata": "WikidataID"
+            }
+          }
+        },
+        {
+          "when": "i1=7 & $2",
+          "i1": {
+            "property": "@type",
+            "tokenMap": {
+              "7": "Identifier"
+            }
+          }
+        }
+      ],
       "i1": {
         "property": "@type",
         "tokenMap": {
-          "7": "Identifier",
           "8": "Identifier"
         },
         "TODO:definedElsewhereToken": "7"
       },
-      "i2": null
+      "i2": null,
+      "$2": {
+        "TODO:requires-i1": "7 (overwritten by 8)",
+        "property": "typeNote",
+        "TODO:see": "http://www.loc.gov/standards/sourcelist/standard-identifier.html"
+      },
+      "_spec": [
+        {
+          "name": "Unspecified Identifier",
+          "source": {
+            "024": {"ind1": "8", "ind2": " ", "subfields": [{"a": "xyz"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Identity",
+              "identifiedBy": [
+                {
+                  "@type": "Identifier",
+                  "value":  "xyz"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "VIAF, indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "1234567890"}, {"2": "viaf"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Identity",
+              "identifiedBy": [
+                {
+                  "@type": "VIAF",
+                  "value":  "1234567890"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "ISNI, indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "0000 0000 0000 0000"}, {"2": "isni"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Identity",
+              "identifiedBy": [
+                {
+                  "@type": "ISNI",
+                  "value":  "0000 0000 0000 0000"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "revert oldschool ISNI (Identifier with typeNote)",
+          "normalized": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "0000 0000 0000 0000"}, {"2": "isni"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Identity",
+              "identifiedBy": [
+                {
+                  "@type": "Identifier",
+                  "value":  "0000 0000 0000 0000",
+                  "typeNote": "isni"
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "031": {
       "NOTE:LC": "031 - Musical Incipits Information (R) - nac",
@@ -22489,11 +23496,10 @@
   },
     "377": {
       "i2": {
-        "property": "marc:languageCode",
+        "TODO:property": "$2 - Source of code (NR), or only support MARC language code?",
+        "NOTE:LC": "# - MARC language code",
         "marcDefault": " ",
-        "tokenMap": {
-          "7": "marc:SourceSpecifiedInSubfield2"
-        }
+        "TODO:definedElsewhereToken": "7"
       },
       "aboutEntity": "?thing",
       "aboutType": "Agent",
@@ -24935,8 +25941,18 @@
     "751": {
       "addLink": "marc:hasAddedEntryGeographicName",
       "resourceType": "marc:AddedEntryGeographicName",
+      "i2": {
+        "property": "marc:thesaurus",
+        "tokenMap": "marcThesaurus",
+        "marcDefault": "4"
+      },
       "$a": {"property": "marc:geographicName"},
       "$e": {"addProperty": "marc:relatorTerm"},
+      "$v": {"addProperty": "marc:formSubdivision"},
+      "$w": {"property": "marc:controlSubfield"},
+      "$x": {"addProperty": "marc:generalSubdivision"},
+      "$y": {"addProperty": "marc:chronologicalSubdivision"},
+      "$z": {"addProperty": "marc:geographicSubdivision"},
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$4": {"addProperty": "marc:relatorCode"},
@@ -25068,9 +26084,9 @@
         "TODO:apply": "852-$b",
         "about": "?thing",
         "link": "heldBy",
-        "uriTemplate": "https://libris.kb.se/library/{code}",
-        "resourceType": "Organization",
-        "property": "code"
+        "uriTemplate": "https://libris.kb.se/library/{sigel}",
+        "resourceType": "Agent",
+        "property": "sigel"
       }
     },
 
@@ -25254,7 +26270,7 @@
 
     "003": {
       "ignored": true,
-      "TODO:systemNumber-with-default": "SE-LIBR", "NOTE": "used-for-exports"
+      "NOTE:local": "FÖREKOMMER EJ I LIBRIS BESTÅNDSFORMAT"
     },
 
     "004": {
@@ -25612,24 +26628,50 @@
     "538": {"inherit": "bib", "$5": null},
     "541": {
       "groupId": "?example-$seq",
+      "NOTE": "groupId has created only sameAs links in the actual converted data.",
       "i1": {
         "NOTE": "0 = Sekretessbelagd information. Används f.n. ej. = ca 5000 poster",
         "property": "marc:isPrivate",
         "marcDefault": " ",
         "tokenMap": {
           "0": true,
-          "1": false
+          "1": null
         }
       },
-      "addLink": "immediateAcquisition", "resourceType": "ImmediateAcquisition",
-      "$a": {"addProperty": "marc:sourceOfAcquisition"},
+      "addLink": "immediateAcquisition",
+      "resourceType": "ImmediateAcquisition",
+      "$a": {"property": "marc:sourceOfAcquisition"},
       "$b": {"property": "marc:address"},
       "$c": {"property": "marc:methodOfAcquisition"},
       "$d": {"property": "marc:dateOfAcquisition"},
       "$e": {"property": "marc:accessionNumber"},
       "$f": {"property": "marc:owner"},
       "$h": {"property": "marc:purchasePrice"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "source": {
+            "541": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Gåva"}, {"d": "2006"}
+            ]}},
+            "normalized": {
+              "541": {"ind1": "0", "ind2": " ", "subfields": [
+                {"a": "Gåva"}, {"d": "2006"}
+              ]}},
+          "result": {"mainEntity": {
+            "@type": "Item",
+            "immediateAcquisition": [
+              {
+                "@id" : "?example-g1-1",
+                "@type": "ImmediateAcquisition",
+                "marc:sourceOfAcquisition": "Gåva",
+                "marc:dateOfAcquisition": "2006",
+                "marc:isPrivate": true
+              }
+            ]
+          }}
+        }
+      ]
     },
     "546": {
       "aboutEntity": "?thing",
@@ -25682,13 +26724,34 @@
         "marcDefault": " ",
         "tokenMap": {
           "0": true,
-          "1": false
+          "1": null
         }
       },
       "$a": {"property": "label"},
       "$b": {"addProperty": "marc:actionIdentification"},
       "$x": {"addProperty": "marc:cataloguersNote", "TODO": "ignore?"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "source": {
+            "583": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "a"}
+            ]}},
+            "normalized": {
+              "583": {"ind1": " ", "ind2": " ", "subfields": [
+                {"a": "a"}
+              ]}},
+          "result": {"mainEntity": {
+            "@type": "Item",
+            "marc:hasActionNote": [
+              {
+                "@type": "marc:ActionNote",
+                "label": "a"
+              }
+            ]
+          }}
+        }
+      ]
     },
     "599": {
       "NOTE:local": "LIBRIS-definierat beståndsfält.",
@@ -25793,10 +26856,10 @@
       "$b": {
         "link": "heldBy",
         "NOTE:marc-repeatable": "true in MARC21, but not in Libris (although it's been in 0.06 % of our records)",
-        "resourceType": "Organization",
+        "resourceType": "Agent",
         "uriTemplate": "https://libris.kb.se/library/{_}",
         "matchUriToken": "^\\S+$",
-        "property": "code",
+        "property": "sigel",
         "TODO": "move to mainEntity and auto-repeat here",
         "NOTE": "libris deviates from standard (sublocationOrCollection)"
       },
@@ -25844,7 +26907,7 @@
             "mainEntity": {
               "@type": "Item",
               "copyNumber": "1",
-              "heldBy": {"@id": "https://libris.kb.se/library/H", "@type": "Organization", "code": "H"},
+              "heldBy": {"@id": "https://libris.kb.se/library/H", "@type": "Agent", "sigel": "H"},
               "shelfControlNumber": "65.465",
               "physicalLocation": ["MAG"]
             }
@@ -25863,7 +26926,7 @@
                   "@type": "Item",
                   "copyNumber": "1",
                   "heldBy": {
-                    "@id": "https://libris.kb.se/library/X", "@type": "Organization", "code": "X"},
+                    "@id": "https://libris.kb.se/library/X", "@type": "Agent", "sigel": "X"},
                   "shelfMark": {
                     "@type": "ShelfMark",
                     "label": "Z"
@@ -25872,7 +26935,7 @@
                 {
                   "@type": "Item",
                   "copyNumber": "2",
-                  "heldBy": {"@id": "https://libris.kb.se/library/Y", "@type": "Organization", "code": "Y"}
+                  "heldBy": {"@id": "https://libris.kb.se/library/Y", "@type": "Agent", "sigel": "Y"}
                 }
               ]
             }
@@ -25896,7 +26959,7 @@
           }}
         },
         {
-          "name": "ShelfMarkSequence revert",
+          "name": "ShelfMarkSequence revert (Library)",
           "result": {
             "mainEntity": {
               "@type": "Item",
@@ -25904,7 +26967,7 @@
                 {
                   "@type": "Item",
                   "heldBy": {
-                    "@id": "https://libris.kb.se/library/X", "@type": "Organization", "code": "X"},
+                    "@id": "https://libris.kb.se/library/X", "@type": "Library", "sigel": "X"},
                   "shelfMark": {
                     "@type": "ShelfMarkSequence",
                     "label": "Z"
@@ -25918,6 +26981,31 @@
             "ind1": " ",
             "ind2": " ",
             "subfields": [{"b": "X"}, {"h": "Z"}, {"j": "br 5"}]
+          }}
+        },
+        {
+          "name": "ShelfMarkSequence revert (Bibliography)",
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
+              "hasComponent": [
+                {
+                  "@type": "Item",
+                  "heldBy": {
+                    "@id": "https://libris.kb.se/library/NB", "@type": "Bibliography", "sigel": "NB"},
+                  "shelfMark": {
+                    "@type": "ShelfMarkSequence",
+                    "label": "Z"
+                  },
+                  "shelfControlNumber": "br 5"
+                }
+              ]
+            }
+          },
+          "normalized": {"852": {
+            "ind1": " ",
+            "ind2": " ",
+            "subfields": [{"b": "NB"}, {"h": "Z"}, {"j": "br 5"}]
           }}
         }
       ]

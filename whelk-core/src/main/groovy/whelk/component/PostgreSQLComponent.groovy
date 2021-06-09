@@ -357,6 +357,19 @@ class PostgreSQLComponent {
             SELECT id FROM lddb WHERE data#>'{@graph,0,inDataset}' @> ?::jsonb AND deleted = false
         """.stripIndent()
 
+    private static final String GET_USER_DATA =
+            "SELECT data FROM lddb__user_data WHERE id = ?"
+
+    private static final String UPSERT_USER_DATA = """
+            INSERT INTO lddb__user_data (id, data, modified)
+            VALUES (?, ?, ?)
+            ON CONFLICT (id) DO UPDATE
+            SET (data, modified) = (EXCLUDED.data, EXCLUDED.modified)
+            """.stripIndent()
+
+    private static final String DELETE_USER_DATA =
+            "DELETE FROM lddb__user_data WHERE id = ?"
+
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
 
@@ -615,7 +628,7 @@ class PostgreSQLComponent {
         try {
             connection.setAutoCommit(false)
             normalizeDocumentForStorage(doc, connection)
-
+            
             if (collection == "hold") {
                 checkLinkedShelfMarkOwnership(doc, connection)
                 
@@ -799,7 +812,7 @@ class PostgreSQLComponent {
         while (true) {
             try {
                 Document doc = load(id)
-                String checksum = doc.getChecksum()
+                String checksum = doc.getChecksum(jsonld)
                 updateAgent.update(doc)
                 Document updated = storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, checksum)
                 return updated
@@ -833,19 +846,41 @@ class PostgreSQLComponent {
                 throw new SQLException("There is no document with the id: " + id)
             Document preUpdateDoc = assembleDocument(resultSet)
 
-            if (preUpdateDoc.getChecksum() != oldChecksum) {
-                throw new StaleUpdateException("Document $doc.shortId has been modified. Checksum mismatch: ${preUpdateDoc.getChecksum()} <> $oldChecksum")
+            if (preUpdateDoc.getChecksum(jsonld) != oldChecksum) {
+                throw new StaleUpdateException("Document $doc.shortId has been modified. Checksum mismatch: ${preUpdateDoc.getChecksum(jsonld)} <> $oldChecksum")
             }
 
             String collection = resultSet.getString("collection")
             String oldChangedBy = resultSet.getString("changedBy")
-            if (changedBy == null)
+            if (changedBy == null || minorUpdate)
                 changedBy = oldChangedBy
 
             normalizeDocumentForStorage(doc, connection)
-
+            
             if (collection == "hold") {
                 checkLinkedShelfMarkOwnership(doc, connection)
+                String holdingFor = doc.getHoldingFor()
+                if (holdingFor == null) {
+                    log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                    return null
+                }
+                String holdingForRecordId = getRecordId(holdingFor, connection)
+                if (holdingForRecordId == null) {
+                    log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                    return null
+                }
+                String holdingForSystemId = holdingForRecordId.substring(Document.BASE_URI.toString().length())
+                if (holdingForSystemId == null) {
+                    log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                    return null
+                }
+
+                acquireRowLock(holdingForSystemId, connection)
+
+                String holdingId = getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) 
+                if (holdingId != null && holdingId != doc.getShortId()) {
+                    throw new ConflictingHoldException("Already exists a holding record ($holdingId) for ${doc.getHeldBy()} and bib: $holdingFor")
+                }
             }
 
             if (doVerifyDocumentIdRetention) {
@@ -881,7 +916,7 @@ class PostgreSQLComponent {
                 SortedSet<String> idsLinkingToOldId = getDependencyData(id, GET_DEPENDERS, connection)
                 for (String dependerId : idsLinkingToOldId) {
                     Document depender = load(dependerId, connection)
-                    storeAtomicUpdate(depender, true, changedIn, changedBy, depender.getChecksum(), connection, postCommitActions)
+                    storeAtomicUpdate(depender, true, changedIn, changedBy, depender.getChecksum(jsonld), connection, postCommitActions)
                 }
             }
 
@@ -1141,7 +1176,7 @@ class PostgreSQLComponent {
             preparedStatement = connection.prepareStatement(UPSERT_CARD)
             preparedStatement.setString(1, card.getShortId())
             preparedStatement.setObject(2, card.dataAsString, OTHER)
-            preparedStatement.setString(3, card.getChecksum())
+            preparedStatement.setString(3, card.getChecksum(jsonld))
             preparedStatement.setTimestamp(4, timestamp)
 
             boolean createdOrUpdated = preparedStatement.executeUpdate() > 0
@@ -1163,7 +1198,7 @@ class PostgreSQLComponent {
 
         PreparedStatement preparedStatement = null
         try {
-            String checksum = card.getChecksum()
+            String checksum = card.getChecksum(jsonld)
             preparedStatement = connection.prepareStatement(UPDATE_CARD)
             preparedStatement.setObject(1, card.dataAsString, OTHER)
             preparedStatement.setString(2, checksum)
@@ -1368,25 +1403,25 @@ class PostgreSQLComponent {
         }
     }
 
-    private static PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, Date timestamp, String changedIn, String changedBy, String collection, boolean deleted) {
+    private PreparedStatement rigInsertStatement(PreparedStatement insert, Document doc, Date timestamp, String changedIn, String changedBy, String collection, boolean deleted) {
         insert.setString(1, doc.getShortId())
         insert.setObject(2, doc.dataAsString, OTHER)
         insert.setString(3, collection)
         insert.setString(4, changedIn)
         insert.setString(5, changedBy)
-        insert.setString(6, doc.getChecksum())
+        insert.setString(6, doc.getChecksum(jsonld))
         insert.setBoolean(7, deleted)
         insert.setTimestamp(8, new Timestamp(timestamp.getTime()))
         insert.setTimestamp(9, new Timestamp(timestamp.getTime()))
         return insert
     }
 
-    private static void rigUpdateStatement(PreparedStatement update, Document doc, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
+    private void rigUpdateStatement(PreparedStatement update, Document doc, Date modTime, String changedIn, String changedBy, String collection, boolean deleted) {
         update.setObject(1, doc.dataAsString, OTHER)
         update.setString(2, collection)
         update.setString(3, changedIn)
         update.setString(4, changedBy)
-        update.setString(5, doc.getChecksum())
+        update.setString(5, doc.getChecksum(jsonld))
         update.setBoolean(6, deleted)
         update.setTimestamp(7, new Timestamp(modTime.getTime()))
         update.setObject(8, doc.getShortId(), OTHER)
@@ -1398,7 +1433,7 @@ class PostgreSQLComponent {
         if (versioning) {
             PreparedStatement insVersion = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
             try {
-                log.debug("Trying to save a version of ${doc.getShortId() ?: ""} with checksum ${doc.getChecksum()}. Modified: $modTime")
+                log.debug("Trying to save a version of ${doc.getShortId() ?: ""} with checksum ${doc.getChecksum(jsonld)}. Modified: $modTime")
                 insVersion = rigVersionStatement(insVersion, doc, createdTime,
                                               modTime, changedIn, changedBy,
                                               collection, deleted)
@@ -1416,7 +1451,7 @@ class PostgreSQLComponent {
         }
     }
 
-    private static PreparedStatement rigVersionStatement(PreparedStatement insvers,
+    private PreparedStatement rigVersionStatement(PreparedStatement insvers,
                                                          Document doc, Date createdTime,
                                                          Date modTime, String changedIn,
                                                          String changedBy, String collection,
@@ -1426,7 +1461,7 @@ class PostgreSQLComponent {
         insvers.setString(3, collection)
         insvers.setString(4, changedIn)
         insvers.setString(5, changedBy)
-        insvers.setString(6, doc.getChecksum())
+        insvers.setString(6, doc.getChecksum(jsonld))
         insvers.setTimestamp(7, new Timestamp(createdTime.getTime()))
         insvers.setTimestamp(8, new Timestamp(modTime.getTime()))
         insvers.setBoolean(9, deleted)
@@ -2402,6 +2437,59 @@ class PostgreSQLComponent {
             log.debug("Removed $numRemoved dependencies for id ${identifier}")
         } finally {
             close(removeDependencies, connection)
+        }
+    }
+
+    String getUserData(String id) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            preparedStatement = connection.prepareStatement(GET_USER_DATA)
+            preparedStatement.setString(1, id)
+
+            rs = preparedStatement.executeQuery()
+            if (rs.next()) {
+                return rs.getString("data")
+            }
+            else {
+                return null
+            }
+        } finally {
+            close(rs, preparedStatement, connection)
+        }
+    }
+
+    boolean storeUserData(String id, String data) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        try {
+            PGobject jsonb = new PGobject()
+            jsonb.setType("jsonb")
+            jsonb.setValue(data)
+
+            preparedStatement = connection.prepareStatement(UPSERT_USER_DATA)
+            preparedStatement.setString(1, id)
+            preparedStatement.setObject(2, jsonb)
+            preparedStatement.setTimestamp(3, new Timestamp(new Date().getTime()))
+
+            boolean createdOrUpdated = preparedStatement.executeUpdate() > 0
+            return createdOrUpdated
+        } finally {
+            close(preparedStatement, connection)
+        }
+    }
+
+    void removeUserData(String id) {
+        Connection connection = getConnection()
+        PreparedStatement preparedStatement = null
+        try {
+            preparedStatement = connection.prepareStatement(DELETE_USER_DATA)
+            preparedStatement.setString(1, id)
+            int numRemoved = preparedStatement.executeUpdate()
+            log.debug("Removed ${numRemoved} user data record for id ${id}")
+        } finally {
+            close(preparedStatement, connection)
         }
     }
 

@@ -78,7 +78,7 @@ public class GetRecord
         try (Connection dbconn = OaiPmh.s_whelk.getStorage().getOuterConnection())
         {
             dbconn.setAutoCommit(false);
-            try (Helpers.ResultIterator it = Helpers.getMatchingDocuments(dbconn, null, null, null, id, false))
+            try (Helpers.ResultIterator it = Helpers.getMatchingDocuments(dbconn, null, null, null, id, false, false))
             {
                 if (!it.hasNext())
                 {

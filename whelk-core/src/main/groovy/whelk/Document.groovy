@@ -13,6 +13,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.function.Predicate
 
 /**
  * A document is represented as a data Map (containing Maps, Lists and Value objects).
@@ -94,14 +95,15 @@ class Document {
         }
     }
 
-    void trimStrings() {
+    boolean trimStrings() {
         DocumentUtil.traverse(data) { value, path ->
-            if (value instanceof String && value != value.trim()) {
-                return new DocumentUtil.Replace(value.trim())
+            // don't touch indX in _marcUncompleted ' '
+            if (value instanceof String && value != ' ' && value != Unicode.trim(value)) {
+                return new DocumentUtil.Replace(Unicode.trim(value))
             }
         }
     }
-
+        
     URI getURI() {
         return baseUri.resolve(getShortId())
     }
@@ -226,7 +228,27 @@ class Document {
     List<String> getIsbnHiddenValues() { return getTypedIDValues("ISBN", thingIndirectTypedIDsPath, "value") }
     List<String> getIssnHiddenValues() { return getTypedIDValues("ISSN", thingTypedIDsPath, "marc:canceledIssn") }
 
+    List<String> getIsniValues() {
+        return getTypedIDValues(this.&isIsni, thingTypedIDsPath, "value")
+    }
+    
+    static boolean isIsni(Map identifier) { 
+         identifier['@type'] == 'ISNI' || identifier.typeNote?.with{ String n -> n.toLowerCase() } == 'isni'
+    }
+
+    List<String> getOrcidValues() {
+        return getTypedIDValues(this.&isOrcid, thingTypedIDsPath, "value")
+    }
+
+    static boolean isOrcid(Map identifier) {
+        identifier['@type'] == 'ORCID' || identifier.typeNote?.with{ String n -> n.toLowerCase() } == 'orcid'
+    }
+    
     private List<String> getTypedIDValues(String typeKey, List<String> idListPath, String valueKey) {
+        getTypedIDValues({ it['@type'] == typeKey }, idListPath, valueKey)
+    }
+        
+    private List<String> getTypedIDValues(Predicate<Map> condition, List<String> idListPath, String valueKey) {
         List<String> values = new ArrayList<>()
         List typedIDs = get(idListPath)
         for (Object element : typedIDs) {
@@ -234,12 +256,9 @@ class Document {
                 continue
             Map map = (Map) element
 
-            Object type = map.get("@type")
-            if (type == null)
+            if (!condition.test(map)) {
                 continue
-
-            if (!type.equals(typeKey))
-                continue
+            }
 
             Object value = map.get(valueKey)
             if (value != null) {
@@ -837,12 +856,12 @@ class Document {
         thing.remove(JsonLd.REVERSE_KEY)
     }
 
-    String getChecksum() {
-        long checksum = calculateCheckSum(data, 1)
+    String getChecksum(JsonLd jsonLd) {
+        long checksum = calculateCheckSum(data, 1, null, jsonLd)
         return Long.toString(checksum)
     }
 
-    private long calculateCheckSum(node, int depth) {
+    private long calculateCheckSum(node, int depth, parentKey, JsonLd jsonLd) {
         long term = 0
 
         if (node == null)
@@ -860,14 +879,17 @@ class Document {
                 if (key != JsonLd.MODIFIED_KEY && key != JsonLd.CREATED_KEY && key != JsonLd.RECORD_STATUS_KEY) {
 
                     term += key.hashCode() * depth
-                    term += calculateCheckSum(node[key], depth + 1)
+                    term += calculateCheckSum(node[key], depth + 1, key, jsonLd)
                 }
             }
         }
         else if (node instanceof List) {
             int i = 1
             for (entry in node)
-                term += calculateCheckSum(entry, depth + (i++))
+                if (isSet(parentKey, jsonLd))
+                    term += calculateCheckSum(entry, depth, null, jsonLd)
+                else
+                    term += calculateCheckSum(entry, depth + (i++), null, jsonLd)
         }
         else {
             return node.hashCode() * depth
@@ -876,5 +898,8 @@ class Document {
         return term
     }
 
+    private static boolean isSet(String key, JsonLd jsonLd) {
+        jsonLd && key && jsonLd.isSetContainer(key)
+    }
 
 }

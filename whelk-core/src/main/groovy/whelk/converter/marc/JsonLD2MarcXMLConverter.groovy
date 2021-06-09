@@ -42,7 +42,7 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
 
         MarcRecord record = JSONMarcConverter.fromJsonMap(marcJsonData)
 
-        record = prepareRecord(record, id, originalDocument.getModified(), originalDocument.getChecksum())
+        record = prepareRecord(record, id, originalDocument.getModified(), originalDocument.getChecksum(jsonldConverter.marcFrameConverter.ld))
 
         String xmlString = whelk.converter.JSONMarcConverter.marcRecordAsXMLString(record)
         xmlString = filterRestrictedXmlEscapeSequences(xmlString)
@@ -74,7 +74,7 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
         Document marcJsonDocument = jsonldConverter.convert(doc)
 
         MarcRecord record = JSONMarcConverter.fromJson(marcJsonDocument.dataAsString)
-        record = prepareRecord(record, doc.id, doc.modified, doc.checksum)
+        record = prepareRecord(record, doc.id, doc.modified, doc.getChecksum(jsonldConverter.marcFrameConverter.ld))
 
         return whelk.converter.JSONMarcConverter.marcRecordAsXMLFragment(record)
     }

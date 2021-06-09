@@ -19,6 +19,7 @@ class ESQuery {
     private JsonLd jsonld
     private Set keywordFields
     private Set dateFields
+    
     private static final ObjectMapper mapper = new ObjectMapper()
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
@@ -38,6 +39,7 @@ class ESQuery {
         this.whelk = whelk
         this.jsonld = whelk.jsonld
         initFieldMappings(this.whelk)
+
         this.lensBoost = new ESQueryLensBoost(jsonld)
     }
 
@@ -51,7 +53,7 @@ class ESQuery {
             this.dateFields = Collections.emptySet()
         }
     }
-
+    
     void setKeywords(Set keywordFields) {
         // NOTE: For unit tests only!
         this.keywordFields = keywordFields
@@ -807,5 +809,9 @@ class ESQuery {
 
         esResponse['aggregations'] = newAggs
         return esResponse
+    }
+
+    int getMaxItems() {
+        return whelk.elastic.maxResultWindow
     }
 }

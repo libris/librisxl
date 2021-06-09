@@ -48,10 +48,10 @@ class LegacyIntegrationToolsSpec extends Specification {
         'bib'   | ['@id': "$MARC/bib"]
         'bib'   | [['@id': "$MARC/bib"], ['@id': "pending"]]
         'auth'  | [['@id': "$MARC/auth"]]
-        null    | ['@id': 'other']
-        null    | [['@id': 'other']]
-        null    | []
-        null    | null
+        'none'  | ['@id': 'other']
+        'none'  | [['@id': 'other']]
+        'none'  | []
+        'none'  | null
     }
 
     def "should get marc collection for type"() {
@@ -63,6 +63,7 @@ class LegacyIntegrationToolsSpec extends Specification {
         'Instance'  | 'bib'
         'Print'     | 'bib'
         'Paperback' | 'bib'
+        'Other'     | 'none'
     }
 
 }

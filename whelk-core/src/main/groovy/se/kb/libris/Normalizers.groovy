@@ -6,15 +6,41 @@ import whelk.JsonLd
 import whelk.Whelk
 import whelk.component.DocumentNormalizer
 import whelk.exception.InvalidQueryException
-import whelk.exception.ModelValidationException
 import whelk.filter.BlankNodeLinker
 import whelk.filter.LanguageLinker
+import whelk.util.DocumentUtil
+import whelk.util.DocumentUtil.Remove
 
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.TYPE_KEY
+import static whelk.JsonLd.asList
+import static whelk.util.DocumentUtil.traverse
+
+/*
+TODO: add support for linking blank nodes based on owl:hasKey
+example: 
+:Concept a owl:Class;
+    rdfs:label "Concept"@en, "Koncept"@sv;
+    rdfs:subClassOf :Identity;
+    owl:equivalentClass skos:Concept;
+    owl:hasKey (:code :prefLabel :inScheme) .
+
+(only hasKey defined in vocab at the moment)
+ */
 
 @Log
 class Normalizers {
+    
+    static DocumentNormalizer nullRemover() {
+        return { Document doc ->
+            traverse(doc.data, { value, path ->
+                if (value == null) {
+                    new Remove()
+                }
+            })
+        }
+    }
 
     static DocumentNormalizer language(Whelk whelk) {
         LanguageLinker linker = new LanguageLinker()
@@ -26,19 +52,70 @@ class Normalizers {
         }
     }
 
-    static DocumentNormalizer contributionRole(Whelk whelk) {
-        BlankNodeLinker linker = new BlankNodeLinker(
-                'Role', ['code', 'label', 'prefLabelByLang', 'altLabelByLang', 'hiddenLabel'])
-        loadDefinitions(linker, whelk)
+    /**
+     * Link blank nodes based on "heuristic identifiers"
+     * e.g. { "@type": "Role", "label": "Þýðandi"} matches https://id.kb.se/relator/trl on prefLabelByLang.is
+     * 
+     * For all types that have :category :heuristicIdentity in vocab:
+     * Link all blank nodes with that @type that match on a property that has :category :heuristicIdentifier.
+     * Only check blank nodes in properties where @type is in range (range or rangeIncludes).
+     */
+    static Collection<DocumentNormalizer> heuristicLinkers(Whelk whelk) {
+        def properties = whelk.jsonld.getCategoryMembers('heuristicIdentifier').collect()
+        properties = properties + properties.findResults {(String) whelk.jsonld.langContainerAlias[it] }
+        
+        whelk.jsonld.getCategoryMembers('heuristicIdentity').collect{ type ->
+            BlankNodeLinker linker = new BlankNodeLinker(type, properties)
+            loadDefinitions(linker, whelk)
 
-        return { Document doc ->
-            Map work = getWork(whelk.jsonld, doc)
-            if (work && work['contribution']) {
-                linker.linkAll(work['contribution'], 'role')
+            Set<String> inRange = whelk.jsonld.getInRange(type)
+            return (DocumentNormalizer) { doc ->
+                linker.linkAll(doc.data, inRange)
             }
         }
     }
 
+    static DocumentNormalizer identifiedBy() {
+        def OBSOLETE_TYPE_NOTES = [
+                'ansi'    : 'Ansi',
+                'doi'     : 'DOI',
+                'hdl'     : 'Hdl',
+                'isan'    : 'ISAN',
+                'isni'    : 'ISNI',
+                'iso'     : 'ISO',
+                'istc'    : 'ISTC',
+                'iswc'    : 'ISWC',
+                'orcid'   : 'ORCID',
+                'urn'     : 'URN',
+                'viaf'    : 'VIAF',
+                'wikidata': 'WikidataID',
+                // already typed in Marc bib 028 ind1:
+                //if $2=matrix-number, then I - identifiedBy - MatrixNumber;
+                //if $2=music-plate, then I - identifiedBy - MusicPlate;
+                //if $2=music-publisher, then I - identifiedBy - MusicPublisherNumber;
+                //if $2=videorecording-identifer, then I - identifiedBy - VideoRecordingNumber;
+        ]
+        
+        return { Document doc ->
+            def (_record, thing) = doc.data[GRAPH_KEY]
+            thing.identifiedBy?.with {
+                asList(it).forEach { Map id ->
+                    id.typeNote?.with { String tn -> 
+                        OBSOLETE_TYPE_NOTES[tn.toLowerCase()] 
+                    }?.with { type ->
+                        id[TYPE_KEY] = type
+                        id.remove('typeNote')
+                    }
+                }
+                asList(it).findAll{ Map id -> Document.isIsni(id) || Document.isOrcid(id) }.forEach { Map isni ->
+                    if (isni.containsKey('value')) {
+                        isni.value = ((String) isni.value).replace(' ', '')
+                    }
+                }
+            }
+        }
+    }
+    
     /**
      * Historically locally defined Work was placed in @graph[2],
      * this normalizer makes sure it is always placed in mainEntity.instanceOf

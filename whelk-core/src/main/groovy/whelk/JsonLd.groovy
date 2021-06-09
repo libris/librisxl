@@ -86,6 +86,8 @@ class JsonLd {
     private Map<String, Set<String>> subClassesByType
     private Map<String, List<String>> superPropertyOf
     private Map<String, Set<String>> subPropertiesByType
+    private Map<String, Set<String>> categories
+    private Map<String, Set<String>> inRange
 
     Map langContainerAlias = [:]
 
@@ -136,6 +138,11 @@ class JsonLd {
         subPropertiesByType = new HashMap<String, Set>()
         superPropertyOf = generateSubTermLists("subPropertyOf")
 
+        categories = generateSubTermLists('category')
+        
+        def zipMaps = { a, b -> (a.keySet() + b.keySet()).collectEntries{k -> [k, a.get(k, []) + b.get(k, [])]}}
+        inRange = zipMaps(generateSubTermLists('rangeIncludes'), generateSubTermLists('range'))
+        
         buildLangContainerAliasMap()
 
         expandAliasesInLensProperties()
@@ -235,6 +242,10 @@ class JsonLd {
         }
     }
 
+    boolean isSetContainer(String property) {
+        context?.get(property)?.with(this.&isSetContainer) ?: false
+    }
+    
     boolean isSetContainer(dfn) {
         return dfn instanceof Map && dfn[CONTAINER_KEY] == SET_KEY
     }
@@ -593,6 +604,14 @@ class JsonLd {
     Set<String> getSubProperties(String type) {
         return getSubTerms(type, superPropertyOf, subPropertiesByType)
     }
+    
+    Set<String> getCategoryMembers(String category) {
+        return categories.get(category, Collections.EMPTY_SET)
+    }
+
+    Set<String> getInRange(String type) {
+        return inRange.get(type, Collections.EMPTY_SET)
+    }
 
     private Set<String> getSubTerms(String type,
             Map<String, List<String>> superTermOf,
@@ -653,14 +672,14 @@ class JsonLd {
     }
 
     Map toCard(Map thing, boolean chipsify = true, boolean addSearchKey = false,
-            boolean reduceKey = false, List<List> preservePaths = []) {
+            boolean reduceKey = false, List<List> preservePaths = [], boolean searchCard = false) {
         Map result = [:]
 
-        Map card = removeProperties(thing, 'cards')
+        Map card = removeProperties(thing, getLens(thing, searchCard ? ['search-cards', 'cards'] : ['cards']))
         // If result is too small, use chip instead.
         // TODO: Support and use extends + super in card defs instead.)
         if (card.size() < 2) {
-            card = removeProperties(thing, 'chips')
+            card = removeProperties(thing, getLens(thing, ['chips']))
         }
 
         restorePreserved(card, thing, preservePaths)
@@ -675,11 +694,11 @@ class JsonLd {
                 if (value instanceof List) {
                     lensValue = ((List) value).withIndex().collect { it, index ->
                         it instanceof Map
-                        ? toCard((Map) it, chipsify, addSearchKey, reduceKey, pathRemainders([key, index], preservePaths))
+                        ? toCard((Map) it, chipsify, addSearchKey, reduceKey, pathRemainders([key, index], preservePaths), searchCard)
                         : it
                     }
                 } else if (value instanceof Map) {
-                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduceKey, pathRemainders([key], preservePaths))
+                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduceKey, pathRemainders([key], preservePaths), searchCard)
                 }
             }
             result[key] = lensValue
@@ -714,7 +733,7 @@ class JsonLd {
             }
         } else if ((object instanceof Map)) {
             Map result = [:]
-            Map reduced = removeProperties(object, 'chips')
+            Map reduced = removeProperties(object, getLens(object, ['chips']))
             restorePreserved(reduced, (Map) object, preservePaths)
             reduced.each { key, value ->
                 result[key] = toChip(value, pathRemainders([key], preservePaths))
@@ -723,6 +742,104 @@ class JsonLd {
         } else {
             return object
         }
+    }
+
+    /**
+     * Returns the chip as a list of [<language>, <property value>] pairs.
+     */
+    private List toChipAsListByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris) {
+        Map lensGroups = displayData.get('lensGroups')
+        Map lensGroup = lensGroups.get('chips')
+        Map lens = getLensFor((Map)thing, lensGroup)
+        List parts = []
+
+        if (lens) {
+            List propertiesToKeep = (List) lens.get('showProperties').findAll({ String s -> !(s.endsWith('ByLang')) })
+            // Go through the properties in the order defined in the chip
+            for (prop in propertiesToKeep) {
+                // If prop (e.g., title) has a language-specific version (e.g., titleByLang),
+                // and the thing has that language-specific version, use that
+                String byLangKey = langContainerAlias.get(prop)
+                if (byLangKey && thing[byLangKey] instanceof Map) {
+                    languagesToKeep.each { lang ->
+                        if (thing[byLangKey][lang]) {
+                            parts << [lang, thing[byLangKey][lang]]
+                        } else {
+                            parts << [lang, thing[prop]]
+                        }
+                    }
+                } else {
+                    def values = thing[prop] instanceof List ? thing[prop] : [thing[prop]]
+                    values.each { value ->
+                        if (value instanceof Map) {
+                            if (value.containsKey('@id') && !value.containsKey('@type')) {
+                                // e.g. heldBy, ..
+                                languagesToKeep.each {
+                                    parts << [it, removeDomain((String) value['@id'], removableBaseUris)]
+                                }
+                            } else {
+                                // Check for a more specific chip
+                                parts << toChipAsListByLang((Map) value, languagesToKeep, removableBaseUris)
+                            }
+                        } else if (value instanceof String) {
+                            // Add non-language-specific chip property values
+                            languagesToKeep.each { parts << [it, value] }
+                        }
+                    }
+                }
+            }
+        }
+
+        return parts
+    }
+
+    /**
+     * Returns a map with the keys given by languagesToKeep, each having as its value a string containing
+     * chip property values in (approximately) the order in which they would be displayed on the
+     * frontend. For use as search keys.
+     */
+    Map toChipAsMapByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris) {
+        // Transform the list of language/property value pairs to a map
+        Map initialResults = languagesToKeep.collectEntries { [(it): []] }
+        Map results = toChipAsListByLang(thing, languagesToKeep, removableBaseUris)
+            .flatten()
+            .collate(2)
+            .inject(initialResults, { acc, it ->
+                String key = it.get(0)
+                if (it.size() == 2 && key in languagesToKeep)
+                    ((List) acc[key]) << it.get(1)
+                acc
+            })
+
+        // Turn the map values into strings
+        return results.collectEntries { k, v ->
+            String result = ((List) v).flatten().join(", ")
+            // Use last URI components as fallback
+            if (!result && thing['@id']) {
+                result = removeDomain((String) thing['@id'], removableBaseUris)
+            } else {
+                result = result
+                    // Remove leading non-alphanumeric characters.
+                    // \p{L} = Lu, Ll, Lt, Lm, Lo; but we don't want Lm as it includes modifier letters like
+                    // MODIFIER LETTER PRIME (ʹ) that are sometimes erroneously used.
+                    .replaceFirst(/^[^\p{Lu}\p{Ll}\p{Lt}\p{Lo}\p{N}]+/, "")
+                    // A string without alphanumerics should not have "" as its sort value, because
+                    // then we get messed up records on top when sorting A-Z. Workaround: use a character from
+                    // Unicode's Private Use Area, forcing such records to appear at the very end when sorting.
+                    // TODO: default to some sensible/explanatory string instead?
+                    .replaceFirst(/^$/, "\uE83A")
+            }
+            [(k): result]
+        }
+    }
+
+    private static String removeDomain(String uri, List<String> removableBaseUris) {
+        for (removableUri in removableBaseUris) {
+            if (uri.startsWith(removableUri)) {
+                return uri.substring(removableUri.length())
+            }
+        }
+        return uri
     }
 
     List makeSearchKeyParts(Map object) {
@@ -787,11 +904,14 @@ class JsonLd {
                 .collect{ it.drop(prefix.size()) }
     }
 
-    private Map removeProperties(Map thing, String lensType) {
+    private Map getLens(Map thing, List<String> lensTypes) {
         Map lensGroups = displayData.get('lensGroups')
-        Map lensGroup = lensGroups.get(lensType)
-        Map lens = getLensFor(thing, lensGroup)
-
+        lensTypes.findResult { lensType ->
+            lensGroups.get(lensType)?.with { getLensFor(thing, (Map) it) }
+        }
+    }
+    
+    private Map removeProperties(Map thing, Map lens) {
         Map result = [:]
         if (lens) {
             List propertiesToKeep = (List) lens.get("showProperties")

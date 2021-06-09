@@ -27,6 +27,8 @@ class LegacyIntegrationTools {
         'https://id.kb.se/marc/bib': 'bib',
         'https://id.kb.se/marc/hold': 'hold'
     ]
+    
+    static final String NO_MARC_COLLECTION = 'none'
 
     static String generateId(String originalIdentifier) {
         String[] parts = originalIdentifier.split("/")
@@ -50,7 +52,7 @@ class LegacyIntegrationTools {
     }
 
     /**
-     * Will return "auth", "bib", "hold" or null
+     * Will return "auth", "bib", "hold", "definitions" or "none"
      */
     static String determineLegacyCollection(Document document, JsonLd jsonld) {
         String type = document.getThingType() // for example "Instance"
@@ -61,16 +63,16 @@ class LegacyIntegrationTools {
     static String getMarcCollectionInHierarchy(String type, JsonLd jsonld) {
         Map termMap = jsonld.vocabIndex[type]
         if (termMap == null)
-            return null
+            return NO_MARC_COLLECTION
 
         String marcCategory = getMarcCollectionForTerm(termMap)
-        if (marcCategory != null) {
+        if (marcCategory != NO_MARC_COLLECTION) {
             return marcCategory
         }
 
         List superClasses = (List) termMap["subClassOf"]
         if (superClasses == null) {
-            return null
+            return NO_MARC_COLLECTION
         }
 
         for (superClass in superClasses) {
@@ -79,11 +81,11 @@ class LegacyIntegrationTools {
             }
             String superClassType = jsonld.toTermKey( (String) superClass["@id"] )
             String category = getMarcCollectionInHierarchy(superClassType, jsonld)
-            if ( category != null )
+            if ( category != NO_MARC_COLLECTION )
                 return category
         }
 
-        return null
+        return NO_MARC_COLLECTION
     }
 
     static String getMarcCollectionForTerm(Map termMap) {
@@ -98,7 +100,7 @@ class LegacyIntegrationTools {
                 return collection
             }
         }
-        return null
+        return NO_MARC_COLLECTION
     }
 
     /**

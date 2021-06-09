@@ -6,6 +6,12 @@ import whelk.util.DocumentUtil
 class JsonLdValidator {
     private static JsonLd jsonLd
     private Collection skipTerms = []
+    private Map<String, Validation.Scope> legacyScopes = [
+            'auth': Validation.Scope.AUTH,
+            'bib': Validation.Scope.BIB,
+            'definitions': Validation.Scope.DEFINITIONS,
+            'hold': Validation.Scope.HOLD,
+    ]
 
     private JsonLdValidator(JsonLd jsonLd) {
         this.jsonLd = jsonLd
@@ -15,7 +21,9 @@ class JsonLdValidator {
         Preconditions.checkNotNull(jsonLd)
         Preconditions.checkArgument(!jsonLd.context.isEmpty())
         Preconditions.checkArgument(!jsonLd.vocabIndex.isEmpty())
-        return new JsonLdValidator(jsonLd)
+        def v = new JsonLdValidator(jsonLd)
+        v.setSkipTerms(['_marcUncompleted'])
+        return v
     }
 
     class Validation {
@@ -25,8 +33,12 @@ class JsonLdValidator {
         Scope scope
 
         enum Scope {
-            NESTED_GRAPH,
-            ALL
+            ALL,     // Every possible validation
+            DEFAULT, // Validations enabled for all collection types
+            AUTH,
+            BIB,
+            DEFINITIONS,
+            HOLD,
         }
 
         Validation(Scope scope) {
@@ -41,7 +53,16 @@ class JsonLdValidator {
     }
 
     List<Error> validate(Map map) {
-        def validation = new Validation(Validation.Scope.NESTED_GRAPH)
+        return validate(map, null)
+    }
+
+    List<Error> validate(Map map, String collection) {
+        def validation
+        if (collection && legacyScopes.containsKey(collection)) {
+            validation = new Validation(legacyScopes[collection])
+        } else {
+            validation = new Validation(Validation.Scope.DEFAULT)
+        }
         doValidate(map, validation)
         return validation.errors
     }
@@ -58,10 +79,29 @@ class JsonLdValidator {
             }
             validation.at = path
 
-            if (validation.scope == Validation.Scope.NESTED_GRAPH) {
-                checkIsNotNestedGraph(key, value, validation)
-            } else if (validation.scope == Validation.Scope.ALL) {
+            if (validation.scope == Validation.Scope.ALL) {
                 verifyAll(key, value, validation)
+                return
+            }
+
+            // Validations enabled for all collections
+            checkIsNotNestedGraph(key, value, validation)
+
+            // Additional per-collection validations
+            switch (validation.scope) {
+                case Validation.Scope.AUTH:
+                    checkHasDefinition(key, validation)
+                    validateObjectProperties(key, value, validation)
+                    verifyVocabTerm(key, value, validation)
+                    break
+                case Validation.Scope.BIB:
+                    checkHasDefinition(key, validation)
+                    validateObjectProperties(key, value, validation)
+                    break
+                case Validation.Scope.DEFINITIONS:
+                    break
+                case Validation.Scope.HOLD:
+                    break
             }
         })
     }
