@@ -168,6 +168,9 @@ class LinkFinder {
         else
             mainIri = postgres.getMainId(id, connection)
 
+        if (mainIri == null)
+            return null
+
         if (postgres.iriIsLinkable(mainIri, connection))
             return mainIri
         throw new LinkValidationException("Not allowed to link to the deleted resource: " + mainIri)
