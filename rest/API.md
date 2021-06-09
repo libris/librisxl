@@ -98,7 +98,7 @@ $ curl -XPOST -H 'Content-Type: application/ld+json' \
     -H 'Authorization: Bearer <token>' \ 
     -H 'XL-Active-Sigel: <sigel>' \
     -d@my_record.jsonld \
-    https://libris-qa.kb.se/data/
+    https://libris-qa.kb.se/data
 ```
 * `<token>` - An active and valid bearer token (e.g. hW3IHc9PexxxFP2IkAAbqKvjLbW4thQ)
 * `<sigel>` - A sigel that is connected to your oauth client (e.g. Doro)
