@@ -27,7 +27,7 @@ selectBySqlWhere(where) { data ->
     record.bibliography?.any { it.'@id' == 'https://libris.kb.se/library/DIGI' } &&
     thing.publication?.any { it.country && it.country.'@id' == 'https://id.kb.se/country/sw' } &&
     thing.'@type' == 'Electronic' &&
-    thing.associatedMedia?.any { hasPublicAssociatedMedia(it) }
+    asList(thing.associatedMedia).any { hasPublicAssociatedMedia(it) }
     ) {
     record.bibliography << ['@id': 'https://libris.kb.se/library/DST']
     modified = true
@@ -38,9 +38,8 @@ selectBySqlWhere(where) { data ->
   }
 }
 
-
 private boolean hasPublicAssociatedMedia(media) {
-  if (!media.uri) {
+  if (!media instanceof Map || !media.uri) {
     return false
   }
 
@@ -53,4 +52,8 @@ private boolean hasPublicAssociatedMedia(media) {
   }
 
   return false
+}
+
+private List asList(Object o) {
+    (o instanceof List) ? (List) o : (o ? [o] : [])
 }
