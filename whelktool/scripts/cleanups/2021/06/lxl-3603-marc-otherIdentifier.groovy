@@ -19,7 +19,7 @@ selectBySqlWhere(where) { data ->
     modified |= changetoIdentifier(mainEntity.identifiedBy)
     modified |= changetoIdentifier(mainEntity.indirectlyIdentifiedBy)
     if (mainEntity.instanceOf != null)
-        modified |= changetoIdentifier(mainEntity.instanceOf.indirectlyIdentifiedBy)
+        modified |= changetoIdentifier(mainEntity.instanceOf.identifiedBy)
 
     if (modified) {
         data.scheduleSave()
