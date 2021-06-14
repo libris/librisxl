@@ -184,17 +184,28 @@ means `OR`, `*` is used for prefix queries, `""` matches the whole phrase, and
 * `_offset` - Number of hits to skip in the result, used for pagination.
   Default is 0.
 
-Records can be filtered on field values. Multiple fields means `AND`. Multiple values
-for the same field means `OR`. Specifying multiple values for the same field can be done
-by repeating the parameter or by giving a comma-separated list as value.
+Records can be filtered on field values. Specifying multiple values for the same field can be done
+by repeating the parameter or by giving a comma-separated list as value. Specifying multiple fields 
+means `AND`. Multiple values for the same field means `OR`. It is possible to combine multiple fields 
+with `OR` by using the prefix `or-`.
 
-* `<field>` - The record has exactly this value for `field`.  
+* `<field>` - The record has this value for `field`.
+* `or-<field>` - Combine filters for multiple fields with `OR` instead of `AND`.
 * `exists-<field>` - The field exists in the record. Value should be `true` or `false`.
 * `min-<field>` - Greater or equal to.
 * `minEx-<field>` - Greater than (exclusive minimum).
 * `max-<field>` - Less or equal to.
 * `maxEx-<field>` - Less than.
 * `matches-<field>` - Value is matching (see date-search below).
+
+Filter-expression                                     | Filter-parameters
+------------------------------------------------------|----------------------------------------------
+a is x `OR` a is y...                                 | `a=x&a=y...`
+a is x `AND` a is y                                   | Not possible.
+a is x `AND` b is y `AND` c is z...                   | `a=x&b=y&c=z...`
+a is x `OR` b is y...                                 | `or-a=x&or-b=y...`
+(a is x `OR` b is y) `AND` c is z...                  | `or-a=x&or-b=y&c=z...`
+(a is x `OR` b is y) `AND` (c is z `OR` d is q)       | Not possible. Can only specify one group with `or-`.
 
 For fields of type date (`meta.created`, `meta.modified` and `meta.generationDate`)
 the following formats can be used for value:

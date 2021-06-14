@@ -108,7 +108,7 @@ public class AuthenticationFilter implements Filter {
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
                 response_code = httpResponse.SC_INTERNAL_SERVER_ERROR;
             } catch (Exception e) {
-                log.error("Exception: " + e);
+                log.error("Exception: " + e, e);
                 httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
                 response_code = httpResponse.SC_INTERNAL_SERVER_ERROR;
                 e.printStackTrace();

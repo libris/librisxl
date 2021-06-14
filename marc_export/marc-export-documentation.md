@@ -14,8 +14,7 @@ Dessa parametrar är:
    1. `ignore` som innebär att borttagna poster helt enkelt ignoreras
    1. `export` som innebär att borttagna poster exporteras men är markerade som borttagna i MARC-leadern
    1. `append` som innebär att borttagna posters ID:n exporteras som en CSV-fil _efter_ den vanliga exportdatan (separerat av en null-byte).
-1. `virtualDelete` som kan ha värde `true` eller `false`. Är `virtualDelete` satt till `true` så kommer poster anses vara borttagna i den genererade exporten, i de fall där de sigel som anges i profilen inte längre har bestånd på posterna. Flaggan används förslagsvis tillsammans med `deleted=export`.
-
+1. `virtualDelete` som kan ha värde `true` eller `false`. Är `virtualDelete` satt till `true` så kommer poster anses vara borttagna i den genererade exporten, i de fall där de sigel som anges i `locations` i profilen inte längre har bestånd på posterna. Flaggan används förslagsvis tillsammans med `deleted=export`.
 
 Exempel på anrop:
 ```
@@ -74,6 +73,7 @@ Förklaring till (en del av) de olika inställningarna i exportprofilen:
 | `bibupdate`          | `on`\|`off`                | Ska uppdateringar av bibliografiska poster leda till export.
 | `characterencoding`  | `UTF-8`\|`ISO-8859-1`      | Avgör teckenkodning.
 | `composestrategy`    | `compose`\|`decompose`     | Avgör ifall unicode-tecken ska vara composed eller decomposed.
+| `exportdeleted`      | `on`\|`off`                | Ska borttagna poster exporteras (men markerade som borttagna i MARC-leadern). Motsvarar HTTP-parametern `deleted=export` resp. `deleted=ignore` som prioriteras framför värdet här om båda anges. Se även `virtualdelete`.
 | `f003`               | [sträng]                   | Blankstegsseparerad lista. Tvinga fält 003 att anta ett visst värde.
 | `format`             | `ISO2709`\|`MARCXML`       | Avgör serialiseringsformat för MARC-data.
 | `holdcreate`         | `on`\|`off`                | Ska nyskapade bestånd leda till export.
@@ -91,3 +91,4 @@ Förklaring till (en del av) de olika inställningarna i exportprofilen:
 | `move240to244`       | `off`|`on`                 | Flytta MARC-fältet 240 till 244.
 | `nameform`           | `Forskningsbiblioteksform` | Tvinga namnformer att anta Forskningsbiblioteksform.
 | `sab`                | `on`\|`off`                | Ska SAB-titlar (976) läggas till.
+| `virtualdelete`      | `on`\|`off`                | Betrakta bibliografiska poster som borttagna när de sigel som anges i `locations` inte längre har något bestånd. Används förslagsvis tillsammans med `exportdeleted`. Motsvarar HTTP-parametern `virtualDelete` som prioriteras framför värdet här om båda anges.
