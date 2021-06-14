@@ -189,16 +189,28 @@ innebär `ELLER`, `*` används för prefixsökningar, `""` matchar hela frasen o
 * `_offset` - Antal träffar att hoppa över i resultatet, används för
   paginering. Standardvärdet är 0.
   
-Sökningen kan filtreras på värdet på egenskaper i posten. Om flera egenskaper anges innebär det `OCH`.
-Om samma egenskap anges flera gånger innebär det `ELLER`. Samma egenskap kan anges flera gånger genom 
-att uppprepa parametern eller genom att komma-separera värdena.
-* `<egenskap>` - Egenskapen har exakt värdet.
+Sökningen kan filtreras på värdet på egenskaper i posten. Samma egenskap kan anges flera gånger genom
+att upprepa parametern eller genom att komma-separera värdena. Om olika egenskaper anges innebär det 
+`OCH`. Om samma egenskap anges flera gånger innebär det `ELLER`. Det går att kombinera olika egenskaper 
+med `ELLER` genom att använda prefixet `or-`.
+
+* `<egenskap>` - Egenskapen har värdet.
+* `or-<egenskap>` - Kombinera filter för olika egenskaper med `ELLER` istället för `OCH`.
 * `exists-<egenskap>` - Egenskapen existerar. Ange ett booleskt värde, d.v.s. `true` eller `false`.
 * `min-<egenskap>` - Värdet är större eller lika med.
 * `minEx-<egenskap>` - Värdet är större än (Ex står för "Exclusive").
 * `max-<egenskap>` - Värdet är mindre eller lika med.
 * `maxEx-<egenskap>` - Värdet är mindre än.
 * `matches-<egenskap>` - Värdet matchar (se datum-sökning nedan).
+
+ Filter-uttryck                                        | Filter-parametrar    
+-------------------------------------------------------|-----------------------                 
+ a är x `ELLER` a är y...                              | `a=x&a=y...`
+ a är x `OCH` a är y                                   | Inte möjligt.
+ a är x `OCH` b är y `OCH` c är z...                   | `a=x&b=y&c=z...`
+ a är x `ELLER` b är y...                              | `or-a=x&or-b=y...`          
+ (a är x `ELLER` b är y) `OCH` c är z...               | `or-a=x&or-b=y&c=z...`  
+ (a är x `ELLER` b är y) `OCH` (c är z `ELLER` d är q) | Inte möjligt. Kan bara ange en grupp med `or-`.                    
 
 För egenskaper som är av typen datum (`meta.created`, `meta.modified` och `meta.generationDate`)
 kan värdet anges på följande format:
