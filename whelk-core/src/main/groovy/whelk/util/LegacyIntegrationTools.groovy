@@ -129,7 +129,7 @@ class LegacyIntegrationTools {
                 != null && field003.getData() != null && field003.getData()
                 != "SE-LIBR" && field003.getData() != "LIBRIS") {
 
-            String idInOtherSystem = "(" + field003.getData() + ")" + field001.getData()
+            String idInOtherSystem = "(" + field003.getData().trim() + ")" + field001.getData().trim()
 
             boolean hasRelevant035aAlready = false
             record.getDatafields("035").each { f ->
