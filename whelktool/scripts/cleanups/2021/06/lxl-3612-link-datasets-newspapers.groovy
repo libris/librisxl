@@ -18,9 +18,13 @@ def datasets =
                         predicate: { doc ->
                             def (record, thing) = doc.graph
                             
-                            asList(thing.hasTitle).any { Map title ->
+                            def titleOk = asList(thing.hasTitle).any { Map title ->
                                 title.mainTitle ==~ /AFTONBLADET\s+\d\d\d\d-\d\d\-\d\d/
                             }
+                            def controlOk = asList(thing.supplementTo).any { Map instance ->
+                                asList(instance.describedBy).any { Map r -> r.controlNumber == '4345612' }
+                            }
+                            return titleOk && controlOk
                         }
                 ],
                 [
