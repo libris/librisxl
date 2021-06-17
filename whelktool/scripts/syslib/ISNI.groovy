@@ -22,7 +22,8 @@ id = uri.split('/')[3] // ta ut id från uri
 def ISNI = isnimap[id] // matcha ISNI-nummer mot id
 
 aukt["identifiedBy"]?.removeIf { it["typeNote"]?.contains("isni") || false } // radera element i identifiedBy som har ISNI-nummer (ofta felaktiga - dessa kan iofs vara korrekta, men läses in på nytt i senare steg))
-
+aukt["identifiedBy"]?.removeIf { it["@type"] == 'ISNI' || false }
+        
 if (!aukt["identifiedBy"]) { // lägg till identifiedBy om det saknas
 
         aukt["identifiedBy"] = []
