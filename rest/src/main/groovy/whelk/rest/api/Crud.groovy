@@ -494,6 +494,7 @@ class Crud extends HttpServlet {
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Body is not flat JSON-LD.")
+            return
         }
 
         // FIXME we're assuming Content-Type application/ld+json here
@@ -546,7 +547,7 @@ class Crud extends HttpServlet {
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
                                savedDoc.getChecksum(jsonld))
-        } else {
+        } else if (!response.isCommitted()) {
             sendNotFound(response, request.getContextPath())
         }
     }
