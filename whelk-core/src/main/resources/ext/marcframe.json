@@ -11179,7 +11179,7 @@
         }
       },
       "$a": {"aboutNew": "_:durationPart", "property": "value"},
-      "$6": {"about": "_:durationPart", "property": "marc:fieldref"},
+      "$6": {"ignored": true, "NOTE:LC": "ignore (v.1.6)"},
       "_spec": [
         {
           "Name": "Simple duration value",
