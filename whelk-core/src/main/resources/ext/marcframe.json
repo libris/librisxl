@@ -5947,7 +5947,7 @@
       "include": ["identifier"],
       "match": [
         {
-          "when": "i1=7 & $2 =~ ansi|ANSI|doi|DOI|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|iswc|ISWC|urn|URN",
+          "when": "i1=7 & $2 =~ ansi|ANSI|doi|DOI|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|iswc|ISWC|uri|URI|urn|URN",
           "i1": null,
           "$2": {
             "property": "@type",
@@ -5967,6 +5967,8 @@
               "istc": "ISTC",
               "ISWC": "ISWC",
               "iswc": "ISWC",
+              "URI": "URI",
+              "uri": "URI",
               "URN": "URN",
               "urn": "URN"
             }
@@ -6176,6 +6178,23 @@
                 {
                   "@type": "ISWC",
                   "value":  "jkl"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "URI, indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "http://id.kb.se/organisations/SE0123456789/KB-2021"}, {"2": "uri"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Instance",
+              "identifiedBy": [
+                {
+                  "@type": "URI",
+                  "value":  "http://id.kb.se/organisations/SE0123456789/KB-2021"
                 }
               ]
             }
