@@ -32,8 +32,7 @@ selectByIds(mimerUriById.keySet()) { data ->
 
     Map identifier =
             [
-                "@type": "Identifier",
-                "typeNote": "uri",
+                "@type": "URI",
                 "value": mimerUriById[data.doc.shortId]
             ]
 
