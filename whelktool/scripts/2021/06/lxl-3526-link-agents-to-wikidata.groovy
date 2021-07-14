@@ -74,10 +74,10 @@ selectByIds(wdDataByLibrisId.keySet()) { data ->
 }
 
 println("Writing reports...")
-printReport(multiplePropsMatchAndNoMismatch, getReportWriter("mutiple-props-match.txt"))
+printReport(multiplePropsMatchAndNoMismatch, getReportWriter("multiple-props-match.txt"))
 printReport(onePropMatchAndNoMismatch, getReportWriter("one-prop-match.txt"))
 printReport(mismatch, getReportWriter("mismatches.txt"))
-printReport(multipleAgentsMatch, getReportWriter("mutiple-agents-match.txt"))
+printReport(multipleAgentsMatch, getReportWriter("multiple-agents-match.txt"))
 
 Map getAgentDataFromWikidata() {
     Map agentDataByLibrisId = [:]
