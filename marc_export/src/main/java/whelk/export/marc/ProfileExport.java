@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -85,6 +86,11 @@ public class ProfileExport
 
         ZonedDateTime zonedFrom = ZonedDateTime.parse(from);
         ZonedDateTime zonedUntil = ZonedDateTime.parse(until);
+
+        // To account for small diffs in between client and server clocks, always add an extra second
+        // at the low end of time intervals!
+        zonedFrom = zonedFrom.minus(1, ChronoUnit.SECONDS);
+
         Timestamp fromTimeStamp = new Timestamp(zonedFrom.toInstant().getEpochSecond() * 1000L);
         Timestamp untilTimeStamp = new Timestamp(zonedUntil.toInstant().getEpochSecond() * 1000L);
 
