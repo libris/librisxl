@@ -238,6 +238,10 @@
                     "keyword": {
                         "type": "icu_collation_keyword",
                         "language": "sv"
+                    },
+                    "suggest": {
+                        "type": "search_as_you_type",
+                        "analyzer": "softmatcher"
                     }
                 },
                 "copy_to": "_all"
