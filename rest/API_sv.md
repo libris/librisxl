@@ -188,6 +188,8 @@ innebär `ELLER`, `*` används för prefixsökningar, `""` matchar hela frasen o
   paginering. Standardvärdet är 200.
 * `_offset` - Antal träffar att hoppa över i resultatet, används för
   paginering. Standardvärdet är 0.
+* `_fieldsToInclude` - Inkludera enbart angivna fält (kommaseparerade) i  resultatet.
+  Om ej angivet returneras alla fält.
   
 Sökningen kan filtreras på värdet på egenskaper i posten. Samma egenskap kan anges flera gånger genom
 att upprepa parametern eller genom att komma-separera värdena. Om olika egenskaper anges innebär det 
@@ -289,6 +291,16 @@ Innehåller 'Aniara' och har ett bestånd med sigel APP1.
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
     'https://libris-qa.kb.se/find.jsonld?q=Aniara&@reverse.itemOf.heldBy.@id=https://libris.kb.se/library/APP1'
+...
+```
+
+#### Exempel
+
+Instanser som innehåller 'Jansson'. Endast fälten  `hasTitle` och `identifiedBy`
+inkluderas i resultatet för varje post.
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?q=Jansson&@type=Instance&_fieldsToInclude=hasTitle,identifiedBy'
 ...
 ```
 
