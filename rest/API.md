@@ -183,8 +183,6 @@ means `OR`, `*` is used for prefix queries, `""` matches the whole phrase, and
   Default is 200.
 * `_offset` - Number of hits to skip in the result, used for pagination.
   Default is 0.
-* `_fieldsToInclude` - Only include the specified fields (comma-delimited) in the results.
-  If not set, all fields are returned.
 
 Records can be filtered on field values. Specifying multiple values for the same field can be done
 by repeating the parameter or by giving a comma-separated list as value. Specifying multiple fields 
@@ -290,15 +288,6 @@ $ curl -XGET -H "Accept: application/ld+json" \
 ...
 ```
 
-#### Example
-
-Instances containing 'Jansson'. Only the fields `hasTitle` and `identifiedBy`
-are included in each returned item.
-```
-$ curl -XGET -H "Accept: application/ld+json" \
-    'https://libris-qa.kb.se/find.jsonld?q=Jansson&@type=Instance&_fieldsToInclude=hasTitle,identifiedBy'
-...
-```
 
 ### `/_remotesearch` - Search external databases - Requires authentication
 

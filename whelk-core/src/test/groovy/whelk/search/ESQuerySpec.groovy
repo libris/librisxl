@@ -201,29 +201,6 @@ class ESQuerySpec extends Specification {
         es.getKeywordFields(nestedMappings) == nestedResult
     }
 
-    def "should get suggest field"() {
-        expect:
-        es.getSuggestField(params) == result
-        where:
-        params                  | result
-        [:]                     | null
-        ['_suggest': []]        | null
-        ['_suggest': ['']]      | null
-        ['_suggest': ['foo']]   | 'foo'
-    }
-
-    def "should get fields to include fields"(Map<String, String[]> params, List result) {
-        expect:
-        es.getFieldsToInclude(params) == result
-        where:
-        params                               | result
-        [:]                                  | null
-        ['_fieldsToInclude': []]             | null
-        ['_fieldsToInclude': ['']]           | null
-        ['_fieldsToInclude': ['foo']]        | ['foo']
-        ['_fieldsToInclude': ['foo,bar']]    | ['foo', 'bar']
-    }
-
     def "should expand @type param"() {
         when:
         Map context = [:]

@@ -108,6 +108,8 @@ class SearchUtils {
         String reverseObject = pageParams['o']
         List<String> predicates = pageParams['p']
         lens = lens ?: 'cards'
+        // If lens is chips and @type has been specified, do a suggest/autocomplete search
+        boolean suggest = (lens == 'chips' && queryParameters['@type'])
         log.debug("Querying ElasticSearch")
 
         // SearchUtils may overwrite the `_limit` query param, and since it's
@@ -117,7 +119,7 @@ class SearchUtils {
         // TODO Only manipulate `_limit` in one place
         queryParameters['_limit'] = [limit.toString()]
 
-        Map esResult = esQuery.doQuery(queryParameters)
+        Map esResult = esQuery.doQuery(queryParameters, suggest)
         Lookup lookup = new Lookup()
         
         List<Map> mappings = []
@@ -195,7 +197,7 @@ class SearchUtils {
                                            items, mappings, pageParams,
                                            limit, offset, total)
 
-        if (stats) {
+        if (stats && !suggest) {
             result['stats'] = stats
         }
 

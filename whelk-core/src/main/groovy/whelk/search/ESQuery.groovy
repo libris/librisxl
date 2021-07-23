@@ -23,7 +23,7 @@ class ESQuery {
     private static final ObjectMapper mapper = new ObjectMapper()
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
-        'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_suggest', '_fieldsToInclude'
+        'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens'
     ]
     private static final String OR_PREFIX = 'or-'
     private static final String EXISTS_PREFIX = 'exists-'
@@ -60,8 +60,8 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map doQuery(Map<String, String[]> queryParameters) {
-        Map esQuery = getESQuery(queryParameters)
+    Map doQuery(Map<String, String[]> queryParameters, suggest = false) {
+        Map esQuery = getESQuery(queryParameters, suggest)
         Map esResponse = hideKeywordFields(whelk.elastic.query(esQuery))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
@@ -80,7 +80,7 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map getESQuery(Map<String, String[]> ogQueryParameters) {
+    Map getESQuery(Map<String, String[]> ogQueryParameters, suggest = false) {
         Map<String, String[]> queryParameters = new HashMap<>(ogQueryParameters)
         // Legit params and their uses:
         //   q - query string, will be used as query_string or simple_query_string
@@ -94,10 +94,6 @@ class ESQuery {
         Map aggQuery
         //   _site_base_uri - Filter id.kb.se resources
         List siteFilter
-        // _suggest - autocompletion/suggestion for a single field
-        String suggestField
-        // _fieldsToInclude - source filtering (return only fields specified in _fieldsToInclude)
-        List fieldsToInclude
         //   any k=v param - FILTER query (same key => OR, different key => AND)
         List filters
 
@@ -117,8 +113,6 @@ class ESQuery {
         siteFilter = getSiteFilter(queryParameters)
         aggQuery = getAggQuery(queryParameters)
         filters = getFilters(queryParameters)
-        suggestField = getSuggestField(queryParameters)
-        fieldsToInclude = getFieldsToInclude(queryParameters)
 
         def isSimple = isSimple(q)
         String queryMode = isSimple ? 'simple_query_string' : 'query_string'
@@ -134,11 +128,13 @@ class ESQuery {
             ]
         ]
 
+        // In case of suggest/autocomplete search, target a specific field with a specific query type
+        // TODO: make language (sv, en) configurable?
         Map queryClauses
-        if (suggestField) {
+        if (suggest) {
             queryClauses = [
                 'match_phrase_prefix': [
-                    (suggestField): q
+                    '_sortKeyByLang.sv.suggest': q
                 ]
             ]
         } else {
@@ -149,7 +145,7 @@ class ESQuery {
         String boostMode = boostParam ? boostParam[0] : null
         List boostedFields = getBoostFields(originalTypeParam, boostMode)
 
-        if (boostedFields && !suggestField) {
+        if (boostedFields && !suggest) {
             def softFields = boostedFields.findAll {
                 it.contains(JsonLd.SEARCH_KEY)
             }
@@ -217,10 +213,6 @@ class ESQuery {
 
         if (aggQuery) {
             query['aggs'] = aggQuery
-        }
-
-        if (fieldsToInclude) {
-            query['_source'] = fieldsToInclude
         }
 
         query['track_total_hits'] = true
@@ -408,40 +400,6 @@ class ESQuery {
             result << getSortClause(sortParam)
         }
         return result
-    }
-
-    /**
-     * Get suggest field from query params, or null if not found.
-     *
-     * Public for test only - don't call outside this class!
-     *
-     */
-    @PackageScope
-    String getSuggestField(Map<String, String[]> queryParameters) {
-        if (!('_suggest' in queryParameters)) return null
-        if (!(queryParameters.get('_suggest').size() > 0) ||
-                queryParameters.get('_suggest')[0] == '') {
-            return null
-        }
-
-        return queryParameters.get('_suggest')[0]
-    }
-
-    /**
-     * Get fields to include from query params, or null if not found.
-     *
-     * Public for test only - don't call outside this class!
-     *
-     */
-    @PackageScope
-    List getFieldsToInclude(Map<String, String[]> queryParameters) {
-        if (!('_fieldsToInclude' in queryParameters)) return null
-        if (!(queryParameters.get('_fieldsToInclude').size() > 0) ||
-                queryParameters.get('_fieldsToInclude')[0] == '') {
-            return null
-        }
-
-        return queryParameters.get('_fieldsToInclude')[0].split(',') as List
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)

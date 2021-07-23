@@ -238,10 +238,6 @@
                     "keyword": {
                         "type": "icu_collation_keyword",
                         "language": "sv"
-                    },
-                    "suggest": {
-                        "type": "search_as_you_type",
-                        "analyzer": "softmatcher"
                     }
                 },
                 "copy_to": "_all"
@@ -262,11 +258,23 @@
                 "properties": {
                     "sv": {
                         "type": "icu_collation_keyword",
-                        "language": "sv"
+                        "language": "sv",
+                        "fields": {
+                            "suggest": {
+                                "type": "search_as_you_type",
+                                "analyzer": "softmatcher"
+                            }
+                        }
                     },
                     "en": {
                         "type": "icu_collation_keyword",
-                        "language": "en"
+                        "language": "en",
+                        "fields": {
+                            "suggest": {
+                                "type": "search_as_you_type",
+                                "analyzer": "softmatcher"
+                            }
+                        }
                     }
                 }
             },
