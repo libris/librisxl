@@ -4,6 +4,7 @@ import whelk.reindexer.CardRefresher
 
 import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
+import org.apache.commons.io.output.CountingOutputStream
 
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
@@ -141,8 +142,8 @@ class ImporterMain {
             "nq89zjzsq2fj5cjs"
     ] as Set
 
-    @Command(args='FILE')
-    void lddbToTrig(String file, String collection = null) {
+    @Command(args='FILE [CHUNKSIZEINMB]')
+    void lddbToTrig(String file, String chunkSizeInMB = null, String collection = null) {
         def whelk = Whelk.createLoadedCoreWhelk(props)
 
         def ctx = JsonLdToTurtle.parseContext([
@@ -150,32 +151,60 @@ class ImporterMain {
         ])
         def opts = [useGraphKeyword: false, markEmptyBnode: true]
 
-        def handleStream = !file || file == '-' ? { it(System.out) }
-                            : new File(file).&withOutputStream
-        handleStream { out ->
-            def serializer = new JsonLdToTurtle(ctx, out, opts)
-            serializer.prelude()
-            int i = 0
-            for (Document doc : whelk.storage.loadAll(collection)) {
-                if (doc.getShortId() in trigExcludeList) {
-                    System.err.println("Excluding: ${doc.getShortId()}")
-                    continue
-                }
+        boolean writingToFile = file && file != '-'
 
-                def id = doc.completeId
-                if (i % 500 == 0) {
-                    System.err.println("$i records dumped.")
-                }
-                ++i
-                filterProblematicData(id, doc.data)
-                try {
-                    serializer.objectToTrig(id, doc.data)
-                } catch (Throwable e) {
-                    // Part of the record may still have been written to the stream, which is now corrupt.
-                    System.err.println("${doc.getShortId()} conversion failed with ${e.toString()}")
-                }
+        String chunkedFormatString = "%04d-%s"
+
+        int partNumber = 1
+        long maxChunkSizeInBytes = 0 // 0 = no limit
+        if (chunkSizeInMB && chunkSizeInMB.toLong() > 0 && writingToFile) {
+            maxChunkSizeInBytes = chunkSizeInMB.toLong() * 1000000
+        }
+
+        def outputStream
+        if (writingToFile && maxChunkSizeInBytes > 0) {
+            System.err.println("Writing ${String.format(chunkedFormatString, partNumber, file)}")
+            outputStream = new FileOutputStream(String.format(chunkedFormatString, partNumber, file))
+        } else if (writingToFile) {
+            outputStream = new FileOutputStream(file)
+        } else {
+            outputStream = System.out
+        }
+
+        CountingOutputStream cos = new CountingOutputStream(outputStream)
+        def serializer = new JsonLdToTurtle(ctx, cos, opts)
+        serializer.prelude()
+        int i = 0
+        for (Document doc : whelk.storage.loadAll(collection)) {
+            if (doc.getShortId() in trigExcludeList) {
+                System.err.println("Excluding: ${doc.getShortId()}")
+                continue
+            }
+
+            def id = doc.completeId
+            if (i % 500 == 0) {
+                System.err.println("$i records dumped.")
+            }
+            ++i
+            filterProblematicData(id, doc.data)
+            try {
+                serializer.objectToTrig(id, doc.data)
+            } catch (Throwable e) {
+                // Part of the record may still have been written to the stream, which is now corrupt.
+                System.err.println("${doc.getShortId()} conversion failed with ${e.toString()}")
+            }
+
+            if (writingToFile && maxChunkSizeInBytes > 0 && cos.getByteCount() > maxChunkSizeInBytes) {
+                ++partNumber
+                cos.close()
+                System.err.println("Writing ${String.format(chunkedFormatString, partNumber, file)}")
+                cos = new CountingOutputStream(new FileOutputStream(String.format(chunkedFormatString, partNumber, file)))
+                serializer.setOutputStream(cos)
+                // Make sure each chunk gets the prefixes
+                serializer.prelude()
             }
         }
+        cos.close()
     }
 
     @Command(args='[FROM]')

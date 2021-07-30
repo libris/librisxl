@@ -35,6 +35,10 @@ class JsonLdToTurtle {
         this.useGraphKeyword = opts?.useGraphKeyword == true
         this.markEmptyBnode = opts?.markEmptyBnode == true
         if ('owl' in prefixes) emptyMarker = 'owl:Nothing'
+        this.setOutputStream(outStream)
+    }
+
+    void setOutputStream(OutputStream outStream) {
         writer = new OutputStreamWriter(outStream, "UTF-8")
     }
 
