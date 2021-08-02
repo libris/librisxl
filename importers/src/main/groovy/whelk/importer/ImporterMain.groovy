@@ -6,6 +6,7 @@ import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
 import java.util.zip.GZIPOutputStream
 import org.apache.commons.io.output.CountingOutputStream
+import org.apache.commons.io.FilenameUtils
 
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
@@ -155,7 +156,9 @@ class ImporterMain {
         boolean writingToFile = file && file != '-'
         boolean shouldGzip = writingToFile && gzip && gzip == '--gzip'
 
-        String chunkedFormatString = shouldGzip ? "%04d-%s.gz" : "%04d-%s"
+        String chunkedFormatString = FilenameUtils.getFullPath(file) + FilenameUtils.getBaseName(file) + "-%04d" +
+                (FilenameUtils.getExtension(file) ? "." + FilenameUtils.getExtension(file) : "") +
+                (shouldGzip ? ".gz" : "")
 
         int partNumber = 1
         long maxChunkSizeInBytes = 0 // 0 = no limit
@@ -165,15 +168,16 @@ class ImporterMain {
 
         def outputStream
         if (writingToFile && maxChunkSizeInBytes > 0) {
-            System.err.println("Writing ${String.format(chunkedFormatString, partNumber, file)}")
-            outputStream = new FileOutputStream(String.format(chunkedFormatString, partNumber, file))
-            if (shouldGzip) {
-                outputStream = new GZIPOutputStream(outputStream)
-            }
+            System.err.println("Writing ${String.format(chunkedFormatString, partNumber)}")
+            outputStream = new FileOutputStream(String.format(chunkedFormatString, partNumber))
         } else if (writingToFile) {
             outputStream = new FileOutputStream(file)
         } else {
             outputStream = System.out
+        }
+
+        if (shouldGzip) {
+            outputStream = new GZIPOutputStream(outputStream)
         }
 
         CountingOutputStream cos = new CountingOutputStream(outputStream)
@@ -202,8 +206,8 @@ class ImporterMain {
             if (writingToFile && maxChunkSizeInBytes > 0 && cos.getByteCount() > maxChunkSizeInBytes) {
                 ++partNumber
                 cos.close()
-                System.err.println("Writing ${String.format(chunkedFormatString, partNumber, file)}")
-                def fos = new FileOutputStream(String.format(chunkedFormatString, partNumber, file))
+                System.err.println("Writing ${String.format(chunkedFormatString, partNumber)}")
+                def fos = new FileOutputStream(String.format(chunkedFormatString, partNumber))
                 if (shouldGzip) {
                     cos = new CountingOutputStream(new GZIPOutputStream(fos))
                 } else {
