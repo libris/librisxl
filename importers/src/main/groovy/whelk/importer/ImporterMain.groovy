@@ -4,6 +4,7 @@ import whelk.reindexer.CardRefresher
 
 import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
+import java.util.zip.GZIPOutputStream
 import org.apache.commons.io.output.CountingOutputStream
 
 import groovy.util.logging.Log4j2 as Log
@@ -142,8 +143,8 @@ class ImporterMain {
             "nq89zjzsq2fj5cjs"
     ] as Set
 
-    @Command(args='FILE [CHUNKSIZEINMB]')
-    void lddbToTrig(String file, String chunkSizeInMB = null, String collection = null) {
+    @Command(args='FILE [CHUNKSIZEINMB [--gzip]]')
+    void lddbToTrig(String file, String chunkSizeInMB = null, String gzip = null, String collection = null) {
         def whelk = Whelk.createLoadedCoreWhelk(props)
 
         def ctx = JsonLdToTurtle.parseContext([
@@ -152,8 +153,9 @@ class ImporterMain {
         def opts = [useGraphKeyword: false, markEmptyBnode: true]
 
         boolean writingToFile = file && file != '-'
+        boolean shouldGzip = writingToFile && gzip && gzip == '--gzip'
 
-        String chunkedFormatString = "%04d-%s"
+        String chunkedFormatString = shouldGzip ? "%04d-%s.gz" : "%04d-%s"
 
         int partNumber = 1
         long maxChunkSizeInBytes = 0 // 0 = no limit
@@ -165,6 +167,9 @@ class ImporterMain {
         if (writingToFile && maxChunkSizeInBytes > 0) {
             System.err.println("Writing ${String.format(chunkedFormatString, partNumber, file)}")
             outputStream = new FileOutputStream(String.format(chunkedFormatString, partNumber, file))
+            if (shouldGzip) {
+                outputStream = new GZIPOutputStream(outputStream)
+            }
         } else if (writingToFile) {
             outputStream = new FileOutputStream(file)
         } else {
@@ -198,7 +203,13 @@ class ImporterMain {
                 ++partNumber
                 cos.close()
                 System.err.println("Writing ${String.format(chunkedFormatString, partNumber, file)}")
-                cos = new CountingOutputStream(new FileOutputStream(String.format(chunkedFormatString, partNumber, file)))
+                def fos = new FileOutputStream(String.format(chunkedFormatString, partNumber, file))
+                if (shouldGzip) {
+                    cos = new CountingOutputStream(new GZIPOutputStream(fos))
+                } else {
+                    cos = new CountingOutputStream(fos)
+                }
+
                 serializer.setOutputStream(cos)
                 // Make sure each chunk gets the prefixes
                 serializer.prelude()
