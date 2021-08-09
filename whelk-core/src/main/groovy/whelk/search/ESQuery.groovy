@@ -60,8 +60,8 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map doQuery(Map<String, String[]> queryParameters) {
-        Map esQuery = getESQuery(queryParameters)
+    Map doQuery(Map<String, String[]> queryParameters, suggest = false) {
+        Map esQuery = getESQuery(queryParameters, suggest)
         Map esResponse = hideKeywordFields(whelk.elastic.query(esQuery))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
@@ -80,7 +80,7 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map getESQuery(Map<String, String[]> ogQueryParameters) {
+    Map getESQuery(Map<String, String[]> ogQueryParameters, suggest = false) {
         Map<String, String[]> queryParameters = new HashMap<>(ogQueryParameters)
         // Legit params and their uses:
         //   q - query string, will be used as query_string or simple_query_string
@@ -128,13 +128,24 @@ class ESQuery {
             ]
         ]
 
-        Map queryClauses = simpleQuery
+        // In case of suggest/autocomplete search, target a specific field with a specific query type
+        // TODO: make language (sv, en) configurable?
+        Map queryClauses
+        if (suggest) {
+            queryClauses = [
+                'match_phrase_prefix': [
+                    '_sortKeyByLang.sv.suggest': q
+                ]
+            ]
+        } else {
+            queryClauses = simpleQuery
+        }
 
         String[] boostParam = queryParameters.get('_boost')
         String boostMode = boostParam ? boostParam[0] : null
         List boostedFields = getBoostFields(originalTypeParam, boostMode)
 
-        if (boostedFields) {
+        if (boostedFields && !suggest) {
             def softFields = boostedFields.findAll {
                 it.contains(JsonLd.SEARCH_KEY)
             }

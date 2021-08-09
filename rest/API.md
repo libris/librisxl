@@ -288,6 +288,7 @@ $ curl -XGET -H "Accept: application/ld+json" \
 ...
 ```
 
+
 ### `/_remotesearch` - Search external databases - Requires authentication
 
 This endpoint allows you to query external databases.
