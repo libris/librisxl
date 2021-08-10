@@ -55,9 +55,6 @@ selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bi
         }
 
         if (e.language && (languageLabelToLanguages(asList(e.language)).toSorted() != asList(work.language).toSorted())) {
-            println(languageLabelToLanguages(asList(e.language)).toSorted())
-            println(asList(work.language).toSorted())
-            println()
             otherExpressionLanguage.println("${bib.doc.shortId} E: ${toString(e)} W: ${toString(work)}" )
             return
         }
