@@ -8,6 +8,7 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.component.ElasticSearch
 import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
@@ -27,7 +28,6 @@ class ESQuery {
     ]
     private static final String OR_PREFIX = 'or-'
     private static final String EXISTS_PREFIX = 'exists-'
-    private static final List SUGGEST_LANGS = ['sv', 'en']
 
     private Map<String, List<String>> boostFieldsByType = [:]
     private ESQueryLensBoost lensBoost
@@ -98,8 +98,8 @@ class ESQuery {
         //   any k=v param - FILTER query (same key => OR, different key => AND)
         List filters
 
-        if (suggest && !SUGGEST_LANGS.contains(suggest)) {
-            throw new InvalidQueryException("Parameter '_suggest' value '${suggest}' invalid, must be one of ${SUGGEST_LANGS}")
+        if (suggest && !ElasticSearch.LANGUAGES_TO_INDEX.contains(suggest)) {
+            throw new InvalidQueryException("Parameter '_suggest' value '${suggest}' invalid, must be one of ${ElasticSearch.LANGUAGES_TO_INDEX}")
         }
 
         String[] originalTypeParam = queryParameters.get('@type')
