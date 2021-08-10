@@ -23,10 +23,11 @@ class ESQuery {
     private static final ObjectMapper mapper = new ObjectMapper()
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
-        'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens'
+        'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_suggest'
     ]
     private static final String OR_PREFIX = 'or-'
     private static final String EXISTS_PREFIX = 'exists-'
+    private static final List SUGGEST_LANGS = ['sv', 'en']
 
     private Map<String, List<String>> boostFieldsByType = [:]
     private ESQueryLensBoost lensBoost
@@ -60,7 +61,7 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map doQuery(Map<String, String[]> queryParameters, suggest = false) {
+    Map doQuery(Map<String, String[]> queryParameters, suggest = null) {
         Map esQuery = getESQuery(queryParameters, suggest)
         Map esResponse = hideKeywordFields(whelk.elastic.query(esQuery))
         if ('esQuery' in queryParameters.get('_debug')) {
@@ -80,7 +81,7 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map getESQuery(Map<String, String[]> ogQueryParameters, suggest = false) {
+    Map getESQuery(Map<String, String[]> ogQueryParameters, suggest = null) {
         Map<String, String[]> queryParameters = new HashMap<>(ogQueryParameters)
         // Legit params and their uses:
         //   q - query string, will be used as query_string or simple_query_string
@@ -96,6 +97,10 @@ class ESQuery {
         List siteFilter
         //   any k=v param - FILTER query (same key => OR, different key => AND)
         List filters
+
+        if (suggest && !SUGGEST_LANGS.contains(suggest)) {
+            throw new InvalidQueryException("_suggest value ${suggest} invalid, must be one of ${SUGGEST_LANGS}")
+        }
 
         String[] originalTypeParam = queryParameters.get('@type')
         if (originalTypeParam != null) {
@@ -134,7 +139,7 @@ class ESQuery {
         if (suggest) {
             queryClauses = [
                 'match_phrase_prefix': [
-                    '_sortKeyByLang.sv.suggest': q
+                    ("_sortKeyByLang.${suggest}.suggest".toString()) : q
                 ]
             ]
         } else {
