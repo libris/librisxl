@@ -119,7 +119,7 @@ selectByIds(uniqueUnmatchedIds) { bib ->
     Map work = instance.instanceOf
     List<Map> expressionOf = asList(work.expressionOf)
 
-    if (!work || !expressionOf) {3
+    if (!work || !expressionOf) {
         return
     }
     
