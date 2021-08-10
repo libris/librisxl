@@ -54,7 +54,7 @@ selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bi
             return
         }
 
-        if (e.language && (languageLabelToLanguages(asList(e.language)).toSorted() != asList(work.language).toSorted())) {
+        if (e.language && !asList(work.language).containsAll(mapBlankLanguages(asList(e.language)))) {
             otherExpressionLanguage.println("${bib.doc.shortId} E: ${toString(e)} W: ${toString(work)}" )
             return
         }
@@ -243,7 +243,7 @@ private List asList(Object o) {
 }
 
 private Set lang(Map work) {
-    (languageLabelToLanguages(asList(work.language)) + languageLabelToLanguages(asList(work.associatedLanguage))) as Set
+    (mapBlankLanguages(asList(work.language)) + mapBlankLanguages(asList(work.associatedLanguage))) as Set
 }
 
 private String getPrimaryContributionString(Map work) {
@@ -359,7 +359,7 @@ private String titleStr(Map thing) {
 }
 
 // Handle e.g. { "@type": "Language", "label": ["English & Tamil."] }
-private List languageLabelToLanguages(List languages) {
+private List mapBlankLanguages(List languages) {
     if (languages.size() == 1 && languages[0].label) {
         List copy = new ArrayList(languages)
         Map m = ['l': copy]
