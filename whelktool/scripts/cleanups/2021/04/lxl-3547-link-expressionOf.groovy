@@ -362,7 +362,7 @@ private String titleStr(Map thing) {
 // Handle e.g. { "@type": "Language", "label": ["English & Tamil."] }
 private List mapBlankLanguages(List languages, List whichGreek = []) {
     if (languages.size() == 1 && languages[0].label) {
-        String label = languages[0].label.toLowerCase()
+        String label = asList(languages[0].label).first().toLowerCase()
         // to be able to map "Greek" to modern or classical Greek (LanguageLinker will use an existing linked sibling to decide when ambiguous) 
         boolean anyGreek = label.contains("grekiska") || label.contains("greek")
         List copy = new ArrayList(anyGreek ? languages + whichGreek : languages)
