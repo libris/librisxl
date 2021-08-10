@@ -29,6 +29,10 @@ PrintWriter otherExpressionLanguage = getReportWriter("other-expression-language
 compareTitles = getReportWriter("compare-titles.txt")
 
 languageLinker = buildLanguageMap()
+Map a = (Map<String, List>) languageLinker.ambiguousIdentifiers
+ambiguousLangNames = a.keySet()
+ambiguousLangIds = a.values().flatten()
+
 languageNames = loadLanguageNames()
 uniformWorks = getUniformWorks()
 
@@ -54,8 +58,8 @@ selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bi
             return
         }
 
-        List greek = asList(work.language).findAll { it['@id'] == 'https://id.kb.se/language/gre' || it['@id'] == 'https://id.kb.se/language/grc' }
-        if (e.language && !asList(work.language).containsAll(mapBlankLanguages(asList(e.language), greek))) {
+        List whichOne = asList(work.language).findAll { it['@id'] in ambiguousLangIds }
+        if (e.language && !asList(work.language).containsAll(mapBlankLanguages(asList(e.language), whichOne))) {
             otherExpressionLanguage.println("${bib.doc.shortId} E: ${toString(e)} W: ${toString(work)}" )
             return
         }
@@ -360,12 +364,15 @@ private String titleStr(Map thing) {
 }
 
 // Handle e.g. { "@type": "Language", "label": ["English & Tamil."] }
-private List mapBlankLanguages(List languages, List whichGreek = []) {
+private List mapBlankLanguages(List languages, List whichLanguageVersion = []) {
     if (languages.size() == 1 && languages[0].label) {
         String label = asList(languages[0].label).first().toLowerCase()
-        // to be able to map "Greek" to modern or classical Greek (LanguageLinker will use an existing linked sibling to decide when ambiguous) 
-        boolean anyGreek = label.contains("grekiska") || label.contains("greek")
-        List copy = new ArrayList(anyGreek ? languages + whichGreek : languages)
+        // to be able to map e.g. "Greek" to modern or classical Greek (LanguageLinker will use an existing linked sibling to decide when ambiguous)
+        List copy = new ArrayList( 
+                ambiguousLangNames.any{ label.contains(it) } 
+                    ? languages + whichLanguageVersion 
+                    : languages
+        )
         Map m = ['l': copy]
         languageLinker.linkLanguages(m, 'l')
         return m['l']
@@ -454,6 +461,9 @@ LanguageLinker buildLanguageMap() {
     linker.addMapping('grekiska', 'https://id.kb.se/language/grc')
     linker.addMapping('greek', 'https://id.kb.se/language/gre')
     linker.addMapping('greek', 'https://id.kb.se/language/grc')
+
+    linker.addMapping('syriska', 'https://id.kb.se/language/syc')
+    linker.addMapping('syriska', 'https://id.kb.se/language/syr')
 
     return linker
 }
