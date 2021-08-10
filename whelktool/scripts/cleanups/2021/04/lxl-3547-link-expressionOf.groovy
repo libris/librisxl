@@ -16,6 +16,8 @@ import java.text.Normalizer
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.regex.Pattern
+import whelk.filter.LanguageLinker
+import whelk.util.Statistics
 
 PrintWriter linked = getReportWriter("linked.txt")
 PrintWriter noLang = getReportWriter("no-lang.txt")
@@ -26,6 +28,7 @@ PrintWriter movedTitles = getReportWriter("moved-titles.txt")
 PrintWriter otherExpressionLanguage = getReportWriter("other-expression-language.txt")
 compareTitles = getReportWriter("compare-titles.txt")
 
+languageLinker = buildLanguageMap()
 languageNames = loadLanguageNames()
 uniformWorks = getUniformWorks()
 
@@ -51,7 +54,10 @@ selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bi
             return
         }
 
-        if (e.language && (asList(e.language).toSorted() != asList(work.language).toSorted())) {
+        if (e.language && (languageLabelToLanguages(asList(e.language)).toSorted() != asList(work.language).toSorted())) {
+            println(languageLabelToLanguages(asList(e.language)).toSorted())
+            println(asList(work.language).toSorted())
+            println()
             otherExpressionLanguage.println("${bib.doc.shortId} E: ${toString(e)} W: ${toString(work)}" )
             return
         }
@@ -240,7 +246,7 @@ private List asList(Object o) {
 }
 
 private Set lang(Map work) {
-    (asList(work.language) + asList(work.associatedLanguage)) as Set
+    (languageLabelToLanguages(asList(work.language)) + languageLabelToLanguages(asList(work.associatedLanguage))) as Set
 }
 
 private String getPrimaryContributionString(Map work) {
@@ -355,6 +361,99 @@ private String titleStr(Map thing) {
     return props.grep().join(' ')
 }
 
+// Handle e.g. { "@type": "Language", "label": ["English & Tamil."] }
+private List languageLabelToLanguages(List languages) {
+    if (languages.size() == 1 && languages[0].label) {
+        List copy = new ArrayList(languages)
+        Map m = ['l': copy]
+        languageLinker.linkLanguages(m, 'l')
+        return m['l']
+    }
+    
+    return languages
+}
+
+class AndLanguageLinker extends LanguageLinker {
+    AndLanguageLinker(List ignoreCodes = [], Statistics stats = null) {
+        super(ignoreCodes, stats)
+    }
+    
+    @Override
+    protected List split(labelOrCode) {
+        if (labelOrCode instanceof List) {
+            return labelOrCode
+        }
+
+        if (labelOrCode ==~ /^(.*,)*.*(&|och|and).*/) {
+            return labelOrCode.split(",|&|och|and") as List
+        }
+    }
+}
+
+// from 2019/10/lxl-2737-remove-redundant-blank-languages
+Map substitutions() {
+    [
+            'catalán'                         : 'katalanska',
+            'dansk'                           : 'danska',
+            'engl'                            : 'engelska',
+            'fornkyrkoslaviska'               : 'fornkyrkslaviska',
+            'francais'                        : 'franska',
+            'inglés'                          : 'engelska',
+            'jap'                             : 'jpn',
+            'kroat'                           : 'kroatiska',
+            'latviešu val'                    : 'lettiska',
+            'latviešu valodā'                 : 'lettiska',
+            'mongoliska språket'              : 'mongoliska språk',
+            'mongoliska'                      : 'mongoliska språk',
+            'mongoliskt språk'                : 'mongoliska språk',
+            'ruotsi'                          : 'svenska',
+            'schwed'                          : 'svenska',
+            'suomi'                           : 'finska',
+            'svensk'                          : 'svenska',
+            'tigriniska'                      : 'tigrinska',
+            'tornedalsfinska'                 : 'meänkieli',
+            'á íslensku'                      : 'isländska',
+            'česky'                           : 'tjeckiska',
+
+            'arabiska (judearabiska)'         : 'judearabiska',
+            'engelska (fornengelska)'         : 'fornengelska',
+            'engelska (medelengelska)'        : 'medelengelska',
+            'franska (fornfranska)'           : 'fornfranska',
+            'franska (medelfranska)'          : 'medelfranska',
+            'french (middle french)'          : 'medelfranska',
+            'grekiska (nygrekiska)'           : 'nygrekiska',
+            'nederländska (medelnederländska)': 'medelnederländska',
+            'norska (nynorsk)'                : 'nynorska',
+            'norska (nynorska)'               : 'nynorska',
+            'samiska (lulesamiska)'           : 'lulesamiska',
+            'samiska (nordsamiska)'           : 'nordsamiska',
+            'svenska (fornsvenska)'           : 'fornsvenska',
+            'tyska (lågtyska)'                : 'lågtyska',
+            'tyska (medelhögtyska)'           : 'medelhögtyska',
+            'tyska (medellågtyska)'           : 'medellågtyska',
+    ]
+}
+
+LanguageLinker buildLanguageMap() {
+    def q = [
+            "@type": ["Language"],
+            "q"    : ["*"],
+            '_sort': ["@id"]
+    ]
+
+    LanguageLinker linker = new AndLanguageLinker([], new Statistics().printOnShutdown())
+    ConcurrentLinkedQueue<Map> languages = new ConcurrentLinkedQueue<>()
+    selectByIds(queryIds(q).collect()) { languages.add(it.graph[1]) }
+    languages.forEach({l -> linker.addDefinition(l) } )
+
+    linker.addSubstitutions(substitutions())
+    linker.addMapping('grekiska', 'https://id.kb.se/language/gre')
+    linker.addMapping('grekiska', 'https://id.kb.se/language/grc')
+    linker.addMapping('greek', 'https://id.kb.se/language/gre')
+    linker.addMapping('greek', 'https://id.kb.se/language/grc')
+
+    return linker
+}
 
 /*
 broken, fix manually:
