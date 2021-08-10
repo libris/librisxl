@@ -218,7 +218,7 @@ private Set<String> loadLanguageNames() {
 private String toString(Map work) {
     def keys = (Norm.TITLE_KEYS.collect {['hasTitle', 0] + it } + Norm.CMP_KEYS) 
     def props = keys.collect {getPathSafe(work, asList(it)) }
-    def langcode = lang(work).collect{ (it['@id'] ?: '').split('/').last() }
+    def langcode = lang(work).collect{ (it['@id'] ?: (it['label'] ?: '')).split('/').last() }
     def contribution = asList(work['primaryContribution']) + asList(getPrimaryContributionString(work))
     return (props + langcode + contribution).grep().join(' · ')
 }
