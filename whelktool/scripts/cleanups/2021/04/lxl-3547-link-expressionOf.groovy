@@ -432,6 +432,8 @@ Map substitutions() {
             'tyska (lågtyska)'                : 'lågtyska',
             'tyska (medelhögtyska)'           : 'medelhögtyska',
             'tyska (medellågtyska)'           : 'medellågtyska',
+            
+            'polyglott'                       : 'flera språk'
     ]
 }
 
