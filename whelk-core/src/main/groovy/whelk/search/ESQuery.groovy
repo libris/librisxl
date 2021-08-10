@@ -99,7 +99,7 @@ class ESQuery {
         List filters
 
         if (suggest && !SUGGEST_LANGS.contains(suggest)) {
-            throw new InvalidQueryException("_suggest value ${suggest} invalid, must be one of ${SUGGEST_LANGS}")
+            throw new InvalidQueryException("Parameter '_suggest' value '${suggest}' invalid, must be one of ${SUGGEST_LANGS}")
         }
 
         String[] originalTypeParam = queryParameters.get('@type')
