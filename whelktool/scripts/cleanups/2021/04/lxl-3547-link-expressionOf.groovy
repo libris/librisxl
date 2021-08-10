@@ -54,7 +54,8 @@ selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bi
             return
         }
 
-        if (e.language && !asList(work.language).containsAll(mapBlankLanguages(asList(e.language)))) {
+        List greek = asList(work.language).findAll { it['@id'] == 'https://id.kb.se/language/gre' || it['@id'] == 'https://id.kb.se/language/grc' }
+        if (e.language && !asList(work.language).containsAll(mapBlankLanguages(asList(e.language), greek))) {
             otherExpressionLanguage.println("${bib.doc.shortId} E: ${toString(e)} W: ${toString(work)}" )
             return
         }
@@ -359,9 +360,12 @@ private String titleStr(Map thing) {
 }
 
 // Handle e.g. { "@type": "Language", "label": ["English & Tamil."] }
-private List mapBlankLanguages(List languages) {
+private List mapBlankLanguages(List languages, List whichGreek = []) {
     if (languages.size() == 1 && languages[0].label) {
-        List copy = new ArrayList(languages)
+        String label = languages[0].label.toLowerCase()
+        // to be able to map "Greek" to modern or classical Greek (LanguageLinker will use an existing linked sibling to decide when ambiguous) 
+        boolean anyGreek = label.contains("grekiska") || label.contains("greek")
+        List copy = new ArrayList(anyGreek ? languages + whichGreek : languages)
         Map m = ['l': copy]
         languageLinker.linkLanguages(m, 'l')
         return m['l']
