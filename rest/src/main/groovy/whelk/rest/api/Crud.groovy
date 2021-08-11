@@ -563,7 +563,7 @@ class Crud extends HttpServlet {
         try {
             doPut2(request, response)
         } catch (Exception e) {
-            failedRequests.labels("POST", request.getRequestURI(),
+            failedRequests.labels("PUT", request.getRequestURI(),
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
             sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), e)
         } finally {
