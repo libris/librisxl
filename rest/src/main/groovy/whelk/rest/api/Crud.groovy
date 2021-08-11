@@ -971,8 +971,9 @@ class Crud extends HttpServlet {
             e = StackTraceUtils.sanitize(e)
             log.error("Internal server error: ${e.getMessage()}", e)
 
-            json.stackTrace = ExceptionUtils.getStackFrames(e).with{
-                it.take(2 + it.findLastIndexOf { at -> at.contains(Crud.class.getName())})
+            // Don't include servlet container stack frames
+            json.stackTrace = ExceptionUtils.getStackFrames(e).with {
+                it.take(2 + it.findLastIndexOf { at -> at.contains(Crud.class.getName()) })
             }.collect { it.replace('\t', '    ')}
         }
 
