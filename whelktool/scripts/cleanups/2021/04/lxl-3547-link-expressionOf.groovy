@@ -9,6 +9,7 @@
  * 
  * TODO: decide which non-linkable expressionOf should be extracted to new works and linked, i.e. how many identical expressionOf have to exist 
  */
+
 import org.apache.commons.lang3.StringUtils
 import whelk.util.Unicode
 import whelk.Document
@@ -58,6 +59,12 @@ selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bi
             return
         }
 
+        // languages1 must contain all languages in languages2
+        // Work
+        //  languages1
+        //  expressionOf
+        //    Work
+        //      languages2
         List whichOne = asList(work.language).findAll { it['@id'] in ambiguousLangIds }
         if (e.language && !asList(work.language).containsAll(mapBlankLanguages(asList(e.language), whichOne))) {
             otherExpressionLanguage.println("${bib.doc.shortId} E: ${toString(e)} W: ${toString(work)}" )
@@ -248,6 +255,11 @@ private List asList(Object o) {
 }
 
 private Set lang(Map work) {
+    String mainTitle = asList(work['hasTitle'])?.first().mainTitle
+    if (mainTitle ==~ /^.*\.\s*\w+(&\s*\w+)?/) {
+        
+    }
+    
     (mapBlankLanguages(asList(work.language)) + mapBlankLanguages(asList(work.associatedLanguage))) as Set
 }
 
@@ -300,6 +312,9 @@ class Norm {
             def s = m.split(' ')
             if (s.last() in languageNames) {
                 t.mainTitle = normalize(s.dropRight(1).join(' '))
+            }
+            if (s.size() > 3 && s[-1] in languageNames && s[-2] == "&" && s[-3] in languageNames) {
+                t.mainTitle = normalize(s.dropRight(3).join(' '))
             }
         }
         
