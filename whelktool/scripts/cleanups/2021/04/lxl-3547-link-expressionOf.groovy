@@ -434,7 +434,7 @@ boolean moveLanguagesFromTitle(Map work, List whichLanguageVersion = []) {
             l = m.l
             if (l.size() == langs.size() && l.every {it['@id'] }) {
                 languageFromTitle.println("${work.hasTitle.mainTitle} --> $title $l")
-                work.hasTitle.mainTitle = title
+                work.hasTitle['mainTitle'] = title
                 work.languages = l
                 return true
             }
