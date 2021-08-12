@@ -73,7 +73,7 @@ selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bi
 
         List whichOne = asList(work.language).findAll { it['@id'] in ambiguousLangIds }
         
-        if (moveLanguagesFromTitle(e, whichOne)) {
+        if (moveLanguagesFromTitle(bib.doc.shortId, e, whichOne)) {
             bib.scheduleSave()
         }
 
@@ -408,7 +408,7 @@ private List mapBlankLanguages(List languages, List whichLanguageVersion = []) {
     return languages
 }
 
-boolean moveLanguagesFromTitle(Map work, List whichLanguageVersion = []) {
+boolean moveLanguagesFromTitle(String id, Map work, List whichLanguageVersion = []) {
     (asList(work['hasTitle'])?.first().mainTitle =~ /^(?<title>.*)\.\s*(?:(.+),|&)?([^&]+)(?: & | och | and )([^&]+)$/).with {
         if (matches()) {
             String title = group('title')
@@ -428,13 +428,13 @@ boolean moveLanguagesFromTitle(Map work, List whichLanguageVersion = []) {
             languageLinker.linkLanguages(m, 'l')
             l = m.l
             if (l.size() == langs.size() && l.every {it['@id'] }) {
-                languageFromTitle.println("${work.hasTitle.mainTitle} --> $title $l")
+                languageFromTitle.println("$id ${work.hasTitle.mainTitle} --> $title $l")
                 asList(work['hasTitle'])?.first().mainTitle = title
                 work.languages = l
                 return true
             }
             else {
-                languageFromTitle.println("COULD NOT HANDLE: $work")
+                languageFromTitle.println("COULD NOT HANDLE: $id $work")
             }
         }
     }
