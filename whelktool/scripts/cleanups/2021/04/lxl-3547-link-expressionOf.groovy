@@ -271,11 +271,6 @@ private List asList(Object o) {
 }
 
 private Set lang(Map work) {
-    String mainTitle = asList(work['hasTitle'])?.first().mainTitle
-    if (mainTitle ==~ /^.*\.\s*\w+(&\s*\w+)?/) {
-        
-    }
-    
     (mapBlankLanguages(asList(work.language)) + mapBlankLanguages(asList(work.associatedLanguage))) as Set
 }
 
