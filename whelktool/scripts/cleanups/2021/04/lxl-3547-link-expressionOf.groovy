@@ -77,11 +77,11 @@ selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bi
             bib.scheduleSave()
         }
 
-        // languages must contain all languages in expressionOf.languages, otherwise abort
+        // language must contain all languages in expressionOf.language, otherwise abort
         // Work
-        //  languages
+        //  language
         //  expressionOf
-        //    languages
+        //    language
         if (e.language && !asList(work.language).containsAll(mapBlankLanguages(asList(e.language), whichOne))) {
             otherExpressionLanguage.println("${bib.doc.shortId} E: ${toString(e)} W: ${toString(work)}" )
             return
@@ -408,7 +408,10 @@ private List mapBlankLanguages(List languages, List whichLanguageVersion = []) {
     return languages
 }
 
+// A bit messy
+// mainTitle: "Haggada. Jiddisch & Hebreiska" --> mainTitle: Haggada, language: [[@id:https://id.kb.se/language/yid], [@id:https://id.kb.se/language/heb]]
 boolean moveLanguagesFromTitle(String id, Map work, List whichLanguageVersion = []) {
+    boolean changed = false
     (asList(work['hasTitle'])?.first().mainTitle =~ /^(?<title>.*)\.\s*(?:(.+),|&)?([^&]+)(?: & | och | and )([^&]+)$/).with {
         if (matches()) {
             String title = group('title')
@@ -430,15 +433,15 @@ boolean moveLanguagesFromTitle(String id, Map work, List whichLanguageVersion = 
             if (l.size() == langs.size() && l.every {it['@id'] }) {
                 languageFromTitle.println("$id ${work.hasTitle.mainTitle} --> $title $l")
                 asList(work['hasTitle'])?.first().mainTitle = title
-                work.languages = l
-                return true
+                work.language = l
+                changed = true
             }
             else {
                 languageFromTitle.println("COULD NOT HANDLE: $id $work")
             }
         }
     }
-    return false
+    return changed
 }
 
 class AndLanguageLinker extends LanguageLinker {
