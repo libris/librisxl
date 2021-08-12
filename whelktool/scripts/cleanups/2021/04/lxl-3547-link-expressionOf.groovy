@@ -509,7 +509,8 @@ Map substitutions() {
             'judetyska'                       : 'jiddisch',
             'italiensk'                       : 'italienska',
             'german (middle high german)'     : 'medelhögtyska',
-            'skotsk-gaeliska'                 : 'skotsk gäliska'
+            'skotsk-gaeliska'                 : 'skotsk gäliska',
+            'nubiska'                         : 'nubiska språk'
 
             // Also seen
             // Fornnorska
