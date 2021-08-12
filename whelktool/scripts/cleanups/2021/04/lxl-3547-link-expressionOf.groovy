@@ -324,6 +324,7 @@ class Norm {
         def t = normalize(title.findAll {it.key in TITLE_KEYS})
         
         // Some records have the language in the title e.g. "Tusen och en natt. Svenska" drop the language part
+        // These should normally already have been moved by moveLanguagesFromTitle()
         t.mainTitle?.with { String m ->
             def s = m.split(' ')
             if (s.last() in languageNames) {
@@ -421,6 +422,9 @@ boolean moveLanguagesFromTitle(Map work, List whichLanguageVersion = []) {
                 langs << group(i + 1)
             }
             langs = langs.grep().findAll{ it != title }.collect{ Unicode.trimNoise(it.toLowerCase()) }
+            if (!langs) {
+                return false
+            }
             def l = langs.collect{ ['@type': 'Language', 'label': it] }
             if (langs.any{ it in ambiguousLangNames }) {
                 l += whichLanguageVersion
@@ -432,12 +436,14 @@ boolean moveLanguagesFromTitle(Map work, List whichLanguageVersion = []) {
                 languageFromTitle.println("${work.hasTitle.mainTitle} --> $title $l")
                 work.hasTitle.mainTitle = title
                 work.languages = l
+                return true
             }
             else {
                 languageFromTitle.println("COULD NOT HANDLE: $work")
             }
         }
     }
+    return false
 }
 
 class AndLanguageLinker extends LanguageLinker {
