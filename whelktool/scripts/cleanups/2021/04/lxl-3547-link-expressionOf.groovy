@@ -409,7 +409,7 @@ private List mapBlankLanguages(List languages, List whichLanguageVersion = []) {
 }
 
 boolean moveLanguagesFromTitle(Map work, List whichLanguageVersion = []) {
-    (asList(work['hasTitle'])?.first().mainTitle =~ /^(?<title>.*)\.\s*(?:(.+),|&)?([^&]+)(?:&|och|and)([^&]+)$/).with {
+    (asList(work['hasTitle'])?.first().mainTitle =~ /^(?<title>.*)\.\s*(?:(.+),|&)?([^&]+)(?: & | och | and )([^&]+)$/).with {
         if (matches()) {
             String title = group('title')
             List<String> langs = []
@@ -452,8 +452,8 @@ class AndLanguageLinker extends LanguageLinker {
             return labelOrCode
         }
 
-        if (labelOrCode ==~ /^(.*,)*.*(&|och|and).*/) {
-            return labelOrCode.split(",|&|och|and") as List
+        if (labelOrCode ==~ /^(.*,)*.*( & | och | and ).*/) {
+            return labelOrCode.split(",| & | och | and ") as List
         }
     }
 }
@@ -500,7 +500,29 @@ Map substitutions() {
             'tyska (medelhögtyska)'           : 'medelhögtyska',
             'tyska (medellågtyska)'           : 'medellågtyska',
             
-            'polyglott'                       : 'flera språk'
+            // Added in lxl-3547
+            'polyglott'                       : 'flera språk',
+            'pehlevi'                         : 'pahlavi',
+            'kanbodjanska (khmer)'            : 'kambodjanska',
+            'english (middle english)'        : 'medelengelska',
+            'english (anglo-saxon)'           : 'fornengelska',
+            'judetyska'                       : 'jiddisch',
+            'italiensk'                       : 'italienska',
+            'german (middle high german)'     : 'medelhögtyska'
+            'skotsk-gaeliska' : 'skotsk gäliska'
+            
+            // Also seen
+            // Fornnorska
+            // Fornryska
+            // Irish (Old Irish)
+            // Fornspanska
+            // Medellågtyska
+            // Luchazi
+            // Egyptian
+            // anglo-norman
+            // spanska (medelspanska)
+            // vepsiska
+            // gäliska
     ]
 }
 
