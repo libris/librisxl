@@ -499,7 +499,7 @@ Map substitutions() {
             'tyska (lågtyska)'                : 'lågtyska',
             'tyska (medelhögtyska)'           : 'medelhögtyska',
             'tyska (medellågtyska)'           : 'medellågtyska',
-            
+
             // Added in lxl-3547
             'polyglott'                       : 'flera språk',
             'pehlevi'                         : 'pahlavi',
@@ -508,9 +508,9 @@ Map substitutions() {
             'english (anglo-saxon)'           : 'fornengelska',
             'judetyska'                       : 'jiddisch',
             'italiensk'                       : 'italienska',
-            'german (middle high german)'     : 'medelhögtyska'
-            'skotsk-gaeliska' : 'skotsk gäliska'
-            
+            'german (middle high german)'     : 'medelhögtyska',
+            'skotsk-gaeliska'                 : 'skotsk gäliska'
+
             // Also seen
             // Fornnorska
             // Fornryska
