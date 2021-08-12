@@ -10,23 +10,35 @@
  * TODO: decide which non-linkable expressionOf should be extracted to new works and linked, i.e. how many identical expressionOf have to exist 
  */
 
+
 import org.apache.commons.lang3.StringUtils
-import whelk.util.Unicode
 import whelk.Document
+import whelk.filter.LanguageLinker
+import whelk.util.Statistics
+import whelk.util.Unicode
+
 import java.text.Normalizer
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.regex.Pattern
-import whelk.filter.LanguageLinker
-import whelk.util.Statistics
 
+// expressionOf linked to a "uniformWorkTitle" work
 PrintWriter linked = getReportWriter("linked.txt")
-PrintWriter noLang = getReportWriter("no-lang.txt")
+// Found potential matches to link to, but non with matching language
+PrintWriter noLang = getReportWriter("no-matching-language.txt")
+// Found multiple potential matches to link to
 PrintWriter multiMatch = getReportWriter("multiple-matches.txt")
-PrintWriter sameExpr = getReportWriter("same-expr.txt")
+// 
+PrintWriter sameExpr = getReportWriter("same-expression.txt")
+// 
 PrintWriter ignoredContribution = getReportWriter("ignored-primary-contribution.txt")
+// Title from expressionOf move to work
 PrintWriter movedTitles = getReportWriter("moved-titles.txt")
+// The work having 'expressionOf' did not have all languages in 'expressionOf.language' in its 'language' 
 PrintWriter otherExpressionLanguage = getReportWriter("other-expression-language.txt")
+// Language parsed from 'mainTitle' of 'expressionOf' and moved to 'language', e.g. "Koranen. Danska & Arabiska"
+languageFromTitle = getReportWriter("language-moved-from-title.txt")
+// 
 compareTitles = getReportWriter("compare-titles.txt")
 
 languageLinker = buildLanguageMap()
@@ -59,13 +71,17 @@ selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bi
             return
         }
 
-        // languages1 must contain all languages in languages2
-        // Work
-        //  languages1
-        //  expressionOf
-        //    Work
-        //      languages2
         List whichOne = asList(work.language).findAll { it['@id'] in ambiguousLangIds }
+        
+        if (moveLanguagesFromTitle(e, whichOne)) {
+            bib.scheduleSave()
+        }
+
+        // languages must contain all languages in expressionOf.languages, otherwise abort
+        // Work
+        //  languages
+        //  expressionOf
+        //    languages
         if (e.language && !asList(work.language).containsAll(mapBlankLanguages(asList(e.language), whichOne))) {
             otherExpressionLanguage.println("${bib.doc.shortId} E: ${toString(e)} W: ${toString(work)}" )
             return
@@ -394,6 +410,34 @@ private List mapBlankLanguages(List languages, List whichLanguageVersion = []) {
     }
     
     return languages
+}
+
+boolean moveLanguagesFromTitle(Map work, List whichLanguageVersion = []) {
+    (work.hasTitle?.mainTitle =~ /^(?<title>.*)\.\s*(?:(.+),|&)?([^&]+)(?:&|och|and)([^&]+)$/).with {
+        if (matches()) {
+            String title = group('title')
+            List<String> langs = []
+            for (int i = 0 ; i < groupCount(); i++) {
+                langs << group(i + 1)
+            }
+            langs = langs.grep().findAll{ it != title }.collect{ Unicode.trimNoise(it.toLowerCase()) }
+            def l = langs.collect{ ['@type': 'Language', 'label': it] }
+            if (langs.any{ it in ambiguousLangNames }) {
+                l += whichLanguageVersion
+            }
+            Map m = ['l': l]
+            languageLinker.linkLanguages(m, 'l')
+            l = m.l
+            if (l.size() == langs.size() && l.every {it['@id'] }) {
+                languageFromTitle.println("${work.hasTitle.mainTitle} --> $title $l")
+                work.hasTitle.mainTitle = title
+                work.languages = l
+            }
+            else {
+                languageFromTitle.println("COULD NOT HANDLE: $work")
+            }
+        }
+    }
 }
 
 class AndLanguageLinker extends LanguageLinker {
