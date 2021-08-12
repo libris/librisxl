@@ -137,9 +137,12 @@ notLinkedExpr.each {key, ids ->
     ids.each {
         incrementStats('same expr', toString(key), it)
     }
-    sameExpr.println(ids.size() + " " + toString(key))
+    
     if (ids.size() == 1) {
         uniqueUnmatchedIds.add(ids.poll())
+    }
+    else {
+        sameExpr.println(ids.size() + " " + toString(key))
     }
 }
 
