@@ -132,7 +132,7 @@ class Crud extends HttpServlet {
         }
     }
 
-    void displayInfo(HttpServletResponse response) {
+    static void displayInfo(HttpServletResponse response) {
         def info = [:]
         info["system"] = "LIBRISXL"
         info["format"] = "linked-data-api"
@@ -238,7 +238,7 @@ class Crud extends HttpServlet {
         HttpTools.sendError(response, HttpServletResponse.SC_NOT_MODIFIED, "Document has not been modified.")
     }
 
-    private void sendNotFound(HttpServletResponse response, String path) {
+    private static void sendNotFound(HttpServletResponse response, String path) {
         failedRequests.labels("GET", path,
                 HttpServletResponse.SC_NOT_FOUND.toString()).inc()
         HttpTools.sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
@@ -268,11 +268,11 @@ class Crud extends HttpServlet {
         }
     }
 
-    private Map frameRecord(Document document) {
+    private static Map frameRecord(Document document) {
         return JsonLd.frame(document.getCompleteId(), document.data)
     }
 
-    private Map frameThing(Document document) {
+    private static Map frameThing(Document document) {
         document.setThingMeta(document.getCompleteId())
         List<String> thingIds = document.getThingIdentifiers()
         if (thingIds.isEmpty()) {
@@ -295,7 +295,7 @@ class Crud extends HttpServlet {
         }
     }
 
-    private void setVary(HttpServletResponse response) {
+    private static void setVary(HttpServletResponse response) {
         response.setHeader("Vary", "Accept")
     }
 
@@ -365,8 +365,8 @@ class Crud extends HttpServlet {
         return result
     }
 
-    private HttpServletResponse maybeAddProposal25Headers(HttpServletResponse response,
-                                                          String location) {
+    private static HttpServletResponse maybeAddProposal25Headers(HttpServletResponse response,
+                                                                 String location) {
         if (location) {
             response.addHeader('Content-Location',
                                getDataURI(location))
@@ -376,7 +376,7 @@ class Crud extends HttpServlet {
         return response
     }
 
-    private String getDataURI(String location) {
+    private static String getDataURI(String location) {
         if (location.endsWith('/')) {
             return location + 'data.jsonld'
         } else {
@@ -426,8 +426,8 @@ class Crud extends HttpServlet {
      * Send 302 Found response
      *
      */
-    void sendRedirect(HttpServletRequest request,
-                      HttpServletResponse response, String location) {
+    static void sendRedirect(HttpServletRequest request,
+                             HttpServletResponse response, String location) {
         if (new URI(location).getScheme() == null) {
             def locationRef = request.getScheme() + "://" +
                     request.getServerName() +
@@ -540,7 +540,7 @@ class Crud extends HttpServlet {
         // try store document
         // return 201 or error
         boolean isUpdate = false
-        Document savedDoc;
+        Document savedDoc
         savedDoc = saveDocument(newDoc, request, response, isUpdate, "POST")
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
@@ -687,18 +687,18 @@ class Crud extends HttpServlet {
 
     }
 
-    boolean isEmptyInput(Map inputData) {
+    static boolean isEmptyInput(Map inputData) {
         return !inputData || inputData.size() == 0
     }
 
-    boolean isSupportedContentType(HttpServletRequest request) {
+    static boolean isSupportedContentType(HttpServletRequest request) {
         ContentType contentType = ContentType.parse(request.getContentType())
         String mimeType = contentType.getMimeType()
         // FIXME add additional content types?
         return mimeType == "application/ld+json"
     }
 
-    Map getRequestBody(HttpServletRequest request) {
+    static Map getRequestBody(HttpServletRequest request) {
         byte[] body = request.getInputStream().getBytes()
 
         try {
@@ -784,19 +784,19 @@ class Crud extends HttpServlet {
         return null
     }
 
-    void sendCreateResponse(HttpServletResponse response, String locationRef,
-                            String etag) {
+    static void sendCreateResponse(HttpServletResponse response, String locationRef,
+                                   String etag) {
         sendDocumentSavedResponse(response, locationRef, etag, true)
     }
 
-    void sendUpdateResponse(HttpServletResponse response, String locationRef,
-                            String etag) {
+    static void sendUpdateResponse(HttpServletResponse response, String locationRef,
+                                   String etag) {
         sendDocumentSavedResponse(response, locationRef, etag, false)
     }
 
-    void sendDocumentSavedResponse(HttpServletResponse response,
-                                   String locationRef, String etag,
-                                   boolean newDocument) {
+    static void sendDocumentSavedResponse(HttpServletResponse response,
+                                          String locationRef, String etag,
+                                          boolean newDocument) {
         log.debug("Setting header Location: $locationRef")
 
         response.setHeader("Location", locationRef)
@@ -859,7 +859,7 @@ class Crud extends HttpServlet {
     }
 
     @Deprecated
-    List<String> getAlternateIdentifiersFromLinkHeaders(HttpServletRequest request) {
+    static List<String> getAlternateIdentifiersFromLinkHeaders(HttpServletRequest request) {
         def alts = []
         for (link in request.getHeaders("Link")) {
             def (id, rel) = link.split(";")*.trim()
