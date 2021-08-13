@@ -61,7 +61,7 @@ class HttpTools {
 
             // Don't include servlet container stack frames
             json.stackTrace = ExceptionUtils.getStackFrames(e).with {
-                it.take(2 + it.findLastIndexOf { at -> at.contains(Crud.class.getName()) })
+                it.take(2 + it.findLastIndexOf { at -> at.contains(HttpTools.class.getPackage().getName()) })
             }.collect { it.replace('\t', '    ')}
         }
 
