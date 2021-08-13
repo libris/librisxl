@@ -46,7 +46,7 @@ Map a = (Map<String, List>) languageLinker.ambiguousIdentifiers
 ambiguousLangNames = a.keySet()
 ambiguousLangIds = a.values().flatten()
 
-languageNames = loadLanguageNames()
+languageNames = languageLinker.map.keySet() + languageLinker.substitutions.keySet() + languageLinker.ambiguousIdentifiers.keySet()
 uniformWorks = getUniformWorks()
 
 def notLinkedExpr = new ConcurrentHashMap<Map, ConcurrentLinkedQueue<String>>()
@@ -230,22 +230,6 @@ private Map<String, Collection<Map>> getUniformWorks() {
     return works
 }
 
-private Set<String> loadLanguageNames() {
-    def q = [
-            '@type': ['Language'],
-            '_sort': ['@id']
-    ]
-
-    def languages = Collections.synchronizedSet(new HashSet<String>())
-    selectByIds(queryIds(q).collect()) { d ->
-        def (record, thing) = d.graph
-        thing.prefLabelByLang?.sv?.with { String label ->
-            languages.add(label.toLowerCase())
-        }
-    }
-    return languages
-}
-
 private String toString(Map work) {
     def keys = (Norm.TITLE_KEYS.collect {['hasTitle', 0] + it } + Norm.CMP_KEYS) 
     def props = keys.collect {getPathSafe(work, asList(it)) }
@@ -415,25 +399,26 @@ private List mapBlankLanguages(List languages, List whichLanguageVersion = []) {
 // mainTitle: "Haggada. Jiddisch & Hebreiska" --> mainTitle: Haggada, language: [[@id:https://id.kb.se/language/yid], [@id:https://id.kb.se/language/heb]]
 boolean moveLanguagesFromTitle(String id, Map work, List whichLanguageVersion = []) {
     boolean changed = false
-    (asList(work['hasTitle'])?.first().mainTitle =~ /^(?<title>.*)\.\s*(?:(.+),|&)?([^&]+)(?: & | och | and )([^&]+)$/).with {
+    (asList(work['hasTitle'])?.first().mainTitle =~ /^(?<title>.*)\.(?<languages>[^.]+)\.?\s*$/).with {
         if (matches()) {
             String title = group('title')
-            List<String> langs = []
-            for (int i = 0 ; i < groupCount(); i++) {
-                langs << group(i + 1)
-            }
-            langs = langs.grep().findAll{ it != title }.collect{ Unicode.trimNoise(it.toLowerCase()) }
-            if (!langs) {
+            List languages = group('languages')
+                    .split(",| & | och | and ")
+                    .collect{ Unicode.trimNoise(it.toLowerCase()) }
+
+            if (!languages || !languages.every{ it in languageNames }) {
                 return false
             }
-            def l = langs.collect{ ['@type': 'Language', 'label': it] }
-            if (langs.any{ it in ambiguousLangNames }) {
+            
+            def l = languages.collect{ ['@type': 'Language', 'label': it] }
+            if (languages.any{ it in ambiguousLangNames }) {
                 l += whichLanguageVersion
             }
+
             Map m = ['l': l]
             languageLinker.linkLanguages(m, 'l')
             l = m.l
-            if (l.size() == langs.size() && l.every {it['@id'] }) {
+            if (l.size() == languages.size() && l.every {it['@id'] }) {
                 languageFromTitle.println("$id ${work.hasTitle.mainTitle} --> $title $l")
                 asList(work['hasTitle'])?.first().mainTitle = title
                 work.language = l
@@ -444,6 +429,7 @@ boolean moveLanguagesFromTitle(String id, Map work, List whichLanguageVersion = 
             }
         }
     }
+    
     return changed
 }
 
