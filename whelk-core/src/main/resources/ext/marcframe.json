@@ -25343,20 +25343,10 @@
       "NOTE:record-count": 0
     },
     "548": {
-      "NOTE:record-count": 51,
+      "NOTE:LC": "548 - See Also From Tracing - Chronological Term (R)",
       "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris.",
-      "addLink": "marc:hasSeeAlsoFromTracingChronologicalTerm",
-      "resourceType": "marc:SeeAlsoFromTracingChronologicalTerm",
-      "$a": {"property": "marc:chronologicalTerm"},
-      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
-      "$v": {"addProperty": "marc:formSubdivision"},
-      "$w": {"property": "marc:controlSubfield"},
-      "$x": {"addProperty": "marc:generalSubdivision"},
-      "$y": {"addProperty": "marc:chronologicalSubdivision"},
-      "$z": {"addProperty": "marc:geographicSubdivision"},
-      "$0": {"addProperty": "marc:recordControlNumber"},
-      "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "550": {
       "include": ["termbase_with_id", "relation_from_w"],
@@ -25603,17 +25593,9 @@
       "NOTE:record-count": 0
     },
     "585": {
-      "addLink": "marc:hasSeeAlsoFromTracingFormSubdivision",
-      "resourceType": "marc:SeeAlsoFromTracingFormSubdivision",
-      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
-      "$v": {"addProperty": "marc:formSubdivision"},
-      "$w": {"property": "marc:controlSubfield"},
-      "$x": {"addProperty": "marc:generalSubdivision"},
-      "$y": {"addProperty": "marc:chronologicalSubdivision"},
-      "$z": {"addProperty": "marc:geographicSubdivision"},
-      "$0": {"addProperty": "marc:recordControlNumber"},
-      "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+      "NOTE:LC": "585 - See Also From Tracing - Form Subdivision (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "599": {
       "NOTE:local": "599 Katalogisatörens anmärkning (R) MAKULERAT",
@@ -25657,13 +25639,10 @@
       "NOTE:local": "ANVÄNDS F.N. EJ",
       "ignored": true
     },
-
     "663": {
-      "addLink": "marc:hasComplexSeeAlsoReferenceName",
-      "resourceType": "marc:ComplexSeeAlsoReferenceName",
-      "$a": {"addProperty": "marc:explanatoryText"},
-      "$b": {"addProperty": "marc:headingReferredTo"},
-      "$t": {"addProperty": "marc:titleReferredTo"}
+      "NOTE:LC": "663 - COMPLEX SEE ALSO REFERENCE--NAME (NR)",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "664": {
       "NOTE:LC": "664 - Complex See Reference - Name (NR)",
@@ -25671,9 +25650,9 @@
       "NOTE:record-count": 0
     },
     "665": {
-      "addLink": "marc:hasHistoryReference",
-      "resourceType": "marc:HistoryReference",
-      "$a": {"addProperty": "marc:historyReference"}
+      "NOTE:LC": "665 - History Reference (NR)",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "666": {
       "NOTE:LC": "666 - General Explanatory Reference - Name (NR)",
@@ -25890,25 +25869,9 @@
       "NOTE:record-count": 0
     },
     "748": {
-      "addLink": "marc:hasEstablishedHeadingLinkingEntryChronologicalTerm",
-      "resourceType": "marc:EstablishedHeadingLinkingEntryChronologicalTerm",
-      "i2": {
-        "property": "marc:thesaurus",
-        "tokenMap": "marcThesaurus",
-        "marcDefault": "4"
-      },
-      "$a": {"property": "marc:chronologicalTerm"},
-      "$i": {"ignored": true},
-      "$v": {"addProperty": "marc:formSubdivision"},
-      "$w": {"property": "marc:controlSubfield"},
-      "$x": {"addProperty": "marc:generalSubdivision"},
-      "$y": {"addProperty": "marc:chronologicalSubdivision"},
-      "$z": {"addProperty": "marc:geographicSubdivision"},
-      "$0": {"addProperty": "marc:recordControlNumber"},
-      "$2": {"property": "marc:sourceOfHeadingOrTerm"},
-      "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"},
-      "$9": {"ignored": true}
+      "NOTE:LC": "748 - Established Heading Linking Entry - Chronological Term (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "750": {
       "i1": null,
