@@ -506,8 +506,8 @@ class CrudSpec extends Specification {
         ''           |''        | 'text/turtle'          || 'application/ld+json' | SC_OK
         ''           |''        | 'application/rdf+xml'  || 'application/ld+json' | SC_OK
         ''           |''        | 'x/x'                  || 'application/ld+json' | SC_OK
-        '/data-view' |'.invalid'| '*/*'                  || null                  | SC_NOT_FOUND
-        '/data'      |'.invalid'| '*/*'                  || null                  | SC_NOT_FOUND
+        '/data-view' |'.invalid'| '*/*'                  || 'application/json'    | SC_NOT_FOUND
+        '/data'      |'.invalid'| '*/*'                  || 'application/json'    | SC_NOT_FOUND
         '/da'        |''        | '*/*'                  || 'application/ld+json' | SC_OK
     }
 
