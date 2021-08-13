@@ -111,7 +111,6 @@ class Crud extends HttpServlet {
             failedRequests.labels("GET", request.getRequestURI(),
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
             HttpTools.sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to reach elastic for query.")
-            return
         }
         catch (WhelkRuntimeException e) {
             log.error("Attempted elastic query, but whelk has no " +
@@ -121,14 +120,12 @@ class Crud extends HttpServlet {
             HttpTools.sendError(response, HttpServletResponse.SC_NOT_IMPLEMENTED,
                     "Attempted to use elastic for query, but " +
                             "no elastic component is configured.")
-            return
         } catch (InvalidQueryException e) {
             log.warn("Invalid query: ${queryParameters}")
             failedRequests.labels("GET", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             HttpTools.sendError(response, HttpServletResponse.SC_BAD_REQUEST,
                     "Invalid query, please check the documentation. ${e.getMessage()}")
-            return
         }
     }
 
