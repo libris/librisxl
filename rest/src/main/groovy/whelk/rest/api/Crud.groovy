@@ -509,7 +509,7 @@ class Crud extends HttpServlet {
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             
             sendError(response, HttpServletResponse.SC_BAD_REQUEST,
-                    "Invalid JsonLd", ['errors': errors.collect{ it.toMap() }])
+                    "Invalid JSON-LD", ['errors': errors.collect{ it.toMap() }])
             return
         }
         
