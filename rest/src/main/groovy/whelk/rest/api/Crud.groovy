@@ -505,11 +505,11 @@ class Crud extends HttpServlet {
         String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
         List<JsonLdValidator.Error> errors = validator.validate(newDoc.data, collection)
         if (errors) {
-            String message = errors.collect { it.toStringWithPath() }.join("\n")
             failedRequests.labels("POST", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            
             sendError(response, HttpServletResponse.SC_BAD_REQUEST,
-                    "Invalid JsonLd, got errors: " + message)
+                    "Invalid JsonLd", ['errors': errors.collect{ it.toMap() }])
             return
         }
         

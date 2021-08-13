@@ -278,5 +278,14 @@ class JsonLdValidator {
         String toString() {
             return type.description +" for KEY: $key VALUE: $value"
         }
+
+        Map toMap() {
+            [
+                    'type'       : type,
+                    'description': type.description,
+                    'path'       : path,
+                    'value'      : value
+            ]
+        }
     }
 }
