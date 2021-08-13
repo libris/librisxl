@@ -67,15 +67,7 @@ class HttpTools {
 
         sendResponse(response, json, "application/json", statusCode)
     }
-
-    static String getMajorContentType(String contentType) {
-        if (contentType == "application/x-marc-json") {
-            return "application/json"
-        }
-        return contentType?.replaceAll("/[\\w]+\\+", "/")
-    }
-
-
+    
     enum DisplayMode {
         DOCUMENT, META, RAW
     }

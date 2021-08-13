@@ -873,15 +873,6 @@ class Crud extends HttpServlet {
         return alts
     }
 
-    String mintIdentifier(Map data) {
-        String id = null
-        if (data) {
-            id = JsonLd.findIdentifier(data)
-        }
-        return id ?: IdGenerator.generate()
-    }
-
-
     @Override
     void doDelete(HttpServletRequest request, HttpServletResponse response) {
         requests.labels("DELETE").inc()
