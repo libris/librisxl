@@ -5,6 +5,12 @@
  * expressionOf with language can link to work with same language or no language
  * expressionOf without language can link to work without language
  * 
+ * Languages in expressionOf.hasTitle.mainTitle are moved to expressionOf.language
+ * "Sefer ha-ḥinukh. Engelska & hebreiska" --> "Sefer ha-ḥinukh", language: [[@id:https://id.kb.se/language/eng], [@id:https://id.kb.se/language/heb]]
+ * 
+ * Identical expressionOf that occur in multiple records are extracted into new "uniformWorkTitle" works.
+ * (If NUM_OCCURENCES_EXTRACT or more found.)
+ * 
  * See LXL-3547 for more info
  * 
  */
@@ -21,17 +27,17 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.regex.Pattern
 
-int NUM_OCCURENCES_EXTRACT = 7
+int NUM_OCCURENCES_EXTRACT = 7  // ~300 new works
 
 // expressionOf linked to a "uniformWorkTitle" work
 PrintWriter linked = getReportWriter("linked.txt")
-// Found potential matches to link to, but non with matching language
+// Found potential matches to link to, but non with matching language. Left untouched.
 PrintWriter noLang = getReportWriter("no-matching-language.txt")
-// Found multiple potential matches to link to
+// Found multiple potential matches to link to. Left untouched.
 PrintWriter multiMatch = getReportWriter("multiple-matches.txt")
-// 
+// Lists identical expressionOf found in multiple records 
 PrintWriter sameExpr = getReportWriter("same-expression.txt")
-// 
+// Found matches but only when ignoring primary contribution (0 results)
 PrintWriter ignoredContribution = getReportWriter("ignored-primary-contribution.txt")
 // Title from expressionOf move to work
 PrintWriter movedTitles = getReportWriter("moved-titles.txt")
@@ -210,19 +216,21 @@ selectByIds(unmatchedIds) { bib ->
     }
 }
 
-toBeExtracted.each { Map key, Collection<String> ids ->
+toBeExtracted.each { Map work, Collection<String> ids ->
     def data =
-            [ "@graph": [
+            ["@graph": [
                     [
-                            "@id": "TEMPID",
-                            "mainEntity" : ["@id": "TEMPID#it"],
+                            "@type"                 : "Record",
+                            "@id"                   : "TEMPID",
+                            "mainEntity"            : ["@id": "TEMPID#it"],
                             "descriptionConventions": [["@id": "https://id.kb.se/marc/CatalogingRulesType-c"]],
-                            "descriptionLanguage": ["@id": "https://id.kb.se/language/swe"],
+                            "descriptionLanguage"   : ["@id": "https://id.kb.se/language/swe"],
                     ],
-                    [
-                            "@id": "TEMPID#it",
+                    work + [
+                            "@type"       : "Work",
+                            "@id"         : "TEMPID#it",
                             "inCollection": [["@id": "https://id.kb.se/term/uniformWorkTitle"]]
-                    ] + key
+                    ]
             ]]
 
     def item = create(data)
@@ -235,7 +243,7 @@ toBeExtracted.each { Map key, Collection<String> ids ->
         bib.graph[1].instanceOf.expressionOf = [ '@id' : newId ] 
         bib.scheduleSave()
     }
-    extracted.println("$newId ${toString(key)} <-- $ids")
+    extracted.println("$newId ${toString(work)} <-- $ids")
 }
 
 Collection<Map> compatibleLanguages(Map expressionOf, Collection<Map> works) {
