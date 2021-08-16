@@ -48,12 +48,15 @@ class HttpTools {
         }
     }
 
-    static void sendError(HttpServletResponse response, int statusCode, String msg, Exception e = null) {
+    static void sendError(HttpServletResponse response, int statusCode, String msg, Object extraInfo = null) {
+        Exception e = extraInfo instanceof Exception ? extraInfo : null
+        Map extra = extraInfo instanceof Map ? extraInfo : [:]
+        
         Map json = [
+                "message"    : msg,
                 "status_code": statusCode,
-                "status": getMessage(statusCode),
-                "message": msg,
-        ]
+                "status"     : getMessage(statusCode)
+        ] + extra
 
         if (statusCode >= 500 && e) {
             e = StackTraceUtils.sanitize(e)
