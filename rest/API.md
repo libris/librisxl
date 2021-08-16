@@ -87,6 +87,9 @@ There are some checks in place, e.g. in order to prevent creation of duplicate
 holding records, and to these requests the API responds with a `400 Bad Request`
 with an error message explaining the issue.
 
+Note that a temporary record `@id` **must** be set in the document you send
+(e.g., `{"@graph":[{"@id":"https://id.kb.se/TEMPID", ...`).
+
 A successful creation will get a `201 Created` response with a `Location`
 header containing the URI of the new record.
 

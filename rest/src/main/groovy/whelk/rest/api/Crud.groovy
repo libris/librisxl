@@ -498,6 +498,15 @@ class Crud extends HttpServlet {
         // should we deny the others?
 
         Document newDoc = new Document(requestBody)
+
+        if (!newDoc.getId()) {
+            log.debug("Temporary @id missing")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Document is missing temporary @id in Record")
+            return
+        }
+
         newDoc.normalizeUnicode()
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
         newDoc.setControlNumber(newDoc.getShortId())
