@@ -7,7 +7,6 @@
  * 
  * See LXL-3547 for more info
  * 
- * TODO: decide which non-linkable expressionOf should be extracted to new works and linked, i.e. how many identical expressionOf have to exist 
  */
 
 
@@ -21,6 +20,8 @@ import java.text.Normalizer
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.regex.Pattern
+
+int NUM_OCCURENCES_EXTRACT = 7
 
 // expressionOf linked to a "uniformWorkTitle" work
 PrintWriter linked = getReportWriter("linked.txt")
@@ -41,6 +42,8 @@ languageFromTitle = getReportWriter("language-moved-from-title.txt")
 // 
 compareTitles = getReportWriter("compare-titles.txt")
 
+PrintWriter extracted = getReportWriter("extracted.txt")
+
 languageLinker = buildLanguageMap()
 Map a = (Map<String, List>) languageLinker.ambiguousIdentifiers
 ambiguousLangNames = a.keySet()
@@ -50,6 +53,8 @@ languageNames = languageLinker.map.keySet() + languageLinker.substitutions.keySe
 uniformWorks = getUniformWorks()
 
 def notLinkedExpr = new ConcurrentHashMap<Map, ConcurrentLinkedQueue<String>>()
+def genericTitles =  new File(scriptDir, 'lxl-3547-link-expressionOf-generic-titles.txt').readLines().collect( Norm.&normalize  )
+println(genericTitles)
 
 selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bib ->
     Map work = getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf'])
@@ -132,23 +137,35 @@ selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bi
     }
 }
 
-List<String> uniqueUnmatchedIds = []
+List<String> unmatchedIds = []
+Map toBeExtracted = [:]
 notLinkedExpr.each {key, ids ->
     ids.each {
         incrementStats('same expr', toString(key), it)
     }
-    
+
     if (ids.size() == 1) {
-        uniqueUnmatchedIds.add(ids.poll())
+        unmatchedIds.add(ids.poll())
+    }
+    else if (ids.size() < NUM_OCCURENCES_EXTRACT) {
+        unmatchedIds.add(ids.poll())
+        sameExpr.println(ids.size() + " " + toString(key))
     }
     else {
-        sameExpr.println(ids.size() + " " + toString(key))
+        if (Norm.cmpTitle(key, languageNames) in genericTitles) {
+            sameExpr.println(ids.size() + " " + toString(key) + " [GENERIC TITLE]")
+            unmatchedIds.add(ids.poll())
+        }
+        else {
+            sameExpr.println(ids.size() + " " + toString(key) + " [E]")
+            toBeExtracted[key] = ids
+        }
     }
 }
 
 def title = ['@type', 'hasTitle'] as Set
 def titleAndLang = ['@type', 'hasTitle', 'language'] as Set
-selectByIds(uniqueUnmatchedIds) { bib ->
+selectByIds(unmatchedIds) { bib ->
     Map instance = bib.doc.data['@graph'][1]
     Map work = instance.instanceOf
     List<Map> expressionOf = asList(work.expressionOf)
@@ -193,6 +210,34 @@ selectByIds(uniqueUnmatchedIds) { bib ->
     }
 }
 
+toBeExtracted.each { Map key, Collection<String> ids ->
+    def data =
+            [ "@graph": [
+                    [
+                            "@id": "TEMPID",
+                            "mainEntity" : ["@id": "TEMPID#it"],
+                            "descriptionConventions": [["@id": "https://id.kb.se/marc/CatalogingRulesType-c"]],
+                            "descriptionLanguage": ["@id": "https://id.kb.se/language/swe"],
+                    ],
+                    [
+                            "@id": "TEMPID#it",
+                            "inCollection": [["@id": "https://id.kb.se/term/uniformWorkTitle"]]
+                    ] + key
+            ]]
+
+    def item = create(data)
+    selectFromIterable([item], { newlyCreatedItem ->
+        newlyCreatedItem.scheduleSave()
+    })
+    String newId = item.graph[1]['@id']
+    
+    selectByIds(ids) { bib ->
+        bib.graph[1].instanceOf.expressionOf = [ '@id' : newId ] 
+        bib.scheduleSave()
+    }
+    extracted.println("$newId ${toString(key)} <-- $ids")
+}
+
 Collection<Map> compatibleLanguages(Map expressionOf, Collection<Map> works) {
     if (lang(expressionOf)) {
         def sameLang = works.findAll{ lang(it) == lang(expressionOf)}
@@ -206,8 +251,8 @@ Collection<Map> compatibleLanguages(Map expressionOf, Collection<Map> works) {
 
 private Map<String, Collection<Map>> getUniformWorks() {
     def q = [
-            'inCollection.@id': ['https://id.kb.se/term/uniformWorkTitle'], 
-            '_sort': ['@id']
+            'inCollection.@id': ['https://id.kb.se/term/uniformWorkTitle'],
+            '_sort'           : ['@id']
     ]
     
     def works = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Map>>()
