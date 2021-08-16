@@ -88,8 +88,18 @@ API:et implementerar ett antal valideringssteg, till exempel för att förhindra
 att duplicerade beståndsposter skapas. Om någon validering misslyckas svarar
 API:et `400 Bad Request` med ett felmeddelande som förklarar problemet.
 
-Observera att ett tillfälligt `@id` **måste** specificeras i dokumentet du skickar
-(t.ex. `{"@graph":[{"@id":"https://id.kb.se/TEMPID", ...`).
+Observera att ett tillfälligt `@id` **måste** specificeras på flera ställen i
+dokumentet du skickar:
+
+* Tillfälligt `@id` i Record
+* Tillfälligt `mainEntity.@id` i Record
+* Tillfälligt `@id` i Thing ("saken")
+
+Till exempel:
+
+```
+{"@graph":[{"@id":"https://id.kb.se/TEMPID","@type":"Record","mainEntity":{"@id":"https://id.kb.se/TEMPID#it"}},{"@id":"https://id.kb.se/TEMPID#it","@type":"Person","familyName":"Testing"}]}
+```
 
 Ett lyckat anrop kommer resultera i ett `201 Created`-svar med den nya postens
 URI satt i `Location`-headern.

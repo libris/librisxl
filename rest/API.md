@@ -87,8 +87,17 @@ There are some checks in place, e.g. in order to prevent creation of duplicate
 holding records, and to these requests the API responds with a `400 Bad Request`
 with an error message explaining the issue.
 
-Note that a temporary record `@id` **must** be set in the document you send
-(e.g., `{"@graph":[{"@id":"https://id.kb.se/TEMPID", ...`).
+Note that a temporary `@id` **must** be set in a few places in the document you send:
+
+* Temporary `@id` in Record
+* Temporary `mainEntity.@id` in Record
+* Temporary `@id` in Thing
+
+For example:
+
+```
+{"@graph":[{"@id":"https://id.kb.se/TEMPID","@type":"Record","mainEntity":{"@id":"https://id.kb.se/TEMPID#it"}},{"@id":"https://id.kb.se/TEMPID#it","@type":"Person","familyName":"Testing"}]}
+```
 
 A successful creation will get a `201 Created` response with a `Location`
 header containing the URI of the new record.

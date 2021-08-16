@@ -500,10 +500,26 @@ class Crud extends HttpServlet {
         Document newDoc = new Document(requestBody)
 
         if (!newDoc.getId()) {
-            log.debug("Temporary @id missing")
+            log.debug("Temporary @id missing in Record")
             failedRequests.labels("POST", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Document is missing temporary @id in Record")
+            return
+        }
+
+        if (newDoc.getThingIdentifiers().isEmpty()) {
+            log.debug("Temporary mainEntity @id missing in Record")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Document is missing temporary mainEntity.@id in Record")
+            return
+        }
+
+        if (!newDoc.data['@graph'][1] || !newDoc.data['@graph'][1]['@id']) {
+            log.debug("Temporary @id missing in Thing")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Document is missing temporary @id in Thing")
             return
         }
 
