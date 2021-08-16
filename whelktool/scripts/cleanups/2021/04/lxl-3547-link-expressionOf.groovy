@@ -11,6 +11,9 @@
  * Identical expressionOf that occur in multiple records are extracted into new "uniformWorkTitle" works.
  * (If NUM_OCCURENCES_EXTRACT or more found.)
  * 
+ * Other instanceOf.expressionOf that only have ['@type', 'hasTitle'] or ['@type', 'hasTitle', 'language'} are 
+ * converted to instanceOf.hasTitle 
+ * 
  * See LXL-3547 for more info
  * 
  */
@@ -45,9 +48,10 @@ PrintWriter movedTitles = getReportWriter("moved-titles.txt")
 PrintWriter otherExpressionLanguage = getReportWriter("other-expression-language.txt")
 // Language parsed from 'mainTitle' of 'expressionOf' and moved to 'language', e.g. "Koranen. Danska & Arabiska"
 languageFromTitle = getReportWriter("language-moved-from-title.txt")
-// 
+// Comarison of instance and expressionOf titles, e.g.:
+// e.g. l3wll6cx1gz8q7b	issuanceType:Serial	isTranslation:false	isSame:false	isPrefix:true	suffix: (Malmö)	I:Bostaden	E:Bostaden (Malmö)
 compareTitles = getReportWriter("compare-titles.txt")
-
+// Identical expressionOf that were extracted into new "uniformWorkTitle" works.
 PrintWriter extracted = getReportWriter("extracted.txt")
 
 languageLinker = buildLanguageMap()
@@ -59,9 +63,12 @@ languageNames = languageLinker.map.keySet() + languageLinker.substitutions.keySe
 uniformWorks = getUniformWorks()
 
 def notLinkedExpr = new ConcurrentHashMap<Map, ConcurrentLinkedQueue<String>>()
-def genericTitles =  new File(scriptDir, 'lxl-3547-link-expressionOf-generic-titles.txt').readLines().collect( Norm.&normalize  )
-println(genericTitles)
 
+// Generic titles that should not be extracted inte new works. e.g. "Annual report"
+def genericTitles =  new File(scriptDir, 'lxl-3547-link-expressionOf-generic-titles.txt').readLines().collect( Norm.&normalize  )
+
+// ############################################################################
+// Try to link
 selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bib ->
     Map work = getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf'])
     List<Map> expressionOf = asList(getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf', 'expressionOf']))
@@ -143,6 +150,8 @@ selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bi
     }
 }
 
+// ############################################################################
+// Find the expressionOfs should that should be extracted to new works 
 List<String> unmatchedIds = []
 Map toBeExtracted = [:]
 notLinkedExpr.each {key, ids ->
@@ -150,11 +159,12 @@ notLinkedExpr.each {key, ids ->
         incrementStats('same expr', toString(key), it)
     }
 
-    if (ids.size() == 1) {
+    if (ids.size() <= 2) {
         unmatchedIds.add(ids.poll())
     }
     else if (ids.size() < NUM_OCCURENCES_EXTRACT) {
-        unmatchedIds.add(ids.poll())
+        // Don't touch these for now
+        //unmatchedIds.add(ids.poll())
         sameExpr.println(ids.size() + " " + toString(key))
     }
     else {
@@ -169,6 +179,8 @@ notLinkedExpr.each {key, ids ->
     }
 }
 
+// ############################################################################
+// Convert instanceOf.expressionOf to instanceOf.hasTitle 
 def title = ['@type', 'hasTitle'] as Set
 def titleAndLang = ['@type', 'hasTitle', 'language'] as Set
 selectByIds(unmatchedIds) { bib ->
@@ -216,6 +228,8 @@ selectByIds(unmatchedIds) { bib ->
     }
 }
 
+// ############################################################################
+// Extract new works
 toBeExtracted.each { Map work, Collection<String> ids ->
     def data =
             ["@graph": [
@@ -245,6 +259,9 @@ toBeExtracted.each { Map work, Collection<String> ids ->
     }
     extracted.println("$newId ${toString(work)} <-- $ids")
 }
+
+// ############################################################################
+// ############################################################################
 
 Collection<Map> compatibleLanguages(Map expressionOf, Collection<Map> works) {
     if (lang(expressionOf)) {
@@ -448,7 +465,6 @@ private List mapBlankLanguages(List languages, List whichLanguageVersion = []) {
     return languages
 }
 
-// A bit messy
 // mainTitle: "Haggada. Jiddisch & Hebreiska" --> mainTitle: Haggada, language: [[@id:https://id.kb.se/language/yid], [@id:https://id.kb.se/language/heb]]
 boolean moveLanguagesFromTitle(String id, Map work, List whichLanguageVersion = []) {
     boolean changed = false
