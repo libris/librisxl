@@ -862,7 +862,7 @@ class CrudSpec extends Specification {
     }
 
     @Unroll
-    def "POST to / should return 400 Bad Request if @id is missing"() {
+    def "POST to / should return 400 Bad Request if @id is missing, record/thing @id are equivalent, or mainEntity.@id not same as thing @id"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
         is.getBytes() >> {
@@ -929,6 +929,22 @@ class CrudSpec extends Specification {
                          "mainEntity" : ["@id": "some_temporary_thing_id"],
                          "contains"   : "some new data"],
                         ["@type"      : "Instance"]
+                ]],
+                // mainEntity.@id not equivalent to thing @id
+                ["@graph": [
+                        ["@type"   : "Record",
+                         "@id": "some_temporary_id",
+                         "mainEntity" : ["@id": "some_temporary_thing_id"],
+                         "contains": "some new data"],
+                        ["@id"     : "some_other_temporary_thing_id"]
+                ]],
+                // Record @id equivalent to thing @id
+                ["@graph": [
+                        ["@type"   : "Record",
+                         "@id": "some_temporary_id",
+                         "mainEntity" : ["@id": "some_temporary_id"],
+                         "contains": "some new data"],
+                        ["@id"     : "some_temporary_id"]
                 ]],
         ]
     }
