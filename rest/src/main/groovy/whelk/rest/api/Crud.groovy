@@ -498,6 +498,47 @@ class Crud extends HttpServlet {
         // should we deny the others?
 
         Document newDoc = new Document(requestBody)
+
+        if (!newDoc.getId()) {
+            log.debug("Temporary @id missing in Record")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Document is missing temporary @id in Record")
+            return
+        }
+
+        if (newDoc.getThingIdentifiers().isEmpty()) {
+            log.debug("Temporary mainEntity @id missing in Record")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Document is missing temporary mainEntity.@id in Record")
+            return
+        }
+
+        if (!newDoc.data['@graph'][1] || !newDoc.data['@graph'][1]['@id']) {
+            log.debug("Temporary @id missing in Thing")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Document is missing temporary @id in Thing")
+            return
+        }
+
+        if (newDoc.getThingIdentifiers().first() != newDoc.data['@graph'][1]['@id']) {
+            log.debug("mainEntity.@id not same as Thing @id")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "The Record's temporary mainEntity.@id is not same as the Thing's temporary @id")
+            return
+        }
+
+        if (newDoc.getId() == newDoc.getThingIdentifiers().first()) {
+            log.debug("Record @id same as Thing @id")
+            failedRequests.labels("POST", request.getRequestURI(),
+                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
+            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "The Record's temporary @id can't be the same as the Thing's temporary mainEntity.@id")
+            return
+        }
+
         newDoc.normalizeUnicode()
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
         newDoc.setControlNumber(newDoc.getShortId())

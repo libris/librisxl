@@ -94,6 +94,7 @@ class CrudSpec extends Specification {
             ["@id": "heldBy"],
             ["@id": "creationDate"],
             ["@id": "code"],
+            ["@id": "mainEntity"],
         ]]
         whelk.setJsonld(new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData))
         GroovySpy(LegacyIntegrationTools.class, global: true)
@@ -758,9 +759,17 @@ class CrudSpec extends Specification {
         given:
         def is = GroovyMock(ServletInputStream.class)
         is.getBytes() >> {
-            mapper.writeValueAsBytes(["@graph": [["@type"   : "Record",
-                                                  "@id"     : "some_temporary_id",
-                                                  "contains": "some new data"]]])
+            mapper.writeValueAsBytes(["@graph": [
+                    [
+                            "@type"     : "Record",
+                            "@id"       : "some_temporary_id",
+                            "mainEntity": ["@id": "some_temporary_thing_id"],
+                            "contains"  : "some new data"
+                    ],
+                    [
+                            "@id": "some_temporary_thing_id"
+                    ]
+            ]])
         }
         request.getInputStream() >> {
             is
@@ -852,11 +861,100 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
     }
 
+    @Unroll
+    def "POST to / should return 400 Bad Request if @id is missing, record/thing @id are equivalent, or mainEntity.@id not same as thing @id"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(data)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            "/"
+        }
+        request.getMethod() >> {
+            "POST"
+        }
+        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
+            return "bib"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            if (it.first() == "user") {
+                return ["user": "SYSTEM"]
+            }
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.createDocument(_, _, _, _, _) >> {
+            Document doc = it.first()
+            doc.setModified(new Date())
+            return doc
+        }
+        crud.doPost(request, response)
+
+        expect:
+        response.getStatus() == SC_BAD_REQUEST
+
+        where:
+        data << [
+                // Missing all @id
+                ["@graph": [
+                        ["@type"   : "Record",
+                         "contains": "some new data"]
+                ]],
+                // Missing record @id
+                ["@graph": [
+                        ["@type"   : "Record",
+                         "mainEntity" : ["@id": "some_temporary_thing_id"],
+                         "contains": "some new data"],
+                        ["@id"     : "some_temporary_thing_id"]
+                ]],
+                // Missing mainEntity.@id
+                ["@graph": [
+                        ["@type"   : "Record",
+                         "@id"     : "some_temporary_id",
+                         "contains": "some new data"],
+                        ["@id"     : "some_temporary_thing_id"]
+                ]],
+                // Missing thing @id
+                ["@graph": [
+                        ["@type"      : "Record",
+                         "@id"        : "some_temporary_id",
+                         "mainEntity" : ["@id": "some_temporary_thing_id"],
+                         "contains"   : "some new data"],
+                        ["@type"      : "Instance"]
+                ]],
+                // mainEntity.@id not equivalent to thing @id
+                ["@graph": [
+                        ["@type"   : "Record",
+                         "@id": "some_temporary_id",
+                         "mainEntity" : ["@id": "some_temporary_thing_id"],
+                         "contains": "some new data"],
+                        ["@id"     : "some_other_temporary_thing_id"]
+                ]],
+                // Record @id equivalent to thing @id
+                ["@graph": [
+                        ["@type"   : "Record",
+                         "@id": "some_temporary_id",
+                         "mainEntity" : ["@id": "some_temporary_id"],
+                         "contains": "some new data"],
+                        ["@id"     : "some_temporary_id"]
+                ]],
+        ]
+    }
+
     def "POST to / should return 403 Forbidden if user has insufficient privilege"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
+                                    "mainEntity": ["@id": "/work_id"],
                                     "contains": "some data",
                                     "creationDate": "2002-01-08T00:00:00.0+01:00"],
                                    ["@id": "/work_id",
@@ -917,6 +1015,7 @@ class CrudSpec extends Specification {
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
+                                    "mainEntity": ["@id": "/item_id"],
                                     "contains": "some data",
                                     "creationDate": "2002-01-08T00:00:00.0+01:00"],
                                    ["@id": "/item_id",
@@ -969,6 +1068,7 @@ class CrudSpec extends Specification {
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
+                                    "mainEntity": ["@id": "/work_id"],
                                     "contains": "some data",
                                     "creationDate": "2002-01-08T00:00:00.0+01:00"],
                                    ["@id": "/work_id",
@@ -1029,6 +1129,7 @@ class CrudSpec extends Specification {
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
+                                    "mainEntity": ["@id": "/item_id"],
                                     "contains": "some data",
                                     "creationDate": "2002-01-08T00:00:00.0+01:00"],
                                    ["@id": "/item_id",
@@ -1150,6 +1251,7 @@ class CrudSpec extends Specification {
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
+                                    "mainEntity": ["@id": "/item_id"],
                                     "contains": "some data",
                                     "creationDate": "2002-01-08T00:00:00.0+01:00"],
                                    ["@id": "/item_id",
@@ -1199,11 +1301,12 @@ class CrudSpec extends Specification {
         assert response.getStatus() == HttpServletResponse.SC_FORBIDDEN
     }
 
-    def "POST to / should return 403 Forbidden if document not is a holding"() {
+    def "POST to / should return 403 Forbidden if document is not a holding"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
+                                    "mainEntity": ["@id": "/instance_id"],
                                     "contains": "some data",
                                     "creationDate": "2002-01-08T00:00:00.0+01:00"],
                                    ["@id": "/instance_id",
@@ -1327,6 +1430,7 @@ class CrudSpec extends Specification {
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
+                                    "mainEntity": ["@id": "/work_id"],
                                     "contains": "some data",
                                     "creationDate": "2002-01-08T00:00:00.0+01:00"],
                                    ["@id": "/work_id",
@@ -1387,6 +1491,7 @@ class CrudSpec extends Specification {
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
+                                    "mainEntity": ["@id": "/work_id"],
                                     "contains": "some data",
                                     "creationDate": "2002-01-08T00:00:00.0+01:00"],
                                    ["@id": "/work_id",
@@ -1447,6 +1552,7 @@ class CrudSpec extends Specification {
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
+                                    "mainEntity": ["@id": "/work_id"],
                                     "contains": "some data",
                                     "creationDate": "2002-01-08T00:00:00.0+01:00"],
                                    ["@id": "/work_id",
@@ -1507,6 +1613,7 @@ class CrudSpec extends Specification {
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
+                                    "mainEntity": ["@id": "/work_id"],
                                     "contains": "some data",
                                     "creationDate": "2002-01-08T00:00:00.0+01:00"],
                                    ["@id": "/work_id",
@@ -1569,6 +1676,7 @@ class CrudSpec extends Specification {
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
+                                    "mainEntity": ["@id": "/work_id"],
                                     "contains": "some data",
                                     "creationDate": "2002-01-08T00:00:00.0+01:00"],
                                    ["@id": "/work_id",
@@ -1630,6 +1738,7 @@ class CrudSpec extends Specification {
         def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
+                                    "mainEntity": ["@id": "/work_id"],
                                     "contains": "some data",
                                     "creationDate": "2002-01-08T00:00:00.0+01:00"],
                                    ["@id": "/work_id",
