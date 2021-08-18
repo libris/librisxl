@@ -89,27 +89,27 @@ public class ProfileExport
         Timestamp untilTimeStamp = new Timestamp(zonedUntil.toInstant().getEpochSecond() * 1000L);
 
         TreeSet<String> exportedIDs = new TreeSet<>();
-        try(Connection connection = m_whelk.getStorage().getOuterConnection();
-            PreparedStatement preparedStatement = getAllChangedIDsStatement(fromTimeStamp, untilTimeStamp, connection);
-            ResultSet resultSet = preparedStatement.executeQuery())
-        {
-            while (resultSet.next())
-            {
-                String id = resultSet.getString("id");
-                String collection = resultSet.getString("collection");
-                String mainEntityType = resultSet.getString("mainEntityType");
-                Timestamp createdTime = resultSet.getTimestamp("created");
-                Boolean deleted = resultSet.getBoolean("deleted");
+        try (Connection connection = m_whelk.getStorage().getOuterConnection()) {
+            connection.setAutoCommit(false);
+            try (PreparedStatement preparedStatement = getAllChangedIDsStatement(fromTimeStamp, untilTimeStamp, connection); 
+                 ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    String id = resultSet.getString("id");
+                    String collection = resultSet.getString("collection");
+                    String mainEntityType = resultSet.getString("mainEntityType");
+                    Timestamp createdTime = resultSet.getTimestamp("created");
+                    Boolean deleted = resultSet.getBoolean("deleted");
 
-                boolean created = false;
-                if (zonedFrom.toInstant().isBefore(createdTime.toInstant()) &&
-                        zonedUntil.toInstant().isAfter(createdTime.toInstant()))
-                    created = true;
+                    boolean created = false;
+                    if (zonedFrom.toInstant().isBefore(createdTime.toInstant()) &&
+                            zonedUntil.toInstant().isAfter(createdTime.toInstant()))
+                        created = true;
 
-                int affected = exportAffectedDocuments(id, collection, created, deleted, fromTimeStamp,
-                        untilTimeStamp, profile, output, deleteMode, doVirtualDeletions, exportedIDs,
-                        deletedNotifications, mainEntityType, connection);
-                affectedCount.observe(affected);
+                    int affected = exportAffectedDocuments(id, collection, created, deleted, fromTimeStamp,
+                            untilTimeStamp, profile, output, deleteMode, doVirtualDeletions, exportedIDs,
+                            deletedNotifications, mainEntityType, connection);
+                    affectedCount.observe(affected);
+                }
             }
         }
         finally {
@@ -387,6 +387,7 @@ public class ProfileExport
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setTimestamp(1, from);
         preparedStatement.setTimestamp(2, until);
+        preparedStatement.setFetchSize(10_000); // average size is less than 2kb, default 16 DB connections ~ 320MB
         return preparedStatement;
     }
 
