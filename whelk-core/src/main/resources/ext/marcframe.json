@@ -21825,9 +21825,8 @@
       },
       "[29]": {
         "aboutEntity": "?record",
-        "link": "marc:reference",
-        "uriTemplate": "https://id.kb.se/marc/ReferenceType-{_}",
-        "matchUriToken": "^[ab]$",
+        "NOTE": "Reference evaluation - n - Not applicable ",
+        "ignored": true,
         "fixedDefault": "n"
       },
       "[30]": null,
