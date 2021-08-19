@@ -21846,9 +21846,8 @@
       },
       "[33]": {
         "aboutEntity": "?record",
-        "link": "marc:level",
-        "uriTemplate": "https://id.kb.se/marc/LevelType-{_}",
-        "matchUriToken": "^[abcd]$",
+        "NOTE": "Level of establishment - a - Fully established",
+        "ignored": true,
         "fixedDefault": "a"
       },
       "[34:38]": null,
