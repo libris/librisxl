@@ -315,7 +315,6 @@
       "$f": {"property": "date"},
       "$g": {"addProperty": "comment"},
       "$h": {"property": "marc:mediaTerm"},
-      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
       "$k": {"addProperty": "qualifier"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
       "$m": {"addProperty": "musicPerformanceMedium"},
@@ -3867,10 +3866,9 @@
           "fixedDefault": "|"
         },
         "[16]": {
-          "link": "hasNote",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicCompletenessType-{_}",
-          "matchUriToken": "^[0123ci]$",
-          "ignoreOnRevert": true
+          "NOTE:LC": "16 - Completeness - nac",
+          "ignored": true,
+          "fixedDefault": "|"
         },
         "[17:23]": {
           "NOTE:LC": "17-22 - Film inspection date - ignore",
@@ -4215,10 +4213,7 @@
           "normalized": {"007":"m| ||||||||||||||||||||"},
           "result": {
             "mainEntity": {
-              "@type": "MovingImageInstance",
-              "hasNote": {
-                "@id" : "https://id.kb.se/marc/MotionPicCompletenessType-i"
-              }
+              "@type": "MovingImageInstance"
             }
           }
         },
@@ -10065,13 +10060,13 @@
       "resourceType": "FormerTitle",
       "subfieldOrder": "a b n p ...",
       "i1": {
-        "property": "marc:isAddedEntry",
-        "tokenMap": {"0": null},
+        "NOTE": "Added entry controller",
+        "ignored": true,
         "marcDefault": "1"
       },
       "i2": {
-        "property": "marc:showRemark",
-        "tokenMap": {"1": true},
+        "NOTE": "Show remark",
+        "ignored": true,
         "marcDefault": "0"
       },
       "$f": {"property": "date"},
@@ -13934,7 +13929,7 @@
       "i1": {"property": "marc:holderOf"},
       "$a": {"property": "marc:custodian"},
       "$b": {"property": "marc:postalAddress"},
-      "$c": {"addProperty": "marc:country"},
+      "$c": {"ignore": true, "NOTE": "Country"},
       "$d": {"addProperty": "marc:telecommunicationsAddress"},
       "$g": {"property": "marc:repositoryLocationCode"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
@@ -18688,7 +18683,6 @@
       "$d": {"property": "marc:city"},
       "$f": {"addProperty": "marc:citySubsection", "TODO:ignored": "true?"},
       "$g": {"addProperty": "marc:otherNonjurisdictionalGeographicRegionAndFeature"},
-      "$h": {"addProperty": "marc:extraterrestrialArea"},
       "$0": {"addProperty": "marc:recordControlNumber"},
       "$1": null,
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
@@ -25762,20 +25756,19 @@
       },
       "$a": {"property": "marc:corporateNameOrJurisdictionNameAsEntryElement"},
       "$b": {"addProperty": "marc:subordinateUnit"},
-      "$c": {"addProperty": "marc:locationOfMeeting"},
+      "$c": {"ignored": true},
       "$d": {"addProperty": "marc:dateOfMeetingOrTreatySigning"},
       "$e": {"addProperty": "marc:relatorTerm"},
-      "$f": {"property": "marc:dateOfAWork"},
       "$g": {"addProperty": "marc:miscellaneousInformation"},
-      "$h": {"property": "marc:medium"},
+      "$h": {"ignored": true},
       "$i": {"ignored": true},
       "$k": {"addProperty": "marc:formSubheading"},
       "$l": {"property": "marc:languageOfAWork"},
-      "$m": {"addProperty": "marc:mediumOfPerformanceForMusic"},
+      "$m": {"ignored": true},
       "$n": {"addProperty": "marc:numberOfPartSectionMeeting"},
       "$o": {"property": "marc:arrangedStatementForMusic"},
       "$p": {"addProperty": "marc:nameOfPartSectionOfAWork"},
-      "$r": {"property": "marc:keyForMusic"},
+      "$r": {"ignored": true},
       "$s": {"property": "marc:version"},
       "$t": {"property": "marc:titleOfAWork"},
       "$v": {"addProperty": "marc:formSubdivision"},
@@ -25786,7 +25779,7 @@
       "$0": {"addProperty": "marc:recordControlNumber"},
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
       "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"},
+      "$5": {"ignored": true},
       "$9": {"ignored": true}
     },
     "711": {
@@ -25803,19 +25796,18 @@
         "marcDefault": "4"
       },
       "$a": {"property": "marc:meetingNameOrJurisdictionNameAsEntryElement"},
-      "$c": {"addProperty": "marc:locationOfMeeting"},
+      "$c": {"ignored": true},
       "$d": {"property": "marc:dateOfMeeting"},
       "$e": {"addProperty": "marc:subordinateUnit"},
-      "$f": {"property": "marc:dateOfAWork"},
       "$g": {"addProperty": "marc:miscellaneousInformation"},
-      "$h": {"property": "marc:medium"},
+      "$h": {"ignored": true},
       "$i": {"ignored": true},
       "$j": {"addProperty": "marc:relatorTerm"},
       "$k": {"addProperty": "marc:formSubheading"},
       "$l": {"property": "marc:languageOfAWork"},
       "$n": {"addProperty": "marc:numberOfPartSectionMeeting"},
       "$p": {"addProperty": "marc:nameOfPartSectionOfAWork"},
-      "$q": {"property": "marc:nameOfMeetingFollowingJurisdictionNameEntryElement"},
+      "$q": {"ignored": true},
       "$s": {"property": "marc:version"},
       "$t": {"property": "marc:titleOfAWork"},
       "$v": {"addProperty": "marc:formSubdivision"},
@@ -25826,7 +25818,7 @@
       "$0": {"addProperty": "marc:recordControlNumber"},
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
       "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"},
+      "$5": {"ignored": true},
       "$9": {"ignored": true}
     },
     "730": {
@@ -25839,17 +25831,16 @@
       },
       "$a": {"property": "marc:uniformTitle"},
       "$d": {"addProperty": "marc:dateOfTreatySigning"},
-      "$f": {"property": "marc:dateOfAWork"},
       "$g": {"addProperty": "marc:miscellaneousInformation"},
-      "$h": {"property": "marc:medium"},
+      "$h": {"ignored": true},
       "$i": {"addProperty": null},
       "$k": {"addProperty": "marc:formSubheading"},
       "$l": {"property": "marc:languageOfAWork"},
-      "$m": {"addProperty": "marc:mediumOfPerformanceForMusic"},
-      "$n": {"addProperty": "marc:partNumber"},
+      "$m": {"ignored": true},
+      "$n": {"ignored": true},
       "$o": {"property": "marc:arrangedStatementForMusic"},
       "$p": {"addProperty": "marc:nameOfPartSectionOfAWork"},
-      "$r": {"property": "marc:keyForMusic"},
+      "$r": {"ignored": true},
       "$s": {"property": "marc:version"},
       "$t": {"property": "marc:titleOfAWork"},
       "$v": {"addProperty": "marc:formSubdivision"},
@@ -25860,7 +25851,7 @@
       "$0": {"addProperty": "marc:recordControlNumber"},
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
       "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"},
+      "$5": {"ignored": true},
       "$9": {"ignored": true}
     },
     "747": {
@@ -27010,8 +27001,8 @@
       "$a": {"property": "marc:firstLevelOfEnumeration"},
       "$b": {"property": "marc:secondLevelOfEnumeration"},
       "$c": {"property": "marc:thirdLevelOfEnumeration"},
-      "$d": {"property": "marc:fourthLevelOfEnumeration"},
-      "$e": {"property": "marc:fifthLevelOfEnumeration"},
+      "$d": {"ignored": true, "NOTE:record-count": 0},
+      "$e": {"ignored": true, "NOTE:record-count": 0},
       "$p": {"property": "marc:pieceDesignation"},
       "$t": {"property": "marc:copyNumber"},
       "$x": {"addProperty": "marc:cataloguersNote"},
