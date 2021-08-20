@@ -14044,7 +14044,6 @@
       "$c": {"property": "marc:methodOfAcquisition"},
       "$d": {"property": "date"},
       "$e": {
-        "aboutEntity": "?thing",
         "addLink": "identifiedBy",
         "resourceType": "AccessionNumber",
         "property": "value"
@@ -26669,7 +26668,6 @@
       "$c": {"property": "marc:methodOfAcquisition"},
       "$d": {"property": "marc:dateOfAcquisition"},
       "$e": {
-        "aboutEntity": "?thing",
         "addLink": "identifiedBy",
         "resourceType": "AccessionNumber",
         "property": "value"
