@@ -30,7 +30,7 @@ Map enumsPrefixed = Collections.synchronizedMap(enumList.collectEntries {
     [it.replace("https://id.kb.se/marc/", "marc:"), it]
 })
 
-selectBySqlWhere("deleted = 'false'") { data ->
+selectBySqlWhere("collection != 'definitions' AND deleted = 'false'") { data ->
     List recAndInstance = data.graph.take(2)
 
     DocumentUtil.traverse(recAndInstance) { value, path ->
@@ -64,6 +64,6 @@ properties.findResults {it.value ? null : it.key }.each {
 classes.findResults {it.value ? null : it.key }.each {
     unusedClasses.println(it)
 }
-enumsPrefixed.findResults {it.value ? null : it.key }.each {
+enums.findResults {it.value ? null : it.key }.each {
     unusedEnums.println(it)
 }
