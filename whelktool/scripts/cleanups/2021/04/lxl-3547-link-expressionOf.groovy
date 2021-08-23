@@ -143,7 +143,7 @@ selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bi
             asList(ee.hasTitle).each { Map title ->
                 title.keySet().each {
                     if (!it.startsWith('@')) {
-                        title[it] = it instanceof List ? it.collect{ t -> Unicode.trimNoise(title[t]) } : Unicode.trimNoise(title[it])
+                        title[it] = title[it] instanceof List ? title[it].collect{ t -> Unicode.trimNoise(t) } : Unicode.trimNoise(title[it])
                     }
                 }
             }
