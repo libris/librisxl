@@ -239,7 +239,9 @@ selectByIds(unmatchedIds) { bib ->
 
 // ############################################################################
 // Extract new works
-toBeExtracted.each { Map work, Collection<String> ids ->
+toBeExtracted.each { Map key, Collection<String> ids ->
+    Map work = loadThing(ids.first()).instanceOf.expressionOf
+    
     def data =
             ["@graph": [
                     [
