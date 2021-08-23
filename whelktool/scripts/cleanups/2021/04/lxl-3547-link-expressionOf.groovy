@@ -168,7 +168,7 @@ notLinkedExpr.each {key, ids ->
         sameExpr.println(ids.size() + " " + toString(key))
     }
     else {
-        if (Norm.normalize(asList(work['hasTitle'])?.first().mainTitle) in genericTitles) {
+        if (Norm.normalize(asList(key['hasTitle'])?.first().mainTitle) in genericTitles) {
             sameExpr.println(ids.size() + " " + toString(key) + " [GENERIC TITLE]")
             unmatchedIds.add(ids.poll())
         }
