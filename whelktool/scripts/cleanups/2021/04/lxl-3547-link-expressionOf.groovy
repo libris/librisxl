@@ -140,7 +140,7 @@ selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bi
         else {
             Map ee = Document.deepCopy(e)
             
-            asList(ee.hasTitle).each { Map title
+            asList(ee.hasTitle).each { Map title ->
                 title.keySet().each {
                     if (!it.startsWith('@')) {
                         title[it] = Unicode.trimNoise(title[it])
