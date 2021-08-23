@@ -1,3 +1,4 @@
+ABC-bok
 Aktuellt för alla
 Annonsaktuellt
 Annonsbladet
@@ -5,6 +6,7 @@ Annual report
 Anuario de migraciones
 Approved estimates
 Assertiones
+Bulletin
 Court and city register.
 Die Internationale
 Discussion paper
@@ -41,5 +43,6 @@ Tiden
 Town and country directory.
 Veckobladet
 Verksamhetsberättelse
+Vikingen
 Årsberättelse
 Årsbok
