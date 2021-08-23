@@ -5,11 +5,10 @@ String whereBib = """
 
 selectBySqlWhere(whereBib) { data ->
     Map thing = data.graph[1]
-    List hasImmediateSourceOfAcquisitionNote = asList(thing."marc:hasImmediateSourceOfAcquisitionNote")
 
     boolean modified
 
-    hasImmediateSourceOfAcquisitionNote.removeAll {
+    asList(thing."marc:hasImmediateSourceOfAcquisitionNote").each {
         String accessionNumber = it.remove("marc:accessionNumber")
         if (accessionNumber) {
             Map accessionNumberEntity =
@@ -18,19 +17,11 @@ selectBySqlWhere(whereBib) { data ->
                             "value": "${accessionNumber}"
                     ]
 
-            thing.identifiedBy = thing.identifiedBy ?: []
-            thing.identifiedBy << accessionNumberEntity
+            it["identifiedBy"] = [accessionNumberEntity]
 
             modified = true
-
-            // Remove if only {@type: marc:ImmediateSourceOfAcquisitionNote} left
-            if (it.size() == 1)
-                return true
         }
-        return false
     }
-    if (hasImmediateSourceOfAcquisitionNote.isEmpty())
-        thing.remove("marc:hasImmediateSourceOfAcquisitionNote")
 
     if (modified) {
         data.scheduleSave()
@@ -44,11 +35,10 @@ String whereHold = """
 
 selectBySqlWhere(whereHold) { data ->
     Map thing = data.graph[1]
-    List immediateAcquisition = asList(thing.immediateAcquisition)
 
     boolean modified
 
-    immediateAcquisition.removeAll {
+    asList(thing.immediateAcquisition).each {
         String accessionNumber = it.remove("marc:accessionNumber")
 
         if (accessionNumber) {
@@ -58,20 +48,11 @@ selectBySqlWhere(whereHold) { data ->
                             "value": "${accessionNumber}"
                     ]
 
-            thing.identifiedBy = thing.identifiedBy ?: []
-            thing.identifiedBy << accessionNumberEntity
+            it["identifiedBy"] = [accessionNumberEntity]
 
             modified = true
-
-            // Remove if only {@type: ImmediateAcquisition} left
-            if (it.size() == 1)
-                return true
         }
-        return false
     }
-
-    if (immediateAcquisition.isEmpty())
-        thing.remove("immediateAcquisition")
 
     if (modified)
         data.scheduleSave()
