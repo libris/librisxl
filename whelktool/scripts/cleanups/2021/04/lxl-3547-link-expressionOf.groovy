@@ -65,7 +65,7 @@ uniformWorks = getUniformWorks()
 def notLinkedExpr = new ConcurrentHashMap<Map, ConcurrentLinkedQueue<String>>()
 
 // Generic titles that should not be extracted inte new works. e.g. "Annual report"
-def genericTitles =  new File(scriptDir, 'lxl-3547-link-expressionOf-generic-titles.txt').readLines().collect( Norm.&normalize  )
+def genericTitles = new File(scriptDir, 'lxl-3547-link-expressionOf-generic-titles.txt').readLines().collect( Norm.&normalize  )
 
 // ############################################################################
 // Try to link
@@ -106,7 +106,7 @@ selectBySqlWhere("data#>>'{@graph,1,instanceOf,expressionOf}' is not null") { bi
         }
 
         // there is always exactly one title
-        def cmpMap = Norm.cmpTitle(asList(e['hasTitle']).first(), languageNames) + Norm.cmpOther(e)
+        def cmpMap = Norm.cmpTitle(asList(e['hasTitle']).first()) + Norm.cmpOther(e)
         getPrimaryContributionString(work)?.with {cmpMap += ['primaryContribution': it] }
         Collection works = uniformWorks.getOrDefault(cmpMap, Collections.emptyList())
         
@@ -168,7 +168,7 @@ notLinkedExpr.each {key, ids ->
         sameExpr.println(ids.size() + " " + toString(key))
     }
     else {
-        if (Norm.cmpTitle(key, languageNames) in genericTitles) {
+        if (Norm.normalize(asList(work['hasTitle'])?.first().mainTitle) in genericTitles) {
             sameExpr.println(ids.size() + " " + toString(key) + " [GENERIC TITLE]")
             unmatchedIds.add(ids.poll())
         }
@@ -285,7 +285,7 @@ private Map<String, Collection<Map>> getUniformWorks() {
         Map work = getPathSafe(doc.doc.data, ['@graph', 1])
         
         def titles = (asList(work.hasTitle) + asList(work.hasVariant).collect{ asList(it['hasTitle']) }.flatten())
-        titles = titles.collect{ Norm.cmpTitle(it, languageNames) }
+        titles = titles.collect{ Norm.cmpTitle(it) }
         
         def otherFields = Norm.cmpOther(work)
         getPrimaryContributionString(work)?.with {otherFields += ['primaryContribution': it] }
@@ -372,24 +372,10 @@ class Norm {
         normalize(work.findAll {it.key in CMP_KEYS})
     }
     
-    static Map cmpTitle(Map title, Set<String> languageNames) {
-        def t = normalize(title.findAll {it.key in TITLE_KEYS})
-        
-        // Some records have the language in the title e.g. "Tusen och en natt. Svenska" drop the language part
-        // These should normally already have been moved by moveLanguagesFromTitle()
-        t.mainTitle?.with { String m ->
-            def s = m.split(' ')
-            if (s.last() in languageNames) {
-                t.mainTitle = normalize(s.dropRight(1).join(' '))
-            }
-            if (s.size() > 3 && s[-1] in languageNames && s[-2] == "&" && s[-3] in languageNames) {
-                t.mainTitle = normalize(s.dropRight(3).join(' '))
-            }
-        }
-        
-        return t
+    static Map cmpTitle(Map title) {
+        normalize(title.findAll {it.key in TITLE_KEYS})
     }
-    
+        
     static Map normalize(Map map) {
         map
                 .collectEntries {
@@ -467,39 +453,56 @@ private List mapBlankLanguages(List languages, List whichLanguageVersion = []) {
 
 // mainTitle: "Haggada. Jiddisch & Hebreiska" --> mainTitle: Haggada, language: [[@id:https://id.kb.se/language/yid], [@id:https://id.kb.se/language/heb]]
 boolean moveLanguagesFromTitle(String id, Map work, List whichLanguageVersion = []) {
-    boolean changed = false
-    (asList(work['hasTitle'])?.first().mainTitle =~ /^(?<title>.*)\.(?<languages>[^.]+)\.?\s*$/).with {
-        if (matches()) {
-            String title = group('title')
-            List languages = group('languages')
-                    .split(",| & | och | and ")
-                    .collect{ Unicode.trimNoise(it.toLowerCase()) }
+    def (title, languages) = splitTitleLanguages(asList(work['hasTitle'])?.first().mainTitle)
+    
+    if (!languages) {
+        return false
+    }
 
-            if (!languages || !languages.every{ it in languageNames }) {
-                return false
-            }
-            
-            def l = languages.collect{ ['@type': 'Language', 'label': it] }
-            if (languages.any{ it in ambiguousLangNames }) {
-                l += whichLanguageVersion
-            }
+    def l = languages.collect{ ['@type': 'Language', 'label': it] }
+    
+    if (work.language) {
+        l += work.language
+    }
+    
+    if (languages.any{ it in ambiguousLangNames }) {  
+        l += whichLanguageVersion
+    }
 
-            Map m = ['l': l]
-            languageLinker.linkLanguages(m, 'l')
-            l = m.l
-            if (l.size() == languages.size() && l.every {it['@id'] }) {
-                languageFromTitle.println("$id ${work.hasTitle.mainTitle} --> $title $l")
-                asList(work['hasTitle'])?.first().mainTitle = title
-                work.language = l
-                changed = true
-            }
-            else {
-                languageFromTitle.println("COULD NOT HANDLE: $id $work")
-            }
+    Map m = ['l': l]
+    languageLinker.linkLanguages(m, 'l')
+    l = m.l
+    
+    l.each {
+        if (it.label) {
+            it.label = it.label.capitalize() 
         }
     }
     
-    return changed
+    languageFromTitle.println("$id ${work.hasTitle.mainTitle} --> $title $l")
+    asList(work['hasTitle']).first().mainTitle = title
+    work.language = l
+    
+    return true
+}
+
+Tuple2<String, List<String>> splitTitleLanguages(String mainTitle) {
+    List languages = []
+    String title = mainTitle
+    (mainTitle =~ /^(?<title>.*)\.(?<languages>[^.]+)\.?\s*$/).with {
+        if (matches()) {
+            List l = group('languages')
+                    .split(",| & | och | and ")
+                    .collect { Unicode.trimNoise(it.toLowerCase()) }
+
+            if (l && l.every { it in languageNames }) {
+                languages.addAll(l)
+                title = group('title')
+            }
+        }
+    }
+
+    return new Tuple2(title, languages)
 }
 
 class AndLanguageLinker extends LanguageLinker {
