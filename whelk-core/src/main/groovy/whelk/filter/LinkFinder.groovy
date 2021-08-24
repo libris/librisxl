@@ -10,7 +10,6 @@ import whelk.exception.LinkValidationException
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.util.concurrent.ConcurrentHashMap
 
 @Log
 class LinkFinder {
@@ -19,7 +18,6 @@ class LinkFinder {
 
     static String ENTITY_QUERY
     static final ObjectMapper mapper = new ObjectMapper()
-    static final ConcurrentHashMap<String, String> uriCache = new ConcurrentHashMap()
 
     LinkFinder(PostgreSQLComponent pgsql) {
         postgres = pgsql
