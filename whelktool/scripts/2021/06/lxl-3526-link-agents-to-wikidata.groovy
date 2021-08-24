@@ -10,6 +10,7 @@ import org.apache.jena.shared.PrefixMapping
 import java.text.Normalizer
 
 Map multiplePropsMatchAndNoMismatch = Collections.synchronizedMap([:])
+Map multiplePropsMatchIncludingIsniOrViafAndNoMismatch = Collections.synchronizedMap([:])
 Map onePropMatchAndNoMismatch = Collections.synchronizedMap([:])
 Map mismatch = Collections.synchronizedMap([:])
 List multipleAgentsMatch = Collections.synchronizedList([])
@@ -54,10 +55,17 @@ selectByIds(wdDataByLibrisId.keySet()) { data ->
             onePropMatchAndNoMismatch[matchedProps] = onePropMatchAndNoMismatch[matchedProps] ?: []
             onePropMatchAndNoMismatch[matchedProps] << [librisId, wdUri]
         } else if (matchedProps.size() > 1) {
-            multiplePropsMatchAndNoMismatch[matchedProps] = multiplePropsMatchAndNoMismatch[matchedProps] ?: []
-            multiplePropsMatchAndNoMismatch[matchedProps] << [librisId, wdUri]
+            if ("viaf" in matchedProps || "isni" in matchedProps) {
+                multiplePropsMatchIncludingIsniOrViafAndNoMismatch[matchedProps] =
+                        multiplePropsMatchIncludingIsniOrViafAndNoMismatch[matchedProps] ?: []
+                multiplePropsMatchIncludingIsniOrViafAndNoMismatch[matchedProps] << [librisId, wdUri]
 
-            matchedWdAgents << wdUri
+                matchedWdAgents << wdUri
+            }
+            else {
+                multiplePropsMatchAndNoMismatch[matchedProps] = multiplePropsMatchAndNoMismatch[matchedProps] ?: []
+                multiplePropsMatchAndNoMismatch[matchedProps] << [librisId, wdUri]
+            }
         }
     }
 
@@ -74,6 +82,7 @@ selectByIds(wdDataByLibrisId.keySet()) { data ->
 }
 
 println("Writing reports...")
+printReport(multiplePropsMatchIncludingIsniOrViafAndNoMismatch, getReportWriter("multiple-props-match-incl-viaf-or-isni.txt"))
 printReport(multiplePropsMatchAndNoMismatch, getReportWriter("multiple-props-match.txt"))
 printReport(onePropMatchAndNoMismatch, getReportWriter("one-prop-match.txt"))
 printReport(mismatch, getReportWriter("mismatches.txt"))
