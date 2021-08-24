@@ -77,7 +77,7 @@ class LinkFinder {
     }
 
     void normalizeIdentifiers(Document document) {
-        Connection connection = postgres.getOuterConnection()
+        Connection connection = postgres.getConnection()
         try {
             normalizeIdentifiers(document, connection)    
         }
