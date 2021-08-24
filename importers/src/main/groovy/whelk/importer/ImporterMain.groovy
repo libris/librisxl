@@ -72,30 +72,6 @@ class ImporterMain {
         long fromUnixTime = Long.parseLong(from)
         reindex.reindexFrom(fromUnixTime)
     }
-
-    static void sendToQueue(Whelk whelk, List doclist, ExecutorService queue, Map counters, String collection) {
-        LinkFinder lf = new LinkFinder(whelk.storage)
-        Document[] workList = new Document[doclist.size()]
-        System.arraycopy(doclist.toArray(), 0, workList, 0, doclist.size())
-        queue.execute({
-            List<Document> storeList = []
-            for (Document wdoc in Arrays.asList(workList)) {
-                Document fdoc = lf.findLinks(wdoc)
-                if (fdoc) {
-                    counters["changed"]++
-                    storeList << fdoc
-                }
-                counters["found"]++
-                if (!log.isDebugEnabled()) {
-                    Tools.printSpinner("Finding links. ${counters["read"]} documents read. ${counters["found"]} processed. ${counters["changed"]} changed.", counters["found"])
-                } else {
-                    log.debug("Finding links. ${counters["read"]} documents read. ${counters["found"]} processed. ${counters["changed"]} changed.")
-                }
-            }
-            log.info("Saving ${storeList.size()} documents ...")
-            whelk.storage.bulkStore(storeList, "xl", null, collection)
-        } as Runnable)
-    }
     
     /**
      * The additional_types argument should be a comma separated list of types to include. Like so:
