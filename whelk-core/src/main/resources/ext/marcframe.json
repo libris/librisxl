@@ -14043,7 +14043,11 @@
       "$b": {"ignored": true, "NOTE:LC": "$b - Jurisdiction (NR) nac"},
       "$c": {"property": "marc:methodOfAcquisition"},
       "$d": {"property": "date"},
-      "$e": {"property": "marc:accessionNumber"},
+      "$e": {
+        "addLink": "identifiedBy",
+        "resourceType": "AccessionNumber",
+        "property": "value"
+      },
       "$f": {"property": "marc:owner"},
       "$h": {"property": "marc:purchasePrice"},
       "$n": {"addProperty": "marc:extent"},
@@ -26663,7 +26667,11 @@
       "$b": {"property": "marc:address"},
       "$c": {"property": "marc:methodOfAcquisition"},
       "$d": {"property": "marc:dateOfAcquisition"},
-      "$e": {"property": "marc:accessionNumber"},
+      "$e": {
+        "addLink": "identifiedBy",
+        "resourceType": "AccessionNumber",
+        "property": "value"
+      },
       "$f": {"property": "marc:owner"},
       "$h": {"property": "marc:purchasePrice"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
