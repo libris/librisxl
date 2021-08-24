@@ -659,10 +659,7 @@ class PostgreSQLComponent {
                 if (getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) != null)
                     throw new ConflictingHoldException("Already exists a holding record for ${doc.getHeldBy()} and bib: $holdingFor")
             }
-
-            if (linkFinder != null)
-                linkFinder.normalizeIdentifiers(doc, connection)
-
+            
             //FIXME: throw exception on null changedBy
             if (changedBy != null) {
                 String creator = getDescriptionChangerId(changedBy)
@@ -1487,7 +1484,7 @@ class PostgreSQLComponent {
             docs.each { doc ->
                 doc.normalizeUnicode()
                 if (linkFinder != null)
-                    linkFinder.normalizeIdentifiers(doc)
+                    linkFinder.normalizeIdentifiers(doc, connection)
                 Date now = new Date()
                 doc.setCreated(now)
                 doc.setModified(now)

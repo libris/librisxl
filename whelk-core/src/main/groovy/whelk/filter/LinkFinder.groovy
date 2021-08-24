@@ -81,7 +81,13 @@ class LinkFinder {
     }
 
     void normalizeIdentifiers(Document document) {
-        normalizeIdentifiers(document, null)
+        Connection connection = postgres.getOuterConnection()
+        try {
+            normalizeIdentifiers(document, connection)    
+        }
+        finally {
+            connection.close()
+        }
     }
 
     void normalizeIdentifiers(Document document, Connection connection) {
@@ -162,11 +168,7 @@ class LinkFinder {
     }
 
     private String lookupPrimaryId(String id, Connection connection) {
-        String mainIri
-        if (connection == null)
-            mainIri = postgres.getMainId(id)
-        else
-            mainIri = postgres.getMainId(id, connection)
+        String mainIri = postgres.getMainId(id, connection)
 
         if (mainIri == null)
             return null
