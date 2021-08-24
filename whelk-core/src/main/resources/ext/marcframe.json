@@ -10060,12 +10060,12 @@
       "resourceType": "FormerTitle",
       "subfieldOrder": "a b n p ...",
       "i1": {
-        "NOTE": "Added entry controller",
+        "NOTE": "Previously: Added entry controller, Nothing about indicators in marc-bf conversion 1.6",
         "ignored": true,
         "marcDefault": "1"
       },
       "i2": {
-        "NOTE": "Show remark",
+        "NOTE": "Previously: Show remark, Nothing about indicators in marc-bf conversion 1.6",
         "ignored": true,
         "marcDefault": "0"
       },
