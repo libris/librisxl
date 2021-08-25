@@ -37,7 +37,7 @@ class LinkFinder {
     }
 
     List<URI> findLinks(List<Map> entities, List<String> recordIds) {
-        return postgres.withDbConnection {
+        return postgres.withDbConnection { notIt -> // Otherwise compliler error with: The current scope already contains a variable of the name it
             if(recordIds.any() && entities.any()) {
                 log.debug "Finding links for ${entities.size()} entities and ${recordIds.size()} record Ids"
 

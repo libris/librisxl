@@ -916,7 +916,7 @@ class PostgreSQLComponent {
                 saveIdentifiers(doc, connection, deleted)
                 SortedSet<String> idsLinkingToOldId = getDependencyData(id, GET_DEPENDERS, connection)
                 for (String dependerId : idsLinkingToOldId) {
-                    Document depender = load(dependerId, connection)
+                    Document depender = load(dependerId)
                     storeAtomicUpdate(depender, true, changedIn, changedBy, depender.getChecksum(jsonld), connection, postCommitActions)
                 }
             }
@@ -1781,25 +1781,25 @@ class PostgreSQLComponent {
         }
     }
 
-    Document load(String id, Connection conn = null) {
-        return load(id, null, conn)
+    Document load(String id) {
+        return load(id, null)
     }
 
-    Document load(String id, String version, Connection conn = null) {
+    Document load(String id, String version) {
         Document doc
         if (version && version.isInteger()) {
             int v = version.toInteger()
-            def docList = loadAllVersions(id, conn)
+            def docList = loadAllVersions(id)
             if (v < docList.size()) {
                 doc = docList[v]
             } else {
                 // looks like version might be a checksum, try loading
-                doc = loadFromSql(GET_DOCUMENT_VERSION, [1: id, 2: version], conn)
+                doc = loadFromSql(GET_DOCUMENT_VERSION, [1: id, 2: version])
             }
         } else if (version) {
-            doc = loadFromSql(GET_DOCUMENT_VERSION, [1: id, 2: version], conn)
+            doc = loadFromSql(GET_DOCUMENT_VERSION, [1: id, 2: version])
         } else {
-            doc = loadFromSql(GET_DOCUMENT, [1: id], conn)
+            doc = loadFromSql(GET_DOCUMENT, [1: id])
         }
         return doc
     }
@@ -2490,15 +2490,43 @@ class PostgreSQLComponent {
         }
     }
 
-    class Context {
+    static class ConnectionContext implements AutoCloseable {
+        // The actual data, shared by both versions
         Connection connection
         int level = 1
+
+        // For the for Groovy (Closure) version
+        public ConnectionContext() {}
+
+        // For the Java (AutoCloseable) version
+        ThreadLocal<ConnectionContext> baseTL;
+        public ConnectionContext(ThreadLocal<ConnectionContext> baseTL) {
+            this.baseTL = baseTL
+            ConnectionContext c = baseTL.get()
+            if (!c) {
+                baseTL.set(new ConnectionContext())
+            }
+            else {
+                c.level++
+            }
+        }
+
+        public void close()
+        {
+            ConnectionContext c = baseTL.get()
+            c.level--
+            if (c.level == 0) {
+                close(c.connection)
+                c.connection = null
+                baseTL.remove()
+            }
+        }
     }
 
-    ThreadLocal<Context> context = ThreadLocal.withInitial({ -> (Context) null })
+    public ThreadLocal<ConnectionContext> connectionContextTL = ThreadLocal.withInitial({ -> (ConnectionContext) null })
 
-    Connection getMyConnection() {
-        Context c = context.get()
+    public Connection getMyConnection() {
+        ConnectionContext c = connectionContextTL.get()
         if (!c) {
             throw new IllegalStateException("getMyConnection() called outside withDbConnection()")
         }
@@ -2511,9 +2539,9 @@ class PostgreSQLComponent {
     public <T> T withDbConnection(Runnable runnable) {
         Preconditions.checkNotNull(runnable)
         try {
-            Context c = context.get()
+            ConnectionContext c = connectionContextTL.get()
             if (!c) {
-                context.set(new Context())
+                connectionContextTL.set(new ConnectionContext())
             }
             else {
                 c.level++
@@ -2522,12 +2550,12 @@ class PostgreSQLComponent {
             runnable.run()
         }
         finally {
-            Context c = context.get()
+            ConnectionContext c = connectionContextTL.get()
             c.level--
             if (c.level == 0) {
                 close(c.connection)
                 c.connection = null
-                context.remove()
+                connectionContextTL.remove()
             }
         }
     }
