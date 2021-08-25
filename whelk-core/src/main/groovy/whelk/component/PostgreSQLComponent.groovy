@@ -1,5 +1,6 @@
 package whelk.component
 
+import com.google.common.base.Preconditions
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory
@@ -443,21 +444,23 @@ class PostgreSQLComponent {
     }
 
     private void cacheEmbellishedDocument(String id, Document embellishedDocument) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
+        withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
 
-        try {
-            List<String> ids = embellishmentIds(embellishedDocument, connection)
+            try {
+                List<String> ids = embellishmentIds(embellishedDocument, connection)
 
-            preparedStatement = connection.prepareStatement(UPSERT_EMBELLISHED_DOCUMENT)
-            preparedStatement.setString(1, id)
-            preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), java.sql.Types.OTHER)
-            preparedStatement.setArray(3, connection.createArrayOf("TEXT", ids as String[]))
+                preparedStatement = connection.prepareStatement(UPSERT_EMBELLISHED_DOCUMENT)
+                preparedStatement.setString(1, id)
+                preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), java.sql.Types.OTHER)
+                preparedStatement.setArray(3, connection.createArrayOf("TEXT", ids as String[]))
 
-            preparedStatement.execute()
-        }
-        finally {
-            close(preparedStatement, connection)
+                preparedStatement.execute()
+            }
+            finally {
+                close(preparedStatement)
+            }
         }
     }
 
@@ -483,34 +486,36 @@ class PostgreSQLComponent {
      * (lazy caching).
      */
     Document loadEmbellished(String id, Closure embellish) {
-        Connection connection = getConnection()
-        PreparedStatement selectStatement = null
-        ResultSet resultSet = null
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement selectStatement = null
+            ResultSet resultSet = null
 
-        try {
-            selectStatement = connection.prepareStatement(GET_EMBELLISHED_DOCUMENT)
-            selectStatement.setString(1, id)
-            resultSet = selectStatement.executeQuery()
+            try {
+                selectStatement = connection.prepareStatement(GET_EMBELLISHED_DOCUMENT)
+                selectStatement.setString(1, id)
+                resultSet = selectStatement.executeQuery()
 
-            if (resultSet.next()) {
-                return new Document(mapper.readValue(resultSet.getString("data"), Map))
+                if (resultSet.next()) {
+                    return new Document(mapper.readValue(resultSet.getString("data"), Map))
+                }
             }
-        }
-        finally {
-            close(resultSet, selectStatement, connection)
-        }
+            finally {
+                close(resultSet, selectStatement)
+            }
 
-        // Cache-miss, embellish and store
-        Document document = load(id)
-        if (document) {
-            embellish(document) // will open a connection
-            cacheEmbellishedDocument(id, document)
-        }
-        else {
-            log.error("loadEmbellished. No document with $id")
-        }
+            // Cache-miss, embellish and store
+            Document document = load(id)
+            if (document) {
+                embellish(document) // will open a connection
+                cacheEmbellishedDocument(id, document)
+            }
+            else {
+                log.error("loadEmbellished. No document with $id")
+            }
 
-        return document
+            return document
+        }
     }
 
     void clearEmbellishedCache(Connection connection) {
@@ -582,20 +587,22 @@ class PostgreSQLComponent {
         Connection connection = null
         PreparedStatement collectionStatement = null
         ResultSet collectionResults = null
-        try {
-            connection = getConnection()
-            collectionStatement = connection.prepareStatement(LOAD_COLLECTIONS)
-            collectionResults = collectionStatement.executeQuery()
-            List<String> collections = []
-            while (collectionResults.next()) {
-                String c = collectionResults.getString("collection")
-                if (c) {
-                    collections.add(c)
+        return withDbConnection {
+            try {
+                connection = getMyConnection()
+                collectionStatement = connection.prepareStatement(LOAD_COLLECTIONS)
+                collectionResults = collectionStatement.executeQuery()
+                List<String> collections = []
+                while (collectionResults.next()) {
+                    String c = collectionResults.getString("collection")
+                    if (c) {
+                        collections.add(c)
+                    }
                 }
+                return collections
+            } finally {
+                close(collectionResults, collectionStatement)
             }
-            return collections
-        } finally {
-            close(collectionResults, collectionStatement, connection)
         }
     }
 
@@ -619,104 +626,104 @@ class PostgreSQLComponent {
     boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
 
-        Connection connection = getConnection()
+        return withDbConnection {
+            Connection connection = getMyConnection()
 
-        /*
-        If we're writing a holding post, obtain a (write) lock on the linked bibpost, and hold it until writing has finished.
-        While under lock: first check that there is not already a holding for this sigel/bib-id combination.
-         */
-        try {
-            connection.setAutoCommit(false)
-            normalizeDocumentForStorage(doc, connection)
-            
-            if (collection == "hold") {
-                checkLinkedShelfMarkOwnership(doc, connection)
-                
-                String holdingFor = doc.getHoldingFor()
-                if (holdingFor == null) {
-                    log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
-                    return false
+            /*
+            If we're writing a holding post, obtain a (write) lock on the linked bibpost, and hold it until writing has finished.
+            While under lock: first check that there is not already a holding for this sigel/bib-id combination.
+             */
+            try {
+                connection.setAutoCommit(false)
+                normalizeDocumentForStorage(doc, connection)
+
+                if (collection == "hold") {
+                    checkLinkedShelfMarkOwnership(doc, connection)
+
+                    String holdingFor = doc.getHoldingFor()
+                    if (holdingFor == null) {
+                        log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                        return false
+                    }
+                    String holdingForRecordId = getRecordId(holdingFor, connection)
+                    if (holdingForRecordId == null) {
+                        log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                        return false
+                    }
+                    String holdingForSystemId = holdingForRecordId.substring(Document.BASE_URI.toString().length())
+                    if (holdingForSystemId == null) {
+                        log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
+                        return false
+                    }
+
+                    acquireRowLock(holdingForSystemId, connection)
+
+                    if (getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) != null)
+                        throw new ConflictingHoldException("Already exists a holding record for ${doc.getHeldBy()} and bib: $holdingFor")
                 }
-                String holdingForRecordId = getRecordId(holdingFor, connection)
-                if (holdingForRecordId == null) {
-                    log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
-                    return false
+
+                if (linkFinder != null)
+                    linkFinder.normalizeIdentifiers(doc, connection)
+
+                //FIXME: throw exception on null changedBy
+                if (changedBy != null) {
+                    String creator = getDescriptionChangerId(changedBy)
+                    doc.setDescriptionCreator(creator)
+                    doc.setDescriptionLastModifier(creator)
                 }
-                String holdingForSystemId = holdingForRecordId.substring(Document.BASE_URI.toString().length())
-                if (holdingForSystemId == null) {
-                    log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
-                    return false
+
+                Date now = new Date()
+                doc.setCreated(now)
+                doc.setModified(now)
+                doc.setDeleted(deleted)
+
+                PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
+                insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, deleted)
+                insert.executeUpdate()
+
+                saveVersion(doc, connection, now, now, changedIn, changedBy, collection, deleted)
+                refreshDerivativeTables(doc, connection, deleted)
+
+                connection.commit()
+                def status = status(doc.getURI(), connection)
+                if (status.exists) {
+                    doc.setCreated((Date) status['created'])
+                    doc.setModified((Date) status['modified'])
                 }
 
-                acquireRowLock(holdingForSystemId, connection)
+                dependencyCache.invalidate(doc)
 
-                if (getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) != null)
-                    throw new ConflictingHoldException("Already exists a holding record for ${doc.getHeldBy()} and bib: $holdingFor")
-            }
-
-            if (linkFinder != null)
-                linkFinder.normalizeIdentifiers(doc, connection)
-
-            //FIXME: throw exception on null changedBy
-            if (changedBy != null) {
-                String creator = getDescriptionChangerId(changedBy)
-                doc.setDescriptionCreator(creator)
-                doc.setDescriptionLastModifier(creator)
-            }
-
-            Date now = new Date()
-            doc.setCreated(now)
-            doc.setModified(now)
-            doc.setDeleted(deleted)
-
-            PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
-            insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, deleted)
-            insert.executeUpdate()
-
-            saveVersion(doc, connection, now, now, changedIn, changedBy, collection, deleted)
-            refreshDerivativeTables(doc, connection, deleted)
-
-            connection.commit()
-            def status = status(doc.getURI(), connection)
-            if (status.exists) {
-                doc.setCreated((Date) status['created'])
-                doc.setModified((Date) status['modified'])
-            }
-
-            dependencyCache.invalidate(doc)
-
-            log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
-            return true
-        } catch (PSQLException psqle) {
-            log.error("SQL failed: ${psqle.message}")
-            connection.rollback()
-            if (psqle.serverErrorMessage?.message?.startsWith("duplicate key value violates unique constraint")) {
-                Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
-                Matcher m = messageDetailPattern.matcher(psqle.message)
-                String duplicateId = doc.getShortId()
-                if (m.matches()) {
-                    log.debug("Problem is that ${m.group(1)} already contains value ${m.group(2)}")
-                    duplicateId = m.group(2)
+                log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
+                return true
+            } catch (PSQLException psqle) {
+                log.error("SQL failed: ${psqle.message}")
+                connection.rollback()
+                if (psqle.serverErrorMessage?.message?.startsWith("duplicate key value violates unique constraint")) {
+                    Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
+                    Matcher m = messageDetailPattern.matcher(psqle.message)
+                    String duplicateId = doc.getShortId()
+                    if (m.matches()) {
+                        log.debug("Problem is that ${m.group(1)} already contains value ${m.group(2)}")
+                        duplicateId = m.group(2)
+                    }
+                    throw new StorageCreateFailedException(duplicateId)
+                } else {
+                    throw psqle
                 }
-                throw new StorageCreateFailedException(duplicateId)
-            } else {
-                throw psqle
+            } catch (Exception e) {
+                log.error("Failed to save document: ${e.message}. Rolling back.")
+                connection.rollback()
+                throw e
             }
-        } catch (Exception e) {
-            log.error("Failed to save document: ${e.message}. Rolling back.")
-            connection.rollback()
-            throw e
-        } finally {
-            connection.close()
-            log.debug("[store] Closed connection.")
-        }
+        } // withDbConnection
     }
 
     void reDenormalize() {
         log.info("Re-denormalizing data.")
-        Connection connection = getConnection()
-        boolean leaveCacheAlone = true
-        try {
+        withDbConnection {
+            Connection connection = getMyConnection()
+            boolean leaveCacheAlone = true
+
             long count = 0
             for (Document doc : loadAll(null, false, null, null)) {
                 refreshDerivativeTables(doc, connection, doc.getDeleted(), leaveCacheAlone)
@@ -726,8 +733,6 @@ class PostgreSQLComponent {
                     log.info("$count records re-denormalized")
             }
             clearEmbellishedCache(connection)
-        } finally {
-            close(connection)
         }
     }
 
@@ -737,26 +742,25 @@ class PostgreSQLComponent {
      * to be used when copying data from one xl environment to another.
      */
     boolean quickCreateDocument(Document doc, String changedIn, String changedBy, String collection) {
-        Connection connection = getConnection()
-        try {
-            connection.setAutoCommit(false)
-            Date now = new Date()
-            PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
-            insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, false)
-            insert.executeUpdate()
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            try {
+                connection.setAutoCommit(false)
+                Date now = new Date()
+                PreparedStatement insert = connection.prepareStatement(INSERT_DOCUMENT)
+                insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, false)
+                insert.executeUpdate()
 
-            saveVersion(doc, connection, now, now, changedIn, changedBy, collection, false)
-            refreshDerivativeTables(doc, connection, false)
+                saveVersion(doc, connection, now, now, changedIn, changedBy, collection, false)
+                refreshDerivativeTables(doc, connection, false)
 
-            connection.commit()
-            return true
-        } catch (Exception e) {
-            log.error("Failed to save document: ${e.message}. Rolling back.")
-            connection.rollback()
-            throw e
-        } finally {
-            connection.close()
-            log.debug("[store] Closed connection.")
+                connection.commit()
+                return true
+            } catch (Exception e) {
+                log.error("Failed to save document: ${e.message}. Rolling back.")
+                connection.rollback()
+                throw e
+            }
         }
     }
 
@@ -775,35 +779,32 @@ class PostgreSQLComponent {
         PreparedStatement selectStatement = null
         ResultSet resultSet = null
 
-        try {
-            connection = getConnection()
-            selectStatement = connection.prepareStatement(GET_CONTEXT)
-            resultSet = selectStatement.executeQuery()
+        return withDbConnection {
+            try {
+                connection = getMyConnection()
+                selectStatement = connection.prepareStatement(GET_CONTEXT)
+                resultSet = selectStatement.executeQuery()
 
-            if (resultSet.next()) {
-                return resultSet.getString(1)
+                if (resultSet.next()) {
+                    return resultSet.getString(1)
+                }
+                return null
             }
-            return null
-        }
-        finally {
-            close(resultSet, selectStatement, connection)
+            finally {
+                close(resultSet, selectStatement)
+            }
         }
     }
 
     Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum) {
-        // Resources to be closed
-        Connection connection = getConnection()
-        try
-        {
+        return withDbConnection {
+            Connection connection = getMyConnection()
             connection.setAutoCommit(false)
             List<Runnable> postCommitActions = []
             Document result = storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum, connection, postCommitActions)
             connection.commit()
             postCommitActions.each { it.run() }
             return result
-        }
-        finally {
-            close(connection)
         }
     }
 
@@ -1007,7 +1008,8 @@ class PostgreSQLComponent {
     }
 
     void refreshDerivativeTables(Document doc) {
-        getConnection().withCloseable { connection ->
+        withDbConnection {
+            Connection connection = getMyConnection()
             refreshDerivativeTables(doc, connection, doc.deleted)
         }
     }
@@ -1035,7 +1037,8 @@ class PostgreSQLComponent {
      * Rewrite card. To be used when card definitions have changed
      */
     void refreshCardData(Document doc, Instant timestamp) {
-        getConnection().withCloseable { connection ->
+        withDbConnection {
+            Connection connection = getMyConnection()
             if (hasCard(doc.shortId, connection)) {
                 updateCard(new CardEntry(doc, timestamp), connection)
             }
@@ -1044,7 +1047,8 @@ class PostgreSQLComponent {
 
     void queueSparqlUpdatesFrom(long unixTime) {
         Timestamp timestamp = new Timestamp(unixTime*1000)
-        getConnection().withCloseable { connection ->
+        withDbConnection {
+            Connection connection = getMyConnection()
             PreparedStatement statement = null
             try {
                 statement = connection.prepareStatement(SPARQL_QUEUE_ADD_UPDATES_SINCE)
@@ -1082,7 +1086,8 @@ class PostgreSQLComponent {
 
     Map<String, String> getSystemIdsByIris (Iterable iris) {
         Map<String, String> ids = new HashMap<>()
-        getConnection().withCloseable { connection ->
+        withDbConnection {
+            Connection connection = getMyConnection()
             getSystemIds(iris, connection) { String iri, String systemId, deleted ->
                 ids.put(iri, systemId)
             }
@@ -1148,23 +1153,28 @@ class PostgreSQLComponent {
      * @return true if the card changed after or at the same time as the document was modified, or is nonexistent
      */
     boolean isCardChangedOrNonexistent(String systemId) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(IS_CARD_CHANGED)
-            preparedStatement.setString(1, systemId)
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                preparedStatement = connection.prepareStatement(IS_CARD_CHANGED)
+                preparedStatement.setString(1, systemId)
 
-            rs = preparedStatement.executeQuery()
+                rs = preparedStatement.executeQuery()
 
-            return rs.next() ? rs.getBoolean(1) : true
-        } finally {
-            close(rs, preparedStatement, connection)
+                return rs.next() ? rs.getBoolean(1) : true
+            } finally {
+                close(rs, preparedStatement)
+            }
         }
     }
 
     protected boolean storeCard(CardEntry cardEntry) {
-        return getConnection().withCloseable { connection -> storeCard(cardEntry, connection)}
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            return storeCard(cardEntry, connection)
+        }
     }
 
     protected boolean storeCard(CardEntry cardEntry, Connection connection) {
@@ -1234,31 +1244,31 @@ class PostgreSQLComponent {
     }
 
     protected Map loadCard(String id) {
-        Connection connection = getConnection()
-        try {
+        return withDbConnection {
+            Connection connection = getMyConnection()
             return loadCard(id, connection)
-        } finally {
-            close(connection)
         }
     }
 
     protected Map<String, Map> bulkLoadCards(Iterable<String> ids) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(BULK_LOAD_CARDS)
-            preparedStatement.setArray(1,  connection.createArrayOf("TEXT", ids as String[]))
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                preparedStatement = connection.prepareStatement(BULK_LOAD_CARDS)
+                preparedStatement.setArray(1,  connection.createArrayOf("TEXT", ids as String[]))
 
-            rs = preparedStatement.executeQuery()
-            SortedMap<String, Map> result = new TreeMap<>()
-            while(rs.next()) {
-                String card = rs.getString("data")
-                result[rs.getString("id")] = card != null ? mapper.readValue(card, Map) : null
+                rs = preparedStatement.executeQuery()
+                SortedMap<String, Map> result = new TreeMap<>()
+                while(rs.next()) {
+                    String card = rs.getString("data")
+                    result[rs.getString("id")] = card != null ? mapper.readValue(card, Map) : null
+                }
+                return result
+            } finally {
+                close(rs, preparedStatement)
             }
-            return result
-        } finally {
-            close(rs, preparedStatement, connection)
         }
     }
 
@@ -1319,9 +1329,10 @@ class PostgreSQLComponent {
 
     // Temporary method for changing lddb__dependencies.relation to full "path" of relation
     // e.g. agent -> instanceOf.contribution.agent
+    // TODO: Unused? Remove?
     void recalculateDependencies(Document doc) {
-        getConnection().withCloseable { connection ->
-            saveDependencies(doc, connection)
+        withDbConnection {
+            saveDependencies(doc, getMyConnection())
         }
     }
     
@@ -1469,52 +1480,53 @@ class PostgreSQLComponent {
     }
 
     boolean bulkStore(final List<Document> docs, String changedIn, String changedBy, String collection) {
-        if (!docs || docs.isEmpty()) {
-            return true
-        }
-        log.trace("Bulk storing ${docs.size()} documents.")
-        Connection connection = getConnection()
-        connection.setAutoCommit(false)
-        PreparedStatement batch = connection.prepareStatement(INSERT_DOCUMENT)
-        PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
-        try {
-            docs.each { doc ->
-                doc.normalizeUnicode()
-                if (linkFinder != null)
-                    linkFinder.normalizeIdentifiers(doc)
-                Date now = new Date()
-                doc.setCreated(now)
-                doc.setModified(now)
-                doc.setDeleted(false)
-                if (versioning) {
-                    ver_batch = rigVersionStatement(ver_batch, doc, now, now, changedIn, changedBy, collection, false)
-                    ver_batch.addBatch()
+        return withDbConnection {
+            if (!docs || docs.isEmpty()) {
+                return true
+            }
+            log.trace("Bulk storing ${docs.size()} documents.")
+            Connection connection = getMyConnection()
+            connection.setAutoCommit(false)
+            PreparedStatement batch = connection.prepareStatement(INSERT_DOCUMENT)
+            PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
+            try {
+                docs.each { doc ->
+                    doc.normalizeUnicode()
+                    if (linkFinder != null)
+                        linkFinder.normalizeIdentifiers(doc)
+                    Date now = new Date()
+                    doc.setCreated(now)
+                    doc.setModified(now)
+                    doc.setDeleted(false)
+                    if (versioning) {
+                        ver_batch = rigVersionStatement(ver_batch, doc, now, now, changedIn, changedBy, collection, false)
+                        ver_batch.addBatch()
+                    }
+                    batch = rigInsertStatement(batch, doc, now, changedIn, changedBy, collection, false)
+                    batch.addBatch()
                 }
-                batch = rigInsertStatement(batch, doc, now, changedIn, changedBy, collection, false)
-                batch.addBatch()
+                batch.executeBatch()
+                ver_batch.executeBatch()
+                docs.each { doc ->
+                    boolean leaveCacheAlone = true
+                    refreshDerivativeTables(doc, connection, false, leaveCacheAlone)
+                }
+                clearEmbellishedCache(connection)
+                connection.commit()
+                log.debug("Stored ${docs.size()} documents in collection ${collection} (versioning: ${versioning})")
+                return true
+            } catch (Exception e) {
+                log.error("Failed to save batch: ${e.message}. Rolling back..", e)
+                if (e instanceof SQLException) {
+                    Exception nextException = ((SQLException) e).nextException
+                    log.error("Note: next exception was: ${nextException.message}.", nextException)
+                }
+                connection.rollback()
+            } finally {
+                close(batch, ver_batch)
             }
-            batch.executeBatch()
-            ver_batch.executeBatch()
-            docs.each { doc ->
-                boolean leaveCacheAlone = true
-                refreshDerivativeTables(doc, connection, false, leaveCacheAlone)
-            }
-            clearEmbellishedCache(connection)
-            connection.commit()
-            log.debug("Stored ${docs.size()} documents in collection ${collection} (versioning: ${versioning})")
-            return true
-        } catch (Exception e) {
-            log.error("Failed to save batch: ${e.message}. Rolling back..", e)
-            if (e instanceof SQLException) {
-                Exception nextException = ((SQLException) e).nextException
-                log.error("Note: next exception was: ${nextException.message}.", nextException)
-            }
-            connection.rollback()
-        } finally {
-            close(batch, ver_batch, connection)
-            log.trace("[bulkStore] Closed connection.")
+            return false
         }
-        return false
     }
 
     private void sparqlQueueAdd(String systemId, Connection connection) {
@@ -1540,7 +1552,7 @@ class PostgreSQLComponent {
      */
     boolean sparqlQueueTake(QueueHandler reader, int num, DataSource connectionPool) {
         Connection connection = null
-        try {
+        return withDbConnection {
             // The queue contains document ids.
             // Items (rows) are locked and then finally removed from the queue when we commit the transaction.
             // If the handler fails on any item, the transaction is cancelled and all items remain in the queue.
@@ -1550,7 +1562,7 @@ class PostgreSQLComponent {
             // working on two different versions of the same document concurrently.
             // (T1 writes A, R1 starts working on A, T2 writes A', R2 starts working on A' => race between R1 and R2)
             // Take locks in same order as lddb writers to avoid deadlocks.
-            connection = connectionPool.getConnection()
+            connection = getMyConnection()
             connection.setAutoCommit(false)
             def ids = sparqlQueueTakeIds(num, connection)
 
@@ -1575,9 +1587,6 @@ class PostgreSQLComponent {
 
             connection.commit()
             return !ids.isEmpty() && !anyReQueued
-        }
-        finally {
-            close(connection)
         }
     }
 
@@ -1629,11 +1638,9 @@ class PostgreSQLComponent {
      *
      */
     String getRecordId(String id) {
-        Connection connection = getConnection()
-        try {
+        return withDbConnection {
+            Connection connection = getMyConnection()
             return getRecordOrThingId(id, GET_RECORD_ID, connection)
-        } finally {
-            close(connection)
         }
     }
 
@@ -1649,11 +1656,9 @@ class PostgreSQLComponent {
      *
      */
     String getThingId(String id) {
-        Connection connection = getConnection()
-        try {
+        return withDbConnection {
+            Connection connection = getMyConnection()
             return getThingId(id, connection)
-        } finally {
-            close(connection)
         }
     }
 
@@ -1669,11 +1674,9 @@ class PostgreSQLComponent {
      *
      */
     String getMainId(String id) {
-        Connection connection = getConnection()
-        try {
+        return withDbConnection {
+            Connection connection = getMyConnection()
             return getRecordOrThingId(id, GET_MAIN_ID, connection)
-        } finally {
-            close(connection)
         }
     }
 
@@ -1713,22 +1716,24 @@ class PostgreSQLComponent {
      *
      */
     IdType getIdType(String id) {
-        Connection connection = getConnection()
-        PreparedStatement selectstmt = null
-        ResultSet rs = null
-        try {
-            selectstmt = connection.prepareStatement(GET_ID_TYPE)
-            selectstmt.setString(1, id)
-            rs = selectstmt.executeQuery()
-            if (rs.next()) {
-                int graphIndex = rs.getInt('graphindex')
-                boolean isMainId = rs.getBoolean('mainid')
-                return determineIdType(graphIndex, isMainId)
-            } else {
-                return null
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement selectstmt = null
+            ResultSet rs = null
+            try {
+                selectstmt = connection.prepareStatement(GET_ID_TYPE)
+                selectstmt.setString(1, id)
+                rs = selectstmt.executeQuery()
+                if (rs.next()) {
+                    int graphIndex = rs.getInt('graphindex')
+                    boolean isMainId = rs.getBoolean('mainid')
+                    return determineIdType(graphIndex, isMainId)
+                } else {
+                    return null
+                }
+            } finally {
+                close(rs, selectstmt)
             }
-        } finally {
-            close(rs, selectstmt, connection)
         }
     }
 
@@ -1751,11 +1756,9 @@ class PostgreSQLComponent {
     }
 
     String getCollectionBySystemID(String id) {
-        Connection connection = getConnection()
-        try {
+        return withDbConnection {
+            Connection connection = getMyConnection()
             return getCollectionBySystemID(id, connection)
-        } finally {
-            close(connection)
         }
     }
 
@@ -1802,11 +1805,9 @@ class PostgreSQLComponent {
     }
 
     String getSystemIdByIri(String iri) {
-        Connection connection = getConnection()
-        try {
+        return withDbConnection {
+            Connection connection = getMyConnection()
             return getSystemIdByIri(iri, connection)
-        } finally {
-            close(connection)
         }
     }
 
@@ -1827,12 +1828,9 @@ class PostgreSQLComponent {
     }
 
     String getThingMainIriBySystemId(String id) {
-        Connection connection = null
-        try {
-            connection = getConnection()
+        return withDbConnection {
+            Connection connection = getMyConnection()
             return getThingMainIriBySystemId(id, connection)
-        } finally {
-            close(connection)
         }
     }
 
@@ -1852,11 +1850,9 @@ class PostgreSQLComponent {
     }
 
     Document getDocumentByIri(String iri) {
-        Connection connection = getConnection()
-        try {
+        return withDbConnection {
+            Connection connection = getMyConnection()
             return getDocumentByIri(iri, connection)
-        } finally {
-            close(connection)
         }
     }
 
@@ -1895,11 +1891,9 @@ class PostgreSQLComponent {
     }
 
     List<Tuple2<String, String>> followDependencies(String id, List<String> excludeRelations = []) {
-        Connection connection = getConnection()
-        try {
+        return withDbConnection {
+            Connection connection = getMyConnection()
             return followDependencies(id, connection, excludeRelations)
-        } finally {
-            close(connection)
         }
     }
 
@@ -1908,11 +1902,9 @@ class PostgreSQLComponent {
     }
 
     List<Tuple2<String, String>> followDependers(String id, List<String> excludeRelations = []) {
-        Connection connection = getConnection()
-        try {
+        return withDbConnection {
+            Connection connection = getMyConnection()
             followDependers(id, connection, excludeRelations)
-        } finally {
-            close(connection)
         }
     }
 
@@ -1953,14 +1945,14 @@ class PostgreSQLComponent {
     }
 
     SortedSet<String> getDependencies(String id) {
-        getConnection().withCloseable { connection ->
-            return getDependencyData(id, GET_DEPENDENCIES, connection)
+        return withDbConnection {
+            return getDependencyData(id, GET_DEPENDENCIES, getMyConnection())
         }
     }
 
     SortedSet<String> getDependers(String id) {
-        getConnection().withCloseable { connection ->
-            return getDependencyData(id, GET_DEPENDERS, connection)
+        return withDbConnection {
+            return getDependencyData(id, GET_DEPENDERS, getMyConnection())
         }
     }
 
@@ -1973,36 +1965,40 @@ class PostgreSQLComponent {
     }
 
     long getIncomingLinkCount(String id) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(GET_INCOMING_LINK_COUNT)
-            preparedStatement.setString(1, id)
-            rs = preparedStatement.executeQuery()
-            rs.next()
-            return rs.getInt(1)
-        } finally {
-            close(rs, preparedStatement, connection)
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                preparedStatement = connection.prepareStatement(GET_INCOMING_LINK_COUNT)
+                preparedStatement.setString(1, id)
+                rs = preparedStatement.executeQuery()
+                rs.next()
+                return rs.getInt(1)
+            } finally {
+                close(rs, preparedStatement)
+            }
         }
     }
 
     Map<String, Long> getIncomingLinkCountByRelation(String iri) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        def result = new TreeMap<String, Long>()
-        try {
-            preparedStatement = connection.prepareStatement(GET_INCOMING_LINK_COUNT_BY_RELATION)
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            def result = new TreeMap<String, Long>()
+            try {
+                preparedStatement = connection.prepareStatement(GET_INCOMING_LINK_COUNT_BY_RELATION)
 
-            preparedStatement.setString(1, iri)
-            rs = preparedStatement.executeQuery()
-            while (rs.next()) {
-                result[rs.getString(1)] = (long) rs.getInt(2)
+                preparedStatement.setString(1, iri)
+                rs = preparedStatement.executeQuery()
+                while (rs.next()) {
+                    result[rs.getString(1)] = (long) rs.getInt(2)
+                }
+                return result
+            } finally {
+                close(rs, preparedStatement)
             }
-            return result
-        } finally {
-            close(rs, preparedStatement, connection)
         }
     }
 
@@ -2025,23 +2021,24 @@ class PostgreSQLComponent {
     }
 
     private List<String> getDependencyDataOfType(String id, String relation, String query) {
-        Connection connection = null
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            connection = getConnection()
-            preparedStatement = connection.prepareStatement(query)
-            preparedStatement.setString(1, id)
-            preparedStatement.setString(2, relation)
-            rs = preparedStatement.executeQuery()
-            List<String> dependencies = []
-            while (rs.next()) {
-                dependencies.add( rs.getString(1) )
+        return withDbConnection {
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                Connection connection = getMyConnection()
+                preparedStatement = connection.prepareStatement(query)
+                preparedStatement.setString(1, id)
+                preparedStatement.setString(2, relation)
+                rs = preparedStatement.executeQuery()
+                List<String> dependencies = []
+                while (rs.next()) {
+                    dependencies.add( rs.getString(1) )
+                }
+                return dependencies
             }
-            return dependencies
-        }
-        finally {
-            close(rs, preparedStatement, connection)
+            finally {
+                close(rs, preparedStatement)
+            }
         }
     }
 
@@ -2051,70 +2048,73 @@ class PostgreSQLComponent {
      * If type is passed as null, all types will match.
      */
     List<String> getSystemIDsByTypedID(String idType, String idValue, int graphIndex) {
-        Connection connection = null
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph," + graphIndex + ",identifiedBy}' @> ?"
-            connection = getConnection()
-            preparedStatement = connection.prepareStatement(query)
+        return withDbConnection {
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph," + graphIndex + ",identifiedBy}' @> ?"
+                Connection connection = getMyConnection()
+                preparedStatement = connection.prepareStatement(query)
 
-            if (idType != null) {
-                String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
-                preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + escapedId + "\"}]", OTHER)
-            }
-            else {
-                String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
-                preparedStatement.setObject(1, "[{\"value\": \"" + escapedId + "\"}]", OTHER)
-            }
+                if (idType != null) {
+                    String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
+                    preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + escapedId + "\"}]", OTHER)
+                }
+                else {
+                    String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
+                    preparedStatement.setObject(1, "[{\"value\": \"" + escapedId + "\"}]", OTHER)
+                }
 
-            rs = preparedStatement.executeQuery()
-            List<String> results = []
-            while (rs.next()) {
-                results.add( rs.getString(1) )
+                rs = preparedStatement.executeQuery()
+                List<String> results = []
+                while (rs.next()) {
+                    results.add( rs.getString(1) )
+                }
+                return results
             }
-            return results
-        }
-        finally {
-            close(rs, preparedStatement, connection)
+            finally {
+                close(rs, preparedStatement)
+            }
         }
     }
 
     String getSystemIdByThingId(String thingId) {
-        Connection connection = null
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            connection = getConnection()
-            preparedStatement = connection.prepareStatement(GET_RECORD_ID_BY_THING_ID)
-            preparedStatement.setString(1, thingId)
-            rs = preparedStatement.executeQuery()
-            if (rs.next()) {
-                return rs.getString(1)
+        return withDbConnection {
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                Connection connection = getMyConnection()
+                preparedStatement = connection.prepareStatement(GET_RECORD_ID_BY_THING_ID)
+                preparedStatement.setString(1, thingId)
+                rs = preparedStatement.executeQuery()
+                if (rs.next()) {
+                    return rs.getString(1)
+                }
+                return null
             }
-            return null
-        }
-        finally {
-            close(rs, preparedStatement, connection)
+            finally {
+                close(rs, preparedStatement)
+            }
         }
     }
 
     String getProfileByLibraryUri(String libraryUri) {
-        Connection connection = null
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            connection = getConnection()
-            preparedStatement = connection.prepareStatement(GET_LEGACY_PROFILE)
-            preparedStatement.setString(1, libraryUri)
-            rs = preparedStatement.executeQuery()
-            if (rs.next()) {
-                return rs.getString(1)
+        return withDbConnection {
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                Connection connection = getMyConnection()
+                preparedStatement = connection.prepareStatement(GET_LEGACY_PROFILE)
+                preparedStatement.setString(1, libraryUri)
+                rs = preparedStatement.executeQuery()
+                if (rs.next()) {
+                    return rs.getString(1)
+                }
+                return null
             }
-            return null
-        }
-        finally {
-            close(rs, preparedStatement, connection)
+            finally {
+                close(rs, preparedStatement)
+            }
         }
     }
 
@@ -2138,95 +2138,91 @@ class PostgreSQLComponent {
         }
 
         // Assemble results
-        Connection connection = null
-        ResultSet rs = null
-        PreparedStatement preparedStatement = null
-        try {
-            connection = getConnection()
-            preparedStatement = connection.prepareStatement(selectSQL.toString())
+        return withDbConnection {
+            ResultSet rs = null
+            PreparedStatement preparedStatement = null
+            try {
+                Connection connection = getMyConnection()
+                preparedStatement = connection.prepareStatement(selectSQL.toString())
 
-            for (int i = 0; i < thingIdentifiers.size(); ++i)
-            {
-                preparedStatement.setString(i+1, thingIdentifiers.get(i))
-            }
+                for (int i = 0; i < thingIdentifiers.size(); ++i)
+                {
+                    preparedStatement.setString(i+1, thingIdentifiers.get(i))
+                }
 
-            rs = preparedStatement.executeQuery()
-            List<String> holdings = []
-            while (rs.next()) {
-                holdings.add(rs.getString("id"))
+                rs = preparedStatement.executeQuery()
+                List<String> holdings = []
+                while (rs.next()) {
+                    holdings.add(rs.getString("id"))
+                }
+                return holdings
             }
-            return holdings
-        }
-        finally {
-            close(rs, preparedStatement, connection)
+            finally {
+                close(rs, preparedStatement)
+            }
         }
     }
 
     Set<String> filterBibIdsByHeldBy(Collection<String> systemIds, Collection<String> libraryURIs) {
-        Connection connection = null
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            connection = getConnection()
-            preparedStatement = connection.prepareStatement(FILTER_BIB_IDS_BY_HELD_BY)
-            preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds as String[]))
-            preparedStatement.setArray(2, connection.createArrayOf("TEXT", libraryURIs as String[]))
-            rs = preparedStatement.executeQuery()
-            Set<String> result = new HashSet<>()
-            while (rs.next()) {
-                result.add(rs.getString(1))
+        return withDbConnection {
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                Connection connection = getMyConnection()
+                preparedStatement = connection.prepareStatement(FILTER_BIB_IDS_BY_HELD_BY)
+                preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds as String[]))
+                preparedStatement.setArray(2, connection.createArrayOf("TEXT", libraryURIs as String[]))
+                rs = preparedStatement.executeQuery()
+                Set<String> result = new HashSet<>()
+                while (rs.next()) {
+                    result.add(rs.getString(1))
+                }
+                return result
             }
-            return result
-        }
-        finally {
-            close(rs, preparedStatement, connection)
+            finally {
+                close(rs, preparedStatement)
+            }
         }
     }
 
-    private Document loadFromSql(String sql, Map parameters, Connection connection = null) {
-        Document doc = null
-        boolean shouldCloseConn = false
-        log.debug("loadFromSql $parameters ($sql)")
-        if (!connection) {
-            connection = getConnection()
-            shouldCloseConn = true
-            log.debug("Got connection.")
-        }
-        PreparedStatement selectstmt = null
-        ResultSet rs = null
-        try {
-            selectstmt = connection.prepareStatement(sql)
-            log.trace("Prepared statement")
-            for (items in parameters) {
-                if (items.value instanceof String) {
-                    selectstmt.setString((Integer) items.key, (String) items.value)
+    private Document loadFromSql(String sql, Map parameters) {
+        return withDbConnection {
+            Document doc = null
+            log.debug("loadFromSql $parameters ($sql)")
+            Connection connection = getMyConnection()
+            PreparedStatement selectstmt = null
+            ResultSet rs = null
+            try {
+                selectstmt = connection.prepareStatement(sql)
+                log.trace("Prepared statement")
+                for (items in parameters) {
+                    if (items.value instanceof String) {
+                        selectstmt.setString((Integer) items.key, (String) items.value)
+                    }
+                    if (items.value instanceof Map || items.value instanceof List) {
+                        selectstmt.setObject((Integer) items.key, mapper.writeValueAsString(items.value), OTHER)
+                    }
                 }
-                if (items.value instanceof Map || items.value instanceof List) {
-                    selectstmt.setObject((Integer) items.key, mapper.writeValueAsString(items.value), OTHER)
+                log.trace("Executing query")
+                rs = selectstmt.executeQuery()
+                log.trace("Executed query.")
+                if (rs.next()) {
+                    log.trace("next")
+                    doc = assembleDocument(rs)
+                    log.trace("Created document with id ${doc.getShortId()}")
+                } else if (log.isTraceEnabled()) {
+                    log.trace("No results returned for $selectstmt")
                 }
+            } finally {
+                close(rs, selectstmt)
             }
-            log.trace("Executing query")
-            rs = selectstmt.executeQuery()
-            log.trace("Executed query.")
-            if (rs.next()) {
-                log.trace("next")
-                doc = assembleDocument(rs)
-                log.trace("Created document with id ${doc.getShortId()}")
-            } else if (log.isTraceEnabled()) {
-                log.trace("No results returned for $selectstmt")
-            }
-        } finally {
-            close(rs, selectstmt)
-            if (shouldCloseConn) {
-                connection.close()
-            }
-        }
 
-        return doc
+            return doc
+        }
     }
 
-    List<Document> loadAllVersions(String identifier, Connection conn = null) {
-        return doLoadAllVersions(identifier, GET_ALL_DOCUMENT_VERSIONS, conn)
+    List<Document> loadAllVersions(String identifier) {
+        return doLoadAllVersions(identifier, GET_ALL_DOCUMENT_VERSIONS)
     }
 
     List<Document> loadAllVersionsByMainId(String identifier) {
@@ -2234,33 +2230,27 @@ class PostgreSQLComponent {
                                  GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID)
     }
 
-    private List<Document> doLoadAllVersions(String identifier, String sql, Connection connection = null) {
-        boolean shouldCloseConn = false
-        if (!connection) {
-            connection = getConnection()
-            shouldCloseConn = true
-        }
-        PreparedStatement selectstmt = null
-        ResultSet rs = null
-        List<Document> docList = []
-        try {
-            selectstmt = connection.prepareStatement(sql)
-            selectstmt.setString(1, identifier)
-            rs = selectstmt.executeQuery()
-            int v = 0
-            while (rs.next()) {
-                def doc = assembleDocument(rs)
-                doc.version = v++
-                docList << doc
+    private List<Document> doLoadAllVersions(String identifier, String sql) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement selectstmt = null
+            ResultSet rs = null
+            List<Document> docList = []
+            try {
+                selectstmt = connection.prepareStatement(sql)
+                selectstmt.setString(1, identifier)
+                rs = selectstmt.executeQuery()
+                int v = 0
+                while (rs.next()) {
+                    def doc = assembleDocument(rs)
+                    doc.version = v++
+                    docList << doc
+                }
+            } finally {
+                close(rs, selectstmt)
             }
-        } finally {
-            close(rs, selectstmt)
-            if (shouldCloseConn) {
-                connection.close()
-                log.debug("[loadAllVersions] Closed connection.")
-            }
+            return docList
         }
-        return docList
     }
 
     private void normalizeDocumentForStorage(Document doc, Connection connection) {
@@ -2305,10 +2295,9 @@ class PostgreSQLComponent {
 
     @CompileStatic(SKIP)
     Iterable<Document> loadAll(String collection, boolean includeDeleted = false, Date since = null, Date until = null) {
-        log.debug("Load all called with collection: $collection")
         return new Iterable<Document>() {
             Iterator<Document> iterator() {
-                Connection connection = getConnection()
+                Connection connection = getOuterConnection()
                 connection.setAutoCommit(false)
                 PreparedStatement loadAllStatement
                 long untilTS = until?.getTime() ?: PGStatement.DATE_POSITIVE_INFINITY
@@ -2428,82 +2417,134 @@ class PostgreSQLComponent {
         }
 
         // Clear out dependencies
-        Connection connection = getConnection()
-        PreparedStatement removeDependencies = null
-        try {
-            removeDependencies = connection.prepareStatement(DELETE_DEPENDENCIES)
-            removeDependencies.setString(1, identifier)
-            int numRemoved = removeDependencies.executeUpdate()
-            log.debug("Removed $numRemoved dependencies for id ${identifier}")
-        } finally {
-            close(removeDependencies, connection)
+        withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement removeDependencies = null
+            try {
+                removeDependencies = connection.prepareStatement(DELETE_DEPENDENCIES)
+                removeDependencies.setString(1, identifier)
+                int numRemoved = removeDependencies.executeUpdate()
+                log.debug("Removed $numRemoved dependencies for id ${identifier}")
+            } finally {
+                close(removeDependencies)
+            }
         }
     }
 
     String getUserData(String id) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(GET_USER_DATA)
-            preparedStatement.setString(1, id)
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                preparedStatement = connection.prepareStatement(GET_USER_DATA)
+                preparedStatement.setString(1, id)
 
-            rs = preparedStatement.executeQuery()
-            if (rs.next()) {
-                return rs.getString("data")
+                rs = preparedStatement.executeQuery()
+                if (rs.next()) {
+                    return rs.getString("data")
+                }
+                else {
+                    return null
+                }
+            } finally {
+                close(rs, preparedStatement)
             }
-            else {
-                return null
-            }
-        } finally {
-            close(rs, preparedStatement, connection)
         }
     }
 
     boolean storeUserData(String id, String data) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
-        try {
-            PGobject jsonb = new PGobject()
-            jsonb.setType("jsonb")
-            jsonb.setValue(data)
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            try {
+                PGobject jsonb = new PGobject()
+                jsonb.setType("jsonb")
+                jsonb.setValue(data)
 
-            preparedStatement = connection.prepareStatement(UPSERT_USER_DATA)
-            preparedStatement.setString(1, id)
-            preparedStatement.setObject(2, jsonb)
-            preparedStatement.setTimestamp(3, new Timestamp(new Date().getTime()))
+                preparedStatement = connection.prepareStatement(UPSERT_USER_DATA)
+                preparedStatement.setString(1, id)
+                preparedStatement.setObject(2, jsonb)
+                preparedStatement.setTimestamp(3, new Timestamp(new Date().getTime()))
 
-            boolean createdOrUpdated = preparedStatement.executeUpdate() > 0
-            return createdOrUpdated
-        } finally {
-            close(preparedStatement, connection)
+                boolean createdOrUpdated = preparedStatement.executeUpdate() > 0
+                return createdOrUpdated
+            } finally {
+                close(preparedStatement)
+            }
         }
     }
 
     void removeUserData(String id) {
-        Connection connection = getConnection()
-        PreparedStatement preparedStatement = null
+        withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            try {
+                preparedStatement = connection.prepareStatement(DELETE_USER_DATA)
+                preparedStatement.setString(1, id)
+                int numRemoved = preparedStatement.executeUpdate()
+                log.debug("Removed ${numRemoved} user data record for id ${id}")
+            } finally {
+                close(preparedStatement)
+            }
+        }
+    }
+
+    class Context {
+        Connection connection
+        int level = 1
+    }
+
+    ThreadLocal<Context> context = ThreadLocal.withInitial({ -> (Context) null })
+
+    Connection getMyConnection() {
+        Context c = context.get()
+        if (!c) {
+            throw new IllegalStateException("getMyConnection() called outside withDbConnection()")
+        }
+        if (!c.connection) {
+            c.connection = _getConnection()
+        }
+        return c.connection
+    }
+
+    public <T> T withDbConnection(Runnable runnable) {
+        Preconditions.checkNotNull(runnable)
         try {
-            preparedStatement = connection.prepareStatement(DELETE_USER_DATA)
-            preparedStatement.setString(1, id)
-            int numRemoved = preparedStatement.executeUpdate()
-            log.debug("Removed ${numRemoved} user data record for id ${id}")
-        } finally {
-            close(preparedStatement, connection)
+            Context c = context.get()
+            if (!c) {
+                context.set(new Context())
+            }
+            else {
+                c.level++
+            }
+
+            runnable.run()
+        }
+        finally {
+            Context c = context.get()
+            c.level--
+            if (c.level == 0) {
+                close(c.connection)
+                c.connection = null
+                context.remove()
+            }
         }
     }
 
     /**
      * Get a database connection.
      */
-    Connection getConnection(){
+    Connection _getConnection(){
         return connectionPool.getConnection()
     }
 
     /**
-     * Get a database connection that is safe to keep open while calling into this class.
+     * Get a database connection that is safe to keep open while taking normal connections.
+     * This should only be used for cases where you genuinely need two concurrent resultsets.
      */
     Connection getOuterConnection() {
+        // FIX: EXCEPTION IF YOU ALREADY HAVE connection open! This must then be called first!
         return getOuterPool().getConnection()
     }
 
