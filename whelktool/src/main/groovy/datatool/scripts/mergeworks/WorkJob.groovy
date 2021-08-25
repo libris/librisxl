@@ -65,8 +65,11 @@ class WorkJob {
                         return
                     }
 
+                    docs.each {it.each {it.addComparisonProps() } }
+                    
                     println(docs
                             .collect { it.sort { a, b -> a.getWork()['@type'] <=> b.getWork()['@type'] } }
+                            .collect { it.sort { it.numPages() } }
                             .collect { clusterTable(it) }
                             .join('') + "<hr/><br/>\n")
                 }
@@ -168,6 +171,7 @@ class WorkJob {
 
         def works = []
         titleClusters.each {titleCluster ->
+            titleCluster.sort {it.numPages() }
             WorkComparator c = new WorkComparator(WorkComparator.allFields(titleCluster))
 
             works.addAll(partition(titleCluster, { Doc a, Doc b -> c.sameWork(a, b)})
@@ -239,7 +243,7 @@ class WorkJob {
         })
     }
 
-    static def infoFields = ['instance title', 'work title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication', 'identifiedBy']
+    static def infoFields = ['instance title', 'work title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication', 'identifiedBy', 'extent']
 
     private String clusterTable(Collection<Doc> cluster) {
         String id = "${clusterId.incrementAndGet()}"

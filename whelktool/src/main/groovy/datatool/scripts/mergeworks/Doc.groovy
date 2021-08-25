@@ -86,6 +86,19 @@ class Doc {
     String encodingLevel() {
         return doc.data['@graph'][0]['encodingLevel'] ?: ''
     }
+    
+    int numPages() {
+        return numPages(Util.getPathSafe(getInstance(), ['extent', 0, 'label', 0], ''))
+    }
+    
+    static int numPages(String extentLabel) {
+        def matcher = extentLabel =~ /(\d+)(?=[, \[\]0-9]*[sp])/
+        List<Integer> pages = []
+        while (matcher.find()) {
+            pages << Integer.parseInt(matcher.group(1))
+        }
+        pages ? pages.max() : -1
+    }
 
     String getDisplayText(String field) {
         if (field == 'contribution') {
@@ -118,12 +131,19 @@ class Doc {
         else if (field == 'identifiedBy') {
             return chipString(getInstance()['identifiedBy'] ?: [])
         }
+        else if (field == 'extent') {
+            return chipString(getInstance()['extent'] ?: [])
+        }
         else {
             return chipString(getWork().getOrDefault(field, []))
         }
     }
 
     private String chipString (def thing) {
+        if (thing instanceof Integer) {
+            return thing
+        }
+        
         def chips = whelk.jsonld.toChip(thing)
         if (chips.size() < 2) {
             chips = thing
@@ -253,6 +273,7 @@ class Doc {
         if(hasDistinguishingEdition()) {
             addToWork('editionStatement')
         }
+        getWork()['numPages'] = numPages()
     }
 
     void addToWork(String field) {
@@ -261,6 +282,7 @@ class Doc {
 
     void removeComparisonProps() {
         getWork().remove('editionStatement')
+        getWork().remove('numPages')
     }
 }
 
