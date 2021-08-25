@@ -7,7 +7,8 @@ import whelk.util.Unicode
 class Util {
     static def titleComponents = ['mainTitle', 'titleRemainder', 'subtitle', 'hasPart', 'partNumber', 'partName', 'marc:parallelTitle', 'marc:equalTitle']
 
-    static def titleVariant = ['Title', 'ParallelTitle', 'VariantTitle', 'CoverTitle']
+    static def titleVariant = ['Title', 'ParallelTitle']  
+    // removed 'VariantTitle', 'CoverTitle' since they sometimes contain random generic stuff like "Alibis filmroman", "Kompisböcker för de yngsta"
 
     private static Set<String> IGNORED_SUBTITLES = WorkJob.class.getClassLoader()
             .getResourceAsStream('merge-works/ignored-subtitles.txt')
