@@ -28,7 +28,7 @@ class WorkTool {
 
         cli.m(longOpt:'merge', 'Merge')
         cli.s(longOpt:'show', 'Show. Generate HTML report with title clusters')
-        cli.s2(longOpt:'show', 'Show. Generate HTML report with works')
+        cli.s2(longOpt:'show2', 'Show. Generate HTML report with works')
         cli.dd(longOpt:'diff', args: 1, argName:'diff', 'Field to diff')
         cli.i(longOpt:'instance-vals', args: 1, argName:'field', 'Instance field to print, e.g. editionStatement')
         cli.t(longOpt:'subTitles', 'Print subtitles')

@@ -2,6 +2,7 @@ package datatool.scripts.mergeworks
 
 import datatool.scripts.mergeworks.compare.Classification
 import datatool.scripts.mergeworks.compare.ContentType
+import datatool.scripts.mergeworks.compare.Extent
 import datatool.scripts.mergeworks.compare.FieldHandler
 import datatool.scripts.mergeworks.compare.GenreForm
 import datatool.scripts.mergeworks.compare.Default
@@ -19,6 +20,7 @@ class WorkComparator {
             'genreForm': new GenreForm(),
             'contentType': new ContentType('https://id.kb.se/term/rda/Text'),
             'hasTitle': new WorkTitle(),
+            'numPages': new Extent(),
     ]
 
     static FieldHandler DEFAULT = new Default()
