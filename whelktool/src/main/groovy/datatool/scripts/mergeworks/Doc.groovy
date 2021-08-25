@@ -55,6 +55,10 @@ class Doc {
 
         return titles
     }
+    
+    boolean hasGenericTitle() {
+        Util.hasGenericTitle(getInstance()['hasTitle'])
+    }
 
     private static String displayTitle(Map thing) {
         thing['hasTitle'].collect { it['@type'] + ": " + it['flatTitle'] }.join(', ')

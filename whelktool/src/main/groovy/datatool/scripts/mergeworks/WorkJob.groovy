@@ -163,7 +163,8 @@ class WorkJob {
                 .findAll(filter)
                 .each {it.addComparisonProps() }
                 .with { partitionByTitle(it) }
-                .findAll {it.size() > 1 }
+                .findAll { it.size() > 1 }
+                .findAll { !it.any{ doc -> doc.hasGenericTitle() } }
 
         def works = []
         titleClusters.each {titleCluster ->
@@ -322,6 +323,7 @@ class WorkJob {
     private Collection<Collection<Doc>> titleClusters(Collection<String> cluster) {
         textMonoDocs(cluster)
                 .with { partitionByTitle(it) }
+                .findAll { !it.any{ doc -> doc.hasGenericTitle() } }
     }
 
     Collection<Collection<Doc>> partitionByTitle(Collection<Doc> docs) {

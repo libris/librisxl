@@ -13,6 +13,10 @@ class Util {
             .getResourceAsStream('merge-works/ignored-subtitles.txt')
             .readLines().grep().collect(Util.&normalize) as Set
 
+    private static Set<String> GENERIC_TITLES = WorkJob.class.getClassLoader()
+            .getResourceAsStream('merge-works/generic-titles.txt')
+            .readLines().grep().collect(Util.&normalize) as Set
+    
     static def noise =
             [",", '"', "'", '[', ']', ',', '.', '.', ':', ';', '-', '(', ')', ' the ', '-', '–', '+', '!', '?'].collectEntries { [it, ' '] }
 
@@ -55,13 +59,17 @@ class Util {
         return false
     }
 
+    static boolean hasGenericTitle(List hasTitle) {
+        hasTitle.any { it['mainTitle'] && normalize((String) it['mainTitle']) in GENERIC_TITLES }
+    }
+    
     static List flatTitles(List hasTitle) {
         hasTitle.collect {
             def old = new TreeMap(it)
 
             if (it['subtitle']) {
                 DocumentUtil.traverse(it['subtitle']) { value, path ->
-                    if (path && value instanceof String && nonsenseSubtitle(value)) {
+                    if (path && value instanceof String && genericSubtitle(value)) {
                         new DocumentUtil.Remove()
                     }
                 }
@@ -77,7 +85,7 @@ class Util {
         }
     }
 
-    private static boolean nonsenseSubtitle(String s) {
+    private static boolean genericSubtitle(String s) {
         s = Util.normalize(s)
         if (s.startsWith("en ")) {
             s = s.substring("en ".length())
