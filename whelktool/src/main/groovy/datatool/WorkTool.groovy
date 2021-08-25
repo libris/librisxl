@@ -5,15 +5,15 @@ import datatool.scripts.mergeworks.WorkJob
 
 /**
   1) find clusters
-  ENV=local && time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar build/libs/whelktool.jar --report reports/$ENV-$(date +%Y%m%d-%H%M%S) --dry-run scripts/analysis/works2.groovy
+  $ ENV=local && time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar build/libs/whelktool.jar --report reports/$ENV-$(date +%Y%m%d-%H%M%S) --dry-run scripts/analysis/works2.groovy
 
-  2) merge overlapping clusters
-  CLUSTERS=reports/local-2020...
-  ENV=local && time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -DclustersDir=$CLUSTERS -jar build/libs/whelktool.jar --report reports/$ENV-$(date +%Y%m%d-%H%M%S) --dry-run scripts/analysis/merge-clusters.groovy
+  2) merge overlapping clusters, output file is placed in same directory as input
+ 
+  $ CLUSTERSDIR=reports/local-2021...
+  $ ENV=local && time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -DclustersDir=$CLUSTERSDIR -jar build/libs/whelktool.jar --report reports/$ENV-$(date +%Y%m%d-%H%M%S) --dry-run scripts/analysis/merge-clusters.groovy
 
-
-
-  ENV=qa && time java -Xmx4G -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool -s reports/1000-fiction.tsv
+  3) 
+  ENV=local && time java -Xmx4G -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool --dry-run -s reports/1000-fiction.tsv
 
 
  */
