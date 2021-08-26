@@ -14,16 +14,18 @@ class WhelkCopier {
     Whelk dest
     List recordIds
     String additionalTypes
+    boolean shouldExcludeItems
     ThreadPool threadPool = new ThreadPool(Runtime.getRuntime().availableProcessors())
     List<Document> saveQueue = []
 
     private int copied = 0
 
-    WhelkCopier(source, dest, recordIds, additionalTypes) {
+    WhelkCopier(source, dest, recordIds, additionalTypes, shouldExcludeItems) {
         this.source = source
         this.dest = dest
         this.recordIds = recordIds
         this.additionalTypes = additionalTypes
+        this.shouldExcludeItems = shouldExcludeItems
 
         dest.storage.doVerifyDocumentIdRetention = false
     }
@@ -31,7 +33,7 @@ class WhelkCopier {
     void run() {
         TreeSet<String> alreadyImportedIDs = new TreeSet<>()
 
-        if (additionalTypes != null) {
+        if (additionalTypes) {
             String[] types = additionalTypes.split(",")
             for (doc in selectBySqlWhere("data#>>'{@graph,1,@type}' in (\n" +
                     "'" + types.join("','") + "'" +
@@ -72,8 +74,14 @@ class WhelkCopier {
                 queueSave(doc)
             }
             // links to this:
+            def linksToThisWhere
+            if (shouldExcludeItems) {
+                linksToThisWhere = "id in (select id from lddb__dependencies where dependsonid = '${id}' and relation != 'itemOf')"
+            } else {
+                linksToThisWhere = "id in (select id from lddb__dependencies where dependsonid = '${id}')"
+            }
             source.storage.withDbConnection {
-                for (revDoc in selectBySqlWhere("""id in (select id from lddb__dependencies where dependsonid = '${id}')""")) {
+                for (revDoc in selectBySqlWhere(linksToThisWhere)) {
                     if (revDoc.deleted) continue
                     revDoc.baseUri = source.baseUri
                     if (!alreadyImportedIDs.contains(revDoc.shortId)) {
