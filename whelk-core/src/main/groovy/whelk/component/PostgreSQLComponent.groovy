@@ -2536,6 +2536,18 @@ class PostgreSQLComponent {
         return c.connection
     }
 
+    /**
+     * Within the supplied closure, getMyConnection() may be called to obtain a database connection.
+     * getMyConnection() may be called as many times as you like. It will always return the one connection
+     * reserved for the active thread.
+     *
+     * The point of this is to prevent accidental taking of an additional connection, while the thread
+     * is holding one already, as this can cause deadlocks when running out of connections.
+     *
+     * It is perfectly fine to nest several withDbConnection()-blocks. Doing so has no practical effect.
+     * The same connection is always returned anyway, and that connection is released when the outermost
+     * block ends.
+     */
     public <T> T withDbConnection(Closure closure) {
         Preconditions.checkNotNull(closure)
         try {
@@ -2561,18 +2573,30 @@ class PostgreSQLComponent {
     }
 
     /**
-     * Get a database connection.
+     * Get a database connection. THIS FUNCTION SHOULD _NEVER_ BE USED DIRECTLY!
+     * Use withDbConnection{ getMyConnection() } instead!
      */
-    Connection _getConnection(){
+    protected Connection _getConnection(){
         return connectionPool.getConnection()
     }
 
     /**
      * Get a database connection that is safe to keep open while taking normal connections.
      * This should only be used for cases where you genuinely need two concurrent resultsets.
+     *
+     * This function cannot (intentionally) be called inside a withDbConnection()-block. Doing so
+     * would run the risk of creating a deadlock situation, because you'd then be holding a normal
+     * connection while waiting for the outer, which may in turn be held by another thead waiting
+     * for a normal connection (which is allowed)!
+     *
+     * It is perfectly fine to call getOuterConnection() and then enter a withDbConnection()-block
+     * while still holding the outer, but not the other way around!
      */
     Connection getOuterConnection() {
-        // FIX: EXCEPTION IF YOU ALREADY HAVE connection open! This must then be called first!
+        ConnectionContext c = connectionContextTL.get()
+        if (c != null) {
+            throw new IllegalStateException("getOuterConnection() called inside withDbConnection()-block. This would risk a deadlock.")
+        }
         return getOuterPool().getConnection()
     }
 
