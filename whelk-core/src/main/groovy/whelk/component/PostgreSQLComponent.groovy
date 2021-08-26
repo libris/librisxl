@@ -2536,8 +2536,8 @@ class PostgreSQLComponent {
         return c.connection
     }
 
-    public <T> T withDbConnection(Runnable runnable) {
-        Preconditions.checkNotNull(runnable)
+    public <T> T withDbConnection(Closure closure) {
+        Preconditions.checkNotNull(closure)
         try {
             ConnectionContext c = connectionContextTL.get()
             if (!c) {
@@ -2547,7 +2547,7 @@ class PostgreSQLComponent {
                 c.level++
             }
 
-            runnable.run()
+            return (T) closure.call()
         }
         finally {
             ConnectionContext c = connectionContextTL.get()
