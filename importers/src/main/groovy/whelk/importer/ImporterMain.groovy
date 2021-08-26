@@ -101,10 +101,21 @@ class ImporterMain {
     }
     
     /**
-     * The additional_types argument should be a comma separated list of types to include. Like so:
-     * Person,GenreForm
+     * The additional_types argument should be one of:
+     * - comma-separated list of types to include. Like so: Person,GenreForm
+     * - --all-types, to copy *all* types
+     * - "", to be able to use --exclude-items without specifying additional types
+     *
+     * E.g., copy everything except items (holdings):
+     * SOURCE_PROPERTIES RECORD_ID_FILE --all-types --exclude-items
+     *
+     * Copy only what's in RECORD_ID_FILE, but exclude items:
+     * SOURCE_PROPERTIES RECORD_ID_FILE "" --exclude-items
+     *
+     * Copy what's in RECORD_ID_FILE and types MovingImageInstance and Map, don't exclude items:
+     * SOURCE_PROPERTIES RECORD_ID_FILE MovingImageInstance,Map
      */
-    @Command(args='SOURCE_PROPERTIES RECORD_ID_FILE [ADDITIONAL_TYPES [--exclude-items]]')
+    @Command(args='SOURCE_PROPERTIES RECORD_ID_FILE [<ADDITIONAL_TYPES | --all-types | ""> [--exclude-items]]')
     void copywhelk(String sourcePropsFile, String recordsFile, additionalTypes=null, String excludeItems=null) {
         def sourceProps = new Properties()
         new File(sourcePropsFile).withInputStream { it

@@ -34,10 +34,19 @@ class WhelkCopier {
         TreeSet<String> alreadyImportedIDs = new TreeSet<>()
 
         if (additionalTypes) {
-            String[] types = additionalTypes.split(",")
-            for (doc in selectBySqlWhere("data#>>'{@graph,1,@type}' in (\n" +
-                    "'" + types.join("','") + "'" +
-                ")")) {
+            String whereClause
+            if (additionalTypes == "--all-types") {
+                whereClause = "deleted = false"
+                if (shouldExcludeItems) {
+                    whereClause += " and data#>>'{@graph,1,@type}' != 'Item'"
+                }
+            } else {
+                String[] types = additionalTypes.split(",")
+                whereClause = "deleted = false and data#>>'{@graph,1,@type}' in (\n" +
+                        "'" + types.join("','") + "'" + ")"
+            }
+
+            for (doc in selectBySqlWhere(whereClause)) {
                 if (doc.deleted) continue
                 doc.baseUri = source.baseUri
                 if (!alreadyImportedIDs.contains(doc.shortId)) {
