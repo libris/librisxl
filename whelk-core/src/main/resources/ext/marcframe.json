@@ -12491,10 +12491,9 @@
      },
     "351": {
       "NOTE:Local": "ignoreOnRevert?",
-      "aboutEntity": "?work",
-      "addLink": "arrangement",
-      "resourceType": "Arrangement",
-      "$a": {"addProperty": "organizationOfMaterial"},
+      "addLink": "collectionArrangement",
+      "resourceType": "CollectionArrangement",
+      "$a": {"addProperty": "collectionOrganization"},
       "$b": {"addProperty": "pattern"},
       "$c": {"property": "hierarchicalLevel"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
