@@ -88,7 +88,8 @@ class Doc {
     }
     
     int numPages() {
-        return numPages(Util.getPathSafe(getInstance(), ['extent', 0, 'label', 0], ''))
+        String extent = Util.getPathSafe(getInstance(), ['extent', 0, 'label', 0]) ?: Util.getPathSafe(getInstance(), ['extent', 0, 'label'], '')
+        return numPages(extent)
     }
     
     static int numPages(String extentLabel) {
@@ -100,6 +101,7 @@ class Doc {
         pages ? pages.max() : -1
     }
 
+    // TODO...
     String getDisplayText(String field) {
         if (field == 'contribution') {
             return contributorStrings().join("<br>")

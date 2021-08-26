@@ -66,20 +66,19 @@ class Util {
     
     static List flatTitles(List hasTitle) {
         hasTitle.collect {
-            def old = new TreeMap(it)
-
-            if (it['subtitle']) {
-                DocumentUtil.traverse(it['subtitle']) { value, path ->
-                    if (path && value instanceof String && genericSubtitle(value)) {
+            def copy = new TreeMap(it)
+            if (copy['subtitle'] || copy['titleRemainder']) {
+                DocumentUtil.traverse(copy) { value, path ->
+                    if (('subtitle' in path || 'titleRemainder' in path) && value instanceof String && genericSubtitle(value)) {
                         new DocumentUtil.Remove()
                     }
                 }
             }
 
             def title = new TreeMap<>()
-            title['flatTitle'] = normalize(Doc.flatten(old, titleComponents))
-            if (it['@type']) {
-                title['@type'] = it['@type']
+            title['flatTitle'] = normalize(Doc.flatten(copy, titleComponents))
+            if (copy['@type']) {
+                title['@type'] = copy['@type']
             }
 
             title
@@ -100,7 +99,7 @@ class Util {
 
     static Object getPathSafe(item, path, defaultTo = null) {
         for (p in path) {
-            if (item[p] != null) {
+            if ((item instanceof Collection || item instanceof Map) && item[p] != null) {
                 item = item[p]
             } else {
                 return defaultTo

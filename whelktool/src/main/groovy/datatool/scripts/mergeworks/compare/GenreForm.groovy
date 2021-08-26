@@ -11,6 +11,8 @@ class GenreForm extends StuffSet {
             [['@id': 'https://id.kb.se/marc/NotFictionNotFurtherSpecified'], ['@id': 'https://id.kb.se/marc/FictionNotFurtherSpecified']],
             [['@id': 'https://id.kb.se/marc/FictionNotFurtherSpecified'], ['@id': 'https://id.kb.se/marc/Novel']],
             [['@id': 'https://id.kb.se/marc/FictionNotFurtherSpecified'], ['@id': 'https://id.kb.se/marc/Poetry']],
+            [['@id': 'https://id.kb.se/marc/NotFictionNotFurtherSpecified'], ['@id': 'https://id.kb.se/marc/Autobiography']],
+            [['@id': 'https://id.kb.se/marc/NotFictionNotFurtherSpecified'], ['@id': 'https://id.kb.se/marc/Biography']],
     ]
 
     @Override

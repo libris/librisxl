@@ -19,7 +19,7 @@ import datatool.scripts.mergeworks.WorkJob
  */
 
 class WorkTool {
-    public static void main(String[] args) {
+    static void main(String[] args) {
         def cli = new CliBuilder(usage:'whelktool [options] <SCRIPT>')
         cli.h(longOpt: 'help', 'Print this help message and exit.')
         cli.I(longOpt:'skip-index', 'Do not index any changes, only write to storage.')
