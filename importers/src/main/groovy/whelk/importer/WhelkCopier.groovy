@@ -37,6 +37,9 @@ class WhelkCopier {
             String whereClause
             if (additionalTypes == "--all-types") {
                 whereClause = "deleted = false"
+                if (shouldExcludeItems) {
+                    whereClause += " and data#>>'{@graph,1,@type}' != 'Item'"
+                }
             } else {
                 String[] types = additionalTypes.split(",")
                 whereClause = "deleted = false and data#>>'{@graph,1,@type}' in (\n" +
