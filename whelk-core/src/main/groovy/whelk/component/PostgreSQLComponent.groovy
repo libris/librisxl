@@ -587,7 +587,7 @@ class PostgreSQLComponent {
         Connection connection = null
         PreparedStatement collectionStatement = null
         ResultSet collectionResults = null
-        return withDbConnection {
+        withDbConnection {
             try {
                 connection = getMyConnection()
                 collectionStatement = connection.prepareStatement(LOAD_COLLECTIONS)
