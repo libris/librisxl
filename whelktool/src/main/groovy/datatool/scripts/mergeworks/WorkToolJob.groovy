@@ -267,10 +267,11 @@ class WorkToolJob {
                         if (c.agent && c.agent['@id']) {
                             // TODO: fix whelk, add load by IRI method
                             def id = c.agent['@id']
-                            println(id)
-                            Map agent = whelk.storage.loadDocumentByMainId(id).data['@graph'][1]
-                            agent.roles = asList(c.role)
-                            linked << agent
+                            whelk.storage.loadDocumentByMainId(id)?.with { doc ->
+                                Map agent = doc.data['@graph'][1]
+                                agent.roles = asList(c.role)
+                                linked << agent
+                            }
                         }
                     }
                 }
@@ -280,7 +281,7 @@ class WorkToolJob {
                     contribution.each { Map c ->
                         if (c.agent && !c.agent['@id']) {
                             def l = linked.find {
-                                (it.givenName == c.agent.givenName && it.firstName == c.agent.firstName) && it.roles.containsAll(c.role) 
+                                (it.givenName == c.agent.givenName && it.firstName == c.agent.firstName) && (!c.role || it.roles.containsAll(c.role)) 
                             }
                             if (l) {
                                 println("$c --> $l")
