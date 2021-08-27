@@ -247,7 +247,7 @@ class WorkToolJob {
         run({ cluster ->
             return {
                 titleClusters(cluster).each {
-                    println(it.join('\t'))
+                    println(it.collect{it.doc.shortId }.join('\t'))
                 }
             }
         })
