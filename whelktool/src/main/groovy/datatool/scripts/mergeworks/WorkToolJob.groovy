@@ -18,10 +18,12 @@ import java.util.function.Function
 import static datatool.scripts.mergeworks.FieldStatus.COMPATIBLE
 import static datatool.scripts.mergeworks.FieldStatus.DIFF
 import static datatool.scripts.mergeworks.FieldStatus.EQUAL
+import static datatool.scripts.mergeworks.Util.asList
+import static datatool.scripts.mergeworks.Util.getPathSafe
 import static datatool.scripts.mergeworks.Util.partition
 
-class WorkJob {
-    private String CSS = WorkJob.class.getClassLoader()
+class WorkToolJob {
+    private String CSS = WorkToolJob.class.getClassLoader()
             .getResourceAsStream('merge-works/table.css').getText("UTF-8")
 
     Whelk whelk
@@ -36,7 +38,7 @@ class WorkJob {
     boolean skipIndex = false
     boolean loud = false
 
-    WorkJob(File clusters) {
+    WorkToolJob(File clusters) {
         this.clusters = clusters
 
         this.whelk = Whelk.createLoadedSearchWhelk('secret', true)
@@ -59,7 +61,7 @@ class WorkJob {
             return {
                 try {
                     Collection<Collection<Doc>> docs = titleClusters(cluster)
-                            .sort { a, b -> a.first().instanceDisplayTitle() <=> b.first().instanceDisplayTitle() }
+                            
 
                     if (docs.isEmpty() || docs.size() == 1 && docs.first().size() == 1) {
                         return
@@ -189,7 +191,7 @@ class WorkJob {
         run({ cluster ->
             return {
                 String titles = cluster.collect(whelk.&getDocument).collect {
-                    Util.getPathSafe(it.data, ['@graph', 1, 'hasTitle', 0, 'subtitle'])
+                    getPathSafe(it.data, ['@graph', 1, 'hasTitle', 0, 'subtitle'])
                 }.grep().join('\n')
 
                 if (!titles.isBlank()) {
@@ -203,7 +205,7 @@ class WorkJob {
         run({ cluster ->
             return {
                 String values = cluster.collect(whelk.&getDocument).collect {
-                    "${it.shortId}\t${Util.getPathSafe(it.data, ['@graph', 1, field])}"
+                    "${it.shortId}\t${getPathSafe(it.data, ['@graph', 1, field])}"
                 }.join('\n')
 
                 println(values + '\n')
@@ -215,7 +217,6 @@ class WorkJob {
         run({ cluster ->
             return {
                 Collection<Collection<Doc>> titleClusters = titleClusters(cluster)
-                        .sort { a, b -> a.first().instanceDisplayTitle() <=> b.first().instanceDisplayTitle() }
 
                 for (titleCluster in titleClusters) {
                     if (titleCluster.size() > 1) {
@@ -233,7 +234,6 @@ class WorkJob {
     }
 
     void fiction() {
-        //statistics.printOnShutdown(10)
         run({ cluster ->
             return {
                 if (textMonoDocs(cluster).any { it.isFiction() }) {
@@ -243,6 +243,52 @@ class WorkJob {
         })
     }
 
+    void outputTitleClusters() {
+        run({ cluster ->
+            return {
+                titleClusters(cluster).each {
+                    println(it.join('\t'))
+                }
+            }
+        })
+    }
+
+    void linkContribution() {
+        //statistics.printOnShutdown(10)
+        run({ cluster ->
+            return {
+                // TODO: check work language?
+                def docs = cluster.collect(whelk.&getDocument)
+                
+                List<Map> linked = []
+                docs.each { Document d ->
+                    def contribution = getPathSafe(d.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
+                    contribution.each { Map c ->
+                        if (c.agent && c.agent['@id']) {
+                            // TODO: fix whelk, add load by IRI method
+                            Map agent = whelk.storage.loadDocumentByMainId(c.agent['@id'], null).data['@graph'][1]
+                            agent.roles = asList(c.role)
+                        }
+                    }
+                }
+
+                docs.each { Document d ->
+                    def contribution = getPathSafe(d.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
+                    contribution.each { Map c ->
+                        if (c.agent && !c.agent['@id']) {
+                            def l = linked.find {
+                                (it.givenName == c.agent.givenName && it.firstName == c.agent.firstName) && it.roles.containsAll(c.role) 
+                            }
+                            if (l) {
+                                println("$c --> $l")
+                            }
+                        }
+                    }
+                }
+            }
+        })
+    }
+    
     static def infoFields = ['instance title', 'work title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication', 'identifiedBy', 'extent']
 
     private String clusterTable(Collection<Doc> cluster) {
@@ -328,6 +374,7 @@ class WorkJob {
         textMonoDocs(cluster)
                 .with { partitionByTitle(it) }
                 .findAll { !it.any{ doc -> doc.hasGenericTitle() } }
+                .sort { a, b -> a.first().instanceDisplayTitle() <=> b.first().instanceDisplayTitle() }
     }
 
     Collection<Collection<Doc>> partitionByTitle(Collection<Doc> docs) {
