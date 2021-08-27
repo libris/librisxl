@@ -1,12 +1,12 @@
-List idList = new File(scriptDir, 'idlist.yaml').readLines()
+List idList = new File(scriptDir, 'f1700-group-idlist.yaml').readLines()
 
 Map mimerUriById = [:]
 
 String id
 
 idList.each { String line ->
-    if (line =~ "libris-id:")
-        id = line.replaceFirst(/.*libris-id:/, "").trim()
+    if (line =~ "libris_id:")
+        id = line.replaceFirst(/.*libris_id:/, "").trim()
     else if (line =~ /uri:/) {
         String uri = line.replace("uri:", "").trim()
 
