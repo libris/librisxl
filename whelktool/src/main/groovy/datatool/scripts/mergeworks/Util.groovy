@@ -10,11 +10,11 @@ class Util {
     static def titleVariant = ['Title', 'ParallelTitle']  
     // removed 'VariantTitle', 'CoverTitle' since they sometimes contain random generic stuff like "Alibis filmroman", "Kompisböcker för de yngsta"
 
-    private static Set<String> IGNORED_SUBTITLES = WorkJob.class.getClassLoader()
+    private static Set<String> IGNORED_SUBTITLES = WorkToolJob.class.getClassLoader()
             .getResourceAsStream('merge-works/ignored-subtitles.txt')
             .readLines().grep().collect(Util.&normalize) as Set
 
-    private static Set<String> GENERIC_TITLES = WorkJob.class.getClassLoader()
+    private static Set<String> GENERIC_TITLES = WorkToolJob.class.getClassLoader()
             .getResourceAsStream('merge-works/generic-titles.txt')
             .readLines().grep().collect(Util.&normalize) as Set
     

@@ -1,7 +1,7 @@
 package datatool
 
 import groovy.cli.commons.CliBuilder
-import datatool.scripts.mergeworks.WorkJob
+import datatool.scripts.mergeworks.WorkToolJob
 
 /**
   1) find clusters
@@ -34,6 +34,8 @@ class WorkTool {
         cli.t(longOpt:'subTitles', 'Print subtitles')
         cli.nf(longOpt:'fiction-not-fiction', 'Filter: output clusters with mixed marc/FictionNotFurtherSpecified and marc/NotFictionNotFurtherSpecified')
         cli.f(longOpt:'fiction', 'Filter: output clusters containing fiction')
+        cli.tc(longOpt:'title-clusters', 'Filter: output title clusters')
+        cli.lc(longOpt:'link-contribution', 'link matching contribution within cluster')
 
         def options = cli.parse(args)
         if (options.h) {
@@ -42,7 +44,7 @@ class WorkTool {
         }
 
         def clustersPath = options.arguments()[0]
-        def m = new WorkJob(new File(clustersPath))
+        def m = new WorkToolJob(new File(clustersPath))
         m.skipIndex = options.I
         m.dryRun = options.d
         m.loud = options.a
@@ -67,6 +69,12 @@ class WorkTool {
         }
         else if (options.f) {
             m.fiction()
+        }
+        else if (options.tc) {
+            m.outputTitleClusters()
+        }
+        else if (options.lc) {
+            m.linkContribution()
         }
         else {
             cli.usage()
