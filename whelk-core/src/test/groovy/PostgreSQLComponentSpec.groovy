@@ -29,7 +29,7 @@ class PostgreSQLComponentSpec extends Specification {
         stmt.executeQuery() >> { result }
         storage = new PostgreSQLComponent((String) null) {
             @Override
-            Connection getConnection() {
+            Connection getMyConnection() {
                 log.info("Getting connection ...")
                 conn
             }
