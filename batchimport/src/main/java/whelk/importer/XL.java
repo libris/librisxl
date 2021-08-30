@@ -14,6 +14,7 @@ import se.kb.libris.utils.isbn.IsbnParser;
 import whelk.Document;
 import whelk.IdGenerator;
 import whelk.Whelk;
+import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.MarcFrameConverter;
 import whelk.exception.TooHighEncodingLevelException;
@@ -474,8 +475,9 @@ class XL
             librisId = Document.getBASE_URI().toString() + librisId;
         }
 
-        try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnId_ps(connection, librisId);
+        try(PostgreSQLComponent.ConnectionContext ignored =
+                    new PostgreSQLComponent.ConnectionContext(m_whelk.getStorage().connectionContextTL);
+            PreparedStatement statement = getOnId_ps(m_whelk.getStorage().getMyConnection(), librisId);
             ResultSet resultSet = statement.executeQuery())
         {
             return collectIDs(resultSet);
@@ -490,8 +492,9 @@ class XL
         {
             String systemNumber = DigId.grep035a( (Datafield) field );
 
-            try(Connection connection = m_whelk.getStorage().getConnection();
-                PreparedStatement statement = getOnSystemNumber_ps(connection, systemNumber);
+            try(PostgreSQLComponent.ConnectionContext ignored =
+                        new PostgreSQLComponent.ConnectionContext(m_whelk.getStorage().connectionContextTL);
+                PreparedStatement statement = getOnSystemNumber_ps(m_whelk.getStorage().getMyConnection(), systemNumber);
                 ResultSet resultSet = statement.executeQuery())
             {
                 results.addAll( collectIDs(resultSet) );
@@ -513,8 +516,9 @@ class XL
                 {
                     String incomingEan = subfield.getData();
 
-                    try (Connection connection = m_whelk.getStorage().getConnection();
-                         PreparedStatement statement = getOnEAN_ps(connection, incomingEan);
+                    try (PostgreSQLComponent.ConnectionContext ignored =
+                                 new PostgreSQLComponent.ConnectionContext(m_whelk.getStorage().connectionContextTL);
+                         PreparedStatement statement = getOnEAN_ps(m_whelk.getStorage().getMyConnection(), incomingEan);
                          ResultSet resultSet = statement.executeQuery())
                     {
                         results.addAll(collectIDs(resultSet));
@@ -541,8 +545,9 @@ class XL
                 {
                     String incomingUri = subfield.getData();
 
-                    try (Connection connection = m_whelk.getStorage().getConnection();
-                         PreparedStatement statement = getOnURI_ps(connection, incomingUri);
+                    try (PostgreSQLComponent.ConnectionContext ignored =
+                                 new PostgreSQLComponent.ConnectionContext(m_whelk.getStorage().connectionContextTL);
+                         PreparedStatement statement = getOnURI_ps(m_whelk.getStorage().getMyConnection(), incomingUri);
                          ResultSet resultSet = statement.executeQuery())
                     {
                         results.addAll(collectIDs(resultSet));
@@ -569,8 +574,9 @@ class XL
                 {
                     String incomingUrn = subfield.getData();
 
-                    try (Connection connection = m_whelk.getStorage().getConnection();
-                         PreparedStatement statement = getOnURN_ps(connection, incomingUrn);
+                    try (PostgreSQLComponent.ConnectionContext ignored =
+                                 new PostgreSQLComponent.ConnectionContext(m_whelk.getStorage().connectionContextTL);
+                         PreparedStatement statement = getOnURN_ps(m_whelk.getStorage().getMyConnection(), incomingUrn);
                          ResultSet resultSet = statement.executeQuery())
                     {
                         results.addAll(collectIDs(resultSet));
@@ -590,8 +596,9 @@ class XL
 
         List<String> duplicateIDs = new ArrayList<>();
 
-        try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getPreparedStatement.apply(connection, isbn);
+        try(PostgreSQLComponent.ConnectionContext ignored =
+                    new PostgreSQLComponent.ConnectionContext(m_whelk.getStorage().connectionContextTL);
+            PreparedStatement statement = getPreparedStatement.apply(m_whelk.getStorage().getMyConnection(), isbn);
             ResultSet resultSet = statement.executeQuery())
         {
             duplicateIDs.addAll( collectIDs(resultSet) );
@@ -604,8 +611,9 @@ class XL
         int otherType = typedIsbn.getType() == Isbn.ISBN10 ? Isbn.ISBN13 : Isbn.ISBN10;
 
         String numericIsbn = typedIsbn.toString(hyphens);
-        try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getPreparedStatement.apply(connection, numericIsbn);
+        try(PostgreSQLComponent.ConnectionContext ignored =
+                    new PostgreSQLComponent.ConnectionContext(m_whelk.getStorage().connectionContextTL);
+            PreparedStatement statement = getPreparedStatement.apply(m_whelk.getStorage().getMyConnection(), numericIsbn);
             ResultSet resultSet = statement.executeQuery())
         {
             duplicateIDs.addAll( collectIDs(resultSet) );
@@ -620,8 +628,9 @@ class XL
             return duplicateIDs;
         }
         numericIsbn = typedIsbn.toString(hyphens);
-        try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getPreparedStatement.apply(connection, numericIsbn);
+        try(PostgreSQLComponent.ConnectionContext ignored =
+                    new PostgreSQLComponent.ConnectionContext(m_whelk.getStorage().connectionContextTL);
+            PreparedStatement statement = getPreparedStatement.apply(m_whelk.getStorage().getMyConnection(), numericIsbn);
             ResultSet resultSet = statement.executeQuery())
         {
             duplicateIDs.addAll( collectIDs(resultSet) );
@@ -636,8 +645,9 @@ class XL
         if (issn == null)
             return new ArrayList<>();
 
-        try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnIssn_ps(connection, issn);
+        try(PostgreSQLComponent.ConnectionContext ignored =
+                    new PostgreSQLComponent.ConnectionContext(m_whelk.getStorage().connectionContextTL);
+            PreparedStatement statement = getOnIssn_ps(m_whelk.getStorage().getMyConnection(), issn);
             ResultSet resultSet = statement.executeQuery())
         {
             return collectIDs(resultSet);
@@ -650,8 +660,9 @@ class XL
         if (issn == null)
             return new ArrayList<>();
 
-        try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnIssnHidden_ps(connection, issn);
+        try(PostgreSQLComponent.ConnectionContext ignored =
+                    new PostgreSQLComponent.ConnectionContext(m_whelk.getStorage().connectionContextTL);
+            PreparedStatement statement = getOnIssnHidden_ps(m_whelk.getStorage().getMyConnection(), issn);
             ResultSet resultSet = statement.executeQuery())
         {
             return collectIDs(resultSet);
@@ -669,8 +680,9 @@ class XL
         String sigel = df.getSubfields("b").get(0).getData();
         String library = LegacyIntegrationTools.legacySigelToUri(sigel);
 
-        try(Connection connection = m_whelk.getStorage().getConnection();
-            PreparedStatement statement = getOnHeldByHoldingFor_ps(connection, library, relatedWithBibResourceId);
+        try(PostgreSQLComponent.ConnectionContext ignored =
+                    new PostgreSQLComponent.ConnectionContext(m_whelk.getStorage().connectionContextTL);
+            PreparedStatement statement = getOnHeldByHoldingFor_ps(m_whelk.getStorage().getMyConnection(), library, relatedWithBibResourceId);
             ResultSet resultSet = statement.executeQuery())
         {
             return collectIDs(resultSet);

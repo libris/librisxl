@@ -89,12 +89,14 @@ class WhelkCopier {
             } else {
                 linksToThisWhere = "id in (select id from lddb__dependencies where dependsonid = '${id}')"
             }
-            for (revDoc in selectBySqlWhere(linksToThisWhere)) {
-                if (revDoc.deleted) continue
-                revDoc.baseUri = source.baseUri
-                if (!alreadyImportedIDs.contains(revDoc.shortId)) {
-                    alreadyImportedIDs.add(revDoc.shortId)
-                    queueSave(revDoc)
+            source.storage.withDbConnection {
+                for (revDoc in selectBySqlWhere(linksToThisWhere)) {
+                    if (revDoc.deleted) continue
+                    revDoc.baseUri = source.baseUri
+                    if (!alreadyImportedIDs.contains(revDoc.shortId)) {
+                        alreadyImportedIDs.add(revDoc.shortId)
+                        queueSave(revDoc)
+                    }
                 }
             }
         }
@@ -111,7 +113,7 @@ class WhelkCopier {
             FROM lddb
             WHERE $whereClause
             """
-        def conn = source.storage.getConnection()
+        def conn = source.storage.getMyConnection()
         conn.setAutoCommit(false)
         def stmt = conn.prepareStatement(query)
         stmt.setFetchSize(DEFAULT_FETCH_SIZE)

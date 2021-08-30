@@ -37,17 +37,16 @@ class LinkFinder {
     }
 
     List<URI> findLinks(List<Map> entities, List<String> recordIds) {
-        if(recordIds.any() && entities.any()) {
-            log.debug "Finding links for ${entities.size()} entities and ${recordIds.size()} record Ids"
+        return postgres.withDbConnection { notIt -> // Otherwise compliler error with: The current scope already contains a variable of the name it
+            if(recordIds.any() && entities.any()) {
+                log.debug "Finding links for ${entities.size()} entities and ${recordIds.size()} record Ids"
 
-            def paramsQuery = ENTITY_QUERY.replace('€', recordIds.collect { it -> '?' }.join(','))
-            def connection = postgres.getConnection()
-            try {
+                def paramsQuery = ENTITY_QUERY.replace('€', recordIds.collect { it -> '?' }.join(','))
+                def connection = postgres.getMyConnection()
+
                 PreparedStatement stmt = connection.prepareStatement(paramsQuery)
 
                 def foundLinks = entities.collect { entity ->
-                    //log.trace "Trying to match entity ${entity.inspect()}"
-
                     int i = 1
                     stmt.setObject(i, mapper.writeValueAsString([entity]), java.sql.Types.OTHER)
                     recordIds.each { recordId ->
@@ -69,13 +68,10 @@ class LinkFinder {
                 log.debug "Found ${foundLinks.count { it -> it }} links to replace in entities"
                 return foundLinks
             }
-            finally {
-                connection.close()
+            else{
+                log.debug "missing arguments. No linkfinding will be performed."
+                return [null]
             }
-        }
-        else{
-            log.debug "missing arguments. No linkfinding will be performed."
-            return [null]
         }
     }
 
