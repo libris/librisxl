@@ -1371,9 +1371,13 @@ class PostgreSQLComponent {
 
     private void saveIdentifiers(Document doc, Connection connection, boolean deleted, boolean removeOnly = false) {
         PreparedStatement removeIdentifiers = connection.prepareStatement(DELETE_IDENTIFIERS)
-        removeIdentifiers.setString(1, doc.getShortId())
-        int numRemoved = removeIdentifiers.executeUpdate()
-        log.debug("Removed $numRemoved identifiers for id ${doc.getShortId()}")
+        try {
+            removeIdentifiers.setString(1, doc.getShortId())
+            int numRemoved = removeIdentifiers.executeUpdate()
+            log.debug("Removed $numRemoved identifiers for id ${doc.getShortId()}")
+        } finally {
+            close(removeIdentifiers)
+        }
 
         if (removeOnly)
             return
@@ -1411,6 +1415,8 @@ class PostgreSQLComponent {
         } catch (BatchUpdateException bue) {
             log.error("Failed saving identifiers for ${doc.getShortId()}")
             throw bue.getNextException()
+        } finally {
+            close(altIdInsert)
         }
     }
 
