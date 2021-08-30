@@ -88,6 +88,19 @@ API:et implementerar ett antal valideringssteg, till exempel för att förhindra
 att duplicerade beståndsposter skapas. Om någon validering misslyckas svarar
 API:et `400 Bad Request` med ett felmeddelande som förklarar problemet.
 
+Observera att ett tillfälligt `@id` **måste** specificeras på flera ställen i
+dokumentet du skickar:
+
+* Tillfälligt `@id` i Record
+* Tillfälligt `mainEntity.@id` i Record
+* Tillfälligt `@id` i Thing ("saken")
+
+Till exempel:
+
+```
+{"@graph":[{"@id":"https://id.kb.se/TEMPID","@type":"Record","mainEntity":{"@id":"https://id.kb.se/TEMPID#it"}},{"@id":"https://id.kb.se/TEMPID#it","@type":"Person","familyName":"Testing"}]}
+```
+
 Ett lyckat anrop kommer resultera i ett `201 Created`-svar med den nya postens
 URI satt i `Location`-headern.
 
@@ -99,7 +112,7 @@ $ curl -XPOST -H 'Content-Type: application/ld+json' \
     -H 'Authorization: Bearer <token>' \
     -H 'XL-Active-Sigel: <sigel>' \
     -d@min_post.jsonld \
-    https://libris-qa.kb.se/data/
+    https://libris-qa.kb.se/data
 ```
 * `<token>` - En aktiv och giltig bearertoken (t.ex. hW3IHc9PexxxFP2IkAAbqKvjLbW4thQ)
 * `<sigel>` - En sigel som din oauth-klient är knuten till (t.ex. Doro)
@@ -189,16 +202,28 @@ innebär `ELLER`, `*` används för prefixsökningar, `""` matchar hela frasen o
 * `_offset` - Antal träffar att hoppa över i resultatet, används för
   paginering. Standardvärdet är 0.
   
-Sökningen kan filtreras på värdet på egenskaper i posten. Om flera egenskaper anges innebär det `OCH`.
-Om samma egenskap anges flera gånger innebär det `ELLER`. Samma egenskap kan anges flera gånger genom 
-att uppprepa parametern eller genom att komma-separera värdena.
-* `<egenskap>` - Egenskapen har exakt värdet.
+Sökningen kan filtreras på värdet på egenskaper i posten. Samma egenskap kan anges flera gånger genom
+att upprepa parametern eller genom att komma-separera värdena. Om olika egenskaper anges innebär det 
+`OCH`. Om samma egenskap anges flera gånger innebär det `ELLER`. Det går att kombinera olika egenskaper 
+med `ELLER` genom att använda prefixet `or-`.
+
+* `<egenskap>` - Egenskapen har värdet.
+* `or-<egenskap>` - Kombinera filter för olika egenskaper med `ELLER` istället för `OCH`.
 * `exists-<egenskap>` - Egenskapen existerar. Ange ett booleskt värde, d.v.s. `true` eller `false`.
 * `min-<egenskap>` - Värdet är större eller lika med.
 * `minEx-<egenskap>` - Värdet är större än (Ex står för "Exclusive").
 * `max-<egenskap>` - Värdet är mindre eller lika med.
 * `maxEx-<egenskap>` - Värdet är mindre än.
 * `matches-<egenskap>` - Värdet matchar (se datum-sökning nedan).
+
+ Filter-uttryck                                        | Filter-parametrar    
+-------------------------------------------------------|-----------------------                 
+ a är x `ELLER` a är y...                              | `a=x&a=y...`
+ a är x `OCH` a är y                                   | Inte möjligt.
+ a är x `OCH` b är y `OCH` c är z...                   | `a=x&b=y&c=z...`
+ a är x `ELLER` b är y...                              | `or-a=x&or-b=y...`          
+ (a är x `ELLER` b är y) `OCH` c är z...               | `or-a=x&or-b=y&c=z...`  
+ (a är x `ELLER` b är y) `OCH` (c är z `ELLER` d är q) | Inte möjligt. Kan bara ange en grupp med `or-`.                    
 
 För egenskaper som är av typen datum (`meta.created`, `meta.modified` och `meta.generationDate`)
 kan värdet anges på följande format:

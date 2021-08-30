@@ -14,14 +14,17 @@ Dessa parametrar är:
    1. `ignore` som innebär att borttagna poster helt enkelt ignoreras
    1. `export` som innebär att borttagna poster exporteras men är markerade som borttagna i MARC-leadern
    1. `append` som innebär att borttagna posters ID:n exporteras som en CSV-fil _efter_ den vanliga exportdatan (separerat av en null-byte).
-1. `virtualDelete` som kan ha värde `true` eller `false`. Är `virtualDelete` satt till `true` så kommer poster anses vara borttagna i den genererade exporten, i de fall där de sigel som anges i profilen inte längre har bestånd på posterna. Flaggan används förslagsvis tillsammans med `deleted=export`.
+1. `virtualDelete` som kan ha värde `true` eller `false`. Är `virtualDelete` satt till `true` så kommer poster anses vara borttagna i den genererade exporten, i de fall där de sigel som anges i `locations` i profilen inte längre har bestånd på posterna. Flaggan används förslagsvis tillsammans med `deleted=export`.
 
-Exempel på anrop:
+## Exempel på anrop
 ```
 $ curl -Ss -XPOST "https://libris.kb.se/api/marc_export/?from=2019-10-05T22:00:00Z&until=2019-10-06T22:00:00Z&deleted=ignore&virtualDelete=false" --data-binary @./etc/export.properties > export.marc
 ```
 
+## Var noga med tiden!
+
 SE UPP med era tidsangivelser/tidszoner! Exemplet ovan skickar in tider i UTC (därav 'Z' på slutet). Det är ett bra sätt att göra det på. Vill man skicka in lokala tider istället för UTC så går det också, men då måste tidszonen ingå i angivelsen. Vänligen läs på om ISO-8601!
+Se till att maskinen som anropar detta API använder sig av NTP, så att maskinens klocka går rätt. Om detta inte görs finns risken att man missar uppdateringar av poster. För att gardera sig emot eventuella avrundningsfel/trunkeringsfel vid tidsangivelser så drar servern också alltid bort en sekund ifrån värdet på `from`. Detta kan vara förvirrande om man försöker använda APIet för statistik-syften eller liknande.
 
 Vill man anropa detta API med ett schemalagt skript så finns exempel/förslag på sådana skript här för:
 [Windows](https://github.com/libris/librisxl/blob/master/marc_export/examplescripts/export_windows.bat)
@@ -29,7 +32,8 @@ och
 [*nix-derivat (bash)](https://github.com/libris/librisxl/blob/master/marc_export/examplescripts/export_nix.sh)
 
 
-Exempel på exportprofil:
+## Exempel på exportprofil
+
 ```
 move240to244=off
 f003=SE-LIBR
@@ -73,7 +77,7 @@ Förklaring till (en del av) de olika inställningarna i exportprofilen:
 | `bibupdate`          | `on`\|`off`                | Ska uppdateringar av bibliografiska poster leda till export.
 | `characterencoding`  | `UTF-8`\|`ISO-8859-1`      | Avgör teckenkodning.
 | `composestrategy`    | `compose`\|`decompose`     | Avgör ifall unicode-tecken ska vara composed eller decomposed.
-| `exportdeleted`      | `on`\|`off`                | Motsvarar HTTP-parametern `deleted=export` resp. `deleted=ignore` som prioriteras framför värdet här om båda anges.
+| `exportdeleted`      | `on`\|`off`                | Ska borttagna poster exporteras (men markerade som borttagna i MARC-leadern). Motsvarar HTTP-parametern `deleted=export` resp. `deleted=ignore` som prioriteras framför värdet här om båda anges. Se även `virtualdelete`.
 | `f003`               | [sträng]                   | Blankstegsseparerad lista. Tvinga fält 003 att anta ett visst värde.
 | `format`             | `ISO2709`\|`MARCXML`       | Avgör serialiseringsformat för MARC-data.
 | `holdcreate`         | `on`\|`off`                | Ska nyskapade bestånd leda till export.
@@ -91,4 +95,4 @@ Förklaring till (en del av) de olika inställningarna i exportprofilen:
 | `move240to244`       | `off`|`on`                 | Flytta MARC-fältet 240 till 244.
 | `nameform`           | `Forskningsbiblioteksform` | Tvinga namnformer att anta Forskningsbiblioteksform.
 | `sab`                | `on`\|`off`                | Ska SAB-titlar (976) läggas till.
-| `virtualdelete`      | `on`\|`off`                | Motsvarar HTTP-parametern `virtualDelete` som prioriteras framför värdet här om båda anges.
+| `virtualdelete`      | `on`\|`off`                | Betrakta bibliografiska poster som borttagna när de sigel som anges i `locations` inte längre har något bestånd. Används förslagsvis tillsammans med `exportdeleted`. Motsvarar HTTP-parametern `virtualDelete` som prioriteras framför värdet här om båda anges.

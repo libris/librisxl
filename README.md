@@ -16,7 +16,7 @@ The project consists of:
 
 * Core
     * `whelk-core/`
-        The root component of XL; a linked data store, including search and [MARC conversion](whelk-core/src/main/resources/ext).
+        The root component of XL. A shared library implementing a linked data store, including search and [MARC conversion](whelk-core/src/main/resources/ext).
 
 * Applications
     * `oaipmh/`

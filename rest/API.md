@@ -87,6 +87,18 @@ There are some checks in place, e.g. in order to prevent creation of duplicate
 holding records, and to these requests the API responds with a `400 Bad Request`
 with an error message explaining the issue.
 
+Note that a temporary `@id` **must** be set in a few places in the document you send:
+
+* Temporary `@id` in Record
+* Temporary `mainEntity.@id` in Record
+* Temporary `@id` in Thing
+
+For example:
+
+```
+{"@graph":[{"@id":"https://id.kb.se/TEMPID","@type":"Record","mainEntity":{"@id":"https://id.kb.se/TEMPID#it"}},{"@id":"https://id.kb.se/TEMPID#it","@type":"Person","familyName":"Testing"}]}
+```
+
 A successful creation will get a `201 Created` response with a `Location`
 header containing the URI of the new record.
 
@@ -98,7 +110,7 @@ $ curl -XPOST -H 'Content-Type: application/ld+json' \
     -H 'Authorization: Bearer <token>' \ 
     -H 'XL-Active-Sigel: <sigel>' \
     -d@my_record.jsonld \
-    https://libris-qa.kb.se/data/
+    https://libris-qa.kb.se/data
 ```
 * `<token>` - An active and valid bearer token (e.g. hW3IHc9PexxxFP2IkAAbqKvjLbW4thQ)
 * `<sigel>` - A sigel that is connected to your oauth client (e.g. Doro)
@@ -184,17 +196,28 @@ means `OR`, `*` is used for prefix queries, `""` matches the whole phrase, and
 * `_offset` - Number of hits to skip in the result, used for pagination.
   Default is 0.
 
-Records can be filtered on field values. Multiple fields means `AND`. Multiple values
-for the same field means `OR`. Specifying multiple values for the same field can be done
-by repeating the parameter or by giving a comma-separated list as value.
+Records can be filtered on field values. Specifying multiple values for the same field can be done
+by repeating the parameter or by giving a comma-separated list as value. Specifying multiple fields 
+means `AND`. Multiple values for the same field means `OR`. It is possible to combine multiple fields 
+with `OR` by using the prefix `or-`.
 
-* `<field>` - The record has exactly this value for `field`.  
+* `<field>` - The record has this value for `field`.
+* `or-<field>` - Combine filters for multiple fields with `OR` instead of `AND`.
 * `exists-<field>` - The field exists in the record. Value should be `true` or `false`.
 * `min-<field>` - Greater or equal to.
 * `minEx-<field>` - Greater than (exclusive minimum).
 * `max-<field>` - Less or equal to.
 * `maxEx-<field>` - Less than.
 * `matches-<field>` - Value is matching (see date-search below).
+
+Filter-expression                                     | Filter-parameters
+------------------------------------------------------|----------------------------------------------
+a is x `OR` a is y...                                 | `a=x&a=y...`
+a is x `AND` a is y                                   | Not possible.
+a is x `AND` b is y `AND` c is z...                   | `a=x&b=y&c=z...`
+a is x `OR` b is y...                                 | `or-a=x&or-b=y...`
+(a is x `OR` b is y) `AND` c is z...                  | `or-a=x&or-b=y&c=z...`
+(a is x `OR` b is y) `AND` (c is z `OR` d is q)       | Not possible. Can only specify one group with `or-`.
 
 For fields of type date (`meta.created`, `meta.modified` and `meta.generationDate`)
 the following formats can be used for value:
@@ -276,6 +299,7 @@ $ curl -XGET -H "Accept: application/ld+json" \
     'https://libris-qa.kb.se/find.jsonld?q=Aniara&@reverse.itemOf.heldBy.@id=https://libris.kb.se/library/APP1'
 ...
 ```
+
 
 ### `/_remotesearch` - Search external databases - Requires authentication
 
