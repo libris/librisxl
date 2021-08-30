@@ -70,17 +70,19 @@ class WhelkCopier {
             doc.baseUri = source.baseUri
 
             // this links to:
-            for (relDoc in selectBySqlWhere("""id in (select dependsonid from lddb__dependencies where id = '${id}')""")) {
-                if (relDoc.deleted) continue
-                relDoc.baseUri = source.baseUri
-                if (!alreadyImportedIDs.contains(relDoc.shortId)) {
-                    alreadyImportedIDs.add(relDoc.shortId)
-                    queueSave(relDoc)
+            source.storage.withDbConnection {
+                for (relDoc in selectBySqlWhere("""id in (select dependsonid from lddb__dependencies where id = '${id}')""")) {
+                    if (relDoc.deleted) continue
+                    relDoc.baseUri = source.baseUri
+                    if (!alreadyImportedIDs.contains(relDoc.shortId)) {
+                        alreadyImportedIDs.add(relDoc.shortId)
+                        queueSave(relDoc)
+                    }
                 }
-            }
-            if (!alreadyImportedIDs.contains(doc.shortId)) {
-                alreadyImportedIDs.add(doc.shortId)
-                queueSave(doc)
+                if (!alreadyImportedIDs.contains(doc.shortId)) {
+                    alreadyImportedIDs.add(doc.shortId)
+                    queueSave(doc)
+                }
             }
             // links to this:
             def linksToThisWhere
