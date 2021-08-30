@@ -669,7 +669,7 @@ class PostgreSQLComponent {
                 }
 
                 if (linkFinder != null)
-                    linkFinder.normalizeIdentifiers(doc, connection)
+                    linkFinder.normalizeIdentifiers(doc)
 
                 //FIXME: throw exception on null changedBy
                 if (changedBy != null) {
@@ -1831,19 +1831,21 @@ class PostgreSQLComponent {
         }
     }
 
-    boolean iriIsLinkable(String iri, Connection connection) {
-        PreparedStatement preparedStatement = null
-        ResultSet rs = null
-        try {
-            preparedStatement = connection.prepareStatement(GET_IRI_IS_LINKABLE)
-            preparedStatement.setString(1, iri)
-            rs = preparedStatement.executeQuery()
-            if (rs.next())
-                return !rs.getBoolean(1) // not deleted
-            return false
-        }
-        finally {
-            close(rs, preparedStatement)
+    boolean iriIsLinkable(String iri) {
+        withDbConnection {
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                preparedStatement = getMyConnection().prepareStatement(GET_IRI_IS_LINKABLE)
+                preparedStatement.setString(1, iri)
+                rs = preparedStatement.executeQuery()
+                if (rs.next())
+                    return !rs.getBoolean(1) // not deleted
+                return false
+            }
+            finally {
+                close(rs, preparedStatement)
+            }
         }
     }
 
@@ -2280,7 +2282,7 @@ class PostgreSQLComponent {
         }
 
         if (linkFinder != null) {
-            linkFinder.normalizeIdentifiers(doc, connection)
+            linkFinder.normalizeIdentifiers(doc)
         }
     }
 

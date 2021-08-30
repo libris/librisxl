@@ -7,9 +7,7 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.component.PostgreSQLComponent
 import whelk.exception.LinkValidationException
-import whelk.util.LegacyIntegrationTools
 
-import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
@@ -77,10 +75,6 @@ class LinkFinder {
     }
 
     void normalizeIdentifiers(Document document) {
-        normalizeIdentifiers(document, null)
-    }
-
-    void normalizeIdentifiers(Document document, Connection connection) {
         // Normalize ISBN and ISSN identifiers. No hyphens and upper case.
         for (List<String> path : [Document.thingTypedIDsPath, Document.thingIndirectTypedIDsPath]) {
             List typedIDs = document.get(path)
@@ -103,7 +97,7 @@ class LinkFinder {
         }
 
         clearReferenceAmbiguities(document)
-        replaceSameAsLinksWithPrimaries(document.data, connection)
+        replaceSameAsLinksWithPrimaries(document.data)
         // TODO: check what happens in the sameas table when id:s are changed and changed back!
         restoreNewCanonicalMainEntityUri(document.data)
     }
@@ -122,11 +116,11 @@ class LinkFinder {
         items[0][JsonLd.THING_KEY]['@id'] = items[1]['@id']
     }
 
-    private void replaceSameAsLinksWithPrimaries(Map data, Connection connection) {
+    private void replaceSameAsLinksWithPrimaries(Map data) {
         // If this is a link (an object containing _only_ an id)
         String id = data.get("@id")
         if (id != null && data.keySet().size() == 1) {
-            String primaryId = lookupPrimaryId(id, connection)
+            String primaryId = lookupPrimaryId(id)
             if (primaryId != null)
                 data.put("@id", primaryId)
         }
@@ -142,32 +136,28 @@ class LinkFinder {
             Object value = data.get(key)
 
             if (value instanceof List)
-                replaceSameAsLinksWithPrimaries( (List) value, connection )
+                replaceSameAsLinksWithPrimaries( (List) value )
             if (value instanceof Map)
-                replaceSameAsLinksWithPrimaries( (Map) value, connection )
+                replaceSameAsLinksWithPrimaries( (Map) value )
         }
     }
 
-    private void replaceSameAsLinksWithPrimaries(List data, Connection connection) {
+    private void replaceSameAsLinksWithPrimaries(List data) {
         for (Object element : data){
             if (element instanceof List)
-                replaceSameAsLinksWithPrimaries( (List) element, connection )
+                replaceSameAsLinksWithPrimaries( (List) element )
             else if (element instanceof Map)
-                replaceSameAsLinksWithPrimaries( (Map) element, connection )
+                replaceSameAsLinksWithPrimaries( (Map) element )
         }
     }
 
-    private String lookupPrimaryId(String id, Connection connection) {
-        String mainIri
-        if (connection == null)
-            mainIri = postgres.getMainId(id)
-        else
-            mainIri = postgres.getMainId(id, connection)
+    private String lookupPrimaryId(String id) {
+        String mainIri = postgres.getMainId(id)
 
         if (mainIri == null)
             return null
 
-        if (postgres.iriIsLinkable(mainIri, connection))
+        if (postgres.iriIsLinkable(mainIri))
             return mainIri
         throw new LinkValidationException("Not allowed to link to the deleted resource: " + mainIri)
     }
