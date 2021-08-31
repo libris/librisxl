@@ -256,7 +256,7 @@ Samtliga namnrymdsprefix som används är [fördefinierade](https://libris.kb.se
             ?digiBook bf2:issuance kbv:Monograph ;
                 bf2:instanceOf/a bf2:Text ;
                 kbv:publication/kbv:year "2020" ;
-                ^sdo:mainEntity/kbv:bibliography [ a sdo:Library ;
+                ^foaf:primaryTopic/kbv:bibliography [ a sdo:Library ;
                         kbv:sigel "DIGI" ]
         }
 
@@ -272,7 +272,7 @@ Samtliga namnrymdsprefix som används är [fördefinierade](https://libris.kb.se
 
         SELECT ?digi ?title {
             ?digi kbv:publication/kbv:year "2019" ;
-                ^sdo:mainEntity/kbv:bibliography [ a sdo:Library ;
+                ^foaf:primaryTopic/kbv:bibliography [ a sdo:Library ;
                         kbv:sigel "DIGI" ]
             OPTIONAL {
                 ?digiBook bf2:title [ a bf2:Title
