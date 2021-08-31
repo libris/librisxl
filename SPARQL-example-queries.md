@@ -253,12 +253,11 @@ Samtliga namnrymdsprefix som används är [fördefinierade](https://libris.kb.se
             ?digiBook bf2:issuance kbv:Monograph ;
                 bf2:instanceOf/a bf2:Text ;
                 kbv:publication/kbv:year "2020" ;
-                ^foaf:primaryTopic/kbv:bibliography [ a sdo:Library ;
-                        kbv:sigel "DIGI" ]
+                ^foaf:primaryTopic/kbv:bibliography <https://libris.kb.se/library/DIGI>
         }
 
     **Kommentar:**
-    Än så länge är det mest effektiva (men tyvärr något konstlade) att avgöra om något digitaliserats att söka efter
+    Än så länge är det mest effektiva (men tyvärr något konstlade) sättet att avgöra om något digitaliserats att söka efter
      sigel "DIGI" via entitetens associerade named graph (record). Så småningom ska det istället bli möjligt att
       finna denna information direkt på entiteten själv medelst formen `?digiBook kbv:production [ a kbv:DigitalReproduction ]`.
       Dessutom ska man kunna få fram den fysiska versionen via `?digiBook bf2:reproductionOf ?book`.
