@@ -38,8 +38,8 @@ Samtliga namnrymdsprefix som används är [fördefinierade](https://libris.kb.se
 
     **Kommentar:**  
     Här förutsätter vi att författaren alltid ligger som länkad entitet under 'agent'. En variant för att matcha även
-     lokala entiteter vore att byta ut URI:n `<https://libris.kb.se/qn247n18248vs58#it>` mot en blanknod `[ sdo:givenName
-      "Selma" ; sdo:familyName "Lagerlöf" ]`. Detta fungerar dock dåligt i det fall författaren har ett mer generiskt
+     lokala entiteter vore att byta ut URI:n `<https://libris.kb.se/qn247n18248vs58#it>` mot en blanknod `[ foaf:givenName
+      "Selma" ; foaf:familyName "Lagerlöf" ]`. Detta fungerar dock dåligt i det fall författaren har ett mer generiskt
        namn.  
 
  ---
@@ -116,8 +116,8 @@ Samtliga namnrymdsprefix som används är [fördefinierade](https://libris.kb.se
                             bf2:agent ?cartoonist ] ] ;
                 kbv:publication/kbv:year ?year   
             OPTIONAL {
-                ?cartoonist sdo:givenName ?givenName ;
-                    sdo:familyName ?familyName
+                ?cartoonist foaf:givenName ?givenName ;
+                    foaf:familyName ?familyName
             }    
             FILTER(str(?year) >= "1980" && str(?year) < "2020")
             FILTER(!isBlank(?cartoonist))
