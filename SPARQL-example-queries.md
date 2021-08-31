@@ -187,16 +187,13 @@ Samtliga namnrymdsprefix som används är [fördefinierade](https://libris.kb.se
 * #### Hur många facklitterära böcker gav förlaget Natur och Kultur ut mellan åren 1920-2000?
 
         SELECT COUNT(DISTINCT ?book) AS ?count {
-            VALUES ?agent {
-                "Natur & Kultur"
-                "N&K"
-            }
             ?book bf2:issuance kbv:Monograph ;
                 bf2:instanceOf [ a bf2:Text ;
                         bf2:genreForm/(owl:sameAs|skos:exactMatch)* marc:NotFictionNotFurtherSpecified ] ;
                 kbv:publication [ a kbv:PrimaryPublication ;
                         bf2:agent/rdfs:label ?agent ;
                         kbv:year ?year ]
+            FILTER(regex(?agent, "Natur (&|och) Kultur|^N&K$", "i"))            
             FILTER(str(?year) >= "1920" && str(?year) < "2000")
         }
 
