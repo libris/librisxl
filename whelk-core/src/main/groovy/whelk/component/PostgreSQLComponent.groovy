@@ -720,8 +720,10 @@ class PostgreSQLComponent {
 
     void reDenormalize() {
         log.info("Re-denormalizing data.")
-        withDbConnection {
-            Connection connection = getMyConnection()
+        Connection connection = getOuterConnection()
+        try {
+            boolean autoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false)
             boolean leaveCacheAlone = true
 
             long count = 0
@@ -733,6 +735,13 @@ class PostgreSQLComponent {
                     log.info("$count records re-denormalized")
             }
             clearEmbellishedCache(connection)
+            connection.commit()
+            connection.setAutoCommit(autoCommit)
+        } catch (Exception e) {
+            log.error("Failed reDenormalize: ${e.message}. Rolling back.")
+            connection.rollback()
+        } finally {
+            connection.close()
         }
     }
 
@@ -1371,9 +1380,13 @@ class PostgreSQLComponent {
 
     private void saveIdentifiers(Document doc, Connection connection, boolean deleted, boolean removeOnly = false) {
         PreparedStatement removeIdentifiers = connection.prepareStatement(DELETE_IDENTIFIERS)
-        removeIdentifiers.setString(1, doc.getShortId())
-        int numRemoved = removeIdentifiers.executeUpdate()
-        log.debug("Removed $numRemoved identifiers for id ${doc.getShortId()}")
+        try {
+            removeIdentifiers.setString(1, doc.getShortId())
+            int numRemoved = removeIdentifiers.executeUpdate()
+            log.debug("Removed $numRemoved identifiers for id ${doc.getShortId()}")
+        } finally {
+            close(removeIdentifiers)
+        }
 
         if (removeOnly)
             return
@@ -1411,6 +1424,8 @@ class PostgreSQLComponent {
         } catch (BatchUpdateException bue) {
             log.error("Failed saving identifiers for ${doc.getShortId()}")
             throw bue.getNextException()
+        } finally {
+            close(altIdInsert)
         }
     }
 
