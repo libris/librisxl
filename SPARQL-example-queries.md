@@ -270,11 +270,11 @@ Samtliga namnrymdsprefix som används är [fördefinierade](https://libris.kb.se
             ?digi kbv:publication/kbv:year "2019" ;
                 ^foaf:primaryTopic/kbv:bibliography <https://libris.kb.se/library/DIGI> .
             OPTIONAL {
-                ?digiBook bf2:title [ a bf2:Title
+                ?digi bf2:title [ a bf2:Title ;
                         bf2:mainTitle ?title ]
             }
         }
-
+        ORDER BY ?title
 ---
 
 * #### Hur många svenska utgivare fanns det 1970?
