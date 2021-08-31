@@ -29,7 +29,7 @@ Samtliga namnrymdsprefix som används är [fördefinierade](https://libris.kb.se
         SELECT DISTINCT ?language ?langName {
             [] bf2:contribution [ a kbv:PrimaryContribution ;
                     bf2:role rel:author ;
-                    bf2:agent <https://libris-qa.kb.se/qn247n18248vs58#it> ] ;
+                    bf2:agent <https://libris.kb.se/qn247n18248vs58#it> ] ;
                 bf2:translationOf/a bf2:Work ;
                 bf2:language ?language .
             ?language skos:prefLabel ?langName
@@ -38,7 +38,7 @@ Samtliga namnrymdsprefix som används är [fördefinierade](https://libris.kb.se
 
     **Kommentar:**  
     Här förutsätter vi att författaren alltid ligger som länkad entitet under 'agent'. En variant för att matcha även
-     lokala entiteter vore att byta ut URI:n `<https://libris-qa.kb.se/qn247n18248vs58#it>` mot en blanknod `[ sdo:givenName
+     lokala entiteter vore att byta ut URI:n `<https://libris.kb.se/qn247n18248vs58#it>` mot en blanknod `[ sdo:givenName
       "Selma" ; sdo:familyName "Lagerlöf" ]`. Detta fungerar dock dåligt i det fall författaren har ett mer generiskt
        namn.  
 
