@@ -721,20 +721,28 @@ class PostgreSQLComponent {
     void reDenormalize() {
         log.info("Re-denormalizing data.")
         Connection connection = getOuterConnection()
-        connection.setAutoCommit(false)
-        boolean leaveCacheAlone = true
+        try {
+            boolean autoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false)
+            boolean leaveCacheAlone = true
 
-        long count = 0
-        for (Document doc : loadAll(null, false, null, null)) {
-            refreshDerivativeTables(doc, connection, doc.getDeleted(), leaveCacheAlone)
+            long count = 0
+            for (Document doc : loadAll(null, false, null, null)) {
+                refreshDerivativeTables(doc, connection, doc.getDeleted(), leaveCacheAlone)
 
-            ++count
-            if (count % 500 == 0)
-                log.info("$count records re-denormalized")
+                ++count
+                if (count % 500 == 0)
+                    log.info("$count records re-denormalized")
+            }
+            clearEmbellishedCache(connection)
+            connection.commit()
+            connection.setAutoCommit(autoCommit)
+        } catch (Exception e) {
+            log.error("Failed reDenormalize: ${e.message}. Rolling back.")
+            connection.rollback()
+        } finally {
+            connection.close()
         }
-        clearEmbellishedCache(connection)
-        connection.commit()
-        connection.close()
     }
 
     /**
