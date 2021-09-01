@@ -1,4 +1,4 @@
-List idList = new File(scriptDir, 'f1700-group-idlist.yaml').readLines()
+List idList = new File(scriptDir, 'suecia-group-idlist.yaml').readLines()
 
 Map mimerUriById = [:]
 
