@@ -29,7 +29,7 @@ Samtliga namnrymdsprefix som används är [fördefinierade](https://libris.kb.se
         SELECT DISTINCT ?language ?langName {
             [] bf2:contribution [ a kbv:PrimaryContribution ;
                     bf2:role rel:author ;
-                    bf2:agent <https://libris-qa.kb.se/qn247n18248vs58#it> ] ;
+                    bf2:agent <https://libris.kb.se/qn247n18248vs58#it> ] ;
                 bf2:translationOf/a bf2:Work ;
                 bf2:language ?language .
             ?language skos:prefLabel ?langName
@@ -38,8 +38,8 @@ Samtliga namnrymdsprefix som används är [fördefinierade](https://libris.kb.se
 
     **Kommentar:**  
     Här förutsätter vi att författaren alltid ligger som länkad entitet under 'agent'. En variant för att matcha även
-     lokala entiteter vore att byta ut URI:n `<https://libris-qa.kb.se/qn247n18248vs58#it>` mot en blanknod `[ sdo:givenName
-      "Selma" ; sdo:familyName "Lagerlöf" ]`. Detta fungerar dock dåligt i det fall författaren har ett mer generiskt
+     lokala entiteter vore att byta ut URI:n `<https://libris.kb.se/qn247n18248vs58#it>` mot en blanknod `[ foaf:givenName
+      "Selma" ; foaf:familyName "Lagerlöf" ]`. Detta fungerar dock dåligt i det fall författaren har ett mer generiskt
        namn.  
 
  ---
@@ -116,8 +116,8 @@ Samtliga namnrymdsprefix som används är [fördefinierade](https://libris.kb.se
                             bf2:agent ?cartoonist ] ] ;
                 kbv:publication/kbv:year ?year   
             OPTIONAL {
-                ?cartoonist sdo:givenName ?givenName ;
-                    sdo:familyName ?familyName
+                ?cartoonist foaf:givenName ?givenName ;
+                    foaf:familyName ?familyName
             }    
             FILTER(str(?year) >= "1980" && str(?year) < "2020")
             FILTER(!isBlank(?cartoonist))
@@ -187,16 +187,13 @@ Samtliga namnrymdsprefix som används är [fördefinierade](https://libris.kb.se
 * #### Hur många facklitterära böcker gav förlaget Natur och Kultur ut mellan åren 1920-2000?
 
         SELECT COUNT(DISTINCT ?book) AS ?count {
-            VALUES ?agent {
-                "Natur & Kultur"
-                "N&K"
-            }
             ?book bf2:issuance kbv:Monograph ;
                 bf2:instanceOf [ a bf2:Text ;
                         bf2:genreForm/(owl:sameAs|skos:exactMatch)* marc:NotFictionNotFurtherSpecified ] ;
                 kbv:publication [ a kbv:PrimaryPublication ;
                         bf2:agent/rdfs:label ?agent ;
                         kbv:year ?year ]
+            FILTER(regex(?agent, "Natur (&|och) Kultur|^N&K$", "i"))            
             FILTER(str(?year) >= "1920" && str(?year) < "2000")
         }
 
@@ -256,12 +253,11 @@ Samtliga namnrymdsprefix som används är [fördefinierade](https://libris.kb.se
             ?digiBook bf2:issuance kbv:Monograph ;
                 bf2:instanceOf/a bf2:Text ;
                 kbv:publication/kbv:year "2020" ;
-                ^sdo:mainEntity/kbv:bibliography [ a sdo:Library ;
-                        kbv:sigel "DIGI" ]
+                ^foaf:primaryTopic/kbv:bibliography <https://libris.kb.se/library/DIGI>
         }
 
     **Kommentar:**
-    Än så länge är det mest effektiva (men tyvärr något konstlade) att avgöra om något digitaliserats att söka efter
+    Än så länge är det mest effektiva (men tyvärr något konstlade) sättet att avgöra om något digitaliserats att söka efter
      sigel "DIGI" via entitetens associerade named graph (record). Så småningom ska det istället bli möjligt att
       finna denna information direkt på entiteten själv medelst formen `?digiBook kbv:production [ a kbv:DigitalReproduction ]`.
       Dessutom ska man kunna få fram den fysiska versionen via `?digiBook bf2:reproductionOf ?book`.
@@ -272,14 +268,13 @@ Samtliga namnrymdsprefix som används är [fördefinierade](https://libris.kb.se
 
         SELECT ?digi ?title {
             ?digi kbv:publication/kbv:year "2019" ;
-                ^sdo:mainEntity/kbv:bibliography [ a sdo:Library ;
-                        kbv:sigel "DIGI" ]
+                ^foaf:primaryTopic/kbv:bibliography <https://libris.kb.se/library/DIGI> .
             OPTIONAL {
-                ?digiBook bf2:title [ a bf2:Title
+                ?digi bf2:title [ a bf2:Title ;
                         bf2:mainTitle ?title ]
             }
         }
-
+        ORDER BY ?title
 ---
 
 * #### Hur många svenska utgivare fanns det 1970?
