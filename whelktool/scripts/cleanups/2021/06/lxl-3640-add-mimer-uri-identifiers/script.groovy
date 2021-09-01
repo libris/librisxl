@@ -6,7 +6,7 @@ String id
 
 idList.each { String line ->
     if (line =~ "libris_id:")
-        id = line.replaceFirst(/.*libris_id:/, "").trim()
+        id = line.replaceFirst(/.*libris_id:/, "").replaceAll(/\W/, "")
     else if (line =~ /uri:/) {
         String uri = line.replace("uri:", "").trim()
 
