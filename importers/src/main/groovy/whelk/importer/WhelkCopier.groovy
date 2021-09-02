@@ -46,12 +46,14 @@ class WhelkCopier {
                         "'" + types.join("','") + "'" + ")"
             }
 
-            for (doc in selectBySqlWhere(whereClause)) {
-                if (doc.deleted) continue
-                doc.baseUri = source.baseUri
-                if (!alreadyImportedIDs.contains(doc.shortId)) {
-                    alreadyImportedIDs.add(doc.shortId)
-                    queueSave(doc)
+            source.storage.withDbConnection {
+                for (doc in selectBySqlWhere(whereClause)) {
+                    if (doc.deleted) continue
+                    doc.baseUri = source.baseUri
+                    if (!alreadyImportedIDs.contains(doc.shortId)) {
+                        alreadyImportedIDs.add(doc.shortId)
+                        queueSave(doc)
+                    }
                 }
             }
         }
