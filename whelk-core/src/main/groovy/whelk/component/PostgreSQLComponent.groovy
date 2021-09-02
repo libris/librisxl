@@ -371,6 +371,12 @@ class PostgreSQLComponent {
     private static final String DELETE_USER_DATA =
             "DELETE FROM lddb__user_data WHERE id = ?"
 
+    private static final String GET_IRI_IS_LINKABLE = """
+            SELECT lddb.deleted
+            FROM lddb__identifiers
+            JOIN lddb ON lddb__identifiers.id = lddb.id WHERE lddb__identifiers.iri = ?
+            """.stripIndent()
+
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
 
@@ -663,7 +669,7 @@ class PostgreSQLComponent {
                 }
 
                 if (linkFinder != null)
-                    linkFinder.normalizeIdentifiers(doc, connection)
+                    linkFinder.normalizeIdentifiers(doc)
 
                 //FIXME: throw exception on null changedBy
                 if (changedBy != null) {
@@ -1840,6 +1846,24 @@ class PostgreSQLComponent {
         }
     }
 
+    boolean iriIsLinkable(String iri) {
+        withDbConnection {
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                preparedStatement = getMyConnection().prepareStatement(GET_IRI_IS_LINKABLE)
+                preparedStatement.setString(1, iri)
+                rs = preparedStatement.executeQuery()
+                if (rs.next())
+                    return !rs.getBoolean(1) // not deleted
+                return false
+            }
+            finally {
+                close(rs, preparedStatement)
+            }
+        }
+    }
+
     String getThingMainIriBySystemId(String id) {
         return withDbConnection {
             Connection connection = getMyConnection()
@@ -2273,7 +2297,7 @@ class PostgreSQLComponent {
         }
 
         if (linkFinder != null) {
-            linkFinder.normalizeIdentifiers(doc, connection)
+            linkFinder.normalizeIdentifiers(doc)
         }
     }
 
