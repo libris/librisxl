@@ -228,11 +228,18 @@ class WhelkTool {
             """
         whelk.storage.withDbConnection {
             def conn = whelk.storage.getMyConnection()
-            conn.setAutoCommit(false)
-            def stmt = conn.prepareStatement(query)
-            stmt.setFetchSize(DEFAULT_FETCH_SIZE)
-            def rs = stmt.executeQuery()
-            select(whelk.storage.iterateDocuments(rs), process, batchSize)
+            def stmt
+            def rs
+            try {
+                conn.setAutoCommit(false)
+                stmt = conn.prepareStatement(query)
+                stmt.setFetchSize(DEFAULT_FETCH_SIZE)
+                rs = stmt.executeQuery()
+                select(whelk.storage.iterateDocuments(rs), process, batchSize)
+            } finally {
+                rs?.close()
+                stmt?.close()
+            }
         }
     }
 
