@@ -226,12 +226,21 @@ class WhelkTool {
             FROM lddb
             WHERE $whereClause
             """
-        def conn = whelk.storage.getConnection()
-        conn.setAutoCommit(false)
-        def stmt = conn.prepareStatement(query)
-        stmt.setFetchSize(DEFAULT_FETCH_SIZE)
-        def rs = stmt.executeQuery()
-        select(whelk.storage.iterateDocuments(rs), process, batchSize)
+        whelk.storage.withDbConnection {
+            def conn = whelk.storage.getMyConnection()
+            def stmt
+            def rs
+            try {
+                conn.setAutoCommit(false)
+                stmt = conn.prepareStatement(query)
+                stmt.setFetchSize(DEFAULT_FETCH_SIZE)
+                rs = stmt.executeQuery()
+                select(whelk.storage.iterateDocuments(rs), process, batchSize)
+            } finally {
+                rs?.close()
+                stmt?.close()
+            }
+        }
     }
 
     void selectByCollection(String collection, Closure process,
