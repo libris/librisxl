@@ -73,10 +73,12 @@ selectByIds(wdDataByLibrisId.keySet()) { data ->
         if (matchedWdAgents.size() > 1) {
             multipleAgentsMatch << [librisId] + matchedWdAgents
         } else {
+            Map entityLink = ["@id": matchedWdAgents[0]]
             instance["exactMatch"] = instance.exactMatch ?: []
-            instance.exactMatch << ["@id": matchedWdAgents[0]]
-
-            data.scheduleSave()
+            if (!(entityLink in instance.exactMatch)) {
+                instance.exactMatch << ["@id": matchedWdAgents[0]]
+                data.scheduleSave()
+            }
         }
     }
 }
