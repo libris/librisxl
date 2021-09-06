@@ -22,7 +22,7 @@ selectByIds(wdDataByLibrisId.keySet()) { data ->
     String librisId = data.doc.shortId
 
     Map librisProps = getPropertiesFromLibris(instance)
-    Map wdData = wdDataByLibrisId.remove(librisId)
+    Map wdData = wdDataByLibrisId[librisId]
 
     List matchedWdAgents = []
 
