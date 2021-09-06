@@ -76,7 +76,7 @@ selectByIds(wdDataByLibrisId.keySet()) { data ->
             Map entityLink = ["@id": matchedWdAgents[0]]
             instance["exactMatch"] = instance.exactMatch ?: []
             if (!(entityLink in instance.exactMatch)) {
-                instance.exactMatch << ["@id": matchedWdAgents[0]]
+                instance.exactMatch << entityLink
                 data.scheduleSave()
             }
         }
