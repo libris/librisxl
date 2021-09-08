@@ -3823,11 +3823,10 @@
           "ignoreOnRevert": true
         },
         "[9]": {
-          "addLink": "genreForm",
+          "NOTE:LC": "09 - Production elements",
           "NOTE": "LC ignores all but c & d",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicElementsType-{_}",
-          "matchUriToken": "^[abcdefg]$",
-          "ignoreOnRevert": true
+          "ignore": true,
+          "NOTE:record-count": 0
         },
         "[10]": {
           "addLink": "polarity",
