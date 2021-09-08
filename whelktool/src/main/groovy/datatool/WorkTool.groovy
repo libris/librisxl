@@ -13,27 +13,27 @@ import datatool.scripts.mergeworks.WorkToolJob
   $ ENV=local && time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -DclustersDir=$CLUSTERSDIR -jar build/libs/whelktool.jar --report reports/$ENV-$(date +%Y%m%d-%H%M%S) --dry-run scripts/analysis/merge-clusters.groovy
 
   3) 
-  ENV=local && time java -Xmx4G -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool --dry-run -s reports/1000-fiction.tsv
+  ENV=local && time java -Xmx4G -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool --dry-run -s reports/1000-swedishFiction.tsv
 
 
  */
 
 class WorkTool {
     static void main(String[] args) {
-        def cli = new CliBuilder(usage:'whelktool [options] <SCRIPT>')
-        cli.h(longOpt: 'help', 'Print this help message and exit.')
+        def cli = new CliBuilder(usage:'WorkTool [options] <CLUSTER TSV>')
+        cli.h(longOpt:'help', 'Print this help message and exit.')
         cli.I(longOpt:'skip-index', 'Do not index any changes, only write to storage.')
         cli.d(longOpt:'dry-run', 'Do not save any modifications.')
         cli.a(longOpt:'allow-loud', 'Do loud modifications.')
-
-        cli.m(longOpt:'merge', 'Merge')
+        
+        cli.m(longOpt:'merge', 'Merge and extract matcing works')
         cli.s(longOpt:'show', 'Show. Generate HTML report with title clusters')
         cli.s2(longOpt:'show2', 'Show. Generate HTML report with works')
         cli.dd(longOpt:'diff', args: 1, argName:'diff', 'Field to diff')
         cli.i(longOpt:'instance-vals', args: 1, argName:'field', 'Instance field to print, e.g. editionStatement')
         cli.t(longOpt:'subTitles', 'Print subtitles')
         cli.nf(longOpt:'fiction-not-fiction', 'Filter: output clusters with mixed marc/FictionNotFurtherSpecified and marc/NotFictionNotFurtherSpecified')
-        cli.f(longOpt:'fiction', 'Filter: output clusters containing fiction')
+        cli.f(longOpt:'swedishFiction', 'Filter: output clusters containing swedish fiction')
         cli.tc(longOpt:'title-clusters', 'Filter: output title clusters')
         cli.lc(longOpt:'link-contribution', 'link matching contribution within cluster')
 
@@ -68,7 +68,7 @@ class WorkTool {
             m.fictionNotFiction()
         }
         else if (options.f) {
-            m.fiction()
+            m.swedishFiction()
         }
         else if (options.tc) {
             m.outputTitleClusters()

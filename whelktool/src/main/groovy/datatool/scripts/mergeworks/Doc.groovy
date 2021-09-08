@@ -8,6 +8,7 @@ import whelk.Whelk
 class Doc {
     public static final String SAOGF_SKÖN = 'https://id.kb.se/term/saogf/Sk%C3%B6nlitteratur'
     public static final String MARC_FICTION = 'https://id.kb.se/marc/FictionNotFurtherSpecified'
+    public static final String MARC_NOT_FICTION = 'https://id.kb.se/marc/NotFictionNotFurtherSpecified'
     Whelk whelk
     Document doc
     Map work
@@ -255,12 +256,21 @@ class Doc {
         (getWork()['genreForm'] ?: []).any{ it['@id'] == MARC_FICTION }
     }
 
+    boolean isMarcNotFiction() {
+        (getWork()['genreForm'] ?: []).any{ it['@id'] == MARC_NOT_FICTION }
+    }
+
     boolean isSaogfFiction() {
         (getWork()['genreForm'] ?: []).any{ whelk.relations.isImpliedBy(SAOGF_SKÖN, it['@id'] ?: '') }
     }
 
     boolean isSabFiction() {
         classificationStrings().any{ it.contains('kssb') && it.contains(': H') }
+    }
+    
+    boolean isNotFiction() {
+        // A lot of fiction has marc/NotFictionNotFurtherSpecified but then classification is usually empty
+        isMarcNotFiction() && (!classificationStrings().isEmpty() && !isSabFiction())
     }
 
     boolean isText() {
