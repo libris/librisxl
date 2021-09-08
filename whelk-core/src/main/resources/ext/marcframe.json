@@ -3836,11 +3836,10 @@
           "ignoreOnRevert": true
         },
         "[11]": {
-          "addLink": "generation",
-          "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MotionPicGenerationType-{_}",
-          "matchUriToken": "^[deor]$",
-          "ignoreOnRevert": true
+          "NOTE:LC": "11 - Generation",
+          "NOTE": "Not ignored by LC",
+          "ignored": true,
+          "NOTE:record-count": 0
         },
         "[12]": {
           "addLink": "baseMaterial",
