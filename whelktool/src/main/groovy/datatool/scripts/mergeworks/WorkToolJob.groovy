@@ -44,12 +44,16 @@ class WorkToolJob {
         this.whelk = Whelk.createLoadedSearchWhelk('secret', true)
         this.statistics = new Statistics()
     }
-
-    Closure filter = { Doc doc ->
+    
+    Closure qualityMonographs = { Doc doc ->
         (doc.isText()
                 && doc.isMonograph()
                 && !doc.hasPart()
-                && (doc.encodingLevel() == 'marc:MinimalLevel' || doc.encodingLevel() == 'marc:FullLevel'))
+                && (doc.encodingLevel() != 'marc:PartialPreliminaryLevel' && doc.encodingLevel() != 'marc:PrepublicationLevel'))
+    }
+    
+    Closure swedish = { Doc doc ->
+        Util.asList(doc.getWork()['language']).collect { it['@id'] } == ['https://id.kb.se/language/swe']
     }
 
     void show() {
@@ -165,7 +169,7 @@ class WorkToolJob {
 
     private Collection<MergedWork> works(List<String> cluster) {
         def titleClusters = loadDocs(cluster)
-                .findAll(filter)
+                .findAll(qualityMonographs)
                 .each {it.addComparisonProps() }
                 .with { partitionByTitle(it) }
                 .findAll { it.size() > 1 }
@@ -220,8 +224,8 @@ class WorkToolJob {
 
                 for (titleCluster in titleClusters) {
                     if (titleCluster.size() > 1) {
-                        Set<String> diffFields = getDiffFields(titleCluster, ['contribution', 'genreForm'] as Set)
-                        if (!diffFields.contains('contribution') && diffFields.contains('genreForm')) {
+                        def statuses = WorkComparator.compare(cluster)
+                        if (!statuses[DIFF].contains('contribution')) {
                             String gf = titleCluster.collect { it.getDisplayText('genreForm') }.join(' ')
                             if (gf.contains('marc/FictionNotFurtherSpecified') && gf.contains('marc/NotFictionNotFurtherSpecified')) {
                                 println(titleCluster.collect { it.getDoc().shortId }.join('\t'))
@@ -233,11 +237,19 @@ class WorkToolJob {
         })
     }
 
-    void fiction() {
+    void swedishFiction() {
+        def swedish = { Doc doc ->
+            Util.asList(doc.getWork()['language']).collect { it['@id'] } == ['https://id.kb.se/language/swe']
+        }
+        
         run({ cluster ->
             return {
-                if (textMonoDocs(cluster).any { it.isFiction() }) {
-                    println(cluster.join('\t'))
+                def c = loadDocs(cluster)
+                        .findAll(qualityMonographs)
+                        .findAll(swedish)        
+                
+                if (c.any { it.isFiction() } && !c.any{ it.isNotFiction()}) {
+                    println(c.collect { it.doc.shortId }.join('\t'))
                 }
             }
         })
@@ -361,13 +373,6 @@ class WorkToolJob {
         s.awaitTermination(1, TimeUnit.DAYS)
     }
 
-    private Collection<Doc> textMonoDocs(Collection<String> cluster) {
-        whelk
-                .bulkLoad(cluster).values()
-                .collect { new Doc(whelk, it) }
-                .findAll { it.isText() && it.isMonograph() }
-    }
-
     private Collection<Doc> loadDocs(Collection<String> cluster) {
         whelk
                 .bulkLoad(cluster).values()
@@ -375,7 +380,8 @@ class WorkToolJob {
     }
 
     private Collection<Collection<Doc>> titleClusters(Collection<String> cluster) {
-        textMonoDocs(cluster)
+        loadDocs(cluster)
+                .findAll(qualityMonographs)
                 .with { partitionByTitle(it) }
                 .findAll { !it.any{ doc -> doc.hasGenericTitle() } }
                 .sort { a, b -> a.first().instanceDisplayTitle() <=> b.first().instanceDisplayTitle() }

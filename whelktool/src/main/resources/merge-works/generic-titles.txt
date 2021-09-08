@@ -5,3 +5,5 @@ publications
 rapport
 report
 skrifter
+collected plays
+plays
