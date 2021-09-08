@@ -3781,10 +3781,10 @@
       },
       "MovingImageInstance": {
         "[1]": {
-          "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicMaterialType-{_}",
-          "matchUriToken": "^[cfor]$",
-          "silentRevert": false
+          "NOTE:LC": " 01 - Specific material designation",
+          "NOTE": "Not ignored by LC",
+          "ignored": true,
+          "NOTE:record-count": 0
         },
         "[2]": null,
         "[3]": {
