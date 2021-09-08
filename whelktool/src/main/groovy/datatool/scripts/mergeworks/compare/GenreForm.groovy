@@ -18,16 +18,16 @@ class GenreForm extends StuffSet {
     @Override
     Object merge(Object a, Object b) {
         return mergeCompatibleElements(super.merge(a, b)) { gf1, gf2 ->
-            if (nor(gf1, gf2)) {
+            if (n(gf1, gf2)) {
                 gf2
             }
-            else if (nor(gf2, gf1)) {
+            else if (n(gf2, gf1)) {
                 gf1
             }
         }
     }
 
-    boolean nor(a, b) {
+    boolean n(a, b) {
         norm.any {
             it[0] == a && it[1] == b
         }
