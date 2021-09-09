@@ -278,7 +278,7 @@ class WorkToolJob {
                     contribution.each { Map c ->
                         if (c.agent && c.agent['@id']) {
                             // TODO: fix whelk, add load by IRI method
-                            def id = c.agent['@id']
+                            String id = c.agent['@id']
                             whelk.storage.loadDocumentByMainId(id)?.with { doc ->
                                 Map agent = doc.data['@graph'][1]
                                 agent.roles = asList(c.role)
@@ -293,7 +293,7 @@ class WorkToolJob {
                     contribution.each { Map c ->
                         if (c.agent && !c.agent['@id']) {
                             def l = linked.find {
-                                (it.givenName == c.agent.givenName && it.firstName == c.agent.firstName) && (!c.role || it.roles.containsAll(c.role)) 
+                                agentMatches(c.agent, it) && (!c.role || it.roles.containsAll(c.role)) 
                             }
                             if (l) {
                                 println("$c --> $l")
@@ -303,6 +303,27 @@ class WorkToolJob {
                 }
             }
         })
+    }
+    
+    boolean agentMatches(Map local, Map linked) {
+        nameMatch(local, linked) && !yearMismatch(local, linked)
+    }
+    
+    boolean nameMatch(Map local, Map linked) {
+        def variants = [linked] + asList(linked.hasVariant)
+        variants.any {
+            def g = it.givenName && it.givenName == local.givenName && it.firstName && it.firstName == local.firstName
+            def n = it.name && it.name == local.name
+            g || n    
+        }
+    }
+    
+    boolean yearMismatch(Map local, Map linked) {
+        def birth = { Map p -> p.lifeSpan?.with { (it.split('-') as List)[0] } }
+        def death = { Map p -> p.lifeSpan?.with { (it.split('-') as List)[1] } }
+        def b = birth(local) && birth(linked) && birth(local) != birth(linked)
+        def d = death(local) && death(linked) && death(local) != death(linked)
+        b || d
     }
     
     static def infoFields = ['instance title', 'work title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication', 'identifiedBy', 'extent']
