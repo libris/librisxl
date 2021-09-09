@@ -332,8 +332,8 @@ class WorkToolJob {
                     def contribution = getPathSafe(d.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
                     contribution.each { Map c ->
                         if (c['@type'] == 'PrimaryContribution' && !c.role) {
-                            if (it.agent) {
-                                def agent = loadIfLink(it['agent'])
+                            if (c.agent) {
+                                def agent = loadIfLink(c.agent)
                                 if (primaryAutAgents.any { agentMatches(agent, it) }) {
                                     c.role = ['@id': 'https://id.kb.se/relator/author']
                                     it.changed = true
