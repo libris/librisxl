@@ -79,6 +79,7 @@ class Crud extends HttpServlet {
     SearchUtils search
     static final ObjectMapper mapper = new ObjectMapper()
     AccessControl accessControl = new AccessControl()
+    ConverterUtils converterUtils
 
     Crud() {
         // Do nothing - only here for Tomcat to have something to call
@@ -98,6 +99,7 @@ class Crud extends HttpServlet {
         jsonld = whelk.jsonld
         search = new SearchUtils(whelk)
         validator = JsonLdValidator.from(jsonld)
+        converterUtils = new ConverterUtils(whelk)
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response) {
@@ -256,14 +258,21 @@ class Crud extends HttpServlet {
             }
         }
 
+        def transformedResponse
         if (request.getLens() != Lens.NONE) {
-            return applyLens(frameThing(doc), request.getLens())
+            transformedResponse = applyLens(frameThing(doc), request.getLens())
+        } else {
+            transformedResponse = request.shouldFrame()  ? frameRecord(doc) : doc.data
         }
-        else {
-            return request.shouldFrame()
-                    ? frameRecord(doc)
-                    : doc.data
+
+        log.debug("Content type is ${request.getContentType()}")
+
+        if (!(request.getContentType() in [MimeTypes.JSON, MimeTypes.JSONLD])) {
+            def id = request.getContentType() == MimeTypes.TRIG ? doc.getCompleteId() : doc.getShortId()
+            return converterUtils.convert(transformedResponse, id, request.getContentType())
         }
+
+        return transformedResponse
     }
 
     private static Map frameRecord(Document document) {
