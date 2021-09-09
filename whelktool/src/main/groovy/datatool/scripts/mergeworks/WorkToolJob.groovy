@@ -266,6 +266,7 @@ class WorkToolJob {
         statistics.printOnShutdown()
         run({ cluster ->
             return {
+                statistics.increment('link contribution', 'clusters checked')
                 // TODO: check work language?
                 def docs = cluster
                         .collect(whelk.&getDocument)
@@ -285,6 +286,7 @@ class WorkToolJob {
                             }
                         }
                     }
+                    statistics.increment('link contribution', 'docs checked')
                 }
 
                 docs.each { 
@@ -296,10 +298,10 @@ class WorkToolJob {
                                 agentMatches(c.agent, it) && (!c.role || it.roles.containsAll(c.role)) 
                             }
                             if (l) {
-                                println("${Util.chipString(c, whelk)} --> ${Util.chipString(l, whelk)}")
+                                println("${d.shortId} ${Util.chipString(c, whelk)} --> ${Util.chipString(l, whelk)}")
                                 c.agent = ['@id': l['@id']]
                                 it.changed = true
-                                statistics.increment('link contribution', 'agent')
+                                statistics.increment('link contribution', 'agents linked')
                             }
                         }
                     }
@@ -324,7 +326,7 @@ class WorkToolJob {
                             if (it.agent && it.agent['@id'] in primaryAutIds) {
                                 c.role = ['@id': 'https://id.kb.se/relator/author']
                                 it.changed = true
-                                statistics.increment('link contribution', 'author')
+                                statistics.increment('link contribution', 'author role added to primary contribution')
                             }
                         }
                     }
