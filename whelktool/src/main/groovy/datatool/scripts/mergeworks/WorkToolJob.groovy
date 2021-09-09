@@ -296,7 +296,7 @@ class WorkToolJob {
                                 agentMatches(c.agent, it) && (!c.role || it.roles.containsAll(c.role)) 
                             }
                             if (l) {
-                                //println("$c --> $l")
+                                println("${Util.chipString(c, whelk)} --> ${Util.chipString(l, whelk)}")
                                 c.agent = ['@id': l['@id']]
                                 it.changed = true
                                 statistics.increment('link contribution', 'agent')
@@ -315,8 +315,7 @@ class WorkToolJob {
                         }
                     }
                 }
-                println("$primaryAutIds")
-                
+                                
                 docs.each {
                     Document d = it.doc
                     def contribution = getPathSafe(d.data, ['@graph', 1, 'instanceOf', 'contribution'], [])

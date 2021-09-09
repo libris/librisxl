@@ -1,6 +1,7 @@
 package datatool.scripts.mergeworks
 
 import org.apache.commons.lang3.StringUtils
+import whelk.Whelk
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
@@ -113,5 +114,20 @@ class Util {
         flatTitles(hasTitle)
                 .grep { it['@type'] in titleVariant }
                 .collect { it['flatTitle']}
+    }
+
+    static String chipString (def thing, Whelk whelk) {
+        if (thing instanceof Integer) {
+            return thing
+        }
+
+        def chips = whelk.jsonld.toChip(thing)
+        if (chips.size() < 2) {
+            chips = thing
+        }
+        if (chips instanceof List) {
+            return chips.collect{ valuesString(it) }.sort().join('<br>')
+        }
+        return valuesString(chips)
     }
 }
