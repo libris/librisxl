@@ -305,9 +305,15 @@ class WorkToolJob {
                     }
                 }
 
-                def primaryAutIds = docs.findResults {
+                def primaryAutIds = []
+                docs.each {
                     def contribution = getPathSafe(it.doc.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
-                    return contribution.findResult { it['@type'] == 'PrimaryContribution' && it['role'] == ['@id': 'https://id.kb.se/relator/author'] }?.with { it.agent['@id'] }
+                    def p = contribution.findAll()
+                    contribution.each { 
+                        if (it['@type'] == 'PrimaryContribution' && it['role'] == ['@id': 'https://id.kb.se/relator/author'] && it['agent'] && it['agent']['@id']) {
+                            primaryAutIds << it['agent']['@id']
+                        }
+                    }
                 }
                 
                 docs.each {
