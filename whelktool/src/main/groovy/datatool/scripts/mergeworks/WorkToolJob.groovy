@@ -312,7 +312,7 @@ class WorkToolJob {
     boolean nameMatch(Map local, Map linked) {
         def variants = [linked] + asList(linked.hasVariant)
         variants.any {
-            def g = it.givenName && it.givenName == local.givenName && it.firstName && it.firstName == local.firstName
+            def g = it.givenName && it.givenName == local.givenName && it.familyName && it.familyName == local.familyName
             def n = it.name && it.name == local.name
             g || n    
         }
