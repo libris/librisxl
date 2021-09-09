@@ -52,10 +52,6 @@ class WorkToolJob {
                 && !doc.hasPart()
                 && (doc.encodingLevel() != 'marc:PartialPreliminaryLevel' && doc.encodingLevel() != 'marc:PrepublicationLevel'))
     }
-    
-    Closure swedish = { Doc doc ->
-        Util.asList(doc.getWork()['language']).collect { it['@id'] } == ['https://id.kb.se/language/swe']
-    }
 
     void show() {
         println("""<html><head>
@@ -130,7 +126,7 @@ class WorkToolJob {
         Collection<Doc> derivedFrom
     }
 
-    private Document buildWorkDocument(Map workData) {
+    private static Document buildWorkDocument(Map workData) {
         workData['@id'] = "TEMPID#it"
         Document d = new Document([
                 "@graph": [
@@ -267,21 +263,23 @@ class WorkToolJob {
     }
 
     void linkContribution() {
-        //statistics.printOnShutdown(10)
+        statistics.printOnShutdown()
         run({ cluster ->
             return {
                 // TODO: check work language?
-                def docs = cluster.collect(whelk.&getDocument)
+                def docs = cluster
+                        .collect(whelk.&getDocument)
+                        .collect {[doc: it, checksum: it.checksum, changed:false]}
                 
                 List<Map> linked = []
-                docs.each { Document d ->
-                    def contribution = getPathSafe(d.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
+                docs.each { d ->
+                    def contribution = getPathSafe(d.doc.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
                     contribution.each { Map c ->
                         if (c.agent && c.agent['@id']) {
                             // TODO: fix whelk, add load by IRI method
                             String id = c.agent['@id']
-                            whelk.storage.loadDocumentByMainId(id)?.with { doc ->
-                                Map agent = doc.data['@graph'][1]
+                            whelk.storage.loadDocumentByMainId(id)?.with { agentDoc ->
+                                Map agent = agentDoc.data['@graph'][1]
                                 agent.roles = asList(c.role)
                                 linked << agent
                             }
@@ -289,7 +287,8 @@ class WorkToolJob {
                     }
                 }
 
-                docs.each { Document d ->
+                docs.each { 
+                    Document d = it.doc
                     def contribution = getPathSafe(d.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
                     contribution.each { Map c ->
                         if (c.agent && !c.agent['@id']) {
@@ -298,19 +297,47 @@ class WorkToolJob {
                             }
                             if (l) {
                                 println("$c --> $l")
+                                c.agent = ['@id': l['@id']]
+                                it.changed = true
+                                statistics.increment('link contribution', 'agent')
                             }
                         }
+                    }
+                }
+
+                def primaryAutIds = docs.findResults {
+                    def contribution = getPathSafe(it.doc.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
+                    return contribution.findResult { it['@type'] == 'PrimaryContribution' && it['role'] == ['@id': 'https://id.kb.se/relator/author'] }?.with { it.agent['@id'] }
+                }
+                
+                docs.each {
+                    Document d = it.doc
+                    def contribution = getPathSafe(d.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
+                    contribution.each { Map c ->
+                        if (c['@type'] == 'PrimaryContribution' && !c.role) {
+                            if (it.agent && it.agent['@id'] in primaryAutIds) {
+                                c.role = ['@id': 'https://id.kb.se/relator/author']
+                                it.changed = true
+                                statistics.increment('link contribution', 'author')
+                            }
+                        }
+                    }
+                }
+                
+                docs.each {
+                    if (!dryRun && it.changed) {
+                        whelk.storeAtomicUpdate(it.doc, !loud, changedIn, changedBy, it.checksum, !skipIndex)    
                     }
                 }
             }
         })
     }
-    
-    boolean agentMatches(Map local, Map linked) {
+
+    static boolean agentMatches(Map local, Map linked) {
         nameMatch(local, linked) && !yearMismatch(local, linked)
     }
-    
-    boolean nameMatch(Map local, Map linked) {
+
+    static boolean nameMatch(Map local, Map linked) {
         def variants = [linked] + asList(linked.hasVariant)
         def name = { 
             Map p -> (p.givenName && p.familyName) 
@@ -321,8 +348,8 @@ class WorkToolJob {
             name(it) && name(local) == name(it)    
         }
     }
-    
-    boolean yearMismatch(Map local, Map linked) {
+
+    static boolean yearMismatch(Map local, Map linked) {
         def birth = { Map p -> p.lifeSpan?.with { (it.split('-') as List)[0] } }
         def death = { Map p -> p.lifeSpan?.with { (it.split('-') as List)[1] } }
         def b = birth(local) && birth(linked) && birth(local) != birth(linked)
