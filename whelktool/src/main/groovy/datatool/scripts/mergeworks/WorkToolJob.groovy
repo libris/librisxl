@@ -8,6 +8,7 @@ import whelk.Whelk
 import whelk.exception.WhelkRuntimeException
 import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
+import whelk.util.Unicode
 
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -311,10 +312,13 @@ class WorkToolJob {
     
     boolean nameMatch(Map local, Map linked) {
         def variants = [linked] + asList(linked.hasVariant)
-        variants.any {
-            def g = it.givenName && it.givenName == local.givenName && it.familyName && it.familyName == local.familyName
-            def n = it.name && it.name == local.name
-            g || n    
+        def name = { 
+            Map p -> (p.givenName && p.familyName) 
+                    ? Unicode.asciiFold("${p.givenName} ${p.familyName}")
+                    : p.name ? Unicode.asciiFold("${p.name}") : null
+        }
+        name(local) && variants.any {
+            name(it) && name(local) == name(it)    
         }
     }
     
