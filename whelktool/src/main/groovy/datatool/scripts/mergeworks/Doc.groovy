@@ -7,8 +7,22 @@ import whelk.Whelk
 
 class Doc {
     public static final String SAOGF_SKÖN = 'https://id.kb.se/term/saogf/Sk%C3%B6nlitteratur'
-    public static final String MARC_FICTION = 'https://id.kb.se/marc/FictionNotFurtherSpecified'
-    public static final String MARC_NOT_FICTION = 'https://id.kb.se/marc/NotFictionNotFurtherSpecified'
+    public static final List MARC_FICTION = [
+            'https://id.kb.se/marc/FictionNotFurtherSpecified',
+            'https://id.kb.se/marc/Drama',
+            'https://id.kb.se/marc/Essay',
+            'https://id.kb.se/marc/Novel',
+            'https://id.kb.se/marc/HumorSatiresEtc',
+            'https://id.kb.se/marc/Letter',
+            'https://id.kb.se/marc/ShortStory',
+            'https://id.kb.se/marc/MixedForms',
+            'https://id.kb.se/marc/Poetry',
+    ]
+    public static final List MARC_NOT_FICTION = [
+            'https://id.kb.se/marc/NotFictionNotFurtherSpecified',
+            'https://id.kb.se/marc/Biography'
+    ]
+    
     Whelk whelk
     Document doc
     Map work
@@ -253,11 +267,11 @@ class Doc {
     }
 
     boolean isMarcFiction() {
-        (getWork()['genreForm'] ?: []).any{ it['@id'] == MARC_FICTION }
+        (getWork()['genreForm'] ?: []).any{ it['@id'] in MARC_FICTION }
     }
 
     boolean isMarcNotFiction() {
-        (getWork()['genreForm'] ?: []).any{ it['@id'] == MARC_NOT_FICTION }
+        (getWork()['genreForm'] ?: []).any{ it['@id'] in MARC_NOT_FICTION }
     }
 
     boolean isSaogfFiction() {
