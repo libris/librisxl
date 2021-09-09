@@ -157,18 +157,7 @@ class Doc {
     }
 
     private String chipString (def thing) {
-        if (thing instanceof Integer) {
-            return thing
-        }
-        
-        def chips = whelk.jsonld.toChip(thing)
-        if (chips.size() < 2) {
-            chips = thing
-        }
-        if (chips instanceof List) {
-            return chips.collect{ valuesString(it) }.sort().join('<br>')
-        }
-        return valuesString(chips)
+        Util.chipString(thing, whelk)
     }
 
     private String valuesString (def thing) {
