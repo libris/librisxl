@@ -7,6 +7,7 @@ import org.apache.jena.rdf.model.RDFWriter
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
+import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.util.PropertyLoader
 
@@ -15,6 +16,13 @@ class JsonLD2RdfXml implements FormatConverter {
     static final ObjectMapper mapper = new ObjectMapper()
 
     Map m_context = null
+
+    JsonLD2RdfXml(Whelk whelk = null) {
+       if (whelk) {
+           m_context = [:]
+           m_context[JsonLd.CONTEXT_KEY] = whelk.jsonld.context
+       }
+    }
 
     Map convert(Map originaldata, String id) {
         readContextFromDb()

@@ -15,8 +15,12 @@ class JsonLDTurtleConverter implements FormatConverter {
     def base
     def mapper = new ObjectMapper()
 
-    JsonLDTurtleConverter(String base = null) {
-        readContextFromDb()
+    JsonLDTurtleConverter(String base = null, Whelk whelk = null) {
+        if (whelk) {
+            context = JsonLdToTurtle.parseContext(['@context': whelk.jsonld.context])
+        } else {
+            readContextFromDb()
+        }
         this.base = base
     }
 
