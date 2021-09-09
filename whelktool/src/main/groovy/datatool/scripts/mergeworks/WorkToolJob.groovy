@@ -261,8 +261,17 @@ class WorkToolJob {
             }
         })
     }
-
+    
     void linkContribution() {
+        def loadThingByIri = { String iri ->
+            // TODO: fix whelk, add load by IRI method
+            whelk.storage.loadDocumentByMainId(iri)?.with { doc ->
+                return (Map) doc.data['@graph'][1]
+            }
+        }
+        
+        def loadIfLink = { it['@id'] ? loadThingByIri(it['@id']) : it }
+        
         statistics.printOnShutdown()
         run({ cluster ->
             return {
@@ -277,10 +286,7 @@ class WorkToolJob {
                     def contribution = getPathSafe(d.doc.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
                     contribution.each { Map c ->
                         if (c.agent && c.agent['@id']) {
-                            // TODO: fix whelk, add load by IRI method
-                            String id = c.agent['@id']
-                            whelk.storage.loadDocumentByMainId(id)?.with { agentDoc ->
-                                Map agent = agentDoc.data['@graph'][1]
+                            loadThingByIri(c.agent['@id'])?.with { Map agent ->
                                 agent.roles = asList(c.role)
                                 linked << agent
                             }
@@ -307,13 +313,16 @@ class WorkToolJob {
                     }
                 }
 
-                def primaryAutIds = []
+                List<Map> primaryAutAgents = []
                 docs.each {
                     def contribution = getPathSafe(it.doc.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
                     def p = contribution.findAll()
                     contribution.each { 
-                        if (it['@type'] == 'PrimaryContribution' && it['role'] == ['@id': 'https://id.kb.se/relator/author'] && it['agent'] && it['agent']['@id']) {
-                            primaryAutIds << it['agent']['@id']
+                        if (it['@type'] == 'PrimaryContribution' && it['role'] == ['@id': 'https://id.kb.se/relator/author'] && it['agent']) {
+                            Map agent = loadIfLink(it['agent'])
+                            if (agent) {
+                                primaryAutAgents << agent
+                            }
                         }
                     }
                 }
@@ -323,11 +332,13 @@ class WorkToolJob {
                     def contribution = getPathSafe(d.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
                     contribution.each { Map c ->
                         if (c['@type'] == 'PrimaryContribution' && !c.role) {
-                            println("PPP $c")
-                            if (it.agent && it.agent['@id'] in primaryAutIds) {
-                                c.role = ['@id': 'https://id.kb.se/relator/author']
-                                it.changed = true
-                                statistics.increment('link contribution', 'author role added to primary contribution')
+                            if (it.agent) {
+                                def agent = loadIfLink(it['agent'])
+                                if (primaryAutAgents.any { agentMatches(agent, it) }) {
+                                    c.role = ['@id': 'https://id.kb.se/relator/author']
+                                    it.changed = true
+                                    statistics.increment('link contribution', 'author role added to primary contribution')
+                                }
                             }
                         }
                     }
