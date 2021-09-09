@@ -155,6 +155,12 @@ class JsonLdToTurtle {
         return v.replaceAll("\\p{Cntrl}", '')
     }
 
+    void toTrig(obj, id) {
+        prelude()
+        objectToTrig(id, obj)
+        flush()
+    }
+
     void toTurtle(obj) {
         prelude()
         objectToTurtle(obj)
@@ -425,6 +431,14 @@ class JsonLdToTurtle {
         def opts = [base: base]
         def serializer = new JsonLdToTurtle(context, bos, opts)
         serializer.toTurtle(source)
+        return bos
+    }
+
+    static OutputStream toTrig(context, source, base=null, String iri) {
+        def bos = new ByteArrayOutputStream()
+        def opts = [base: base]
+        def serializer = new JsonLdToTurtle(context, bos, opts)
+        serializer.toTrig(source, iri)
         return bos
     }
 
