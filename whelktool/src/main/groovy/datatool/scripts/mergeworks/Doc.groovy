@@ -159,17 +159,7 @@ class Doc {
     private String chipString (def thing) {
         Util.chipString(thing, whelk)
     }
-
-    private String valuesString (def thing) {
-        if (thing instanceof List) {
-           return thing.collect{ valuesString(it) }.join(' • ')
-        }
-        if (thing instanceof Map) {
-            return thing.findAll { k, v -> k != '@type'}.values().collect{ valuesString(it) }.join(' • ')
-        }
-        return thing.toString()
-    }
-
+    
     String tooltip(String string, String tooltip) {
         """<abbr title="${tooltip}">${string}</abbr>"""
     }
