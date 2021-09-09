@@ -130,4 +130,14 @@ class Util {
         }
         return valuesString(chips)
     }
+
+    private static String valuesString (def thing) {
+        if (thing instanceof List) {
+            return thing.collect{ valuesString(it) }.join(' • ')
+        }
+        if (thing instanceof Map) {
+            return thing.findAll { k, v -> k != '@type'}.values().collect{ valuesString(it) }.join(' • ')
+        }
+        return thing.toString()
+    }
 }
