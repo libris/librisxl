@@ -269,7 +269,7 @@ class WorkToolJob {
                 // TODO: check work language?
                 def docs = cluster
                         .collect(whelk.&getDocument)
-                        .collect {[doc: it, checksum: it.checksum, changed:false]}
+                        .collect {[doc: it, checksum: it.getChecksum(whelk.jsonld), changed:false]}
                 
                 List<Map> linked = []
                 docs.each { d ->
