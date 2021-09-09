@@ -323,6 +323,7 @@ class WorkToolJob {
                     def contribution = getPathSafe(d.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
                     contribution.each { Map c ->
                         if (c['@type'] == 'PrimaryContribution' && !c.role) {
+                            println("PPP $c")
                             if (it.agent && it.agent['@id'] in primaryAutIds) {
                                 c.role = ['@id': 'https://id.kb.se/relator/author']
                                 it.changed = true
