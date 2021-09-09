@@ -11285,9 +11285,9 @@
       },
       "$a": {"about": "_:frequency", "property": "label"},
       "$b": {"about": "_:frequency", "property": "date"},
-      "$0": {"property": "marc:recordControlNumber"},
+      "$0": {"about": "_:frequency", "property": "marc:recordControlNumber"},
       "$1": null,
-      "$2": {"link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$2": {"about": "_:frequency", "link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
       "$6": {"ignored": true, "NOTE:LC": "ignore (v1.6)"},
       "_spec": [
         {
