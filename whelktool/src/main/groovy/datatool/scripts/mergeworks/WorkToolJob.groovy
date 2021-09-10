@@ -351,7 +351,7 @@ class WorkToolJob {
                 
                 docs.each {
                     if (!dryRun && it.changed) {
-                        whelk.storeAtomicUpdate(it.doc, !loud, changedIn, changedBy, it.checksum, !skipIndex)    
+                        whelk.storeAtomicUpdate(it.doc, !loud, changedIn, changedBy, it.checksum)    
                     }
                 }
             }
