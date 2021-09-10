@@ -369,14 +369,15 @@ class WorkToolJob {
                     ? Unicode.asciiFold("${p.givenName} ${p.familyName}")
                     : p.name ? Unicode.asciiFold("${p.name}") : null
         }
+        
         name(local) && variants.any {
             name(it) && name(local) == name(it)    
         }
     }
 
     static boolean yearMismatch(Map local, Map linked) {
-        def birth = { Map p -> p.lifeSpan?.with { (it.split('-') as List)[0] } }
-        def death = { Map p -> p.lifeSpan?.with { (it.split('-') as List)[1] } }
+        def birth = { Map p -> p.lifeSpan?.with { (it.replaceAll(/[^\-0-9]/, '').split('-') as List)[0] } }
+        def death = { Map p -> p.lifeSpan?.with { (it.replaceAll(/[^\-0-9]/, '').split('-') as List)[1] } }
         def b = birth(local) && birth(linked) && birth(local) != birth(linked)
         def d = death(local) && death(linked) && death(local) != death(linked)
         b || d
