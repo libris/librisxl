@@ -156,7 +156,7 @@ class Doc {
         }
     }
 
-    private String chipString (def thing) {
+    protected String chipString (def thing) {
         Util.chipString(thing, whelk)
     }
     
@@ -299,7 +299,7 @@ class Doc2 extends Doc {
 
     @Override
     String getDisplayText(String field) {
-        return getWork()[field]
+        chipString(getWork().getOrDefault(field, []))
     }
 
     protected Map getFramed() {

@@ -71,6 +71,7 @@ class WorkComparator {
         return result
     }
     
+    // TODO: preserve order? e.g. subject
     private Object mergeField(String field, FieldHandler h, Collection<Doc> docs) {
         Object value = docs.first().getWork().get(field)
         def rest = docs.drop(1)
