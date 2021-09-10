@@ -12,6 +12,8 @@ import datatool.scripts.mergeworks.compare.WorkTitle
 import datatool.util.DocumentComparator
 import io.vavr.Tuple
 
+import static datatool.scripts.mergeworks.Util.bestTitle
+
 class WorkComparator {
     Set<String> fields
     DocumentComparator c = new DocumentComparator()
