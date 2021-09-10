@@ -11,7 +11,7 @@ visited = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>())
 selectByCollection('bib') { bib ->
     if (!visited.add(bib.doc.shortId))
         return
-
+    
     try {
         def q = buildQuery(bib)
         if (!q) {
@@ -33,17 +33,11 @@ selectByCollection('bib') { bib ->
 
 exit()
 
-List<Map<String, List<String>>> buildQueries(bib) {
+Map<String, List<String>> buildQuery(bib) {
     def title = title(bib)
 
     if (!title)
         return null
-
-
-}
-
-Map<String, List<String>> buildQuery(bib) {
-
 
     Map<String, List<String>> query = [
             "q"                                : ["*"],
@@ -81,33 +75,6 @@ private String primaryContributorId(bib) {
 
 private List contributorStrings(bib) {
     return getPathSafe(bib.asCard(true), ['@graph', 1, 'instanceOf', 'contribution'], [])['_str'].grep{it}
-}
-
-private String flatTitle(bib) {
-    return flatten(
-            bib.doc.data['@graph'][1]['hasTitle'],
-            ['mainTitle', 'titleRemainder', 'subtitle', 'hasPart', 'partNumber', 'partName', ]
-    )
-}
-
-private String flatten(Object o, List order) {
-    if (o instanceof String) {
-        return o
-    }
-    if (o instanceof List) {
-        return o
-                .collect{ flatten(it, order) }
-                .join(' || ')
-    }
-    if (o instanceof Map) {
-        return order
-                .collect{ o.get(it, null) }
-                .grep{ it != null }
-                .collect{ flatten(it, order) }
-                .join(' | ')
-    }
-
-    throw new RuntimeException(String.format("unexpected type: %s for %s", o.class.getName(), o))
 }
 
 private Object getPathSafe(item, path, defaultTo = null) {
