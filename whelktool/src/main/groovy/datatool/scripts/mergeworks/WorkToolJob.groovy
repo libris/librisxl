@@ -20,6 +20,7 @@ import static datatool.scripts.mergeworks.FieldStatus.COMPATIBLE
 import static datatool.scripts.mergeworks.FieldStatus.DIFF
 import static datatool.scripts.mergeworks.FieldStatus.EQUAL
 import static datatool.scripts.mergeworks.Util.asList
+import static datatool.scripts.mergeworks.Util.chipString
 import static datatool.scripts.mergeworks.Util.getPathSafe
 import static datatool.scripts.mergeworks.Util.partition
 
@@ -38,6 +39,7 @@ class WorkToolJob {
     boolean dryRun = true
     boolean skipIndex = false
     boolean loud = false
+    boolean verbose = false
 
     WorkToolJob(File clusters) {
         this.clusters = clusters
@@ -304,10 +306,13 @@ class WorkToolJob {
                                 agentMatches(c.agent, it) && (!c.role || it.roles.containsAll(c.role)) 
                             }
                             if (l) {
-                                println("${d.shortId} ${Util.chipString(c, whelk)} --> ${Util.chipString(l, whelk)}")
+                                println("${d.shortId} ${chipString(c, whelk)} --> ${chipString(l, whelk)}")
                                 c.agent = ['@id': l['@id']]
                                 it.changed = true
                                 statistics.increment('link contribution', 'agents linked')
+                            }
+                            else if (verbose) {
+                                println("${d.shortId} NO MATCH: ${chipString(c, whelk)} ??? ${linked.collect{ chipString(it, whelk)}}")
                             }
                         }
                     }
