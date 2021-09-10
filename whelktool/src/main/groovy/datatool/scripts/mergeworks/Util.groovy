@@ -141,7 +141,7 @@ class Util {
         return thing.toString()
     }
 
-    
+    // (docs on some of these levels are normally filtered out before we reach here)
     private static List bestEncodingLevel = [
             'marc:FullLevel',
             'marc:FullLevelMaterialNotExamined',
@@ -149,6 +149,9 @@ class Util {
             'marc:LessThanFullLevelMaterialNotExamined',
             'marc:CoreLevel',
             'marc:AbbreviatedLevel',
+            'marc:PartialPreliminaryLevel',
+            'marc:PrepublicationLevel',
+            null
     ]
 
     // TODO: review
@@ -162,7 +165,7 @@ class Util {
                 continue
             }
 
-            Util.partition(titles, { a, b -> a == b } ).sort { it.size() }.reverse().first().first()
+            return Util.partition(titles, { a, b -> a == b } ).sort { it.size() }.reverse().first().first()
         }
 
         return null
