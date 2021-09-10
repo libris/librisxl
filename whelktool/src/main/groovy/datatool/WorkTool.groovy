@@ -5,7 +5,7 @@ import datatool.scripts.mergeworks.WorkToolJob
 
 /**
   1) find clusters
-  $ ENV=local && time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar build/libs/whelktool.jar --report reports/$ENV-$(date +%Y%m%d-%H%M%S) --dry-run scripts/analysis/works2.groovy
+  $ ENV=local && time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar build/libs/whelktool.jar --report reports/$ENV-$(date +%Y%m%d-%H%M%S) --dry-run scripts/analysis/find-work-clusters.groovy
 
   2) merge overlapping clusters, output file is placed in same directory as input
  
