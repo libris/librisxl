@@ -12,6 +12,8 @@ import org.postgresql.PGStatement
 import org.postgresql.util.PGobject
 import org.postgresql.util.PSQLException
 import whelk.Document
+import whelk.history.DocumentVersion
+import whelk.history.History
 import whelk.IdType
 import whelk.JsonLd
 import whelk.Link
@@ -145,10 +147,10 @@ class PostgreSQLComponent {
             """.stripIndent()
 
     private static final String GET_ALL_DOCUMENT_VERSIONS = """
-            SELECT id, data, deleted, created, modified 
+            SELECT id, data, deleted, created, modified, changedBy, changedIn 
             FROM lddb__versions
             WHERE id = ? 
-            ORDER BY modified DESC
+            ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) DESC
             """.stripIndent()
 
     private static final String GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID = """
@@ -2282,6 +2284,29 @@ class PostgreSQLComponent {
                     def doc = assembleDocument(rs)
                     doc.version = v++
                     docList << doc
+                }
+            } finally {
+                close(rs, selectstmt)
+            }
+            return docList
+        }
+    }
+
+    List<DocumentVersion> loadDocumentHistory(String id) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement selectstmt = null
+            ResultSet rs = null
+            List<DocumentVersion> docList = []
+            try {
+                selectstmt = connection.prepareStatement(GET_ALL_DOCUMENT_VERSIONS)
+                selectstmt.setString(1, id)
+                rs = selectstmt.executeQuery()
+                int v = 0
+                while (rs.next()) {
+                    def doc = assembleDocument(rs)
+                    doc.version = v++
+                    docList.add(new DocumentVersion(doc, rs.getString("changedBy"), rs.getString("changedIn")));
                 }
             } finally {
                 close(rs, selectstmt)

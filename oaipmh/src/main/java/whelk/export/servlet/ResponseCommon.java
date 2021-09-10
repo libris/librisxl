@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Link;
+import whelk.history.History;
 import whelk.util.LegacyIntegrationTools;
 
 import javax.servlet.http.HttpServletRequest;
