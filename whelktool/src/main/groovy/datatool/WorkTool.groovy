@@ -25,6 +25,7 @@ class WorkTool {
         cli.I(longOpt:'skip-index', 'Do not index any changes, only write to storage.')
         cli.d(longOpt:'dry-run', 'Do not save any modifications.')
         cli.a(longOpt:'allow-loud', 'Do loud modifications.')
+        cli.v(longOpt:'verbose', '.')
         
         cli.m(longOpt:'merge', 'Merge and extract matcing works')
         cli.s(longOpt:'show', 'Show. Generate HTML report with title clusters')
@@ -48,6 +49,7 @@ class WorkTool {
         m.skipIndex = options.I
         m.dryRun = options.d
         m.loud = options.a
+        m.verbose = options.v
 
         if (options.m) {
             m.merge()
