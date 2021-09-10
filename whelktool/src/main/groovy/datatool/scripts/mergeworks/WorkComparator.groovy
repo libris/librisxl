@@ -2,13 +2,15 @@ package datatool.scripts.mergeworks
 
 import datatool.scripts.mergeworks.compare.Classification
 import datatool.scripts.mergeworks.compare.ContentType
+import datatool.scripts.mergeworks.compare.Default
 import datatool.scripts.mergeworks.compare.Extent
 import datatool.scripts.mergeworks.compare.FieldHandler
 import datatool.scripts.mergeworks.compare.GenreForm
-import datatool.scripts.mergeworks.compare.Default
 import datatool.scripts.mergeworks.compare.StuffSet
+import datatool.scripts.mergeworks.compare.ValuePicker
 import datatool.scripts.mergeworks.compare.WorkTitle
 import datatool.util.DocumentComparator
+import io.vavr.Tuple
 
 class WorkComparator {
     Set<String> fields
@@ -16,12 +18,12 @@ class WorkComparator {
 
     Map<String, FieldHandler> comparators = [
             'classification': new Classification(),
-            'subject': new StuffSet(),
-            'genreForm': new GenreForm(),
-            'contentType': new ContentType('https://id.kb.se/term/rda/Text'),
-            'hasTitle': new WorkTitle(),
-            'numPages': new Extent(),
-            'summary': new Extent(),
+            'subject'       : new StuffSet(),
+            'genreForm'     : new GenreForm(),
+            'contentType'   : new ContentType('https://id.kb.se/term/rda/Text'),
+            'hasTitle'      : new WorkTitle(),
+            'numPages'      : new Extent(),
+            'summary'       : new StuffSet(),
     ]
 
     static FieldHandler DEFAULT = new Default()
@@ -31,7 +33,7 @@ class WorkComparator {
     }
 
     boolean sameWork(Doc a, Doc b) {
-        fields.every {compare(a, b, it).with {it == EQUAL || it == COMPATIBLE} }
+        fields.every { compare(a, b, it).with { it == EQUAL || it == COMPATIBLE } }
     }
 
     FieldStatus compare(Doc a, Doc b, String field) {
@@ -49,23 +51,31 @@ class WorkComparator {
 
     Map merge(Collection<Doc> docs) {
         Map result = [:]
-        fields.each {field ->
+        fields.each { field ->
             FieldHandler h = comparators.getOrDefault(field, DEFAULT)
-            Object value = docs.first().getWork().get(field)
-            def rest = docs.drop(1)
-            rest.each {
-                value = h.merge(value, it.getWork().get(field))
-            }
+            def value = h instanceof ValuePicker
+                    ? h.pick(docs.collect {new Tuple2(it, it.getWork().get(field)) })
+                    : mergeField(field, h, docs)
+            
             if(value) {
                 result[field] = value
             }
         }
 
         if (!result['hasTitle']) {
-            result['hasTitle'] = bestTitle(docs)
+            result['hasTitle'] = bestTitle(docs.collect { new Tuple2(it, it.getInstance().get('hasTitle')) })
         }
 
         return result
+    }
+    
+    private Object mergeField(String field, FieldHandler h, Collection<Doc> docs) {
+        Object value = docs.first().getWork().get(field)
+        def rest = docs.drop(1)
+        rest.each {
+            value = h.merge(value, it.getWork().get(field))
+        }
+        return value
     }
 
     private FieldStatus compareDiff(Doc a, Doc b, String field) {
@@ -82,7 +92,7 @@ class WorkComparator {
         WorkComparator c = new WorkComparator(allFields(cluster))
 
         Map<FieldStatus, List<String>> result = [:]
-        c.fieldStatuses(cluster).each {f, s -> result.get(s, []) << f}
+        c.fieldStatuses(cluster).each { f, s -> result.get(s, []) << f }
         return result
     }
 
@@ -93,7 +103,7 @@ class WorkComparator {
     }
 
     Map<String, FieldStatus> fieldStatuses(Collection<Doc> cluster) {
-        fields.collectEntries {[it, fieldStatus(cluster, it)]}
+        fields.collectEntries { [it, fieldStatus(cluster, it)] }
     }
 
     FieldStatus fieldStatus(Collection<Doc> cluster, String field) {
@@ -109,12 +119,5 @@ class WorkComparator {
             c == FieldStatus.DIFF ? c : null
         } ?: (anyCompat ? FieldStatus.COMPATIBLE : FieldStatus.EQUAL)
     }
-
-    //FIXME
-    static Object bestTitle(Collection<Doc> docs) {
-        def t = docs.findResult {it.encodingLevel() == 'marc:FullLevel' ? it.getInstance()['hasTitle'] : null }
-        if(t) { return t }
-        t = docs.findResult {it.encodingLevel() == 'marc:MinimalLevel' ? it.getInstance()['hasTitle'] : null }
-        return t
-    }
+    
 }

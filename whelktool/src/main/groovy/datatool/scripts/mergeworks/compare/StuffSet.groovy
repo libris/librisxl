@@ -1,6 +1,5 @@
 package datatool.scripts.mergeworks.compare
 
-import datatool.scripts.mergeworks.Util
 
 import java.util.function.BiFunction
 
