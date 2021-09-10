@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 clusterLog = getReportWriter("clusters.tsv")
 
-visited = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>())
+visited = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>())  // TODO: remove?
 
 selectByCollection('bib') { bib ->
     if (!visited.add(bib.doc.shortId))
@@ -27,6 +27,7 @@ selectByCollection('bib') { bib ->
     }
     catch (Exception e) {
         println(e)
+        e.printStackTrace()
         return
     }
 }
@@ -41,22 +42,26 @@ Map<String, List<String>> buildQuery(bib) {
 
     Map<String, List<String>> query = [
             "q"                                : ["*"],
-            "@type"                            : ["*"],
+            "@type"                            : ["Instance"],
             "hasTitle.mainTitle"               : [title + "~"],
     ]
 
-    def author = primaryContributorId(bib)
+    insertLinkedAgents(bib)
+    def card = bib.asCard(true)
+    
+    def author = primaryContributor(card) //.collect{ it + "~" }
     if (author) {
-        query["instanceOf.contribution.agent.@id"] = [author]
+        query["or-instanceOf.contribution._str"] = author
+        query["or-instanceOf.contribution.agent._str"] = author
         return query
     }
 
-    def contributors = contributorStrings(bib)
-    if (contributors) {
-        query["instanceOf.contribution._str"] = contributors.collect{ it + "~" }
+    def allContributors = contributors(card) //.collect{ it + "~" }
+    if (allContributors) {
+        query["or-instanceOf.contribution._str"] = allContributors
+        query["or-instanceOf.contribution.agent._str"] = allContributors
         return query
     }
-
     return null
 }
 
@@ -64,20 +69,44 @@ synchronized void exit() {
     System.exit(0)
 }
 
+private void insertLinkedAgents(bib) {
+    getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf', 'contribution']).each {
+        if (it.agent && it.agent['@id']) {
+            it.agent = loadThing(it.agent['@id'])
+        }
+    }
+}
+
 private String title(bib) {
     return getPathSafe(bib.doc.data, ['@graph', 1, 'hasTitle', 0, 'mainTitle'])
 }
 
-private String primaryContributorId(bib) {
-    def primary = getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf', 'contribution'], []).grep{ it['@type'] == "PrimaryContribution"}
-    return getPathSafe(primary, [0, 'agent', '@id'])
+private List primaryContributor(bib) {
+    contributorStrings(getPathSafe(bib, ['@graph', 1, 'instanceOf', 'contribution'], []).find{ it['@type'] == "PrimaryContribution"})
 }
 
-private List contributorStrings(bib) {
-    return getPathSafe(bib.asCard(true), ['@graph', 1, 'instanceOf', 'contribution'], [])['_str'].grep{it}
+private List contributors(bib) {
+    getPathSafe(bib, ['@graph', 1, 'instanceOf', 'contribution'], []).collect{ contributorStrings(it) }.grep().flatten()
+}
+
+//getPathSafe(contribution, ['_str'])?.with { String s -> s.replaceAll(/[^ \p{IsAlphabetic}]/, '') }
+private List contributorStrings(contribution) {
+    List variants = asList(contribution?.agent) + asList(getPathSafe(contribution, ['agent', 'hasVariant']))
+
+    variants.collect { name(it) }.grep()
+}
+
+private String name(Map agent)  {
+    agent.givenName && agent.familyName 
+            ? "${agent.givenName} ${agent.familyName}"
+            : agent.name
 }
 
 private Object getPathSafe(item, path, defaultTo = null) {
+    if (!item) {
+        return defaultTo
+    }
+    
     for (p in path) {
         if (item[p] != null) {
             item = item[p]
@@ -86,4 +115,16 @@ private Object getPathSafe(item, path, defaultTo = null) {
         }
     }
     return item
+}
+
+private Map loadThing(def id) {
+    def thing = [:]
+    selectByIds([id]) { t ->
+        thing = t.graph[1]
+    }
+    return thing
+}
+
+private static List asList(Object o) {
+    (o ?: []).with { it instanceof List ? it : [it] }
 }
