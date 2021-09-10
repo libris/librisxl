@@ -21,6 +21,7 @@ class WorkComparator {
             'contentType': new ContentType('https://id.kb.se/term/rda/Text'),
             'hasTitle': new WorkTitle(),
             'numPages': new Extent(),
+            'summary': new Extent(),
     ]
 
     static FieldHandler DEFAULT = new Default()
