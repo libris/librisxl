@@ -1,12 +1,11 @@
 package datatool.scripts.mergeworks.compare
 
+import datatool.scripts.mergeworks.Doc
 import datatool.scripts.mergeworks.Util
+import org.apache.commons.lang3.NotImplementedException
 
-class WorkTitle implements FieldHandler {
+class WorkTitle implements ValuePicker {
 
-    // TODO: use the most common title as work title?
-    // TODO: Use @type Title with any generic subtitles removed?
-    
     @Override
     boolean isCompatible(Object a, Object b) {
         return !a || !b || !Util.getTitleVariants(a).intersect(Util.getTitleVariants(b)).isEmpty()
@@ -14,6 +13,11 @@ class WorkTitle implements FieldHandler {
 
     @Override
     Object merge(Object a, Object b) {
-        return a ?: b
+        throw new NotImplementedException('')
+    }
+    
+    @Override
+    Object pick(List<Tuple2<Doc, Object>> values) {
+        return Util.bestTitle(values)
     }
 }

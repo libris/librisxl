@@ -140,4 +140,31 @@ class Util {
         }
         return thing.toString()
     }
+
+    
+    private static List bestEncodingLevel = [
+            'marc:FullLevel',
+            'marc:FullLevelMaterialNotExamined',
+            'marc:MinimalLevel',
+            'marc:LessThanFullLevelMaterialNotExamined',
+            'marc:CoreLevel',
+            'marc:AbbreviatedLevel',
+    ]
+
+    // TODO: review
+    // TODO: Use @type Title with any generic subtitles removed?
+    
+    // Return the most common title for the best encodingLevel
+    static Object bestTitle(Collection<Tuple2<Doc, Object>> docs) {
+        for (def level : bestEncodingLevel) {
+            def titles = docs.findAll { it.getFirst().encodingLevel() == level }.collect { it.getSecond() }.grep()
+            if (!titles) {
+                continue
+            }
+
+            Util.partition(titles, { a, b -> a == b } ).sort { it.size() }.reverse().first().first()
+        }
+
+        return null
+    }
 }
