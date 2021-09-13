@@ -1,29 +1,28 @@
-List suecia = new File(scriptDir, 'suecia-group-idlist.yaml').readLines()
-List f1700 = new File(scriptDir, 'f1700-group-idlist.yaml').readLines()
-
 Map mimerUriById = [:]
 
-String id
+new File(scriptDir + '/id-lists').eachFile {f ->
+    String id
 
-(suecia + f1700).each { String line ->
-    if (line =~ "libris_id:")
-        id = line.replaceFirst(/.*libris_id:/, "").replaceAll(/\W/, "")
-    else if (line =~ /uri:/) {
-        String uri = line.replace("uri:", "").trim()
+    f.eachLine { String line ->
+        if (line =~ "libris_id:")
+            id = line.replaceFirst(/.*libris_id:/, "").replaceAll(/\W/, "")
+        else if (line =~ /uri:/) {
+            String uri = line.replace("uri:", "").trim()
 
-        if (id.isNumber()) {
-            String where = """
-                collection = 'bib' 
-                AND deleted = 'false' 
+            if (id.isNumber()) {
+                String where = """
+                collection = 'bib'
+                AND deleted = 'false'
                 AND data#>>'{@graph,0,controlNumber}' = '${id}'
             """
 
-            selectBySqlWhere(where) {
-                id = it.doc.shortId
+                selectBySqlWhere(where) {
+                    id = it.doc.shortId
+                }
             }
-        }
 
-        mimerUriById[id] = uri
+            mimerUriById[id] = uri
+        }
     }
 }
 
@@ -48,7 +47,6 @@ selectByIds(mimerUriById.keySet()) { data ->
         data.scheduleSave()
     }
 }
-
 
 
 
