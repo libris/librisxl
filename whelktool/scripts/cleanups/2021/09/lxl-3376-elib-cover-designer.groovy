@@ -1,6 +1,6 @@
 def where = """
   collection = 'bib' 
-  AND data#>>'{@graph, 1, instanceOf, summary}' like '%Omslagsforgivare:%[Elib]%'
+  AND data#>>'{@graph, 1, instanceOf, summary}' like '%Omslagsformgivare:%[Elib]%'
   AND deleted = false
   """
 
@@ -13,6 +13,8 @@ selectBySqlWhere(where) { bib ->
             .collect { it.substring("Omslagsformgivare:".size()) }
             .collect { it.trim() }
 
+    println(names)
+    /*
     List workContribution = bib.graph[1]['instanceOf']['contribution']
     def coverDesigners = workContribution
             .findAll { it['role'] == COV || "${it.agent.givenName} ${it.agent.familyName}" in names}
@@ -29,6 +31,7 @@ selectBySqlWhere(where) { bib ->
     bib.graph[1]['contribution'] = (bib.graph[1]['contribution'] ?: []) + coverDesigners
     
     bib.scheduleSave()
+     */
 }
 
 
