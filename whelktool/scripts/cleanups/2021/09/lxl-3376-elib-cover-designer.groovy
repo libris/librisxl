@@ -14,9 +14,7 @@ selectBySqlWhere(where) { bib ->
             .findResults { it['label']}
             .join(' ')
             .with { parseDesigners(it) }
-
-    println(designers)
-    
+        
     List workContribution = bib.graph[1]['instanceOf']['contribution']
     def coverDesigners = workContribution
             .findAll { roles.values().containsAll(it.role) || nameToRoles.containsKey(name(it.agent))}
