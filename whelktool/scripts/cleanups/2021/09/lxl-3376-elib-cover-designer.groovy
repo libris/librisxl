@@ -22,7 +22,7 @@ selectBySqlWhere(where) { bib ->
             .findAll { roles.values().containsAll(it.role) || nameToRoles.containsKey(name(it.agent))}
 
     if (!coverDesigners) {
-        println("ERR: "bib.doc.shortId)
+        println("Could not handle: ${bib.doc.shortId}")
         return
     }
     
