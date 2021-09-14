@@ -1,3 +1,5 @@
+PrintWriter unhandled = getReportWriter("unhandled.txt")
+
 def where = """
   collection = 'bib' 
   AND data#>>'{@graph, 1, instanceOf, summary}' like '%ormgivare:%[Elib]%'
@@ -24,13 +26,13 @@ selectBySqlWhere(where) { bib ->
             .findAll { roles.values().containsAll(it.role) || nameToRoles.containsKey(name(it.agent))}
 
     if (!coverDesigners) {
-        println("Could not handle: ${bib.doc.shortId}")
+        unhandled.println("${bib.doc.shortId} c:$workContribution d:$coverDesigners")
         return
     }
     
     workContribution.removeAll(coverDesigners)
     
-    coverDesigners.each { it['role'] == nameToRoles[name(it.agent)] }
+    coverDesigners.each { it['role'] = nameToRoles[name(it.agent)] }
 
     bib.graph[1]['contribution'] = (bib.graph[1]['contribution'] ?: []) + coverDesigners
     
