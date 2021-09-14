@@ -2,7 +2,7 @@ PrintWriter unhandled = getReportWriter("unhandled.txt")
 
 def where = """
   collection = 'bib' 
-  AND data#>>'{@graph, 1, instanceOf, summary}' like '%ormgivare:%[Elib]%'
+  AND (data#>>'{@graph, 1, instanceOf, summary}' like '%ormgivare:%[Elib]%' OR data#>>'{@graph, 1, summary}' like '%ormgivare:%[Elib]%')
   AND deleted = false
   """
 
@@ -12,7 +12,8 @@ roles = [
 ]
 
 selectBySqlWhere(where) { bib ->
-    def nameToRoles = asList(bib.graph[1]['instanceOf']['summary'])
+    def summary = asList(bib.graph[1]['instanceOf']['summary']) + asList(bib.graph[1]['summary'])
+    def nameToRoles = summary
             .findResults { it['label']}
             .join(' ')
             .with { parseDesigners(it) }
@@ -32,12 +33,10 @@ selectBySqlWhere(where) { bib ->
     
     workContribution.removeAll(coverDesigners)
     
-    coverDesigners.each { it['role'] = nameToRoles[name(it.agent)] }
+    coverDesigners.each { it['role'] = nameToRoles[name(it.agent)].collect { ['@id' : it] } }
 
     bib.graph[1]['contribution'] = (bib.graph[1]['contribution'] ?: []) + coverDesigners
-    
-    println(bib.graph[1]['contribution'])
-    
+        
     bib.scheduleSave()
 }
 
