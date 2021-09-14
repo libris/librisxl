@@ -26,7 +26,7 @@ selectBySqlWhere(where) { bib ->
             .findAll { it.role && roles.values().containsAll(it.role) || nameToRoles.containsKey(name(it.agent))}
 
     if (!coverDesigners) {
-        unhandled.println("${bib.doc.shortId} c:$workContribution d:$coverDesigners")
+        unhandled.println("${bib.doc.shortId} c:$workContribution d:$nameToRoles")
         return
     }
     
