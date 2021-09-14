@@ -26,8 +26,14 @@ selectBySqlWhere(where) { bib ->
     }
     
     if (toInstance) {
-        bib.graph[1]['instanceOf']['summary'] = toWork
-        bib.graph[1]['summary'] = bib.graph[1]['summary'] ?: [] + toInstance
+        if (toWork) {
+            bib.graph[1]['instanceOf']['summary'] = toWork
+        }
+        else {
+            bib.graph[1]['instanceOf'].remove('summary')
+        }
+         
+        bib.graph[1]['summary'] = (bib.graph[1]['summary'] ?: []) + toInstance
         bib.scheduleSave()
     }
 }
