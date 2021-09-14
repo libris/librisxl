@@ -106,9 +106,11 @@ class Doc {
         String extent = Util.getPathSafe(getInstance(), ['extent', 0, 'label', 0]) ?: Util.getPathSafe(getInstance(), ['extent', 0, 'label'], '')
         return numPages(extent)
     }
-    
+
+    // TODO: improve parsing https://metadatabyran.kb.se/beskrivning/materialtyper-arbetsfloden/tryckta-monografier/omfang-for-tryckta-monografier
     static int numPages(String extentLabel) {
-        def matcher = extentLabel =~ /(\d+)(?=[, \[\]0-9]*[sp])/
+        def l = extentLabel.replace('onumrerade', '')
+        def matcher = l =~ /(\d+)(?=[, \[\]0-9]*[sp])/
         List<Integer> pages = []
         while (matcher.find()) {
             pages << Integer.parseInt(matcher.group(1))
