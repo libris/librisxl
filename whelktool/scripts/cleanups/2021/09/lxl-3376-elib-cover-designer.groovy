@@ -16,6 +16,10 @@ selectBySqlWhere(where) { bib ->
             .with { parseDesigners(it) }
         
     List workContribution = bib.graph[1]['instanceOf']['contribution']
+    if (workContribution.removeAll { !it.agent }) {
+        bib.scheduleSave()
+    }
+    
     def coverDesigners = workContribution
             .findAll { roles.values().containsAll(it.role) || nameToRoles.containsKey(name(it.agent))}
 
@@ -25,7 +29,7 @@ selectBySqlWhere(where) { bib ->
     }
     
     workContribution.removeAll(coverDesigners)
-
+    
     coverDesigners.each { it['role'] == nameToRoles[name(it.agent)] }
 
     bib.graph[1]['contribution'] = (bib.graph[1]['contribution'] ?: []) + coverDesigners
