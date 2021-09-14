@@ -47,8 +47,8 @@ private Map parseDesigners(String summary) {
     }
     
     def nameToRoles = [:]
-    roleToNames.each { r, n ->
-        n.each { nameToRoles[n] = nameToRoles.getOrDefault(n, []) + [r] }
+    roleToNames.each { role, names ->
+        names.each { n -> nameToRoles[n] = nameToRoles.getOrDefault(n, []) + [role] }
     } 
     
     return nameToRoles
