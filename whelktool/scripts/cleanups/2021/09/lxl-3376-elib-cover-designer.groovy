@@ -43,7 +43,7 @@ private Map parseDesigners(String summary) {
                 .collect { it.substring(s.size()) }
                 .collect { it.trim() }
         
-        [id : names]
+        [(id) : names]
     }
     
     def nameToRoles = [:]
