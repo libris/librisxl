@@ -1,19 +1,21 @@
 def where = """
   collection = 'bib' 
-  AND data#>>'{@graph, 1, instanceOf, summary}' like '%Omslagsformgivare:%[Elib]%'
+  AND data#>>'{@graph, 1, instanceOf, summary}' like '%ormgivare:%[Elib]%'
   AND deleted = false
   """
 
-def COV = 'https://id.kb.se/relator/coverDesigner'
+roles = [
+        'Formgivare:' : 'https://id.kb.se/relator/designer',
+        'Omslagsformgivare:' : 'https://id.kb.se/relator/coverDesigner'
+]
 
 selectBySqlWhere(where) { bib ->
-    def names = asList(bib.graph[1]['instanceOf']['summary'])
+    def designers= asList(bib.graph[1]['instanceOf']['summary'])
             .findResults { it['label']}
-            .findResults { String s -> s.find(/(?:Omslagsformgivare:)([^\[]+)/) }
-            .collect { it.substring("Omslagsformgivare:".size()) }
-            .collect { it.trim() }
+            .join(' ')
+            .with { parseDesigners(it) }
 
-    println(names)
+    println(designers)
     /*
     List workContribution = bib.graph[1]['instanceOf']['contribution']
     def coverDesigners = workContribution
@@ -34,7 +36,23 @@ selectBySqlWhere(where) { bib ->
      */
 }
 
-
+private Map parseDesigners(String summary) {
+    def roleToNames = roles.collectEntries { s, id ->
+        def names = summary
+                .findAll(/$s[^\[,]+/)
+                .collect { it.substring(s.size()) }
+                .collect { it.trim() }
+        
+        [id : names]
+    }
+    
+    def nameToRoles = [:]
+    roleToNames.each { r, n ->
+        n.each { nameToRoles[n] = nameToRoles.getOrDefault(n, []) + [r] }
+    } 
+    
+    return nameToRoles
+}
 
 private List asList(Object o) {
     if (o == null)
