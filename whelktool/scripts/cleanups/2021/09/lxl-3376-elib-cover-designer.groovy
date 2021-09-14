@@ -10,30 +10,31 @@ roles = [
 ]
 
 selectBySqlWhere(where) { bib ->
-    def designers= asList(bib.graph[1]['instanceOf']['summary'])
+    def nameToRoles = asList(bib.graph[1]['instanceOf']['summary'])
             .findResults { it['label']}
             .join(' ')
             .with { parseDesigners(it) }
 
     println(designers)
-    /*
+    
     List workContribution = bib.graph[1]['instanceOf']['contribution']
     def coverDesigners = workContribution
-            .findAll { it['role'] == COV || "${it.agent.givenName} ${it.agent.familyName}" in names}
+            .findAll { roles.values().containsAll(it.role) || nameToRoles.containsKey(name(it.agent))}
 
     if (!coverDesigners) {
-        println(bib.doc.shortId)
+        println("ERR: "bib.doc.shortId)
         return
     }
     
     workContribution.removeAll(coverDesigners)
 
-    coverDesigners.each { it['role'] == COV }
+    coverDesigners.each { it['role'] == nameToRoles[name(it.agent)] }
 
     bib.graph[1]['contribution'] = (bib.graph[1]['contribution'] ?: []) + coverDesigners
     
+    println(bib.graph[1]['contribution'])
+    
     bib.scheduleSave()
-     */
 }
 
 private Map parseDesigners(String summary) {
@@ -52,6 +53,10 @@ private Map parseDesigners(String summary) {
     } 
     
     return nameToRoles
+}
+
+private String name(Map agent) {
+    "${agent.givenName} ${agent.familyName}"
 }
 
 private List asList(Object o) {
