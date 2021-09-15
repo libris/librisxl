@@ -70,6 +70,12 @@ public class History {
                              Object examining, Object correspondingPrevious,
                              List<Object> compositePath) {
         if (examining instanceof Map) {
+
+            if (! (correspondingPrevious instanceof Map) ) {
+                setOwnership(path, compositePath, version);
+                return;
+            }
+
             Set k1 = ((Map) examining).keySet();
             Set k2 = ((Map) correspondingPrevious).keySet();
 
@@ -94,10 +100,18 @@ public class History {
             }
         }
 
+        if (examining instanceof List) {
+            if (! (correspondingPrevious instanceof List) ) {
+                setOwnership(path, compositePath, version);
+                return;
+            }
+        }
+
         if (examining instanceof String ||
                 examining instanceof Float || examining instanceof Boolean) {
             if (!examining.equals(correspondingPrevious)) {
                 setOwnership(path, compositePath, version);
+                return;
             }
         }
 

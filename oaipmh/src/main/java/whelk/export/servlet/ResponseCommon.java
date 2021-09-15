@@ -147,6 +147,9 @@ public class ResponseCommon
             document = OaiPmh.s_whelk.loadEmbellished(document.getShortId());
         }
 
+        History history = new History(OaiPmh.s_whelk.getStorage().loadDocumentHistory(document.getShortId()), OaiPmh.s_whelk.getJsonld());
+        System.err.println(history);
+
         if (!onlyIdentifiers)
             writer.writeStartElement("record");
 
