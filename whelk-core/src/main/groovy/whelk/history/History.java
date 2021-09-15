@@ -103,12 +103,33 @@ public class History {
 
         // Keep scanning
         if (examining instanceof List) {
-            for (int i = 0; i < ((List) examining).size(); ++i) {
+            // Create copies of the two lists (so that they can be manipulated)
+            // and remove from them any elements that _have an identical copy_ in the
+            // other list.
+            // This way, only elements that differ somehow remain to be checked, and
+            // they remain in their relative order to one another.
+            // Without this, removal or addition of a list element results in every
+            // _following_ element being compared with the wrong element in the other list.
+            List tempNew = new LinkedList((List) examining);
+            List tempOld = new LinkedList((List) correspondingPrevious);
+            for (int i = 0; i < tempNew.size(); ++i) {
+                for (int j = 0; j < tempOld.size(); ++j) {
+                    if (tempNew.get(i).equals(tempOld.get(j))) { // Equals will recursively check the entire subtree!
+                        tempNew.remove(i);
+                        tempOld.remove(j);
+                        --i;
+                        --j;
+                        break;
+                    }
+                }
+            }
+
+            for (int i = 0; i < tempNew.size(); ++i) {
                 List<Object> childPath = new ArrayList(path);
-                if ( ((List)correspondingPrevious).size() > i ) {
+                if ( tempOld.size() > i ) {
                     childPath.add(new Integer(i));
                     examineDiff(childPath, version,
-                            ((List) examining).get(i), ((List) correspondingPrevious).get(i),
+                            tempNew.get(i), tempOld.get(i),
                             compositePath);
                 }
             }
