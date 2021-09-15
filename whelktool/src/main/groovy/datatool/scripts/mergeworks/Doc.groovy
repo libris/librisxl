@@ -24,6 +24,10 @@ class Doc {
             'https://id.kb.se/marc/NotFictionNotFurtherSpecified',
             'https://id.kb.se/marc/Biography'
     ]
+    public static final List DRAMA_GF = [
+            'https://id.kb.se/term/saogf/Dramatik',
+            'https://id.kb.se/marc/Drama'
+    ]
     
     Whelk whelk
     Document doc
@@ -276,6 +280,18 @@ class Doc {
     
     boolean isTranslationWithoutTranslator() {
         getWork()['translationOf'] && !hasTranslator()
+    }
+
+    boolean isSabDrama() {
+        classificationStrings().any{ it.contains(': Hc.02') || it.contains(': Hce.02') }
+    }
+
+    boolean isGfDrama() {
+        asList(getWork()['genreForm']).any{ it['@id'] in DRAMA_GF }
+    }
+    
+    boolean isDrama() {
+        isSabDrama() || isGfDrama()
     }
     
     boolean hasTranslator() {

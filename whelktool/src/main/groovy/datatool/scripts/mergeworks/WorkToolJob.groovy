@@ -248,8 +248,9 @@ class WorkToolJob {
             return {
                 def c = loadDocs(cluster)
                         .findAll(qualityMonographs)
-                        .findAll(swedish)        
-                
+                        .findAll(swedish)
+                        .findAll{ d -> !d.isDrama() }
+
                 if (c.any { it.isFiction() } && !c.any{ it.isNotFiction()}) {
                     println(c.collect { it.doc.shortId }.join('\t'))
                 }
