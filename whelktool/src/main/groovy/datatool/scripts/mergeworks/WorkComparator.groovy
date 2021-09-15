@@ -7,6 +7,7 @@ import datatool.scripts.mergeworks.compare.Extent
 import datatool.scripts.mergeworks.compare.FieldHandler
 import datatool.scripts.mergeworks.compare.GenreForm
 import datatool.scripts.mergeworks.compare.StuffSet
+import datatool.scripts.mergeworks.compare.TranslationOf
 import datatool.scripts.mergeworks.compare.ValuePicker
 import datatool.scripts.mergeworks.compare.WorkTitle
 import datatool.util.DocumentComparator
@@ -26,6 +27,7 @@ class WorkComparator {
             'numPages'        : new Extent(),
             'subject'         : new StuffSet(),
             'summary'         : new StuffSet(),
+            'translationOf'   : new TranslationOf(),
     ]
 
     static FieldHandler DEFAULT = new Default()
