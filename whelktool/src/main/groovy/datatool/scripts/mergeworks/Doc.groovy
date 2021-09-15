@@ -292,6 +292,13 @@ class Doc {
         }
         getWork()['numPages'] = numPages()
     }
+
+    void moveSummaryToInstance() {
+        if (getWork()['summary']) {
+            getInstance()['summary'] = asList(getInstance()['summary']) + asList(getWork()['summary'])
+            getWork().remove('summary')
+        }
+    }
     
     void addToWork(String field) {
         getWork()[field] = getInstance()[field]
