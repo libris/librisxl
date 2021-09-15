@@ -23,6 +23,7 @@ import static datatool.scripts.mergeworks.FieldStatus.EQUAL
 import static datatool.scripts.mergeworks.Util.asList
 import static datatool.scripts.mergeworks.Util.chipString
 import static datatool.scripts.mergeworks.Util.getPathSafe
+import static datatool.scripts.mergeworks.Util.normalize
 import static datatool.scripts.mergeworks.Util.partition
 
 class WorkToolJob {
@@ -379,8 +380,8 @@ class WorkToolJob {
         def variants = [linked] + asList(linked.hasVariant)
         def name = { 
             Map p -> (p.givenName && p.familyName) 
-                    ? Unicode.asciiFold("${p.givenName} ${p.familyName}")
-                    : p.name ? Unicode.asciiFold("${p.name}") : null
+                    ? normalize("${p.givenName} ${p.familyName}")
+                    : p.name ? normalize("${p.name}") : null
         }
         
         name(local) && variants.any {
