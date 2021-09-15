@@ -11127,7 +11127,7 @@
         "about": "_:extent",
         "property": "marc:sizeOfUnit"
       },
-      "$6": {"about": "_:extent", "property": "marc:fieldref"},
+      "$6": {"ignored": true, "NOTE:LC": "ignore (v1.6)"},
       "$8": {"about": "_:extent", "property": "marc:groupid"},
       "_spec": [
         {
@@ -11193,7 +11193,7 @@
         }
       },
       "$a": {"aboutNew": "_:durationPart", "property": "value"},
-      "$6": {"about": "_:durationPart", "property": "marc:fieldref"},
+      "$6": {"ignored": true, "NOTE:LC": "ignore (v1.6)"},
       "_spec": [
         {
           "Name": "Simple duration value",
@@ -11262,7 +11262,10 @@
       "NOTE:marc-repeatable": false,
       "$a": {"property": "label"},
       "$b": {"property": "date"},
-      "$6": {"property": "marc:fieldref", "supplementary": true},
+      "$0": {"property": "marc:recordControlNumber"},
+      "$1": null,
+      "$2": {"link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$6": {"ignored": true, "NOTE:LC": "ignore (v1.6)"},
       "_spec": [
         {
           "source": [
@@ -11296,7 +11299,10 @@
       },
       "$a": {"about": "_:frequency", "property": "label"},
       "$b": {"about": "_:frequency", "property": "date"},
-      "$6": {"about": "_:frequency", "property": "marc:fieldref", "supplementary": true},
+      "$0": {"about": "_:frequency", "property": "marc:recordControlNumber"},
+      "$1": null,
+      "$2": {"about": "_:frequency", "link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$6": {"ignored": true, "NOTE:LC": "ignore (v1.6)"},
       "_spec": [
         {
           "source": [
