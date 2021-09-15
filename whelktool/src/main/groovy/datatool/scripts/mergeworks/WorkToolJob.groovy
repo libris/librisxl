@@ -15,6 +15,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Function
+import java.util.function.Predicate
 
 import static datatool.scripts.mergeworks.FieldStatus.COMPATIBLE
 import static datatool.scripts.mergeworks.FieldStatus.DIFF
@@ -248,6 +249,18 @@ class WorkToolJob {
                         .findAll(swedish)        
                 
                 if (c.any { it.isFiction() } && !c.any{ it.isNotFiction()}) {
+                    println(c.collect { it.doc.shortId }.join('\t'))
+                }
+            }
+        })
+    }
+
+    
+    void filterDocs(Closure<Doc> predicate) {
+        run({ cluster ->
+            return {
+                def c = loadDocs(cluster).findAll(predicate)
+                if (c.size() > 1) {
                     println(c.collect { it.doc.shortId }.join('\t'))
                 }
             }

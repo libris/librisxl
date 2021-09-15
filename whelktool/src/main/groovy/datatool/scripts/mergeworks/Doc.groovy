@@ -271,6 +271,14 @@ class Doc {
     boolean isText() {
         getWork()['@type'] == 'Text'
     }
+    
+    boolean isTranslationWithoutTranslator() {
+        getWork()['translationOf'] && !hasTranslator()
+    }
+    
+    boolean hasTranslator() {
+        contributorStrings().join(' ').contains("trl:") //FIXME
+    }
 
     boolean hasDistinguishingEdition() {
         (getInstance()['editionStatement'] ?: '').toString().toLowerCase().contains("förk")
