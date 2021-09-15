@@ -5,6 +5,8 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
 
+import static datatool.scripts.mergeworks.Util.asList
+
 class Doc {
     public static final String SAOGF_SKÖN = 'https://id.kb.se/term/saogf/Sk%C3%B6nlitteratur'
     public static final List MARC_FICTION = [
@@ -290,7 +292,7 @@ class Doc {
         }
         getWork()['numPages'] = numPages()
     }
-
+    
     void addToWork(String field) {
         getWork()[field] = getInstance()[field]
     }
