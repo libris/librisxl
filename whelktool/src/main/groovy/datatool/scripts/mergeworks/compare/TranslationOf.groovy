@@ -13,7 +13,7 @@ class TranslationOf implements FieldHandler {
 
     @Override
     Object merge(Object a, Object b) {
-        return a
+        return a // TODO: prefer one @type over another?
     }
     
     Map noType(Map m) {
