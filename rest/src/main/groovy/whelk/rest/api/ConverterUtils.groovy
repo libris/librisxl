@@ -1,10 +1,10 @@
 package whelk.rest.api
 
 import groovy.util.logging.Log4j2 as Log
-import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.converter.FormatConverter
+import whelk.converter.JsonLD2N3Converter
 import whelk.converter.JsonLD2RdfXml
 import whelk.converter.JsonLDTrigConverter
 import whelk.converter.JsonLDTurtleConverter
@@ -21,6 +21,7 @@ class ConverterUtils {
                 (MimeTypes.RDF): new JsonLD2RdfXml(whelk),
                 (MimeTypes.TURTLE): new JsonLDTurtleConverter(null, whelk),
                 (MimeTypes.TRIG): new JsonLDTrigConverter(null, whelk),
+                (MimeTypes.N3): new JsonLD2N3Converter(whelk),
         ]
     }
 
