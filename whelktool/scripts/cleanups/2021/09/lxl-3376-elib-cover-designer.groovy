@@ -6,10 +6,12 @@ def where = """
   AND deleted = false
   """
 
-roles = [
+ROLES = [
         'Formgivare:' : 'https://id.kb.se/relator/designer',
         'Omslagsformgivare:' : 'https://id.kb.se/relator/coverDesigner'
 ]
+
+OTHER = [['@id': 'https://id.kb.se/relator/unspecifiedContributor']]
 
 selectBySqlWhere(where) { bib ->
     def summary = asList(bib.graph[1]['instanceOf']['summary']) + asList(bib.graph[1]['summary'])
@@ -23,8 +25,11 @@ selectBySqlWhere(where) { bib ->
         bib.scheduleSave()
     }
     
-    def coverDesigners = workContribution
-            .findAll { (it.role && roles.values().containsAll(it.role)) || nameToRoles.containsKey(name(it.agent))}
+    def coverDesigners = workContribution.findAll {
+        def a = it.role && ROLES.values().containsAll(it.role)
+        def b = nameToRoles.containsKey(name(it.agent)) && (it.role == OTHER || !it.role)
+        a || b
+    }
 
     if (!coverDesigners) {
         unhandled.println("${bib.doc.shortId} c:$workContribution d:$nameToRoles")
@@ -41,7 +46,7 @@ selectBySqlWhere(where) { bib ->
 }
 
 private Map parseDesigners(String summary) {
-    def roleToNames = roles.collectEntries { s, id ->
+    def roleToNames = ROLES.collectEntries { s, id ->
         def names = summary
                 .findAll(/$s[^\[,]+/)
                 .collect { it.substring(s.size()) }
