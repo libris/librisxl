@@ -1,6 +1,5 @@
 package datatool.scripts.mergeworks
 
-
 import whelk.Document
 import whelk.IdGenerator
 import whelk.JsonLd
@@ -8,14 +7,12 @@ import whelk.Whelk
 import whelk.exception.WhelkRuntimeException
 import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
-import whelk.util.Unicode
 
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Function
-import java.util.function.Predicate
 
 import static datatool.scripts.mergeworks.FieldStatus.COMPATIBLE
 import static datatool.scripts.mergeworks.FieldStatus.DIFF
@@ -36,6 +33,8 @@ class WorkToolJob {
 
     AtomicInteger clusterId = new AtomicInteger()
 
+    String jobId = IdGenerator.generate()
+    
     String changedIn = "xl"
     String changedBy = "SEK"
     boolean dryRun = true
@@ -130,7 +129,9 @@ class WorkToolJob {
         Collection<Doc> derivedFrom
     }
 
-    private static Document buildWorkDocument(Map workData) {
+    private Document buildWorkDocument(Map workData) {
+        String workId = IdGenerator.generate()
+        
         workData['@id'] = "TEMPID#it"
         Document d = new Document([
                 "@graph": [
@@ -138,14 +139,23 @@ class WorkToolJob {
                                 "@id"       : "TEMPID",
                                 "@type"     : "Record",
                                 "mainEntity": ["@id": "TEMPID#it"],
-                        ],
+                                "technicalNote": [[
+                                        "@type" : "TechnicalNote",
+                                        "hasNote": [[
+                                                "@type": "Note",
+                                                "label": ["Maskinellt utbrutet verk... TODO"]
+                                        ]],
+                                        "uri": ["http://xlbuild.kb.se/works/$jobId/$workId"]
+                                        
+                                ]
+                        ]],
                         workData
                 ]
         ])
 
         d.setGenerationDate(new Date())
         d.setGenerationProcess('https://libris.kb.se/sys/merge-works')
-        d.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
+        d.deepReplaceId(Document.BASE_URI.toString() + workId)
         return d
     }
 
