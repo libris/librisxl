@@ -46,6 +46,7 @@ class Crud extends HttpServlet {
     final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
     final static String XL_ACTIVE_SIGEL_HEADER = 'XL-Active-Sigel'
     final static String EPOCH_START = '1970/1/1'
+    final static String CONTEXT_PATH = '/context.jsonld'
 
     static final Counter requests = Counter.build()
         .name("api_requests_total").help("Total requests to API.")
@@ -107,8 +108,12 @@ class Crud extends HttpServlet {
 
         try {
             Map results = search.doSearch(queryParameters)
+            String responseContentType = CrudUtils.getBestContentType(request)
+            if (responseContentType == MimeTypes.JSONLD && !results['@context']) {
+                results['@context'] = CONTEXT_PATH
+            }
             def jsonResult = mapper.writeValueAsString(results)
-            sendResponse(response, jsonResult, "application/json")
+            sendResponse(response, jsonResult, responseContentType)
         } catch (ElasticIOException | UnexpectedHttpStatusException e) {
             log.error("Attempted elastic query, but failed: $e", e)
             failedRequests.labels("GET", request.getRequestURI(),
@@ -165,7 +170,8 @@ class Crud extends HttpServlet {
             return
         }
 
-        if (request.pathInfo == "/find" || request.pathInfo == "/find.json") {
+        // TODO: Handle things other than JSON / JSON-LD
+        if (request.pathInfo == "/find" || request.pathInfo == "/find.json" || request.pathInfo == "/find.jsonld") {
             handleQuery(request, response)
             return
         }
@@ -270,6 +276,11 @@ class Crud extends HttpServlet {
         if (!(request.getContentType() in [MimeTypes.JSON, MimeTypes.JSONLD])) {
             def id = request.getContentType() == MimeTypes.TRIG ? doc.getCompleteId() : doc.getShortId()
             return converterUtils.convert(transformedResponse, id, request.getContentType())
+        }
+
+        // TODO: Flask used to add this to all JSON-LD responses. When/where do we need it?
+        if (request.getContentType() == MimeTypes.JSONLD && !transformedResponse['@context']) {
+            transformedResponse['@context'] = CONTEXT_PATH
         }
 
         return transformedResponse
