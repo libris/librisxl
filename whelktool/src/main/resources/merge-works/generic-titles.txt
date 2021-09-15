@@ -8,6 +8,7 @@ folksagor
 folkvisor
 fragment
 korrespondens
+krönikor
 lyrik
 memoarer
 noveller
