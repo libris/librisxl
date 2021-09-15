@@ -168,7 +168,7 @@ public class History {
         } else {
             path = newPath;
         }
-        m_pathOwnership.put( path, new Ownership(version, getOwnership(path)) );
+        m_pathOwnership.put( path, new Ownership(version, m_pathOwnership.get(path)) );
     }
 
     // DEBUG CODE BELOW THIS POINT
