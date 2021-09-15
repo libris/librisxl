@@ -1,5 +1,6 @@
 package datatool
 
+import datatool.scripts.mergeworks.Doc
 import groovy.cli.commons.CliBuilder
 import datatool.scripts.mergeworks.WorkToolJob
 
@@ -35,6 +36,7 @@ class WorkTool {
         cli.t(longOpt:'subTitles', 'Print subtitles')
         cli.nf(longOpt:'fiction-not-fiction', 'Filter: output clusters with mixed marc/FictionNotFurtherSpecified and marc/NotFictionNotFurtherSpecified')
         cli.f(longOpt:'swedishFiction', 'Filter: output clusters containing swedish fiction')
+        cli.tr(longOpt:'anonymousTranslation', 'Filter: remove translations without translator')
         cli.tc(longOpt:'title-clusters', 'Filter: output title clusters')
         cli.lc(longOpt:'link-contribution', 'link matching contribution within cluster')
 
@@ -71,6 +73,9 @@ class WorkTool {
         }
         else if (options.f) {
             m.swedishFiction()
+        }
+        else if (options.tr) {
+            m.filterDocs({ Doc d -> !d.isTranslationWithoutTranslator() })
         }
         else if (options.tc) {
             m.outputTitleClusters()
