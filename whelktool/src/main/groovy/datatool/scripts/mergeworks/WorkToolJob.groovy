@@ -183,8 +183,8 @@ class WorkToolJob {
 
             works.addAll(partition(titleCluster, { Doc a, Doc b -> c.sameWork(a, b)})
                     .findAll {it.size() > 1 }
-                    .each { work -> work.each {doc -> doc.removeComparisonProps()}}
-                    .each { work -> work.each {doc -> doc.moveSummaryToInstance()}} 
+                    .each { work -> work.each { doc -> doc.removeComparisonProps() } }
+                    .each { work -> work.each { doc -> doc.moveSummaryToInstance() } } // TODO: keep if all have the same? 
                     .collect{new MergedWork(work: buildWorkDocument(c.merge(it)), derivedFrom: it)})
         }
 
