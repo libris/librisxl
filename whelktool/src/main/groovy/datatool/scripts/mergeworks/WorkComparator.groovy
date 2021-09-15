@@ -1,7 +1,7 @@
 package datatool.scripts.mergeworks
 
 import datatool.scripts.mergeworks.compare.Classification
-import datatool.scripts.mergeworks.compare.ContentType
+import datatool.scripts.mergeworks.compare.SameOrEmpty
 import datatool.scripts.mergeworks.compare.Default
 import datatool.scripts.mergeworks.compare.Extent
 import datatool.scripts.mergeworks.compare.FieldHandler
@@ -10,7 +10,6 @@ import datatool.scripts.mergeworks.compare.StuffSet
 import datatool.scripts.mergeworks.compare.ValuePicker
 import datatool.scripts.mergeworks.compare.WorkTitle
 import datatool.util.DocumentComparator
-import io.vavr.Tuple
 
 import static datatool.scripts.mergeworks.Util.bestTitle
 
@@ -19,13 +18,14 @@ class WorkComparator {
     DocumentComparator c = new DocumentComparator()
 
     Map<String, FieldHandler> comparators = [
-            'classification': new Classification(),
-            'subject'       : new StuffSet(),
-            'genreForm'     : new GenreForm(),
-            'contentType'   : new ContentType('https://id.kb.se/term/rda/Text'),
-            'hasTitle'      : new WorkTitle(),
-            'numPages'      : new Extent(),
-            'summary'       : new StuffSet(),
+            'classification'  : new Classification(),
+            'contentType'     : new SameOrEmpty('https://id.kb.se/term/rda/Text'),
+            'genreForm'       : new GenreForm(),
+            'hasTitle'        : new WorkTitle(),
+            'intendedAudience': new SameOrEmpty('https://id.kb.se/marc/Juvenile'),
+            'numPages'        : new Extent(),
+            'subject'         : new StuffSet(),
+            'summary'         : new StuffSet(),
     ]
 
     static FieldHandler DEFAULT = new Default()

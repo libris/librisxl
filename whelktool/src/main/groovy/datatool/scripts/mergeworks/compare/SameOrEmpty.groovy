@@ -2,16 +2,16 @@ package datatool.scripts.mergeworks.compare
 
 import static datatool.scripts.mergeworks.Util.asList
 
-class ContentType implements FieldHandler {
-    Object contentType
+class SameOrEmpty implements FieldHandler {
+    Object link
 
-    ContentType(String contentType) {
-        this.contentType = [['@id' : contentType]]
+    SameOrEmpty(String iri) {
+        this.link = [['@id': iri]]
     }
 
     @Override
     boolean isCompatible(Object a, Object b) {
-        (!a && asList(b) == contentType) || (!b && asList(a) == contentType)
+        (!a && asList(b) == link) || (!b && asList(a) == link)
     }
 
     @Override
