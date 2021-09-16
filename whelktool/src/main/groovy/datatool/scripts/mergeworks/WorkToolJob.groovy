@@ -44,7 +44,7 @@ class WorkToolJob {
         this.statistics = new Statistics()
     }
 
-    public Closure qualityMonographs = { Doc doc ->
+    public static Closure qualityMonographs = { Doc doc ->
         (doc.isText()
                 && doc.isMonograph()
                 && !doc.hasPart()
