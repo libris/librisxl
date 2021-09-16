@@ -187,8 +187,9 @@ class WorkToolJob {
 
     private void store(MergedWork work) {
         if (!dryRun) {
+            whelk.setSkipIndex(skipIndex)
             if (!whelk.createDocument(work.work, changedIn, changedBy,
-                    LegacyIntegrationTools.determineLegacyCollection(work.work, whelk.getJsonld()), false, !skipIndex)) {
+                    LegacyIntegrationTools.determineLegacyCollection(work.work, whelk.getJsonld()), false)) {
                 throw new WhelkRuntimeException("Could not store new work: ${work.work.shortId}")
             }
 
@@ -197,9 +198,9 @@ class WorkToolJob {
             work.derivedFrom
                     .collect { it.ogDoc }
                     .each {
-                        def sum = it.checksum
+                        def sum = it.getChecksum(whelk.jsonld)
                         it.data[JsonLd.GRAPH_KEY][1]['instanceOf'] = [(JsonLd.ID_KEY): workIri]
-                        whelk.storeAtomicUpdate(it, !loud, changedIn, changedBy, sum, !skipIndex)
+                        whelk.storeAtomicUpdate(it, !loud, changedIn, changedBy, sum)
                     }
         }
     }
