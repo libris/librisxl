@@ -50,17 +50,9 @@ private Object getPathSafe(item, path, defaultTo = null) {
     return item
 }
 
-private List asList(Object o) {
-    if (o == null)
-        return []
-    if (o instanceof List)
-        return o
-    return [o]
-}
-
 @Memoized
 private String langName(def id) {
-    getPathSafe(loadThing(id), ['prefLabel', 'sv'], "NOT FOUND")
+    getPathSafe(loadThing(id), ['prefLabelByLang', 'sv'], "NOT FOUND")
 }
 
 private Map loadThing(def id) {
