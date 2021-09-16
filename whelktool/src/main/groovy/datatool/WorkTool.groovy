@@ -75,7 +75,13 @@ class WorkTool {
             m.swedishFiction()
         }
         else if (options.tr) {
-            m.filterDocs({ Doc d -> !d.isTranslationWithoutTranslator() })
+            m.filterDocs({ Doc d -> 
+                if (d.isTranslationWithoutTranslator() ) {
+                    System.err.println(d.doc.shortId)    
+                }
+                
+                !d.isTranslationWithoutTranslator() 
+            })
         }
         else if (options.tc) {
             m.outputTitleClusters()
