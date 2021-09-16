@@ -106,6 +106,22 @@ class Crud extends HttpServlet {
     void handleQuery(HttpServletRequest request, HttpServletResponse response) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
 
+        // Default to normal Libris configuration
+        String activeSite = SiteData.LIBRIS
+        if (SiteData.IDKBSE in queryParameters['_site']) {
+            activeSite = SiteData.IDKBSE
+            queryParameters.put('_site_base_uri', (String[])[SiteData.IDKBSE])
+        }
+        log.debug("Site configuration: ${activeSite}")
+
+        if (!queryParameters['_statsrepr'] && SiteData.SITES[activeSite]['statsfind']) {
+            queryParameters.put('_statsrepr', (String[])[SiteData.SITES[activeSite]['statsfind']])
+        }
+
+        if (!queryParameters['_boost'] && SiteData.SITES[activeSite]['boost']) {
+            queryParameters.put('_boost', (String[])[SiteData.SITES[activeSite]['boost']])
+        }
+
         try {
             Map results = search.doSearch(queryParameters)
             String responseContentType = CrudUtils.getBestContentType(request)

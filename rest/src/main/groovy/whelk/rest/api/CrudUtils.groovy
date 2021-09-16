@@ -8,7 +8,6 @@ import org.apache.commons.io.FilenameUtils
 import org.apache.http.HeaderElement
 import org.apache.http.NameValuePair
 import org.apache.http.message.BasicHeaderValueParser
-import org.apache.jena.vocabulary.RDF
 
 import javax.servlet.http.HttpServletRequest
 
