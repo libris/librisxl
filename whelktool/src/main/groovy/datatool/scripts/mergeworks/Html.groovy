@@ -51,10 +51,14 @@ class Html {
         """
     }
 
-    static String clusterId(Collection<Doc> cluster) {
+    static String clusterId(Collection<String> cluster) {
         cluster
-                ? DigestUtils.md5Hex(cluster.collect { it.doc.shortId }.sort().first()).toUpperCase()
+                ? DigestUtils.md5Hex(cluster.sort().first()).toUpperCase().substring(0, 12)
                 : ""
+    }
+    
+    static String clusterId(Collection<Doc> cluster) {
+        clusterId(cluster.collect { it.doc.shortId })
     }
 
     private static def fieldRows(Collection<Doc> cluster, String cls) {

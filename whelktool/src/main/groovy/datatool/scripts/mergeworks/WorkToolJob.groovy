@@ -112,6 +112,8 @@ class WorkToolJob {
                 works.each { store(it) }
 
                 String report = htmlReport(titles, works)
+                
+                new File(reportDir, "${Html.clusterId(cluster)}.html") << report
                 works.each {
                     s.increment('num derivedFrom', "${it.derivedFrom.size()}", it.work.shortId)
                     new File(reportDir, "${it.work.shortId}.html") << report
