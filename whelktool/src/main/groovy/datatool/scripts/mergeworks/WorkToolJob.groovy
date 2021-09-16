@@ -171,7 +171,7 @@ class WorkToolJob {
                                                 "@type": "Note",
                                                 "label": ["Maskinellt utbrutet verk... TODO"]
                                         ]],
-                                        "uri": ["http://xlbuild.kb.se/works/$jobId/${workId}.html".toString()]
+                                        "uri": ["http://xlbuild.libris.kb.se/works/$jobId/${workId}.html".toString()]
                                         
                                 ]
                         ]],
