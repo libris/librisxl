@@ -102,7 +102,8 @@ class WorkToolJob {
 
     void merge() {
         def s = statistics.printOnShutdown()
-
+        reportDir.mkdirs()
+        
         run({ cluster ->
             return {
                 String report = htmlReport(titleClusters(cluster))
