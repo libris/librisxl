@@ -153,6 +153,36 @@ class Crud extends HttpServlet {
         }
     }
 
+    void handleData(HttpServletRequest request, HttpServletResponse response) {
+        Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
+
+        String activeSite = SiteData.LIBRIS
+        if (SiteData.IDKBSE in queryParameters['_site']) {
+            activeSite = SiteData.IDKBSE
+        }
+
+        Map results = SiteData.SITES[activeSite]
+
+        if (!queryParameters['_statsrepr']) {
+            queryParameters.put('_statsrepr', (String[])[SiteData.SITES[activeSite]['statsindex']])
+        }
+        if (!queryParameters['_limit']) {
+            queryParameters.put('_limit', (String[])["0"])
+        }
+        if (!queryParameters['q']) {
+            queryParameters.put('q', (String[])["*"])
+        }
+        Map searchResults = search.doSearch(queryParameters)
+        results['statistics'] = searchResults['stats']
+
+        String responseContentType = CrudUtils.getBestContentType(request)
+        if (responseContentType == MimeTypes.JSONLD && !results['@context']) {
+            results['@context'] = CONTEXT_PATH
+        }
+        def jsonResult = mapper.writeValueAsString(results)
+        sendResponse(response, jsonResult, responseContentType)
+    }
+
     static void displayInfo(HttpServletResponse response) {
         def info = [:]
         info["system"] = "LIBRISXL"
@@ -183,6 +213,12 @@ class Crud extends HttpServlet {
     void doGet2(HttpServletRequest request, HttpServletResponse response) {
         if (request.pathInfo == "/") {
             displayInfo(response)
+            return
+        }
+
+        // TODO: Handle things other than JSON / JSON-LD
+        if (request.pathInfo == "/data" || request.pathInfo == "/data.json" || request.pathInfo == "/data.jsonld") {
+            handleData(request, response)
             return
         }
 

@@ -10,7 +10,7 @@ class SiteData {
                     (JsonLd.ID_KEY)  : IDKBSE,
                     (JsonLd.TYPE_KEY): "DataCatalog",
                     "title"          : "id.kb.se",
-                    "summary"        : [ID: "/doc/summary"],
+                    "summary"        : [(JsonLd.ID_KEY): "/doc/summary"],
                     "stylesheet"     : ["name": "id.css"],
                     "statsindex"     : '{"inScheme.@id":{"inCollection.@id":["@type"], "@type":[]}}',
                     "statsfind"      : '{"inScheme.@id":{"inCollection.@id":["@type"], "@type":[]}}',
@@ -18,10 +18,10 @@ class SiteData {
                     "filter_param"   : "inScheme.@id",
                     "applyInverseOf" : true,
                     "itemList"       : [
-                            [ID: "/", "title": "Sök"],
-                            [ID: "/marcframe/", "title": "MARC-mappningar"],
-                            [ID: "/vocab/", "title": "Basvokabulär"],
-                            [ID: "/doc/about", "title": "Om id.kb.se"],
+                            [(JsonLd.ID_KEY): "/", "title": "Sök"],
+                            [(JsonLd.ID_KEY): "/marcframe/", "title": "MARC-mappningar"],
+                            [(JsonLd.ID_KEY): "/vocab/", "title": "Basvokabulär"],
+                            [(JsonLd.ID_KEY): "/doc/about", "title": "Om id.kb.se"],
                     ]
             ],
             (LIBRIS): [
