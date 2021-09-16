@@ -24,11 +24,11 @@ class Html {
         String header = """
             <tr>
                 <th><a id="${id}"><a href="#${id}">${id}</th>
-                ${cluster.collect { doc -> "<th><a href=\"${doc.link()}\">${doc.instanceDisplayTitle()}</a></th>" }.join('\n')}                                                             
+                ${cluster.collect { doc -> "<th><a href=\"${doc.link()}\">${doc.doc.shortId}</a></th>" }.join('\n')}                                                             
             </tr>
             <tr>
                 <td></td>
-                ${cluster.collect { doc -> "<td>${doc.doc.shortId}</td>" }.join('\\n')}                                                             
+                ${cluster.collect { doc -> "<td>${doc.instanceDisplayTitle()}</td>" }.join('\n')}                                                             
             </tr>
            """.stripIndent()
 
