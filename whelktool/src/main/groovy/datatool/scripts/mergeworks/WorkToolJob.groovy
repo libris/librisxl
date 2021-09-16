@@ -86,7 +86,7 @@ class WorkToolJob {
         run({ cluster ->
             return {
                 try {
-                    println(works(titleClusters(cluster)).collect {[new Doc2(whelk, it.work)] + it.derivedFrom }
+                    println(mergedWorks(titleClusters(cluster)).collect {[new Doc2(whelk, it.work)] + it.derivedFrom }
                             .collect { Html.clusterTable(it) }
                             .join('') + Html.HORIZONTAL_RULE
                     )
