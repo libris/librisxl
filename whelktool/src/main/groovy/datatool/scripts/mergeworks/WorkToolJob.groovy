@@ -273,7 +273,7 @@ class WorkToolJob {
         run({ cluster ->
             return {
                 def c = loadDocs(cluster).findAll(predicate)
-                if (c.size() > 1) {
+                if (c.size() > 0) {
                     println(c.collect { it.doc.shortId }.join('\t'))
                 }
             }
