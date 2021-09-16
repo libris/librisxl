@@ -279,7 +279,11 @@ class Doc {
     }
     
     boolean isTranslationWithoutTranslator() {
-        getWork()['translationOf'] && !hasTranslator()
+        isTranslation() && !hasTranslator()
+    }
+    
+    boolean isTranslation() {
+        getWork()['translationOf']
     }
 
     boolean isSabDrama() {

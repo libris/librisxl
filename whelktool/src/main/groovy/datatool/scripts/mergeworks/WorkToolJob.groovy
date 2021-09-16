@@ -300,6 +300,32 @@ class WorkToolJob {
         })
     }
 
+    void translationNoTranslator() {
+        run({ cluster ->
+            return {
+                def c = loadDocs(cluster)
+                
+                if (c) {
+                    if (c.any {it.isTranslation()}) {
+                        if (c.any{ it.hasTranslator() }) {
+                            c = c.findAll{ !it.isTranslationWithoutTranslator() }
+                        }
+                        else {
+                            int pages = c.first().numPages()
+                            if (c.any{ it.numPages() != pages}) {
+                                return // drop cluster
+                            }
+                        }
+                    }
+                }
+                
+                if (c.size() > 0) {
+                    println(c.collect { it.doc.shortId }.join('\t'))
+                }
+            }
+        })
+    }
+
     void outputTitleClusters() {
         run({ cluster ->
             return {
