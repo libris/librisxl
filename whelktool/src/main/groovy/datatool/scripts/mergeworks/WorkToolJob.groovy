@@ -120,7 +120,7 @@ class WorkToolJob {
         })
     }
     
-    String htmlReport(Collection<Collection> titleClusters, Collection<MergedWork> works)  {
+    String htmlReport(Collection<Collection<Doc>> titleClusters, Collection<MergedWork> works)  {
         if (titleClusters.isEmpty() || titleClusters.size() == 1 && titleClusters.first().size() == 1) {
             return ""
         }
@@ -129,6 +129,8 @@ class WorkToolJob {
         
         s.append(Html.START)
         s.append("<h1>Title cluster(s)</h1>")
+        titleClusters.each { it.each { it.addComparisonProps() } }
+        
         titleClusters
             .collect { it.sort { a, b -> a.getWork()['@type'] <=> b.getWork()['@type'] } }
             .collect { it.sort { it.numPages() } }
