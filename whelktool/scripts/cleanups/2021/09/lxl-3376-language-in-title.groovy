@@ -13,7 +13,7 @@ selectByIds(ids) { bib ->
             [1, 'instanceOf', 'language', 0, '@id'],
             [1, 'instanceOf', 'translationOf', 0, 'language', 0, '@id']
     ].collect {
-        langName(getPathSafe(it, '')).toLowerCase() 
+        langName(getPathSafe(bib.grap, it, '')).toLowerCase() 
     }
     println (langs)
     
