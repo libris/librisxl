@@ -67,7 +67,7 @@ dependencies {
     def groovyVersion=GroovySystem.getVersion()
 
     // KB tools
-    compile files('lib/jmarctools-1.3.3.jar')
+    compile files('lib/jmarctools-1.3.4.jar')
     compile files('lib/isbntools-1.3.jar')
     compile files('lib/oaij-0.1.jar')
 
