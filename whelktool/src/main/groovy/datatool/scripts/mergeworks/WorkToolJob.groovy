@@ -106,24 +106,29 @@ class WorkToolJob {
         
         run({ cluster ->
             return {
-                String report = htmlReport(titleClusters(cluster))
+                def titles = titleClusters(cluster)
+                def works = mergedWorks(titles)
                 
-                works(titleClusters(cluster)).each {
+                works.each { store(it) }
+
+                String report = htmlReport(titles, works)
+                works.each {
                     s.increment('num derivedFrom', "${it.derivedFrom.size()}", it.work.shortId)
-                    store(it)
                     new File(reportDir, "${it.work.shortId}.html") << report
                 }
             }
         })
     }
     
-    String htmlReport(Collection<Collection> titleClusters)  {
+    String htmlReport(Collection<Collection> titleClusters, Collection<MergedWork> works)  {
         if (titleClusters.isEmpty() || titleClusters.size() == 1 && titleClusters.first().size() == 1) {
             return ""
         }
 
         StringBuilder s = new StringBuilder()
         
+        s.append(Html.START)
+        s.append("<h1>Title cluster(s)</h1>")
         titleClusters
             .collect { it.sort { a, b -> a.getWork()['@type'] <=> b.getWork()['@type'] } }
             .collect { it.sort { it.numPages() } }
@@ -131,11 +136,12 @@ class WorkToolJob {
                 s.append(Html.clusterTable(it)) 
                 s.append(Html.HORIZONTAL_RULE)
             }
+
+        s.append("<h1>Extracted works</h1>")
+        works.collect {[new Doc2(whelk, it.work)] + it.derivedFrom }
+                .each { s.append(Html.clusterTable(it)) }
         
-        works(titleClusters).collect {[new Doc2(whelk, it.work)] + it.derivedFrom }
-                .collect { Html.clusterTable(it) }
-                .join('')
-        
+        s.append(Html.END)
         return s.toString()
     }
 
@@ -193,7 +199,7 @@ class WorkToolJob {
         }
     }
 
-    private Collection<MergedWork> works(Collection<Collection> titleClusters) {
+    private Collection<MergedWork> mergedWorks(Collection<Collection> titleClusters) {
         def works = []
         titleClusters.each {titleCluster ->
             titleCluster.sort {it.numPages() }
