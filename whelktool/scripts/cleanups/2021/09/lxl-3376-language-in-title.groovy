@@ -15,13 +15,16 @@ selectByIds(ids) { bib ->
     ].collect {
         langName(getPathSafe(it, '')).toLowerCase() 
     }
+    println (langs)
     
     boolean changed = DocumentUtil.findKey(bib.graph, "mainTitle") { String value, path ->
-        for (lang in langs) {
-            String r = value.replaceAll(/(?i)\s+\(\(?\s*${lang}\s*\)\)?\s+$/, '')
-            if (value != r) {
-                report.println("$value -> $r")
-                return new DocumentUtil.Replace(r)
+        if (value instanceof String && path && 'mainTitle' in path) {
+            for (lang in langs) {
+                String r = value.replaceAll(/(?i)\s+\(\(?\s*${lang}\s*\)\)?\s+$/, '')
+                if (value != r) {
+                    report.println("$value -> $r")
+                    return new DocumentUtil.Replace(r)
+                }
             }
         }
         return DocumentUtil.NOP
