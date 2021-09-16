@@ -38,6 +38,7 @@ class WorkTool {
         cli.f(longOpt:'swedishFiction', 'Filter: output clusters containing swedish fiction')
         cli.tr(longOpt:'anonymousTranslation', 'Filter: remove translations without translator')
         cli.tr2(longOpt:'anonymousTranslation2', 'Filter: remove translations without translator')
+        cli.qm(longOpt:'qualityMonographs', 'Filter: "qualityMonographs"')
         cli.tc(longOpt:'title-clusters', 'Filter: output title clusters')
         cli.lc(longOpt:'link-contribution', 'link matching contribution within cluster')
 
@@ -77,6 +78,9 @@ class WorkTool {
         }
         else if (options.tr) {
             m.filterDocs({ Doc d -> !d.isTranslationWithoutTranslator() })
+        }
+        else if (options.qm) {
+            m.filterDocs(WorkToolJob.qualityMonographs)
         }
         else if (options.tr2) {
             m.translationNoTranslator()

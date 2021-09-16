@@ -43,8 +43,8 @@ class WorkToolJob {
         this.whelk = Whelk.createLoadedSearchWhelk('secret', true)
         this.statistics = new Statistics()
     }
-    
-    Closure qualityMonographs = { Doc doc ->
+
+    public Closure qualityMonographs = { Doc doc ->
         (doc.isText()
                 && doc.isMonograph()
                 && !doc.hasPart()
