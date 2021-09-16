@@ -26,6 +26,10 @@ class Html {
                 <th><a id="${id}"><a href="#${id}">${id}</th>
                 ${cluster.collect { doc -> "<th><a href=\"${doc.link()}\">${doc.instanceDisplayTitle()}</a></th>" }.join('\n')}                                                             
             </tr>
+            <tr>
+                <td></td>
+                ${cluster.collect { doc -> "<td>${doc.doc.shortId}</td>" }.join('\\n')}                                                             
+            </tr>
            """.stripIndent()
 
         def statuses = WorkComparator.compare(cluster)
