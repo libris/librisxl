@@ -37,6 +37,7 @@ class WorkTool {
         cli.nf(longOpt:'fiction-not-fiction', 'Filter: output clusters with mixed marc/FictionNotFurtherSpecified and marc/NotFictionNotFurtherSpecified')
         cli.f(longOpt:'swedishFiction', 'Filter: output clusters containing swedish fiction')
         cli.tr(longOpt:'anonymousTranslation', 'Filter: remove translations without translator')
+        cli.tr2(longOpt:'anonymousTranslation2', 'Filter: remove translations without translator')
         cli.tc(longOpt:'title-clusters', 'Filter: output title clusters')
         cli.lc(longOpt:'link-contribution', 'link matching contribution within cluster')
 
@@ -75,13 +76,10 @@ class WorkTool {
             m.swedishFiction()
         }
         else if (options.tr) {
-            m.filterDocs({ Doc d -> 
-                if (d.isTranslationWithoutTranslator() ) {
-                    System.err.println(d.doc.shortId)    
-                }
-                
-                !d.isTranslationWithoutTranslator() 
-            })
+            m.filterDocs({ Doc d -> !d.isTranslationWithoutTranslator() })
+        }
+        else if (options.tr2) {
+            m.translationNoTranslator()
         }
         else if (options.tc) {
             m.outputTitleClusters()
