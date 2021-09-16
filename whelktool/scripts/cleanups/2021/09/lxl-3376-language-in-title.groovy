@@ -15,12 +15,11 @@ selectByIds(ids) { bib ->
     ].collect {
         langName(getPathSafe(bib.graph, it, '')).toLowerCase() 
     }
-    println (langs)
     
     boolean changed = DocumentUtil.traverse(bib.graph) { value, path ->
         if (path && 'mainTitle' in path && value instanceof String) {
             for (lang in langs) {
-                String r = value.replaceAll(/(?i)\s+\(\(?\s*${lang}\s*\)\)?\s+$/, '')
+                String r = value.replaceAll(/(?i)\s*\(\(?\s*${lang}\s*\)\)?\s*$/, '')
                 if (value != r) {
                     report.println("$value -> $r")
                     return new DocumentUtil.Replace(r)
