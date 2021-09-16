@@ -1,5 +1,6 @@
 package datatool.scripts.mergeworks
 
+
 import whelk.Document
 import whelk.IdGenerator
 import whelk.JsonLd
@@ -14,9 +15,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Function
 
-import static datatool.scripts.mergeworks.FieldStatus.COMPATIBLE
 import static datatool.scripts.mergeworks.FieldStatus.DIFF
-import static datatool.scripts.mergeworks.FieldStatus.EQUAL
 import static datatool.scripts.mergeworks.Util.asList
 import static datatool.scripts.mergeworks.Util.chipString
 import static datatool.scripts.mergeworks.Util.getPathSafe
@@ -24,14 +23,9 @@ import static datatool.scripts.mergeworks.Util.normalize
 import static datatool.scripts.mergeworks.Util.partition
 
 class WorkToolJob {
-    private String CSS = WorkToolJob.class.getClassLoader()
-            .getResourceAsStream('merge-works/table.css').getText("UTF-8")
-
     Whelk whelk
     Statistics statistics
     File clusters
-
-    AtomicInteger clusterId = new AtomicInteger()
 
     String jobId = IdGenerator.generate()
     
@@ -57,16 +51,12 @@ class WorkToolJob {
     }
 
     void show() {
-        println("""<html><head>
-                    <meta charset="UTF-8">
-                    <style>$CSS</style>
-                    </head><body>""")
+        println(Html.START)
         run({ cluster ->
             return {
                 try {
                     Collection<Collection<Doc>> docs = titleClusters(cluster)
-                            
-
+                    
                     if (docs.isEmpty() || docs.size() == 1 && docs.first().size() == 1) {
                         return
                     }
@@ -76,8 +66,9 @@ class WorkToolJob {
                     println(docs
                             .collect { it.sort { a, b -> a.getWork()['@type'] <=> b.getWork()['@type'] } }
                             .collect { it.sort { it.numPages() } }
-                            .collect { clusterTable(it) }
-                            .join('') + "<hr/><br/>\n")
+                            .collect { Html.clusterTable(it) }
+                            .join('') + Html.HORIZONTAL_RULE
+                    )
                 }
                 catch (NoWorkException e) {
                     System.err.println(e.getMessage())
@@ -88,20 +79,18 @@ class WorkToolJob {
                 }
             }
         })
-        println('</body></html>')
+        println(Html.END)
     }
 
-    void show2() {
-        println("""<html><head>
-                    <meta charset="UTF-8">
-                    <style>$CSS</style>
-                    </head><body>""")
+    void showWorks() {
+        println(Html.START)
         run({ cluster ->
             return {
                 try {
                     println(works(cluster).collect {[new Doc2(whelk, it.work)] + it.derivedFrom }
-                            .collect { clusterTable(it) }
-                            .join('') + "<hr/><br/>\n")
+                            .collect { Html.clusterTable(it) }
+                            .join('') + Html.HORIZONTAL_RULE
+                    )
                 }
                 catch (Exception e) {
                     System.err.println(e.getMessage())
@@ -109,7 +98,7 @@ class WorkToolJob {
                 }
             }
         })
-        println('</body></html>')
+        println(Html.END)
     }
 
     void merge() {
@@ -145,7 +134,7 @@ class WorkToolJob {
                                                 "@type": "Note",
                                                 "label": ["Maskinellt utbrutet verk... TODO"]
                                         ]],
-                                        "uri": ["http://xlbuild.kb.se/works/$jobId/$workId"]
+                                        "uri": ["http://xlbuild.kb.se/works/$jobId/${workId}.html"]
                                         
                                 ]
                         ]],
@@ -409,46 +398,6 @@ class WorkToolJob {
         b || d
     }
     
-    static def infoFields = ['instance title', 'work title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication', 'identifiedBy', 'extent']
-
-    private String clusterTable(Collection<Doc> cluster) {
-        String id = "${clusterId.incrementAndGet()}"
-        String header = """
-            <tr>
-                <th><a id="${id}"><a href="#${id}">${id}</th>
-                ${cluster.collect { doc -> "<th><a href=\"${doc.link()}\">${doc.instanceDisplayTitle()}</a></th>" }.join('\n')}                                                             
-            </tr>
-           """.stripIndent()
-
-        def statuses = WorkComparator.compare(cluster)
-
-        String info = infoFields.collect(fieldRows(cluster, "info")).join('\n')
-        String equal = statuses.get(EQUAL, []).collect(fieldRows(cluster, cluster.size() > 1 ? EQUAL.toString() : "")).join('\n')
-        String compatible = statuses.get(COMPATIBLE, []).collect(fieldRows(cluster, COMPATIBLE.toString())).join('\n')
-        String diff = statuses.get(DIFF, []).collect(fieldRows(cluster, DIFF.toString())).join('\n')
-
-        return """
-            <table>
-                ${header}   
-                ${equal}
-                ${compatible}
-                ${diff}
-                ${info}
-            </table>
-            <br/><br/>
-        """
-    }
-
-    private def fieldRows(Collection<Doc> cluster, String cls) {
-        { field ->
-            """
-            <tr class="${cls}">
-                <td>${field}</td>
-                ${cluster.collect { "<td>${it.getDisplayText(field)}</td>" }.join('\n')}   
-            </tr> """.stripIndent()
-        }
-    }
-
     private void run(Function<List<String>, Runnable> f) {
         ExecutorService s = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4)
 
