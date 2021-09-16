@@ -138,6 +138,7 @@ class WorkToolJob {
                 s.append(Html.clusterTable(it)) 
                 s.append(Html.HORIZONTAL_RULE)
             }
+        titleClusters.each { it.each { it.removeComparisonProps() } }
 
         s.append("<h1>Extracted works</h1>")
         works.collect {[new Doc2(whelk, it.work)] + it.derivedFrom }
