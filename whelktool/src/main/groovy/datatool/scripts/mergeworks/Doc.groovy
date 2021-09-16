@@ -295,7 +295,9 @@ class Doc {
     }
     
     boolean hasTranslator() {
-        contributorStrings().join(' ').contains("trl:") //FIXME
+        asList(getWork()['contribution']).any {
+            asList(it['role']).contains(['@id': 'https://id.kb.se/relator/translator'])
+        }
     }
 
     boolean hasDistinguishingEdition() {
