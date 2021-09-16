@@ -28,6 +28,7 @@ class WorkToolJob {
     File clusters
 
     String jobId = IdGenerator.generate()
+    File reportDir = new File("reports/$jobId") 
     
     String changedIn = "xl"
     String changedBy = "SEK"
@@ -61,8 +62,6 @@ class WorkToolJob {
                         return
                     }
 
-                    docs.each {it.each {it.addComparisonProps() } }
-                    
                     println(docs
                             .collect { it.sort { a, b -> a.getWork()['@type'] <=> b.getWork()['@type'] } }
                             .collect { it.sort { it.numPages() } }
@@ -81,13 +80,13 @@ class WorkToolJob {
         })
         println(Html.END)
     }
-
+    
     void showWorks() {
         println(Html.START)
         run({ cluster ->
             return {
                 try {
-                    println(works(cluster).collect {[new Doc2(whelk, it.work)] + it.derivedFrom }
+                    println(works(titleClusters(cluster)).collect {[new Doc2(whelk, it.work)] + it.derivedFrom }
                             .collect { Html.clusterTable(it) }
                             .join('') + Html.HORIZONTAL_RULE
                     )
@@ -103,14 +102,40 @@ class WorkToolJob {
 
     void merge() {
         def s = statistics.printOnShutdown()
+
         run({ cluster ->
             return {
-                works(cluster).each {
+                String report = htmlReport(titleClusters(cluster))
+                
+                works(titleClusters(cluster)).each {
                     s.increment('num derivedFrom', "${it.derivedFrom.size()}", it.work.shortId)
                     store(it)
+                    new File(reportDir, "${it.work.shortId}.html") << report
                 }
             }
         })
+    }
+    
+    String htmlReport(Collection<Collection> titleClusters)  {
+        if (titleClusters.isEmpty() || titleClusters.size() == 1 && titleClusters.first().size() == 1) {
+            return ""
+        }
+
+        StringBuilder s = new StringBuilder()
+        
+        titleClusters
+            .collect { it.sort { a, b -> a.getWork()['@type'] <=> b.getWork()['@type'] } }
+            .collect { it.sort { it.numPages() } }
+            .each { 
+                s.append(Html.clusterTable(it)) 
+                s.append(Html.HORIZONTAL_RULE)
+            }
+        
+        works(titleClusters).collect {[new Doc2(whelk, it.work)] + it.derivedFrom }
+                .collect { Html.clusterTable(it) }
+                .join('')
+        
+        return s.toString()
     }
 
     class MergedWork {
@@ -167,14 +192,7 @@ class WorkToolJob {
         }
     }
 
-    private Collection<MergedWork> works(List<String> cluster) {
-        def titleClusters = loadDocs(cluster)
-                .findAll(qualityMonographs)
-                .each {it.addComparisonProps() }
-                .with { partitionByTitle(it) }
-                .findAll { it.size() > 1 }
-                .findAll { !it.any{ doc -> doc.hasGenericTitle() } }
-
+    private Collection<MergedWork> works(Collection<Collection> titleClusters) {
         def works = []
         titleClusters.each {titleCluster ->
             titleCluster.sort {it.numPages() }
@@ -435,7 +453,9 @@ class WorkToolJob {
     private Collection<Collection<Doc>> titleClusters(Collection<String> cluster) {
         loadDocs(cluster)
                 .findAll(qualityMonographs)
+                .each {it.addComparisonProps() }
                 .with { partitionByTitle(it) }
+                .findAll { it.size() > 1 }
                 .findAll { !it.any{ doc -> doc.hasGenericTitle() } }
                 .sort { a, b -> a.first().instanceDisplayTitle() <=> b.first().instanceDisplayTitle() }
     }
