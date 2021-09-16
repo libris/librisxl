@@ -654,15 +654,14 @@ class ESQuery {
      */
     @CompileStatic(TypeCheckingMode.SKIP)
     public Map getAggQuery(Map queryParameters) {
-        // TODO: Don't hardcode id.kb.se here?
-        if ('_statsrepr' in queryParameters) {
-            return buildAggQuery(mapper.readValue(queryParameters.get('_statsrepr')[0], Map))
-        } else if ('https://id.kb.se' in queryParameters['_site_base_uri']) {
-            Map aggQuery = ["inScheme.@id": ["inCollection.@id":["@type"], "@type":[]]]
-            return buildAggQuery(aggQuery)
-        } else {
-            return [(JsonLd.TYPE_KEY): ['terms': ['field': JsonLd.TYPE_KEY]]]
+        if (!('_statsrepr' in queryParameters)) {
+            Map defaultQuery = [(JsonLd.TYPE_KEY): ['terms': ['field': JsonLd.TYPE_KEY]]]
+            return defaultQuery
         }
+
+        Map statsrepr = mapper.readValue(queryParameters.get('_statsrepr')[0], Map)
+
+        return buildAggQuery(statsrepr)
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
