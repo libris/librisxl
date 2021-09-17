@@ -3795,7 +3795,7 @@
         },
         "[4]": {
           "NOTE:LC": "04 - Motion picture presentation format",
-          "NOTE": "Not ignored by LC",
+          "NOTE": "Not ignored by LC, MarcFrame currently does not support mapping of fixedfields to multiple properties on different entities.",
           "ignored": true,
           "NOTE:record-count": 0
         },
