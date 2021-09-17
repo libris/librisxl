@@ -3782,7 +3782,7 @@
       "MovingImageInstance": {
         "[1]": {
           "NOTE:LC": " 01 - Specific material designation",
-          "NOTE": "Not ignored by LC",
+          "NOTE": "Not ignored by LC, add carrier and ignoreOnRevert?",
           "ignored": true,
           "NOTE:record-count": 0
         },
