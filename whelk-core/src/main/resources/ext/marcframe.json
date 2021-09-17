@@ -3781,10 +3781,10 @@
       },
       "MovingImageInstance": {
         "[1]": {
-          "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicMaterialType-{_}",
-          "matchUriToken": "^[cfor]$",
-          "silentRevert": false
+          "NOTE:LC": " 01 - Specific material designation",
+          "NOTE": "Not ignored by LC, add carrier and ignoreOnRevert?",
+          "ignored": true,
+          "NOTE:record-count": 0
         },
         "[2]": null,
         "[3]": {
@@ -3794,10 +3794,10 @@
           "matchUriToken": "^[bchm]$"
         },
         "[4]": {
-          "addLink": "projectionCharacteristic",
-          "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MotionPicFormatType-{_}",
-          "matchUriToken": "^[abcdef]$"
+          "NOTE:LC": "04 - Motion picture presentation format",
+          "NOTE": "Not ignored by LC, MarcFrame currently does not support mapping of fixedfields to multiple properties on different entities.",
+          "ignored": true,
+          "NOTE:record-count": 0
         },
         "[5]": {
           "link": "soundContent",
@@ -3823,11 +3823,10 @@
           "ignoreOnRevert": true
         },
         "[9]": {
-          "addLink": "genreForm",
+          "NOTE:LC": "09 - Production elements",
           "NOTE": "LC ignores all but c & d",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicElementsType-{_}",
-          "matchUriToken": "^[abcdefg]$",
-          "ignoreOnRevert": true
+          "ignore": true,
+          "NOTE:record-count": 0
         },
         "[10]": {
           "addLink": "polarity",
@@ -3837,11 +3836,10 @@
           "ignoreOnRevert": true
         },
         "[11]": {
-          "addLink": "generation",
-          "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MotionPicGenerationType-{_}",
-          "matchUriToken": "^[deor]$",
-          "ignoreOnRevert": true
+          "NOTE:LC": "11 - Generation",
+          "NOTE": "Not ignored by LC",
+          "ignored": true,
+          "NOTE:record-count": 0
         },
         "[12]": {
           "addLink": "baseMaterial",
