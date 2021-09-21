@@ -1,10 +1,10 @@
 String where = """
-collection = 'bib' and  
+collection = 'bib' and data#>>'{@graph,1,@type}' = 'Electronic' and
 (
 \tdata#>'{@graph,0,bibliography}' @> '[{"@id": "https://libris.kb.se/library/SAH"}]' or
 \tdata#>'{@graph,0,bibliography}' @> '[{"@id": "https://libris.kb.se/library/SAHF"}]' or
 \tdata#>'{@graph,0,bibliography}' @> '[{"@id": "https://libris.kb.se/library/SAHT"}]' 
-) and not data#>'{@graph,0,inDataset}' @> '[{"@id": "https://libris.kb.se/1fjdz8jnzxkc3qmw#it"}]'
+)
 """
 
 selectBySqlWhere(where) { data ->
@@ -12,7 +12,10 @@ selectBySqlWhere(where) { data ->
 
     if ( ! record["inDataset"] instanceof List )
         record["inDataset"] = [record["inDataset"]]
-    record["inDataset"].add(["@id": "https://libris.kb.se/1fjdz8jnzxkc3qmw#it"])
+    List datasets = record["inDataset"]
+    if (!datasets.any{ it.equals( ["@id": "https://libris.kb.se/1fjdz8jnzxkc3qmw#it"] ) }) {
+        datasets.add(["@id": "https://libris.kb.se/1fjdz8jnzxkc3qmw#it"])
+    }
 
     data.scheduleSave()
 }
