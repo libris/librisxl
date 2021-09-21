@@ -530,7 +530,7 @@ class Document {
         else
             categories = [catObj]
         return categories.any {
-            it["@id"] == "http://id.kb.se/bibdb/registrant"
+            it["@id"] == "http://id.kb.se/term/bibdb/Registrant"
         }
     }
 
