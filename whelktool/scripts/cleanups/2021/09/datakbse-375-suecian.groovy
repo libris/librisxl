@@ -10,7 +10,10 @@ collection = 'bib' and data#>>'{@graph,1,@type}' = 'Electronic' and
 selectBySqlWhere(where) { data ->
     Map record = data.graph[0]
 
-    if ( ! record["inDataset"] instanceof List )
+    if (record["inDataset"] == null) {
+        record["inDataset"] = []
+    }
+    else if ( ! record["inDataset"] instanceof List )
         record["inDataset"] = [record["inDataset"]]
     List datasets = record["inDataset"]
     if (!datasets.any{ it.equals( ["@id": "https://libris.kb.se/1fjdz8jnzxkc3qmw#it"] ) }) {
