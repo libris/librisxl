@@ -1639,7 +1639,7 @@ class PostgreSQLComponent {
         if (version && version.isInteger()) {
             int v = version.toInteger()
             def docList = loadAllVersionsByMainId(mainId)
-            if (v < docList.size()) {
+            if ((v >= 0 && v < docList.size()) || (v < 0 && v.abs()-1 < docList.size())) {
                 doc = docList[v]
             }
         } else if (version) {
@@ -1811,9 +1811,9 @@ class PostgreSQLComponent {
         if (version && version.isInteger()) {
             int v = version.toInteger()
             def docList = loadAllVersions(id)
-            if (v < docList.size()) {
+            if ((v >= 0 && v < docList.size()) || (v < 0 && v.abs()-1 < docList.size())) {
                 doc = docList[v]
-            } else {
+            } else if (v > -1) {
                 // looks like version might be a checksum, try loading
                 doc = loadFromSql(GET_DOCUMENT_VERSION, [1: id, 2: version])
             }
