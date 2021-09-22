@@ -465,7 +465,7 @@ class WhelkTool {
 
     private boolean doRevertToTime(DocumentItem item) {
 
-        // The 'versions' list is sorted, with the most recent version first.
+        // The 'versions' list is sorted, with the oldest version first.
         List<Document> versions = whelk.storage.loadAllVersions(item.doc.shortId)
 
         ZonedDateTime restoreTime = ZonedDateTime.parse(item.restoreToTime)
@@ -477,11 +477,10 @@ class WhelkTool {
             return false
         }
 
-        // Go over the versions, oldest first (in reverse),
+        // Go over the versions, oldest first,
         // until you've found the oldest version that is younger than the desired time target.
         Document selectedVersion = null
-        for (int i = versions.size()-1; i > -1; --i) {
-            Document version = versions.get(i)
+        for (Document version : versions) {
             ZonedDateTime latestModificationTime = getLatestModification(version)
             if (restoreTime.isAfter(latestModificationTime))
                 selectedVersion = version

@@ -150,14 +150,14 @@ class PostgreSQLComponent {
             SELECT id, data, deleted, created, modified, changedBy, changedIn 
             FROM lddb__versions
             WHERE id = ? 
-            ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) DESC
+            ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) ASC
             """.stripIndent()
 
     private static final String GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID = """
             SELECT id, data, deleted, created, modified 
             FROM lddb__versions 
             WHERE id = (SELECT id FROM lddb__identifiers WHERE iri = ? AND mainid = 't')
-            ORDER BY modified
+            ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) ASC
             """.stripIndent()
 
     private static final String LOAD_ALL_DOCUMENTS =
