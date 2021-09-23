@@ -68,6 +68,7 @@ class Document {
     static final List generationDatePath = ["@graph", 0, "generationDate"]
     static final List descriptionCreatorPath = ["@graph", 0, "descriptionCreator", "@id"]
     static final List descriptionLastModifierPath = ["@graph", 0, "descriptionLastModifier", "@id"]
+    static final List categoryPath = ["@graph", 1, "category"]
 
     URI baseUri = BASE_URI
 
@@ -517,6 +518,20 @@ class Document {
         if (type != null)
             return type
         return null
+    }
+
+    public boolean libraryIsRegistrant() {
+        Object catObj = get(categoryPath)
+        if (catObj == null)
+            return false
+        List categories
+        if (catObj instanceof List)
+            categories = catObj
+        else
+            categories = [catObj]
+        return categories.any {
+            it["@id"] == "https://id.kb.se/term/bibdb/Registrant"
+        }
     }
 
     /**

@@ -465,23 +465,22 @@ class WhelkTool {
 
     private boolean doRevertToTime(DocumentItem item) {
 
-        // The 'versions' list is sorted, with the most recent version first.
+        // The 'versions' list is sorted, with the oldest version first.
         List<Document> versions = whelk.storage.loadAllVersions(item.doc.shortId)
 
         ZonedDateTime restoreTime = ZonedDateTime.parse(item.restoreToTime)
 
         // If restoreTime is older than any stored version (we can't go back that far)
-        ZonedDateTime oldestStoredTime = getLatestModification(versions.get(versions.size()-1))
+        ZonedDateTime oldestStoredTime = getLatestModification(versions.get(0))
         if ( restoreTime.isBefore( oldestStoredTime ) ) {
             errorLog.println("Cannot restore ${item.doc.shortId} to ${restoreTime}, oldest stored version from: ${oldestStoredTime}")
             return false
         }
 
-        // Go over the versions, oldest first (in reverse),
+        // Go over the versions, oldest first,
         // until you've found the oldest version that is younger than the desired time target.
         Document selectedVersion = null
-        for (int i = versions.size()-1; i > -1; --i) {
-            Document version = versions.get(i)
+        for (Document version : versions) {
             ZonedDateTime latestModificationTime = getLatestModification(version)
             if (restoreTime.isAfter(latestModificationTime))
                 selectedVersion = version

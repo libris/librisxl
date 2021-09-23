@@ -3781,10 +3781,10 @@
       },
       "MovingImageInstance": {
         "[1]": {
-          "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicMaterialType-{_}",
-          "matchUriToken": "^[cfor]$",
-          "silentRevert": false
+          "NOTE:LC": " 01 - Specific material designation",
+          "NOTE": "Not ignored by LC, add carrier and ignoreOnRevert?",
+          "ignored": true,
+          "NOTE:record-count": 0
         },
         "[2]": null,
         "[3]": {
@@ -3794,10 +3794,10 @@
           "matchUriToken": "^[bchm]$"
         },
         "[4]": {
-          "addLink": "projectionCharacteristic",
-          "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MotionPicFormatType-{_}",
-          "matchUriToken": "^[abcdef]$"
+          "NOTE:LC": "04 - Motion picture presentation format",
+          "NOTE": "Not ignored by LC, MarcFrame currently does not support mapping of fixedfields to multiple properties on different entities.",
+          "ignored": true,
+          "NOTE:record-count": 0
         },
         "[5]": {
           "link": "soundContent",
@@ -3823,11 +3823,10 @@
           "ignoreOnRevert": true
         },
         "[9]": {
-          "addLink": "genreForm",
+          "NOTE:LC": "09 - Production elements",
           "NOTE": "LC ignores all but c & d",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicElementsType-{_}",
-          "matchUriToken": "^[abcdefg]$",
-          "ignoreOnRevert": true
+          "ignore": true,
+          "NOTE:record-count": 0
         },
         "[10]": {
           "addLink": "polarity",
@@ -3837,11 +3836,10 @@
           "ignoreOnRevert": true
         },
         "[11]": {
-          "addLink": "generation",
-          "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MotionPicGenerationType-{_}",
-          "matchUriToken": "^[deor]$",
-          "ignoreOnRevert": true
+          "NOTE:LC": "11 - Generation",
+          "NOTE": "Not ignored by LC",
+          "ignored": true,
+          "NOTE:record-count": 0
         },
         "[12]": {
           "addLink": "baseMaterial",
@@ -11127,7 +11125,7 @@
         "about": "_:extent",
         "property": "marc:sizeOfUnit"
       },
-      "$6": {"about": "_:extent", "property": "marc:fieldref"},
+      "$6": {"ignored": true, "NOTE:LC": "ignore (v1.6)"},
       "$8": {"about": "_:extent", "property": "marc:groupid"},
       "_spec": [
         {
@@ -11193,7 +11191,7 @@
         }
       },
       "$a": {"aboutNew": "_:durationPart", "property": "value"},
-      "$6": {"about": "_:durationPart", "property": "marc:fieldref"},
+      "$6": {"ignored": true, "NOTE:LC": "ignore (v1.6)"},
       "_spec": [
         {
           "Name": "Simple duration value",
@@ -11262,7 +11260,10 @@
       "NOTE:marc-repeatable": false,
       "$a": {"property": "label"},
       "$b": {"property": "date"},
-      "$6": {"property": "marc:fieldref", "supplementary": true},
+      "$0": {"property": "marc:recordControlNumber"},
+      "$1": null,
+      "$2": {"link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$6": {"ignored": true, "NOTE:LC": "ignore (v1.6)"},
       "_spec": [
         {
           "source": [
@@ -11296,7 +11297,10 @@
       },
       "$a": {"about": "_:frequency", "property": "label"},
       "$b": {"about": "_:frequency", "property": "date"},
-      "$6": {"about": "_:frequency", "property": "marc:fieldref", "supplementary": true},
+      "$0": {"about": "_:frequency", "property": "marc:recordControlNumber"},
+      "$1": null,
+      "$2": {"about": "_:frequency", "link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$6": {"ignored": true, "NOTE:LC": "ignore (v1.6)"},
       "_spec": [
         {
           "source": [

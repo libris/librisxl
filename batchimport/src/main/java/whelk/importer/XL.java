@@ -169,7 +169,20 @@ class XL
 
         Document rdfDoc = convertToRDF(marcRecord, incomingId);
         if (collection.equals("hold"))
+        {
+            String libraryUri = rdfDoc.getHeldBy();
+            String librarySystemId = m_whelk.getStorage().getSystemIdByIri(libraryUri);
+            if (librarySystemId == null)
+            {
+                return null;
+            }
+            Document libraryDoc = m_whelk.getDocument(librarySystemId);
+            if (!libraryDoc.libraryIsRegistrant())
+            {
+                return null;
+            }
             rdfDoc.setHoldingFor(relatedWithBibResourceId);
+        }
 
         String encodingLevel = rdfDoc.getEncodingLevel();
         if (encodingLevel == null || (

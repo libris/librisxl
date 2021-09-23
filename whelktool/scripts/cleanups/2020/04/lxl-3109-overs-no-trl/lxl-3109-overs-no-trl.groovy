@@ -49,6 +49,7 @@ class Script {
 
 TRL = 'https://id.kb.se/relator/translator'
 FORMS = buildForms()
+println(FORMS.join('\n'))
 testParser()
 
 scheduledForUpdate = getReportWriter("scheduled-for-update")
@@ -151,7 +152,7 @@ Map tryMakeBlankContribution(String name) {
 List parseTranslatorNames(String responsibilityStatement) {
     responsibilityStatement
             .split(';')
-            .grep{ it.contains('övers') }
+            .grep{ String s -> s.toLowerCase().contains('övers') }
             .collect(Unicode.&trimNoise)
             .collect(StringUtils.&normalizeSpace)
             .findResults { getNamesPart(it) }
@@ -238,7 +239,7 @@ List buildForms() {
     def nameWord = /(?:al-)?(?:\p{javaUpperCase}\S*|och|&|van|von|der|de|la|af|f.)/
     def names = /(?:\s*$nameWord|,|, )+/
 
-    def nocase = '(?i)'
+    def nocase = '(?i)(?u)'
     def aukt = /(?:aukt. |auktor. |auktoris. |auktoriserad )/
     def bemynd = /(?:bemynd. |bemynd |bemyndigad )/
     def svensk = /(?:svensk )/
@@ -252,12 +253,12 @@ List buildForms() {
     return [
             ~/$nocase$i?$type*$translation$from?$to?$by($names)/,
             ~/$nocase$i?$type*$translation${by}($names)/,
-            ~/översättningen är utförd av ($names)/,
-            ~/övers. är utförd av ($names)/,
-            ~/översättningar: ($names)/,
-            ~/översättningar av ($names)/,
-            ~/översättare: ($names)/,
-            ~/översättning \.\.\. ($names)/,
+            ~/${nocase}översättningen är utförd av ($names)/,
+            ~/${nocase}övers. är utförd av ($names)/,
+            ~/${nocase}översättningar: ($names)/,
+            ~/${nocase}översättningar av ($names)/,
+            ~/${nocase}översättare: ($names)/,
+            ~/${nocase}översättning \.\.\. ($names)/,
             ~/$nocase${i}?${type}?${translation}${from}?${to}? ($names)/,
     ]
 }
@@ -267,6 +268,8 @@ void testParser() {
     [
             'Aukt. övers. av Anna Bagge'                                                     : ['Anna Bagge'],
             'auktor. övers. av Louis Renner och Ture Nerman'                                 : ['Louis Renner', 'Ture Nerman'],
+            'Auktor. Övers. av Louis Renner och Ture Nerman'                                 : ['Louis Renner', 'Ture Nerman'],
+            'Auktor. Övers. av louis renner och ture nerman'                                 : [],
             'aukt. övers. av Oscar Ljungström'                                               : ['Oscar Ljungström'],
             'auktoriserad översättning av C. G. Segerstråle'                                 : ['C. G. Segerstråle'],
             'auktoris. övers. av Karl August Hagberg'                                        : ['Karl August Hagberg'],
@@ -304,6 +307,7 @@ void testParser() {
             'översättning: Aina Larsson'                                                     : ['Aina Larsson'],
             'översättning: Amelie Björck, Patricia Lorenzoni och Maria Åsard'                : ['Amelie Björck', 'Patricia Lorenzoni', 'Maria Åsard'],
             'översättningen är utförd av Gustaf Lundgren'                                    : ['Gustaf Lundgren'],
+            'Översättningen är utförd av Gustaf Lundgren'                                    : ['Gustaf Lundgren'],
 
             // trickier cases that we don't handle for now. Don't want to touch them so should return empty
             'övers. från kinesiska och komment. av Kuma-san'                                 : [],
