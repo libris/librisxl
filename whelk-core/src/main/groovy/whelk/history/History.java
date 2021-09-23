@@ -20,11 +20,8 @@ public class History {
         m_jsonLd = jsonLd;
         m_pathOwnership = new HashMap<>();
 
-        // The list we get is sorted backwards chronologically,
-        // this needs to be the case for other uses of the same
-        // list, so "deal with it".
-        for (int i = versions.size()-1; i > -1 ; --i) {
-            DocumentVersion version = versions.get(i);
+        // The list we get is sorted chronologically, oldest first.
+        for (DocumentVersion version : versions) {
             addVersion(version);
         }
     }
