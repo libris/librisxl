@@ -173,14 +173,16 @@ public class ProfileExport
         {
             List<Document> versions = m_whelk.getStorage().loadAllVersions(id);
 
-            // The 'versions' list is sorted, with the most recent version first.
+            // The 'versions' list is sorted, with the oldest version first.
+            // We go through it in reverse (i.e. starting with the newest version).
             // 1. We iterate through the list, skipping (continue) until we've found a
             // version inside the update interval.
             // 2. We keep iterating over versions and check if we're still inside the
             // interval _after_ each iteration, which means we will pass (export) all
             // versions inside the interval and exactly one version "before" the interval.
-            for (Document version : versions)
+            for (int i = versions.size()-1; i > -1; --i)
             {
+                Document version = versions.get(i);
                 String itemOf = version.getHoldingFor();
                 Instant modified = ZonedDateTime.parse(version.getModified()).toInstant();
 

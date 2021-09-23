@@ -150,14 +150,14 @@ class PostgreSQLComponent {
             SELECT id, data, deleted, created, modified, changedBy, changedIn 
             FROM lddb__versions
             WHERE id = ? 
-            ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) DESC
+            ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) ASC
             """.stripIndent()
 
     private static final String GET_ALL_DOCUMENT_VERSIONS_BY_MAIN_ID = """
             SELECT id, data, deleted, created, modified 
             FROM lddb__versions 
             WHERE id = (SELECT id FROM lddb__identifiers WHERE iri = ? AND mainid = 't')
-            ORDER BY modified
+            ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) ASC
             """.stripIndent()
 
     private static final String LOAD_ALL_DOCUMENTS =
@@ -1639,7 +1639,7 @@ class PostgreSQLComponent {
         if (version && version.isInteger()) {
             int v = version.toInteger()
             def docList = loadAllVersionsByMainId(mainId)
-            if (v < docList.size()) {
+            if ((v >= 0 && v < docList.size()) || (v < 0 && v.abs()-1 < docList.size())) {
                 doc = docList[v]
             }
         } else if (version) {
@@ -1811,9 +1811,9 @@ class PostgreSQLComponent {
         if (version && version.isInteger()) {
             int v = version.toInteger()
             def docList = loadAllVersions(id)
-            if (v < docList.size()) {
+            if ((v >= 0 && v < docList.size()) || (v < 0 && v.abs()-1 < docList.size())) {
                 doc = docList[v]
-            } else {
+            } else if (v > -1) {
                 // looks like version might be a checksum, try loading
                 doc = loadFromSql(GET_DOCUMENT_VERSION, [1: id, 2: version])
             }
