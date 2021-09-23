@@ -81,6 +81,7 @@ class Crud extends HttpServlet {
     static final ObjectMapper mapper = new ObjectMapper()
     AccessControl accessControl = new AccessControl()
     ConverterUtils converterUtils
+    Map siteConfig
 
     Crud() {
         // Do nothing - only here for Tomcat to have something to call
@@ -101,25 +102,28 @@ class Crud extends HttpServlet {
         search = new SearchUtils(whelk)
         validator = JsonLdValidator.from(jsonld)
         converterUtils = new ConverterUtils(whelk)
+        siteConfig = mapper.readValue(getClass().classLoader
+                .getResourceAsStream("site_config.json").getBytes(), Map)
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
 
-        // Default to normal Libris configuration
-        String activeSite = SiteData.LIBRIS
-        if (SiteData.IDKBSE in queryParameters['_site']) {
-            activeSite = SiteData.IDKBSE
-            queryParameters.put('_site_base_uri', (String[])[SiteData.IDKBSE])
-        }
-        log.debug("Site configuration: ${activeSite}")
+        // Depending on what site/client we're serving, we might need to add extra query parameters
+        // before they're sent further.
+        String activeSite = getActiveSite(queryParameters)
+        log.debug("Active site is ${activeSite}")
 
-        if (!queryParameters['_statsrepr'] && SiteData.SITES[activeSite]['statsfind']) {
-            queryParameters.put('_statsrepr', (String[])[SiteData.SITES[activeSite]['statsfind']])
+        if (activeSite != siteConfig['_default']) {
+            queryParameters.put('_site_base_uri', (String[])[siteConfig[activeSite]['@id']])
         }
 
-        if (!queryParameters['_boost'] && SiteData.SITES[activeSite]['boost']) {
-            queryParameters.put('_boost', (String[])[SiteData.SITES[activeSite]['boost']])
+        if (!queryParameters['_statsrepr'] && siteConfig[activeSite]['statsfind']) {
+            queryParameters.put('_statsrepr', (String[])[mapper.writeValueAsString(siteConfig[activeSite]['statsfind'])])
+        }
+
+        if (!queryParameters['_boost'] && siteConfig[activeSite]['boost']) {
+            queryParameters.put('_boost', (String[])[siteConfig[activeSite]['boost']])
         }
 
         try {
@@ -156,15 +160,12 @@ class Crud extends HttpServlet {
     void handleData(HttpServletRequest request, HttpServletResponse response) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
 
-        String activeSite = SiteData.LIBRIS
-        if (SiteData.IDKBSE in queryParameters['_site']) {
-            activeSite = SiteData.IDKBSE
-        }
+        String activeSite = getActiveSite(queryParameters)
 
-        Map results = SiteData.SITES[activeSite]
+        Map results = siteConfig[activeSite]
 
         if (!queryParameters['_statsrepr']) {
-            queryParameters.put('_statsrepr', (String[])[SiteData.SITES[activeSite]['statsindex']])
+            queryParameters.put('_statsrepr', (String[])[mapper.writeValueAsString(siteConfig[activeSite]['statsindex'])])
         }
         if (!queryParameters['_limit']) {
             queryParameters.put('_limit', (String[])["0"])
@@ -380,6 +381,14 @@ class Crud extends HttpServlet {
         }
 
         return path
+    }
+
+    private String getActiveSite(Map queryParameters) {
+        if (queryParameters['_site'] && queryParameters['_site'][0] in siteConfig) {
+            return queryParameters['_site'][0]
+        } else {
+            return siteConfig['_default']
+        }
     }
 
     /**
