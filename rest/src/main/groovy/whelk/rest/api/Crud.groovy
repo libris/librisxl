@@ -330,11 +330,6 @@ class Crud extends HttpServlet {
             return converterUtils.convert(transformedResponse, id, request.getContentType())
         }
 
-        // TODO: Flask used to add this to all JSON-LD responses. When/where do we need it?
-        if (request.getContentType() == MimeTypes.JSONLD && !transformedResponse['@context']) {
-            transformedResponse['@context'] = CONTEXT_PATH
-        }
-
         return transformedResponse
     }
 
@@ -479,6 +474,10 @@ class Crud extends HttpServlet {
             response.setHeader("ETag", "\"${ManagementFactory.getRuntimeMXBean().getStartTime()}\"")
         } else {
             response.setHeader("ETag", "\"${etag}\"")
+        }
+
+        if (contentType == MimeTypes.JSONLD && responseBody instanceof Map && !responseBody['@context']) {
+            responseBody['@context'] = CONTEXT_PATH
         }
 
         if (path in contextHeaders.collect { it.value }) {
