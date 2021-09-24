@@ -6,9 +6,8 @@ import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
 import whelk.component.PostgreSQLComponent
-import whelk.util.LegacyIntegrationTools
+import whelk.exception.LinkValidationException
 
-import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
@@ -37,17 +36,16 @@ class LinkFinder {
     }
 
     List<URI> findLinks(List<Map> entities, List<String> recordIds) {
-        if(recordIds.any() && entities.any()) {
-            log.debug "Finding links for ${entities.size()} entities and ${recordIds.size()} record Ids"
+        return postgres.withDbConnection { notIt -> // Otherwise compliler error with: The current scope already contains a variable of the name it
+            if(recordIds.any() && entities.any()) {
+                log.debug "Finding links for ${entities.size()} entities and ${recordIds.size()} record Ids"
 
-            def paramsQuery = ENTITY_QUERY.replace('€', recordIds.collect { it -> '?' }.join(','))
-            def connection = postgres.getConnection()
-            try {
+                def paramsQuery = ENTITY_QUERY.replace('€', recordIds.collect { it -> '?' }.join(','))
+                def connection = postgres.getMyConnection()
+
                 PreparedStatement stmt = connection.prepareStatement(paramsQuery)
 
                 def foundLinks = entities.collect { entity ->
-                    //log.trace "Trying to match entity ${entity.inspect()}"
-
                     int i = 1
                     stmt.setObject(i, mapper.writeValueAsString([entity]), java.sql.Types.OTHER)
                     recordIds.each { recordId ->
@@ -69,21 +67,14 @@ class LinkFinder {
                 log.debug "Found ${foundLinks.count { it -> it }} links to replace in entities"
                 return foundLinks
             }
-            finally {
-                connection.close()
+            else{
+                log.debug "missing arguments. No linkfinding will be performed."
+                return [null]
             }
         }
-        else{
-            log.debug "missing arguments. No linkfinding will be performed."
-            return [null]
-        }
     }
 
-    void normalizeIdentifiers(Document document, boolean cacheAuthForever = false ) {
-        normalizeIdentifiers(document, null, cacheAuthForever)
-    }
-
-    void normalizeIdentifiers(Document document, Connection connection, boolean cacheAuthForever = false) {
+    void normalizeIdentifiers(Document document) {
         // Normalize ISBN and ISSN identifiers. No hyphens and upper case.
         for (List<String> path : [Document.thingTypedIDsPath, Document.thingIndirectTypedIDsPath]) {
             List typedIDs = document.get(path)
@@ -106,7 +97,7 @@ class LinkFinder {
         }
 
         clearReferenceAmbiguities(document)
-        replaceSameAsLinksWithPrimaries(document.data, connection, cacheAuthForever)
+        replaceSameAsLinksWithPrimaries(document.data)
         // TODO: check what happens in the sameas table when id:s are changed and changed back!
         restoreNewCanonicalMainEntityUri(document.data)
     }
@@ -125,11 +116,11 @@ class LinkFinder {
         items[0][JsonLd.THING_KEY]['@id'] = items[1]['@id']
     }
 
-    private void replaceSameAsLinksWithPrimaries(Map data, Connection connection, boolean cacheAuthForever = false) {
+    private void replaceSameAsLinksWithPrimaries(Map data) {
         // If this is a link (an object containing _only_ an id)
         String id = data.get("@id")
         if (id != null && data.keySet().size() == 1) {
-            String primaryId = lookupPrimaryId(id, connection, cacheAuthForever)
+            String primaryId = lookupPrimaryId(id)
             if (primaryId != null)
                 data.put("@id", primaryId)
         }
@@ -145,73 +136,30 @@ class LinkFinder {
             Object value = data.get(key)
 
             if (value instanceof List)
-                replaceSameAsLinksWithPrimaries( (List) value, connection )
+                replaceSameAsLinksWithPrimaries( (List) value )
             if (value instanceof Map)
-                replaceSameAsLinksWithPrimaries( (Map) value, connection )
+                replaceSameAsLinksWithPrimaries( (Map) value )
         }
     }
 
-    private void replaceSameAsLinksWithPrimaries(List data, Connection connection) {
+    private void replaceSameAsLinksWithPrimaries(List data) {
         for (Object element : data){
             if (element instanceof List)
-                replaceSameAsLinksWithPrimaries( (List) element, connection )
+                replaceSameAsLinksWithPrimaries( (List) element )
             else if (element instanceof Map)
-                replaceSameAsLinksWithPrimaries( (Map) element, connection )
+                replaceSameAsLinksWithPrimaries( (Map) element )
         }
     }
 
-    private String lookupPrimaryId(String id, Connection connection, boolean cacheAuthForever) {
+    private String lookupPrimaryId(String id) {
+        String mainIri = postgres.getMainId(id)
 
-        if (!cacheAuthForever) {
-            if (connection == null)
-                return postgres.getMainId(id)
-            return postgres.getMainId(id, connection)
-        }
+        if (mainIri == null)
+            return null
 
-        if (id.startsWith("http://libris.kb.se/resource/")) {
-            // re-calculate what the correct primary ID should be (better get this right)
-            String pathId = id.substring("http://libris.kb.se/resource".length())
-            String numericId = pathId.split("/")[2]
-            boolean isNumericId = true
-            for (char c : numericId.toCharArray()) {
-                if (!Character.isDigit(c))
-                    isNumericId = false
-            }
-            if (isNumericId) {
-                return Document.BASE_URI.resolve(LegacyIntegrationTools.generateId(pathId)).toString() + "#it"
-            } else {
-                // The ID is something of the form http://libris.kb.se/resource/cwpqbclp4x4n61k
-                String primaryId = Document.BASE_URI.resolve(numericId).toString()
-                if (!primaryId.endsWith("#it"))
-                    primaryId += "#it"
-                return primaryId
-            }
-
-        } else if (id.startsWith("https://id.kb.se/")) {
-            // cache the ID
-            if (uriCache.containsKey(id)) {
-                return uriCache.get(id)
-            } else {
-                String mainId
-                if (connection == null)
-                    mainId = postgres.getMainId(id)
-                else
-                    mainId = postgres.getMainId(id, connection)
-                if (mainId != null) {
-                    uriCache.put(id, mainId)
-                    return mainId
-                }
-            }
-        } else { // Fallback -> Look for a primary ID in postgres (expensive)
-            String mainId
-            if (connection == null)
-                mainId = postgres.getMainId(id)
-            else
-                mainId = postgres.getMainId(id, connection)
-                return mainId
-        }
-
-        return null
+        if (postgres.iriIsLinkable(mainIri))
+            return mainIri
+        throw new LinkValidationException("Not allowed to link to the deleted resource: " + mainIri)
     }
 
     /**

@@ -4,6 +4,9 @@ import whelk.reindexer.CardRefresher
 
 import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
+import java.util.zip.GZIPOutputStream
+import org.apache.commons.io.output.CountingOutputStream
+import org.apache.commons.io.FilenameUtils
 
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
@@ -98,11 +101,22 @@ class ImporterMain {
     }
     
     /**
-     * The additional_types argument should be a comma separated list of types to include. Like so:
-     * Person,GenreForm
+     * The additional_types argument should be one of:
+     * - comma-separated list of types to include. Like so: Person,GenreForm
+     * - --all-types, to copy *all* types
+     * - "", to be able to use --exclude-items without specifying additional types
+     *
+     * E.g., copy everything except items (holdings):
+     * SOURCE_PROPERTIES RECORD_ID_FILE --all-types --exclude-items
+     *
+     * Copy only what's in RECORD_ID_FILE, but exclude items:
+     * SOURCE_PROPERTIES RECORD_ID_FILE "" --exclude-items
+     *
+     * Copy what's in RECORD_ID_FILE and types MovingImageInstance and Map, don't exclude items:
+     * SOURCE_PROPERTIES RECORD_ID_FILE MovingImageInstance,Map
      */
-    @Command(args='SOURCE_PROPERTIES RECORD_ID_FILE [ADDITIONAL_TYPES]')
-    void copywhelk(String sourcePropsFile, String recordsFile, additionalTypes=null) {
+    @Command(args='SOURCE_PROPERTIES RECORD_ID_FILE [<ADDITIONAL_TYPES | --all-types | ""> [--exclude-items]]')
+    void copywhelk(String sourcePropsFile, String recordsFile, additionalTypes=null, String excludeItems=null) {
         def sourceProps = new Properties()
         new File(sourcePropsFile).withInputStream { it
             sourceProps.load(it)
@@ -112,7 +126,8 @@ class ImporterMain {
         def recordIds = new File(recordsFile).collect {
             it.split(/\t/)[0]
         }
-        def copier = new WhelkCopier(source, dest, recordIds, additionalTypes)
+        boolean shouldExcludeItems = excludeItems && excludeItems == '--exclude-items'
+        def copier = new WhelkCopier(source, dest, recordIds, additionalTypes, shouldExcludeItems)
         copier.run()
     }
 
@@ -141,8 +156,8 @@ class ImporterMain {
             "nq89zjzsq2fj5cjs"
     ] as Set
 
-    @Command(args='FILE')
-    void lddbToTrig(String file, String collection = null) {
+    @Command(args='FILE [CHUNKSIZEINMB [--gzip]]')
+    void lddbToTrig(String file, String chunkSizeInMB = null, String gzip = null, String collection = null) {
         def whelk = Whelk.createLoadedCoreWhelk(props)
 
         def ctx = JsonLdToTurtle.parseContext([
@@ -150,32 +165,73 @@ class ImporterMain {
         ])
         def opts = [useGraphKeyword: false, markEmptyBnode: true]
 
-        def handleStream = !file || file == '-' ? { it(System.out) }
-                            : new File(file).&withOutputStream
-        handleStream { out ->
-            def serializer = new JsonLdToTurtle(ctx, out, opts)
-            serializer.prelude()
-            int i = 0
-            for (Document doc : whelk.storage.loadAll(collection)) {
-                if (doc.getShortId() in trigExcludeList) {
-                    System.err.println("Excluding: ${doc.getShortId()}")
-                    continue
+        boolean writingToFile = file && file != '-'
+        boolean shouldGzip = writingToFile && gzip && gzip == '--gzip'
+
+        String chunkedFormatString = FilenameUtils.getFullPath(file) + FilenameUtils.getBaseName(file) + "-%04d" +
+                (FilenameUtils.getExtension(file) ? "." + FilenameUtils.getExtension(file) : "") +
+                (shouldGzip ? ".gz" : "")
+
+        int partNumber = 1
+        long maxChunkSizeInBytes = 0 // 0 = no limit
+        if (chunkSizeInMB && chunkSizeInMB.toLong() > 0 && writingToFile) {
+            maxChunkSizeInBytes = chunkSizeInMB.toLong() * 1000000
+        }
+
+        def outputStream
+        if (writingToFile && maxChunkSizeInBytes > 0) {
+            System.err.println("Writing ${String.format(chunkedFormatString, partNumber)}")
+            outputStream = new FileOutputStream(String.format(chunkedFormatString, partNumber))
+        } else if (writingToFile) {
+            outputStream = new FileOutputStream(file)
+        } else {
+            outputStream = System.out
+        }
+
+        if (shouldGzip) {
+            outputStream = new GZIPOutputStream(outputStream)
+        }
+
+        CountingOutputStream cos = new CountingOutputStream(outputStream)
+        def serializer = new JsonLdToTurtle(ctx, cos, opts)
+        serializer.prelude()
+        int i = 0
+        for (Document doc : whelk.storage.loadAll(collection)) {
+            if (doc.getShortId() in trigExcludeList) {
+                System.err.println("Excluding: ${doc.getShortId()}")
+                continue
+            }
+
+            def id = doc.completeId
+            if (i % 500 == 0) {
+                System.err.println("$i records dumped.")
+            }
+            ++i
+            filterProblematicData(id, doc.data)
+            try {
+                serializer.objectToTrig(id, doc.data)
+            } catch (Throwable e) {
+                // Part of the record may still have been written to the stream, which is now corrupt.
+                System.err.println("${doc.getShortId()} conversion failed with ${e.toString()}")
+            }
+
+            if (writingToFile && maxChunkSizeInBytes > 0 && cos.getByteCount() > maxChunkSizeInBytes) {
+                ++partNumber
+                cos.close()
+                System.err.println("Writing ${String.format(chunkedFormatString, partNumber)}")
+                def fos = new FileOutputStream(String.format(chunkedFormatString, partNumber))
+                if (shouldGzip) {
+                    cos = new CountingOutputStream(new GZIPOutputStream(fos))
+                } else {
+                    cos = new CountingOutputStream(fos)
                 }
 
-                def id = doc.completeId
-                if (i % 500 == 0) {
-                    System.err.println("$i records dumped.")
-                }
-                ++i
-                filterProblematicData(id, doc.data)
-                try {
-                    serializer.objectToTrig(id, doc.data)
-                } catch (Throwable e) {
-                    // Part of the record may still have been written to the stream, which is now corrupt.
-                    System.err.println("${doc.getShortId()} conversion failed with ${e.toString()}")
-                }
+                serializer.setOutputStream(cos)
+                // Make sure each chunk gets the prefixes
+                serializer.prelude()
             }
         }
+        cos.close()
     }
 
     @Command(args='[FROM]')

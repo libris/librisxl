@@ -5,7 +5,7 @@ import java.util.function.Predicate
 def datasets =
         [
                 [
-                        dataset: 'n2rgzfcklj9zcwlw',
+                        dataset: '7mf87n2g5xzjf8r4',
                         query  :
                                 [
                                         '@type'                     : ['Electronic'],
@@ -17,14 +17,11 @@ def datasets =
                                 ],
                         predicate: { doc ->
                             def (record, thing) = doc.graph
-                            
-                            asList(thing.hasTitle).any { Map title ->
-                                title.mainTitle ==~ /AFTONBLADET\s+\d\d\d\d-\d\d\-\d\d/
-                            }
+                            return hasTitle(thing, /AFTONBLADET\s+\d\d\d\d-\d\d\-\d\d/) && hasControlNumber(thing, '4345612')
                         }
                 ],
                 [
-                        dataset: 'm1qfz6d3k163n1ww',
+                        dataset: '6ld76n1p44s12ht1',
                         query  :
                                 [
                                         '@type'                     : ['Electronic'],
@@ -37,13 +34,11 @@ def datasets =
                         predicate: { doc ->
                             def (record, thing) = doc.graph
 
-                            asList(thing.hasTitle).any { Map title ->
-                                title.mainTitle ==~ /DAGENS NYHETER\s+\d\d\d\d-\d\d\-\d\d/
-                            }
+                            return hasTitle(thing, /DAGENS NYHETER\s+\d\d\d\d-\d\d\-\d\d/) && hasControlNumber(thing, '13991099')
                         }
                 ],
                 [
-                        dataset: 'w90p8vw6tcph9xl3',
+                        dataset: 'hwpjh1n7fnsskvfr',
                         query  :
                                 [
                                         '@type'                     : ['Electronic'],
@@ -56,13 +51,11 @@ def datasets =
                         predicate: { doc ->
                             def (record, thing) = doc.graph
 
-                            asList(thing.hasTitle).any { Map title ->
-                                title.mainTitle ==~ /NORRKÖPINGS WECKOTIDNINGAR\s+\d\d\d\d-\d\d\-\d\d/
-                            }
+                            return hasTitle(thing, /NORRKÖPINGS WECKOTIDNINGAR\s+\d\d\d\d-\d\d\-\d\d/) && hasControlNumber(thing, '19227357')
                         }
                 ],
                 [
-                        dataset: 'l0pdzslgjcdk19cx',
+                        dataset: 'm1tnm4cpktxgf28n',
                         query  :
                                 [
                                         '@type'                     : ['Electronic'],
@@ -74,14 +67,12 @@ def datasets =
                                 ],
                         predicate: { doc ->
                             def (record, thing) = doc.graph
-
-                            asList(thing.hasTitle).any { Map title ->
-                                title.mainTitle ==~ /NORRKÖPINGS TIDNINGAR\s+\d\d\d\d-\d\d\-\d\d/
-                            }
+                            
+                            return hasTitle(thing, /NORRKÖPINGS TIDNINGAR\s+\d\d\d\d-\d\d\-\d\d/) && hasControlNumber(thing, '15650837')
                         }
                 ],
                 [
-                        dataset: 'ftj7swkgcxxbm982',
+                        dataset: 'hwpjh11gfnk12r2z',
                         query  :
                                 [
                                         '@type'                     : ['Electronic'],
@@ -94,9 +85,7 @@ def datasets =
                         predicate: { doc ->
                             def (record, thing) = doc.graph
 
-                            asList(thing.hasTitle).any { Map title ->
-                                title.mainTitle ==~ /SVENSKA DAGBLADET\s+\d\d\d\d-\d\d\-\d\d/
-                            }
+                            return hasTitle(thing, /SVENSKA DAGBLADET\s+\d\d\d\d-\d\d\-\d\d/) && hasControlNumber(thing, '13434192')
                         }
                 ],
         ]
@@ -138,4 +127,16 @@ String getIri(String id) {
 
 List asList(o) {
     (o instanceof List) ? (List) o : (o ? [o] : [])
+}
+
+boolean hasControlNumber(Map thing, String controlNumber) {
+    asList(thing.supplementTo).any { Map instance ->
+        asList(instance.describedBy).any { Map r -> r.controlNumber == controlNumber }
+    }
+}
+
+boolean hasTitle(Map thing, String pattern) {
+    asList(thing.hasTitle).any { Map title ->
+        title.mainTitle ==~ pattern
+    }
 }

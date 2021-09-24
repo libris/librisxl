@@ -86,6 +86,7 @@ class Normalizers {
                 'istc'    : 'ISTC',
                 'iswc'    : 'ISWC',
                 'orcid'   : 'ORCID',
+                'uri'     : 'URI',
                 'urn'     : 'URN',
                 'viaf'    : 'VIAF',
                 'wikidata': 'WikidataID',

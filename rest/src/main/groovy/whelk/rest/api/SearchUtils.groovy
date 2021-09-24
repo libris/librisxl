@@ -58,11 +58,16 @@ class SearchUtils {
         String query = getReservedQueryParameter('q', queryParameters)
         String sortBy = getReservedQueryParameter('_sort', queryParameters)
         String lens = getReservedQueryParameter('_lens', queryParameters)
+        String suggest = getReservedQueryParameter('_suggest', queryParameters)
 
         if (queryParameters['p'] && !object) {
             throw new InvalidQueryException("Parameter 'p' can only be used together with 'o'")
         }
-        
+
+        if (suggest && lens != 'chips') {
+            throw new InvalidQueryException("Parameter '_suggest' can only be used when '_lens' is set to 'chips'")
+        }
+
         Tuple2 limitAndOffset = getLimitAndOffset(queryParameters)
         int limit = limitAndOffset.first
         int offset = limitAndOffset.second
@@ -74,6 +79,7 @@ class SearchUtils {
                           '_sort' : sortBy,
                           '_limit': limit,
                           '_lens' : lens,
+                          '_suggest' : suggest,
         ]
 
         Map results = queryElasticSearch(
@@ -107,7 +113,9 @@ class SearchUtils {
         String query = pageParams['q']
         String reverseObject = pageParams['o']
         List<String> predicates = pageParams['p']
+        String suggest = pageParams['_suggest']
         lens = lens ?: 'cards'
+
         log.debug("Querying ElasticSearch")
 
         // SearchUtils may overwrite the `_limit` query param, and since it's
@@ -117,7 +125,7 @@ class SearchUtils {
         // TODO Only manipulate `_limit` in one place
         queryParameters['_limit'] = [limit.toString()]
 
-        Map esResult = esQuery.doQuery(queryParameters)
+        Map esResult = esQuery.doQuery(queryParameters, suggest)
         Lookup lookup = new Lookup()
         
         List<Map> mappings = []
@@ -195,7 +203,7 @@ class SearchUtils {
                                            items, mappings, pageParams,
                                            limit, offset, total)
 
-        if (stats) {
+        if (stats && !suggest) {
             result['stats'] = stats
         }
 
@@ -702,7 +710,7 @@ class SearchUtils {
      * Return a list of reserved query params
      */
     private List getReservedParameters() {
-        return ['q', 'p', 'o', 'value', '_limit', '_offset']
+        return ['q', 'p', 'o', 'value', '_limit', '_offset', '_suggest']
     }
 
     /*

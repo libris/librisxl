@@ -8,6 +8,7 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.component.ElasticSearch
 import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
@@ -23,7 +24,7 @@ class ESQuery {
     private static final ObjectMapper mapper = new ObjectMapper()
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
-        'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens'
+        'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_suggest'
     ]
     private static final String OR_PREFIX = 'or-'
     private static final String EXISTS_PREFIX = 'exists-'
@@ -60,8 +61,8 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map doQuery(Map<String, String[]> queryParameters) {
-        Map esQuery = getESQuery(queryParameters)
+    Map doQuery(Map<String, String[]> queryParameters, suggest = null) {
+        Map esQuery = getESQuery(queryParameters, suggest)
         Map esResponse = hideKeywordFields(whelk.elastic.query(esQuery))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
@@ -80,7 +81,7 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map getESQuery(Map<String, String[]> ogQueryParameters) {
+    Map getESQuery(Map<String, String[]> ogQueryParameters, suggest = null) {
         Map<String, String[]> queryParameters = new HashMap<>(ogQueryParameters)
         // Legit params and their uses:
         //   q - query string, will be used as query_string or simple_query_string
@@ -96,6 +97,10 @@ class ESQuery {
         List siteFilter
         //   any k=v param - FILTER query (same key => OR, different key => AND)
         List filters
+
+        if (suggest && !ElasticSearch.LANGUAGES_TO_INDEX.contains(suggest)) {
+            throw new InvalidQueryException("Parameter '_suggest' value '${suggest}' invalid, must be one of ${ElasticSearch.LANGUAGES_TO_INDEX}")
+        }
 
         String[] originalTypeParam = queryParameters.get('@type')
         if (originalTypeParam != null) {
@@ -128,13 +133,24 @@ class ESQuery {
             ]
         ]
 
-        Map queryClauses = simpleQuery
+        // In case of suggest/autocomplete search, target a specific field with a specific query type
+        // TODO: make language (sv, en) configurable?
+        Map queryClauses
+        if (suggest) {
+            queryClauses = [
+                'match_phrase_prefix': [
+                    ("_sortKeyByLang.${suggest}.suggest".toString()) : q
+                ]
+            ]
+        } else {
+            queryClauses = simpleQuery
+        }
 
         String[] boostParam = queryParameters.get('_boost')
         String boostMode = boostParam ? boostParam[0] : null
         List boostedFields = getBoostFields(originalTypeParam, boostMode)
 
-        if (boostedFields) {
+        if (boostedFields && !suggest) {
             def softFields = boostedFields.findAll {
                 it.contains(JsonLd.SEARCH_KEY)
             }

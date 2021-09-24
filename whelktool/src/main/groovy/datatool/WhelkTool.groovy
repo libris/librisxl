@@ -173,19 +173,20 @@ class WhelkTool {
             FROM lddb__identifiers
             WHERE iri IN ($uriItems)
             """
-        def conn = whelk.storage.getConnection()
-        def stmt
-        def rs
-        try {
-            stmt = conn.prepareStatement(query)
-            rs = stmt.executeQuery()
-            while (rs.next()) {
-                uriIdMap[rs.getString("iri")] = rs.getString("id")
+        whelk.storage.withDbConnection {
+            def conn = whelk.storage.getMyConnection()
+            def stmt
+            def rs
+            try {
+                stmt = conn.prepareStatement(query)
+                rs = stmt.executeQuery()
+                while (rs.next()) {
+                    uriIdMap[rs.getString("iri")] = rs.getString("id")
+                }
+            } finally {
+                try { rs?.close() } catch (SQLException e) {}
+                try { stmt?.close() } catch (SQLException e) {}
             }
-        } finally {
-            try { rs?.close() } catch (SQLException e) {}
-            try { stmt?.close() } catch (SQLException e) {}
-            conn.close()
         }
         return uriIdMap
     }
@@ -225,12 +226,21 @@ class WhelkTool {
             FROM lddb
             WHERE $whereClause
             """
-        def conn = whelk.storage.getConnection()
-        conn.setAutoCommit(false)
-        def stmt = conn.prepareStatement(query)
-        stmt.setFetchSize(DEFAULT_FETCH_SIZE)
-        def rs = stmt.executeQuery()
-        select(whelk.storage.iterateDocuments(rs), process, batchSize)
+
+        def conn = whelk.storage.getOuterConnection()
+        def stmt
+        def rs
+        try {
+            conn.setAutoCommit(false)
+            stmt = conn.prepareStatement(query)
+            stmt.setFetchSize(DEFAULT_FETCH_SIZE)
+            rs = stmt.executeQuery()
+            select(whelk.storage.iterateDocuments(rs), process, batchSize)
+        } finally {
+            rs?.close()
+            stmt?.close()
+            conn?.close()
+        }
     }
 
     void selectByCollection(String collection, Closure process,

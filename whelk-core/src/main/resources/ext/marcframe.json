@@ -315,7 +315,6 @@
       "$f": {"property": "date"},
       "$g": {"addProperty": "comment"},
       "$h": {"property": "marc:mediaTerm"},
-      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
       "$k": {"addProperty": "qualifier"},
       "$l": {"link": "language", "resourceType": "Language", "property": "label"},
       "$m": {"addProperty": "musicPerformanceMedium"},
@@ -3782,10 +3781,10 @@
       },
       "MovingImageInstance": {
         "[1]": {
-          "addLink": "carrierType",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicMaterialType-{_}",
-          "matchUriToken": "^[cfor]$",
-          "silentRevert": false
+          "NOTE:LC": " 01 - Specific material designation",
+          "NOTE": "Not ignored by LC, add carrier and ignoreOnRevert?",
+          "ignored": true,
+          "NOTE:record-count": 0
         },
         "[2]": null,
         "[3]": {
@@ -3795,10 +3794,10 @@
           "matchUriToken": "^[bchm]$"
         },
         "[4]": {
-          "addLink": "projectionCharacteristic",
-          "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MotionPicFormatType-{_}",
-          "matchUriToken": "^[abcdef]$"
+          "NOTE:LC": "04 - Motion picture presentation format",
+          "NOTE": "Not ignored by LC, MarcFrame currently does not support mapping of fixedfields to multiple properties on different entities.",
+          "ignored": true,
+          "NOTE:record-count": 0
         },
         "[5]": {
           "link": "soundContent",
@@ -3824,11 +3823,10 @@
           "ignoreOnRevert": true
         },
         "[9]": {
-          "addLink": "genreForm",
+          "NOTE:LC": "09 - Production elements",
           "NOTE": "LC ignores all but c & d",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicElementsType-{_}",
-          "matchUriToken": "^[abcdefg]$",
-          "ignoreOnRevert": true
+          "ignore": true,
+          "NOTE:record-count": 0
         },
         "[10]": {
           "addLink": "polarity",
@@ -3838,11 +3836,10 @@
           "ignoreOnRevert": true
         },
         "[11]": {
-          "addLink": "generation",
-          "NOTE:marc-repeatable": false,
-          "uriTemplate": "https://id.kb.se/marc/MotionPicGenerationType-{_}",
-          "matchUriToken": "^[deor]$",
-          "ignoreOnRevert": true
+          "NOTE:LC": "11 - Generation",
+          "NOTE": "Not ignored by LC",
+          "ignored": true,
+          "NOTE:record-count": 0
         },
         "[12]": {
           "addLink": "baseMaterial",
@@ -3867,10 +3864,9 @@
           "fixedDefault": "|"
         },
         "[16]": {
-          "link": "hasNote",
-          "uriTemplate": "https://id.kb.se/marc/MotionPicCompletenessType-{_}",
-          "matchUriToken": "^[0123ci]$",
-          "ignoreOnRevert": true
+          "NOTE:LC": "16 - Completeness - nac",
+          "ignored": true,
+          "fixedDefault": "|"
         },
         "[17:23]": {
           "NOTE:LC": "17-22 - Film inspection date - ignore",
@@ -4215,10 +4211,7 @@
           "normalized": {"007":"m| ||||||||||||||||||||"},
           "result": {
             "mainEntity": {
-              "@type": "MovingImageInstance",
-              "hasNote": {
-                "@id" : "https://id.kb.se/marc/MotionPicCompletenessType-i"
-              }
+              "@type": "MovingImageInstance"
             }
           }
         },
@@ -5947,7 +5940,7 @@
       "include": ["identifier"],
       "match": [
         {
-          "when": "i1=7 & $2 =~ ansi|ANSI|doi|DOI|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|iswc|ISWC|urn|URN",
+          "when": "i1=7 & $2 =~ ansi|ANSI|doi|DOI|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|iswc|ISWC|uri|URI|urn|URN",
           "i1": null,
           "$2": {
             "property": "@type",
@@ -5967,6 +5960,8 @@
               "istc": "ISTC",
               "ISWC": "ISWC",
               "iswc": "ISWC",
+              "URI": "URI",
+              "uri": "URI",
               "URN": "URN",
               "urn": "URN"
             }
@@ -6176,6 +6171,23 @@
                 {
                   "@type": "ISWC",
                   "value":  "jkl"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "URI, indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "http://id.kb.se/organisations/SE0123456789/KB-2021"}, {"2": "uri"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Instance",
+              "identifiedBy": [
+                {
+                  "@type": "URI",
+                  "value":  "http://id.kb.se/organisations/SE0123456789/KB-2021"
                 }
               ]
             }
@@ -10046,13 +10058,13 @@
       "resourceType": "FormerTitle",
       "subfieldOrder": "a b n p ...",
       "i1": {
-        "property": "marc:isAddedEntry",
-        "tokenMap": {"0": null},
+        "NOTE": "Previously: Added entry controller, Nothing about indicators in marc-bf conversion 1.6",
+        "ignored": true,
         "marcDefault": "1"
       },
       "i2": {
-        "property": "marc:showRemark",
-        "tokenMap": {"1": true},
+        "NOTE": "Previously: Show remark, Nothing about indicators in marc-bf conversion 1.6",
+        "ignored": true,
         "marcDefault": "0"
       },
       "$f": {"property": "date"},
@@ -11113,7 +11125,7 @@
         "about": "_:extent",
         "property": "marc:sizeOfUnit"
       },
-      "$6": {"about": "_:extent", "property": "marc:fieldref"},
+      "$6": {"ignored": true, "NOTE:LC": "ignore (v1.6)"},
       "$8": {"about": "_:extent", "property": "marc:groupid"},
       "_spec": [
         {
@@ -11179,7 +11191,7 @@
         }
       },
       "$a": {"aboutNew": "_:durationPart", "property": "value"},
-      "$6": {"about": "_:durationPart", "property": "marc:fieldref"},
+      "$6": {"ignored": true, "NOTE:LC": "ignore (v1.6)"},
       "_spec": [
         {
           "Name": "Simple duration value",
@@ -11248,7 +11260,10 @@
       "NOTE:marc-repeatable": false,
       "$a": {"property": "label"},
       "$b": {"property": "date"},
-      "$6": {"property": "marc:fieldref", "supplementary": true},
+      "$0": {"property": "marc:recordControlNumber"},
+      "$1": null,
+      "$2": {"link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$6": {"ignored": true, "NOTE:LC": "ignore (v1.6)"},
       "_spec": [
         {
           "source": [
@@ -11282,7 +11297,10 @@
       },
       "$a": {"about": "_:frequency", "property": "label"},
       "$b": {"about": "_:frequency", "property": "date"},
-      "$6": {"about": "_:frequency", "property": "marc:fieldref", "supplementary": true},
+      "$0": {"about": "_:frequency", "property": "marc:recordControlNumber"},
+      "$1": null,
+      "$2": {"about": "_:frequency", "link": "source", "resourceType": "Source", "property": "code", "supplementary": true},
+      "$6": {"ignored": true, "NOTE:LC": "ignore (v1.6)"},
       "_spec": [
         {
           "source": [
@@ -13915,7 +13933,7 @@
       "i1": {"property": "marc:holderOf"},
       "$a": {"property": "marc:custodian"},
       "$b": {"property": "marc:postalAddress"},
-      "$c": {"addProperty": "marc:country"},
+      "$c": {"ignore": true, "NOTE": "Country"},
       "$d": {"addProperty": "marc:telecommunicationsAddress"},
       "$g": {"property": "marc:repositoryLocationCode"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
@@ -14024,7 +14042,11 @@
       "$b": {"ignored": true, "NOTE:LC": "$b - Jurisdiction (NR) nac"},
       "$c": {"property": "marc:methodOfAcquisition"},
       "$d": {"property": "date"},
-      "$e": {"property": "marc:accessionNumber"},
+      "$e": {
+        "addLink": "identifiedBy",
+        "resourceType": "AccessionNumber",
+        "property": "value"
+      },
       "$f": {"property": "marc:owner"},
       "$h": {"property": "marc:purchasePrice"},
       "$n": {"addProperty": "marc:extent"},
@@ -18669,7 +18691,6 @@
       "$d": {"property": "marc:city"},
       "$f": {"addProperty": "marc:citySubsection", "TODO:ignored": "true?"},
       "$g": {"addProperty": "marc:otherNonjurisdictionalGeographicRegionAndFeature"},
-      "$h": {"addProperty": "marc:extraterrestrialArea"},
       "$0": {"addProperty": "marc:recordControlNumber"},
       "$1": null,
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
@@ -21812,9 +21833,8 @@
       },
       "[29]": {
         "aboutEntity": "?record",
-        "link": "marc:reference",
-        "uriTemplate": "https://id.kb.se/marc/ReferenceType-{_}",
-        "matchUriToken": "^[ab]$",
+        "NOTE": "Reference evaluation - n - Not applicable ",
+        "ignored": true,
         "fixedDefault": "n"
       },
       "[30]": null,
@@ -21833,9 +21853,8 @@
       },
       "[33]": {
         "aboutEntity": "?record",
-        "link": "marc:level",
-        "uriTemplate": "https://id.kb.se/marc/LevelType-{_}",
-        "matchUriToken": "^[abcd]$",
+        "NOTE": "Level of establishment - a - Fully established",
+        "ignored": true,
         "fixedDefault": "a"
       },
       "[34:38]": null,
@@ -25324,20 +25343,10 @@
       "NOTE:record-count": 0
     },
     "548": {
-      "NOTE:record-count": 51,
+      "NOTE:LC": "548 - See Also From Tracing - Chronological Term (R)",
       "NOTE:local": "Observera att detta fält för närvarande inte omfattas av auktoritetskontroll i Libris.",
-      "addLink": "marc:hasSeeAlsoFromTracingChronologicalTerm",
-      "resourceType": "marc:SeeAlsoFromTracingChronologicalTerm",
-      "$a": {"property": "marc:chronologicalTerm"},
-      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
-      "$v": {"addProperty": "marc:formSubdivision"},
-      "$w": {"property": "marc:controlSubfield"},
-      "$x": {"addProperty": "marc:generalSubdivision"},
-      "$y": {"addProperty": "marc:chronologicalSubdivision"},
-      "$z": {"addProperty": "marc:geographicSubdivision"},
-      "$0": {"addProperty": "marc:recordControlNumber"},
-      "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "550": {
       "include": ["termbase_with_id", "relation_from_w"],
@@ -25584,17 +25593,9 @@
       "NOTE:record-count": 0
     },
     "585": {
-      "addLink": "marc:hasSeeAlsoFromTracingFormSubdivision",
-      "resourceType": "marc:SeeAlsoFromTracingFormSubdivision",
-      "$i": {"addProperty": "marc:referenceInstructionPhrase"},
-      "$v": {"addProperty": "marc:formSubdivision"},
-      "$w": {"property": "marc:controlSubfield"},
-      "$x": {"addProperty": "marc:generalSubdivision"},
-      "$y": {"addProperty": "marc:chronologicalSubdivision"},
-      "$z": {"addProperty": "marc:geographicSubdivision"},
-      "$0": {"addProperty": "marc:recordControlNumber"},
-      "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"}
+      "NOTE:LC": "585 - See Also From Tracing - Form Subdivision (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "599": {
       "NOTE:local": "599 Katalogisatörens anmärkning (R) MAKULERAT",
@@ -25638,13 +25639,10 @@
       "NOTE:local": "ANVÄNDS F.N. EJ",
       "ignored": true
     },
-
     "663": {
-      "addLink": "marc:hasComplexSeeAlsoReferenceName",
-      "resourceType": "marc:ComplexSeeAlsoReferenceName",
-      "$a": {"addProperty": "marc:explanatoryText"},
-      "$b": {"addProperty": "marc:headingReferredTo"},
-      "$t": {"addProperty": "marc:titleReferredTo"}
+      "NOTE:LC": "663 - COMPLEX SEE ALSO REFERENCE--NAME (NR)",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "664": {
       "NOTE:LC": "664 - Complex See Reference - Name (NR)",
@@ -25652,9 +25650,9 @@
       "NOTE:record-count": 0
     },
     "665": {
-      "addLink": "marc:hasHistoryReference",
-      "resourceType": "marc:HistoryReference",
-      "$a": {"addProperty": "marc:historyReference"}
+      "NOTE:LC": "665 - History Reference (NR)",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "666": {
       "NOTE:LC": "666 - General Explanatory Reference - Name (NR)",
@@ -25764,20 +25762,19 @@
       },
       "$a": {"property": "marc:corporateNameOrJurisdictionNameAsEntryElement"},
       "$b": {"addProperty": "marc:subordinateUnit"},
-      "$c": {"addProperty": "marc:locationOfMeeting"},
+      "$c": {"ignored": true},
       "$d": {"addProperty": "marc:dateOfMeetingOrTreatySigning"},
       "$e": {"addProperty": "marc:relatorTerm"},
-      "$f": {"property": "marc:dateOfAWork"},
       "$g": {"addProperty": "marc:miscellaneousInformation"},
-      "$h": {"property": "marc:medium"},
+      "$h": {"ignored": true},
       "$i": {"ignored": true},
       "$k": {"addProperty": "marc:formSubheading"},
       "$l": {"property": "marc:languageOfAWork"},
-      "$m": {"addProperty": "marc:mediumOfPerformanceForMusic"},
+      "$m": {"ignored": true},
       "$n": {"addProperty": "marc:numberOfPartSectionMeeting"},
       "$o": {"property": "marc:arrangedStatementForMusic"},
       "$p": {"addProperty": "marc:nameOfPartSectionOfAWork"},
-      "$r": {"property": "marc:keyForMusic"},
+      "$r": {"ignored": true},
       "$s": {"property": "marc:version"},
       "$t": {"property": "marc:titleOfAWork"},
       "$v": {"addProperty": "marc:formSubdivision"},
@@ -25788,7 +25785,7 @@
       "$0": {"addProperty": "marc:recordControlNumber"},
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
       "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"},
+      "$5": {"ignored": true},
       "$9": {"ignored": true}
     },
     "711": {
@@ -25805,19 +25802,18 @@
         "marcDefault": "4"
       },
       "$a": {"property": "marc:meetingNameOrJurisdictionNameAsEntryElement"},
-      "$c": {"addProperty": "marc:locationOfMeeting"},
+      "$c": {"ignored": true},
       "$d": {"property": "marc:dateOfMeeting"},
       "$e": {"addProperty": "marc:subordinateUnit"},
-      "$f": {"property": "marc:dateOfAWork"},
       "$g": {"addProperty": "marc:miscellaneousInformation"},
-      "$h": {"property": "marc:medium"},
+      "$h": {"ignored": true},
       "$i": {"ignored": true},
       "$j": {"addProperty": "marc:relatorTerm"},
       "$k": {"addProperty": "marc:formSubheading"},
       "$l": {"property": "marc:languageOfAWork"},
       "$n": {"addProperty": "marc:numberOfPartSectionMeeting"},
       "$p": {"addProperty": "marc:nameOfPartSectionOfAWork"},
-      "$q": {"property": "marc:nameOfMeetingFollowingJurisdictionNameEntryElement"},
+      "$q": {"ignored": true},
       "$s": {"property": "marc:version"},
       "$t": {"property": "marc:titleOfAWork"},
       "$v": {"addProperty": "marc:formSubdivision"},
@@ -25828,7 +25824,7 @@
       "$0": {"addProperty": "marc:recordControlNumber"},
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
       "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"},
+      "$5": {"ignored": true},
       "$9": {"ignored": true}
     },
     "730": {
@@ -25841,17 +25837,16 @@
       },
       "$a": {"property": "marc:uniformTitle"},
       "$d": {"addProperty": "marc:dateOfTreatySigning"},
-      "$f": {"property": "marc:dateOfAWork"},
       "$g": {"addProperty": "marc:miscellaneousInformation"},
-      "$h": {"property": "marc:medium"},
+      "$h": {"ignored": true},
       "$i": {"addProperty": null},
       "$k": {"addProperty": "marc:formSubheading"},
       "$l": {"property": "marc:languageOfAWork"},
-      "$m": {"addProperty": "marc:mediumOfPerformanceForMusic"},
-      "$n": {"addProperty": "marc:partNumber"},
+      "$m": {"ignored": true},
+      "$n": {"ignored": true},
       "$o": {"property": "marc:arrangedStatementForMusic"},
       "$p": {"addProperty": "marc:nameOfPartSectionOfAWork"},
-      "$r": {"property": "marc:keyForMusic"},
+      "$r": {"ignored": true},
       "$s": {"property": "marc:version"},
       "$t": {"property": "marc:titleOfAWork"},
       "$v": {"addProperty": "marc:formSubdivision"},
@@ -25862,7 +25857,7 @@
       "$0": {"addProperty": "marc:recordControlNumber"},
       "$2": {"property": "marc:sourceOfHeadingOrTerm"},
       "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"},
+      "$5": {"ignored": true},
       "$9": {"ignored": true}
     },
     "747": {
@@ -25871,25 +25866,9 @@
       "NOTE:record-count": 0
     },
     "748": {
-      "addLink": "marc:hasEstablishedHeadingLinkingEntryChronologicalTerm",
-      "resourceType": "marc:EstablishedHeadingLinkingEntryChronologicalTerm",
-      "i2": {
-        "property": "marc:thesaurus",
-        "tokenMap": "marcThesaurus",
-        "marcDefault": "4"
-      },
-      "$a": {"property": "marc:chronologicalTerm"},
-      "$i": {"ignored": true},
-      "$v": {"addProperty": "marc:formSubdivision"},
-      "$w": {"property": "marc:controlSubfield"},
-      "$x": {"addProperty": "marc:generalSubdivision"},
-      "$y": {"addProperty": "marc:chronologicalSubdivision"},
-      "$z": {"addProperty": "marc:geographicSubdivision"},
-      "$0": {"addProperty": "marc:recordControlNumber"},
-      "$2": {"property": "marc:sourceOfHeadingOrTerm"},
-      "$4": {"ignored": true},
-      "$5": {"addProperty": "marc:institutionToWhichFieldApplies"},
-      "$9": {"ignored": true}
+      "NOTE:LC": "748 - Established Heading Linking Entry - Chronological Term (R)",
+      "ignored": true,
+      "NOTE:record-count": 0
     },
     "750": {
       "i1": null,
@@ -26644,7 +26623,11 @@
       "$b": {"property": "marc:address"},
       "$c": {"property": "marc:methodOfAcquisition"},
       "$d": {"property": "marc:dateOfAcquisition"},
-      "$e": {"property": "marc:accessionNumber"},
+      "$e": {
+        "addLink": "identifiedBy",
+        "resourceType": "AccessionNumber",
+        "property": "value"
+      },
       "$f": {"property": "marc:owner"},
       "$h": {"property": "marc:purchasePrice"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
@@ -27028,8 +27011,8 @@
       "$a": {"property": "marc:firstLevelOfEnumeration"},
       "$b": {"property": "marc:secondLevelOfEnumeration"},
       "$c": {"property": "marc:thirdLevelOfEnumeration"},
-      "$d": {"property": "marc:fourthLevelOfEnumeration"},
-      "$e": {"property": "marc:fifthLevelOfEnumeration"},
+      "$d": {"ignored": true, "NOTE:record-count": 0},
+      "$e": {"ignored": true, "NOTE:record-count": 0},
       "$p": {"property": "marc:pieceDesignation"},
       "$t": {"property": "marc:copyNumber"},
       "$x": {"addProperty": "marc:cataloguersNote"},
