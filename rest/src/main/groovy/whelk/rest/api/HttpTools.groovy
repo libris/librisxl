@@ -6,6 +6,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils
 import org.codehaus.groovy.runtime.StackTraceUtils
 import org.codehaus.jackson.map.ObjectMapper
 
+import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 import static org.eclipse.jetty.http.HttpStatus.getMessage
@@ -69,6 +70,13 @@ class HttpTools {
         }
 
         sendResponse(response, json, "application/json", statusCode)
+    }
+
+    static String getBaseUri(HttpServletRequest request) {
+        return request.getScheme() + '://' +
+                request.getServerName() +
+                ((request.getServerPort() == 80) ? '' : ':' + request.getServerPort()) +
+                '/'
     }
     
     enum DisplayMode {

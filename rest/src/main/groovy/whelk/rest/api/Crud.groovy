@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.lang.management.ManagementFactory
 
+import static whelk.rest.api.HttpTools.getBaseUri
 import static whelk.rest.api.HttpTools.sendError
 import static whelk.rest.api.HttpTools.sendResponse
 
@@ -111,19 +112,19 @@ class Crud extends HttpServlet {
 
         // Depending on what site/client we're serving, we might need to add extra query parameters
         // before they're sent further.
-        String activeSite = getActiveSite(queryParameters)
+        String activeSite = getActiveSite(queryParameters, getBaseUri(request))
         log.debug("Active site is ${activeSite}")
 
-        if (activeSite != siteConfig['_default']) {
-            queryParameters.put('_site_base_uri', (String[])[siteConfig[activeSite]['@id']])
+        if (activeSite != siteConfig['default_site']) {
+            queryParameters.put('_site_base_uri', (String[])[siteConfig['sites'][activeSite]['@id']])
         }
 
-        if (!queryParameters['_statsrepr'] && siteConfig[activeSite]['statsfind']) {
-            queryParameters.put('_statsrepr', (String[])[mapper.writeValueAsString(siteConfig[activeSite]['statsfind'])])
+        if (!queryParameters['_statsrepr'] && siteConfig['sites'][activeSite]['statsfind']) {
+            queryParameters.put('_statsrepr', (String[])[mapper.writeValueAsString(siteConfig['sites'][activeSite]['statsfind'])])
         }
 
-        if (!queryParameters['_boost'] && siteConfig[activeSite]['boost']) {
-            queryParameters.put('_boost', (String[])[siteConfig[activeSite]['boost']])
+        if (!queryParameters['_boost'] && siteConfig['sites'][activeSite]['boost']) {
+            queryParameters.put('_boost', (String[])[siteConfig['sites'][activeSite]['boost']])
         }
 
         try {
@@ -160,12 +161,12 @@ class Crud extends HttpServlet {
     void handleData(HttpServletRequest request, HttpServletResponse response) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
 
-        String activeSite = getActiveSite(queryParameters)
+        String activeSite = getActiveSite(queryParameters, getBaseUri(request))
 
-        Map results = siteConfig[activeSite]
+        Map results = siteConfig['sites'][activeSite]
 
         if (!queryParameters['_statsrepr']) {
-            queryParameters.put('_statsrepr', (String[])[mapper.writeValueAsString(siteConfig[activeSite]['statsindex'])])
+            queryParameters.put('_statsrepr', (String[])[mapper.writeValueAsString(siteConfig['sites'][activeSite]['statsindex'])])
         }
         if (!queryParameters['_limit']) {
             queryParameters.put('_limit', (String[])["0"])
@@ -383,12 +384,22 @@ class Crud extends HttpServlet {
         return path
     }
 
-    private String getActiveSite(Map queryParameters) {
-        if (queryParameters['_site'] && queryParameters['_site'][0] in siteConfig) {
+    private String getActiveSite(Map queryParameters, String baseUri = null) {
+        // If ?_site=<foo> has been specified (and <foo> is a valid site) it takes precedence
+        if (queryParameters['_site'] && queryParameters['_site'][0] in siteConfig['sites']) {
             return queryParameters['_site'][0]
-        } else {
-            return siteConfig['_default']
         }
+
+        if (baseUri in siteConfig['sites']) {
+            return siteConfig['sites'][baseUri]['@id']
+        }
+
+        if (baseUri in siteConfig['site_alias']) {
+            String actualSite = siteConfig['site_alias'][baseUri]
+            return siteConfig['sites'][actualSite]['@id']
+        }
+
+        return siteConfig['default_site']
     }
 
     /**
