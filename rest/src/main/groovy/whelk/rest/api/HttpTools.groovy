@@ -73,10 +73,23 @@ class HttpTools {
     }
 
     static String getBaseUri(HttpServletRequest request) {
-        return request.getScheme() + '://' +
-                request.getServerName() +
-                ((request.getServerPort() == 80) ? '' : ':' + request.getServerPort()) +
-                '/'
+        String baseUri = ''
+
+        if (request.getScheme() == 'http') {
+            baseUri = request.getScheme() + '://' +
+                    request.getServerName() +
+                    ((request.getServerPort() == 80) ? '' : ':' + request.getServerPort()) +
+                    '/'
+        }
+
+        if (request.getScheme() == 'https') {
+            baseUri = request.getScheme() + '://' +
+                    request.getServerName() +
+                    ((request.getServerPort() == 443) ? '' : ':' + request.getServerPort()) +
+                    '/'
+        }
+
+        return baseUri
     }
     
     enum DisplayMode {
