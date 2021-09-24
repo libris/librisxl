@@ -162,6 +162,8 @@ class Crud extends HttpServlet {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
 
         String activeSite = getActiveSite(queryParameters, getBaseUri(request))
+        log.info("Request base URI: ${getBaseUri(request)}")
+        log.info("Active site: ${activeSite}")
 
         Map results = siteConfig['sites'][activeSite]
 
