@@ -2119,6 +2119,80 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
     }
 
+    def "PUT to /<id> should return 400 Bad Request if collection has been changed"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/id",
+                                      "@type": "Concept",
+                                      "contains": "some other data"]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/id",
+                                      "@type": "Instance",
+                                      "contains": "some new other data"]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getParameter("collection") >> {
+            "bib"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.load(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return doc
+        }
+        storage.createDocument(_, _, _, _, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
+            return "bib"
+        }
+        whelk.storage.getCollectionBySystemID(_) >> {
+            return "auth"
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
+    }
+
+
     def "PUT to /<id> should return 403 Forbidden if user has insufficient privilege"() {
         given:
         def is = GroovyMock(ServletInputStream.class)
