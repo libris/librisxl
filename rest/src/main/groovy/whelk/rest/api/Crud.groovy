@@ -759,7 +759,7 @@ class Crud extends HttpServlet {
                     // You are not allowed to change collection when updating a record
                     if (collection != whelk.storage.getCollectionBySystemID(doc.getShortId())) {
                         log.warn("Refused API update of document due to changed 'collection'")
-                        return null
+                        throw new BadRequestException("Cannot change legacy collection for document. Legacy collection is mapped from entity @type.")
                     }
 
                     String ifMatch = CrudUtils.cleanEtag(request.getHeader("If-Match"))
@@ -808,7 +808,7 @@ class Crud extends HttpServlet {
             sendError(response, HttpServletResponse.SC_BAD_REQUEST,
                     "Failed to acquire a necessary lock. Did you submit a holding record without a valid bib link? " + e.message)
             return null
-        } catch (LinkValidationException | PostgreSQLComponent.ConflictingHoldException e) {
+        } catch (LinkValidationException | PostgreSQLComponent.ConflictingHoldException | BadRequestException e) {
             failedRequests.labels(httpMethod, request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             sendError(response, HttpServletResponse.SC_BAD_REQUEST, e.getMessage())
