@@ -37,12 +37,11 @@ class CrudUtils {
         def desired = parseAcceptHeader(header)
         def allowed = allowedMediaTypes(request, desired)
 
-        log.debug("Desired: ${desired}")
-        log.debug("Allowed: ${allowed}")
-
         MediaType best = getBestMatchingMimeType(allowed, desired)
 
-        log.debug("Best: ${best}")
+        log.debug("Desired Content-Type: ${desired}")
+        log.debug("Allowed Content-Type: ${allowed}")
+        log.debug("Best Content-Type: ${best}")
 
         if (!best) {
             throw new UnsupportedContentTypeException(header)

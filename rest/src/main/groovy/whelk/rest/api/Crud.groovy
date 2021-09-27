@@ -112,8 +112,7 @@ class Crud extends HttpServlet {
 
         // Depending on what site/client we're serving, we might need to add extra query parameters
         // before they're sent further.
-        String activeSite = getActiveSite(queryParameters, getBaseUri(request))
-        log.debug("Active site is ${activeSite}")
+        String activeSite = request.getAttribute('activeSite')
 
         if (activeSite != siteConfig['default_site']) {
             queryParameters.put('_site_base_uri', (String[])[siteConfig['sites'][activeSite]['@id']])
@@ -160,12 +159,7 @@ class Crud extends HttpServlet {
 
     void handleData(HttpServletRequest request, HttpServletResponse response) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
-
-        String activeSite = getActiveSite(queryParameters, getBaseUri(request))
-        log.info("Request base URI: ${getBaseUri(request)}")
-        log.info("Request URI: ${request.requestURI}")
-        log.info("Active site: ${activeSite}")
-
+        String activeSite = request.getAttribute('activeSite')
         Map results = siteConfig['sites'][activeSite]
 
         if (!queryParameters['_statsrepr']) {
@@ -216,6 +210,9 @@ class Crud extends HttpServlet {
     }
 
     void doGet2(HttpServletRequest request, HttpServletResponse response) {
+        request.setAttribute('activeSite', getActiveSite(request, getBaseUri(request)))
+        log.debug("Active site: ${request.getAttribute('activeSite')}")
+
         if (request.pathInfo == "/") {
             displayInfo(response)
             return
@@ -241,8 +238,7 @@ class Crud extends HttpServlet {
         }
         
         try {
-            Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
-            String activeSite = getActiveSite(queryParameters, getBaseUri(request))
+            String activeSite = request.getAttribute('activeSite')
             if (siteConfig['sites'][activeSite].get('applyInverseOf', false)) {
                 request.setAttribute('_applyInverseOf', "true")
             }
@@ -334,8 +330,6 @@ class Crud extends HttpServlet {
             transformedResponse = request.shouldFrame()  ? frameRecord(doc) : doc.data
         }
 
-        log.debug("Content type is ${request.getContentType()}")
-
         if (!(request.getContentType() in [MimeTypes.JSON, MimeTypes.JSONLD])) {
             def id = request.getContentType() == MimeTypes.TRIG ? doc.getCompleteId() : doc.getShortId()
             return converterUtils.convert(transformedResponse, id, request.getContentType())
@@ -393,10 +387,10 @@ class Crud extends HttpServlet {
         return path
     }
 
-    private String getActiveSite(Map queryParameters, String baseUri = null) {
+    private String getActiveSite(HttpServletRequest request, String baseUri = null) {
         // If ?_site=<foo> has been specified (and <foo> is a valid site) it takes precedence
-        if (queryParameters['_site'] && queryParameters['_site'][0] in siteConfig['sites']) {
-            return queryParameters['_site'][0]
+        if (request.getParameter("_site") in siteConfig['sites']) {
+            return request.getParameter("_site")
         }
 
         if (baseUri in siteConfig['sites']) {
