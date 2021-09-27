@@ -1575,40 +1575,45 @@ class PostgreSQLComponent {
      */
     boolean sparqlQueueTake(QueueHandler reader, int num, DataSource connectionPool) {
         Connection connection = null
-        // The queue contains document ids.
-        // Items (rows) are locked and then finally removed from the queue when we commit the transaction.
-        // If the handler fails on any item, the transaction is cancelled and all items remain in the queue.
-        // SKIP LOCKED in the query guarantees that we will take the first <num> unlocked rows.
-        //
-        // Lock the actual documents while the reader is working on them. Otherwise two readers could end up
-        // working on two different versions of the same document concurrently.
-        // (T1 writes A, R1 starts working on A, T2 writes A', R2 starts working on A' => race between R1 and R2)
-        // Take locks in same order as lddb writers to avoid deadlocks.
-        connection = connectionPool.getConnection()
-        connection.setAutoCommit(false)
-        def ids = sparqlQueueTakeIds(num, connection)
+        try {
+            // The queue contains document ids.
+            // Items (rows) are locked and then finally removed from the queue when we commit the transaction.
+            // If the handler fails on any item, the transaction is cancelled and all items remain in the queue.
+            // SKIP LOCKED in the query guarantees that we will take the first <num> unlocked rows.
+            //
+            // Lock the actual documents while the reader is working on them. Otherwise two readers could end up
+            // working on two different versions of the same document concurrently.
+            // (T1 writes A, R1 starts working on A, T2 writes A', R2 starts working on A' => race between R1 and R2)
+            // Take locks in same order as lddb writers to avoid deadlocks.
+            connection = connectionPool.getConnection()
+            connection.setAutoCommit(false)
+            def ids = sparqlQueueTakeIds(num, connection)
 
-        boolean anyReQueued = false
-        for (String id : ids.sort()) {
-            try {
-                Document doc = lockAndLoad(id, connection)
-                def result = reader.handle(doc)
-                if (result == QueueHandler.Result.FAIL_REQUEUE) {
-                    sparqlQueueAdd(id, connection)
-                    anyReQueued = true
+            boolean anyReQueued = false
+            for (String id : ids.sort()) {
+                try {
+                    Document doc = lockAndLoad(id, connection)
+                    def result = reader.handle(doc)
+                    if (result == QueueHandler.Result.FAIL_REQUEUE) {
+                        sparqlQueueAdd(id, connection)
+                        anyReQueued = true
+                    }
+                    else if (result == QueueHandler.Result.FAIL_RETRY) {
+                        connection.rollback()
+                        return false
+                    }
                 }
-                else if (result == QueueHandler.Result.FAIL_RETRY) {
-                    connection.rollback()
-                    return false
+                catch (DocumentNotFoundException e) {
+                    log.warn("sparqlQueueTake: document with id $id does not exist: $e")
                 }
             }
-            catch (DocumentNotFoundException e) {
-                log.warn("sparqlQueueTake: document with id $id does not exist: $e")
-            }
+
+            connection.commit()
+            return !ids.isEmpty() && !anyReQueued
         }
-
-        connection.commit()
-        return !ids.isEmpty() && !anyReQueued
+        finally {
+            close(connection)
+        }
     }
 
     private Collection<String> sparqlQueueTakeIds(int num, Connection connection) {
