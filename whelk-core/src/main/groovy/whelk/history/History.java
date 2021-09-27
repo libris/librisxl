@@ -46,6 +46,18 @@ public class History {
         return m_pathOwnership.get(new ArrayList<>()); // The root (first) owner
     }
 
+    public boolean containsHandEdits(List<Object> path) {
+        for (Object keyObject : m_pathOwnership.keySet()) {
+            List<Object> key = (List<Object>) keyObject;
+            if (key.size() >= path.size() && key.subList(0, path.size()).equals(path)) { // A path below (more specific) than 'path'
+                if (m_pathOwnership.get(key).m_manualEditTime != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /**
      * Examine differences between (what would presumably be) the same entity
      * in two versions of a record.

@@ -2,75 +2,73 @@ package whelk.history;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 public class Ownership {
-    public String m_lastManualEditor;
-    public Instant m_lastManualEditTime;
+    public String m_manualEditor;
+    public Instant m_manualEditTime;
 
-    public String m_lastEditor;
-    public Instant m_lastEditTime;
+    public String m_systematicEditor;
+    public String m_systematicEditorComment;
+    public Instant m_systematicEditTime;
 
     public Ownership(DocumentVersion version, Ownership previousOwnership) {
 
         // An initial version from voyager
         if (version.changedIn.equals("vcopy") )
         {
-            m_lastEditor = m_lastManualEditor = "Voyager";
-            m_lastEditTime = m_lastManualEditTime = ZonedDateTime.parse(version.doc.getModified()).toInstant();
+            m_manualEditor = "Voyager";
+            m_manualEditTime = ZonedDateTime.parse(version.doc.getModified()).toInstant();
         }
         // A handmade (or atleast REST-API entered) version
         else if (version.changedIn.equals("xl") && version.changedBy != null && !version.changedBy.endsWith(".groovy")) {
-            m_lastEditor = m_lastManualEditor = version.changedBy;
-            m_lastEditTime = m_lastManualEditTime = ZonedDateTime.parse(version.doc.getModified()).toInstant();
+            m_manualEditor = version.changedBy;
+            m_manualEditTime = ZonedDateTime.parse(version.doc.getModified()).toInstant();
         }
-        // An import or script generated version
+        // An import or script generated version (systematic edit)
         else {
-            if (previousOwnership == null) {
-                m_lastManualEditor = getDescription(version.changedBy, version.changedIn);
-                m_lastManualEditTime = ZonedDateTime.parse(version.doc.getModified()).toInstant();
-            } else {
-                m_lastManualEditor = previousOwnership.m_lastManualEditor;
-                m_lastManualEditTime = previousOwnership.m_lastManualEditTime;
+            if (previousOwnership != null) {
+                m_manualEditor = previousOwnership.m_manualEditor;
+                m_manualEditTime = previousOwnership.m_manualEditTime;
             }
 
-            m_lastEditor = getDescription(version.changedBy, version.changedIn);
+            setSystemChangeDescription(version.changedBy, version.changedIn);
 
             Instant modifiedInstant = ZonedDateTime.parse(version.doc.getModified()).toInstant();
             Instant generatedInstant = Instant.EPOCH;
             if (version.doc.getGenerationDate() != null)
                 generatedInstant = ZonedDateTime.parse(version.doc.getGenerationDate()).toInstant();
             if (modifiedInstant.isAfter( generatedInstant ))
-                m_lastEditTime = modifiedInstant;
+                m_systematicEditTime = modifiedInstant;
             else
-                m_lastEditTime = generatedInstant;
+                m_systematicEditTime = generatedInstant;
         }
-    }
-
-    private String getDescription(String changedBy, String changedIn) {
-        if (changedBy == null)
-            changedBy = "N/A";
-        if (changedBy.endsWith(".groovy")) {
-            return "S (scripted)";
-        } else if (changedIn.equals("APIX")) {
-            return changedBy + " (apix)";
-        } else if (changedIn.equals("batch import")) {
-            return changedBy + " (metadatatratten)";
-        }
-        return changedBy;
     }
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
-        if (m_lastEditTime.equals(m_lastManualEditTime)) {
-            sb.append(m_lastEditor + " at: " + m_lastEditTime);
+        if (m_manualEditTime != null && m_manualEditor != null) {
+            sb.append("[M]" + m_manualEditor + " at: " + m_manualEditTime + " ");
         }
-        else if (m_lastEditTime.isAfter(m_lastManualEditTime)) {
-            sb.append(m_lastManualEditor + " and since by " + m_lastEditor + " at: " + m_lastEditTime);
-        } else {
-            sb.append(m_lastManualEditor + " at: " + m_lastManualEditTime);
+        if (m_systematicEditTime != null && m_systematicEditor != null) {
+            sb.append("[S]" + m_systematicEditor + " ");
+            if (m_systematicEditorComment != null)
+                sb.append("(" + m_systematicEditorComment + ") ");
+            sb.append("at: " + m_systematicEditTime);
         }
 
         return sb.toString();
+    }
+
+    private void setSystemChangeDescription(String changedBy, String changedIn) {
+        m_systematicEditor = changedBy;
+        if (changedBy != null && changedBy.endsWith(".groovy")) {
+            m_systematicEditorComment = "scripted";
+        } else if (changedBy != null && changedIn != null && changedIn.equals("APIX")) {
+            m_systematicEditorComment = "apix";
+        } else if (changedBy != null && changedIn != null && changedIn.equals("batch import")) {
+            m_systematicEditorComment = "metadatatratten";
+        }
     }
 }

@@ -2,6 +2,7 @@ package whelk.importer;
 
 import groovy.lang.Tuple;
 import io.prometheus.client.Counter;
+import se.kb.libris.Normalizers;
 import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
@@ -50,6 +51,7 @@ class XL
     private Parameters m_parameters;
     private Properties m_properties;
     private MarcFrameConverter m_marcFrameConverter;
+    private Merge m_merge;
     private static boolean verbose = false;
 
     // The predicates listed here are those that must always be represented as lists in jsonld, even if the list
@@ -67,6 +69,7 @@ class XL
         m_repeatableTerms = m_whelk.getJsonld().getRepeatableTerms();
         m_marcFrameConverter = m_whelk.getMarcFrameConverter();
         m_linkfinder = new LinkFinder(m_whelk.getStorage());
+        m_merge = new Merge(parameters.getMergeRuleFile());
         if (parameters.getChangedIn() != null)
             IMPORT_SYSTEM_CODE = parameters.getChangedIn();
         else
@@ -121,6 +124,23 @@ class XL
             {
                 String idToReplace = duplicateIDs.iterator().next();
                 resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, idToReplace);
+            }
+
+            // merge
+            else if (m_merge != null && collection.equals("bib")) {
+                String idToMerge = duplicateIDs.iterator().next();
+                Document incoming = convertToRDF(incomingMarcRecord, idToMerge);
+                if (m_parameters.getReadOnly()) {
+                    Document existing = m_whelk.getDocument(idToMerge);
+                    m_merge.merge(existing, incoming, m_parameters.getChangedBy(), m_whelk);
+                    System.out.println("info: Would now (if --live had been specified) have written the following json-ld to whelk as a merged record:\n"
+                            + existing.getDataAsString());
+                }
+                else {
+                    m_whelk.storeAtomicUpdate(idToMerge, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), (Document existing) -> {
+                        m_merge.merge(existing, incoming, m_parameters.getChangedBy(), m_whelk);
+                    });
+                }
             }
 
             // Keep existing
@@ -249,11 +269,8 @@ class XL
         }
         else
         {
-            if ( verbose )
-            {
-                System.out.println("info: Would now (if --live had been specified) have written the following json-ld to whelk as a new record:\n"
-                + rdfDoc.getDataAsString());
-            }
+            System.out.println("info: Would now (if --live had been specified) have written the following json-ld to whelk as a new record:\n"
+                    + rdfDoc.getDataAsString());
         }
 
         if (collection.equals("bib"))
@@ -316,6 +333,7 @@ class XL
         Document convertedDocument = new Document(convertedData);
         convertedDocument.deepReplaceId(Document.getBASE_URI().toString()+id);
         m_linkfinder.normalizeIdentifiers(convertedDocument);
+        m_whelk.getNormalizer().normalize(convertedDocument);
         return convertedDocument;
     }
 
