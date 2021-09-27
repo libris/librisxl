@@ -163,6 +163,7 @@ class Crud extends HttpServlet {
 
         String activeSite = getActiveSite(queryParameters, getBaseUri(request))
         log.info("Request base URI: ${getBaseUri(request)}")
+        log.info("Request URI: ${request.requestURI}")
         log.info("Active site: ${activeSite}")
 
         Map results = siteConfig['sites'][activeSite]
@@ -240,6 +241,12 @@ class Crud extends HttpServlet {
         }
         
         try {
+            Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
+            String activeSite = getActiveSite(queryParameters, getBaseUri(request))
+            if (siteConfig['sites'][activeSite].get('applyInverseOf', false)) {
+                request.setAttribute('_applyInverseOf', "true")
+            }
+
             handleGetRequest(CrudGetRequest.parse(request), response)
         } catch (UnsupportedContentTypeException e) {
             failedRequests.labels("GET", request.getRequestURI(),
