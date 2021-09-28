@@ -75,6 +75,7 @@ class Crud extends HttpServlet {
 
     Map vocabData
     Map displayData
+    Map contextData
     JsonLd jsonld
     JsonLdValidator validator
 
@@ -99,6 +100,7 @@ class Crud extends HttpServlet {
         }
         displayData = whelk.displayData
         vocabData = whelk.vocabData
+        contextData = whelk.contextData
         jsonld = whelk.jsonld
         search = new SearchUtils(whelk)
         validator = JsonLdValidator.from(jsonld)
@@ -266,9 +268,19 @@ class Crud extends HttpServlet {
     
     void handleGetRequest(CrudGetRequest request,
                           HttpServletResponse response) {
-        // TODO: return already loaded displayData and vocabData (cached on modified)? (LXL-260)
-        Tuple2<Document, String> docAndLocation = getDocumentFromStorage(
-                request.getId(), request.getVersion().orElse(null))
+        Tuple2<Document, String> docAndLocation
+
+        if (request.getId() == whelk.vocabContextUri) {
+            docAndLocation = new Tuple2(contextData, null)
+        } else if (request.getId() == whelk.vocabDisplayUri) {
+            docAndLocation = new Tuple2(displayData, null)
+        } else if (request.getId() == whelk.vocabUri) {
+            docAndLocation = new Tuple2(vocabData, null)
+        } else {
+            docAndLocation = getDocumentFromStorage(
+                    request.getId(), request.getVersion().orElse(null))
+        }
+
         Document doc = docAndLocation.first
         String loc = docAndLocation.second
 
@@ -288,7 +300,8 @@ class Crud extends HttpServlet {
                     getFormattedResponseBody(request, doc),
                     doc.getChecksum(jsonld),
                     request.getPath(),
-                    request.getContentType())
+                    request.getContentType(),
+                    request.getId())
         }
     }
 
@@ -480,7 +493,7 @@ class Crud extends HttpServlet {
      */
     void sendGetResponse(HttpServletResponse response,
                          Object responseBody, String modified, String path,
-                         String contentType) {
+                         String contentType, String requestId) {
         // FIXME remove?
         String ctxHeader = contextHeaders.get(path.split("/")[1])
         if (ctxHeader) {
@@ -499,7 +512,7 @@ class Crud extends HttpServlet {
             response.setHeader("ETag", "\"${etag}\"")
         }
 
-        if (contentType == MimeTypes.JSONLD && responseBody instanceof Map && !responseBody['@context']) {
+        if (contentType == MimeTypes.JSONLD && responseBody instanceof Map && requestId != whelk.vocabContextUri) {
             responseBody['@context'] = CONTEXT_PATH
         }
 
