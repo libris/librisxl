@@ -142,6 +142,8 @@ class XL
                         m_merge.merge(existing, incoming, m_parameters.getChangedBy(), m_whelk);
                     });
                 }
+
+                resultingResourceId = m_whelk.getStorage().getThingId(idToMerge);
             }
 
             // Keep existing
