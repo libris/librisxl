@@ -131,8 +131,8 @@ class Crud extends HttpServlet {
         try {
             Map results = search.doSearch(queryParameters)
             String responseContentType = CrudUtils.getBestContentType(request)
-            if (responseContentType == MimeTypes.JSONLD && !results['@context']) {
-                results['@context'] = CONTEXT_PATH
+            if (responseContentType == MimeTypes.JSONLD && !results[JsonLd.CONTEXT_KEY]) {
+                results[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
             }
             def jsonResult = mapper.writeValueAsString(results)
             sendResponse(response, jsonResult, responseContentType)
@@ -177,8 +177,8 @@ class Crud extends HttpServlet {
         results['statistics'] = searchResults['stats']
 
         String responseContentType = CrudUtils.getBestContentType(request)
-        if (responseContentType == MimeTypes.JSONLD && !results['@context']) {
-            results['@context'] = CONTEXT_PATH
+        if (responseContentType == MimeTypes.JSONLD && !results[JsonLd.CONTEXT_KEY]) {
+            results[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
         }
         def jsonResult = mapper.writeValueAsString(results)
         sendResponse(response, jsonResult, responseContentType)
@@ -513,7 +513,7 @@ class Crud extends HttpServlet {
         }
 
         if (contentType == MimeTypes.JSONLD && responseBody instanceof Map && requestId != whelk.vocabContextUri) {
-            responseBody['@context'] = CONTEXT_PATH
+            responseBody[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
         }
 
         if (path in contextHeaders.collect { it.value }) {
