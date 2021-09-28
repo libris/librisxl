@@ -216,5 +216,22 @@ fi
 
 
 cleanup
+# (Sanity-)test the dynamic merge rules.
+java -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --changedIn=importtest --changedBy=Utb1
+# Batch 14 adds (relative to batch 0) a summary, and has a different title. The title should be replaced, and the summary added as specified in mergerules0.json
+java -jar build/libs/batchimport.jar --path=./integtest/batch14.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --changedIn=importtest --changedBy=Utb2 --mergeBibUsing=./integtest/mergerules0.json
+mainTitle=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'importtest' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["hasTitle"]|.[0]|.["mainTitle"]')
+expect="\"Polisbilen får INTE ett larm\""
+if [ "$mainTitle" != "$expect" ]; then
+    fail "Merge: Data was not replaced!"
+fi
+summary=$(psql -qAt whelk_dev <<< "select data from lddb where changedIn = 'importtest' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["summary"]|.[0]|.["label"]')
+expect="\"En JÄTTEJÄTTEFIN sammanfattning\""
+if [ "$summary" != "$expect" ]; then
+    fail "Merge: Data was not replaced!"
+fi
+
+
+cleanup
 popd
 echo $OUTCOME

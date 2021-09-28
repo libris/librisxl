@@ -69,7 +69,8 @@ class XL
         m_repeatableTerms = m_whelk.getJsonld().getRepeatableTerms();
         m_marcFrameConverter = m_whelk.getMarcFrameConverter();
         m_linkfinder = new LinkFinder(m_whelk.getStorage());
-        m_merge = new Merge(parameters.getMergeRuleFile());
+        if (parameters.getMergeRuleFile() != null)
+            m_merge = new Merge(parameters.getMergeRuleFile());
         if (parameters.getChangedIn() != null)
             IMPORT_SYSTEM_CODE = parameters.getChangedIn();
         else
