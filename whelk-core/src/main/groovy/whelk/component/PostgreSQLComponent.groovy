@@ -875,6 +875,8 @@ class PostgreSQLComponent {
 
             normalizeDocumentForStorage(doc, connection)
             
+            boolean deleted = doc.getDeleted()
+            
             if (collection == "hold") {
                 checkLinkedShelfMarkOwnership(doc, connection)
                 String holdingFor = doc.getHoldingFor()
@@ -896,7 +898,7 @@ class PostgreSQLComponent {
                 acquireRowLock(holdingForSystemId, connection)
 
                 String holdingId = getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) 
-                if (holdingId != null && holdingId != doc.getShortId()) {
+                if (holdingId != null && holdingId != doc.getShortId() && !deleted) {
                     throw new ConflictingHoldException("Already exists a holding record ($holdingId) for ${doc.getHeldBy()} and bib: $holdingFor")
                 }
             }
@@ -904,9 +906,7 @@ class PostgreSQLComponent {
             if (doVerifyDocumentIdRetention) {
                 verifyDocumentIdRetention(preUpdateDoc, doc, connection)
             }
-
-            boolean deleted = doc.getDeleted()
-
+            
             Date createdTime = new Date(resultSet.getTimestamp("created").getTime())
             Date modTime = minorUpdate
                 ? new Date(resultSet.getTimestamp("modified").getTime())
@@ -1343,10 +1343,7 @@ class PostgreSQLComponent {
         storeCard(cardEntry)
         return cardEntry.getCard().data
     }
-
-    // Temporary method for changing lddb__dependencies.relation to full "path" of relation
-    // e.g. agent -> instanceOf.contribution.agent
-    // TODO: Unused? Remove?
+    
     void recalculateDependencies(Document doc) {
         withDbConnection {
             saveDependencies(doc, getMyConnection())
