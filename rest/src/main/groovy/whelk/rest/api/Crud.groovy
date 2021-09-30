@@ -75,7 +75,6 @@ class Crud extends HttpServlet {
 
     Map vocabData
     Map displayData
-    Map contextData
     JsonLd jsonld
     JsonLdValidator validator
 
@@ -84,6 +83,7 @@ class Crud extends HttpServlet {
     AccessControl accessControl = new AccessControl()
     ConverterUtils converterUtils
     Map siteConfig
+    Map<String, Tuple2<Document, String>> cachedDocs
 
     Crud() {
         // Do nothing - only here for Tomcat to have something to call
@@ -100,13 +100,20 @@ class Crud extends HttpServlet {
         }
         displayData = whelk.displayData
         vocabData = whelk.vocabData
-        contextData = whelk.contextData
+
         jsonld = whelk.jsonld
         search = new SearchUtils(whelk)
         validator = JsonLdValidator.from(jsonld)
         converterUtils = new ConverterUtils(whelk)
         siteConfig = mapper.readValue(getClass().classLoader
                 .getResourceAsStream("site_config.json").getBytes(), Map)
+
+        cachedDocs = [
+                (whelk.vocabContextUri): getDocumentFromStorage(whelk.vocabContextUri, null),
+                (whelk.vocabDisplayUri): getDocumentFromStorage(whelk.vocabDisplayUri, null),
+                (whelk.vocabUri): getDocumentFromStorage(whelk.vocabUri, null)
+
+        ]
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response) {
@@ -270,12 +277,8 @@ class Crud extends HttpServlet {
                           HttpServletResponse response) {
         Tuple2<Document, String> docAndLocation
 
-        if (request.getId() == whelk.vocabContextUri) {
-            docAndLocation = new Tuple2(contextData, null)
-        } else if (request.getId() == whelk.vocabDisplayUri) {
-            docAndLocation = new Tuple2(displayData, null)
-        } else if (request.getId() == whelk.vocabUri) {
-            docAndLocation = new Tuple2(vocabData, null)
+        if (request.getId() in cachedDocs) {
+            docAndLocation = cachedDocs[request.getId()]
         } else {
             docAndLocation = getDocumentFromStorage(
                     request.getId(), request.getVersion().orElse(null))
