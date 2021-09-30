@@ -107,21 +107,30 @@ public class Merge {
                                       String incomingAgent, History baseHistory) {
         Rule replaceRule = getRuleForPath(path, Operation.REPLACE);
         if (replaceRule != null) {
-            // Determine priority for existing and incoming versions at this path respectively
+
+            // Determine priority for the incoming version
             int incomingPriorityHere = 0;
             if (replaceRule.sigelPriority.get(incomingAgent) != null) {
                 incomingPriorityHere = (Integer) replaceRule.sigelPriority.get(incomingAgent);
             }
-            int basePriorityHere = Integer.MAX_VALUE; // A manual edit should never be replaced.
-            Ownership baseOwnership = baseHistory.getOwnership(path);
-            if (!baseHistory.containsHandEdits(path)) {
+
+            // Determine (the maximum) priority for any part of the already existing subtree (below 'path')
+            int basePriorityHere = 0;
+            boolean baseContainsHandEdits = false;
+            Set<Ownership> baseOwners = baseHistory.getSubtreeOwnerships(path);
+            for (Ownership baseOwnership : baseOwners) {
+                if (baseOwnership.m_manualEditTime != null)
+                    baseContainsHandEdits = true;
                 String baseAgent = baseOwnership.m_systematicEditor;
                 if (replaceRule.sigelPriority.get(baseAgent) != null) {
-                    basePriorityHere = (Integer) replaceRule.sigelPriority.get(baseAgent);
+                    int priority = (Integer) replaceRule.sigelPriority.get(baseAgent);
+                    if (priority > basePriorityHere)
+                    basePriorityHere = priority;
                 }
             }
 
-            if (incomingPriorityHere > basePriorityHere) {
+            // Execute replacement if appropriate
+            if (!baseContainsHandEdits && incomingPriorityHere > basePriorityHere) {
                 if (base instanceof Map) {
                     Map map = ( (Map) base );
                     if (!subtreeContainsLinks(map)) {

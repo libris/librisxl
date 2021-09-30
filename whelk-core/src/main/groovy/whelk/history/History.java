@@ -46,16 +46,18 @@ public class History {
         return m_pathOwnership.get(new ArrayList<>()); // The root (first) owner
     }
 
-    public boolean containsHandEdits(List<Object> path) {
+    /**
+     * Get the set of owners for path and everything under it.
+     */
+    public Set<Ownership> getSubtreeOwnerships(List<Object> path) {
+        Set<Ownership> owners = new HashSet<>();
         for (Object keyObject : m_pathOwnership.keySet()) {
             List<Object> key = (List<Object>) keyObject;
             if (key.size() >= path.size() && key.subList(0, path.size()).equals(path)) { // A path below (more specific) than 'path'
-                if (m_pathOwnership.get(key).m_manualEditTime != null) {
-                    return true;
-                }
+                owners.add(m_pathOwnership.get(key));
             }
         }
-        return false;
+        return owners;
     }
 
     /**
