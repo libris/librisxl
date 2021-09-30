@@ -13,7 +13,6 @@ import org.postgresql.util.PGobject
 import org.postgresql.util.PSQLException
 import whelk.Document
 import whelk.history.DocumentVersion
-import whelk.history.History
 import whelk.IdType
 import whelk.JsonLd
 import whelk.Link
@@ -666,7 +665,7 @@ class PostgreSQLComponent {
 
                     acquireRowLock(holdingForSystemId, connection)
 
-                    if (getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) != null)
+                    if (getHoldingIdByItemOfAndHeldBy(holdingFor, doc.getHeldBy(), connection) != null)
                         throw new ConflictingHoldException("Already exists a holding record for ${doc.getHeldBy()} and bib: $holdingFor")
                 }
 
@@ -897,9 +896,14 @@ class PostgreSQLComponent {
 
                 acquireRowLock(holdingForSystemId, connection)
 
-                String holdingId = getHoldingForBibAndSigel(holdingFor, doc.getHeldBy(), connection) 
-                if (holdingId != null && holdingId != doc.getShortId() && !deleted) {
-                    throw new ConflictingHoldException("Already exists a holding record ($holdingId) for ${doc.getHeldBy()} and bib: $holdingFor")
+                // we won't create new duplicate holdings for the same heldBy but we allow existing ones to be updated
+                boolean heldByChanged = doc.getHeldBy() != preUpdateDoc.getHeldBy()
+                boolean itemOfChanged = doc.getHoldingFor() != preUpdateDoc.getHoldingFor()
+                if ((heldByChanged || itemOfChanged) && !deleted) {
+                    String holdingId = getHoldingIdByItemOfAndHeldBy(holdingFor, doc.getHeldBy(), connection)
+                    if (holdingId && holdingId != doc.getShortId()) {
+                        throw new ConflictingHoldException("Already exists a holding record ($holdingId) for ${doc.getHeldBy()} and bib: $holdingFor")
+                    }
                 }
             }
 
@@ -1913,7 +1917,7 @@ class PostgreSQLComponent {
         }
     }
 
-    String getHoldingForBibAndSigel(String bibThingUri, String libraryUri, Connection connection) {
+    String getHoldingIdByItemOfAndHeldBy(String bibThingUri, String libraryUri, Connection connection) {
         PreparedStatement preparedStatement = null
         ResultSet rs = null
         try {
