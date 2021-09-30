@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.lang.management.ManagementFactory
 
+import static whelk.rest.api.CrudUtils.*
 import static whelk.rest.api.HttpTools.sendError
 import static whelk.rest.api.HttpTools.sendResponse
 
@@ -45,8 +46,7 @@ class Crud extends HttpServlet {
 
     final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
     final static String XL_ACTIVE_SIGEL_HEADER = 'XL-Active-Sigel'
-    final static String EPOCH_START = '1970/1/1'
-
+    
     static final Counter requests = Counter.build()
         .name("api_requests_total").help("Total requests to API.")
         .labelNames("method").register()
@@ -171,7 +171,7 @@ class Crud extends HttpServlet {
         def marcframePath = "/sys/marcframe.json"
         if (request.pathInfo == marcframePath) {
             def responseBody = getClass().classLoader.getResourceAsStream("ext/marcframe.json").getText("utf-8")
-            sendGetResponse(response, responseBody, EPOCH_START, marcframePath, "application/json")
+            sendGetResponse(response, responseBody, ETag.SYSTEM_START, marcframePath, "application/json")
             return
         }
         
@@ -209,29 +209,43 @@ class Crud extends HttpServlet {
             sendNotFound(response, request.getPath())
         } else if (!doc && loc) {
             sendRedirect(request.getHttpServletRequest(), response, loc)
-        } else if (!request.shouldEmbellish() && isNotModified(request, doc)) {
-            sendNotModified(response, doc)
         } else if (doc.deleted) {
             failedRequests.labels("GET", request.getPath(),
                     HttpServletResponse.SC_GONE.toString()).inc()
             sendError(response, HttpServletResponse.SC_GONE, "Document has been deleted.")
         } else {
+            String checksum = doc.getChecksum(jsonld)
+            
+            if (request.shouldEmbellish()) {
+                whelk.embellish(doc)
+
+                // reverse links are inserted by embellish, so can only do this when embellished
+                if (request.shouldApplyInverseOf()) {
+                    doc.applyInverses(whelk.jsonld)
+                }
+            }
+            
+            ETag eTag = request.shouldEmbellish()
+                    ? ETag.embellished(checksum, doc.getChecksum(jsonld))
+                    : ETag.plain(checksum)
+            
+            if (request.getIfNoneMatch().map(eTag.&isNotModified).orElse(false)) {
+                sendNotModified(response, eTag)
+                return
+            }
+            
             sendGetResponse(
                     maybeAddProposal25Headers(response, loc),
                     getFormattedResponseBody(request, doc),
-                    doc.getChecksum(jsonld),
+                    eTag,
                     request.getPath(),
                     request.getContentType())
         }
     }
-
-    private boolean isNotModified(CrudGetRequest request, Document doc) {
-        request.getIfNoneMatch().map({ etag -> etag == doc.getChecksum(jsonld) }).orElse(false)
-    }
-
-    private void sendNotModified(HttpServletResponse response, Document doc) {
+    
+    private void sendNotModified(HttpServletResponse response, ETag eTag) {
         setVary(response)
-        response.setHeader("ETag", "\"${doc.getChecksum(jsonld)}\"")
+        response.setHeader("ETag", eTag.toString())
         response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
         sendError(response, HttpServletResponse.SC_NOT_MODIFIED, "Document has not been modified.")
     }
@@ -245,17 +259,7 @@ class Crud extends HttpServlet {
     private Object getFormattedResponseBody(CrudGetRequest request, Document doc) {
         log.debug("Formatting document {}. embellished: {}, framed: {}, lens: {}",
                 doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame(), request.getLens())
-
-        if (request.shouldEmbellish()) {
-            doc = doc.clone() // FIXME: this is because ETag calculation is done on non-embellished doc...
-            whelk.embellish(doc)
-
-            // reverse links are inserted by embellish, so can only do this when embellished
-            if (request.shouldApplyInverseOf()) {
-                doc.applyInverses(whelk.jsonld)
-            }
-        }
-
+        
         if (request.getLens() != Lens.NONE) {
             return applyLens(frameThing(doc), request.getLens())
         }
@@ -389,7 +393,7 @@ class Crud extends HttpServlet {
      *
      */
     void sendGetResponse(HttpServletResponse response,
-                         Object responseBody, String modified, String path,
+                         Object responseBody, ETag eTag, String path,
                          String contentType) {
         // FIXME remove?
         String ctxHeader = contextHeaders.get(path.split("/")[1])
@@ -400,15 +404,8 @@ class Crud extends HttpServlet {
                             "type=\"application/ld+json\"")
         }
 
-        String etag = modified
-
-        if (etag == EPOCH_START) {
-            // For some resources, we want to set the etag to when the system was started
-            response.setHeader("ETag", "\"${ManagementFactory.getRuntimeMXBean().getStartTime()}\"")
-        } else {
-            response.setHeader("ETag", "\"${etag}\"")
-        }
-
+        response.setHeader("ETag", eTag.toString())
+        
         if (path in contextHeaders.collect { it.value }) {
             log.debug("request is for context file. " +
                     "Must serve original content-type ($contentType).")
@@ -762,9 +759,13 @@ class Crud extends HttpServlet {
                         throw new BadRequestException("Cannot change legacy collection for document. Legacy collection is mapped from entity @type.")
                     }
 
-                    String ifMatch = CrudUtils.cleanEtag(request.getHeader("If-Match"))
+                    ETag ifMatch = Optional
+                            .ofNullable(request.getHeader("If-Match"))
+                            .map(ETag.&parse)
+                            .orElseThrow({ -> new BadRequestException("Missing If-Match header in update") })
+                    
                     log.info("If-Match: ${ifMatch}")
-                    whelk.storeAtomicUpdate(doc, false, "xl", activeSigel, ifMatch)
+                    whelk.storeAtomicUpdate(doc, false, "xl", activeSigel, ifMatch.documentCheckSum())
                 }
                 else {
                     log.debug("Saving NEW document ("+ doc.getId() +")")
