@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletResponseWrapper
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND
+import static javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED
 import static javax.servlet.http.HttpServletResponse.SC_OK
 import static whelk.rest.api.MimeTypes.JSON
 import static whelk.rest.api.MimeTypes.JSONLD
@@ -421,39 +422,50 @@ class CrudSpec extends Specification {
         response.getStatus() == SC_NOT_FOUND
     }
 
-    def "GET non-embellished document with If-None-Match equal to ETag should return 304 Not Modified"() {
+    @Unroll
+    def "GET document with If-None-Match should return 200 Ok or 304 Not Modified"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        def doc = new Document(["@graph": [["@id": id]]])
+        def doc = new Document(["@graph": [
+                ["@id": id, 'mainEntity': ["@id": "$id#it"]], 
+                ["@id": "$id#it", '@type': 'Instance', 'prop1': ['@id': 'https://foo']]
+        ]])
         doc.setModified(new Date())
-        def etag = doc.getChecksum(whelk.jsonld)
-        request.getPathInfo() >> { '/' + id }
-        request.getHeader("Accept") >> { "*/*" }
-        request.getHeader("If-None-Match") >> { etag }
-        request.getParameter(_) >> {
-            return getParameter('?embellished=false', arguments[0])
-        }
-        storage.load(_, _) >> { return doc }
-        when:
-        crud.doGet(request, response)
-        then:
-        response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED
-    }
-
-    def "GET embellished document with If-None-Match equal to ETag should return 200 Ok"() {
-        given:
-        def id = BASE_URI.resolve("/1234").toString()
-        def doc = new Document(["@graph": [["@id": id]]])
-        doc.setModified(new Date())
-        def etag = doc.getChecksum(whelk.jsonld)
         request.getPathInfo() >> { '/' + id}
         request.getHeader("Accept") >> { "*/*" }
-        request.getHeader("If-None-Match") >> { etag }
+        request.getHeader("If-None-Match") >> { eTag }
+        request.getParameter("embellished") >> {
+            return "$embellished"
+        }
         storage.load(_, _) >> { return doc }
-        when:
+        storage.getCards(_) >> { 
+            def iris = ['https://foo']
+            iris.collect {
+                ["@graph": [
+                        ["@id": it, 'mainEntity': ["@id": "$it#it"]],
+                        ["@id": "$it#it"]
+                ]]
+            }
+        }
         crud.doGet(request, response)
-        then:
-        response.getStatus() == HttpServletResponse.SC_OK
+        
+        expect:
+        response.getStatus() == status
+
+        where:
+        // checksum             -1856151741
+        // checksum embellished -5527327606
+
+        embellished | eTag                      || status
+        false       | '-1856151741'             || SC_NOT_MODIFIED
+        false       | "-1856151741:-5527327606" || SC_NOT_MODIFIED
+        false       | "-1856151741:other"       || SC_NOT_MODIFIED
+        false       | "other"                   || SC_OK
+
+        true        | '-1856151741'             || SC_OK
+        true        | '-1856151741:-5527327606' || SC_NOT_MODIFIED
+        true        | "-1856151741:other"       || SC_OK
+        true        | "other"                   || SC_OK
     }
 
     @Unroll
@@ -1877,6 +1889,9 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "PUT"
         }
+        request.getHeader("If-Match") >> {
+            CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
         }
@@ -2650,6 +2665,9 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "PUT"
         }
+        request.getHeader("If-Match") >> {
+            CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
@@ -2719,6 +2737,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "PUT"
+        }
+        request.getHeader("If-Match") >> {
+            CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -2926,6 +2947,9 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "PUT"
         }
+        request.getHeader("If-Match") >> {
+            CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
@@ -2996,6 +3020,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "PUT"
+        }
+        request.getHeader("If-Match") >> {
+            CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
         }
         request.getParameter("collection") >> {
             "bib"
@@ -3213,6 +3240,9 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "PUT"
         }
+        request.getHeader("If-Match") >> {
+            CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
@@ -3349,6 +3379,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "PUT"
+        }
+        request.getHeader("If-Match") >> {
+            CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
