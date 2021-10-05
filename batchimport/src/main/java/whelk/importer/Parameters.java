@@ -26,6 +26,7 @@ class Parameters
     private String changedIn = null;
     private boolean forceUpdate = false;
     private HashMap<String, String> specialRules = new HashMap<>();
+    private File mergeRuleFile = null;
 
     Path getPath() { return path; }
     INPUT_FORMAT getFormat() { return format; }
@@ -41,6 +42,7 @@ class Parameters
     String getChangedIn() { return changedIn; }
     boolean getForceUpdate() { return forceUpdate; }
     HashMap<String, String> getSpecialRules() { return specialRules; }
+    File getMergeRuleFile() { return mergeRuleFile; }
 
 
     enum INPUT_FORMAT
@@ -114,7 +116,7 @@ class Parameters
         System.err.println("              the xml document must be that of MARCXML at the latest after any XSLT");
         System.err.println("              transforms have been applied.");
         System.err.println("");
-        System.err.println("--transformer The path to an XSLT stylsheet that should be used to transform the input");
+        System.err.println("--transformer The path to an XSLT stylesheet that should be used to transform the input");
         System.err.println("              before importing. This parameter may be used even if the input format is");
         System.err.println("              \"iso2709\", in which case the stream will be translated to MARCXML before");
         System.err.println("              transformation. If more than one transformer is specified these will be");
@@ -127,9 +129,7 @@ class Parameters
         System.err.println("");
         System.err.println("--dupType     The type of duplication checking that should be done for each incoming");
         System.err.println("              record. The value of this parameter may be a comma-separated list of any");
-        System.err.println("              combination of duplication types. If a duplicate is found for an incoming");
-        System.err.println("              record, that record will be enriched with any additional information in the");
-        System.err.println("              incoming record.");
+        System.err.println("              combination of duplication types.");
         System.err.println("              Duplication types are checked in the order they are defined on the command line");
         System.err.println("              As soon as one duplication type has yielded one or more duplicates, no additional");
         System.err.println("              types will be checked. (in other words: THE ORDERING OF TYPES MATTER)");
@@ -158,6 +158,10 @@ class Parameters
         System.err.println("--replaceBib  If this flag is set, matching bibliographic records will be replaced.");
         System.err.println("");
         System.err.println("--replaceHold If this flag is set, matching holding records will be replaced.");
+        System.err.println("");
+        System.err.println("--mergeBibUsing Bibliographic records can be \"partially uppated\" (merged) with incoming");
+        System.err.println("              records according to some specified set of rules.");
+        System.err.println("              Using this option, a file containing such merge rules can be specified.");
         System.err.println("");
         System.err.println("--changedBy   A string to use as descriptionCreator (MARC 040) for imported records.");
         System.err.println("--changedIn   A string to use for the changedIn column, defaults to \"batch import\".");
@@ -228,6 +232,12 @@ class Parameters
                 specialRules.put(from, to);
                 break;
 
+            case "--mergeBibUsing":
+                if (getReplaceBib())
+                    throw new IllegalArgumentException("Encrich/replace are mutually exclusive");
+                mergeRuleFile = new File(value);
+                break;
+
             default:
                 throw new IllegalArgumentException(parameter);
         }
@@ -293,6 +303,8 @@ class Parameters
                 replaceHold = true;
                 break;
             case "--replaceBib":
+                if (getMergeRuleFile() != null)
+                    throw new IllegalArgumentException("Encrich/replace are mutually exclusive");
                 replaceBib = true;
                 break;
             case "--forceUpdate":
