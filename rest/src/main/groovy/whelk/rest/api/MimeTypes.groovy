@@ -7,4 +7,5 @@ class MimeTypes {
     static final RDF = "application/rdf+xml"
     static final JSON = "application/json"
     static final N3 = "text/n3"
+    static final HTML = "text/html"
 }

@@ -438,6 +438,45 @@ class CrudSpec extends Specification {
         response.getContentType() == "text/turtle"
     }
 
+    def "GET /<id>/data.html should display document in HTML format"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}/data.html".toString()
+        }
+        request.getHeader("Accept") >> {
+            "*/*"
+        }
+        storage.load(_, _) >> {
+            new Document(["@graph": [
+                    ["@id": id, "mainEntity": ["@id": "main"]],
+                    ["@id": "main", "foo": "bar"]]])
+        }
+        when:
+        crud.doGet(request, response)
+        then:
+        response.getStatus() == SC_OK
+        response.getContentType() == "text/html"
+    }
+
+    def "GET /<id>/data.gif should return 404 Not Found"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}/data.gif".toString()
+        }
+        request.getHeader("Accept") >> {
+            "*/*"
+        }
+        storage.load(_, _) >> {
+            new Document(["@graph": [["@id": id, "foo": "bar"]]])
+        }
+        when:
+        crud.doGet(request, response)
+        then:
+        response.getStatus() == SC_NOT_FOUND
+    }
+
     @Unroll
     def "GET document with If-None-Match should return 200 Ok or 304 Not Modified"() {
         given:

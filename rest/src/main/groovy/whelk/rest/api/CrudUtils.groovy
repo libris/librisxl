@@ -20,6 +20,7 @@ class CrudUtils {
     final static MediaType TRIG = MediaType.parse(MimeTypes.TRIG)
     final static MediaType RDFXML = MediaType.parse(MimeTypes.RDF)
     final static MediaType N3 = MediaType.parse(MimeTypes.N3)
+    final static MediaType HTML = MediaType.parse(MimeTypes.HTML)
 
     static final Map ALLOWED_MEDIA_TYPES_BY_EXT = [
             '': [JSONLD, JSON],
@@ -29,10 +30,11 @@ class CrudUtils {
             'ttl': [TURTLE],
             'rdf': [RDFXML],
             'xml': [RDFXML],
-            'n3': [N3]
+            'n3': [N3],
+            'html': [HTML],
     ]
 
-    static final List ALLOWED_MEDIA_TYPES = [JSON, JSONLD, TRIG, TURTLE, RDFXML, N3]
+    static final List ALLOWED_MEDIA_TYPES = [JSON, JSONLD, TRIG, TURTLE, RDFXML, N3, HTML]
 
     static String getBestContentType(HttpServletRequest request) {
         def header = getAcceptHeader(request)

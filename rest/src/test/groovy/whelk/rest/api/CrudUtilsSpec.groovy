@@ -59,6 +59,8 @@ class CrudUtilsSpec extends Specification {
         "text/turtle;q=0.1, application/json;q=0.8"         | ''        || "application/json"
         "*/*, text/turtle;q=0.1, application/json;q=0.8"    | ''        || "application/json"
         "text/turtle, application/signed-exchange;v=b3"     | ''        || "text/turtle"
+        "*/*"                                               | '.html'   || "text/html"
+        "text/html"                                         | ''        || "text/html"
     }
 
     def "Should throw on invalid suffix"() {

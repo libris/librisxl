@@ -112,7 +112,6 @@ class Crud extends HttpServlet {
                 (whelk.vocabContextUri): getDocumentFromStorage(whelk.vocabContextUri, null),
                 (whelk.vocabDisplayUri): getDocumentFromStorage(whelk.vocabDisplayUri, null),
                 (whelk.vocabUri): getDocumentFromStorage(whelk.vocabUri, null)
-
         ]
     }
 

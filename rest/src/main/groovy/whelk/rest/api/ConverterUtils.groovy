@@ -4,6 +4,7 @@ import groovy.util.logging.Log4j2 as Log
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.converter.FormatConverter
+import whelk.converter.JsonLD2HtmlConverter
 import whelk.converter.JsonLD2N3Converter
 import whelk.converter.JsonLD2RdfXml
 import whelk.converter.JsonLDTrigConverter
@@ -22,6 +23,7 @@ class ConverterUtils {
                 (MimeTypes.TURTLE): new JsonLDTurtleConverter(null, whelk),
                 (MimeTypes.TRIG): new JsonLDTrigConverter(null, whelk),
                 (MimeTypes.N3): new JsonLD2N3Converter(whelk),
+                (MimeTypes.HTML): new JsonLD2HtmlConverter(whelk),
         ]
     }
 
