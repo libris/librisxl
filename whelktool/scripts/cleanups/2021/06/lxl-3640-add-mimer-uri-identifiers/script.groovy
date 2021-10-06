@@ -1,39 +1,39 @@
-Map mimerUriById = [:]
+Map mimerIdByLibrisId = [:]
 
 new File(scriptDir + '/id-lists').eachFile {f ->
-    String id
+    String librisId
 
     f.eachLine { String line ->
         if (line =~ "libris_id:")
-            id = line.replaceFirst(/.*libris_id:/, "").replaceAll(/\W/, "")
-        else if (line =~ /uri:/) {
-            String uri = line.replace("uri:", "").trim()
+            librisId = line.replaceFirst(/.*libris_id:/, "").replaceAll(/\W/, "")
+        else if (line =~ /local:/) {
+            String local = line.replace("local:", "").trim()
 
-            if (id.isNumber()) {
+            if (librisId.isNumber()) {
                 String where = """
                 collection = 'bib'
                 AND deleted = 'false'
-                AND data#>>'{@graph,0,controlNumber}' = '${id}'
+                AND data#>>'{@graph,0,controlNumber}' = '${librisId}'
             """
 
                 selectBySqlWhere(where) {
-                    id = it.doc.shortId
+                    librisId = it.doc.shortId
                 }
             }
 
-            mimerUriById[id] = uri
+            mimerIdByLibrisId[librisId] = local
         }
     }
 }
 
-selectByIds(mimerUriById.keySet()) { data ->
+selectByIds(mimerIdByLibrisId.keySet()) { data ->
     Map instance = data.graph[1]
     List identifiedBy = instance.identifiedBy
 
     Map identifier =
             [
-                "@type": "URI",
-                "value": mimerUriById[data.doc.shortId]
+                "@type": "Identifier",
+                "value": mimerIdByLibrisId[data.doc.shortId]
             ]
 
     if (identifiedBy) {
