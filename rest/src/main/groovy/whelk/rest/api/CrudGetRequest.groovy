@@ -53,7 +53,7 @@ class CrudGetRequest {
             return false;
         }
 
-        return getBoolParameter("embellished").orElse(view != View.DATA)
+        return getBoolParameter("embellished").orElse(true)
     }
 
     boolean shouldFrame() {
@@ -103,7 +103,7 @@ class CrudGetRequest {
 
     private Optional<Boolean> getBoolParameter(String name) {
         return Optional
-                .ofNullable(request.getParameter(name))
+                .ofNullable(request.getParameter(name) ?: request.getAttribute(name))
                 .map(Boolean.&parseBoolean)
     }
 

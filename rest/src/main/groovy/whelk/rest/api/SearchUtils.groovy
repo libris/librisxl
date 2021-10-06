@@ -171,7 +171,7 @@ class SearchUtils {
                 makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
                 (total > 0 && !predicates) ? reverseObject : null)
         if (!stats) {
-            log.debug("No stats found for query: ${queryParameters}, result: ${esResult}")
+            log.debug("No stats found for query: ${queryParameters}")
         }
 
         (query ? mappings.tail() : mappings).each { Map mapping ->

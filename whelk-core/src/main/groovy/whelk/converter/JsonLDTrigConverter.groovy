@@ -7,15 +7,14 @@ import whelk.component.PostgreSQLComponent
 import whelk.util.PropertyLoader
 
 @Log
-class JsonLDTurtleConverter implements FormatConverter {
-
-    String resultContentType = "text/turtle"
+class JsonLDTrigConverter implements FormatConverter {
+    String resultContentType = "text/trig"
     String requiredContentType = "application/ld+json"
     def context
     def base
     def mapper = new ObjectMapper()
 
-    JsonLDTurtleConverter(String base = null, Whelk whelk = null) {
+    JsonLDTrigConverter(String base = null, Whelk whelk = null) {
         if (whelk) {
             context = JsonLdToTurtle.parseContext(['@context': whelk.jsonld.context])
         } else {
@@ -33,7 +32,7 @@ class JsonLDTurtleConverter implements FormatConverter {
     }
 
     Map convert(Map source, String id) {
-        def bytes = JsonLdToTurtle.toTurtle(context, source, base).toByteArray()
+        def bytes = JsonLdToTurtle.toTrig(context, source, base, id).toByteArray()
         return [(JsonLd.NON_JSON_CONTENT_KEY) : (new String(bytes, "UTF-8"))]
     }
 }

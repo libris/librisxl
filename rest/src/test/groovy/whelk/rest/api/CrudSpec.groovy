@@ -47,7 +47,6 @@ class CrudSpec extends Specification {
         request.getRequestURI() >> {
             request.getPathInfo()
         }
-
         CapturingServletOutputStream out = new CapturingServletOutputStream()
         response = new HttpServletResponseWrapper(GroovyMock(HttpServletResponse.class)) {
             int status = 0
@@ -80,7 +79,7 @@ class CrudSpec extends Specification {
         whelk = new Whelk(storage)
         whelk.contextData = ['@context': [
                 'examplevocab': 'http://example.com',
-                'some_term': 'some_value']]
+                'some_term': 'http://some-term.somewhere']]
         whelk.displayData = ['lensGroups': [
                 'chips': [lenses: ['Instance' : ['showProperties': ['prop1', 'prop2']]]],
                 'cards': [lenses: ['Instance' : ['showProperties': ['prop1', 'prop2', 'prop3']]]],
@@ -367,6 +366,9 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
+        request.getParameter("embellished") >> {
+            return "false"
+        }
         storage.load(_, _) >> {
             new Document(["@graph": [
                     ["@id": id,
@@ -386,7 +388,38 @@ class CrudSpec extends Specification {
         response.getContentType() == "application/json"
     }
 
-    def "GET /<id>/data.ttl should return 404 Not Found"() {
+    def "GET /<id>/data.rdf should display document in RDF format"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}/data.rdf".toString()
+        }
+        request.getHeader("Accept") >> {
+            "*/*"
+        }
+        request.getParameter("embellished") >> {
+            return "false"
+        }
+        storage.load(_, _) >> {
+            new Document(["@graph": [
+                    ["@id": id,
+                     "foo": "bar",
+                     "baz": ["@id": "examplevocab:"],
+                     "quux": ["@id": "some_term"],
+                     "bad_ref": ["@id": "invalid:ref"],
+                     "mainEntity": ["@id": "main_id"]
+                    ],
+                    ["@id": "main_id"]
+            ]])
+        }
+        when:
+        crud.doGet(request, response)
+        then:
+        response.getStatus() == SC_OK
+        response.getContentType() == "application/rdf+xml"
+    }
+
+    def "GET /<id>/data.ttl should display document in Turtle format"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
@@ -401,25 +434,8 @@ class CrudSpec extends Specification {
         when:
         crud.doGet(request, response)
         then:
-        response.getStatus() == SC_NOT_FOUND
-    }
-
-    def "GET /<id>/data.rdf should return 404 Not Found"() {
-        given:
-        def id = BASE_URI.resolve("/1234").toString()
-        request.getPathInfo() >> {
-            "/${id}/data.rdf".toString()
-        }
-        request.getHeader("Accept") >> {
-            "*/*"
-        }
-        storage.load(_, _) >> {
-            return new Document(["@graph": [["@id": id, "foo": "bar"]]])
-        }
-        when:
-        crud.doGet(request, response)
-        then:
-        response.getStatus() == SC_NOT_FOUND
+        response.getStatus() == SC_OK
+        response.getContentType() == "text/turtle"
     }
 
     @Unroll
@@ -515,8 +531,8 @@ class CrudSpec extends Specification {
         '/data-view' |'.json'   | 'application/ld+json'  || 'application/json'    | SC_OK
 
         ''           |''        | ''                     || 'application/ld+json' | SC_OK
-        ''           |''        | 'text/turtle'          || 'application/ld+json' | SC_OK
-        ''           |''        | 'application/rdf+xml'  || 'application/ld+json' | SC_OK
+        ''           |''        | 'text/turtle'          || 'text/turtle'         | SC_OK
+        ''           |''        | 'application/rdf+xml'  || 'application/rdf+xml' | SC_OK
         ''           |''        | 'x/x'                  || 'application/ld+json' | SC_OK
         '/data-view' |'.invalid'| '*/*'                  || 'application/json'    | SC_NOT_FOUND
         '/data'      |'.invalid'| '*/*'                  || 'application/json'    | SC_NOT_FOUND
@@ -562,15 +578,15 @@ class CrudSpec extends Specification {
         ''           | ''        | 'application/ld+json'  || 'application/ld+json' | true        | false
         ''           | ''        | 'application/json'     || 'application/json'    | true        | true
 
-        '/data'      | ''        | '*/*'                  || 'application/ld+json' | false       | false
-        '/data'      | ''        | 'application/ld+json'  || 'application/ld+json' | false       | false
-        '/data'      | '.jsonld' | '*/*'                  || 'application/ld+json' | false       | false
-        '/data'      | '.jsonld' | 'application/ld+json'  || 'application/ld+json' | false       | false
-        '/data'      | '.jsonld' | 'application/json'     || 'application/ld+json' | false       | false
+        '/data'      | ''        | '*/*'                  || 'application/ld+json' | true        | false
+        '/data'      | ''        | 'application/ld+json'  || 'application/ld+json' | true        | false
+        '/data'      | '.jsonld' | '*/*'                  || 'application/ld+json' | true        | false
+        '/data'      | '.jsonld' | 'application/ld+json'  || 'application/ld+json' | true        | false
+        '/data'      | '.jsonld' | 'application/json'     || 'application/ld+json' | true        | false
 
-        '/data'      | ''        | 'application/json'     || 'application/json'    | false       | true
-        '/data'      | '.json'   | '*/*'                  || 'application/json'    | false       | true
-        '/data'      | '.json'   | 'application/ld+json'  || 'application/json'    | false       | true
+        '/data'      | ''        | 'application/json'     || 'application/json'    | true        | true
+        '/data'      | '.json'   | '*/*'                  || 'application/json'    | true        | true
+        '/data'      | '.json'   | 'application/ld+json'  || 'application/json'    | true        | true
 
         '/data-view' | ''        | '*/*'                  || 'application/ld+json' | true        | false
         '/data-view' | ''        | 'application/ld+json'  || 'application/ld+json' | true        | false

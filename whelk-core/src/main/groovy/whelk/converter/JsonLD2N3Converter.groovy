@@ -11,17 +11,17 @@ import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.util.PropertyLoader
 
-class JsonLD2RdfXml implements FormatConverter {
+class JsonLD2N3Converter implements FormatConverter {
 
     static final ObjectMapper mapper = new ObjectMapper()
 
     Map m_context = null
 
-    JsonLD2RdfXml(Whelk whelk = null) {
-       if (whelk) {
-           m_context = [:]
-           m_context[JsonLd.CONTEXT_KEY] = whelk.jsonld.context
-       }
+    JsonLD2N3Converter(Whelk whelk = null) {
+        if (whelk) {
+            m_context = [:]
+            m_context[JsonLd.CONTEXT_KEY] = whelk.jsonld.context
+        }
     }
 
     Map convert(Map originaldata, String id) {
@@ -35,7 +35,7 @@ class JsonLD2RdfXml implements FormatConverter {
         Model model = ModelFactory.createDefaultModel()
         ByteArrayOutputStream baos = new ByteArrayOutputStream()
         model = model.read(input, Document.BASE_URI.toString(), "JSONLD")
-        RDFWriter writer = model.getWriter("RDF/XML")
+        RDFWriter writer = model.getWriter("N3")
         writer.setProperty("allowBadURIs","true")
         writer.write(model, baos, "")
 
@@ -49,7 +49,7 @@ class JsonLD2RdfXml implements FormatConverter {
     }
 
     public String getResultContentType() {
-        return "application/rdf+xml"
+        return "text/n3"
     }
 
     private synchronized readContextFromDb() {
