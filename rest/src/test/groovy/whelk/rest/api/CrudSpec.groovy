@@ -427,10 +427,9 @@ class CrudSpec extends Specification {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         def doc = new Document(["@graph": [
-                ["@id": id, 'mainEntity': ["@id": "$id#it"]], 
-                ["@id": "$id#it", '@type': 'Instance', 'prop1': ['@id': 'https://foo']]
+                ['@id': id, 'mainEntity': ['@id': "$id#it"]], 
+                ['@id': "$id#it", '@type': 'Instance', 'prop1': ['@id': 'https://foo']]
         ]])
-        doc.setModified(new Date())
         request.getPathInfo() >> { '/' + id}
         request.getHeader("Accept") >> { "*/*" }
         request.getHeader("If-None-Match") >> { eTag }
@@ -442,8 +441,8 @@ class CrudSpec extends Specification {
             def iris = ['https://foo']
             iris.collect {
                 ["@graph": [
-                        ["@id": it, 'mainEntity': ["@id": "$it#it"]],
-                        ["@id": "$it#it"]
+                        ['@id': it, 'mainEntity': ['@id': "$it#it"]],
+                        ['@id': "$it#it"]
                 ]]
             }
         }
@@ -453,17 +452,17 @@ class CrudSpec extends Specification {
         response.getStatus() == status
 
         where:
-        // checksum             -1856151741
-        // checksum embellished -5527327606
+        // checksum             -1856152111
+        // checksum embellished -5527328642
 
         embellished | eTag                      || status
-        false       | '-1856151741'             || SC_NOT_MODIFIED
-        false       | "-1856151741:-5527327606" || SC_NOT_MODIFIED
-        false       | "-1856151741:other"       || SC_NOT_MODIFIED
+        false       | '-1856152111'             || SC_NOT_MODIFIED
+        false       | "-1856152111:-5527328642" || SC_NOT_MODIFIED
+        false       | "-1856152111:other"       || SC_NOT_MODIFIED
         false       | "other"                   || SC_OK
 
-        true        | '-1856151741'             || SC_OK
-        true        | '-1856151741:-5527327606' || SC_NOT_MODIFIED
+        true        | '-1856152111'             || SC_OK
+        true        | '-1856152111:-5527328642' || SC_NOT_MODIFIED
         true        | "-1856151741:other"       || SC_OK
         true        | "other"                   || SC_OK
     }

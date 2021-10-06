@@ -1,6 +1,5 @@
 package whelk.rest.api
 
-
 import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
 import io.prometheus.client.Counter
@@ -34,7 +33,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.lang.management.ManagementFactory
 
-import static whelk.rest.api.CrudUtils.*
+import static whelk.rest.api.CrudUtils.ETag
 import static whelk.rest.api.HttpTools.sendError
 import static whelk.rest.api.HttpTools.sendResponse
 
@@ -228,7 +227,7 @@ class Crud extends HttpServlet {
             ETag eTag = request.shouldEmbellish()
                     ? ETag.embellished(checksum, doc.getChecksum(jsonld))
                     : ETag.plain(checksum)
-            
+
             if (request.getIfNoneMatch().map(eTag.&isNotModified).orElse(false)) {
                 sendNotModified(response, eTag)
                 return
@@ -242,7 +241,7 @@ class Crud extends HttpServlet {
                     request.getContentType())
         }
     }
-    
+
     private void sendNotModified(HttpServletResponse response, ETag eTag) {
         setVary(response)
         response.setHeader("ETag", eTag.toString())

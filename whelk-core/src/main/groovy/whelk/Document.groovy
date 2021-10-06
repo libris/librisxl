@@ -883,6 +883,8 @@ class Document {
             return term
         else if (node instanceof String)
             return node.hashCode() * depth
+        else if (node instanceof GString)
+            return node.toString().hashCode() * depth
         else if (node instanceof Boolean)
             return node.booleanValue() ? depth : term
         else if (node instanceof Integer)
