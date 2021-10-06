@@ -44,8 +44,6 @@ import static whelk.rest.api.HttpTools.getBaseUri
  */
 @Log
 class Crud extends HttpServlet {
-
-    final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
     final static String XL_ACTIVE_SIGEL_HEADER = 'XL-Active-Sigel'
     final static String CONTEXT_PATH = '/context.jsonld'
 
@@ -1006,21 +1004,6 @@ class Crud extends HttpServlet {
         }
 
         return false
-    }
-
-    @Deprecated
-    static List<String> getAlternateIdentifiersFromLinkHeaders(HttpServletRequest request) {
-        def alts = []
-        for (link in request.getHeaders("Link")) {
-            def (id, rel) = link.split(";")*.trim()
-            if (rel.replaceAll(/"/, "") == "rel=${SAMEAS_NAMESPACE}") {
-                def match = id =~ /<([\S]+)>/
-                if (match.matches()) {
-                    alts << match[0][1]
-                }
-            }
-        }
-        return alts
     }
 
     @Override
