@@ -80,7 +80,7 @@ class Util {
     }
     
     static List flatTitles(List hasTitle) {
-        hasTitle.collect(Util.&dropGenericSubTitles).collect {
+        dropGenericSubTitles(hasTitle).collect {
             def title = new TreeMap<>()
             title['flatTitle'] = normalize(Doc.flatten(it, titleComponents))
             if (it['@type']) {
