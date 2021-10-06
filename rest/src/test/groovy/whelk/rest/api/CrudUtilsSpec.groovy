@@ -40,7 +40,7 @@ class CrudUtilsSpec extends Specification {
         CrudUtils.getBestContentType(request) == contentType
         where:
         accept                                              | suffix    || contentType
-        "text/turtle"                                       | ''        || "application/ld+json"
+        "text/turtle"                                       | ''        || "text/turtle"
         "application/json"                                  | ''        || "application/json"
         "application/ld+json"                               | ''        || "application/ld+json"
         "*/*"                                               | ''        || "application/ld+json"
@@ -50,11 +50,15 @@ class CrudUtilsSpec extends Specification {
         "*/*"                                               | ".json"   || "application/json"
         "application/ld+json"                               | ".json"   || "application/json"
         "application/x-octet-stream"                        | ''        || "application/ld+json"
-        "text/turtle;q=0.8"                                 | ''        || "application/ld+json"
-        "text/turtle, application/json;q=0.8"               | ''        || "application/json"
+        "*/*"                                               | ".ttl"    || "text/turtle"
+        "text/turtle;q=0.8"                                 | ''        || "text/turtle"
+        "text/turtle, application/json;q=0.8"               | ''        || "text/turtle"
+        "*/*"                                               | '.rdf'    || "application/rdf+xml"
+        "*/*"                                               | '.xml'    || "application/rdf+xml"
+        "application/rdf+xml"                               | ''        || "application/rdf+xml"
         "text/turtle;q=0.1, application/json;q=0.8"         | ''        || "application/json"
-        "*/*, text/turtle;q=0.1, application/json;q=0.8"    | ''        || "application/ld+json"
-        "text/turtle, application/signed-exchange;v=b3"     | ''        || "application/ld+json"
+        "*/*, text/turtle;q=0.1, application/json;q=0.8"    | ''        || "application/json"
+        "text/turtle, application/signed-exchange;v=b3"     | ''        || "text/turtle"
     }
 
     def "Should throw on invalid suffix"() {
@@ -72,7 +76,7 @@ class CrudUtilsSpec extends Specification {
         thrown(Crud.NotFoundException)
 
         where:
-        suffix << ['.rdf', '.ttl', '.invalid']
+        suffix << ['.invalid']
     }
 
     static final def m = MediaType.&parse
