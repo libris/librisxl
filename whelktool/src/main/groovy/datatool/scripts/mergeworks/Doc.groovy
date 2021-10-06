@@ -215,7 +215,7 @@ class Doc {
         return s.toString()
     }
 
-    private static String flatten(Object o, List order, String mapSeparator = ': ') {
+    static String flatten(Object o, List order, String mapSeparator = ': ') {
         if (o instanceof String) {
             return o
         }

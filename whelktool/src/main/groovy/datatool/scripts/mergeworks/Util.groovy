@@ -65,7 +65,7 @@ class Util {
         hasTitle.any { it['mainTitle'] && normalize((String) it['mainTitle']) in GENERIC_TITLES }
     }
     
-    static List flatTitles(List hasTitle) {
+    static List dropGenericSubTitles(List hasTitle) {
         hasTitle.collect {
             def copy = new TreeMap(it)
             if (copy['subtitle'] || copy['titleRemainder']) {
@@ -75,11 +75,16 @@ class Util {
                     }
                 }
             }
-
+            copy
+        }
+    }
+    
+    static List flatTitles(List hasTitle) {
+        hasTitle.collect(Util.&dropGenericSubTitles).collect {
             def title = new TreeMap<>()
-            title['flatTitle'] = normalize(Doc.flatten(copy, titleComponents))
-            if (copy['@type']) {
-                title['@type'] = copy['@type']
+            title['flatTitle'] = normalize(Doc.flatten(it, titleComponents))
+            if (it['@type']) {
+                title['@type'] = it['@type']
             }
 
             title
@@ -165,6 +170,7 @@ class Util {
                 continue
             }
 
+            titles = titles.collect(Util.&dropGenericSubTitles)
             return Util.partition(titles, { a, b -> a == b } ).sort { it.size() }.reverse().first().first()
         }
 
