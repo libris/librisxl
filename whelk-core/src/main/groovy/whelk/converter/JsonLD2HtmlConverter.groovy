@@ -20,13 +20,16 @@ class JsonLD2HtmlConverter implements FormatConverter {
         Map thingChipMap = whelk.jsonld.toChipAsMapByLang(source['@graph'][1],
                 ElasticSearch.LANGUAGES_TO_INDEX, ElasticSearch.REMOVABLE_BASE_URIS)
 
+        String recordTitle = recordChipMap['sv'].toString().trim().split(',').first()
+        String thingTitle = thingChipMap['sv'].toString().trim()
+
         TemplateConfiguration config = new TemplateConfiguration()
         config.setAutoEscape(true)
         MarkupTemplateEngine engine = new MarkupTemplateEngine(config)
         Template template = engine.createTemplateByPath('html_resource.tpl')
 
         Map<String, Object> model = [
-                'title': "${recordChipMap['sv'].toString().trim()} (${thingChipMap['sv'].toString().trim()})",
+                'title': "${recordTitle} (${thingTitle})",
                 'record': source['@graph'][0],
                 'thing': source['@graph'][1]
         ]
