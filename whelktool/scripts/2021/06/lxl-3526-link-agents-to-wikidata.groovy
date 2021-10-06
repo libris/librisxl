@@ -274,11 +274,11 @@ Map getPropertiesFromLibris(Map instance) {
     if (deathYears)
         props["deathYear"] = deathYears
 
-    List viaf = instance.identifiedBy?.findResults { it."@type" == "VIAF" ? it."value" : null }
+    List viaf = instance.identifiedBy?.findResults { it."@type" == "VIAF" && it."value" ? it."value".replaceAll(/\W/, '') : null }
     if (viaf)
         props["viaf"] = viaf
 
-    List isni = instance.identifiedBy?.findResults { it."@type" == "ISNI" ? it."value" : null }
+    List isni = instance.identifiedBy?.findResults { it."@type" == "ISNI" && it."value" ? it."value".replaceAll(/\W/, '') : null }
     if (isni)
         props["isni"] = isni
 

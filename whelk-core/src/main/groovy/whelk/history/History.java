@@ -47,6 +47,20 @@ public class History {
     }
 
     /**
+     * Get the set of owners for path and everything under it.
+     */
+    public Set<Ownership> getSubtreeOwnerships(List<Object> path) {
+        Set<Ownership> owners = new HashSet<>();
+        for (Object keyObject : m_pathOwnership.keySet()) {
+            List<Object> key = (List<Object>) keyObject;
+            if (key.size() >= path.size() && key.subList(0, path.size()).equals(path)) { // A path below (more specific) than 'path'
+                owners.add(m_pathOwnership.get(key));
+            }
+        }
+        return owners;
+    }
+
+    /**
      * Examine differences between (what would presumably be) the same entity
      * in two versions of a record.
      *

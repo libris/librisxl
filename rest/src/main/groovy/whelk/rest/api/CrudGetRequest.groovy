@@ -2,6 +2,8 @@ package whelk.rest.api
 
 import javax.servlet.http.HttpServletRequest
 
+import static whelk.rest.api.CrudUtils.*
+
 class CrudGetRequest {
     private HttpServletRequest request
     private String resourceId
@@ -16,7 +18,7 @@ class CrudGetRequest {
     private CrudGetRequest(HttpServletRequest request) {
         this.request = request
         parsePath(getPath())
-        contentType = CrudUtils.getBestContentType(request)
+        contentType = getBestContentType(request)
         lens = parseLens(request)
     }
 
@@ -36,10 +38,10 @@ class CrudGetRequest {
         return Optional.ofNullable(request.getParameter("version"))
     }
 
-    Optional<String> getIfNoneMatch() {
+    Optional<ETag> getIfNoneMatch() {
         return Optional
                 .ofNullable(request.getHeader("If-None-Match"))
-                .map(CrudUtils.&cleanEtag)
+                .map(ETag.&parse)
     }
 
     String getContentType() {

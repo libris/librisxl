@@ -10,6 +10,7 @@ import org.apache.http.NameValuePair
 import org.apache.http.message.BasicHeaderValueParser
 
 import javax.servlet.http.HttpServletRequest
+import java.lang.management.ManagementFactory
 
 @Log
 class CrudUtils {
@@ -110,15 +111,7 @@ class CrudUtils {
          */
         return allowedMimeTypes.isEmpty() ? JSONLD : allowedMimeTypes[0]
     }
-
-    static String cleanEtag(String str) {
-        return stripQuotes(str)?.replaceAll('-gzip', '')
-    }
-
-    private static String stripQuotes(String str) {
-        return str?.replaceAll('"', '')
-    }
-
+    
     /**
      * Returns a sorted list of media types accepted by the client
      */
@@ -188,8 +181,8 @@ class CrudUtils {
                 MediaType m = MediaType.parse(element.name).withParameters(parameters)
                 return new AcceptMediaType(m, q)
             }
-            catch (IllegalArgumentException e) {
-                throw new BadRequestException('Invalid media type in Accept header': element.toString())
+            catch (IllegalArgumentException ignored) {
+                throw new BadRequestException("Invalid media type in Accept header': $element")
             }
         }
 
@@ -200,6 +193,75 @@ class CrudUtils {
             catch (NumberFormatException e) {
                 throw new BadRequestException("Invalid q value in Accept header:" + value)
             }
+        }
+    }
+
+    static class ETag {
+        static final ETag SYSTEM_START = plain("${ManagementFactory.getRuntimeMXBean().getStartTime()}")
+        
+        private static final String SEPARATOR = ':'
+        
+        private String plain = null
+        private String embellished = null
+
+        private ETag(String checksum) {
+            plain = checksum
+        }
+
+        private ETag(String checksum, String checksumEmbellished) {
+            plain = checksum
+            embellished = checksumEmbellished
+        }
+
+        String documentCheckSum() {
+            return plain
+        }
+        
+        static ETag parse(String eTag) {
+            if(!eTag) {
+                return plain(null)
+            }
+            
+            eTag = cleanEtag(eTag)
+            
+            if (eTag.contains(SEPARATOR)) {
+                def e = eTag.split(SEPARATOR)
+                embellished(e[0], e[1])
+            }
+            else {
+                plain(eTag)
+            }
+        }
+
+
+        static ETag plain(String checksum) {
+            new ETag(checksum)
+        }
+
+        static ETag embellished(String checksum, String checksumEmbellish) {
+            new ETag(checksum, checksumEmbellish)
+        }
+
+        String toString() {
+            embellished ? "$plain$SEPARATOR$embellished" : plain
+        }
+        
+        boolean isNotModified(ETag ifNoneMatch) {
+            if (plain != ifNoneMatch.plain) {
+                return false
+            }
+            if (embellished && embellished != ifNoneMatch.embellished) {
+                return false
+            }
+            return true
+        }
+
+        private static String cleanEtag(String str) {
+            return stripQuotes(str)?.replaceAll('-gzip', '')
+        }
+
+        private static String stripQuotes(String str) {
+            return str?.replaceAll('"', '')
         }
     }
 }

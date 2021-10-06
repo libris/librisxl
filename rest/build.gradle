@@ -32,11 +32,6 @@ sourceSets {
 }
 
 test {
-    systemProperty 'xl.secret.properties', '../secret.properties'
-}
-
-test {
-    systemProperty 'xl.secret.properties', '../secret.properties'
     jacoco {
         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
         classDumpDir = file("$buildDir/jacoco/classpathdumps")

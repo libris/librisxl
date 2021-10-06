@@ -1,6 +1,5 @@
 package whelk.rest.api
 
-
 import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
 import io.prometheus.client.Counter
@@ -34,9 +33,11 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.lang.management.ManagementFactory
 
-import static whelk.rest.api.HttpTools.getBaseUri
+import static whelk.rest.api.CrudUtils.ETag
+
 import static whelk.rest.api.HttpTools.sendError
 import static whelk.rest.api.HttpTools.sendResponse
+import static whelk.rest.api.HttpTools.getBaseUri
 
 /**
  * Handles all GET/PUT/POST/DELETE requests against the backend.
@@ -46,7 +47,6 @@ class Crud extends HttpServlet {
 
     final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
     final static String XL_ACTIVE_SIGEL_HEADER = 'XL-Active-Sigel'
-    final static String EPOCH_START = '1970/1/1'
     final static String CONTEXT_PATH = '/context.jsonld'
 
     static final Counter requests = Counter.build()
@@ -242,13 +242,13 @@ class Crud extends HttpServlet {
         def marcframePath = "/sys/marcframe.json"
         if (request.pathInfo == marcframePath) {
             def responseBody = getClass().classLoader.getResourceAsStream("ext/marcframe.json").getText("utf-8")
-            sendGetResponse(response, responseBody, EPOCH_START, marcframePath, "application/json")
+            sendGetResponse(response, responseBody, ETag.SYSTEM_START, marcframePath, "application/json")
             return
         }
         
         try {
             String activeSite = request.getAttribute('activeSite')
-            if (siteConfig['sites'][activeSite].get('applyInverseOf', false)) {
+            if (siteConfig['sites'][activeSite]?.get('applyInverseOf', false)) {
                 request.setAttribute('_applyInverseOf', "true")
             }
 
@@ -291,30 +291,44 @@ class Crud extends HttpServlet {
             sendNotFound(response, request.getPath())
         } else if (!doc && loc) {
             sendRedirect(request.getHttpServletRequest(), response, loc)
-        } else if (!request.shouldEmbellish() && isNotModified(request, doc)) {
-            sendNotModified(response, doc)
         } else if (doc.deleted) {
             failedRequests.labels("GET", request.getPath(),
                     HttpServletResponse.SC_GONE.toString()).inc()
             sendError(response, HttpServletResponse.SC_GONE, "Document has been deleted.")
         } else {
+            String checksum = doc.getChecksum(jsonld)
+            
+            if (request.shouldEmbellish()) {
+                whelk.embellish(doc)
+
+                // reverse links are inserted by embellish, so can only do this when embellished
+                if (request.shouldApplyInverseOf()) {
+                    doc.applyInverses(whelk.jsonld)
+                }
+            }
+            
+            ETag eTag = request.shouldEmbellish()
+                    ? ETag.embellished(checksum, doc.getChecksum(jsonld))
+                    : ETag.plain(checksum)
+
+            if (request.getIfNoneMatch().map(eTag.&isNotModified).orElse(false)) {
+                sendNotModified(response, eTag)
+                return
+            }
+            
             sendGetResponse(
                     maybeAddProposal25Headers(response, loc),
                     getFormattedResponseBody(request, doc),
-                    doc.getChecksum(jsonld),
+                    eTag,
                     request.getPath(),
                     request.getContentType(),
                     request.getId())
         }
     }
 
-    private boolean isNotModified(CrudGetRequest request, Document doc) {
-        request.getIfNoneMatch().map({ etag -> etag == doc.getChecksum(jsonld) }).orElse(false)
-    }
-
-    private void sendNotModified(HttpServletResponse response, Document doc) {
+    private void sendNotModified(HttpServletResponse response, ETag eTag) {
         setVary(response)
-        response.setHeader("ETag", "\"${doc.getChecksum(jsonld)}\"")
+        response.setHeader("ETag", eTag.toString())
         response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
         sendError(response, HttpServletResponse.SC_NOT_MODIFIED, "Document has not been modified.")
     }
@@ -328,16 +342,6 @@ class Crud extends HttpServlet {
     private Object getFormattedResponseBody(CrudGetRequest request, Document doc) {
         log.debug("Formatting document {}. embellished: {}, framed: {}, lens: {}",
                 doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame(), request.getLens())
-
-        if (request.shouldEmbellish()) {
-            doc = doc.clone() // FIXME: this is because ETag calculation is done on non-embellished doc...
-            whelk.embellish(doc)
-
-            // reverse links are inserted by embellish, so can only do this when embellished
-            if (request.shouldApplyInverseOf()) {
-                doc.applyInverses(whelk.jsonld)
-            }
-        }
 
         def transformedResponse
         if (request.getLens() != Lens.NONE) {
@@ -495,8 +499,8 @@ class Crud extends HttpServlet {
      *
      */
     void sendGetResponse(HttpServletResponse response,
-                         Object responseBody, String modified, String path,
-                         String contentType, String requestId) {
+                         Object responseBody, ETag eTag, String path,
+                         String contentType, String requestId = null) {
         // FIXME remove?
         String ctxHeader = contextHeaders.get(path.split("/")[1])
         if (ctxHeader) {
@@ -506,18 +510,11 @@ class Crud extends HttpServlet {
                             "type=\"application/ld+json\"")
         }
 
-        String etag = modified
-
-        if (etag == EPOCH_START) {
-            // For some resources, we want to set the etag to when the system was started
-            response.setHeader("ETag", "\"${ManagementFactory.getRuntimeMXBean().getStartTime()}\"")
-        } else {
-            response.setHeader("ETag", "\"${etag}\"")
-        }
-
         if (contentType == MimeTypes.JSONLD && responseBody instanceof Map && requestId != whelk.vocabContextUri) {
             responseBody[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
         }
+
+        response.setHeader("ETag", eTag.toString())
 
         if (path in contextHeaders.collect { it.value }) {
             log.debug("request is for context file. " +
@@ -869,12 +866,16 @@ class Crud extends HttpServlet {
                     // You are not allowed to change collection when updating a record
                     if (collection != whelk.storage.getCollectionBySystemID(doc.getShortId())) {
                         log.warn("Refused API update of document due to changed 'collection'")
-                        return null
+                        throw new BadRequestException("Cannot change legacy collection for document. Legacy collection is mapped from entity @type.")
                     }
 
-                    String ifMatch = CrudUtils.cleanEtag(request.getHeader("If-Match"))
+                    ETag ifMatch = Optional
+                            .ofNullable(request.getHeader("If-Match"))
+                            .map(ETag.&parse)
+                            .orElseThrow({ -> new BadRequestException("Missing If-Match header in update") })
+                    
                     log.info("If-Match: ${ifMatch}")
-                    whelk.storeAtomicUpdate(doc, false, "xl", activeSigel, ifMatch)
+                    whelk.storeAtomicUpdate(doc, false, "xl", activeSigel, ifMatch.documentCheckSum())
                 }
                 else {
                     log.debug("Saving NEW document ("+ doc.getId() +")")
@@ -918,7 +919,7 @@ class Crud extends HttpServlet {
             sendError(response, HttpServletResponse.SC_BAD_REQUEST,
                     "Failed to acquire a necessary lock. Did you submit a holding record without a valid bib link? " + e.message)
             return null
-        } catch (LinkValidationException | PostgreSQLComponent.ConflictingHoldException e) {
+        } catch (LinkValidationException | PostgreSQLComponent.ConflictingHoldException | BadRequestException e) {
             failedRequests.labels(httpMethod, request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             sendError(response, HttpServletResponse.SC_BAD_REQUEST, e.getMessage())

@@ -97,7 +97,7 @@ class DependencyCache {
             Set<String> load(Link link) {
                 try {
                     def iris = func.apply(storage.getSystemIdByThingId(link.iri), link.relation)
-                            .collect(storage.&getThingMainIriBySystemId)
+                            .findResults (this.&tryGetThingMainIriBySystemId)
 
                     return iris.isEmpty()
                             ? Collections.EMPTY_SET
@@ -106,6 +106,16 @@ class DependencyCache {
                 catch (MissingMainIriException e) {
                     log.warn("Missing Main IRI: $e")
                     return Collections.EMPTY_SET
+                }
+            }
+            
+            private String tryGetThingMainIriBySystemId(String systemId) {
+                try {
+                    return storage.getThingMainIriBySystemId(systemId)
+                }
+                catch (MissingMainIriException ignored) {
+                    log.warn("Missing thing main IRI for $systemId. Deleted?")
+                    return null
                 }
             }
 
