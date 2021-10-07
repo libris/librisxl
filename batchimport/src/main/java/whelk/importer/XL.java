@@ -775,7 +775,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"Identifier\", \"typeNote\": \"uri\", \"value\": \"" + uri + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"URI\", \"value\": \"" + uri + "\"}]", java.sql.Types.OTHER);
 
         return statement;
     }
@@ -786,7 +786,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"Identifier\", \"typeNote\": \"urn\", \"value\": \"" + urn + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"URN\", \"value\": \"" + urn + "\"}]", java.sql.Types.OTHER);
 
         return statement;
     }
