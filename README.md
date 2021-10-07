@@ -82,6 +82,12 @@ for e.g. Fedora/CentOS/RHEL with minor adjustments.
     sudo apt install openjdk-8-jdk # or openjdk-8-headless
     ```
 
+5. [Apache](https://httpd.apache.org/)
+
+    ```
+    sudo apt install apache2
+    ```
+
 ## Setup
 
 ### Cloning repositories
@@ -227,7 +233,99 @@ The system is then available on <http://localhost:8180>.
 (The OAI-PMH service is started in a similar way: just cd into `oaipmh`
 instead of `rest`.)
 
-To run the frontend, see [LXLViewer](https://github.com/libris/lxlviewer).
+To run the frontend, first set up LXLViewer and the id.kb.se web app
+(follow the README in each):
+
+* [LXLViewer](https://github.com/libris/lxlviewer)
+* [id.kb.se](https://github.com/libris/id.kb.se)
+
+At this point, you should have the LXLViewer cataloging client running on port 8080
+and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
+`/etc/apache2/sites-enabled/000-default.conf` and add the following:
+
+```
+<VirtualHost *:5000>
+    ServerName kblocalhost.kb.se
+    ProxyRequests Off
+    ProxyPreserveHost On
+
+    RewriteEngine On
+
+    ProxyPassMatch ^/vocab/(data.*) http://localhost:8180/https://id.kb.se/vocab//$1
+    ProxyPass /vocab http://localhost:8180/https://id.kb.se/vocab
+    ProxyPass /context.jsonld http://localhost:8180/https://id.kb.se/vocab/context
+
+    RewriteCond %{REQUEST_METHOD} ^(POST|PUT|DELETE|OPTIONS)$
+    RewriteRule ^/data(.*)$ http://localhost:8180/$1 [P,L]
+
+    ProxyPass / http://localhost:8180/
+
+    AddOutputFilterByType DEFLATE text/css text/html text/plain text/xml
+    AddOutputFilterByType DEFLATE application/x-javascript text/x-component application/javascript
+    AddOutputFilterByType DEFLATE application/json application/ld+json
+</VirtualHost>
+
+<VirtualHost *:5000>
+    ServerName id.kblocalhost.kb.se
+    ProxyRequests Off
+    ProxyPreserveHost On
+
+    RewriteEngine On
+
+    RewriteCond %{HTTP_ACCEPT} (text/html|application/xhtml|\*/\*) [OR]
+    RewriteCond %{HTTP_ACCEPT} ^$
+    RewriteCond %{REQUEST_URI} !\.(json|jsonld)$
+    RewriteCond %{REQUEST_URI} !data\..+$
+    RewriteRule ^/(.*)$ http://localhost:3000/$1 [P,L]
+    ProxyPass /_nuxt http://localhost:3000/_nuxt
+    ProxyPass /_loading http://localhost:3000/_loading
+    ProxyPass /__webpack_hmr http://localhost:3000/__webpack_hmr
+
+    ProxyPassMatch ^/vocab/(data.*) http://localhost:8180/https://id.kb.se/vocab//$1
+    ProxyPass /vocab http://localhost:8180/https://id.kb.se/vocab
+    ProxyPass /vocab/display/data.jsonld http://localhost:8180/https://id.kb.se/vocab/display
+    ProxyPass /context.jsonld http://localhost:8180/https://id.kb.se/vocab/context
+
+    ProxyPassMatch ^/(data.*)$ http://localhost:8180/$1
+    ProxyPassMatch ^/find(.*) http://localhost:8180/find$1
+
+    ProxyPassMatch ^/(http.*)$ http://localhost:8180/$1
+    ProxyPassMatch ^/(.*) http://localhost:8180/https://id.kb.se/$1
+
+    AddOutputFilterByType DEFLATE text/css text/html text/plain text/xml
+    AddOutputFilterByType DEFLATE application/x-javascript text/x-component application/javascript
+    AddOutputFilterByType DEFLATE application/json application/ld+json
+</VirtualHost>
+```
+
+Edit `/etc/apache2/ports.conf` and add the following line:
+
+```
+Listen 5000
+```
+
+Add these lines to `/etc/hosts`:
+
+```
+127.0.0.1 kblocalhost.kb.se
+127.0.0.1 id.kblocalhost.kb.se
+```
+
+Make sure some necessary Apache modules are enabled:
+
+```
+a2enmod rewrite proxy proxy_http
+```
+
+Now (re)start Apache:
+
+```
+systemctl restart apache2
+```
+
+You should now able to visit http://id.kblocalhost.kb.se, and use the cataloging client
+on http://localhost:8080/katalogisering/. The XL API itself is available on
+http://kblocalhost.kb.se:5000 (proxied via Apache), or directly on http://localhost:8180.
 
 ## Maintenance
 
