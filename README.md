@@ -237,7 +237,7 @@ To run the frontend, first set up LXLViewer and the id.kb.se web app
 (follow the README in each):
 
 * [LXLViewer](https://github.com/libris/lxlviewer)
-* [id.kb.se](https://github.com/libris/id.kb.se)
+* [id.kb.se](https://github.com/libris/id.kb.se) (set `API_PATH=http://id.kblocalhost.kb.se:5000` in `.env`)
 
 At this point, you should have the LXLViewer cataloging client running on port 8080
 and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
