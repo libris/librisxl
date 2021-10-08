@@ -45,6 +45,10 @@ class JsonLd {
     static final String ABOUT_KEY = "mainEntity"
     static final String APIX_FAILURE_KEY = "apixExportFailedAt"
     static final String ENCODING_LEVEL_KEY = "marc:encLevel"
+    
+    static final String CACHE_RECORD_TYPE = 'CacheRecord'
+    static final String PLACEHOLDER_RECORD_TYPE = 'PlaceholderRecord'
+    static final String PLACEHOLDER_ENTITY_TYPE = 'Resource'
 
     static final String SEARCH_KEY = "_str"
 
@@ -497,6 +501,10 @@ class JsonLd {
 
     static List asList(o) {
         return (o instanceof List) ? (List) o : o != null ? [o] : []
+    }
+    
+    static boolean looksLikeIri(String s) {
+        s.startsWith('https://') || s.startsWith('http://')
     }
 
     static List<List<String>> findPaths(Map obj, String key, String value) {

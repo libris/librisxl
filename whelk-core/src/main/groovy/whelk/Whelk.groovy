@@ -2,6 +2,8 @@ package whelk
 
 import com.google.common.collect.Iterables
 import groovy.transform.CompileStatic
+import groovy.transform.TypeChecked
+import groovy.transform.TypeCheckingMode
 import groovy.util.logging.Log4j2 as Log
 import se.kb.libris.Normalizers
 import whelk.component.CachingPostgreSQLComponent
@@ -15,9 +17,11 @@ import whelk.filter.LinkFinder
 import whelk.filter.NormalizerChain
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
+import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 
 import java.time.ZoneId
+import java.util.function.Function
 
 /**
  * The Whelk is the root component of the XL system.
@@ -36,6 +40,7 @@ class Whelk {
     JsonLd jsonld
     MarcFrameConverter marcFrameConverter
     Relations relations
+    External external = new External(this)
     DocumentNormalizer normalizer
     ElasticFind elasticFind
     ZoneId timezone = ZoneId.of('Europe/Stockholm')
@@ -222,6 +227,7 @@ class Whelk {
         Set<Link> addedLinks = (postUpdateLinks - preUpdateLinks)
         Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
 
+        //TODO: fails for placeholders...
         removedLinks.findResults { storage.getSystemIdByIri(it.iri) }
                 .each{id -> elastic.decrementReverseLinks(id) }
 
@@ -235,7 +241,7 @@ class Whelk {
                     // we added a link to a document that includes us in its @reverse relations, reindex it
                     elastic.index(doc, this)
                 }
-                else {
+                else if (!doc.isPlaceholder()) {
                     // just update link counter
                     elastic.incrementReverseLinks(id)
                 }
@@ -307,7 +313,7 @@ class Whelk {
     /**
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
-    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean index = true) {
+    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
         normalize(document)
         
         boolean detectCollisionsOnTypedIDs = false
@@ -317,6 +323,7 @@ class Whelk {
             throw new StorageCreateFailedException(document.getShortId(), "Document considered a duplicate of : " + collidingIDs)
         }
 
+        createPlaceholdersAndExternalDocs(document)
         boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
         if (success) {
             if (elastic && !skipIndex) {
@@ -338,6 +345,7 @@ class Whelk {
             preUpdateDoc = doc.clone()
             updateAgent.update(doc)
             normalize(doc)
+            createPlaceholdersAndExternalDocs(doc, preUpdateDoc)
         })
 
         if (updated == null || preUpdateDoc == null) {
@@ -351,6 +359,7 @@ class Whelk {
     void storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum) {
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
+        createPlaceholdersAndExternalDocs(doc, preUpdateDoc)
         Document updated = storage.storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum)
 
         if (updated == null) {
@@ -360,7 +369,7 @@ class Whelk {
         reindex(updated, preUpdateDoc)
         sparqlUpdater?.pollNow()
     }
-
+    
     /**
      * This is a variant of createDocument that does no or minimal denormalization or indexing.
      * It should NOT be used to create records in a production environment. Its intended purpose is
@@ -389,10 +398,11 @@ class Whelk {
                 updated.getThingIdentifiers()[0] &&
                 updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]
     }
-
+    @TypeChecked(TypeCheckingMode.SKIP)
     void embellish(Document document, List<String> levels = null) {
-        def docsByIris = { List<String> iris -> bulkLoad(iris).values().collect{ it.data } }
-        Embellisher e = new Embellisher(jsonld, docsByIris, storage.&getCards, relations.&getByReverse)
+        def getDocs = andGetExternal({ List<String> iris -> bulkLoad(iris).values().collect{ it.data } })
+        def getCards = andGetExternal(storage.&getCards, true)
+        Embellisher e = new Embellisher(jsonld, getDocs, getCards, relations.&getByReverse)
 
         if(levels) {
             e.setEmbellishLevels(levels)
@@ -400,7 +410,40 @@ class Whelk {
 
         e.embellish(document)
     }
-
+    
+    //FIXME
+    @TypeChecked(TypeCheckingMode.SKIP)
+    private def andGetExternal(Function<Iterable<String>, Iterable<Map>> f, cards = false) {
+        def thingId = { graph -> (String) Document._get(Document.thingIdPath, graph) }
+        
+        return { Iterable<String> iris ->
+            def result = f.apply(iris).collect {
+                def d = new Document(it) 
+                if (d.isPlaceholder()) {
+                    external.getEphemeral(d.getThingIdentifiers().first()).ifPresent({ ext ->
+                        d.setThing(cards ? jsonld.toCard(ext.getThing(), false) : ext.getThing())
+                    })
+                    d.data
+                } else {
+                    it
+                }
+            }
+            
+            // get external for IRIs that don't have placeholders
+            // TODO: only needed if we don't store placeholders for everything
+            def found = result.collect(thingId)
+            def missing = ((iris as Set) - (found as Set)) 
+            def ext = missing
+                    .collect{ external.getEphemeral(it) }
+                    .findAll{ it.isPresent() }
+                    .collect {cards ? jsonld.toCard(it.get().data) : it.get().data }
+            
+            result += ext
+            
+            return result
+        }
+    }
+    
     /**
      * Get cards
      * @param iris
@@ -462,5 +505,54 @@ class Whelk {
 
     ZoneId getTimezone() {
         return timezone
+    }
+
+    private void createPlaceholdersAndExternalDocs(Document postUpdateDoc, Document preUpdateDoc = null) {
+        Set<Link> postUpdateLinks = postUpdateDoc.getExternalRefs()
+        Set<Link> preUpdateLinks = preUpdateDoc?.getExternalRefs() ?: new HashSet<Link>() //Collections.EMPTY_SET groovy compiler...?
+        
+        def iris = { Set<Link> s -> s.collect { it.iri } as Set<String> }
+        Set<String> addedIris = iris(postUpdateLinks) - iris(preUpdateLinks)
+
+        createPlaceholdersAndExternalDocs(iris(postUpdateLinks), !postUpdateDoc.isCacheRecord())
+    }
+
+    private void createPlaceholdersAndExternalDocs(Set<String> iris, boolean tryFetchExternal) {
+        Set<String> brokenOrExternalIris = iris - storage.getSystemIdsByIris(iris).keySet()
+
+        boolean minorUpdate = true
+        def changedIn = 'xl'
+        def changedBy = 'https://libris.kb.se/library/SEK' // FIXME...
+        def collection = LegacyIntegrationTools.NO_MARC_COLLECTION
+        def deleted = false
+        
+        brokenOrExternalIris.each { iri -> 
+            def doc = tryFetchExternal 
+                    ? external.get(iri).orElse(External.getPlaceholder(iri))
+                    : External.getPlaceholder(iri)
+
+            try {
+                createDocument(doc, changedIn, changedBy, collection, deleted)
+            }
+            catch (StorageCreateFailedException ignored) {
+                // Another transaction already created it -> OK 
+            }
+        }
+        
+        // Check if old placeholder records can be replaced with cache records
+        bulkLoad(iris - brokenOrExternalIris).values()
+                .findAll{doc -> doc.isPlaceholder() }
+                .each { doc ->
+                    try {
+                        external.getEphemeral(doc.getThingIdentifiers().first()).ifPresent({ extDoc ->
+                            def checkSum = doc.getChecksum(jsonld)
+                            extDoc.setRecordId(doc.getRecordIdentifiers().first())
+                            storeAtomicUpdate(extDoc, minorUpdate, changedIn, changedBy, checkSum)
+                        })
+                    }
+                    catch (Exception e) { // TODO 
+                        log.warn("Failed to update ${doc.shortId}: $e", e)
+                    }
+                }
     }
 }

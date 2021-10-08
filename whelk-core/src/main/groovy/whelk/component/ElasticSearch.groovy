@@ -150,6 +150,10 @@ class ElasticSearch {
     void bulkIndex(Collection<Document> docs, Whelk whelk) {
         if (docs) {
             String bulkString = docs.findResults{ doc ->
+                if (doc.isPlaceholder()) {
+                    return null
+                }
+                
                 try {
                     String shapedData = getShapeForIndex(doc, whelk)
                     String action = createActionRow(doc)
@@ -188,6 +192,10 @@ class ElasticSearch {
     }
 
     void index(Document doc, Whelk whelk) {
+        if (doc.isPlaceholder()) {
+            return
+        }
+        
         // The justification for this uncomfortable catch-all, is that an index-failure must raise an alert (log entry)
         // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
         try {
