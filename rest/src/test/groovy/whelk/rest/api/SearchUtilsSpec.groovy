@@ -23,16 +23,6 @@ class SearchUtilsSpec extends Specification {
         assert !(urir =~ pattern)
     }
 
-    def "Should make site filter"() {
-        when:
-        String url = "http://example.com"
-        Map expected = ['should': [['prefix': ['@id': url]],
-                                   ['prefix': ['sameAs.@id': url]]],
-                        'minimum_should_match': 1]
-        then:
-        assert search.makeSiteFilter(url) == expected
-    }
-
     def "Should build aggregation query"() {
         when:
         Map tree = ['@type': []]
