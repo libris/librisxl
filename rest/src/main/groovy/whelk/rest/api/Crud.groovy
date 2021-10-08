@@ -679,7 +679,13 @@ class Crud extends HttpServlet {
         try {
             if (doc) {
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
+
                 String collection = doc.getLegacyCollection(jsonld)
+                
+                if (doc.isCacheRecord()) {
+                    throw new BadRequestException("Cannot POST/PUT cache record")
+                }
+                
                 if (isUpdate) {
 
                     // You are not allowed to change collection when updating a record
