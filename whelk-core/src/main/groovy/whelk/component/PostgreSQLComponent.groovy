@@ -905,6 +905,10 @@ class PostgreSQLComponent {
                 }
             }
 
+            if (preUpdateDoc.isCacheRecord() && !doc.isCacheRecord()) {
+                throw new RuntimeException("Cannot change cache record to not be cache record (${doc.getShortId()})")
+            }
+            
             if (doVerifyDocumentIdRetention) {
                 verifyDocumentIdRetention(preUpdateDoc, doc, connection)
             }
