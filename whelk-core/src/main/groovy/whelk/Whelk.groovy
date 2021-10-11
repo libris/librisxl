@@ -281,7 +281,7 @@ class Whelk {
             int graphIndex = ((Integer) typedID[2]).intValue()
 
             // "Identifier" and "SystemNumber" are too general/meaningless to use for duplication checking.
-            if (type.equals("Identifier") || type.equals("SystemNumber"))
+            if (type == "Identifier" || type == "SystemNumber")
                 continue
 
             List<String> collisions = storage.getSystemIDsByTypedID(type, value, graphIndex)
@@ -384,7 +384,7 @@ class Whelk {
         }
     }
 
-    boolean hasChangedMainEntityId(Document updated, Document preUpdateDoc) {
+    static boolean hasChangedMainEntityId(Document updated, Document preUpdateDoc) {
         preUpdateDoc.getThingIdentifiers()[0] &&
                 updated.getThingIdentifiers()[0] &&
                 updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]

@@ -599,35 +599,7 @@ class Document {
     Set<Link> getExternalRefs() {
         return JsonLd.getExternalReferences(this.data)
     }
-
-    private void addRefsWithRelation(Map node, List<String[]> references, String relation) {
-        for (Object keyObject : node.keySet()) {
-            String key = (String) keyObject
-            Object value = node.get(keyObject)
-
-            // Is node a {"@id":"[URI]"} link ?
-            if (key.equals("@id") && node.size() == 1 && value instanceof String) {
-                references.add ([relation, (String) value] as String[])
-            }
-
-            // Keep going down the tree
-            if (value instanceof Map)
-                addRefsWithRelation( (Map) value, references, key )
-            else if ( value instanceof List)
-                addRefsWithRelation( (List) value, references, key )
-        }
-    }
-
-    private void addRefsWithRelation(List node, List<String[]> references, String relation) {
-        // Keep going down the tree
-        for (Object item : node) {
-            if (item instanceof Map)
-                addRefsWithRelation( (Map) item, references, relation )
-            else if ( item instanceof List)
-                addRefsWithRelation( (List) item, references, relation )
-        }
-    }
-
+    
     /**
      * Adds empty structure to the document so that 'path' can be traversed.
      */
