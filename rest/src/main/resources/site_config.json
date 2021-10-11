@@ -36,7 +36,6 @@
       },
       "boost"          : "id.kb.se",
       "filter_param"   : "inScheme.@id",
-      "applyInverseOf" : true,
       "itemList"       : [
         {"@id": "/", "title": "Sök"},
         {"@id": "/marcframe/", "title": "MARC-mappningar"},
