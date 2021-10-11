@@ -332,7 +332,7 @@ class Whelk {
      * The UpdateAgent SHOULD be a pure function since the update will be retried in case the document
      * was modified in another transaction.
      */
-    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
+    void storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
         Document preUpdateDoc = null
         Document updated = storage.storeUpdate(id, minorUpdate, changedIn, changedBy, { Document doc ->
             preUpdateDoc = doc.clone()
@@ -341,20 +341,20 @@ class Whelk {
         })
 
         if (updated == null || preUpdateDoc == null) {
-            return null
+            return
         }
 
         reindex(updated, preUpdateDoc)
         sparqlUpdater?.pollNow()
     }
 
-    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum) {
+    void storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum) {
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
         Document updated = storage.storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum)
 
         if (updated == null) {
-            return null
+            return
         }
         
         reindex(updated, preUpdateDoc)
