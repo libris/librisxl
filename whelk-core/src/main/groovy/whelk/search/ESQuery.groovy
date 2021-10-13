@@ -135,16 +135,7 @@ class ESQuery {
 
         // In case of suggest/autocomplete search, target a specific field with a specific query type
         // TODO: make language (sv, en) configurable?
-        Map queryClauses
-        if (suggest) {
-            queryClauses = [
-                'match_phrase_prefix': [
-                    ("_sortKeyByLang.${suggest}.suggest".toString()) : q
-                ]
-            ]
-        } else {
-            queryClauses = simpleQuery
-        }
+        Map queryClauses = simpleQuery
 
         String[] boostParam = queryParameters.get('_boost')
         String boostMode = boostParam ? boostParam[0] : null
@@ -186,15 +177,48 @@ class ESQuery {
             ]
         }
 
-        Map query = [
-            'query': [
-                'bool': [
-                    'must': [
-                        queryClauses
+        Map query
+        if (suggest) {
+            query = [
+                'query': [
+                    'bool': [
+                        'must': [
+                            'multi_match': [
+                                'query': q,
+                                'type': 'bool_prefix',
+                                'fields': [
+                                    "_sortKeyByLang.${suggest}.suggest".toString(),
+                                    "_sortKeyByLang.${suggest}.suggest._2gram".toString(),
+                                    "_sortKeyByLang.${suggest}.suggest._3gram".toString()
+                                ]
+                            ]
+                        ],
+                        'should': [
+                            'prefix': [
+                                ("_sortKeyByLang.${suggest}.keyword".toString()): [
+                                    'value': q,
+                                    'boost': 100
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                'sort': [
+                    '_score': 'desc',
+                    ("_sortKeyByLang.${suggest}.keyword".toString()): 'asc'
+                ]
+            ]
+        } else {
+            query = [
+                'query': [
+                    'bool': [
+                        'must': [
+                            queryClauses
+                        ]
                     ]
                 ]
             ]
-        ]
+        }
 
         if (limit >= 0) {
             query['size'] = limit
