@@ -243,7 +243,10 @@ class ElasticSearch {
                     body)
         }
         catch (Exception e) {
-            if (!isBadRequest(e)) {
+            if (isMissingDocument(e)) {
+                log.debug("Failed to update reverse link counter for $shortId, missing")
+            }
+            else if (!isBadRequest(e) ) {
                 log.warn("Failed to update reverse link counter for $shortId: $e, placing in retry queue.", e)
                 indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, deltaCount) })
             }
@@ -255,6 +258,10 @@ class ElasticSearch {
 
     static boolean isBadRequest(Exception e) {
         e instanceof UnexpectedHttpStatusException && e.getStatusCode() == 400
+    }
+
+    static boolean isMissingDocument(Exception e) {
+        e instanceof UnexpectedHttpStatusException && e.getStatusCode() == 404
     }
 
     void remove(String identifier) {
