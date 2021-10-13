@@ -799,10 +799,27 @@ class JsonLd {
        lens property values. For lens 'chip', they would be (approximately) in the order in which they would
        be displayed on the frontend. Mainly for use as search keys.
      */
-    Map applyLensAsMapByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris, String lensToUse) {
+    Map applyLensAsMapByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris, List<String> lensesToTry) {
+        Map lensGroups = displayData.get('lensGroups')
+        Map lens = null
+        String initialLens
+
+        for (String lensToTry : lensesToTry) {
+            Map lensGroup = lensGroups.get(lensToTry)
+            lens = getLensFor((Map)thing, lensGroup)
+            if (lens) {
+                initialLens = lensToTry
+                break
+            }
+        }
+
+        if (!lens) {
+            throw new FresnelException("No suitable lens found for ${thing.get(ID_KEY)}, tried: ${lensesToTry}")
+        }
+
         // Transform the list of language/property value pairs to a map
         Map initialResults = languagesToKeep.collectEntries { [(it): []] }
-        Map results = applyLensAsListByLang(thing, languagesToKeep, removableBaseUris, lensToUse)
+        Map results = applyLensAsListByLang(thing, languagesToKeep, removableBaseUris, initialLens)
             .flatten()
             .collate(2)
             .inject(initialResults, { acc, it ->

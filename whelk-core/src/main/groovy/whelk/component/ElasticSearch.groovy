@@ -303,7 +303,7 @@ class ElasticSearch {
                 framed,
                 LANGUAGES_TO_INDEX,
                 REMOVABLE_BASE_URIS,
-                document.getThingInScheme() ? 'tokens' : 'chips')
+                document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
 
         // TODO: replace with elastic ICU Analysis plugin?
         // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
