@@ -745,17 +745,18 @@ class JsonLd {
     }
 
     /**
-     * Returns the fresnel group (chip, card, ..) as a list of [<language>, <property value>] pairs.
+     * Applies lens (chip, card, ..) to the thing and returns a list of
+     * [<language>, <property value>] pairs.
      */
-    private List toFresnelGroupAsListByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris, String fresnelGroup) {
+    private List applyLensAsListByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris, String lensToUse) {
         Map lensGroups = displayData.get('lensGroups')
-        Map lensGroup = lensGroups.get(fresnelGroup)
+        Map lensGroup = lensGroups.get(lensToUse)
         Map lens = getLensFor((Map)thing, lensGroup)
         List parts = []
 
         if (lens) {
             List propertiesToKeep = (List) lens.get('showProperties').findAll({ String s -> !(s.endsWith('ByLang')) })
-            // Go through the properties in the order defined in the chip
+            // Go through the properties in the order defined in the lens
             for (prop in propertiesToKeep) {
                 // If prop (e.g., title) has a language-specific version (e.g., titleByLang),
                 // and the thing has that language-specific version, use that
@@ -778,11 +779,11 @@ class JsonLd {
                                     parts << [it, removeDomain((String) value['@id'], removableBaseUris)]
                                 }
                             } else {
-                                // Check for a more specific chip
-                                parts << toFresnelGroupAsListByLang((Map) value, languagesToKeep, removableBaseUris, fresnelGroup)
+                                // Check for a more specific lens
+                                parts << applyLensAsListByLang((Map) value, languagesToKeep, removableBaseUris, lensToUse)
                             }
                         } else if (value instanceof String) {
-                            // Add non-language-specific chip property values
+                            // Add non-language-specific lens property values
                             languagesToKeep.each { parts << [it, value] }
                         }
                     }
@@ -795,13 +796,13 @@ class JsonLd {
 
     /**
      * Returns a map with the keys given by languagesToKeep, each having as its value a string containing the
-     * fresnel group (chip, card, ..) property values. For fresnelGroup 'chip', they would be (approximately)
-     * in the order in which they would be displayed on the frontend. Mainly for use as search keys.
+       lens property values. For lens 'chip', they would be (approximately) in the order in which they would
+       be displayed on the frontend. Mainly for use as search keys.
      */
-    Map toFresnelGroupAsMapByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris, String fresnelGroup) {
+    Map applyLensAsMapByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris, String lensToUse) {
         // Transform the list of language/property value pairs to a map
         Map initialResults = languagesToKeep.collectEntries { [(it): []] }
-        Map results = toFresnelGroupAsListByLang(thing, languagesToKeep, removableBaseUris, fresnelGroup)
+        Map results = applyLensAsListByLang(thing, languagesToKeep, removableBaseUris, lensToUse)
             .flatten()
             .collate(2)
             .inject(initialResults, { acc, it ->

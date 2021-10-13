@@ -299,7 +299,7 @@ class ElasticSearch {
         }
         String thingId = thingIds.get(0)
         Map framed = JsonLd.frame(thingId, copy.data)
-        framed['_sortKeyByLang'] = whelk.jsonld.toFresnelGroupAsMapByLang(
+        framed['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
                 framed,
                 LANGUAGES_TO_INDEX,
                 REMOVABLE_BASE_URIS,
