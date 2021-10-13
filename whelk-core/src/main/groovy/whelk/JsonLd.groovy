@@ -745,11 +745,11 @@ class JsonLd {
     }
 
     /**
-     * Returns the chip as a list of [<language>, <property value>] pairs.
+     * Returns the fresnel group (chip, card, ..) as a list of [<language>, <property value>] pairs.
      */
-    private List toChipAsListByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris) {
+    private List toFresnelGroupAsListByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris, String fresnelGroup) {
         Map lensGroups = displayData.get('lensGroups')
-        Map lensGroup = lensGroups.get('chips')
+        Map lensGroup = lensGroups.get(fresnelGroup)
         Map lens = getLensFor((Map)thing, lensGroup)
         List parts = []
 
@@ -779,7 +779,7 @@ class JsonLd {
                                 }
                             } else {
                                 // Check for a more specific chip
-                                parts << toChipAsListByLang((Map) value, languagesToKeep, removableBaseUris)
+                                parts << toFresnelGroupAsListByLang((Map) value, languagesToKeep, removableBaseUris, fresnelGroup)
                             }
                         } else if (value instanceof String) {
                             // Add non-language-specific chip property values
@@ -794,14 +794,14 @@ class JsonLd {
     }
 
     /**
-     * Returns a map with the keys given by languagesToKeep, each having as its value a string containing
-     * chip property values in (approximately) the order in which they would be displayed on the
-     * frontend. For use as search keys.
+     * Returns a map with the keys given by languagesToKeep, each having as its value a string containing the
+     * fresnel group (chip, card, ..) property values. For fresnelGroup 'chip', they would be (approximately)
+     * in the order in which they would be displayed on the frontend. Mainly for use as search keys.
      */
-    Map toChipAsMapByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris) {
+    Map toFresnelGroupAsMapByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris, String fresnelGroup) {
         // Transform the list of language/property value pairs to a map
         Map initialResults = languagesToKeep.collectEntries { [(it): []] }
-        Map results = toChipAsListByLang(thing, languagesToKeep, removableBaseUris)
+        Map results = toFresnelGroupAsListByLang(thing, languagesToKeep, removableBaseUris, fresnelGroup)
             .flatten()
             .collate(2)
             .inject(initialResults, { acc, it ->
@@ -813,7 +813,7 @@ class JsonLd {
 
         // Turn the map values into strings
         return results.collectEntries { k, v ->
-            String result = ((List) v).flatten().join(", ")
+            String result = ((List) v).findAll { it != null }.flatten().join(", ")
             // Use last URI components as fallback
             if (!result && thing['@id']) {
                 result = removeDomain((String) thing['@id'], removableBaseUris)
