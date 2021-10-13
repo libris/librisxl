@@ -7,6 +7,7 @@ import org.apache.jena.query.ResultSet
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.RDFNode
+import whelk.component.ElasticSearch
 
 class Wikidata {
     Optional<Map> getThing(String iri) {
@@ -20,7 +21,7 @@ class Wikidata {
     }
 
     boolean isWikidataEntity(String iri) {
-        iri.startsWith("https://www.wikidata.org")
+        iri.startsWith("https://www.wikidata.org") || iri.startsWith("http://www.wikidata.org")
     }
 }
 
@@ -84,10 +85,9 @@ class WikidataEntity {
                         '@id'  : iri, // Måste vara entity irin!
                         '@type': "Place"
                 ]
-
-        List langsOfInterest = ['sv', 'en']
+        
         List prefLabel = getValuesOfProperty(Properties.PREF_LABEL.prefixedIri)
-        List prefLabelsOfInterest = prefLabel.findAll { it.getLanguage() in langsOfInterest }
+        List prefLabelsOfInterest = prefLabel.findAll { it.getLanguage() in ElasticSearch.LANGUAGES_TO_INDEX }
         if (!prefLabelsOfInterest.isEmpty())
             place['prefLabelByLang'] = prefLabelsOfInterest.collectEntries { [it.getLanguage(), it.getLexicalForm()] }
 
