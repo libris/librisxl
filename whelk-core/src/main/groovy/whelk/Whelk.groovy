@@ -61,7 +61,7 @@ class Whelk {
     RomanizationStep.LanguageResources languageResources 
     ElasticFind elasticFind
     Relations relations
-    External external = new External(this)
+    External external = new External()
     DocumentNormalizer normalizer
     Romanizer romanizer
 

@@ -291,7 +291,7 @@ class ElasticSearch {
             }
         }
     }
-    
+
     void remove(String identifier) {
         if (log.isDebugEnabled()) {
             log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
