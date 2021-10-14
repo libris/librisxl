@@ -323,7 +323,7 @@ class Whelk {
             throw new StorageCreateFailedException(document.getShortId(), "Document considered a duplicate of : " + collidingIDs)
         }
 
-        createPlaceholdersAndExternalDocs(document)
+        createCacheRecordsAndPlaceholders(document)
         boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
         if (success) {
             if (elastic && !skipIndex) {
@@ -345,7 +345,7 @@ class Whelk {
             preUpdateDoc = doc.clone()
             updateAgent.update(doc)
             normalize(doc)
-            createPlaceholdersAndExternalDocs(doc, preUpdateDoc)
+            createCacheRecordsAndPlaceholders(doc, preUpdateDoc)
         })
 
         if (updated == null || preUpdateDoc == null) {
@@ -359,7 +359,7 @@ class Whelk {
     void storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum) {
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
-        createPlaceholdersAndExternalDocs(doc, preUpdateDoc)
+        createCacheRecordsAndPlaceholders(doc, preUpdateDoc)
         Document updated = storage.storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum)
 
         if (updated == null) {
@@ -507,7 +507,7 @@ class Whelk {
         return timezone
     }
 
-    private void createPlaceholdersAndExternalDocs(Document postUpdateDoc, Document preUpdateDoc = null) {
+    private void createCacheRecordsAndPlaceholders(Document postUpdateDoc, Document preUpdateDoc = null) {
         Set<Link> postUpdateLinks = postUpdateDoc.getExternalRefs()
         Set<Link> preUpdateLinks = preUpdateDoc?.getExternalRefs() ?: new HashSet<Link>() //Collections.EMPTY_SET groovy compiler...?
         
