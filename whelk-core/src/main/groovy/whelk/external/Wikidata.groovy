@@ -58,7 +58,7 @@ class WikidataEntity {
 
     private void loadGraph() {
         try {
-            graph.read("https://www.wikidata.org/wiki/Special:EntityData/${shortId}.rdf?flavor=dump")
+            graph.read("https://www.wikidata.org/wiki/Special:EntityData/${shortId}.ttl?flavor=dump", "Turtle")
         } catch (Exception ex) {
             println("Unable to load graph for entity ${entityIri}")
         }
