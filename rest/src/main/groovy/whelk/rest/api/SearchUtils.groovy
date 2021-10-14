@@ -128,14 +128,14 @@ class SearchUtils {
         // TODO Only manipulate `_limit` in one place
         queryParameters['_limit'] = [limit.toString()]
 
+        def extItems = searchExternal(queryParameters) // might manipulate q
+        
         Map esResult = esQuery.doQuery(queryParameters, suggest)
         
-        
-        def e = searchExternal(queryParameters)
-        if (e) {
-            esResult['items'] = e + esResult['items']
+        if (extItems) {
+            esResult['items'] = extItems + (List) esResult['items']
             if(esResult['totalHits'] == 0) {
-                esResult['totalHits'] = e.size()
+                esResult['totalHits'] = extItems.size()
             }
         }
         
@@ -233,7 +233,7 @@ class SearchUtils {
         return result
     }
     
-    List searchExternal(Map query) {
+    List searchExternal(Map<String, String[]> query) {
         if (!query.q || !JsonLd.looksLikeIri(query.q.first())) {
             return []
         }
@@ -243,13 +243,21 @@ class SearchUtils {
             iri = iri.split('\\|').first().trim()
         }
         
-        def existing = whelk.getCards([iri])
-        boolean existsInWhelk = !existing.isEmpty() && !(new Document(existing[iri]).isPlaceholder())
-        if (existsInWhelk) {
+        def existsInWhelk = { String i ->
+            def existing = whelk.getCards([i])
+            return !existing.isEmpty() && !(new Document(existing[i]).isPlaceholder())
+        }
+        
+        if (existsInWhelk(iri)) {
             return []
         }
         
         return whelk.external.getEphemeral(iri).map ({ doc ->
+            if (existsInWhelk(doc.getThingIdentifiers().first())) { // iri was an alias/sameAs 
+                query.q = [doc.getThingIdentifiers().first()] as String[]
+                return []
+            }
+            
             def extType = doc.getThingType()
             def queryTypes = query[TYPE_KEY]
             boolean isAnyTypeOk = !queryTypes || queryTypes.any { it == '*' }
