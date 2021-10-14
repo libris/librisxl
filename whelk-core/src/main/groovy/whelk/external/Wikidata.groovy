@@ -23,6 +23,10 @@ class Wikidata {
     boolean isWikidata(String iri) {
         iri.startsWith("https://www.wikidata.org") || iri.startsWith("http://www.wikidata.org")
     }
+    
+    String datasetId() {
+        'https://id.kb.se/datasets/wikidata'
+    }
 }
 
 class WikidataEntity {
