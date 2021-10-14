@@ -63,28 +63,31 @@ selectByIds(fiction) { data ->
             List cRoles = asList(c.role)
             List rRoles = matchedOnName.value
 
+            List specifiedRoles = []
+
             // Add missing role(s) for agent in contribution
             if (cRoles.isEmpty() || cRoles == [['@id':'https://id.kb.se/relator/unspecifiedContributor']]) {
                 c['role'] = rRoles
+                specifiedRoles = rRoles
                 modified = true
-                rRoles.each {
-                    incrementStats("Roles specified", it.'@id')
-                }
             } else {
                 rRoles.each {
                     if (!(it in cRoles)) {
                         c['role'] = asList(c.role) + it
+                        specifiedRoles << it
                         modified = true
-                        incrementStats("Roles specified", it.'@id')
                     }
                 }
             }
 
-            if (modified) {
+            if (!specifiedRoles.isEmpty()) {
+                specifiedRoles.each {
+                    incrementStats("Roles specified", it.'@id')
+                }
                 roleSpecified.println(recId)
                 roleSpecified.println(respStmt)
                 roleSpecified.println(cNames)
-                roleSpecified.println(c.role)
+                roleSpecified.println(specifiedRoles)
                 roleSpecified.println()
                 numRolesSpecified.incrementAndGet()
             }
@@ -270,7 +273,7 @@ Pattern rolePattern() {
 }
 
 Pattern likelyRolePattern() {
-    ~/([\p{L}|\d]\.?(:| a[fv]) )/
+    ~/(.(:| a[fv]| by) )/
 }
 
 Pattern afterRolePattern() {
