@@ -1,8 +1,6 @@
 package whelk.external
 
 import groovy.transform.Memoized
-import org.apache.jena.query.Query
-import org.apache.jena.query.QueryExecution
 import org.apache.jena.query.ResultSet
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
@@ -33,9 +31,12 @@ class WikidataEntity {
     static final String WIKIDATA_ENDPOINT = "https://query.wikidata.org/sparql"
     static final String WIKIDATA_ENTITY_NS = "http://www.wikidata.org/entity/"
 
-    static final String PROP_PREF_LABEL = "skos:prefLabel"
-    static final String PROP_COUNTRY = "wdt:P17"
-    static final String PROP_IS_PART_OF = "wdt:P131" // located in the administrative territorial entity
+    // Wikidata property short ids
+    static final String COUNTRY = "P17"
+    static final String END_TIME = "P582"
+    static final String INSTANCE_OF = "P31"
+    static final String PART_OF_PLACE = "P131" // located in the administrative territorial entity
+    static final String SUBCLASS_OF = "P279"
 
     enum Type {
         PLACE('Q618123'), // Geographical feature
@@ -83,15 +84,15 @@ class WikidataEntity {
                         '@type': "Place"
                 ]
 
-        List prefLabel = getValuesOfProperty(PROP_PREF_LABEL).findAll { it.getLanguage() in ElasticSearch.LANGUAGES_TO_INDEX }
+        List prefLabel = getPrefLabel().findAll { it.getLanguage() in ElasticSearch.LANGUAGES_TO_INDEX }
         if (!prefLabel.isEmpty())
             place['prefLabelByLang'] = prefLabel.collectEntries { [it.getLanguage(), it.getLexicalForm()] }
 
-        List country = getValuesOfProperty(PROP_COUNTRY)
+        List country = getCountry()
         if (!country.isEmpty())
             place['country'] = country.collect { ['@id': it.toString()] }
 
-        List partOf = getValuesOfProperty(PROP_IS_PART_OF) - country
+        List partOf = getPartOfPlace() - country
         if (!partOf.isEmpty())
             place['isPartOf'] = partOf.collect { ['@id': it.toString()] }
 
@@ -105,31 +106,50 @@ class WikidataEntity {
                         '@type': "Person"
                 ]
 
-        List prefLabel = getValuesOfProperty(PROP_PREF_LABEL).findAll { it.getLanguage() in ElasticSearch.LANGUAGES_TO_INDEX }
+        List prefLabel = getPrefLabel().findAll { it.getLanguage() in ElasticSearch.LANGUAGES_TO_INDEX }
         if (!prefLabel.isEmpty())
             person['prefLabelByLang'] = prefLabel.collectEntries { [it.getLanguage(), it.getLexicalForm()] }
 
         return person
     }
 
+    List<RDFNode> getPrefLabel() {
+        String queryString = "SELECT ?prefLabel { wd:${shortId} skos:prefLabel ?prefLabel }"
+
+        ResultSet rs = QueryRunner.localSelectResult(queryString, graph)
+
+        return rs.collect { it.get("prefLabel") }
+    }
+
+    List<RDFNode> getCountry() {
+        String queryString = "SELECT ?country { wd:${shortId} wdt:${COUNTRY} ?country }"
+
+        ResultSet rs = QueryRunner.localSelectResult(queryString, graph)
+
+        return rs.collect { it.get("country") }
+    }
+
+    List<RDFNode> getPartOfPlace() {
+        String queryString = """
+            SELECT ?place { 
+                wd:${shortId} p:${PART_OF_PLACE} ?stmt .
+                ?stmt ps:${PART_OF_PLACE} ?place .
+                FILTER NOT EXISTS { ?place pq:${END_TIME} ?endTime }
+            }
+        """
+
+        ResultSet rs = QueryRunner.localSelectResult(queryString, graph)
+
+        return rs.collect { it.get("place") }
+    }
+
     Type type() {
-        String command = "SELECT ?type { wd:${shortId} wdt:P31 ?type }"
-        Query q = QueryRunner.prepareQuery(command)
-        QueryExecution qExec = QueryRunner.localQueryExec(q, graph)
-        ResultSet rs = QueryRunner.selectQuery(qExec)
+        String queryString = "SELECT ?type { wd:${shortId} wdt:${INSTANCE_OF} ?type }"
+
+        ResultSet rs = QueryRunner.localSelectResult(queryString, graph)
         Set wdTypes = rs.collect { it.get("type").toString() } as Set
 
         return Type.values().find { getSubclasses(it).intersect(wdTypes) } ?: Type.OTHER
-    }
-
-    List<RDFNode> getValuesOfProperty(String prop) {
-        String queryString = "SELECT ?o { wd:${shortId} ${prop} ?o }"
-
-        Query q = QueryRunner.prepareQuery(queryString)
-        QueryExecution qExec = QueryRunner.localQueryExec(q, graph)
-        ResultSet rs = QueryRunner.selectQuery(qExec)
-
-        return rs.collect { it.get("o") }
     }
 
     @Memoized
@@ -138,12 +158,11 @@ class WikidataEntity {
             return Collections.EMPTY_SET
         }
 
-        String queryString = "SELECT ?class { ?class wdt:P279* wd:${type.baseClass} }"
-        Query q = QueryRunner.prepareQuery(queryString)
-        QueryExecution qExec = QueryRunner.remoteQueryExec(q, WIKIDATA_ENDPOINT)
-        ResultSet res = QueryRunner.selectQuery(qExec)
+        String queryString = "SELECT ?class { ?class wdt:${SUBCLASS_OF}* wd:${type.baseClass} }"
 
-        return res.collect { it.get("class").toString() }.toSet()
+        ResultSet rs = QueryRunner.remoteSelectResult(queryString, WIKIDATA_ENDPOINT)
+
+        return rs.collect { it.get("class").toString() }.toSet()
     }
 
     String getShortId(String iri) {
