@@ -6,8 +6,8 @@ import com.google.common.cache.LoadingCache
 import whelk.external.Wikidata
 
 class External {
-    private static final Map mappers = [
-            'http://kblocalhost.kb.se:5000/v8h8lr6js3cmfvvd#it' : new Wikidata(),
+    private static final List mappers = [
+            new Wikidata(),
     ]
 
     private static final int CACHE_SIZE = 50_000
@@ -34,8 +34,8 @@ class External {
     }
 
     private static Optional<Document> getInternal(String iri) {
-        Document d = mappers.findResult { dataset, mapper ->
-            mapper.getThing(iri).map{ document(it, JsonLd.CACHE_RECORD_TYPE, dataset) }.orElse(null)
+        Document d = mappers.findResult { mapper ->
+            mapper.getThing(iri).map{ document(it, JsonLd.CACHE_RECORD_TYPE, mapper.datasetId()) }.orElse(null)
         }
 
         return Optional.ofNullable (d)
