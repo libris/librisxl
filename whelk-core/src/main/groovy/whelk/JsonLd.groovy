@@ -745,17 +745,18 @@ class JsonLd {
     }
 
     /**
-     * Returns the chip as a list of [<language>, <property value>] pairs.
+     * Applies lens (chip, card, ..) to the thing and returns a list of
+     * [<language>, <property value>] pairs.
      */
-    private List toChipAsListByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris) {
+    private List applyLensAsListByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris, String lensToUse) {
         Map lensGroups = displayData.get('lensGroups')
-        Map lensGroup = lensGroups.get('chips')
+        Map lensGroup = lensGroups.get(lensToUse)
         Map lens = getLensFor((Map)thing, lensGroup)
         List parts = []
 
         if (lens) {
             List propertiesToKeep = (List) lens.get('showProperties').findAll({ String s -> !(s.endsWith('ByLang')) })
-            // Go through the properties in the order defined in the chip
+            // Go through the properties in the order defined in the lens
             for (prop in propertiesToKeep) {
                 // If prop (e.g., title) has a language-specific version (e.g., titleByLang),
                 // and the thing has that language-specific version, use that
@@ -778,11 +779,11 @@ class JsonLd {
                                     parts << [it, removeDomain((String) value['@id'], removableBaseUris)]
                                 }
                             } else {
-                                // Check for a more specific chip
-                                parts << toChipAsListByLang((Map) value, languagesToKeep, removableBaseUris)
+                                // Check for a more specific lens
+                                parts << applyLensAsListByLang((Map) value, languagesToKeep, removableBaseUris, lensToUse)
                             }
                         } else if (value instanceof String) {
-                            // Add non-language-specific chip property values
+                            // Add non-language-specific lens property values
                             languagesToKeep.each { parts << [it, value] }
                         }
                     }
@@ -794,14 +795,31 @@ class JsonLd {
     }
 
     /**
-     * Returns a map with the keys given by languagesToKeep, each having as its value a string containing
-     * chip property values in (approximately) the order in which they would be displayed on the
-     * frontend. For use as search keys.
+     * Returns a map with the keys given by languagesToKeep, each having as its value a string containing the
+       lens property values. For lens 'chip', they would be (approximately) in the order in which they would
+       be displayed on the frontend. Mainly for use as search keys.
      */
-    Map toChipAsMapByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris) {
+    Map applyLensAsMapByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris, List<String> lensesToTry) {
+        Map lensGroups = displayData.get('lensGroups')
+        Map lens = null
+        String initialLens
+
+        for (String lensToTry : lensesToTry) {
+            Map lensGroup = lensGroups.get(lensToTry)
+            lens = getLensFor((Map)thing, lensGroup)
+            if (lens) {
+                initialLens = lensToTry
+                break
+            }
+        }
+
+        if (!lens) {
+            throw new FresnelException("No suitable lens found for ${thing.get(ID_KEY)}, tried: ${lensesToTry}")
+        }
+
         // Transform the list of language/property value pairs to a map
         Map initialResults = languagesToKeep.collectEntries { [(it): []] }
-        Map results = toChipAsListByLang(thing, languagesToKeep, removableBaseUris)
+        Map results = applyLensAsListByLang(thing, languagesToKeep, removableBaseUris, initialLens)
             .flatten()
             .collate(2)
             .inject(initialResults, { acc, it ->
@@ -813,7 +831,7 @@ class JsonLd {
 
         // Turn the map values into strings
         return results.collectEntries { k, v ->
-            String result = ((List) v).flatten().join(", ")
+            String result = ((List) v).findAll { it != null }.flatten().join(", ")
             // Use last URI components as fallback
             if (!result && thing['@id']) {
                 result = removeDomain((String) thing['@id'], removableBaseUris)

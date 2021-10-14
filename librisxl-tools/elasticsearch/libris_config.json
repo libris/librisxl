@@ -56,6 +56,19 @@
                         "swedish_snowball"
                     ]
                 },
+                "softmatcher_unique": {
+                    "type": "custom",
+                    "char_filter": ["apostrophe_and_okina_remover"],
+                    "tokenizer": "standard",
+                    "filter": [
+                        "lowercase",
+                        "elision_case_insensitive",
+                        "apostrophe_remover",
+                        "ascii_folder",
+                        "swedish_snowball",
+                        "unique"
+                    ]
+                },
                 "isbn_analyzer": {
                     "tokenizer": "standard",
                     "char_filter": [
@@ -118,6 +131,13 @@
                     "type": "pattern_replace",
                     "pattern": "[\u0027|\u2019]",
                     "replacement": ""
+                }
+            },
+            "normalizer": {
+                "custom_case_insensitive": {
+                    "type": "custom",
+                    "char_filter": ["apostrophe_and_okina_remover"],
+                    "filter": ["lowercase"]
                 }
             }
         }
@@ -262,7 +282,11 @@
                         "fields": {
                             "suggest": {
                                 "type": "search_as_you_type",
-                                "analyzer": "softmatcher"
+                                "analyzer": "softmatcher_unique"
+                            },
+                            "keyword": {
+                                "type": "keyword",
+                                "normalizer": "custom_case_insensitive"
                             }
                         }
                     },
@@ -272,7 +296,11 @@
                         "fields": {
                             "suggest": {
                                 "type": "search_as_you_type",
-                                "analyzer": "softmatcher"
+                                "analyzer": "softmatcher_unique"
+                            },
+                            "keyword": {
+                                "type": "keyword",
+                                "normalizer": "custom_case_insensitive"
                             }
                         }
                     }

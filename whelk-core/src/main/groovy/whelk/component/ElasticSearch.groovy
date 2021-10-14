@@ -299,12 +299,12 @@ class ElasticSearch {
         }
         String thingId = thingIds.get(0)
         Map framed = JsonLd.frame(thingId, copy.data)
-
-        framed['_sortKeyByLang'] = whelk.jsonld.toChipAsMapByLang(
+        framed['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
                 framed,
                 LANGUAGES_TO_INDEX,
-                REMOVABLE_BASE_URIS)
-        
+                REMOVABLE_BASE_URIS,
+                document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
+
         // TODO: replace with elastic ICU Analysis plugin?
         // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
         DocumentUtil.findKey(framed, JsonLd.SEARCH_KEY) { value, path ->
