@@ -15,6 +15,9 @@ class QueryRunner {
             [
                     "bd"      : "http://www.bigdata.com/rdf#",
                     "kbv"     : "https://id.kb.se/vocab/",
+                    "p"       : "http://www.wikidata.org/prop/",
+                    "pq"      : "http://www.wikidata.org/prop/qualifier/",
+                    "ps"      : "http://www.wikidata.org/prop/statement/",
                     "rdfs"    : "http://www.w3.org/2000/01/rdf-schema#",
                     "skos"    : "http://www.w3.org/2004/02/skos/core#",
                     "wd"      : "http://www.wikidata.org/entity/",
@@ -23,6 +26,22 @@ class QueryRunner {
             ]
 
     static PrefixMapping prefixMapping = PrefixMapping.Factory.create().setNsPrefixes(nsPrefixes)
+
+    static ResultSet localSelectResult(String queryString, Model graph) {
+        Query q = prepareQuery(queryString)
+        QueryExecution qExec = localQueryExec(q, graph)
+        ResultSet rs = selectQuery(qExec)
+
+        return rs
+    }
+
+    static ResultSet remoteSelectResult(String queryString, String sparqlEndpoint) {
+        Query q = prepareQuery(queryString)
+        QueryExecution qExec = remoteQueryExec(q, sparqlEndpoint)
+        ResultSet rs = selectQuery(qExec)
+
+        return rs
+    }
 
     static ResultSet selectQuery(QueryExecution qe) {
         ResultSet resultSet
