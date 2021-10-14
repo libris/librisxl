@@ -134,7 +134,7 @@ class WikidataEntity {
             SELECT ?place { 
                 wd:${shortId} p:${PART_OF_PLACE} ?stmt .
                 ?stmt ps:${PART_OF_PLACE} ?place .
-                FILTER NOT EXISTS { ?place pq:${END_TIME} ?endTime }
+                FILTER NOT EXISTS { ?stmt pq:${END_TIME} ?endTime }
             }
         """
 
