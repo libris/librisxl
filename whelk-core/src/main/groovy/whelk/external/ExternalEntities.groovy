@@ -1,12 +1,14 @@
-package whelk
+package whelk.external
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
-import whelk.external.Wikidata
+import whelk.Document
+import whelk.IdGenerator
+import whelk.JsonLd
 import whelk.util.Metrics
 
-class External {
+class ExternalEntities {
     private static final List mappers = [
             new Wikidata(),
     ]
@@ -22,9 +24,9 @@ class External {
                     return getInternal(iri)
                 }
             })
-    
-    External() {
-        Metrics.cacheMetrics.addCache('external', cache)
+
+    ExternalEntities() {
+        Metrics.cacheMetrics.addCache('external-entities', cache)
     }
     
     Optional<Document> get(String iri) {
