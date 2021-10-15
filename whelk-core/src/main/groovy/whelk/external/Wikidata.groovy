@@ -7,7 +7,8 @@ import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.RDFNode
 import whelk.component.ElasticSearch
 
-class Wikidata {
+class Wikidata implements Mapper {
+    @Override
     Optional<Map> getThing(String iri) {
         if (!isWikidata(iri)) {
             return Optional.empty()
@@ -17,13 +18,19 @@ class Wikidata {
 
         return Optional.ofNullable(wdEntity.convert())
     }
-
-    boolean isWikidata(String iri) {
-        iri.startsWith("https://www.wikidata.org") || iri.startsWith("http://www.wikidata.org")
-    }
     
+    @Override
+    boolean mightHandle(String iri) {
+        return isWikidata(iri)
+    }
+
+    @Override
     String datasetId() {
         'https://id.kb.se/datasets/wikidata'
+    }
+
+    static boolean isWikidata(String iri) {
+        iri.startsWith("https://www.wikidata.org") || iri.startsWith("http://www.wikidata.org")
     }
 }
 
