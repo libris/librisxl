@@ -13,6 +13,7 @@ import whelk.component.PostgreSQLComponent
 import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
+import whelk.external.ExternalEntities
 import whelk.filter.LinkFinder
 import whelk.filter.NormalizerChain
 import whelk.search.ESQuery
@@ -40,7 +41,7 @@ class Whelk {
     JsonLd jsonld
     MarcFrameConverter marcFrameConverter
     Relations relations
-    External external = new External()
+    ExternalEntities external = new ExternalEntities()
     DocumentNormalizer normalizer
     ElasticFind elasticFind
     ZoneId timezone = ZoneId.of('Europe/Stockholm')
@@ -528,8 +529,8 @@ class Whelk {
         
         brokenOrExternalIris.each { iri -> 
             def doc = tryFetchExternal 
-                    ? external.get(iri).orElse(External.getPlaceholder(iri))
-                    : External.getPlaceholder(iri)
+                    ? external.get(iri).orElse(ExternalEntities.getPlaceholder(iri))
+                    : ExternalEntities.getPlaceholder(iri)
 
             try {
                 createDocument(doc, changedIn, changedBy, collection, deleted)
