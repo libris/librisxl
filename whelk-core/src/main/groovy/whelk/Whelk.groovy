@@ -15,8 +15,9 @@ import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
 import whelk.converter.marc.RomanizationStep
 import whelk.exception.StorageCreateFailedException
-import whelk.filter.LanguageLinker
 import whelk.exception.WhelkException
+import whelk.external.ExternalEntities
+import whelk.filter.LanguageLinker
 import whelk.filter.LinkFinder
 import whelk.filter.NormalizerChain
 import whelk.meta.WhelkConstants
@@ -61,7 +62,7 @@ class Whelk {
     RomanizationStep.LanguageResources languageResources 
     ElasticFind elasticFind
     Relations relations
-    External external = new External()
+    ExternalEntities external = new ExternalEntities()
     DocumentNormalizer normalizer
     Romanizer romanizer
 
@@ -657,8 +658,8 @@ class Whelk {
         
         brokenOrExternalIris.each { iri -> 
             def doc = tryFetchExternal 
-                    ? external.get(iri).orElse(External.getPlaceholder(iri))
-                    : External.getPlaceholder(iri)
+                    ? external.get(iri).orElse(ExternalEntities.getPlaceholder(iri))
+                    : ExternalEntities.getPlaceholder(iri)
 
             try {
                 createDocument(doc, changedIn, changedBy, collection, deleted)
