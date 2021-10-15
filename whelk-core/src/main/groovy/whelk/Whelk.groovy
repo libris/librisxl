@@ -338,8 +338,7 @@ class Whelk {
     private void reindexAffected(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
         Set<Link> addedLinks = (postUpdateLinks - preUpdateLinks)
         Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
-
-        //TODO: fails for placeholders...
+        
         removedLinks.findResults { storage.getSystemIdByIri(it.iri) }
                 .each{id -> elastic.decrementReverseLinks(id) }
 
@@ -353,7 +352,7 @@ class Whelk {
                     // we added a link to a document that includes us in its @reverse relations, reindex it
                     elastic.index(doc, this)
                 }
-                else if (!doc.isPlaceholder()) {
+                else {
                     // just update link counter
                     elastic.incrementReverseLinks(id)
                 }
