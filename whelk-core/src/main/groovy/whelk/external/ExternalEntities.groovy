@@ -9,7 +9,7 @@ import whelk.JsonLd
 import whelk.util.Metrics
 
 class ExternalEntities {
-    private static final List mappers = [
+    private static final List<Mapper> mappers = [
             new Wikidata(),
     ]
 
@@ -30,7 +30,12 @@ class ExternalEntities {
     }
     
     Optional<Document> get(String iri) {
-        cache.get(iri).map{ it.clone() }
+        if (mappers.any { it.mightHandle(iri) }) {
+            cache.get(iri).map{ it.clone() }
+        }
+        else {
+            Optional.empty()
+        }
     }
 
     Optional<Document> getEphemeral(String iri) {
