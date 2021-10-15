@@ -95,7 +95,7 @@ class WikidataEntity {
         if (!prefLabel.isEmpty())
             place['prefLabelByLang'] = prefLabel.collectEntries { [it.getLanguage(), it.getLexicalForm()] }
 
-        List country = getCountry()
+        List country = getCountry().findAll { it.toString() != entityIri }
         if (!country.isEmpty())
             place['country'] = country.collect { ['@id': it.toString()] }
 
