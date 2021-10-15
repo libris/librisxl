@@ -4,13 +4,14 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import whelk.external.Wikidata
+import whelk.util.Metrics
 
 class External {
     private static final List mappers = [
             new Wikidata(),
     ]
 
-    private static final int CACHE_SIZE = 50_000
+    private static final int CACHE_SIZE = 10_000
 
     private LoadingCache<String, Optional<Document>> cache = CacheBuilder.newBuilder()
             .maximumSize(CACHE_SIZE)
@@ -21,6 +22,10 @@ class External {
                     return getInternal(iri)
                 }
             })
+    
+    External() {
+        Metrics.cacheMetrics.addCache('external', cache)
+    }
     
     Optional<Document> get(String iri) {
         cache.get(iri).map{ it.clone() }

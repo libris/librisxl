@@ -7,10 +7,10 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.ListenableFutureTask
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import groovy.util.logging.Log4j2 as Log
-import io.prometheus.client.guava.cache.CacheMetricsCollector
 import whelk.Document
 import whelk.Link
 import whelk.exception.MissingMainIriException
+import whelk.util.Metrics
 
 import java.util.concurrent.Callable
 import java.util.concurrent.Executor
@@ -23,9 +23,7 @@ import java.util.function.Supplier
 class DependencyCache {
     private static final int CACHE_SIZE = 50_000
     private static final int REFRESH_INTERVAL_MINUTES = 5
-
-    private static final CacheMetricsCollector cacheMetrics = new CacheMetricsCollector().register()
-
+    
     PostgreSQLComponent storage
 
     private Executor cacheRefresher = Executors.newSingleThreadExecutor(
@@ -46,8 +44,8 @@ class DependencyCache {
     DependencyCache(PostgreSQLComponent storage) {
         this.storage = storage
 
-        cacheMetrics.addCache('dependersCache', dependersCache)
-        cacheMetrics.addCache('dependencyCache', dependenciesCache)
+        Metrics.cacheMetrics.addCache('dependersCache', dependersCache)
+        Metrics.cacheMetrics.addCache('dependencyCache', dependenciesCache)
     }
 
     Set<String> getDependenciesOfType(String iri, String typeOfRelation) {
