@@ -1082,7 +1082,7 @@ class PostgreSQLComponent {
             }
         }
 
-        if (sparqlQueueEnabled) {
+        if (sparqlQueueEnabled && !doc.isCacheRecord() && !doc.isPlaceholder()) {
             sparqlQueueAdd(doc.getShortId(), connection)
         }
     }
