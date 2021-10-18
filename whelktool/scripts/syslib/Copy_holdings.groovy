@@ -12,13 +12,13 @@ selectBySqlWhere("""id in
 (
  select lh.id
   from
-   lddb lb
+  lddb lb
   left join
-   lddb lh
+  lddb lh
   on lh.data#>>'{@graph,1,itemOf,@id}' = lb.data#>>'{@graph,1,@id}'
- where lb.data#>>'{@graph,0,controlNumber}' in ( '$bibidstring' ) and lb.collection = 'bib'
- and
- lh.data#>>'{@graph,1,heldBy,@id}' = '{$CURRENT_SIGEL}'
+  where lb.data#>>'{@graph,0,controlNumber}' in ( '$bibidstring' ) and lb.collection = 'bib'
+  and
+  lh.data#>>'{@graph,1,heldBy,@id}' = '${CURRENT_SIGEL}'
  
  )""", silent: false, { hold ->
 
