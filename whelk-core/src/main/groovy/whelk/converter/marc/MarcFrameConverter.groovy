@@ -1068,7 +1068,6 @@ class ConversionPart {
                   : types.contains(baseType)
     }
 
-    @CompileStatic(SKIP)
     Tuple2<Boolean, Map<String, List>> buildAboutMap(Map pendingResources, List<String> pendingKeys, Map entity, String aboutAlias) {
         Map<String, List> aboutMap = [:]
         boolean requiredOk = true
@@ -1082,7 +1081,7 @@ class ConversionPart {
                 if (key in aboutMap) {
                     return
                 }
-                Map pendingDfn = pendingResources[key]
+                Map pendingDfn = pendingResources[key] as Map
                 def resourceType = pendingDfn.resourceType
                 def parents = pendingDfn.about == null ? [entity] :
                     pendingDfn.about in aboutMap ? aboutMap[pendingDfn.about] : null
@@ -1095,14 +1094,14 @@ class ConversionPart {
                     }
 
                     if (!about && pendingDfn.absorbSingle) {
-                        if (isInstanceOf(parent, pendingDfn.resourceType)) {
+                        if (isInstanceOf(parent as Map, pendingDfn.resourceType as String)) {
                             about = parent
                         } else {
                             requiredOk = false
                         }
                     }
                     Util.asList(about).eachWithIndex { item, pos ->
-                        if (!item || (pendingDfn.resourceType && !isInstanceOf(item, pendingDfn.resourceType))) {
+                        if (!item || (pendingDfn.resourceType && !isInstanceOf(item as Map, pendingDfn.resourceType as String))) {
                             return
                         } else if (pos == 0 && pendingDfn.itemPos == 'rest') {
                             return
@@ -1133,7 +1132,7 @@ class ConversionPart {
         }
         // TODO: we can now move this into the loop, yes?
         boolean missingRequired = pendingResources?.find { key, pendingDfn ->
-            pendingDfn.required && !(key in aboutMap)
+            pendingDfn['required'] && !(key in aboutMap)
         }
         if (missingRequired) {
             requiredOk = false
@@ -1141,7 +1140,7 @@ class ConversionPart {
 
         // The about map is the whole embellished record N times, framed around the "pending keys", typically:
         // ?record, ?thing, ?work, _:provision
-        return new Tuple2<Boolean, Map>(requiredOk, aboutMap)
+        return new Tuple2<Boolean, Map<String, List>>(requiredOk, aboutMap)
     }
 
     static String findTokenFromId(Object node, String uriTemplate,
@@ -1888,13 +1887,12 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     static GENERIC_REL_URI_TEMPLATE = "generic:{_}"
 
-    @CompileStatic(SKIP)
     MarcFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn,
             String baseTag = tag) {
         super(ruleSet, tag, fieldDfn, baseTag)
         ind1 = fieldDfn['i1'] ? new MarcSubFieldHandler(this, "ind1", fieldDfn.i1 as Map) : null
         ind2 = fieldDfn['i2'] ? new MarcSubFieldHandler(this, "ind2", fieldDfn.i2 as Map) : null
-        pendingResources = fieldDfn.pendingResources
+        pendingResources = fieldDfn['pendingResources'] as Map<String, Map>
         pendingResources?.values().each {
             linkTerm(it.link ?: it.addLink, it.containsKey('addLink'))
             typeTerm(it.resourceType)
@@ -1904,32 +1902,32 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             pendingKeys = Util.getSortedPendingKeys(pendingResources)
         }
 
-        aboutAlias = fieldDfn.aboutAlias
-        allowLinkOnRevert = fieldDfn.allowLinkOnRevert
-        dependsOn = fieldDfn.dependsOn
-        constructProperties = fieldDfn.constructProperties
+        aboutAlias = fieldDfn['aboutAlias']
+        allowLinkOnRevert = fieldDfn['allowLinkOnRevert']
+        dependsOn = fieldDfn['dependsOn'] as List<String>
+        constructProperties = fieldDfn['constructProperties'] as Map<String, Map>
 
-        if (fieldDfn.uriTemplate) {
-            uriTemplate = fieldDfn.uriTemplate
+        if (fieldDfn['uriTemplate']) {
+            uriTemplate = fieldDfn['uriTemplate']
             uriTemplateKeys = fromTemplate(uriTemplate).variables as Set
-            uriTemplateDefaults = fieldDfn.uriTemplateDefaults
+            uriTemplateDefaults = fieldDfn['uriTemplateDefaults'] as Map
         }
         onRevertPrefer = (List<String>) (fieldDfn.onRevertPrefer instanceof String ?
                 [fieldDfn.onRevertPrefer] : fieldDfn.onRevertPrefer)
 
         silentRevert = fieldDfn.silentRevert == true
 
-        computeLinks = (fieldDfn.computeLinks) ? new HashMap(fieldDfn.computeLinks) : [:]
+        computeLinks = (fieldDfn.computeLinks) ? new HashMap(fieldDfn['computeLinks'] as Map) : [:]
         if (computeLinks) {
-            computeLinks.use = computeLinks.use.replaceFirst(/^\$/, '')
+            computeLinks.use = ((String) computeLinks['use']).replaceFirst(/^\$/, '')
         }
 
-        matchRules = MatchRule.parseRules(this, fieldDfn) ?: Collections.emptyList()
+        matchRules = MatchRule.parseRules(this, fieldDfn) ?: Collections.emptyList() as List<MatchRule>
 
         fieldDfn.each { key, obj ->
             def m = key =~ /^\$(\w+)$/
             if (m && obj) {
-                addSubfield(m.group(1), obj)
+                addSubfield(m.group(1) as String, obj as Map)
             }
         }
 
@@ -2114,7 +2112,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             // for multiply linked entities. Or, perhaps better, run a final "mapIds" pass
             // in the main loop..
             if (uriTemplateParams.keySet().containsAll(uriTemplateKeys)) {
-                def computedUri = fromTemplate(uriTemplate).expand(uriTemplateParams)
+                def computedUri = fromTemplate(uriTemplate).expand(uriTemplateParams as Map<String, Object>)
                 def altUriRel = "sameAs"
                 // NOTE: We used to force minted ("pretty") uri to be an alias here...
                 /*if (definesDomainEntityType != null) {
@@ -3019,7 +3017,7 @@ class MatchRule {
 
         Map<String, Map> ruleWhenMap = matchDefs.collectEntries {
             [it['when'], it]
-        }
+        } as Map<String, Map>
         return matchDefs?.collect {
             Map dfnCopy = fieldDfn.findAll { it.key != 'match' }
             if (dfnCopy.pendingResources) {
