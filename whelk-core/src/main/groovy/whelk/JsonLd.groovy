@@ -567,7 +567,7 @@ class JsonLd {
     }
 
     private Map<String, List<String>> generateSubTermLists(String relationToSuper) {
-        def superTermOf = [:]
+        Map<String, List<String>> superTermOf = [:]
         for (String type : vocabIndex.keySet()) {
             def termMap = vocabIndex[type]
             def superTerms = termMap[relationToSuper]
@@ -1057,7 +1057,7 @@ class JsonLd {
 
         putRecordReferencesIntoThings(idMap)
 
-        Map mainItem = idMap[mainId]
+        Map mainItem = idMap[mainId] as Map
 
         Map framedData
         try {

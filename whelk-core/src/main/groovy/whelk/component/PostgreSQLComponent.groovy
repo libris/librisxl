@@ -2745,7 +2745,7 @@ class PostgreSQLComponent {
         }
     }
 
-    private class CardEntry {
+    class CardEntry {
         Document card
         Instant changedTimestamp
 
@@ -2756,6 +2756,14 @@ class PostgreSQLComponent {
 
             this.card = new Document(jsonld.toCard(doc.data, false))
             this.changedTimestamp = changedTimestamp ?: doc.getModifiedTimestamp()
+        }
+
+        Document getCard() {
+            return card
+        }
+
+        Instant getChangedTimestamp() {
+            return changedTimestamp
         }
     }
 

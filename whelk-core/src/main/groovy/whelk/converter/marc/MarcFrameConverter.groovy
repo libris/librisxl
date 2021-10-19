@@ -1336,7 +1336,7 @@ class MarcFixedFieldHandler {
                 return
             def colNums = parseColumnNumbers(key)
             colNums.eachWithIndex { Tuple2<Integer, Integer> colNum, int i ->
-                columns << new Column(this, obj, colNum.first, colNum.second,
+                columns << new Column(this, obj as Map, colNum.first, colNum.second,
                         obj['itemPos'] ?: colNums.size() > 1 ? i : null,
                         obj['fixedDefault'],
                         obj['ignoreOnRevert'],
@@ -1411,7 +1411,7 @@ class MarcFixedFieldHandler {
         Pattern matchAsDefault
         MarcFixedFieldHandler fixedFieldHandler
 
-        Column(MarcFixedFieldHandler fixedFieldHandler, fieldDfn, int start, int end,
+        Column(MarcFixedFieldHandler fixedFieldHandler, Map fieldDfn, int start, int end,
                itemPos, fixedDefault, ignoreOnRevert = null, matchAsDefault = null) {
             super(fixedFieldHandler.ruleSet, "$fixedFieldHandler.tag-$start-$end", fieldDfn)
             this.fixedFieldHandler = fixedFieldHandler
@@ -1659,7 +1659,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     //MarcSimpleFieldHandler linkedHandler
 
     @CompileStatic(SKIP)
-    MarcSimpleFieldHandler(ruleSet, tag, fieldDfn) {
+    MarcSimpleFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn) {
         super(ruleSet, tag, fieldDfn)
         super.setTokenMap(this, fieldDfn)
         if (fieldDfn.addProperty) {
@@ -1672,7 +1672,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         property = propTerm(fieldDfn.property ?: fieldDfn.addProperty,
                 fieldDfn.containsKey('addProperty'))
 
-        def parseDateTime = fieldDfn.parseDateTime
+        String parseDateTime = fieldDfn.parseDateTime
         if (parseDateTime) {
             missingCentury = (parseDateTime == "yyMMdd")
             if (missingCentury) {
@@ -1689,12 +1689,12 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         parseZeroPaddedNumber = (fieldDfn.parseZeroPaddedNumber == true)
         uriTemplate = fieldDfn.uriTemplate
         if (fieldDfn.matchUriToken) {
-            matchUriToken = Pattern.compile(fieldDfn.matchUriToken)
+            matchUriToken = Pattern.compile(fieldDfn.matchUriToken as String)
             if (fieldDfn.matchSpec) {
-                fieldDfn.matchSpec.matches.each {
+                fieldDfn.matchSpec['matches'].each {
                     assert matchUriToken.matcher(it).matches()
                 }
-                fieldDfn.matchSpec.notMatches.each {
+                fieldDfn.matchSpec['notMatches'].each {
                     assert !matchUriToken.matcher(it).matches()
                 }
             }
@@ -1892,8 +1892,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     MarcFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn,
             String baseTag = tag) {
         super(ruleSet, tag, fieldDfn, baseTag)
-        ind1 = fieldDfn.i1 ? new MarcSubFieldHandler(this, "ind1", fieldDfn.i1) : null
-        ind2 = fieldDfn.i2 ? new MarcSubFieldHandler(this, "ind2", fieldDfn.i2) : null
+        ind1 = fieldDfn['i1'] ? new MarcSubFieldHandler(this, "ind1", fieldDfn.i1 as Map) : null
+        ind2 = fieldDfn['i2'] ? new MarcSubFieldHandler(this, "ind2", fieldDfn.i2 as Map) : null
         pendingResources = fieldDfn.pendingResources
         pendingResources?.values().each {
             linkTerm(it.link ?: it.addLink, it.containsKey('addLink'))
@@ -2169,8 +2169,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
         entryIt.each {
             if (it.value instanceof List) {
-                it.value.removeAll(isEmpty)
-                if (it.value.size() == 0) {
+                ((List)it.value).removeAll(isEmpty)
+                if (((List)it.value).size() == 0) {
                     entryIt.remove()
                 }
             } else if (it.value instanceof Map) {
@@ -2609,7 +2609,7 @@ class MarcSubFieldHandler extends ConversionPart {
     String itemPos
 
     @CompileStatic(SKIP)
-    MarcSubFieldHandler(fieldHandler, code, Map subDfn) {
+    MarcSubFieldHandler(MarcFieldHandler fieldHandler, code, Map subDfn) {
         this.ruleSet = fieldHandler.ruleSet
         this.fieldHandler = fieldHandler
         this.code = code
@@ -2625,21 +2625,21 @@ class MarcSubFieldHandler extends ConversionPart {
         punctuationChars = (subDfn.containsKey('punctuationChars')
                             ? subDfn.punctuationChars
                             : (trailingPunctuation ?:
-                               defaultPunctuation.punctuationChars))?.toCharArray()
+                               defaultPunctuation['punctuationChars']))?.toCharArray()
 
         surroundingChars = subDfn.surroundingChars?.toCharArray()
 
         skipLeadingPattern = toPattern(subDfn.containsKey('skipLeading')
                                        ? subDfn.skipLeading
-                                       : defaultPunctuation.skipLeading)
+                                       : defaultPunctuation['skipLeading'])
 
         blockNextLeadingPattern = toPattern(subDfn.containsKey('blockNextLeading')
                                             ? subDfn.blockNextLeading
-                                            : defaultPunctuation.blockNextLeading)
+                                            : defaultPunctuation['blockNextLeading'])
 
         balanceBrackets = (subDfn.containsKey('balanceBrackets')
                             ? subDfn.balanceBrackets
-                            : defaultPunctuation.balanceBrackets) == true
+                            : defaultPunctuation['balanceBrackets']) == true
 
         if (subDfn.aboutNew) {
             about = subDfn.aboutNew

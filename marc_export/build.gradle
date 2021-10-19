@@ -3,8 +3,8 @@ apply plugin: 'war'
 apply plugin: 'maven'
 apply from: '../gretty.plugin'
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 11
+targetCompatibility = 11
 
 repositories {
     mavenCentral()
@@ -43,7 +43,7 @@ dependencies {
     }
     compile group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
     compile 'org.apache.commons:commons-lang3:3.3.2'
-    compile 'org.codehaus.groovy:groovy:2.5.4'
+    compile 'org.codehaus.groovy:groovy:3.0.9'
 }
 
 gretty {

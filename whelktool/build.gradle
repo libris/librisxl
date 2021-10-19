@@ -18,8 +18,8 @@ def loadConfiguration() {
 
 loadConfiguration()
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 11
+targetCompatibility = 11
 
 sourceSets {
     main {
@@ -52,11 +52,11 @@ configurations.all {
 
 dependencies {
     compile project(':whelk-core')
-    testCompile 'org.spockframework:spock-core:1.3-groovy-2.5'
+    testCompile 'org.spockframework:spock-core:2.0-groovy-3.0'
     compile 'com.google.guava:guava:18.0'
-    compile 'org.codehaus.groovy:groovy-cli-commons:2.5.4'
-    compile 'org.codehaus.groovy:groovy-jsr223:2.5.4'
-    compile 'org.codehaus.groovy:groovy:2.5.4'
+    compile 'org.codehaus.groovy:groovy-cli-commons:3.0.9'
+    compile 'org.codehaus.groovy:groovy-jsr223:3.0.9'
+    compile 'org.codehaus.groovy:groovy:3.0.9'
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
     compile group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
 }
