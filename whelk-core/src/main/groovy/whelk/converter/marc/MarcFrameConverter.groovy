@@ -1675,7 +1675,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         if (parseDateTime) {
             missingCentury = (parseDateTime == "yyMMdd")
             if (missingCentury) {
-                parseDateTime = "yy" + parseDateTime
+                parseDateTime = "yy$parseDateTime".toString()
             }
             dateTimeFormat = DateTimeFormatter.ofPattern(parseDateTime)
             if (fieldDfn.timeZone) {
@@ -1893,7 +1893,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         ind1 = fieldDfn['i1'] ? new MarcSubFieldHandler(this, "ind1", fieldDfn.i1 as Map) : null
         ind2 = fieldDfn['i2'] ? new MarcSubFieldHandler(this, "ind2", fieldDfn.i2 as Map) : null
         pendingResources = fieldDfn['pendingResources'] as Map<String, Map>
-        pendingResources?.values().each {
+        pendingResources?.values()?.each {
             linkTerm(it.link ?: it.addLink, it.containsKey('addLink'))
             typeTerm(it.resourceType)
             propTerm(it.property ?: it.addProperty, it.containsKey('addProperty'))
