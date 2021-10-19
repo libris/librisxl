@@ -591,6 +591,8 @@ class JsonLd {
     }
 
     boolean isSubClassOf(String type, String baseType) {
+        if (!type)
+            return false
         if (type == baseType)
             return true
         Set<String> bases = getSubClasses(baseType)
@@ -672,7 +674,7 @@ class JsonLd {
     }
 
     Map toCard(Map thing, boolean chipsify = true, boolean addSearchKey = false,
-            boolean reduceKey = false, List<List> preservePaths = [], boolean searchCard = false) {
+            final boolean reduceKey = false, List<List> preservePaths = [], boolean searchCard = false) {
         Map result = [:]
 
         Map card = removeProperties(thing, getLens(thing, searchCard ? ['search-cards', 'cards'] : ['cards']))
@@ -684,8 +686,11 @@ class JsonLd {
 
         restorePreserved(card, thing, preservePaths)
 
-        reduceKey = reduceKey ?: { isSubClassOf((String) it, 'StructuredValue') }
-
+        boolean reduce = reduceKey
+                ? reduceKey
+                : isSubClassOf((String) thing[TYPE_KEY], 'StructuredValue')
+        
+        
         card.each { key, value ->
             def lensValue = value
             if (chipsify) {
@@ -694,11 +699,11 @@ class JsonLd {
                 if (value instanceof List) {
                     lensValue = ((List) value).withIndex().collect { it, index ->
                         it instanceof Map
-                        ? toCard((Map) it, chipsify, addSearchKey, reduceKey, pathRemainders([key, index], preservePaths), searchCard)
+                        ? toCard((Map) it, chipsify, addSearchKey, reduce, pathRemainders([key, index], preservePaths), searchCard)
                         : it
                     }
                 } else if (value instanceof Map) {
-                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduceKey, pathRemainders([key], preservePaths), searchCard)
+                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduce, pathRemainders([key], preservePaths), searchCard)
                 }
             }
             result[key] = lensValue
@@ -706,7 +711,8 @@ class JsonLd {
 
         if (addSearchKey) {
             List key = makeSearchKeyParts(card)
-            if (reduceKey) {
+            
+            if (reduce) {
                 for (v in result.values()) {
                     if (v instanceof List && ((List)v).size() == 1) {
                         v = ((List)v)[0]
@@ -718,6 +724,8 @@ class JsonLd {
                     }
                 }
             }
+            
+             
             if (key) {
                 result[SEARCH_KEY] = key.join(' ')
             }
