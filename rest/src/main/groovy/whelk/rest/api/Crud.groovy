@@ -191,6 +191,13 @@ class Crud extends HttpServlet {
             sendGetResponse(response, body, eTag, request.getPath(), request.getContentType(), request.getId())
         } else {
             ETag eTag
+
+            if (doc.isPlaceholder()) {
+                whelk.external.getEphemeral(doc.getThingIdentifiers().first()).ifPresent({ ext ->
+                    doc.setThing(ext.getThing())
+                })
+            }
+            
             if (request.shouldEmbellish()) {
                 String plainChecksum = doc.getChecksum(jsonld)
                 whelk.embellish(doc)
