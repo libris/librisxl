@@ -686,7 +686,10 @@ class JsonLd {
 
         restorePreserved(card, thing, preservePaths)
 
-        boolean reduce = reduceKey
+        // Using a new variable here is because changing the value of reduceKey
+        // causes "java.lang.VerifyError: Bad type on operand stack" when running
+        // on Java 11. Groovy compiler bug?
+        boolean reduce = reduceKey 
                 ? reduceKey
                 : isSubClassOf((String) thing[TYPE_KEY], 'StructuredValue')
         
