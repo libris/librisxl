@@ -12,6 +12,7 @@ import whelk.IdGenerator
 import whelk.IdType
 import whelk.JsonLd
 import whelk.JsonLdValidator
+import whelk.TargetVocabMapper
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ElasticIOException
@@ -46,6 +47,7 @@ import static whelk.rest.api.HttpTools.getBaseUri
 class Crud extends HttpServlet {
     final static String XL_ACTIVE_SIGEL_HEADER = 'XL-Active-Sigel'
     final static String CONTEXT_PATH = '/context.jsonld'
+    final static String KBV_CONTEXT = "https://id.kb.se/sys/context/kbv"
 
     static final Counter requests = Counter.build()
         .name("api_requests_total").help("Total requests to API.")
@@ -75,6 +77,7 @@ class Crud extends HttpServlet {
     Map displayData
     JsonLd jsonld
     JsonLdValidator validator
+    TargetVocabMapper targetVocabMapper
 
     SearchUtils search
     static final ObjectMapper mapper = new ObjectMapper()
@@ -112,6 +115,11 @@ class Crud extends HttpServlet {
                 (whelk.vocabUri): getDocumentFromStorage(whelk.vocabUri, null)
 
         ]
+
+        Tuple2<Document, String> docAndLoc = getDocumentFromStorage(KBV_CONTEXT)
+        Document contextDoc = docAndLoc.first
+        targetVocabMapper = new TargetVocabMapper(whelk.jsonld, contextDoc.data)
+
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response) {
@@ -314,9 +322,11 @@ class Crud extends HttpServlet {
                 return
             }
             
+            def requestBody = getFormattedResponseBody(request, doc, response)
+
             sendGetResponse(
                     maybeAddProposal25Headers(response, loc),
-                    getFormattedResponseBody(request, doc),
+                    requestBody,
                     eTag,
                     request.getPath(),
                     request.getContentType(),
@@ -337,15 +347,33 @@ class Crud extends HttpServlet {
         sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
     }
 
-    private Object getFormattedResponseBody(CrudGetRequest request, Document doc) {
-        log.debug("Formatting document {}. embellished: {}, framed: {}, lens: {}",
-                doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame(), request.getLens())
+    private Object getFormattedResponseBody(CrudGetRequest request, Document doc, HttpServletResponse response) {
+        log.debug("Formatting document {}. embellished: {}, framed: {}, lens: {}, profile: {}",
+                doc.getCompleteId(),
+                request.shouldEmbellish(),
+                request.shouldFrame(),
+                request.getLens(),
+                request.getProfile())
 
         def transformedResponse
         if (request.getLens() != Lens.NONE) {
             transformedResponse = applyLens(frameThing(doc), request.getLens())
         } else {
             transformedResponse = request.shouldFrame()  ? frameRecord(doc) : doc.data
+        }
+
+        String profileId = request.getProfile()
+        if (profileId != null) {
+            Tuple2<Document, String> docAndLoc = getDocumentFromStorage(profileId)
+            Document profileDoc = docAndLoc.first
+            String profileLocation = docAndLoc.second
+            if (profileDoc == null) {
+                sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Profile <${profileId}> is not available")
+                return
+            }
+            log.debug("Using profile: $profileId")
+            transformedResponse = targetVocabMapper.applyTargetVocabularyMap(profileId, profileDoc.data, doc.data)
+            transformedResponse[JsonLd.CONTEXT_KEY] = profileLocation
         }
 
         if (!(request.getContentType() in [MimeTypes.JSON, MimeTypes.JSONLD])) {
@@ -509,7 +537,9 @@ class Crud extends HttpServlet {
         }
 
         if (contentType == MimeTypes.JSONLD && responseBody instanceof Map && requestId != whelk.vocabContextUri) {
-            responseBody[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
+            if (!responseBody.containsKey(JsonLd.CONTEXT_KEY)) {
+                responseBody[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
+            }
         }
 
         response.setHeader("ETag", eTag.toString())

@@ -10,6 +10,7 @@ class CrudGetRequest {
     private String contentType
     private View view
     private Lens lens
+    private String profile
 
     static CrudGetRequest parse(HttpServletRequest request) {
         return new CrudGetRequest(request)
@@ -20,6 +21,7 @@ class CrudGetRequest {
         parsePath(getPath())
         contentType = getBestContentType(request)
         lens = parseLens(request)
+        profile = parseProfile(request)
     }
 
     HttpServletRequest getHttpServletRequest() {
@@ -72,6 +74,10 @@ class CrudGetRequest {
         return lens
     }
 
+    String getProfile() {
+        return profile
+    }
+
     /**
      * Parse a CRUD path
      *
@@ -99,6 +105,13 @@ class CrudGetRequest {
         catch (IllegalArgumentException e) {
             throw new BadRequestException("Unknown lens:" + lens)
         }
+    }
+
+    private String parseProfile(HttpServletRequest request) {
+        // TODO: Also look in Accept ld+json;profile=X, or Accept-Profile: <X>
+        // TODO: Resolve against base if parameter?
+        //final String SYS_CONTEXT_BASE = "https://id.kb.se/sys/context/"
+        return request.getParameter('profile')
     }
 
     private Optional<Boolean> getBoolParameter(String name) {
