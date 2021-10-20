@@ -285,6 +285,12 @@ class ElasticSearch {
     }
 
     String getShapeForIndex(Document document, Whelk whelk) {
+        if (document.isPlaceholder()) {
+            whelk.external.getEphemeral(document.getThingIdentifiers().first()).ifPresent({ ext ->
+                document.setThing(ext.getThing())
+            })
+        }
+        
         Document copy = document.clone()
 
         whelk.embellish(copy, ['chips'])
