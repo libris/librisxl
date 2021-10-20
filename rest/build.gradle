@@ -50,8 +50,8 @@ jacoco {
 
 jacocoTestReport {
     reports {
-        xml.enabled false
-        csv.enabled false
+        xml.required = false
+        csv.required = false
         html.destination file("${buildDir}/coverage_report/html")
     }
 }
@@ -168,12 +168,12 @@ gretty {
 task(groovy, dependsOn: "classes", type: JavaExec) {
     description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
     classpath = sourceSets.test.runtimeClasspath
-    main = "groovy.ui.GroovyMain"
+    mainClass = "groovy.ui.GroovyMain"
     args(System.getProperty("args", "").split() as String[])
 }
 
 task(console, dependsOn: 'classes', type: JavaExec) {
   description "Launch a Groovy Console"
   classpath = sourceSets.main.runtimeClasspath
-  main = 'groovy.ui.Console'
+  mainClass = 'groovy.ui.Console'
 }

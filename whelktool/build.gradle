@@ -76,7 +76,7 @@ jar {
 
 task(doRun, dependsOn: "classes", type: JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
-    main = "whelk.datatool.WhelkTool"
+    mainClass = "whelk.datatool.WhelkTool"
     minHeapSize = "1g"
     maxHeapSize = "4g"
     systemProperties(

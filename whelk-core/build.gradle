@@ -43,8 +43,8 @@ jacoco {
 
 jacocoTestReport {
     reports {
-        xml.enabled false
-        csv.enabled false
+        xml.required = false
+        csv.required = false
         html.destination file("${buildDir}/coverage_report/html")
     }
 }
@@ -140,7 +140,7 @@ task integTest(type: Test) {
         showStandardStreams true
         exceptionFormat "full"
     }
-    binResultsDir = file("$buildDir/integration-test-results/binary/integTest")
+    binaryResultsDirectory.set(file("$buildDir/integration-test-results/binary/integTest"))
     reports {
         html.destination = file("$buildDir/reports/integration-test")
         junitXml.destination = file("$buildDir/integration-test-results")
@@ -151,27 +151,27 @@ task integTest(type: Test) {
 task(groovy, dependsOn: "classes", type: JavaExec) {
     description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
     classpath = sourceSets.test.runtimeClasspath
-    main = "groovy.ui.GroovyMain"
+    mainClass = "groovy.ui.GroovyMain"
     args(System.getProperty("args", "").split() as String[])
 }
 
 task(console, dependsOn: 'classes', type: JavaExec) {
   description "Launch a Groovy Console"
   classpath = sourceSets.main.runtimeClasspath
-  main = 'groovy.ui.Console'
+  mainClass = 'groovy.ui.Console'
 }
 
 task(convertIso2709ToJson, dependsOn: 'classes', type: JavaExec) {
     description "Convert an ISO2709 file to JSON (USAGE: -Dargs='<infile>')"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.converter.MarcJSONConverter'
+    mainClass = 'whelk.converter.MarcJSONConverter'
     args(System.getProperty('args', "").split() as String[])
 }
 
 task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
     description "Convert a MarcJson file to JsonLD (USAGE: -Dargs='<source>')"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.converter.marc.MarcFrameCli'
+    mainClass = 'whelk.converter.marc.MarcFrameCli'
     systemProperties(
         'xl.secret.properties': System.getProperty("xl.secret.properties")
     )
@@ -181,20 +181,20 @@ task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
 task vocabFromMarcFrame(dependsOn: 'classes', type: JavaExec) {
     description "Extract a vocabulary from marcframe"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.converter.marc.MarcFrameVocabExtractor'
+    mainClass = 'whelk.converter.marc.MarcFrameVocabExtractor'
 }
 
 task jsonldToTurtle(dependsOn: 'classes', type: JavaExec) {
     description "Convert a JSON-LD file to Turtle (USAGE: -Dargs='<context> <source>')"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.converter.JsonLdToTurtle'
+    mainClass = 'whelk.converter.JsonLdToTurtle'
     args(System.getProperty('args', "").split() as String[])
 }
 
 task dataview(dependsOn: 'classes', type: JavaExec) {
     description "View JSON-LD data (USAGE: -Dargs='<card|chip|embellish|index> <source>')"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.util.DataViewCli'
+    mainClass = 'whelk.util.DataViewCli'
     systemProperties(
         'xl.secret.properties': System.getProperty("xl.secret.properties")
     )
@@ -203,7 +203,7 @@ task dataview(dependsOn: 'classes', type: JavaExec) {
 
 task testRelations(dependsOn: 'classes', type: JavaExec) {
     classpath = sourceSets.integTest.runtimeClasspath
-    main = 'Relations'
+    mainClass = 'Relations'
     systemProperties(
             'xl.secret.properties': System.getProperty("xl.secret.properties")
     )

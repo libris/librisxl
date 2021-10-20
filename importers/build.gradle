@@ -141,7 +141,7 @@ project.afterEvaluate {
 
 task(doRun, dependsOn: "classes", type: JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
-    main = "whelk.importer.ImporterMain"
+    mainClass = "whelk.importer.ImporterMain"
     systemProperties(
         'xl.secret.properties': System.getProperty("xl.secret.properties"),
         'xl.mysql.properties' : System.getProperty("xl.mysql.properties")
@@ -163,12 +163,12 @@ gretty {
 task(groovy, dependsOn: "classes", type: JavaExec) {
     description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
     classpath = sourceSets.test.runtimeClasspath
-    main = "groovy.ui.GroovyMain"
+    mainClass = "groovy.ui.GroovyMain"
     args(System.getProperty("args", "").split() as String[])
 }
 
 task(console, dependsOn: 'classes', type: JavaExec) {
     description "Launch a Groovy Console"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'groovy.ui.Console'
+    mainClass = 'groovy.ui.Console'
 }
