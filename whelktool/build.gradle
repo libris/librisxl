@@ -40,7 +40,6 @@ test.testLogging {
 
 repositories {
     mavenCentral()
-    maven { url "http://repository.codehaus.org/" }
     maven { url "https://jitpack.io/" }
 }
 
@@ -51,14 +50,14 @@ configurations.all {
 }
 
 dependencies {
-    compile project(':whelk-core')
-    testCompile 'org.spockframework:spock-core:2.0-groovy-3.0'
-    compile 'com.google.guava:guava:18.0'
-    compile 'org.codehaus.groovy:groovy-cli-commons:3.0.9'
-    compile 'org.codehaus.groovy:groovy-jsr223:3.0.9'
-    compile 'org.codehaus.groovy:groovy:3.0.9'
-    compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
-    compile group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
+    implementation project(':whelk-core')
+    testImplementation 'org.spockframework:spock-core:2.0-groovy-3.0'
+    implementation 'com.google.guava:guava:18.0'
+    implementation 'org.codehaus.groovy:groovy-cli-commons:3.0.9'
+    implementation 'org.codehaus.groovy:groovy-jsr223:3.0.9'
+    implementation 'org.codehaus.groovy:groovy:3.0.9'
+    implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
+    implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
 }
 
 jar {
@@ -66,8 +65,9 @@ jar {
         attributes "Main-Class": "whelk.datatool.WhelkTool"
     }
 
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from {
-        configurations.compile.collect {
+        configurations.runtimeClasspath.collect {
             it.isDirectory() ? it : project.zipTree(it).matching {
             }
         }

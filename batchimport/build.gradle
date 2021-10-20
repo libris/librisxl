@@ -1,13 +1,11 @@
 apply plugin: 'java'
 apply plugin: 'application'
-apply plugin: 'maven'
 
 sourceCompatibility = 11
 targetCompatibility = 11
 
 repositories {
     mavenCentral()
-    maven { url "http://repository.codehaus.org/" }
     maven { url "https://jitpack.io/" }
 }
 
@@ -21,11 +19,11 @@ configurations.all {
 dependencies {
 
     // XL dependencies
-    compile(project(':whelk-core'))
-    compile "io.prometheus:simpleclient:${prometheusVersion}"
-    compile "io.prometheus:simpleclient_pushgateway:${prometheusVersion}"
+    implementation(project(':whelk-core'))
+    implementation "io.prometheus:simpleclient:${prometheusVersion}"
+    implementation "io.prometheus:simpleclient_pushgateway:${prometheusVersion}"
 
-    testCompile 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.12'
 }
 
 mainClassName = 'whelk.importer.Main'
@@ -37,6 +35,6 @@ jar {
                 'Main-class': mainClassName
     }
     from {
-        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+        configurations.runtimeClasspath.collect {it.isDirectory() ? it : zipTree(it) }
     }
 }

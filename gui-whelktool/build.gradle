@@ -6,11 +6,10 @@ targetCompatibility = 11
 
 repositories {
     mavenCentral()
-    maven { url "http://repository.codehaus.org/" }
 }
 
 dependencies {
-    compile project(':whelktool')
+    implementation project(':whelktool')
 }
 
 jar {
@@ -18,8 +17,10 @@ jar {
         attributes "Main-Class": "whelk.gui.GuiWhelkTool"
     }
 
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
     from {
-        configurations.compile.collect {
+        configurations.runtimeClasspath.collect {
             it.isDirectory() ? it : project.zipTree(it).matching {
             }
         }
