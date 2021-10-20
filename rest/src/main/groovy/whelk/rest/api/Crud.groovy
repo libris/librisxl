@@ -291,6 +291,12 @@ class Crud extends HttpServlet {
                     HttpServletResponse.SC_GONE.toString()).inc()
             sendError(response, HttpServletResponse.SC_GONE, "Document has been deleted.")
         } else {
+            if (doc.isPlaceholder()) {
+                whelk.external.getEphemeral(doc.getThingIdentifiers().first()).ifPresent({ ext ->
+                    doc.setThing(ext.getThing())
+                })
+            }
+            
             String checksum = doc.getChecksum(jsonld)
             
             if (request.shouldEmbellish()) {
