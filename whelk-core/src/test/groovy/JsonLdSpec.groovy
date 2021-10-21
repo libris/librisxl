@@ -323,12 +323,12 @@ class JsonLdSpec extends Specification {
             "lensGroups":
                     ["chips":
                             ["lenses": [
-                                "Thing": ["showProperties": ["notation", "label", "note", ["alternateProperties": ["title"]]]]]
+                                "Thing": ["showProperties": ["notation", "label", "note", ["alternateProperties": ["foo", "title"]]]]]
                             ]]]
         def ld = new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA)
         expect:
         def props = ld.displayData.lensGroups.chips.lenses.Thing.showProperties
-        props == ['notation', 'label', 'labelByLang', 'note', ["alternateProperties": [["title", "titleByLang"]]]]
+        props == ['notation', 'label', 'labelByLang', 'note', ["alternateProperties": ["foo", ["title", "titleByLang"]]]]
     }
 
     def "should handle lens inheritance"() {
