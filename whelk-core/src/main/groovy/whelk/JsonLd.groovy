@@ -177,10 +177,16 @@ class JsonLd {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     private void expandAliasesInLensProperties() {
+        def expand = { p ->
+            def alias = langContainerAlias[p]
+            return alias ? [p, alias] : p
+        }
+        
         eachLens { lens ->
-            lens['showProperties'] = lens['showProperties'].collect {
-                def alias = langContainerAlias[it]
-                return alias ? [it, alias] : it
+            lens['showProperties'] = lens['showProperties'].collect { p ->
+                isAlternateProperties(p)
+                    ? ((Map) p).collectEntries { k, v -> [(k), v.collect{ expand(it) }] }
+                    : expand(p)
             }.flatten()
         }
     }
@@ -755,9 +761,11 @@ class JsonLd {
         List parts = []
 
         if (lens) {
-            List propertiesToKeep = (List) lens.get('showProperties').findAll({ String s -> !(s.endsWith('ByLang')) })
+            List propertiesToKeep = (List) lens.get('showProperties').findAll({ s -> !(s instanceof String && s.endsWith('ByLang')) })
             // Go through the properties in the order defined in the lens
-            for (prop in propertiesToKeep) {
+            for (p in propertiesToKeep) {
+                def prop = selectProperty(p, thing, languagesToKeep)
+                
                 // If prop (e.g., title) has a language-specific version (e.g., titleByLang),
                 // and the thing has that language-specific version, use that
                 String byLangKey = langContainerAlias.get(prop)
@@ -792,6 +800,29 @@ class JsonLd {
         }
 
         return parts
+    }
+    
+    private static def selectProperty(def prop, Map thing, Set<String> languagesToKeep) {
+        if (!isAlternateProperties(prop)) {
+            return prop
+        }
+        
+        def a = prop['alternateProperties'].findResult {
+            def hasByLang = { List<String> a -> // List with [prop, propAlias1, propAlias2...]
+                 thing[a.head()] || (a.tail().any { 
+                     it.endsWith('ByLang') && ((Map<String, ?>) thing.get(it))?.keySet()?.any{ it in languagesToKeep } 
+                 })
+            }
+            if (it instanceof List && hasByLang(it))
+            {
+                it.first()
+            }
+            else if (thing[it]) {
+                it
+            }
+        }
+
+        return a ?: prop
     }
 
     /**
@@ -929,20 +960,40 @@ class JsonLd {
         }
     }
     
-    private Map removeProperties(Map thing, Map lens) {
+    private static Map removeProperties(Map thing, Map lens) {
         Map result = [:]
         if (lens) {
             List propertiesToKeep = (List) lens.get("showProperties")
 
             thing.each { key, value ->
-                if (shouldKeep((String) key, (List) propertiesToKeep)) {
+                if (shouldAlwaysKeep((String) key)) {
                     result[key] = value
+                }
+            }
+            propertiesToKeep.each { p ->
+                if (p instanceof String && thing[p]) {
+                    result[p] = thing[p]
+                }
+                else if (isAlternateProperties(p)) {
+                    // We keep _all_ alternate properties, selecting one is more of a display thing 
+                    p['alternateProperties'].each { a ->
+                        if (a instanceof List) {
+                            a.each { if (thing[it]) result[it] = thing[it] }
+                        }
+                        else if (thing[a]) {
+                            result[a] = thing[a]
+                        }
+                    }
                 }
             }
             return result
         } else {
             return thing
         }
+    }
+    
+    private static boolean isAlternateProperties(def p) {
+        p instanceof Map && p.size() == 1 && p['alternateProperties']
     }
 
     Map getLensFor(Map thing, Map lensGroup) {
@@ -979,9 +1030,8 @@ class JsonLd {
         return null
     }
 
-    private static boolean shouldKeep(String key, List propertiesToKeep) {
-        return (key == RECORD_KEY || key == THING_KEY || key == JSONLD_ALT_ID_KEY ||
-                key in propertiesToKeep || key.startsWith("@"))
+    private static boolean shouldAlwaysKeep(String key) {
+        return key == RECORD_KEY || key == THING_KEY || key == JSONLD_ALT_ID_KEY || key.startsWith("@")
     }
 
 
