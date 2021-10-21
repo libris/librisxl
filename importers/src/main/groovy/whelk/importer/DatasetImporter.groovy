@@ -1,15 +1,14 @@
 package whelk.importer
 
 import groovy.util.logging.Log4j2 as Log
-import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.Whelk
 import whelk.exception.CancelUpdateException
 
+import static whelk.util.Jackson.mapper
+
 @Log
 class DatasetImporter {
-    static final ObjectMapper mapper = new ObjectMapper()
-
     static void importDataset(Whelk whelk, String filePath, String dataset) {
 
         if (Runtime.getRuntime().maxMemory() < 2l * 1024l * 1024l * 1024l) {

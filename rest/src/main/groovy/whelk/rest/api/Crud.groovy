@@ -6,7 +6,6 @@ import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import io.prometheus.client.Summary
 import org.apache.http.entity.ContentType
-import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.IdGenerator
 import whelk.IdType
@@ -34,10 +33,10 @@ import javax.servlet.http.HttpServletResponse
 import java.lang.management.ManagementFactory
 
 import static whelk.rest.api.CrudUtils.ETag
-
+import static whelk.rest.api.HttpTools.getBaseUri
 import static whelk.rest.api.HttpTools.sendError
 import static whelk.rest.api.HttpTools.sendResponse
-import static whelk.rest.api.HttpTools.getBaseUri
+import static whelk.util.Jackson.mapper
 
 /**
  * Handles all GET/PUT/POST/DELETE requests against the backend.
@@ -77,7 +76,6 @@ class Crud extends HttpServlet {
     JsonLdValidator validator
 
     SearchUtils search
-    static final ObjectMapper mapper = new ObjectMapper()
     AccessControl accessControl = new AccessControl()
     ConverterUtils converterUtils
     Map siteConfig

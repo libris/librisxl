@@ -1,15 +1,15 @@
 package whelk.converter
 
-import java.text.Normalizer
 import groovy.util.logging.Log4j2 as Log
-
+import org.codehaus.jackson.node.ObjectNode
 import se.kb.libris.util.marc.Controlfield
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709MarcRecordReader
 import se.kb.libris.util.marc.io.MarcXmlRecordReader
-import org.codehaus.jackson.map.ObjectMapper
-import org.codehaus.jackson.node.ObjectNode
 
+import java.text.Normalizer
+
+import static whelk.util.Jackson.mapper
 
 /**
  *
@@ -18,8 +18,6 @@ import org.codehaus.jackson.node.ObjectNode
  */
 @Log
 class MarcJSONConverter {
-
-    protected final static ObjectMapper mapper = new ObjectMapper()
 
     static String old_toJSONString(MarcRecord record) {
         def builder = new groovy.json.JsonBuilder()

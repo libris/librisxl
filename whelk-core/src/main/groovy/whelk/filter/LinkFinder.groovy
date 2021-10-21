@@ -1,8 +1,6 @@
 package whelk.filter
 
-
 import groovy.util.logging.Log4j2 as Log
-import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
 import whelk.component.PostgreSQLComponent
@@ -10,7 +8,8 @@ import whelk.exception.LinkValidationException
 
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.util.concurrent.ConcurrentHashMap
+
+import static whelk.util.Jackson.mapper
 
 @Log
 class LinkFinder {
@@ -18,8 +17,6 @@ class LinkFinder {
     PostgreSQLComponent postgres
 
     static String ENTITY_QUERY
-    static final ObjectMapper mapper = new ObjectMapper()
-    static final ConcurrentHashMap<String, String> uriCache = new ConcurrentHashMap()
 
     LinkFinder(PostgreSQLComponent pgsql) {
         postgres = pgsql

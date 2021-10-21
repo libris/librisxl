@@ -1,22 +1,15 @@
 package whelk.converter
 
 import groovy.util.logging.Log4j2 as Log
-
 import whelk.Document
 
-//import static whelk.util.Tools.*
-
-import org.codehaus.jackson.map.ObjectMapper
+import static whelk.util.Jackson.mapper
 
 @Log
 @Deprecated
 class JsonLDLinkCompleterFilter {
 
     static String BNODE_ID_PREFIX = "_:"
-
-    ObjectMapper mapper = new ObjectMapper()
-
-    String requiredContentType = "application/ld+json"
 
     Map entityShapes
     Map bnodeIdMap
@@ -27,11 +20,7 @@ class JsonLDLinkCompleterFilter {
             this.entityShapes = mapper.readValue(it, Map)
         }
     }
-
-    public JsonLDLinkCompleterFilter(Map entityShapes) {
-        this.entityShapes = entityShapes
-    }
-
+    
     protected buildRelatedItemsIndex(Document doc) {
         def byType = [:]
         def byIdOrSameAs = [:]

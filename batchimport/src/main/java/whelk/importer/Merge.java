@@ -1,6 +1,5 @@
 package whelk.importer;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import whelk.Document;
 import whelk.Whelk;
 import whelk.history.History;
@@ -8,7 +7,13 @@ import whelk.history.Ownership;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static whelk.util.Jackson.mapper;
 
 public class Merge {
     /*
@@ -46,8 +51,7 @@ public class Merge {
 
     public Merge(File ruleFile) throws IOException {
         m_pathRules = new HashMap<>();
-
-        ObjectMapper mapper = new ObjectMapper();
+        
         Map rulesMap = mapper.readValue(ruleFile, Map.class);
         List rules = (List) rulesMap.get("rules");
         for (Object rule : rules) {

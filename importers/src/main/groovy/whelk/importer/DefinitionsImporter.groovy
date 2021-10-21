@@ -1,16 +1,15 @@
 package whelk.importer
 
-import org.codehaus.jackson.map.ObjectMapper
+
 import sun.reflect.generics.reflectiveObjects.NotImplementedException
 import whelk.Document
 import whelk.IdGenerator
 import whelk.Whelk
 import whelk.reindexer.CardRefresher
 
+import static whelk.util.Jackson.mapper
+
 class DefinitionsImporter extends Importer {
-
-    static final ObjectMapper mapper = new ObjectMapper()
-
     String definitionsFilename
 
     DefinitionsImporter(Whelk w) {
