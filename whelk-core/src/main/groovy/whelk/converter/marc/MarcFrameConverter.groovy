@@ -1482,7 +1482,6 @@ class MarcFixedFieldHandler {
             return value != fixedDefault &&
                     (matchAsDefault == null ||
                             !matchAsDefault.matcher(value).matches())
-            value != FIXED_NONE && value != FIXED_UNDEF
         }
 
     }
