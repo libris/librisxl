@@ -1,4 +1,3 @@
-apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'application'
 apply plugin: 'war'
@@ -17,9 +16,6 @@ def loadConfiguration() {
     System.setProperty 'file.encoding', encoding
     System.setProperty 'whelk.environment', environment
 }
-
-sourceCompatibility = 11
-targetCompatibility = 11
 
 mainClassName = "whelk.importer.ImporterMain"
 

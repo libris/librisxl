@@ -7,9 +7,6 @@ archivesBaseName = "xlcore"
 
 group = 'com.github.libris'
 
-sourceCompatibility = 11
-targetCompatibility = 11
-
 sourceSets {
     main {
         java { srcDirs = [] }

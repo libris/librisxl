@@ -1,9 +1,7 @@
-apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'war'
 //apply plugin: 'jacoco'
 apply from: '../gretty.plugin'
-
 
 def getGitVersion() {
 	def stdout = new ByteArrayOutputStream()
@@ -17,9 +15,6 @@ def getGitVersion() {
 def version = getGitVersion()
 
 archivesBaseName = "whelk"
-
-sourceCompatibility = 11
-targetCompatibility = 11
 
 sourceSets {
     main {

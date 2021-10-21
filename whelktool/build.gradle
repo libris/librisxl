@@ -1,7 +1,5 @@
-apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'application'
-
 
 def loadConfiguration() {
     ext {
@@ -17,9 +15,6 @@ def loadConfiguration() {
 }
 
 loadConfiguration()
-
-sourceCompatibility = 11
-targetCompatibility = 11
 
 sourceSets {
     main {

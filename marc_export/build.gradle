@@ -1,9 +1,5 @@
-apply plugin: 'java'
 apply plugin: 'war'
 apply from: '../gretty.plugin'
-
-sourceCompatibility = 11
-targetCompatibility = 11
 
 repositories {
     mavenCentral()
@@ -17,7 +13,6 @@ configurations.all {
 }
 
 dependencies {
-
     // XL dependencies
     implementation(project(':whelk-core'))
 
