@@ -47,6 +47,7 @@ configurations.all {
 dependencies {
     implementation project(':whelk-core')
     testImplementation 'org.spockframework:spock-core:2.0-groovy-3.0'
+    testImplementation 'junit:junit:4.13.2'
     implementation 'com.google.guava:guava:18.0'
     implementation 'org.codehaus.groovy:groovy-cli-commons:3.0.9'
     implementation 'org.codehaus.groovy:groovy-jsr223:3.0.9'
