@@ -1119,7 +1119,7 @@ class ConversionPart {
                             // over direct type comparison, but won't work
                             // since a base type might be preferable to a
                             // subtype in practise (due to a modeling issue).
-                            selected = items.findAll { it['@type'] == type  }
+                            selected = items?.findAll { it['@type'] == type  }
                             if (selected) {
                                 items = selected
                                 break
