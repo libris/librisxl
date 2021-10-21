@@ -282,8 +282,8 @@ class Crud extends HttpServlet {
                     request.getId(), request.getVersion().orElse(null))
         }
 
-        Document doc = docAndLocation.first
-        String loc = docAndLocation.second
+        Document doc = docAndLocation.v1
+        String loc = docAndLocation.v2
 
         if (!doc && !loc) {
             sendNotFound(response, request.getPath())
@@ -759,8 +759,8 @@ class Crud extends HttpServlet {
         }
 
         Tuple2<Document, String> docAndLoc = getDocumentFromStorage(idFromUrl)
-        Document existingDoc = docAndLoc.first
-        String location = docAndLoc.second
+        Document existingDoc = docAndLoc.v1
+        String location = docAndLoc.v2
 
         if (!existingDoc && !location) {
             failedRequests.labels("PUT", request.getRequestURI(),
@@ -1037,8 +1037,8 @@ class Crud extends HttpServlet {
         try {
             String id = getRequestPath(request).substring(1)
             Tuple2<Document, String> docAndLocation = getDocumentFromStorage(id)
-            Document doc = docAndLocation.first
-            String loc = docAndLocation.second
+            Document doc = docAndLocation.v1
+            String loc = docAndLocation.v2
 
             log.debug("Checking permissions for ${doc}")
 

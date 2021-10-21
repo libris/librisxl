@@ -536,8 +536,8 @@ class JsonLd {
 
         private void descend(List<Tuple2> nodes) {
             for (n in nodes) {
-                path << n.second
-                node(n.first)
+                path << n.v2
+                node(n.v1)
                 path.remove(path.size()-1)
             }
         }

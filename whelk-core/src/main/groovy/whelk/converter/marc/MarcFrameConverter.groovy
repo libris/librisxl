@@ -1335,14 +1335,14 @@ class MarcFixedFieldHandler {
                 return
             def colNums = parseColumnNumbers(key)
             colNums.eachWithIndex { Tuple2<Integer, Integer> colNum, int i ->
-                columns << new Column(this, obj as Map, colNum.first, colNum.second,
+                columns << new Column(this, obj as Map, colNum.v1, colNum.v2,
                         obj['itemPos'] ?: colNums.size() > 1 ? i : null,
                         obj['fixedDefault'],
                         obj['ignoreOnRevert'],
                         obj['matchAsDefault'])
 
-                if (colNum.second > fieldSize) {
-                    fieldSize = colNum.second
+                if (colNum.v2 > fieldSize) {
+                    fieldSize = colNum.v2
                 }
             }
         }

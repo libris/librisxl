@@ -69,8 +69,8 @@ class SearchUtils {
         }
 
         Tuple2 limitAndOffset = getLimitAndOffset(queryParameters)
-        int limit = limitAndOffset.first
-        int offset = limitAndOffset.second
+        int limit = limitAndOffset.v1
+        int offset = limitAndOffset.v2
 
         Map pageParams = ['p'     : predicates,
                           'value' : value,
@@ -136,8 +136,8 @@ class SearchUtils {
         }
 
         Tuple2 mappingsAndPageParams = mapParams(lookup, queryParameters)
-        mappings.addAll(mappingsAndPageParams.first)
-        pageParams << mappingsAndPageParams.second
+        mappings.addAll(mappingsAndPageParams.v1)
+        pageParams << mappingsAndPageParams.v2
 
         int total = 0
         if (esResult['totalHits']) {
@@ -165,7 +165,7 @@ class SearchUtils {
         // This can be changed if we add a way to have x=a AND x=b in the API. 
         // Now: if x=a is selected, the facet for x=b will show the number for (x=a AND x=b) but when selected the 
         // results will be (x=a OR x=b).
-        def selectedFacets = ((Map) mappingsAndPageParams.second).findAll {it.key != JsonLd.TYPE_KEY }.keySet()
+        def selectedFacets = ((Map) mappingsAndPageParams.v2).findAll {it.key != JsonLd.TYPE_KEY }.keySet()
         def filteredAggregations = ((Map) esResult['aggregations']).findAll{ !selectedFacets.contains(it.key) }
         Map stats = buildStats(lookup, filteredAggregations,
                 makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
@@ -516,8 +516,8 @@ class SearchUtils {
      */
     String makeFindUrl(SearchType st, Map queryParameters, int offset=0) {
         Tuple2 initial = getInitialParamsAndKeys(st, queryParameters)
-        List params = initial.first
-        List keys = initial.second
+        List params = initial.v1
+        List keys = initial.v2
         keys.each { k ->
             def v = queryParameters[k]
             if (!v) {

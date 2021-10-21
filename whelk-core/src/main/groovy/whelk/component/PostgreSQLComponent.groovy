@@ -1973,7 +1973,7 @@ class PostgreSQLComponent {
                 if (rs.getString(2) != null) // The first tuple will be (root, null), which we dont need in the result.
                     dependencies.add( new Tuple2<String, String>(rs.getString(1), rs.getString(2)) )
             }
-            dependencies.sort { it.getFirst() }
+            dependencies.sort { it.v1 }
             return dependencies
         }
         finally {
