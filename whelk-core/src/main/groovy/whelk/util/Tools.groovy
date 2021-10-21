@@ -1,26 +1,8 @@
 package whelk.util
 
-
-import org.codehaus.jackson.map.ObjectMapper
-import whelk.Document
-
-import java.text.Normalizer
-
+//TODO: unused, anything useful in here?
 class Tools {
-    static ObjectMapper staticMapper = new ObjectMapper()
-
-    /**
-     * Detects the content-type of supplied data.
-     * TODO: Implement properly.
-     */
-    static String contentType(byte[] data) {
-        return "text/plain"
-    }
-
-    static String contentType(String data) {
-        return contentType(data.getBytes('UTF-8'))
-    }
-
+    
     static def getDeepValue(Map map, String key) {
         def keylist = key.split(/\./)
         def lastkey = keylist[keylist.length-1]
@@ -130,26 +112,5 @@ class Tools {
             }
         }
         return origmap
-    }
-
-    static String normalizeString(String inString) {
-        if (!Normalizer.isNormalized(inString, Normalizer.Form.NFC)) {
-            return Normalizer.normalize(inString, Normalizer.Form.NFC)
-        }
-        return inString
-    }
-
-    static void printSpinner(String message, int currentCount) {
-        def progressSpinner = ['/','-','\\','|']
-        int state = currentCount % (progressSpinner.size()-1)
-        print "${message}  ${progressSpinner[state]}                                                                 \r"
-    }
-
-    static Map getDataAsMap(Document doc) {
-        return staticMapper.readValue(doc.getDataAsString(), Map)
-    }
-
-    static String getMapAsString(Map map) {
-        return staticMapper.writeValueAsString(map)
     }
 }

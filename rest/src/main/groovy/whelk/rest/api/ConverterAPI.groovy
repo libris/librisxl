@@ -6,6 +6,7 @@ import whelk.Document
 import whelk.Whelk
 import whelk.converter.marc.MarcFrameConverter
 import whelk.util.Tools
+import whelk.util.Unicode
 import whelk.util.WhelkFactory
 
 import javax.servlet.http.HttpServlet
@@ -66,7 +67,7 @@ class ConverterAPI extends HttpServlet {
                         "application/x-marc-json"
 
         if (requestedContentType == "application/x-marc-json") {
-            String jsonText = Tools.normalizeString(request.getInputStream().getText("UTF-8"))
+            String jsonText = Unicode.normalize(request.getInputStream().getText("UTF-8"))
             Map json = marcFrameConverter.mapper.readValue(jsonText, Map)
             log.info("Constructed document. Converting to $requestedContentType")
             Document doc = new Document(json)
