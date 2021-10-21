@@ -18,8 +18,6 @@ dependencies {
     // XL dependencies
     implementation(project(':whelk-core'))
 
-    def jettyVersion = "9.4.44.v20210927"
-
     // Jetty
     implementation "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"

@@ -72,7 +72,6 @@ configurations.all {
 dependencies {
 
     def groovyVersion=GroovySystem.getVersion()
-    def jettyVersion = "9.4.44.v20210927"
 
     // KB libs
     implementation(project(':whelk-core'))
