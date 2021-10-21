@@ -191,10 +191,7 @@ public class ExportProfile {
      * Adds pointers from 9XX fields to 100, 110, 111, 130, 240, 440,
      * 600, 610, 611, 630, 648, 650, 651, 654, 655, 700, 710, 711, 730,
      * 800, 810, 811 and 830 fields
-     * @param args
-     * @throws java.lang.Exception
      */
-
     public static MarcRecord addAuthLinks(se.kb.libris.util.marc.MarcRecord mr) {
         Pattern pattern1 = Pattern.compile(
                 "100|110|111|130|240|440|600|610|" +
@@ -342,8 +339,6 @@ public class ExportProfile {
 
     /**
      * Remove everything except 'a'-'z','A'-'z','-' and '$'. Convert 'a'-'z' -> 'A'-'Z'
-     *
-     * @param sb
      */
     public static void normalize(StringBuffer sb) {
         int n=0;

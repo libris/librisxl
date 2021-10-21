@@ -257,7 +257,7 @@ public class DeweyMapper {
         if (check() && !deweys.isEmpty() && sabs.isEmpty()) {
 
             for (String dewey: deweys) {
-                /** @todo remove this temporary fix when 78* and 8* classes are done */
+                /* @todo remove this temporary fix when 78* and 8* classes are done */
                 if (dewey.startsWith("78") || dewey.startsWith("8")) continue;
                 
                 String sab = getSAB(dewey);
