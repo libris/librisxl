@@ -806,9 +806,14 @@ class JsonLd {
         if (!isAlternateProperties(prop)) {
             return prop
         }
+        
         def a = prop['alternateProperties'].findResult {
-            // List with [prop, propByLang]
-            if (it instanceof List && (thing[it.get(0)] || (thing[it.get(1)] && ((Map) thing[it.get(1)]).keySet().any{(String)it in languagesToKeep})))
+            def hasByLang = { List<String> a -> // List with [prop, propAlias1, propAlias2...]
+                 thing[a.head()] || (a.tail().any { 
+                     it.endsWith('ByLang') && ((Map<String, ?>) thing.get(it))?.keySet()?.any{ it in languagesToKeep } 
+                 })
+            }
+            if (it instanceof List && hasByLang(it))
             {
                 it.first()
             }
