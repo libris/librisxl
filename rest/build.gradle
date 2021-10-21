@@ -70,9 +70,6 @@ configurations.all {
 }
 
 dependencies {
-
-    def groovyVersion=GroovySystem.getVersion()
-
     // KB libs
     implementation(project(':whelk-core'))
 
@@ -114,8 +111,8 @@ dependencies {
     executableWarDeps "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
     executableWarDeps "org.codehaus.groovy:groovy-all:${groovyVersion}"
     executableWarDeps 'commons-cli:commons-cli:1.2'
-    implementation 'org.codehaus.groovy:groovy-xml:3.0.9'
-    implementation 'org.codehaus.groovy:groovy:3.0.9'
+    implementation "org.codehaus.groovy:groovy-xml:${groovyVersion}"
+    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
     implementation 'org.codehaus.jackson:jackson-core-asl:1.9.13'
     implementation 'xml-apis:xml-apis:1.4.01'
 }

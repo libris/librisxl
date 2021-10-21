@@ -49,9 +49,9 @@ dependencies {
     testImplementation 'org.spockframework:spock-core:2.0-groovy-3.0'
     testImplementation 'junit:junit:4.13.2'
     implementation 'com.google.guava:guava:18.0'
-    implementation 'org.codehaus.groovy:groovy-cli-commons:3.0.9'
-    implementation 'org.codehaus.groovy:groovy-jsr223:3.0.9'
-    implementation 'org.codehaus.groovy:groovy:3.0.9'
+    implementation "org.codehaus.groovy:groovy-cli-commons:${groovyVersion}"
+    implementation "org.codehaus.groovy:groovy-jsr223:${groovyVersion}"
+    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
     implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
     implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
 }
