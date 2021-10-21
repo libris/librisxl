@@ -38,6 +38,13 @@ dependencies {
 gretty {
     httpPort = 8280
     contextPath = '/apix'
+
+    afterEvaluate {
+        appRunDebug {
+            debugPort = 5007
+            debugSuspend = false
+        }
+    }
 }
 
 war {
