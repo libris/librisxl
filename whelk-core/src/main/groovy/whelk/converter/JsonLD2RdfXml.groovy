@@ -44,11 +44,11 @@ class JsonLD2RdfXml implements FormatConverter {
         return data
     }
 
-    public String getRequiredContentType() {
+    String getRequiredContentType() {
         return "application/ld+json"
     }
 
-    public String getResultContentType() {
+    String getResultContentType() {
         return "application/rdf+xml"
     }
 

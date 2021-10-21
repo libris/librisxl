@@ -24,7 +24,7 @@ public class OaiPmhListener {
         System.err.println("  --debug                : include diagnostic output");
     }
 
-    public static void main(String args[]) throws MalformedURLException, IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         for (String s: args) System.out.println(s);
         System.setProperty("java.util.logging.SimpleFormatter.format", "%1$tF %1$tT %4$s %5$s%6$s%n");
         Logger.getGlobal().setLevel(Level.ALL);

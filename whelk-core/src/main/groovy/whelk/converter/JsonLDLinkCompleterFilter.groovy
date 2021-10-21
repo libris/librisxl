@@ -21,14 +21,14 @@ class JsonLDLinkCompleterFilter {
     Map entityShapes
     Map bnodeIdMap
 
-    public JsonLDLinkCompleterFilter() {
+    JsonLDLinkCompleterFilter() {
         def entityShapesCfgPath = "ext/entityshapes.json"
         getClass().classLoader.getResourceAsStream(entityShapesCfgPath).withStream {
             this.entityShapes = mapper.readValue(it, Map)
         }
     }
 
-    public JsonLDLinkCompleterFilter(Map entityShapes) {
+    JsonLDLinkCompleterFilter(Map entityShapes) {
         this.entityShapes = entityShapes
     }
 

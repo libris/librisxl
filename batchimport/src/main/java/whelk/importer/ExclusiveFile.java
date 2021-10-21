@@ -14,8 +14,8 @@ import java.nio.file.StandardOpenOption;
  */
 class ExclusiveFile implements AutoCloseable
 {
-    private FileChannel channel;
-    private FileLock lock;
+    private final FileChannel channel;
+    private final FileLock lock;
 
     ExclusiveFile(Path path)
             throws IOException

@@ -68,7 +68,7 @@ class MarcExport {
         MarcRecord bibRecord = MarcXmlRecordReader.fromXml(bibXmlString)
 
         // remove any existing 003
-        ListIterator li = bibRecord.listIterator();
+        ListIterator li = bibRecord.listIterator()
         while (li.hasNext())
             if (((Field)li.next()).getTag().equals("003"))
                 li.remove()

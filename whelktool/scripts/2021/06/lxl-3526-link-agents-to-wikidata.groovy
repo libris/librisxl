@@ -218,7 +218,7 @@ ResultSet runQuery(String command, List values = null) {
     } catch (Exception ex) {
         System.out.println(ex.getMessage())
     } finally {
-        qExec.close();
+        qExec.close()
     }
 
     return resultSet

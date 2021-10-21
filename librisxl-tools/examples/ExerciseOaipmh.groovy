@@ -55,7 +55,7 @@ class ExerciseOaipmh {
                 protected PasswordAuthentication getPasswordAuthentication() {
                     return new PasswordAuthentication(username, password.toCharArray())
                 }
-            });
+            })
     }
 
     static void main(args) {

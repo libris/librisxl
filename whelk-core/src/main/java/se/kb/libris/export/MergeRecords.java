@@ -59,7 +59,7 @@ public class MergeRecords {
         return String.format("%-9s %-16s %-21s %-30s", bibId, isxn, author, title);
     }
     
-    public static void main(String args[]) throws IOException {
+    public static void main(String[] args) throws IOException {
         if (args.length != 2) {
             System.err.println("usage: java [options] se.kb.libris.export.MergeRecords <inencoding> <profile>");
             System.exit(1);
@@ -68,7 +68,7 @@ public class MergeRecords {
         String inEncoding = args[0];
         ExportProfile profile = new ExportProfile(new File(args[1]));
         StrictIso2709Reader reader = new StrictIso2709Reader(System.in);
-        byte record[] = null;
+        byte[] record = null;
         MarcRecord bibRecord = null;
         Set<MarcRecord> auths = new HashSet<MarcRecord>();
         Map<String, MarcRecord> mfhds = new TreeMap<String, MarcRecord>();
@@ -115,7 +115,7 @@ public class MergeRecords {
             } else if (mr.getType() == MarcRecord.AUTHORITY) {
                 auths.add(mr);
             } else if (mr.getType() == MarcRecord.HOLDINGS) {                
-                mfhds.put(((Subfield)((Datafield)mr.iterator("852").next()).iterator("b").next()).getData(), mr);
+                mfhds.put(((Datafield)mr.iterator("852").next()).iterator("b").next().getData(), mr);
             }
         }
         

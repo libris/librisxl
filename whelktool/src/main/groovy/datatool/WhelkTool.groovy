@@ -701,7 +701,7 @@ class DocumentItem {
     private String restoreToTime = null
     Closure onError = null
 
-    def List getGraph() {
+    List getGraph() {
         return doc.data['@graph']
     }
 

@@ -1261,7 +1261,7 @@ class JsonLd {
 
     class FresnelException extends WhelkRuntimeException {
         FresnelException(String msg) {
-            super(msg);
+            super(msg)
         }
     }
 }

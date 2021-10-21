@@ -18,7 +18,7 @@ class ConverterAPI extends HttpServlet {
     Whelk whelk
     MarcFrameConverter marcFrameConverter
 
-    public ConverterAPI() {
+    ConverterAPI() {
         // Do nothing - only here for Tomcat to have something to call
     }
 

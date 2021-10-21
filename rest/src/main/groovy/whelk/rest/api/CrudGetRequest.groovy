@@ -50,7 +50,7 @@ class CrudGetRequest {
 
     boolean shouldEmbellish() {
         if (getVersion().present) {
-            return false;
+            return false
         }
 
         return getBoolParameter("embellished").orElse(true)

@@ -7,6 +7,7 @@ import se.kb.libris.util.marc.io.StrictIso2709Reader;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 
 
 /**
@@ -14,7 +15,7 @@ import java.io.FileReader;
  * @author marma
  */
 public class MarcLatin1Compat2 {
-    public static void main(String args[]) throws Exception {
+    public static void main(String[] args) throws Exception {
         if (args.length != 3) {
             System.err.println("usage: java se.kb.libris.util.charcomposer.MarcLatin1Compat <inencoding> <outencoding> <file>");
             System.exit(1);
@@ -23,8 +24,8 @@ public class MarcLatin1Compat2 {
         String fromEncoding = args[0], toEncoding = args[1];
         StrictIso2709Reader reader = new StrictIso2709Reader(System.in);
         StringBuffer sb = new StringBuffer(100*1000);
-        byte record[] = null;
-        String map[] = new String[65536];
+        byte[] record = null;
+        String[] map = new String[65536];
         
         for (int i=0;i<65536;i++) {
             map[i] = String.valueOf((char)i);
@@ -65,7 +66,7 @@ public class MarcLatin1Compat2 {
                 }
             }
             
-            MarcRecord mr = Iso2709Deserializer.deserialize(sb.toString().getBytes("UTF-8"), "UTF-8");
+            MarcRecord mr = Iso2709Deserializer.deserialize(sb.toString().getBytes(StandardCharsets.UTF_8), "UTF-8");
             System.out.write(Iso2709Serializer.serialize(mr, toEncoding));        
         }
     }

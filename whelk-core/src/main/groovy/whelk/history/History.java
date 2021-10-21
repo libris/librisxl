@@ -5,12 +5,12 @@ import whelk.JsonLd;
 import java.util.*;
 
 public class History {
-    private HashMap<List<Object>, Ownership> m_pathOwnership;
+    private final HashMap<List<Object>, Ownership> m_pathOwnership;
 
     // The last version added to this history, needed for diffing the next one against.
     private DocumentVersion m_lastVersion;
 
-    private JsonLd m_jsonLd;
+    private final JsonLd m_jsonLd;
 
     /**
      * Reconstruct a records history given a (backwards chronologically ordered "DESC")

@@ -39,9 +39,7 @@ public class ResponseCommon
 
         // The OAI-PMH specification requires that parameters be echoed in response, unless the response has an error
         // code of badVerb or badArgument, in which case the parameters must be omitted.
-        boolean includeParameters = true;
-        if (errorCode.equals(OaiPmh.OAIPMH_ERROR_BAD_VERB) || errorCode.equals(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT))
-            includeParameters = false;
+        boolean includeParameters = !errorCode.equals(OaiPmh.OAIPMH_ERROR_BAD_VERB) && !errorCode.equals(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT);
 
         writeOaiPmhHeader(writer, request, includeParameters);
 

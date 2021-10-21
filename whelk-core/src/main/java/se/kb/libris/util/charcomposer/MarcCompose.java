@@ -11,7 +11,7 @@ import se.kb.libris.util.marc.io.StrictIso2709Reader;
  * @author marma
  */
 public class MarcCompose {
-    public static void main(String args[]) throws Exception {
+    public static void main(String[] args) throws Exception {
         if (args.length != 2) {
             System.err.println("usage: java se.kb.libris.util.charcomposer.MarcCompose <inencoding> <outencoding>");
             System.exit(1);
@@ -19,7 +19,7 @@ public class MarcCompose {
         
         String fromEncoding = args[0], toEncoding = args[1];
         StrictIso2709Reader reader = new StrictIso2709Reader(System.in);
-        byte record[] = null;
+        byte[] record = null;
 
         while ((record = reader.readIso2709()) != null) {
             MarcRecord mr = Iso2709Deserializer.deserialize(record, fromEncoding);

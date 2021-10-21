@@ -3,23 +3,23 @@ package whelk.util
 import groovy.transform.CompileStatic
 
 @CompileStatic
-public class ThreadPool {
+class ThreadPool {
     private final int THREAD_COUNT
     private final Thread[] s_threadPool
 
-    public ThreadPool(int threadCount) {
+    ThreadPool(int threadCount) {
         THREAD_COUNT = threadCount
         s_threadPool = new Thread[THREAD_COUNT]
     }
 
-    public interface Worker<T> {
+    interface Worker<T> {
         void doWork(T t, int threadIndex)
     }
 
     /**
      * Will block until a thread becomes available to perform this work.
      */
-    public <T> void executeOnThread(T workLoad, Worker<T> worker) {
+    def <T> void executeOnThread(T workLoad, Worker<T> worker) {
         // Find a suitable thread from the pool to do the work
 
         int i = 0
@@ -32,7 +32,7 @@ public class ThreadPool {
 
             if (s_threadPool[i] == null || s_threadPool[i].getState() == Thread.State.TERMINATED) {
                 s_threadPool[i] = new Thread(new Runnable() {
-                    public void run() {
+                    void run() {
                         worker.doWork(workLoad, i)
                     }
                 })
@@ -42,7 +42,7 @@ public class ThreadPool {
         }
     }
 
-    public int getActiveThreadCount() {
+    int getActiveThreadCount() {
         int activeThreadCount = 0
         for (int i = 0; i < THREAD_COUNT; ++i) {
             if (s_threadPool[i] != null && s_threadPool[i].getState() != Thread.State.TERMINATED)
@@ -51,7 +51,7 @@ public class ThreadPool {
         return activeThreadCount
     }
 
-    public void joinAll()
+    void joinAll()
             throws InterruptedException {
         for (int i = 0; i < THREAD_COUNT; ++i) {
             if (s_threadPool[i] != null)

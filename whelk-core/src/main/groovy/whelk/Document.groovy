@@ -505,7 +505,7 @@ class Document {
         }
     }
 
-    public String getWorkType() {
+    String getWorkType() {
         Object workId = get(workIdPath)
         if (workId == null)
             return null
@@ -520,7 +520,7 @@ class Document {
         return null
     }
 
-    public boolean libraryIsRegistrant() {
+    boolean libraryIsRegistrant() {
         Object catObj = get(categoryPath)
         if (catObj == null)
             return false
@@ -607,7 +607,7 @@ class Document {
         return _preparePath(path, data)
     }
 
-    public static boolean _preparePath(List path, Object root) {
+    static boolean _preparePath(List path, Object root) {
         // Start at root data node
         Object node = root
 
@@ -658,7 +658,7 @@ class Document {
         return _set(path, value, data)
     }
 
-    public static boolean _set(List path, Object value, Object root) {
+    static boolean _set(List path, Object value, Object root) {
         if (!_preparePath(path, root))
             return false
 
@@ -685,7 +685,7 @@ class Document {
         return true
     }
 
-    public static boolean _removeLeafObject(List path, Object root) {
+    static boolean _removeLeafObject(List path, Object root) {
         // Start at root data node
         Object node = root
 
@@ -711,7 +711,7 @@ class Document {
         return _get(path, data)
     }
 
-    public static Object _get(List path, Object root) {
+    static Object _get(List path, Object root) {
         // Start at root data node
         Object node = root
 
@@ -791,7 +791,7 @@ class Document {
      * the sameAs list. The same thing happens consistently to all
      * derivative (thing/work/etc) IDs.
      */
-    public void deepPromoteId(String aliasToPromote) {
+    void deepPromoteId(String aliasToPromote) {
         String oldId = get(recordIdPath)
         deepPromoteIdInternal(oldId, aliasToPromote, data)
     }

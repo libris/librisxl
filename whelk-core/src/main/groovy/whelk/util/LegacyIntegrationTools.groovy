@@ -149,7 +149,7 @@ class LegacyIntegrationTools {
 
         // Replace 003
         while (record.getControlfields("003").size() > 0)
-            record.getFields().remove(record.getControlfields("003").get(0));
+            record.getFields().remove(record.getControlfields("003").get(0))
 
         record.addField(new ControlfieldImpl("003", "SE-LIBR"))
     }

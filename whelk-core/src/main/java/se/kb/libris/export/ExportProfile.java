@@ -47,7 +47,7 @@ public class ExportProfile {
         for (String extra: properties.getProperty("extrafields", "").split(";")) {
             if (extra.trim().equals("")) continue;
             String sigel = extra.trim().split(":")[0].trim();
-            String fields[] = extra.trim().split(":")[1].trim().split(",");
+            String[] fields = extra.trim().split(":")[1].trim().split(",");
             String f = null;
 
             for (int i=0;i<fields.length;i++) {
@@ -70,7 +70,7 @@ public class ExportProfile {
         for (String extra: properties.getProperty("extrafields").split(";")) {
             if (extra.trim().equals("")) continue;
             String sigel = extra.trim().split(":")[0].trim();
-            String fields[] = extra.trim().split(":")[1].trim().split(",");
+            String[] fields = extra.trim().split(":")[1].trim().split(",");
             String f = null;
 
             for (int i=0;i<fields.length;i++) {
@@ -1011,7 +1011,7 @@ public class ExportProfile {
     private MarcRecord create999Fields(MarcRecord bibRecord, String value, String xkey, char code) {
         // Extract strings between single quotes and put them in separate 999 fields
         //Pattern pattern = Pattern.compile("\\'([^\\'\\']*)\\'");
-        Pattern pattern = Pattern.compile("\'([^']*)\'");
+        Pattern pattern = Pattern.compile("'([^']*)'");
         Matcher matcher = pattern.matcher(value);
         while (matcher.find() && matcher.groupCount() > 0) {
             String val = matcher.group(1);

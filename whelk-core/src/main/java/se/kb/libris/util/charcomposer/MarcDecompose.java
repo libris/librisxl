@@ -5,13 +5,15 @@ import se.kb.libris.util.marc.io.Iso2709Deserializer;
 import se.kb.libris.util.marc.io.Iso2709Serializer;
 import se.kb.libris.util.marc.io.StrictIso2709Reader;
 
+import java.nio.charset.StandardCharsets;
+
 
 /**
  *
  * @author marma
  */
 public class MarcDecompose {
-    public static void main(String args[]) throws Exception {
+    public static void main(String[] args) throws Exception {
         if (args.length != 2 && args.length != 4) {
             System.err.println("usage: java se.kb.libris.util.charcomposer.MarcDecompose <inencoding> <outencoding> [skipfrom skipto]");
             System.exit(1);
@@ -19,7 +21,7 @@ public class MarcDecompose {
         
         String fromEncoding = args[0], toEncoding = args[1];
         StrictIso2709Reader reader = new StrictIso2709Reader(System.in);
-        byte record[] = null;
+        byte[] record = null;
 
         if (args.length == 4) {
             StringBuffer sb = new StringBuffer(100*1000);
@@ -37,7 +39,7 @@ public class MarcDecompose {
                     else sb.append(com.ibm.icu.text.Normalizer.decompose(String.valueOf((char)c), false));
                 }
                 
-                MarcRecord mr = Iso2709Deserializer.deserialize(sb.toString().getBytes("UTF-8"), "UTF-8");
+                MarcRecord mr = Iso2709Deserializer.deserialize(sb.toString().getBytes(StandardCharsets.UTF_8), "UTF-8");
                 System.out.write(Iso2709Serializer.serialize(mr, toEncoding));
             }
         } else {

@@ -834,7 +834,7 @@ class MarcRuleSet {
                             fromTemplate(dfn.uriTemplate)
                                     .set('marcType', name).set(record).expandPartial())
                 } catch (IllegalArgumentException e) {
-                    ; // Fails on resolve if expanded is only partially filled
+                    // Fails on resolve if expanded is only partially filled
                 }
             }
 
@@ -1758,7 +1758,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             try {
                 value = Integer.parseInt(strValue.trim())
             } catch (NumberFormatException e) {
-                ; // pass
+                // pass
             }
         }
 
@@ -2747,7 +2747,7 @@ class MarcSubFieldHandler extends ConversionPart {
                         subVal : fromTemplate(subUriTemplate).expand(["_": subVal])
                 } catch (IllegalArgumentException|IndexOutOfBoundsException e) {
                     // Bad characters in what should have been a proper URI path ('+' expansion).
-                    ; // NOTE: We just drop the attempt here if the uriTemplate fails...
+                     // NOTE: We just drop the attempt here if the uriTemplate fails...
                 }
             }
             def newEnt = newEntity(state, resourceType, entId)

@@ -4,7 +4,7 @@ import javax.swing.*;
 
 public abstract class WizardCard extends JPanel
 {
-    private Wizard wizard;
+    private final Wizard wizard;
     public WizardCard(Wizard wizard)
     {
         this.wizard = wizard;
@@ -12,7 +12,7 @@ public abstract class WizardCard extends JPanel
 
     abstract void onShow(Object parameterFromPreviousCard);
 
-    protected void beforeNext() {};
+    protected void beforeNext() {}
 
     protected void setNextCard(String card)
     {

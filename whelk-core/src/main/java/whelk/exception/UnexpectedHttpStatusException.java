@@ -1,7 +1,7 @@
 package whelk.exception;
 
 public class UnexpectedHttpStatusException extends WhelkRuntimeException {
-    private int statusCode;
+    private final int statusCode;
 
     public UnexpectedHttpStatusException(String msg, int statusCode) {
         super(msg);

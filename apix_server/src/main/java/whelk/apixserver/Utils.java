@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class Utils
@@ -27,8 +28,8 @@ public class Utils
     static final String APIX_BASEURI = "https://libris.kb.se/apix";
     static final String APIX_SYSTEM_CODE = "APIX";
     static Whelk s_whelk;
-    private static JsonLD2MarcXMLConverter s_toMarcConverter;
-    private static MarcFrameConverter s_toJsonLdConverter;
+    private static final JsonLD2MarcXMLConverter s_toMarcConverter;
+    private static final MarcFrameConverter s_toJsonLdConverter;
     private static final Logger s_logger = LogManager.getLogger(Utils.class);
 
     static
@@ -57,7 +58,7 @@ public class Utils
     {
         try
         {
-            InputStream marcXmlInputStream = new ByteArrayInputStream(marcXmlString.getBytes("UTF-8"));
+            InputStream marcXmlInputStream = new ByteArrayInputStream(marcXmlString.getBytes(StandardCharsets.UTF_8));
             MarcXmlRecordReader reader = new MarcXmlRecordReader(marcXmlInputStream, "/record");
             MarcRecord marcRecord = reader.readRecord();
 
@@ -86,7 +87,7 @@ public class Utils
                 String bibThingId = null;
                 if ( 14 < itemOfSystemId.length() && itemOfSystemId.length() < 17) // XL system id
                 {
-                    bibThingId = Document.getBASE_URI().resolve(itemOfSystemId).toString()+"#it";
+                    bibThingId = Document.getBASE_URI().resolve(itemOfSystemId) +"#it";
                 }
                 else if (itemOfSystemId.matches("^\\d+$"))
                 {
