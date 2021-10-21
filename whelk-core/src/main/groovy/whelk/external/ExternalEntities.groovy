@@ -41,6 +41,7 @@ class ExternalEntities {
     Optional<Document> getEphemeral(String iri) {
         get(iri).map {doc ->
             doc.setRecordId("${doc.getThingIdentifiers().first()}#record".toString())
+            doc.setRecordType(JsonLd.PLACEHOLDER_RECORD_TYPE)
             doc
         }
     }
