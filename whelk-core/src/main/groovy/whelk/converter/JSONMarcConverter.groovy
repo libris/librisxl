@@ -59,9 +59,9 @@ class JSONMarcConverter {
                                 }
                             }else {
                                 int ind = 1
-                                if (dataKey.equals("ind1"))
+                                if (dataKey == "ind1")
                                     ind = 0
-                                if (dataValue.equals(""))
+                                if (dataValue == "")
                                     dataValue = " "
                                 datafield.setIndicator(ind, dataValue as char)
                             }

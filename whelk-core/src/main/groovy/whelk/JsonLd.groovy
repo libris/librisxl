@@ -1106,7 +1106,7 @@ class JsonLd {
         embedChain.add(mainId)
         Map newItem = [:]
         mainItem.each { key, value ->
-            if (!key.equals(JSONLD_ALT_ID_KEY))
+            if (key != JSONLD_ALT_ID_KEY)
                 newItem.put(key, toEmbedded(value, idMap, embedChain))
             else
                 newItem.put(key, value)
@@ -1149,14 +1149,14 @@ class JsonLd {
 
     private static void populateIdMap(Map data, Map idMap) {
         for (Object key : data.keySet()) {
-            if (key.equals(ID_KEY)
+            if (key == ID_KEY
                 // Don't index references (i.e. objects with only an @id).
                 && data.keySet().size() > 1
                 // Don't index graphs, since their @id:s do not denote them.
                 && !data.containsKey(GRAPH_KEY)
                ) {
                 addToIdMap(idMap, data, (String) data.get(key))
-            } else if (key.equals(JSONLD_ALT_ID_KEY)
+            } else if (key == JSONLD_ALT_ID_KEY
                     // Don't index graphs, since their @id:s do not denote them.
                     && !data.containsKey(GRAPH_KEY)
                     && data.get(key) instanceof List) {
@@ -1206,8 +1206,8 @@ class JsonLd {
     static void getReferencedBNodes(Map map, Set referencedBNodes) {
         // A jsonld reference is denoted as a json object containing exactly one member, with the key "@id".
         if (map.size() == 1) {
-            String key = map.keySet().getAt(0)
-            if (key.equals(ID_KEY)) {
+            String key = map.keySet()[0]
+            if (key == ID_KEY) {
                 String id = map.get(key)
                 if (id.startsWith("_:"))
                     referencedBNodes.add(id)

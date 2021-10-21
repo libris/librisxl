@@ -2803,7 +2803,7 @@ class MarcSubFieldHandler extends ConversionPart {
                     if (val.size() < 2) {
                         break
                     }
-                    if (val[-1].equals(c.toString())) {
+                    if (val[-1] == c.toString()) {
                         val = val[0..-2].trim()
                     }
                 }
@@ -2813,9 +2813,9 @@ class MarcSubFieldHandler extends ConversionPart {
                     if (val.size() < 2) {
                         break
                     }
-                    if (val[-1].equals(c.toString())) {
+                    if (val[-1] == c.toString()) {
                         val = val[0..-2].trim()
-                    } else if (val[0].equals(c.toString())) {
+                    } else if (val[0] == c.toString()) {
                         val = val[1..-1].trim()
                     }
                 }
@@ -3191,7 +3191,7 @@ class MatchRule {
             }
             return true
         } else {
-            return obj.equals(pattern)
+            return obj == pattern
         }
     }
 }

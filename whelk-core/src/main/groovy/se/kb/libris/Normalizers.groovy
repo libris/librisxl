@@ -141,7 +141,7 @@ class Normalizers {
         if (node instanceof Map) {
             for (Object key: node.keySet()) {
 
-                if (key.equals("@type")) {
+                if (key == "@type") {
                     Object typeObject = node[key]
                     if (typeObject instanceof List) {
                         List typeList = typeObject

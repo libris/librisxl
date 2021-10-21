@@ -321,17 +321,17 @@ class Document {
 
     boolean getDeleted() {
         String deletedString = get(statusPath)
-        if (deletedString == null || !deletedString.equals("marc:Deleted"))
+        if (deletedString == null || deletedString != "marc:Deleted")
             return false
         return true
     }
 
     private void updateRecordStatus() {
         String currentStatus = get(statusPath)
-        if (currentStatus != null && currentStatus.equals("marc:New")) {
+        if (currentStatus != null && currentStatus == "marc:New") {
             String modified = getModified()
             String created = getCreated()
-            if (modified != null && created != null && !modified.equals(created))
+            if (modified != null && created != null && modified != created)
                 set(statusPath, "marc:CorrectedOrRevised")
         }
     }
@@ -549,7 +549,7 @@ class Document {
     private Map getEmbedded(String id, Map localData) {
         Map map = (Map) localData
         String objId = map.get("@id")
-        if (objId.equals(id) && map.size() > 1) {
+        if (objId == id && map.size() > 1) {
             return map
         }
         else {
@@ -823,7 +823,7 @@ class Document {
                     for (int i = 0; i < sameAsList.size(); ++i) {
                         Map object = (Map) sameAsList.get(i)
                         String sameAsId = object["@id"]
-                        if (sameAsId.equals(nodeId))
+                        if (sameAsId == nodeId)
                             alreadyInSameAsList = true
                     }
                     if (!alreadyInSameAsList && nodeId != expectedNewDerivative) {
