@@ -34,8 +34,8 @@ sourceSets {
 mainClassName = "whelk.datatool.WhelkTool"
 
 test.testLogging {
-    showStandardStreams true
-    exceptionFormat "full"
+    showStandardStreams = true
+    exceptionFormat = "full"
 }
 
 repositories {

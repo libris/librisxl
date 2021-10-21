@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'war'
-apply plugin: 'jacoco'
+//apply plugin: 'jacoco'
 apply from: '../gretty.plugin'
 
 
@@ -32,17 +32,19 @@ sourceSets {
 }
 
 test {
+    /*
     jacoco {
         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
         classDumpDir = file("$buildDir/jacoco/classpathdumps")
     }
+    */
 }
 
 test.testLogging {
-    showStandardStreams true
-    exceptionFormat "full"
+    showStandardStreams = true
+    exceptionFormat = "full"
 }
-
+/*
 jacoco {
     toolVersion = "0.7.6.201602180812"
     reportsDirectory = file("$buildDir/coverage_report")
@@ -55,7 +57,7 @@ jacocoTestReport {
         html.destination file("${buildDir}/coverage_report/html")
     }
 }
-
+*/
 repositories {
     mavenCentral()
     maven { url "https://jitpack.io/" }
@@ -150,10 +152,10 @@ project.afterEvaluate {
 }
 
 gretty {
-    jacocoEnabled false // https://github.com/akhikhl/gretty/issues/425
+    //jacocoEnabled false // https://github.com/akhikhl/gretty/issues/425
     httpPort = 8180
     contextPath = '/'
-    systemProperties 'xl.secret.properties': System.getProperty("xl.secret.properties")
+    systemProperties = ['xl.secret.properties': System.getProperty("xl.secret.properties")]
     afterEvaluate {
         appRunDebug {
             debugPort = 5005

@@ -1,6 +1,6 @@
 apply plugin: 'groovy'
 apply plugin: 'java-library'
-apply plugin: 'jacoco'
+//apply plugin: 'jacoco'
 apply plugin: 'nebula.lint'
 
 archivesBaseName = "xlcore"
@@ -25,17 +25,19 @@ sourceSets {
 }
 
 test {
+    /*
     jacoco {
         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
         classDumpDir = file("$buildDir/jacoco/classpathdumps")
     }
+    */
 }
 
 test.testLogging {
-    showStandardStreams true
-    exceptionFormat "full"
+    showStandardStreams = true
+    exceptionFormat = "full"
 }
-
+/*
 jacoco {
     toolVersion = "0.8.2"
     reportsDirectory = file("$buildDir/coverage_report")
@@ -48,18 +50,15 @@ jacocoTestReport {
         html.destination file("${buildDir}/coverage_report/html")
     }
 }
-
+*/
 repositories {
     mavenCentral()
     maven { url "https://jitpack.io/" }
 }
 
 configurations {
-    integTestImplementation.extendsFrom(compile)
-    integTestImplementation.extendsFrom(testCompile)
-
-    integTestImplementation.extendsFrom(runtime)
-    integTestImplementation.extendsFrom(testRuntime)
+    integTestRuntimeOnly.extendsFrom(testRuntimeOnly)
+    integTestImplementation.extendsFrom(testImplementation)
 }
 
 // Don't blame me for this TRAVESTY. It is a necessity because of the versioning of xml-apis (2.0.2 which gradle otherwise chooses is OLDER (and broken) despite the version.)
@@ -131,14 +130,15 @@ dependencies {
 }
 
 task integTest(type: Test) {
+    useJUnitPlatform()
     group = LifecycleBasePlugin.VERIFICATION_GROUP
     description = 'Runs the integration tests.'
     outputs.upToDateWhen { false }
     testClassesDirs = sourceSets.integTest.output.classesDirs
     classpath = sourceSets.integTest.runtimeClasspath
     testLogging {
-        showStandardStreams true
-        exceptionFormat "full"
+        showStandardStreams = true
+        exceptionFormat = "full"
     }
     binaryResultsDirectory.set(file("$buildDir/integration-test-results/binary/integTest"))
     reports {
