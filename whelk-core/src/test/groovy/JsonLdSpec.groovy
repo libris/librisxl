@@ -511,7 +511,7 @@ class JsonLdSpec extends Specification {
 
         where:
         thing                                                          | group   || expected
-        ['@type': 'X', 'x1': 'x1', 'x2': 'x2', 'a1': 'a1', 'a2': 'a2'] | 'chips' || ['@type': 'X', 'a1': 'a1']
+        ['@type': 'X', 'x1': 'x1', 'x2': 'x2', 'a1': 'a1', 'a2': 'a2'] | 'chips' || ['@type': 'X', 'a1': 'a1', 'a2': 'a2']
         ['@type': 'X', 'x1': 'x1', 'x2': 'x2', 'a2': 'a2']             | 'chips' || ['@type': 'X', 'a2': 'a2']
         ['@type': 'X', 'x1': 'x1', 'x2': 'x2', 'a3': 'a3']             | 'chips' || ['@type': 'X', 'a3': 'a3']
         ['@type': 'X', 'x1': 'x1', 'x2': 'x2']                         | 'chips' || ['@type': 'X']

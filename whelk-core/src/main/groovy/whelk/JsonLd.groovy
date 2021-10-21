@@ -970,16 +970,13 @@ class JsonLd {
                     result[p] = thing[p]
                 }
                 else if (isAlternateProperties(p)) {
-                    for (def a : (List) p['alternateProperties']) {
+                    // We keep _all_ alternate properties, selecting one is more of a display thing 
+                    p['alternateProperties'].each { a ->
                         if (a instanceof List) {
-                            if (a.any { thing[it] }) {
-                                a.each { if (thing[it]) result[it] = thing[it] }
-                                break
-                            }
+                            a.each { if (thing[it]) result[it] = thing[it] }
                         }
                         else if (thing[a]) {
                             result[a] = thing[a]
-                            break
                         }
                     }
                 }
