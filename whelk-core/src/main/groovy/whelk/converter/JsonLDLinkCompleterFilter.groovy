@@ -36,7 +36,7 @@ class JsonLDLinkCompleterFilter {
         def byType = [:]
         def byIdOrSameAs = [:]
         def relatedItemsIndex = [byType: byType, byIdOrSameAs: byIdOrSameAs]
-        def oaipmhSetSpecs = doc.manifest?.extraData.get("oaipmhSetSpecs") ?: []
+        def oaipmhSetSpecs = doc.manifest?.extraData?.get("oaipmhSetSpecs") ?: []
         for (spec in oaipmhSetSpecs) {
             log.trace("Doc has link to ${spec}")
             if (spec.startsWith("authority:")) {

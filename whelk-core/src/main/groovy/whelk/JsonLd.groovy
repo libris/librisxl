@@ -233,10 +233,9 @@ class JsonLd {
         }
     }
 
-    @TypeChecked(TypeCheckingMode.SKIP)
     private void eachLens(Closure c) {
-        displayData['lensGroups']?.values().each { group ->
-            group.get('lenses')?.values().each { lens ->
+        ((Map<String, Map>) displayData['lensGroups'])?.values()?.each { group ->
+            ((Map) group.get('lenses'))?.values()?.each { lens ->
                 c(lens)
             }
         }

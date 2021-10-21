@@ -61,7 +61,7 @@ class ESQueryLensBoost {
                 jsonld.getLensFor([(JsonLd.TYPE_KEY): it], lenses)
             }
         } else {
-            return lenses?.lenses.values().findAll { lens ->
+            return lenses?.lenses?.values()?.findAll { lens ->
                 baseTypes.any { jsonld.isSubClassOf(lens.classLensDomain, it) }
             }
         }
