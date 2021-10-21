@@ -94,6 +94,7 @@ jar {
         attributes "Main-Class": "whelk.importer.ImporterMain"
     }
 
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from {
         configurations.runtimeClasspath.collect {
             it.isDirectory() ? it : project.zipTree(it).matching {
