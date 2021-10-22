@@ -510,11 +510,11 @@ class Whelk {
     private void createCacheRecordsAndPlaceholders(Document postUpdateDoc, Document preUpdateDoc = null) {
         Set<Link> postUpdateLinks = postUpdateDoc.getExternalRefs()
         Set<Link> preUpdateLinks = preUpdateDoc?.getExternalRefs() ?: new HashSet<Link>() //Collections.EMPTY_SET groovy compiler...?
-        
+
         def iris = { Set<Link> s -> s.collect { it.iri } as Set<String> }
         Set<String> addedIris = iris(postUpdateLinks) - iris(preUpdateLinks)
 
-        createCacheRecordsAndPlaceholders(iris(postUpdateLinks), !postUpdateDoc.isCacheRecord())
+        createCacheRecordsAndPlaceholders(addedIris, !postUpdateDoc.isCacheRecord())
     }
 
     private void createCacheRecordsAndPlaceholders(Set<String> iris, boolean tryFetchExternal) {
