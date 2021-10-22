@@ -908,4 +908,11 @@ class Document {
         jsonLd && key && jsonLd.isSetContainer(key)
     }
 
+    void replaceLinks(Map<String, String> oldToNew) {
+        DocumentUtil.findKey(data, JsonLd.ID_KEY) { value, path ->
+            if (oldToNew.containsKey(value)) {
+                new DocumentUtil.Replace(oldToNew[(String) value])
+            }
+        }
+    }
 }
