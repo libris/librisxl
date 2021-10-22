@@ -95,6 +95,10 @@ class WikidataEntity {
         if (!prefLabel.isEmpty())
             place['prefLabelByLang'] = prefLabel.collectEntries { [it.getLanguage(), it.getLexicalForm()] }
 
+        List description = getDescription().findAll { it.getLanguage() in ElasticSearch.LANGUAGES_TO_INDEX }
+        if (!prefLabel.isEmpty())
+            place['descriptionByLang'] = description.collectEntries { [it.getLanguage(), it.getLexicalForm()] }
+
         List country = getCountry().findAll { it.toString() != entityIri }
         if (!country.isEmpty())
             place['country'] = country.collect { ['@id': it.toString()] }
@@ -126,6 +130,14 @@ class WikidataEntity {
         ResultSet rs = QueryRunner.localSelectResult(queryString, graph)
 
         return rs.collect { it.get("prefLabel") }
+    }
+
+    List<RDFNode> getDescription() {
+        String queryString = "SELECT ?description { wd:${shortId} sdo:description ?description }"
+
+        ResultSet rs = QueryRunner.localSelectResult(queryString, graph)
+
+        return rs.collect { it.get("description") }
     }
 
     List<RDFNode> getCountry() {
