@@ -19,6 +19,7 @@ class QueryRunner {
                     "pq"      : "http://www.wikidata.org/prop/qualifier/",
                     "ps"      : "http://www.wikidata.org/prop/statement/",
                     "rdfs"    : "http://www.w3.org/2000/01/rdf-schema#",
+                    "sdo"     : "http://schema.org/",
                     "skos"    : "http://www.w3.org/2004/02/skos/core#",
                     "wd"      : "http://www.wikidata.org/entity/",
                     "wdt"     : "http://www.wikidata.org/prop/direct/",
