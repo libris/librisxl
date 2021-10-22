@@ -17,10 +17,12 @@ selectByCollection('bib') { doc ->
 
 void process(doc) {
     prod.each { p ->
-        getPathSafe(doc.graph, [1, p], []).each {
-            def place = asList(getPathSafe(it, ['place', 'label'])).flatten().join(' | ')
-            if (place) {
-                incrementStats(p, place)
+        ['place', 'agent'].each { what ->
+            getPathSafe(doc.graph, [1, p], []).each {
+                def label = asList(getPathSafe(it, [what, 'label'])).flatten().join(' | ')
+                if (label) {
+                    incrementStats("$what $p", label)
+                }
             }
         }
     }
