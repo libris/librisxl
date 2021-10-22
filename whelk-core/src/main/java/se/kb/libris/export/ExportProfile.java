@@ -16,13 +16,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Vector;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ExportProfile {
@@ -437,27 +435,7 @@ public class ExportProfile {
 
         return mr;
     }
-
-    public static MarcRecord dehyphenateIssn(MarcRecord mr) {
-        Iterator iter = mr.iterator("022");
-
-        while (iter.hasNext()) {
-            Datafield df = (Datafield)iter.next();
-            Iterator sfiter = df.iterator("a|z");
-
-            while (sfiter.hasNext()) {
-                Subfield sf = (Subfield)sfiter.next();
-                String data = sf.getData();
-
-                if (sf.getData().length() >= 9 && sf.getData().charAt(4) == '-') {
-                    sf.setData(data.substring(0,4) + data.substring(5));
-                }
-            }
-        }
-
-        return mr;
-    }
-
+    
     public MarcRecord mergeBibAuth(MarcRecord bibRecord, MarcRecord authRecord) {
         Iterator iter = authRecord.iterator("1..|4..|5..|750");
         Datafield df1XX = null;
@@ -976,48 +954,5 @@ public class ExportProfile {
             }
         }
     }
-
-    private MarcRecord addXinfo999(MarcRecord bibRecord) {
-        for (Entry<String, String> entry : bibRecord.getProperties().entrySet()) {
-            String key = entry.getKey(), value = entry.getValue();
-            // Xinfo hash key
-            String xkey = key.substring(key.indexOf('_') + 1, key.lastIndexOf('_'));
-            // Xinfo type
-            String xtype = key.substring(key.lastIndexOf('_') + 1);
-            if (xtype.equals("sum")) {
-                bibRecord = create999Fields(bibRecord, value, xkey, 'b');
-            }
-            else if (xtype.equals("toc")) {
-                bibRecord = create999Fields(bibRecord, value, xkey, 'c');
-            }
-            else if (xtype.equals("rev")) {
-                bibRecord = create999Fields(bibRecord, value, xkey, 'd');
-            }
-            else if (xtype.equals("img")) {
-                bibRecord = create999Fields(bibRecord, value, xkey, 'e');
-            }
-            else if (xtype.equals("spl")) {
-                bibRecord = create999Fields(bibRecord, value, xkey, 'x');
-            }
-        }
-        return bibRecord;
-    }
-
-    private MarcRecord create999Fields(MarcRecord bibRecord, String value, String xkey, char code) {
-        // Extract strings between single quotes and put them in separate 999 fields
-        //Pattern pattern = Pattern.compile("\\'([^\\'\\']*)\\'");
-        Pattern pattern = Pattern.compile("'([^']*)'");
-        Matcher matcher = pattern.matcher(value);
-        while (matcher.find() && matcher.groupCount() > 0) {
-            String val = matcher.group(1);
-            Datafield df = bibRecord.createDatafield("999");
-            df.setIndicator(0, ' ');
-            df.setIndicator(1, ' ');
-            df.addSubfield(df.createSubfield('a', "xinfo"));
-            df.addSubfield(df.createSubfield(code, val));
-            df.addSubfield(df.createSubfield('y', xkey));
-            bibRecord.addField(df);
-        }
-        return bibRecord;
-    }
+    
 }
