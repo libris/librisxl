@@ -22,6 +22,7 @@ import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 
 import java.time.ZoneId
+import java.util.function.Consumer
 import java.util.function.Function
 
 /**
@@ -515,9 +516,15 @@ class Whelk {
         Set<String> addedIris = iris(postUpdateLinks) - iris(preUpdateLinks)
 
         createCacheRecordsAndPlaceholders(addedIris, !postUpdateDoc.isCacheRecord())
+
+        def redirects = createCacheRecordsAndPlaceholders(addedIris, !postUpdateDoc.isCacheRecord())
+        
+        if (redirects) {
+            postUpdateDoc.replaceLinks(redirects)
+        }
     }
 
-    private void createCacheRecordsAndPlaceholders(Set<String> iris, boolean tryFetchExternal) {
+    private Map<String, String> createCacheRecordsAndPlaceholders(Set<String> iris, boolean tryFetchExternal) {
         Set<String> brokenOrExternalIris = iris - storage.getSystemIdsByIris(iris).keySet()
 
         boolean minorUpdate = true
@@ -526,11 +533,17 @@ class Whelk {
         def collection = LegacyIntegrationTools.NO_MARC_COLLECTION
         def deleted = false
         
+        Map<String, String> redirectedIris = [:]
+        
         brokenOrExternalIris.each { iri -> 
             def doc = tryFetchExternal 
                     ? external.get(iri).orElse(ExternalEntities.getPlaceholder(iri))
                     : ExternalEntities.getPlaceholder(iri)
 
+            if (doc.getThingIdentifiers().first() != iri) {
+                redirectedIris[iri] = doc.getThingIdentifiers().first()
+            }
+            
             try {
                 createDocument(doc, changedIn, changedBy, collection, deleted)
             }
@@ -544,9 +557,14 @@ class Whelk {
                 .findAll{doc -> doc.isPlaceholder() }
                 .each { doc ->
                     try {
-                        external.getEphemeral(doc.getThingIdentifiers().first()).ifPresent({ extDoc ->
+                        String iri = doc.getThingIdentifiers().first()
+                        external.getEphemeral(iri).ifPresent( (Consumer<Document>) { Document extDoc ->
                             def checkSum = doc.getChecksum(jsonld)
                             extDoc.setRecordId(doc.getRecordIdentifiers().first())
+                            if (extDoc.getThingIdentifiers().first() != iri) {
+                                redirectedIris[iri] = extDoc.getThingIdentifiers().first()
+                                extDoc.addThingIdentifier(iri)
+                            }
                             storeAtomicUpdate(extDoc, minorUpdate, changedIn, changedBy, checkSum)
                         })
                     }
@@ -554,5 +572,7 @@ class Whelk {
                         log.warn("Failed to update ${doc.shortId}: $e", e)
                     }
                 }
+        
+        return redirectedIris
     }
 }
