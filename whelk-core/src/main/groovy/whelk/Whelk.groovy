@@ -514,10 +514,10 @@ class Whelk {
         def iris = { Set<Link> s -> s.collect { it.iri } as Set<String> }
         Set<String> addedIris = iris(postUpdateLinks) - iris(preUpdateLinks)
 
-        createPlaceholdersAndExternalDocs(iris(postUpdateLinks), !postUpdateDoc.isCacheRecord())
+        createCacheRecordsAndPlaceholders(iris(postUpdateLinks), !postUpdateDoc.isCacheRecord())
     }
 
-    private void createPlaceholdersAndExternalDocs(Set<String> iris, boolean tryFetchExternal) {
+    private void createCacheRecordsAndPlaceholders(Set<String> iris, boolean tryFetchExternal) {
         Set<String> brokenOrExternalIris = iris - storage.getSystemIdsByIris(iris).keySet()
 
         boolean minorUpdate = true
