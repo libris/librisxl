@@ -6,6 +6,7 @@ import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.RDFNode
 import whelk.component.ElasticSearch
+import whelk.util.Metrics
 
 class Wikidata implements Mapper {
     @Override
@@ -70,7 +71,9 @@ class WikidataEntity {
 
     private void loadGraph() {
         try {
-            graph.read("https://www.wikidata.org/wiki/Special:EntityData/${shortId}.ttl?flavor=dump", "Turtle")
+            Metrics.clientTimer.labels(Wikidata.class.getSimpleName(), 'ttl-dump').time {
+                graph.read("https://www.wikidata.org/wiki/Special:EntityData/${shortId}.ttl?flavor=dump", "Turtle")
+            }
         } catch (Exception ex) {
             println("Unable to load graph for entity ${entityIri}")
         }
