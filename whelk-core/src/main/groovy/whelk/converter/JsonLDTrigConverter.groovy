@@ -1,10 +1,12 @@
 package whelk.converter
 
 import groovy.util.logging.Log4j2 as Log
-import org.codehaus.jackson.map.ObjectMapper
-import whelk.*
+import whelk.JsonLd
+import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.util.PropertyLoader
+
+import static whelk.util.Jackson.mapper
 
 @Log
 class JsonLDTrigConverter implements FormatConverter {
@@ -12,8 +14,7 @@ class JsonLDTrigConverter implements FormatConverter {
     String requiredContentType = "application/ld+json"
     def context
     def base
-    def mapper = new ObjectMapper()
-
+    
     JsonLDTrigConverter(String base = null, Whelk whelk = null) {
         if (whelk) {
             context = JsonLdToTurtle.parseContext(['@context': whelk.jsonld.context])
@@ -27,7 +28,7 @@ class JsonLDTrigConverter implements FormatConverter {
         if (context == null) {
             Properties props = PropertyLoader.loadProperties("secret")
             PostgreSQLComponent postgreSQLComponent = new PostgreSQLComponent(props.getProperty("sqlUrl"))
-            context = JsonLdToTurtle.parseContext( mapper.readValue(postgreSQLComponent.getContext(), HashMap.class) )
+            context = JsonLdToTurtle.parseContext(mapper.readValue(postgreSQLComponent.getContext(), HashMap.class) )
         }
     }
 

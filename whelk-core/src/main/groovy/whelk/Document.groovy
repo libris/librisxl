@@ -1,8 +1,6 @@
 package whelk
 
-
 import groovy.util.logging.Log4j2 as Log
-import org.codehaus.jackson.map.ObjectMapper
 import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
@@ -14,6 +12,8 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.function.Predicate
+
+import static whelk.util.Jackson.mapper
 
 /**
  * A document is represented as a data Map (containing Maps, Lists and Value objects).
@@ -38,8 +38,6 @@ class Document {
             BASE_URI = new URI("https://libris.kb.se/")
         }
     }
-
-    static final ObjectMapper mapper = new ObjectMapper()
 
     static final List thingPath = ["@graph", 1]
     static final List thingIdPath = ["@graph", 0, "mainEntity", "@id"]

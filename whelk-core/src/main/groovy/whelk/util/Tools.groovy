@@ -1,14 +1,8 @@
 package whelk.util
 
-
-import org.codehaus.jackson.map.ObjectMapper
-import whelk.Document
-
 import java.text.Normalizer
 
 class Tools {
-    static ObjectMapper staticMapper = new ObjectMapper()
-
     /**
      * Detects the content-type of supplied data.
      * TODO: Implement properly.
@@ -143,13 +137,5 @@ class Tools {
         def progressSpinner = ['/','-','\\','|']
         int state = currentCount % (progressSpinner.size()-1)
         print "${message}  ${progressSpinner[state]}                                                                 \r"
-    }
-
-    static Map getDataAsMap(Document doc) {
-        return staticMapper.readValue(doc.getDataAsString(), Map)
-    }
-
-    static String getMapAsString(Map map) {
-        return staticMapper.writeValueAsString(map)
     }
 }

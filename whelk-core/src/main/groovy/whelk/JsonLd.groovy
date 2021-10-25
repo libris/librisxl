@@ -6,7 +6,6 @@ import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import org.codehaus.jackson.map.ObjectMapper
 import whelk.exception.FramingException
 import whelk.exception.WhelkRuntimeException
 import whelk.util.DocumentUtil
@@ -54,8 +53,6 @@ class JsonLd {
     static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf', 'related', 'derivedFrom']
 
     static final Set<String> LD_KEYS
-
-    static final ObjectMapper mapper = new ObjectMapper()
 
     static {
         LD_KEYS = [

@@ -1,13 +1,12 @@
 package datatool.util
 
-import org.codehaus.jackson.map.ObjectMapper
-import spock.lang.Shared
+
 import spock.lang.Specification
 
-class DocumentComparatorSpec extends Specification {
-    @Shared
-    ObjectMapper mapper = new ObjectMapper()
+import static whelk.util.Jackson.mapper
 
+class DocumentComparatorSpec extends Specification {
+    
     def "isEqual"() {
         given:
         DocumentComparator d = new DocumentComparator({ o -> ("ordered" == o) })

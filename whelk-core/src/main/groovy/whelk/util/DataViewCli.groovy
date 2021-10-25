@@ -3,6 +3,8 @@ package whelk.util
 import whelk.Document
 import whelk.Whelk
 
+import static whelk.util.Jackson.mapper
+
 // TODO: factor out and use MarcFrameCli.addJsonLd to allow for local data.
 assert 'xl.secret.properties' in System.properties
 
@@ -20,7 +22,7 @@ def view(cmd, source) {
         //case 'chip':
         //    break
         case 'embellish':
-            return ld.mapper.writeValueAsString(ld.embellish(source))
+            return mapper.writeValueAsString(ld.embellish(source))
         case 'index':
             def doc = new Document(source)
             return whelk.elastic.getShapeForIndex(doc, whelk, null)
@@ -39,7 +41,7 @@ if (args.length > 1) {
 }
 
 for (fpath in fpaths) {
-    def source = ld.mapper.readValue(new File(fpath), Map)
+    def source = mapper.readValue(new File(fpath), Map)
     def result = view(cmd, source)
     println result
 }
