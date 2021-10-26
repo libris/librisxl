@@ -27,6 +27,7 @@ sourceSets {
 }
 
 test {
+    useJUnitPlatform()
     /*
     jacoco {
         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")

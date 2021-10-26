@@ -40,6 +40,10 @@ sourceSets {
     }
 }
 
+test {
+    useJUnitPlatform()
+}
+
 test.testLogging {
     showStandardStreams true
     exceptionFormat "full"
