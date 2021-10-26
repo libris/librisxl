@@ -1,7 +1,6 @@
 package whelk.rest.api
 
 import org.codehaus.jackson.JsonParseException
-import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.Whelk
 import whelk.util.WhelkFactory
@@ -9,6 +8,8 @@ import whelk.util.WhelkFactory
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+
+import static whelk.util.Jackson.mapper
 
 /**
  * The purpose of this class is to facilitate refreshing of records that have been modified in authoritative storage
@@ -20,7 +21,6 @@ import javax.servlet.http.HttpServletResponse
  */
 class RefreshAPI extends HttpServlet
 {
-    public final static mapper = new ObjectMapper()
     private Whelk whelk
 
     RefreshAPI() {

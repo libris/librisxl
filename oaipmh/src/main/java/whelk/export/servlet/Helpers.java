@@ -7,9 +7,22 @@ import whelk.util.LegacyIntegrationTools;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Stack;
+import java.util.StringJoiner;
+
+import static whelk.util.Jackson.mapper;
 
 public class Helpers
 {
@@ -157,7 +170,7 @@ public class Helpers
                     {
                         String data = resultSet.getString("data");
 
-                        Document updated = new Document(ResponseCommon.mapper.readValue(data, HashMap.class));
+                        Document updated = new Document(mapper.readValue(data, HashMap.class));
                         emitAffected(updated);
 
                         // Did reading this record from the DB result in anything new in the export flow?

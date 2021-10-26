@@ -7,12 +7,10 @@ import com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory
 import groovy.json.StringEscapeUtils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
-import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
 import org.postgresql.util.PGobject
 import org.postgresql.util.PSQLException
 import whelk.Document
-import whelk.history.DocumentVersion
 import whelk.IdType
 import whelk.JsonLd
 import whelk.Link
@@ -25,6 +23,7 @@ import whelk.exception.TooHighEncodingLevelException
 import whelk.exception.WhelkException
 import whelk.exception.WhelkRuntimeException
 import whelk.filter.LinkFinder
+import whelk.history.DocumentVersion
 import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 
@@ -44,6 +43,7 @@ import java.util.regex.Pattern
 
 import static groovy.transform.TypeCheckingMode.SKIP
 import static java.sql.Types.OTHER
+import static whelk.util.Jackson.mapper
 
 /**
  *  It is important to not grab more than one connection per request/thread to avoid connection related deadlocks.
@@ -72,8 +72,6 @@ class PostgreSQLComponent {
     public static final String PROPERTY_SQL_URL = "sqlUrl"
     public static final String PROPERTY_SQL_MAX_POOL_SIZE = "sqlMaxPoolSize"
     public static final String PROPERTY_EMBELLISH_CACHE_MAX_SIZE = "embellishCacheMaxSizeBytes"
-
-    public static final ObjectMapper mapper = new ObjectMapper()
 
     private static final int DEFAULT_MAX_POOL_SIZE = 16
     private static final String driverClass = "org.postgresql.Driver"

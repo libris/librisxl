@@ -2,13 +2,14 @@ package whelk.rest.api
 
 import whelk.Document
 import whelk.Whelk
-import whelk.component.PostgreSQLComponent
 import whelk.util.LegacyIntegrationTools
 import whelk.util.WhelkFactory
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+
+import static whelk.util.Jackson.mapper
 
 class RecordRelationAPI extends HttpServlet {
 
@@ -86,21 +87,21 @@ class RecordRelationAPI extends HttpServlet {
             for (String resultId : result) {
                 ids.add(Document.getBASE_URI().toString() + resultId)
             }
-            jsonString = PostgreSQLComponent.mapper.writeValueAsString(ids)
+            jsonString = mapper.writeValueAsString(ids)
         }
         else if (returnMode.equals("bare_record")) {
             List<Map> records = new ArrayList<>(result.size())
             for (String resultId : result) {
                 records.add(whelk.storage.load(resultId).data)
             }
-            jsonString = PostgreSQLComponent.mapper.writeValueAsString(records)
+            jsonString = mapper.writeValueAsString(records)
         }
         else if (returnMode.equals("embellished_record")) {
             List<Map> records = new ArrayList<>(result.size())
             for (String resultId : result) {
                 records.add( whelk.loadEmbellished(resultId).data )
             }
-            jsonString = PostgreSQLComponent.mapper.writeValueAsString(records)
+            jsonString = mapper.writeValueAsString(records)
         }
         else {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,

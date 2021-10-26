@@ -3,7 +3,6 @@ package whelk.component
 import groovy.json.JsonOutput
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.codec.binary.Base64
-import org.codehaus.jackson.map.ObjectMapper
 import se.kb.libris.utils.isbn.ConvertException
 import se.kb.libris.utils.isbn.Isbn
 import se.kb.libris.utils.isbn.IsbnException
@@ -11,12 +10,14 @@ import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
-import whelk.exception.UnexpectedHttpStatusException
 import whelk.exception.InvalidQueryException
+import whelk.exception.UnexpectedHttpStatusException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
+
+import static whelk.util.Jackson.mapper
 
 @Log
 class ElasticSearch {
@@ -31,8 +32,6 @@ class ElasticSearch {
             'http://id.kb.se/',
             'https://id.kb.se/',
     ]
-
-    private static final ObjectMapper mapper = new ObjectMapper()
 
     public int maxResultWindow = 10000 // Elasticsearch default (fallback value)
     

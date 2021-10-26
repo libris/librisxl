@@ -1,6 +1,6 @@
 package whelk.rest.api
 
-import org.codehaus.jackson.map.ObjectMapper
+
 import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -25,6 +25,7 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED
 import static javax.servlet.http.HttpServletResponse.SC_OK
 import static whelk.rest.api.MimeTypes.JSON
 import static whelk.rest.api.MimeTypes.JSONLD
+import static whelk.util.Jackson.mapper
 
 /**
  * Created by markus on 2015-10-16.
@@ -39,9 +40,7 @@ class CrudSpec extends Specification {
     HttpServletResponse response
 
     static final URI BASE_URI = Document.BASE_URI
-    private static final ObjectMapper mapper = new ObjectMapper()
-
-
+    
     void setup() {
         request = GroovyMock(HttpServletRequest.class)
         request.getRequestURI() >> {

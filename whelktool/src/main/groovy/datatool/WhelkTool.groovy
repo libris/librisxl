@@ -2,7 +2,6 @@ package whelk.datatool
 
 import com.google.common.util.concurrent.MoreExecutors
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
-import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.IdGenerator
 import whelk.Whelk
@@ -31,6 +30,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 import static java.util.concurrent.TimeUnit.SECONDS
+import static whelk.util.Jackson.mapper
 
 class WhelkTool {
 
@@ -69,7 +69,7 @@ class WhelkTool {
 
     private Throwable errorDetected
 
-    private def jsonWriter = new ObjectMapper().writerWithDefaultPrettyPrinter()
+    private def jsonWriter = mapper.writerWithDefaultPrettyPrinter()
 
     Map<String, Closure> compiledScripts = [:]
 

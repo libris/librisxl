@@ -2,7 +2,7 @@ package whelk.util
 
 //TODO: unused, anything useful in here?
 class Tools {
-    
+
     static def getDeepValue(Map map, String key) {
         def keylist = key.split(/\./)
         def lastkey = keylist[keylist.length-1]

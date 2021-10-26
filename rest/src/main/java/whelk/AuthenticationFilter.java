@@ -6,7 +6,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import whelk.util.PropertyLoader;
 
@@ -29,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-public class AuthenticationFilter implements Filter {
+import static whelk.util.Jackson.mapper;
 
-    private static final ObjectMapper mapper = new ObjectMapper();
+public class AuthenticationFilter implements Filter {
     private static final String XL_ACTIVE_SIGEL_HEADER = "XL-Active-Sigel";
     private List<String> supportedMethods;
     private List<String> whitelistedPostEndpoints;

@@ -4,12 +4,15 @@ import whelk.Document
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.JsonLD2MarcXMLConverter
+import whelk.util.Jackson
 import whelk.util.LegacyIntegrationTools
 import whelk.util.WhelkFactory
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+
+import static whelk.util.Jackson.mapper
 
 class HoldAPI extends HttpServlet {
 
@@ -72,7 +75,7 @@ class HoldAPI extends HttpServlet {
                 holdingIDs.add(holding.getCompleteId())
         }
 
-        String jsonString = PostgreSQLComponent.mapper.writeValueAsString(holdingIDs)
+        String jsonString = mapper.writeValueAsString(holdingIDs)
         response.setContentType("application/json")
         response.setHeader("Expires", "0")
         response.setHeader('Cache-Control', 'no-cache')
