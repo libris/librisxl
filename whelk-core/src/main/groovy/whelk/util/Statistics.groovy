@@ -10,7 +10,7 @@ class Statistics {
     ConcurrentHashMap<String, ConcurrentHashMap<Object, AtomicInteger>> c = new ConcurrentHashMap<>()
     ConcurrentHashMap<String, ConcurrentHashMap<Object, ArrayBlockingQueue<Object>>> examples = new ConcurrentHashMap<>()
 
-    ThreadLocal<Object> context = ThreadLocal.withInitial({ -> null });
+    ThreadLocal<Object> context = ThreadLocal.withInitial({ -> null })
 
     int numExamples
 

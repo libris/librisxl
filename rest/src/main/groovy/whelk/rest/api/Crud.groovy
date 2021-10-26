@@ -20,7 +20,6 @@ import whelk.exception.ModelValidationException
 import whelk.exception.StaleUpdateException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.UnexpectedHttpStatusException
-import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
 import whelk.rest.api.CrudGetRequest.Lens
 import whelk.rest.security.AccessControl
@@ -280,8 +279,8 @@ class Crud extends HttpServlet {
                     request.getId(), request.getVersion().orElse(null))
         }
 
-        Document doc = docAndLocation.first
-        String loc = docAndLocation.second
+        Document doc = docAndLocation.v1
+        String loc = docAndLocation.v2
 
         if (!doc && !loc) {
             sendNotFound(response, request.getPath())
@@ -757,8 +756,8 @@ class Crud extends HttpServlet {
         }
 
         Tuple2<Document, String> docAndLoc = getDocumentFromStorage(idFromUrl)
-        Document existingDoc = docAndLoc.first
-        String location = docAndLoc.second
+        Document existingDoc = docAndLoc.v1
+        String location = docAndLoc.v2
 
         if (!existingDoc && !location) {
             failedRequests.labels("PUT", request.getRequestURI(),
@@ -892,14 +891,6 @@ class Crud extends HttpServlet {
                     HttpServletResponse.SC_CONFLICT.toString()).inc()
             sendError(response, HttpServletResponse.SC_CONFLICT,
                     scfe.message)
-            return null
-        } catch (WhelkAddException wae) {
-            log.warn("Whelk failed to store document: ${wae.message}")
-            failedRequests.labels(httpMethod, request.getRequestURI(),
-                    HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE.toString()).inc()
-            // FIXME data leak
-            sendError(response, HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE,
-                    wae.message)
             return null
         } catch (StaleUpdateException eme) {
             log.warn("Did not store document, because the ETAGs did not match.")
@@ -1035,8 +1026,8 @@ class Crud extends HttpServlet {
         try {
             String id = getRequestPath(request).substring(1)
             Tuple2<Document, String> docAndLocation = getDocumentFromStorage(id)
-            Document doc = docAndLocation.first
-            String loc = docAndLocation.second
+            Document doc = docAndLocation.v1
+            String loc = docAndLocation.v2
 
             log.debug("Checking permissions for ${doc}")
 

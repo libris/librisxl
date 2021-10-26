@@ -1,5 +1,5 @@
-import whelk.Document;
-import whelk.Whelk;
+import whelk.Document
+import whelk.Whelk
 
 String where = """
     ( collection = 'bib' and data#>'{@graph,1,instanceOf,subject}' @> '[{"@type":"ComplexSubject"}]' )

@@ -20,10 +20,10 @@ public class DeleteOrCreateHoldPanel extends WizardCard implements ActionListene
     final Wizard window;
     private final boolean createHoldInsteadOfDelete;
 
-    private JFileChooser chooser = new JFileChooser();
+    private final JFileChooser chooser = new JFileChooser();
     private File chosenFile;
-    private JTextField chosenFileField;
-    private JTextField sigelField;
+    private final JTextField chosenFileField;
+    private final JTextField sigelField;
 
     public DeleteOrCreateHoldPanel(Wizard wizard, boolean createHolds)
     {

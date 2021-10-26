@@ -108,7 +108,7 @@ public class Helpers
                     List<Tuple2<String, String>> dependers = OaiPmh.s_whelk.getStorage().followDependers(updated.getShortId(), JsonLd.getNON_DEPENDANT_RELATIONS());
                     for (Tuple2<String, String> depender : dependers)
                     {
-                        String dependerId = depender.getFirst();
+                        String dependerId = depender.getV1();
                         Document dependerDocument = OaiPmh.s_whelk.getDocument(dependerId);
                         String dependerCollection = LegacyIntegrationTools.determineLegacyCollection(dependerDocument, OaiPmh.s_whelk.getJsonld());
                         if (dependerCollection.equals("bib") && requestedCollection.equals("bib"))

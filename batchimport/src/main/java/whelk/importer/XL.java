@@ -46,17 +46,17 @@ class XL
     public static final String ENC_ABBREVIVATED_STATUS = "marc:AbbreviatedLevel";  // 3
     public static final String ENC_MINMAL_STATUS = "marc:MinimalLevel";  // 7
 
-    private Whelk m_whelk;
-    private LinkFinder m_linkfinder;
-    private Parameters m_parameters;
-    private Properties m_properties;
-    private MarcFrameConverter m_marcFrameConverter;
+    private final Whelk m_whelk;
+    private final LinkFinder m_linkfinder;
+    private final Parameters m_parameters;
+    private final Properties m_properties;
+    private final MarcFrameConverter m_marcFrameConverter;
     private Merge m_merge;
     private static boolean verbose = false;
 
     // The predicates listed here are those that must always be represented as lists in jsonld, even if the list
     // has only a single member.
-    private Set<String> m_repeatableTerms;
+    private final Set<String> m_repeatableTerms;
 
     private final String IMPORT_SYSTEM_CODE;
 
@@ -528,7 +528,7 @@ class XL
         {
             if (field.getIndicator(0) == '7')
             {
-                List<Subfield> sf2uri = field.getSubfields("2").stream().filter(sf -> sf.getData().toLowerCase().equals("uri")).collect(Collectors.toList());
+                List<Subfield> sf2uri = field.getSubfields("2").stream().filter(sf -> sf.getData().equalsIgnoreCase("uri")).collect(Collectors.toList());
 		if ( sf2uri.size() == 0 ) continue;
 
                 List<Subfield> subfields = field.getSubfields("a");
@@ -557,7 +557,7 @@ class XL
         {
             if (field.getIndicator(0) == '7')
             {
-                List<Subfield> sf2urn = field.getSubfields("2").stream().filter(sf -> sf.getData().toLowerCase().equals("urn")).collect(Collectors.toList());
+                List<Subfield> sf2urn = field.getSubfields("2").stream().filter(sf -> sf.getData().equalsIgnoreCase("urn")).collect(Collectors.toList());
 		if ( sf2urn.size() == 0 ) continue;
 
                 List<Subfield> subfields = field.getSubfields("a");

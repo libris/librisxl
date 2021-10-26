@@ -5,12 +5,12 @@ import whelk.JsonLd;
 import java.util.*;
 
 public class History {
-    private HashMap<List<Object>, Ownership> m_pathOwnership;
+    private final HashMap<List<Object>, Ownership> m_pathOwnership;
 
     // The last version added to this history, needed for diffing the next one against.
     private DocumentVersion m_lastVersion;
 
-    private JsonLd m_jsonLd;
+    private final JsonLd m_jsonLd;
 
     /**
      * Reconstruct a records history given a (backwards chronologically ordered "DESC")
@@ -152,7 +152,7 @@ public class History {
             for (int i = 0; i < tempNew.size(); ++i) {
                 List<Object> childPath = new ArrayList(path);
                 if ( tempOld.size() > i ) {
-                    childPath.add(new Integer(i));
+                    childPath.add(Integer.valueOf(i));
                     examineDiff(childPath, version,
                             tempNew.get(i), tempOld.get(i),
                             compositePath);
@@ -195,7 +195,7 @@ public class History {
                 beginLine(b, indent, path);
                 b.append("[\n");
                 List<Object> childPath = new ArrayList(path);
-                childPath.add(new Integer(i));
+                childPath.add(Integer.valueOf(i));
                 toString(b, ((List)current).get(i), indent + 1, childPath);
                 b.setLength(b.length()-1); // drop newline
                 b.append(",\n");

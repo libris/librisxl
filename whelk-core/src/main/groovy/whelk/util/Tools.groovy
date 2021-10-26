@@ -1,19 +1,7 @@
 package whelk.util
 
-import java.text.Normalizer
-
+//TODO: unused, anything useful in here?
 class Tools {
-    /**
-     * Detects the content-type of supplied data.
-     * TODO: Implement properly.
-     */
-    static String contentType(byte[] data) {
-        return "text/plain"
-    }
-
-    static String contentType(String data) {
-        return contentType(data.getBytes('UTF-8'))
-    }
 
     static def getDeepValue(Map map, String key) {
         def keylist = key.split(/\./)
@@ -124,18 +112,5 @@ class Tools {
             }
         }
         return origmap
-    }
-
-    static String normalizeString(String inString) {
-        if (!Normalizer.isNormalized(inString, Normalizer.Form.NFC)) {
-            return Normalizer.normalize(inString, Normalizer.Form.NFC)
-        }
-        return inString
-    }
-
-    static void printSpinner(String message, int currentCount) {
-        def progressSpinner = ['/','-','\\','|']
-        int state = currentCount % (progressSpinner.size()-1)
-        print "${message}  ${progressSpinner[state]}                                                                 \r"
     }
 }

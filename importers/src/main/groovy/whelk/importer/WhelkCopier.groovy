@@ -68,7 +68,7 @@ class WhelkCopier {
             else
                 doc = source.getDocument(id)
             if (doc == null) {
-                System.err.println("Could not load document with ID: $id");
+                System.err.println("Could not load document with ID: $id")
                 continue
             }
             doc.baseUri = source.baseUri

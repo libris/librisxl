@@ -27,9 +27,9 @@ import java.util.*;
 public class MarcCliExport
 {
     private final int BATCH_SIZE = 200;
-    private JsonLD2MarcXMLConverter m_toMarcXmlConverter;
-    private Whelk m_whelk;
-    private Set<String> exportedUris = new TreeSet<>();
+    private final JsonLD2MarcXMLConverter m_toMarcXmlConverter;
+    private final Whelk m_whelk;
+    private final Set<String> exportedUris = new TreeSet<>();
 
     final static Logger log = LogManager.getLogger(MarcCliExport.class);
 
@@ -110,23 +110,23 @@ public class MarcCliExport
     private static void printUsageAndExit()
     {
         System.out.println("Usage:");
-        System.out.println("");
+        System.out.println();
         System.out.println("  To export a collection of IDs:");
         System.out.println("  java -Dxl.secret.properties=SECRETPROPSFILE -jar marc_export.jar PROFILE-FILE ID-FILE");
-        System.out.println("");
+        System.out.println();
         System.out.println("  To do a \"complete\" or \"interval\" export, for a given profile");
         System.out.println("  (the profile must contain start/stop to make it an interval export):");
         System.out.println("  java -Dxl.secret.properties=SECRETPROPSFILE -jar marc_export.jar PROFILE-FILE");
-        System.out.println("");
+        System.out.println();
         System.out.println("   PROFILE-FILE should be a Java-properties file with the export-profile settings.");
         System.out.println("   ID-FILE should be a file with IDs to export, containing one URI per row.");
-        System.out.println("");
+        System.out.println();
         System.out.println("  To do an SAO export:");
         System.out.println("  java -Dxl.secret.properties=SECRETPROPSFILE -jar marc_export.jar --sao");
-        System.out.println("");
+        System.out.println();
         System.out.println("  To do an AUTH export for regina/aleph:");
         System.out.println("  java -Dxl.secret.properties=SECRETPROPSFILE -jar marc_export.jar --auth");
-        System.out.println("");
+        System.out.println();
         System.out.println("For example:");
         System.out.println(" java -jar marc_export.jar export.properties");
         System.out.println("Would export all records held by whatever is in location=[] in export.properties.");

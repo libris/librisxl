@@ -236,10 +236,9 @@ class JsonLd {
         }
     }
 
-    @TypeChecked(TypeCheckingMode.SKIP)
     private void eachLens(Closure c) {
-        displayData['lensGroups']?.values().each { group ->
-            group.get('lenses')?.values().each { lens ->
+        ((Map<String, Map>) displayData['lensGroups'])?.values()?.each { group ->
+            ((Map) group.get('lenses'))?.values()?.each { lens ->
                 c(lens)
             }
         }
@@ -539,8 +538,8 @@ class JsonLd {
 
         private void descend(List<Tuple2> nodes) {
             for (n in nodes) {
-                path << n.second
-                node(n.first)
+                path << n.v2
+                node(n.v1)
                 path.remove(path.size()-1)
             }
         }
@@ -570,7 +569,7 @@ class JsonLd {
     }
 
     private Map<String, List<String>> generateSubTermLists(String relationToSuper) {
-        def superTermOf = [:]
+        Map<String, List<String>> superTermOf = [:]
         for (String type : vocabIndex.keySet()) {
             def termMap = vocabIndex[type]
             def superTerms = termMap[relationToSuper]
@@ -594,6 +593,8 @@ class JsonLd {
     }
 
     boolean isSubClassOf(String type, String baseType) {
+        if (!type)
+            return false
         if (type == baseType)
             return true
         Set<String> bases = getSubClasses(baseType)
@@ -675,7 +676,7 @@ class JsonLd {
     }
 
     Map toCard(Map thing, boolean chipsify = true, boolean addSearchKey = false,
-            boolean reduceKey = false, List<List> preservePaths = [], boolean searchCard = false) {
+            final boolean reduceKey = false, List<List> preservePaths = [], boolean searchCard = false) {
         Map result = [:]
 
         Map card = removeProperties(thing, getLens(thing, searchCard ? ['search-cards', 'cards'] : ['cards']))
@@ -687,8 +688,14 @@ class JsonLd {
 
         restorePreserved(card, thing, preservePaths)
 
-        reduceKey = reduceKey ?: { isSubClassOf((String) it, 'StructuredValue') }
-
+        // Using a new variable here is because changing the value of reduceKey
+        // causes "java.lang.VerifyError: Bad type on operand stack" when running
+        // on Java 11. Groovy compiler bug?
+        boolean reduce = reduceKey 
+                ? reduceKey
+                : isSubClassOf((String) thing[TYPE_KEY], 'StructuredValue')
+        
+        
         card.each { key, value ->
             def lensValue = value
             if (chipsify) {
@@ -697,11 +704,11 @@ class JsonLd {
                 if (value instanceof List) {
                     lensValue = ((List) value).withIndex().collect { it, index ->
                         it instanceof Map
-                        ? toCard((Map) it, chipsify, addSearchKey, reduceKey, pathRemainders([key, index], preservePaths), searchCard)
+                        ? toCard((Map) it, chipsify, addSearchKey, reduce, pathRemainders([key, index], preservePaths), searchCard)
                         : it
                     }
                 } else if (value instanceof Map) {
-                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduceKey, pathRemainders([key], preservePaths), searchCard)
+                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduce, pathRemainders([key], preservePaths), searchCard)
                 }
             }
             result[key] = lensValue
@@ -709,7 +716,8 @@ class JsonLd {
 
         if (addSearchKey) {
             List key = makeSearchKeyParts(card)
-            if (reduceKey) {
+            
+            if (reduce) {
                 for (v in result.values()) {
                     if (v instanceof List && ((List)v).size() == 1) {
                         v = ((List)v)[0]
@@ -721,6 +729,8 @@ class JsonLd {
                     }
                 }
             }
+            
+             
             if (key) {
                 result[SEARCH_KEY] = key.join(' ')
             }
@@ -1104,7 +1114,7 @@ class JsonLd {
 
         putRecordReferencesIntoThings(idMap)
 
-        Map mainItem = idMap[mainId]
+        Map mainItem = idMap[mainId] as Map
 
         Map framedData
         try {
@@ -1142,7 +1152,7 @@ class JsonLd {
         embedChain.add(mainId)
         Map newItem = [:]
         mainItem.each { key, value ->
-            if (!key.equals(JSONLD_ALT_ID_KEY))
+            if (key != JSONLD_ALT_ID_KEY)
                 newItem.put(key, toEmbedded(value, idMap, embedChain))
             else
                 newItem.put(key, value)
@@ -1185,14 +1195,14 @@ class JsonLd {
 
     private static void populateIdMap(Map data, Map idMap) {
         for (Object key : data.keySet()) {
-            if (key.equals(ID_KEY)
+            if (key == ID_KEY
                 // Don't index references (i.e. objects with only an @id).
                 && data.keySet().size() > 1
                 // Don't index graphs, since their @id:s do not denote them.
                 && !data.containsKey(GRAPH_KEY)
                ) {
                 addToIdMap(idMap, data, (String) data.get(key))
-            } else if (key.equals(JSONLD_ALT_ID_KEY)
+            } else if (key == JSONLD_ALT_ID_KEY
                     // Don't index graphs, since their @id:s do not denote them.
                     && !data.containsKey(GRAPH_KEY)
                     && data.get(key) instanceof List) {
@@ -1242,8 +1252,8 @@ class JsonLd {
     static void getReferencedBNodes(Map map, Set referencedBNodes) {
         // A jsonld reference is denoted as a json object containing exactly one member, with the key "@id".
         if (map.size() == 1) {
-            String key = map.keySet().getAt(0)
-            if (key.equals(ID_KEY)) {
+            String key = map.keySet()[0]
+            if (key == ID_KEY) {
                 String id = map.get(key)
                 if (id.startsWith("_:"))
                     referencedBNodes.add(id)
@@ -1297,7 +1307,7 @@ class JsonLd {
 
     class FresnelException extends WhelkRuntimeException {
         FresnelException(String msg) {
-            super(msg);
+            super(msg)
         }
     }
 }

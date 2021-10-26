@@ -44,6 +44,6 @@ selectBySqlWhere(where) { data ->
     }
 
     if (modified) {
-        data.scheduleSave();
+        data.scheduleSave()
     }
 }

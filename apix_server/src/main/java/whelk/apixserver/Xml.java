@@ -25,7 +25,7 @@ import java.util.Map;
  */
 public class Xml
 {
-    private static TransformerFactory transformerFactory = TransformerFactory.newInstance();
+    private static final TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
     private static String docToString(Document xmlDoc) throws TransformerException
     {

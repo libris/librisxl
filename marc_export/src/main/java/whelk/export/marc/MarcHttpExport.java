@@ -124,9 +124,7 @@ public class MarcHttpExport extends HttpServlet
             deleteMode = ProfileExport.DELETE_MODE.EXPORT;
 
         // Virtual deletion means: If there exists no holding for any of the locations in the profile for a bib record, consider that bib record deleted.
-        boolean doVirtualDeletions = false; // Default
-        if (profile.getProperty("virtualdelete", "OFF").equalsIgnoreCase("ON"))
-            doVirtualDeletions = true;
+        boolean doVirtualDeletions = profile.getProperty("virtualdelete", "OFF").equalsIgnoreCase("ON"); // Default
 
         // For backwards compatibility, respect any "deleted" and "virtualDelete" HTTP parameters.
         // We now normally prefer these settings to live in the profile (exportdeleted/virtualdelete),

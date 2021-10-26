@@ -43,11 +43,11 @@ class JsonLD2N3Converter implements FormatConverter {
         return data
     }
 
-    public String getRequiredContentType() {
+    String getRequiredContentType() {
         return "application/ld+json"
     }
 
-    public String getResultContentType() {
+    String getResultContentType() {
         return "text/n3"
     }
 

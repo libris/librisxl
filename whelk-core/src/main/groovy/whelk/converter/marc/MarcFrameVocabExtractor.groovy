@@ -2,7 +2,7 @@ package whelk.converter.marc
 
 class MarcFrameVocabExtractor {
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         extract(new MarcFrameConverter())
     }
 

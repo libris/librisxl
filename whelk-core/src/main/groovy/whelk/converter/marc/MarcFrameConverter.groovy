@@ -834,7 +834,7 @@ class MarcRuleSet {
                             fromTemplate(dfn.uriTemplate)
                                     .set('marcType', name).set(record).expandPartial())
                 } catch (IllegalArgumentException e) {
-                    ; // Fails on resolve if expanded is only partially filled
+                    // Fails on resolve if expanded is only partially filled
                 }
             }
 
@@ -1068,7 +1068,6 @@ class ConversionPart {
                   : types.contains(baseType)
     }
 
-    @CompileStatic(SKIP)
     Tuple2<Boolean, Map<String, List>> buildAboutMap(Map pendingResources, List<String> pendingKeys, Map entity, String aboutAlias) {
         Map<String, List> aboutMap = [:]
         boolean requiredOk = true
@@ -1082,7 +1081,7 @@ class ConversionPart {
                 if (key in aboutMap) {
                     return
                 }
-                Map pendingDfn = pendingResources[key]
+                Map pendingDfn = pendingResources[key] as Map
                 def resourceType = pendingDfn.resourceType
                 def parents = pendingDfn.about == null ? [entity] :
                     pendingDfn.about in aboutMap ? aboutMap[pendingDfn.about] : null
@@ -1095,14 +1094,14 @@ class ConversionPart {
                     }
 
                     if (!about && pendingDfn.absorbSingle) {
-                        if (isInstanceOf(parent, pendingDfn.resourceType)) {
+                        if (isInstanceOf(parent as Map, pendingDfn.resourceType as String)) {
                             about = parent
                         } else {
                             requiredOk = false
                         }
                     }
                     Util.asList(about).eachWithIndex { item, pos ->
-                        if (!item || (pendingDfn.resourceType && !isInstanceOf(item, pendingDfn.resourceType))) {
+                        if (!item || (pendingDfn.resourceType && !isInstanceOf(item as Map, pendingDfn.resourceType as String))) {
                             return
                         } else if (pos == 0 && pendingDfn.itemPos == 'rest') {
                             return
@@ -1120,7 +1119,7 @@ class ConversionPart {
                             // over direct type comparison, but won't work
                             // since a base type might be preferable to a
                             // subtype in practise (due to a modeling issue).
-                            selected = items.findAll { it['@type'] == type  }
+                            selected = items?.findAll { it['@type'] == type  }
                             if (selected) {
                                 items = selected
                                 break
@@ -1133,7 +1132,7 @@ class ConversionPart {
         }
         // TODO: we can now move this into the loop, yes?
         boolean missingRequired = pendingResources?.find { key, pendingDfn ->
-            pendingDfn.required && !(key in aboutMap)
+            pendingDfn['required'] && !(key in aboutMap)
         }
         if (missingRequired) {
             requiredOk = false
@@ -1141,7 +1140,7 @@ class ConversionPart {
 
         // The about map is the whole embellished record N times, framed around the "pending keys", typically:
         // ?record, ?thing, ?work, _:provision
-        return new Tuple2<Boolean, Map>(requiredOk, aboutMap)
+        return new Tuple2<Boolean, Map<String, List>>(requiredOk, aboutMap)
     }
 
     static String findTokenFromId(Object node, String uriTemplate,
@@ -1336,14 +1335,14 @@ class MarcFixedFieldHandler {
                 return
             def colNums = parseColumnNumbers(key)
             colNums.eachWithIndex { Tuple2<Integer, Integer> colNum, int i ->
-                columns << new Column(this, obj, colNum.first, colNum.second,
+                columns << new Column(this, obj as Map, colNum.v1, colNum.v2,
                         obj['itemPos'] ?: colNums.size() > 1 ? i : null,
                         obj['fixedDefault'],
                         obj['ignoreOnRevert'],
                         obj['matchAsDefault'])
 
-                if (colNum.second > fieldSize) {
-                    fieldSize = colNum.second
+                if (colNum.v2 > fieldSize) {
+                    fieldSize = colNum.v2
                 }
             }
         }
@@ -1411,7 +1410,7 @@ class MarcFixedFieldHandler {
         Pattern matchAsDefault
         MarcFixedFieldHandler fixedFieldHandler
 
-        Column(MarcFixedFieldHandler fixedFieldHandler, fieldDfn, int start, int end,
+        Column(MarcFixedFieldHandler fixedFieldHandler, Map fieldDfn, int start, int end,
                itemPos, fixedDefault, ignoreOnRevert = null, matchAsDefault = null) {
             super(fixedFieldHandler.ruleSet, "$fixedFieldHandler.tag-$start-$end", fieldDfn)
             this.fixedFieldHandler = fixedFieldHandler
@@ -1483,7 +1482,6 @@ class MarcFixedFieldHandler {
             return value != fixedDefault &&
                     (matchAsDefault == null ||
                             !matchAsDefault.matcher(value).matches())
-            value != FIXED_NONE && value != FIXED_UNDEF
         }
 
     }
@@ -1659,7 +1657,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     //MarcSimpleFieldHandler linkedHandler
 
     @CompileStatic(SKIP)
-    MarcSimpleFieldHandler(ruleSet, tag, fieldDfn) {
+    MarcSimpleFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn) {
         super(ruleSet, tag, fieldDfn)
         super.setTokenMap(this, fieldDfn)
         if (fieldDfn.addProperty) {
@@ -1672,11 +1670,11 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         property = propTerm(fieldDfn.property ?: fieldDfn.addProperty,
                 fieldDfn.containsKey('addProperty'))
 
-        def parseDateTime = fieldDfn.parseDateTime
+        String parseDateTime = fieldDfn.parseDateTime
         if (parseDateTime) {
             missingCentury = (parseDateTime == "yyMMdd")
             if (missingCentury) {
-                parseDateTime = "yy" + parseDateTime
+                parseDateTime = "yy$parseDateTime".toString()
             }
             dateTimeFormat = DateTimeFormatter.ofPattern(parseDateTime)
             if (fieldDfn.timeZone) {
@@ -1689,12 +1687,12 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         parseZeroPaddedNumber = (fieldDfn.parseZeroPaddedNumber == true)
         uriTemplate = fieldDfn.uriTemplate
         if (fieldDfn.matchUriToken) {
-            matchUriToken = Pattern.compile(fieldDfn.matchUriToken)
+            matchUriToken = Pattern.compile(fieldDfn.matchUriToken as String)
             if (fieldDfn.matchSpec) {
-                fieldDfn.matchSpec.matches.each {
+                fieldDfn.matchSpec['matches'].each {
                     assert matchUriToken.matcher(it).matches()
                 }
-                fieldDfn.matchSpec.notMatches.each {
+                fieldDfn.matchSpec['notMatches'].each {
                     assert !matchUriToken.matcher(it).matches()
                 }
             }
@@ -1759,7 +1757,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
             try {
                 value = Integer.parseInt(strValue.trim())
             } catch (NumberFormatException e) {
-                ; // pass
+                // pass
             }
         }
 
@@ -1888,14 +1886,13 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
     static GENERIC_REL_URI_TEMPLATE = "generic:{_}"
 
-    @CompileStatic(SKIP)
     MarcFieldHandler(MarcRuleSet ruleSet, String tag, Map fieldDfn,
             String baseTag = tag) {
         super(ruleSet, tag, fieldDfn, baseTag)
-        ind1 = fieldDfn.i1 ? new MarcSubFieldHandler(this, "ind1", fieldDfn.i1) : null
-        ind2 = fieldDfn.i2 ? new MarcSubFieldHandler(this, "ind2", fieldDfn.i2) : null
-        pendingResources = fieldDfn.pendingResources
-        pendingResources?.values().each {
+        ind1 = fieldDfn['i1'] ? new MarcSubFieldHandler(this, "ind1", fieldDfn.i1 as Map) : null
+        ind2 = fieldDfn['i2'] ? new MarcSubFieldHandler(this, "ind2", fieldDfn.i2 as Map) : null
+        pendingResources = fieldDfn['pendingResources'] as Map<String, Map>
+        pendingResources?.values()?.each {
             linkTerm(it.link ?: it.addLink, it.containsKey('addLink'))
             typeTerm(it.resourceType)
             propTerm(it.property ?: it.addProperty, it.containsKey('addProperty'))
@@ -1904,32 +1901,32 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             pendingKeys = Util.getSortedPendingKeys(pendingResources)
         }
 
-        aboutAlias = fieldDfn.aboutAlias
-        allowLinkOnRevert = fieldDfn.allowLinkOnRevert
-        dependsOn = fieldDfn.dependsOn
-        constructProperties = fieldDfn.constructProperties
+        aboutAlias = fieldDfn['aboutAlias']
+        allowLinkOnRevert = fieldDfn['allowLinkOnRevert']
+        dependsOn = fieldDfn['dependsOn'] as List<String>
+        constructProperties = fieldDfn['constructProperties'] as Map<String, Map>
 
-        if (fieldDfn.uriTemplate) {
-            uriTemplate = fieldDfn.uriTemplate
+        if (fieldDfn['uriTemplate']) {
+            uriTemplate = fieldDfn['uriTemplate']
             uriTemplateKeys = fromTemplate(uriTemplate).variables as Set
-            uriTemplateDefaults = fieldDfn.uriTemplateDefaults
+            uriTemplateDefaults = fieldDfn['uriTemplateDefaults'] as Map
         }
         onRevertPrefer = (List<String>) (fieldDfn.onRevertPrefer instanceof String ?
                 [fieldDfn.onRevertPrefer] : fieldDfn.onRevertPrefer)
 
         silentRevert = fieldDfn.silentRevert == true
 
-        computeLinks = (fieldDfn.computeLinks) ? new HashMap(fieldDfn.computeLinks) : [:]
+        computeLinks = (fieldDfn.computeLinks) ? new HashMap(fieldDfn['computeLinks'] as Map) : [:]
         if (computeLinks) {
-            computeLinks.use = computeLinks.use.replaceFirst(/^\$/, '')
+            computeLinks.use = ((String) computeLinks['use']).replaceFirst(/^\$/, '')
         }
 
-        matchRules = MatchRule.parseRules(this, fieldDfn) ?: Collections.emptyList()
+        matchRules = MatchRule.parseRules(this, fieldDfn) ?: Collections.emptyList() as List<MatchRule>
 
         fieldDfn.each { key, obj ->
             def m = key =~ /^\$(\w+)$/
             if (m && obj) {
-                addSubfield(m.group(1), obj)
+                addSubfield(m.group(1) as String, obj as Map)
             }
         }
 
@@ -2114,7 +2111,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             // for multiply linked entities. Or, perhaps better, run a final "mapIds" pass
             // in the main loop..
             if (uriTemplateParams.keySet().containsAll(uriTemplateKeys)) {
-                def computedUri = fromTemplate(uriTemplate).expand(uriTemplateParams)
+                def computedUri = fromTemplate(uriTemplate).expand(uriTemplateParams as Map<String, Object>)
                 def altUriRel = "sameAs"
                 // NOTE: We used to force minted ("pretty") uri to be an alias here...
                 /*if (definesDomainEntityType != null) {
@@ -2169,8 +2166,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         }
         entryIt.each {
             if (it.value instanceof List) {
-                it.value.removeAll(isEmpty)
-                if (it.value.size() == 0) {
+                ((List)it.value).removeAll(isEmpty)
+                if (((List)it.value).size() == 0) {
                     entryIt.remove()
                 }
             } else if (it.value instanceof Map) {
@@ -2609,7 +2606,7 @@ class MarcSubFieldHandler extends ConversionPart {
     String itemPos
 
     @CompileStatic(SKIP)
-    MarcSubFieldHandler(fieldHandler, code, Map subDfn) {
+    MarcSubFieldHandler(MarcFieldHandler fieldHandler, code, Map subDfn) {
         this.ruleSet = fieldHandler.ruleSet
         this.fieldHandler = fieldHandler
         this.code = code
@@ -2625,21 +2622,21 @@ class MarcSubFieldHandler extends ConversionPart {
         punctuationChars = (subDfn.containsKey('punctuationChars')
                             ? subDfn.punctuationChars
                             : (trailingPunctuation ?:
-                               defaultPunctuation.punctuationChars))?.toCharArray()
+                               defaultPunctuation['punctuationChars']))?.toCharArray()
 
         surroundingChars = subDfn.surroundingChars?.toCharArray()
 
         skipLeadingPattern = toPattern(subDfn.containsKey('skipLeading')
                                        ? subDfn.skipLeading
-                                       : defaultPunctuation.skipLeading)
+                                       : defaultPunctuation['skipLeading'])
 
         blockNextLeadingPattern = toPattern(subDfn.containsKey('blockNextLeading')
                                             ? subDfn.blockNextLeading
-                                            : defaultPunctuation.blockNextLeading)
+                                            : defaultPunctuation['blockNextLeading'])
 
         balanceBrackets = (subDfn.containsKey('balanceBrackets')
                             ? subDfn.balanceBrackets
-                            : defaultPunctuation.balanceBrackets) == true
+                            : defaultPunctuation['balanceBrackets']) == true
 
         if (subDfn.aboutNew) {
             about = subDfn.aboutNew
@@ -2749,7 +2746,7 @@ class MarcSubFieldHandler extends ConversionPart {
                         subVal : fromTemplate(subUriTemplate).expand(["_": subVal])
                 } catch (IllegalArgumentException|IndexOutOfBoundsException e) {
                     // Bad characters in what should have been a proper URI path ('+' expansion).
-                    ; // NOTE: We just drop the attempt here if the uriTemplate fails...
+                     // NOTE: We just drop the attempt here if the uriTemplate fails...
                 }
             }
             def newEnt = newEntity(state, resourceType, entId)
@@ -2805,7 +2802,7 @@ class MarcSubFieldHandler extends ConversionPart {
                     if (val.size() < 2) {
                         break
                     }
-                    if (val[-1].equals(c.toString())) {
+                    if (val[-1] == c.toString()) {
                         val = val[0..-2].trim()
                     }
                 }
@@ -2815,9 +2812,9 @@ class MarcSubFieldHandler extends ConversionPart {
                     if (val.size() < 2) {
                         break
                     }
-                    if (val[-1].equals(c.toString())) {
+                    if (val[-1] == c.toString()) {
                         val = val[0..-2].trim()
-                    } else if (val[0].equals(c.toString())) {
+                    } else if (val[0] == c.toString()) {
                         val = val[1..-1].trim()
                     }
                 }
@@ -3019,7 +3016,7 @@ class MatchRule {
 
         Map<String, Map> ruleWhenMap = matchDefs.collectEntries {
             [it['when'], it]
-        }
+        } as Map<String, Map>
         return matchDefs?.collect {
             Map dfnCopy = fieldDfn.findAll { it.key != 'match' }
             if (dfnCopy.pendingResources) {
@@ -3193,7 +3190,7 @@ class MatchRule {
             }
             return true
         } else {
-            return obj.equals(pattern)
+            return obj == pattern
         }
     }
 }

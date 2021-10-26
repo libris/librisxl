@@ -79,12 +79,12 @@ class LinkFinder {
                 if (entry instanceof Map) {
                     Map map = (Map) entry
                     String type = map.get("@type")
-                    if (type != null && type.equals("ISBN")) {
+                    if (type != null && type == "ISBN") {
                         String value = map.get("value")
                         if (value != null)
                             map.put("value", value.replaceAll("-", "").toUpperCase())
                     }
-                    if (type != null && type.equals("ISSN")) {
+                    if (type != null && type == "ISSN") {
                         String value = map.get("value")
                         if (value != null)
                             map.put("value", value.toUpperCase())
@@ -127,7 +127,7 @@ class LinkFinder {
 
             // sameAs objects are not links per se, and must not be replaced
             String keyString = (String) key
-            if (keyString.equals("sameAs"))
+            if (keyString == "sameAs")
                 continue
 
             Object value = data.get(key)

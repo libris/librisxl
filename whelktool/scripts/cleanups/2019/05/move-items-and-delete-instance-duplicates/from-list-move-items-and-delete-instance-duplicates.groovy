@@ -12,7 +12,7 @@ PrintWriter failedIDs = getReportWriter("failed-to-delete-bibIDs")
 PrintWriter scheduledForChange = getReportWriter("scheduledForChange")
 PrintWriter info = getReportWriter("info")
 
-def file = new File(scriptDir, "id_lxl-2281_eboksberikning.txt");
+def file = new File(scriptDir, "id_lxl-2281_eboksberikning.txt")
 
 file.eachLine { line ->
     def (goodBibId, badBibId) = line.split(";").collect { it.trim() }

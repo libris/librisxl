@@ -3,6 +3,7 @@ package se.kb.libris.export;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -16,7 +17,7 @@ public class SabMadness {
             BufferedReader reader = null;
 
             try {
-                reader = new BufferedReader(new InputStreamReader(SabMadness.class.getResourceAsStream("/se/kb/libris/export/sabrub.txt"), "ISO-8859-1"));
+                reader = new BufferedReader(new InputStreamReader(SabMadness.class.getResourceAsStream("/se/kb/libris/export/sabrub.txt"), StandardCharsets.ISO_8859_1));
             } catch (Exception e) {
               System.err.println(e.getMessage());
               e.printStackTrace();
@@ -48,7 +49,7 @@ public class SabMadness {
         return map.get(sab);
     }
 
-    public static void main(String args[]) throws Exception {
+    public static void main(String[] args) throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String line = null;
 

@@ -146,7 +146,7 @@ void logHtml(bib, query, docs, ids) {
         m[d.'_id'].'_str' = d.'_str'
     }
 
-    def StringBuilder h = new StringBuilder()
+    StringBuilder h = new StringBuilder()
     h.append('<b>').append(flatTitle(bib)).append('</b><br>\n')
     h.append("<i>").append(query).append('</i><br>\n')
     h.append(bib.doc.shortId).append(" ----> ").append(ids.toString()).append("<br>\n")

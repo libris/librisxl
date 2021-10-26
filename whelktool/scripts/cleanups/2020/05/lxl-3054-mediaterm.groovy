@@ -82,7 +82,7 @@ void set(bib, String field, String value, StringBuilder msg) {
     switch (field) {
         case 'responsibilityStatement':
             put(bib, instance, field, repairBrackets(value.trim()), msg)
-            break;
+            break
 
         case 'subtitle':
             if (value.indexOf('/') != -1) {
@@ -99,7 +99,7 @@ void set(bib, String field, String value, StringBuilder msg) {
                 }
                 put(bib, title, field, repairBrackets(value.trim()), msg)
             }
-            break;
+            break
     }
 }
 
