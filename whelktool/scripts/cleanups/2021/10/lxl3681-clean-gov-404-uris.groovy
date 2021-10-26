@@ -1,9 +1,4 @@
-import whelk.util.Statistics
 import whelk.util.DocumentUtil
-
-class Script {
-    static Statistics s = new Statistics(10)
-}
 
 selectByCollection('bib') { bib ->
     boolean saveMe = false
@@ -15,7 +10,7 @@ selectByCollection('bib') { bib ->
         String iri  = value."@id"
         if (iri.contains("Type-")) {
             if (!whelk.storage.getSystemIdByIri(iri)) {
-                Script.s.increment(iri, path, bib.doc.getShortId())
+                incrementStats(iri, path)
             }
             saveMe = true
 
