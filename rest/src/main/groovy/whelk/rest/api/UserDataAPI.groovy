@@ -43,9 +43,18 @@ class UserDataAPI extends HttpServlet {
 
         String id = userInfo.email.digest(ID_HASH_FUNCTION)
         String data = whelk.getUserData(id) ?: "{}"
+
+        def eTag = CrudUtils.ETag.plain(data.digest("MD5"))
+        response.setHeader("ETag", eTag.toString())
+        
+        if (CrudUtils.getIfNoneMatch(request).map(eTag.&isNotModified).orElse(false)) {
+            HttpTools.sendResponse(response, "", "application/json", HttpServletResponse.SC_NOT_MODIFIED)
+            return
+        }
+        
         HttpTools.sendResponse(response, data, "application/json")
     }
-
+    
     @Override
     void doPut(HttpServletRequest request, HttpServletResponse response) {
         log.info("Handling PUT request for ${request.pathInfo}")
