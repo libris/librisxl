@@ -67,8 +67,9 @@ for (String operation : ProgramLines) {
             }	
 
         boolean foundHold = false
-		List holdIds = []
-
+	List holdIds = []
+	HC = 0 // sätta 0 som default (för rätt värde om inga bestånd finns)
+	    
         selectBySqlWhere("""
                 data#>>'{@graph,1,itemOf,@id}' = '${bibMainEntity}' AND
                 collection = 'hold' AND
