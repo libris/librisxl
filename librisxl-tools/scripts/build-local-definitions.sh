@@ -11,11 +11,9 @@ if [[ "$defsdir" == "" ]]; then
 fi
 
 ensurevenv() {
-    if [[ ! -d .venv ]]; then
-        rm -f .venv
-        python3 -m venv .venv
-        .venv/bin/pip install wheel
-    fi
+    rm -rf .venv
+    python3 -m venv .venv
+    .venv/bin/pip install wheel
 }
 
 updatereqs() {
