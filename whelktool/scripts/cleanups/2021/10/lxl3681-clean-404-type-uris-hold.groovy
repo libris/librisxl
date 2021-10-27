@@ -1,9 +1,9 @@
 import whelk.util.DocumentUtil
 
-selectByCollection('bib') { bib ->
+selectByCollection('hold') { hold ->
     boolean saveMe = false
-    def whelk = bib.whelk
-    DocumentUtil.traverse(bib.doc.data, { value, path ->
+    def whelk = hold.whelk
+    DocumentUtil.traverse(hold.doc.data, { value, path ->
         if (!value || !(value instanceof Map) || !value."@id") {
             return
         }
@@ -20,6 +20,6 @@ selectByCollection('bib') { bib ->
     )
 
     if (saveMe) {
-        bib.scheduleSave()
+        hold.scheduleSave()
     }
 }
