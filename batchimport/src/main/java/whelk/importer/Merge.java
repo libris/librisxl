@@ -134,7 +134,7 @@ public class Merge {
             }
 
             // Execute replacement if appropriate
-            if (!baseContainsHandEdits && incomingPriorityHere > basePriorityHere) {
+            if (!baseContainsHandEdits && incomingPriorityHere >= basePriorityHere) {
                 if (base instanceof Map) {
                     Map map = ( (Map) base );
                     if (!subtreeContainsLinks(map)) {
