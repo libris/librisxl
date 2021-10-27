@@ -49,10 +49,10 @@ class UserDataAPI extends HttpServlet {
         
         if (CrudUtils.getIfNoneMatch(request).map(eTag.&isNotModified).orElse(false)) {
             HttpTools.sendResponse(response, "", "application/json", HttpServletResponse.SC_NOT_MODIFIED)
-            return
         }
-        
-        HttpTools.sendResponse(response, data, "application/json")
+        else {
+            HttpTools.sendResponse(response, data, "application/json")
+        }
     }
     
     @Override
