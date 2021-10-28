@@ -23,7 +23,6 @@ String where = """
 """
 
 selectBySqlWhere(where) { data ->
-    boolean modified = false
     Map record = data.graph[0]
     Map thing = data.graph[1]
 
@@ -33,10 +32,6 @@ selectBySqlWhere(where) { data ->
 
     if (isDst(record, thing)) {
         record.bibliography << ['@id': 'https://libris.kb.se/library/DST']
-        modified = true
-    }
-
-    if (modified) {
         data.scheduleSave()
     }
 }
