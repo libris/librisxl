@@ -7,7 +7,7 @@ selectByCollection('hold') { hold ->
         if (!value || !(value instanceof Map) || !value."@id") {
             return
         }
-        String iri  = value."@id"
+        String iri = value."@id"
         if (iri.startsWith("https://id.kb.se/marc") && iri.contains("Type-")) {
             if (!whelk.storage.getSystemIdByIri(iri)) {
                 incrementStats(iri, path)
@@ -16,7 +16,6 @@ selectByCollection('hold') { hold ->
             }
         }
     }
-            //Remove container if empty
     )
 
     if (saveMe) {
