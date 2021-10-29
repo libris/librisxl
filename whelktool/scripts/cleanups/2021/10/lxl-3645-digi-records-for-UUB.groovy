@@ -141,10 +141,7 @@ void createDigitalReproduction(bib, uris, eod) {
                     'heldBy': ['@id': 'https://libris.kb.se/library/Unix'],
             ],
     ]
-    def hold = create(holdData)
-    selectFromIterable([hold], { d ->
-        d.scheduleSave()
-    })
+    selectFromIterable([create(holdData)], { d -> d.scheduleSave() })
 }
 
 Map ukaHolding(bibId) {
