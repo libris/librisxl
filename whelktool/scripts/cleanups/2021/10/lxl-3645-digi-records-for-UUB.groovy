@@ -61,7 +61,7 @@ selectBySqlWhere(whereBib) { bib ->
     }
 }
 
-void createDigitalReproduction(bib, uris, associatedMedia, eod) {
+void createDigitalReproduction(bib, uris, eod) {
     def physicalThing = bib.graph[1]
     def graph = [
             [
@@ -86,7 +86,7 @@ void createDigitalReproduction(bib, uris, associatedMedia, eod) {
                             ['@id': 'https://id.kb.se/marc/Online'],
                             ['@id': 'https://id.kb.se/marc/OnlineResource']
                     ],
-                    'associatedMedia': associatedMedia + uris.collect {
+                    'associatedMedia': uris.collect {
                         [
                                 '@type'          : 'MediaObject',
                                 'uri'            : [it],
