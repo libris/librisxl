@@ -60,7 +60,7 @@ void createDigitalReproduction(bib, uris, eod) {
             [
                     '@id'                  : 'TEMP-ID',
                     '@type'                : 'Record',
-                    'mainEntity'           : 'TEMP-ID#it',
+                    'mainEntity'           : ["@id": "TEMP-ID#it"],
                     'bibliography'         : [DST, DIGI],
                     'encodingLevel'        : 'marc:MinimalLevel',
                     'descriptionLanguage'  : ['@id': 'https://id.kb.se/language/swe'],
@@ -138,7 +138,7 @@ void createHolding(bibId, libraryId) {
             [
                     '@id'       : 'TEMP-ID',
                     '@type'     : 'Record',
-                    'mainEntity': 'TEMP-ID#it',
+                    'mainEntity': ["@id": "TEMP-ID#it"]
             ],
             [
                     '@id'   : 'TEMP-ID#it',
