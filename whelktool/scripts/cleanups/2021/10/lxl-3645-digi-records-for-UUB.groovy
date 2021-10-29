@@ -12,6 +12,8 @@ EOD = ['@id': 'https://libris.kb.se/library/EOD']
 DIGI = ['@id': 'https://libris.kb.se/library/DIGI']
 DST = ['@id': 'https://libris.kb.se/library/DST']
 
+unhandled = getReportWriter("unhandled.txt")
+
 String whereBib = """
     collection = 'bib'
     AND data#>>'{@graph,1,@type}' != 'Electronic'
@@ -29,11 +31,13 @@ selectBySqlWhere(whereBib) { bib ->
     
     Map holding = ukaHolding(thing['@id'])
     if (!holding) {
+        unhandled.println("${bib.doc.shortId} No Uka holding")
         return
     }
     
     Set<String> uris = (asList(thing.uri) + asList(holding.uri) + asList(holding.hasComponent).collect{ Map item -> asList(item.uri) }.flatten()) as Set
     if (!uris) {
+        unhandled.println("${bib.doc.shortId} No URI")
         return
     }
     
