@@ -32,7 +32,7 @@ selectBySqlWhere(where) { data ->
 
     if (isDst(record, thing)) {
         record.bibliography << ['@id': 'https://libris.kb.se/library/DST']
-        data.scheduleSave()
+        data.scheduleSave(loud: true)
     }
 }
 
