@@ -97,11 +97,11 @@ void createDigitalReproduction(bib, uris, eod) {
     ]
 
     def digitalThing = data[1]
-    
+
     if (eod) {
         data[0].bibliography << EOD
     }
-    
+
     // 😿
     [
             'instanceOf',
@@ -113,12 +113,12 @@ void createDigitalReproduction(bib, uris, eod) {
             digitalThing[p] = physicalThing[p]
         }
     }
-    
+
     def primaryPublication = asList(physicalThing['publication']).find { it['@type'] == 'PrimaryPublication' }
     if (primaryPublication) {
         digitalThing['publication'] = primaryPublication
     }
-    
+
     def ids = (asList(physicalThing['identifiedBy']) + asList(physicalThing['indirectlyIdentifiedBy'])) as Set
     if (ids) {
         digitalThing['indirectlyIdentifiedBy'] = ids.collect()
@@ -128,7 +128,11 @@ void createDigitalReproduction(bib, uris, eod) {
     selectFromIterable([electronicBib], { d ->
         d.scheduleSave()
     })
-    
+
+    createUnixHolding(electronicBib.graph[1]['@id'])
+}
+
+void createUnixHolding(bibId) {
     def holdData = [
             [
                     '@type'     : 'Record',
@@ -137,7 +141,7 @@ void createDigitalReproduction(bib, uris, eod) {
             [
                     '@id'   : 'TEMP-ID',
                     '@type' : 'Item',
-                    'itemOf': ['@id': electronicBib.graph[1]['@id']],
+                    'itemOf': ['@id': bibId],
                     'heldBy': ['@id': 'https://libris.kb.se/library/Unix'],
             ],
     ]
