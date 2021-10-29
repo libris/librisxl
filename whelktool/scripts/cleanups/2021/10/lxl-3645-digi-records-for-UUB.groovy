@@ -1,7 +1,16 @@
+/**
+ * Retroactively create Electronic records for digital reproductions by Uka/UUB 
+ * 
+ * Based on the current practice
+ * https://metadatabyran.kb.se/beskrivning/materialtyper-arbetsfloden/digitala-reproduktioner
+ * https://github.com/libris/lxlviewer/blob/384d625e32e590984dd4b23d51763e33ff963d66/vue-client/src/utils/record.js#L131
+ * 
+ * See LXL-3645 for more information
+ */
+
 EOD = ['@id': 'https://libris.kb.se/library/EOD']
 DIGI = ['@id': 'https://libris.kb.se/library/DIGI']
 DST = ['@id': 'https://libris.kb.se/library/DST']
-
 
 String whereBib = """
     collection = 'bib'
