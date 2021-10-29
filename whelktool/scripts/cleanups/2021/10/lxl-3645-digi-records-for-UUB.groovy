@@ -34,7 +34,7 @@ selectBySqlWhere(whereBib) { bib ->
     createDigitalReproduction(bib, uris, eod)
     
     boolean modified = record.bibliography?.remove(DIGI) || eod
-    modified &= thing.remove('uri')
+    modified |= thing.remove('uri')
     
     if (modified) {
         bib.scheduleSave(loud:true)
