@@ -29,13 +29,13 @@ selectBySqlWhere(whereBib) { bib ->
         return
     }
     
-    Map holding = ukaHolding(thing['@id'])
-    if (!holding) {
+    Map item = getHoldingItem(thing['@id'], 'https://libris.kb.se/library/Uka')
+    if (!item) {
         unhandled.println("${bib.doc.shortId} No Uka holding")
         return
     }
     
-    Set<String> uris = (asList(thing.uri) + asList(holding.uri) + asList(holding.hasComponent).collect{ Map item -> asList(item.uri) }.flatten()) as Set
+    Set<String> uris = (asList(thing.uri) + asList(item.uri) + asList(item.hasComponent).collect{ Map i -> asList(i.uri) }.flatten()) as Set
     if (!uris) {
         unhandled.println("${bib.doc.shortId} No URI")
         return
@@ -148,12 +148,12 @@ void createHolding(bibId, libraryId) {
     selectFromIterable([create(data)], { d -> d.scheduleSave() })
 }
 
-Map ukaHolding(bibId) {
+Map getHoldingItem(bibId, libraryId) {
     String where = """
         collection = 'hold' 
         AND deleted = false
         AND data#>>'{@graph,1,itemOf,@id}' = '$bibId'
-        AND data#>>'{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/Uka'
+        AND data#>>'{@graph,1,heldBy,@id}' = '$libraryId'
     """
 
     Map item = null
