@@ -58,8 +58,9 @@ void createDigitalReproduction(bib, uris, eod) {
     def physicalThing = bib.graph[1]
     def graph = [
             [
+                    '@id'                  : 'TEMP-ID',
                     '@type'                : 'Record',
-                    'mainEntity'           : 'TEMP-ID',
+                    'mainEntity'           : 'TEMP-ID#it',
                     'bibliography'         : [DST, DIGI],
                     'encodingLevel'        : 'marc:MinimalLevel',
                     'descriptionLanguage'  : ['@id': 'https://id.kb.se/language/swe'],
@@ -67,7 +68,7 @@ void createDigitalReproduction(bib, uris, eod) {
 
             ],
             [
-                    '@id'            : 'TEMP-ID',
+                    '@id'            : 'TEMP-ID#it',
                     '@type'          : 'Electronic',
                     'reproductionOf' : ['@id': physicalThing['@id']],
                     'mediaType'      : [
@@ -135,11 +136,12 @@ void createDigitalReproduction(bib, uris, eod) {
 void createHolding(bibId, libraryId) {
     def graph = [
             [
+                    '@id'       : 'TEMP-ID',
                     '@type'     : 'Record',
-                    'mainEntity': 'TEMP-ID',
+                    'mainEntity': 'TEMP-ID#it',
             ],
             [
-                    '@id'   : 'TEMP-ID',
+                    '@id'   : 'TEMP-ID#it',
                     '@type' : 'Item',
                     'itemOf': ['@id': bibId],
                     'heldBy': ['@id': libraryId],
