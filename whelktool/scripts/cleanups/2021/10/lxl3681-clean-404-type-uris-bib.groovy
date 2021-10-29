@@ -2,11 +2,7 @@ import whelk.util.DocumentUtil
 
 selectByCollection('bib') { bib ->
     def whelk = bib.whelk
-    DocumentUtil.traverse(bib.doc.data, { value, path ->
-        if (!value || !(value instanceof Map) || !value."@id") {
-            return
-        }
-        String iri = value."@id"
+    DocumentUtil.findKey(bib.doc.data, '@id') { iri, path ->
         if (isMarcTermWithType(iri) && !ignore(iri)) {
             if (!whelk.storage.getSystemIdByIri(iri)) {
                 incrementStats(iri, path)
@@ -15,7 +11,6 @@ selectByCollection('bib') { bib ->
             }
         }
     }
-    )
 }
 
 private boolean ignore(String iri) {
