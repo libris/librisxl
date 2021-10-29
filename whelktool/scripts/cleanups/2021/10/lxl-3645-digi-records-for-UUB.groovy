@@ -149,24 +149,6 @@ Map ukaHolding(bibId) {
     return item
 }
 
-/*
-
-    boolean modified
-    boolean hasHoldForUka
-    Map params =
-            [
-                    'bibliographyCode'   : "DST",
-                    'heldById'           : "https://libris.kb.se/library/Unix",
-                    'mediaObjectUris'    : [],
-                    'reproductionAgent'  : "https://libris.kb.se/library/Uka",
-                    'reproductionComment': "Digitalt faksimil",
-//                    'year'                  : ""
-            ]
-    
-    
-
- */
-
 def asList(x) {
     (x ?: []).with {it instanceof List ? it : [it] }
 }
