@@ -81,8 +81,9 @@ void createDigitalReproduction(bib, uris, eod) {
                     ],
                     'associatedMedia': uris.collect {
                         [
-                                '@type': 'MediaObject',
-                                'uri'  : [it]
+                                '@type'          : 'MediaObject',
+                                'uri'            : [it],
+                                'marc:publicNote': 'Fritt tillgänglig via Uppsala universitetsbibliotek'
                         ]
                     },
                     'production'     : [
