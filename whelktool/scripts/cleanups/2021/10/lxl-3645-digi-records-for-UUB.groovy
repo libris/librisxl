@@ -87,12 +87,15 @@ void createDigitalReproduction(bib, uris, eod) {
                     },
                     'production'     : [
                             '@type'   : 'DigitalReproduction',
-                            'typeNote': 'Digitalt faksimil',
+                            'typeNote': 'Digitalt faksimil och elektronisk text',
                             'place'   : [
                                     '@type': 'Place',
                                     'label': 'Uppsala',
                             ],
-                            'agent'   : ['@id': 'https://libris.kb.se/library/Uka'],
+                            'agent'   : [
+                                    '@type': 'Agent',
+                                    'label': 'Uppsala universitetsbibliotek'
+                            ],
                     ]
             ],
     ]
