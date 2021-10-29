@@ -56,7 +56,7 @@ selectBySqlWhere(whereBib) { bib ->
 
 void createDigitalReproduction(bib, uris, eod) {
     def physicalThing = bib.graph[1]
-    def data = [
+    def graph = [
             [
                     '@type'                : 'Record',
                     'mainEntity'           : 'TEMP-ID',
@@ -96,10 +96,10 @@ void createDigitalReproduction(bib, uris, eod) {
             ],
     ]
 
-    def digitalThing = data[1]
+    def digitalThing = graph[1]
 
     if (eod) {
-        data[0].bibliography << EOD
+        graph[0].bibliography << EOD
     }
 
     // 😿
@@ -124,7 +124,7 @@ void createDigitalReproduction(bib, uris, eod) {
         digitalThing['indirectlyIdentifiedBy'] = ids.collect()
     }
 
-    def electronicBib = create(data)
+    def electronicBib = create(['@graph': graph])
     selectFromIterable([electronicBib], { d ->
         d.scheduleSave()
     })
@@ -133,7 +133,7 @@ void createDigitalReproduction(bib, uris, eod) {
 }
 
 void createHolding(bibId, libraryId) {
-    def data = [
+    def graph = [
             [
                     '@type'     : 'Record',
                     'mainEntity': 'TEMP-ID',
@@ -145,7 +145,7 @@ void createHolding(bibId, libraryId) {
                     'heldBy': ['@id': libraryId],
             ],
     ]
-    selectFromIterable([create(data)], { d -> d.scheduleSave() })
+    selectFromIterable([create(['@graph': graph])], { d -> d.scheduleSave() })
 }
 
 Map getHoldingItem(bibId, libraryId) {
