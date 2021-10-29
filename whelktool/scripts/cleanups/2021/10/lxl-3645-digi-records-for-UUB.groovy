@@ -35,7 +35,13 @@ selectBySqlWhere(whereBib) { bib ->
         return
     }
     
-    Set<String> uris = (asList(thing.uri) + asList(item.uri) + asList(item.hasComponent).collect{ Map i -> asList(i.uri) }.flatten()) as Set
+    Set<String> uris = (
+            asList(thing.uri) 
+            + asList(thing.associatedMedia).collect{ Map i -> asList(i.uri) }.flatten()
+            + asList(item.uri) 
+            + asList(item.hasComponent).collect{ Map i -> asList(i.uri) }.flatten()
+    ) as Set
+    
     if (!uris) {
         unhandled.println("${bib.doc.shortId} No URI")
         return
@@ -48,13 +54,14 @@ selectBySqlWhere(whereBib) { bib ->
     
     boolean modified = record.bibliography?.remove(DIGI) || eod
     modified |= thing.remove('uri')
+    modified |= thing.remove('associatedMedia')
     
     if (modified) {
         bib.scheduleSave(loud:true)
     }
 }
 
-void createDigitalReproduction(bib, uris, eod) {
+void createDigitalReproduction(bib, uris, associatedMedia, eod) {
     def physicalThing = bib.graph[1]
     def graph = [
             [
@@ -79,7 +86,7 @@ void createDigitalReproduction(bib, uris, eod) {
                             ['@id': 'https://id.kb.se/marc/Online'],
                             ['@id': 'https://id.kb.se/marc/OnlineResource']
                     ],
-                    'associatedMedia': uris.collect {
+                    'associatedMedia': associatedMedia + uris.collect {
                         [
                                 '@type'          : 'MediaObject',
                                 'uri'            : [it],
