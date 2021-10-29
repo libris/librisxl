@@ -58,25 +58,25 @@ void createDigitalReproduction(bib, uris, eod) {
     def physicalThing = bib.graph[1]
     def data = [
             [
-                    '@type'       : 'Record',
-                    'mainEntity'  : 'TEMP-ID',
-                    'bibliography': [DST, DIGI],
-                    'encodingLevel': 'marc:MinimalLevel',
-                    'descriptionLanguage': [ '@id': 'https://id.kb.se/language/swe' ],
-                    'marc:catalogingSource': [ '@id': 'https://id.kb.se/marc/CooperativeCatalogingProgram' ],
-                    
+                    '@type'                : 'Record',
+                    'mainEntity'           : 'TEMP-ID',
+                    'bibliography'         : [DST, DIGI],
+                    'encodingLevel'        : 'marc:MinimalLevel',
+                    'descriptionLanguage'  : ['@id': 'https://id.kb.se/language/swe'],
+                    'marc:catalogingSource': ['@id': 'https://id.kb.se/marc/CooperativeCatalogingProgram'],
+
             ],
             [
-                    '@id'           : 'TEMP-ID',
-                    '@type'         : 'Electronic',
-                    'reproductionOf': ['@id': physicalThing['@id']],
-                    'mediaType': [
-                            [ '@id': 'https://id.kb.se/term/rda/Computer' ]
+                    '@id'            : 'TEMP-ID',
+                    '@type'          : 'Electronic',
+                    'reproductionOf' : ['@id': physicalThing['@id']],
+                    'mediaType'      : [
+                            ['@id': 'https://id.kb.se/term/rda/Computer']
                     ],
-                    'carrierType': [
-                            [ '@id': 'https://id.kb.se/term/rda/OnlineResource' ],
-                            [ '@id': 'https://id.kb.se/marc/Online' ],
-                            [ '@id': 'https://id.kb.se/marc/OnlineResource' ]
+                    'carrierType'    : [
+                            ['@id': 'https://id.kb.se/term/rda/OnlineResource'],
+                            ['@id': 'https://id.kb.se/marc/Online'],
+                            ['@id': 'https://id.kb.se/marc/OnlineResource']
                     ],
                     'associatedMedia': uris.collect {
                         [
@@ -84,7 +84,7 @@ void createDigitalReproduction(bib, uris, eod) {
                                 'uri'  : [it]
                         ]
                     },
-                    'production': [
+                    'production'     : [
                             '@type'   : 'DigitalReproduction',
                             'typeNote': 'Digitalt faksimil',
                             'place'   : [
