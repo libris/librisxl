@@ -129,10 +129,10 @@ void createDigitalReproduction(bib, uris, eod) {
         d.scheduleSave()
     })
 
-    createUnixHolding(electronicBib.graph[1]['@id'])
+    createHolding(electronicBib.graph[1]['@id'], 'https://libris.kb.se/library/Unix')
 }
 
-void createUnixHolding(bibId) {
+void createHolding(bibId, libraryId) {
     def data = [
             [
                     '@type'     : 'Record',
@@ -142,7 +142,7 @@ void createUnixHolding(bibId) {
                     '@id'   : 'TEMP-ID',
                     '@type' : 'Item',
                     'itemOf': ['@id': bibId],
-                    'heldBy': ['@id': 'https://libris.kb.se/library/Unix'],
+                    'heldBy': ['@id': libraryId],
             ],
     ]
     selectFromIterable([create(data)], { d -> d.scheduleSave() })
