@@ -10,19 +10,15 @@ if [[ "$defsdir" == "" ]]; then
     exit 1
 fi
 
-ensurevenv() {
+ensure_venv_with_reqs() {
     rm -rf .venv
     python3 -m venv .venv
     .venv/bin/pip install wheel
-}
-
-updatereqs() {
-    ensurevenv
     .venv/bin/pip install -r requirements.txt
 }
 
 builddefs() {
-    ensurevenv
+    ensure_venv_with_reqs
     .venv/bin/python datasets.py $buildargs
 }
 
@@ -32,7 +28,6 @@ if [[ ! -d "$defsdir" ]]; then
         git clone https://github.com/libris/definitions
     popd
     pushd $defsdir
-        updatereqs
         builddefs
     popd
 else
@@ -42,12 +37,6 @@ else
         remote=$(git rev-parse "@{upstream}")
         if [[ $local != $remote ]]; then
             git pull
-            if [[ requirements.txt -nt .venv && -d .venv ]]; then
-                touch -r requirements.txt .venv
-                updatereqs
-            elif [[ ! -d .venv ]]; then
-                updatereqs
-            fi
             builddefs
         fi
     popd
