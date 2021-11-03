@@ -264,16 +264,24 @@ class SearchUtils {
         
         def typeFilter = extTypeFilter(query)
         
-        Wikidata.query(q)
-                .collect {whelk.external.getEphemeral(it) }  // TODO? could get e.g 15 URIs from wikidata and then collect results until we get e.g. 5 
-                .findResults { it.orElse(null) }
+        def uris = Wikidata.query(q)
+        def existingInWhelk = whelk.getCards(uris)
+        
+        uris
+                .collect { uri ->
+                    existingInWhelk[uri]
+                            ? new Document(existingInWhelk[uri])
+                            : whelk.external.getEphemeral(uri).orElse(null)
+                    // TODO? could get e.g 15 URIs from wikidata and then collect results until we get e.g. 5 
+                }  
+                .grep()
                 .findAll {typeFilter.test(it) }
-                .collect {doc ->
+                .collect { doc ->
                     whelk.embellish(doc)
                     JsonLd.frame(doc.getThingIdentifiers().first(), doc.data)
                 }
     }
-    
+        
     private Predicate<Document> extTypeFilter(Map<String, String[]> query) {
         def queryTypes = query[TYPE_KEY]
         boolean isAnyTypeOk = !queryTypes || queryTypes.any { it == '*' }
