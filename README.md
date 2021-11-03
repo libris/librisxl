@@ -253,7 +253,8 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
 
     <LocationMatch "^/([bcdfghjklmnpqrstvwxz0-9]{15,16})$">
         ProxyPreserveHost Off
-        RewriteCond %{HTTP_ACCEPT} (text/html|application/xhtml|\*/\*|^$)
+        RewriteCond %{REQUEST_METHOD} GET
+	RewriteCond %{HTTP_ACCEPT} (text/html|application/xhtml|\*/\*|^$)
         RewriteRule ([^/]+)$ http://id.kblocalhost.kb.se:5000/$1 [P]
     </LocationMatch>
 
