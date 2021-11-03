@@ -42,8 +42,7 @@ class Wikidata implements Mapper {
     static boolean isWikidata(String iri) {
         iri.startsWith("https://www.wikidata.org") || iri.startsWith("http://www.wikidata.org")
     }
-
-    @Override
+    
     static List<String> query(String query) {
         try {
             performQuery(query)
