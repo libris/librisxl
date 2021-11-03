@@ -10,9 +10,12 @@ import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
 import whelk.exception.WhelkRuntimeException
+import whelk.external.Wikidata
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.util.DocumentUtil
+
+import java.util.function.Predicate
 
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
@@ -127,17 +130,30 @@ class SearchUtils {
         //
         // TODO Only manipulate `_limit` in one place
         queryParameters['_limit'] = [limit.toString()]
+        
+        // TODO external switch
+        Map esResult
+        if (queryParameters.q && queryParameters.q.first().trim().startsWith('wiki ')) { // TODO: only for testing
+            def result = searchWikidata(queryParameters)
+            esResult = [
+                    'items' : result,
+                    'totalHits': result.size(),
+                    'aggregations': [:]
+            ]
+        }
+        else {
+            def extItems = selectExternalByUri(queryParameters) // might manipulate q
 
-        def extItems = searchExternal(queryParameters) // might manipulate q
-        
-        Map esResult = esQuery.doQuery(queryParameters, suggest)
-        
-        if (extItems) {
-            esResult['items'] = extItems + (List) esResult['items']
-            if(esResult['totalHits'] == 0) {
-                esResult['totalHits'] = extItems.size()
+            esResult = esQuery.doQuery(queryParameters, suggest)
+
+            if (extItems) {
+                esResult['items'] = extItems + (List) esResult['items']
+                if(esResult['totalHits'] == 0) {
+                    esResult['totalHits'] = extItems.size()
+                }
             }
         }
+        
         
         Lookup lookup = new Lookup()
         
@@ -233,7 +249,41 @@ class SearchUtils {
         return result
     }
     
-    List searchExternal(Map<String, String[]> query) {
+    List searchWikidata(Map<String, String[]> query) {
+        if (!query.q) {
+            return []
+        }
+        
+        String q = query.q.first().trim()
+        if (q.startsWith('wiki ')) {
+            q = q.substring('wiki '.length())
+        }
+        if (q.contains('|')) {  // TODO: cataloging client does "term | term*" in side panel search...
+            q = q.split('\\|').first().trim()
+        }
+        
+        def typeFilter = extTypeFilter(query)
+        
+        Wikidata.query(q)
+                .collect {whelk.external.getEphemeral(it) }  // TODO? could get e.g 15 URIs from wikidata and then collect results until we get e.g. 5 
+                .findResults { it.orElse(null) }
+                .findAll {typeFilter.test(it) }
+                .collect {doc ->
+                    whelk.embellish(doc)
+                    JsonLd.frame(doc.getThingIdentifiers().first(), doc.data)
+                }
+    }
+    
+    private Predicate<Document> extTypeFilter(Map<String, String[]> query) {
+        def queryTypes = query[TYPE_KEY]
+        boolean isAnyTypeOk = !queryTypes || queryTypes.any { it == '*' }
+        return { Document doc ->
+            def extType = doc.getThingType()
+            isAnyTypeOk || queryTypes.any { it == extType || whelk.jsonld.isSubClassOf(extType, (String) it)}
+        }
+    }
+    
+    List selectExternalByUri(Map<String, String[]> query) {
         if (!query.q || !JsonLd.looksLikeIri(query.q.first())) {
             return []
         }
@@ -258,10 +308,7 @@ class SearchUtils {
                 return []
             }
             
-            def extType = doc.getThingType()
-            def queryTypes = query[TYPE_KEY]
-            boolean isAnyTypeOk = !queryTypes || queryTypes.any { it == '*' }
-            if (isAnyTypeOk || queryTypes.any { it == extType || whelk.jsonld.isSubClassOf(extType, (String) it)}) {
+            if (extTypeFilter(query).test(doc)) {
                 whelk.embellish(doc)
                 [JsonLd.frame(doc.getThingIdentifiers().first(), doc.data)]
             } else {
