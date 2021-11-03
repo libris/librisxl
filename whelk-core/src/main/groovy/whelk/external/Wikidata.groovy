@@ -6,7 +6,16 @@ import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.RDFNode
 import whelk.component.ElasticSearch
+import whelk.exception.WhelkRuntimeException
 import whelk.util.Metrics
+
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+import java.nio.charset.StandardCharsets
+import java.time.Duration
+
+import static whelk.util.Jackson.mapper
 
 class Wikidata implements Mapper {
     @Override
@@ -33,6 +42,38 @@ class Wikidata implements Mapper {
     static boolean isWikidata(String iri) {
         iri.startsWith("https://www.wikidata.org") || iri.startsWith("http://www.wikidata.org")
     }
+
+    @Override
+    static List<String> query(String query) {
+        try {
+            performQuery(query)
+        }
+        catch (Exception e) {
+            throw new WhelkRuntimeException("Error querying wikidata: $e", e)
+        }
+    }
+
+    private static List<String> performQuery(String query) {
+        HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build()
+        def base = 'https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json'
+        def lang = 'sv'
+        def limit = 5
+        def q = URLEncoder.encode(query, StandardCharsets.UTF_8)
+        String uri = "$base&limit=$limit&language=$lang&uselang=$lang&search=$q"
+        
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(uri))
+                .timeout(Duration.ofSeconds(30))
+                .GET()
+                .build()
+
+        def httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString())
+        def result = mapper.readValue(httpResponse.body(), Map.class)
+                .get('search')
+                .collect { (String) it['concepturi'] }
+  
+        return result
+    }
 }
 
 class WikidataEntity {
@@ -58,15 +99,21 @@ class WikidataEntity {
         }
     }
 
-    Model graph = ModelFactory.createDefaultModel()
+    Model graph
 
     String entityIri
     String shortId
 
     WikidataEntity(String iri) {
-        this.shortId = getShortId(iri)
-        this.entityIri = WIKIDATA_ENTITY_NS + shortId
-        loadGraph()
+        try {
+            graph = ModelFactory.createDefaultModel()
+            this.shortId = getShortId(iri)
+            this.entityIri = WIKIDATA_ENTITY_NS + shortId
+            loadGraph()
+        }
+        catch (ExceptionInInitializerError e) {
+            e.printStackTrace()
+        }
     }
 
     private void loadGraph() {
