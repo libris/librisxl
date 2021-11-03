@@ -10,9 +10,6 @@
   local: nicodemus-877a6675-714b-4fe6-a9bc-9e8984d5c9b7
   name: nicodemus
   uri: http://id.kb.se/organisations/SE2021001710/nicodemus-877a6675-714b-4fe6-a9bc-9e8984d5c9b7
-- local: poit-1e6c0e26-917f-4489-ba91-1e94a5da6bdc
-  name: poit
-  uri: http://id.kb.se/organisations/SE2021001710/poit-1e6c0e26-917f-4489-ba91-1e94a5da6bdc
 - libris_id: '22518619'
   local: saxo-1683b513-e421-4460-a59c-2e55d30e51db
   name: saxo
