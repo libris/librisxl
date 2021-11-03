@@ -435,7 +435,7 @@ class Whelk {
             throw new StorageCreateFailedException(document.getShortId(), "Document considered a duplicate of : " + collidingIDs)
         }
 
-        createCacheRecordsAndPlaceholders(document)
+        createCacheRecordsAndPlaceholders(changedBy, document)
         boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
         if (success) {
             indexAsyncOrSync {
@@ -465,7 +465,7 @@ class Whelk {
             preUpdateDoc = doc.clone()
             updateAgent.update(doc)
             normalize(doc)
-            createCacheRecordsAndPlaceholders(doc, preUpdateDoc)
+            createCacheRecordsAndPlaceholders(changedBy, doc, preUpdateDoc)
         })
 
         if (updated == null || preUpdateDoc == null) {
@@ -482,7 +482,7 @@ class Whelk {
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
 
-        createCacheRecordsAndPlaceholders(doc, preUpdateDoc)
+        createCacheRecordsAndPlaceholders(changedBy, doc, preUpdateDoc)
         Document updated = storage.storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, oldChecksum)
 
         if (updated == null) {
@@ -637,28 +637,24 @@ class Whelk {
         return timezone
     }
 
-    private void createCacheRecordsAndPlaceholders(Document postUpdateDoc, Document preUpdateDoc = null) {
+    private void createCacheRecordsAndPlaceholders(String changedBy, Document postUpdateDoc, Document preUpdateDoc = null) {
         Set<Link> postUpdateLinks = postUpdateDoc.getExternalRefs()
         Set<Link> preUpdateLinks = preUpdateDoc?.getExternalRefs() ?: new HashSet<Link>() //Collections.EMPTY_SET groovy compiler...?
 
         def iris = { Set<Link> s -> s.collect { it.iri } as Set<String> }
         Set<String> addedIris = iris(postUpdateLinks) - iris(preUpdateLinks)
-
-        createCacheRecordsAndPlaceholders(addedIris, !postUpdateDoc.isCacheRecord())
-
-        def redirects = createCacheRecordsAndPlaceholders(addedIris, !postUpdateDoc.isCacheRecord())
         
+        def redirects = createCacheRecordsAndPlaceholders(changedBy, addedIris, !postUpdateDoc.isCacheRecord())
         if (redirects) {
             postUpdateDoc.replaceLinks(redirects)
         }
     }
 
-    private Map<String, String> createCacheRecordsAndPlaceholders(Set<String> iris, boolean tryFetchExternal) {
+    private Map<String, String> createCacheRecordsAndPlaceholders(String changedBy, Set<String> iris, boolean tryFetchExternal) {
         Set<String> brokenOrExternalIris = iris - storage.getSystemIdsByIris(iris).keySet()
 
         boolean minorUpdate = true
-        def changedIn = 'xl'
-        def changedBy = 'https://libris.kb.se/library/SEK' // FIXME...
+        def changedIn = 'xl' // FIXME
         def collection = LegacyIntegrationTools.NO_MARC_COLLECTION
         def deleted = false
         
