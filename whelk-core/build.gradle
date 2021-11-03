@@ -95,7 +95,7 @@ dependencies {
     api 'commons-io:commons-io:2.11.0'
     implementation "org.apache.httpcomponents:httpclient:${httpComponentsClientVersion}"
     implementation "org.apache.httpcomponents:httpcore:${httpComponentsCoreVersion}"
-    implementation 'org.apache.jena:apache-jena-libs:3.0.1'
+    implementation 'org.apache.jena:apache-jena-libs:3.17.0'
     api "org.codehaus.groovy:groovy-json:${groovyVersion}"
     api "org.codehaus.groovy:groovy-xml:${groovyVersion}"
     api "org.codehaus.groovy:groovy:${groovyVersion}"
