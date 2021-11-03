@@ -16582,7 +16582,7 @@
         },
         {
           "when": "i2=5",
-          "resourceType": "Geographic"
+          "resourceType": "Place"
         },
         {
           "when": "i2=6",
@@ -16630,7 +16630,7 @@
           }}
         },
         {
-          "name": "Geographic subject",
+          "name": "Place as subject",
           "source": {
             "653": {"ind1": " ", "ind2": "5", "subfields":[
               {"a": "Stockholm"}]
@@ -16641,12 +16641,31 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "Geographic",
+                  "@type": "Place",
                   "label": "Stockholm"
                 }
               ]
             }
           }}
+        },
+        {
+          "name": "Geographic subject should revert to place",
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Geographic",
+                  "label": "Stockholm"
+                }
+              ]
+            }
+          }},
+          "normalized": {
+            "653": {"ind1": " ", "ind2": "5", "subfields":[
+              {"a": "Stockholm"}]
+            }
+          }
         },
         {
           "name": "Change i2=0 to blank (none of our 653s belongs to lcsh)",
