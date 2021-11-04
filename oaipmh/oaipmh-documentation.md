@@ -37,10 +37,8 @@ T ex: Om `metadataPrefix=marcxml_expanded` används för en bibliografisk post s
 Libris implementation av OAI-PMH erbjuder en extra parameter som inte ingår i OAI-PMH specifikationen och som kan användas tillsammans med verben `GetRecord` och `ListRecords`. Parametern heter `x-withDeletedData` och om den sätts till `true` så inkluderar svaret metadata även för poster som markerats som borttagna. Detta strider mot OAI-PMH specifikationen som förbjuder både extra parametrar och att metadata för borttagna poster skickas med. Trots detta har valet gjorts att använda den här parametern för att möjliggöra viss nödvändig libris-funktionalitet.
 
 #### Exempel
-För att (från Libris QA mijlö) hämta alla bibliografiska poster (med tillhörande beståndsposter), för vilka det finns beståndsposter med sigel `S` och som uppdaterats mellan den 13 och klockan 12 den 14 februari:
+För att hämta alla bibliografiska poster (med tillhörande beståndsposter), för vilka det finns beståndsposter med sigel `S` och som uppdaterats mellan den 13 och klockan 12 den 14 februari:
 
 ```
 $ curl "https://libris.kb.se/api/oaipmh/?verb=ListRecords&metadataPrefix=marcxml_includehold_expanded&from=2018-02-13&until=2018-02-14T12:00:00Z&x-withDeletedData=true&set=bib:S"
-<?xml version="1.0" encoding="UTF-8"?><OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd"><responseDate>2018-02-15T10:54:18.606Z</responseDate><request verb="ListRecords" metadataPrefix="marcxml_includehold_expanded" from="2018-02-13" until="2018-02-14" x-withDeletedData="true" set="hold:S">http://export-qa.libris.kb.se:8080/oaipmh/</request><ListRecords><record><header><identifier>https://libris-qa.kb.se/pt0pfgtv1hf8p2t</identifier>
-...
 ```
