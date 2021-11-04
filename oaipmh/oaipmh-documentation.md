@@ -4,6 +4,8 @@ Libris OAI-PMH-server följer den officiella OAI-PMH-specifikationen som kan lä
 
 Det här dokumentets syfte är att ge Libris-specifik information, om hur OAI-PMH kan användas för att hämta Libris-metadata.
 
+Adressen till OAI-PMH-gränssnittet är https://libris.kb.se/api/oaipmh/
+
 ## Set-parametern (delmängder):
 
 OAI-PMH-specifikationen beskriver hur skördning av delmängder fungerar generellt, men i Libris används dessa för vissa specifika ändamål.
@@ -38,7 +40,7 @@ Libris implementation av OAI-PMH erbjuder en extra parameter som inte ingår i O
 För att (från Libris QA mijlö) hämta alla bibliografiska poster (med tillhörande beståndsposter), för vilka det finns beståndsposter med sigel `S` och som uppdaterats mellan den 13 och klockan 12 den 14 februari:
 
 ```
-$ curl "export-qa.libris.kb.se:8080/oaipmh/?verb=ListRecords&metadataPrefix=marcxml_includehold_expanded&from=2018-02-13&until=2018-02-14T12:00:00Z&x-withDeletedData=true&set=bib:S"
+$ curl "https://libris.kb.se/api/oaipmh/?verb=ListRecords&metadataPrefix=marcxml_includehold_expanded&from=2018-02-13&until=2018-02-14T12:00:00Z&x-withDeletedData=true&set=bib:S"
 <?xml version="1.0" encoding="UTF-8"?><OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd"><responseDate>2018-02-15T10:54:18.606Z</responseDate><request verb="ListRecords" metadataPrefix="marcxml_includehold_expanded" from="2018-02-13" until="2018-02-14" x-withDeletedData="true" set="hold:S">http://export-qa.libris.kb.se:8080/oaipmh/</request><ListRecords><record><header><identifier>https://libris-qa.kb.se/pt0pfgtv1hf8p2t</identifier>
 ...
 ```
