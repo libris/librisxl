@@ -160,7 +160,7 @@ class ReproductionService {
     private static final def DST = ['@id': 'https://libris.kb.se/library/DST']
     private static final def FACSIMILE = ['@id': 'https://id.kb.se/term/saogf/Faksimiler']
     private static final def ONLINE = ['@id': 'https://id.kb.se/term/rda/OnlineResource']
-    private static final def FREELY_AVAILABLE = ['@id': 'https://id.kb.se/term/freelyAvailable'] //TODO
+    private static final def FREELY_AVAILABLE = ['@id': 'https://id.kb.se/policy/freely-available']
 
     XL xl
     
