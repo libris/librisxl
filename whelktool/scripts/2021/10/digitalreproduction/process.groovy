@@ -42,7 +42,7 @@ void createDigitalRepresentation(doc, params) {
       carrierType: [ ref('https://id.kb.se/term/rda/OnlineResource') ],
       instanceOf: ref(getMainEntityId(workDoc)),
       reproductionOf: ref(getMainEntityId(doc)),
-      reproduction: [
+      production: [
           [
             (TYPE): 'DigitalReproduction',
             label: params.reproductionComment,
