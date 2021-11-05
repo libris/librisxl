@@ -31,6 +31,18 @@ import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT
 import static javax.servlet.http.HttpServletResponse.SC_OK
 
 /**
+ Creates a record for a digital reproduction.
+ Takes JSON-LD with an Electronic describing the reproduction as input.
+ 
+ - Validates that minimal required data is present in Electronic (all additional data is kept).
+ - Extracts and links work entity from reproduction and original (physical thing)
+ - Copies title from original
+ - Adds genreFrom saofg/Faksimiler
+ - Adds DIGI and DST bibliographies if applicable
+ - Adds carrierType rda/OnlineResource if applicable
+ - Creates holdings if specified in @reverse.itemOf
+ 
+ 
  Example (without required authentication headers):
  
  curl -v -XPOST 'http://localhost:8180/_reproduction' -H 'Content-Type: application/ld+json' --data-binary @- << EOF
