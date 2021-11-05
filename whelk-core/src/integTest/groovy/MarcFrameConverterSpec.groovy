@@ -279,6 +279,7 @@ class MarcFrameConverterSpec extends Specification {
         item << postProcStepSpecs.findAll { it.spec.source }
     }
 
+    @IgnoreRest
     def "should handle postprocessing on revert"() {
         given:
         def data = getSpecPiece(item.spec, 'result')

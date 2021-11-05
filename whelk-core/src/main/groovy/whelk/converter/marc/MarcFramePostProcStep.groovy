@@ -453,6 +453,68 @@ class ProduceIfMissingStep extends MarcFramePostProcStepBase {
 }
 
 
+class InjectWhenMatchingOnRevertStep extends MarcFramePostProcStepBase {
+
+    List<Map> rules
+    static final MATCH_REF = ~/\?\d+/
+
+    void modify(Map record, Map thing) {
+    }
+
+    void unmodify(Map record, Map thing) {
+        def item = thing
+        for (rule in rules) {
+            def refs = [:]
+            if (deepMatches(item, rule.matches, refs)) {
+                injectInto(item, rule.injectData, refs)
+                break
+            }
+        }
+    }
+
+    boolean deepMatches(Map o, Map match, Map refs) {
+        String ref = null
+        if (match[ID] =~ MATCH_REF) {
+            ref = match.remove(ID)
+        }
+        match.every { k, v ->
+            Util.asList(v).every {
+                Util.asList(o[k]).any { ov ->
+                    boolean matches = (ov instanceof Map) ?
+                        deepMatches(ov, it, refs) :
+                        ov == it
+                    if (!matches && k == TYPE) {
+                        matches = ld.isSubClassOf(ov, it)
+                    }
+                    if (matches) {
+                        refs[ref] = o
+                    }
+                    return matches
+                }
+            }
+        }
+    }
+
+    static void injectInto(Map o, Map v, Map refs) {
+        v.each { ik, iv ->
+            if (o.containsKey(ik)) {
+                if (iv instanceof Map && iv[ID] =~ MATCH_REF) {
+                    Map matched = refs[iv[ID]]
+                    matched.putAll(iv)
+                    matched.remove(ID)
+                } else {
+                    def os = o[ik] = Util.asList(o[ik])
+                    os += Util.asList(iv)
+                    o[ik] = os
+                }
+            } else {
+                o[ik] = iv
+            }
+        }
+    }
+}
+
+
 class SetFlagsByPatternsStep extends MarcFramePostProcStepBase {
 
     String select

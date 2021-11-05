@@ -214,8 +214,12 @@ class MarcConversion {
             procStep = new SetFlagsByPatternsStep(props); break
             case 'CopyOnRevert':
             procStep = new CopyOnRevertStep(props); break
-            default:
+            case 'InjectWhenMatchingOnRevert':
+            procStep = new InjectWhenMatchingOnRevertStep(props); break
+            case null:
             return null
+            default:
+            throw new RuntimeException("Unknown postProcStep: ${stepDfn}")
         }
         procStep.ld = converter.ld
         procStep.init()

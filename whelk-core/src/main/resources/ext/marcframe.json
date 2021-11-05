@@ -2303,6 +2303,111 @@
         ]
       },
       {
+        "type": "InjectWhenMatchingOnRevert",
+        "_TODO": "Decide upon and define SAOGF terms to be used",
+        "rules": [
+          {
+            "matches": {
+              "@type": "Electronic",
+              "genreForm": [
+                {"@id": "https://id.kb.se/term/saogf/Digitalt%20faksimil"},
+                {"@id": "https://id.kb.se/term/saogf/Elektronisk%20text"}
+              ],
+              "production": {
+                "@id": "?1",
+                "@type": "Reproduction"
+              }
+            },
+            "injectData": {
+              "production": {
+                "@id": "?1",
+                "typeNote": "Digitalt faksimil och elektronisk text"
+              }
+            }
+          },
+          {
+            "matches": {
+              "@type": "Electronic",
+              "genreForm": {"@id": "https://id.kb.se/term/saogf/Digitalt%20faksimil"},
+              "production": {
+                "@id": "?1",
+                "@type": "Reproduction"
+              }
+            },
+            "injectData": {
+              "production": {
+                "@id": "?1",
+                "typeNote": "Digitalt faksimil"
+              }
+            }
+          }
+        ],
+        "_spec": [
+          {
+            "source": {
+              "mainEntity": {
+                "@type": "Electronic",
+                "genreForm": [
+                  {"@id": "https://id.kb.se/term/saogf/Digitalt%20faksimil"},
+                  {"@id": "https://id.kb.se/term/saogf/Elektronisk%20text"}
+                ],
+                "production": [
+                  {
+                    "@type": "DigitalReproduction"
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "@type": "Electronic",
+                "genreForm": [
+                  {"@id": "https://id.kb.se/term/saogf/Digitalt%20faksimil"},
+                  {"@id": "https://id.kb.se/term/saogf/Elektronisk%20text"}
+                ],
+                "production": [
+                  {
+                    "@type": "DigitalReproduction",
+                    "typeNote": "Digitalt faksimil och elektronisk text"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "@type": "Electronic",
+                "genreForm": [
+                  {"@id": "https://id.kb.se/term/saogf/Digitalt%20faksimil"}
+                ],
+                "production": [
+                  {
+                    "@type": "Reproduction"
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "@type": "Electronic",
+                "genreForm": [
+                  {"@id": "https://id.kb.se/term/saogf/Digitalt%20faksimil"}
+                ],
+                "production": [
+                  {
+                    "@type": "Reproduction",
+                    "typeNote": "Digitalt faksimil"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
         "type": "CopyOnRevert",
         "sourceLink": "reproductionOf",
         "copyIfMissing": [
