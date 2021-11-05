@@ -28,14 +28,12 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
 
     void init() { }
 
-    def findValue(source, List path) {
+    static def findValue(source, List path) {
         if (!source || !path) {
             return source
         }
-        if (source instanceof List) {
-            source = source[0]
-        }
-        return findValue(source[path[0]], path.size() > 1 ? path[1..-1] : null)
+        def pathrest = path.size() > 1 ? path[1..-1] : null
+        return findValue(source[path[0]], pathrest)
     }
 
     static String buildString(Map node, List showProperties) {
@@ -46,33 +44,33 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
                 fmt = prop.useValueFormat
                 prop = prop.property
             }
-            def value = node[prop]
+            def value = prop instanceof List ? findValue(node, prop) : node[prop]
             if (value) {
                 if (!(value instanceof List)) {
                     value = [value]
                 }
                 def first = true
-                if (fmt?.contentFirst) {
+                if (fmt?.contentFirst != null) {
                     result += fmt.contentFirst
                 }
                 def prevAfter = null
                 value.each {
-                    if (prevAfter) {
+                    if (prevAfter != null) {
                         result += prevAfter
                     }
-                    if (fmt?.contentBefore && (!fmt.contentFirst || !first)) {
+                    if (fmt?.contentBefore != null && (fmt.contentFirst == null || first == null)) {
                         result += fmt.contentBefore
                     }
                     result += it
                     first = false
                     prevAfter = fmt?.contentAfter
                 }
-                if (fmt?.contentLast) {
+                if (fmt?.contentLast != null) {
                     result += fmt.contentLast
-                } else if (prevAfter) {
+                } else if (prevAfter != null) {
                     result += prevAfter
                 }
-            } else if (fmt?.contentNoValue) {
+            } else if (fmt?.contentNoValue != null) {
                 result += fmt.contentNoValue
             }
         }

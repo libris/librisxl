@@ -2136,6 +2136,64 @@
         ]
       },
       {
+        "type": "ProduceIfMissing",
+        "select": "associatedMedia",
+        "produceMissing": {
+          "produceProperty": "marc:publicNote",
+          "showProperties": [
+            {"property": ["usageAndAccessPolicy", "label"]},
+            {
+              "property": ["publisher", "name"],
+              "useValueFormat": {
+                "contentFirst": " via ",
+                "contentAfter": " och ",
+                "contentLast": ""
+              }
+            }
+          ]
+        },
+        "_spec": [
+          {
+            "source": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "usageAndAccessPolicy": [
+                      {"label": "Fritt tillgänglig"}
+                    ],
+                    "publisher": [
+                      {"name": "Kungliga biblioteket"},
+                      {"name": "Umeå universitetsbibliotek"}
+                    ]
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "marc:publicNote": "Fritt tillgänglig via Kungliga biblioteket och Umeå universitetsbibliotek",
+                    "usageAndAccessPolicy": [
+                      {"label": "Fritt tillgänglig"}
+                    ],
+                    "publisher": [
+                      {"name": "Kungliga biblioteket"},
+                      {"name": "Umeå universitetsbibliotek"}
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
         "type": "SetFlagsByPatterns",
         "select": "seriesMembership",
         "match": [
