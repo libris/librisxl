@@ -1950,6 +1950,115 @@
         ]
       },
       {
+        "type": "SetFlagsByPatterns",
+        "select": "seriesMembership",
+        "match": [
+          {
+            "exists": ["seriesStatement", "inSeries"],
+            "setFlags": {
+              "marc:seriesTracingPolicy": "1"
+            }
+          },
+          {
+            "exists": ["seriesStatement"],
+            "setFlags": {
+              "marc:seriesTracingPolicy": "0"
+            }
+          }
+        ],
+        "_spec": [
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "marc:seriesTracingPolicy": "0",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": "source"
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "marc:seriesTracingPolicy": "1",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "..."
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "marc:seriesTracingPolicy": "0"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
         "type": "ProduceIfMissing",
         "select": "seriesMembership",
         "produceMissing": {
@@ -2186,115 +2295,6 @@
                       {"name": "Kungliga biblioteket"},
                       {"name": "Umeå universitetsbibliotek"}
                     ]
-                  }
-                ]
-              }
-            }
-          }
-        ]
-      },
-      {
-        "type": "SetFlagsByPatterns",
-        "select": "seriesMembership",
-        "match": [
-          {
-            "exists": ["seriesStatement", "inSeries"],
-            "setFlags": {
-              "marc:seriesTracingPolicy": "1"
-            }
-          },
-          {
-            "exists": ["seriesStatement"],
-            "setFlags": {
-              "marc:seriesTracingPolicy": "0"
-            }
-          }
-        ],
-        "_spec": [
-          {
-            "source": {
-              "mainEntity": {
-                "seriesMembership": [
-                  {
-                    "@type": "SeriesMembership",
-                    "seriesStatement": "...",
-                    "marc:seriesTracingPolicy": "0",
-                    "inSeries": {"...": "..."}
-                  }
-                ]
-              }
-            },
-            "result": "source",
-            "back": "source"
-          },
-          {
-            "source": {
-              "mainEntity": {
-                "seriesMembership": [
-                  {
-                    "@type": "SeriesMembership",
-                    "seriesStatement": "...",
-                    "inSeries": {"...": "..."}
-                  }
-                ]
-              }
-            },
-            "result": "source",
-            "back": {
-              "mainEntity": {
-                "seriesMembership": [
-                  {
-                    "@type": "SeriesMembership",
-                    "seriesStatement": "...",
-                    "marc:seriesTracingPolicy": "1",
-                    "inSeries": {"...": "..."}
-                  }
-                ]
-              }
-            }
-          },
-          {
-            "source": {
-              "mainEntity": {
-                "seriesMembership": [
-                  {
-                    "@type": "SeriesMembership",
-                    "seriesStatement": "..."
-                  }
-                ]
-              }
-            },
-            "result": "source",
-            "back": {
-              "mainEntity": {
-                "seriesMembership": [
-                  {
-                    "@type": "SeriesMembership",
-                    "seriesStatement": "...",
-                    "marc:seriesTracingPolicy": "0"
-                  }
-                ]
-              }
-            }
-          },
-          {
-            "source": {
-              "mainEntity": {
-                "seriesMembership": [
-                  {
-                    "@type": "SeriesMembership",
-                    "inSeries": {"...": "..."}
-                  }
-                ]
-              }
-            },
-            "result": "source",
-            "back": {
-              "mainEntity": {
-                "seriesMembership": [
-                  {
-                    "@type": "SeriesMembership",
-                    "inSeries": {"...": "..."}
                   }
                 ]
               }
