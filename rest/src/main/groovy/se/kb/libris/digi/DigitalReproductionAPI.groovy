@@ -1,0 +1,428 @@
+package se.kb.libris.digi
+
+import groovy.transform.MapConstructor
+import groovy.util.logging.Log4j2 as Log
+import org.codehaus.jackson.JsonParseException
+import org.codehaus.jackson.map.ObjectMapper
+
+import javax.servlet.ServletException
+import javax.servlet.http.HttpServlet
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+import java.time.Duration
+import java.util.concurrent.Semaphore
+
+import static RequestException.badRequest
+import static RequestException.internalError
+import static Util.JSONLD
+import static Util.asList
+import static Util.asMap
+import static Util.asSet
+import static Util.getAtPath
+import static Util.isLink
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
+import static javax.servlet.http.HttpServletResponse.SC_CREATED
+import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND
+import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT
+import static javax.servlet.http.HttpServletResponse.SC_OK
+
+/**
+ Example (without required authentication headers):
+ 
+ curl -v -XPOST 'http://localhost:8180/_reproduction' -H 'Content-Type: application/ld+json' --data-binary @- << EOF
+ {
+  "@type": "Electronic",
+  "reproductionOf": { "@id": "http://kblocalhost.kb.se:5000/l091l3s8jvz2c5ts#it" },
+  "production": {
+    "@type": "Reproduction",
+    "agent": { "@id": "http://kblocalhost.kb.se:5000/jgvxv7m23l9rxd3#it" },
+    "place": { "@id": "https://id.kb.se/country/ohu" },
+    "year": "2021"
+  },
+  "meta" : {
+    "bibliography": [ {"@id" : "https://libris.kb.se/library/ARB"} ]
+  },
+  "@reverse" : {
+    "itemOf": [
+      { "heldBy": { "@id": "https://libris.kb.se/library/Utb1" }},
+      { "heldBy": { "@id": "https://libris.kb.se/library/S" }}
+    ]
+  },
+  "genreForm": [ { "@id": "https://id.kb.se/term/gmgpc/swe/Sk%C3%A4mtkort" } ]
+}
+EOF 
+ 
+ */
+
+@Log
+class DigitalReproductionAPI extends HttpServlet {
+    private static final ObjectMapper mapper = new ObjectMapper()
+    
+    private static final def FORWARD_HEADERS = [
+            'XL-Active-Sigel',
+            'Authorization'
+    ]
+    
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        def forwardHeaders = request.headerNames
+                .findAll{it in FORWARD_HEADERS }
+                .collectEntries { [it : request.getHeader(it as String)] }
+        
+        def service = new ReproductionService(xl : new XL(headers : forwardHeaders, apiLocation: getXlAPI(request)))
+        
+        try {
+            String id = service.createDigitalReproduction(parse(request))
+            log.info("Created $id")
+            response.setHeader('Location', id)
+            response.setStatus(SC_CREATED)
+        }
+        catch (RequestException e) {
+            log.warn("${e.code} ${e.msg}")
+            sendError(response, e.code, e.msg)
+        }
+        catch (Exception e) {
+            log.error("Internal error: $e", e)
+            sendError(response, SC_INTERNAL_SERVER_ERROR, e.getMessage())
+        }
+    }
+    
+    static Map parse(HttpServletRequest request) {
+        if (request.getHeader('Content-Type') != JSONLD) {
+            throw badRequest("Header Content-Type must be $JSONLD")
+        }
+        
+        def electronic = readJson(request)
+        
+        //TODO
+        check(electronic, ['@type'], 'Electronic')
+        check(electronic, ['reproductionOf', '@id'], String.class)
+        check(electronic, ['production'], Map.class)
+        check(electronic, ['production', '@type'], 'Reproduction')
+        check(electronic, ['production', 'agent'], Object.class)
+        check(electronic, ['production', 'place'], Object.class)
+        check(electronic, ['production', 'year'], String.class)
+        
+        return electronic
+    }
+    
+    static void check(thing, path, expected) {
+        def actual = getAtPath(thing, path)
+        def ok = expected instanceof Class 
+                ? expected.isInstance(actual) 
+                : expected == actual
+        
+        if (!ok) {
+            def e = expected instanceof Class ? expected.getSimpleName() : expected
+            throw new RequestException(code: SC_BAD_REQUEST, msg: "Expected $e at $path, got: ${actual ?: '<MISSING>'}")
+        }
+    }
+    
+    static Map readJson(HttpServletRequest request) {
+        try {
+            mapper.readValue(request.getInputStream().getBytes(), Map)
+        } catch (JsonParseException e) {
+            throw badRequest("Bad JSON: ${e.message}")
+        }
+    }
+
+    static void sendError(HttpServletResponse response, int code, String msg) {
+        response.setStatus(code)
+        response.setHeader('Content-Type', 'application/json')
+        mapper.writeValue(response.getOutputStream(), ['code': code, 'msg' : msg ?: ''])
+    }
+    
+    //TODO
+    static String getXlAPI(HttpServletRequest request) {
+        "http://localhost:${request.getServerPort()}/"
+    }
+}
+
+@Log
+class ReproductionService {
+    private static final def DIGI = ['@id': 'https://libris.kb.se/library/DIGI']
+    private static final def DST = ['@id': 'https://libris.kb.se/library/DST']
+    private static final def FACSIMILE = ['@id': 'https://id.kb.se/term/saogf/Faksimiler']
+    private static final def ONLINE = ['@id': 'https://id.kb.se/term/rda/OnlineResource']
+    private static final def FREELY_AVAILABLE = ['@id': 'https://id.kb.se/term/freelyAvailable'] //TODO
+
+    XL xl
+    
+    String createDigitalReproduction(Map electronicThing) {
+        String requestedId = electronicThing.reproductionOf['@id'] as String
+        Map physicalThing = xl.get(requestedId)
+                .map{ it.data['@graph'][1] as Map }
+                .orElseThrow{ badRequest("Thing linked in reproductionOf does not exist: $requestedId") }
+
+        if (physicalThing['@type'] == 'Electronic') {
+            throw badRequest("Thing linked in reproductionOf cannot be Electronic")
+        }
+
+        def holdingsToCreate = getAtPath(electronicThing, ['@reverse', 'itemOf', '*', 'heldBy', '@id'], [])
+        def badHeldBy = holdingsToCreate.findAll { xl.get(it).isEmpty() }
+        if (badHeldBy) {
+            throw badRequest("No such library: $badHeldBy")
+        }
+        
+        electronicThing.reproductionOf['@id'] = physicalThing['@id'] // if link was to sameAs
+        
+        electronicThing.instanceOf = ['@id' : xl.ensureExtractedWork(physicalThing['@id'] as String)]
+        electronicThing.genreForm = asSet(electronicThing.genreForm) << FACSIMILE
+        
+        if (physicalThing.hasTitle) {
+            electronicThing.hasTitle = physicalThing.hasTitle
+        }
+        
+        if (isOnline(electronicThing)) {
+            electronicThing.carrierType = asSet(electronicThing.carrierType) << ONLINE
+        }
+
+        def record = asMap(electronicThing.remove('meta'))
+
+        record.bibliography = asSet(record.bibliography).with { bibliography ->
+            if (isDigitaliseratSvensktTryck(physicalThing, electronicThing)) {
+                bibliography << DST
+            }
+            bibliography << DIGI
+        }
+        
+        def electronicId = xl.create(record, electronicThing)
+        holdingsToCreate.each { heldBy -> createHoldingFor(electronicId, heldBy) }
+        
+        return electronicId
+    }
+    
+    boolean isDigitaliseratSvensktTryck(Map physicalThing, Map electronicThing) {
+        isFreelyAvailable(electronicThing) && physicalThing.publication?.any { Map p ->
+            publishedIn(p, 'sw') || (publishedIn(p, 'fi') && pre1810(p))
+        }
+    }
+    static boolean isFreelyAvailable(Map thing) {
+        def usageAndAccess = asList(thing.usageAndAccessPolicy) + asList(getAtPath(thing, ['associatedMedia', '*', 'usageAndAccessPolicy', []]))
+        usageAndAccess.any { it['@id'] == FREELY_AVAILABLE}
+    }
+
+    static boolean publishedIn(Map publication, countryCode) {
+        publication.country && publication.country['@id'] == "https://id.kb.se/country/$countryCode"
+    }
+    
+    boolean pre1810(Map publication) {
+        parseYear(publication.year as String) <= 1809 || parseYear(publication.date as String) <= 1809
+    }
+
+    static int parseYear(String date) {
+        (date && date ==~ /\d\d\d\d.*/)
+                ? Integer.parseInt(date.substring(0,4))
+                : Integer.MAX_VALUE
+    }
+
+    static boolean isOnline(Map thing) {
+        thing.hasRepresentation || !asList(getAtPath(thing, ['associatedMedia', '*', 'uri'], [])).isEmpty()
+    }
+    
+    void createHoldingFor(thingId, heldBy) {
+        xl.create(
+                [:],
+                [
+                        '@type' : 'Item',
+                        'itemOf' : ['@id' : thingId],
+                        'heldBy': ['@id' : heldBy],
+                        'hasComponent' : [
+                                [
+                                        '@type' : 'Item',
+                                        'heldBy': ['@id' : heldBy],
+                                ]
+                        ]
+                ]
+        )
+    }
+}
+
+@MapConstructor
+@Log
+class XL {
+    // Since we are (for now) making HTTP requests to the same servlet container. must be lower that maxConnections / 2
+    private static final int MAX_CONCURRENT_REQUESTS = 10 
+    private static final Semaphore semaphore = new Semaphore(MAX_CONCURRENT_REQUESTS)
+    private static final HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build()
+    private static final ObjectMapper mapper = new ObjectMapper()
+    
+    Map<String, String> headers
+    String apiLocation
+
+    // TODO add atomic "extract entity" to Whelk API and use instead
+    String ensureExtractedWork(String instanceId) {
+        def doc = get(instanceId).orElseThrow { badRequest("No such record: $instanceId") }
+        Map instance = doc.data['@graph'][1] as Map
+        Map work = instance.instanceOf as Map
+        
+        if (!work) {
+            throw badRequest("No instanceOf in $instanceId")
+        }
+        
+        if (isLink(work)) {
+            return work['@id']
+        }
+        
+        if(!work.hasTitle) {
+            def titles = asList(instance.hasTitle).findAll{ it['@type'] == 'Title' }
+            if (titles) {
+                work.hasTitle = titles
+            }
+        }
+        
+        def workId = create([:], work)
+        instance.instanceOf = ['@id': workId]
+        update(doc)
+        
+        return workId
+    }
+
+    void update(Doc doc) {
+        String id = doc.data['@graph'][1]['@id']
+        def request = requestForPath(id)
+                .header('Content-Type', Util.JSONLD)
+                .header('If-Match', doc.eTag)
+                .PUT(HttpRequest.BodyPublishers.ofByteArray(mapper.writeValueAsBytes(doc.data)))
+                .build()
+        
+        def response = send(request, HttpResponse.BodyHandlers.ofString())
+        if (response.statusCode() != SC_NO_CONTENT) {
+            throw new RequestException(code: response.statusCode(), msg: response.body())
+        }
+    }
+    
+    String create(Map record, Map thing) {
+        def data = [
+                '@graph': [
+                        record + [
+                                '@id'       : 'TEMP-ID',
+                                '@type'     : 'Record',
+                                'mainEntity': ['@id': 'TEMP-ID#it']
+                        ],
+                        thing + [
+                                '@id': 'TEMP-ID#it',
+                        ]
+                ]
+        ]
+
+        def request = requestForPath('')
+                .header('Content-Type', Util.JSONLD)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(mapper.writeValueAsBytes(data)))
+                .build()
+        
+        def response = send(request, HttpResponse.BodyHandlers.ofString())
+        if (response.statusCode() != SC_CREATED) {
+            throw new RequestException(code: response.statusCode(), msg: response.body())
+        }
+        
+        return response.headers().firstValue('Location').map{ it + '#it' }
+                .orElseThrow{ internalError("Got no Location in create") }
+    }
+    
+    Optional<Doc> get(String id) {
+        def request = requestForPath("${id.split('#').first()}?embellished=false")
+                .header('Accept', Util.JSONLD)
+                .GET()
+                .build()
+        
+        def response = send(request, HttpResponse.BodyHandlers.ofString())
+        if (response.statusCode() == SC_NOT_FOUND) {
+            return Optional.empty()
+        }
+        if (response.statusCode() != SC_OK) {
+            throw new RequestException(code: response.statusCode(), msg: response.body())
+        }
+        
+        return Optional.of(new Doc(
+                data: mapper.readValue(response.body(), Map), 
+                eTag: response.headers().firstValue('ETag').orElseThrow{ internalError("Got no ETag for $id") }
+        ))
+    }
+    
+    HttpRequest.Builder requestForPath(String path) {
+        def builder = HttpRequest.newBuilder()
+                .uri(URI.create("$apiLocation$path"))
+                .timeout(Duration.ofSeconds(15))
+        
+        headers.each { k, v ->
+            builder.header(k, v)
+        }
+        
+        return builder
+    }
+
+    static def send(request, responseBodyHandler) {
+        try {
+            semaphore.acquireUninterruptibly()
+            log.debug(request)
+            client.send(request, responseBodyHandler)
+        }
+       finally {
+           semaphore.release()
+       }
+    }
+    
+    @MapConstructor
+    static class Doc {
+        Map data
+        String eTag
+    }
+}
+
+class Util {
+    static final String JSONLD = 'application/ld+json'
+    
+    static List asList(Object o) {
+        (o instanceof List) ? (List) o : (o ? [o] : [])
+    }
+
+    static Map asMap(Object o) {
+        (o instanceof Map) ? (Map) o : [:]
+    }
+
+    static Set asSet(Object o) {
+        asList(o) as Set
+    }
+
+    static Object getAtPath(item, Iterable path, defaultTo = null) {
+        if(!item) {
+            return defaultTo
+        }
+
+        for (int i = 0 ; i < path.size(); i++) {
+            def p = path[i]
+            if (p == '*' && item instanceof Collection) {
+                return item.collect { getAtPath(it, path.drop(i + 1), [])}.flatten()
+            }
+            else if (item[p] != null) {
+                item = item[p]
+            } else {
+                return defaultTo
+            }
+        }
+        return item
+    }
+    
+    static boolean isLink(Map m) {
+        m.'@id' && m.size() == 1
+    }
+}
+
+@MapConstructor
+class RequestException extends RuntimeException {
+    int code
+    String msg
+    
+    static RequestException badRequest(String msg) {
+        new RequestException(code: SC_BAD_REQUEST, msg:  msg)
+    }
+
+    static RequestException internalError(String msg) {
+        new RequestException(code: SC_INTERNAL_SERVER_ERROR, msg:  msg)
+    }
+}
