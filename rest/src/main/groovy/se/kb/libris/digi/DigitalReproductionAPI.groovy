@@ -297,7 +297,7 @@ class XL {
     void update(Doc doc) {
         String id = doc.data['@graph'][1]['@id']
         def request = requestForPath(id)
-                .header('Content-Type', Util.JSONLD)
+                .header('Content-Type', JSONLD)
                 .header('If-Match', doc.eTag)
                 .PUT(HttpRequest.BodyPublishers.ofByteArray(mapper.writeValueAsBytes(doc.data)))
                 .build()
@@ -323,7 +323,7 @@ class XL {
         ]
 
         def request = requestForPath('')
-                .header('Content-Type', Util.JSONLD)
+                .header('Content-Type', JSONLD)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(mapper.writeValueAsBytes(data)))
                 .build()
         
@@ -338,7 +338,7 @@ class XL {
     
     Optional<Doc> get(String id) {
         def request = requestForPath("${id.split('#').first()}?embellished=false")
-                .header('Accept', Util.JSONLD)
+                .header('Accept', JSONLD)
                 .GET()
                 .build()
         
