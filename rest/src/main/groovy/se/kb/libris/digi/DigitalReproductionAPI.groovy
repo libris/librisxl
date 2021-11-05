@@ -83,7 +83,7 @@ class DigitalReproductionAPI extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         def forwardHeaders = request.headerNames
-                .findAll{it in FORWARD_HEADERS }
+                .findAll{ it in FORWARD_HEADERS }
                 .collectEntries { [it : request.getHeader(it as String)] }
         
         def service = new ReproductionService(xl : new XL(headers : forwardHeaders, apiLocation: getXlAPI(request)))
@@ -131,7 +131,7 @@ class DigitalReproductionAPI extends HttpServlet {
         
         if (!ok) {
             def e = expected instanceof Class ? expected.getSimpleName() : expected
-            throw new RequestException(code: SC_BAD_REQUEST, msg: "Expected $e at $path, got: ${actual ?: '<MISSING>'}")
+            throw badRequest("Expected $e at $path, got: ${actual ?: '<MISSING>'}")
         }
     }
     
@@ -214,6 +214,7 @@ class ReproductionService {
             publishedIn(p, 'sw') || (publishedIn(p, 'fi') && pre1810(p))
         }
     }
+    
     static boolean isFreelyAvailable(Map thing) {
         def usageAndAccess = asList(thing.usageAndAccessPolicy) + asList(getAtPath(thing, ['associatedMedia', '*', 'usageAndAccessPolicy'], []))
         usageAndAccess.any { it['@id'] == FREELY_AVAILABLE}
@@ -237,17 +238,17 @@ class ReproductionService {
         thing.hasRepresentation || !asList(getAtPath(thing, ['associatedMedia', '*', 'uri'], [])).isEmpty()
     }
     
-    void createHoldingFor(thingId, heldBy) {
+    void createHoldingFor(thingId, heldById) {
         xl.create(
                 [:],
                 [
                         '@type' : 'Item',
                         'itemOf' : ['@id' : thingId],
-                        'heldBy': ['@id' : heldBy],
+                        'heldBy': ['@id' : heldById],
                         'hasComponent' : [
                                 [
                                         '@type' : 'Item',
-                                        'heldBy': ['@id' : heldBy],
+                                        'heldBy': ['@id' : heldById],
                                 ]
                         ]
                 ]
@@ -410,7 +411,7 @@ class Util {
         for (int i = 0 ; i < path.size(); i++) {
             def p = path[i]
             if (p == '*' && item instanceof Collection) {
-                return item.collect { getAtPath(it, path.drop(i + 1), [])}.flatten()
+                return item.collect { getAtPath(it, path.drop(i + 1), []) }.flatten()
             }
             else if (item[p] != null) {
                 item = item[p]
