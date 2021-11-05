@@ -2301,6 +2301,61 @@
             }
           }
         ]
+      },
+      {
+        "type": "CopyOnRevert",
+        "sourceLink": "reproductionOf",
+        "copyIfMissing": [
+          "publication",
+          "extent",
+          "hasDimensions"
+        ],
+        "_spec": [
+          {
+            "name":  "Copy data from the original of a reproduction",
+            "source": {
+              "mainEntity": {
+                "reproductionOf": [
+                  {
+                    "publication": [
+                      {
+                        "@type": "Publication",
+                        "year": "1773"
+                      }
+                    ],
+                    "extent": [{"@type": "Extent", "label": ["259 s."]}],
+                    "hasDimensions": [{"@type": "Dimensions", "label": "24 cm."}]
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "reproductionOf": [
+                  {
+                    "publication": [
+                      {
+                        "@type": "Publication",
+                        "year": "1773"
+                      }
+                    ],
+                    "extent": [{"@type": "Extent", "label": ["259 s."]}],
+                    "hasDimensions": [{"@type": "Dimensions", "label": "24 cm."}]
+                  }
+                ],
+                "publication": [
+                  {
+                    "@type": "Publication",
+                    "year": "1773"
+                  }
+                ],
+                "extent": [{"@type": "Extent", "label": ["259 s."]}],
+                "hasDimensions": [{"@type": "Dimensions", "label": "24 cm."}]
+              }
+            }
+          }
+        ]
       }
     ],
 

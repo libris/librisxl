@@ -212,6 +212,8 @@ class MarcConversion {
             procStep = new ProduceIfMissingStep(props); break
             case 'SetFlagsByPatterns':
             procStep = new SetFlagsByPatternsStep(props); break
+            case 'CopyOnRevert':
+            procStep = new CopyOnRevertStep(props); break
             default:
             return null
         }

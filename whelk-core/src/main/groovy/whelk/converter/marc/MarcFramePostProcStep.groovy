@@ -80,6 +80,43 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
 }
 
 
+class CopyOnRevertStep implements MarcFramePostProcStep {
+
+    String type
+    JsonLd ld
+
+    String sourceLink
+    String targetLink
+    List<String> copyIfMissing
+
+    void init() {
+        assert sourceLink || targetLink
+    }
+
+    void modify(Map record, Map thing) {
+    }
+
+    void unmodify(Map record, Map thing) {
+        def source = sourceLink ? thing[sourceLink] : thing
+        def target = targetLink ? thing[targetLink] : thing
+
+        if (source) {
+            if (!(source instanceof List)) {
+                source = [source]
+            }
+            for (prop in copyIfMissing) {
+                for (item in source) {
+                    if (!target.containsKey(prop) && item.containsKey(prop)) {
+                        target[prop] = item[prop]
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+
 class MappedPropertyStep implements MarcFramePostProcStep {
 
     JsonLd ld
