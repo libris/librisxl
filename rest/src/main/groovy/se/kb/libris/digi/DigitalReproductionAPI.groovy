@@ -24,11 +24,13 @@ import static Util.asSet
 import static Util.getAtPath
 import static Util.isLink
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
+import static javax.servlet.http.HttpServletResponse.SC_CONFLICT
 import static javax.servlet.http.HttpServletResponse.SC_CREATED
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT
 import static javax.servlet.http.HttpServletResponse.SC_OK
+import static javax.servlet.http.HttpServletResponse.SC_PRECONDITION_FAILED
 
 /**
  Creates a record for a digital reproduction.
@@ -268,32 +270,46 @@ class XL {
     Map<String, String> headers
     String apiLocation
 
-    // TODO add atomic "extract entity" to Whelk API and use instead
     String ensureExtractedWork(String instanceId) {
-        def doc = get(instanceId).orElseThrow { badRequest("No such record: $instanceId") }
-        Map instance = doc.data['@graph'][1] as Map
-        Map work = instance.instanceOf as Map
-        
-        if (!work) {
-            throw badRequest("No instanceOf in $instanceId")
-        }
-        
-        if (isLink(work)) {
-            return work['@id']
-        }
-        
-        if(!work.hasTitle) {
-            def titles = asList(instance.hasTitle).findAll{ it['@type'] == 'Title' }
-            if (titles) {
-                work.hasTitle = titles
+        int maxRetries = 5
+        do {
+            def doc = get(instanceId).orElseThrow { badRequest("No such record: $instanceId") }
+            Map instance = doc.data['@graph'][1] as Map
+            Map work = instance.instanceOf as Map
+
+            if (!work) {
+                throw badRequest("No instanceOf in $instanceId")
             }
-        }
+
+            if (isLink(work)) {
+                return work['@id']
+            }
+
+            if (!work.hasTitle) {
+                def titles = asList(instance.hasTitle).findAll { it['@type'] == 'Title' }
+                if (titles) {
+                    work.hasTitle = titles
+                }
+            }
+
+            def workId = create([:], work)
+            instance.instanceOf = ['@id': workId]
+            try {
+                update(doc)
+                return workId
+            } catch (RequestException e) {
+                if (e.code == SC_PRECONDITION_FAILED) {
+                    log.info("ensureExtractedWork() Document $instanceId was modified by someone else, " +
+                             "deleting newly created work $workId and retrying")
+                    delete(workId)
+                }
+                else {
+                    throw e
+                }
+            }
+        } while (maxRetries-- > 0)
         
-        def workId = create([:], work)
-        instance.instanceOf = ['@id': workId]
-        update(doc)
-        
-        return workId
+        throw new RequestException(code: SC_PRECONDITION_FAILED)
     }
 
     void update(Doc doc) {
@@ -356,6 +372,12 @@ class XL {
                 data: mapper.readValue(response.body(), Map), 
                 eTag: response.headers().firstValue('ETag').orElseThrow{ internalError("Got no ETag for $id") }
         ))
+    }
+    
+    boolean delete(String id) {
+        def request = requestForPath(id).DELETE().build()
+        def response = send(request, HttpResponse.BodyHandlers.discarding())
+        return response.statusCode() == SC_NO_CONTENT
     }
     
     HttpRequest.Builder requestForPath(String path) {
