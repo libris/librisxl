@@ -41,6 +41,7 @@ import static javax.servlet.http.HttpServletResponse.SC_OK
  - Adds DIGI and DST bibliographies if applicable
  - Adds carrierType rda/OnlineResource if applicable
  - Creates holdings if specified in @reverse.itemOf
+ - Record data can be specified in meta
  
  
  Example (without required authentication headers):
