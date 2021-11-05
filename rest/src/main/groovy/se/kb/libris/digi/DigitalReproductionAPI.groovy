@@ -215,7 +215,7 @@ class ReproductionService {
         }
     }
     static boolean isFreelyAvailable(Map thing) {
-        def usageAndAccess = asList(thing.usageAndAccessPolicy) + asList(getAtPath(thing, ['associatedMedia', '*', 'usageAndAccessPolicy', []]))
+        def usageAndAccess = asList(thing.usageAndAccessPolicy) + asList(getAtPath(thing, ['associatedMedia', '*', 'usageAndAccessPolicy'], []))
         usageAndAccess.any { it['@id'] == FREELY_AVAILABLE}
     }
 
