@@ -5,7 +5,10 @@ PrintWriter manCheck = getReportWriter("Manuell-kontroll.csv")
 PrintWriter wrongInput = getReportWriter("Wrong-input-not-run.csv")
 PrintWriter failedHoldIDs = getReportWriter("failed-holdIDs")
 
-File lastRunDate = new File(scriptDir, "lastRun.Date").readLines() // Läs in datum för senaste körning
+// Läs in datum för senaste körning
+File lastRunFile = new File(System.getProperty("last-run-file", new File(scriptDir, "lastRun.Date").toString()))
+def lastRunDate = lastRunFile.exists() ? lastRunFile.readLines().first() : ""
+println("Using last run timestamp: $lastRunDate")
 url = "http://devill.libris.kb.se/nb/export.php?timestamp=$lastRunDate" // url för att hämta data från applikationen
 
 inputRows = new URL(url).text
@@ -188,7 +191,7 @@ selectFromIterable(itemList, { newlyCreatedItem ->
     })
 })
 
-String currentDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date()) 
-new File(scriptDir, "lastRun.Date").withWriter { writer -> 
+String currentDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
+lastRunFile.withWriter { writer -> 
     writer.write(currentDate) // spara dagens datum i lastRun.Date
 }
