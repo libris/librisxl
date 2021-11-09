@@ -1,3 +1,5 @@
+import java.text.SimpleDateFormat
+
 PrintWriter IDreport = getReportWriter("ID-report.csv")
 PrintWriter manCheck = getReportWriter("Manuell-kontroll.csv")
 PrintWriter wrongInput = getReportWriter("Wrong-input-not-run.csv")
