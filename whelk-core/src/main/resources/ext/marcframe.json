@@ -2461,6 +2461,38 @@
             }
           }
         ]
+      },
+      {
+        "type": "CopyOnRevert",
+        "sourceLink": "hasReproduction",
+        "copyIfMissing": [
+          "associatedMedia"
+        ],
+        "_spec": [
+          {
+            "name":  "Copy associatedMedia from a reproduction",
+            "source": {
+              "mainEntity": {
+                "hasReproduction": [
+                  {
+                    "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "hasReproduction": [
+                  {
+                    "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
+                  }
+                ],
+                "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
+              }
+            }
+          }
+        ]
       }
     ],
 
