@@ -14049,7 +14049,7 @@
       "$f": {"property": "marc:owner"},
       "$h": {"property": "marc:purchasePrice"},
       "$n": {"addProperty": "marc:extent"},
-      "$o": {"addProperty": "unit"},
+      "$o": {"addLink": "unit", "resourceType": "Unit", "property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
       "_spec": [
