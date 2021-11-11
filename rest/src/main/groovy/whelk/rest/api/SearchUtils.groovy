@@ -35,7 +35,7 @@ class SearchUtils {
     Whelk whelk
     JsonLd ld
     ESQuery esQuery
-    URI vocabUri
+    
 
     SearchUtils(Whelk whelk) {
         this(whelk.jsonld)
@@ -45,9 +45,6 @@ class SearchUtils {
 
     SearchUtils(JsonLd jsonld) {
         this.ld = jsonld
-        if (ld.vocabId) {
-            vocabUri = new URI(ld.vocabId)
-        }
     }
 
     Map doSearch(Map queryParameters) {
@@ -130,7 +127,7 @@ class SearchUtils {
         
         Map esResult = esQuery.doQuery(queryParameters, suggest)
         
-        Lookup lookup = new Lookup()
+        Lookup lookup = new Lookup(whelk)
         
         List<Map> mappings = []
         if (query) {
@@ -434,9 +431,21 @@ class SearchUtils {
         }
     }
 
-    private class Lookup {
+    static class Lookup {
         private Multimap<String, Map> iriPos = ArrayListMultimap.create()
+
+        private Whelk whelk
+        private JsonLd ld
+        private URI vocabUri
         
+        Lookup(Whelk whelk) {
+            this.whelk = whelk
+            this.ld = whelk.jsonld
+            if (ld.vocabId) {
+                vocabUri = new URI(ld.vocabId)
+            }
+        }
+         
         Map chip(String itemId) {
             def termKey = ld.toTermKey(itemId)
             if (termKey in ld.vocabIndex) {
@@ -471,37 +480,37 @@ class SearchUtils {
                 it.value.putAll(chip)
             }
         }
-    }
-    
-    private Map dummyChip(String itemId) {
-        [(ID_KEY): itemId, 'label': itemId]
-    }
 
-    /*
-     * Read vocab term data from storage.
-     *
-     * Returns null if not found.
-     *
-     */
-    private String getFullUri(String id) {
-        try {
-            if (vocabUri) {
-                return vocabUri.resolve(id).toString()
+        private Map dummyChip(String itemId) {
+            [(ID_KEY): itemId, 'label': itemId]
+        }
+
+        /*
+         * Read vocab term data from storage.
+         *
+         * Returns null if not found.
+         *
+         */
+        private String getFullUri(String id) {
+            try {
+                if (vocabUri) {
+                    return vocabUri.resolve(id).toString()
+                }
+            }
+            catch (IllegalArgumentException e) {
+                // Couldn't resolve, which means id isn't a valid IRI.
+                // No need to check the db.
+                return null
             }
         }
-        catch (IllegalArgumentException e) {
-            // Couldn't resolve, which means id isn't a valid IRI.
-            // No need to check the db.
-            return null
+
+        // FIXME move to Document or JsonLd
+        private Map getEntry(Map jsonLd, String entryId) {
+            // we rely on this convention for the time being.
+            return jsonLd[(GRAPH_KEY)].find { it[ID_KEY] == entryId }
         }
     }
     
-    // FIXME move to Document or JsonLd
-    private Map getEntry(Map jsonLd, String entryId) {
-        // we rely on this convention for the time being.
-        return jsonLd[(GRAPH_KEY)].find { it[ID_KEY] == entryId }
-    }
-
     /**
      * Create a URL for '/find' with the specified query parameters.
      *
@@ -656,7 +665,7 @@ class SearchUtils {
      * filtered out.
      *
      */
-    private Tuple2 mapParams(Lookup lookup, Map params) {
+    static Tuple2 mapParams(Lookup lookup, Map params) {
         List result = []
         Map pageParams = [:]
         List reservedParams = getReservedParameters()
@@ -701,7 +710,7 @@ class SearchUtils {
     /*
      * Return a list of reserved query params
      */
-    private List getReservedParameters() {
+    private static List getReservedParameters() {
         return ['q', 'p', 'o', 'value', '_limit', '_offset', '_suggest']
     }
 
