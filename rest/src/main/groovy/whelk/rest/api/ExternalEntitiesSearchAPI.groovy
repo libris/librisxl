@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.util.function.Predicate
 
+import static whelk.JsonLd.CONTEXT_KEY
 import static whelk.JsonLd.TYPE_KEY
 
 class ExternalEntitiesSearchAPI extends HttpServlet {
@@ -30,24 +31,31 @@ class ExternalEntitiesSearchAPI extends HttpServlet {
         def items = JsonLd.looksLikeIri(q) 
                 ? selectExternal(q, types) 
                 : searchExternal(q, types)
+
+        SearchUtils.Lookup lookup = new SearchUtils.Lookup(whelk)
         
-        def mapping = [:]
+        // TODO: proper mapping
+        def mappings = []
         if (q) {
-            mapping << ['variable' : 'q',
-                        'predicate': whelk.jsonld.toTermKey('textQuery'),
+            mappings << ['variable' : 'q',
+                        'predicate': lookup.chip('textQuery'),
                         'value'    : q]
         }
+        def (paramMappings, _) = SearchUtils.mapParams(lookup, request.getParameterMap())
+        mappings.addAll(paramMappings)
         
         def result = [
-                (TYPE_KEY): 'PartialCollectionView',
+                (CONTEXT_KEY): Crud.CONTEXT_PATH,
+                (TYPE_KEY)   : 'PartialCollectionView',
                 'itemOffset' : 0,
                 'totalItems' : items.size(),
-                'search': [
-                        'mapping' : mapping
+                'search'     : [
+                        'mapping': mappings
                 ],
-                'items' : items
-                // TODO: other, @type etc
+                'items'      : items
         ]
+        
+        lookup.run()
         
         HttpTools.sendResponse(response, result, MimeTypes.JSONLD)
     }
