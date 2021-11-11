@@ -502,10 +502,15 @@ class InjectWhenMatchingOnRevertStep extends MarcFramePostProcStepBase {
                     Map matched = refs[iv[ID]]
                     matched.putAll(iv)
                     matched.remove(ID)
-                } else {
-                    def os = o[ik] = Util.asList(o[ik])
-                    os += Util.asList(iv)
-                    o[ik] = os
+                } else if (o[ik] != iv) {
+                    def values = Util.asList(o[ik])
+                    def ids = values.findResults { if (it instanceof Map) it[ID] } as Set
+                    Util.asList(iv).each {
+                        if (it instanceof Map && it[ID] in ids)
+                            return
+                        values << it
+                    }
+                    o[ik] = values
                 }
             } else {
                 o[ik] = iv

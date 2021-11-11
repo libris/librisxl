@@ -2408,6 +2408,85 @@
         ]
       },
       {
+        "type": "InjectWhenMatchingOnRevert",
+        "_TODO": "This should be closeMatch/broader-driven (and computed on search)",
+        "rules": [
+          {
+            "matches": {
+              "@type": "Electronic",
+              "carrierType": [
+                {"@id": "https://id.kb.se/term/rda/OnlineResource"}
+              ]
+            },
+            "injectData": {
+              "carrierType": [
+                {"@id": "https://id.kb.se/marc/OnlineResource"},
+                {"@id": "https://id.kb.se/marc/Online"}
+              ],
+              "mediaType": [
+                {"@id": "https://id.kb.se/term/rda/Computer"}
+              ]
+            }
+          }
+        ],
+        "_spec": [
+          {
+            "source": {
+              "mainEntity": {
+                "@type": "Electronic",
+                "carrierType": [
+                  {"@id": "https://id.kb.se/term/rda/OnlineResource"}
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "@type": "Electronic",
+                "carrierType": [
+                  {"@id": "https://id.kb.se/term/rda/OnlineResource"},
+                  {"@id": "https://id.kb.se/marc/OnlineResource"},
+                  {"@id": "https://id.kb.se/marc/Online"}
+                ],
+                "mediaType": [
+                  {"@id": "https://id.kb.se/term/rda/Computer"}
+                ]
+              }
+            }
+          },
+          {
+            "name": "do not duplicate already given",
+            "source": {
+              "mainEntity": {
+                "@type": "Electronic",
+                "carrierType": [
+                  {"@id": "https://id.kb.se/term/rda/OnlineResource"},
+                  {"@id": "https://id.kb.se/marc/OnlineResource"}
+                ],
+                "mediaType": [
+                  {"@id": "https://id.kb.se/term/rda/Unmediated"}
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "@type": "Electronic",
+                "carrierType": [
+                  {"@id": "https://id.kb.se/term/rda/OnlineResource"},
+                  {"@id": "https://id.kb.se/marc/OnlineResource"},
+                  {"@id": "https://id.kb.se/marc/Online"}
+                ],
+                "mediaType": [
+                  {"@id": "https://id.kb.se/term/rda/Unmediated"},
+                  {"@id": "https://id.kb.se/term/rda/Computer"}
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
         "type": "CopyOnRevert",
         "sourceLink": "reproductionOf",
         "copyIfMissing": [
