@@ -58,6 +58,10 @@
         <servlet-class>whelk.rest.api.RemoteSearchAPI</servlet-class>
     </servlet>
     <servlet>
+        <servlet-name>ExternalEntitiesSearchAPI</servlet-name>
+        <servlet-class>whelk.rest.api.ExternalEntitiesSearchAPI</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>MarcConverter</servlet-name>
         <servlet-class>whelk.rest.api.ConverterAPI</servlet-class>
     </servlet>
@@ -105,6 +109,11 @@
     <servlet-mapping>
         <servlet-name>RemoteSearch</servlet-name>
         <url-pattern>/_remotesearch</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>ExternalEntitiesSearchAPI</servlet-name>
+        <url-pattern>/_externalentities</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>

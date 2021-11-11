@@ -28,7 +28,6 @@ class ExternalEntities {
     ExternalEntities() {
         Metrics.cacheMetrics.addCache('external-entities', cache)
     }
-    
     Optional<Document> get(String iri) {
         if (mappers.any { it.mightHandle(iri) }) {
             cache.get(iri).map{ it.clone() }
