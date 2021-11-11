@@ -665,7 +665,7 @@ class SearchUtils {
      * filtered out.
      *
      */
-    static Tuple2 mapParams(Lookup lookup, Map params) {
+    static Tuple2<List, Map> mapParams(Lookup lookup, Map params) {
         List result = []
         Map pageParams = [:]
         List reservedParams = getReservedParameters()
