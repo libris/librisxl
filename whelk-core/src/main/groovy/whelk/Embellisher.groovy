@@ -7,14 +7,13 @@ import groovy.util.logging.Log4j2 as Log
 @Log
 class Embellisher {
     static final List<String> DEFAULT_EMBELLISH_LEVELS = ['cards', 'chips']
-    // FIXME: get from context
-    static final List<String> DEFAULT_CLOSE_RELATIONS = ['instanceOf', 'translationOf']
+    static final List<String> DEFAULT_INTEGRAL_RELATIONS = ['instanceOf', 'translationOf']
 
     static final int MAX_REVERSE_LINKS = 512
 
     JsonLd jsonld
-    List<String> embellishLevels = DEFAULT_EMBELLISH_LEVELS
-    List<String> closeRelations = DEFAULT_CLOSE_RELATIONS
+    Collection<String> embellishLevels = DEFAULT_EMBELLISH_LEVELS
+    Collection<String> integralRelations = DEFAULT_INTEGRAL_RELATIONS
 
     Function<Iterable<String>, Iterable<Map>> getDocs
     Function<Iterable<String>, Iterable<Map>> getCards
@@ -30,6 +29,11 @@ class Embellisher {
         this.getDocs = getDocs
         this.getCards = getCards
         this.getByReverseRelation = getByReverseRelation
+        
+        def integral = jsonld.getCategoryMembers('integral')
+        if (integral) {
+            this.integralRelations = integral
+        }
     }
 
     // FIXME: describe me
@@ -41,8 +45,8 @@ class Embellisher {
         this.embellishLevels = embellishLevels.collect()
     }
 
-    void setCloseRelations(List<String> closeRelations) {
-        this.closeRelations = closeRelations.collect()
+    void setIntegralRelations(List<String> integralRelations) {
+        this.integralRelations = integralRelations.collect()
     }
 
     private List getEmbellishData(Document document) {
@@ -55,7 +59,7 @@ class Embellisher {
         Set<String> visitedIris = new HashSet<>()
         visitedIris.addAll(plusWithoutHash(document.getThingIdentifiers()))
 
-        def docs = fetchClose('full', start, visitedIris).collect()
+        def docs = fetchIntegral('full', start, visitedIris).collect()
 
         List result = docs
         List<String> iris = getAllLinks(start + docs)
@@ -64,7 +68,7 @@ class Embellisher {
 
         for (String lens : embellishLevels) {
             docs = fetchNonVisited(lens, iris, visitedIris)
-            docs += fetchClose(lens, docs, visitedIris)
+            docs += fetchIntegral(lens, docs, visitedIris)
 
             previousLevelDocs.each { insertInverse(previousLens, it, lens, docs, visitedIris) }
             previousLevelDocs = docs
@@ -84,9 +88,9 @@ class Embellisher {
         (List<String>) docs.collect{ JsonLd.getExternalReferences((Map) it).collect{ it.iri } }.flatten()
     }
 
-    private List<String> getCloseLinks(Iterable<Map> docs) {
+    private List<String> getIntegralLinks(Iterable<Map> docs) {
         (List<String>) docs.collect{
-            JsonLd.getExternalReferences((Map) it).grep{ it.relation in closeRelations }.collect{ it.iri }
+            JsonLd.getExternalReferences((Map) it).grep{ it.relation in integralRelations }.collect{ it.iri }
         }.flatten()
     }
 
@@ -97,10 +101,10 @@ class Embellisher {
         return data
     }
 
-    private Iterable<Map> fetchClose(String lens, Iterable<Map> docs, Set<String> visitedIris) {
+    private Iterable<Map> fetchIntegral(String lens, Iterable<Map> docs, Set<String> visitedIris) {
         def result = []
         while(true) {
-            docs = fetchNonVisited(lens, getCloseLinks(docs), visitedIris)
+            docs = fetchNonVisited(lens, getIntegralLinks(docs), visitedIris)
 
             if (docs.isEmpty()) {
                 break
