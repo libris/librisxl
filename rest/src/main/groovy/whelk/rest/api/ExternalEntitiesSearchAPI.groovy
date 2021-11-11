@@ -97,27 +97,16 @@ class ExternalEntitiesSearchAPI extends HttpServlet {
     List selectExternal(String iri, Collection<String> types) {
         def typeFilter = typeFilter(types)
         
-        Closure whelkResult = { Map data ->
-            Document doc = new Document(data)
-            if (!typeFilter.test(doc)) {
-                return []
-            }
-            insertReverseLinkCount(doc)
-            whelk.embellish(doc)
-            def framed = JsonLd.frame(doc.getThingIdentifiers().first(), doc.data)
-            return [framed]
-        }
-        
         def inWhelk = whelk.getCards([iri])
         if (inWhelk[iri]) {
-            return whelkResult(inWhelk[iri])
+            return whelkResult(inWhelk[iri], typeFilter)
         }
 
         return whelk.external.getEphemeral(iri).map ({ doc ->
             def extId = doc.getThingIdentifiers().first()
             inWhelk = whelk.getCards([extId])
             if (inWhelk[extId]) { // iri was an alias/sameAs
-                return whelkResult(inWhelk[extId])
+                return whelkResult(inWhelk[extId], typeFilter)
             }
             
             if (typeFilter(types).test(doc)) {
@@ -127,6 +116,17 @@ class ExternalEntitiesSearchAPI extends HttpServlet {
                 []
             }
         }).orElse([])
+    }
+    
+    List whelkResult(Map data, typeFilter) {
+        Document doc = new Document(data)
+        if (!typeFilter.test(doc)) {
+            return []
+        }
+        insertReverseLinkCount(doc)
+        whelk.embellish(doc)
+        def framed = JsonLd.frame(doc.getThingIdentifiers().first(), doc.data)
+        return [framed]
     }
 
     void insertReverseLinkCount(Document doc) {
