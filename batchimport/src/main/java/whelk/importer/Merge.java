@@ -7,11 +7,7 @@ import whelk.history.Ownership;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static whelk.util.Jackson.mapper;
 
@@ -36,21 +32,16 @@ public class Merge {
     }
 
      */
-    enum Operation {
-        REPLACE,
-        ADD_IF_NONE
-    }
 
-    class Rule {
-        public Operation operation;
-        public Map sigelPriority;
-    }
+    // Contains paths where we're allowed to add things that don't already exist
+    private Set<List<Object>> m_pathAddRules = null;
 
-    // Maps a path to a rule.
-    private Map<List<Object>, Rule> m_pathRules = null;
+    // Maps a path to a sigel priority list.
+    private Map<List<Object>, Map> m_pathReplaceRules = null;
 
     public Merge(File ruleFile) throws IOException {
-        m_pathRules = new HashMap<>();
+        m_pathAddRules = new HashSet<>();
+        m_pathReplaceRules = new HashMap<>();
         
         Map rulesMap = mapper.readValue(ruleFile, Map.class);
         List rules = (List) rulesMap.get("rules");
@@ -60,15 +51,12 @@ public class Merge {
             List path = (List) ruleMap.get("path");
             Map prioMap = (Map) ruleMap.get("priority");
 
-            Rule r = new Rule();
-            r.sigelPriority = prioMap;
             if (op.equals("replace"))
-                r.operation = Operation.REPLACE;
+                m_pathReplaceRules.put(path, prioMap);
             else if (op.equals("add_if_none"))
-                r.operation = Operation.ADD_IF_NONE;
+                m_pathAddRules.add(path);
             else
                 throw new RuntimeException("Malformed import rule, no such operation: " + op);
-            m_pathRules.put(path, r);
         }
     }
 
@@ -92,30 +80,40 @@ public class Merge {
     }
 
     /**
-     * Get the rule (of specified operation) that applies at this path, if any exists.
+     * Get the sigel priority list for replacements that applies at this path, if any exists.
      * this will be the most specific one of all rules, with that operation, that cover this path.
      */
-    public Rule getRuleForPath(List<Object> path, Operation op) {
+    public Map getReplaceRuleForPath(List<Object> path) {
         List<Object> temp = new ArrayList<>(path);
         while (!temp.isEmpty()) {
-            Rule value = m_pathRules.get(temp);
-            if (value != null && value.operation == op)
-                return value;
+            Map prioMap = m_pathReplaceRules.get(temp);
+            if ( prioMap != null )
+                return prioMap;
             temp.remove(temp.size()-1);
         }
         return null;
     }
 
+    public boolean existsAddRuleForPath(List<Object> path) {
+        List<Object> temp = new ArrayList<>(path);
+        while (!temp.isEmpty()) {
+            if (m_pathAddRules.contains(path))
+                return true;
+            temp.remove(temp.size()-1);
+        }
+        return false;
+    }
+
     private void mergeInternal(Object base, Object correspondingIncoming,
                                       List<Object> path,
                                       String incomingAgent, History baseHistory) {
-        Rule replaceRule = getRuleForPath(path, Operation.REPLACE);
-        if (replaceRule != null) {
+        Map replacePriority = getReplaceRuleForPath(path);
+        if (replacePriority != null) {
 
             // Determine priority for the incoming version
             int incomingPriorityHere = 0;
-            if (replaceRule.sigelPriority.get(incomingAgent) != null) {
-                incomingPriorityHere = (Integer) replaceRule.sigelPriority.get(incomingAgent);
+            if (replacePriority.get(incomingAgent) != null) {
+                incomingPriorityHere = (Integer) replacePriority.get(incomingAgent);
             }
 
             // Determine (the maximum) priority for any part of the already existing subtree (below 'path')
@@ -126,8 +124,8 @@ public class Merge {
                 if (baseOwnership.m_manualEditTime != null)
                     baseContainsHandEdits = true;
                 String baseAgent = baseOwnership.m_systematicEditor;
-                if (replaceRule.sigelPriority.get(baseAgent) != null) {
-                    int priority = (Integer) replaceRule.sigelPriority.get(baseAgent);
+                if (replacePriority.get(baseAgent) != null) {
+                    int priority = (Integer) replacePriority.get(baseAgent);
                     if (priority > basePriorityHere)
                     basePriorityHere = priority;
                 }
@@ -159,8 +157,7 @@ public class Merge {
                 List<Object> childPath = new ArrayList(path);
                 childPath.add(key);
                 if ( ((Map) base).get(key) == null ) {
-                    Rule addRule = getRuleForPath(childPath, Operation.ADD_IF_NONE);
-                    if (addRule != null) {
+                    if (existsAddRuleForPath(childPath)) {
                         ((Map) base).put(key, ((Map) correspondingIncoming).get(key));
                     }
                 }
