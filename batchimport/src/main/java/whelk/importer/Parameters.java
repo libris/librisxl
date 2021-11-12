@@ -9,6 +9,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 class Parameters
 {
@@ -25,7 +27,7 @@ class Parameters
     private String changedBy = null;
     private String changedIn = null;
     private boolean forceUpdate = false;
-    private final HashMap<String, String> specialRules = new HashMap<>();
+    private final HashMap<String, Set<String>> specialRules = new HashMap<>();
     private File mergeRuleFile = null;
 
     Path getPath() { return path; }
@@ -41,7 +43,7 @@ class Parameters
     String getChangedBy() { return changedBy; }
     String getChangedIn() { return changedIn; }
     boolean getForceUpdate() { return forceUpdate; }
-    HashMap<String, String> getSpecialRules() { return specialRules; }
+    HashMap<String, Set<String>> getSpecialRules() { return specialRules; }
     File getMergeRuleFile() { return mergeRuleFile; }
 
 
@@ -229,7 +231,11 @@ class Parameters
                 String to = translateEncodingLevel(value.charAt(2));
                 if (from == null || to == null)
                     throw new IllegalArgumentException(parameter);
-                specialRules.put(from, to);
+		if ( !specialRules.containsKey(from) ) {
+			specialRules.put(from, new HashSet<String>()); //enumset?
+		}
+                //specialRules.put(from, to);
+                specialRules.get(from).add(to);
                 break;
 
             case "--mergeBibUsing":
