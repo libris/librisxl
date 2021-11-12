@@ -14,7 +14,7 @@ selectByCollection('bib') { bib ->
 }
 
 private boolean ignore(String iri) {
-    ["https://id.kb.se/marc/MapsProjectionType-a"].contains(iri)
+    ["https://id.kb.se/marc/SerialsRegularityType-u"].contains(iri)
 }
 
 private boolean isMarcTermWithType(String iri) {
