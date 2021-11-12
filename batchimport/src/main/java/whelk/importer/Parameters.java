@@ -231,9 +231,9 @@ class Parameters
                 String to = translateEncodingLevel(value.charAt(2));
                 if (from == null || to == null)
                     throw new IllegalArgumentException(parameter);
-		if ( !specialRules.containsKey(from) ) {
-			specialRules.put(from, new HashSet<String>()); //enumset?
-		}
+                if ( !specialRules.containsKey(from) ) {
+                    specialRules.put(from, new HashSet<String>()); //enumset?
+                }
                 //specialRules.put(from, to);
                 specialRules.get(from).add(to);
                 break;
