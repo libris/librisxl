@@ -71,6 +71,7 @@ public class Merge {
             path.add(i);
             mergeInternal(
                     baseGraphList.get(i),
+                    baseGraphList,
                     incomingGraphList.get(i),
                     path,
                     incomingAgent,
@@ -104,7 +105,7 @@ public class Merge {
         return false;
     }
 
-    private void mergeInternal(Object base, Object correspondingIncoming,
+    private void mergeInternal(Object base, Object baseParent, Object correspondingIncoming,
                                       List<Object> path,
                                       String incomingAgent, History baseHistory) {
         Map replacePriority = getReplaceRuleForPath(path);
@@ -145,6 +146,12 @@ public class Merge {
                     list.clear();
                     list.addAll( (List) correspondingIncoming );
                 }
+                else { // String, number etc
+                    if (baseParent instanceof Map) { // List is not relevant, as we can't navigate past them!
+                        Map parentMap = (Map) baseParent;
+                        parentMap.put(path.get(path.size()-1), correspondingIncoming);
+                    }
+                }
 
                 return; // scan no further (we've just replaced everything below us)
             }
@@ -164,7 +171,7 @@ public class Merge {
 
                 // Keep scanning further down the tree!
                 else {
-                    mergeInternal( ((Map) base).get(key),
+                    mergeInternal( ((Map) base).get(key), base,
                             ((Map) correspondingIncoming).get(key),
                             childPath,
                             incomingAgent,
