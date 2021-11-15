@@ -1,9 +1,12 @@
 import java.text.SimpleDateFormat
 
-PrintWriter IDreport = getReportWriter("ID-report.csv")
-PrintWriter manCheck = getReportWriter("Manuell-kontroll.csv")
-PrintWriter wrongInput = getReportWriter("Wrong-input-not-run.csv")
-PrintWriter failedHoldIDs = getReportWriter("failed-holdIDs")
+String currentDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
+
+PrintWriter IDreport = getReportWriter("ID-report-${currentDate}.csv")
+PrintWriter manCheck = getReportWriter("Manuell-kontroll-${currentDate}.csv")
+PrintWriter wrongInput = getReportWriter("Wrong-input-not-run-${currentDate}.csv")
+PrintWriter failedHoldIDs = getReportWriter("Failed-holdIDs-${currentDate}.txt")
+PrintWriter dup = getReportWriter("Duplicate-input-${currentDate}.txt")
 
 // Läs in datum för senaste körning
 File lastRunFile = new File(System.getProperty("last-run-file", new File(scriptDir, "lastRun.Date").toString()))
@@ -186,12 +189,13 @@ for (String operation : ProgramLines) {
 }
 
 selectFromIterable(itemList, { newlyCreatedItem ->
+    String newInvNr = newlyCreatedItem.graph[1].hasComponent[0].shelfControlNumber // Hämta Inventarienummer från det nya beståndet
     newlyCreatedItem.scheduleSave(onError: { e ->
         failedHoldIDs.println("Failed to save ${newlyCreatedItem.doc.shortId} due to: $e")
+        dup.println("$newInvNr is a duplicate from the input-list") // Logga dubbletter i inputlistan i egen rapport
     })
 })
 
-String currentDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
 lastRunFile.withWriter { writer -> 
     writer.write(currentDate) // spara dagens datum i lastRun.Date
 }
