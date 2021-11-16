@@ -289,9 +289,9 @@ class XL
         if (newEncodingLevel == null || existingEncodingLevel == null)
             return false;
 
-        String specialRule = m_parameters.getSpecialRules().get(newEncodingLevel);
+        Set<String> specialRule = m_parameters.getSpecialRules().get(newEncodingLevel);
 
-        if (specialRule != null && specialRule.equals(existingEncodingLevel))
+        if (specialRule != null && specialRule.contains(existingEncodingLevel))
             return true;
 
         switch (newEncodingLevel)
