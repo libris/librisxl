@@ -20,6 +20,7 @@ public class History {
         m_jsonLd = jsonLd;
         m_pathOwnership = new HashMap<>();
 
+
         // The list we get is sorted chronologically, oldest first.
         for (DocumentVersion version : versions) {
             addVersion(version);
@@ -109,6 +110,18 @@ public class History {
                     setOwnership(newPath, compositePath, version);
                 }
             }
+
+            // Key removed!
+            if (!k1.containsAll(k2)) {
+                Set removedKeys = new HashSet(k2);
+                removedKeys.removeAll(k1);
+
+                for (Object key : removedKeys) {
+                    List<Object> removedPath = new ArrayList(path);
+                    removedPath.add(key);
+                    clearOwnership(removedPath);
+                }
+            }
         }
 
         if (examining instanceof List) {
@@ -180,6 +193,20 @@ public class History {
             path = newPath;
         }
         m_pathOwnership.put( path, new Ownership(version, m_pathOwnership.get(path)) );
+    }
+
+    private void clearOwnership(List<Object> removedPath) {
+        Iterator<List<Object>> it = m_pathOwnership.keySet().iterator();
+        while (it.hasNext()) {
+            List<Object> keyPath = it.next();
+            if (keyPath.size() >= removedPath.size() && keyPath.subList(0, removedPath.size()).equals(removedPath)) {
+                // removedPath is a more general version of keyPath.
+                // For example, keyPath might be @graph,1,hasTitle,subTitle
+                // and the removed path @graph,1,hasTitle
+                // Therefore, keyPath must be cleared.
+                it.remove();
+            }
+        }
     }
 
     // DEBUG CODE BELOW THIS POINT
