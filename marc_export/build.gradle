@@ -52,6 +52,7 @@ gretty {
 }
 
 jar {
+    dependsOn ':whelk-core:jar'
     manifest {
         attributes "Main-Class": "whelk.export.marc.MarcCliExport"
     }

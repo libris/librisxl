@@ -25,6 +25,7 @@ dependencies {
 mainClassName = 'whelk.importer.Main'
 
 jar {
+    dependsOn ':whelk-core:jar'
     manifest {
         attributes 'Implementation-Title':'Libris XL metadata importer',
                 'Implementation-Version': '1.0',
