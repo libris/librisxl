@@ -154,8 +154,7 @@ class DigitalReproductionAPI extends HttpServlet {
         response.setHeader('Content-Type', 'application/json')
         mapper.writeValue(response.getOutputStream(), ['code': code, 'msg' : msg ?: ''])
     }
-
-    //TODO
+    
     static String getXlAPI(HttpServletRequest request) {
         "http://localhost:${request.getServerPort()}/"
     }
