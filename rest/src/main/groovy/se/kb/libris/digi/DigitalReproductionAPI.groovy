@@ -24,7 +24,6 @@ import static Util.asSet
 import static Util.getAtPath
 import static Util.isLink
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
-import static javax.servlet.http.HttpServletResponse.SC_CONFLICT
 import static javax.servlet.http.HttpServletResponse.SC_CREATED
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND
@@ -51,12 +50,14 @@ curl -v -XPOST 'http://localhost:8180/_reproduction' -H 'Content-Type: applicati
 {
   "@type": "Electronic",
   "reproductionOf": { "@id": "http://kblocalhost.kb.se:5000/q822pht24j3ljjr#it" },
-  "production": {
-    "@type": "Reproduction",
-    "agent": { "@id": "http://kblocalhost.kb.se:5000/jgvxv7m23l9rxd3#it" },
-    "place": { "@type": "Place", "label": "Stockholm" },
-    "year": "2021"
-  },
+  "production": [ 
+    {
+      "@type": "Reproduction",
+      "agent": { "@id": "http://kblocalhost.kb.se:5000/jgvxv7m23l9rxd3#it" },
+      "place": { "@type": "Place", "label": "Stockholm" },
+      "year": "2021"
+    } 
+  ],
   "meta" : {
     "bibliography": [ {"@id" : "https://libris.kb.se/library/ARB"} ]
   },
@@ -79,7 +80,7 @@ class DigitalReproductionAPI extends HttpServlet {
             'XL-Active-Sigel',
             'Authorization'
     ]
-
+    
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         def forwardHeaders = request.headerNames
@@ -110,16 +111,21 @@ class DigitalReproductionAPI extends HttpServlet {
         }
 
         def electronic = readJson(request)
-
-        //TODO
+        
         check(electronic, ['@type'], 'Electronic')
         check(electronic, ['reproductionOf', '@id'], String.class)
-        check(electronic, ['production'], Map.class)
-        check(electronic, ['production', '@type'], 'Reproduction')
-        check(electronic, ['production', 'agent'], Object.class)
-        check(electronic, ['production', 'place'], Object.class)
-        check(electronic, ['production', 'year'], String.class)
-
+        if (!isLink(getAtPath(electronic, ['production']))) {
+            check(electronic, ['production', '@type'], 'Reproduction')
+            check(electronic, ['production', 'year'], String.class)
+            if (!isLink(getAtPath(electronic, ['production', 'agent']))) {
+                check(electronic, ['production', 'place', '@type'], String.class)
+            }
+            if (!isLink(getAtPath(electronic, ['production', 'place']))) {
+                check(electronic, ['production', 'place', '@type'], 'Place')
+                check(electronic, ['production', 'place', 'label'], String.class)
+            }
+        }
+               
         return electronic
     }
 
@@ -130,11 +136,11 @@ class DigitalReproductionAPI extends HttpServlet {
                 : expected == actual
 
         if (!ok) {
-            def e = expected instanceof Class ? expected.getSimpleName() : expected
+            def e = expected instanceof Class ? expected.getSimpleName().toLowerCase() : expected
             throw badRequest("Expected $e at $path, got: ${actual ?: '<MISSING>'}")
         }
     }
-
+        
     static Map readJson(HttpServletRequest request) {
         try {
             mapper.readValue(request.getInputStream().getBytes(), Map)
@@ -440,8 +446,8 @@ class Util {
         return item
     }
     
-    static boolean isLink(Map m) {
-        m.'@id' && m.size() == 1
+    static boolean isLink(m) {
+        m && m instanceof Map && m.'@id' && m.size() == 1
     }
 }
 
