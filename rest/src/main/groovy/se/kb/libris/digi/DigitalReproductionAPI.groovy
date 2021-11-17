@@ -30,6 +30,8 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT
 import static javax.servlet.http.HttpServletResponse.SC_OK
 import static javax.servlet.http.HttpServletResponse.SC_PRECONDITION_FAILED
+import static se.kb.libris.digi.DigitalReproductionAPI.Type.ARRAY
+import static se.kb.libris.digi.DigitalReproductionAPI.Type.STRING
 
 /**
  Creates a record for a digital reproduction.
@@ -113,16 +115,17 @@ class DigitalReproductionAPI extends HttpServlet {
         def electronic = readJson(request)
         
         check(electronic, ['@type'], 'Electronic')
-        check(electronic, ['reproductionOf', '@id'], String.class)
-        if (!isLink(getAtPath(electronic, ['production']))) {
-            check(electronic, ['production', '@type'], 'Reproduction')
-            check(electronic, ['production', 'year'], String.class)
-            if (!isLink(getAtPath(electronic, ['production', 'agent']))) {
-                check(electronic, ['production', 'place', '@type'], String.class)
+        check(electronic, ['reproductionOf', '@id'], STRING)
+        check(electronic, ['production'], ARRAY)
+        if (!isLink(getAtPath(electronic, ['production', 0]))) { // minimal valid shape, so just check the first one 
+            check(electronic, ['production', 0, '@type'], 'Reproduction')
+            check(electronic, ['production', 0, 'year'], STRING)
+            if (!isLink(getAtPath(electronic, ['production', 0, 'agent']))) {
+                check(electronic, ['production', 0, 'place', '@type'], STRING)
             }
-            if (!isLink(getAtPath(electronic, ['production', 'place']))) {
-                check(electronic, ['production', 'place', '@type'], 'Place')
-                check(electronic, ['production', 'place', 'label'], String.class)
+            if (!isLink(getAtPath(electronic, ['production', 0, 'place']))) {
+                check(electronic, ['production', 0, 'place', '@type'], 'Place')
+                check(electronic, ['production', 0, 'place', 'label'], STRING)
             }
         }
                
@@ -131,14 +134,21 @@ class DigitalReproductionAPI extends HttpServlet {
 
     static void check(thing, path, expected) {
         def actual = getAtPath(thing, path)
-        def ok = expected instanceof Class
-                ? expected.isInstance(actual)
+        def ok = expected instanceof Type
+                ? expected.type.isInstance(actual)
                 : expected == actual
 
         if (!ok) {
-            def e = expected instanceof Class ? expected.getSimpleName().toLowerCase() : expected
-            throw badRequest("Expected $e at $path, got: ${actual ?: '<MISSING>'}")
+            throw badRequest("Expected $expected at $path, got: ${actual ?: '<MISSING>'}")
         }
+    }
+    
+    static enum Type {
+        ARRAY(List.class),
+        STRING(String.class)
+        
+        Class type
+        Type(Class type) { this.type = type }
     }
         
     static Map readJson(HttpServletRequest request) {
