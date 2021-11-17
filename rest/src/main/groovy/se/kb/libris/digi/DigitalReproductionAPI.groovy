@@ -35,27 +35,26 @@ import static javax.servlet.http.HttpServletResponse.SC_PRECONDITION_FAILED
 /**
  Creates a record for a digital reproduction.
  Takes JSON-LD with an Electronic describing the reproduction as input.
- 
+
  - Validates that minimal required data is present in Electronic (all additional data is kept).
  - Extracts and links work entity from reproduction and original (physical thing)
  - Copies title from original
- - Adds genreFrom saofg/Faksimiler
  - Adds DIGI and DST bibliographies if applicable
  - Adds carrierType rda/OnlineResource if applicable
  - Creates holdings if specified in @reverse.itemOf
  - Record data can be specified in meta
- 
- 
+
+
  Example (without required authentication headers):
- 
- curl -v -XPOST 'http://localhost:8180/_reproduction' -H 'Content-Type: application/ld+json' --data-binary @- << EOF
- {
+
+curl -v -XPOST 'http://localhost:8180/_reproduction' -H 'Content-Type: application/ld+json' --data-binary @- << EOF
+{
   "@type": "Electronic",
-  "reproductionOf": { "@id": "http://kblocalhost.kb.se:5000/l091l3s8jvz2c5ts#it" },
+  "reproductionOf": { "@id": "http://kblocalhost.kb.se:5000/q822pht24j3ljjr#it" },
   "production": {
     "@type": "Reproduction",
     "agent": { "@id": "http://kblocalhost.kb.se:5000/jgvxv7m23l9rxd3#it" },
-    "place": { "@id": "https://id.kb.se/country/ohu" },
+    "place": { "@type": "Place", "label": "Stockholm" },
     "year": "2021"
   },
   "meta" : {
@@ -63,33 +62,32 @@ import static javax.servlet.http.HttpServletResponse.SC_PRECONDITION_FAILED
   },
   "@reverse" : {
     "itemOf": [
-      { "heldBy": { "@id": "https://libris.kb.se/library/Utb1" }},
-      { "heldBy": { "@id": "https://libris.kb.se/library/S" }}
+      { "heldBy": { "@id": "https://libris.kb.se/library/S" }},
+      { "heldBy": { "@id": "https://libris.kb.se/library/Utb1" }}
     ]
-  },
-  "genreForm": [ { "@id": "https://id.kb.se/term/gmgpc/swe/Sk%C3%A4mtkort" } ]
+  }
 }
-EOF 
- 
+EOF
+
  */
 
 @Log
 class DigitalReproductionAPI extends HttpServlet {
     private static final ObjectMapper mapper = new ObjectMapper()
-    
+
     private static final def FORWARD_HEADERS = [
             'XL-Active-Sigel',
             'Authorization'
     ]
-    
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         def forwardHeaders = request.headerNames
                 .findAll{ it in FORWARD_HEADERS }
                 .collectEntries { [it : request.getHeader(it as String)] }
-        
+
         def service = new ReproductionService(xl : new XL(headers : forwardHeaders, apiLocation: getXlAPI(request)))
-        
+
         try {
             String id = service.createDigitalReproduction(parse(request))
             log.info("Created $id")
@@ -105,14 +103,14 @@ class DigitalReproductionAPI extends HttpServlet {
             sendError(response, SC_INTERNAL_SERVER_ERROR, e.getMessage())
         }
     }
-    
+
     static Map parse(HttpServletRequest request) {
         if (request.getHeader('Content-Type') != JSONLD) {
             throw badRequest("Header Content-Type must be $JSONLD")
         }
-        
+
         def electronic = readJson(request)
-        
+
         //TODO
         check(electronic, ['@type'], 'Electronic')
         check(electronic, ['reproductionOf', '@id'], String.class)
@@ -121,22 +119,22 @@ class DigitalReproductionAPI extends HttpServlet {
         check(electronic, ['production', 'agent'], Object.class)
         check(electronic, ['production', 'place'], Object.class)
         check(electronic, ['production', 'year'], String.class)
-        
+
         return electronic
     }
-    
+
     static void check(thing, path, expected) {
         def actual = getAtPath(thing, path)
-        def ok = expected instanceof Class 
-                ? expected.isInstance(actual) 
+        def ok = expected instanceof Class
+                ? expected.isInstance(actual)
                 : expected == actual
-        
+
         if (!ok) {
             def e = expected instanceof Class ? expected.getSimpleName() : expected
             throw badRequest("Expected $e at $path, got: ${actual ?: '<MISSING>'}")
         }
     }
-    
+
     static Map readJson(HttpServletRequest request) {
         try {
             mapper.readValue(request.getInputStream().getBytes(), Map)
@@ -150,7 +148,7 @@ class DigitalReproductionAPI extends HttpServlet {
         response.setHeader('Content-Type', 'application/json')
         mapper.writeValue(response.getOutputStream(), ['code': code, 'msg' : msg ?: ''])
     }
-    
+
     //TODO
     static String getXlAPI(HttpServletRequest request) {
         "http://localhost:${request.getServerPort()}/"
@@ -161,7 +159,6 @@ class DigitalReproductionAPI extends HttpServlet {
 class ReproductionService {
     private static final def DIGI = ['@id': 'https://libris.kb.se/library/DIGI']
     private static final def DST = ['@id': 'https://libris.kb.se/library/DST']
-    private static final def FACSIMILE = ['@id': 'https://id.kb.se/term/saogf/Faksimiler']
     private static final def ONLINE = ['@id': 'https://id.kb.se/term/rda/OnlineResource']
     private static final def FREELY_AVAILABLE = ['@id': 'https://id.kb.se/policy/freely-available']
 
@@ -186,7 +183,6 @@ class ReproductionService {
         electronicThing.reproductionOf['@id'] = physicalThing['@id'] // if link was to sameAs
         
         electronicThing.instanceOf = ['@id' : xl.ensureExtractedWork(physicalThing['@id'] as String)]
-        electronicThing.genreForm = asSet(electronicThing.genreForm) << FACSIMILE
         
         if (physicalThing.hasTitle) {
             electronicThing.hasTitle = physicalThing.hasTitle
