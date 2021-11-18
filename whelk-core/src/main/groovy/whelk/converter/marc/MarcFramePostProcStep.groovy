@@ -87,7 +87,21 @@ class CopyOnRevertStep implements MarcFramePostProcStep {
 
     String sourceLink
     String targetLink
-    List<String> copyIfMissing
+    List<FromToProperty> copyIfMissing
+
+    void setCopyIfMissing(List<Object> copyIfMissing) {
+        this.copyIfMissing = copyIfMissing.collect {
+            String fromProp
+            String toProp
+            if (it instanceof Map) {
+                new FromToProperty(it)
+            } else if (it instanceof String) {
+                new FromToProperty([from: it, to: it])
+            } else {
+                throw new RuntimeException("Unhandled value in copyIfMissing: ${it}")
+            }
+        }
+    }
 
     void init() {
         assert sourceLink || targetLink
@@ -106,14 +120,18 @@ class CopyOnRevertStep implements MarcFramePostProcStep {
             }
             for (prop in copyIfMissing) {
                 for (item in source) {
-                    if (!target.containsKey(prop) && item.containsKey(prop)) {
-                        target[prop] = item[prop]
+                    if (!target.containsKey(prop.to) && item.containsKey(prop.from)) {
+                        target[prop.to] = item[prop.from]
                     }
                 }
             }
         }
     }
 
+    class FromToProperty {
+        String from
+        String to
+    }
 }
 
 
