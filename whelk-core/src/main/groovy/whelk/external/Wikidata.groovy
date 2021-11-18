@@ -43,22 +43,32 @@ class Wikidata implements Mapper {
         iri.startsWith("https://www.wikidata.org") || iri.startsWith("http://www.wikidata.org")
     }
     
-    static List<String> query(String query) {
+    static List<String> query(String query, String langTag, int limit) {
         try {
-            performQuery(query)
+            performQuery(query, langTag, limit)
         }
         catch (Exception e) {
             throw new WhelkRuntimeException("Error querying wikidata: $e", e)
         }
     }
 
-    private static List<String> performQuery(String query) {
+    /**
+     * Search Wikidata using the wbsearchentities API
+     * Documented here: https://www.wikidata.org/w/api.php?action=help&modules=wbsearchentities
+     * 
+     * Language parameter: "Search in this language. This only affects how entities are selected, not 
+     * the language in which the results are returned: this is controlled by the "uselang" parameter."
+     * 
+     * @param query the query string
+     * @param langTag language code for language to search in
+     * @param limit max number of hits
+     * @return a list of entity URIs
+     */
+    private static List<String> performQuery(String query, String langTag, int limit) {
         HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build()
         def base = 'https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json'
-        def lang = 'sv'
-        def limit = 5
         def q = URLEncoder.encode(query, StandardCharsets.UTF_8)
-        String uri = "$base&limit=$limit&language=$lang&uselang=$lang&search=$q"
+        String uri = "$base&limit=$limit&language=$langTag&uselang=$langTag&search=$q"
         
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(uri))
