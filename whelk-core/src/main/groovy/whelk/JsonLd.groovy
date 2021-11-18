@@ -504,7 +504,7 @@ class JsonLd {
     }
     
     static boolean looksLikeIri(String s) {
-        s.startsWith('https://') || s.startsWith('http://')
+        s && (s.startsWith('https://') || s.startsWith('http://'))
     }
 
     static List<List<String>> findPaths(Map obj, String key, String value) {

@@ -25,16 +25,16 @@ class ExternalEntitiesSearchAPI extends HttpServlet {
     
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String q = request.getParameter('q')?.trim()
+        String q = request.getParameter('q')?.trim() ?: ''
         def types = request.getParameterMap().get(TYPE_KEY) as List ?: []
+        def language = request.getParameter('_lang') ?: 'sv'
         
         def items = JsonLd.looksLikeIri(q) 
                 ? selectExternal(q, types) 
-                : searchExternal(q, types)
+                : searchExternal(q, types, language)
 
         SearchUtils.Lookup lookup = new SearchUtils.Lookup(whelk)
         
-        // TODO: proper mapping
         def mappings = []
         if (q) {
             mappings << ['variable' : 'q',
@@ -60,13 +60,12 @@ class ExternalEntitiesSearchAPI extends HttpServlet {
         HttpTools.sendResponse(response, result, MimeTypes.JSONLD)
     }
     
-    List searchExternal(String q, Collection<String> types) {
+    List searchExternal(String q, Collection<String> types, languageTag) {
         def typeFilter = typeFilter(types)
 
-        def uris = Wikidata.query(q)
+        def uris = Wikidata.query(q, languageTag, 5)
         def inWhelk = whelk.getCards(uris)
-
-        // TODO? could get e.g 15 URIs from wikidata and then collect results until we get e.g. 5
+        
         uris
                 .collect { uri ->
                     if (inWhelk[uri]) {
