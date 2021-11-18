@@ -552,7 +552,7 @@ class JsonLd {
     }
     
     static boolean looksLikeIri(String s) {
-        s.startsWith('https://') || s.startsWith('http://')
+        s && (s.startsWith('https://') || s.startsWith('http://'))
     }
 
     static boolean looksLikeIri(String s) {
