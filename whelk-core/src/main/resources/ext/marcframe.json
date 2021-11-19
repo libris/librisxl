@@ -5940,7 +5940,7 @@
       "include": ["identifier"],
       "match": [
         {
-          "when": "i1=7 & $2 =~ ansi|ANSI|doi|DOI|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|iswc|ISWC|uri|URI|urn|URN",
+          "when": "i1=7 & $2 =~ ansi|ANSI|danacode|doi|DOI|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|iswc|ISWC|uri|URI|urn|URN",
           "i1": null,
           "$2": {
             "property": "@type",
@@ -5948,6 +5948,7 @@
               "NOTE": "NB! Order is significant. The last key for the same value will be used on revert",
               "ANSI": "Ansi",
               "ansi": "Ansi",
+              "danacode": "Danacode",
               "DOI": "DOI",
               "doi": "DOI",
               "HDL": "Hdl",
@@ -6104,6 +6105,23 @@
               "identifiedBy": [
                 {
                   "@type": "Ansi",
+                  "value":  "xyz"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Danacode, indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "xyz"}, {"2": "danacode"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Instance",
+              "identifiedBy": [
+                {
+                  "@type": "Danacode",
                   "value":  "xyz"
                 }
               ]

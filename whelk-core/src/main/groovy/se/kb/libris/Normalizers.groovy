@@ -79,6 +79,7 @@ class Normalizers {
         def OBSOLETE_TYPE_NOTES = [
                 'ansi'    : 'Ansi',
                 'doi'     : 'DOI',
+                'danacode': 'Danacode',
                 'hdl'     : 'Hdl',
                 'isan'    : 'ISAN',
                 'isni'    : 'ISNI',
