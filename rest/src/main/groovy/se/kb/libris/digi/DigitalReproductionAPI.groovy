@@ -81,7 +81,7 @@ class DigitalReproductionAPI extends HttpServlet {
     private static final def FORWARD_HEADERS = [
             'XL-Active-Sigel',
             'Authorization'
-    ]
+    ].collect { it.toLowerCase() }
     
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
