@@ -13,6 +13,7 @@ rdf	http://www.w3.org/1999/02/22-rdf-syntax-ns#
 rdfs	http://www.w3.org/2000/01/rdf-schema#
 rel	https://id.kb.se/relator/
 sao	https://id.kb.se/term/sao/
+saogf	https://id.kb.se/term/saogf/
 sdo	http://schema.org/
 skos	http://www.w3.org/2004/02/skos/core#
 void	http://rdfs.org/ns/void#
