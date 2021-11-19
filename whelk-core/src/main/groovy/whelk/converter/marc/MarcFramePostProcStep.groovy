@@ -492,12 +492,13 @@ class InjectWhenMatchingOnRevertStep extends MarcFramePostProcStepBase {
 
     boolean deepMatches(Map o, Map match, Map refs) {
         String ref = null
-        if (match[ID] =~ MATCH_REF) {
-            ref = match.remove(ID)
+        if (match[ID] ==~ MATCH_REF) {
+            ref = match[ID]
         }
         match.every { k, v ->
+            if (k == ID && v == ref) return true
             Util.asList(v).every {
-                Util.asList(o[k]).any { ov ->
+                return Util.asList(o[k]).any { ov ->
                     boolean matches = (ov instanceof Map) ?
                         deepMatches(ov, it, refs) :
                         ov == it
@@ -513,25 +514,29 @@ class InjectWhenMatchingOnRevertStep extends MarcFramePostProcStepBase {
         }
     }
 
-    static void injectInto(Map o, Map v, Map refs) {
+    static void injectInto(Map receiver, Map v, Map refs) {
         v.each { ik, iv ->
-            if (o.containsKey(ik)) {
-                if (iv instanceof Map && iv[ID] =~ MATCH_REF) {
+            if (receiver.containsKey(ik)) {
+                if (iv instanceof Map && iv[ID] ==~ MATCH_REF) {
                     Map matched = refs[iv[ID]]
-                    matched.putAll(iv)
-                    matched.remove(ID)
-                } else if (o[ik] != iv) {
-                    def values = Util.asList(o[ik])
+                    if (matched instanceof Map && !iv.keySet().any {
+                        it != ID && matched.containsKey(it)
+                    }) {
+                        matched.putAll(iv)
+                        matched.remove(ID)
+                    }
+                } else if (receiver[ik] != iv) {
+                    def values = Util.asList(receiver[ik])
                     def ids = values.findResults { if (it instanceof Map) it[ID] } as Set
                     Util.asList(iv).each {
                         if (it instanceof Map && it[ID] in ids)
                             return
                         values << it
                     }
-                    o[ik] = values
+                    receiver[ik] = values
                 }
             } else {
-                o[ik] = iv
+                receiver[ik] = iv
             }
         }
     }
