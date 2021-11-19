@@ -85,6 +85,10 @@
         <servlet-name>UserDataAPI</servlet-name>
         <servlet-class>whelk.rest.api.UserDataAPI</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>DigitalReproductionAPI</servlet-name>
+        <servlet-class>se.kb.libris.digi.DigitalReproductionAPI</servlet-class>
+    </servlet>
 
 
     <servlet>
@@ -121,6 +125,11 @@
     <servlet-mapping>
         <servlet-name>LegacyVirtualMarc</servlet-name>
         <url-pattern>/_compilemarc</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>DigitalReproductionAPI</servlet-name>
+        <url-pattern>/_reproduction</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
