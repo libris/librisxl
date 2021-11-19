@@ -76,7 +76,7 @@ void createDigitalRepresentation(main, printDoc, params) {
 
     if (params.bibliographyCode) {
       recordDetails.bibliography << [
-        [(ID): 'https://libris.kb.se/library/${params.bibliographyCode}']
+        [(ID): "https://libris.kb.se/library/${params.bibliographyCode}" as String]
       ]
     }
 
