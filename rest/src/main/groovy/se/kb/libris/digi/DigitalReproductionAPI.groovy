@@ -166,7 +166,12 @@ class DigitalReproductionAPI extends HttpServlet {
     }
     
     static String getXlAPI(HttpServletRequest request) {
-        "http://localhost:${request.getServerPort()}/"
+        //FIXME
+        int port = request.getServerPort()
+        if (port == 443) {
+            port = 8080
+        }
+        "http://localhost:${port}/"
     }
 }
 
