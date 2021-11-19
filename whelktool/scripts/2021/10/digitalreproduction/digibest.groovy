@@ -98,7 +98,6 @@ def jobs = [:]
         params.heldById = 'https://libris.kb.se/library/S'
         params.holdingNote = cataloguersNote
 
-        println(printid)
         jobs[printid] = params
     }
 }
@@ -108,6 +107,5 @@ selectByIds(jobs.keySet() as List) { docItem ->
     if (params.is(null)) {
         params = docItem.graph[1].sameAs.findResult { jobs[it[ID]] }
     }
-    println(docItem.doc.id)
     script('process.groovy')(this, docItem, params)
 }
