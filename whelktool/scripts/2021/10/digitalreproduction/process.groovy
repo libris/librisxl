@@ -8,45 +8,43 @@ String getMainEntityId(doc) { doc.graph[0].mainEntity[ID] }
 
 Map ref(id) { [(ID): id] }
 
-DocumentItem createFromMainEntity(entity, recordDetails=null) {
-    def id = "https://id.kb.se/TEMPID"
+DocumentItem createFromMainEntity(main, entity, recordDetails=null) {
+    def id = "TEMPID"
     entity[ID] = "${id}#it"
     def record = [
-        (TYPE): 'Record',
         (ID): id,
+        (TYPE): 'Record',
         mainEntity: [(ID): entity[ID]]
     ]
     if (recordDetails) {
         record += recordDetails
     }
-    doc = create([(GRAPH): [record, entity]])
+    doc = main.create([(GRAPH): [record, entity]])
     return doc
 }
 
-DocumentItem extractWork(doc) {
+DocumentItem extractWork(main, doc) {
     def instance = doc.graph[1]
-    def workDoc = createFromMainEntity(instance.instanceOf)
+    def workDoc = createFromMainEntity(main, instance.instanceOf)
     instance.instanceOf = [(ID): workDoc.graph[0].mainEntity[ID]]
     doc.scheduleSave()
     return workDoc
 }
 
-void createDigitalRepresentation(doc, params) {
-    def workDoc = extractWork(doc)
+void createDigitalRepresentation(main, printDoc, params) {
+    def workDoc = extractWork(main, printDoc)
 
     def digital = [
       (TYPE): 'Electronic',
       issuanceType: 'Monograph',
-      // TODO: simplify: infer from broader of carrierType ...
-      //mediaType: [ ref('https://id.kb.se/term/rda/Computer') ],
       carrierType: [ ref('https://id.kb.se/term/rda/OnlineResource') ],
+      genreForm: params.genreForm,
       instanceOf: ref(getMainEntityId(workDoc)),
-      reproductionOf: ref(getMainEntityId(doc)),
+      reproductionOf: ref(getMainEntityId(printDoc)),
       production: [
           [
-            (TYPE): 'DigitalReproduction',
-            label: params.reproductionComment,
-            agent: [ [ (TYPE): 'Agent', label: params.reproductionAgentLabel ] ],
+            (TYPE): 'Reproduction',
+            agent: [ params.reproductionAgent ],
             year: params.year,
             place: [ [ (TYPE): 'Place', label: 'Stockholm' ] ],
             country: ref('https://id.kb.se/country/sw')
@@ -58,31 +56,22 @@ void createDigitalRepresentation(doc, params) {
       digital.associatedMedia = [
         [
           (TYPE): 'MediaObject',
-          //'marc:publicNote': 'Fritt tillgänglig via Kungliga biblioteket',
+          usageAndAccessPolicy: ref('https://id.kb.se/policy/freely-available'),
+          publisher: [(ID): params.mediaObjectAgent ?: params.reproductionAgent],
           uri: [params.mediaObjectUri]
         ]
       ]
     }
-    if (params.thumbnailUrl) {
-      //digital.isPrimaryTopicOf = [
-      //  [ (TYPE): "Document","cataloguersNote": ["digipic"],"marc:publicNote": [params.tumnagelNote],uri: [params.thumbnailUrl] ]
-      //]
-      digital.thumbnail = [
-        [ (TYPE): "MediaObject", comment: [params.tumnagelNote], uri: [params.thumbnailUrl] ]
+    if (params.imageUrl) {
+      digital.isPrimaryTopicOf = [
+        [ (TYPE): "Document", cataloguersNote: ["digipic"], "marc:publicNote": [params.imageNote],uri: [params.imageUrl] ]
       ]
     }
-
-    // TODO: define a reasonable set of licenses/policies/rights
-    digital.usageAndAccessPolicy = ref('https://id.kb.se/license/freely-available')
 
     def recordDetails = [
       bibliography: [
         [(ID): 'https://libris.kb.se/library/DIGI']
       ],
-      //hasNote: [
-      //  //[(TYPE): 'Note', label: 'Digitaliserat exemplar'],
-      //  [(TYPE): 'Note', label: 'Fritt tillgänglig via Internet']
-      //]
     ]
 
     if (params.bibliographyCode) {
@@ -91,7 +80,7 @@ void createDigitalRepresentation(doc, params) {
       ]
     }
 
-    def digiDoc = createFromMainEntity(digital, recordDetails)
+    def digiDoc = createFromMainEntity(main, digital, recordDetails)
 
     if (params.heldById) {
         def item = [
@@ -103,8 +92,8 @@ void createDigitalRepresentation(doc, params) {
         if (params.holdingNote) {
             holdRecordDetails.cataloguersNote = [ params.holdingNote ]
         }
-        createFromMainEntity(item, holdRecordDetails)
+        createFromMainEntity(main, item, holdRecordDetails)
     }
 }
 
-process &createDigitalRepresentation
+process this.&createDigitalRepresentation

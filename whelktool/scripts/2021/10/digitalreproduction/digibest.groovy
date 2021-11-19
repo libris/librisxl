@@ -2,97 +2,112 @@
  * Batch job for "digibest"
  */
 
-reproductionComment = 'Digitalt faksimil'
-reproductionAgentLabel = 'Kungliga biblioteket'
+reproductionAgent = [(TYPE): 'Agent', label: 'Kungliga biblioteket']
 
 PARAMS = [
   bild: [
-    subUrn: 'dig',
-    tumnagelNote: 'Bild',
-    reproductionComment: reproductionComment,
-    reproductionAgentLabel: reproductionAgentLabel
+    //subUrn: 'dig',
+    imageNote: 'Bild',
+    reproductionAgent: reproductionAgent
   ],
 
   eod: [
-    subUrn: 'eod',
+    //subUrn: 'eod',
     bibliographyCode: 'EOD',
-    reproductionComment: reproductionComment,
-    reproductionAgentLabel: reproductionAgentLabel
+    reproductionAgent: reproductionAgent
   ],
 
   handskrift: [
-    subUrn: 'handskrift',
+    //subUrn: 'handskrift',
     bibliographyCode: 'DIHS',
-    tumnagelNote: 'Frampärm/första sida',
-    reproductionComment: reproductionComment,
-    reproductionAgentLabel: reproductionAgentLabel
+    imageNote: 'Frampärm/första sida',
+    reproductionAgent: reproductionAgent
   ],
 
   karta: [
-    subUrn: 'dig',
-    tumnagelNote: 'Karta/kartbok',
-    reproductionComment: reproductionComment,
-    reproductionAgentLabel: reproductionAgentLabel
+    //subUrn: 'dig',
+    imageNote: 'Karta/kartbok',
+    reproductionAgent: reproductionAgent
   ],
 
   riks: [
-    subUrn: 'riks',
+    //subUrn: 'riks',
     bibliographyCode: 'RIKS',
-    reproductionComment: 'Digitalt faksimil och elektronisk text',
-    reproductionAgentLabel: 'Riksdagsbiblioteket och Kungliga biblioteket'
+    contentAccessibility: [ ["@id": "https://id.kb.se/a11y/textual"] ],
+    reproductionAgent: 'Riksdagsbiblioteket och Kungliga biblioteket'
   ],
 
   vardagstryck: [
-    subUrn: 'vardagstryck',
-    tumnagelNote: 'Titelsida',
+    //subUrn: 'vardagstryck',
+    imageNote: 'Titelsida',
     hasNote: ["@type": "marc:SourceOfDescriptionNote", label: "S: Digitaliserat vardagstryck"],
-    reproductionComment: reproductionComment,
-    reproductionAgentLabel: reproductionAgentLabel
+    reproductionAgent: reproductionAgent
   ],
 
   tryck: [
-    subUrn: 'dig',
-    reproductionComment: reproductionComment,
-    reproductionAgentLabel: reproductionAgentLabel
+    //subUrn: 'dig',
+    reproductionAgent: reproductionAgent
   ],
 
   publ: [
-    subUrn: 'publ',
-    tumnagelNote: 'Titelsida',
-    reproductionComment: null,
-    reproductionAgentLabel: null
+    //subUrn: 'publ',
+    imageNote: 'Titelsida',
+    // NOTE: no production.typeNote (implies no associatedMediaUri?)
+    reproductionAgent: null
     // TODO: optional thumbnailUrl ...
   ]
 ]
 
 def makeParams(jobType) {
-    def params = [:] + PARAMS[jobType]
-
-    params.year = (1900 + new Date().getYear()).toString()
-
-    def urnCode = 'N/A' // TODO: materialtyp != "8" ? librisid_old : prompt("Ange nummer för publikationen (publ-?):"
-    params.mediaObjectUri = "https://urn.kb.se/resolve?urn=urn:nbn:se:kb:${params.subUrn}-${urnCode}"
-
-    /* TODO:
-    sysNr="curl -s "https://ask.kb.se/F/?func=find-c&ccl_term=libnr%3D+${librisid_old}" | grep Gr1Sysnr | sed "s/  <dt id='Gr1Sysnr'>//" | sed "s/<\/dt>//" | sed "s/ //""
-    tumnagel=$(curl -s "https://weburn.kb.se/tumnaglar/${sysNrDir}/" | grep "${sysNr}" | sed -e 's/^<tr.*href="//' | sed -e 's/".* //')
-    params.thumbnailUrl = "https://weburn.kb.se/tumnaglar/${sysNrDir}/${tumnagel}"
-    */
-    params.thumbnailUrl = null
-
-    params.heldById = 'https://libris.kb.se/library/S'
-    // TODO: |= <kbeodbest>, <kbdtryck>, <kbdkart>, <kbdbild>
-    params.holdingNote = "kb${params.subUrn}best"
 
     return params
 }
 
-// TODO: hardcoded local test of one item
-def jobs = [
-  'http://libris.kblocalhost.kb.se/n6038s6054qvfr6': makeParams('eod')
-]
+def jobs = [:]
 
-selectByIds(jobs.keySet() as List) { doc ->
-    def params = jobs[doc.id]
-    script('process.groovy')(doc, params)
+[
+    ['VardagstryckLaddfil.csv', 'vardagstryck'],
+    ['TryckLaddfil.csv', 'tryck'],
+    ['KartorLaddfil.csv', 'karta'],
+    ['HSLaddfil.csv', 'handskrift'],
+    //['AffischLaddfil.csv', 'affisch'],
+    ['BildLaddfil.csv', 'bild'],
+].each { csvFilePath, jobType ->
+    new File(scriptDir, csvFilePath).readLines().drop(1).each {
+        def (
+            printid,
+            bibliography,
+            reproductionDate,
+            associatedMediaUri,
+            imageUrl,
+            imageNote,
+            cataloguersNote
+        ) = (it + ';').split(';', -1)
+
+        printid = printid ==~ /\d{5,11}/ ?
+                  "http://libris.kb.se/resource/bib/${printid}" :
+                  printid
+
+        def params = [:] + PARAMS[jobType]
+
+        params.bibliographyCode = bibliography
+        params.year = reproductionDate
+        params.mediaObjectUri = associatedMediaUri
+        params.imageUrl = imageUrl
+        params.imageNote = imageNote
+        params.heldById = 'https://libris.kb.se/library/S'
+        params.holdingNote = cataloguersNote
+
+        println(printid)
+        jobs[printid] = params
+    }
+}
+
+selectByIds(jobs.keySet() as List) { docItem ->
+    def params = jobs[docItem.doc.id] ?: jobs[docItem.doc.shortId]
+    if (params.is(null)) {
+        params = docItem.graph[1].sameAs.findResult { jobs[it[ID]] }
+    }
+    println(docItem.doc.id)
+    script('process.groovy')(this, docItem, params)
 }
