@@ -86,8 +86,8 @@ class DigitalReproductionAPI extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         def forwardHeaders = request.headerNames
-                .findAll{ it in FORWARD_HEADERS }
-                .collectEntries { [it : request.getHeader(it as String)] }
+                .findAll{ it.toLowerCase() in FORWARD_HEADERS }
+                .collectEntries { [(it) : request.getHeader(it as String)] }
 
         def service = new ReproductionService(xl : new XL(headers : forwardHeaders, apiLocation: getXlAPI(request)))
 
