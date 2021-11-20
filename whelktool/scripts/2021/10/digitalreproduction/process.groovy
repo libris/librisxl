@@ -57,7 +57,7 @@ void createDigitalRepresentation(main, printDoc, params) {
         [
           (TYPE): 'MediaObject',
           usageAndAccessPolicy: ref('https://id.kb.se/policy/freely-available'),
-          publisher: [(ID): params.mediaObjectAgent ?: params.reproductionAgent],
+          publisher: params.mediaObjectAgent ?: params.reproductionAgent,
           uri: [params.mediaObjectUri]
         ]
       ]
