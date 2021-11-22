@@ -32,7 +32,10 @@ DocumentItem extractWork(main, doc) {
 }
 
 void createDigitalRepresentation(main, printDoc, params) {
+    def newlyCreated = []
+
     def workDoc = extractWork(main, printDoc)
+    newlyCreated << workDoc
 
     def digital = [
       (TYPE): 'Electronic',
@@ -81,6 +84,7 @@ void createDigitalRepresentation(main, printDoc, params) {
     }
 
     def digiDoc = createFromMainEntity(main, digital, recordDetails)
+    newlyCreated << digiDoc
 
     if (params.heldById) {
         def item = [
@@ -92,7 +96,12 @@ void createDigitalRepresentation(main, printDoc, params) {
         if (params.holdingNote) {
             holdRecordDetails.cataloguersNote = [ params.holdingNote ]
         }
-        createFromMainEntity(main, item, holdRecordDetails)
+        def itemDoc = createFromMainEntity(main, item, holdRecordDetails)
+        newlyCreated << itemDoc
+    }
+
+    main.selectFromIterable(newlyCreated) { doc ->
+        doc.scheduleSave()
     }
 }
 
