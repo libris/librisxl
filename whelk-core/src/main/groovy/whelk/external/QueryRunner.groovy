@@ -23,6 +23,7 @@ class QueryRunner {
                     "skos"    : "http://www.w3.org/2004/02/skos/core#",
                     "wd"      : "http://www.wikidata.org/entity/",
                     "wdt"     : "http://www.wikidata.org/prop/direct/",
+                    "wdtn"    : "http://www.wikidata.org/prop/direct-normalized/",
                     "wikibase": "http://wikiba.se/ontology#"
             ]
 
