@@ -31,10 +31,10 @@ DocumentItem extractWork(main, doc) {
     return workDoc
 }
 
-void createDigitalRepresentation(main, printDoc, params) {
+void createDigitalRepresentation(Script main, DocumentItem originalDoc, Map params) {
     def newlyCreated = []
 
-    def workDoc = extractWork(main, printDoc)
+    def workDoc = extractWork(main, originalDoc)
     newlyCreated << workDoc
 
     def digital = [
@@ -43,7 +43,7 @@ void createDigitalRepresentation(main, printDoc, params) {
       carrierType: [ ref('https://id.kb.se/term/rda/OnlineResource') ],
       genreForm: params.genreForm,
       instanceOf: ref(getMainEntityId(workDoc)),
-      reproductionOf: ref(getMainEntityId(printDoc)),
+      reproductionOf: ref(getMainEntityId(originalDoc)),
       production: [
           [
             (TYPE): 'Reproduction',
@@ -54,6 +54,12 @@ void createDigitalRepresentation(main, printDoc, params) {
           ]
       ],
     ]
+
+    def original = originalDoc.graph[1]
+
+    if (original.hasTitle) {
+        digital.hasTitle = original.hasTitle
+    }
 
     if (params.mediaObjectUri) {
       digital.associatedMedia = [

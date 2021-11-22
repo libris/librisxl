@@ -75,7 +75,7 @@ def jobs = [:]
 ].each { csvFilePath, jobType ->
     new File(scriptDir, csvFilePath).readLines().drop(1).each {
         def (
-            printid,
+            originalId,
             bibliography,
             reproductionDate,
             associatedMediaUri,
@@ -84,9 +84,9 @@ def jobs = [:]
             cataloguersNote
         ) = (it + ';').split(';', -1)
 
-        printid = printid ==~ /\d{5,11}/ ?
-                  "http://libris.kb.se/resource/bib/${printid}" :
-                  printid
+        originalId = originalId ==~ /\d{5,11}/ ?
+                  "http://libris.kb.se/resource/bib/${originalId}" :
+                  originalId
 
         def params = [:] + PARAMS[jobType]
 
@@ -98,7 +98,7 @@ def jobs = [:]
         params.heldById = 'https://libris.kb.se/library/S'
         params.holdingNote = cataloguersNote
 
-        jobs[printid] = params
+        jobs[originalId] = params
     }
 }
 
