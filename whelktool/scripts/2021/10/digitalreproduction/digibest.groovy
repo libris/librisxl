@@ -2,7 +2,7 @@
  * Batch job for "digibest"
  */
 
-reproductionAgent = [(TYPE): 'Agent', label: 'Kungliga biblioteket']
+reproductionAgent = [(ID): 'https://libris.kb.se/20dgd3zl56pmrzk#it'] // Kungliga biblioteket
 
 PARAMS = [
   bild: [
