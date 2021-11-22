@@ -14119,7 +14119,7 @@
       },
       "$a": {"about": "_:event", "property": "typeNote", "punctuationChars": ":", "NOTE": "Talks about the subject but need to be kept together with the Activity for now since in MARC it is repeatable and *could* talk about the object depending on praxis.", "NOTE:LC": "I - carrier - Carrier - rdfs:label"},
       "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label" , "punctuationChars": ":"},
-      "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label" , "punctuationChars": ","},
+      "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label", "infer": true, "punctuationChars": ","},
       "$d": {"about": "_:event", "property": "date"},
       "$e": {"ignoreOnRevert": true, "addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false, "NOTE": "should be part of the subject", "NOTE:record-count": 342},
       "$f": {"ignoreOnRevert": true, "addLink": "seriesMembership", "resourceType": "SeriesMembership", "property": "seriesStatement"},
