@@ -734,7 +734,7 @@ class ESQuery {
         queryParameters.each { parameter, values ->
             parseRangeParameter(parameter) { String nameNoPrefix, RangeParameterPrefix prefix ->
                 Ranges r = ranges.computeIfAbsent(nameNoPrefix,
-                        { p -> p in dateFields ? Ranges.date(p, whelk.getTimezone()) : Ranges.nonDate(p)})
+                        { p -> p in dateFields ? Ranges.date(p, whelk.getTimezone(), whelk) : Ranges.nonDate(p, whelk)})
                 values.collectMany{ it.tokenize(',') }.each { r.add(prefix, it.trim()) }
                 handledParameters.add(parameter)
             }
