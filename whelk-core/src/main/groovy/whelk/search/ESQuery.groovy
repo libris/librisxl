@@ -492,8 +492,10 @@ class ESQuery {
         def queryParametersCopy = new HashMap<>(queryParameters)
         List filters = []
 
-        makeRangeFilters(queryParametersCopy, filters)
-
+        def (handledParameters, rangeFilters) = makeRangeFilters(queryParametersCopy)
+        handledParameters.each {queryParametersCopy.remove(it)}
+        filters.addAll(rangeFilters)
+        
         // TODO This is copied from the old code and should be rewritten.
         // We don't have that many nested mappings, so this is way to general.
         Map groups = queryParametersCopy.groupBy { p -> getPrefixIfExists(p.key) }
@@ -727,24 +729,27 @@ class ESQuery {
      * means 1984 < x < 1988 OR 1993 < x < 1995 OR x >= 2000
      */
     @CompileDynamic // compiler doesn't get the collectMany construct below...
-    void makeRangeFilters(Map<String, String[]> queryParameters, List filters) {
+    Tuple2<Set<String>, List> makeRangeFilters(Map<String, String[]> queryParameters) {
         Map<String, Ranges> ranges = [:]
         Set<String> handledParameters = new HashSet<>()
 
         queryParameters.each { parameter, values ->
             parseRangeParameter(parameter) { String nameNoPrefix, RangeParameterPrefix prefix ->
-                Ranges r = ranges.computeIfAbsent(nameNoPrefix,
-                        { p -> p in dateFields ? Ranges.date(p, whelk.getTimezone(), whelk) : Ranges.nonDate(p, whelk)})
+                Ranges r = ranges.computeIfAbsent(nameNoPrefix, { p -> 
+                    p in dateFields 
+                            ? Ranges.date(p, whelk.getTimezone(), whelk) 
+                            : Ranges.nonDate(p, whelk) 
+                })
+                
                 values.collectMany{ it.tokenize(',') }.each { r.add(prefix, it.trim()) }
                 handledParameters.add(parameter)
             }
         }
 
-        handledParameters.each {queryParameters.remove(it)}
-        filters.addAll(ranges.values().collect {it.toQuery()})
+        return new Tuple2(handledParameters, ranges.values().collect { it.toQuery() })
     }
 
-    private void parseRangeParameter (String parameter, Closure handler) {
+    private static void parseRangeParameter (String parameter, Closure handler) {
         for (RangeParameterPrefix p : RangeParameterPrefix.values()) {
             if (parameter.startsWith(p.prefix())) {
                 handler(parameter.substring(p.prefix().size()), p)
@@ -753,7 +758,7 @@ class ESQuery {
         }
     }
 
-    Set getDateFields(Map mappings) {
+    static Set getDateFields(Map mappings) {
         Set dateFields = [] as Set
         DocumentUtil.findKey(mappings['properties'], 'type') { value, path ->
             if (value == 'date') {

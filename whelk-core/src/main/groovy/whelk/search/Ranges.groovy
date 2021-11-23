@@ -3,6 +3,7 @@ package whelk.search
 
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
+import whelk.search.Ranges.Query
 
 import java.time.ZoneId
 import java.time.format.DateTimeParseException
@@ -19,7 +20,7 @@ class Ranges {
     ZoneId timezone
     Whelk whelk
 
-    private List<Query> clauses = []
+    private List<Query> ranges = []
 
     private Ranges(String fieldName, ZoneId timezone = null, Whelk whelk) {
         this.fieldName = fieldName
@@ -39,18 +40,18 @@ class Ranges {
         switch (operator) {
             case MIN:
             case MIN_EX:
-                Range openOrNew = (clauses.find {it instanceof Range && !it.min } ?: (clauses << new Range()).last()) as Range
+                Range openOrNew = (ranges.find {it instanceof Range && !it.min } ?: (ranges << new Range()).last()) as Range
                 openOrNew.min = new EndPoint(operator, value)
                 break
 
             case MAX:
             case MAX_EX:
-                Range openOrNew = (clauses.find {it instanceof Range &&  !it.max } ?: (clauses << new Range()).last()) as Range
+                Range openOrNew = (ranges.find {it instanceof Range &&  !it.max } ?: (ranges << new Range()).last()) as Range
                 openOrNew.max = new EndPoint(operator, value)
                 break
 
             case MATCHES:
-                clauses << (isDateField() ? new Range(new EndPoint(MIN, value), new EndPoint(MAX, value)) : new OrNarrower(value))
+                ranges << (isDateField() ? new Range(new EndPoint(MIN, value), new EndPoint(MAX, value)) : new OrNarrower(value))
                 break
         }
     }
@@ -58,16 +59,16 @@ class Ranges {
     boolean isDateField() {
         timezone != null
     }
-
+    
     Map toQuery() {
-        if (clauses.isEmpty()) {
+        if (ranges.isEmpty()) {
             throw new IllegalStateException("no ranges")
         }
 
         try {
-            clauses.size() > 1
-                    ? ["bool": ["should": clauses.collect{it.toQuery()}]]
-                    : clauses.first().toQuery()
+            ranges.size() > 1
+                    ? ["bool": ["should": ranges.collect{it.toQuery()}]]
+                    : ranges.first().toQuery()
         } catch (DateTimeParseException e) {
             throw new InvalidQueryException(e.getMessage())
         }
@@ -151,12 +152,8 @@ class Ranges {
         
         @Override
         Map toQuery() {
-            def values = [value] + whelk.relations.followReverseBroader(value).collect()
-            [
-                    "terms" : [
-                            (fieldName) : values
-                    ]
-            ]
+            def values = [value] + whelk.relations.followReverseBroader(value).collect() // default max size in ES 65,536...
+            ["terms" : [(fieldName) : values]]
         }
     }
 }
