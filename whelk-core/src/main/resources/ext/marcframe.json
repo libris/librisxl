@@ -1950,6 +1950,115 @@
         ]
       },
       {
+        "type": "SetFlagsByPatterns",
+        "select": "seriesMembership",
+        "match": [
+          {
+            "exists": ["seriesStatement", "inSeries"],
+            "setFlags": {
+              "marc:seriesTracingPolicy": "1"
+            }
+          },
+          {
+            "exists": ["seriesStatement"],
+            "setFlags": {
+              "marc:seriesTracingPolicy": "0"
+            }
+          }
+        ],
+        "_spec": [
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "marc:seriesTracingPolicy": "0",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": "source"
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "marc:seriesTracingPolicy": "1",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "..."
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "marc:seriesTracingPolicy": "0"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
         "type": "ProduceIfMissing",
         "select": "seriesMembership",
         "produceMissing": {
@@ -2136,19 +2245,80 @@
         ]
       },
       {
-        "type": "SetFlagsByPatterns",
-        "select": "seriesMembership",
-        "match": [
-          {
-            "exists": ["seriesStatement", "inSeries"],
-            "setFlags": {
-              "marc:seriesTracingPolicy": "1"
+        "type": "ProduceIfMissing",
+        "select": "associatedMedia",
+        "produceMissing": {
+          "produceProperty": "marc:publicNote",
+          "showProperties": [
+            {"property": ["usageAndAccessPolicy", "label"]},
+            {
+              "property": ["publisher", "name"],
+              "useValueFormat": {
+                "contentFirst": " via ",
+                "contentAfter": " och ",
+                "contentLast": ""
+              }
             }
-          },
+          ]
+        },
+        "_spec": [
           {
-            "exists": ["seriesStatement"],
-            "setFlags": {
-              "marc:seriesTracingPolicy": "0"
+            "source": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "usageAndAccessPolicy": [
+                      {"label": "Fritt tillgänglig"}
+                    ],
+                    "publisher": [
+                      {"name": "Kungliga biblioteket"},
+                      {"name": "Umeå universitetsbibliotek"}
+                    ]
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "marc:publicNote": "Fritt tillgänglig via Kungliga biblioteket och Umeå universitetsbibliotek",
+                    "usageAndAccessPolicy": [
+                      {"label": "Fritt tillgänglig"}
+                    ],
+                    "publisher": [
+                      {"name": "Kungliga biblioteket"},
+                      {"name": "Umeå universitetsbibliotek"}
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "InjectWhenMatchingOnRevert",
+        "rules": [
+          {
+            "matches": {
+              "@type": "Electronic",
+              "reproductionOf": {},
+              "production": {
+                "@id": "?1",
+                "@type": "Reproduction"
+              }
+            },
+            "injectData": {
+              "production": {
+                "@id": "?1",
+                "typeNote": "Digital reproduktion"
+              }
             }
           }
         ],
@@ -2156,27 +2326,33 @@
           {
             "source": {
               "mainEntity": {
-                "seriesMembership": [
-                  {
-                    "@type": "SeriesMembership",
-                    "seriesStatement": "...",
-                    "marc:seriesTracingPolicy": "0",
-                    "inSeries": {"...": "..."}
-                  }
-                ]
+                "@type": "Electronic",
+                "reproductionOf": {},
+                "production": {
+                  "@type": "Reproduction"
+                }
               }
             },
             "result": "source",
-            "back": "source"
+            "back": {
+              "mainEntity": {
+                "@type": "Electronic",
+                "reproductionOf": {},
+                "production": {
+                  "@type": "Reproduction",
+                  "typeNote": "Digital reproduktion"
+                }
+              }
+            }
           },
           {
             "source": {
               "mainEntity": {
-                "seriesMembership": [
+                "@type": "Electronic",
+                "reproductionOf": {},
+                "production": [
                   {
-                    "@type": "SeriesMembership",
-                    "seriesStatement": "...",
-                    "inSeries": {"...": "..."}
+                    "@type": "Reproduction"
                   }
                 ]
               }
@@ -2184,12 +2360,12 @@
             "result": "source",
             "back": {
               "mainEntity": {
-                "seriesMembership": [
+                "@type": "Electronic",
+                "reproductionOf": {},
+                "production": [
                   {
-                    "@type": "SeriesMembership",
-                    "seriesStatement": "...",
-                    "marc:seriesTracingPolicy": "1",
-                    "inSeries": {"...": "..."}
+                    "@type": "Reproduction",
+                    "typeNote": "Digital reproduktion"
                   }
                 ]
               }
@@ -2198,10 +2374,12 @@
           {
             "source": {
               "mainEntity": {
-                "seriesMembership": [
+                "@type": "Electronic",
+                "reproductionOf": {},
+                "production": [
                   {
-                    "@type": "SeriesMembership",
-                    "seriesStatement": "..."
+                    "@type": "Reproduction",
+                    "typeNote": "Digitalt faksimil och elektronisk text"
                   }
                 ]
               }
@@ -2209,23 +2387,126 @@
             "result": "source",
             "back": {
               "mainEntity": {
-                "seriesMembership": [
+                "@type": "Electronic",
+                "reproductionOf": {},
+                "production": [
                   {
-                    "@type": "SeriesMembership",
-                    "seriesStatement": "...",
-                    "marc:seriesTracingPolicy": "0"
+                    "@type": "Reproduction",
+                    "typeNote": "Digitalt faksimil och elektronisk text"
                   }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "InjectWhenMatchingOnRevert",
+        "_TODO": "This should be closeMatch/broader-driven (and computed on search)",
+        "rules": [
+          {
+            "matches": {
+              "@type": "Electronic",
+              "carrierType": [
+                {"@id": "https://id.kb.se/term/rda/OnlineResource"}
+              ]
+            },
+            "injectData": {
+              "carrierType": [
+                {"@id": "https://id.kb.se/marc/OnlineResource"},
+                {"@id": "https://id.kb.se/marc/Online"}
+              ],
+              "mediaType": [
+                {"@id": "https://id.kb.se/term/rda/Computer"}
+              ]
+            }
+          }
+        ],
+        "_spec": [
+          {
+            "source": {
+              "mainEntity": {
+                "@type": "Electronic",
+                "carrierType": [
+                  {"@id": "https://id.kb.se/term/rda/OnlineResource"}
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "@type": "Electronic",
+                "carrierType": [
+                  {"@id": "https://id.kb.se/term/rda/OnlineResource"},
+                  {"@id": "https://id.kb.se/marc/OnlineResource"},
+                  {"@id": "https://id.kb.se/marc/Online"}
+                ],
+                "mediaType": [
+                  {"@id": "https://id.kb.se/term/rda/Computer"}
                 ]
               }
             }
           },
           {
+            "name": "do not duplicate already given",
             "source": {
               "mainEntity": {
-                "seriesMembership": [
+                "@type": "Electronic",
+                "carrierType": [
+                  {"@id": "https://id.kb.se/term/rda/OnlineResource"},
+                  {"@id": "https://id.kb.se/marc/OnlineResource"}
+                ],
+                "mediaType": [
+                  {"@id": "https://id.kb.se/term/rda/Unmediated"}
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "@type": "Electronic",
+                "carrierType": [
+                  {"@id": "https://id.kb.se/term/rda/OnlineResource"},
+                  {"@id": "https://id.kb.se/marc/OnlineResource"},
+                  {"@id": "https://id.kb.se/marc/Online"}
+                ],
+                "mediaType": [
+                  {"@id": "https://id.kb.se/term/rda/Unmediated"},
+                  {"@id": "https://id.kb.se/term/rda/Computer"}
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "CopyOnRevert",
+        "sourceLink": "reproductionOf",
+        "copyIfMissing": [
+          "publication",
+          "extent",
+          "hasDimensions",
+          {
+            "from": "identifiedBy",
+            "to": "indirectlyIdentifiedBy"
+          }
+        ],
+        "_spec": [
+          {
+            "name":  "Copy data from the original of a reproduction",
+            "source": {
+              "mainEntity": {
+                "reproductionOf": [
                   {
-                    "@type": "SeriesMembership",
-                    "inSeries": {"...": "..."}
+                    "publication": [
+                      {
+                        "@type": "Publication",
+                        "year": "1773"
+                      }
+                    ],
+                    "extent": [{"@type": "Extent", "label": ["259 s."]}],
+                    "hasDimensions": [{"@type": "Dimensions", "label": "24 cm."}],
+                    "identifiedBy": {"@type": "ISBN", "value": "00-0-000000-0"}
                   }
                 ]
               }
@@ -2233,12 +2514,60 @@
             "result": "source",
             "back": {
               "mainEntity": {
-                "seriesMembership": [
+                "reproductionOf": [
                   {
-                    "@type": "SeriesMembership",
-                    "inSeries": {"...": "..."}
+                    "publication": [
+                      {
+                        "@type": "Publication",
+                        "year": "1773"
+                      }
+                    ],
+                    "extent": [{"@type": "Extent", "label": ["259 s."]}],
+                    "hasDimensions": [{"@type": "Dimensions", "label": "24 cm."}],
+                    "identifiedBy": {"@type": "ISBN", "value": "00-0-000000-0"}
+                  }
+                ],
+                "publication": [
+                  {
+                    "@type": "Publication",
+                    "year": "1773"
+                  }
+                ],
+                "extent": [{"@type": "Extent", "label": ["259 s."]}],
+                "hasDimensions": [{"@type": "Dimensions", "label": "24 cm."}],
+                "indirectlyIdentifiedBy": {"@type": "ISBN", "value": "00-0-000000-0"}
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "CopyOnRevert",
+        "sourceLink": "hasReproduction",
+        "copyIfMissing": [
+          "associatedMedia"
+        ],
+        "_spec": [
+          {
+            "name":  "Copy associatedMedia from a reproduction",
+            "source": {
+              "mainEntity": {
+                "hasReproduction": [
+                  {
+                    "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
                   }
                 ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "hasReproduction": [
+                  {
+                    "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
+                  }
+                ],
+                "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
               }
             }
           }
@@ -13808,7 +14137,7 @@
       },
       "$a": {"about": "_:event", "property": "typeNote", "punctuationChars": ":", "NOTE": "Talks about the subject but need to be kept together with the Activity for now since in MARC it is repeatable and *could* talk about the object depending on praxis.", "NOTE:LC": "I - carrier - Carrier - rdfs:label"},
       "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label" , "punctuationChars": ":"},
-      "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label" , "punctuationChars": ","},
+      "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label", "infer": true, "punctuationChars": ","},
       "$d": {"about": "_:event", "property": "date"},
       "$e": {"ignoreOnRevert": true, "addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false, "NOTE": "should be part of the subject", "NOTE:record-count": 342},
       "$f": {"ignoreOnRevert": true, "addLink": "seriesMembership", "resourceType": "SeriesMembership", "property": "seriesStatement"},
@@ -19779,7 +20108,7 @@
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "otherPhysicalFormat",
-      "allowLinkOnRevert": "reproductionOf",
+      "allowLinkOnRevert": ["reproductionOf", "hasReproduction"],
       "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
@@ -20035,16 +20364,16 @@
           "name": "reproductionOf should revert to 776",
           "normalized": {"776": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "name of agent"},
-            {"t": "Title of reproduction"},
+            {"t": "Title on original"},
             {"w": "00000"}
           ]}},
           "result": {"mainEntity": {
             "reproductionOf": [{
-              "@type": "Instance",
+              "@type": "Print",
               "meta": [{"@type": "Record", "controlNumber": "00000"}],
               "hasTitle": [{
                 "@type": "Title",
-                "mainTitle": "Title of reproduction"
+                "mainTitle": "Title on original"
               }],
               "instanceOf": {
                 "@type": "Work",
@@ -20056,6 +20385,23 @@
                   }
                 }]
               }
+            }]
+          }}
+        },
+        {
+          "name": "hasReproduction should revert to 776",
+          "normalized": {"776": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Title on reproduction"},
+            {"w": "00001"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasReproduction": [{
+              "@type": "Electronic",
+              "meta": [{"@type": "Record", "controlNumber": "00001"}],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Title on reproduction"
+              }]
             }]
           }}
         }

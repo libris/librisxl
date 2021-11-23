@@ -28,14 +28,12 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
 
     void init() { }
 
-    def findValue(source, List path) {
+    static def findValue(source, List path) {
         if (!source || !path) {
             return source
         }
-        if (source instanceof List) {
-            source = source[0]
-        }
-        return findValue(source[path[0]], path.size() > 1 ? path[1..-1] : null)
+        def pathrest = path.size() > 1 ? path[1..-1] : null
+        return findValue(source[path[0]], pathrest)
     }
 
     static String buildString(Map node, List showProperties) {
@@ -46,39 +44,94 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
                 fmt = prop.useValueFormat
                 prop = prop.property
             }
-            def value = node[prop]
+            def value = prop instanceof List ? findValue(node, prop) : node[prop]
             if (value) {
                 if (!(value instanceof List)) {
                     value = [value]
                 }
                 def first = true
-                if (fmt?.contentFirst) {
+                if (fmt?.contentFirst != null) {
                     result += fmt.contentFirst
                 }
                 def prevAfter = null
                 value.each {
-                    if (prevAfter) {
+                    if (prevAfter != null) {
                         result += prevAfter
                     }
-                    if (fmt?.contentBefore && (!fmt.contentFirst || !first)) {
+                    if (fmt?.contentBefore != null && (fmt.contentFirst == null || first == null)) {
                         result += fmt.contentBefore
                     }
                     result += it
                     first = false
                     prevAfter = fmt?.contentAfter
                 }
-                if (fmt?.contentLast) {
+                if (fmt?.contentLast != null) {
                     result += fmt.contentLast
-                } else if (prevAfter) {
+                } else if (prevAfter != null) {
                     result += prevAfter
                 }
-            } else if (fmt?.contentNoValue) {
+            } else if (fmt?.contentNoValue != null) {
                 result += fmt.contentNoValue
             }
         }
         return result
     }
 
+}
+
+
+class CopyOnRevertStep implements MarcFramePostProcStep {
+
+    String type
+    JsonLd ld
+
+    String sourceLink
+    String targetLink
+    List<FromToProperty> copyIfMissing
+
+    void setCopyIfMissing(List<Object> copyIfMissing) {
+        this.copyIfMissing = copyIfMissing.collect {
+            String fromProp
+            String toProp
+            if (it instanceof Map) {
+                new FromToProperty(it)
+            } else if (it instanceof String) {
+                new FromToProperty([from: it, to: it])
+            } else {
+                throw new RuntimeException("Unhandled value in copyIfMissing: ${it}")
+            }
+        }
+    }
+
+    void init() {
+        assert sourceLink || targetLink
+    }
+
+    void modify(Map record, Map thing) {
+    }
+
+    void unmodify(Map record, Map thing) {
+        def source = sourceLink ? thing[sourceLink] : thing
+        def target = targetLink ? thing[targetLink] : thing
+
+        if (source) {
+            if (!(source instanceof List)) {
+                source = [source]
+            }
+            for (prop in copyIfMissing) {
+                for (item in source) {
+                    if (!target.containsKey(prop.to) && item.containsKey(prop.from)) {
+                        target[prop.to] = item[prop.from]
+                    }
+                }
+            }
+        }
+    }
+
+    class FromToProperty {
+        String from
+        String to
+    }
 }
 
 
@@ -412,6 +465,78 @@ class ProduceIfMissingStep extends MarcFramePostProcStepBase {
                 if (value) {
                     it[produceMissing.produceProperty] = value
                 }
+            }
+        }
+    }
+}
+
+
+class InjectWhenMatchingOnRevertStep extends MarcFramePostProcStepBase {
+
+    List<Map> rules
+    static final MATCH_REF = ~/\?\d+/
+
+    void modify(Map record, Map thing) {
+    }
+
+    void unmodify(Map record, Map thing) {
+        def item = thing
+        for (rule in rules) {
+            def refs = [:]
+            if (deepMatches(item, rule.matches, refs)) {
+                injectInto(item, rule.injectData, refs)
+                break
+            }
+        }
+    }
+
+    boolean deepMatches(Map o, Map match, Map refs) {
+        String ref = null
+        if (match[ID] ==~ MATCH_REF) {
+            ref = match[ID]
+        }
+        match.every { k, v ->
+            if (k == ID && v == ref) return true
+            Util.asList(v).every {
+                return Util.asList(o[k]).any { ov ->
+                    boolean matches = (ov instanceof Map) ?
+                        deepMatches(ov, it, refs) :
+                        ov == it
+                    if (!matches && k == TYPE) {
+                        matches = ld.isSubClassOf(ov, it)
+                    }
+                    if (matches) {
+                        refs[ref] = o
+                    }
+                    return matches
+                }
+            }
+        }
+    }
+
+    static void injectInto(Map receiver, Map v, Map refs) {
+        v.each { ik, iv ->
+            if (receiver.containsKey(ik)) {
+                if (iv instanceof Map && iv[ID] ==~ MATCH_REF) {
+                    Map matched = refs[iv[ID]]
+                    if (matched instanceof Map && !iv.keySet().any {
+                        it != ID && matched.containsKey(it)
+                    }) {
+                        matched.putAll(iv)
+                        matched.remove(ID)
+                    }
+                } else if (receiver[ik] != iv) {
+                    def values = Util.asList(receiver[ik])
+                    def ids = values.findResults { if (it instanceof Map) it[ID] } as Set
+                    Util.asList(iv).each {
+                        if (it instanceof Map && it[ID] in ids)
+                            return
+                        values << it
+                    }
+                    receiver[ik] = values
+                }
+            } else {
+                receiver[ik] = iv
             }
         }
     }

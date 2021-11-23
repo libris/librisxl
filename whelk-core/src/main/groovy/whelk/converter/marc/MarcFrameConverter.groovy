@@ -212,8 +212,14 @@ class MarcConversion {
             procStep = new ProduceIfMissingStep(props); break
             case 'SetFlagsByPatterns':
             procStep = new SetFlagsByPatternsStep(props); break
-            default:
+            case 'CopyOnRevert':
+            procStep = new CopyOnRevertStep(props); break
+            case 'InjectWhenMatchingOnRevert':
+            procStep = new InjectWhenMatchingOnRevertStep(props); break
+            case null:
             return null
+            default:
+            throw new RuntimeException("Unknown postProcStep: ${stepDfn}")
         }
         procStep.ld = converter.ld
         procStep.init()
@@ -1879,7 +1885,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     List<String> pendingKeys
     String aboutAlias
     //NOTE: allowLinkOnRevert as list may be preferable, but there is currently no case for it. Update if needed.
-    String allowLinkOnRevert
+    List<String> allowLinkOnRevert
     List<String> onRevertPrefer
     Set<String> sharesGroupIdWith = new HashSet<String>()
     boolean silentRevert
@@ -1900,9 +1906,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         if (pendingResources) {
             pendingKeys = Util.getSortedPendingKeys(pendingResources)
         }
-
+        
         aboutAlias = fieldDfn['aboutAlias']
-        allowLinkOnRevert = fieldDfn['allowLinkOnRevert']
+        allowLinkOnRevert = Util.asList(fieldDfn['allowLinkOnRevert'])
         dependsOn = fieldDfn['dependsOn'] as List<String>
         constructProperties = fieldDfn['constructProperties'] as Map<String, Map>
 
@@ -2283,8 +2289,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def useLinks = []
 
-        if (allowLinkOnRevert) {
-            useLinks << [link: allowLinkOnRevert, resourceType: resourceType]
+        allowLinkOnRevert.each {
+            useLinks << [link: it, resourceType: resourceType]
         }
 
         if (computeLinks && computeLinks.mapping instanceof Map) {
