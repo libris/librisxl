@@ -308,7 +308,7 @@ class WikidataEntity {
 
     List<RDFNode> getPlaceIdentifiers() {
         String queryString = """
-            SELECT ?freebaseId ?geonamesId ?toraId {
+            SELECT ?freebaseId ?geonamesId ?toraId ?ysoId {
                 VALUES ?place { wd:${shortId} }
                 
                 OPTIONAL { ?place wdtn:${FREEBASE} ?freebaseId }
