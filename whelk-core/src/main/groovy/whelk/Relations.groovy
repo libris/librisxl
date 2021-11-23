@@ -63,6 +63,10 @@ class Relations {
             String id = stack.pop()
             for (String relation : relations ) {
                 Set<String> dependers = new HashSet<>(storage.getByReverseRelation(id, relation))
+                if (isSymmetric(relation)) {
+                    dependers.addAll(new HashSet<>(storage.getByRelation(id, relation)))
+                }
+                
                 dependers.removeAll(iris)
                 stack.addAll(dependers)
                 iris.addAll(dependers)
@@ -70,5 +74,10 @@ class Relations {
         }
 
         return iris
+    }
+    
+    private static boolean isSymmetric(String relation) {
+        // FIXME get from vocab
+        relation == "exactMatch"
     }
 }
