@@ -503,7 +503,7 @@ class InjectWhenMatchingOnRevertStep extends MarcFramePostProcStepBase {
                         deepMatches(ov, it, refs) :
                         ov == it
                     if (!matches && k == TYPE) {
-                        matches = ld.isSubClassOf(ov, it)
+                        matches = ld?.isSubClassOf(ov, it)
                     }
                     if (matches) {
                         refs[ref] = o
