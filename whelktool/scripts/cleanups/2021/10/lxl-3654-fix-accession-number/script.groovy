@@ -8,8 +8,10 @@ selectByIds(ids) { data ->
     asList(thing."marc:hasImmediateSourceOfAcquisitionNote").each { acq ->
         acq.identifiedBy?.each {
             if (it.'@type' == 'AccessionNumber') {
-                it['value'] = it['value']['values'][0]
-                modified = true
+                if (!(it['value'] in String)) {
+                    it['value'] = it['value']['values'][0]
+                    modified = true
+                }
             }
         }
     }
@@ -17,8 +19,10 @@ selectByIds(ids) { data ->
     asList(thing.immediateAcquisition).each { acq ->
         acq.identifiedBy?.each {
             if (it.'@type' == 'AccessionNumber') {
-                it['value'] = it['value']['values'][0]
-                modified = true
+                if (!(it['value'] in String)) {
+                    it['value'] = it['value']['values'][0]
+                    modified = true
+                }
             }
         }
     }

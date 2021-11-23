@@ -18,6 +18,7 @@ import whelk.Whelk;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.MarcFrameConverter;
+import whelk.exception.CancelUpdateException;
 import whelk.exception.TooHighEncodingLevelException;
 import whelk.filter.LinkFinder;
 import whelk.util.LegacyIntegrationTools;
@@ -139,7 +140,12 @@ class XL
                 }
                 else {
                     m_whelk.storeAtomicUpdate(idToMerge, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), (Document existing) -> {
+                        String existingChecksum = existing.getChecksum(m_whelk.getJsonld());
                         m_merge.merge(existing, incoming, m_parameters.getChangedBy(), m_whelk);
+                        String modifiedChecksum = existing.getChecksum(m_whelk.getJsonld());
+                        // Avoid writing an identical version
+                        if (modifiedChecksum.equals(existingChecksum))
+                            throw new CancelUpdateException();
                     });
                 }
 
@@ -289,9 +295,9 @@ class XL
         if (newEncodingLevel == null || existingEncodingLevel == null)
             return false;
 
-        String specialRule = m_parameters.getSpecialRules().get(newEncodingLevel);
+        Set<String> specialRule = m_parameters.getSpecialRules().get(newEncodingLevel);
 
-        if (specialRule != null && specialRule.equals(existingEncodingLevel))
+        if (specialRule != null && specialRule.contains(existingEncodingLevel))
             return true;
 
         switch (newEncodingLevel)

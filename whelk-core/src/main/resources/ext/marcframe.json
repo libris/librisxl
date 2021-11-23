@@ -6269,7 +6269,7 @@
       "include": ["identifier"],
       "match": [
         {
-          "when": "i1=7 & $2 =~ ansi|ANSI|doi|DOI|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|iswc|ISWC|uri|URI|urn|URN",
+          "when": "i1=7 & $2 =~ ansi|ANSI|danacode|doi|DOI|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|iswc|ISWC|uri|URI|urn|URN",
           "i1": null,
           "$2": {
             "property": "@type",
@@ -6277,6 +6277,7 @@
               "NOTE": "NB! Order is significant. The last key for the same value will be used on revert",
               "ANSI": "Ansi",
               "ansi": "Ansi",
+              "danacode": "Danacode",
               "DOI": "DOI",
               "doi": "DOI",
               "HDL": "Hdl",
@@ -6433,6 +6434,23 @@
               "identifiedBy": [
                 {
                   "@type": "Ansi",
+                  "value":  "xyz"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Danacode, indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "xyz"}, {"2": "danacode"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Instance",
+              "identifiedBy": [
+                {
+                  "@type": "Danacode",
                   "value":  "xyz"
                 }
               ]
@@ -14378,7 +14396,7 @@
       "$f": {"property": "marc:owner"},
       "$h": {"property": "marc:purchasePrice"},
       "$n": {"addProperty": "marc:extent"},
-      "$o": {"addProperty": "unit"},
+      "$o": {"addLink": "unit", "resourceType": "Unit", "property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
       "_spec": [
@@ -16911,7 +16929,7 @@
         },
         {
           "when": "i2=5",
-          "resourceType": "Geographic"
+          "resourceType": "Place"
         },
         {
           "when": "i2=6",
@@ -16959,7 +16977,7 @@
           }}
         },
         {
-          "name": "Geographic subject",
+          "name": "Place as subject",
           "source": {
             "653": {"ind1": " ", "ind2": "5", "subfields":[
               {"a": "Stockholm"}]
@@ -16970,12 +16988,31 @@
               "@type": "Text",
               "subject": [
                 {
-                  "@type": "Geographic",
+                  "@type": "Place",
                   "label": "Stockholm"
                 }
               ]
             }
           }}
+        },
+        {
+          "name": "Geographic subject should revert to place",
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject": [
+                {
+                  "@type": "Geographic",
+                  "label": "Stockholm"
+                }
+              ]
+            }
+          }},
+          "normalized": {
+            "653": {"ind1": " ", "ind2": "5", "subfields":[
+              {"a": "Stockholm"}]
+            }
+          }
         },
         {
           "name": "Change i2=0 to blank (none of our 653s belongs to lcsh)",
@@ -22857,12 +22894,6 @@
       "NOTE:LC": "087 - Government Document Classification Number (R)",
       "ignored": true,
       "NOTE:record-count": 0
-    },
-    "094": {
-      "NOTE:LC": "09X - Local Call Numbers",
-      "NOTE:local": "OBSOLET",
-      "ignored": true,
-      "NOTE:record-count": 4
     },
 
     "100" : {

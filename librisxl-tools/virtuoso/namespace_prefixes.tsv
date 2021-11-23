@@ -15,4 +15,6 @@ sao https://id.kb.se/term/sao/
 sdo http://schema.org/
 skos    http://www.w3.org/2004/02/skos/core#
 void    http://rdfs.org/ns/void#
+wd  http://www.wikidata.org/entity/
+wdt http://www.wikidata.org/prop/direct/
 xsd http://www.w3.org/2001/XMLSchema#
