@@ -282,16 +282,16 @@ class WikidataEntity {
 
     List<RDFNode> getLcsh() {
         String queryString = """
-            SELECT ?fullId {
-                wd:${shortId} wdtn:${LC_AUTH} ?fullId ;
-                  wdt:${LC_AUTH} ?shortId .
+            SELECT ?id {
+                wd:${shortId} wdt:${LC_AUTH} ?shortId .
+                bind(iri(concat("http://id.loc.gov/authorities/subjects/", ?shortId)) as ?id)
                 FILTER(strstarts(?shortId, "sh"))
             }
         """
 
         ResultSet rs = QueryRunner.localSelectResult(queryString, graph)
 
-        return rs.collect { it.get("fullId") }
+        return rs.collect { it.get("id") }
     }
 
     List<RDFNode> getFast() {
