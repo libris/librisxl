@@ -728,7 +728,6 @@ class ESQuery {
      * e.g. minEx-x=1984&maxEx-x=1988&minEx-x=1993&min-x=2000&maxEx-x=1995
      * means 1984 < x < 1988 OR 1993 < x < 1995 OR x >= 2000
      */
-    @CompileDynamic // compiler doesn't get the collectMany construct below...
     Tuple2<Set<String>, List> makeRangeFilters(Map<String, String[]> queryParameters) {
         Map<String, Ranges> ranges = [:]
         Set<String> handledParameters = new HashSet<>()
@@ -741,7 +740,7 @@ class ESQuery {
                             : Ranges.nonDate(p, whelk) 
                 })
                 
-                values.collectMany{ it.tokenize(',') }.each { r.add(prefix, it.trim()) }
+                values.each { it.tokenize(',').each { r.add(prefix, it.trim()) } }
                 handledParameters.add(parameter)
             }
         }
