@@ -309,7 +309,8 @@ class XL {
             }
 
             def record = [
-                    'generationProcess': ['@id': 'https://libris.kb.se/api/_reproduction']
+                    'generationProcess': ['@id': 'https://libris.kb.se/api/_reproduction'],
+                    'derivedFrom'      : [['@id': instanceId]]
             ]
             
             def workId = create(record, work)
