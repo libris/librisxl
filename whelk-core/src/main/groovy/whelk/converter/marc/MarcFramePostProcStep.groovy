@@ -3,13 +3,15 @@ package whelk.converter.marc
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import groovy.util.logging.Log4j2 as Log
+import org.codehaus.jackson.map.ObjectMapper
 
 import whelk.JsonLd
 
 interface MarcFramePostProcStep {
-    def ID = '@id'
-    def TYPE = '@type'
+    def ID = JsonLd.ID_KEY
+    def TYPE = JsonLd.TYPE_KEY
     void setLd(JsonLd ld)
+    void setMapper(ObjectMapper mapper)
     void init()
     void modify(Map record, Map thing)
     void unmodify(Map record, Map thing)
@@ -21,6 +23,7 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
     String type
     Pattern matchValuePattern
     JsonLd ld
+    ObjectMapper mapper
 
     void setMatchValuePattern(String pattern) {
         matchValuePattern = Pattern.compile(pattern)
@@ -84,6 +87,7 @@ class CopyOnRevertStep implements MarcFramePostProcStep {
 
     String type
     JsonLd ld
+    ObjectMapper mapper
 
     String sourceLink
     String targetLink
@@ -137,8 +141,10 @@ class CopyOnRevertStep implements MarcFramePostProcStep {
 
 class MappedPropertyStep implements MarcFramePostProcStep {
 
-    JsonLd ld
     String type
+    JsonLd ld
+    ObjectMapper mapper
+
     String sourceEntity
     String sourceLink
     String sourceProperty
@@ -484,7 +490,9 @@ class InjectWhenMatchingOnRevertStep extends MarcFramePostProcStepBase {
         for (rule in rules) {
             def refs = [:]
             if (deepMatches(item, rule.matches, refs)) {
-                injectInto(item, rule.injectData, refs)
+                Map injectData = mapper.readValue(
+                        mapper.writeValueAsString(rule.injectData), SortedMap)
+                injectInto(item, injectData, refs)
                 break
             }
         }

@@ -222,6 +222,7 @@ class MarcConversion {
             throw new RuntimeException("Unknown postProcStep: ${stepDfn}")
         }
         procStep.ld = converter.ld
+        procStep.mapper = converter.mapper
         procStep.init()
         return procStep
     }
