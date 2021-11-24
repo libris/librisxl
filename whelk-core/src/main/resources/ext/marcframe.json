@@ -22946,6 +22946,12 @@
       "ignored": true,
       "NOTE:record-count": 0
     },
+    "094": {
+      "NOTE:LC": "09X - Local Call Numbers",
+      "NOTE:local": "OBSOLET",
+      "ignored": true,
+      "NOTE:record-count": 4
+    },
 
     "100" : {
       "match": [
