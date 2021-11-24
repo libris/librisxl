@@ -308,7 +308,11 @@ class XL {
                 }
             }
 
-            def workId = create([:], work)
+            def record = [
+                    'generationProcess': ['@id': 'https://libris.kb.se/api/_reproduction']
+            ]
+            
+            def workId = create(record, work)
             instance.instanceOf = ['@id': workId]
             try {
                 update(doc)
