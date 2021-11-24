@@ -64,7 +64,7 @@ public class AuthenticationFilter implements Filter {
             try {
                 String token = httpRequest.getHeader("Authorization");
                 if (token == null) {
-                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Invalid accesstoken, Token is: "+ null);
+                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "No access token (Authorization header) in request");
                     response_code = httpResponse.SC_UNAUTHORIZED;
                     return;
                 }
@@ -85,7 +85,7 @@ public class AuthenticationFilter implements Filter {
                     return;
                 }
                 if (message != null && message.toString().equals("Bearer token not found.")) {
-                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Missing access token.");
+                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Bad access token.");
                     response_code = httpResponse.SC_UNAUTHORIZED;
                     return;
                 }
