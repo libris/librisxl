@@ -205,7 +205,7 @@ class ReproductionService {
         electronicThing.instanceOf = ['@id' : xl.ensureExtractedWork(physicalThing['@id'] as String)]
         
         if (physicalThing.hasTitle) {
-            electronicThing.hasTitle = physicalThing.hasTitle.find { it['@type'] == 'Title' } ?: asList(physicalThing.hasTitle).first()
+            electronicThing.hasTitle = physicalThing.hasTitle
         }
         
         if (isOnline(electronicThing)) {
@@ -304,7 +304,7 @@ class XL {
             if (!work.hasTitle) {
                 def titles = asList(instance.hasTitle).findAll { it['@type'] == 'Title' }
                 if (titles) {
-                    work.hasTitle = titles
+                    work.hasTitle = titles.first() + [source: ['@id': instanceId]] 
                 }
             }
 
