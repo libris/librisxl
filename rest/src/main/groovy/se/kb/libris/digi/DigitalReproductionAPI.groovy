@@ -205,7 +205,7 @@ class ReproductionService {
         electronicThing.instanceOf = ['@id' : xl.ensureExtractedWork(physicalThing['@id'] as String)]
         
         if (physicalThing.hasTitle) {
-            electronicThing.hasTitle = physicalThing.hasTitle
+            electronicThing.hasTitle = physicalThing.hasTitle.find { it['@type'] == 'Title' } ?: asList(physicalThing.hasTitle).first()
         }
         
         if (isOnline(electronicThing)) {
