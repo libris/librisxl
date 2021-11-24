@@ -2457,11 +2457,30 @@
                 "@type": "Electronic",
                 "carrierType": [
                   {"@id": "https://id.kb.se/term/rda/OnlineResource"},
-                  {"@id": "https://id.kb.se/marc/OnlineResource"},
-                  {"@id": "https://id.kb.se/marc/Online"}
+                  {
+                    "@id": "https://id.kb.se/marc/OnlineResource",
+                    "@type": "CarrierType",
+                    "sameAs": [
+                      {"@id": "https://id.kb.se/marc/ComputerMaterialType-r"}
+                    ]
+                  },
+                  {
+                    "@id": "https://id.kb.se/marc/Online",
+                    "sameAs": [
+                      {"@id": "https://id.kb.se/marc/ItemType-o"},
+                      {"@id": "https://id.kb.se/marc/BooksItemType-o"},
+                      {"@id": "https://id.kb.se/marc/ComputerItemType-o"},
+                      {"@id": "https://id.kb.se/marc/SerialsOriginalItemType-o"}
+                    ]
+                  }
                 ],
                 "mediaType": [
-                  {"@id": "https://id.kb.se/term/rda/Computer"}
+                  {
+                    "@id": "https://id.kb.se/term/rda/Computer",
+                    "@type": "MediaType",
+                    "code": "c",
+                    "prefLabelByLang": {"sv": "dator"}
+                  }
                 ]
               }
             }
@@ -2487,11 +2506,24 @@
                 "carrierType": [
                   {"@id": "https://id.kb.se/term/rda/OnlineResource"},
                   {"@id": "https://id.kb.se/marc/OnlineResource"},
-                  {"@id": "https://id.kb.se/marc/Online"}
+                  {
+                    "@id": "https://id.kb.se/marc/Online",
+                    "sameAs": [
+                      {"@id": "https://id.kb.se/marc/ItemType-o"},
+                      {"@id": "https://id.kb.se/marc/BooksItemType-o"},
+                      {"@id": "https://id.kb.se/marc/ComputerItemType-o"},
+                      {"@id": "https://id.kb.se/marc/SerialsOriginalItemType-o"}
+                    ]
+                  }
                 ],
                 "mediaType": [
                   {"@id": "https://id.kb.se/term/rda/Unmediated"},
-                  {"@id": "https://id.kb.se/term/rda/Computer"}
+                  {
+                    "@id": "https://id.kb.se/term/rda/Computer",
+                    "@type": "MediaType",
+                    "code": "c",
+                    "prefLabelByLang": {"sv": "dator"}
+                  }
                 ]
               }
             }
