@@ -8,9 +8,10 @@ String getMainEntityId(doc) { doc.graph[0].mainEntity[ID] }
 
 Map ref(id) { [(ID): id] }
 
-DocumentItem createFromMainEntity(main, entity, recordDetails=null) {
+DocumentItem createFromMainEntity(script, entity, recordDetails=null) {
     def id = "TEMPID"
     entity[ID] = "${id}#it"
+
     def record = [
         (ID): id,
         (TYPE): 'Record',
@@ -19,30 +20,48 @@ DocumentItem createFromMainEntity(main, entity, recordDetails=null) {
     if (recordDetails) {
         record += recordDetails
     }
-    doc = main.create([(GRAPH): [record, entity]])
-    return doc
+
+    return script.create([(GRAPH): [record, entity]])
 }
 
-DocumentItem extractWork(main, doc) {
+DocumentItem extractWork(script, doc) {
+    def record = doc.graph[0]
     def instance = doc.graph[1]
-    def workDoc = createFromMainEntity(main, instance.instanceOf)
-    instance.instanceOf = [(ID): workDoc.graph[0].mainEntity[ID]]
-    doc.scheduleSave()
-    return workDoc
+    def work = instance.instanceOf
+
+    if (!work.containsKey('hasTitle')) {
+        def title = instance.hasTitle?.find { it[TYPE] == 'Title' }
+        if (title) {
+            title = title.clone()
+            title.source = [ ref(instance[ID]) ]
+            work.hasTitle = [ title ]
+        }
+    }
+
+    def recordDetails = [
+      derivedFrom: ref(record[ID])
+    ]
+    return createFromMainEntity(script, work, recordDetails)
 }
 
-void createDigitalRepresentation(Script main, DocumentItem originalDoc, Map params) {
+void createDigitalRepresentation(Script script, DocumentItem originalDoc, Map params) {
     def newlyCreated = []
 
-    def workDoc = extractWork(main, originalDoc)
-    newlyCreated << workDoc
+    def original = originalDoc.graph[1]
+
+    if (!original.instanceOf.containsKey(ID)) {
+        def workDoc = extractWork(script, originalDoc)
+        original.instanceOf = ref(getMainEntityId(workDoc))
+        originalDoc.scheduleSave()
+        newlyCreated << workDoc
+    }
 
     def digital = [
       (TYPE): 'Electronic',
       issuanceType: 'Monograph',
       carrierType: [ ref('https://id.kb.se/term/rda/OnlineResource') ],
       genreForm: params.genreForm,
-      instanceOf: ref(getMainEntityId(workDoc)),
+      instanceOf: ref(original.instanceOf[ID]),
       reproductionOf: ref(getMainEntityId(originalDoc)),
       production: [
           [
@@ -54,8 +73,6 @@ void createDigitalRepresentation(Script main, DocumentItem originalDoc, Map para
           ]
       ],
     ]
-
-    def original = originalDoc.graph[1]
 
     if (original.hasTitle) {
         digital.hasTitle = original.hasTitle
@@ -89,7 +106,7 @@ void createDigitalRepresentation(Script main, DocumentItem originalDoc, Map para
       ]
     }
 
-    def digiDoc = createFromMainEntity(main, digital, recordDetails)
+    def digiDoc = createFromMainEntity(script, digital, recordDetails)
     newlyCreated << digiDoc
 
     if (params.heldById) {
@@ -102,11 +119,11 @@ void createDigitalRepresentation(Script main, DocumentItem originalDoc, Map para
         if (params.holdingNote) {
             holdRecordDetails.cataloguersNote = [ params.holdingNote ]
         }
-        def itemDoc = createFromMainEntity(main, item, holdRecordDetails)
+        def itemDoc = createFromMainEntity(script, item, holdRecordDetails)
         newlyCreated << itemDoc
     }
 
-    main.selectFromIterable(newlyCreated) { doc ->
+    script.selectFromIterable(newlyCreated) { doc ->
         doc.scheduleSave()
     }
 }
