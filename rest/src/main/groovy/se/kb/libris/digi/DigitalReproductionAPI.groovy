@@ -302,9 +302,9 @@ class XL {
             }
 
             if (!work.hasTitle) {
-                def titles = asList(instance.hasTitle).findAll { it['@type'] == 'Title' }
-                if (titles) {
-                    work.hasTitle = titles.first() + [source: [['@id': instanceId]]] 
+                def title = asList(instance.hasTitle).find { it['@type'] == 'Title' }
+                if (title) {
+                    work.hasTitle = title + [source: [['@id': instanceId]]] 
                 }
             }
 
