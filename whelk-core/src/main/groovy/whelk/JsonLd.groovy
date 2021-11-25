@@ -852,7 +852,10 @@ class JsonLd {
         }
 
         if (!lens) {
-            throw new FresnelException("No suitable lens found for ${thing.get(ID_KEY)}, tried: ${lensesToTry}")
+            String id = (String) thing.get(ID_KEY)
+            log.warn('applyLensAsMapByLang() No lens found for {}, tried {}', id, lensesToTry)
+            String fallback = id.split('/').last()
+            return languagesToKeep.collectEntries{ [(it) : fallback] }
         }
 
         // Transform the list of language/property value pairs to a map
