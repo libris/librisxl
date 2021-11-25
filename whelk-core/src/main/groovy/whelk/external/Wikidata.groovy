@@ -9,6 +9,7 @@ import org.apache.jena.rdf.model.RDFNode
 import whelk.component.ElasticSearch
 import whelk.exception.WhelkRuntimeException
 import whelk.util.Metrics
+import groovy.util.logging.Log4j2 as Log
 
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -18,14 +19,22 @@ import java.time.Duration
 
 import static whelk.util.Jackson.mapper
 
+@Log
 class Wikidata implements Mapper {
+    Map<String, String> countryMap
+    
+    Wikidata(Map<String, String> countryMap) {
+        this.countryMap = countryMap
+        log.info("Initialized with ${countryMap.size()} country mappings")
+    }
+    
     @Override
     Optional<Map> getThing(String iri) {
         if (!isWikidata(iri)) {
             return Optional.empty()
         }
 
-        WikidataEntity wdEntity = new WikidataEntity(iri)
+        WikidataEntity wdEntity = new WikidataEntity(iri, countryMap)
 
         return Optional.ofNullable(wdEntity.convert())
     }
@@ -128,7 +137,9 @@ class WikidataEntity {
     String entityIri
     String shortId
 
-    WikidataEntity(String iri) {
+    Map<String, String> countryMap
+    
+    WikidataEntity(String iri, Map<String, String> countryMap) {
         try {
             graph = ModelFactory.createDefaultModel()
             this.shortId = getShortId(iri)
@@ -138,6 +149,7 @@ class WikidataEntity {
         catch (ExceptionInInitializerError e) {
             e.printStackTrace()
         }
+        this.countryMap = countryMap
     }
 
     private void loadGraph() {
@@ -175,11 +187,11 @@ class WikidataEntity {
 
         List country = getCountry().findAll { it.toString() != entityIri }
         if (!country.isEmpty())
-            place['country'] = country.collect { ['@id': it.toString()] }
+            place['country'] = country.collect { ['@id': replaceIfCountry(it.toString())] }
 
         List locatedIn = getLocatedIn() - country
         if (!locatedIn.isEmpty())
-            place['locatedIn'] = locatedIn.collect { ['@id': it.toString()] }
+            place['locatedIn'] = locatedIn.collect { ['@id': replaceIfCountry(it.toString())] }
 
         List ddc = getDdc().collect { code, edition ->
             Map bNode =
@@ -212,6 +224,10 @@ class WikidataEntity {
             place['exactMatch'] = identifiers.collect { ['@id': it.toString()] }
 
         return place
+    }
+    
+    String replaceIfCountry(String id) {
+        return countryMap.get(id, id)
     }
 
     Map convertPerson() {

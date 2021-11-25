@@ -63,7 +63,7 @@ class Whelk {
     RomanizationStep.LanguageResources languageResources 
     ElasticFind elasticFind
     Relations relations
-    ExternalEntities external = new ExternalEntities()
+    ExternalEntities external
     DocumentNormalizer normalizer
     Romanizer romanizer
 
@@ -222,6 +222,7 @@ class Whelk {
             elasticFind = new ElasticFind(new ESQuery(this))
             initDocumentNormalizers(elasticFind)
         }
+        external = new ExternalEntities(this)
     }
 
     // FIXME: de-KBV/Libris-ify: some of these are KBV specific, is that a problem?
