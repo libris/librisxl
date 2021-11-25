@@ -6,15 +6,15 @@ import com.google.common.cache.LoadingCache
 import whelk.Document
 import whelk.IdGenerator
 import whelk.JsonLd
+import whelk.Whelk
 import whelk.util.Metrics
 
 class ExternalEntities {
-    private static final List<Mapper> mappers = [
-            new Wikidata(),
-    ]
+    private final List<Mapper> mappers
 
     private static final int CACHE_SIZE = 10_000
-
+    private final Set<String> bannedImports
+    
     private LoadingCache<String, Optional<Document>> cache = CacheBuilder.newBuilder()
             .maximumSize(CACHE_SIZE)
             .recordStats()
@@ -25,9 +25,16 @@ class ExternalEntities {
                 }
             })
 
-    ExternalEntities() {
+    ExternalEntities(Whelk whelk) {
+        Map countryMappings = loadCountryMappings(whelk)
+        mappers = [
+                new Wikidata(countryMappings),
+        ]
+        bannedImports = Collections.unmodifiableSet(countryMappings.keySet())
+        
         Metrics.cacheMetrics.addCache('external-entities', cache)
     }
+    
     Optional<Document> get(String iri) {
         if (mappers.any { it.mightHandle(iri) }) {
             cache.get(iri).map{ it.clone() }
@@ -44,8 +51,12 @@ class ExternalEntities {
             doc
         }
     }
+    
+    Set<String> getBannedImports() {
+        return bannedImports
+    }
 
-    private static Optional<Document> getInternal(String iri) {
+    private Optional<Document> getInternal(String iri) {
         Document d = mappers.findResult { mapper ->
             mapper.getThing(iri).map{ document(it, JsonLd.CACHE_RECORD_TYPE, mapper.datasetId()) }.orElse(null)
         }
@@ -79,5 +90,26 @@ class ExternalEntities {
                         thing
                 ]
         ])
+    }
+    
+    private static Map<String, String> loadCountryMappings(Whelk whelk) {
+        if (!whelk.elasticFind) {
+            return [:]
+        }
+
+        def query = [
+                (JsonLd.TYPE_KEY): ['Country'],
+                "q"              : ["*"],
+                '_sort'          : [JsonLd.ID_KEY]
+        ]
+        
+        Map<String, String> result = [:]
+        def recordIds = whelk.elasticFind.findIds(query).collect{ whelk.baseUri.toString() + it }
+        whelk.bulkLoad(recordIds).collect { id, doc ->
+            JsonLd.asList(doc.getThing()['exactMatch']).each { match -> 
+                result[(String) match[JsonLd.ID_KEY]] = doc.getThingIdentifiers().first() 
+            }
+        }
+        return result
     }
 }

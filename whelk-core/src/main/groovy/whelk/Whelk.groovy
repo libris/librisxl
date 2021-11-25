@@ -42,7 +42,7 @@ class Whelk {
     JsonLd jsonld
     MarcFrameConverter marcFrameConverter
     Relations relations
-    ExternalEntities external = new ExternalEntities()
+    ExternalEntities external
     DocumentNormalizer normalizer
     ElasticFind elasticFind
     ZoneId timezone = ZoneId.of('Europe/Stockholm')
@@ -133,6 +133,7 @@ class Whelk {
             elasticFind = new ElasticFind(new ESQuery(this))
             initDocumentNormalizers()
         }
+        external = new ExternalEntities(this)
     }
     
     private void initDocumentNormalizers() {

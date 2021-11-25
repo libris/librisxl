@@ -64,6 +64,8 @@ class ExternalEntitiesSearchAPI extends HttpServlet {
         def typeFilter = typeFilter(types)
 
         def uris = Wikidata.query(q, languageTag, 5)
+        uris.removeAll(whelk.external.getBannedImports())
+        
         def inWhelk = whelk.getCards(uris)
         
         uris
