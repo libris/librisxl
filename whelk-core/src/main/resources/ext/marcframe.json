@@ -2066,11 +2066,11 @@
             "mainTitle",
             {
               "property": "partNumber",
-              "useValueFormat": {"contentBefore": ", "}
+              "useValueFormat": {"contentBefore": ", ", "contentNoValue": ""}
             },
             {
               "property": "partName",
-              "useValueFormat": {"contentBefore": ". "}
+              "useValueFormat": {"contentBefore": ". ", "contentNoValue": ""}
             }
           ]
         },
@@ -2248,13 +2248,19 @@
         "produceMissing": {
           "produceProperty": "marc:publicNote",
           "showProperties": [
-            {"property": ["usageAndAccessPolicy", "label"]},
+            {
+              "property": ["usageAndAccessPolicy", "label"],
+              "useValueFormat": {
+                "contentNoValue": "Tillgänglig"
+              }
+            },
             {
               "property": ["publisher", "name"],
               "useValueFormat": {
                 "contentFirst": " via ",
                 "contentAfter": " och ",
-                "contentLast": ""
+                "contentLast": "",
+                "contentNoValue": ""
               }
             }
           ]
@@ -2266,9 +2272,88 @@
                 "associatedMedia": [
                   {
                     "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"]
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
                     "uri": ["http://example.com/doc.pdf"],
                     "usageAndAccessPolicy": [
                       {"label": "Fritt tillgänglig"}
+                    ]
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "marc:publicNote": "Fritt tillgänglig",
+                    "usageAndAccessPolicy": [
+                      {"label": "Fritt tillgänglig"}
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "publisher": {"name": "Kungliga biblioteket"}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "marc:publicNote": "Tillgänglig via Kungliga biblioteket",
+                    "publisher": {"name": "Kungliga biblioteket"}
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "usageAndAccessPolicy": [
+                      {"prefLabelByLang": {"sv": "Fritt tillgänglig"}}
                     ],
                     "publisher": [
                       {"name": "Kungliga biblioteket"},
@@ -2287,7 +2372,7 @@
                     "uri": ["http://example.com/doc.pdf"],
                     "marc:publicNote": "Fritt tillgänglig via Kungliga biblioteket och Umeå universitetsbibliotek",
                     "usageAndAccessPolicy": [
-                      {"label": "Fritt tillgänglig"}
+                      {"prefLabelByLang": {"sv": "Fritt tillgänglig"}}
                     ],
                     "publisher": [
                       {"name": "Kungliga biblioteket"},

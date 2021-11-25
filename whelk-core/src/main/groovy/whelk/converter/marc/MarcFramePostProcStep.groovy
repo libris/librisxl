@@ -31,24 +31,59 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
 
     void init() { }
 
-    static def findValue(source, List path) {
+    def findValue(source, List path) {
         if (!source || !path) {
             return source
         }
+
+        def key = path[0]
+        def object
+        if (ld == null) {
+            object = source[key]
+        } else {
+            object = getValue(source, key)
+        }
+
         def pathrest = path.size() > 1 ? path[1..-1] : null
-        return findValue(source[path[0]], pathrest)
+
+        return findValue(object, pathrest)
     }
 
-    static String buildString(Map node, List showProperties) {
+    def getValue(source, key) {
+        if (source instanceof List) {
+            if (key instanceof Integer) {
+                return source[key]
+            }
+            return source.collect { getValue(it, key) }
+        }
+
+        if (source instanceof Map) {
+            def value = ld.getPropertyValue(source, key)
+            if (!value) {
+                value = ld.getSubProperties(key).findResult {
+                    ld.getPropertyValue(source, (String) it)
+                }
+            }
+            return value
+        }
+
+        return source // don't attempt to index potential primitives
+    }
+
+    String buildString(Map node, List showProperties) {
         def result = ""
+        int shown = 0
+        int padded = 0
+
         for (prop in showProperties) {
             def fmt = null
             if (prop instanceof Map) {
                 fmt = prop.useValueFormat
                 prop = prop.property
             }
-            def value = prop instanceof List ? findValue(node, prop) : node[prop]
+            def value = prop instanceof List ? findValue(node, prop) : getValue(node, prop)
             if (value) {
+                shown++
                 if (!(value instanceof List)) {
                     value = [value]
                 }
@@ -74,9 +109,15 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
                     result += prevAfter
                 }
             } else if (fmt?.contentNoValue != null) {
+                padded++
                 result += fmt.contentNoValue
             }
         }
+
+        if (shown == 0 || shown + padded < showProperties.size()) {
+            return null
+        }
+
         return result
     }
 
