@@ -76,6 +76,8 @@ EOF
 
 @Log
 class DigitalReproductionAPI extends HttpServlet {
+    static final String API_LOCATION = 'https://libris.kb.se/api/_reproduction' // Only for setting generationProcess 
+    
     private static final ObjectMapper mapper = new ObjectMapper()
 
     private static final def FORWARD_HEADERS = [
@@ -309,7 +311,7 @@ class XL {
             }
 
             def record = [
-                    'generationProcess': ['@id': 'https://libris.kb.se/api/_reproduction'],
+                    'generationProcess': ['@id': DigitalReproductionAPI.API_LOCATION],
                     'derivedFrom'      : [['@id': instanceId]]
             ]
             
