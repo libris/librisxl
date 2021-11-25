@@ -177,9 +177,9 @@ class WikidataEntity {
         if (!country.isEmpty())
             place['country'] = country.collect { ['@id': it.toString()] }
 
-        List partOf = getLocatedIn() - country
-        if (!partOf.isEmpty())
-            place['isPartOf'] = partOf.collect { ['@id': it.toString()] }
+        List locatedIn = getLocatedIn() - country
+        if (!locatedIn.isEmpty())
+            place['locatedIn'] = locatedIn.collect { ['@id': it.toString()] }
 
         List ddc = getDdc().collect { code, edition ->
             Map bNode =
