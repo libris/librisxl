@@ -4,8 +4,6 @@
 
   "keepGroupIds": false,
 
-  "locale": "sv",
-
   "TODO:s": [
     "addLink:identifiedBy (+ NOTE:marc-repeatable: false where link)"
   ],

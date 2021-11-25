@@ -140,7 +140,6 @@ class MarcConversion {
     Map marcTypeMap = [:]
     Map tokenMaps
     Map defaultPunctuation
-    String locale
 
     private Set missingTerms = [] as Set
     private Set badRepeats = [] as Set
@@ -152,7 +151,6 @@ class MarcConversion {
         this.tokenMaps = tokenMaps
         this.converter = converter
         //this.baseUri = new URI(config.baseUri ?: '/')
-        this.locale = config.locale
         this.keepGroupIds = config.keepGroupIds == true
 
         this.sharedPostProcSteps = config.postProcessing.collect {
@@ -2884,7 +2882,7 @@ class MarcSubFieldHandler extends ConversionPart {
 
             String entityId = entity['@id']
 
-            def propertyValue = getPropertyValue(entity, property)
+            def propertyValue = ld ? ld.getPropertyValue(entity, property) : entity[property]
 
             if (ignoreOnRevert) {
                 continue
@@ -2906,7 +2904,7 @@ class MarcSubFieldHandler extends ConversionPart {
 
             if (propertyValue == null && infer) {
                 for (subProp in ld.getSubProperties(property)) {
-                    propertyValue = getPropertyValue(entity, subProp)
+                    propertyValue = ld.getPropertyValue(entity, subProp)
                     if (propertyValue)
                         break
                 }
@@ -2998,18 +2996,6 @@ class MarcSubFieldHandler extends ConversionPart {
             return null
         else
             return values
-    }
-
-    def getPropertyValue(Map entity, String property) {
-        def propertyValue = property ? entity[property] : null
-        if (propertyValue == null) {
-            def alias = ld ? ld.langContainerAlias[property] : null
-            propertyValue = alias ? entity[alias] : null
-            if (propertyValue instanceof Map) {
-                propertyValue = propertyValue[ruleSet.conversion.locale]
-            }
-        }
-        return propertyValue
     }
 }
 

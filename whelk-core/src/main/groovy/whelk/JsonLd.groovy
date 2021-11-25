@@ -260,6 +260,18 @@ class JsonLd {
         return dfn instanceof Map && dfn[CONTAINER_KEY] == LANGUAGE_KEY
     }
 
+    def getPropertyValue(Map entity, String property) {
+        def propertyValue = property ? entity[property] : null
+        if (propertyValue == null) {
+            def alias = langContainerAlias[property]
+            propertyValue = alias ? entity[alias] : null
+            if (propertyValue instanceof Map) {
+                propertyValue = locales.findResult { propertyValue[it] }
+            }
+        }
+        return propertyValue
+    }
+
     String toTermKey(String termId) {
         Integer splitPos = NS_SEPARATORS.findResult {
             int idx = termId.lastIndexOf(it)
