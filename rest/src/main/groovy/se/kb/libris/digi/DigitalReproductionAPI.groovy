@@ -76,6 +76,8 @@ EOF
 
 @Log
 class DigitalReproductionAPI extends HttpServlet {
+    static final String API_LOCATION = 'https://libris.kb.se/api/_reproduction' // Only for setting generationProcess 
+    
     private static final ObjectMapper mapper = new ObjectMapper()
 
     private static final def FORWARD_HEADERS = [
@@ -302,13 +304,18 @@ class XL {
             }
 
             if (!work.hasTitle) {
-                def titles = asList(instance.hasTitle).findAll { it['@type'] == 'Title' }
-                if (titles) {
-                    work.hasTitle = titles.first() + [source: [['@id': instanceId]]] 
+                def title = asList(instance.hasTitle).find { it['@type'] == 'Title' }
+                if (title) {
+                    work.hasTitle = [ title + [source: [['@id': instanceId]]] ] 
                 }
             }
 
-            def workId = create([:], work)
+            def record = [
+                    'generationProcess': ['@id': DigitalReproductionAPI.API_LOCATION],
+                    'derivedFrom'      : [['@id': instanceId]]
+            ]
+            
+            def workId = create(record, work)
             instance.instanceOf = ['@id': workId]
             try {
                 update(doc)
