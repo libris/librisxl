@@ -729,12 +729,12 @@ class ESQuery {
      * means 1984 < x < 1988 OR 1993 < x < 1995 OR x >= 2000
      */
     Tuple2<Set<String>, List> makeRangeFilters(Map<String, String[]> queryParameters) {
-        Map<String, Ranges> ranges = [:]
+        Map<String, Ranges> parameterToRanges = [:]
         Set<String> handledParameters = new HashSet<>()
 
         queryParameters.each { parameter, values ->
-            parseRangeParameter(parameter) { String nameNoPrefix, RangeParameterPrefix prefix ->
-                Ranges r = ranges.computeIfAbsent(nameNoPrefix, { p -> 
+            parseRangeParameter(parameter) { String parameterNoPrefix, RangeParameterPrefix prefix ->
+                Ranges r = parameterToRanges.computeIfAbsent(parameterNoPrefix, { p ->
                     p in dateFields 
                             ? Ranges.date(p, whelk.getTimezone(), whelk) 
                             : Ranges.nonDate(p, whelk) 
@@ -745,7 +745,9 @@ class ESQuery {
             }
         }
 
-        return new Tuple2(handledParameters, ranges.values().collect { it.toQuery() })
+        def filters = parameterToRanges.values().collect { it.toQuery() }
+
+        return new Tuple2(handledParameters, filters)
     }
 
     private static void parseRangeParameter (String parameter, Closure handler) {
