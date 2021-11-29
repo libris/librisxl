@@ -2273,6 +2273,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         // If this overproduces, it's because _revertedBy fails to prevent it.
         for (rule in matchRules) {
             def matchres = rule.handler.revert(state, data, result, usedMatchRules + [rule])
+            if (rule.handler.ignored && matchres) {
+                return null
+            }
+
             if (matchres) {
                 matchedResults += matchres
             }
