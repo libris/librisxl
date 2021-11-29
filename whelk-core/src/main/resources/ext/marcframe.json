@@ -9859,6 +9859,14 @@
       "match": [
         {
           "when": {
+            "NOTE": "Ignore title with source",
+            "IMPORTANT": "As this is defined, *any* title with source blocks *all* titles from reverting to 240. This is OK as things stand, since titles using source are only added if there is no formal title on the work.",
+            "onRevert": {"hasTitle": [{"source": []}]}
+          },
+          "ignored": true
+        },
+        {
+          "when": {
             "NOTE": "Drop undefined language label",
             "onRevert": {"language": {"@id": "https://id.kb.se/language/und"}}
           },
@@ -10215,6 +10223,23 @@
               }
             }
           }
+        },
+        {
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "En bok",
+                "subtitle": "med undertitel",
+                "source": [
+                  {"@id": "https://libris.kb.se/x#it"}
+                ]
+              }]
+            }
+          }},
+          "normalized": [
+          ]
         }
       ]
     },
