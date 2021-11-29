@@ -92,7 +92,8 @@ class DigitalReproductionAPI extends HttpServlet {
         def service = new ReproductionService(xl : new XL(headers : forwardHeaders, apiLocation: getXlAPI(request)))
 
         try {
-            String id = service.createDigitalReproduction(parse(request))
+            boolean extractWork = !Boolean.parseBoolean(request.getHeader("x-dont-extract-work"))
+            String id = service.createDigitalReproduction(parse(request), extractWork)
             log.info("Created $id")
             response.setHeader('Location', id)
             response.setStatus(SC_CREATED)
@@ -184,7 +185,7 @@ class ReproductionService {
 
     XL xl
     
-    String createDigitalReproduction(Map electronicThing) {
+    String createDigitalReproduction(Map electronicThing, boolean extractWork) {
         String requestedId = electronicThing.reproductionOf['@id'] as String
         Map physicalThing = xl.get(requestedId)
                 .map{ it.data['@graph'][1] as Map }
@@ -202,7 +203,9 @@ class ReproductionService {
         
         electronicThing.reproductionOf['@id'] = physicalThing['@id'] // if link was to sameAs
         
-        electronicThing.instanceOf = ['@id' : xl.ensureExtractedWork(physicalThing['@id'] as String)]
+        electronicThing.instanceOf = extractWork 
+                ? ['@id' : xl.ensureExtractedWork(physicalThing['@id'] as String)] 
+                : physicalThing.instanceOf
         
         if (physicalThing.hasTitle) {
             electronicThing.hasTitle = physicalThing.hasTitle
