@@ -96,21 +96,21 @@ class ExternalEntitiesSearchAPI extends HttpServlet {
     }
 
     List selectExternal(String iri, Collection<String> types) {
-        def typeFilter = typeFilter(types)
+        def theTypeFilter = typeFilter(types)
         
         def inWhelk = whelk.getCards([iri])
         if (inWhelk[iri]) {
-            return whelkResult(inWhelk[iri], typeFilter)
+            return whelkResult(inWhelk[iri], theTypeFilter)
         }
 
         return whelk.external.getEphemeral(iri).map ({ doc ->
             def extId = doc.getThingIdentifiers().first()
             inWhelk = whelk.getCards([extId])
             if (inWhelk[extId]) { // iri was an alias/sameAs
-                return whelkResult(inWhelk[extId], typeFilter)
+                return whelkResult(inWhelk[extId], theTypeFilter)
             }
             
-            if (typeFilter(types).test(doc)) {
+            if (theTypeFilter.test(doc)) {
                 whelk.embellish(doc)
                 [JsonLd.frame(doc.getThingIdentifiers().first(), doc.data)]
             } else {
