@@ -2621,9 +2621,15 @@
           "extent",
           {
             "from": "identifiedBy",
-            "to": "indirectlyIdentifiedBy"
+            "to": "indirectlyIdentifiedBy",
+            "injectOnCopies": {
+              "qualifier": "[originalversion]"
+            }
           }
         ],
+        "injectOnCopies": {
+          "appliesTo": {"label": "[originalversion]"}
+        },
         "_spec": [
           {
             "name":  "Copy data from the original of a reproduction",
@@ -2637,8 +2643,10 @@
                         "year": "1773"
                       }
                     ],
-                    "extent": [{"@type": "Extent", "label": ["259 s."]}],
-                    "identifiedBy": {"@type": "ISBN", "value": "00-0-000000-0"}
+                    "extent": {"@type": "Extent", "label": ["259 s."]},
+                    "identifiedBy": [
+                      {"@type": "ISBN", "value": "00-0-000000-0"}
+                    ]
                   }
                 ]
               }
@@ -2661,11 +2669,14 @@
                 "publication": [
                   {
                     "@type": "Publication",
-                    "year": "1773"
+                    "year": "1773",
+                    "appliesTo": {"label": "[originalversion]"}
                   }
                 ],
-                "extent": [{"@type": "Extent", "label": ["259 s."]}],
-                "indirectlyIdentifiedBy": {"@type": "ISBN", "value": "00-0-000000-0"}
+                "extent": {"@type": "Extent", "label": ["259 s."], "appliesTo": {"label": "[originalversion]"}},
+                "indirectlyIdentifiedBy": [
+                  {"@type": "ISBN", "value": "00-0-000000-0", "qualifier": "[originalversion]"}
+                ]
               }
             }
           }

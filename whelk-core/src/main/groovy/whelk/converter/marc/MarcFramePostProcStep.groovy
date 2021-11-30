@@ -121,18 +121,18 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
         return result
     }
 
+    Map jsonClone(Map data) {
+        return mapper.readValue(mapper.writeValueAsString(data), SortedMap)
+    }
 }
 
 
-class CopyOnRevertStep implements MarcFramePostProcStep {
-
-    String type
-    JsonLd ld
-    ObjectMapper mapper
+class CopyOnRevertStep extends MarcFramePostProcStepBase {
 
     String sourceLink
     String targetLink
     List<FromToProperty> copyIfMissing
+    Map injectOnCopies
 
     void setCopyIfMissing(List<Object> copyIfMissing) {
         this.copyIfMissing = copyIfMissing.collect {
@@ -166,7 +166,23 @@ class CopyOnRevertStep implements MarcFramePostProcStep {
             for (prop in copyIfMissing) {
                 for (item in source) {
                     if (!target.containsKey(prop.to) && item.containsKey(prop.from)) {
-                        target[prop.to] = item[prop.from]
+                        def src = item[prop.from]
+                        def copy = src instanceof List ?
+                            src.collect { jsonClone(it) } :
+                            jsonClone((Map) src)
+
+                        Map inject = prop.injectOnCopies ?: this.injectOnCopies
+                        if (inject) {
+                            Map injectCopy = jsonClone(inject)
+                            if (copy instanceof Map) {
+                                copy.putAll(injectCopy)
+                            } else if (copy instanceof List) {
+                                copy.each {
+                                    if (it instanceof Map) it.putAll(injectCopy)
+                                }
+                            }
+                        }
+                        target[prop.to] = copy
                     }
                 }
             }
@@ -176,6 +192,7 @@ class CopyOnRevertStep implements MarcFramePostProcStep {
     class FromToProperty {
         String from
         String to
+        Map injectOnCopies
     }
 }
 
@@ -531,8 +548,7 @@ class InjectWhenMatchingOnRevertStep extends MarcFramePostProcStepBase {
         for (rule in rules) {
             def refs = [:]
             if (deepMatches(item, rule.matches, refs)) {
-                Map injectData = mapper.readValue(
-                        mapper.writeValueAsString(rule.injectData), SortedMap)
+                Map injectData = jsonClone(rule.injectData)
                 injectInto(item, injectData, refs)
                 break
             }
