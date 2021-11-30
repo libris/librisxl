@@ -107,6 +107,7 @@ class WikidataEntity {
     static final String FAST = "P2163"
     static final String FREEBASE = "P646"
     static final String GEONAMES = "P1566"
+    static final String GETTY = "P1667"
     static final String INSTANCE_OF = "P31"
     static final String LC_AUTH = "P244"
     static final String LOCATED_IN = "P131" // located in the administrative territorial entity
@@ -213,7 +214,11 @@ class WikidataEntity {
             ['@id': it.toString()]
         }
 
-        List closeMatches = ddc + lcsh + fast
+        List getty = getGetty().collect {
+            ['@id': it.toString()]
+        }
+
+        List closeMatches = ddc + lcsh + fast + getty
 
         if (closeMatches) {
             place['closeMatch'] = closeMatches
@@ -320,6 +325,18 @@ class WikidataEntity {
         ResultSet rs = QueryRunner.localSelectResult(queryString, graph)
 
         return rs.collect { it.get("fastId") }
+    }
+
+    List<RDFNode> getGetty() {
+        String queryString = """
+            SELECT ?fastId {
+                wd:${shortId} wdtn:${GETTY} ?gettyId ;
+            }
+        """
+
+        ResultSet rs = QueryRunner.localSelectResult(queryString, graph)
+
+        return rs.collect { it.get("gettyId") }
     }
 
     List<RDFNode> getPlaceIdentifiers() {
