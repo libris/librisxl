@@ -2619,7 +2619,6 @@
         "copyIfMissing": [
           "publication",
           "extent",
-          "hasDimensions",
           {
             "from": "identifiedBy",
             "to": "indirectlyIdentifiedBy"
@@ -2639,7 +2638,6 @@
                       }
                     ],
                     "extent": [{"@type": "Extent", "label": ["259 s."]}],
-                    "hasDimensions": [{"@type": "Dimensions", "label": "24 cm."}],
                     "identifiedBy": {"@type": "ISBN", "value": "00-0-000000-0"}
                   }
                 ]
@@ -2657,7 +2655,6 @@
                       }
                     ],
                     "extent": [{"@type": "Extent", "label": ["259 s."]}],
-                    "hasDimensions": [{"@type": "Dimensions", "label": "24 cm."}],
                     "identifiedBy": {"@type": "ISBN", "value": "00-0-000000-0"}
                   }
                 ],
@@ -2668,7 +2665,6 @@
                   }
                 ],
                 "extent": [{"@type": "Extent", "label": ["259 s."]}],
-                "hasDimensions": [{"@type": "Dimensions", "label": "24 cm."}],
                 "indirectlyIdentifiedBy": {"@type": "ISBN", "value": "00-0-000000-0"}
               }
             }
