@@ -92,7 +92,7 @@ class DigitalReproductionAPI extends HttpServlet {
         def service = new ReproductionService(xl : new XL(headers : forwardHeaders, apiLocation: getXlAPI(request)))
 
         try {
-            boolean extractWork = !Boolean.parseBoolean(request.getHeader("x-dont-extract-work"))
+            boolean extractWork = !Boolean.parseBoolean(request.getParameter("dont-extract-work"))
             String id = service.createDigitalReproduction(parse(request), extractWork)
             log.info("Created $id")
             response.setHeader('Location', id)
