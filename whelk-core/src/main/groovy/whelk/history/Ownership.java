@@ -61,14 +61,17 @@ public class Ownership {
         return sb.toString();
     }
 
+    public static String getSystemChangeDescription(String changedBy, String changedIn) {
+        if (changedBy != null && changedIn != null && changedIn.equals("APIX")) {
+            return "APIX (" + changedBy + ")";
+        } else if (changedBy != null && changedIn != null && changedIn.equals("batch import")) {
+            return "Metadatatratten (" + changedBy + ")";
+        }
+        return "Scripted (XL administrative)";
+    }
+
     private void setSystemChangeDescription(String changedBy, String changedIn) {
         m_systematicEditor = changedBy;
-        if (changedBy != null && changedBy.endsWith(".groovy")) {
-            m_systematicEditorComment = "scripted";
-        } else if (changedBy != null && changedIn != null && changedIn.equals("APIX")) {
-            m_systematicEditorComment = "apix";
-        } else if (changedBy != null && changedIn != null && changedIn.equals("batch import")) {
-            m_systematicEditorComment = "metadatatratten";
-        }
+        m_systematicEditorComment = getSystemChangeDescription(changedBy, changedIn);
     }
 }
