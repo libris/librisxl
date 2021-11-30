@@ -3,7 +3,7 @@ package whelk
 import whelk.component.PostgreSQLComponent
 
 class Relations {
-    public static final List<String> BROADER_RELATIONS = ['broader', 'broadMatch', 'exactMatch']
+    public static final List<String> BROADER_RELATIONS = ['broader', 'broadMatch', 'exactMatch', 'locatedIn']
 
     PostgreSQLComponent storage
 
@@ -61,16 +61,18 @@ class Relations {
 
         while (!stack.isEmpty()) {
             String id = stack.pop()
-            for (String relation : relations ) {
-                Set<String> dependers = new HashSet<>(storage.getByReverseRelation(id, relation))
+            
+            Set<String> dependers = new HashSet<>()
+            for (String relation : relations) {
+                dependers.addAll(storage.getByReverseRelation(id, relation))
                 if (isSymmetric(relation)) {
-                    dependers.addAll(new HashSet<>(storage.getByRelation(id, relation)))
+                    dependers.addAll(storage.getByRelation(id, relation))
                 }
-                
-                dependers.removeAll(iris)
-                stack.addAll(dependers)
-                iris.addAll(dependers)
             }
+            
+            dependers.removeAll(iris)
+            stack.addAll(dependers)
+            iris.addAll(dependers)
         }
 
         return iris
