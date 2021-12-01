@@ -13865,7 +13865,7 @@
         }
       },
       "TODO": "Concatenate $a, $b, $c, $d, $e, $f, $g, $q to label",
-      "$a": {"property": "label"},
+      "$a": {"property": "label", "infer": true},
       "$b": {"addProperty": "marc:jurisdiction"},
       "$c": {"addProperty": "marc:physicalAccessProvisions"},
       "$d": {"addProperty": "marc:authorizedUsers"},
@@ -13878,7 +13878,32 @@
       "NOTE:$2": {"NOTE:LC": "nac"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "name": "Revert embellished linked AccessPolicy",
+          "result": {
+            "mainEntity": {
+              "@type": "Instance",
+              "usageAndAccessPolicy": [
+                {
+                  "@id": "https://id.kb.se/policy/freely-available",
+                  "@type": "AccessPolicy",
+                  "prefLabelByLang": {
+                    "en": "Freely available",
+                    "sv": "Fritt tillgänglig"
+                  }
+                }
+              ]
+            }
+          },
+          "normalized": {
+            "506": {"ind1": " ", "ind2": " ",
+              "subfields": [{"a": "Fritt tillgänglig"}]
+            }
+          }
+        }
+      ]
     },
 
     "507": {
@@ -14487,7 +14512,7 @@
       "pendingResources": {
         "_:source": {"link": "source", "resourceType": "Source"}
       },
-      "$a": {"property": "label"},
+      "$a": {"property": "label", "infer": true},
       "$b": null,
       "$c": {"about": "_:source", "property": "label", "NOTE": "FIX COLLISION WITH SUBFIELD 2"},
       "$d": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
@@ -14536,6 +14561,29 @@
                 "label": "XXXX"
               }]
           }}
+        },
+        {
+          "name": "Revert embellished linked License",
+          "result": {
+            "mainEntity": {
+              "@type": "Instance",
+              "usageAndAccessPolicy": [
+                {
+                  "@id": "http://creativecommons.org/publicdomain/zero/1.0/",
+                  "@type": "License",
+                  "titleByLang": {
+                    "en": "CC0 1.0 Universal",
+                    "sv": "CC0 1.0 universell"
+                  }
+                }
+              ]
+            }
+          },
+          "normalized": {
+            "540": {"ind1": " ", "ind2": " ",
+              "subfields": [{"a": "CC0 1.0 universell"}]
+            }
+          }
         }
       ]
     },
