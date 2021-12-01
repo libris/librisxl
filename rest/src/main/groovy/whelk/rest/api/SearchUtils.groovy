@@ -181,7 +181,7 @@ class SearchUtils {
         }
 
         if (reverseObject) {
-            String upUrl = makeFindUrl(SearchType.ELASTIC, pageParams - ['o' :  pageParams['o']], offset)
+            String upUrl = makeFindUrl(SearchType.ELASTIC, pageParams - ['o' : pageParams['o'], 'p' : pageParams['p']], offset)
             mappings << [
                     'variable' : 'o',
                     'object'   : lookup.chip(reverseObject),  // TODO: object/predicate/???
@@ -190,7 +190,7 @@ class SearchUtils {
         }
 
         if (reverseObject && predicates) {
-            String upUrl = makeFindUrl(SearchType.ELASTIC, pageParams - ['p' :  pageParams['p']], offset)
+            String upUrl = makeFindUrl(SearchType.ELASTIC, pageParams - ['p' : pageParams['p']], offset)
             mappings << [
                     'variable' : 'p',
                     'object'   : reverseObject,
