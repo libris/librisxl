@@ -175,10 +175,14 @@ class CopyOnRevertStep extends MarcFramePostProcStepBase {
                         if (inject) {
                             Map injectCopy = jsonClone(inject)
                             if (copy instanceof Map) {
+                                injectCopy.keySet().removeAll(copy.keySet())
                                 copy.putAll(injectCopy)
                             } else if (copy instanceof List) {
                                 copy.each {
-                                    if (it instanceof Map) it.putAll(injectCopy)
+                                    if (it instanceof Map) {
+                                        injectCopy.keySet().removeAll(it.keySet())
+                                        it.putAll(injectCopy)
+                                    }
                                 }
                             }
                         }

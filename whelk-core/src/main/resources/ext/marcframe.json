@@ -2623,12 +2623,12 @@
             "from": "identifiedBy",
             "to": "indirectlyIdentifiedBy",
             "injectOnCopies": {
-              "qualifier": "[originalversion]"
+              "qualifier": "original"
             }
           }
         ],
         "injectOnCopies": {
-          "appliesTo": {"label": "[originalversion]"}
+          "appliesTo": {"@type": "Resource", "label": "[original]"}
         },
         "_spec": [
           {
@@ -2672,12 +2672,12 @@
                   {
                     "@type": "Publication",
                     "year": "1773",
-                    "appliesTo": {"label": "[originalversion]"}
+                    "appliesTo": {"@type": "Resource", "label": "[original]"}
                   }
                 ],
-                "extent": {"@type": "Extent", "label": ["259 s."], "appliesTo": {"label": "[originalversion]"}},
+                "extent": {"@type": "Extent", "label": ["259 s."], "appliesTo": {"@type": "Resource", "label": "[original]"}},
                 "indirectlyIdentifiedBy": [
-                  {"@type": "ISBN", "value": "00-0-000000-0", "qualifier": "[originalversion]"}
+                  {"@type": "ISBN", "value": "00-0-000000-0", "qualifier": "original"}
                 ]
               }
             }
