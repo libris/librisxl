@@ -21,7 +21,7 @@ public class Ownership {
             m_manualEditTime = ZonedDateTime.parse(version.doc.getModified()).toInstant();
         }
         // A handmade (or atleast REST-API entered) version
-        else if (version.changedIn.equals("xl") && version.changedBy != null && !version.changedBy.endsWith(".groovy")) {
+        else if (version.changedIn.equals("xl") && version.changedBy != null && !History.wasScriptEdit(version)) {
             m_manualEditor = version.changedBy;
             m_manualEditTime = ZonedDateTime.parse(version.doc.getModified()).toInstant();
         }

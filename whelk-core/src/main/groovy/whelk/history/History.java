@@ -271,12 +271,16 @@ public class History {
     }
 
     private boolean wasSavedManually(DocumentVersion version) {
+        return version.changedIn.equals("xl") && !wasScriptEdit(version);
+    }
+
+    public static boolean wasScriptEdit(DocumentVersion version) {
         Instant modifiedInstant = ZonedDateTime.parse(version.doc.getModified()).toInstant();
         Instant generatedInstant = ZonedDateTime.parse(version.doc.getGenerationDate()).toInstant();
         if (generatedInstant != null && generatedInstant.isAfter( modifiedInstant )) {
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
     // DEBUG CODE BELOW THIS POINT
