@@ -1,0 +1,16 @@
+{
+    "rules": [
+        {
+            "operation": "replace",
+            "path": ["@graph", 1, "hasTitle"],
+            "priority":  {
+                "Utb1": 10,
+                "Utb2": 11
+            }
+        },
+	{
+            "operation": "add_if_none",
+            "path": ["@graph", 1, "summary"]
+        }
+    ]
+}

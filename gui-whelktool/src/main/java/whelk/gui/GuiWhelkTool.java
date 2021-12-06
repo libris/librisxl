@@ -4,7 +4,7 @@ import javax.swing.*;
 
 class GuiWhelkTool
 {
-    public static void main(String args[])
+    public static void main(String[] args)
     {
         java.awt.EventQueue.invokeLater(new Runnable()
         {

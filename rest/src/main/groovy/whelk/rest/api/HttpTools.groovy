@@ -1,23 +1,20 @@
 package whelk.rest.api
 
-
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.codehaus.groovy.runtime.StackTraceUtils
-import org.codehaus.jackson.map.ObjectMapper
 
+import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 import static org.eclipse.jetty.http.HttpStatus.getMessage
+import static whelk.util.Jackson.mapper
 
 /**
  * Created by markus on 2015-10-09.
  */
 @Log
 class HttpTools {
-
-    static final ObjectMapper mapper = new ObjectMapper()
-
     static void sendResponse(HttpServletResponse response, Map data, String contentType, int statusCode = 200) {
         if (!data) {
             sendResponse(response, new byte[0], contentType, statusCode)
@@ -69,6 +66,26 @@ class HttpTools {
         }
 
         sendResponse(response, json, "application/json", statusCode)
+    }
+
+    static String getBaseUri(HttpServletRequest request) {
+        String baseUri = ''
+
+        if (request.getScheme() == 'http') {
+            baseUri = request.getScheme() + '://' +
+                    request.getServerName() +
+                    ((request.getServerPort() == 80) ? '' : ':' + request.getServerPort()) +
+                    '/'
+        }
+
+        if (request.getScheme() == 'https') {
+            baseUri = request.getScheme() + '://' +
+                    request.getServerName() +
+                    ((request.getServerPort() == 443) ? '' : ':' + request.getServerPort()) +
+                    '/'
+        }
+
+        return baseUri
     }
     
     enum DisplayMode {

@@ -1,26 +1,25 @@
 package whelk.converter
 
-import javax.xml.transform.*
-import javax.xml.transform.dom.*
-import javax.xml.transform.stream.*
-import org.w3c.dom.*
-
+import groovy.util.logging.Log4j2 as Log
+import org.w3c.dom.DocumentFragment
+import se.kb.libris.util.marc.Controlfield
 import se.kb.libris.util.marc.Datafield
+import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.impl.ControlfieldImpl
 import se.kb.libris.util.marc.impl.DatafieldImpl
 import se.kb.libris.util.marc.impl.MarcRecordImpl
 import se.kb.libris.util.marc.io.DomSerializer
 
-import groovy.util.logging.Log4j2 as Log
+import javax.xml.transform.Result
+import javax.xml.transform.Source
+import javax.xml.transform.Transformer
+import javax.xml.transform.dom.DOMSource
+import javax.xml.transform.stream.StreamResult
 
-import se.kb.libris.util.marc.Controlfield
-import se.kb.libris.util.marc.MarcRecord
-import org.codehaus.jackson.map.ObjectMapper
-
+import static whelk.util.Jackson.mapper
 
 @Log
 class JSONMarcConverter {
-    protected final static ObjectMapper mapper = new ObjectMapper()
 
     static MarcRecord fromJson(String marcJson) {
         Map resultJson = mapper.readValue(marcJson, Map)
@@ -59,9 +58,9 @@ class JSONMarcConverter {
                                 }
                             }else {
                                 int ind = 1
-                                if (dataKey.equals("ind1"))
+                                if (dataKey == "ind1")
                                     ind = 0
-                                if (dataValue.equals(""))
+                                if (dataValue == "")
                                     dataValue = " "
                                 datafield.setIndicator(ind, dataValue as char)
                             }

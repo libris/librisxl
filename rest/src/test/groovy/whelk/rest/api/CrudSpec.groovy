@@ -1,6 +1,6 @@
 package whelk.rest.api
 
-import org.codehaus.jackson.map.ObjectMapper
+
 import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -21,9 +21,11 @@ import javax.servlet.http.HttpServletResponseWrapper
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND
+import static javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED
 import static javax.servlet.http.HttpServletResponse.SC_OK
 import static whelk.rest.api.MimeTypes.JSON
 import static whelk.rest.api.MimeTypes.JSONLD
+import static whelk.util.Jackson.mapper
 
 /**
  * Created by markus on 2015-10-16.
@@ -38,15 +40,12 @@ class CrudSpec extends Specification {
     HttpServletResponse response
 
     static final URI BASE_URI = Document.BASE_URI
-    private static final ObjectMapper mapper = new ObjectMapper()
-
-
+    
     void setup() {
         request = GroovyMock(HttpServletRequest.class)
         request.getRequestURI() >> {
             request.getPathInfo()
         }
-
         CapturingServletOutputStream out = new CapturingServletOutputStream()
         response = new HttpServletResponseWrapper(GroovyMock(HttpServletResponse.class)) {
             int status = 0
@@ -79,7 +78,7 @@ class CrudSpec extends Specification {
         whelk = new Whelk(storage)
         whelk.contextData = ['@context': [
                 'examplevocab': 'http://example.com',
-                'some_term': 'some_value']]
+                'some_term': 'http://some-term.somewhere']]
         whelk.displayData = ['lensGroups': [
                 'chips': [lenses: ['Instance' : ['showProperties': ['prop1', 'prop2']]]],
                 'cards': [lenses: ['Instance' : ['showProperties': ['prop1', 'prop2', 'prop3']]]],
@@ -366,6 +365,9 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
+        request.getParameter("embellished") >> {
+            return "false"
+        }
         storage.load(_, _) >> {
             new Document(["@graph": [
                     ["@id": id,
@@ -385,7 +387,38 @@ class CrudSpec extends Specification {
         response.getContentType() == "application/json"
     }
 
-    def "GET /<id>/data.ttl should return 404 Not Found"() {
+    def "GET /<id>/data.rdf should display document in RDF format"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}/data.rdf".toString()
+        }
+        request.getHeader("Accept") >> {
+            "*/*"
+        }
+        request.getParameter("embellished") >> {
+            return "false"
+        }
+        storage.load(_, _) >> {
+            new Document(["@graph": [
+                    ["@id": id,
+                     "foo": "bar",
+                     "baz": ["@id": "examplevocab:"],
+                     "quux": ["@id": "some_term"],
+                     "bad_ref": ["@id": "invalid:ref"],
+                     "mainEntity": ["@id": "main_id"]
+                    ],
+                    ["@id": "main_id"]
+            ]])
+        }
+        when:
+        crud.doGet(request, response)
+        then:
+        response.getStatus() == SC_OK
+        response.getContentType() == "application/rdf+xml"
+    }
+
+    def "GET /<id>/data.ttl should display document in Turtle format"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
         request.getPathInfo() >> {
@@ -400,60 +433,53 @@ class CrudSpec extends Specification {
         when:
         crud.doGet(request, response)
         then:
-        response.getStatus() == SC_NOT_FOUND
+        response.getStatus() == SC_OK
+        response.getContentType() == "text/turtle"
     }
 
-    def "GET /<id>/data.rdf should return 404 Not Found"() {
+    @Unroll
+    def "GET document with If-None-Match should return 200 Ok or 304 Not Modified"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
-        request.getPathInfo() >> {
-            "/${id}/data.rdf".toString()
-        }
-        request.getHeader("Accept") >> {
-            "*/*"
-        }
-        storage.load(_, _) >> {
-            return new Document(["@graph": [["@id": id, "foo": "bar"]]])
-        }
-        when:
-        crud.doGet(request, response)
-        then:
-        response.getStatus() == SC_NOT_FOUND
-    }
-
-    def "GET non-embellished document with If-None-Match equal to ETag should return 304 Not Modified"() {
-        given:
-        def id = BASE_URI.resolve("/1234").toString()
-        def doc = new Document(["@graph": [["@id": id]]])
-        doc.setModified(new Date())
-        def etag = doc.getChecksum(whelk.jsonld)
-        request.getPathInfo() >> { '/' + id }
-        request.getHeader("Accept") >> { "*/*" }
-        request.getHeader("If-None-Match") >> { etag }
-        request.getParameter(_) >> {
-            return getParameter('?embellished=false', arguments[0])
-        }
-        storage.load(_, _) >> { return doc }
-        when:
-        crud.doGet(request, response)
-        then:
-        response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED
-    }
-
-    def "GET embellished document with If-None-Match equal to ETag should return 200 Ok"() {
-        given:
-        def id = BASE_URI.resolve("/1234").toString()
-        def doc = new Document(["@graph": [["@id": id]]])
-        doc.setModified(new Date())
-        def etag = doc.getChecksum(whelk.jsonld)
+        def doc = new Document(["@graph": [
+                ['@id': id, 'mainEntity': ['@id': "$id#it"]], 
+                ['@id': "$id#it", '@type': 'Instance', 'prop1': ['@id': 'https://foo']]
+        ]])
         request.getPathInfo() >> { '/' + id}
         request.getHeader("Accept") >> { "*/*" }
-        request.getHeader("If-None-Match") >> { etag }
+        request.getHeader("If-None-Match") >> { eTag }
+        request.getParameter("embellished") >> {
+            return "$embellished"
+        }
         storage.load(_, _) >> { return doc }
-        when:
+        storage.getCards(_) >> { 
+            def iris = ['https://foo']
+            iris.collect {
+                ["@graph": [
+                        ['@id': it, 'mainEntity': ['@id': "$it#it"]],
+                        ['@id': "$it#it"]
+                ]]
+            }
+        }
         crud.doGet(request, response)
-        then:
-        response.getStatus() == HttpServletResponse.SC_OK
+        
+        expect:
+        response.getStatus() == status
+
+        where:
+        // checksum             -1856152111
+        // checksum embellished -5527328642
+
+        embellished | eTag                      || status
+        false       | '-1856152111'             || SC_NOT_MODIFIED
+        false       | "-1856152111:-5527328642" || SC_NOT_MODIFIED
+        false       | "-1856152111:other"       || SC_NOT_MODIFIED
+        false       | "other"                   || SC_OK
+
+        true        | '-1856152111'             || SC_OK
+        true        | '-1856152111:-5527328642' || SC_NOT_MODIFIED
+        true        | "-1856151741:other"       || SC_OK
+        true        | "other"                   || SC_OK
     }
 
     @Unroll
@@ -504,8 +530,8 @@ class CrudSpec extends Specification {
         '/data-view' |'.json'   | 'application/ld+json'  || 'application/json'    | SC_OK
 
         ''           |''        | ''                     || 'application/ld+json' | SC_OK
-        ''           |''        | 'text/turtle'          || 'application/ld+json' | SC_OK
-        ''           |''        | 'application/rdf+xml'  || 'application/ld+json' | SC_OK
+        ''           |''        | 'text/turtle'          || 'text/turtle'         | SC_OK
+        ''           |''        | 'application/rdf+xml'  || 'application/rdf+xml' | SC_OK
         ''           |''        | 'x/x'                  || 'application/ld+json' | SC_OK
         '/data-view' |'.invalid'| '*/*'                  || 'application/json'    | SC_NOT_FOUND
         '/data'      |'.invalid'| '*/*'                  || 'application/json'    | SC_NOT_FOUND
@@ -551,15 +577,15 @@ class CrudSpec extends Specification {
         ''           | ''        | 'application/ld+json'  || 'application/ld+json' | true        | false
         ''           | ''        | 'application/json'     || 'application/json'    | true        | true
 
-        '/data'      | ''        | '*/*'                  || 'application/ld+json' | false       | false
-        '/data'      | ''        | 'application/ld+json'  || 'application/ld+json' | false       | false
-        '/data'      | '.jsonld' | '*/*'                  || 'application/ld+json' | false       | false
-        '/data'      | '.jsonld' | 'application/ld+json'  || 'application/ld+json' | false       | false
-        '/data'      | '.jsonld' | 'application/json'     || 'application/ld+json' | false       | false
+        '/data'      | ''        | '*/*'                  || 'application/ld+json' | true        | false
+        '/data'      | ''        | 'application/ld+json'  || 'application/ld+json' | true        | false
+        '/data'      | '.jsonld' | '*/*'                  || 'application/ld+json' | true        | false
+        '/data'      | '.jsonld' | 'application/ld+json'  || 'application/ld+json' | true        | false
+        '/data'      | '.jsonld' | 'application/json'     || 'application/ld+json' | true        | false
 
-        '/data'      | ''        | 'application/json'     || 'application/json'    | false       | true
-        '/data'      | '.json'   | '*/*'                  || 'application/json'    | false       | true
-        '/data'      | '.json'   | 'application/ld+json'  || 'application/json'    | false       | true
+        '/data'      | ''        | 'application/json'     || 'application/json'    | true        | true
+        '/data'      | '.json'   | '*/*'                  || 'application/json'    | true        | true
+        '/data'      | '.json'   | 'application/ld+json'  || 'application/json'    | true        | true
 
         '/data-view' | ''        | '*/*'                  || 'application/ld+json' | true        | false
         '/data-view' | ''        | 'application/ld+json'  || 'application/ld+json' | true        | false
@@ -1877,6 +1903,9 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "PUT"
         }
+        request.getHeader("If-Match") >> {
+            CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "bib"
         }
@@ -2118,6 +2147,80 @@ class CrudSpec extends Specification {
         then:
         response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
     }
+
+    def "PUT to /<id> should return 400 Bad Request if collection has been changed"() {
+        given:
+        def is = GroovyMock(ServletInputStream.class)
+        def createdDate = "2009-04-21T00:00:00.0+02:00"
+        def modifiedDate = new Date()
+        def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        def id = "/1234"
+        def fullId = BASE_URI.resolve(id).toString()
+        def oldContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "contains": "some data"],
+                                     ["@id": "/id",
+                                      "@type": "Concept",
+                                      "contains": "some other data"]]]
+        def newContent = ["@graph": [["@id": fullId,
+                                      "@type": "Record",
+                                      "created": createdDate,
+                                      "modified": modifiedDate,
+                                      "contains": "some updated data"],
+                                     ["@id": "/id",
+                                      "@type": "Instance",
+                                      "contains": "some new other data"]]]
+        is.getBytes() >> {
+            mapper.writeValueAsBytes(newContent)
+        }
+        request.getInputStream() >> {
+            is
+        }
+        request.getPathInfo() >> {
+            id
+        }
+        request.getMethod() >> {
+            "PUT"
+        }
+        request.getParameter("collection") >> {
+            "bib"
+        }
+        request.getContentType() >> {
+            "application/ld+json"
+        }
+        request.getAttribute(_) >> {
+            return ["active_sigel": "Ting",
+                    "permissions": [["code": "Ting",
+                                     "cataloger": false,
+                                     "registrant": true],
+                                    ["code": "S",
+                                     "cataloger": true,
+                                     "registrant": false]]]
+        }
+        request.getRequestURL() >> {
+            return new StringBuffer(BASE_URI.toString())
+        }
+        storage.load(_, _) >> {
+            Document doc = new Document(oldContent)
+            doc.setCreated(Date.parse(dateFormat, createdDate))
+            return doc
+        }
+        storage.createDocument(_, _, _, _, _) >> {
+            throw new Exception("This shouldn't happen")
+        }
+        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
+            return "bib"
+        }
+        whelk.storage.getCollectionBySystemID(_) >> {
+            return "auth"
+        }
+        when:
+        crud.doPut(request, response)
+        then:
+        assert response.getStatus() == HttpServletResponse.SC_BAD_REQUEST
+    }
+
 
     def "PUT to /<id> should return 403 Forbidden if user has insufficient privilege"() {
         given:
@@ -2576,6 +2679,9 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "PUT"
         }
+        request.getHeader("If-Match") >> {
+            CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
@@ -2645,6 +2751,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "PUT"
+        }
+        request.getHeader("If-Match") >> {
+            CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
@@ -2852,6 +2961,9 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "PUT"
         }
+        request.getHeader("If-Match") >> {
+            CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
@@ -2922,6 +3034,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "PUT"
+        }
+        request.getHeader("If-Match") >> {
+            CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
         }
         request.getParameter("collection") >> {
             "bib"
@@ -3139,6 +3254,9 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "PUT"
         }
+        request.getHeader("If-Match") >> {
+            CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
+        }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"
         }
@@ -3275,6 +3393,9 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "PUT"
+        }
+        request.getHeader("If-Match") >> {
+            CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
             return "hold"

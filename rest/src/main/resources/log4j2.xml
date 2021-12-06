@@ -11,9 +11,16 @@
         <File name="File" fileName="${sys:catalina.base}/logs/whelk.log">
             <PatternLayout pattern="%d{ISO8601} [%t] %-5level %logger{36} - %msg%n"/>
         </File>
+        <File name="DigitalReproductionApi" fileName="${sys:catalina.base}/logs/digital-reproduction-api.log">
+            <PatternLayout pattern="%d{ISO8601} [%t] %-5level %logger{36} - %msg%n"/>
+        </File>
     </Appenders>
 
     <Loggers>
+        <Logger name="se.kb.libris.digi" level="info" additivity="false">
+            <AppenderRef ref="STDOUT"/>
+            <AppenderRef ref="DigitalReproductionApi"/>
+        </Logger>
         <Root level="info">
             <AppenderRef ref="STDOUT"/>
             <AppenderRef ref="File" />

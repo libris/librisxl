@@ -2,11 +2,13 @@ package whelk.rest.api
 
 import spock.lang.Specification
 import whelk.Document
+import whelk.util.PropertyLoader
 
 class RemoteSearchAPISpec extends Specification {
     RemoteSearchAPI remote
 
     void setup() {
+        PropertyLoader.setUserEnteredProperties('secret', 'foo')
         remote = new RemoteSearchAPI()
     }
 

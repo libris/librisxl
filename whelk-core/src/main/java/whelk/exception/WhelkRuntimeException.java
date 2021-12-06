@@ -5,10 +5,6 @@ public class WhelkRuntimeException extends RuntimeException {
         super(msg);
     }
 
-    public WhelkRuntimeException(Throwable t) {
-        super(t);
-    }
-
     public WhelkRuntimeException(String msg, Throwable t) {
         super(msg, t);
     }

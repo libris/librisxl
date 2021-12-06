@@ -6,7 +6,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import whelk.util.PropertyLoader;
 
@@ -29,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-public class AuthenticationFilter implements Filter {
+import static whelk.util.Jackson.mapper;
 
-    private static final ObjectMapper mapper = new ObjectMapper();
+public class AuthenticationFilter implements Filter {
     private static final String XL_ACTIVE_SIGEL_HEADER = "XL-Active-Sigel";
     private List<String> supportedMethods;
     private List<String> whitelistedPostEndpoints;
@@ -65,7 +64,7 @@ public class AuthenticationFilter implements Filter {
             try {
                 String token = httpRequest.getHeader("Authorization");
                 if (token == null) {
-                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Invalid accesstoken, Token is: "+token);
+                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "No access token (Authorization header) in request");
                     response_code = httpResponse.SC_UNAUTHORIZED;
                     return;
                 }
@@ -77,7 +76,7 @@ public class AuthenticationFilter implements Filter {
                     return;
                 }
 
-                HashMap result = mapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+                HashMap<String, Object> result = mapper.readValue(json, new TypeReference<Map<String, Object>>() {});
 
                 Object message = result.get("message");
                 if (message != null && message.toString().equals("Bearer token is expired.")) {
@@ -86,20 +85,21 @@ public class AuthenticationFilter implements Filter {
                     return;
                 }
                 if (message != null && message.toString().equals("Bearer token not found.")) {
-                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Missing access token.");
+                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Bad access token.");
                     response_code = httpResponse.SC_UNAUTHORIZED;
                     return;
                 }
 
                 if (!isExpired(result.get("expires_at").toString())) {
-                    HashMap user = (HashMap) result.get("user");
+                    @SuppressWarnings("unchecked")
+                    Map<Object, Object> user = (Map<Object, Object>) result.get("user");
                     String activeSigel = httpRequest.getHeader(XL_ACTIVE_SIGEL_HEADER);
                     if (activeSigel != null) {
                         user.put("active_sigel", activeSigel);
                     }
                     request.setAttribute("user", user);
                     chain.doFilter(request, response);
-                }else {
+                } else {
                     httpResponse.sendError(httpResponse.SC_UNAUTHORIZED);
                     response_code = httpResponse.SC_UNAUTHORIZED;
                 }
@@ -128,7 +128,7 @@ public class AuthenticationFilter implements Filter {
         }
     }
 
-    private Map createDevelopmentUser() {
+    private Map<String,Object> createDevelopmentUser() {
         Map<String,Object> emptyUser = new HashMap<>();
         emptyUser.put("user", "SYSTEM");
         return emptyUser;
@@ -147,7 +147,7 @@ public class AuthenticationFilter implements Filter {
             BufferedReader rd = new BufferedReader(
                     new InputStreamReader(response.getEntity().getContent()));
 
-            StringBuffer result = new StringBuffer();
+            StringBuilder result = new StringBuilder();
             String line;
             while ((line = rd.readLine()) != null) {
                 result.append(line);
@@ -183,7 +183,6 @@ public class AuthenticationFilter implements Filter {
 
     /**
      *
-     * @param initParams
      * @return a list with all supported methods
      */
     private List<String> splitInitParameters(String initParams) {
@@ -196,13 +195,13 @@ public class AuthenticationFilter implements Filter {
 
     private String getVerifyUrl() {
         if (url == null) {
-            Properties secrets = null;
+            Properties secrets;
             try {
                 secrets = PropertyLoader.loadProperties("secret");
             } catch (Exception e) {
                 throw new RuntimeException("Failed to load api properties.", e);
             }
-            url = (String)secrets.getProperty("oauth2verifyurl");
+            url = secrets.getProperty("oauth2verifyurl");
         }
         return url;
     }

@@ -1,9 +1,11 @@
 package whelk.importer
 
-import whelk.Whelk
 import whelk.Document
+import whelk.Whelk
 import whelk.util.LegacyIntegrationTools
 import whelk.util.ThreadPool
+
+import static whelk.util.Jackson.mapper
 
 class WhelkCopier {
 
@@ -66,7 +68,7 @@ class WhelkCopier {
             else
                 doc = source.getDocument(id)
             if (doc == null) {
-                System.err.println("Could not load document with ID: $id");
+                System.err.println("Could not load document with ID: $id")
                 continue
             }
             doc.baseUri = source.baseUri
@@ -156,7 +158,7 @@ class WhelkCopier {
                 '"\\Q' + libUriPlaceholder + '\\E',
                 '"' + source.baseUri.resolve("library/").toString())
 
-        def newDoc = new Document(doc.mapper.readValue(newDataRepr, Map))
+        def newDoc = new Document(mapper.readValue(newDataRepr, Map))
 
         def newId = dest.baseUri.resolve(doc.shortId).toString()
         newDoc.id = newId

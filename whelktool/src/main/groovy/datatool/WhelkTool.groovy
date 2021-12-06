@@ -2,7 +2,6 @@ package whelk.datatool
 
 import com.google.common.util.concurrent.MoreExecutors
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
-import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.IdGenerator
 import whelk.Whelk
@@ -31,6 +30,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 import static java.util.concurrent.TimeUnit.SECONDS
+import static whelk.util.Jackson.mapper
 
 class WhelkTool {
 
@@ -65,11 +65,13 @@ class WhelkTool {
     boolean stepWise
     int limit = -1
 
+    private String chosenAnswer = 'y'
+
     boolean allowLoud
 
     private Throwable errorDetected
 
-    private def jsonWriter = new ObjectMapper().writerWithDefaultPrettyPrinter()
+    private def jsonWriter = mapper.writerWithDefaultPrettyPrinter()
 
     Map<String, Closure> compiledScripts = [:]
 
@@ -465,23 +467,22 @@ class WhelkTool {
 
     private boolean doRevertToTime(DocumentItem item) {
 
-        // The 'versions' list is sorted, with the most recent version first.
+        // The 'versions' list is sorted, with the oldest version first.
         List<Document> versions = whelk.storage.loadAllVersions(item.doc.shortId)
 
         ZonedDateTime restoreTime = ZonedDateTime.parse(item.restoreToTime)
 
         // If restoreTime is older than any stored version (we can't go back that far)
-        ZonedDateTime oldestStoredTime = getLatestModification(versions.get(versions.size()-1))
+        ZonedDateTime oldestStoredTime = getLatestModification(versions.get(0))
         if ( restoreTime.isBefore( oldestStoredTime ) ) {
             errorLog.println("Cannot restore ${item.doc.shortId} to ${restoreTime}, oldest stored version from: ${oldestStoredTime}")
             return false
         }
 
-        // Go over the versions, oldest first (in reverse),
+        // Go over the versions, oldest first,
         // until you've found the oldest version that is younger than the desired time target.
         Document selectedVersion = null
-        for (int i = versions.size()-1; i > -1; --i) {
-            Document version = versions.get(i)
+        for (Document version : versions) {
             ZonedDateTime latestModificationTime = getLatestModification(version)
             if (restoreTime.isAfter(latestModificationTime))
                 selectedVersion = version
@@ -532,10 +533,22 @@ class WhelkTool {
         new File(reportsDir, "OUT.jsonld").withWriter {
             jsonWriter.writeValue(it, doc.data)
         }
+
+        def choice = { chosenAnswer == it ? it.toUpperCase() : it }
+        def y = choice('y')
+        def p = choice('p')
+        def n = choice('n')
+
         println()
-        print 'Continue [Y/n]? '
-        def answer = System.in.newReader().readLine()
-        return answer.toLowerCase() != 'n'
+        print "Continue [ $y(es) / $n(o) / $p(rint) ]? "
+
+        chosenAnswer = System.in.newReader().readLine()?.toLowerCase() ?: chosenAnswer
+
+        if (chosenAnswer == 'p') {
+            println jsonWriter.writeValueAsString(doc.data)
+        }
+
+        return chosenAnswer != 'n'
     }
 
     private synchronized void storeScriptJob() {
@@ -702,7 +715,7 @@ class DocumentItem {
     private String restoreToTime = null
     Closure onError = null
 
-    def List getGraph() {
+    List getGraph() {
         return doc.data['@graph']
     }
 

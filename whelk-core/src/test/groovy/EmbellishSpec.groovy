@@ -7,7 +7,7 @@ import whelk.JsonLd
 import whelk.Link
 import whelk.util.JsonLdSpec
 
-class EmbellishSpec extends Specification{
+class EmbellishSpec extends Specification {
     static final Map DISPLAY_DATA = [
             'lensGroups':
                     ['chips':
@@ -262,7 +262,7 @@ digraph {
 
 */
 
-    def "should handle close relations"() {
+    def "should handle integral relations"() {
         given:
         def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, DISPLAY_DATA, JsonLdSpec.VOCAB_DATA)
 
@@ -314,7 +314,7 @@ digraph {
         docs.each(storage.&add)
 
         def embellisher = new Embellisher(ld, storage.&getFull, storage.&getCards, storage.&getReverseLinks)
-        embellisher.setCloseRelations(['CR'])
+        embellisher.setIntegralRelations(['CR'])
 
         Document document = new Document(doc)
 
@@ -407,7 +407,7 @@ digraph {
 }
 */
 
-    def "should handle multi-level close relations"() {
+    def "should handle multi-level integral relations"() {
         given:
         def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, DISPLAY_DATA, JsonLdSpec.VOCAB_DATA)
 
@@ -467,7 +467,7 @@ digraph {
         docs.each(storage.&add)
 
         def embellisher = new Embellisher(ld, storage.&getFull, storage.&getCards, storage.&getReverseLinks)
-        embellisher.setCloseRelations(['CR', 'CR2'])
+        embellisher.setIntegralRelations(['CR', 'CR2'])
 
         Document document = new Document(doc)
 

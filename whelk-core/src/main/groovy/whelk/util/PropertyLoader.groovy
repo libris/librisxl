@@ -13,7 +13,7 @@ class PropertyLoader {
     /**
      * MUST be called before loadProperties to have any effect.
      */
-    public static void setUserEnteredProperties(String name, String propString) {
+    static void setUserEnteredProperties(String name, String propString) {
         userEnteredProperties.put(name, propString)
     }
 

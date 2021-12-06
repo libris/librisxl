@@ -281,7 +281,7 @@ class Whelk {
             int graphIndex = ((Integer) typedID[2]).intValue()
 
             // "Identifier" and "SystemNumber" are too general/meaningless to use for duplication checking.
-            if (type.equals("Identifier") || type.equals("SystemNumber"))
+            if (type == "Identifier" || type == "SystemNumber")
                 continue
 
             List<String> collisions = storage.getSystemIDsByTypedID(type, value, graphIndex)
@@ -332,7 +332,7 @@ class Whelk {
      * The UpdateAgent SHOULD be a pure function since the update will be retried in case the document
      * was modified in another transaction.
      */
-    Document storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
+    void storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
         Document preUpdateDoc = null
         Document updated = storage.storeUpdate(id, minorUpdate, changedIn, changedBy, { Document doc ->
             preUpdateDoc = doc.clone()
@@ -341,20 +341,20 @@ class Whelk {
         })
 
         if (updated == null || preUpdateDoc == null) {
-            return null
+            return
         }
 
         reindex(updated, preUpdateDoc)
         sparqlUpdater?.pollNow()
     }
 
-    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum) {
+    void storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum) {
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
         Document updated = storage.storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum)
 
         if (updated == null) {
-            return null
+            return
         }
         
         reindex(updated, preUpdateDoc)
@@ -384,7 +384,7 @@ class Whelk {
         }
     }
 
-    boolean hasChangedMainEntityId(Document updated, Document preUpdateDoc) {
+    static boolean hasChangedMainEntityId(Document updated, Document preUpdateDoc) {
         preUpdateDoc.getThingIdentifiers()[0] &&
                 updated.getThingIdentifiers()[0] &&
                 updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]

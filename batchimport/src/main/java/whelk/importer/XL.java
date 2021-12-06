@@ -2,6 +2,7 @@ package whelk.importer;
 
 import groovy.lang.Tuple;
 import io.prometheus.client.Counter;
+import se.kb.libris.Normalizers;
 import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
@@ -17,6 +18,7 @@ import whelk.Whelk;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
 import whelk.converter.marc.MarcFrameConverter;
+import whelk.exception.CancelUpdateException;
 import whelk.exception.TooHighEncodingLevelException;
 import whelk.filter.LinkFinder;
 import whelk.util.LegacyIntegrationTools;
@@ -45,16 +47,17 @@ class XL
     public static final String ENC_ABBREVIVATED_STATUS = "marc:AbbreviatedLevel";  // 3
     public static final String ENC_MINMAL_STATUS = "marc:MinimalLevel";  // 7
 
-    private Whelk m_whelk;
-    private LinkFinder m_linkfinder;
-    private Parameters m_parameters;
-    private Properties m_properties;
-    private MarcFrameConverter m_marcFrameConverter;
+    private final Whelk m_whelk;
+    private final LinkFinder m_linkfinder;
+    private final Parameters m_parameters;
+    private final Properties m_properties;
+    private final MarcFrameConverter m_marcFrameConverter;
+    private Merge m_merge;
     private static boolean verbose = false;
 
     // The predicates listed here are those that must always be represented as lists in jsonld, even if the list
     // has only a single member.
-    private Set<String> m_repeatableTerms;
+    private final Set<String> m_repeatableTerms;
 
     private final String IMPORT_SYSTEM_CODE;
 
@@ -67,6 +70,8 @@ class XL
         m_repeatableTerms = m_whelk.getJsonld().getRepeatableTerms();
         m_marcFrameConverter = m_whelk.getMarcFrameConverter();
         m_linkfinder = new LinkFinder(m_whelk.getStorage());
+        if (parameters.getMergeRuleFile() != null)
+            m_merge = new Merge(parameters.getMergeRuleFile());
         if (parameters.getChangedIn() != null)
             IMPORT_SYSTEM_CODE = parameters.getChangedIn();
         else
@@ -121,6 +126,30 @@ class XL
             {
                 String idToReplace = duplicateIDs.iterator().next();
                 resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, idToReplace);
+            }
+
+            // merge
+            else if (m_merge != null && collection.equals("bib")) {
+                String idToMerge = duplicateIDs.iterator().next();
+                Document incoming = convertToRDF(incomingMarcRecord, idToMerge);
+                if (m_parameters.getReadOnly()) {
+                    Document existing = m_whelk.getDocument(idToMerge);
+                    m_merge.merge(existing, incoming, m_parameters.getChangedBy(), m_whelk);
+                    System.out.println("info: Would now (if --live had been specified) have written the following json-ld to whelk as a merged record:\n"
+                            + existing.getDataAsString());
+                }
+                else {
+                    m_whelk.storeAtomicUpdate(idToMerge, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), (Document existing) -> {
+                        String existingChecksum = existing.getChecksum(m_whelk.getJsonld());
+                        m_merge.merge(existing, incoming, m_parameters.getChangedBy(), m_whelk);
+                        String modifiedChecksum = existing.getChecksum(m_whelk.getJsonld());
+                        // Avoid writing an identical version
+                        if (modifiedChecksum.equals(existingChecksum))
+                            throw new CancelUpdateException();
+                    });
+                }
+
+                resultingResourceId = m_whelk.getStorage().getThingId(idToMerge);
             }
 
             // Keep existing
@@ -249,11 +278,8 @@ class XL
         }
         else
         {
-            if ( verbose )
-            {
-                System.out.println("info: Would now (if --live had been specified) have written the following json-ld to whelk as a new record:\n"
-                + rdfDoc.getDataAsString());
-            }
+            System.out.println("info: Would now (if --live had been specified) have written the following json-ld to whelk as a new record:\n"
+                    + rdfDoc.getDataAsString());
         }
 
         if (collection.equals("bib"))
@@ -269,9 +295,9 @@ class XL
         if (newEncodingLevel == null || existingEncodingLevel == null)
             return false;
 
-        String specialRule = m_parameters.getSpecialRules().get(newEncodingLevel);
+        Set<String> specialRule = m_parameters.getSpecialRules().get(newEncodingLevel);
 
-        if (specialRule != null && specialRule.equals(existingEncodingLevel))
+        if (specialRule != null && specialRule.contains(existingEncodingLevel))
             return true;
 
         switch (newEncodingLevel)
@@ -316,6 +342,7 @@ class XL
         Document convertedDocument = new Document(convertedData);
         convertedDocument.deepReplaceId(Document.getBASE_URI().toString()+id);
         m_linkfinder.normalizeIdentifiers(convertedDocument);
+        m_whelk.getNormalizer().normalize(convertedDocument);
         return convertedDocument;
     }
 
@@ -507,7 +534,7 @@ class XL
         {
             if (field.getIndicator(0) == '7')
             {
-                List<Subfield> sf2uri = field.getSubfields("2").stream().filter(sf -> sf.getData().toLowerCase().equals("uri")).collect(Collectors.toList());
+                List<Subfield> sf2uri = field.getSubfields("2").stream().filter(sf -> sf.getData().equalsIgnoreCase("uri")).collect(Collectors.toList());
 		if ( sf2uri.size() == 0 ) continue;
 
                 List<Subfield> subfields = field.getSubfields("a");
@@ -536,7 +563,7 @@ class XL
         {
             if (field.getIndicator(0) == '7')
             {
-                List<Subfield> sf2urn = field.getSubfields("2").stream().filter(sf -> sf.getData().toLowerCase().equals("urn")).collect(Collectors.toList());
+                List<Subfield> sf2urn = field.getSubfields("2").stream().filter(sf -> sf.getData().equalsIgnoreCase("urn")).collect(Collectors.toList());
 		if ( sf2urn.size() == 0 ) continue;
 
                 List<Subfield> subfields = field.getSubfields("a");
@@ -754,7 +781,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"Identifier\", \"typeNote\": \"uri\", \"value\": \"" + uri + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"URI\", \"value\": \"" + uri + "\"}]", java.sql.Types.OTHER);
 
         return statement;
     }
@@ -765,7 +792,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"Identifier\", \"typeNote\": \"urn\", \"value\": \"" + urn + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"URN\", \"value\": \"" + urn + "\"}]", java.sql.Types.OTHER);
 
         return statement;
     }

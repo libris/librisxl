@@ -317,17 +317,18 @@ class JsonLdSpec extends Specification {
         given:
         Map displayData = [
             "@context": [
-                "labelByLang": ["@id": "label", "@container": "@language"]
+                "labelByLang": ["@id": "label", "@container": "@language"],
+                "titleByLang": ["@id": "title", "@container": "@language"]
             ],
             "lensGroups":
                     ["chips":
                             ["lenses": [
-                                "Thing": ["showProperties": ["notation", "label", "note"]]]
+                                "Thing": ["showProperties": ["notation", "label", "note", ["alternateProperties": ["foo", "title"]]]]]
                             ]]]
         def ld = new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA)
         expect:
         def props = ld.displayData.lensGroups.chips.lenses.Thing.showProperties
-        props == ['notation', 'label', 'labelByLang', 'note']
+        props == ['notation', 'label', 'labelByLang', 'note', ["alternateProperties": ["foo", ["title", "titleByLang"]]]]
     }
 
     def "should handle lens inheritance"() {
@@ -477,6 +478,94 @@ class JsonLdSpec extends Specification {
         ["@type": "P"]                               | 'cards' || ['prop1', 'prop2', 'prop3']
         ["@graph": [["@type": "Q"], ["@type": "X"]]] | 'chips' || ['propQ', 'prop1']
         ["@graph": [["@type": "X"], ["@type": "X"]]] | 'chips' || ['prop1']
+    }
+
+    def "should handle lens alternateProperties"() {
+        given:
+        Map displayData = [
+                "@context": [
+                        "a1ByLang": ["@id": "a1", "@container": "@language"],
+                ],
+                "lensGroups":
+                        ["chips":
+                                 ["lenses": [
+                                         "X": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "X-chips",
+                                               "showProperties" : [["alternateProperties": ["a1", "a2", "a3"]]]
+                                         ],
+                                 ]],
+                         "cards":
+                                 ["lenses": [
+                                         "X": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "X-cards",
+                                               "showProperties" : ["x1", ["alternateProperties": ["a1", "a2"]], "x2", ["alternateProperties": ["a3", "a4"]]]
+                                         ],
+                                 ]],
+                        ]
+                        ]
+        
+        def ld = new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA)
+        
+        expect:
+        group == 'cards' ? ld.toCard(thing) : ld.toChip(thing) == expected
+
+        where:
+        thing                                                          | group   || expected
+        ['@type': 'X', 'x1': 'x1', 'x2': 'x2', 'a1': 'a1', 'a2': 'a2'] | 'chips' || ['@type': 'X', 'a1': 'a1', 'a2': 'a2']
+        ['@type': 'X', 'x1': 'x1', 'x2': 'x2', 'a2': 'a2']             | 'chips' || ['@type': 'X', 'a2': 'a2']
+        ['@type': 'X', 'x1': 'x1', 'x2': 'x2', 'a3': 'a3']             | 'chips' || ['@type': 'X', 'a3': 'a3']
+        ['@type': 'X', 'x1': 'x1', 'x2': 'x2']                         | 'chips' || ['@type': 'X']
+
+        ['@type': 'X', 'x1': 'x1', 'x2': 'x2', 'a1': 'a1', 'a2': 'a2'] | 'cards' || ['@type': 'X', 'x1': 'x1', 'a1': 'a1', 'x2': 'x2']
+        ['@type': 'X', 'x1': 'x1', 'x2': 'x2', 'a2': 'a2']             | 'cards' || ['@type': 'X', 'x1': 'x1', 'a2': 'a2', 'x2': 'x2']
+        ['@type': 'X', 'x1': 'x1', 'x2': 'x2', 'a3': 'a3']             | 'cards' || ['@type': 'X', 'x1': 'x1', 'x2': 'x2', 'a3': 'a3']
+        ['@type': 'X', 'x1': 'x1', 'x2': 'x2', 'a2': 'a2', 'a4': 'a4'] | 'cards' || ['@type': 'X', 'x1': 'x1', 'a2': 'a2', 'x2': 'x2', 'a4': 'a4']
+
+        ['@type': 'X', 'a1': 'a1']                                     | 'chips' || ['@type': 'X', 'a1': 'a1']
+        ['@type': 'X', 'a1ByLang': ['xx': 'a1']]                       | 'chips' || ['@type': 'X', 'a1ByLang': ['xx': 'a1']]
+        ['@type': 'X', 'a1': 'a1', 'a1ByLang': ['xx': 'a1']]           | 'chips' || ['@type': 'X', 'a1': 'a1', 'a1ByLang': ['xx': 'a1']]
+    }
+
+    def "applyLensAsMapByLang"() {
+        given:
+        Map displayData = [
+                "@context": [
+                        "a1ByLang": ["@id": "a1", "@container": "@language"],
+                        "a2ByLang": ["@id": "a2", "@container": "@language"],
+                        "x1ByLang": ["@id": "x1", "@container": "@language"],
+                ],
+                "lensGroups":
+                        ["chips":
+                                 ["lenses": [
+                                         "X": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "X-chips",
+                                               "showProperties" : [["alternateProperties": ["a1", "a2", "a3"]]]
+                                         ],
+                                 ]],
+                         "cards":
+                                 ["lenses": [
+                                         "X": ["@type"          : "fresnel:Lens",
+                                               "@id"            : "X-cards",
+                                               "showProperties" : ["x1", ["alternateProperties": ["a1", "a2"]], "x2", ["alternateProperties": ["a3", "a4"]]]
+                                         ],
+                                 ]],
+                        ]
+        ]
+
+        def ld = new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA)
+
+        expect:
+        ld.applyLensAsMapByLang(thing, ['sv'] as Set, [], ['cards']) == expected
+
+        where:
+        thing                                                                  || expected
+        ['@type': 'X', 'x1': 'x1', 'x1ByLang': ['sv': 'x1ByLang']]             || ['sv': 'x1ByLang']
+        ['@type': 'X', 'x1': 'x1', 'x1ByLang': ['de': 'x1ByLang']]             || ['sv': 'x1']
+
+        ['@type': 'X', 'x1': 'x1', 'a1ByLang': ['sv': 'a1ByLang'], 'a1': 'a1'] || ['sv': 'x1, a1ByLang']
+        ['@type': 'X', 'x1': 'x1', 'a1ByLang': ['de': 'a1ByLang'], 'a1': 'a1'] || ['sv': 'x1, a1']
+        ['@type': 'X', 'x1': 'x1', 'a2': 'a2']                                 || ['sv': 'x1, a2']
+        ['@type': 'X', 'x1': 'x1', 'a1ByLang': ['de': 'a1ByLang'], 'a2': 'a2'] || ['sv': 'x1, a2']
     }
 
     def "get term key from URI"() {

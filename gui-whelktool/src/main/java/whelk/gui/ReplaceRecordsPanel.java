@@ -17,9 +17,9 @@ class ReplaceRecordsPanel extends WizardCard implements ActionListener
 {
     final Wizard window;
 
-    private JFileChooser chooser = new JFileChooser();
+    private final JFileChooser chooser = new JFileChooser();
     private File chosenFile;
-    private JTextField chosenFileField;
+    private final JTextField chosenFileField;
 
     public ReplaceRecordsPanel(Wizard wizard)
     {

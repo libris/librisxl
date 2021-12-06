@@ -6,7 +6,6 @@ import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import org.codehaus.jackson.map.ObjectMapper
 import whelk.exception.FramingException
 import whelk.exception.WhelkRuntimeException
 import whelk.util.DocumentUtil
@@ -54,8 +53,6 @@ class JsonLd {
     static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf', 'related', 'derivedFrom']
 
     static final Set<String> LD_KEYS
-
-    static final ObjectMapper mapper = new ObjectMapper()
 
     static {
         LD_KEYS = [
@@ -177,10 +174,16 @@ class JsonLd {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     private void expandAliasesInLensProperties() {
+        def expand = { p ->
+            def alias = langContainerAlias[p]
+            return alias ? [p, alias] : p
+        }
+        
         eachLens { lens ->
-            lens['showProperties'] = lens['showProperties'].collect {
-                def alias = langContainerAlias[it]
-                return alias ? [it, alias] : it
+            lens['showProperties'] = lens['showProperties'].collect { p ->
+                isAlternateProperties(p)
+                    ? ((Map) p).collectEntries { k, v -> [(k), v.collect{ expand(it) }] }
+                    : expand(p)
             }.flatten()
         }
     }
@@ -233,10 +236,9 @@ class JsonLd {
         }
     }
 
-    @TypeChecked(TypeCheckingMode.SKIP)
     private void eachLens(Closure c) {
-        displayData['lensGroups']?.values().each { group ->
-            group.get('lenses')?.values().each { lens ->
+        ((Map<String, Map>) displayData['lensGroups'])?.values()?.each { group ->
+            ((Map) group.get('lenses'))?.values()?.each { lens ->
                 c(lens)
             }
         }
@@ -256,6 +258,18 @@ class JsonLd {
 
     boolean isLangContainer(dfn) {
         return dfn instanceof Map && dfn[CONTAINER_KEY] == LANGUAGE_KEY
+    }
+
+    def getPropertyValue(Map entity, String property) {
+        def propertyValue = property ? entity[property] : null
+        if (propertyValue == null) {
+            def alias = langContainerAlias[property]
+            propertyValue = alias ? entity[alias] : null
+            if (propertyValue instanceof Map) {
+                propertyValue = locales.findResult { propertyValue[it] }
+            }
+        }
+        return propertyValue
     }
 
     String toTermKey(String termId) {
@@ -536,8 +550,8 @@ class JsonLd {
 
         private void descend(List<Tuple2> nodes) {
             for (n in nodes) {
-                path << n.second
-                node(n.first)
+                path << n.v2
+                node(n.v1)
                 path.remove(path.size()-1)
             }
         }
@@ -567,7 +581,7 @@ class JsonLd {
     }
 
     private Map<String, List<String>> generateSubTermLists(String relationToSuper) {
-        def superTermOf = [:]
+        Map<String, List<String>> superTermOf = [:]
         for (String type : vocabIndex.keySet()) {
             def termMap = vocabIndex[type]
             def superTerms = termMap[relationToSuper]
@@ -591,6 +605,8 @@ class JsonLd {
     }
 
     boolean isSubClassOf(String type, String baseType) {
+        if (!type)
+            return false
         if (type == baseType)
             return true
         Set<String> bases = getSubClasses(baseType)
@@ -672,7 +688,7 @@ class JsonLd {
     }
 
     Map toCard(Map thing, boolean chipsify = true, boolean addSearchKey = false,
-            boolean reduceKey = false, List<List> preservePaths = [], boolean searchCard = false) {
+            final boolean reduceKey = false, List<List> preservePaths = [], boolean searchCard = false) {
         Map result = [:]
 
         Map card = removeProperties(thing, getLens(thing, searchCard ? ['search-cards', 'cards'] : ['cards']))
@@ -684,8 +700,14 @@ class JsonLd {
 
         restorePreserved(card, thing, preservePaths)
 
-        reduceKey = reduceKey ?: { isSubClassOf((String) it, 'StructuredValue') }
-
+        // Using a new variable here is because changing the value of reduceKey
+        // causes "java.lang.VerifyError: Bad type on operand stack" when running
+        // on Java 11. Groovy compiler bug?
+        boolean reduce = reduceKey 
+                ? reduceKey
+                : isSubClassOf((String) thing[TYPE_KEY], 'StructuredValue')
+        
+        
         card.each { key, value ->
             def lensValue = value
             if (chipsify) {
@@ -694,11 +716,11 @@ class JsonLd {
                 if (value instanceof List) {
                     lensValue = ((List) value).withIndex().collect { it, index ->
                         it instanceof Map
-                        ? toCard((Map) it, chipsify, addSearchKey, reduceKey, pathRemainders([key, index], preservePaths), searchCard)
+                        ? toCard((Map) it, chipsify, addSearchKey, reduce, pathRemainders([key, index], preservePaths), searchCard)
                         : it
                     }
                 } else if (value instanceof Map) {
-                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduceKey, pathRemainders([key], preservePaths), searchCard)
+                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduce, pathRemainders([key], preservePaths), searchCard)
                 }
             }
             result[key] = lensValue
@@ -706,7 +728,8 @@ class JsonLd {
 
         if (addSearchKey) {
             List key = makeSearchKeyParts(card)
-            if (reduceKey) {
+            
+            if (reduce) {
                 for (v in result.values()) {
                     if (v instanceof List && ((List)v).size() == 1) {
                         v = ((List)v)[0]
@@ -718,6 +741,8 @@ class JsonLd {
                     }
                 }
             }
+            
+             
             if (key) {
                 result[SEARCH_KEY] = key.join(' ')
             }
@@ -745,18 +770,21 @@ class JsonLd {
     }
 
     /**
-     * Returns the chip as a list of [<language>, <property value>] pairs.
+     * Applies lens (chip, card, ..) to the thing and returns a list of
+     * [<language>, <property value>] pairs.
      */
-    private List toChipAsListByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris) {
+    private List applyLensAsListByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris, String lensToUse) {
         Map lensGroups = displayData.get('lensGroups')
-        Map lensGroup = lensGroups.get('chips')
+        Map lensGroup = lensGroups.get(lensToUse)
         Map lens = getLensFor((Map)thing, lensGroup)
         List parts = []
 
         if (lens) {
-            List propertiesToKeep = (List) lens.get('showProperties').findAll({ String s -> !(s.endsWith('ByLang')) })
-            // Go through the properties in the order defined in the chip
-            for (prop in propertiesToKeep) {
+            List propertiesToKeep = (List) lens.get('showProperties').findAll({ s -> !(s instanceof String && s.endsWith('ByLang')) })
+            // Go through the properties in the order defined in the lens
+            for (p in propertiesToKeep) {
+                def prop = selectProperty(p, thing, languagesToKeep)
+                
                 // If prop (e.g., title) has a language-specific version (e.g., titleByLang),
                 // and the thing has that language-specific version, use that
                 String byLangKey = langContainerAlias.get(prop)
@@ -778,11 +806,11 @@ class JsonLd {
                                     parts << [it, removeDomain((String) value['@id'], removableBaseUris)]
                                 }
                             } else {
-                                // Check for a more specific chip
-                                parts << toChipAsListByLang((Map) value, languagesToKeep, removableBaseUris)
+                                // Check for a more specific lens
+                                parts << applyLensAsListByLang((Map) value, languagesToKeep, removableBaseUris, lensToUse)
                             }
                         } else if (value instanceof String) {
-                            // Add non-language-specific chip property values
+                            // Add non-language-specific lens property values
                             languagesToKeep.each { parts << [it, value] }
                         }
                     }
@@ -792,16 +820,59 @@ class JsonLd {
 
         return parts
     }
+    
+    private static def selectProperty(def prop, Map thing, Set<String> languagesToKeep) {
+        if (!isAlternateProperties(prop)) {
+            return prop
+        }
+        
+        def a = prop['alternateProperties'].findResult {
+            def hasByLang = { List<String> a -> // List with [prop, propAlias1, propAlias2...]
+                 thing[a.head()] || (a.tail().any { 
+                     it.endsWith('ByLang') && ((Map<String, ?>) thing.get(it))?.keySet()?.any{ it in languagesToKeep } 
+                 })
+            }
+            if (it instanceof List && hasByLang(it))
+            {
+                it.first()
+            }
+            else if (thing[it]) {
+                it
+            }
+        }
+
+        return a ?: prop
+    }
 
     /**
-     * Returns a map with the keys given by languagesToKeep, each having as its value a string containing
-     * chip property values in (approximately) the order in which they would be displayed on the
-     * frontend. For use as search keys.
+     * Returns a map with the keys given by languagesToKeep, each having as its value a string containing the
+       lens property values. For lens 'chip', they would be (approximately) in the order in which they would
+       be displayed on the frontend. Mainly for use as search keys.
      */
-    Map toChipAsMapByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris) {
+    Map applyLensAsMapByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris, List<String> lensesToTry) {
+        Map lensGroups = displayData.get('lensGroups')
+        Map lens = null
+        String initialLens
+
+        for (String lensToTry : lensesToTry) {
+            Map lensGroup = lensGroups.get(lensToTry)
+            lens = getLensFor((Map)thing, lensGroup)
+            if (lens) {
+                initialLens = lensToTry
+                break
+            }
+        }
+
+        if (!lens) {
+            String id = (String) thing.get(ID_KEY)
+            log.warn('applyLensAsMapByLang() No lens found for {}, tried {}', id, lensesToTry)
+            String fallback = id.split('/').last()
+            return languagesToKeep.collectEntries{ [(it) : fallback] }
+        }
+
         // Transform the list of language/property value pairs to a map
         Map initialResults = languagesToKeep.collectEntries { [(it): []] }
-        Map results = toChipAsListByLang(thing, languagesToKeep, removableBaseUris)
+        Map results = applyLensAsListByLang(thing, languagesToKeep, removableBaseUris, initialLens)
             .flatten()
             .collate(2)
             .inject(initialResults, { acc, it ->
@@ -813,7 +884,7 @@ class JsonLd {
 
         // Turn the map values into strings
         return results.collectEntries { k, v ->
-            String result = ((List) v).flatten().join(", ")
+            String result = ((List) v).findAll { it != null }.flatten().join(", ")
             // Use last URI components as fallback
             if (!result && thing['@id']) {
                 result = removeDomain((String) thing['@id'], removableBaseUris)
@@ -911,20 +982,40 @@ class JsonLd {
         }
     }
     
-    private Map removeProperties(Map thing, Map lens) {
+    private static Map removeProperties(Map thing, Map lens) {
         Map result = [:]
         if (lens) {
             List propertiesToKeep = (List) lens.get("showProperties")
 
             thing.each { key, value ->
-                if (shouldKeep((String) key, (List) propertiesToKeep)) {
+                if (shouldAlwaysKeep((String) key)) {
                     result[key] = value
+                }
+            }
+            propertiesToKeep.each { p ->
+                if (p instanceof String && thing[p]) {
+                    result[p] = thing[p]
+                }
+                else if (isAlternateProperties(p)) {
+                    // We keep _all_ alternate properties, selecting one is more of a display thing 
+                    p['alternateProperties'].each { a ->
+                        if (a instanceof List) {
+                            a.each { if (thing[it]) result[it] = thing[it] }
+                        }
+                        else if (thing[a]) {
+                            result[a] = thing[a]
+                        }
+                    }
                 }
             }
             return result
         } else {
             return thing
         }
+    }
+    
+    private static boolean isAlternateProperties(def p) {
+        p instanceof Map && p.size() == 1 && p['alternateProperties']
     }
 
     Map getLensFor(Map thing, Map lensGroup) {
@@ -961,9 +1052,8 @@ class JsonLd {
         return null
     }
 
-    private static boolean shouldKeep(String key, List propertiesToKeep) {
-        return (key == RECORD_KEY || key == THING_KEY || key == JSONLD_ALT_ID_KEY ||
-                key in propertiesToKeep || key.startsWith("@"))
+    private static boolean shouldAlwaysKeep(String key) {
+        return key == RECORD_KEY || key == THING_KEY || key == JSONLD_ALT_ID_KEY || key.startsWith("@")
     }
 
 
@@ -1039,7 +1129,7 @@ class JsonLd {
 
         putRecordReferencesIntoThings(idMap)
 
-        Map mainItem = idMap[mainId]
+        Map mainItem = idMap[mainId] as Map
 
         Map framedData
         try {
@@ -1077,7 +1167,7 @@ class JsonLd {
         embedChain.add(mainId)
         Map newItem = [:]
         mainItem.each { key, value ->
-            if (!key.equals(JSONLD_ALT_ID_KEY))
+            if (key != JSONLD_ALT_ID_KEY)
                 newItem.put(key, toEmbedded(value, idMap, embedChain))
             else
                 newItem.put(key, value)
@@ -1120,14 +1210,14 @@ class JsonLd {
 
     private static void populateIdMap(Map data, Map idMap) {
         for (Object key : data.keySet()) {
-            if (key.equals(ID_KEY)
+            if (key == ID_KEY
                 // Don't index references (i.e. objects with only an @id).
                 && data.keySet().size() > 1
                 // Don't index graphs, since their @id:s do not denote them.
                 && !data.containsKey(GRAPH_KEY)
                ) {
                 addToIdMap(idMap, data, (String) data.get(key))
-            } else if (key.equals(JSONLD_ALT_ID_KEY)
+            } else if (key == JSONLD_ALT_ID_KEY
                     // Don't index graphs, since their @id:s do not denote them.
                     && !data.containsKey(GRAPH_KEY)
                     && data.get(key) instanceof List) {
@@ -1177,8 +1267,8 @@ class JsonLd {
     static void getReferencedBNodes(Map map, Set referencedBNodes) {
         // A jsonld reference is denoted as a json object containing exactly one member, with the key "@id".
         if (map.size() == 1) {
-            String key = map.keySet().getAt(0)
-            if (key.equals(ID_KEY)) {
+            String key = map.keySet()[0]
+            if (key == ID_KEY) {
                 String id = map.get(key)
                 if (id.startsWith("_:"))
                     referencedBNodes.add(id)
@@ -1232,7 +1322,7 @@ class JsonLd {
 
     class FresnelException extends WhelkRuntimeException {
         FresnelException(String msg) {
-            super(msg);
+            super(msg)
         }
     }
 }

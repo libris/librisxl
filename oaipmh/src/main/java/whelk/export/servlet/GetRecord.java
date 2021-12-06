@@ -44,7 +44,7 @@ public class GetRecord
             return;
         }
 
-        if (!OaiPmh.supportedFormats.keySet().contains(metadataPrefix))
+        if (!OaiPmh.supportedFormats.containsKey(metadataPrefix))
         {
             failedRequests.labels(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT, "Unsupported format: " + metadataPrefix,
