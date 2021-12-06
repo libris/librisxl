@@ -121,7 +121,9 @@ public class DeweyMapper {
                     
                 if (m.find()) {
                     int rowid = Integer.parseInt(m.group(1));
-                    String sab = m.group(2), dewey = m.group(3), flags[] = m.group(4).split("\\s");
+                    String sab = m.group(2);
+                    String dewey = m.group(3);
+                    String[] flags = m.group(4).split("\\s");
                     Relation relation = Relation.getRelation(flags);
                     Usage usage = Usage.getUsage(flags);
 
@@ -255,7 +257,7 @@ public class DeweyMapper {
         if (check() && !deweys.isEmpty() && sabs.isEmpty()) {
 
             for (String dewey: deweys) {
-                /** @todo remove this temporary fix when 78* and 8* classes are done */
+                /* @todo remove this temporary fix when 78* and 8* classes are done */
                 if (dewey.startsWith("78") || dewey.startsWith("8")) continue;
                 
                 String sab = getSAB(dewey);
@@ -349,7 +351,7 @@ public class DeweyMapper {
         }
     }
 
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         long t0 = System.currentTimeMillis();
 
         MarcRecord mr = new MarcRecordImpl();

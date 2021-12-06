@@ -83,7 +83,7 @@ public class ListRecords
         }
 
         // Was the data ordered in a format we know?
-        if (!OaiPmh.supportedFormats.keySet().contains(metadataPrefix))
+        if (!OaiPmh.supportedFormats.containsKey(metadataPrefix))
         {
             failedRequests.labels(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT,

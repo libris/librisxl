@@ -79,6 +79,7 @@ class Normalizers {
         def OBSOLETE_TYPE_NOTES = [
                 'ansi'    : 'Ansi',
                 'doi'     : 'DOI',
+                'danacode': 'Danacode',
                 'hdl'     : 'Hdl',
                 'isan'    : 'ISAN',
                 'isni'    : 'ISNI',
@@ -141,7 +142,7 @@ class Normalizers {
         if (node instanceof Map) {
             for (Object key: node.keySet()) {
 
-                if (key.equals("@type")) {
+                if (key == "@type") {
                     Object typeObject = node[key]
                     if (typeObject instanceof List) {
                         List typeList = typeObject

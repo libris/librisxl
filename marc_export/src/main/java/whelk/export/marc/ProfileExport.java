@@ -58,8 +58,8 @@ public class ProfileExport
     private static final Summary singleExportLatency = Summary.build().name("marc_export_single_doc_latency_seconds")
         .help("The time in seconds it takes to export a single 'complete' document")
         .labelNames("collection").register();
-    private JsonLD2MarcXMLConverter m_toMarcXmlConverter;
-    private Whelk m_whelk;
+    private final JsonLD2MarcXMLConverter m_toMarcXmlConverter;
+    private final Whelk m_whelk;
     public ProfileExport(Whelk whelk)
     {
         m_whelk = whelk;
@@ -106,10 +106,8 @@ public class ProfileExport
                     Timestamp createdTime = resultSet.getTimestamp("created");
                     Boolean deleted = resultSet.getBoolean("deleted");
 
-                    boolean created = false;
-                    if (zonedFrom.toInstant().isBefore(createdTime.toInstant()) &&
-                            zonedUntil.toInstant().isAfter(createdTime.toInstant()))
-                        created = true;
+                    boolean created = zonedFrom.toInstant().isBefore(createdTime.toInstant()) &&
+                            zonedUntil.toInstant().isAfter(createdTime.toInstant());
 
                     int affected = exportAffectedDocuments(id, collection, created, deleted, fromTimeStamp,
                             untilTimeStamp, profile, output, deleteMode, doVirtualDeletions, exportedIDs,
@@ -173,14 +171,16 @@ public class ProfileExport
         {
             List<Document> versions = m_whelk.getStorage().loadAllVersions(id);
 
-            // The 'versions' list is sorted, with the most recent version first.
+            // The 'versions' list is sorted, with the oldest version first.
+            // We go through it in reverse (i.e. starting with the newest version).
             // 1. We iterate through the list, skipping (continue) until we've found a
             // version inside the update interval.
             // 2. We keep iterating over versions and check if we're still inside the
             // interval _after_ each iteration, which means we will pass (export) all
             // versions inside the interval and exactly one version "before" the interval.
-            for (Document version : versions)
+            for (int i = versions.size()-1; i > -1; --i)
             {
+                Document version = versions.get(i);
                 String itemOf = version.getHoldingFor();
                 Instant modified = ZonedDateTime.parse(version.getModified()).toInstant();
 
@@ -273,9 +273,7 @@ public class ProfileExport
             if (collection.equals("hold"))
             {
                 Document updatedDocument = m_whelk.getStorage().load(id);
-                if (!profile.locations().contains(updatedDocument.getHeldBySigel())) {
-                    return false;
-                }
+                return profile.locations().contains(updatedDocument.getHeldBySigel());
             }
         }
 

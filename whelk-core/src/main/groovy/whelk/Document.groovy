@@ -1,8 +1,6 @@
 package whelk
 
-
 import groovy.util.logging.Log4j2 as Log
-import org.codehaus.jackson.map.ObjectMapper
 import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
@@ -14,6 +12,8 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.function.Predicate
+
+import static whelk.util.Jackson.mapper
 
 /**
  * A document is represented as a data Map (containing Maps, Lists and Value objects).
@@ -38,8 +38,6 @@ class Document {
             BASE_URI = new URI("https://libris.kb.se/")
         }
     }
-
-    static final ObjectMapper mapper = new ObjectMapper()
 
     static final List thingPath = ["@graph", 1]
     static final List thingIdPath = ["@graph", 0, "mainEntity", "@id"]
@@ -321,17 +319,17 @@ class Document {
 
     boolean getDeleted() {
         String deletedString = get(statusPath)
-        if (deletedString == null || !deletedString.equals("marc:Deleted"))
+        if (deletedString == null || deletedString != "marc:Deleted")
             return false
         return true
     }
 
     private void updateRecordStatus() {
         String currentStatus = get(statusPath)
-        if (currentStatus != null && currentStatus.equals("marc:New")) {
+        if (currentStatus != null && currentStatus == "marc:New") {
             String modified = getModified()
             String created = getCreated()
-            if (modified != null && created != null && !modified.equals(created))
+            if (modified != null && created != null && modified != created)
                 set(statusPath, "marc:CorrectedOrRevised")
         }
     }
@@ -505,7 +503,7 @@ class Document {
         }
     }
 
-    public String getWorkType() {
+    String getWorkType() {
         Object workId = get(workIdPath)
         if (workId == null)
             return null
@@ -520,7 +518,7 @@ class Document {
         return null
     }
 
-    public boolean libraryIsRegistrant() {
+    boolean libraryIsRegistrant() {
         Object catObj = get(categoryPath)
         if (catObj == null)
             return false
@@ -549,7 +547,7 @@ class Document {
     private Map getEmbedded(String id, Map localData) {
         Map map = (Map) localData
         String objId = map.get("@id")
-        if (objId.equals(id) && map.size() > 1) {
+        if (objId == id && map.size() > 1) {
             return map
         }
         else {
@@ -599,35 +597,7 @@ class Document {
     Set<Link> getExternalRefs() {
         return JsonLd.getExternalReferences(this.data)
     }
-
-    private void addRefsWithRelation(Map node, List<String[]> references, String relation) {
-        for (Object keyObject : node.keySet()) {
-            String key = (String) keyObject
-            Object value = node.get(keyObject)
-
-            // Is node a {"@id":"[URI]"} link ?
-            if (key.equals("@id") && node.size() == 1 && value instanceof String) {
-                references.add ([relation, (String) value] as String[])
-            }
-
-            // Keep going down the tree
-            if (value instanceof Map)
-                addRefsWithRelation( (Map) value, references, key )
-            else if ( value instanceof List)
-                addRefsWithRelation( (List) value, references, key )
-        }
-    }
-
-    private void addRefsWithRelation(List node, List<String[]> references, String relation) {
-        // Keep going down the tree
-        for (Object item : node) {
-            if (item instanceof Map)
-                addRefsWithRelation( (Map) item, references, relation )
-            else if ( item instanceof List)
-                addRefsWithRelation( (List) item, references, relation )
-        }
-    }
-
+    
     /**
      * Adds empty structure to the document so that 'path' can be traversed.
      */
@@ -635,7 +605,7 @@ class Document {
         return _preparePath(path, data)
     }
 
-    public static boolean _preparePath(List path, Object root) {
+    static boolean _preparePath(List path, Object root) {
         // Start at root data node
         Object node = root
 
@@ -686,7 +656,7 @@ class Document {
         return _set(path, value, data)
     }
 
-    public static boolean _set(List path, Object value, Object root) {
+    static boolean _set(List path, Object value, Object root) {
         if (!_preparePath(path, root))
             return false
 
@@ -713,7 +683,7 @@ class Document {
         return true
     }
 
-    public static boolean _removeLeafObject(List path, Object root) {
+    static boolean _removeLeafObject(List path, Object root) {
         // Start at root data node
         Object node = root
 
@@ -739,7 +709,7 @@ class Document {
         return _get(path, data)
     }
 
-    public static Object _get(List path, Object root) {
+    static Object _get(List path, Object root) {
         // Start at root data node
         Object node = root
 
@@ -819,7 +789,7 @@ class Document {
      * the sameAs list. The same thing happens consistently to all
      * derivative (thing/work/etc) IDs.
      */
-    public void deepPromoteId(String aliasToPromote) {
+    void deepPromoteId(String aliasToPromote) {
         String oldId = get(recordIdPath)
         deepPromoteIdInternal(oldId, aliasToPromote, data)
     }
@@ -851,7 +821,7 @@ class Document {
                     for (int i = 0; i < sameAsList.size(); ++i) {
                         Map object = (Map) sameAsList.get(i)
                         String sameAsId = object["@id"]
-                        if (sameAsId.equals(nodeId))
+                        if (sameAsId == nodeId)
                             alreadyInSameAsList = true
                     }
                     if (!alreadyInSameAsList && nodeId != expectedNewDerivative) {
@@ -883,6 +853,8 @@ class Document {
             return term
         else if (node instanceof String)
             return node.hashCode() * depth
+        else if (node instanceof GString)
+            return node.toString().hashCode() * depth
         else if (node instanceof Boolean)
             return node.booleanValue() ? depth : term
         else if (node instanceof Integer)

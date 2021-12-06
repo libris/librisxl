@@ -1,0 +1,148 @@
+{
+  "default_site": "https://libris.kb.se/",
+  "site_alias": {
+    "http://id.kblocalhost.kb.se:5000/": "https://id.kb.se/",
+    "https://id-dev.kb.se/": "https://id.kb.se/",
+    "https://id-dev2.kb.se/": "https://id.kb.se/",
+    "https://id-edu.kb.se/": "https://id.kb.se/",
+    "https://id-qa.kb.se/": "https://id.kb.se/",
+    "https://id-stg.kb.se/": "https://id.kb.se/"
+  },
+  "sites": {
+    "https://id.kb.se/": {
+      "@id"  : "https://id.kb.se/",
+      "@type": "DataCatalog",
+      "title"          : "id.kb.se",
+      "summary"        : {"@id": "/doc/summary"},
+      "stylesheet"     : {"name": "id.css"},
+      "statsindex"     : {"inScheme.@id":{"inCollection.@id":["@type"], "@type":[]}},
+      "statsfind"      :
+      {
+        "inScheme.@id":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":1000
+        },
+        "@type":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":100
+        },
+        "inCollection.@id":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":100
+        }
+      },
+      "boost"          : "id.kb.se",
+      "filter_param"   : "inScheme.@id",
+      "itemList"       : [
+        {"@id": "/", "title": "Sök"},
+        {"@id": "/marcframe/", "title": "MARC-mappningar"},
+        {"@id": "/vocab/", "title": "Basvokabulär"},
+        {"@id": "/doc/about", "title": "Om id.kb.se"}
+      ]
+    },
+    "https://libris.kb.se/": {
+      "@id": "https://libris.kb.se/",
+      "@type": "DataCatalog",
+      "title": "libris.kb.se",
+      "summary": {"articleBody": "<p>Data på <b>LIBRIS.KB.SE</b>.</p>"},
+      "statsindex": {"@type": []},
+      "filter_param": "@type",
+      "statsfind": {
+        "@reverse.itemOf.heldBy.@id":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":1000
+        },
+        "instanceOf.language.@id":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":100
+        },
+        "carrierType.@id":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":100
+        },
+        "instanceOf.@type":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":100
+        },
+        "publication.year":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":500
+        },
+        "issuanceType":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":100
+        },
+        "meta.encodingLevel":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":100
+        },
+        "@type":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":100
+        },
+        "inScheme.@id":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":100
+        },
+        "inCollection.@id":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":100
+        },
+        "genreForm.@id":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":100
+        },
+        "instanceOf.genreForm.@id":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":100
+        },
+        "contentType.@id": {
+          "sort":"value",
+          "sortOrder": "desc",
+          "size":100
+        },
+        "nationality.@id": {
+          "sort":"value",
+          "sortOrder": "desc",
+          "size":100
+        },
+        "language.@id":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":100
+        },
+        "contribution.agent.@id":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":20
+        },
+        "instanceOf.subject.@id":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":100
+        },
+        "meta.bibliography.@id":{
+          "sort":"value",
+          "sortOrder":"desc",
+          "size":100
+        }
+      },
+      "itemList": []
+    }
+  }
+}

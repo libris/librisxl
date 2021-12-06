@@ -16,7 +16,7 @@
         </init-param>
         <init-param>
             <param-name>cors.supportedMethods</param-name>
-            <param-value>GET, POST, PUT, DELETE</param-value>
+            <param-value>GET, POST, PUT, DELETE, HEAD, OPTIONS</param-value>
         </init-param>
     </filter>
     <filter>
@@ -85,6 +85,10 @@
         <servlet-name>UserDataAPI</servlet-name>
         <servlet-class>whelk.rest.api.UserDataAPI</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>DigitalReproductionAPI</servlet-name>
+        <servlet-class>se.kb.libris.digi.DigitalReproductionAPI</servlet-class>
+    </servlet>
 
 
     <servlet>
@@ -124,6 +128,11 @@
     </servlet-mapping>
 
     <servlet-mapping>
+        <servlet-name>DigitalReproductionAPI</servlet-name>
+        <url-pattern>/_reproduction</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
         <servlet-name>WhelkServlet</servlet-name>
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
@@ -145,7 +154,7 @@
 
     <filter-mapping>
         <filter-name>CORS</filter-name>
-        <servlet-name>WhelkServlet</servlet-name>
+        <url-pattern>/*</url-pattern>
     </filter-mapping>
 
     <filter-mapping>

@@ -1,17 +1,13 @@
 package whelk.converter.marc
 
 import groovy.util.logging.Log4j2 as Log
-import org.codehaus.jackson.map.ObjectMapper
-import whelk.*
 import whelk.converter.FormatConverter
 
 @Log
 class JsonLD2MarcConverter implements FormatConverter {
 
     protected MarcFrameConverter marcFrameConverter
-    final static ObjectMapper mapper = new ObjectMapper()
-
-
+    
     @Override
     String getResultContentType() { "application/x-marc-json" }
 

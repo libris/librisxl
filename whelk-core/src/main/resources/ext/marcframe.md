@@ -217,7 +217,7 @@ So in total a 020 mapping could look like this.
 
 
 - [BIBFRAME 2 conversion specifications](https://www.loc.gov/bibframe/)
-- [Libris Formathandbok](https://www.kb.se/katalogisering/Formathandboken)
+- [Libris Formathandbok](https://katalogverk.kb.se/katalogisering/Formathandboken/index.html)
 - [LC MARC21 specification](https://www.loc.gov/marc/)
 - [OCLC](https://www.oclc.org/bibformats/en.html)
 - Translations and configuration files from old Libris systems.

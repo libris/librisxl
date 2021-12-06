@@ -15,14 +15,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RunPanel extends WizardCard implements ActionListener
 {
-    private JTextArea stdErrArea;
-    private JScrollPane stdErrScroll;
-    private JPasswordField passwordField;
-    private JButton startButton;
+    private final JTextArea stdErrArea;
+    private final JScrollPane stdErrScroll;
+    private final JPasswordField passwordField;
+    private final JButton startButton;
 
     private PortableScript scriptToRun;
 
-    private AtomicBoolean scriptIsDone = new AtomicBoolean(false);
+    private final AtomicBoolean scriptIsDone = new AtomicBoolean(false);
 
     public RunPanel(Wizard wizard)
     {

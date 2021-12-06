@@ -3,7 +3,6 @@ package whelk.rest.api
 import groovy.util.logging.Log4j2 as Log
 import groovy.util.slurpersupport.GPathResult
 import groovy.xml.StreamingMarkupBuilder
-import org.codehaus.jackson.map.ObjectMapper
 import se.kb.libris.util.marc.Field
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.MarcXmlRecordReader
@@ -24,11 +23,10 @@ import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+import static whelk.util.Jackson.mapper
+
 @Log
 class RemoteSearchAPI extends HttpServlet {
-
-    final static mapper = new ObjectMapper()
-
     MarcFrameConverter marcFrameConverter
     static final URL metaProxyInfoUrl
     static final String metaProxyBaseUrl

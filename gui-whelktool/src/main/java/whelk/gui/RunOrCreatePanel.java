@@ -7,8 +7,8 @@ import java.awt.event.ActionListener;
 
 public class RunOrCreatePanel extends WizardCard implements ActionListener
 {
-    private JRadioButton rCreate;
-    private JRadioButton rRun;
+    private final JRadioButton rCreate;
+    private final JRadioButton rRun;
 
     public RunOrCreatePanel(Wizard wizard)
     {

@@ -29,7 +29,7 @@ public class Main
 
     private static boolean verbose = false;
 
-    private static List tempfiles = Collections.synchronizedList(new ArrayList<File>());
+    private static final List tempfiles = Collections.synchronizedList(new ArrayList<File>());
 
     // Metrics
     private final static String METRICS_PUSHGATEWAY = "metrics.libris.kb.se:9091";
@@ -274,9 +274,9 @@ public class Main
     }
     
     private static void dumpDigIds(MarcRecord marcRecord) {
-        String ids[][] = DigId.digIds(marcRecord);
+        String[][] ids = DigId.digIds(marcRecord);
         if (ids != null) {
-            for (String r[] : ids) {
+            for (String[] r : ids) {
                 if (r != null) {
                     for (String c : r) {
                         if (c != null) {

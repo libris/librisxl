@@ -4,6 +4,8 @@ The Libris OAI-PMH server implementation conforms to the official OAI-PMH specif
 
 The purpose of this document is to provide Libris-specific information on to how to use OAI-PMH to harvest metadata from Libris.
 
+The OAI-PMH endpoint is available at https://libris.kb.se/api/oaipmh/
+
 ## The Set-parameter:
 
 The OAI-PMH specification describes harvesting of sets. Libris uses sets for certain specific purposes.
@@ -34,10 +36,8 @@ For example if `metadataPrefix=marcxml_expanded` is used for a bilbiographic rec
 The Libris OAI-PMH implementation allows one extra parameter which is not a part of the OAI-PMH specification. This parameter is called `x-withDeletedData` and may be used with the verbs `GetRecord` and `ListRecords`. If `x-withDeletedData` is set to `true` this results in data being delivered for records even if those records are marked deleted. This violates the OAI-PMH specification, which explicitly forbids both extra parameters and delivering deleted data. The parameter has been included anyway, because it is necessary for certain Libris functionality.
 
 #### Example
-To harvest (from the Libris QA-environment) all bibliographic records (with a list of holding records attached) for which there exists holding records with the sigel `S` and that have been modified between 13/2 and 12:00 14/2 (UTC):
+To harvest all bibliographic records (with a list of holding records attached) for which there exists holding records with the sigel `S` and that have been modified between 2018-02-13 and 12:00 2018-02-14 (UTC):
 
 ```
-$ curl "https://libris-qa.kb.se/api/oaipmh/?verb=ListRecords&metadataPrefix=marcxml_includehold_expanded&from=2018-02-13&until=2018-02-14T12:00:00Z&x-withDeletedData=true&set=bib:S"
-<?xml version="1.0" encoding="UTF-8"?><OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd"><responseDate>2018-02-15T10:54:18.606Z</responseDate><request verb="ListRecords" metadataPrefix="marcxml_includehold_expanded" from="2018-02-13" until="2018-02-14" x-withDeletedData="true" set="hold:S">http://export-qa.libris.kb.se:8080/oaipmh/</request><ListRecords><record><header><identifier>https://libris-qa.kb.se/pt0pfgtv1hf8p2t</identifier>
-...
+$ curl "https://libris.kb.se/api/oaipmh/?verb=ListRecords&metadataPrefix=marcxml_includehold_expanded&from=2018-02-13&until=2018-02-14T12:00:00Z&x-withDeletedData=true&set=bib:S"
 ```

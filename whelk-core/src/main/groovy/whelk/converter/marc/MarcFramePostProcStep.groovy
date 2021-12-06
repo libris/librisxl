@@ -3,13 +3,15 @@ package whelk.converter.marc
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import groovy.util.logging.Log4j2 as Log
+import org.codehaus.jackson.map.ObjectMapper
 
 import whelk.JsonLd
 
 interface MarcFramePostProcStep {
-    def ID = '@id'
-    def TYPE = '@type'
+    def ID = JsonLd.ID_KEY
+    def TYPE = JsonLd.TYPE_KEY
     void setLd(JsonLd ld)
+    void setMapper(ObjectMapper mapper)
     void init()
     void modify(Map record, Map thing)
     void unmodify(Map record, Map thing)
@@ -21,6 +23,7 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
     String type
     Pattern matchValuePattern
     JsonLd ld
+    ObjectMapper mapper
 
     void setMatchValuePattern(String pattern) {
         matchValuePattern = Pattern.compile(pattern)
@@ -32,60 +35,178 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
         if (!source || !path) {
             return source
         }
-        if (source instanceof List) {
-            source = source[0]
+
+        def key = path[0]
+        def object
+        if (ld == null) {
+            object = source[key]
+        } else {
+            object = getValue(source, key)
         }
-        return findValue(source[path[0]], path.size() > 1 ? path[1..-1] : null)
+
+        def pathrest = path.size() > 1 ? path[1..-1] : null
+
+        return findValue(object, pathrest)
     }
 
-    static String buildString(Map node, List showProperties) {
+    def getValue(source, key) {
+        if (source instanceof List) {
+            if (key instanceof Integer) {
+                return source[key]
+            }
+            return source.collect { getValue(it, key) }
+        }
+
+        if (source instanceof Map) {
+            def value = ld.getPropertyValue(source, key)
+            if (!value) {
+                value = ld.getSubProperties(key).findResult {
+                    ld.getPropertyValue(source, (String) it)
+                }
+            }
+            return value
+        }
+
+        return source // don't attempt to index potential primitives
+    }
+
+    String buildString(Map node, List showProperties) {
         def result = ""
+        int shown = 0
+        int padded = 0
+
         for (prop in showProperties) {
             def fmt = null
             if (prop instanceof Map) {
                 fmt = prop.useValueFormat
                 prop = prop.property
             }
-            def value = node[prop]
+            def value = prop instanceof List ? findValue(node, prop) : getValue(node, prop)
             if (value) {
+                shown++
                 if (!(value instanceof List)) {
                     value = [value]
                 }
                 def first = true
-                if (fmt?.contentFirst) {
+                if (fmt?.contentFirst != null) {
                     result += fmt.contentFirst
                 }
                 def prevAfter = null
                 value.each {
-                    if (prevAfter) {
+                    if (prevAfter != null) {
                         result += prevAfter
                     }
-                    if (fmt?.contentBefore && (!fmt.contentFirst || !first)) {
+                    if (fmt?.contentBefore != null && (fmt.contentFirst == null || first == null)) {
                         result += fmt.contentBefore
                     }
                     result += it
                     first = false
                     prevAfter = fmt?.contentAfter
                 }
-                if (fmt?.contentLast) {
+                if (fmt?.contentLast != null) {
                     result += fmt.contentLast
-                } else if (prevAfter) {
+                } else if (prevAfter != null) {
                     result += prevAfter
                 }
-            } else if (fmt?.contentNoValue) {
+            } else if (fmt?.contentNoValue != null) {
+                padded++
                 result += fmt.contentNoValue
             }
         }
+
+        if (shown == 0 || shown + padded < showProperties.size()) {
+            return null
+        }
+
         return result
     }
 
+    Map jsonClone(Map data) {
+        return mapper.readValue(mapper.writeValueAsString(data), SortedMap)
+    }
+}
+
+
+class CopyOnRevertStep extends MarcFramePostProcStepBase {
+
+    String sourceLink
+    String targetLink
+    List<FromToProperty> copyIfMissing
+    Map injectOnCopies
+
+    void setCopyIfMissing(List<Object> copyIfMissing) {
+        this.copyIfMissing = copyIfMissing.collect {
+            String fromProp
+            String toProp
+            if (it instanceof Map) {
+                new FromToProperty(it)
+            } else if (it instanceof String) {
+                new FromToProperty([from: it, to: it])
+            } else {
+                throw new RuntimeException("Unhandled value in copyIfMissing: ${it}")
+            }
+        }
+    }
+
+    void init() {
+        assert sourceLink || targetLink
+    }
+
+    void modify(Map record, Map thing) {
+    }
+
+    void unmodify(Map record, Map thing) {
+        def source = sourceLink ? thing[sourceLink] : thing
+        def target = targetLink ? thing[targetLink] : thing
+
+        if (source) {
+            if (!(source instanceof List)) {
+                source = [source]
+            }
+            for (prop in copyIfMissing) {
+                for (item in source) {
+                    if (!target.containsKey(prop.to) && item.containsKey(prop.from)) {
+                        def src = item[prop.from]
+                        def copy = src instanceof List ?
+                            src.collect { jsonClone(it) } :
+                            jsonClone((Map) src)
+
+                        Map inject = prop.injectOnCopies ?: this.injectOnCopies
+                        if (inject) {
+                            Map injectCopy = jsonClone(inject)
+                            if (copy instanceof Map) {
+                                injectCopy.keySet().removeAll(copy.keySet())
+                                copy.putAll(injectCopy)
+                            } else if (copy instanceof List) {
+                                copy.each {
+                                    if (it instanceof Map) {
+                                        injectCopy.keySet().removeAll(it.keySet())
+                                        it.putAll(injectCopy)
+                                    }
+                                }
+                            }
+                        }
+                        target[prop.to] = copy
+                    }
+                }
+            }
+        }
+    }
+
+    class FromToProperty {
+        String from
+        String to
+        Map injectOnCopies
+    }
 }
 
 
 class MappedPropertyStep implements MarcFramePostProcStep {
 
-    JsonLd ld
     String type
+    JsonLd ld
+    ObjectMapper mapper
+
     String sourceEntity
     String sourceLink
     String sourceProperty
@@ -412,6 +533,79 @@ class ProduceIfMissingStep extends MarcFramePostProcStepBase {
                 if (value) {
                     it[produceMissing.produceProperty] = value
                 }
+            }
+        }
+    }
+}
+
+
+class InjectWhenMatchingOnRevertStep extends MarcFramePostProcStepBase {
+
+    List<Map> rules
+    static final MATCH_REF = ~/\?\d+/
+
+    void modify(Map record, Map thing) {
+    }
+
+    void unmodify(Map record, Map thing) {
+        def item = thing
+        for (rule in rules) {
+            def refs = [:]
+            if (deepMatches(item, rule.matches, refs)) {
+                Map injectData = jsonClone(rule.injectData)
+                injectInto(item, injectData, refs)
+                break
+            }
+        }
+    }
+
+    boolean deepMatches(Map o, Map match, Map refs) {
+        String ref = null
+        if (match[ID] ==~ MATCH_REF) {
+            ref = match[ID]
+        }
+        match.every { k, v ->
+            if (k == ID && v == ref) return true
+            Util.asList(v).every {
+                return Util.asList(o[k]).any { ov ->
+                    boolean matches = (ov instanceof Map) ?
+                        deepMatches(ov, it, refs) :
+                        ov == it
+                    if (!matches && k == TYPE) {
+                        matches = ld?.isSubClassOf(ov, it)
+                    }
+                    if (matches) {
+                        refs[ref] = o
+                    }
+                    return matches
+                }
+            }
+        }
+    }
+
+    static void injectInto(Map receiver, Map v, Map refs) {
+        v.each { ik, iv ->
+            if (receiver.containsKey(ik)) {
+                if (iv instanceof Map && iv[ID] ==~ MATCH_REF) {
+                    Map matched = refs[iv[ID]]
+                    if (matched instanceof Map && !iv.keySet().any {
+                        it != ID && matched.containsKey(it)
+                    }) {
+                        matched.putAll(iv)
+                        matched.remove(ID)
+                    }
+                } else if (receiver[ik] != iv) {
+                    def values = Util.asList(receiver[ik])
+                    def ids = values.findResults { if (it instanceof Map) it[ID] } as Set
+                    Util.asList(iv).each {
+                        if (it instanceof Map && it[ID] in ids)
+                            return
+                        values << it
+                    }
+                    receiver[ik] = values
+                }
+            } else {
+                receiver[ik] = iv
             }
         }
     }

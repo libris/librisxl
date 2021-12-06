@@ -5,13 +5,14 @@ import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeCheckingMode
 import groovy.util.logging.Log4j2 as Log
-import org.codehaus.jackson.map.ObjectMapper
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.component.ElasticSearch
 import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
+
+import static whelk.util.Jackson.mapper
 
 @CompileStatic
 @Log
@@ -21,10 +22,9 @@ class ESQuery {
     private Set keywordFields
     private Set dateFields
     
-    private static final ObjectMapper mapper = new ObjectMapper()
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
-        'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_suggest'
+        'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_suggest', '_site'
     ]
     private static final String OR_PREFIX = 'or-'
     private static final String EXISTS_PREFIX = 'exists-'
@@ -135,16 +135,7 @@ class ESQuery {
 
         // In case of suggest/autocomplete search, target a specific field with a specific query type
         // TODO: make language (sv, en) configurable?
-        Map queryClauses
-        if (suggest) {
-            queryClauses = [
-                'match_phrase_prefix': [
-                    ("_sortKeyByLang.${suggest}.suggest".toString()) : q
-                ]
-            ]
-        } else {
-            queryClauses = simpleQuery
-        }
+        Map queryClauses = simpleQuery
 
         String[] boostParam = queryParameters.get('_boost')
         String boostMode = boostParam ? boostParam[0] : null
@@ -186,15 +177,48 @@ class ESQuery {
             ]
         }
 
-        Map query = [
-            'query': [
-                'bool': [
-                    'must': [
-                        queryClauses
+        Map query
+        if (suggest) {
+            query = [
+                'query': [
+                    'bool': [
+                        'must': [
+                            'multi_match': [
+                                'query': q,
+                                'type': 'bool_prefix',
+                                'fields': [
+                                    "_sortKeyByLang.${suggest}.suggest".toString(),
+                                    "_sortKeyByLang.${suggest}.suggest._2gram".toString(),
+                                    "_sortKeyByLang.${suggest}.suggest._3gram".toString()
+                                ]
+                            ]
+                        ],
+                        'should': [
+                            'prefix': [
+                                ("_sortKeyByLang.${suggest}.keyword".toString()): [
+                                    'value': q,
+                                    'boost': 100
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                'sort': [
+                    '_score': 'desc',
+                    ("_sortKeyByLang.${suggest}.keyword".toString()): 'asc'
+                ]
+            ]
+        } else {
+            query = [
+                'query': [
+                    'bool': [
+                        'must': [
+                            queryClauses
+                        ]
                     ]
                 ]
             ]
-        ]
+        }
 
         if (limit >= 0) {
             query['size'] = limit
@@ -441,7 +465,7 @@ class ESQuery {
      * Public for test only - don't call outside this class!
      *
      */
-    public List getSiteFilter(Map<String, String[]> queryParameters) {
+    List getSiteFilter(Map<String, String[]> queryParameters) {
         if (!('_site_base_uri' in queryParameters)) return null
         if (!(queryParameters.get('_site_base_uri').size() > 0)) return null
 
@@ -653,7 +677,7 @@ class ESQuery {
      *
      */
     @CompileStatic(TypeCheckingMode.SKIP)
-    public Map getAggQuery(Map queryParameters) {
+    Map getAggQuery(Map queryParameters) {
         if (!('_statsrepr' in queryParameters)) {
             Map defaultQuery = [(JsonLd.TYPE_KEY): ['terms': ['field': JsonLd.TYPE_KEY]]]
             return defaultQuery
@@ -751,7 +775,7 @@ class ESQuery {
      * Public for test only - don't call outside this class!
      *
      */
-    public Set getKeywordFields(Map mappings) {
+    Set getKeywordFields(Map mappings) {
         Set keywordFields = [] as Set
         if (mappings) {
             keywordFields = getKeywordFieldsFromProperties(mappings['properties'] as Map)
@@ -800,7 +824,7 @@ class ESQuery {
      *
      */
     @CompileStatic(TypeCheckingMode.SKIP)
-    public Map hideKeywordFields(Map esResponse) {
+    Map hideKeywordFields(Map esResponse) {
         // no aggs? nothing to do.
         if (!esResponse.containsKey('aggregations')) {
             return esResponse

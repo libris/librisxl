@@ -197,7 +197,7 @@ class ElasticClient {
                     def result = new Tuple2(statusCode, EntityUtils.toString(response.getEntity()))
 
                     if (log.isDebugEnabled()) {
-                        String r = result.getSecond()
+                        String r = result.v2
                         if (r.size() < 50_000) {
                             log.debug("Elastic response: $r")
                         }

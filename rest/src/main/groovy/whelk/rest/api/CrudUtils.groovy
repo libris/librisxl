@@ -10,24 +10,40 @@ import org.apache.http.NameValuePair
 import org.apache.http.message.BasicHeaderValueParser
 
 import javax.servlet.http.HttpServletRequest
+import java.lang.management.ManagementFactory
 
 @Log
 class CrudUtils {
     final static MediaType JSON = MediaType.parse(MimeTypes.JSON)
     final static MediaType JSONLD = MediaType.parse(MimeTypes.JSONLD)
+    final static MediaType TURTLE = MediaType.parse(MimeTypes.TURTLE)
+    final static MediaType TRIG = MediaType.parse(MimeTypes.TRIG)
+    final static MediaType RDFXML = MediaType.parse(MimeTypes.RDF)
+    final static MediaType N3 = MediaType.parse(MimeTypes.N3)
 
     static final Map ALLOWED_MEDIA_TYPES_BY_EXT = [
             '': [JSONLD, JSON],
             'jsonld': [JSONLD],
             'json': [JSON],
+            'trig': [TRIG],
+            'ttl': [TURTLE],
+            'rdf': [RDFXML],
+            'xml': [RDFXML],
+            'n3': [N3]
     ]
+
+    static final List ALLOWED_MEDIA_TYPES = [JSON, JSONLD, TRIG, TURTLE, RDFXML, N3]
 
     static String getBestContentType(HttpServletRequest request) {
         def header = getAcceptHeader(request)
         def desired = parseAcceptHeader(header)
-        def allowed = allowedMediaTypes(request)
+        def allowed = allowedMediaTypes(request, desired)
 
         MediaType best = getBestMatchingMimeType(allowed, desired)
+
+        log.debug("Desired Content-Type: ${desired}")
+        log.debug("Allowed Content-Type: ${allowed}")
+        log.debug("Best Content-Type: ${best}")
 
         if (!best) {
             throw new UnsupportedContentTypeException(header)
@@ -36,14 +52,23 @@ class CrudUtils {
         return best.toString()
     }
 
-    private static List<MediaType> allowedMediaTypes(HttpServletRequest request) {
+    private static List<MediaType> allowedMediaTypes(HttpServletRequest request, List desired) {
         String extension = FilenameUtils.getExtension(request.getRequestURI())
 
-        if (ALLOWED_MEDIA_TYPES_BY_EXT.containsKey(extension)) {
+        List media_type_intersect = ALLOWED_MEDIA_TYPES.intersect(desired)
+
+        // If no extension specified but Accept given, try Accept values first.
+        // Otherwise, if extension (including no extension) specified, try that.
+        if (media_type_intersect.size() > 0 && extension == '') {
+            return media_type_intersect
+        } else if (ALLOWED_MEDIA_TYPES_BY_EXT.containsKey(extension)) {
             return ALLOWED_MEDIA_TYPES_BY_EXT.get(extension)
-        }
-        else {
-            throw new Crud.NotFoundException('.' + extension)
+        } else {
+            if (extension) {
+                throw new Crud.NotFoundException('.' + extension)
+            } else {
+                throw new Crud.NotFoundException("${media_type_intersect}")
+            }
         }
     }
 
@@ -86,15 +111,7 @@ class CrudUtils {
          */
         return allowedMimeTypes.isEmpty() ? JSONLD : allowedMimeTypes[0]
     }
-
-    static String cleanEtag(String str) {
-        return stripQuotes(str)?.replaceAll('-gzip', '')
-    }
-
-    private static String stripQuotes(String str) {
-        return str?.replaceAll('"', '')
-    }
-
+    
     /**
      * Returns a sorted list of media types accepted by the client
      */
@@ -107,6 +124,12 @@ class CrudUtils {
         }
 
         return mediaTypes.sort().collect { it.mediaType }
+    }
+
+    static Optional<ETag> getIfNoneMatch(HttpServletRequest request) {
+        return Optional
+                .ofNullable(request.getHeader("If-None-Match"))
+                .map(ETag.&parse)
     }
 
     private static class AcceptMediaType implements Comparable<AcceptMediaType> {
@@ -164,8 +187,8 @@ class CrudUtils {
                 MediaType m = MediaType.parse(element.name).withParameters(parameters)
                 return new AcceptMediaType(m, q)
             }
-            catch (IllegalArgumentException e) {
-                throw new BadRequestException('Invalid media type in Accept header': element.toString())
+            catch (IllegalArgumentException ignored) {
+                throw new BadRequestException("Invalid media type in Accept header': $element")
             }
         }
 
@@ -176,6 +199,75 @@ class CrudUtils {
             catch (NumberFormatException e) {
                 throw new BadRequestException("Invalid q value in Accept header:" + value)
             }
+        }
+    }
+
+    static class ETag {
+        static final ETag SYSTEM_START = plain("${ManagementFactory.getRuntimeMXBean().getStartTime()}")
+        
+        private static final String SEPARATOR = ':'
+        
+        private String plain = null
+        private String embellished = null
+
+        private ETag(String checksum) {
+            plain = checksum
+        }
+
+        private ETag(String checksum, String checksumEmbellished) {
+            plain = checksum
+            embellished = checksumEmbellished
+        }
+
+        String documentCheckSum() {
+            return plain
+        }
+        
+        static ETag parse(String eTag) {
+            if(!eTag) {
+                return plain(null)
+            }
+            
+            eTag = cleanEtag(eTag)
+            
+            if (eTag.contains(SEPARATOR)) {
+                def e = eTag.split(SEPARATOR)
+                embellished(e[0], e[1])
+            }
+            else {
+                plain(eTag)
+            }
+        }
+
+
+        static ETag plain(String checksum) {
+            new ETag(checksum)
+        }
+
+        static ETag embellished(String checksum, String checksumEmbellish) {
+            new ETag(checksum, checksumEmbellish)
+        }
+
+        String toString() {
+            embellished ? "$plain$SEPARATOR$embellished" : plain
+        }
+        
+        boolean isNotModified(ETag ifNoneMatch) {
+            if (plain != ifNoneMatch.plain) {
+                return false
+            }
+            if (embellished && embellished != ifNoneMatch.embellished) {
+                return false
+            }
+            return true
+        }
+
+        private static String cleanEtag(String str) {
+            return stripQuotes(str)?.replaceAll('-gzip', '')
+        }
+
+        private static String stripQuotes(String str) {
+            return str?.replaceAll('"', '')
         }
     }
 }

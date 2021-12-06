@@ -1,11 +1,11 @@
 package whelk.converter
 
-import static org.apache.commons.lang3.StringEscapeUtils.escapeJava
-import org.apache.jena.iri.*
-
-import org.codehaus.jackson.map.ObjectMapper
-
 import groovy.util.logging.Log4j2 as Log
+import org.apache.jena.iri.IRI
+import org.apache.jena.iri.IRIFactory
+
+import static org.apache.commons.lang3.StringEscapeUtils.escapeJava
+import static whelk.util.Jackson.mapper
 
 @Log
 class JsonLdToTurtle {
@@ -153,6 +153,12 @@ class JsonLdToTurtle {
 
     String cleanValue(String v) {
         return v.replaceAll("\\p{Cntrl}", '')
+    }
+
+    void toTrig(obj, id) {
+        prelude()
+        objectToTrig(id, obj)
+        flush()
     }
 
     void toTurtle(obj) {
@@ -428,8 +434,15 @@ class JsonLdToTurtle {
         return bos
     }
 
+    static OutputStream toTrig(context, source, base=null, String iri) {
+        def bos = new ByteArrayOutputStream()
+        def opts = [base: base]
+        def serializer = new JsonLdToTurtle(context, bos, opts)
+        serializer.toTrig(source, iri)
+        return bos
+    }
+
     static void main(args) {
-        def mapper = new ObjectMapper()
         def contextSrc = new File(args[0]).withInputStream { mapper.readValue(it, Map) }
         def context = JsonLdToTurtle.parseContext(contextSrc)
         if (args.length == 2) {

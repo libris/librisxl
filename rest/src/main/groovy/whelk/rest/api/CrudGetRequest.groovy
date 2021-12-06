@@ -2,6 +2,8 @@ package whelk.rest.api
 
 import javax.servlet.http.HttpServletRequest
 
+import static whelk.rest.api.CrudUtils.*
+
 class CrudGetRequest {
     private HttpServletRequest request
     private String resourceId
@@ -16,7 +18,7 @@ class CrudGetRequest {
     private CrudGetRequest(HttpServletRequest request) {
         this.request = request
         parsePath(getPath())
-        contentType = CrudUtils.getBestContentType(request)
+        contentType = getBestContentType(request)
         lens = parseLens(request)
     }
 
@@ -36,10 +38,8 @@ class CrudGetRequest {
         return Optional.ofNullable(request.getParameter("version"))
     }
 
-    Optional<String> getIfNoneMatch() {
-        return Optional
-                .ofNullable(request.getHeader("If-None-Match"))
-                .map(CrudUtils.&cleanEtag)
+    Optional<ETag> getIfNoneMatch() {
+        getIfNoneMatch(request)
     }
 
     String getContentType() {
@@ -48,10 +48,10 @@ class CrudGetRequest {
 
     boolean shouldEmbellish() {
         if (getVersion().present) {
-            return false;
+            return false
         }
 
-        return getBoolParameter("embellished").orElse(view != View.DATA)
+        return getBoolParameter("embellished").orElse(true)
     }
 
     boolean shouldFrame() {
@@ -101,7 +101,7 @@ class CrudGetRequest {
 
     private Optional<Boolean> getBoolParameter(String name) {
         return Optional
-                .ofNullable(request.getParameter(name))
+                .ofNullable(request.getParameter(name) ?: request.getAttribute(name))
                 .map(Boolean.&parseBoolean)
     }
 

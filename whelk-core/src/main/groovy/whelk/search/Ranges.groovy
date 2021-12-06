@@ -37,17 +37,17 @@ class Ranges {
             case MIN_EX:
                 Range openOrNew = (ranges.find { !it.min } ?: (ranges << new Range()).last())
                 openOrNew.min = new EndPoint(operator, value)
-                break;
+                break
 
             case MAX:
             case MAX_EX:
                 Range openOrNew = (ranges.find { !it.max } ?: (ranges << new Range()).last())
                 openOrNew.max = new EndPoint(operator, value)
-                break;
+                break
 
             case MATCHES:
                 ranges << new Range(new EndPoint(MIN, value), new EndPoint(MAX, value))
-                break;
+                break
         }
     }
 

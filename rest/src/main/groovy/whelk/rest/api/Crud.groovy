@@ -1,13 +1,11 @@
 package whelk.rest.api
 
-
 import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import io.prometheus.client.Summary
 import org.apache.http.entity.ContentType
-import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.IdGenerator
 import whelk.IdType
@@ -22,7 +20,6 @@ import whelk.exception.ModelValidationException
 import whelk.exception.StaleUpdateException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.UnexpectedHttpStatusException
-import whelk.exception.WhelkAddException
 import whelk.exception.WhelkRuntimeException
 import whelk.rest.api.CrudGetRequest.Lens
 import whelk.rest.security.AccessControl
@@ -34,18 +31,19 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.lang.management.ManagementFactory
 
+import static whelk.rest.api.CrudUtils.ETag
+import static whelk.rest.api.HttpTools.getBaseUri
 import static whelk.rest.api.HttpTools.sendError
 import static whelk.rest.api.HttpTools.sendResponse
+import static whelk.util.Jackson.mapper
 
 /**
  * Handles all GET/PUT/POST/DELETE requests against the backend.
  */
 @Log
 class Crud extends HttpServlet {
-
-    final static String SAMEAS_NAMESPACE = "http://www.w3.org/2002/07/owl#sameAs"
     final static String XL_ACTIVE_SIGEL_HEADER = 'XL-Active-Sigel'
-    final static String EPOCH_START = '1970/1/1'
+    final static String CONTEXT_PATH = '/context.jsonld'
 
     static final Counter requests = Counter.build()
         .name("api_requests_total").help("Total requests to API.")
@@ -77,8 +75,10 @@ class Crud extends HttpServlet {
     JsonLdValidator validator
 
     SearchUtils search
-    static final ObjectMapper mapper = new ObjectMapper()
     AccessControl accessControl = new AccessControl()
+    ConverterUtils converterUtils
+    Map siteConfig
+    Map<String, Tuple2<Document, String>> cachedDocs
 
     Crud() {
         // Do nothing - only here for Tomcat to have something to call
@@ -95,18 +95,49 @@ class Crud extends HttpServlet {
         }
         displayData = whelk.displayData
         vocabData = whelk.vocabData
+
         jsonld = whelk.jsonld
         search = new SearchUtils(whelk)
         validator = JsonLdValidator.from(jsonld)
+        converterUtils = new ConverterUtils(whelk)
+        siteConfig = mapper.readValue(getClass().classLoader
+                .getResourceAsStream("site_config.json").getBytes(), Map)
+
+        cachedDocs = [
+                (whelk.vocabContextUri): getDocumentFromStorage(whelk.vocabContextUri, null),
+                (whelk.vocabDisplayUri): getDocumentFromStorage(whelk.vocabDisplayUri, null),
+                (whelk.vocabUri): getDocumentFromStorage(whelk.vocabUri, null)
+
+        ]
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
 
+        // Depending on what site/client we're serving, we might need to add extra query parameters
+        // before they're sent further.
+        String activeSite = request.getAttribute('activeSite')
+
+        if (activeSite != siteConfig['default_site']) {
+            queryParameters.put('_site_base_uri', (String[])[siteConfig['sites'][activeSite]['@id']])
+        }
+
+        if (!queryParameters['_statsrepr'] && siteConfig['sites'][activeSite]['statsfind']) {
+            queryParameters.put('_statsrepr', (String[])[mapper.writeValueAsString(siteConfig['sites'][activeSite]['statsfind'])])
+        }
+
+        if (!queryParameters['_boost'] && siteConfig['sites'][activeSite]['boost']) {
+            queryParameters.put('_boost', (String[])[siteConfig['sites'][activeSite]['boost']])
+        }
+
         try {
             Map results = search.doSearch(queryParameters)
+            String responseContentType = CrudUtils.getBestContentType(request)
+            if (responseContentType == MimeTypes.JSONLD && !results[JsonLd.CONTEXT_KEY]) {
+                results[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
+            }
             def jsonResult = mapper.writeValueAsString(results)
-            sendResponse(response, jsonResult, "application/json")
+            sendResponse(response, jsonResult, responseContentType)
         } catch (ElasticIOException | UnexpectedHttpStatusException e) {
             log.error("Attempted elastic query, but failed: $e", e)
             failedRequests.labels("GET", request.getRequestURI(),
@@ -128,6 +159,31 @@ class Crud extends HttpServlet {
             sendError(response, HttpServletResponse.SC_BAD_REQUEST,
                     "Invalid query, please check the documentation. ${e.getMessage()}")
         }
+    }
+
+    void handleData(HttpServletRequest request, HttpServletResponse response) {
+        Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
+        String activeSite = request.getAttribute('activeSite')
+        Map results = siteConfig['sites'][activeSite]
+
+        if (!queryParameters['_statsrepr']) {
+            queryParameters.put('_statsrepr', (String[])[mapper.writeValueAsString(siteConfig['sites'][activeSite]['statsindex'])])
+        }
+        if (!queryParameters['_limit']) {
+            queryParameters.put('_limit', (String[])["0"])
+        }
+        if (!queryParameters['q']) {
+            queryParameters.put('q', (String[])["*"])
+        }
+        Map searchResults = search.doSearch(queryParameters)
+        results['statistics'] = searchResults['stats']
+
+        String responseContentType = CrudUtils.getBestContentType(request)
+        if (responseContentType == MimeTypes.JSONLD && !results[JsonLd.CONTEXT_KEY]) {
+            results[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
+        }
+        def jsonResult = mapper.writeValueAsString(results)
+        sendResponse(response, jsonResult, responseContentType)
     }
 
     static void displayInfo(HttpServletResponse response) {
@@ -158,12 +214,22 @@ class Crud extends HttpServlet {
     }
 
     void doGet2(HttpServletRequest request, HttpServletResponse response) {
+        request.setAttribute('activeSite', getActiveSite(request, getBaseUri(request)))
+        log.debug("Active site: ${request.getAttribute('activeSite')}")
+
         if (request.pathInfo == "/") {
             displayInfo(response)
             return
         }
 
-        if (request.pathInfo == "/find" || request.pathInfo == "/find.json") {
+        // TODO: Handle things other than JSON / JSON-LD
+        if (request.pathInfo == "/data" || request.pathInfo == "/data.json" || request.pathInfo == "/data.jsonld") {
+            handleData(request, response)
+            return
+        }
+
+        // TODO: Handle things other than JSON / JSON-LD
+        if (request.pathInfo == "/find" || request.pathInfo == "/find.json" || request.pathInfo == "/find.jsonld") {
             handleQuery(request, response)
             return
         }
@@ -171,11 +237,16 @@ class Crud extends HttpServlet {
         def marcframePath = "/sys/marcframe.json"
         if (request.pathInfo == marcframePath) {
             def responseBody = getClass().classLoader.getResourceAsStream("ext/marcframe.json").getText("utf-8")
-            sendGetResponse(response, responseBody, EPOCH_START, marcframePath, "application/json")
+            sendGetResponse(response, responseBody, ETag.SYSTEM_START, marcframePath, "application/json")
             return
         }
         
         try {
+            String activeSite = request.getAttribute('activeSite')
+            if (siteConfig['sites'][activeSite]?.get('applyInverseOf', false)) {
+                request.setAttribute('_applyInverseOf', "true")
+            }
+
             handleGetRequest(CrudGetRequest.parse(request), response)
         } catch (UnsupportedContentTypeException e) {
             failedRequests.labels("GET", request.getRequestURI(),
@@ -199,39 +270,60 @@ class Crud extends HttpServlet {
     
     void handleGetRequest(CrudGetRequest request,
                           HttpServletResponse response) {
-        // TODO: return already loaded displayData and vocabData (cached on modified)? (LXL-260)
-        Tuple2<Document, String> docAndLocation = getDocumentFromStorage(
-                request.getId(), request.getVersion().orElse(null))
-        Document doc = docAndLocation.first
-        String loc = docAndLocation.second
+        Tuple2<Document, String> docAndLocation
+
+        if (request.getId() in cachedDocs) {
+            docAndLocation = cachedDocs[request.getId()]
+        } else {
+            docAndLocation = getDocumentFromStorage(
+                    request.getId(), request.getVersion().orElse(null))
+        }
+
+        Document doc = docAndLocation.v1
+        String loc = docAndLocation.v2
 
         if (!doc && !loc) {
             sendNotFound(response, request.getPath())
         } else if (!doc && loc) {
             sendRedirect(request.getHttpServletRequest(), response, loc)
-        } else if (!request.shouldEmbellish() && isNotModified(request, doc)) {
-            sendNotModified(response, doc)
         } else if (doc.deleted) {
             failedRequests.labels("GET", request.getPath(),
                     HttpServletResponse.SC_GONE.toString()).inc()
             sendError(response, HttpServletResponse.SC_GONE, "Document has been deleted.")
         } else {
+            String checksum = doc.getChecksum(jsonld)
+            
+            if (request.shouldEmbellish()) {
+                whelk.embellish(doc)
+
+                // reverse links are inserted by embellish, so can only do this when embellished
+                if (request.shouldApplyInverseOf()) {
+                    doc.applyInverses(whelk.jsonld)
+                }
+            }
+            
+            ETag eTag = request.shouldEmbellish()
+                    ? ETag.embellished(checksum, doc.getChecksum(jsonld))
+                    : ETag.plain(checksum)
+
+            if (request.getIfNoneMatch().map(eTag.&isNotModified).orElse(false)) {
+                sendNotModified(response, eTag)
+                return
+            }
+            
             sendGetResponse(
                     maybeAddProposal25Headers(response, loc),
                     getFormattedResponseBody(request, doc),
-                    doc.getChecksum(jsonld),
+                    eTag,
                     request.getPath(),
-                    request.getContentType())
+                    request.getContentType(),
+                    request.getId())
         }
     }
 
-    private boolean isNotModified(CrudGetRequest request, Document doc) {
-        request.getIfNoneMatch().map({ etag -> etag == doc.getChecksum(jsonld) }).orElse(false)
-    }
-
-    private void sendNotModified(HttpServletResponse response, Document doc) {
+    private void sendNotModified(HttpServletResponse response, ETag eTag) {
         setVary(response)
-        response.setHeader("ETag", "\"${doc.getChecksum(jsonld)}\"")
+        response.setHeader("ETag", eTag.toString())
         response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
         sendError(response, HttpServletResponse.SC_NOT_MODIFIED, "Document has not been modified.")
     }
@@ -246,24 +338,19 @@ class Crud extends HttpServlet {
         log.debug("Formatting document {}. embellished: {}, framed: {}, lens: {}",
                 doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame(), request.getLens())
 
-        if (request.shouldEmbellish()) {
-            doc = doc.clone() // FIXME: this is because ETag calculation is done on non-embellished doc...
-            whelk.embellish(doc)
-
-            // reverse links are inserted by embellish, so can only do this when embellished
-            if (request.shouldApplyInverseOf()) {
-                doc.applyInverses(whelk.jsonld)
-            }
-        }
-
+        def transformedResponse
         if (request.getLens() != Lens.NONE) {
-            return applyLens(frameThing(doc), request.getLens())
+            transformedResponse = applyLens(frameThing(doc), request.getLens())
+        } else {
+            transformedResponse = request.shouldFrame()  ? frameRecord(doc) : doc.data
         }
-        else {
-            return request.shouldFrame()
-                    ? frameRecord(doc)
-                    : doc.data
+
+        if (!(request.getContentType() in [MimeTypes.JSON, MimeTypes.JSONLD])) {
+            def id = request.getContentType() == MimeTypes.TRIG ? doc.getCompleteId() : doc.getShortId()
+            return converterUtils.convert(transformedResponse, id, request.getContentType())
         }
+
+        return transformedResponse
     }
 
     private static Map frameRecord(Document document) {
@@ -313,6 +400,24 @@ class Crud extends HttpServlet {
         }
 
         return path
+    }
+
+    private String getActiveSite(HttpServletRequest request, String baseUri = null) {
+        // If ?_site=<foo> has been specified (and <foo> is a valid site) it takes precedence
+        if (request.getParameter("_site") in siteConfig['sites']) {
+            return request.getParameter("_site")
+        }
+
+        if (baseUri in siteConfig['sites']) {
+            return siteConfig['sites'][baseUri]['@id']
+        }
+
+        if (baseUri in siteConfig['site_alias']) {
+            String actualSite = siteConfig['site_alias'][baseUri]
+            return siteConfig['sites'][actualSite]['@id']
+        }
+
+        return siteConfig['default_site']
     }
 
     /**
@@ -389,8 +494,8 @@ class Crud extends HttpServlet {
      *
      */
     void sendGetResponse(HttpServletResponse response,
-                         Object responseBody, String modified, String path,
-                         String contentType) {
+                         Object responseBody, ETag eTag, String path,
+                         String contentType, String requestId = null) {
         // FIXME remove?
         String ctxHeader = contextHeaders.get(path.split("/")[1])
         if (ctxHeader) {
@@ -400,14 +505,11 @@ class Crud extends HttpServlet {
                             "type=\"application/ld+json\"")
         }
 
-        String etag = modified
-
-        if (etag == EPOCH_START) {
-            // For some resources, we want to set the etag to when the system was started
-            response.setHeader("ETag", "\"${ManagementFactory.getRuntimeMXBean().getStartTime()}\"")
-        } else {
-            response.setHeader("ETag", "\"${etag}\"")
+        if (contentType == MimeTypes.JSONLD && responseBody instanceof Map && requestId != whelk.vocabContextUri) {
+            responseBody[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
         }
+
+        response.setHeader("ETag", eTag.toString())
 
         if (path in contextHeaders.collect { it.value }) {
             log.debug("request is for context file. " +
@@ -654,8 +756,8 @@ class Crud extends HttpServlet {
         }
 
         Tuple2<Document, String> docAndLoc = getDocumentFromStorage(idFromUrl)
-        Document existingDoc = docAndLoc.first
-        String location = docAndLoc.second
+        Document existingDoc = docAndLoc.v1
+        String location = docAndLoc.v2
 
         if (!existingDoc && !location) {
             failedRequests.labels("PUT", request.getRequestURI(),
@@ -759,12 +861,16 @@ class Crud extends HttpServlet {
                     // You are not allowed to change collection when updating a record
                     if (collection != whelk.storage.getCollectionBySystemID(doc.getShortId())) {
                         log.warn("Refused API update of document due to changed 'collection'")
-                        return null
+                        throw new BadRequestException("Cannot change legacy collection for document. Legacy collection is mapped from entity @type.")
                     }
 
-                    String ifMatch = CrudUtils.cleanEtag(request.getHeader("If-Match"))
+                    ETag ifMatch = Optional
+                            .ofNullable(request.getHeader("If-Match"))
+                            .map(ETag.&parse)
+                            .orElseThrow({ -> new BadRequestException("Missing If-Match header in update") })
+                    
                     log.info("If-Match: ${ifMatch}")
-                    whelk.storeAtomicUpdate(doc, false, "xl", activeSigel, ifMatch)
+                    whelk.storeAtomicUpdate(doc, false, "xl", activeSigel, ifMatch.documentCheckSum())
                 }
                 else {
                     log.debug("Saving NEW document ("+ doc.getId() +")")
@@ -786,14 +892,6 @@ class Crud extends HttpServlet {
             sendError(response, HttpServletResponse.SC_CONFLICT,
                     scfe.message)
             return null
-        } catch (WhelkAddException wae) {
-            log.warn("Whelk failed to store document: ${wae.message}")
-            failedRequests.labels(httpMethod, request.getRequestURI(),
-                    HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE.toString()).inc()
-            // FIXME data leak
-            sendError(response, HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE,
-                    wae.message)
-            return null
         } catch (StaleUpdateException eme) {
             log.warn("Did not store document, because the ETAGs did not match.")
             failedRequests.labels(httpMethod, request.getRequestURI(),
@@ -808,7 +906,7 @@ class Crud extends HttpServlet {
             sendError(response, HttpServletResponse.SC_BAD_REQUEST,
                     "Failed to acquire a necessary lock. Did you submit a holding record without a valid bib link? " + e.message)
             return null
-        } catch (LinkValidationException | PostgreSQLComponent.ConflictingHoldException e) {
+        } catch (LinkValidationException | PostgreSQLComponent.ConflictingHoldException | BadRequestException e) {
             failedRequests.labels(httpMethod, request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
             sendError(response, HttpServletResponse.SC_BAD_REQUEST, e.getMessage())
@@ -897,21 +995,6 @@ class Crud extends HttpServlet {
         return false
     }
 
-    @Deprecated
-    static List<String> getAlternateIdentifiersFromLinkHeaders(HttpServletRequest request) {
-        def alts = []
-        for (link in request.getHeaders("Link")) {
-            def (id, rel) = link.split(";")*.trim()
-            if (rel.replaceAll(/"/, "") == "rel=${SAMEAS_NAMESPACE}") {
-                def match = id =~ /<([\S]+)>/
-                if (match.matches()) {
-                    alts << match[0][1]
-                }
-            }
-        }
-        return alts
-    }
-
     @Override
     void doDelete(HttpServletRequest request, HttpServletResponse response) {
         requests.labels("DELETE").inc()
@@ -943,8 +1026,8 @@ class Crud extends HttpServlet {
         try {
             String id = getRequestPath(request).substring(1)
             Tuple2<Document, String> docAndLocation = getDocumentFromStorage(id)
-            Document doc = docAndLocation.first
-            String loc = docAndLocation.second
+            Document doc = docAndLocation.v1
+            String loc = docAndLocation.v2
 
             log.debug("Checking permissions for ${doc}")
 
