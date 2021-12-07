@@ -57,13 +57,39 @@ public class History {
             changeSet.put("removed", new ArrayList<>());
             changeSet.put("agent", version.changedBy);
             List changeSets = (List) m_changeSetsMap.get("changeSets");
-            if (!wasSavedManually(version)) {
+            Map agent = new HashMap();
+            agent.put("@id", changedByToUri(version.changedBy));
+            changeSet.put("agent", agent);
+            if (wasScriptEdit(version)) {
                 changeSet.put("date", version.doc.getGenerationDate());
-                changeSet.put("note", Ownership.getSystemChangeDescription(version.changedBy, version.changedIn));
-                changeSet.put("manualEdit", false);
-            } else {
+                Map tool = new HashMap();
+                tool.put("@id", "https://id.kb.se/generator/globalchanges");
+                changeSet.put("tool", tool);
+            } else if (version.changedIn.equals("APIX")) {
                 changeSet.put("date", version.doc.getModified());
-                changeSet.put("manualEdit", true);
+                Map tool = new HashMap();
+                tool.put("@id", "https://id.kb.se/generator/apix");
+                changeSet.put("tool", tool);
+            } else if (version.changedIn.equals("batch import")) {
+                changeSet.put("date", version.doc.getModified());
+                Map tool = new HashMap();
+                tool.put("@id", "https://id.kb.se/generator/batchimport");
+                changeSet.put("tool", tool);
+            } else if (version.changedIn.equals("vcopy")) {
+                changeSet.put("date", version.doc.getModified());
+                Map tool = new HashMap();
+                tool.put("@id", "https://id.kb.se/generator/voyager");
+                changeSet.put("tool", tool);
+            } else if (version.changedBy.equals("WhelkCopier")) {
+                changeSet.put("date", version.doc.getModified());
+                Map tool = new HashMap();
+                tool.put("@id", "https://id.kb.se/generator/whelkcopier");
+                changeSet.put("tool", tool);
+            } else if (version.changedIn.equals("xl")) { // Must be last in list!
+                changeSet.put("date", version.doc.getModified());
+                Map tool = new HashMap();
+                tool.put("@id", "https://id.kb.se/generator/crud");
+                changeSet.put("tool", tool);
             }
             changeSets.add(changeSet);
 
@@ -270,8 +296,22 @@ public class History {
         }
     }
 
-    private boolean wasSavedManually(DocumentVersion version) {
-        return version.changedIn.equals("xl") && !wasScriptEdit(version);
+    /**
+     * What was put into the changedBy column has varied a bit over XLs history. This
+     * tries to make sense of the different variants.
+     */
+    private String changedByToUri(String changedBy) {
+        if (changedBy.startsWith("http"))
+            return changedBy;
+        if (changedBy.equals("")) // This was the case for script changes for a brief period (early global changes)
+            return "https://libris.kb.se/library/SEK";
+        if (changedBy.endsWith(".groovy"))
+            return "https://libris.kb.se/library/SEK";
+        if (changedBy.equals("Libriskörning, globala ändringar"))
+            return "https://libris.kb.se/library/SEK";
+        if (changedBy.equals("WhelkCopier"))
+            return "https://libris.kb.se/library/SEK";
+        else return "https://libris.kb.se/library/" + changedBy;
     }
 
     public static boolean wasScriptEdit(DocumentVersion version) {
