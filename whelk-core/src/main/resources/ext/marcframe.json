@@ -1753,6 +1753,24 @@
             "back": "both"
           },
           {
+            "name":  "Metatesting postprocess merge",
+            "source": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "2021",
+                "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+              },
+              "publication": [ {"@type": "Publication", "year": "2021" } ]
+            },
+            "result": {
+              "publication": [
+                {"@type": "PrimaryPublication", "country": [ {"@id": "https://id.kb.se/country/sw"} ], "year": "2021"}
+              ]
+            },
+            "back": "both"
+          },
+          {
             "source": {
               "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
             },
@@ -11509,6 +11527,73 @@
                 "place": {"@type": "Place", "label": "Finland"}
               }
             ]
+          }}
+        },
+        {
+          "name": "With publication place ($a) and 008",
+          "source": [
+            {"008": "|     s2020    sw |||||||||||000 ||   | "},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+                {"a": "Stockholm :"},
+                {"b": "Norstedts,"},
+                {"c": "2020"}
+              ]
+            }}
+          ],
+          "result": {
+            "mainEntity":
+              {
+            "marc:primaryProvisionActivity" : {
+              "@type" : "PrimaryProvisionActivity",
+              "country" : [ {
+                "@id" : "https://id.kb.se/country/sw"
+              } ],
+              "marc:publicationStatus" : "marc:SingleKnownDateProbableDate",
+              "year" : "2020"
+            },
+            "publication":
+              [
+                {
+                  "@type": "Publication",
+                  "agent": {"@type": "Agent", "label": "Norstedts"},
+                  "place" : {
+                    "@type" : "Place",
+                    "label" : "Stockholm"
+                  },
+                  "year": "2020"
+                }
+              ]
+          }}
+        },
+        {
+          "name": "No publication place ($a) and 008",
+          "source": [
+            {"008": "|     s2021    sw |||||||||||000 ||   | "},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+                {"b": "Bonnier,"},
+                {"c": "2021"}
+              ]
+            }}
+          ],
+          "result": {
+            "mainEntity":
+              {
+            "marc:primaryProvisionActivity" : {
+              "@type" : "PrimaryProvisionActivity",
+              "country" : [ {
+                "@id" : "https://id.kb.se/country/sw"
+              } ],
+              "marc:publicationStatus" : "marc:SingleKnownDateProbableDate",
+              "year" : "2021"
+            },
+            "publication":
+              [
+                {
+                  "@type": "Publication",
+                  "agent": {"@type": "Agent", "label": "Bonnier"},
+                  "year": "2021"
+                }
+              ]
           }}
         },
         {
@@ -26910,6 +26995,7 @@
       "[16]": {
         "link": "marc:completeness",
         "uriTemplate": "https://id.kb.se/marc/CompletenessType-{_}",
+        "matchUriToken": "^[123]$",
         "fixedDefault": "|"
       },
       "[17:20]": {
