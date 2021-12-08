@@ -2382,6 +2382,42 @@
                 ]
               }
             }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "usageAndAccessPolicy": [
+                      {"uri": "http://example.org"}
+                    ],
+                    "publisher": [
+                      {"name": "Kungliga biblioteket"}
+                    ]
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "marc:publicNote": "Tillgänglig via Kungliga biblioteket",
+                    "usageAndAccessPolicy": [
+                      {"uri": "http://example.org"}
+                    ],
+                    "publisher": [
+                      {"name": "Kungliga biblioteket"}
+                    ]
+                  }
+                ]
+              }
+            }
           }
         ]
       },
