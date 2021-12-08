@@ -54,7 +54,7 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
             if (key instanceof Integer) {
                 return source[key]
             }
-            return source.collect { getValue(it, key) }
+            return source.collect { getValue(it, key) }.grep()
         }
 
         if (source instanceof Map) {
