@@ -9,14 +9,16 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 class Parameters
 {
     private Path path;
     private INPUT_FORMAT format;
     private boolean readOnly = true;
-    private List<Templates> templates = new ArrayList<>();
-    private List<DUPLICATION_TYPE> dupTypes = new ArrayList<>();
+    private final List<Templates> templates = new ArrayList<>();
+    private final List<DUPLICATION_TYPE> dupTypes = new ArrayList<>();
     private String inputEncoding = "UTF-8";
     private boolean parallel = false;
     private boolean verbose = false;
@@ -25,7 +27,7 @@ class Parameters
     private String changedBy = null;
     private String changedIn = null;
     private boolean forceUpdate = false;
-    private HashMap<String, String> specialRules = new HashMap<>();
+    private final HashMap<String, Set<String>> specialRules = new HashMap<>();
     private File mergeRuleFile = null;
 
     Path getPath() { return path; }
@@ -41,7 +43,7 @@ class Parameters
     String getChangedBy() { return changedBy; }
     String getChangedIn() { return changedIn; }
     boolean getForceUpdate() { return forceUpdate; }
-    HashMap<String, String> getSpecialRules() { return specialRules; }
+    HashMap<String, Set<String>> getSpecialRules() { return specialRules; }
     File getMergeRuleFile() { return mergeRuleFile; }
 
 
@@ -93,40 +95,40 @@ class Parameters
     private void printUsage()
     {
         System.err.println("Usage: java -Dxl.secret.properties=PROPSFILE -jar batchimport.jar [PARAMETERS] [DATA]");
-        System.err.println("");
+        System.err.println();
         System.err.println("Imports records into Libris XL.");
-        System.err.println("");
+        System.err.println();
         System.err.println("In order to function, this program needs a Libris XL secret properties file. Please consult");
         System.err.println("the whelk-core readme, for information on how to build such a file");
-        System.err.println("");
+        System.err.println();
         System.err.println("This program expects records fed to it to have a certain order, such that each bibliograhic");
         System.err.println("record be followed by the holding records for that record (if any). This ordering of the");
         System.err.println("data must be in effect at the latest after any XSLT transforms have been applied. This");
         System.err.println("program should NOT be used to import authority records.");
-        System.err.println("");
+        System.err.println();
         System.err.println("Parameters:");
-        System.err.println("");
+        System.err.println();
         System.err.println("--path        A file path to use as input data. If this path represents a folder, all");
         System.err.println("              files in that folder will be imported (but no subfolders).");
         System.err.println("              If the path represents a file, only that specific file will be imported.");
         System.err.println("              If this parameter is omitted, lxl_import will expect its input on stdin.");
-        System.err.println("");
+        System.err.println();
         System.err.println("--format      The format of the input data. Can be either \"iso2709\" or \"xml\".");
         System.err.println("              This parameter must be specified. If the format is \"xml\", the structure of");
         System.err.println("              the xml document must be that of MARCXML at the latest after any XSLT");
         System.err.println("              transforms have been applied.");
-        System.err.println("");
+        System.err.println();
         System.err.println("--transformer The path to an XSLT stylesheet that should be used to transform the input");
         System.err.println("              before importing. This parameter may be used even if the input format is");
         System.err.println("              \"iso2709\", in which case the stream will be translated to MARCXML before");
         System.err.println("              transformation. If more than one transformer is specified these will be");
         System.err.println("              applied in the same order they are specified on the command line.");
         System.err.println("              XSLT transformation is optional.");
-        System.err.println("");
+        System.err.println();
         System.err.println("--inEncoding  The character encoding of the incoming data. Only relevant if the format");
         System.err.println("              is \"iso2709\" as xml documents are expected to declare their encoding in the");
         System.err.println("              xml header. Defaults to UTF-8.");
-        System.err.println("");
+        System.err.println();
         System.err.println("--dupType     The type of duplication checking that should be done for each incoming");
         System.err.println("              record. The value of this parameter may be a comma-separated list of any");
         System.err.println("              combination of duplication types.");
@@ -143,26 +145,26 @@ class Parameters
         System.err.println("                URI       ID in other system, obtained from MARC 024 $a ind0 = 7 & $2 = uri of the incoming record");
         System.err.println("                URN       ID in other system, obtained from MARC 024 $a ind0 = 7 & $2 = urn of the incoming record");
         System.err.println("                LIBRIS-ID ID in Libris.");
-        System.err.println("");
+        System.err.println();
         System.err.println("--live        Write to Whelk (without this flag operations against the Whelk are readonly");
         System.err.println("              and results are only printed to stdout).");
-        System.err.println("");
+        System.err.println();
         System.err.println("--parallel    Do document conversion, enrichment and duplicate checking in parallel. Use with");
         System.err.println("              care. Specifically do not use for sources where multiples of the same document");
         System.err.println("              may appear in one batch. If you do, you risk introducing multiples in the");
         System.err.println("              database, because there is no synchronization in between duplicate checks");
         System.err.println("              and writing a document.");
-        System.err.println("");
+        System.err.println();
         System.err.println("--verbose     Verbose logging.");
-        System.err.println("");
+        System.err.println();
         System.err.println("--replaceBib  If this flag is set, matching bibliographic records will be replaced.");
-        System.err.println("");
+        System.err.println();
         System.err.println("--replaceHold If this flag is set, matching holding records will be replaced.");
-        System.err.println("");
+        System.err.println();
         System.err.println("--mergeBibUsing Bibliographic records can be \"partially uppated\" (merged) with incoming");
         System.err.println("              records according to some specified set of rules.");
         System.err.println("              Using this option, a file containing such merge rules can be specified.");
-        System.err.println("");
+        System.err.println();
         System.err.println("--changedBy   A string to use as descriptionCreator (MARC 040) for imported records.");
         System.err.println("--changedIn   A string to use for the changedIn column, defaults to \"batch import\".");
         System.err.println("--forceUpdate If this option is passed, encoding levels are ignored when deciding if");
@@ -229,7 +231,11 @@ class Parameters
                 String to = translateEncodingLevel(value.charAt(2));
                 if (from == null || to == null)
                     throw new IllegalArgumentException(parameter);
-                specialRules.put(from, to);
+                if ( !specialRules.containsKey(from) ) {
+                    specialRules.put(from, new HashSet<String>()); //enumset?
+                }
+                //specialRules.put(from, to);
+                specialRules.get(from).add(to);
                 break;
 
             case "--mergeBibUsing":

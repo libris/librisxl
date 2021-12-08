@@ -4,16 +4,15 @@ import org.apache.commons.io.IOUtils
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.RDFWriter
-import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.util.PropertyLoader
 
-class JsonLD2N3Converter implements FormatConverter {
+import static whelk.util.Jackson.mapper
 
-    static final ObjectMapper mapper = new ObjectMapper()
+class JsonLD2N3Converter implements FormatConverter {
 
     Map m_context = null
 
@@ -44,11 +43,11 @@ class JsonLD2N3Converter implements FormatConverter {
         return data
     }
 
-    public String getRequiredContentType() {
+    String getRequiredContentType() {
         return "application/ld+json"
     }
 
-    public String getResultContentType() {
+    String getResultContentType() {
         return "text/n3"
     }
 

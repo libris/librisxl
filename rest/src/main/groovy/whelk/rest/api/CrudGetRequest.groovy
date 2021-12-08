@@ -41,9 +41,7 @@ class CrudGetRequest {
     }
 
     Optional<ETag> getIfNoneMatch() {
-        return Optional
-                .ofNullable(request.getHeader("If-None-Match"))
-                .map(ETag.&parse)
+        getIfNoneMatch(request)
     }
 
     String getContentType() {
@@ -52,7 +50,7 @@ class CrudGetRequest {
 
     boolean shouldEmbellish() {
         if (getVersion().present) {
-            return false;
+            return false
         }
 
         return getBoolParameter("embellished").orElse(true)

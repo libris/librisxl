@@ -58,8 +58,8 @@ public class ProfileExport
     private static final Summary singleExportLatency = Summary.build().name("marc_export_single_doc_latency_seconds")
         .help("The time in seconds it takes to export a single 'complete' document")
         .labelNames("collection").register();
-    private JsonLD2MarcXMLConverter m_toMarcXmlConverter;
-    private Whelk m_whelk;
+    private final JsonLD2MarcXMLConverter m_toMarcXmlConverter;
+    private final Whelk m_whelk;
     public ProfileExport(Whelk whelk)
     {
         m_whelk = whelk;
@@ -106,10 +106,8 @@ public class ProfileExport
                     Timestamp createdTime = resultSet.getTimestamp("created");
                     Boolean deleted = resultSet.getBoolean("deleted");
 
-                    boolean created = false;
-                    if (zonedFrom.toInstant().isBefore(createdTime.toInstant()) &&
-                            zonedUntil.toInstant().isAfter(createdTime.toInstant()))
-                        created = true;
+                    boolean created = zonedFrom.toInstant().isBefore(createdTime.toInstant()) &&
+                            zonedUntil.toInstant().isAfter(createdTime.toInstant());
 
                     int affected = exportAffectedDocuments(id, collection, created, deleted, fromTimeStamp,
                             untilTimeStamp, profile, output, deleteMode, doVirtualDeletions, exportedIDs,
@@ -275,9 +273,7 @@ public class ProfileExport
             if (collection.equals("hold"))
             {
                 Document updatedDocument = m_whelk.getStorage().load(id);
-                if (!profile.locations().contains(updatedDocument.getHeldBySigel())) {
-                    return false;
-                }
+                return profile.locations().contains(updatedDocument.getHeldBySigel());
             }
         }
 

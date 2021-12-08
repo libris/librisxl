@@ -171,8 +171,8 @@ class DocumentUtil {
 
         private void descend(List<Tuple2> nodes) {
             for (n in nodes) {
-                path.push(n.second)
-                node(n.first)
+                path.push(n.v2)
+                node(n.v1)
                 path.pop()
             }
         }

@@ -1,14 +1,8 @@
-apply plugin: 'java'
 apply plugin: 'war'
-apply plugin: 'maven'
 apply from: '../gretty.plugin'
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
 
 repositories {
     mavenCentral()
-    maven { url "http://repository.codehaus.org/" }
 }
 
 // Don't blame me for this TRAVESTY. It is a necessity because of the versioning of xml-apis (2.0.2 which gradle otherwise chooses is OLDER (and broken) despite the version.)
@@ -19,21 +13,20 @@ configurations.all {
 }
 
 dependencies {
-
     // XL dependencies
-    compile(project(':whelk-core'))
+    implementation(project(':whelk-core'))
 
     // Logging
-    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.2'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.2'
 
     // metrics
-    compile "io.prometheus:simpleclient:${prometheusVersion}"
-    compile "io.prometheus:simpleclient_servlet:${prometheusVersion}"
+    implementation "io.prometheus:simpleclient:${prometheusVersion}"
+    implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
 
     // Dependencies inherited from classic libris, due to profile handling
-    compile group: 'com.ibm.icu', name: 'icu4j', version: '4.8.1.1'
-    compile(group: 'org.dspace', name: 'xoai', version: '3.2.10') {
+    implementation group: 'com.ibm.icu', name: 'icu4j', version: '4.8.1.1'
+    implementation(group: 'org.dspace', name: 'xoai', version: '3.2.10') {
         exclude group: 'org.mockito'
         exclude group: 'org.hamcrest'
         exclude group: 'junit'
@@ -41,9 +34,9 @@ dependencies {
         // org.w3c.dom.UserDataHandler scanned from multiple locations: xml-apis, jaxen
         exclude group: 'jaxen', module: 'jaxen'
     }
-    compile group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
-    compile 'org.apache.commons:commons-lang3:3.3.2'
-    compile 'org.codehaus.groovy:groovy:2.5.4'
+    implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
+    implementation 'org.apache.commons:commons-lang3:3.3.2'
+    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
 }
 
 gretty {
@@ -59,12 +52,14 @@ gretty {
 }
 
 jar {
+    dependsOn ':whelk-core:jar'
     manifest {
         attributes "Main-Class": "whelk.export.marc.MarcCliExport"
     }
 
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from {
-        configurations.compile.collect {
+        configurations.runtimeClasspath.collect {
             it.isDirectory() ? it : project.zipTree(it).matching {
                 exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA','build','.gradle/**','build.gradle','gradle','gradlew','gradlew.bat','test'
             }

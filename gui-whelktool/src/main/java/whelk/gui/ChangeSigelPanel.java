@@ -19,11 +19,11 @@ public class ChangeSigelPanel extends WizardCard implements DocumentListener, Ac
 {
     final Wizard window;
 
-    private JTextField fromSigelField;
-    private JTextField toSigelField;
-    private JFileChooser chooser = new JFileChooser();
+    private final JTextField fromSigelField;
+    private final JTextField toSigelField;
+    private final JFileChooser chooser = new JFileChooser();
     private File chosenFile;
-    private JTextField chosenFileField;
+    private final JTextField chosenFileField;
 
     public ChangeSigelPanel(Wizard wizard)
     {

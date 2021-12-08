@@ -1,8 +1,6 @@
 package whelk.filter
 
-
 import groovy.util.logging.Log4j2 as Log
-import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
 import whelk.component.PostgreSQLComponent
@@ -10,7 +8,8 @@ import whelk.exception.LinkValidationException
 
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.util.concurrent.ConcurrentHashMap
+
+import static whelk.util.Jackson.mapper
 
 @Log
 class LinkFinder {
@@ -18,8 +17,6 @@ class LinkFinder {
     PostgreSQLComponent postgres
 
     static String ENTITY_QUERY
-    static final ObjectMapper mapper = new ObjectMapper()
-    static final ConcurrentHashMap<String, String> uriCache = new ConcurrentHashMap()
 
     LinkFinder(PostgreSQLComponent pgsql) {
         postgres = pgsql
@@ -82,12 +79,12 @@ class LinkFinder {
                 if (entry instanceof Map) {
                     Map map = (Map) entry
                     String type = map.get("@type")
-                    if (type != null && type.equals("ISBN")) {
+                    if (type != null && type == "ISBN") {
                         String value = map.get("value")
                         if (value != null)
                             map.put("value", value.replaceAll("-", "").toUpperCase())
                     }
-                    if (type != null && type.equals("ISSN")) {
+                    if (type != null && type == "ISSN") {
                         String value = map.get("value")
                         if (value != null)
                             map.put("value", value.toUpperCase())
@@ -130,7 +127,7 @@ class LinkFinder {
 
             // sameAs objects are not links per se, and must not be replaced
             String keyString = (String) key
-            if (keyString.equals("sameAs"))
+            if (keyString == "sameAs")
                 continue
 
             Object value = data.get(key)

@@ -12,7 +12,7 @@ PrintWriter scheduledForDeletion = getReportWriter("scheduled-for-deletion")
 File bibIDsFile = new File(scriptDir, BIB_ID_FILE)
 
 selectByIds(bibIDsFile.readLines()) { bib ->
-    def bibId = bib.graph[1][ID] as String;
+    def bibId = bib.graph[1][ID] as String
 
     if (hasHoldForBib(bibId)) {
         notDeletedIds.println("Ignoring ${bibId}, record has holdings")

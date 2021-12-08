@@ -1,6 +1,6 @@
 package whelk.export.servlet;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import org.apache.cxf.staxutils.StaxUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.Document;
@@ -10,7 +10,10 @@ import whelk.util.LegacyIntegrationTools;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.stream.*;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.sql.SQLException;
@@ -19,12 +22,9 @@ import java.time.ZonedDateTime;
 import java.util.Enumeration;
 import java.util.List;
 
-import org.apache.cxf.staxutils.StaxUtils;
-
 public class ResponseCommon
 {
     private static final Logger logger = LogManager.getLogger(ResponseCommon.class);
-    static final ObjectMapper mapper = new ObjectMapper();
     private static final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
 
     /**
@@ -39,9 +39,7 @@ public class ResponseCommon
 
         // The OAI-PMH specification requires that parameters be echoed in response, unless the response has an error
         // code of badVerb or badArgument, in which case the parameters must be omitted.
-        boolean includeParameters = true;
-        if (errorCode.equals(OaiPmh.OAIPMH_ERROR_BAD_VERB) || errorCode.equals(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT))
-            includeParameters = false;
+        boolean includeParameters = !errorCode.equals(OaiPmh.OAIPMH_ERROR_BAD_VERB) && !errorCode.equals(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT);
 
         writeOaiPmhHeader(writer, request, includeParameters);
 

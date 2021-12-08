@@ -33,7 +33,7 @@ int n = 200
 def threadPool = Executors.newFixedThreadPool(20)
 try {
     n.times {
-        threadPool.submit(update as Runnable);
+        threadPool.submit(update as Runnable)
     }
 }
 finally {

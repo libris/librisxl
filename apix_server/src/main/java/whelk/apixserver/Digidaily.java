@@ -13,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -45,7 +46,18 @@ public class Digidaily {
             if (line.charAt(0) == '#') continue;
 
             /** @todo stricter checking **/
-            String s[] = line.split("\t"), bibid = s[0], sigel = s[1], f0429 = s[2], work_url = s[3], work_text = s[4], img_url = s[5], license = s[6], place = s[7], agency = s[8], non_public_note = s[9], img_public_note = s[10];
+            String[] s = line.split("\t");
+            String bibid = s[0];
+            String sigel = s[1];
+            String f0429 = s[2];
+            String work_url = s[3];
+            String work_text = s[4];
+            String img_url = s[5];
+            String license = s[6];
+            String place = s[7];
+            String agency = s[8];
+            String non_public_note = s[9];
+            String img_public_note = s[10];
 
             // hämta tryck
             Document r = Utils.getXlDocument(bibid, "bib");
@@ -57,7 +69,7 @@ public class Digidaily {
 
             String rMarcXml = Utils.convertToMarcXml(r);
 
-            InputStream marcXmlInputStream = new ByteArrayInputStream(rMarcXml.getBytes("UTF-8"));
+            InputStream marcXmlInputStream = new ByteArrayInputStream(rMarcXml.getBytes(StandardCharsets.UTF_8));
             MarcXmlRecordReader reader = new MarcXmlRecordReader(marcXmlInputStream, "/record");
             MarcRecord printRecord = reader.readRecord();
 
@@ -103,7 +115,7 @@ public class Digidaily {
             // Flytta ISBN etc.
             for (Datafield df : eRecord.getDatafields()) {
                 if (df.getTag().equals("020") || df.getTag().equals("022") || df.getTag().equals("024")) {
-                    ListIterator<Subfield> sfields = (ListIterator<Subfield>) df.listIterator();
+                    ListIterator<Subfield> sfields = df.listIterator();
                     while (sfields.hasNext()) {
                         Subfield sf = sfields.next();
                         if (sf.getCode() == 'a') {
@@ -116,7 +128,7 @@ public class Digidaily {
             }
 
             // Ta bort 035 och 040
-            ListIterator<Field> fields = (ListIterator<Field>) eRecord.listIterator();
+            ListIterator<Field> fields = eRecord.listIterator();
             while (fields.hasNext()) {
                 Field f = fields.next();
                 if (f.getTag().equals("035") || f.getTag().equals("040")) {
@@ -128,7 +140,7 @@ public class Digidaily {
             eRecord.addField(eRecord.createDatafield("040").addSubfield('a', sigel));
 
             // Ta bort 042 med NB
-            fields = (ListIterator<Field>) eRecord.listIterator();
+            fields = eRecord.listIterator();
             while (fields.hasNext()) {
                 Field f = fields.next();
                 if (f.getTag().equals("042")) {

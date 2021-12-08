@@ -1,15 +1,11 @@
 apply plugin: 'groovy'
-apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'jacoco'
+apply plugin: 'java-library'
+//apply plugin: 'jacoco'
 apply plugin: 'nebula.lint'
 
 archivesBaseName = "xlcore"
 
 group = 'com.github.libris'
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
 
 sourceSets {
     main {
@@ -26,34 +22,40 @@ sourceSets {
 }
 
 test {
+    /*
     jacoco {
         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
         classDumpDir = file("$buildDir/jacoco/classpathdumps")
     }
+    */
 }
 
 test.testLogging {
-    showStandardStreams true
-    exceptionFormat "full"
+    showStandardStreams = true
+    exceptionFormat = "full"
 }
-
+/*
 jacoco {
     toolVersion = "0.8.2"
-    reportsDir = file("$buildDir/coverage_report")
+    reportsDirectory = file("$buildDir/coverage_report")
 }
 
 jacocoTestReport {
     reports {
-        xml.enabled false
-        csv.enabled false
+        xml.required = false
+        csv.required = false
         html.destination file("${buildDir}/coverage_report/html")
     }
 }
-
+*/
 repositories {
     mavenCentral()
-    maven { url "http://repository.codehaus.org/" }
     maven { url "https://jitpack.io/" }
+}
+
+configurations {
+    integTestRuntimeOnly.extendsFrom(testRuntimeOnly)
+    integTestImplementation.extendsFrom(testImplementation)
 }
 
 // Don't blame me for this TRAVESTY. It is a necessity because of the versioning of xml-apis (2.0.2 which gradle otherwise chooses is OLDER (and broken) despite the version.)
@@ -64,17 +66,15 @@ configurations.all {
 }
 
 dependencies {
-    def groovyVersion=GroovySystem.getVersion()
-
     // KB tools
-    compile files('lib/jmarctools-1.3.4.jar')
-    compile files('lib/isbntools-1.3.jar')
-    compile files('lib/oaij-0.1.jar')
-    compile files('lib/trld.jar')
+    api files('lib/jmarctools-1.3.4.jar')
+    api files('lib/isbntools-1.3.jar')
+    implementation files('lib/oaij-0.1.jar')
+    api files('lib/trld.jar')
 
     // Dependencies inherited from classic libris, due to profile handling
-    compile group: 'com.ibm.icu', name: 'icu4j', version: '4.8.1.1'
-    compile(group: 'org.dspace', name: 'xoai', version: '3.2.10') {
+    implementation group: 'com.ibm.icu', name: 'icu4j', version: '4.8.1.1'
+    implementation(group: 'org.dspace', name: 'xoai', version: '3.2.10') {
         exclude group: 'org.mockito'
         exclude group: 'org.hamcrest'
         exclude group: 'junit'
@@ -82,67 +82,62 @@ dependencies {
         // org.w3c.dom.UserDataHandler scanned from multiple locations: xml-apis, jaxen
         exclude group: 'jaxen', module: 'jaxen'
     }
-    compile group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
+    implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
 
     // Common tools
-    compile "com.google.guava:guava:16.0.1"
-    compile "io.github.resilience4j:resilience4j-circuitbreaker:${resilience4jVersion}"
-    compile "io.github.resilience4j:resilience4j-prometheus:${resilience4jVersion}"
-    compile "io.github.resilience4j:resilience4j-retry:${resilience4jVersion}"
-    compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
-    compile 'com.damnhandy:handy-uri-templates:2.0.4'
-    compile 'com.zaxxer:HikariCP:3.4.1'
-    compile 'commons-codec:commons-codec:1.7'
-    compile 'commons-io:commons-io:2.4'
-    compile "org.apache.httpcomponents:httpclient:${httpComponentsVersion}"
-    compile "org.apache.httpcomponents:httpcore:${httpComponentsVersion}"
-    compile 'org.apache.jena:apache-jena-libs:3.0.1'
-    compile 'org.codehaus.groovy:groovy-json:2.5.4'
-    compile 'org.codehaus.groovy:groovy-xml:2.5.4'
-    compile 'org.codehaus.groovy:groovy:2.5.4'
-    compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
-    compile 'com.fasterxml.jackson.jr:jackson-jr-objects:2.9.0' // TRLD dep
-    compile 'xerces:xercesImpl:2.11.0' //KP
+    implementation "com.google.guava:guava:16.0.1"
+    implementation "io.github.resilience4j:resilience4j-circuitbreaker:${resilience4jVersion}"
+    implementation "io.github.resilience4j:resilience4j-prometheus:${resilience4jVersion}"
+    implementation "io.github.resilience4j:resilience4j-retry:${resilience4jVersion}"
+    implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    implementation 'com.damnhandy:handy-uri-templates:2.0.4'
+    implementation 'com.zaxxer:HikariCP:3.4.1'
+    implementation 'commons-codec:commons-codec:1.7'
+    api 'commons-io:commons-io:2.11.0'
+    implementation "org.apache.httpcomponents:httpclient:${httpComponentsClientVersion}"
+    implementation "org.apache.httpcomponents:httpcore:${httpComponentsCoreVersion}"
+    implementation 'org.apache.jena:apache-jena-libs:3.0.1'
+    api "org.codehaus.groovy:groovy-json:${groovyVersion}"
+    api "org.codehaus.groovy:groovy-xml:${groovyVersion}"
+    api "org.codehaus.groovy:groovy:${groovyVersion}"
+    api 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
+    implementation 'com.fasterxml.jackson.jr:jackson-jr-objects:2.9.0' // TRLD dep
+    implementation 'xerces:xercesImpl:2.11.0' //KP
 
     // Logging
-    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.2'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.2'
 
     // Caching
-    compile 'org.apache.commons:commons-collections4:4.1'
+    implementation 'org.apache.commons:commons-collections4:4.1'
 
     // metrics
-    compile "io.prometheus:simpleclient_guava:${prometheusVersion}"
+    implementation "io.prometheus:simpleclient_guava:${prometheusVersion}"
 
     // Integration
-    compile "org.apache.commons:commons-lang3:3.3.2"
-    compile 'org.postgresql:postgresql:9.4.1212.jre7'
+    api "org.apache.commons:commons-lang3:3.3.2"
+    implementation 'org.postgresql:postgresql:9.4.1212.jre7'
 
     // profiling and test
-    testCompile 'org.spockframework:spock-core:1.3-groovy-2.5'
+    testImplementation 'org.spockframework:spock-core:2.0-groovy-3.0'
 
     // Integration Testing
-    integTestCompile sourceSets.main.output
-    integTestCompile sourceSets.test.output
-
-    integTestCompile configurations.compile
-    integTestCompile configurations.testCompile
-
-    integTestRuntime configurations.runtime
-    integTestRuntime configurations.testRuntime
+    integTestImplementation sourceSets.main.output
+    integTestImplementation sourceSets.test.output
 }
 
 task integTest(type: Test) {
+    useJUnitPlatform()
     group = LifecycleBasePlugin.VERIFICATION_GROUP
     description = 'Runs the integration tests.'
     outputs.upToDateWhen { false }
     testClassesDirs = sourceSets.integTest.output.classesDirs
     classpath = sourceSets.integTest.runtimeClasspath
     testLogging {
-        showStandardStreams true
-        exceptionFormat "full"
+        showStandardStreams = true
+        exceptionFormat = "full"
     }
-    binResultsDir = file("$buildDir/integration-test-results/binary/integTest")
+    binaryResultsDirectory.set(file("$buildDir/integration-test-results/binary/integTest"))
     reports {
         html.destination = file("$buildDir/reports/integration-test")
         junitXml.destination = file("$buildDir/integration-test-results")
@@ -153,27 +148,27 @@ task integTest(type: Test) {
 task(groovy, dependsOn: "classes", type: JavaExec) {
     description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
     classpath = sourceSets.test.runtimeClasspath
-    main = "groovy.ui.GroovyMain"
+    mainClass = "groovy.ui.GroovyMain"
     args(System.getProperty("args", "").split() as String[])
 }
 
 task(console, dependsOn: 'classes', type: JavaExec) {
   description "Launch a Groovy Console"
   classpath = sourceSets.main.runtimeClasspath
-  main = 'groovy.ui.Console'
+  mainClass = 'groovy.ui.Console'
 }
 
 task(convertIso2709ToJson, dependsOn: 'classes', type: JavaExec) {
     description "Convert an ISO2709 file to JSON (USAGE: -Dargs='<infile>')"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.converter.MarcJSONConverter'
+    mainClass = 'whelk.converter.MarcJSONConverter'
     args(System.getProperty('args', "").split() as String[])
 }
 
 task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
     description "Convert a MarcJson file to JsonLD (USAGE: -Dargs='<source>')"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.converter.marc.MarcFrameCli'
+    mainClass = 'whelk.converter.marc.MarcFrameCli'
     systemProperties(
         'xl.secret.properties': System.getProperty("xl.secret.properties")
     )
@@ -183,20 +178,20 @@ task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
 task vocabFromMarcFrame(dependsOn: 'classes', type: JavaExec) {
     description "Extract a vocabulary from marcframe"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.converter.marc.MarcFrameVocabExtractor'
+    mainClass = 'whelk.converter.marc.MarcFrameVocabExtractor'
 }
 
 task jsonldToTurtle(dependsOn: 'classes', type: JavaExec) {
     description "Convert a JSON-LD file to Turtle (USAGE: -Dargs='<context> <source>')"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.converter.JsonLdToTurtle'
+    mainClass = 'whelk.converter.JsonLdToTurtle'
     args(System.getProperty('args', "").split() as String[])
 }
 
 task dataview(dependsOn: 'classes', type: JavaExec) {
     description "View JSON-LD data (USAGE: -Dargs='<card|chip|embellish|index> <source>')"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'whelk.util.DataViewCli'
+    mainClass = 'whelk.util.DataViewCli'
     systemProperties(
         'xl.secret.properties': System.getProperty("xl.secret.properties")
     )
@@ -205,7 +200,7 @@ task dataview(dependsOn: 'classes', type: JavaExec) {
 
 task testRelations(dependsOn: 'classes', type: JavaExec) {
     classpath = sourceSets.integTest.runtimeClasspath
-    main = 'Relations'
+    mainClass = 'Relations'
     systemProperties(
             'xl.secret.properties': System.getProperty("xl.secret.properties")
     )

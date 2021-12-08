@@ -105,18 +105,18 @@ public class DigId {
         String z = grepIssn(df, 'z');
         
         if (a != null && z != null) {
-            String ret[] = new String[2];
+            String[] ret = new String[2];
             ret[0] = a;
             ret[1] = z;
             
             return ret;
         } else if (a != null) {
-            String ret[] = new String[1];
+            String[] ret = new String[1];
             ret[0] = a;
             
             return ret;
         } else if (z != null) {
-            String ret[] = new String[1];
+            String[] ret = new String[1];
             ret[0] = z;
             
             return ret;
@@ -225,7 +225,7 @@ public class DigId {
         if (librisId != null) v.add("LIBRIS-ID" + ' ' + librisId);
 
         if (v.size() != 0) {
-            String ret[][] = new String[v.size()][];
+            String[][] ret = new String[v.size()][];
             
             for (int i=0;i<v.size();i++) {
                 ret[i] = v.get(i).split(" ");

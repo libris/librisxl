@@ -7,8 +7,8 @@ import java.io.IOException;
 
 public class ChangeComplexSubject extends WizardCard
 {
-    private JTextField fromMainTerm;
-    private JTextField toMainTerm;
+    private final JTextField fromMainTerm;
+    private final JTextField toMainTerm;
 
     public ChangeComplexSubject(Wizard wizard)
     {

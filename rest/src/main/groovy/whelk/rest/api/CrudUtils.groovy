@@ -126,6 +126,12 @@ class CrudUtils {
         return mediaTypes.sort().collect { it.mediaType }
     }
 
+    static Optional<ETag> getIfNoneMatch(HttpServletRequest request) {
+        return Optional
+                .ofNullable(request.getHeader("If-None-Match"))
+                .map(ETag.&parse)
+    }
+
     private static class AcceptMediaType implements Comparable<AcceptMediaType> {
         private MediaType mediaType
         private float q

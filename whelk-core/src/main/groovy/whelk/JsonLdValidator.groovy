@@ -224,11 +224,11 @@ class JsonLdValidator {
         return jsonLd.context.findAll {k, v -> v == null}.keySet()
     }
 
-    public void setSkipTerms(Collection terms) {
+    void setSkipTerms(Collection terms) {
         this.skipTerms = terms
     }
 
-    public void skipUndefined() {
+    void skipUndefined() {
         setSkipTerms(getUndefinedContextTerms())
     }
 

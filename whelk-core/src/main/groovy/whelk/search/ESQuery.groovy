@@ -5,13 +5,14 @@ import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeCheckingMode
 import groovy.util.logging.Log4j2 as Log
-import org.codehaus.jackson.map.ObjectMapper
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.component.ElasticSearch
 import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
+
+import static whelk.util.Jackson.mapper
 
 @CompileStatic
 @Log
@@ -21,7 +22,6 @@ class ESQuery {
     private Set keywordFields
     private Set dateFields
     
-    private static final ObjectMapper mapper = new ObjectMapper()
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
         'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_suggest', '_site'
@@ -465,7 +465,7 @@ class ESQuery {
      * Public for test only - don't call outside this class!
      *
      */
-    public List getSiteFilter(Map<String, String[]> queryParameters) {
+    List getSiteFilter(Map<String, String[]> queryParameters) {
         if (!('_site_base_uri' in queryParameters)) return null
         if (!(queryParameters.get('_site_base_uri').size() > 0)) return null
 
@@ -677,7 +677,7 @@ class ESQuery {
      *
      */
     @CompileStatic(TypeCheckingMode.SKIP)
-    public Map getAggQuery(Map queryParameters) {
+    Map getAggQuery(Map queryParameters) {
         if (!('_statsrepr' in queryParameters)) {
             Map defaultQuery = [(JsonLd.TYPE_KEY): ['terms': ['field': JsonLd.TYPE_KEY]]]
             return defaultQuery
@@ -775,7 +775,7 @@ class ESQuery {
      * Public for test only - don't call outside this class!
      *
      */
-    public Set getKeywordFields(Map mappings) {
+    Set getKeywordFields(Map mappings) {
         Set keywordFields = [] as Set
         if (mappings) {
             keywordFields = getKeywordFieldsFromProperties(mappings['properties'] as Map)
@@ -824,7 +824,7 @@ class ESQuery {
      *
      */
     @CompileStatic(TypeCheckingMode.SKIP)
-    public Map hideKeywordFields(Map esResponse) {
+    Map hideKeywordFields(Map esResponse) {
         // no aggs? nothing to do.
         if (!esResponse.containsKey('aggregations')) {
             return esResponse

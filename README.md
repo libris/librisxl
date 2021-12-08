@@ -251,6 +251,18 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
 
     RewriteEngine On
 
+    <LocationMatch "^/([bcdfghjklmnpqrstvwxz0-9]{15,16})$">
+        ProxyPreserveHost Off
+        RewriteCond %{REQUEST_METHOD} GET
+        RewriteCond %{HTTP_ACCEPT} (text/html|application/xhtml|\*/\*|^$)
+        RewriteRule ([^/]+)$ http://id.kblocalhost.kb.se:5000/$1 [P]
+    </LocationMatch>
+
+    <Location /_nuxt>
+        ProxyPreserveHost Off
+        ProxyPass http://id.kblocalhost.kb.se:5000/_nuxt
+    </Location>
+
     ProxyPassMatch ^/vocab/(data.*) http://localhost:8180/https://id.kb.se/vocab//$1
     ProxyPass /vocab http://localhost:8180/https://id.kb.se/vocab
     ProxyPass /context.jsonld http://localhost:8180/https://id.kb.se/vocab/context
@@ -258,7 +270,7 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
     RewriteCond %{REQUEST_METHOD} ^(POST|PUT|DELETE|OPTIONS)$
     RewriteRule ^/data(.*)$ http://localhost:8180/$1 [P,L]
 
-    ProxyPass / http://localhost:8180/
+    ProxyPass / http://localhost:8180/ nocanon
 
     AddOutputFilterByType DEFLATE text/css text/html text/plain text/xml
     AddOutputFilterByType DEFLATE application/x-javascript text/x-component application/javascript
@@ -289,8 +301,9 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
     ProxyPassMatch ^/(data.*)$ http://localhost:8180/$1
     ProxyPassMatch ^/find(.*) http://localhost:8180/find$1
 
-    ProxyPassMatch ^/(http.*)$ http://localhost:8180/$1
-    ProxyPassMatch ^/(.*) http://localhost:8180/https://id.kb.se/$1
+    ProxyPassMatch ^/(http.*)$ http://localhost:8180/$1 nocanon
+    ProxyPassMatch ^/([bcdfghjklmnpqrstvwxz0-9]{15,16}) http://localhost:8180/$1
+    ProxyPassMatch ^/(.*) http://localhost:8180/https://id.kb.se/$1 nocanon
 
     AddOutputFilterByType DEFLATE text/css text/html text/plain text/xml
     AddOutputFilterByType DEFLATE application/x-javascript text/x-component application/javascript

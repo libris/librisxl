@@ -5,12 +5,12 @@ import whelk.JsonLd;
 import java.util.*;
 
 public class History {
-    private HashMap<List<Object>, Ownership> m_pathOwnership;
+    private final HashMap<List<Object>, Ownership> m_pathOwnership;
 
     // The last version added to this history, needed for diffing the next one against.
     private DocumentVersion m_lastVersion;
 
-    private JsonLd m_jsonLd;
+    private final JsonLd m_jsonLd;
 
     /**
      * Reconstruct a records history given a (backwards chronologically ordered "DESC")
@@ -19,6 +19,7 @@ public class History {
     public History(List<DocumentVersion> versions, JsonLd jsonLd) {
         m_jsonLd = jsonLd;
         m_pathOwnership = new HashMap<>();
+
 
         // The list we get is sorted chronologically, oldest first.
         for (DocumentVersion version : versions) {
@@ -109,6 +110,18 @@ public class History {
                     setOwnership(newPath, compositePath, version);
                 }
             }
+
+            // Key removed!
+            if (!k1.containsAll(k2)) {
+                Set removedKeys = new HashSet(k2);
+                removedKeys.removeAll(k1);
+
+                for (Object key : removedKeys) {
+                    List<Object> removedPath = new ArrayList(path);
+                    removedPath.add(key);
+                    clearOwnership(removedPath);
+                }
+            }
         }
 
         if (examining instanceof List) {
@@ -152,7 +165,7 @@ public class History {
             for (int i = 0; i < tempNew.size(); ++i) {
                 List<Object> childPath = new ArrayList(path);
                 if ( tempOld.size() > i ) {
-                    childPath.add(new Integer(i));
+                    childPath.add(Integer.valueOf(i));
                     examineDiff(childPath, version,
                             tempNew.get(i), tempOld.get(i),
                             compositePath);
@@ -182,6 +195,20 @@ public class History {
         m_pathOwnership.put( path, new Ownership(version, m_pathOwnership.get(path)) );
     }
 
+    private void clearOwnership(List<Object> removedPath) {
+        Iterator<List<Object>> it = m_pathOwnership.keySet().iterator();
+        while (it.hasNext()) {
+            List<Object> keyPath = it.next();
+            if (keyPath.size() >= removedPath.size() && keyPath.subList(0, removedPath.size()).equals(removedPath)) {
+                // removedPath is a more general version of keyPath.
+                // For example, keyPath might be @graph,1,hasTitle,subTitle
+                // and the removed path @graph,1,hasTitle
+                // Therefore, keyPath must be cleared.
+                it.remove();
+            }
+        }
+    }
+
     // DEBUG CODE BELOW THIS POINT
     public String toString() {
         StringBuilder b = new StringBuilder();
@@ -195,7 +222,7 @@ public class History {
                 beginLine(b, indent, path);
                 b.append("[\n");
                 List<Object> childPath = new ArrayList(path);
-                childPath.add(new Integer(i));
+                childPath.add(Integer.valueOf(i));
                 toString(b, ((List)current).get(i), indent + 1, childPath);
                 b.setLength(b.length()-1); // drop newline
                 b.append(",\n");

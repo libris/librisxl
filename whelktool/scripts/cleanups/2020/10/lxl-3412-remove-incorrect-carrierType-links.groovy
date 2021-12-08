@@ -47,7 +47,7 @@ selectByCollection('bib') { data ->
     }
 }
 
-def boolean removeUris(Object data, List<String> uris) {
+boolean removeUris(Object data, List<String> uris) {
     return DocumentUtil.traverse(data, {value, path ->
         if (value instanceof String && startsWithAny(uris, value)) {
             return new DocumentUtil.Remove()
@@ -55,7 +55,7 @@ def boolean removeUris(Object data, List<String> uris) {
     })
 }
 
-def boolean startsWithAny(List<String> uris, String compareString) {
+boolean startsWithAny(List<String> uris, String compareString) {
     for (uri in uris) {
         if (compareString.startsWith(uri)) {
             return true

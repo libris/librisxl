@@ -7,6 +7,7 @@ import whelk.JsonLdValidator.Error
 import whelk.Whelk
 import whelk.filter.LinkFinder
 
+import static whelk.util.Jackson.mapper
 
 List fpaths
 def cmd = "convert"
@@ -86,8 +87,8 @@ static void addJsonLd(converter) {
     def displayFile = new File("$defsbuild/vocab/display.jsonld")
     assert displayFile.exists(), "Missing display file: ${displayFile}"
 
-    def contextData = converter.mapper.readValue(contextFile, Map)
-    def displayData = converter.mapper.readValue(displayFile, Map)
-    def vocabData = converter.mapper.readValue(vocabFile, Map)
+    def contextData = mapper.readValue(contextFile, Map)
+    def displayData = mapper.readValue(displayFile, Map)
+    def vocabData = mapper.readValue(vocabFile, Map)
     converter.ld = new JsonLd(contextData, displayData, vocabData)
 }

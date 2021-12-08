@@ -23,15 +23,15 @@ class Wizard extends JDialog implements ActionListener
     public static String REPLACE_RECORDS = "replacerecords";
     public static String SELECT_SCRIPT = "selectscript";
 
-    private JPanel cardPanel;
-    private JButton backButton;
-    private JButton nextButton;
-    private JButton cancelButton;
-    private CardLayout cardLayout;
+    private final JPanel cardPanel;
+    private final JButton backButton;
+    private final JButton nextButton;
+    private final JButton cancelButton;
+    private final CardLayout cardLayout;
 
-    private Stack<String> cardStack;
+    private final Stack<String> cardStack;
     private String currentCard;
-    private HashMap<String, WizardCard> cardInstances;
+    private final HashMap<String, WizardCard> cardInstances;
 
     private Object parameterFromPreviousCard;
 

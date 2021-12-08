@@ -1,13 +1,14 @@
 package whelk.converter.marc
 
 import groovy.util.logging.Log4j2 as Log
-import org.codehaus.jackson.map.ObjectMapper
 import org.w3c.dom.DocumentFragment
 import se.kb.libris.util.marc.MarcRecord
 import whelk.Document
 import whelk.JsonLd
 import whelk.converter.FormatConverter
 import whelk.converter.JSONMarcConverter
+
+import static whelk.util.Jackson.mapper
 
 @Log
 class JsonLD2MarcXMLConverter implements FormatConverter {
@@ -28,8 +29,7 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
     }
 
     JsonLD2MarcConverter jsonldConverter = null
-    final static ObjectMapper mapper = new ObjectMapper()
-
+    
     JsonLD2MarcXMLConverter(MarcFrameConverter marcFrameConverter) {
         jsonldConverter = new JsonLD2MarcConverter(marcFrameConverter)
     }
@@ -58,7 +58,7 @@ class JsonLD2MarcXMLConverter implements FormatConverter {
             if (!field.getSubfields("2").isEmpty() && field.getSubfields("2").first().data == "librisxl") {
                 has887Field = true
                 def subFieldA = field.getSubfields("a").first()
-                subFieldA.setData(mapper.writeValueAsString(["@id":identifier,"modified":modified,"checksum":checksum]))
+                subFieldA.setData(mapper.writeValueAsString(["@id":identifier, "modified":modified, "checksum":checksum]))
             }
         }
         if (!has887Field) {

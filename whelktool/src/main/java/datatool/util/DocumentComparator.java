@@ -12,7 +12,7 @@ import java.util.function.Function;
 public class DocumentComparator {
     private static final Comparator<Object> BY_HASH = (o1, o2) -> o2.hashCode() - o1.hashCode();
 
-    private Function<Object, Boolean> isOrderedList;
+    private final Function<Object, Boolean> isOrderedList;
 
     public DocumentComparator() {
         this(o -> "termComponentList".equals(o));

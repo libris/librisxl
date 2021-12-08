@@ -7,12 +7,10 @@ import com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory
 import groovy.json.StringEscapeUtils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
-import org.codehaus.jackson.map.ObjectMapper
 import org.postgresql.PGStatement
 import org.postgresql.util.PGobject
 import org.postgresql.util.PSQLException
 import whelk.Document
-import whelk.history.DocumentVersion
 import whelk.IdType
 import whelk.JsonLd
 import whelk.Link
@@ -25,6 +23,7 @@ import whelk.exception.TooHighEncodingLevelException
 import whelk.exception.WhelkException
 import whelk.exception.WhelkRuntimeException
 import whelk.filter.LinkFinder
+import whelk.history.DocumentVersion
 import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 
@@ -44,6 +43,7 @@ import java.util.regex.Pattern
 
 import static groovy.transform.TypeCheckingMode.SKIP
 import static java.sql.Types.OTHER
+import static whelk.util.Jackson.mapper
 
 /**
  *  It is important to not grab more than one connection per request/thread to avoid connection related deadlocks.
@@ -72,8 +72,6 @@ class PostgreSQLComponent {
     public static final String PROPERTY_SQL_URL = "sqlUrl"
     public static final String PROPERTY_SQL_MAX_POOL_SIZE = "sqlMaxPoolSize"
     public static final String PROPERTY_EMBELLISH_CACHE_MAX_SIZE = "embellishCacheMaxSizeBytes"
-
-    public static final ObjectMapper mapper = new ObjectMapper()
 
     private static final int DEFAULT_MAX_POOL_SIZE = 16
     private static final String driverClass = "org.postgresql.Driver"
@@ -729,7 +727,7 @@ class PostgreSQLComponent {
         log.info("Re-denormalizing data.")
         Connection connection = getOuterConnection()
         try {
-            boolean autoCommit = connection.getAutoCommit();
+            boolean autoCommit = connection.getAutoCommit()
             connection.setAutoCommit(false)
             boolean leaveCacheAlone = true
 
@@ -1073,8 +1071,8 @@ class PostgreSQLComponent {
             PreparedStatement statement = null
             try {
                 statement = connection.prepareStatement(SPARQL_QUEUE_ADD_UPDATES_SINCE)
-                statement.setTimestamp(1, timestamp);
-                statement.setTimestamp(2, timestamp);
+                statement.setTimestamp(1, timestamp)
+                statement.setTimestamp(2, timestamp)
 
                 statement.execute()
             } finally {
@@ -1973,7 +1971,7 @@ class PostgreSQLComponent {
                 if (rs.getString(2) != null) // The first tuple will be (root, null), which we dont need in the result.
                     dependencies.add( new Tuple2<String, String>(rs.getString(1), rs.getString(2)) )
             }
-            dependencies.sort { it.getFirst() }
+            dependencies.sort { it.v1 }
             return dependencies
         }
         finally {
@@ -2312,7 +2310,7 @@ class PostgreSQLComponent {
                 while (rs.next()) {
                     def doc = assembleDocument(rs)
                     doc.version = v++
-                    docList.add(new DocumentVersion(doc, rs.getString("changedBy"), rs.getString("changedIn")));
+                    docList.add(new DocumentVersion(doc, rs.getString("changedBy"), rs.getString("changedIn")))
                 }
             } finally {
                 close(rs, selectstmt)
@@ -2564,11 +2562,12 @@ class PostgreSQLComponent {
         int level = 1
 
         // For the for Groovy (Closure) version
-        public ConnectionContext() {}
+        ConnectionContext() {}
 
         // For the Java (AutoCloseable) version
-        ThreadLocal<ConnectionContext> baseTL;
-        public ConnectionContext(ThreadLocal<ConnectionContext> baseTL) {
+        ThreadLocal<ConnectionContext> baseTL
+
+        ConnectionContext(ThreadLocal<ConnectionContext> baseTL) {
             this.baseTL = baseTL
             ConnectionContext c = baseTL.get()
             if (!c) {
@@ -2579,7 +2578,7 @@ class PostgreSQLComponent {
             }
         }
 
-        public void close()
+        void close()
         {
             ConnectionContext c = baseTL.get()
             c.level--
@@ -2593,7 +2592,7 @@ class PostgreSQLComponent {
 
     public ThreadLocal<ConnectionContext> connectionContextTL = ThreadLocal.withInitial({ -> (ConnectionContext) null })
 
-    public Connection getMyConnection() {
+    Connection getMyConnection() {
         ConnectionContext c = connectionContextTL.get()
         if (!c) {
             throw new IllegalStateException("getMyConnection() called outside withDbConnection()")
@@ -2616,7 +2615,7 @@ class PostgreSQLComponent {
      * The same connection is always returned anyway, and that connection is released when the outermost
      * block ends.
      */
-    public <T> T withDbConnection(Closure closure) {
+    def <T> T withDbConnection(Closure closure) {
         Preconditions.checkNotNull(closure)
         try {
             ConnectionContext c = connectionContextTL.get()
@@ -2745,7 +2744,7 @@ class PostgreSQLComponent {
         }
     }
 
-    private class CardEntry {
+    class CardEntry {
         Document card
         Instant changedTimestamp
 
@@ -2756,6 +2755,14 @@ class PostgreSQLComponent {
 
             this.card = new Document(jsonld.toCard(doc.data, false))
             this.changedTimestamp = changedTimestamp ?: doc.getModifiedTimestamp()
+        }
+
+        Document getCard() {
+            return card
+        }
+
+        Instant getChangedTimestamp() {
+            return changedTimestamp
         }
     }
 
