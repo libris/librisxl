@@ -52,9 +52,9 @@ public class History {
             Map versionLink = new HashMap();
             versionLink.put("@id", version.doc.getCompleteId() + "/data?version=" + i);
             changeSet.put("version", versionLink);
-            changeSet.put("added", new ArrayList<>());
-            changeSet.put("modified", new ArrayList<>());
-            changeSet.put("removed", new ArrayList<>());
+            changeSet.put("addedPaths", new ArrayList<>());
+            changeSet.put("modifiedPaths", new ArrayList<>());
+            changeSet.put("removedPaths", new ArrayList<>());
             changeSet.put("agent", version.changedBy);
             List changeSets = (List) m_changeSetsMap.get("changeSets");
             Map agent = new HashMap();
@@ -96,12 +96,12 @@ public class History {
             addVersion(version, changeSet);
 
             // Clean up empty fields
-            if ( ((List) changeSet.get("added")).isEmpty() )
-                changeSet.remove("added");
-            if ( ((List) changeSet.get("removed")).isEmpty() )
-                changeSet.remove("removed");
-            if ( ((List) changeSet.get("modified")).isEmpty() )
-                changeSet.remove("modified");
+            if ( ((List) changeSet.get("addedPaths")).isEmpty() )
+                changeSet.remove("addedPaths");
+            if ( ((List) changeSet.get("removedPaths")).isEmpty() )
+                changeSet.remove("removedPaths");
+            if ( ((List) changeSet.get("modifiedPaths")).isEmpty() )
+                changeSet.remove("modifiedPaths");
         }
     }
 
@@ -190,7 +190,7 @@ public class History {
                     newPath.add(key);
                     setOwnership(newPath, compositePath, version);
 
-                    ((List) changeSet.get("added")).add(newPath);
+                    ((List) changeSet.get("addedPaths")).add(newPath);
                 }
             }
 
@@ -204,7 +204,7 @@ public class History {
                     removedPath.add(key);
                     clearOwnership(removedPath);
 
-                    ((List) changeSet.get("removed")).add(removedPath);
+                    ((List) changeSet.get("removedPaths")).add(removedPath);
                 }
             }
         }
@@ -212,7 +212,7 @@ public class History {
         if (examining instanceof List) {
             if (! (correspondingPrevious instanceof List) ) {
                 setOwnership(path, compositePath, version);
-                ((List) changeSet.get("modified")).add(path);
+                ((List) changeSet.get("modifiedPaths")).add(path);
                 return;
             }
         }
@@ -221,7 +221,7 @@ public class History {
                 examining instanceof Float || examining instanceof Boolean) {
             if (!examining.equals(correspondingPrevious)) {
                 setOwnership(path, compositePath, version);
-                ((List) changeSet.get("modified")).add(path);
+                ((List) changeSet.get("modifiedPaths")).add(path);
                 return;
             }
         }
