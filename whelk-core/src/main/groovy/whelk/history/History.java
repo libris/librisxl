@@ -1,11 +1,31 @@
 package whelk.history;
 
+import whelk.Document;
 import whelk.JsonLd;
 
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 public class History {
+
+    /**
+     * This class takes a list of versions of a record, and from that list compiles
+     * two separate things.
+     *
+     * One is a map from 'path' to 'ownership', such that for example the path
+     * {@graph,1,contribution} (and all subkeys!) are "owned" (most recently changed by)
+     * for example "sigel S and was since additionally modified by a script".
+     *
+     * The other is a set change list, which contains a summary of what was updated
+     * (and by whom) for each version of the record.
+     */
+
+    // Most-recent-ownership for each part of the record
     private final HashMap<List<Object>, Ownership> m_pathOwnership;
+
+    // A (json) summary of changes or "change sets" for the history of this record, version for version.
+    public Map m_changeSetsMap;
 
     // The last version added to this history, needed for diffing the next one against.
     private DocumentVersion m_lastVersion;
@@ -13,25 +33,83 @@ public class History {
     private final JsonLd m_jsonLd;
 
     /**
-     * Reconstruct a records history given a (backwards chronologically ordered "DESC")
-     * list of versions of said record
+     * Reconstruct a records history given a list of versions of said record
      */
     public History(List<DocumentVersion> versions, JsonLd jsonLd) {
         m_jsonLd = jsonLd;
         m_pathOwnership = new HashMap<>();
 
+        m_changeSetsMap = new HashMap();
+        m_changeSetsMap.put("@id", versions.get(0).doc.getCompleteId() + "/changesets");
+        m_changeSetsMap.put("changeSets", new ArrayList<>());
 
         // The list we get is sorted chronologically, oldest first.
-        for (DocumentVersion version : versions) {
-            addVersion(version);
+        for (int i = 0; i < versions.size(); ++i) {
+            DocumentVersion version = versions.get(i);
+
+            Map changeSet = new HashMap();
+            changeSet.put("@type", "ChangeSet");
+            Map versionLink = new HashMap();
+            versionLink.put("@id", version.doc.getCompleteId() + "/data?version=" + i);
+            changeSet.put("version", versionLink);
+            changeSet.put("addedPaths", new ArrayList<>());
+            changeSet.put("modifiedPaths", new ArrayList<>());
+            changeSet.put("removedPaths", new ArrayList<>());
+            changeSet.put("agent", version.changedBy);
+            List changeSets = (List) m_changeSetsMap.get("changeSets");
+            Map agent = new HashMap();
+            agent.put("@id", changedByToUri(version.changedBy));
+            changeSet.put("agent", agent);
+            if (wasScriptEdit(version)) {
+                changeSet.put("date", version.doc.getGenerationDate());
+                Map tool = new HashMap();
+                tool.put("@id", "https://id.kb.se/generator/globalchanges");
+                changeSet.put("tool", tool);
+            } else if (version.changedIn.equals("APIX")) {
+                changeSet.put("date", version.doc.getModified());
+                Map tool = new HashMap();
+                tool.put("@id", "https://id.kb.se/generator/apix");
+                changeSet.put("tool", tool);
+            } else if (version.changedIn.equals("batch import")) {
+                changeSet.put("date", version.doc.getModified());
+                Map tool = new HashMap();
+                tool.put("@id", "https://id.kb.se/generator/batchimport");
+                changeSet.put("tool", tool);
+            } else if (version.changedIn.equals("vcopy")) {
+                changeSet.put("date", version.doc.getModified());
+                Map tool = new HashMap();
+                tool.put("@id", "https://id.kb.se/generator/voyager");
+                changeSet.put("tool", tool);
+            } else if (version.changedBy.equals("WhelkCopier")) {
+                changeSet.put("date", version.doc.getModified());
+                Map tool = new HashMap();
+                tool.put("@id", "https://id.kb.se/generator/whelkcopier");
+                changeSet.put("tool", tool);
+            } else if (version.changedIn.equals("xl")) { // Must be last in list!
+                changeSet.put("date", version.doc.getModified());
+                Map tool = new HashMap();
+                tool.put("@id", "https://id.kb.se/generator/crud");
+                changeSet.put("tool", tool);
+            }
+            changeSets.add(changeSet);
+
+            addVersion(version, changeSet);
+
+            // Clean up empty fields
+            if ( ((List) changeSet.get("addedPaths")).isEmpty() )
+                changeSet.remove("addedPaths");
+            if ( ((List) changeSet.get("removedPaths")).isEmpty() )
+                changeSet.remove("removedPaths");
+            if ( ((List) changeSet.get("modifiedPaths")).isEmpty() )
+                changeSet.remove("modifiedPaths");
         }
     }
 
-    public void addVersion(DocumentVersion version) {
+    public void addVersion(DocumentVersion version, Map changeSetToBuild) {
         if (m_lastVersion == null) {
             m_pathOwnership.put( new ArrayList<>(), new Ownership(version, null) );
         } else {
-            examineDiff(new ArrayList<>(), version, version.doc.data, m_lastVersion.doc.data, null);
+            examineDiff(new ArrayList<>(), version, version.doc.data, m_lastVersion.doc.data, null, changeSetToBuild);
         }
         m_lastVersion = version;
     }
@@ -76,11 +154,14 @@ public class History {
      * has subcomponents. The point of this is that changing (for example)
      * a subTitle should result in ownership of the whole title (not just
      * the subtitle).
+     * 'changeSet' is a map in which this function will be building a summary
+     * of changes this version has.
      */
     private void examineDiff(List<Object> path,
                              DocumentVersion version,
                              Object examining, Object correspondingPrevious,
-                             List<Object> compositePath) {
+                             List<Object> compositePath,
+                             Map changeSet) {
         if (examining instanceof Map) {
 
             if (! (correspondingPrevious instanceof Map) ) {
@@ -108,6 +189,8 @@ public class History {
                     List<Object> newPath = new ArrayList(path);
                     newPath.add(key);
                     setOwnership(newPath, compositePath, version);
+
+                    ((List) changeSet.get("addedPaths")).add(newPath);
                 }
             }
 
@@ -120,6 +203,8 @@ public class History {
                     List<Object> removedPath = new ArrayList(path);
                     removedPath.add(key);
                     clearOwnership(removedPath);
+
+                    ((List) changeSet.get("removedPaths")).add(removedPath);
                 }
             }
         }
@@ -127,6 +212,7 @@ public class History {
         if (examining instanceof List) {
             if (! (correspondingPrevious instanceof List) ) {
                 setOwnership(path, compositePath, version);
+                ((List) changeSet.get("modifiedPaths")).add(path);
                 return;
             }
         }
@@ -135,6 +221,7 @@ public class History {
                 examining instanceof Float || examining instanceof Boolean) {
             if (!examining.equals(correspondingPrevious)) {
                 setOwnership(path, compositePath, version);
+                ((List) changeSet.get("modifiedPaths")).add(path);
                 return;
             }
         }
@@ -168,7 +255,7 @@ public class History {
                     childPath.add(Integer.valueOf(i));
                     examineDiff(childPath, version,
                             tempNew.get(i), tempOld.get(i),
-                            compositePath);
+                            compositePath, changeSet);
                 }
             }
         } else if (examining instanceof Map) {
@@ -178,7 +265,7 @@ public class History {
                     childPath.add(key);
                     examineDiff(childPath, version,
                             ((Map) examining).get(key), ((Map) correspondingPrevious).get(key),
-                            compositePath);
+                            compositePath, changeSet);
                 }
             }
         }
@@ -207,6 +294,33 @@ public class History {
                 it.remove();
             }
         }
+    }
+
+    /**
+     * What was put into the changedBy column has varied a bit over XLs history. This
+     * tries to make sense of the different variants.
+     */
+    private String changedByToUri(String changedBy) {
+        if (changedBy.startsWith("http"))
+            return changedBy;
+        if (changedBy.equals("")) // This was the case for script changes for a brief period (early global changes)
+            return "https://libris.kb.se/library/SEK";
+        if (changedBy.endsWith(".groovy"))
+            return "https://libris.kb.se/library/SEK";
+        if (changedBy.equals("Libriskörning, globala ändringar"))
+            return "https://libris.kb.se/library/SEK";
+        if (changedBy.equals("WhelkCopier"))
+            return "https://libris.kb.se/library/SEK";
+        else return "https://libris.kb.se/library/" + changedBy;
+    }
+
+    public static boolean wasScriptEdit(DocumentVersion version) {
+        Instant modifiedInstant = ZonedDateTime.parse(version.doc.getModified()).toInstant();
+        Instant generatedInstant = ZonedDateTime.parse(version.doc.getGenerationDate()).toInstant();
+        if (generatedInstant != null && generatedInstant.isAfter( modifiedInstant )) {
+            return true;
+        }
+        return false;
     }
 
     // DEBUG CODE BELOW THIS POINT

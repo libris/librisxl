@@ -21,6 +21,7 @@ import whelk.exception.StaleUpdateException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.UnexpectedHttpStatusException
 import whelk.exception.WhelkRuntimeException
+import whelk.history.History
 import whelk.rest.api.CrudGetRequest.Lens
 import whelk.rest.security.AccessControl
 import whelk.util.LegacyIntegrationTools
@@ -335,8 +336,12 @@ class Crud extends HttpServlet {
     }
 
     private Object getFormattedResponseBody(CrudGetRequest request, Document doc) {
-        log.debug("Formatting document {}. embellished: {}, framed: {}, lens: {}",
-                doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame(), request.getLens())
+        log.debug("Formatting document {}. embellished: {}, framed: {}, lens: {}, view: {}",
+                doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame(), request.getLens(), request.getView())
+        if (request.getView() == CrudGetRequest.View.CHANGE_SETS) {
+            History history = new History(whelk.storage.loadDocumentHistory(doc.getShortId()), jsonld)
+            return history.m_changeSetsMap;
+        }
 
         def transformedResponse
         if (request.getLens() != Lens.NONE) {
