@@ -301,6 +301,8 @@ public class History {
      * tries to make sense of the different variants.
      */
     private String changedByToUri(String changedBy) {
+        if (changedBy == null)
+            return "https://libris.kb.se/library/SEK";
         if (changedBy.startsWith("http"))
             return changedBy;
         if (changedBy.equals("")) // This was the case for script changes for a brief period (early global changes)
