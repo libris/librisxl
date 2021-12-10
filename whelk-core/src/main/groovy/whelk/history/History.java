@@ -318,9 +318,11 @@ public class History {
 
     public static boolean wasScriptEdit(DocumentVersion version) {
         Instant modifiedInstant = ZonedDateTime.parse(version.doc.getModified()).toInstant();
-        Instant generatedInstant = ZonedDateTime.parse(version.doc.getGenerationDate()).toInstant();
-        if (generatedInstant != null && generatedInstant.isAfter( modifiedInstant )) {
-            return true;
+        if (version.doc.getGenerationDate() != null) {
+            Instant generatedInstant = ZonedDateTime.parse(version.doc.getGenerationDate()).toInstant();
+            if (generatedInstant != null && generatedInstant.isAfter( modifiedInstant )) {
+                return true;
+            }
         }
         return false;
     }
