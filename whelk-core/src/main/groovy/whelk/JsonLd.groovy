@@ -925,7 +925,7 @@ class JsonLd {
         }
         if (lens) {
             List propertiesToKeep = (List) lens.get("showProperties")
-                    .collect { prop -> isAlternateProperties(prop) ? prop['alternateProperties'] : prop}
+                    .collect { prop -> isAlternateProperties(prop) ? prop['alternateProperties'] : prop }
                     .flatten()
             
             for (prop in propertiesToKeep) {
