@@ -925,6 +925,9 @@ class JsonLd {
         }
         if (lens) {
             List propertiesToKeep = (List) lens.get("showProperties")
+                    .collect { prop -> isAlternateProperties(prop) ? prop['alternateProperties'] : prop }
+                    .flatten()
+            
             for (prop in propertiesToKeep) {
                 def values = object[prop]
                 if (isLangContainer(context[prop]) && values instanceof Map) {
