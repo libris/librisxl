@@ -4,7 +4,8 @@ import whelk.Document;
 import whelk.Whelk;
 import whelk.history.History;
 import whelk.history.Ownership;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -42,13 +43,13 @@ public class Merge {
        being targeted.
      */
 
-    // TODO: GENERATE A LOG OF _CHANGES MADE_ AND PERHAPS CHANGES NOT MADE!
-
     // Contains paths where we're allowed to add things that don't already exist
     private Set<List<Object>> m_pathAddRules = null;
 
     // Maps a path to a sigel priority list.
     private Map<List<Object>, Map> m_pathReplaceRules = null;
+
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
     public Merge(File ruleFile) throws IOException {
         m_pathAddRules = new HashSet<>();
@@ -86,7 +87,8 @@ public class Merge {
                     incomingGraphList.get(i),
                     path,
                     incomingAgent,
-                    baseHistory
+                    baseHistory,
+                    base.getShortId()
             );
         }
     }
@@ -117,8 +119,10 @@ public class Merge {
     }
 
     private void mergeInternal(Object base, Object baseParent, Object correspondingIncoming,
-                                      List<Object> path,
-                                      String incomingAgent, History baseHistory) {
+                               List<Object> path,
+                               String incomingAgent,
+                               History baseHistory,
+                               String loggingForID) {
         Map replacePriority = getReplaceRuleForPath(path);
         if (replacePriority != null) {
 
@@ -144,13 +148,12 @@ public class Merge {
             }
 
             // Execute replacement if appropriate
-            if (!baseContainsHandEdits && incomingPriorityHere >= basePriorityHere) {
+            if (!baseContainsHandEdits && incomingPriorityHere >= basePriorityHere &&
+                    !subtreeContainsLinks(base)) {
                 if (base instanceof Map) {
                     Map map = ( (Map) base );
-                    if (!subtreeContainsLinks(map)) {
-                        map.clear();
-                        map.putAll( (Map) correspondingIncoming );
-                    }
+                    map.clear();
+                    map.putAll( (Map) correspondingIncoming );
                 }
                 else if (base instanceof List) {
                     List list = ( (List) base );
@@ -158,11 +161,15 @@ public class Merge {
                     list.addAll( (List) correspondingIncoming );
                 }
                 else { // String, number etc
-                    if (baseParent instanceof Map) { // List is not relevant, as we can't navigate past them!
+                    // Parent-as-list is not relevant, as lists cannot be navigated without type
+                    // specifiers, and only objects (not strings/numbers) can have types.
+                    if (baseParent instanceof Map) {
                         Map parentMap = (Map) baseParent;
                         parentMap.put(path.get(path.size()-1), correspondingIncoming);
                     }
                 }
+                logger.info("Merge of " + loggingForID + ": replaced " + path + ". Max existing subtree priority was: " +
+                        basePriorityHere + " and incoming priority was: " + incomingPriorityHere);
 
                 return; // scan no further (we've just replaced everything below us)
             }
@@ -177,6 +184,7 @@ public class Merge {
                 if ( ((Map) base).get(key) == null ) {
                     if (existsAddRuleForPath(childPath)) {
                         ((Map) base).put(key, ((Map) correspondingIncoming).get(key));
+                        logger.info("Merge of " + loggingForID + ": added object at " + childPath);
                     }
                 }
 
@@ -186,7 +194,8 @@ public class Merge {
                             ((Map) correspondingIncoming).get(key),
                             childPath,
                             incomingAgent,
-                            baseHistory);
+                            baseHistory,
+                            loggingForID);
                 }
             }
         } else if (base instanceof List && correspondingIncoming instanceof List) {
@@ -238,7 +247,8 @@ public class Merge {
                         incomingChild,
                         childPath,
                         incomingAgent,
-                        baseHistory);
+                        baseHistory,
+                        loggingForID);
             }
         }
     }
