@@ -690,7 +690,7 @@ class Crud extends HttpServlet {
         savedDoc = saveDocument(newDoc, request, response, isUpdate, "POST")
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
-                               savedDoc.getChecksum(jsonld))
+                    ETag.plain(savedDoc.getChecksum(jsonld)))
         } else if (!response.isCommitted()) {
             sendNotFound(response, request.getContextPath())
         }
@@ -828,7 +828,7 @@ class Crud extends HttpServlet {
         Document savedDoc = saveDocument(updatedDoc, request, response, isUpdate, "PUT")
         if (savedDoc != null) {
             sendUpdateResponse(response, savedDoc.getURI().toString(),
-                               savedDoc.getChecksum(jsonld))
+                    ETag.plain(savedDoc.getChecksum(jsonld)))
         }
 
     }
@@ -927,22 +927,22 @@ class Crud extends HttpServlet {
     }
 
     static void sendCreateResponse(HttpServletResponse response, String locationRef,
-                                   String etag) {
-        sendDocumentSavedResponse(response, locationRef, etag, true)
+                                   ETag eTag) {
+        sendDocumentSavedResponse(response, locationRef, eTag, true)
     }
 
     static void sendUpdateResponse(HttpServletResponse response, String locationRef,
-                                   String etag) {
-        sendDocumentSavedResponse(response, locationRef, etag, false)
+                                   ETag eTag) {
+        sendDocumentSavedResponse(response, locationRef, eTag, false)
     }
 
     static void sendDocumentSavedResponse(HttpServletResponse response,
-                                          String locationRef, String etag,
+                                          String locationRef, ETag eTag,
                                           boolean newDocument) {
         log.debug("Setting header Location: $locationRef")
 
         response.setHeader("Location", locationRef)
-        response.setHeader("ETag", "\"${etag as String}\"")
+        response.setHeader("ETag", eTag.toString())
         response.setHeader('Cache-Control', 'no-cache')
 
         if (newDocument) {
