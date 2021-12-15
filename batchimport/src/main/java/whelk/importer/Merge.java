@@ -150,22 +150,20 @@ public class Merge {
             // Execute replacement if appropriate
             if (!baseContainsHandEdits && incomingPriorityHere >= basePriorityHere &&
                     !subtreeContainsLinks(base)) {
-                if (base instanceof Map) {
-                    Map map = ( (Map) base );
-                    map.clear();
-                    map.putAll( (Map) correspondingIncoming );
-                }
-                else if (base instanceof List) {
-                    List list = ( (List) base );
-                    list.clear();
-                    list.addAll( (List) correspondingIncoming );
-                }
-                else { // String, number etc
-                    // Parent-as-list is not relevant, as lists cannot be navigated without type
-                    // specifiers, and only objects (not strings/numbers) can have types.
-                    if (baseParent instanceof Map) {
-                        Map parentMap = (Map) baseParent;
-                        parentMap.put(path.get(path.size()-1), correspondingIncoming);
+                if (baseParent instanceof Map) {
+                    Map parentMap = (Map) baseParent;
+                    parentMap.put(path.get(path.size()-1), correspondingIncoming);
+                } else if (baseParent instanceof List) {
+                    List parentList = (List) baseParent;
+                    String typeToReplace = ((String) path.get(path.size()-1)).substring(6); // Strip away the @type=
+                    for (int i = 0; i < parentList.size(); ++i) {
+                        if (parentList.get(0) instanceof Map) {
+                            Map m = (Map) parentList.get(0);
+                            if (m.containsKey("@type") && m.get("@type").equals(typeToReplace)) {
+                                parentList.set(i, correspondingIncoming);
+                                break;
+                            }
+                        }
                     }
                 }
                 logger.info("Merge of " + loggingForID + ": replaced " + path + ". Max existing subtree priority was: " +
