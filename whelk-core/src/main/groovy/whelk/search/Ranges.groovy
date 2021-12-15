@@ -4,6 +4,7 @@ package whelk.search
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
 import whelk.search.Ranges.Query
+import groovy.util.logging.Log4j2 as Log
 
 import java.time.ZoneId
 import java.time.format.DateTimeParseException
@@ -15,6 +16,7 @@ import static RangeParameterPrefix.MIN
 import static RangeParameterPrefix.MIN_EX
 import static whelk.search.QueryDateTime.Precision.WEEK
 
+@Log
 class Ranges {
     String fieldName
     ZoneId timezone
@@ -152,7 +154,13 @@ class Ranges {
         
         @Override
         Map toQuery() {
-            def values = [value] + whelk.relations.followReverseBroader(value).collect() // default max size in ES 65,536...
+            def values = [value] + whelk.relations.followReverseBroader(value).collect()
+            
+            if (values.size() > whelk.elastic.maxTermsCount) {
+                log.warn("followReversebroader($value) gave more than ES maxTermsCount (${whelk.elastic.maxTermsCount}) results, truncating term list")
+                values = values.take(whelk.elastic.maxTermsCount)
+            }
+            
             ["terms" : [(fieldName) : values]]
         }
     }
