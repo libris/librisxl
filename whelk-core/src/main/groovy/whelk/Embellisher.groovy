@@ -116,7 +116,7 @@ class Embellisher {
         return integral
     }
 
-    private Iterable<Map> fetchNonVisited(String lens, Iterable<String> iris, Set<String> visitedIris) {
+    private Iterable<Map> fetchNonVisited(String lens, Set<String> iris, Set<String> visitedIris) {
         def data = load(lens, iris - visitedIris)
         visitedIris.addAll(data.collectMany { plusWithoutHash(new Document(it).getThingIdentifiers()) })
         visitedIris.addAll(iris)
@@ -140,14 +140,14 @@ class Embellisher {
         return result
     }
 
-    private Iterable<Map> load(String lens, Iterable<String> iris) {
+    private Iterable<Map> load(String lens, Set<String> iris) {
         if (iris.isEmpty()) {
             return []
         }
 
         def data = lens == 'full'
-                ? getDocs.apply(iris)
-                : getCards.apply(iris)
+                ? getDocs.apply(iris.collect())
+                : getCards.apply(iris.collect())
 
         if (lens == 'chips') {
             data = data.collect{ (Map) jsonld.toChip(it) }
