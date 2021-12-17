@@ -6,6 +6,8 @@
 
 import java.util.function.Predicate
 
+report = getReportWriter("report.txt")
+
 def datasets =
         [
                 [
@@ -59,12 +61,11 @@ selectByIds( new File(scriptDir, 'ids.txt').readLines() ) { bib ->
         Predicate predicate = spec.predicate
         if (predicate.test(bib) && setDataset(record, spec.datasetUri)) {
             bib.scheduleSave()
-            println("matched: $bib.doc.shortId  ${title(bib)}")
             return
         }
     }
-    
-    println("not matched: $bib.doc.shortId  ${title(bib)}")
+
+    report.println("not matched: $bib.doc.shortId ${title(bib)}")
 }
 
 boolean setDataset(Map record, datasetUri) {
