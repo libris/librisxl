@@ -1,10 +1,13 @@
 package whelk
 
+import groovy.transform.CompileStatic
+
 import java.util.function.BiFunction
 import java.util.function.Function
 import groovy.util.logging.Log4j2 as Log
 
 @Log
+@CompileStatic
 class Embellisher {
     static final List<String> DEFAULT_EMBELLISH_LEVELS = ['cards', 'chips']
     static final List<String> DEFAULT_INTEGRAL_RELATIONS = ['instanceOf', 'translationOf']
@@ -61,7 +64,7 @@ class Embellisher {
 
         def docs = fetchIntegral('full', start, integral(getAllLinks(start)), visitedIris).collect()
 
-        List result = docs
+        List result = docs.collect()
         Set<Link> links = getAllLinks(start + docs)
         Iterable<Map> previousLevelDocs = start + docs
         String previousLens = 'full'
@@ -124,7 +127,7 @@ class Embellisher {
     }
 
     private Iterable<Map> fetchIntegral(String lens, Iterable<Map> docs, Set<Link> integralLinks, Set<String> visitedIris) {
-        def result = []
+        List<Map> result = []
         while(true) {
             docs = fetchNonVisited(lens, uniqueIris(integralLinks), visitedIris)
             integralLinks = integral(getAllLinks(docs))
