@@ -11530,7 +11530,7 @@
           }}
         },
         {
-          "name": "With publication place ($a) and 008",
+          "name": "With publication place, agent and date (264 $a $b $c) and 008",
           "source": [
             {"008": "|     s2020    sw |||||||||||000 ||   | "},
             {"264": {"ind1": " ", "ind2": "1", "subfields": [
@@ -11566,7 +11566,7 @@
           }}
         },
         {
-          "name": "No publication place ($a) and 008",
+          "name": "No publication place (264 $a) and 008",
           "source": [
             {"008": "|     s2021    sw |||||||||||000 ||   | "},
             {"264": {"ind1": " ", "ind2": "1", "subfields": [
@@ -11595,6 +11595,31 @@
                 }
               ]
           }}
+        },
+        {
+          "name": ": No publication place or date (264 $a and $c) and 008",
+          "NOTE": "False Strings too large to calculate edit distance.",
+          "NOTE:source": [
+            {"008": "|     snnnn    xx |||||||||||000 ||   | "},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+                {"b": "Saga Egmont"}
+              ]
+            }}
+          ],
+          "NOTE:result": {
+            "marc:primaryProvisionActivity" : {
+              "@type" : "PrimaryProvisionActivity",
+              "country" : [ { "@id" : "https://id.kb.se/country/xx" } ],
+              "marc:publicationStatus" : "marc:SingleKnownDateProbableDate",
+              "year" : "nnnn"
+            },
+            "publication" : [ 
+              {
+                "@type" : "Publication",
+                "agent" : { "@type" : "Agent", "label" : "Saga Egmont" }
+              }
+            ]
+          }
         },
         {
           "source": [
@@ -26995,7 +27020,6 @@
       "[16]": {
         "link": "marc:completeness",
         "uriTemplate": "https://id.kb.se/marc/CompletenessType-{_}",
-        "matchUriToken": "^[123]$",
         "fixedDefault": "|"
       },
       "[17:20]": {
