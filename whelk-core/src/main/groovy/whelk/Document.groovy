@@ -1,5 +1,6 @@
 package whelk
 
+import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
@@ -846,7 +847,8 @@ class Document {
         return Long.toString(checksum)
     }
 
-    private long calculateCheckSum(node, int depth, parentKey, JsonLd jsonLd) {
+    @CompileStatic
+    private long calculateCheckSum(node, int depth, String parentKey, JsonLd jsonLd) {
         long term = 0
 
         if (node == null)
