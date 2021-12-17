@@ -1,7 +1,20 @@
 import whelk.util.DocumentUtil
 
+import java.util.regex.Pattern
+
+PrintWriter replaced = getReportWriter('replaced.tsv')
 PrintWriter removed = getReportWriter('removed.tsv')
+PrintWriter stillBroken = getReportWriter('unhandled.tsv')
+// Might need manual handling:
 PrintWriter exceptions = getReportWriter('exceptions.tsv')
+
+Map substitutions =
+        [
+                "http://www.scb.se/statistik/_publikationer/": "http://share.scb.se/OV9993/Data/Publikationer/statistik/_publikationer/",
+                "http://www.scb.se/statistik/"               : "http://share.scb.se/OV9993/Data/Publikationer/statistik/"
+        ]
+
+Pattern removePattern = ~/http:\/\/www\.scb\.se\/Pages\/List____[0-9]+\.aspx/
 
 selectByCollection('bib') { data ->
     Map instance = data.graph[1]
@@ -9,9 +22,25 @@ selectByCollection('bib') { data ->
 
     List badPaths = []
 
-    // Remove broken links
     boolean modified = DocumentUtil.traverse(instance) { value, path ->
         if (value in String && value.startsWith('http://www.scb.se/')) {
+            // Replace
+            Map.Entry substitution = substitutions.find {value.startsWith(it.key) }
+            if (substitution) {
+                String newUrl = value.replace(substitution.key, substitution.value)
+                replaced.println("$id\t$value\t$newUrl")
+                return new DocumentUtil.Replace(newUrl)
+            }
+
+            // Remove
+            if (value ==~ removePattern) {
+                // Save path so that the object containing the broken link can be removed
+                badPaths << path
+                removed.println("${id}\t${path}\t${value}")
+                return new DocumentUtil.Remove()
+            }
+
+            // Log unhandled broken links
             try {
                 URLConnection conn = new URL(value).openConnection()
 
@@ -21,9 +50,7 @@ selectByCollection('bib') { data ->
                 int responseCode = conn.getResponseCode()
 
                 if (responseCode in [400, 404]) {
-                    badPaths << path
-                    removed.println("${id}\t${responseCode}\t${path}\t${value}")
-                    return new DocumentUtil.Remove()
+                    stillBroken.println("${id}\t${responseCode}\t${path}\t${value}")
                 }
             } catch (Exception ex) {
                 exceptions.println("${id}\t${ex}")
