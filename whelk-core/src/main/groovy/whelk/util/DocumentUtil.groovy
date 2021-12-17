@@ -1,5 +1,7 @@
 package whelk.util
 
+import groovy.transform.CompileStatic
+
 import static whelk.JsonLd.TYPE_KEY
 
 class DocumentUtil {
@@ -67,7 +69,7 @@ class DocumentUtil {
     }
 
     static Visitor link(Linker linker) {
-        return { value, path ->
+        return (Visitor) { value, path ->
             return DocumentUtil.&linkBlankNodes(value, linker)
         }
     }
@@ -140,10 +142,11 @@ class DocumentUtil {
         node.size() == 0 || (node.size() == 1 && node.containsKey(TYPE_KEY))
     }
 
+    @CompileStatic
     private static class DFS {
         Stack path
         Visitor visitor
-        List operations
+        List<Operation> operations
 
         boolean traverse(obj, Visitor visitor) {
             this.visitor = visitor
@@ -192,7 +195,8 @@ class DocumentUtil {
         protected def parentAndKey(obj) {
             def p = path.collect()
             while (p.size() > 1) {
-                obj = obj[p.remove(0)]
+                def k = p.remove(0)
+                obj = (obj instanceof List && k instanceof Integer) ? obj[k] : (obj instanceof Map ? obj[k] : null)
                 if (obj == null) {
                     // already gone
                     return [null, null]
@@ -211,7 +215,8 @@ class DocumentUtil {
     static class Remove extends Operation {
         @Override
         protected void perform(Object obj) {
-            def (parent, key) = parentAndKey(obj)
+            def objects = parentAndKey(obj)
+            def (parent, key) = [objects[0], objects[1]]
             if(!parent) {
                 return
             }
@@ -232,9 +237,15 @@ class DocumentUtil {
 
         @Override
         protected void perform(Object obj) {
-            def (parent, key) = parentAndKey(obj)
+            def objects = parentAndKey(obj)
+            def (parent, key) = [objects[0], objects[1]]
             if (parent != null) {
-                parent[key] = with
+                if (parent instanceof Map) {
+                    parent[key] = with
+                }
+                else if (parent instanceof List && key instanceof Integer) {
+                    parent[key] = with
+                }
             }
         }
     }

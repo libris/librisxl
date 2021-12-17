@@ -432,6 +432,7 @@ class JsonLd {
         }
     }
 
+    @CompileStatic
     static Set<Link> getAllReferences(Map jsonLd) {
         if (!jsonLd.containsKey(GRAPH_KEY)) {
             throw new FramingException("Missing '@graph' key in input")
