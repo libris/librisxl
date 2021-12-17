@@ -59,39 +59,61 @@ class Embellisher {
         Set<String> visitedIris = new HashSet<>()
         visitedIris.addAll(plusWithoutHash(document.getThingIdentifiers()))
 
-        def docs = fetchIntegral('full', start, visitedIris).collect()
+        def docs = fetchIntegral('full', start, integral(getAllLinks(start)), visitedIris).collect()
 
         List result = docs
-        List<String> iris = getAllLinks(start + docs)
+        Set<Link> links = getAllLinks(start + docs)
         Iterable<Map> previousLevelDocs = start + docs
         String previousLens = 'full'
 
         for (String lens : embellishLevels) {
-            docs = fetchNonVisited(lens, iris, visitedIris)
-            docs += fetchIntegral(lens, docs, visitedIris)
-
-            previousLevelDocs.each { insertInverse(previousLens, it, lens, docs, visitedIris) }
+            docs = fetchNonVisited(lens, uniqueIris(links), visitedIris)
+            links = getAllLinks(docs)
+            
+            def integralDocs = fetchIntegral(lens, docs, integral(links), visitedIris)
+            docs += integralDocs
+            links += getAllLinks(integralDocs)
+            
+            previousLevelDocs.each {
+                def inverseDocs = insertInverse(previousLens, it, lens, visitedIris)
+                docs += inverseDocs
+                links += getAllLinks(inverseDocs)
+            }
             previousLevelDocs = docs
             previousLens = lens
 
-            result.addAll(docs)
-
-            iris = getAllLinks(docs)
+            result += docs
         }
         // Last level: add reverse links, but don't include documents linking here in embellish graph
-        previousLevelDocs.each { insertInverse(previousLens, it, null, [], visitedIris) }
+        previousLevelDocs.each { insertInverse(previousLens, it, null, visitedIris) }
 
         return result
     }
-
-    private static List<String> getAllLinks(Iterable<Map> docs) {
-        (List<String>) docs.collect{ JsonLd.getExternalReferences((Map) it).collect{ it.iri } }.flatten()
+    
+    private static Set<Link> getAllLinks(Iterable<Map> docs) {
+        Set<Link> links = new HashSet<>()
+        for (Map doc : docs) { 
+            links += JsonLd.getExternalReferences(doc) 
+        }
+        return links
     }
 
-    private List<String> getIntegralLinks(Iterable<Map> docs) {
-        (List<String>) docs.collect{
-            JsonLd.getExternalReferences((Map) it).grep{ it.relation in integralRelations }.collect{ it.iri }
-        }.flatten()
+    private static Set<String> uniqueIris(Set<Link> links) {
+        Set<String> iris = new HashSet<>(links.size())
+        for (Link link : links) { 
+            iris.add(link.iri) 
+        }
+        return iris
+    }
+
+    private Set<Link> integral(Set<Link> links) {
+        Set<Link> integral = new HashSet<>()
+        for (Link l : links) { 
+            if (l.relation in integralRelations) { 
+                integral.add(l) 
+            } 
+        }
+        return integral
     }
 
     private Iterable<Map> fetchNonVisited(String lens, Iterable<String> iris, Set<String> visitedIris) {
@@ -101,16 +123,17 @@ class Embellisher {
         return data
     }
 
-    private Iterable<Map> fetchIntegral(String lens, Iterable<Map> docs, Set<String> visitedIris) {
+    private Iterable<Map> fetchIntegral(String lens, Iterable<Map> docs, Set<Link> integralLinks, Set<String> visitedIris) {
         def result = []
         while(true) {
-            docs = fetchNonVisited(lens, getIntegralLinks(docs), visitedIris)
+            docs = fetchNonVisited(lens, uniqueIris(integralLinks), visitedIris)
+            integralLinks = integral(getAllLinks(docs))
 
             if (docs.isEmpty()) {
                 break
             }
             else {
-                result.addAll(docs)
+                result += docs
             }
         }
 
@@ -133,12 +156,13 @@ class Embellisher {
         return data
     }
 
-    private void insertInverse(String forLens, Map thing, String applyLens, List<Map> cards, Set<String> visitedIris) {
+    private Iterable<Map> insertInverse(String forLens, Map thing, String applyLens, Set<String> visitedIris) {
         Set<String> inverseRelations = jsonld.getInverseProperties(thing, forLens)
         if (inverseRelations.isEmpty()) {
-            return
+            return Collections.EMPTY_LIST
         }
 
+        List<Map> cards = []
         String iri = new Document(thing).getThingIdentifiers().first()
         for (String relation : inverseRelations) {
             Set<String> irisLinkingHere = getByReverseRelation.apply(iri, [relation])
@@ -162,6 +186,7 @@ class Embellisher {
                 cards.addAll(fetchNonVisited(applyLens, irisLinkingHere, visitedIris))
             }
         }
+        return cards
     }
 
     private static List<String> plusWithoutHash(List<String> iris) {
