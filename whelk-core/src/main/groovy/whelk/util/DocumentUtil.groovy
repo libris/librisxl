@@ -159,7 +159,7 @@ class DocumentUtil {
         }
 
         private void node(obj) {
-            Operation op = visitor.visitElement(obj, path.collect())
+            Operation op = visitor.visitElement(obj, Collections.unmodifiableList(path))
             if (op && !(op instanceof Nop)) {
                 op.setPath(path)
                 operations.add(op)
