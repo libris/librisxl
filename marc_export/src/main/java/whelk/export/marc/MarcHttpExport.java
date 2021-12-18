@@ -9,6 +9,7 @@ import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter;
 import se.kb.libris.util.marc.io.MarcRecordWriter;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.Whelk;
+import whelk.exception.WhelkRuntimeException;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -22,6 +23,7 @@ import java.sql.SQLException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
@@ -55,7 +57,7 @@ public class MarcHttpExport extends HttpServlet
     public void init()
     {
         whelk = Whelk.createLoadedCoreWhelk();
-        profileExport = new ProfileExport(whelk);
+        profileExport = new ProfileExport(whelk, whelk.getStorage().createAdditionalConnectionPool("ProfileExport"));
     }
     public void destroy() { }
 
@@ -175,15 +177,16 @@ public class MarcHttpExport extends HttpServlet
         else
             output = new Iso2709MarcRecordWriter(outStream, encoding);
 
-        TreeMap<String, ProfileExport.DELETE_REASON> deleteInfo = null;
+        Map<String, ProfileExport.DELETE_REASON> deleteInfo = null;
 
         try
         {
-            deleteInfo = profileExport.exportInto(output, profile, parameterMap.get("from"), parameterMap.get("until"), deleteMode, doVirtualDeletions);
+            var p = new ProfileExport.Parameters(profile, parameterMap.get("from"), parameterMap.get("until"), deleteMode, doVirtualDeletions);
+            deleteInfo = profileExport.exportInto(output, p);
         }
-        catch (SQLException se)
+        catch (SQLException | WhelkRuntimeException e)
         {
-            logger.error("Failed to handle export request.", se);
+            logger.error("Failed to handle export request.", e);
             failedRequests.labels("Export failed",
                     Integer.toString(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)).inc();
             res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
