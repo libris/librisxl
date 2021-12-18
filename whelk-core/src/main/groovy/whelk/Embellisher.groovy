@@ -17,6 +17,7 @@ class Embellisher {
     JsonLd jsonld
     Collection<String> embellishLevels = DEFAULT_EMBELLISH_LEVELS
     Collection<String> integralRelations = DEFAULT_INTEGRAL_RELATIONS
+    boolean followInverse = true
 
     Function<Iterable<String>, Iterable<Map>> getDocs
     Function<Iterable<String>, Iterable<Map>> getCards
@@ -52,6 +53,10 @@ class Embellisher {
         this.integralRelations = integralRelations.collect()
     }
 
+    void setFollowInverse(boolean followInverse) {
+        this.followInverse = followInverse
+    }
+
     private List getEmbellishData(Document document) {
         if (document.getThingIdentifiers().isEmpty()) {
             return []
@@ -76,19 +81,23 @@ class Embellisher {
             def integralDocs = fetchIntegral(lens, docs, integral(links), visitedIris)
             docs += integralDocs
             links += getAllLinks(integralDocs)
-            
-            previousLevelDocs.each {
-                def inverseDocs = insertInverse(previousLens, it, lens, visitedIris)
-                docs += inverseDocs
-                links += getAllLinks(inverseDocs)
+
+            if (followInverse) {
+                previousLevelDocs.each {
+                    def inverseDocs = insertInverse(previousLens, it, lens, visitedIris)
+                    docs += inverseDocs
+                    links += getAllLinks(inverseDocs)
+                }
+                previousLevelDocs = docs
+                previousLens = lens
             }
-            previousLevelDocs = docs
-            previousLens = lens
 
             result += docs
         }
-        // Last level: add reverse links, but don't include documents linking here in embellish graph
-        previousLevelDocs.each { insertInverse(previousLens, it, null, visitedIris) }
+        if (followInverse) {
+            // Last level: add reverse links, but don't include documents linking here in embellish graph
+            previousLevelDocs.each { insertInverse(previousLens, it, null, visitedIris) }
+        }
 
         return result
     }
