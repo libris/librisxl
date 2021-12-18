@@ -422,7 +422,7 @@ class PostgreSQLComponent {
             config.setJdbcUrl(sqlUrl.replaceAll(":\\/\\/\\w+:*.*@", ":\\/\\/"))
             config.setDriverClassName(driverClass)
             config.setConnectionTimeout(0)
-            config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory())
+            //config.setMetricsTrackerFactory(new PrometheusMetricsTrackerFactory())
 
             log.info("Connecting to sql database at ${config.getJdbcUrl()}, using driver $driverClass. Pool size: $maxPoolSize")
             URI connURI = new URI(sqlUrl.substring(5))
