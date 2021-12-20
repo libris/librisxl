@@ -492,6 +492,7 @@ public class ProfileExport
 
         public void add(ResultSet resultSet) throws SQLException, IOException {
             if (buffer.hasErrored()) {
+                outstandingTasks.forEach(t -> t.cancel(false));
                 if (buffer.error instanceof IOException) {
                     throw new IOException(buffer.error);
                 } else {
