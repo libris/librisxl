@@ -344,8 +344,9 @@ i endpointen och behöver därför inte deklareras explicit i frågorna.
     
     Om utgivare var länkade skulle vi också få ett mer exakt resultat, tack vare att vi då skulle kunna garantera att
      antalet _unika_ utgivare räknas. Att räkna blanknoder fungerar inte eftersom vi inte kan särskilja vilka som
-      representerar samma förlag. Istället räknar vi antalet unika benämningar, men inte heller detta sätt garanterar
-       ett exakt resultat då det kan förekomma olika benämningar på samma förlag, t.ex. "Natur & Kultur" och "N&K". 
+      representerar samma förlag. Istället räknar vi antalet unika benämningar, även om inte heller detta sätt
+       garanterar ett helt exakt resultat då det kan förekomma olika benämningar på samma förlag, t.ex. "Natur
+        & Kultur" och "N&K". 
 
 ---
 
