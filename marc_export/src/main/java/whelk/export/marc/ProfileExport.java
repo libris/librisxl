@@ -460,17 +460,29 @@ public class ProfileExport
         preparedStatement.setString(3, id);
         return preparedStatement;
     }
-    
+
+    /**
+     * Prepare and convert documents to MARC in parallel.
+     *
+     * Work is performed by a shared pool handling all requests. (Using more threads will just slow us down.) 
+     * Serializing and writing the converted records to the output stream is done by a separate single thread per request. 
+     * 
+     * Getting ids to be exported from the database will always be faster than exporting them.
+     * So we need to block the calling thread when too much work is queued up.
+     * Alas, there is no clean way of having a ThreadPoolExecutor with a bounded queue where the caller blocks
+     * when the queue is full. (Best hacky option seems to be to subclass som Queue and override offer() with a call
+     * to put(), since ThreadPoolExecutor calls offer() internally...)
+     * Instead, use an unbounded shared queue and use a semaphore (per client) to put a bound on the number of tasks queued. 
+     * 
+     * Since the task size can vary significantly (auth exports are much larger than bib) we don't want the calling 
+     * thread to perform any work (i.e. ThreadPoolExecutor.CallerRunsPolicy) since it might get caught up in a large
+     * export and starve the pool threads.
+     * 
+     * A possible improvement would be to split auth exports into smaller pieces (i.e. parallel exportDocument() instead)
+     */
     private class WorkDistributor {
         private static final ExecutorService pool = buildExecutorService();
-        /** 
-         * Getting ids to be exported from the database will always be faster than exporting them.
-         * Use a semaphore to set a bound on the number of tasks queued.  
-         * 
-         * (Alas, there is no clean way of having a ThreadPoolExecutor with a bounded queue where the caller blocks
-         * when the queue is full. Best option seems to be to subclass som Queue and override offer() with a call
-         * to put(), since ThreadPoolExecutor calls offer() internally...)
-         */
+
         private static final int QUEUE_SIZE = 256;
         Semaphore numQueued = new Semaphore(QUEUE_SIZE);
 
@@ -489,7 +501,8 @@ public class ProfileExport
             this.buffer = new MarcRecordBuffer(output);
             this.parameters = parameters;
         }
-
+        
+        // Can only be called by a single thread (might get stuck on numQueued otherwise since cancelled tasks don't release)
         public void add(ResultSet resultSet) throws SQLException, IOException {
             if (buffer.hasErrored()) {
                 outstandingTasks.forEach(t -> t.cancel(false));
