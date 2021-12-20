@@ -388,7 +388,7 @@ i endpointen och behöver därför inte deklareras explicit i frågorna.
 
 * #### Hur många titlar har getts ut om coronapandemin 2019-2020 och coronaviruset?
 
-        SELECT (COUNT(DISTINCT ?instance) as ?count) {
+        SELECT (COUNT(DISTINCT ?instance) AS ?count) {
             VALUES ?subject {
                 sao:Covid-19
                 sao:Coronapandemin%202019-2020%20
@@ -396,4 +396,107 @@ i endpointen och behöver därför inte deklareras explicit i frågorna.
             }
             
             ?instance bf2:instanceOf/bf2:subject ?subject
+        }
+        
+---
+
+* #### Hur många tryckta monografier katalogiserades av Kungliga biblioteket 2020?
+
+        SELECT ?month (COUNT(?instance) as ?count) {  
+            ?instance a bf2:Print ;
+                bf2:issuance kbv:Monograph .
+            ?hold bf2:itemOf ?instance ;
+                bf2:heldBy lib:S .
+            ?holdMeta foaf:primaryTopic ?hold ;
+                bf2:creationDate ?date .
+            
+            BIND(month(?date) as ?month)
+            FILTER(year(?date) = 2020)
+        }
+        GROUP BY ?month
+        ORDER BY ?month
+    
+    **Kommentar:**
+    Med katalogiserades menar vi här när beståndspost skapades. Svaret visar antal per månad.
+    
+---
+
+* #### Hur många elektroniska seriella resurser katalogiserades av Kungliga biblioteket 2018?
+        
+        SELECT ?month (COUNT(?instance) as ?count) {  
+            ?instance a bf2:Electronic ;
+                bf2:issuance kbv:Serial .
+            ?hold bf2:itemOf ?instance ;
+                bf2:heldBy lib:S .
+            ?holdMeta foaf:primaryTopic ?hold ;
+                bf2:creationDate ?date .
+          
+            BIND(month(?date) as ?month)
+            FILTER(year(?date) = 2018)
+        }
+        GROUP BY ?month
+        ORDER BY ?month
+        
+---
+        
+* #### Hur många monografier inom DDK 320 katalogiserades av Umeå universitetsbibliotek 2019?
+
+        SELECT COUNT(DISTINCT ?instance) {  
+            ?instance bf2:issuance kbv:Monograph ;
+                bf2:instanceOf/bf2:classification [ a bf2:ClassificationDdc ; 
+                        bf2:code ?code ] .
+            ?hold bf2:itemOf ?instance ;
+                bf2:heldBy lib:Q .
+            ?holdMeta foaf:primaryTopic ?hold ;
+                bf2:creationDate ?date .
+            
+            FILTER(STRSTARTS(?code, "320"))
+            FILTER(year(?date) = 2019)
+        }
+        
+---
+
+* #### Hur många poster katalogiserades med Svenska ämnesordet Missionärer 2010-2019?
+
+        SELECT COUNT(DISTINCT ?instance) {  
+            ?instance bf2:instanceOf/bf2:subject <https://id.kb.se/term/sao/Mission%C3%A4rer> ;
+                ^bf2:itemOf ?hold .
+            ?holdMeta foaf:primaryTopic ?hold ;
+                bf2:creationDate ?date .
+            
+            FILTER(year(?date) >= 2010 && year(?date) <= 2020)
+        }
+        
+---
+ 
+ * #### Hur många poster finns det inom bibliografin SUEC??
+ 
+        SELECT COUNT(?meta) {
+            ?meta a kbv:Record ;
+                kbv:bibliography lib:SUEC .
+        } 
+        
+---
+  
+ * #### Hur många nya personbeskrivningar (auktoritetsposter) med ISNI skapades 2017-2021?
+  
+        SELECT COUNT(?person) WHERE {
+            ?meta foaf:primaryTopic ?person ;
+                bf2:creationDate ?date .
+            ?person a bf2:Person ;
+                bf2:identifiedBy [ a bf2:Isni ]
+      
+            FILTER(year(?date) >= 2017 && year(?date) <= 2021)
+        }
+        
+---
+
+ * #### Hur många personbeskrivningar ändrades 2017-2021?
+ 
+        SELECT COUNT(?person) {
+            ?meta foaf:primaryTopic ?person ;
+                bf2:changeDate ?date .
+            ?person a bf2:Person .
+              
+            FILTER(year(?date) >= 2017 && year(?date) <= 2021)
         }
