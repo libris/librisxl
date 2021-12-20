@@ -158,9 +158,20 @@ class Embellisher {
         }
 
         def data = lens == 'full'
-                ? getDocs.apply(iris.collect())
-                : getCards.apply(iris.collect())
+                ? getDocs.apply(iris.collect()) // NB! this collect must be here, see comment below!
+                : getCards.apply(iris.collect()) // NB! this collect must be here, see comment below!
 
+        
+        // Without the .collect() above, this sometimes(!) fails with the following exception:
+        //
+        // 2021-12-17T19:16:20,484 [qtp184642382-23] ERROR whelk.rest.api.HttpTools - Internal server error: No signature of method: whelk.Whelk$_embellish_closure8.doCall() is applicable for argument types: (LinkedHashSet) values: [[http://kblocalhost.kb.se:5000/v8ncrvjbsh1z8fb2#it]]
+        // Possible solutions: doCall(java.util.List), findAll(), findAll(), isCase(java.lang.Object), isCase(java.lang.Object)
+        // groovy.lang.MissingMethodException: No signature of method: whelk.Whelk$_embellish_closure8.doCall() is applicable for argument types: (LinkedHashSet) values: [[http://kblocalhost.kb.se:5000/v8ncrvjbsh1z8fb2#it]]
+        // Possible solutions: doCall(java.util.List), findAll(), findAll(), isCase(java.lang.Object), isCase(java.lang.Object)
+        // at jdk.proxy1.$Proxy37.apply(Unknown Source) ~[?:?]
+        // at java_util_function_Function$apply.call(Unknown Source) ~[?:?]
+        // at whelk.Embellisher.load(Embellisher.groovy:149) ~[main/:?]
+        
         if (lens == 'chips') {
             data = data.collect{ (Map) jsonld.toChip(it) }
         }
