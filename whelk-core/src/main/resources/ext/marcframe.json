@@ -4,8 +4,6 @@
 
   "keepGroupIds": false,
 
-  "locale": "sv",
-
   "TODO:s": [
     "addLink:identifiedBy (+ NOTE:marc-repeatable: false where link)"
   ],
@@ -1950,6 +1948,115 @@
         ]
       },
       {
+        "type": "SetFlagsByPatterns",
+        "select": "seriesMembership",
+        "match": [
+          {
+            "exists": ["seriesStatement", "inSeries"],
+            "setFlags": {
+              "marc:seriesTracingPolicy": "1"
+            }
+          },
+          {
+            "exists": ["seriesStatement"],
+            "setFlags": {
+              "marc:seriesTracingPolicy": "0"
+            }
+          }
+        ],
+        "_spec": [
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "marc:seriesTracingPolicy": "0",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": "source"
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "marc:seriesTracingPolicy": "1",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "..."
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "seriesStatement": "...",
+                    "marc:seriesTracingPolicy": "0"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "seriesMembership": [
+                  {
+                    "@type": "SeriesMembership",
+                    "inSeries": {"...": "..."}
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
         "type": "ProduceIfMissing",
         "select": "seriesMembership",
         "produceMissing": {
@@ -1959,11 +2066,11 @@
             "mainTitle",
             {
               "property": "partNumber",
-              "useValueFormat": {"contentBefore": ", "}
+              "useValueFormat": {"contentBefore": ", ", "contentNoValue": ""}
             },
             {
               "property": "partName",
-              "useValueFormat": {"contentBefore": ". "}
+              "useValueFormat": {"contentBefore": ". ", "contentNoValue": ""}
             }
           ]
         },
@@ -2136,19 +2243,201 @@
         ]
       },
       {
-        "type": "SetFlagsByPatterns",
-        "select": "seriesMembership",
-        "match": [
+        "type": "ProduceIfMissing",
+        "select": "associatedMedia",
+        "produceMissing": {
+          "produceProperty": "marc:publicNote",
+          "showProperties": [
+            {
+              "property": ["usageAndAccessPolicy", "label"],
+              "useValueFormat": {
+                "contentNoValue": "Tillgänglig"
+              }
+            },
+            {
+              "property": ["publisher", "name"],
+              "useValueFormat": {
+                "contentFirst": " via ",
+                "contentAfter": " och ",
+                "contentLast": "",
+                "contentNoValue": ""
+              }
+            }
+          ]
+        },
+        "_spec": [
           {
-            "exists": ["seriesStatement", "inSeries"],
-            "setFlags": {
-              "marc:seriesTracingPolicy": "1"
+            "source": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"]
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"]
+                  }
+                ]
+              }
             }
           },
           {
-            "exists": ["seriesStatement"],
-            "setFlags": {
-              "marc:seriesTracingPolicy": "0"
+            "source": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "usageAndAccessPolicy": [
+                      {"label": "Fritt tillgänglig"}
+                    ]
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "marc:publicNote": "Fritt tillgänglig",
+                    "usageAndAccessPolicy": [
+                      {"label": "Fritt tillgänglig"}
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "publisher": {"name": "Kungliga biblioteket"}
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "marc:publicNote": "Tillgänglig via Kungliga biblioteket",
+                    "publisher": {"name": "Kungliga biblioteket"}
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "usageAndAccessPolicy": [
+                      {"prefLabelByLang": {"sv": "Fritt tillgänglig"}}
+                    ],
+                    "publisher": [
+                      {"name": "Kungliga biblioteket"},
+                      {"name": "Umeå universitetsbibliotek"}
+                    ]
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "marc:publicNote": "Fritt tillgänglig via Kungliga biblioteket och Umeå universitetsbibliotek",
+                    "usageAndAccessPolicy": [
+                      {"prefLabelByLang": {"sv": "Fritt tillgänglig"}}
+                    ],
+                    "publisher": [
+                      {"name": "Kungliga biblioteket"},
+                      {"name": "Umeå universitetsbibliotek"}
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "source": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "usageAndAccessPolicy": [
+                      {"uri": "http://example.org"}
+                    ],
+                    "publisher": [
+                      {"name": "Kungliga biblioteket"}
+                    ]
+                  }
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "associatedMedia": [
+                  {
+                    "@type": "MediaObject",
+                    "uri": ["http://example.com/doc.pdf"],
+                    "marc:publicNote": "Tillgänglig via Kungliga biblioteket",
+                    "usageAndAccessPolicy": [
+                      {"uri": "http://example.org"}
+                    ],
+                    "publisher": [
+                      {"name": "Kungliga biblioteket"}
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "InjectWhenMatchingOnRevert",
+        "rules": [
+          {
+            "matches": {
+              "@type": "Electronic",
+              "reproductionOf": {},
+              "production": {
+                "@id": "?1",
+                "@type": "Reproduction"
+              }
+            },
+            "injectData": {
+              "production": {
+                "@id": "?1",
+                "typeNote": "Digital reproduktion"
+              }
             }
           }
         ],
@@ -2156,27 +2445,33 @@
           {
             "source": {
               "mainEntity": {
-                "seriesMembership": [
-                  {
-                    "@type": "SeriesMembership",
-                    "seriesStatement": "...",
-                    "marc:seriesTracingPolicy": "0",
-                    "inSeries": {"...": "..."}
-                  }
-                ]
+                "@type": "Electronic",
+                "reproductionOf": {},
+                "production": {
+                  "@type": "Reproduction"
+                }
               }
             },
             "result": "source",
-            "back": "source"
+            "back": {
+              "mainEntity": {
+                "@type": "Electronic",
+                "reproductionOf": {},
+                "production": {
+                  "@type": "Reproduction",
+                  "typeNote": "Digital reproduktion"
+                }
+              }
+            }
           },
           {
             "source": {
               "mainEntity": {
-                "seriesMembership": [
+                "@type": "Electronic",
+                "reproductionOf": {},
+                "production": [
                   {
-                    "@type": "SeriesMembership",
-                    "seriesStatement": "...",
-                    "inSeries": {"...": "..."}
+                    "@type": "Reproduction"
                   }
                 ]
               }
@@ -2184,12 +2479,12 @@
             "result": "source",
             "back": {
               "mainEntity": {
-                "seriesMembership": [
+                "@type": "Electronic",
+                "reproductionOf": {},
+                "production": [
                   {
-                    "@type": "SeriesMembership",
-                    "seriesStatement": "...",
-                    "marc:seriesTracingPolicy": "1",
-                    "inSeries": {"...": "..."}
+                    "@type": "Reproduction",
+                    "typeNote": "Digital reproduktion"
                   }
                 ]
               }
@@ -2198,10 +2493,12 @@
           {
             "source": {
               "mainEntity": {
-                "seriesMembership": [
+                "@type": "Electronic",
+                "reproductionOf": {},
+                "production": [
                   {
-                    "@type": "SeriesMembership",
-                    "seriesStatement": "..."
+                    "@type": "Reproduction",
+                    "typeNote": "Digitalt faksimil och elektronisk text"
                   }
                 ]
               }
@@ -2209,23 +2506,183 @@
             "result": "source",
             "back": {
               "mainEntity": {
-                "seriesMembership": [
+                "@type": "Electronic",
+                "reproductionOf": {},
+                "production": [
                   {
-                    "@type": "SeriesMembership",
-                    "seriesStatement": "...",
-                    "marc:seriesTracingPolicy": "0"
+                    "@type": "Reproduction",
+                    "typeNote": "Digitalt faksimil och elektronisk text"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "InjectWhenMatchingOnRevert",
+        "_TODO": "This should follow closeMatch+broader instead and leverage embellish",
+        "rules": [
+          {
+            "matches": {
+              "@type": "Electronic",
+              "carrierType": [
+                {"@id": "https://id.kb.se/term/rda/OnlineResource"}
+              ]
+            },
+            "injectData": {
+              "carrierType": [
+                {
+                  "@id": "https://id.kb.se/marc/OnlineResource",
+                  "@type": "CarrierType",
+                  "sameAs": [
+                    {"@id": "https://id.kb.se/marc/ComputerMaterialType-r"}
+                  ]
+                },
+                {
+                  "@id": "https://id.kb.se/marc/Online",
+                  "sameAs": [
+                    {"@id": "https://id.kb.se/marc/ItemType-o"},
+                    {"@id": "https://id.kb.se/marc/BooksItemType-o"},
+                    {"@id": "https://id.kb.se/marc/ComputerItemType-o"},
+                    {"@id": "https://id.kb.se/marc/SerialsOriginalItemType-o"}
+                  ]
+                }
+              ],
+              "mediaType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/Computer",
+                  "@type": "MediaType",
+                  "code": "c",
+                  "prefLabelByLang": {"sv": "dator"}
+                }
+              ]
+            }
+          }
+        ],
+        "_spec": [
+          {
+            "source": {
+              "mainEntity": {
+                "@type": "Electronic",
+                "carrierType": [
+                  {"@id": "https://id.kb.se/term/rda/OnlineResource"}
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "@type": "Electronic",
+                "carrierType": [
+                  {"@id": "https://id.kb.se/term/rda/OnlineResource"},
+                  {
+                    "@id": "https://id.kb.se/marc/OnlineResource",
+                    "@type": "CarrierType",
+                    "sameAs": [
+                      {"@id": "https://id.kb.se/marc/ComputerMaterialType-r"}
+                    ]
+                  },
+                  {
+                    "@id": "https://id.kb.se/marc/Online",
+                    "sameAs": [
+                      {"@id": "https://id.kb.se/marc/ItemType-o"},
+                      {"@id": "https://id.kb.se/marc/BooksItemType-o"},
+                      {"@id": "https://id.kb.se/marc/ComputerItemType-o"},
+                      {"@id": "https://id.kb.se/marc/SerialsOriginalItemType-o"}
+                    ]
+                  }
+                ],
+                "mediaType": [
+                  {
+                    "@id": "https://id.kb.se/term/rda/Computer",
+                    "@type": "MediaType",
+                    "code": "c",
+                    "prefLabelByLang": {"sv": "dator"}
                   }
                 ]
               }
             }
           },
           {
+            "name": "do not duplicate already given",
             "source": {
               "mainEntity": {
-                "seriesMembership": [
+                "@type": "Electronic",
+                "carrierType": [
+                  {"@id": "https://id.kb.se/term/rda/OnlineResource"},
+                  {"@id": "https://id.kb.se/marc/OnlineResource"}
+                ],
+                "mediaType": [
+                  {"@id": "https://id.kb.se/term/rda/Unmediated"}
+                ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "@type": "Electronic",
+                "carrierType": [
+                  {"@id": "https://id.kb.se/term/rda/OnlineResource"},
+                  {"@id": "https://id.kb.se/marc/OnlineResource"},
                   {
-                    "@type": "SeriesMembership",
-                    "inSeries": {"...": "..."}
+                    "@id": "https://id.kb.se/marc/Online",
+                    "sameAs": [
+                      {"@id": "https://id.kb.se/marc/ItemType-o"},
+                      {"@id": "https://id.kb.se/marc/BooksItemType-o"},
+                      {"@id": "https://id.kb.se/marc/ComputerItemType-o"},
+                      {"@id": "https://id.kb.se/marc/SerialsOriginalItemType-o"}
+                    ]
+                  }
+                ],
+                "mediaType": [
+                  {"@id": "https://id.kb.se/term/rda/Unmediated"},
+                  {
+                    "@id": "https://id.kb.se/term/rda/Computer",
+                    "@type": "MediaType",
+                    "code": "c",
+                    "prefLabelByLang": {"sv": "dator"}
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "CopyOnRevert",
+        "sourceLink": "reproductionOf",
+        "copyIfMissing": [
+          "publication",
+          "extent",
+          {
+            "from": "identifiedBy",
+            "to": "indirectlyIdentifiedBy",
+            "injectOnCopies": {
+              "qualifier": "original"
+            }
+          }
+        ],
+        "injectOnCopies": {
+          "appliesTo": {"@type": "Resource", "label": "[original]"}
+        },
+        "_spec": [
+          {
+            "name":  "Copy data from the original of a reproduction",
+            "source": {
+              "mainEntity": {
+                "reproductionOf": [
+                  {
+                    "publication": [
+                      {
+                        "@type": "Publication",
+                        "year": "1773"
+                      }
+                    ],
+                    "extent": {"@type": "Extent", "label": ["259 s."]},
+                    "identifiedBy": [
+                      {"@type": "ISBN", "value": "00-0-000000-0"}
+                    ]
                   }
                 ]
               }
@@ -2233,12 +2690,63 @@
             "result": "source",
             "back": {
               "mainEntity": {
-                "seriesMembership": [
+                "reproductionOf": [
                   {
-                    "@type": "SeriesMembership",
-                    "inSeries": {"...": "..."}
+                    "publication": [
+                      {
+                        "@type": "Publication",
+                        "year": "1773"
+                      }
+                    ],
+                    "extent": {"@type": "Extent", "label": ["259 s."]},
+                    "identifiedBy": [
+                      {"@type": "ISBN", "value": "00-0-000000-0"}
+                    ]
+                  }
+                ],
+                "publication": [
+                  {
+                    "@type": "Publication",
+                    "year": "1773",
+                    "appliesTo": {"@type": "Resource", "label": "[original]"}
+                  }
+                ],
+                "extent": {"@type": "Extent", "label": ["259 s."], "appliesTo": {"@type": "Resource", "label": "[original]"}},
+                "indirectlyIdentifiedBy": [
+                  {"@type": "ISBN", "value": "00-0-000000-0", "qualifier": "original"}
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "CopyOnRevert",
+        "sourceLink": "hasReproduction",
+        "copyIfMissing": [
+          "associatedMedia"
+        ],
+        "_spec": [
+          {
+            "name":  "Copy associatedMedia from a reproduction",
+            "source": {
+              "mainEntity": {
+                "hasReproduction": [
+                  {
+                    "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
                   }
                 ]
+              }
+            },
+            "result": "source",
+            "back": {
+              "mainEntity": {
+                "hasReproduction": [
+                  {
+                    "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
+                  }
+                ],
+                "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
               }
             }
           }
@@ -9396,6 +9904,14 @@
       "match": [
         {
           "when": {
+            "NOTE": "Ignore title with source",
+            "IMPORTANT": "As this is defined, *any* title with source blocks *all* titles from reverting to 240. This is OK as things stand, since titles using source are only added if there is no formal title on the work.",
+            "onRevert": {"hasTitle": [{"source": []}]}
+          },
+          "ignored": true
+        },
+        {
+          "when": {
             "NOTE": "Drop undefined language label",
             "onRevert": {"language": {"@id": "https://id.kb.se/language/und"}}
           },
@@ -9752,6 +10268,23 @@
               }
             }
           }
+        },
+        {
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "En bok",
+                "subtitle": "med undertitel",
+                "source": [
+                  {"@id": "https://libris.kb.se/x#it"}
+                ]
+              }]
+            }
+          }},
+          "normalized": [
+          ]
         }
       ]
     },
@@ -13368,7 +13901,7 @@
         }
       },
       "TODO": "Concatenate $a, $b, $c, $d, $e, $f, $g, $q to label",
-      "$a": {"property": "label"},
+      "$a": {"property": "label", "infer": true},
       "$b": {"addProperty": "marc:jurisdiction"},
       "$c": {"addProperty": "marc:physicalAccessProvisions"},
       "$d": {"addProperty": "marc:authorizedUsers"},
@@ -13381,7 +13914,32 @@
       "NOTE:$2": {"NOTE:LC": "nac"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "name": "Revert embellished linked AccessPolicy",
+          "result": {
+            "mainEntity": {
+              "@type": "Instance",
+              "usageAndAccessPolicy": [
+                {
+                  "@id": "https://id.kb.se/policy/freely-available",
+                  "@type": "AccessPolicy",
+                  "prefLabelByLang": {
+                    "en": "Freely available",
+                    "sv": "Fritt tillgänglig"
+                  }
+                }
+              ]
+            }
+          },
+          "normalized": {
+            "506": {"ind1": " ", "ind2": " ",
+              "subfields": [{"a": "Fritt tillgänglig"}]
+            }
+          }
+        }
+      ]
     },
 
     "507": {
@@ -13808,7 +14366,7 @@
       },
       "$a": {"about": "_:event", "property": "typeNote", "punctuationChars": ":", "NOTE": "Talks about the subject but need to be kept together with the Activity for now since in MARC it is repeatable and *could* talk about the object depending on praxis.", "NOTE:LC": "I - carrier - Carrier - rdfs:label"},
       "$b": {"about": "_:event", "addLink": "place", "resourceType": "Place", "property": "label" , "punctuationChars": ":"},
-      "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label" , "punctuationChars": ","},
+      "$c": {"about": "_:event", "addLink": "agent", "resourceType": "Agent", "property": "label", "infer": true, "punctuationChars": ","},
       "$d": {"about": "_:event", "property": "date"},
       "$e": {"ignoreOnRevert": true, "addLink": "extent", "resourceType": "Extent", "property": "label", "NOTE:marc-repeatable": false, "NOTE": "should be part of the subject", "NOTE:record-count": 342},
       "$f": {"ignoreOnRevert": true, "addLink": "seriesMembership", "resourceType": "SeriesMembership", "property": "seriesStatement"},
@@ -13990,7 +14548,7 @@
       "pendingResources": {
         "_:source": {"link": "source", "resourceType": "Source"}
       },
-      "$a": {"property": "label"},
+      "$a": {"property": "label", "infer": true},
       "$b": null,
       "$c": {"about": "_:source", "property": "label", "NOTE": "FIX COLLISION WITH SUBFIELD 2"},
       "$d": {"addLink": "hasNote", "resourceType": "Note", "property": "label"},
@@ -14039,6 +14597,29 @@
                 "label": "XXXX"
               }]
           }}
+        },
+        {
+          "name": "Revert embellished linked License",
+          "result": {
+            "mainEntity": {
+              "@type": "Instance",
+              "usageAndAccessPolicy": [
+                {
+                  "@id": "http://creativecommons.org/publicdomain/zero/1.0/",
+                  "@type": "License",
+                  "titleByLang": {
+                    "en": "CC0 1.0 Universal",
+                    "sv": "CC0 1.0 universell"
+                  }
+                }
+              ]
+            }
+          },
+          "normalized": {
+            "540": {"ind1": " ", "ind2": " ",
+              "subfields": [{"a": "CC0 1.0 universell"}]
+            }
+          }
         }
       ]
     },
@@ -19779,7 +20360,7 @@
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "otherPhysicalFormat",
-      "allowLinkOnRevert": "reproductionOf",
+      "allowLinkOnRevert": ["reproductionOf", "hasReproduction"],
       "resourceType": "Instance",
       "i2": {"ignored": true, "marcDefault": " "},
       "_spec": [
@@ -20035,16 +20616,16 @@
           "name": "reproductionOf should revert to 776",
           "normalized": {"776": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "name of agent"},
-            {"t": "Title of reproduction"},
+            {"t": "Title on original"},
             {"w": "00000"}
           ]}},
           "result": {"mainEntity": {
             "reproductionOf": [{
-              "@type": "Instance",
+              "@type": "Print",
               "meta": [{"@type": "Record", "controlNumber": "00000"}],
               "hasTitle": [{
                 "@type": "Title",
-                "mainTitle": "Title of reproduction"
+                "mainTitle": "Title on original"
               }],
               "instanceOf": {
                 "@type": "Work",
@@ -20056,6 +20637,23 @@
                   }
                 }]
               }
+            }]
+          }}
+        },
+        {
+          "name": "hasReproduction should revert to 776",
+          "normalized": {"776": {"ind1": "0", "ind2": " ", "subfields": [
+            {"t": "Title on reproduction"},
+            {"w": "00001"}
+          ]}},
+          "result": {"mainEntity": {
+            "hasReproduction": [{
+              "@type": "Electronic",
+              "meta": [{"@type": "Record", "controlNumber": "00001"}],
+              "hasTitle": [{
+                "@type": "Title",
+                "mainTitle": "Title on reproduction"
+              }]
             }]
           }}
         }
@@ -22548,6 +23146,12 @@
       "NOTE:LC": "087 - Government Document Classification Number (R)",
       "ignored": true,
       "NOTE:record-count": 0
+    },
+    "094": {
+      "NOTE:LC": "09X - Local Call Numbers",
+      "NOTE:local": "OBSOLET",
+      "ignored": true,
+      "NOTE:record-count": 4
     },
 
     "100" : {

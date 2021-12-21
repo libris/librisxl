@@ -140,7 +140,6 @@ class MarcConversion {
     Map marcTypeMap = [:]
     Map tokenMaps
     Map defaultPunctuation
-    String locale
 
     private Set missingTerms = [] as Set
     private Set badRepeats = [] as Set
@@ -152,7 +151,6 @@ class MarcConversion {
         this.tokenMaps = tokenMaps
         this.converter = converter
         //this.baseUri = new URI(config.baseUri ?: '/')
-        this.locale = config.locale
         this.keepGroupIds = config.keepGroupIds == true
 
         this.sharedPostProcSteps = config.postProcessing.collect {
@@ -212,10 +210,17 @@ class MarcConversion {
             procStep = new ProduceIfMissingStep(props); break
             case 'SetFlagsByPatterns':
             procStep = new SetFlagsByPatternsStep(props); break
-            default:
+            case 'CopyOnRevert':
+            procStep = new CopyOnRevertStep(props); break
+            case 'InjectWhenMatchingOnRevert':
+            procStep = new InjectWhenMatchingOnRevertStep(props); break
+            case null:
             return null
+            default:
+            throw new RuntimeException("Unknown postProcStep: ${stepDfn}")
         }
         procStep.ld = converter.ld
+        procStep.mapper = converter.mapper
         procStep.init()
         return procStep
     }
@@ -1879,7 +1884,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
     List<String> pendingKeys
     String aboutAlias
     //NOTE: allowLinkOnRevert as list may be preferable, but there is currently no case for it. Update if needed.
-    String allowLinkOnRevert
+    List<String> allowLinkOnRevert
     List<String> onRevertPrefer
     Set<String> sharesGroupIdWith = new HashSet<String>()
     boolean silentRevert
@@ -1900,9 +1905,9 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         if (pendingResources) {
             pendingKeys = Util.getSortedPendingKeys(pendingResources)
         }
-
+        
         aboutAlias = fieldDfn['aboutAlias']
-        allowLinkOnRevert = fieldDfn['allowLinkOnRevert']
+        allowLinkOnRevert = Util.asList(fieldDfn['allowLinkOnRevert'])
         dependsOn = fieldDfn['dependsOn'] as List<String>
         constructProperties = fieldDfn['constructProperties'] as Map<String, Map>
 
@@ -2268,6 +2273,10 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         // If this overproduces, it's because _revertedBy fails to prevent it.
         for (rule in matchRules) {
             def matchres = rule.handler.revert(state, data, result, usedMatchRules + [rule])
+            if (rule.handler.ignored && matchres) {
+                return null
+            }
+
             if (matchres) {
                 matchedResults += matchres
             }
@@ -2283,8 +2292,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
         def useLinks = []
 
-        if (allowLinkOnRevert) {
-            useLinks << [link: allowLinkOnRevert, resourceType: resourceType]
+        allowLinkOnRevert.each {
+            useLinks << [link: it, resourceType: resourceType]
         }
 
         if (computeLinks && computeLinks.mapping instanceof Map) {
@@ -2877,7 +2886,7 @@ class MarcSubFieldHandler extends ConversionPart {
 
             String entityId = entity['@id']
 
-            def propertyValue = getPropertyValue(entity, property)
+            def propertyValue = ld ? ld.getPropertyValue(entity, property) : entity[property]
 
             if (ignoreOnRevert) {
                 continue
@@ -2899,7 +2908,7 @@ class MarcSubFieldHandler extends ConversionPart {
 
             if (propertyValue == null && infer) {
                 for (subProp in ld.getSubProperties(property)) {
-                    propertyValue = getPropertyValue(entity, subProp)
+                    propertyValue = ld.getPropertyValue(entity, subProp)
                     if (propertyValue)
                         break
                 }
@@ -2991,18 +3000,6 @@ class MarcSubFieldHandler extends ConversionPart {
             return null
         else
             return values
-    }
-
-    def getPropertyValue(Map entity, String property) {
-        def propertyValue = property ? entity[property] : null
-        if (propertyValue == null) {
-            def alias = ld ? ld.langContainerAlias[property] : null
-            propertyValue = alias ? entity[alias] : null
-            if (propertyValue instanceof Map) {
-                propertyValue = propertyValue[ruleSet.conversion.locale]
-            }
-        }
-        return propertyValue
     }
 }
 

@@ -1,3 +1,4 @@
+
 /**
  * Retroactively create Electronic records for digital reproductions by Uka/UUB 
  * 
@@ -22,6 +23,7 @@ String whereBib = """
 """
 
 selectBySqlWhere(whereBib) { bib ->
+
     def (record, thing) = bib.graph
 
     boolean publishedInSweden = thing.publication?.any { it.country?."@id" == "https://id.kb.se/country/sw" }
@@ -179,4 +181,5 @@ Map getHoldingItem(bibId, libraryId) {
 
 def asList(x) {
     (x ?: []).with {it instanceof List ? it : [it] }
+
 }

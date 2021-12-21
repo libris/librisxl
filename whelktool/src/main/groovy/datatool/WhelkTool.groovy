@@ -65,6 +65,8 @@ class WhelkTool {
     boolean stepWise
     int limit = -1
 
+    private String chosenAnswer = 'y'
+
     boolean allowLoud
 
     private Throwable errorDetected
@@ -531,10 +533,22 @@ class WhelkTool {
         new File(reportsDir, "OUT.jsonld").withWriter {
             jsonWriter.writeValue(it, doc.data)
         }
+
+        def choice = { chosenAnswer == it ? it.toUpperCase() : it }
+        def y = choice('y')
+        def p = choice('p')
+        def n = choice('n')
+
         println()
-        print 'Continue [Y/n]? '
-        def answer = System.in.newReader().readLine()
-        return answer.toLowerCase() != 'n'
+        print "Continue [ $y(es) / $n(o) / $p(rint) ]? "
+
+        chosenAnswer = System.in.newReader().readLine()?.toLowerCase() ?: chosenAnswer
+
+        if (chosenAnswer == 'p') {
+            println jsonWriter.writeValueAsString(doc.data)
+        }
+
+        return chosenAnswer != 'n'
     }
 
     private synchronized void storeScriptJob() {

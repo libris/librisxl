@@ -1,5 +1,3 @@
-// UPDATE DATASET IDS FOR PROD
-
 import java.util.function.Predicate
 
 def datasets =
@@ -34,7 +32,7 @@ def datasets =
                         predicate: { doc ->
                             def (record, thing) = doc.graph
 
-                            return hasTitle(thing, /DAGENS NYHETER\s+\d\d\d\d-\d\d\-\d\d/) && hasControlNumber(thing, '13991099')
+                            return hasTitle(thing, /DAGENS\s+NYHETER\s+\d\d\d\d-\d\d\-\d\d/) && hasControlNumber(thing, '13991099')
                         }
                 ],
                 [
@@ -51,7 +49,7 @@ def datasets =
                         predicate: { doc ->
                             def (record, thing) = doc.graph
 
-                            return hasTitle(thing, /NORRKÖPINGS WECKOTIDNINGAR\s+\d\d\d\d-\d\d\-\d\d/) && hasControlNumber(thing, '19227357')
+                            return hasTitle(thing, /NORRKÖPINGS\s+WECKOTIDNINGAR\s+\d\d\d\d-\d\d\-\d\d/) && hasControlNumber(thing, '19227357')
                         }
                 ],
                 [
@@ -68,7 +66,7 @@ def datasets =
                         predicate: { doc ->
                             def (record, thing) = doc.graph
                             
-                            return hasTitle(thing, /NORRKÖPINGS TIDNINGAR\s+\d\d\d\d-\d\d\-\d\d/) && hasControlNumber(thing, '15650837')
+                            return hasTitle(thing, /NORRKÖPINGS\s+TIDNINGAR\s+\d\d\d\d-\d\d\-\d\d/) && hasControlNumber(thing, '15650837')
                         }
                 ],
                 [
@@ -85,7 +83,7 @@ def datasets =
                         predicate: { doc ->
                             def (record, thing) = doc.graph
 
-                            return hasTitle(thing, /SVENSKA DAGBLADET\s+\d\d\d\d-\d\d\-\d\d/) && hasControlNumber(thing, '13434192')
+                            return hasTitle(thing, /SVENSKA\s+DAGBLADET\s+\d\d\d\d-\d\d\-\d\d/) && hasControlNumber(thing, '13434192')
                         }
                 ],
         ]

@@ -76,6 +76,8 @@ EOF
 
 @Log
 class DigitalReproductionAPI extends HttpServlet {
+    static final String API_LOCATION = 'https://libris.kb.se/api/_reproduction' // Only for setting generationProcess 
+    
     private static final ObjectMapper mapper = new ObjectMapper()
 
     private static final def FORWARD_HEADERS = [
@@ -92,7 +94,8 @@ class DigitalReproductionAPI extends HttpServlet {
         def service = new ReproductionService(xl : new XL(headers : forwardHeaders, apiLocation: getXlAPI(request)))
 
         try {
-            String id = service.createDigitalReproduction(parse(request))
+            boolean extractWork = !Boolean.parseBoolean(request.getParameter("dont-extract-work"))
+            String id = service.createDigitalReproduction(parse(request), extractWork)
             log.info("Created $id")
             response.setHeader('Location', id)
             response.setStatus(SC_CREATED)
@@ -184,7 +187,7 @@ class ReproductionService {
 
     XL xl
     
-    String createDigitalReproduction(Map electronicThing) {
+    String createDigitalReproduction(Map electronicThing, boolean extractWork) {
         String requestedId = electronicThing.reproductionOf['@id'] as String
         Map physicalThing = xl.get(requestedId)
                 .map{ it.data['@graph'][1] as Map }
@@ -202,7 +205,9 @@ class ReproductionService {
         
         electronicThing.reproductionOf['@id'] = physicalThing['@id'] // if link was to sameAs
         
-        electronicThing.instanceOf = ['@id' : xl.ensureExtractedWork(physicalThing['@id'] as String)]
+        electronicThing.instanceOf = extractWork 
+                ? ['@id' : xl.ensureExtractedWork(physicalThing['@id'] as String)] 
+                : physicalThing.instanceOf
         
         if (physicalThing.hasTitle) {
             electronicThing.hasTitle = physicalThing.hasTitle
@@ -235,7 +240,7 @@ class ReproductionService {
     
     static boolean isFreelyAvailable(Map thing) {
         def usageAndAccess = asList(thing.usageAndAccessPolicy) + asList(getAtPath(thing, ['associatedMedia', '*', 'usageAndAccessPolicy'], []))
-        usageAndAccess.any { it['@id'] == FREELY_AVAILABLE}
+        usageAndAccess.any { it == FREELY_AVAILABLE }
     }
 
     static boolean publishedIn(Map publication, countryCode) {
@@ -302,13 +307,18 @@ class XL {
             }
 
             if (!work.hasTitle) {
-                def titles = asList(instance.hasTitle).findAll { it['@type'] == 'Title' }
-                if (titles) {
-                    work.hasTitle = titles
+                def title = asList(instance.hasTitle).find { it['@type'] == 'Title' }
+                if (title) {
+                    work.hasTitle = [ title + [source: [['@id': instanceId]]] ] 
                 }
             }
 
-            def workId = create([:], work)
+            def record = [
+                    'generationProcess': ['@id': DigitalReproductionAPI.API_LOCATION],
+                    'derivedFrom'      : [['@id': instanceId]]
+            ]
+            
+            def workId = create(record, work)
             instance.instanceOf = ['@id': workId]
             try {
                 update(doc)

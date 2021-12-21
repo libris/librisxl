@@ -21,6 +21,7 @@ import whelk.exception.StaleUpdateException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.UnexpectedHttpStatusException
 import whelk.exception.WhelkRuntimeException
+import whelk.history.History
 import whelk.rest.api.CrudGetRequest.Lens
 import whelk.rest.security.AccessControl
 import whelk.util.LegacyIntegrationTools
@@ -335,8 +336,12 @@ class Crud extends HttpServlet {
     }
 
     private Object getFormattedResponseBody(CrudGetRequest request, Document doc) {
-        log.debug("Formatting document {}. embellished: {}, framed: {}, lens: {}",
-                doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame(), request.getLens())
+        log.debug("Formatting document {}. embellished: {}, framed: {}, lens: {}, view: {}",
+                doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame(), request.getLens(), request.getView())
+        if (request.getView() == CrudGetRequest.View.CHANGE_SETS) {
+            History history = new History(whelk.storage.loadDocumentHistory(doc.getShortId()), jsonld)
+            return history.m_changeSetsMap;
+        }
 
         def transformedResponse
         if (request.getLens() != Lens.NONE) {
@@ -685,7 +690,7 @@ class Crud extends HttpServlet {
         savedDoc = saveDocument(newDoc, request, response, isUpdate, "POST")
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
-                               savedDoc.getChecksum(jsonld))
+                    ETag.plain(savedDoc.getChecksum(jsonld)))
         } else if (!response.isCommitted()) {
             sendNotFound(response, request.getContextPath())
         }
@@ -823,7 +828,7 @@ class Crud extends HttpServlet {
         Document savedDoc = saveDocument(updatedDoc, request, response, isUpdate, "PUT")
         if (savedDoc != null) {
             sendUpdateResponse(response, savedDoc.getURI().toString(),
-                               savedDoc.getChecksum(jsonld))
+                    ETag.plain(savedDoc.getChecksum(jsonld)))
         }
 
     }
@@ -922,22 +927,22 @@ class Crud extends HttpServlet {
     }
 
     static void sendCreateResponse(HttpServletResponse response, String locationRef,
-                                   String etag) {
-        sendDocumentSavedResponse(response, locationRef, etag, true)
+                                   ETag eTag) {
+        sendDocumentSavedResponse(response, locationRef, eTag, true)
     }
 
     static void sendUpdateResponse(HttpServletResponse response, String locationRef,
-                                   String etag) {
-        sendDocumentSavedResponse(response, locationRef, etag, false)
+                                   ETag eTag) {
+        sendDocumentSavedResponse(response, locationRef, eTag, false)
     }
 
     static void sendDocumentSavedResponse(HttpServletResponse response,
-                                          String locationRef, String etag,
+                                          String locationRef, ETag eTag,
                                           boolean newDocument) {
         log.debug("Setting header Location: $locationRef")
 
         response.setHeader("Location", locationRef)
-        response.setHeader("ETag", "\"${etag as String}\"")
+        response.setHeader("ETag", eTag.toString())
         response.setHeader('Cache-Control', 'no-cache')
 
         if (newDocument) {

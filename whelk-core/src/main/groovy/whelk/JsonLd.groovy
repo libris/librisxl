@@ -260,6 +260,18 @@ class JsonLd {
         return dfn instanceof Map && dfn[CONTAINER_KEY] == LANGUAGE_KEY
     }
 
+    def getPropertyValue(Map entity, String property) {
+        def propertyValue = property ? entity[property] : null
+        if (propertyValue == null) {
+            def alias = langContainerAlias[property]
+            propertyValue = alias ? entity[alias] : null
+            if (propertyValue instanceof Map) {
+                propertyValue = locales.findResult { propertyValue[it] }
+            }
+        }
+        return propertyValue
+    }
+
     String toTermKey(String termId) {
         Integer splitPos = NS_SEPARATORS.findResult {
             int idx = termId.lastIndexOf(it)
@@ -852,7 +864,10 @@ class JsonLd {
         }
 
         if (!lens) {
-            throw new FresnelException("No suitable lens found for ${thing.get(ID_KEY)}, tried: ${lensesToTry}")
+            String id = (String) thing.get(ID_KEY)
+            log.warn('applyLensAsMapByLang() No lens found for {}, tried {}', id, lensesToTry)
+            String fallback = id.split('/').last()
+            return languagesToKeep.collectEntries{ [(it) : fallback] }
         }
 
         // Transform the list of language/property value pairs to a map
@@ -910,6 +925,9 @@ class JsonLd {
         }
         if (lens) {
             List propertiesToKeep = (List) lens.get("showProperties")
+                    .collect { prop -> isAlternateProperties(prop) ? prop['alternateProperties'] : prop }
+                    .flatten()
+            
             for (prop in propertiesToKeep) {
                 def values = object[prop]
                 if (isLangContainer(context[prop]) && values instanceof Map) {
