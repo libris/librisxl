@@ -501,3 +501,7 @@ i endpointen och behöver därför inte deklareras explicit i frågorna.
               
             FILTER(year(?date) >= 2017 && year(?date) <= 2021)
         }
+        
+    **Kommentar:**
+    För att få motsvarande resultat för andra entitetstyper än personer räcker det att ändra `bf2:Person` till önskad
+     typ, t.ex. `bf2:Organization`.
