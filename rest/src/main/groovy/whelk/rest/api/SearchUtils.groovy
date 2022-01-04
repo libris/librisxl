@@ -13,6 +13,7 @@ import whelk.exception.InvalidQueryException
 import whelk.exception.WhelkRuntimeException
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
+import whelk.search.RangeParameterPrefix
 import whelk.util.DocumentUtil
 
 @Log
@@ -21,6 +22,8 @@ class SearchUtils {
     final static int DEFAULT_LIMIT = 200
     final static int MAX_LIMIT = 4000
     final static int DEFAULT_OFFSET = 0
+
+    final static String MATCHES_PROP = 'matchesTransitive'
 
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper()
 
@@ -445,18 +448,41 @@ class SearchUtils {
     private class Lookup {
         private Multimap<String, Map> iriPos = ArrayListMultimap.create()
         
-        Map chip(String itemId) {
+        Map chip(String itemRepr) {
+            boolean matchesTerm = false
+            def itemId = itemRepr
+            if (itemRepr.startsWith(RangeParameterPrefix.MATCHES.prefix)) {
+                matchesTerm = true
+                itemId = itemId[RangeParameterPrefix.MATCHES.prefix.size()..-1]
+            }
+
             def termKey = ld.toTermKey(itemId)
             if (termKey in ld.vocabIndex) {
                 return ld.vocabIndex[termKey]
             }
 
             if (!itemId.startsWith('http') && itemId.contains('.')) {
-                def chain = itemId.split('\\.').findAll {it != JsonLd.ID_KEY}
+                String[] parts = itemId.split('\\.')
+                List chain = parts
+                    .findAll { it != JsonLd.ID_KEY }
+                    .collect { Lookup.this.chip(it) }
+                String label = parts.join(' ')
+
+                if (matchesTerm) {
+                    def proptype = chain[-1][JsonLd.TYPE_KEY]
+                    List<String> proptypes = proptype instanceof String ?
+                        [(String) proptype] :
+                        (List<String>) proptype
+                    if (proptypes.any { ld.isSubClassOf(it, 'ObjectProperty') }) {
+                        chain << Lookup.this.chip(MATCHES_PROP)
+                        label = "matches $label"
+                    }
+                }
+
                 return [
-                        'propertyChainAxiom': chain.collect{ Lookup.this.chip(it) },
-                        'label': chain.join(' '),
-                        '_key': itemId,  // lxlviewer has some propertyChains of its own defined, this is used to match them 
+                        'propertyChainAxiom': chain,
+                        'label': label,
+                        '_key': itemRepr,  // lxlviewer has some propertyChains of its own defined, this is used to match them 
                 ]
             }
 
@@ -690,9 +716,12 @@ class SearchUtils {
                     termKey = param
                     value = val
                 }
-                
-                result << ['variable': param, 'predicate': lookup.chip(termKey),
-                           (valueProp): value]
+
+                result << [
+                    'variable': param,
+                    'predicate': lookup.chip(termKey),
+                    (valueProp): value
+                ]
 
                 if (!(param in pageParams)) {
                     pageParams[param] = []

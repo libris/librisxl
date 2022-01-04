@@ -1,6 +1,10 @@
 package whelk.search
 
+
+import whelk.Whelk
 import whelk.exception.InvalidQueryException
+import whelk.search.Ranges.Query
+import groovy.util.logging.Log4j2 as Log
 
 import java.time.ZoneId
 import java.time.format.DateTimeParseException
@@ -12,41 +16,44 @@ import static RangeParameterPrefix.MIN
 import static RangeParameterPrefix.MIN_EX
 import static whelk.search.QueryDateTime.Precision.WEEK
 
+@Log
 class Ranges {
     String fieldName
     ZoneId timezone
+    Whelk whelk
 
-    private List<Range> ranges = []
+    private List<Query> ranges = []
 
-    private Ranges(String fieldName, ZoneId timezone = null) {
+    private Ranges(String fieldName, ZoneId timezone = null, Whelk whelk) {
         this.fieldName = fieldName
         this.timezone = timezone
+        this.whelk = whelk
     }
 
-    static Ranges nonDate(String fieldName) {
-        new Ranges(fieldName)
+    static Ranges nonDate(String fieldName, Whelk whelk) {
+        new Ranges(fieldName, whelk)
     }
 
-    static Ranges date(String fieldName, ZoneId timezone) {
-        new Ranges(fieldName, timezone)
+    static Ranges date(String fieldName, ZoneId timezone, Whelk whelk) {
+        new Ranges(fieldName, timezone, whelk)
     }
 
     void add(RangeParameterPrefix operator, value) {
         switch (operator) {
             case MIN:
             case MIN_EX:
-                Range openOrNew = (ranges.find { !it.min } ?: (ranges << new Range()).last())
+                Range openOrNew = (ranges.find {it instanceof Range && !it.min } ?: (ranges << new Range()).last()) as Range
                 openOrNew.min = new EndPoint(operator, value)
                 break
 
             case MAX:
             case MAX_EX:
-                Range openOrNew = (ranges.find { !it.max } ?: (ranges << new Range()).last())
+                Range openOrNew = (ranges.find {it instanceof Range &&  !it.max } ?: (ranges << new Range()).last()) as Range
                 openOrNew.max = new EndPoint(operator, value)
                 break
 
             case MATCHES:
-                ranges << new Range(new EndPoint(MIN, value), new EndPoint(MAX, value))
+                ranges << (isDateField() ? new Range(new EndPoint(MIN, value), new EndPoint(MAX, value)) : new OrNarrower(value))
                 break
         }
     }
@@ -54,7 +61,7 @@ class Ranges {
     boolean isDateField() {
         timezone != null
     }
-
+    
     Map toQuery() {
         if (ranges.isEmpty()) {
             throw new IllegalStateException("no ranges")
@@ -92,7 +99,11 @@ class Ranges {
         }
     }
 
-    private class Range {
+    private interface Query {
+        Map toQuery()
+    }
+    
+    private class Range implements Query {
         EndPoint min
         EndPoint max
 
@@ -105,6 +116,7 @@ class Ranges {
             this.max = max
         }
 
+        @Override
         Map toQuery() {
             def conditions = [:]
 
@@ -130,6 +142,26 @@ class Ranges {
             }
 
             ["range": [(fieldName): conditions]]
+        }
+    }
+
+    private class OrNarrower implements Query {
+        String value
+
+        OrNarrower(String value) {
+            this.value = value
+        }
+        
+        @Override
+        Map toQuery() {
+            def values = [value] + whelk.relations.followReverseBroader(value).collect()
+            
+            if (values.size() > whelk.elastic.maxTermsCount) {
+                log.warn("followReversebroader($value) gave more than ES maxTermsCount (${whelk.elastic.maxTermsCount}) results, truncating term list")
+                values = values.take(whelk.elastic.maxTermsCount)
+            }
+            
+            ["terms" : [(fieldName) : values]]
         }
     }
 }

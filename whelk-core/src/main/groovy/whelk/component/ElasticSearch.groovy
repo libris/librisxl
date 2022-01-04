@@ -34,6 +34,7 @@ class ElasticSearch {
     ]
 
     public int maxResultWindow = 10000 // Elasticsearch default (fallback value)
+    public int maxTermsCount = 65536 // Elasticsearch default (fallback value)
     
     String defaultIndex = null
     private List<String> elasticHosts
@@ -75,12 +76,16 @@ class ElasticSearch {
 
     void initSettings() {
         Map indexSettings = getSettings()
-        if (indexSettings.index &&
-                indexSettings.index['max_result_window'] &&
-                ((String) indexSettings.index['max_result_window']).isNumber()) {
-            maxResultWindow = ((String) indexSettings.index['max_result_window']).toInteger()
+        
+        def getInt = { String name, int defaultTo ->
+            indexSettings.index && indexSettings.index[name] && ((String) indexSettings.index[name]).isNumber()
+                ? ((String) indexSettings.index[name]).toInteger()
+                : defaultTo
         }
         
+        maxResultWindow = getInt('max_result_window', maxResultWindow)
+        maxTermsCount = getInt('max_terms_count', maxTermsCount)
+                
         Map clusterInfo = performRequest('GET', '/')
         if (clusterInfo?.version?.build_flavor == 'default') {
             isPitApiAvailable = true
