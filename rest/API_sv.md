@@ -241,7 +241,7 @@ kan värdet anges på följande format:
 #### Exempel
 ```
 $ curl -XGET -H "Accept: application/ld+json" \
-    https://libris-qa.kb.se/find\?q\=tove%20\(jansson\|lindgren\)\&_limit=2
+    https://libris-qa.kb.se/find?q\=tove%20\(jansson\|lindgren\)\&_limit=2
 ...
 ```
 
