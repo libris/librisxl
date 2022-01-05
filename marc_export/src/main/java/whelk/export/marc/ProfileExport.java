@@ -132,7 +132,7 @@ public class ProfileExport
         if (parameters.profile.getProperty("status", "ON").equalsIgnoreCase("OFF"))
             return Collections.EMPTY_MAP;
         
-        WorkDistributor workDistributor = new WorkDistributor(output, parameters);
+        ParallelExporter exporter = new ParallelExporter(output, parameters);
         
         try {
             try (Connection connection = m_connectionPool.getConnection()) {
@@ -140,17 +140,17 @@ public class ProfileExport
                 try (PreparedStatement preparedStatement = getAllChangedIDsStatement(parameters.fromTimeStamp, parameters.untilTimeStamp, connection);
                      ResultSet resultSet = preparedStatement.executeQuery()) {
                     while (resultSet.next()) {
-                        workDistributor.add(resultSet);
+                        exporter.submit(resultSet);
                     }
                 }
             }
-            workDistributor.awaitCompletion();
+            exporter.awaitCompletion();
         }
         finally {
-            totalExportCount.observe(workDistributor.exportedIDs.size());
+            totalExportCount.observe(exporter.exportedIDs.size());
         }
 
-        return workDistributor.deletedNotifications;
+        return exporter.deletedNotifications;
     }
     
     /**
@@ -468,44 +468,32 @@ public class ProfileExport
      * Serializing and writing the converted records to the output stream is done by a separate single thread per request. 
      * 
      * Getting ids to be exported from the database will always be faster than exporting them.
-     * So we need to block the calling thread when too much work is queued up.
-     * Alas, there is no clean way of having a ThreadPoolExecutor with a bounded queue where the caller blocks
-     * when the queue is full. (Best hacky option seems to be to subclass som Queue and override offer() with a call
-     * to put(), since ThreadPoolExecutor calls offer() internally...)
-     * Instead, use an unbounded shared queue and use a semaphore (per client) to put a bound on the number of tasks queued. 
-     * 
      * Since the task size can vary significantly (auth exports are much larger than bib) we don't want the calling 
      * thread to perform any work (i.e. ThreadPoolExecutor.CallerRunsPolicy) since it might get caught up in a large
      * export and starve the pool threads.
-     * 
+     * So we need to block the calling thread when too much work is queued up.
+     *
      * A possible improvement would be to split auth exports into smaller pieces (i.e. parallel exportDocument() instead)
      */
-    private class WorkDistributor {
-        private static final ExecutorService pool = buildExecutorService();
-
-        private static final int QUEUE_SIZE = 256;
-        Semaphore numQueued = new Semaphore(QUEUE_SIZE);
-
-        private static final int PURGE_OUTSTANDING_EVERY = 1024;
-        private List<Future<?>> outstandingTasks = new ArrayList<>(); 
+    private class ParallelExporter {
+        private static final BlockingPool sharedPool = new BlockingPool(ProfileExport.class.getSimpleName(), Runtime.getRuntime().availableProcessors());
         
-        private int numAdded = 0;
-
+        BlockingPool.Queue queue = sharedPool.getQueue();
+        
         Set<String> exportedIDs = ConcurrentHashMap.newKeySet();
         Map<String, DELETE_REASON> deletedNotifications = new ConcurrentHashMap<>();
 
         Parameters parameters;
         MarcRecordBuffer buffer;
 
-        public WorkDistributor(MarcRecordWriter output, Parameters parameters) {
+        public ParallelExporter(MarcRecordWriter output, Parameters parameters) {
             this.buffer = new MarcRecordBuffer(output);
             this.parameters = parameters;
         }
         
-        // Can only be called by a single thread (might get stuck on numQueued otherwise since cancelled tasks don't release)
-        public void add(ResultSet resultSet) throws SQLException, IOException {
+        public void submit(ResultSet resultSet) throws SQLException, IOException {
             if (buffer.hasErrored()) {
-                outstandingTasks.forEach(t -> t.cancel(false));
+                queue.cancelAll();
                 if (buffer.error instanceof IOException) {
                     throw new IOException(buffer.error);
                 } else {
@@ -513,44 +501,14 @@ public class ProfileExport
                 }
             }
 
-            Task task = new Task(resultSet);
-            numQueued.acquireUninterruptibly();
-            outstandingTasks.add(pool.submit(task));
-
-            // try to limit outstandingTasks to an arbitrary smallish size
-            if (numAdded++ % PURGE_OUTSTANDING_EVERY == 0) {
-                var done = outstandingTasks.stream()
-                        .collect(Collectors.partitioningBy(Future::isDone, Collectors.toCollection(ArrayList::new)));
-
-                checkResult(done.get(true));
-                outstandingTasks = done.get(false);
-            }
+            queue.submit(new Task(resultSet));
         }
 
         public void awaitCompletion() throws IOException {
-            checkResult(outstandingTasks);
+            queue.awaitAll();
             buffer.close();
         }
-
-        private void checkResult(List<Future<?>> tasks) {
-            for (Future<?> f : tasks) {
-                try {
-                    f.get();
-                } catch (ExecutionException e) {
-                    throw new WhelkRuntimeException("Export threw exception: " + e.getMessage(), e.getCause());
-                } catch (InterruptedException ignored) {}
-            }
-        }
-
-        private static ExecutorService buildExecutorService() {
-            ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                    .setNameFormat(ProfileExport.class.getSimpleName() + "-%d")
-                    .build();
-            int poolSize = Runtime.getRuntime().availableProcessors();
-
-            return Executors.newFixedThreadPool(poolSize, threadFactory);
-        }
-
+        
         private class Task implements Runnable {
             String id;
             String collection;
@@ -580,8 +538,6 @@ public class ProfileExport
                     logger.error("Aborting due to earlier error");
                 } catch (Exception e) {
                     throw new RuntimeException(e);
-                } finally {
-                    numQueued.release();
                 }
             }
         }
@@ -589,6 +545,86 @@ public class ProfileExport
 
     private static class PreviousErrorException extends RuntimeException {
 
+    }
+
+    /**
+     * A thread pool with multiple virtual task queues.
+     * If a task is submitted to a queue that is full, the caller is blocked.
+     *
+     * 
+     * Alas, there is no clean way of having a ThreadPoolExecutor with a bounded queue where the caller blocks
+     * when the queue is full. (Best hacky option seems to be to subclass som Queue and override offer() with a call
+     * to put(), since ThreadPoolExecutor calls offer() internally...)
+     * Instead, use an unbounded shared queue and use a semaphore (per client) to put a bound on the number of tasks queued.
+     */
+    private static class BlockingPool {
+        private static final int QUEUE_SIZE = 256;
+        private static final int PURGE_OUTSTANDING_EVERY = QUEUE_SIZE * 6;
+
+        private final ExecutorService pool;
+        
+        public BlockingPool(String name, int poolSize) {
+            ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                    .setNameFormat(name + "-%d")
+                    .build();
+            
+            pool = Executors.newFixedThreadPool(poolSize, threadFactory);
+        }
+
+        // The returned queue is not thread safe
+        Queue getQueue() {
+            return new Queue();
+        }
+        
+        public class Queue {
+            private final Semaphore queuePermits = new Semaphore(QUEUE_SIZE);
+            private List<Future<?>> outstandingTasks = new ArrayList<>();
+            private int totalNumQueued = 0;
+
+            private Queue() {}
+            
+            public void submit(Runnable runnable) throws WhelkRuntimeException {
+                queuePermits.acquireUninterruptibly();
+                
+                Runnable task = () -> {
+                    try {
+                        runnable.run();
+                    } finally {
+                        queuePermits.release();
+                    }
+                };
+                
+                outstandingTasks.add(pool.submit(task));
+
+                // try to limit outstandingTasks to an arbitrary smallish size
+                if (totalNumQueued++ % PURGE_OUTSTANDING_EVERY == 0) {
+                    var done = outstandingTasks.stream()
+                            .collect(Collectors.partitioningBy(Future::isDone, Collectors.toCollection(ArrayList::new)));
+
+                    checkResult(done.get(true));
+                    outstandingTasks = done.get(false);
+                }
+            }
+
+            public void awaitAll() throws WhelkRuntimeException {
+                checkResult(outstandingTasks);
+            }
+
+            public void cancelAll() {
+                queuePermits.release(outstandingTasks.size());
+                outstandingTasks.forEach(t -> t.cancel(false));
+            }
+
+            private void checkResult(List<Future<?>> tasks) {
+                for (Future<?> f : tasks) {
+                    try {
+                        f.get();
+                    } catch (ExecutionException e) {
+                        throw new WhelkRuntimeException("Task threw exception: " + e.getMessage(), e.getCause());
+                    } catch (InterruptedException ignored) {}
+                }
+            }
+        }
     }
 
     private class MarcRecordBuffer implements MarcRecordWriter {
