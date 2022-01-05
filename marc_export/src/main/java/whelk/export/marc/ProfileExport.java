@@ -157,17 +157,17 @@ public class ProfileExport
      * Export (into output) all documents that are affected by 'id' having been updated.
      * 'created' == true means 'id' was created in the chosen interval, false means merely updated.
      */
-    private int exportAffectedDocuments(String id, String collection, boolean created, Boolean deleted,Timestamp from,
-                                        Timestamp until, ExportProfile profile, MarcRecordWriter output,
-                                        DELETE_MODE deleteMode, boolean doVirtualDeletions,
-                                        Set<String> exportedIDs, Map<String, DELETE_REASON> deletedNotifications,
-                                        String mainEntityType, Connection connection)
+    private void exportAffectedDocuments(String id, String collection, boolean created, Boolean deleted,Timestamp from,
+                                         Timestamp until, ExportProfile profile, MarcRecordWriter output,
+                                         DELETE_MODE deleteMode, boolean doVirtualDeletions,
+                                         Set<String> exportedIDs, Map<String, DELETE_REASON> deletedNotifications,
+                                         String mainEntityType, Connection connection)
             throws IOException, SQLException
     {
         Summary.Timer requestTimer = singleExportLatency.labels(collection).startTimer();
         try
         {
-            return exportAffectedDocuments2(id, collection, created, deleted, from, until, profile,
+            exportAffectedDocuments2(id, collection, created, deleted, from, until, profile, 
                     output, deleteMode, doVirtualDeletions, exportedIDs, deletedNotifications, mainEntityType, connection);
         }
         finally
@@ -176,15 +176,13 @@ public class ProfileExport
         }
     }
 
-    private int exportAffectedDocuments2(String id, String collection, boolean created, Boolean deleted,Timestamp from,
-                                         Timestamp until, ExportProfile profile, MarcRecordWriter output,
-                                         DELETE_MODE deleteMode, boolean doVirtualDeletions,
-                                         Set<String> exportedIDs, Map<String, DELETE_REASON> deletedNotifications,
-                                         String mainEntityType, Connection connection)
+    private void exportAffectedDocuments2(String id, String collection, boolean created, Boolean deleted,Timestamp from,
+                                          Timestamp until, ExportProfile profile, MarcRecordWriter output,
+                                          DELETE_MODE deleteMode, boolean doVirtualDeletions,
+                                          Set<String> exportedIDs, Map<String, DELETE_REASON> deletedNotifications,
+                                          String mainEntityType, Connection connection)
             throws IOException, SQLException
     {
-        int oldCount = exportedIDs.size();
-
         if (collection.equals("bib") && updateShouldBeExported(id, collection, mainEntityType, profile, from, until, created, deleted, connection))
         {
             exportDocument(m_whelk.loadEmbellished(id), profile,
@@ -233,8 +231,6 @@ public class ProfileExport
                     break;
             }
         }
-
-        return exportedIDs.size() - oldCount;
     }
 
     /**
@@ -345,6 +341,7 @@ public class ProfileExport
         if (exportedIDs.contains(systemId))
             return;
         exportedIDs.add(systemId);
+        affectedCount.observe(1);
 
         DELETE_REASON deleteReason = DELETE_REASON.DELETED; // Default
         if (doVirtualDeletions && !profile.shouldExportAllLocations())
@@ -530,10 +527,9 @@ public class ProfileExport
             @Override
             public void run() {
                 try (Connection connection = m_whelk.getStorage().getOuterConnection()) {
-                    int affected = exportAffectedDocuments(id, collection, created, deleted, parameters.fromTimeStamp,
-                            parameters.untilTimeStamp, parameters.profile, buffer, parameters.deleteMode, 
+                    exportAffectedDocuments(id, collection, created, deleted, parameters.fromTimeStamp, 
+                            parameters.untilTimeStamp, parameters.profile, buffer, parameters.deleteMode,
                             parameters.doVirtualDeletions, exportedIDs, deletedNotifications, mainEntityType, connection);
-                    affectedCount.observe(affected);
                 } catch (PreviousErrorException ignored) {
                     logger.error("Aborting due to earlier error");
                 } catch (Exception e) {
