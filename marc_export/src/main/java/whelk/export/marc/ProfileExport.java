@@ -464,7 +464,7 @@ public class ProfileExport
     /**
      * Prepare and convert documents to MARC in parallel.
      *
-     * Work is performed by a shared pool handling all requests. (Using more threads will just slow us down.) 
+     * Work is performed by a shared pool handling all requests because tasks are CPU bound. 
      * Serializing and writing the converted records to the output stream is done by a separate single thread per request. 
      * 
      * Getting ids to be exported from the database will always be faster than exporting them.
