@@ -71,8 +71,10 @@ class DependencyCache {
         thingIris.addAll(preUpdateDoc.getThingIdentifiers())
         thingIris.addAll(postUpdateDoc.getThingIdentifiers())
 
-        Set<Link> added = (postUpdateDoc.getExternalRefs() - preUpdateDoc.getExternalRefs())
-        Set<Link> removed = (preUpdateDoc.getExternalRefs() - postUpdateDoc.getExternalRefs())
+        Set<Link> before = preUpdateDoc.getExternalRefs()
+        Set<Link> after = postUpdateDoc.deleted ? Collections.emptySet() : postUpdateDoc.getExternalRefs()
+        Set<Link> added = (after - before)
+        Set<Link> removed = (before - after)
 
         (added + removed).each { Link link ->
             thingIris.each { fromIri ->
