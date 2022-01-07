@@ -376,7 +376,7 @@ class Whelk {
         storage.remove(id, changedIn, changedBy)
         if (elastic && !skipIndex) {
             elastic.remove(id)
-            reindexAffected(doc, doc.getExternalRefs(), new TreeSet<>())
+            reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
             log.debug "Object ${id} was removed from Whelk"
         }
         else {
