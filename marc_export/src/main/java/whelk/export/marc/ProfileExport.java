@@ -155,14 +155,14 @@ public class ProfileExport
                                          Timestamp until, ExportProfile profile, MarcRecordWriter output,
                                          DELETE_MODE deleteMode, boolean doVirtualDeletions,
                                          Set<String> exportedIDs, Map<String, DELETE_REASON> deletedNotifications,
-                                         String mainEntityType, Connection connection)
+                                         String mainEntityType, Connection connection, BlockingThreadPool.Queue queue)
             throws IOException, SQLException
     {
         Summary.Timer requestTimer = singleExportLatency.labels(collection).startTimer();
         try
         {
             exportAffectedDocuments2(id, collection, created, deleted, from, until, profile, 
-                    output, deleteMode, doVirtualDeletions, exportedIDs, deletedNotifications, mainEntityType, connection);
+                    output, deleteMode, doVirtualDeletions, exportedIDs, deletedNotifications, mainEntityType, connection, queue);
         }
         finally
         {
@@ -174,19 +174,19 @@ public class ProfileExport
                                           Timestamp until, ExportProfile profile, MarcRecordWriter output,
                                           DELETE_MODE deleteMode, boolean doVirtualDeletions,
                                           Set<String> exportedIDs, Map<String, DELETE_REASON> deletedNotifications,
-                                          String mainEntityType, Connection connection)
+                                          String mainEntityType, Connection connection, BlockingThreadPool.Queue queue)
             throws IOException, SQLException
     {
         if (collection.equals("bib") && updateShouldBeExported(id, collection, mainEntityType, profile, from, until, created, deleted, connection))
         {
             exportDocument(m_whelk.loadEmbellished(id), profile,
-                    output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
+                    output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications, queue);
         }
         else if (collection.equals("auth") && updateShouldBeExported(id, collection, mainEntityType, profile, from, until, created, deleted, connection))
         {
             for (String bibId : getAffectedBibIdsForAuth(id, profile))
             {
-                exportDocument(m_whelk.loadEmbellished(bibId), profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
+                exportDocument(m_whelk.loadEmbellished(bibId), profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications, queue);
             }
         }
         else if (collection.equals("hold") && updateShouldBeExported(id, collection, mainEntityType, profile, from, until, created, deleted, connection))
@@ -214,7 +214,7 @@ public class ProfileExport
                 if (itemOfSystemId != null) {
                     exportDocument(
                             m_whelk.loadEmbellished(itemOfSystemId)
-                            , profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
+                            , profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications, queue);
                 } else {
                     logger.info("Not exporting {} ({}) for {} because of missing itemOf systemID", id,
                             collection, profile.getProperty("name", "unknown"));
@@ -320,9 +320,25 @@ public class ProfileExport
      */
     private void exportDocument(Document document, ExportProfile profile, MarcRecordWriter output,
                                 Set<String> exportedIDs, DELETE_MODE deleteMode, boolean doVirtualDeletions,
-                                Map<String, DELETE_REASON> deletedNotifications)
+                                Map<String, DELETE_REASON> deletedNotifications, BlockingThreadPool.Queue queue)
+            throws IOException {
+
+        Runnable task = () -> {
+            try {
+                exportDocumentQQQ(document, profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        };
+
+        queue.submit(task);
+    }
+    
+    private void exportDocumentQQQ(Document document, ExportProfile profile, MarcRecordWriter output,
+            Set<String> exportedIDs, DELETE_MODE deleteMode, boolean doVirtualDeletions,
+        Map<String, DELETE_REASON> deletedNotifications)
             throws IOException
-    {
+        {
         String collection = LegacyIntegrationTools.determineLegacyCollection(document, m_whelk.getJsonld());
         if (!collection.equals("bib"))
         {
@@ -451,7 +467,7 @@ public class ProfileExport
         preparedStatement.setString(3, id);
         return preparedStatement;
     }
-
+        
     /**
      * Prepare and convert documents to MARC in parallel.
      *
@@ -469,13 +485,13 @@ public class ProfileExport
     private class ParallelExporter {
         private static final BlockingThreadPool sharedPool = new BlockingThreadPool(ProfileExport.class.getSimpleName(), Runtime.getRuntime().availableProcessors());
         
-        BlockingThreadPool.Queue workQueue = sharedPool.getQueue();
-        
         Set<String> exportedIDs = ConcurrentHashMap.newKeySet();
         Map<String, DELETE_REASON> deletedNotifications = new ConcurrentHashMap<>();
 
         Parameters parameters;
         MarcRecordWriterThread out;
+        BlockingThreadPool.Queue workQueue = sharedPool.getBlockingQueue();
+        BlockingThreadPool.Queue workQueue2 = sharedPool.getNonBlockingQueue();
 
         public ParallelExporter(MarcRecordWriter output, Parameters parameters) {
             this.out = new MarcRecordWriterThread(output);
@@ -497,6 +513,7 @@ public class ProfileExport
 
         public void awaitCompletion() throws IOException {
             workQueue.awaitAll();
+            workQueue2.awaitAll();
             out.close();
         }
         
@@ -523,7 +540,7 @@ public class ProfileExport
                 try (Connection connection = m_whelk.getStorage().getOuterConnection()) {
                     exportAffectedDocuments(id, collection, created, deleted, parameters.fromTimeStamp, 
                             parameters.untilTimeStamp, parameters.profile, out, parameters.deleteMode,
-                            parameters.doVirtualDeletions, exportedIDs, deletedNotifications, mainEntityType, connection);
+                            parameters.doVirtualDeletions, exportedIDs, deletedNotifications, mainEntityType, connection, workQueue2);
                 } catch (PreviousErrorException ignored) {
                     logger.error("Aborting due to earlier error");
                 } catch (Exception e) {

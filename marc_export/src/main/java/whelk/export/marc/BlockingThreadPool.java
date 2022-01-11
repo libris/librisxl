@@ -5,10 +5,12 @@ import whelk.exception.WhelkRuntimeException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
@@ -38,18 +40,17 @@ class BlockingThreadPool {
     }
 
     // The returned queue is not thread safe
-    Queue getQueue() {
-        return new Queue();
+    Queue getBlockingQueue() {
+        return new BlockingQueue();
     }
 
-    public class Queue {
+    // The returned queue is not thread safe
+    Queue getNonBlockingQueue() {
+        return new NonBlockingQueue();
+    }
+
+    public class BlockingQueue extends Queue {
         private final Semaphore queuePermits = new Semaphore(QUEUE_SIZE);
-        private List<Future<?>> outstandingTasks = new ArrayList<>();
-        private int totalNumQueued = 0;
-
-        private Queue() {
-        }
-
         public void submit(Runnable task) throws WhelkRuntimeException {
             queuePermits.acquireUninterruptibly();
 
@@ -61,36 +62,78 @@ class BlockingThreadPool {
                 }
             };
 
-            outstandingTasks.add(pool.submit(r));
-
-            // try to limit outstandingTasks to an arbitrary smallish size
-            if (totalNumQueued++ % PURGE_OUTSTANDING_EVERY == 0) {
-                var done = outstandingTasks.stream()
-                        .collect(Collectors.partitioningBy(Future::isDone, Collectors.toCollection(ArrayList::new)));
-
-                checkResult(done.get(true));
-                outstandingTasks = done.get(false);
-            }
-        }
-
-        public void awaitAll() throws WhelkRuntimeException {
-            checkResult(outstandingTasks);
+            submitInternal(r);
         }
 
         public void cancelAll() {
             queuePermits.release(outstandingTasks.size());
             outstandingTasks.forEach(t -> t.cancel(false));
         }
+    }
 
-        private void checkResult(List<Future<?>> tasks) {
-            for (Future<?> f : tasks) {
-                try {
-                    f.get();
-                } catch (ExecutionException e) {
-                    throw new WhelkRuntimeException("Task threw exception: " + e.getMessage(), e.getCause());
-                } catch (InterruptedException ignored) {
+    public class NonBlockingQueue extends Queue {
+
+        @Override
+        public void submit(Runnable task) throws WhelkRuntimeException {
+            submitInternal(task);
+        }
+
+        public void cancelAll() {
+            outstandingTasks.forEach(t -> t.cancel(false));
+        }
+    }
+    
+    public abstract class Queue {
+        protected ConcurrentLinkedQueue<Future<?>> outstandingTasks = new ConcurrentLinkedQueue<>();
+        private int totalNumQueued = 0;
+
+        private Queue() {
+        }
+
+        public abstract void submit(Runnable task) throws WhelkRuntimeException;
+        
+        protected void submitInternal(Runnable r) {
+            outstandingTasks.add(pool.submit(r));
+
+            // try to limit outstandingTasks to an arbitrary smallish size
+            if (totalNumQueued++ % PURGE_OUTSTANDING_EVERY == 0) {
+                for (int i = 0 ; i < outstandingTasks.size() ; i++) {
+                    Future<?> f = outstandingTasks.poll();
+                    if (f == null) {
+                        break;
+                    }
+                    
+                    if (f.isDone()) {
+                        checkResult(f);
+                    }
+                    else {
+                        outstandingTasks.add(f);
+                    }
                 }
             }
+        }
+
+        public void awaitAll() throws WhelkRuntimeException {
+            Future<?> task;
+            while ((task = outstandingTasks.poll()) != null) {
+                checkResult(task);
+            }
+        }
+
+        public abstract void cancelAll();
+
+        private void checkResult(List<Future<?>> tasks) {
+            for (Future<?> task : tasks) {
+                checkResult(task);
+            }
+        }
+
+        private void checkResult(Future<?> task) {
+            try {
+                task.get();
+            } catch (ExecutionException e) {
+                throw new WhelkRuntimeException("Task threw exception: " + e.getMessage(), e.getCause());
+            } catch (InterruptedException ignored) {}
         }
     }
 }
