@@ -1,10 +1,13 @@
 package whelk
 
+import groovy.transform.CompileStatic
+
 import java.util.function.BiFunction
 import java.util.function.Function
 import groovy.util.logging.Log4j2 as Log
 
 @Log
+@CompileStatic
 class Embellisher {
     static final List<String> DEFAULT_EMBELLISH_LEVELS = ['cards', 'chips']
     static final List<String> DEFAULT_INTEGRAL_RELATIONS = ['instanceOf', 'translationOf']
@@ -14,6 +17,7 @@ class Embellisher {
     JsonLd jsonld
     Collection<String> embellishLevels = DEFAULT_EMBELLISH_LEVELS
     Collection<String> integralRelations = DEFAULT_INTEGRAL_RELATIONS
+    boolean followInverse = true
 
     Function<Iterable<String>, Iterable<Map>> getDocs
     Function<Iterable<String>, Iterable<Map>> getCards
@@ -49,6 +53,10 @@ class Embellisher {
         this.integralRelations = integralRelations.collect()
     }
 
+    void setFollowInverse(boolean followInverse) {
+        this.followInverse = followInverse
+    }
+
     private List getEmbellishData(Document document) {
         if (document.getThingIdentifiers().isEmpty()) {
             return []
@@ -59,73 +67,111 @@ class Embellisher {
         Set<String> visitedIris = new HashSet<>()
         visitedIris.addAll(plusWithoutHash(document.getThingIdentifiers()))
 
-        def docs = fetchIntegral('full', start, visitedIris).collect()
+        def docs = fetchIntegral('full', start, integral(getAllLinks(start)), visitedIris).collect()
 
-        List result = docs
-        List<String> iris = getAllLinks(start + docs)
+        List result = docs.collect()
+        Set<Link> links = getAllLinks(start + docs)
         Iterable<Map> previousLevelDocs = start + docs
         String previousLens = 'full'
 
         for (String lens : embellishLevels) {
-            docs = fetchNonVisited(lens, iris, visitedIris)
-            docs += fetchIntegral(lens, docs, visitedIris)
+            docs = fetchNonVisited(lens, uniqueIris(links), visitedIris)
+            links = getAllLinks(docs)
+            
+            def integralDocs = fetchIntegral(lens, docs, integral(links), visitedIris)
+            docs += integralDocs
+            links += getAllLinks(integralDocs)
 
-            previousLevelDocs.each { insertInverse(previousLens, it, lens, docs, visitedIris) }
-            previousLevelDocs = docs
-            previousLens = lens
+            if (followInverse) {
+                previousLevelDocs.each {
+                    def inverseDocs = insertInverse(previousLens, it, lens, visitedIris)
+                    docs += inverseDocs
+                    links += getAllLinks(inverseDocs)
+                }
+                previousLevelDocs = docs
+                previousLens = lens
+            }
 
-            result.addAll(docs)
-
-            iris = getAllLinks(docs)
+            result += docs
         }
-        // Last level: add reverse links, but don't include documents linking here in embellish graph
-        previousLevelDocs.each { insertInverse(previousLens, it, null, [], visitedIris) }
+        if (followInverse) {
+            // Last level: add reverse links, but don't include documents linking here in embellish graph
+            previousLevelDocs.each { insertInverse(previousLens, it, null, visitedIris) }
+        }
 
         return result
     }
-
-    private static List<String> getAllLinks(Iterable<Map> docs) {
-        (List<String>) docs.collect{ JsonLd.getExternalReferences((Map) it).collect{ it.iri } }.flatten()
+    
+    private static Set<Link> getAllLinks(Iterable<Map> docs) {
+        Set<Link> links = new HashSet<>()
+        for (Map doc : docs) { 
+            links += JsonLd.getExternalReferences(doc) 
+        }
+        return links
     }
 
-    private List<String> getIntegralLinks(Iterable<Map> docs) {
-        (List<String>) docs.collect{
-            JsonLd.getExternalReferences((Map) it).grep{ it.relation in integralRelations }.collect{ it.iri }
-        }.flatten()
+    private static Set<String> uniqueIris(Set<Link> links) {
+        Set<String> iris = new HashSet<>(links.size())
+        for (Link link : links) { 
+            iris.add(link.iri) 
+        }
+        return iris
     }
 
-    private Iterable<Map> fetchNonVisited(String lens, Iterable<String> iris, Set<String> visitedIris) {
+    private Set<Link> integral(Set<Link> links) {
+        Set<Link> integral = new HashSet<>()
+        for (Link l : links) { 
+            if (l.relation in integralRelations) { 
+                integral.add(l) 
+            } 
+        }
+        return integral
+    }
+
+    private Iterable<Map> fetchNonVisited(String lens, Set<String> iris, Set<String> visitedIris) {
         def data = load(lens, iris - visitedIris)
         visitedIris.addAll(data.collectMany { plusWithoutHash(new Document(it).getThingIdentifiers()) })
         visitedIris.addAll(iris)
         return data
     }
 
-    private Iterable<Map> fetchIntegral(String lens, Iterable<Map> docs, Set<String> visitedIris) {
-        def result = []
+    private Iterable<Map> fetchIntegral(String lens, Iterable<Map> docs, Set<Link> integralLinks, Set<String> visitedIris) {
+        List<Map> result = []
         while(true) {
-            docs = fetchNonVisited(lens, getIntegralLinks(docs), visitedIris)
+            docs = fetchNonVisited(lens, uniqueIris(integralLinks), visitedIris)
+            integralLinks = integral(getAllLinks(docs))
 
             if (docs.isEmpty()) {
                 break
             }
             else {
-                result.addAll(docs)
+                result += docs
             }
         }
 
         return result
     }
 
-    private Iterable<Map> load(String lens, Iterable<String> iris) {
+    private Iterable<Map> load(String lens, Set<String> iris) {
         if (iris.isEmpty()) {
             return []
         }
 
         def data = lens == 'full'
-                ? getDocs.apply(iris)
-                : getCards.apply(iris)
+                ? getDocs.apply(iris.collect()) // NB! this collect must be here, see comment below!
+                : getCards.apply(iris.collect()) // NB! this collect must be here, see comment below!
 
+        
+        // Without the .collect() above, this sometimes(!) fails with the following exception:
+        //
+        // 2021-12-17T19:16:20,484 [qtp184642382-23] ERROR whelk.rest.api.HttpTools - Internal server error: No signature of method: whelk.Whelk$_embellish_closure8.doCall() is applicable for argument types: (LinkedHashSet) values: [[http://kblocalhost.kb.se:5000/v8ncrvjbsh1z8fb2#it]]
+        // Possible solutions: doCall(java.util.List), findAll(), findAll(), isCase(java.lang.Object), isCase(java.lang.Object)
+        // groovy.lang.MissingMethodException: No signature of method: whelk.Whelk$_embellish_closure8.doCall() is applicable for argument types: (LinkedHashSet) values: [[http://kblocalhost.kb.se:5000/v8ncrvjbsh1z8fb2#it]]
+        // Possible solutions: doCall(java.util.List), findAll(), findAll(), isCase(java.lang.Object), isCase(java.lang.Object)
+        // at jdk.proxy1.$Proxy37.apply(Unknown Source) ~[?:?]
+        // at java_util_function_Function$apply.call(Unknown Source) ~[?:?]
+        // at whelk.Embellisher.load(Embellisher.groovy:149) ~[main/:?]
+        
         if (lens == 'chips') {
             data = data.collect{ (Map) jsonld.toChip(it) }
         }
@@ -133,12 +179,13 @@ class Embellisher {
         return data
     }
 
-    private void insertInverse(String forLens, Map thing, String applyLens, List<Map> cards, Set<String> visitedIris) {
+    private Iterable<Map> insertInverse(String forLens, Map thing, String applyLens, Set<String> visitedIris) {
         Set<String> inverseRelations = jsonld.getInverseProperties(thing, forLens)
         if (inverseRelations.isEmpty()) {
-            return
+            return Collections.EMPTY_LIST
         }
 
+        List<Map> cards = []
         String iri = new Document(thing).getThingIdentifiers().first()
         for (String relation : inverseRelations) {
             Set<String> irisLinkingHere = getByReverseRelation.apply(iri, [relation])
@@ -162,6 +209,7 @@ class Embellisher {
                 cards.addAll(fetchNonVisited(applyLens, irisLinkingHere, visitedIris))
             }
         }
+        return cards
     }
 
     private static List<String> plusWithoutHash(List<String> iris) {
