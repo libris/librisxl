@@ -26,7 +26,6 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -35,13 +34,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -473,37 +467,37 @@ public class ProfileExport
      * A possible improvement would be to split auth exports into smaller pieces (i.e. parallel exportDocument() instead)
      */
     private class ParallelExporter {
-        private static final BlockingPool sharedPool = new BlockingPool(ProfileExport.class.getSimpleName(), Runtime.getRuntime().availableProcessors());
+        private static final BlockingThreadPool sharedPool = new BlockingThreadPool(ProfileExport.class.getSimpleName(), Runtime.getRuntime().availableProcessors());
         
-        BlockingPool.Queue queue = sharedPool.getQueue();
+        BlockingThreadPool.Queue workQueue = sharedPool.getQueue();
         
         Set<String> exportedIDs = ConcurrentHashMap.newKeySet();
         Map<String, DELETE_REASON> deletedNotifications = new ConcurrentHashMap<>();
 
         Parameters parameters;
-        MarcRecordBuffer buffer;
+        MarcRecordWriterThread out;
 
         public ParallelExporter(MarcRecordWriter output, Parameters parameters) {
-            this.buffer = new MarcRecordBuffer(output);
+            this.out = new MarcRecordWriterThread(output);
             this.parameters = parameters;
         }
         
         public void submit(ResultSet resultSet) throws SQLException, IOException {
-            if (buffer.hasErrored()) {
-                queue.cancelAll();
-                if (buffer.error instanceof IOException) {
-                    throw new IOException(buffer.error);
+            if (out.hasErrored()) {
+                workQueue.cancelAll();
+                if (out.error instanceof IOException) {
+                    throw new IOException(out.error);
                 } else {
-                    throw new WhelkRuntimeException("", buffer.error);
+                    throw new WhelkRuntimeException("", out.error);
                 }
             }
 
-            queue.submit(new Task(resultSet));
+            workQueue.submit(new Task(resultSet));
         }
 
         public void awaitCompletion() throws IOException {
-            queue.awaitAll();
-            buffer.close();
+            workQueue.awaitAll();
+            out.close();
         }
         
         private class Task implements Runnable {
@@ -528,7 +522,7 @@ public class ProfileExport
             public void run() {
                 try (Connection connection = m_whelk.getStorage().getOuterConnection()) {
                     exportAffectedDocuments(id, collection, created, deleted, parameters.fromTimeStamp, 
-                            parameters.untilTimeStamp, parameters.profile, buffer, parameters.deleteMode,
+                            parameters.untilTimeStamp, parameters.profile, out, parameters.deleteMode,
                             parameters.doVirtualDeletions, exportedIDs, deletedNotifications, mainEntityType, connection);
                 } catch (PreviousErrorException ignored) {
                     logger.error("Aborting due to earlier error");
@@ -543,100 +537,20 @@ public class ProfileExport
 
     }
 
-    /**
-     * A thread pool with multiple virtual task queues.
-     * If a task is submitted to a queue that is full, the caller is blocked.
-     *
-     * 
-     * Alas, there is no clean way of having a ThreadPoolExecutor with a bounded queue where the caller blocks
-     * when the queue is full. (Best hacky option seems to be to subclass som Queue and override offer() with a call
-     * to put(), since ThreadPoolExecutor calls offer() internally...)
-     * Instead, use an unbounded shared queue and use a semaphore (per client) to put a bound on the number of tasks queued.
-     */
-    private static class BlockingPool {
-        private static final int QUEUE_SIZE = 256;
-        private static final int PURGE_OUTSTANDING_EVERY = QUEUE_SIZE * 6;
-
-        private final ExecutorService pool;
-        
-        public BlockingPool(String name, int poolSize) {
-            ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                    .setNameFormat(name + "-%d")
-                    .build();
-            
-            pool = Executors.newFixedThreadPool(poolSize, threadFactory);
-        }
-
-        // The returned queue is not thread safe
-        Queue getQueue() {
-            return new Queue();
-        }
-        
-        public class Queue {
-            private final Semaphore queuePermits = new Semaphore(QUEUE_SIZE);
-            private List<Future<?>> outstandingTasks = new ArrayList<>();
-            private int totalNumQueued = 0;
-
-            private Queue() {}
-            
-            public void submit(Runnable runnable) throws WhelkRuntimeException {
-                queuePermits.acquireUninterruptibly();
-                
-                Runnable task = () -> {
-                    try {
-                        runnable.run();
-                    } finally {
-                        queuePermits.release();
-                    }
-                };
-                
-                outstandingTasks.add(pool.submit(task));
-
-                // try to limit outstandingTasks to an arbitrary smallish size
-                if (totalNumQueued++ % PURGE_OUTSTANDING_EVERY == 0) {
-                    var done = outstandingTasks.stream()
-                            .collect(Collectors.partitioningBy(Future::isDone, Collectors.toCollection(ArrayList::new)));
-
-                    checkResult(done.get(true));
-                    outstandingTasks = done.get(false);
-                }
-            }
-
-            public void awaitAll() throws WhelkRuntimeException {
-                checkResult(outstandingTasks);
-            }
-
-            public void cancelAll() {
-                queuePermits.release(outstandingTasks.size());
-                outstandingTasks.forEach(t -> t.cancel(false));
-            }
-
-            private void checkResult(List<Future<?>> tasks) {
-                for (Future<?> f : tasks) {
-                    try {
-                        f.get();
-                    } catch (ExecutionException e) {
-                        throw new WhelkRuntimeException("Task threw exception: " + e.getMessage(), e.getCause());
-                    } catch (InterruptedException ignored) {}
-                }
-            }
-        }
-    }
-
-    private class MarcRecordBuffer implements MarcRecordWriter {
+    private class MarcRecordWriterThread implements MarcRecordWriter {
         private static final int BUFFER_SIZE = 1000;
         private static final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(MarcRecordBuffer.class.getSimpleName()).build();
+                .setNameFormat(MarcRecordWriterThread.class.getSimpleName()).build();
 
         volatile Exception error;
         
         // The single thread that performs serialization and writes to the actual output stream 
-        ThreadPoolExecutor writer = new ThreadPoolExecutor(1, 1, 0L,
+        ThreadPoolExecutor thread = new ThreadPoolExecutor(1, 1, 0L,
                 TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(BUFFER_SIZE), threadFactory);
 
         MarcRecordWriter out;
 
-        public MarcRecordBuffer(MarcRecordWriter out) {
+        public MarcRecordWriterThread(MarcRecordWriter out) {
             this.out = out;
         }
 
@@ -654,7 +568,7 @@ public class ProfileExport
                 try {
                     out.writeRecord(marcRecord);
                 } catch (Exception e) {
-                    writer.shutdownNow();
+                    thread.shutdownNow();
                     if (error == null) {
                         error = e;
                     }
@@ -664,10 +578,10 @@ public class ProfileExport
             int maxTimeouts = 20;
             while (maxTimeouts-- > 0) {
                 try {
-                    writer.execute(task);
+                    thread.execute(task);
                     return;
                 } catch (RejectedExecutionException e) {
-                    if (writer.isShutdown()) {
+                    if (thread.isShutdown()) {
                         return;
                     }
                     // We're producing records faster than can be written (read by client), back off
@@ -682,11 +596,11 @@ public class ProfileExport
 
         @Override
         public void close() throws IOException {
-            writer.shutdown();
+            thread.shutdown();
             // Await all pending writes
             try {
                 int timeout = 90;
-                if (!writer.isTerminated() && !writer.awaitTermination(timeout, TimeUnit.SECONDS)) {
+                if (!thread.isTerminated() && !thread.awaitTermination(timeout, TimeUnit.SECONDS)) {
                     throw new IOException(String.format("Could not write all pending records within %s seconds", timeout));
                 }
             } catch (InterruptedException e) {
