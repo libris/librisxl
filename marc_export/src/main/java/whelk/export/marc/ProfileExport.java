@@ -485,11 +485,7 @@ public class ProfileExport
         public void submit(ResultSet resultSet) throws SQLException, IOException {
             if (out.hasErrored()) {
                 workQueue.cancelAll();
-                if (out.error instanceof IOException) {
-                    throw new IOException(out.error);
-                } else {
-                    throw new WhelkRuntimeException("", out.error);
-                }
+                out.throwIfError();
             }
 
             workQueue.submit(new Task(resultSet));
@@ -525,7 +521,7 @@ public class ProfileExport
                             parameters.untilTimeStamp, parameters.profile, out, parameters.deleteMode,
                             parameters.doVirtualDeletions, exportedIDs, deletedNotifications, mainEntityType, connection);
                 } catch (PreviousErrorException ignored) {
-                    logger.error("Aborting due to earlier error");
+                    // Already handled elsewhere
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -606,6 +602,18 @@ public class ProfileExport
             } catch (InterruptedException e) {
                 throw new IOException(e);
             }
+            throwIfError();
+        }
+        
+        public void throwIfError() throws IOException {
+            if (hasErrored()) {
+                if (error instanceof IOException) {
+                    throw new IOException(error);
+                } else {
+                    throw new WhelkRuntimeException("", error);
+                }
+            }
+            
         }
     }
 }

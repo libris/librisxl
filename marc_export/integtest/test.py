@@ -22,7 +22,7 @@ def queueSql(sql):
 def flushSql():
     global pendingSql
     if pendingSql:
-        os.system("psql whelk_dev -c '{}'".format(pendingSql))
+        os.system("psql -h localhost -U postgres whelk_dev -c '{}'".format(pendingSql))
         pendingSql = ""
 
 def reset():
