@@ -568,14 +568,14 @@ public class ProfileExport
                 try {
                     out.writeRecord(marcRecord);
                 } catch (Exception e) {
-                    thread.shutdownNow();
                     if (error == null) {
                         error = e;
                     }
+                    thread.shutdownNow();
                 }
             };
 
-            int maxTimeouts = 20;
+            int maxTimeouts = 100;
             while (maxTimeouts-- > 0) {
                 try {
                     thread.execute(task);
