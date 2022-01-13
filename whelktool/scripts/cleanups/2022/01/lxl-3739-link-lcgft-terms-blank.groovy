@@ -13,6 +13,7 @@ Alternative histories (fiction) -> Alternative histories (Fiction) (in 0xbdhl4j3
 Straight-edge -> Straight-edge (Music) (in 42gkrt7n4r3cqv8)
 Indians Music -> Indians--Music (in 86lpwfvs37m8dj2)
 Minutes (records) -> Minutes (Records) (in 0xbfnmfj240rck1)
+Tango -> Tangos (Music) (in 97mqx3jt059lds6)
 
 Terms not available at https://id.loc.gov/authorities/genreForm/label were checked manually with the LC
 suggest API https://id.loc.gov/suggest2?q=<label>. These are mainly music terms. See LABEL_TO_URI_NON_GF mapping.
@@ -36,7 +37,6 @@ LABEL_TO_URI_NON_GF =
          "Sprechstimme"                      : "https://id.loc.gov/authorities/subjects/sh2008000832",
          "Straight-edge"                     : "https://id.loc.gov/authorities/subjects/sh2003002058",
          "String octets"                     : "https://id.loc.gov/authorities/subjects/sh85129020",
-         "Tango"                             : "?",
          "Te Deum laudamus"                  : "https://id.loc.gov/authorities/subjects/sh85132921",
          "Ukulele"                           : "https://id.loc.gov/authorities/subjects/sh85139417",
          "Violoncello"                       : "https://id.loc.gov/authorities/subjects/sh85143658",
@@ -130,6 +130,7 @@ LABEL_TO_URI_GF =
          "Taarab"                         : "https://id.loc.gov/authorities/genreForms/gf2014027123",
          "Talking books"                  : "https://id.loc.gov/authorities/genreForms/gf2011026630",
          "Tall tales"                     : "https://id.loc.gov/authorities/genreForms/gf2014026565",
+         "Tango"                          : "https://id.loc.gov/authorities/genreForms/gf2014027127",
          "Thrillers (Fiction)"            : "https://id.loc.gov/authorities/genreForms/gf2014026571",
          "Utopian fiction"                : "https://id.loc.gov/authorities/genreForms/gf2014026583",
          "War fiction"                    : "https://id.loc.gov/authorities/genreForms/gf2014026590",
