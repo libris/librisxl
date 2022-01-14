@@ -4,18 +4,18 @@ See LXL-3739 for more info.
 Manually mapped (spelling mistakes etc):
 
 Subject headings:
-Bio-bibliography => https://id.loc.gov/authorities/subjects/sh99001236
-Charts -> Charts, diagrams, etc. => https://id.loc.gov/authorities/subjects/sh99001425
-Corporate resolutions => https://id.loc.gov/authorities/subjects/sh87007018
-Land surveys : https://id.loc.gov/authorities/subjects/sh99001768
-Problems, exercises, etc. => https://id.loc.gov/authorities/subjects/sh99001553
+Bio-bibliography => https://id.loc.gov/authorities/subjects/sh99001236 (in b8nrzx0v5cfl9tx)
+Charts -> Charts, diagrams, etc. => https://id.loc.gov/authorities/subjects/sh99001425 (in ljx18cn42tlzmg1)
+Corporate resolutions => https://id.loc.gov/authorities/subjects/sh87007018 (in 42gkswgn2f93m76)
+Land surveys => https://id.loc.gov/authorities/subjects/sh99001768 (in vs69jm9d4v5gff7)
+Problems, exercises, etc. => https://id.loc.gov/authorities/subjects/sh99001553 (in sq47fd3b4wbwf38)
 
 Genre/form:
-Annals and chronicals -> Annals and chronicles => http://id.loc.gov/authorities/genreForms/gf2014026045
-Passanger lists -> Passenger lists => https://id.loc.gov/authorities/genreForms/gf2014026138
-Plot summeries -> Plot summaries => https://id.loc.gov/authorities/genreForms/gf2014026149
-Teachers’ guides -> Teachers' guides => https://id.loc.gov/authorities/genreForms/gf2014026188
-Television programs reviews -> Television program reviews => https://id.loc.gov/authorities/genreForms/gf2014026190
+Annals and chronicals -> Annals and chronicles => http://id.loc.gov/authorities/genreForms/gf2014026045 (in pm14cgp70q09025)
+Passanger lists -> Passenger lists => https://id.loc.gov/authorities/genreForms/gf2014026138 (in 75knw0nr4bx5jvl)
+Plot summeries -> Plot summaries => https://id.loc.gov/authorities/genreForms/gf2014026149 (in 75knvtgr13npl86)
+Teachers’ guides -> Teachers' guides => https://id.loc.gov/authorities/genreForms/gf2014026188 (in xv8clpcg1blw9d0)
+Television programs reviews -> Television program reviews => https://id.loc.gov/authorities/genreForms/gf2014026190 (in sq47gk8b2mc20mj)
 
 TODO:
 Sports programs (nl03bf463042n22):
