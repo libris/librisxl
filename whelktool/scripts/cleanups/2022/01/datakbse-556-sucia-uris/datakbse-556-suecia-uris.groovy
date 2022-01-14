@@ -1,8 +1,14 @@
 /*
+Update links to data.kb.se in associatedMedia.uri for Suecia docs
 
+- Replace .tif link with .tif links
+- Replace .zip links with data.kb.se landing page links 
+- Remove .pdf links (dataset doesn't exist anymore)
+- Also verify .tif file sizes in public note (they are all correct) 
 
+See DATAKBSE-556 for more information
 
-# Get new filesizes
+filesize.txt generated like this: 
 cat new-tifs.txt | while read URI; do echo $URI $(curl -s -IXGET $URI | grep 'Content-Length' | grep -o [0-9]*); done > filesize.txt
 
  */
@@ -17,6 +23,7 @@ for (String line: new File(scriptDir, 'new_data.kb.se.tsv').readLines()) {
     def (recordId, oldLink, newUri) = line.split('\t')
     records.add(recordId)
     String newPkgUri = newUri.split('/')[0..-2].join('/') // drop last component 
+    
     if (oldLink.endsWith('.tif')) {
         String filename = oldLink.split('/')[-1]
         String newLink = newPkgUri + '/' + filename
@@ -73,9 +80,10 @@ void fix(String id, Map<String,String> replacementLinks, Map<String, Integer> si
             }
         }
         
-        String reproductionOf = doc.graph[1].reproductionOf?.'@id'
-        if (reproductionOf) {
-            fix(reproductionOf, replacementLinks, sizes)
+        // Some of these have associatedMedia
+        String physical = doc.graph[1].reproductionOf?.'@id'
+        if (physical) {
+            fix(physical, replacementLinks, sizes)
         }
     }
 }
