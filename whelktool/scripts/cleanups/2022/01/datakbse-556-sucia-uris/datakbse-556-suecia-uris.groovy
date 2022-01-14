@@ -37,6 +37,10 @@ for (String line: new File(scriptDir, 'filesizes.txt').readLines()) {
 records.each { fix(it, replacementLinks, sizes) }
 
 void fix(String id, Map<String,String> replacementLinks, Map<String, Integer> sizes) {
+    if (id.isNumber()) {
+        id = 'http://libris.kb.se/resource/bib/' + id
+    }
+    
     selectByIds([id]) { doc ->
         List associatedMedia = doc.graph[1].associatedMedia
         if (!associatedMedia) {
@@ -53,11 +57,11 @@ void fix(String id, Map<String,String> replacementLinks, Map<String, Integer> si
             
             if (oldUri.startsWith(PDF_LINK_PREFIX)) {
                 i.remove()
-                doc.scheduleSave()
+                doc.scheduleSave(loud: true)
                 continue
             }
             
-            def newUri = replacementLinks[mediaObject.uri[0]]
+            def newUri = replacementLinks[oldUri]
             if (newUri) {
                 Integer size = sizes.get(newUri)
                 if (size && !((String) mediaObject.'marc:publicNote'[0]).contains("$size MB")) {
@@ -65,8 +69,13 @@ void fix(String id, Map<String,String> replacementLinks, Map<String, Integer> si
                 }
 
                 mediaObject.uri[0] = newUri
-                doc.scheduleSave()
+                doc.scheduleSave(loud: true)
             }
+        }
+        
+        String reproductionOf = doc.graph[1].reproductionOf?.'@id'
+        if (reproductionOf) {
+            fix(reproductionOf, replacementLinks, sizes)
         }
     }
 }
