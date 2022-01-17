@@ -1,7 +1,7 @@
 /*
 Update links to data.kb.se in associatedMedia.uri for Suecia docs
 
-- Replace .tif link with .tif links
+- Replace .tif links with .tif links
 - Replace .zip links with data.kb.se landing page links 
 - Remove .pdf links (dataset doesn't exist anymore)
 - Also verify .tif file sizes in public note (they are all correct) 
