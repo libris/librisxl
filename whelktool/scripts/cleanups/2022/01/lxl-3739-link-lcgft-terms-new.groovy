@@ -6,7 +6,6 @@ Manually mapped (spelling mistakes etc):
 Subject headings:
 Bio-bibliography => https://id.loc.gov/authorities/subjects/sh99001236 (in b8nrzx0v5cfl9tx)
 Charts -> Charts, diagrams, etc. => https://id.loc.gov/authorities/subjects/sh99001425 (in ljx18cn42tlzmg1)
-Corporate resolutions => https://id.loc.gov/authorities/subjects/sh87007018 (in 42gkswgn2f93m76)
 Land surveys => https://id.loc.gov/authorities/subjects/sh99001768 (in vs69jm9d4v5gff7)
 Problems, exercises, etc. => https://id.loc.gov/authorities/subjects/sh99001553 (in sq47fd3b4wbwf38)
 
@@ -28,7 +27,6 @@ import whelk.util.DocumentUtil
 LABEL_TO_URI_NON_GF =
         ["Bio-bibliography"         : "https://id.loc.gov/authorities/subjects/sh99001236",
          "Charts"                   : "https://id.loc.gov/authorities/subjects/sh99001425",
-         "Corporate resolutions"    : "https://id.loc.gov/authorities/subjects/sh87007018",
          "Land surveys"             : "https://id.loc.gov/authorities/subjects/sh99001768",
          "Problems, exercises, etc.": "https://id.loc.gov/authorities/subjects/sh99001553"]
 

@@ -10,38 +10,17 @@ Darkwawe (music) -> Darkwave (Music) (in pm14bfp71ldshtn)
 Taraab -> Taraab (Music) (in wt7bjpmf1s02t5n)
 Occational verse -> Occasional verse (in khw087h30db2179)
 Alternative histories (fiction) -> Alternative histories (Fiction) (in 0xbdhl4j3g28rlz)
-Straight-edge -> Straight-edge (Music) (in 42gkrt7n4r3cqv8)
 Indians Music -> Indians--Music (in 86lpwfvs37m8dj2)
 Minutes (records) -> Minutes (Records) (in 0xbfnmfj240rck1)
 Tango -> Tangos (Music) (in 97mqx3jt059lds6)
 
 Terms not available at https://id.loc.gov/authorities/genreForm/label were checked manually with the LC
-suggest API https://id.loc.gov/suggest2?q=<label>. These are mainly music terms. See LABEL_TO_URI_NON_GF mapping.
+suggest API https://id.loc.gov/suggest2?q=<label>.
 */
 
 import whelk.util.DocumentUtil
 
-LABEL_TO_URI_NON_GF =
-        ["Aeolian harp"                      : "https://id.loc.gov/authorities/subjects/sh85001245",
-         "Ballets"                           : "https://id.loc.gov/authorities/subjects/sh85011293",
-         "Bowing (Musical instruments)"      : "https://id.loc.gov/authorities/subjects/sh2005003308",
-         "Christian literature, Early"       : "https://id.loc.gov/authorities/subjects/sh85025115",
-         "Concerts"                          : "https://id.loc.gov/authorities/subjects/sh85030620",
-         "Double bass"                       : "https://id.loc.gov/authorities/subjects/sh85039150",
-         "Guitar"                            : "https://id.loc.gov/authorities/subjects/sh85057803",
-         "Indians Music"                     : "https://id.loc.gov/authorities/subjects/sh85065058",
-         "Mass (Music)"                      : "https://id.loc.gov/authorities/subjects/sh85081852",
-         "National songs"                    : "https://id.loc.gov/authorities/subjects/sh85090141",
-         "Octets"                            : "https://id.loc.gov/authorities/subjects/sh85093983",
-         "Organ (Musical instrument)"        : "https://id.loc.gov/authorities/subjects/sh85095454",
-         "Sprechstimme"                      : "https://id.loc.gov/authorities/subjects/sh2008000832",
-         "Straight-edge"                     : "https://id.loc.gov/authorities/subjects/sh2003002058",
-         "String octets"                     : "https://id.loc.gov/authorities/subjects/sh85129020",
-         "Te Deum laudamus"                  : "https://id.loc.gov/authorities/subjects/sh85132921",
-         "Ukulele"                           : "https://id.loc.gov/authorities/subjects/sh85139417",
-         "Violoncello"                       : "https://id.loc.gov/authorities/subjects/sh85143658",
-         "Woodwind quartets (Saxophones (4))": "https://id.loc.gov/authorities/subjects/sh85147995"]
-
+LABEL_TO_URI_NON_GF = ["Indians Music" : "https://id.loc.gov/authorities/subjects/sh85065058"]
 LABEL_TO_URI_GF =
         ["Action and adventure fiction"   : "https://id.loc.gov/authorities/genreForms/gf2014026217",
          "Administrative regulations"     : "https://id.loc.gov/authorities/genreForms/gf2011026030",
