@@ -136,6 +136,12 @@ public class History {
                 owners.add(m_pathOwnership.get(key));
             }
         }
+
+        // If there was no more specific ownership in the subtree, default
+        // to the ownership of the base path (in other words, search upwards instead)
+        if (owners.isEmpty()) {
+            owners.add(getOwnership(path));
+        }
         return owners;
     }
 
