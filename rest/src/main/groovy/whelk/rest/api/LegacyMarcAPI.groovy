@@ -101,6 +101,12 @@ class LegacyMarcAPI extends HttpServlet {
             id = LegacyIntegrationTools.fixUri(id)
             library = LegacyIntegrationTools.fixUri(library)
             String systemId = whelk.storage.getSystemIdByIri(id)
+            if (systemId == null) {
+                String message = "The supplied \"id\"-parameter must refer to an existing bibliographic record."
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, message)
+                log.warn("Bad client request to LegacyMarcAPI: " + message)
+                return
+            }
             Document rootDocument = whelk.loadEmbellished(systemId)
             if (rootDocument == null) {
                 String message = "The supplied \"id\"-parameter must refer to an existing bibliographic record."
