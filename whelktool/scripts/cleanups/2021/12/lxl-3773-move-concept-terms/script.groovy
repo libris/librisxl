@@ -1,6 +1,7 @@
-PrintWriter movedToSubject = getReportWriter('moved-to-subject.tsv')
-PrintWriter movedToGf = getReportWriter('moved-to-gf.tsv')
+PrintWriter movedToSubject = getReportWriter('moved-to-subject.txt')
+PrintWriter movedToGf = getReportWriter('moved-to-gf.txt')
 PrintWriter replacedByGf = getReportWriter('replaced-by-gf.tsv')
+PrintWriter workWasList = getReportWriter('work-was-list.txt')
 
 List saogfSchemes = ["https://id.kb.se/term/saogf", "https://id.kb.se/term/barngf"]
 Set moveToGf = queryDocs(["inScheme.@id": saogfSchemes]).collect { it.'@id' } as Set
@@ -31,6 +32,15 @@ selectByCollection('bib') { data ->
         return
 
     boolean modified = false
+
+    // Work can apparently be List, fix if that's the case
+    if (work in List) {
+        assert work.size() == 1
+        work = work[0]
+        data.graph[1].instanceOf = work
+        workWasList.println(id)
+        modified = true
+    }
 
     if (work.genreForm) {
         // Move misplaced topics from genreForm to subject
