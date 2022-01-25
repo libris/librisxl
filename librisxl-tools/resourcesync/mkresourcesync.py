@@ -115,9 +115,9 @@ class Indexer:
         self.outdir = outdir
         self.max_items = max_items or Indexer.DEFAULT_MAX_ITEMS
         self.compress = compress
-        self.indexfilename = f'sitemapindex.xml'
+        self.indexfilename = f'sitemap.xml'
 
-        sync_base_url = f'{base_url}/{sync_base}'
+        sync_base_url = f'{base_url}/{sync_base}' if sync_base else base_url
         self.index_url = f'{sync_base_url}/{self.indexfilename}'
 
         self.write_sitemap = ItemsetWriter(base_url,
@@ -146,17 +146,17 @@ class Indexer:
 
         sitemapindex, indexsub = elem('sitemapindex')
         indexsub('md', ns=RS, capability='resourcelist', at=lastmod)
-        indexsub('ln', ns=RS, sel='self', href=self.index_url)
+        indexsub('ln', ns=RS, rel='self', href=self.index_url)
         #smsub('ln', ns=RS, rel='up', href=self.capabilitylist)
 
         for url, modified in sorteditemsets:
-            _, urlsetsub = indexsub('urlset')
+            _, urlsetsub = indexsub('sitemap')
             urlsetsub('loc', url)
             urlsetsub('lastmod', modified)
 
         outfile = self.outdir / self.indexfilename
 
-        write_xml(sitemapindex, outfile, len(sorteditemsets))
+        write_xml(sitemapindex, outfile, self.compress, len(sorteditemsets))
 
 
 class ItemsetWriter(NamedTuple):
@@ -200,7 +200,7 @@ class ItemsetWriter(NamedTuple):
                         href=f'{uri}/data-record.jsonld',
                         type='application/ld+json')
 
-        write_xml(sitemap, self.outdir / filename, len(items))
+        write_xml(sitemap, self.outdir / filename, self.compress, len(items))
 
         return ItemSet(sitemapurl, lastmod)
 
@@ -231,6 +231,7 @@ def main():
     argp.add_argument('-b', '--base-url', default='https://libris.kb.se')
     argp.add_argument('-s', '--sync-base', default='sync')
     argp.add_argument('-m', '--max-items', type=int, default=0)
+    argp.add_argument('-C', '--no-compress', action='store_true')
     argp.add_argument('-M', '--no-multiproc', action='store_true')
     argp.add_argument('outdir', metavar='OUTDIR')
     args = argp.parse_args()
@@ -241,7 +242,8 @@ def main():
     indexer = Indexer(args.base_url,
                     args.sync_base,
                     outdir,
-                    args.max_items)
+                    args.max_items,
+                    compress=not args.no_compress)
 
     if args.no_multiproc:
         indexer.index(sys.stdin)
