@@ -57,45 +57,44 @@ def chunk_by(seq, n):
 
 
 
-class TStamp(NamedTuple):
-    stamp: str
-    fraction: int
-    tz: str
+def normalize_timestamp(s : str) -> str:
+    s = s.replace('Z', '+00')
 
-    @classmethod
-    def parse(cls, s: str) -> 'TStamp':
-        s = s.replace('Z', '+00')
+    dtime, offsign, tz = s.rpartition('+' if '+' in s else '-')
+    dtime = dtime.replace(' ', 'T')
 
-        stamp, offsign, tz = s.rpartition('+' if '+' in s else '-')
+    if '.' in dtime:
+        whole, pastdot = dtime.split('.', 1)
+        fraction = pastdot
+        fraction += '0' * (3 - len(fraction))
+        dtime = f"{whole}.{fraction}"
+    else:
+        dtime += '.0'
 
-        stamp, *pastdot = stamp.split('.', 1)
-        fraction = int(*pastdot) if pastdot else 0
+    tz = 'Z' if tz == '00' else f"{offsign}{tz}"
 
-        tz = 'Z' if tz == '00' else f"{offsign}{tz}"
-
-        return cls(stamp.replace(' ', 'T'), fraction, tz)
-
-    def __str__(t: 'TStamp') -> str:
-        return f'{t[0]}.{t[1]}{t[2]}'
+    return f'{dtime}{tz}'
 
 
 class ItemSet(NamedTuple):
     url: str
     modified: str
+    created: str
+    file: str
 
 
 class Item(NamedTuple):
     slug: str
-    created: TStamp
-    modified: TStamp
+    created: str
+    modified: str
     deleted: bool
 
     @classmethod
     def parse(cls, l: str) -> 'Item':
         slug, created, modified, deleted = l.rstrip().split('\t')
         return cls(slug,
-                   TStamp.parse(created),
-                   TStamp.parse(modified),
+                   normalize_timestamp(created),
+                   normalize_timestamp(modified),
                    deleted == 't')
 
 
@@ -149,10 +148,10 @@ class Indexer:
         indexsub('ln', ns=RS, rel='self', href=self.index_url)
         #smsub('ln', ns=RS, rel='up', href=self.capabilitylist)
 
-        for url, modified in sorteditemsets:
+        for itemset in sorteditemsets:
             _, urlsetsub = indexsub('sitemap')
-            urlsetsub('loc', url)
-            urlsetsub('lastmod', modified)
+            urlsetsub('loc', itemset.url)
+            urlsetsub('lastmod', itemset.modified)
 
         outfile = self.outdir / self.indexfilename
 
@@ -169,12 +168,16 @@ class ItemsetWriter(NamedTuple):
 
     def __call__(self, lines: list[str], seqnum: Optional[int] = None) -> ItemSet:
         items = [Item.parse(l) for l in lines]
-        lastid = items[-1].slug
+        firstid = items[0].slug
+        firstcreated = items[0].created
 
         items.sort(key=lambda item: item.modified)
-        lastmod = str(items[-1].modified)
+        lastmod = items[-1].modified
 
-        filename = f'sitemap-{seqnum or lastid}.xml'
+        seqslug = (str(seqnum) if seqnum is not None else
+                f"{firstcreated.replace(':', '_').replace('.', '-')}-{firstid}")
+
+        filename = f'sitemap-{seqslug}.xml'
 
         sitemapurl = f'{self.sync_base_url}/{filename}'
 
@@ -202,7 +205,7 @@ class ItemsetWriter(NamedTuple):
 
         write_xml(sitemap, self.outdir / filename, self.compress, len(items))
 
-        return ItemSet(sitemapurl, lastmod)
+        return ItemSet(sitemapurl, lastmod, firstcreated, filename)
 
 
 def main():
