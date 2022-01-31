@@ -249,9 +249,9 @@ class CrudUtils {
         }
 
         String toString() {
-            embellished ? "$plain$SEPARATOR$embellished" : plain
+            "\"${ embellished ? "$plain$SEPARATOR$embellished" : plain }\""
         }
-        
+
         boolean isNotModified(ETag ifNoneMatch) {
             if (plain != ifNoneMatch.plain) {
                 return false

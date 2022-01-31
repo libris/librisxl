@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Properties>
+        <Property name="catalina.base">.</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="STDERR" target="SYSTEM_ERR">
+            <PatternLayout pattern="%msg%n"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="STDERR"/>
+            <AppenderRef ref="File" />
+        </Root>
+    </Loggers>
+</Configuration>

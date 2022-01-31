@@ -376,7 +376,7 @@ class Whelk {
         storage.remove(id, changedIn, changedBy)
         if (elastic && !skipIndex) {
             elastic.remove(id)
-            reindexAffected(doc, doc.getExternalRefs(), new TreeSet<>())
+            reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
             log.debug "Object ${id} was removed from Whelk"
         }
         else {
@@ -394,8 +394,12 @@ class Whelk {
         def docsByIris = { List<String> iris -> bulkLoad(iris).values().collect{ it.data } }
         Embellisher e = new Embellisher(jsonld, docsByIris, storage.&getCards, relations.&getByReverse)
 
-        if(levels) {
+        if (levels) {
             e.setEmbellishLevels(levels)
+        }
+        else if (document.getThingType() == 'Item') {
+            e.setEmbellishLevels(['cards'])
+            e.setFollowInverse(false)
         }
 
         e.embellish(document)

@@ -17,8 +17,8 @@ dependencies {
     implementation(project(':whelk-core'))
 
     // Logging
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.2'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
 
     // metrics
     implementation "io.prometheus:simpleclient:${prometheusVersion}"
@@ -40,7 +40,8 @@ dependencies {
 }
 
 gretty {
-    systemProperties 'xl.secret.properties': System.getProperty("xl.secret.properties")
+    jvmArgs = ['-XX:+UseParallelGC']
+    systemProperties = ['xl.secret.properties': System.getProperty("xl.secret.properties")]
     httpPort = 8580
     scanInterval = 0
     afterEvaluate {
@@ -53,8 +54,14 @@ gretty {
 
 jar {
     dependsOn ':whelk-core:jar'
+
+    // 'Multi-Release': 'true' is needed because log4j2-api is a 'Multi-Release' jar and selects "StackLocator"
+    // implementation based on JDK version. If we build our fat jar without 'Multi-Release' it will not find the 
+    // JDK9+ version and log a warning to STDOUT (not STDERR...) messing up the output of this program.
+    // "WARNING: sun.reflect.Reflection.getCallerClass is not supported. This will impact performance."
     manifest {
-        attributes "Main-Class": "whelk.export.marc.MarcCliExport"
+        attributes "Main-Class": "whelk.export.marc.MarcCliExport", 
+                'Multi-Release': 'true' 
     }
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE

@@ -9,36 +9,38 @@ import whelk.filter.LinkFinder
 
 import static whelk.util.Jackson.mapper
 
-List fpaths
 def cmd = "convert"
+def perf = 0
 
-if (args.length > 1) {
-    cmd = args[0]
-    fpaths = args[1..-1]
-} else {
-    fpaths = args[0..-1]
+List fpaths = args[0..-1]
+
+if (fpaths[0] ==~ /\d+/) {
+    perf = fpaths[0] as int
+    fpaths = fpaths[1..-1]
+}
+
+if (fpaths.size() > 1) {
+    cmd = fpaths[0]
+    fpaths = fpaths[1..-1]
+}
+
+if (perf) {
+    fpaths = fpaths * perf
+    System.err.println "Measuring performance of ${fpaths.size()} ${cmd} runs..."
 }
 
 def converter = new MarcFrameConverter()
 addSystemComponents(converter)
+
+def start = new Date().time
 
 for (fpath in fpaths) {
     def source = converter.mapper.readValue(new File(fpath), Map)
     def result = null
 
     if (cmd == "revert") {
-        if (converter.ld) {
-            System.err.println "Validating JSON-LD ..."
-            def validator = JsonLdValidator.from(converter.ld)
-            List<Error> errors = validator.validateAll(source)
-            if (errors) {
-                System.err.println "JSON-LD validation errors:"
-                errors.each{
-                    System.err.println it.toStringWithPath()
-                }
-            } else {
-                System.err.println "OK"
-            }
+        if (!perf && converter.ld) {
+            reportValidation(converter, source)
         }
         result = converter.runRevert(source)
     } else {
@@ -54,16 +56,26 @@ for (fpath in fpaths) {
         }
     }
 
-    if (fpaths.size() > 1)
-        println "SOURCE: ${fpath}"
+    def s = null
     try {
-        println converter.mapper.writeValueAsString(result)
+        s = converter.mapper.writeValueAsString(result)
     } catch (e) {
         System.err.println "Error in result:"
         System.err.println result
         throw e
     }
+
+    if (!perf) {
+        if (fpaths.size() > 1) println "SOURCE: ${fpath}"
+        println s
+    }
 }
+
+if (perf) {
+    def stop = new Date().time - start
+    System.err.println "Performance for ${perf} ${cmd} runs: ${stop / perf} ms on average"
+}
+
 
 void addSystemComponents(converter) {
     if ('xl.secret.properties' in System.properties) {
@@ -91,4 +103,18 @@ static void addJsonLd(converter) {
     def displayData = mapper.readValue(displayFile, Map)
     def vocabData = mapper.readValue(vocabFile, Map)
     converter.ld = new JsonLd(contextData, displayData, vocabData)
+}
+
+static void reportValidation(converter, source) {
+    System.err.println "Validating JSON-LD ..."
+    def validator = JsonLdValidator.from(converter.ld)
+    List<Error> errors = validator.validateAll(source)
+    if (errors) {
+        System.err.println "JSON-LD validation errors:"
+        errors.each{
+            System.err.println it.toStringWithPath()
+        }
+    } else {
+        System.err.println "OK"
+    }
 }

@@ -83,7 +83,7 @@ class CrudGetRequest {
      * where view is 'data' or 'data-view'
      */
     private void parsePath(String path) {
-        def matcher = path =~ ~/^\/(.+?)(\/(data|data-view)(\.(\w+))?)?$/
+        def matcher = path =~ ~/^\/(.+?)(\/(data|data-view|_changesets)(\.(\w+))?)?$/
         if (matcher.matches()) {
             resourceId = matcher[0][1]
             view = View.fromString(matcher[0][3])
@@ -121,7 +121,8 @@ class CrudGetRequest {
     enum View {
         RESOURCE(''),
         DATA('data'),
-        DATA_VIEW('data-view');
+        DATA_VIEW('data-view'),
+        CHANGE_SETS('_changesets');
 
         private String name
 

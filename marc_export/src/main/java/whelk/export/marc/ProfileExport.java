@@ -1,5 +1,6 @@
 package whelk.export.marc;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import groovy.lang.Tuple2;
 import io.prometheus.client.Summary;
 import org.apache.logging.log4j.LogManager;
@@ -11,9 +12,11 @@ import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
+import whelk.exception.WhelkRuntimeException;
 import whelk.util.LegacyIntegrationTools;
 import whelk.util.MarcExport;
 
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -27,17 +30,22 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class ProfileExport
 {
     private final Logger logger = LogManager.getLogger(this.getClass());
     private HashSet<String> workDerivativeTypes = null;
-
+        
     public enum DELETE_REASON
     {
         DELETED,
@@ -60,9 +68,13 @@ public class ProfileExport
         .labelNames("collection").register();
     private final JsonLD2MarcXMLConverter m_toMarcXmlConverter;
     private final Whelk m_whelk;
-    public ProfileExport(Whelk whelk)
+    private final DataSource m_connectionPool;
+    
+    public ProfileExport(Whelk whelk, DataSource connectionPool)
     {
         m_whelk = whelk;
+        m_connectionPool = connectionPool;
+        
         m_toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
 
         // _only_ the derivatives, not "Work" itself, as that is what the "classical" MARC works use, which we
@@ -70,74 +82,86 @@ public class ProfileExport
         workDerivativeTypes = new HashSet<>(m_whelk.getJsonld().getSubClasses("Work"));
     }
 
+    public static class Parameters {
+        ExportProfile profile;
+        String from;
+        String until;
+        DELETE_MODE deleteMode;
+        boolean doVirtualDeletions;
+
+        ZonedDateTime zonedFrom;
+        ZonedDateTime zonedUntil;
+
+        Timestamp fromTimeStamp;
+        Timestamp untilTimeStamp;
+        
+        public Parameters(ExportProfile profile, String from,
+                          String until, DELETE_MODE deleteMode, boolean doVirtualDeletions) {
+            this.profile = profile;
+            this.from = from;
+            this.until = until;
+            this.deleteMode = deleteMode;
+            this.doVirtualDeletions = doVirtualDeletions;
+
+            zonedFrom = ZonedDateTime.parse(from);
+            zonedUntil = ZonedDateTime.parse(until);
+
+            // To account for small diffs in between client and server clocks, always add an extra second
+            // at the low end of time intervals!
+            zonedFrom = zonedFrom.minus(1, ChronoUnit.SECONDS);
+
+            fromTimeStamp = new Timestamp(zonedFrom.toInstant().getEpochSecond() * 1000L);
+            untilTimeStamp = new Timestamp(zonedUntil.toInstant().getEpochSecond() * 1000L);
+        }
+    }
+    
     /**
      * Export MARC data affected in between 'from' and 'until' shaped by 'profile' into 'output'.
      * Return a set of IDs that should be deleted separately and the reason why. If deleteMode is not 'SEPARATE', the
      * returned collection will be empty.
      */
-    public TreeMap<String, DELETE_REASON> exportInto(MarcRecordWriter output, ExportProfile profile, String from,
-                                                     String until, DELETE_MODE deleteMode, boolean doVirtualDeletions)
+    public Map<String, DELETE_REASON> exportInto(MarcRecordWriter output, Parameters parameters)
             throws IOException, SQLException
     {
-        TreeMap<String, DELETE_REASON> deletedNotifications = new TreeMap<>();
-
-        if (profile.getProperty("status", "ON").equalsIgnoreCase("OFF"))
-            return deletedNotifications;
-
-        ZonedDateTime zonedFrom = ZonedDateTime.parse(from);
-        ZonedDateTime zonedUntil = ZonedDateTime.parse(until);
-
-        // To account for small diffs in between client and server clocks, always add an extra second
-        // at the low end of time intervals!
-        zonedFrom = zonedFrom.minus(1, ChronoUnit.SECONDS);
-
-        Timestamp fromTimeStamp = new Timestamp(zonedFrom.toInstant().getEpochSecond() * 1000L);
-        Timestamp untilTimeStamp = new Timestamp(zonedUntil.toInstant().getEpochSecond() * 1000L);
-
-        TreeSet<String> exportedIDs = new TreeSet<>();
-        try (Connection connection = m_whelk.getStorage().getOuterConnection()) {
-            connection.setAutoCommit(false);
-            try (PreparedStatement preparedStatement = getAllChangedIDsStatement(fromTimeStamp, untilTimeStamp, connection); 
-                 ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    String id = resultSet.getString("id");
-                    String collection = resultSet.getString("collection");
-                    String mainEntityType = resultSet.getString("mainEntityType");
-                    Timestamp createdTime = resultSet.getTimestamp("created");
-                    Boolean deleted = resultSet.getBoolean("deleted");
-
-                    boolean created = zonedFrom.toInstant().isBefore(createdTime.toInstant()) &&
-                            zonedUntil.toInstant().isAfter(createdTime.toInstant());
-
-                    int affected = exportAffectedDocuments(id, collection, created, deleted, fromTimeStamp,
-                            untilTimeStamp, profile, output, deleteMode, doVirtualDeletions, exportedIDs,
-                            deletedNotifications, mainEntityType, connection);
-                    affectedCount.observe(affected);
+        if (parameters.profile.getProperty("status", "ON").equalsIgnoreCase("OFF"))
+            return Collections.EMPTY_MAP;
+        
+        ParallelExporter exporter = new ParallelExporter(output, parameters);
+        
+        try {
+            try (Connection connection = m_connectionPool.getConnection()) {
+                connection.setAutoCommit(false);
+                try (PreparedStatement preparedStatement = getAllChangedIDsStatement(parameters.fromTimeStamp, parameters.untilTimeStamp, connection);
+                     ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        exporter.submit(resultSet);
+                    }
                 }
             }
+            exporter.awaitCompletion();
         }
         finally {
-            totalExportCount.observe(exportedIDs.size());
+            totalExportCount.observe(exporter.exportedIDs.size());
         }
 
-        return deletedNotifications;
+        return exporter.deletedNotifications;
     }
-
+    
     /**
      * Export (into output) all documents that are affected by 'id' having been updated.
      * 'created' == true means 'id' was created in the chosen interval, false means merely updated.
      */
-    private int exportAffectedDocuments(String id, String collection, boolean created, Boolean deleted,Timestamp from,
-                                        Timestamp until, ExportProfile profile, MarcRecordWriter output,
-                                        DELETE_MODE deleteMode, boolean doVirtualDeletions,
-                                        TreeSet<String> exportedIDs, TreeMap<String, DELETE_REASON> deletedNotifications,
-                                        String mainEntityType, Connection connection)
+    private void exportAffectedDocuments(String id, String collection, boolean created, Boolean deleted,Timestamp from,
+                                         Timestamp until, ExportProfile profile, MarcRecordWriter output,
+                                         DELETE_MODE deleteMode, boolean doVirtualDeletions,
+                                         Set<String> exportedIDs, Map<String, DELETE_REASON> deletedNotifications,
+                                         String mainEntityType, Connection connection)
             throws IOException, SQLException
     {
         Summary.Timer requestTimer = singleExportLatency.labels(collection).startTimer();
         try
         {
-            return exportAffectedDocuments2(id, collection, created, deleted, from, until, profile,
+            exportAffectedDocuments2(id, collection, created, deleted, from, until, profile, 
                     output, deleteMode, doVirtualDeletions, exportedIDs, deletedNotifications, mainEntityType, connection);
         }
         finally
@@ -146,15 +170,13 @@ public class ProfileExport
         }
     }
 
-    private int exportAffectedDocuments2(String id, String collection, boolean created, Boolean deleted,Timestamp from,
-                                         Timestamp until, ExportProfile profile, MarcRecordWriter output,
-                                         DELETE_MODE deleteMode, boolean doVirtualDeletions,
-                                         TreeSet<String> exportedIDs, TreeMap<String, DELETE_REASON> deletedNotifications,
-                                         String mainEntityType, Connection connection)
+    private void exportAffectedDocuments2(String id, String collection, boolean created, Boolean deleted,Timestamp from,
+                                          Timestamp until, ExportProfile profile, MarcRecordWriter output,
+                                          DELETE_MODE deleteMode, boolean doVirtualDeletions,
+                                          Set<String> exportedIDs, Map<String, DELETE_REASON> deletedNotifications,
+                                          String mainEntityType, Connection connection)
             throws IOException, SQLException
     {
-        int oldCount = exportedIDs.size();
-
         if (collection.equals("bib") && updateShouldBeExported(id, collection, mainEntityType, profile, from, until, created, deleted, connection))
         {
             exportDocument(m_whelk.loadEmbellished(id), profile,
@@ -203,8 +225,6 @@ public class ProfileExport
                     break;
             }
         }
-
-        return exportedIDs.size() - oldCount;
     }
 
     /**
@@ -299,8 +319,8 @@ public class ProfileExport
      * Export bib document (into output)
      */
     private void exportDocument(Document document, ExportProfile profile, MarcRecordWriter output,
-                                TreeSet<String> exportedIDs, DELETE_MODE deleteMode, boolean doVirtualDeletions,
-                                TreeMap<String, DELETE_REASON> deletedNotifications)
+                                Set<String> exportedIDs, DELETE_MODE deleteMode, boolean doVirtualDeletions,
+                                Map<String, DELETE_REASON> deletedNotifications)
             throws IOException
     {
         String collection = LegacyIntegrationTools.determineLegacyCollection(document, m_whelk.getJsonld());
@@ -315,6 +335,7 @@ public class ProfileExport
         if (exportedIDs.contains(systemId))
             return;
         exportedIDs.add(systemId);
+        affectedCount.observe(1);
 
         DELETE_REASON deleteReason = DELETE_REASON.DELETED; // Default
         if (doVirtualDeletions && !profile.shouldExportAllLocations())
@@ -356,7 +377,7 @@ public class ProfileExport
             }
             try {
                 output.writeRecord(mr);
-            } catch (IOException e) {
+            } catch (IOException | PreviousErrorException e) {
                 throw e;
             } catch (Exception e) {
                 logger.error(String.format("Error writing %s for %s:  %s", systemId, profileName, e), e);
@@ -429,5 +450,170 @@ public class ProfileExport
         preparedStatement.setTimestamp(2, until);
         preparedStatement.setString(3, id);
         return preparedStatement;
+    }
+
+    /**
+     * Prepare and convert documents to MARC in parallel.
+     *
+     * Work is performed by a shared pool handling all requests because tasks are CPU bound. 
+     * Serializing and writing the converted records to the output stream is done by a separate single thread per request. 
+     * 
+     * Getting ids to be exported from the database will always be faster than exporting them.
+     * Since the task size can vary significantly (auth exports are much larger than bib) we don't want the calling 
+     * thread to perform any work (i.e. ThreadPoolExecutor.CallerRunsPolicy) since it might get caught up in a large
+     * export and starve the pool threads.
+     * So we need to block the calling thread when too much work is queued up.
+     *
+     * A possible improvement would be to split auth exports into smaller pieces (i.e. parallel exportDocument() instead)
+     */
+    private class ParallelExporter {
+        private static final BlockingThreadPool sharedPool = new BlockingThreadPool(ProfileExport.class.getSimpleName(), Runtime.getRuntime().availableProcessors());
+        
+        BlockingThreadPool.Queue workQueue = sharedPool.getQueue();
+        
+        Set<String> exportedIDs = ConcurrentHashMap.newKeySet();
+        Map<String, DELETE_REASON> deletedNotifications = new ConcurrentHashMap<>();
+
+        Parameters parameters;
+        MarcRecordWriterThread out;
+
+        public ParallelExporter(MarcRecordWriter output, Parameters parameters) {
+            this.out = new MarcRecordWriterThread(output);
+            this.parameters = parameters;
+        }
+        
+        public void submit(ResultSet resultSet) throws SQLException, IOException {
+            if (out.hasErrored()) {
+                workQueue.cancelAll();
+                out.throwIfError();
+            }
+
+            workQueue.submit(new Task(resultSet));
+        }
+
+        public void awaitCompletion() throws IOException {
+            workQueue.awaitAll();
+            out.close();
+        }
+        
+        private class Task implements Runnable {
+            String id;
+            String collection;
+            String mainEntityType;
+            Timestamp createdTime;
+            Boolean deleted;
+            boolean created;
+
+            public Task(ResultSet resultSet) throws SQLException {
+                id = resultSet.getString("id");
+                collection = resultSet.getString("collection");
+                mainEntityType = resultSet.getString("mainEntityType");
+                createdTime = resultSet.getTimestamp("created");
+                deleted = resultSet.getBoolean("deleted");
+                created = parameters.zonedFrom.toInstant().isBefore(createdTime.toInstant()) &&
+                        parameters.zonedUntil.toInstant().isAfter(createdTime.toInstant());
+            }
+
+            @Override
+            public void run() {
+                try (Connection connection = m_whelk.getStorage().getOuterConnection()) {
+                    exportAffectedDocuments(id, collection, created, deleted, parameters.fromTimeStamp, 
+                            parameters.untilTimeStamp, parameters.profile, out, parameters.deleteMode,
+                            parameters.doVirtualDeletions, exportedIDs, deletedNotifications, mainEntityType, connection);
+                } catch (PreviousErrorException ignored) {
+                    // Already handled elsewhere
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+
+    private static class PreviousErrorException extends RuntimeException {
+
+    }
+
+    private class MarcRecordWriterThread implements MarcRecordWriter {
+        private static final int BUFFER_SIZE = 1000;
+        private static final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat(MarcRecordWriterThread.class.getSimpleName()).build();
+
+        volatile Exception error;
+        
+        // The single thread that performs serialization and writes to the actual output stream 
+        ThreadPoolExecutor thread = new ThreadPoolExecutor(1, 1, 0L,
+                TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(BUFFER_SIZE), threadFactory);
+
+        MarcRecordWriter out;
+
+        public MarcRecordWriterThread(MarcRecordWriter out) {
+            this.out = out;
+        }
+
+        public boolean hasErrored() {
+            return error != null;
+        }
+
+        @Override
+        public void writeRecord(MarcRecord marcRecord) throws IOException {
+            if (hasErrored()) {
+                throw new PreviousErrorException();
+            }
+
+            Runnable task = () -> {
+                try {
+                    out.writeRecord(marcRecord);
+                } catch (Exception e) {
+                    if (error == null) {
+                        error = e;
+                    }
+                    thread.shutdownNow();
+                }
+            };
+
+            int maxTimeouts = 100;
+            while (maxTimeouts-- > 0) {
+                try {
+                    thread.execute(task);
+                    return;
+                } catch (RejectedExecutionException e) {
+                    if (thread.isShutdown()) {
+                        return;
+                    }
+                    // We're producing records faster than can be written (read by client), back off
+                    try {
+                        logger.info("Slow client, slowing down");
+                        Thread.sleep(250);
+                    } catch (InterruptedException ignored) {}
+                }
+            }
+            throw new IOException("Reached max timeouts while write queue was full");
+        }
+
+        @Override
+        public void close() throws IOException {
+            thread.shutdown();
+            // Await all pending writes
+            try {
+                int timeout = 90;
+                if (!thread.isTerminated() && !thread.awaitTermination(timeout, TimeUnit.SECONDS)) {
+                    throw new IOException(String.format("Could not write all pending records within %s seconds", timeout));
+                }
+            } catch (InterruptedException e) {
+                throw new IOException(e);
+            }
+            throwIfError();
+        }
+        
+        public void throwIfError() throws IOException {
+            if (hasErrored()) {
+                if (error instanceof IOException) {
+                    throw new IOException(error);
+                } else {
+                    throw new WhelkRuntimeException("", error);
+                }
+            }
+            
+        }
     }
 }
