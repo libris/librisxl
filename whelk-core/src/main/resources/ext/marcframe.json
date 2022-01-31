@@ -12526,7 +12526,7 @@
         "TODO": "Add the separate lists used for cataloging, as enumerations",
         "addLink": "baseMaterial",
         "resourceType": "Material",
-        "property": "label"
+        "property": "label", "infer": true
       },
       "$b": {
         "NOTE:LC": "bf2marcSpec-3XX-v1.0: nac - Cannot be differeneted from 300 $c",
@@ -12540,7 +12540,7 @@
         "TODO": "Add the separate lists used for cataloging, as enumerations",
         "addLink": "appliedMaterial",
         "resourceType": "Material",
-        "property": "label"
+        "property": "label", "infer": true
       },
       "$d": {
         "TODO": "Add the separate lists used for cataloging, as enumerations. Ensure this doesn't clash with 007 13:14 Sound",
@@ -12615,6 +12615,23 @@
                 {
                   "@type": "Material",
                   "label": "papper"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "baseMaterial linked",
+          "normalized":  [
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"a": "papper"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "baseMaterial": [
+                {
+                  "@id": "https://id.kb.se/material/Paper",
+                  "@type": "Material",
+                  "prefLabel": "papper"
                 }
               ]
             }
@@ -12698,6 +12715,23 @@
                 {
                   "@type": "Material",
                   "label": "akvarell"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "appliedMaterial linked",
+          "normalized":  [
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"c": "akvarell"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "appliedMaterial": [
+                {
+                  "@id": "https://id.kb.se/material/Watercolour",
+                  "@type": "Material",
+                  "prefLabel": "akvarell"
                 }
               ]
             }
