@@ -16,43 +16,62 @@ https://katalogverk.kb.se/katalogisering/Formathandboken/Auktoritetsformatet/Kon
 For more information, see LXL-3590
  */
 
-import java.util.concurrent.atomic.AtomicReference
 
-linked = getReportWriter("linked.txt")
-notLinked = getReportWriter("not-linked.txt")
+import java.util.concurrent.LinkedBlockingQueue
+
+linked = getReportWriter("linked.tsv")
+notFound = getReportWriter("not-found.tsv")
+multiple = getReportWriter("multiple-matches.tsv")
+variant = getReportWriter("variant.txt")
 
 selectByCollection('auth') { auth ->
     def (record, thing) = auth.graph
-    if (thing.seeAlso) {
-        thing.seeAlso.each { seeAlso ->
-            if (!seeAlso.'@id') {
-                def id = find(seeAlso) 
-                if (id) {
-                    linked.println("${auth.doc.shortId} $seeAlso -> $id")
-                    seeAlso.clear()
-                    seeAlso['@id'] = id
-                    auth.scheduleSave()
-                }
-                else {
-                    notLinked.println("${auth.doc.shortId} $seeAlso")
-                }
-            }
+    if (!thing.seeAlso) {
+        return
+    }
+    
+    thing.seeAlso.each { seeAlso ->
+        if (seeAlso.'@id') {
+            return 
+        }
+        
+        def ids = findIds(seeAlso).findAll { it != thing.'@id' }
+        if (ids.size() == 1) {
+            linked.println("${thing.'@id'}\t$seeAlso\t${ids.first()}")
+            seeAlso.clear()
+            seeAlso['@id'] = ids.first()
+            auth.scheduleSave()
+        }
+        else {
+            (ids ? multiple : notFound).println("${auth.doc.shortId}\t$seeAlso\t$ids")
         }
     }
 }
 
-String find(Map seeAlso) {
+def findIds(Map seeAlso) {
     def query = [
             'q' : [seeAlso.values().join(" ")]
     ]
 
-    AtomicReference<String> id = new AtomicReference<>() 
+    LinkedBlockingQueue<String> ids = new LinkedBlockingQueue<>() 
     selectByIds(queryIds(query).collect()) { candidate -> 
         def (record, candidateThing) = candidate.graph
         
         if (seeAlso.every { key, value -> candidateThing[key] == value}) {
-            id.set(candidateThing.'@id')
+            ids.add(candidateThing.'@id')
+        }
+        else if (candidateThing.hasVariant) {
+            candidateThing.hasVariant.each {
+                if (seeAlso.every { key, value -> it[key] == value} && it.every { key, value -> seeAlso[key] == value}) {
+                    def allCaps = it.name && it.name.toUpperCase() == it.name
+                    if (!allCaps) {
+                        variant.println("$it")
+                        ids.add(candidateThing.'@id')
+                    }
+                }
+            }
+            
         }
     }
-    return id.get()
+    return ids.collect()
 }
