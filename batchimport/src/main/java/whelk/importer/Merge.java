@@ -151,13 +151,15 @@ public class Merge {
             // If it does, it should generally speaking not be replaced. But there is a list
             // of exceptions to this rule:
             boolean containsSanctifiedLinks = subtreeContainsLinks(base);
-            // instanceOf,language may be overwritten
-            if (path.size() > 1 && path.get(path.size()-1).equals("language") && path.get(path.size()-2).equals("instanceOf")) {
-                containsSanctifiedLinks = false;
-            }
-            // publication,*,country may be overwritten
-            if (path.size() > 2 && path.get(path.size()-1).equals("country") && path.get(path.size()-3).equals("publication")) {
-                containsSanctifiedLinks = false;
+            for (int i = path.size(); i > 1; --i) {
+                // instanceOf,language links may be overwritten
+                if (i > 1 && path.get(i-1).equals("language") && path.get(i-2).equals("instanceOf")) {
+                    containsSanctifiedLinks = false;
+                }
+                // publication,*,country links may be overwritten
+                if (path.size() > 2 && path.get(i-1).equals("country") && path.get(i-3).equals("publication")) {
+                    containsSanctifiedLinks = false;
+                }
             }
 
             // Execute replacement if appropriate
