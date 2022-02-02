@@ -12523,7 +12523,7 @@
       },
       "aboutEntity": "?thing",
       "$a": {
-        "TODO": "Add the separate lists used for cataloging, as enumerations",
+        "NOTE": "Linked enumerations only at revert from https://id.kb.se/material/",
         "addLink": "baseMaterial",
         "resourceType": "Material",
         "property": "label", "infer": true
@@ -12537,7 +12537,7 @@
         "punctuationChars": ":;+"
       },
       "$c": {
-        "TODO": "Add the separate lists used for cataloging, as enumerations",
+        "NOTE": "Linked enumerations only at revert from https://id.kb.se/material/",
         "addLink": "appliedMaterial",
         "resourceType": "Material",
         "property": "label", "infer": true
