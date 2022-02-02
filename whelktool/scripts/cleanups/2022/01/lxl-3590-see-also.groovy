@@ -16,8 +16,8 @@ https://katalogverk.kb.se/katalogisering/Formathandboken/Auktoritetsformatet/Kon
 For more information, see LXL-3590
  */
 
-
 import java.util.concurrent.LinkedBlockingQueue
+import whelk.component.ElasticSearch.TooManyResultsException
 
 linked = getReportWriter("linked.tsv")
 notFound = getReportWriter("not-found.tsv")
@@ -49,6 +49,14 @@ selectByCollection('auth') { auth ->
 }
 
 def findIds(Map seeAlso) {
+    try {
+        find(seeAlso)
+    } catch(TooManyResultsException e) {
+        return []
+    }
+}
+
+def find(Map seeAlso) {
     def query = [
             'q' : [seeAlso.values().join(" ")]
     ]
