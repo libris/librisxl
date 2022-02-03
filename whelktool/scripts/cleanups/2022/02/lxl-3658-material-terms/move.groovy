@@ -1,0 +1,2 @@
+// physicalDetailsNote -> appliedMaterial
+// productionMethod -> ?
