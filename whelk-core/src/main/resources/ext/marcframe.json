@@ -11702,6 +11702,28 @@
           }
         },
         {
+          "Name": "Huvudsaklig resurs och medföljande",
+          "source": [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"a": "250 sidor"},{"e": "1 CD-ROM"}]}}
+          ],
+          "result": {
+            "mainEntity": 
+            {
+              "extent": [
+                {
+                  "@type": "Extent",
+                  "label": "250 sidor"
+                }
+              ],
+              "accompaniedBy":
+                {
+                  "@type": "Resource",
+                  "label": "1 CD-ROM"
+                }
+            }
+          }
+        },
+        {
           "Name": "Import med interpunktion i flera fält",
           "source": [
             {"300": {"ind1": " ", "ind2": " ", "subfields": [{"a": "11 volumes :"},{"b": "illustrations ;"},{"c": "24 cm"}]}}
@@ -12501,10 +12523,10 @@
       },
       "aboutEntity": "?thing",
       "$a": {
-        "TODO": "Add the separate lists used for cataloging, as enumerations",
+        "NOTE": "Linked enumerations only at revert from https://id.kb.se/material/",
         "addLink": "baseMaterial",
-        "resourceType": "BaseMaterial",
-        "property": "label"
+        "resourceType": "Material",
+        "property": "label", "infer": true
       },
       "$b": {
         "NOTE:LC": "bf2marcSpec-3XX-v1.0: nac - Cannot be differeneted from 300 $c",
@@ -12515,10 +12537,10 @@
         "punctuationChars": ":;+"
       },
       "$c": {
-        "TODO": "Add the separate lists used for cataloging, as enumerations",
+        "NOTE": "Linked enumerations only at revert from https://id.kb.se/material/",
         "addLink": "appliedMaterial",
-        "resourceType": "AppliedMaterial",
-        "property": "label"
+        "resourceType": "Material",
+        "property": "label", "infer": true
       },
       "$d": {
         "TODO": "Add the separate lists used for cataloging, as enumerations. Ensure this doesn't clash with 007 13:14 Sound",
@@ -12583,24 +12605,57 @@
       },
       "_spec": [
         {
+          "name": "baseMaterial",
+          "source":  [
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"a": "papper"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "baseMaterial": [
+                {
+                  "@type": "Material",
+                  "label": "papper"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "baseMaterial linked",
+          "normalized":  [
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"a": "papper"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "baseMaterial": [
+                {
+                  "@id": "https://id.kb.se/material/Paper",
+                  "@type": "Material",
+                  "prefLabel": "papper"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "Property clash between 300c from 340b producing doubled fields in MARC. (340 ignored on revert)",
           "source":  [
-            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film 300"}]}},
-            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "film 340"}]}}
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film 300c"}]}},
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"b": "film 340b"}]}}
           ],
           "normalized":  [
-            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film 300"},{"c": "film 340"}]}}
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"c": "film 300c"},{"c": "film 340b"}]}}
           ],
           "result": {
             "mainEntity": {
               "hasDimensions": [
                 {
                   "@type": "Dimensions",
-                  "label": "film 300"
+                  "label": "film 300c"
                 },
                 {
                   "@type": "Dimensions",
-                  "label": "film 340"
+                  "label": "film 340b"
                 }
               ]
             }
@@ -12622,7 +12677,7 @@
             "mainEntity": {
               "baseMaterial": [
                 {
-                  "@type": "BaseMaterial",
+                  "@type": "Material",
                   "label": "film"
                 }
               ],
@@ -12644,6 +12699,55 @@
                       "label": "original"
                     }
                   ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "appliedMaterial",
+          "source":  [
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"c": "akvarell"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "appliedMaterial": [
+                {
+                  "@type": "Material",
+                  "label": "akvarell"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "appliedMaterial linked",
+          "normalized":  [
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"c": "akvarell"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "appliedMaterial": [
+                {
+                  "@id": "https://id.kb.se/material/Watercolour",
+                  "@type": "Material",
+                  "prefLabel": "akvarell"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "productionMethod",
+          "source":  [
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"d": "gravyr"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "productionMethod": [
+                {
+                  "@type": "ProductionMethod",
+                  "label": "gravyr"
                 }
               ]
             }
