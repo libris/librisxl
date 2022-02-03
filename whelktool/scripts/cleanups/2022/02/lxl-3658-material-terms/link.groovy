@@ -5,28 +5,28 @@ MATERIAL_BASE_URI = 'https://id.kb.se/material/'
 
 LABEL_MAPPINGS =
         [
-                'Paper'        : ~/pap[pi]?er/,
-                'Parchment'    : ~/pergament/,
-                'Plastic'      : ~/plast(ic)?/,
-                'Glass'        : ~/glas/,
-                'Metal'        : ~/metall?/,
-                'Canvas'       : ~/målarduk/,
-                'Panel'        : ~/pannå/,
-                'Textile'      : ~/textile?/,
-                'Vinyl'        : ~/vinyl/,
-                'Plaster'      : ~/gips/,
-                'Papyrus'      : ~/papyrus/,
-                'Watercolour'  : ~/akvarell|vattenfärg/,
-                'Pencil'       : ~/blyerts/,
-                'Gouache'      : ~/gouas?che?/,
-                'Charcoal'     : ~/kol/,
-                'Ink'          : ~/bläck/,
-                'OilPaint'     : ~/oljefärg|olja/
+                'Paper'      : ~/pap[pi]?er/,
+                'Parchment'  : ~/pergament/,
+                'Plastic'    : ~/plast(ic)?/,
+                'Glass'      : ~/glas/,
+                'Metal'      : ~/metall?/,
+                'Canvas'     : ~/målarduk/,
+                'Panel'      : ~/pannå/,
+                'Textile'    : ~/textile?/,
+                'Vinyl'      : ~/vinyl/,
+                'Plaster'    : ~/gips/,
+                'Papyrus'    : ~/papyrus/,
+                'Watercolour': ~/akvarell|vattenfärg/,
+                'Pencil'     : ~/blyerts/,
+                'Gouache'    : ~/gouas?che?/,
+                'Charcoal'   : ~/kol/,
+                'Ink'        : ~/bläck/,
+                'OilPaint'   : ~/oljefärg|olja/,
+                'IndiaInk'   : ~/tusch/
 //                'Pen'          : ~/penna/,
 //                'Wash'         : ~/lavering/,
 //                'Chalk'        : ~/krita|kritteckning/,
 //                'ColoredPencil': ~/färgpenn(a|or)/,
-//                'FeltPen'      : ~/tusch/,
 //                'Cardboard'    : ~/papp|kartong/
         ]
 
