@@ -41,7 +41,8 @@ class RemoteSearchAPI extends HttpServlet {
     private Whelk whelk
 
     private Set<String> m_undesirableFields
-
+    private Set<String> m_undesirableFieldsAuth
+    
     RemoteSearchAPI() {
         // Do nothing - only here for Tomcat to have something to call
     }
@@ -75,6 +76,7 @@ class RemoteSearchAPI extends HttpServlet {
         for (int i = 363; i <= 388; ++i) {
             m_undesirableFields.add(String.format("%1\$03d", i))
         }
+        
         m_undesirableFields.add("514")
         m_undesirableFields.add("526")
         m_undesirableFields.add("542")
@@ -151,6 +153,9 @@ class RemoteSearchAPI extends HttpServlet {
         for (int i = 900; i <= 999; ++i) {
             m_undesirableFields.add(String.format("%1\$03d", i))
         }
+        
+        // Handle authority records separately since we don't want 370 in bib
+        m_undesirableFieldsAuth = m_undesirableFields - ["370", "372", "374", "377"]
 
         log.info("Started ...")
     }
@@ -421,11 +426,13 @@ class RemoteSearchAPI extends HttpServlet {
         marcRecord.addField(marcRecord.createControlfield("001", generatedId))
 
         // Remove unwanted marc fields.
+        def isAuth = marcRecord.getLeader(6) == 'z' as char
+        def undesirableFields = isAuth ? m_undesirableFieldsAuth : m_undesirableFields
         Iterator<Field> it = mutableFieldList.iterator()
         while (it.hasNext()) {
             Field field = it.next()
             String fieldNumber = field.getTag()
-            if (m_undesirableFields.contains(fieldNumber))
+            if (undesirableFields.contains(fieldNumber))
                 it.remove()
         }
         return generatedId
