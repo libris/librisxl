@@ -1,10 +1,12 @@
 from functools import partial
 from itertools import islice
 from pathlib import Path
+from urllib.parse import urljoin
 from typing import NamedTuple, Iterable, Optional
 from xml.etree import ElementTree as ET
 import gzip
 import sys
+import mimetypes
 
 
 DEFAULT = 'http://www.sitemaps.org/schemas/sitemap/0.9'
@@ -78,7 +80,8 @@ def normalize_timestamp(s : str) -> str:
 
 class ItemSet(NamedTuple):
     url: str
-    modified: str
+    firstmod: str
+    lastmod: str
     created: str
     file: str
 
@@ -106,22 +109,31 @@ class Indexer:
 
     def __init__(self,
             base_url: str,
-            sync_base: str,
+            sync_dir: str,
             outdir: Path,
             max_items=0,
             compress=True,
+            representation_templates: list[str]=[],
         ):
         self.outdir = outdir
         self.max_items = max_items or Indexer.DEFAULT_MAX_ITEMS
         self.compress = compress
-        self.indexfilename = f'sitemap.xml'
+        self.caplistfilename = f'capabilitylist.xml'
+        self.changelistfilename = f'changelist.xml'
+        self.descfilename = f'description.xml'
 
-        sync_base_url = f'{base_url}/{sync_base}' if sync_base else base_url
-        self.index_url = f'{sync_base_url}/{self.indexfilename}'
+        sync_dir = sync_dir.rstrip('/') + '/' if sync_dir else ''
+        sync_base_url = urljoin(base_url, sync_dir)
+        self.base_url = base_url
+        self.changelist_url = urljoin(sync_base_url, self.changelistfilename)
+        self.caplist_url = urljoin(sync_base_url, self.caplistfilename)
+        self.desc_url = urljoin(sync_base_url, self.descfilename)
 
-        self.write_sitemap = ItemsetWriter(base_url,
-                sync_base_url,
-                self.index_url,
+        self.write_sitemap = ItemsetWriter(
+                base_url,
+                self.changelist_url,
+                self.caplist_url,
+                representation_templates,
                 compress,
                 self.outdir)
 
@@ -136,33 +148,69 @@ class Indexer:
                     chunk_by(iterable, self.max_items)))
 
     def dump_sets(self, itemsets: Iterable[ItemSet]) -> None:
-        sorteditemsets = sorted(itemsets, key=lambda iset: iset.modified)
+        sorteditemsets = sorted(itemsets, key=lambda iset: iset.lastmod)
 
         if not sorteditemsets:
             return
 
-        lastmod = sorteditemsets[-1].modified
+        firstmod = sorteditemsets[0].firstmod
+        lastmod = sorteditemsets[-1].lastmod
 
-        sitemapindex, indexsub = elem('sitemapindex')
-        indexsub('md', ns=RS, capability='resourcelist', at=lastmod)
-        indexsub('ln', ns=RS, rel='self', href=self.index_url)
-        #smsub('ln', ns=RS, rel='up', href=self.capabilitylist)
+        sitemapindex, smsub = elem('sitemapindex')
+        smsub('md', ns=RS, capability='changelist',
+                 **{'from': firstmod, 'until': lastmod})
+        smsub('ln', ns=RS, rel='self', href=self.changelist_url)
+        smsub('ln', ns=RS, rel='up', href=self.caplist_url)
 
         for itemset in sorteditemsets:
-            _, urlsetsub = indexsub('sitemap')
+            _, urlsetsub = smsub('sitemap')
             urlsetsub('loc', itemset.url)
-            urlsetsub('lastmod', itemset.modified)
+            urlsetsub('md', ns=RS,
+                    **{'from': itemset.firstmod, 'until': itemset.lastmod})
+            #urlsetsub('lastmod', itemset.modified) # optional
 
-        outfile = self.outdir / self.indexfilename
+        outfile = self.outdir / self.changelistfilename
 
         write_xml(sitemapindex, outfile, self.compress, len(sorteditemsets))
+
+        self.write_parents()
+
+    def write_parents(self):
+        self.write_caplist()
+        self.write_desc()
+
+    def write_caplist(self):
+        root, sub = elem('urlset')
+        sub('ln', ns=RS, rel='up', href=self.desc_url)
+        sub('ln', ns=RS, rel='self', href=self.caplist_url)
+        sub('md', ns=RS, capability='capabilitylist')
+
+        _, urlsub = sub('url')
+        urlsub('loc', self.changelist_url)
+        urlsub('md', ns=RS, capability='changelist')
+
+        write_xml(root, self.outdir / self.caplistfilename, self.compress)
+
+    def write_desc(self):
+        root, sub = elem('urlset')
+        sub('ln', ns=RS, rel='self', href=self.desc_url)
+        # TOOD: ds_url
+        #sub('ln', ns=RS, rel='describedby', href=self.base_url)
+        sub('md', ns=RS, capability='description')
+
+        _, urlsub = sub('url')
+        urlsub('loc', self.caplist_url)
+        urlsub('md', ns=RS, capability='capabilitylist')
+
+        write_xml(root, self.outdir / self.descfilename, self.compress)
 
 
 class ItemsetWriter(NamedTuple):
 
     base_url: str
-    sync_base_url: str
-    index_url: str
+    changelist_url: str
+    caplist_url: str
+    representation_templates: list[str]
     compress: bool
     outdir: Path
 
@@ -172,46 +220,55 @@ class ItemsetWriter(NamedTuple):
         firstcreated = items[0].created
 
         items.sort(key=lambda item: item.modified)
+
+        firstmod = items[0].modified
         lastmod = items[-1].modified
 
         seqslug = (str(seqnum) if seqnum is not None else
                 f"{firstcreated.replace(':', '_').replace('.', '-')}-{firstid}")
 
-        filename = f'sitemap-{seqslug}.xml'
+        changelist_nosuffix = self.changelist_url.rsplit('.', 1)[0]
 
-        sitemapurl = f'{self.sync_base_url}/{filename}'
+        itemlisturl = f'{changelist_nosuffix}-{seqslug}.xml'
+        filename = itemlisturl.rsplit('/', 1)[-1]
 
         sitemap, smsub = elem('urlset')
-        smsub('md', ns=RS, capability='resourcelist', at=lastmod)
-        smsub('ln', ns=RS, rel='self', href=sitemapurl)
-        smsub('ln', ns=RS, rel='index', href=self.index_url)
-        #smsub('ln', ns=RS, rel='up', href=self.capabilitylist)
+        smsub('md', ns=RS, capability='changelist',
+              **{'from': firstmod, 'until': lastmod})
+        smsub('ln', ns=RS, rel='self', href=itemlisturl)
+        smsub('ln', ns=RS, rel='index', href=self.changelist_url)
+        smsub('ln', ns=RS, rel='up', href=self.caplist_url)
 
         for slug, created, modified, deleted in items:
-            modrepr = str(modified)
-            uri = f'{self.base_url}/{slug}'
+            uri = urljoin(self.base_url, slug)
             _, urlsub = smsub('url')
             urlsub('loc', uri)
-            if deleted: # TODO: only in a changelist
-                # (but we still want to count them to keep the chunks intact?)
-                #print('Deleted', uri, 'at', modrepr, file=sys.stderr)
-                urlsub('md', ns=RS, change='deleted', datetime=modrepr)
+            if deleted:
+                urlsub('md', ns=RS, change='deleted', datetime=modified)
             else:
-                urlsub('lastmod', modrepr)
-                urlsub('md', ns=RS, at=modrepr)
-                urlsub('ln', ns=RS, rel='alternate',
-                        href=f'{uri}/data-record.jsonld',
-                        type='application/ld+json')
+                #urlsub('lastmod', modified) # optional
+                #urlsub('md', ns=RS, at=modified) # in plain resourcelist
+                change = 'created' if created == modified else 'updated'
+                urlsub('md', ns=RS, change=change, datetime=modified)
+
+                self.add_representations(urlsub, uri)
 
         write_xml(sitemap, self.outdir / filename, self.compress, len(items))
 
-        return ItemSet(sitemapurl, lastmod, firstcreated, filename)
+        return ItemSet(itemlisturl, firstmod, lastmod, firstcreated, filename)
+
+    def add_representations(self, urlsub, uri):
+        for repr_url_tplt in self.representation_templates:
+            repr_url = repr_url_tplt.format(uri)
+            mtype, enc = mimetypes.guess_type(repr_url)
+
+            urlsub('ln', ns=RS, rel='alternate', href=repr_url, type=mtype)
 
 
 def main():
     """
-    This tool generates a set of ResourceSync files from an input stream of
-    tab-separated values of the form:
+    This tool generates a set of ResourceSync changeset files from an input
+    stream of tab-separated values of the form:
 
         <slug>\t<created>\t<modified>\t<deleted>
 
@@ -223,6 +280,17 @@ def main():
     | created     | SQL or W3C datetime value
     | modified    | SQL or W3C datetime value
     | deleted     | Boolean hint ('t' is true)
+
+    The result is:
+
+    - one Source Description,
+    - one Capability List,
+    - one Change List index,
+    - a set of Change Lists.
+
+    All entries in a Change List are provided in forward chronological order:
+    the least recently changed resource at the beginning of the Change List and
+    the most recently changed resource must be listed at the end.
     """
     import argparse
     from textwrap import dedent
@@ -231,11 +299,12 @@ def main():
             formatter_class=argparse.RawDescriptionHelpFormatter,
             description=dedent(main.__doc__),
         )
-    argp.add_argument('-b', '--base-url', default='https://libris.kb.se')
-    argp.add_argument('-s', '--sync-base', default='sync')
+    argp.add_argument('-b', '--base-url', default='')
+    argp.add_argument('-s', '--sync-dir', default='resourcesync/')
     argp.add_argument('-m', '--max-items', type=int, default=0)
     argp.add_argument('-C', '--no-compress', action='store_true')
     argp.add_argument('-M', '--no-multiproc', action='store_true')
+    argp.add_argument('-r', '--representation-templates', nargs='*')
     argp.add_argument('outdir', metavar='OUTDIR')
     args = argp.parse_args()
 
@@ -243,10 +312,11 @@ def main():
     outdir.mkdir(parents=True, exist_ok=True)
 
     indexer = Indexer(args.base_url,
-                    args.sync_base,
+                    args.sync_dir,
                     outdir,
                     args.max_items,
-                    compress=not args.no_compress)
+                    compress=not args.no_compress,
+                    representation_templates=args.representation_templates)
 
     if args.no_multiproc:
         indexer.index(sys.stdin)
