@@ -8,7 +8,7 @@ PrintWriter parsing = getReportWriter("parsing.txt")
 PrintWriter addedFromOtherInTitleCluster = getReportWriter("matched-in-title-cluster.txt")
 PrintWriter numbers = getReportWriter("numbers.txt")
 
-List titlesClusters = new File(scriptDir, 'title-clusters.tsv').readLines().collect { it.split() }
+List titlesClusters = new File(scriptDir, 'title-clusters.tsv').collect { it.split() }
 List fiction = new File(scriptDir, 'fiction.tsv').collect { it.split() }.flatten()
 
 AtomicInteger numHaveRespStatementAndContribution = new AtomicInteger()
@@ -66,7 +66,7 @@ selectByIds(fiction) { data ->
             List specifiedRoles = []
 
             // Add missing role(s) for agent in contribution
-            if (cRoles.isEmpty() || cRoles == [['@id':'https://id.kb.se/relator/unspecifiedContributor']]) {
+            if (cRoles.isEmpty() || cRoles == [['@id': 'https://id.kb.se/relator/unspecifiedContributor']]) {
                 c['role'] = rRoles
                 specifiedRoles = rRoles
                 modified = true
@@ -108,7 +108,7 @@ selectByIds(fiction) { data ->
         numExtraContributionsInRespStatement.addAndGet(contributorsInRespStmt.size())
 
         List otherInTitleCluster = titlesClusters.find { recId in it } - recId
-        Map contributorsInSameTitleCluster = [:]
+        Map contributorsInSameTitleCluster = Collections.synchronizedMap([:])
 
         selectByIds(otherInTitleCluster) {
             String id = it.doc.shortId
