@@ -1,10 +1,22 @@
-import whelk.util.DocumentUtil
+/**
+ * Remove/replace broken SCB urls as per correspondence documented in https://jira.kb.se/browse/LXL-2537.
+ *
+ * We might want to reuse this script with more substitutions/removals in the future.
+ *
+ * Where we remove a broken url we also remove the entity containing that object.
+ * Exceptions are thrown for deviant structures for which we can't guarantee that the entity is properly removed.
+ * These are logged in 'exceptions.tsv' for manual handling.
+ * The removed entities are logged in STATISTICS.txt (to verify that we don't remove anything valueable).
+ *
+ *
+ */
 
+import whelk.util.DocumentUtil
 import java.util.regex.Pattern
 
 PrintWriter replaced = getReportWriter('replaced.tsv')
 PrintWriter removed = getReportWriter('removed.tsv')
-PrintWriter stillBroken = getReportWriter('unhandled.tsv')
+PrintWriter unhandled = getReportWriter('unhandled.tsv')
 // Might need manual handling:
 PrintWriter exceptions = getReportWriter('exceptions.tsv')
 
@@ -50,7 +62,7 @@ selectByCollection('bib') { data ->
                 int responseCode = conn.getResponseCode()
 
                 if (responseCode in [400, 404]) {
-                    stillBroken.println("${id}\t${responseCode}\t${path}\t${value}")
+                    unhandled.println("${id}\t${responseCode}\t${path}\t${value}")
                 }
             } catch (Exception ex) {
                 exceptions.println("${id}\t${ex}")
@@ -65,7 +77,7 @@ selectByCollection('bib') { data ->
             exceptions.println("${id}\t${ex}")
             return null
         }
-    }.unique()
+    }
 
     // Remove the objects containing broken links altogether
     containingObjectPaths.reverseEach { p ->
@@ -97,22 +109,22 @@ List getContainingObjectPath(Object item, List path) {
         }
     }
 
-    throw new NewInPathException("New object found at path ${path}")
+    throw new NewInPathException("New object found at ${path}")
 }
 
 Object removeContainingObject(Object item, List path) {
     for (p in path[0..<-1]) {
         item = item[p]
         if (item == null)
-            throw new AlreadyRemovedException("Object at path ${path} already removed")
+            throw new AlreadyRemovedException("Object at ${path} already removed")
     }
 
-    Object removedObj = item.remove(path[-1])
+    def last = path.last()
 
-    if (!(removedObj in Map && removedObj.containsKey('@type')))
-        throw new NonEntityException("Object at path ${path} doesn't seem to be an entity")
+    if (!(item[last] in Map && item[last].containsKey('@type')))
+        throw new NonEntityException("Object at ${path} doesn't seem to be an entity")
 
-    return removedObj
+    return item.remove(last)
 }
 
 void removeAllEmpty(Object item, List path) {
