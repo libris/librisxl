@@ -58,7 +58,7 @@ selectByIds(fiction) { data ->
 
         if (matchedOnName) {
             // Contributor found locally, no need to search further later
-            contributorsInRespStmt.remove(matchedOnName)
+            contributorsInRespStmt.remove(matchedOnName.key)
 
             List cRoles = asList(c.role)
             List rRoles = matchedOnName.value
