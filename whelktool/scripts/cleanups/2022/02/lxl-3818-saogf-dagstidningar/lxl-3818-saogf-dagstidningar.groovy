@@ -2,10 +2,12 @@
 Add instanceOf.genreForm saogf/Dagstidningar to listed docs
 
  */
+import whelk.Document
+
 notModified = getReportWriter("not-modified.txt")
 
 selectByIds(new File(scriptDir, 'Libris-id_saogf_Dagstidningar.txt').readLines()) { bib ->
-    def (_record, thing) = bib.graph
+    def (record, thing) = bib.graph
     
     if (thing.issuanceType != 'Serial') {
         notModified.println("${bib.doc.shortId} Wrong issuanceType")
@@ -16,10 +18,23 @@ selectByIds(new File(scriptDir, 'Libris-id_saogf_Dagstidningar.txt').readLines()
         notModified.println("${bib.doc.shortId} Not Electronic")
     }
     
-    def genreForm = (thing.instanceOf.genreForm ?: []) as Set
-    
-    genreForm += ['@id' : 'https://id.kb.se/term/saogf/Dagstidningar']
-    thing.instanceOf.genreForm = genreForm as List
-    
-    bib.scheduleSave()
+    boolean modified = false
+
+
+    modified |= addLink(thing, ['instanceOf', 'genreForm'], 'https://id.kb.se/term/saogf/Dagstidningar')
+    modified |= addLink(record, ['bibliography'], 'https://libris.kb.se/library/DST')
+
+    if (modified) {
+        bib.scheduleSave()
+    }
+}
+
+boolean addLink(Map data, List path, String uri) {
+    Map links = Document._get(path, data) as Set
+    def link = [ '@id': datasetUri ]
+    boolean modified = links.add(link)
+    if (modified) {
+        Document._set(path, links as List, data)
+    }
+    return modified
 }
