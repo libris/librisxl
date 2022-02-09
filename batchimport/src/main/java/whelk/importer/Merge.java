@@ -147,9 +147,24 @@ public class Merge {
                 }
             }
 
+            // Determine if the subtree that is to potentially be replaced contains links.
+            // If it does, it should generally speaking not be replaced. But there is a list
+            // of exceptions to this rule:
+            boolean containsSanctifiedLinks = subtreeContainsLinks(base);
+            for (int i = path.size(); i > 1; --i) {
+                // instanceOf,language links may be overwritten
+                if (i > 1 && path.get(i-1).equals("language") && path.get(i-2).equals("instanceOf")) {
+                    containsSanctifiedLinks = false;
+                }
+                // publication,*,country links may be overwritten
+                if (path.size() > 2 && path.get(i-1).equals("country") && path.get(i-3).equals("publication")) {
+                    containsSanctifiedLinks = false;
+                }
+            }
+
             // Execute replacement if appropriate
             if (!baseContainsHandEdits && incomingPriorityHere >= basePriorityHere &&
-                    !subtreeContainsLinks(base)) {
+                    !containsSanctifiedLinks) {
                 if (baseParent instanceof Map) {
                     Map parentMap = (Map) baseParent;
                     parentMap.put(path.get(path.size()-1), correspondingIncoming);
