@@ -519,11 +519,23 @@ class Whelk {
 
         def iris = { Set<Link> s -> s.collect { it.iri } as Set<String> }
         Set<String> addedIris = iris(postUpdateLinks) - iris(preUpdateLinks)
-        
+
+        //Pretend that Lcsh links are newly added
+        //This will be the case IRL when
+        // (1) Whelktool saves a new version of the records. The links will then be in the addedIris variable.
+        // (2) When, in the future, it will be possible to add links in records they will also be added.
+        Set<Link> locLinks = preUpdateLinks.findAll { isLoc(it.getIri()) }
+        def locIris = iris(locLinks)
+        addedIris = addedIris + locIris
+
         def redirects = createCacheRecordsAndPlaceholders(changedBy, addedIris, !postUpdateDoc.isCacheRecord())
         if (redirects) {
             postUpdateDoc.replaceLinks(redirects)
         }
+    }
+
+    static boolean isLoc(String iri) {
+        iri.startsWith("https://id.loc.gov") || iri.startsWith("https://id.loc.gov")
     }
 
     private Map<String, String> createCacheRecordsAndPlaceholders(String changedBy, Set<String> iris, boolean tryFetchExternal) {

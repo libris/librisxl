@@ -29,6 +29,7 @@ class ExternalEntities {
         Map countryMappings = loadCountryMappings(whelk)
         mappers = [
                 new Wikidata(countryMappings),
+                new TvmMapper()
         ]
         bannedImports = Collections.unmodifiableSet(countryMappings.keySet())
         
