@@ -31,7 +31,7 @@ selectByIds(new File(scriptDir, 'Libris-id_saogf_Dagstidningar.txt').readLines()
 
 boolean addLink(Map data, List path, String uri) {
     def links = Document._get(path, data) as Set
-    def link = [ '@id': datasetUri ]
+    def link = [ '@id': uri ]
     boolean modified = links.add(link)
     if (modified) {
         Document._set(path, links as List, data)
