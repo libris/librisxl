@@ -1,5 +1,5 @@
 /* 
-Analysis of shapes for:
+Analysis of shapes for the following cleanup.
 
 Link digitized newspaper (dagstidningar + tidskrifter) monographs (issues) to their series
 Replace supplementTo with hasSeries
@@ -48,6 +48,28 @@ bf2:title [
 bf2:hasSeries <https://libris.kb.se/m5z2w4lz3m2zxpk#it> ;
 ...
 
+
+RESULT
+Shapes encountered
+supplementTo shape (1762029)
+----------------------------
+1634199 [@type, hasTitle, describedBy]                 [2g7kwvwg0gxr0gbm, w92drwg0t5p9q64b, 2g7kx37w0svpm1sx]
+  87473 [part, @type, hasTitle, describedBy]           [1kcg9k9c119d6x1, 2ldh2q8d1qhxq0n, 4ngk8vrg4mk4jwh]
+  37834 [@type, instanceOf, describedBy, identifiedBy] [8slqsctl4r093pp, xg8dkhz81q4fv2l, 7rknhtxk26tbh3h]
+   2523 [@type, hasTitle, describedBy, identifiedBy]   [m5z5p3tz4llsjv9, 6qjq8ncj07twbcz, xg8g0d482lxdlf0]
+   
+Examples
+[@type, hasTitle, describedBy]
+{@type=Instance, hasTitle=[{@type=Title, mainTitle=DAGENS NYHETER}], describedBy=[{@type=Record, controlNumber=13991099}]} [7m92hxhq5zj1bm8g, n26zztr6l6xc2498, 8nskj3cx60gc12vl]
+
+[part, @type, hasTitle, describedBy]
+{part=[2010-11-21], @type=Instance, hasTitle=[{@type=Title, mainTitle=SVENSKA DAGBLADET}], describedBy=[{@type=Record, controlNumber=13434192}]} [0jbf6m1b0hx1cgh]
+
+[@type, instanceOf, describedBy, identifiedBy]
+{@type=Instance, instanceOf={@type=Work, contribution=[{@type=PrimaryContribution, agent={@type=Agent, label=[DAGENS NYHETER]}}]}, describedBy=[{@type=Record, controlNumber=13991099}], identifiedBy=[{@type=ISSN, value=1101-2447}, {@type=STRN, value=http://libris.kb.se/resource/bib/13991099}]} [1kch914c1r5cst3, 1kch915c2bj59gb, 3mfkc3gf4g1rmfv]
+
+[@type, hasTitle, describedBy, identifiedBy]
+{@type=Instance, hasTitle=[{@type=Title, mainTitle=SVENSKA DAGBLADET}], describedBy=[{@type=Record, controlNumber=13434192}], identifiedBy=[{@type=ISSN, value=2001-3868}]} [0jbj4c5b264549m, 3mfm5p5f1xm7xsv, q828thb23j7cmqr]
 */
 import groovy.transform.Memoized
 
