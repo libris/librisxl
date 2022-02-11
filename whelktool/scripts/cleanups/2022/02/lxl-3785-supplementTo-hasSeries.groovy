@@ -1,8 +1,6 @@
 /* 
-Analysis of shapes for the following cleanup.
-
-Link digitized newspaper (dagstidningar + tidskrifter) monographs (issues) to their series
-Replace supplementTo with hasSeries
+Clean up newspaper (dagstidningar + tidskrifter) shapes.
+Link digitized newspaper monographs (issues) to their series. That is, replace supplementTo with hasSeries.
 
 Example
 Before
@@ -49,8 +47,8 @@ bf2:hasSeries <https://libris.kb.se/m5z2w4lz3m2zxpk#it> ;
 ...
 
 
-RESULT
-Shapes encountered
+Shapes encountered in dry-run
+
 supplementTo shape (1762029)
 ----------------------------
 1634199 [@type, hasTitle, describedBy]                 [2g7kwvwg0gxr0gbm, w92drwg0t5p9q64b, 2g7kx37w0svpm1sx]
@@ -70,6 +68,9 @@ Examples
 
 [@type, hasTitle, describedBy, identifiedBy]
 {@type=Instance, hasTitle=[{@type=Title, mainTitle=SVENSKA DAGBLADET}], describedBy=[{@type=Record, controlNumber=13434192}], identifiedBy=[{@type=ISSN, value=2001-3868}]} [0jbj4c5b264549m, 3mfm5p5f1xm7xsv, q828thb23j7cmqr]
+
+
+There were no supplementTo with multiple controlnumbers (refering to newspaper serials)
 */
 import groovy.transform.Memoized
 
@@ -82,26 +83,46 @@ def where = """
 selectBySqlWhere(where) { bib ->
     def (record, thing) = bib.graph
     
-    thing.supplementTo?.each { Map s ->
-        if (tidningSerialReferences(s)) {
-            incrementStats('supplementTo', s)
-            incrementStats('supplementTo shape', s.keySet())
+    if (!thing.supplementTo) {
+        return
+    }
+
+    def hasSeries = asList(thing.hasSeries) as Set
+    def i = ((List) thing.supplementTo).iterator()
+    while (i.hasNext()) {
+        Map supplementTo = (Map) i.next()
+        def serials = tidningSerialThings(supplementTo)
+        if (serials) {
+            incrementStats('supplementTo', supplementTo)
+            incrementStats('supplementTo shape', supplementTo.keySet())
+            
+            i.remove()
+            hasSeries.addAll(serials.collect{['@id': it.'@id']})
+        }
+    }
+    
+    if (hasSeries) {
+        thing.hasSeries = hasSeries as List
+        if (!thing.supplementTo) {
+            thing.remove('supplementTo')
         }
         
+        bib.scheduleSave()
     }
 }
 
-List tidningSerialReferences(Map supplementTo) {
+List tidningSerialThings(Map supplementTo) {
     List controlNumbers = getAtPath(supplementTo, ['describedBy', '*', 'controlNumber'], [])
-    def result = controlNumbers.collect{ tidningSerialReferences(it) }.flatten()
+    def result = controlNumbers.collect{ tidningSerialThings(it) }.flatten()
     if (result && controlNumbers.size() > 1) {
         incrementStats('multiple controlnumbers', supplementTo)
+        return []
     }
     return result
 }
 
 @Memoized
-List tidningSerialReferences(String controlNumber) {
+List tidningSerialThings(String controlNumber) {
     def thing = loadThing(controlNumberToId(controlNumber))
     isTidningSerial(thing) 
             ? [thing]
@@ -147,4 +168,8 @@ static Object getAtPath(item, Iterable path, defaultTo = null) {
         }
     }
     return item
+}
+
+static List asList(o) {
+    return (o instanceof List) ? (List) o : o != null ? [o] : []
 }
