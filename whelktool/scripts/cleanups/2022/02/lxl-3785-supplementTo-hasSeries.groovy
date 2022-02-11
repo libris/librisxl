@@ -1,3 +1,54 @@
+/* 
+Analysis of shapes for:
+
+Link digitized newspaper (dagstidningar + tidskrifter) monographs (issues) to their series
+Replace supplementTo with hasSeries
+
+Example
+Before
+...
+bf2:title [
+    a bf2:Title ;
+    bf2:mainTitle "DAGENS NYHETER  1900-05-28"
+    ] ;
+...
+bf2:supplementTo [
+    a bf2:Instance ;
+    bf2:instanceOf [
+      a bf2:Work ;
+      bf2:contribution [
+        a bflc:PrimaryContribution ;
+        bf2:agent [
+          a bf2:Agent ;
+          sdo:name "DAGENS NYHETER"
+          ]
+        ]
+      ] ;
+    :describedBy [
+      a :Record ;
+      :controlNumber "13991099"
+      ] ;
+    bf2:identifiedBy [
+      a bf2:Issn ;
+      rdf:value "1101-2447"
+      ] , [
+      a bf2:Strn ;
+      rdf:value "http://libris.kb.se/resource/bib/13991099"
+      ]
+    ] ;
+...
+
+After
+...
+bf2:title [
+    a bf2:Title ;
+    bf2:mainTitle "DAGENS NYHETER  1900-05-28"
+    ] ;
+...
+bf2:hasSeries <https://libris.kb.se/m5z2w4lz3m2zxpk#it> ;
+...
+
+*/
 import groovy.transform.Memoized
 
 def where = """
@@ -10,7 +61,7 @@ selectBySqlWhere(where) { bib ->
     def (record, thing) = bib.graph
     
     thing.supplementTo?.each { Map s ->
-        if (isTidningSerialReference(s)) {
+        if (tidningSerialReferences(s)) {
             incrementStats('supplementTo', s)
             incrementStats('supplementTo shape', s.keySet())
         }
@@ -18,18 +69,21 @@ selectBySqlWhere(where) { bib ->
     }
 }
 
-boolean isTidningSerialReference(Map supplementTo) {
-    def controlNumbers = getAtPath(supplementTo, ['describedBy', '*', 'controlNumber'], [])
-    def result = controlNumbers.any{ isTidningSerialReference(it) }
-    if (controlNumbers.size() > 1) {
+List tidningSerialReferences(Map supplementTo) {
+    List controlNumbers = getAtPath(supplementTo, ['describedBy', '*', 'controlNumber'], [])
+    def result = controlNumbers.collect{ tidningSerialReferences(it) }.flatten()
+    if (result && controlNumbers.size() > 1) {
         incrementStats('multiple controlnumbers', supplementTo)
     }
     return result
 }
 
 @Memoized
-boolean isTidningSerialReference(String controlNumber) {
-    isTidningSerial(loadThing(controlNumberToId(controlNumber)))
+List tidningSerialReferences(String controlNumber) {
+    def thing = loadThing(controlNumberToId(controlNumber))
+    isTidningSerial(thing) 
+            ? [thing]
+            : []
 }
 
 static boolean isTidningSerial(Map thing) {
