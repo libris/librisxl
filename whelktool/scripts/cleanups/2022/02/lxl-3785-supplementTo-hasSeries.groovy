@@ -2,6 +2,8 @@
 Clean up newspaper (dagstidningar + tidskrifter) shapes.
 Link digitized newspaper monographs (issues) to their series. That is, replace supplementTo with hasSeries.
 
+Don't touch "Projects" and "Channel records" in supplementTo for now.
+
 Example
 Before
 ...
