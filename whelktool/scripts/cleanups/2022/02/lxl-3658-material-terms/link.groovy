@@ -17,7 +17,7 @@ LABEL_MAPPINGS =
                 'Plaster'    : ~/gips/,
                 'Papyrus'    : ~/papyrus/,
                 'Watercolour': ~/akvarell|vattenfärg/,
-                'Pencil'     : ~/blyerts/,
+//                'Pencil'     : ~/blyerts/,
                 'Gouache'    : ~/gouas?che?/,
                 'Charcoal'   : ~/kol/,
                 'Ink'        : ~/bläck/,
