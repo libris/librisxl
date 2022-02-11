@@ -100,6 +100,7 @@ selectBySqlWhere(where) { bib ->
             
             i.remove()
             hasSeries.addAll(serials.collect{['@id': it.'@id']})
+            bib.scheduleSave()
         }
     }
     
@@ -108,8 +109,6 @@ selectBySqlWhere(where) { bib ->
         if (!thing.supplementTo) {
             thing.remove('supplementTo')
         }
-        
-        bib.scheduleSave()
     }
 }
 
