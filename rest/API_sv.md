@@ -55,7 +55,7 @@ ni kontakta Libris kundservice som återkommer med den nya klientens id och
 klienthemlighet samt en instruktion för hur dessa ska användas för att erhålla
 en bearertoken. Det är denna bearertoken som det hänvisas till i exemplen nedan.
 Utdelade uppgifter gäller antingen för testmiljöerna eller för produktionsmiljön beroende
-integrationens karaktär och användarens behov.
+på integrationens karaktär och användarens behov.
 
 Det finns två olika behörighetsnivåer för klienten: en för att arbeta med
 beståndsposter och en för att arbeta med både bibliografiska poster och beståndsposter.
