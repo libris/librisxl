@@ -54,6 +54,8 @@ oauth-klient registreras i Libris. För att registrera en klient behöver
 ni kontakta Libris kundservice som återkommer med den nya klientens id och
 klienthemlighet samt en instruktion för hur dessa ska användas för att erhålla
 en bearertoken. Det är denna bearertoken som det hänvisas till i exemplen nedan.
+Utdelade uppgifter gäller antingen för testmiljöerna eller för produktionsmiljön beroende
+integrationens karaktär och användarens behov.
 
 Det finns två olika behörighetsnivåer för klienten: en för att arbeta med
 beståndsposter och en för att arbeta med både bibliografiska poster och beståndsposter.
@@ -69,6 +71,7 @@ en beartoken:
 ```
 $ curl -X POST -d 'client_id=<Ert klientid>&client_secret=<Er klienthemlighet>&grant_type=client_credentials' https://login.libris.kb.se/oauth/token'
 ```
+För att hämta ut en token som gäller för testmiljöerna anropas istället `https://login-stg.libris.kb.se/oauth/token`.
 
 Svaret på anropet bör se ut ungefär som följande:
 
