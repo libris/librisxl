@@ -47,7 +47,7 @@ selectByCollection('bib') { data ->
             // Remove
             if (value ==~ removePattern) {
                 // Save path so that the object containing the broken link can be removed
-                badPaths << path
+                badPaths << path.collect()
                 removed.println("${id}\t${path}\t${value}")
                 return new DocumentUtil.Remove()
             }
