@@ -5,6 +5,8 @@ Using id list from VDD database:
 - Link electronic/reproduction series to physical series with reproductionOf if missing
 - Add tidningar.kb.se bibliography to electronic series
 
+TODO? Set physical thing @type to 'Print' ??
+
 See LXL-3819 for more information
  */
 import whelk.Document
