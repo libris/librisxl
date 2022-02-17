@@ -14,7 +14,7 @@ notModified = getReportWriter("not-modified.txt")
 INPUT_FILE_NAME = 'libris_physical_electronic.tsv'
 
 // TODO: replace test record id with real
-def TIDNINGAR_BIBLIOGRAPHY = 'https://libris-qa.kb.se/katalogisering/k0p5lq17hztn5mng#it'
+def TIDNINGAR_BIBLIOGRAPHY = 'https://libris-qa.kb.se/k0p5lq17hztn5mng#it'
 
 
 new File(scriptDir, INPUT_FILE_NAME).readLines().each {
@@ -37,7 +37,7 @@ new File(scriptDir, INPUT_FILE_NAME).readLines().each {
         // Link electronic/reproduction to physical if missing
         if (!getAtPath(bib.graph, [1, 'reproductionOf'])) {
             def physicalThing = loadThing(controlNumberToId(physicalId))
-            bib.graph[1].reproductionOf = [['@id': physicalThing.'@id']]
+            bib.graph[1].reproductionOf = ['@id': physicalThing.'@id']
             bib.scheduleSave()
         }
 
