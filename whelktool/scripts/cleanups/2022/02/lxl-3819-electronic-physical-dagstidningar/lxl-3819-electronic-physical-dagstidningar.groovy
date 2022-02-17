@@ -10,6 +10,8 @@ See LXL-3819 for more information
 import whelk.Document
 
 notModified = getReportWriter("not-modified.txt")
+badIds = getReportWriter("bad-ids.txt")
+
 
 INPUT_FILE_NAME = 'libris_physical_electronic.tsv'
 
@@ -22,7 +24,12 @@ new File(scriptDir, INPUT_FILE_NAME).readLines().each {
     def (physicalId, electronicId) = it.split('\t')
     def eMainId = loadThing(controlNumberToId(electronicId)).'@id'
     def pMainId = loadThing(controlNumberToId(physicalId)).'@id'
-    electronicToPhysicalId[eMainId] = pMainId
+    if (eMainId && pMainId) {
+        electronicToPhysicalId[eMainId] = pMainId
+    }
+    else {
+        badIds.println("${electronicId}\t${physicalId} : $eMainId --> $pMainId ???")
+    }
 }
 
 selectByIds(electronicToPhysicalId.keySet().collect()) { bib ->
