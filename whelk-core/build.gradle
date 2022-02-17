@@ -70,7 +70,8 @@ dependencies {
     api files('lib/jmarctools-1.3.5.jar')
     api files('lib/isbntools-1.3.jar')
     implementation files('lib/oaij-0.1.jar')
-    api files('lib/trld.jar')
+
+    implementation(project(':trld-java'))
 
     // Dependencies inherited from classic libris, due to profile handling
     implementation group: 'com.ibm.icu', name: 'icu4j', version: '4.8.1.1'
@@ -101,7 +102,6 @@ dependencies {
     api "org.codehaus.groovy:groovy-xml:${groovyVersion}"
     api "org.codehaus.groovy:groovy:${groovyVersion}"
     api 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
-    implementation 'com.fasterxml.jackson.jr:jackson-jr-objects:2.9.0' // TRLD dep
     implementation 'xerces:xercesImpl:2.11.0' //KP
 
     // Logging
