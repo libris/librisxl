@@ -16,37 +16,41 @@ INPUT_FILE_NAME = 'libris_physical_electronic.tsv'
 // TODO: replace test record id with real
 def TIDNINGAR_BIBLIOGRAPHY = 'https://libris-qa.kb.se/k0p5lq17hztn5mng#it'
 
+electronicToPhysicalId = [:]
 
 new File(scriptDir, INPUT_FILE_NAME).readLines().each {
     def (physicalId, electronicId) = it.split('\t')
+    def eMainId = loadThing(controlNumberToId(electronicId)).'@id'
+    def pMainId = loadThing(controlNumberToId(physicalId)).'@id'
+    electronicToPhysicalId[eMainId] = pMainId
+}
+
+selectByIds(electronicToPhysicalId.keySet().collect()) { bib ->
+    def (record, thing) = bib.graph
     
-    selectByIds([controlNumberToId(electronicId)]) { bib ->
-        def (record, thing) = bib.graph
-        
-        // Sanity check input
-        if (thing.issuanceType != 'Serial') {
-            notModified.println("${bib.doc.shortId} Wrong issuanceType")
-            return
-        }
+    // Sanity check input
+    if (thing.issuanceType != 'Serial') {
+        notModified.println("${bib.doc.shortId} Wrong issuanceType")
+        return
+    }
 
-        if (thing.'@type' != 'Electronic') {
-            notModified.println("${bib.doc.shortId} Not Electronic")
-            return
-        }
+    if (thing.'@type' != 'Electronic') {
+        notModified.println("${bib.doc.shortId} Not Electronic")
+        return
+    }
 
-        // Link electronic/reproduction to physical if missing
-        if (!getAtPath(bib.graph, [1, 'reproductionOf'])) {
-            def physicalThing = loadThing(controlNumberToId(physicalId))
-            bib.graph[1].reproductionOf = ['@id': physicalThing.'@id']
-            bib.scheduleSave()
-        }
+    // Link electronic/reproduction to physical if missing
+    if (!getAtPath(bib.graph, [1, 'reproductionOf'])) {
+        bib.graph[1].reproductionOf = ['@id': electronicToPhysicalId[thing.'@id']]
+        bib.scheduleSave()
+    }
 
-        // Add tidningar.kb.se bibliography to electronic series
-        if (addLink(record, ['bibliography'], TIDNINGAR_BIBLIOGRAPHY)) {
-            bib.scheduleSave()
-        }
+    // Add tidningar.kb.se bibliography to electronic series
+    if (addLink(record, ['bibliography'], TIDNINGAR_BIBLIOGRAPHY)) {
+        bib.scheduleSave()
     }
 }
+
 
 //---------------------------------
 
