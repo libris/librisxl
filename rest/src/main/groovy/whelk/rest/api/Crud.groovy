@@ -374,6 +374,7 @@ class Crud extends HttpServlet {
             contextData = data[JsonLd.CONTEXT_KEY]
             data[JsonLd.CONTEXT_KEY] = profileId
         }
+        response.setHeader("Profile", "<$profileId>")
 
         def dataBody = data
         if (!(request.getContentType() in [MimeTypes.JSON, MimeTypes.JSONLD])) {
@@ -417,7 +418,7 @@ class Crud extends HttpServlet {
     }
 
     private static void setVary(HttpServletResponse response) {
-        response.setHeader("Vary", "Accept")
+        response.setHeader("Vary", "Accept, Profile")
     }
 
     /**

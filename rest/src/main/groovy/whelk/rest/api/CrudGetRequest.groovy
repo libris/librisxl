@@ -106,10 +106,23 @@ class CrudGetRequest {
     }
 
     private String parseProfile(HttpServletRequest request) {
-        // TODO: Also look in Accept ld+json;profile=X, or Accept-Profile: <X>
-        // TODO: Resolve against base if parameter?
-        //final String SYS_CONTEXT_BASE = "https://id.kb.se/sys/context/"
-        return request.getParameter('profile')
+        String param = request.getParameter('profile')
+        if (param != null) {
+            return param
+        }
+        String header = request.getHeader('Accept-Profile')
+        if (header != null) {
+            header = header.trim()
+            boolean startAngle = header.startsWith('<')
+            boolean endAngle = header.endsWith('>')
+            if (startAngle || endAngle) {
+                int start = startAngle ? 1 : 0
+                int end = header.size() - (endAngle ? 1 : 0)
+                header = header.substring(start, end)
+            }
+            return header
+        }
+        return null
     }
 
     private Optional<Boolean> getBoolParameter(String name) {

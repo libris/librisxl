@@ -61,6 +61,12 @@ $ curl -s -H'Accept: text/turtle' http://id-qa.kb.se/relator/contributor?profile
 $ curl -s -H'Accept: text/turtle' http://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/bibo-w3c
 ```
 
+Using headers:
+```
+$ curl -H 'Accept-Profile: <https://id.kb.se/sys/context/target/loc-w3c-sdo>' \
+      http://libris-qa.kb.se/fxql7jqr38b1dkf
+```
+
 ## Requests that require authentication – create, update and remove
 
 In order to make requests that require authentication, an oauth client has to be registered
