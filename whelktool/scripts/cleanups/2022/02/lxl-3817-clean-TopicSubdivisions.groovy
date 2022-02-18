@@ -36,7 +36,7 @@ selectByCollection('bib') { bib ->
 
         def components = value.termComponentList
         def uriSubdivision = components.find { isSubdivision(it)}?.'@id'
-        def uri = components.find { !isSubdivision(it) && it.'@id' }.collect { it.getValue() }
+        def uri = components.find { !isSubdivision(it) && it.'@id' }?.'@id'
 
         if (components.size() == 2 && uriSubdivision && uri) {
             boolean rule1 = false
@@ -51,7 +51,7 @@ selectByCollection('bib') { bib ->
                 prefLabelForSubdivision = thing.prefLabel
             }
 
-            selectByIds(uri) { d ->
+            selectByIds([uri]) { d ->
                 Map thing = d.doc.data['@graph'][1]
                 prefLabelForSubject = thing.prefLabel
                 if (thing.'@type' in ["Person", "Geographic", "Organisation"]) {
