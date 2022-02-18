@@ -97,7 +97,8 @@ Map loadAgents() {
 void normalize(Map agent) {
     DocumentUtil.traverse(agent) { value, path ->
         if (value in String) {
-            return new DocumentUtil.Replace(removeTrailingPeriod(value))
+            def normValue = path.last() in Integer ? removeTrailingPeriod(value) : asList(removeTrailingPeriod(value))
+            return new DocumentUtil.Replace(normValue)
         }
     }
 }
