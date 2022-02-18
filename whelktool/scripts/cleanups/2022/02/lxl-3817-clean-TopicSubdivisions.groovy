@@ -2,7 +2,7 @@
 
 Examples of
 rule 1:
-[(Alexander den store), (i litteraturen)] => (Alexander den store) (Motiv i litteraturen)
+[(Alexander den store), (i litteraturen)] => (Alexander den store), (Motiv i litteraturen)
 rule 2:
 [(Symboler) + (i konsten)] => (Symboler i konsten); the combination exists
 rule 3:
@@ -75,22 +75,22 @@ selectByCollection('bib') { bib ->
             def subjectRoot = getAtPath(data, pathCopy)
 
             if (rule1) {
-                incrementStats("Regel 1", path.collect(), bib.doc.id)
+                incrementStats("Regel 1", bib.doc.id)
                 subjectRoot.add(["@id" : SUBDIVISION_TO_SUBJECT[uriSubdivision]])
                 bib.scheduleSave()
                 return new DocumentUtil.Replace(["@id" : uri])
             } else if (rule2) {
-                incrementStats("Regel 2", path.collect(), bib.doc.id)
+                incrementStats("Regel 2", bib.doc.id)
                 bib.scheduleSave()
                 return new DocumentUtil.Replace(["@id" : combinedId])
             } else if (rule3) {
-                incrementStats("Regel 3", path.collect(), bib.doc.id)
+                incrementStats("Regel 3", bib.doc.id)
                 bib.scheduleSave()
                 return new DocumentUtil.Replace(["@id" : uri])
             }
         }
         else if (uriSubdivision && (components.size() > 2 || !uri)) {
-                incrementStats("Regel 4", path.collect(), bib.doc.id)
+                incrementStats("Regel 4", bib.doc.id)
         }
     })
 }
