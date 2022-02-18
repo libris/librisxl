@@ -47,6 +47,7 @@ class Crud extends HttpServlet {
     final static String XL_ACTIVE_SIGEL_HEADER = 'XL-Active-Sigel'
     final static String CONTEXT_PATH = '/context.jsonld'
     final static String KBV_CONTEXT = "https://id.kb.se/sys/context/kbv"
+    final static String DEFAULT_PROFILE = KBV_CONTEXT
 
     static final Counter requests = Counter.build()
         .name("api_requests_total").help("Total requests to API.")
@@ -297,29 +298,36 @@ class Crud extends HttpServlet {
             sendError(response, HttpServletResponse.SC_GONE, "Document has been deleted.")
         } else {
             String checksum = doc.getChecksum(jsonld)
-            
-            if (request.shouldEmbellish()) {
-                whelk.embellish(doc)
-
-                // reverse links are inserted by embellish, so can only do this when embellished
-                if (request.shouldApplyInverseOf()) {
-                    doc.applyInverses(whelk.jsonld)
-                }
-            }
-            
             ETag eTag = request.shouldEmbellish()
                     ? ETag.embellished(checksum, doc.getChecksum(jsonld))
                     : ETag.plain(checksum)
 
-            if (request.getIfNoneMatch().map(eTag.&isNotModified).orElse(false)) {
-                sendNotModified(response, eTag)
-                return
+            def requestBody
+
+            if (request.getView() == CrudGetRequest.View.CHANGE_SETS) {
+                History history = new History(whelk.storage.loadDocumentHistory(doc.getShortId()), jsonld)
+                requestBody = history.m_changeSetsMap
+            } else {
+                if (request.getIfNoneMatch().map(eTag.&isNotModified).orElse(false)) {
+                    sendNotModified(response, eTag)
+                    return
+                }
+
+                if (request.shouldEmbellish()) {
+                    whelk.embellish(doc)
+
+                    // reverse links are inserted by embellish, so can only do
+                    // this when embellished
+                    if (request.shouldApplyInverseOf()) {
+                        doc.applyInverses(whelk.jsonld)
+                    }
+                }
+
+                requestBody = getFormattedResponseBody(request, response, doc, loc)
             }
-            
-            def requestBody = getFormattedResponseBody(request, doc, response)
 
             sendGetResponse(
-                    maybeAddProposal25Headers(response, loc),
+                    response,
                     requestBody,
                     eTag,
                     request.getPath(),
@@ -341,7 +349,10 @@ class Crud extends HttpServlet {
         sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
     }
 
-    private Object getFormattedResponseBody(CrudGetRequest request, Document doc, HttpServletResponse response) {
+    private Object getFormattedResponseBody(CrudGetRequest request,
+                                            HttpServletResponse response,
+                                            Document doc,
+                                            String location) {
         log.debug("Formatting document {}. embellished: {}, framed: {}, lens: {}, view: {}, profile: {}",
                 doc.getCompleteId(),
                 request.shouldEmbellish(),
@@ -349,38 +360,33 @@ class Crud extends HttpServlet {
                 request.getLens(),
                 request.getView(),
                 request.getProfile())
-        if (request.getView() == CrudGetRequest.View.CHANGE_SETS) {
-            History history = new History(whelk.storage.loadDocumentHistory(doc.getShortId()), jsonld)
-            return history.m_changeSetsMap;
-        }
-
-        def transformedResponse
+        Map data
         if (request.getLens() != Lens.NONE) {
-            transformedResponse = applyLens(frameThing(doc), request.getLens())
+            data = applyLens(frameThing(doc), request.getLens())
         } else {
-            transformedResponse = request.shouldFrame()  ? frameRecord(doc) : doc.data
+            data = request.shouldFrame()  ? frameRecord(doc) : doc.data
         }
 
-        String profileId = request.getProfile()
-        if (profileId != null) {
-            Tuple2<Document, String> docAndLoc = getDocumentFromStorage(profileId)
-            Document profileDoc = docAndLoc.first
-            String profileLocation = docAndLoc.second
-            if (profileDoc == null) {
-                sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Profile <${profileId}> is not available")
-                return
-            }
-            log.debug("Using profile: $profileId")
-            transformedResponse = targetVocabMapper.applyTargetVocabularyMap(profileId, profileDoc.data, doc.data)
-            transformedResponse[JsonLd.CONTEXT_KEY] = profileLocation
+        String profileId = request.getProfile() ?: DEFAULT_PROFILE
+        def contextData = whelk.jsonld.context
+        if (profileId != null && profileId != DEFAULT_PROFILE) {
+            data = applyDataProfile(profileId, data, response)
+            contextData = data[JsonLd.CONTEXT_KEY]
+            data[JsonLd.CONTEXT_KEY] = profileId
         }
 
+        def dataBody = data
         if (!(request.getContentType() in [MimeTypes.JSON, MimeTypes.JSONLD])) {
             def id = request.getContentType() == MimeTypes.TRIG ? doc.getCompleteId() : doc.getShortId()
-            return converterUtils.convert(transformedResponse, id, request.getContentType())
+            data[JsonLd.CONTEXT_KEY] = contextData
+            dataBody = converterUtils.convert(data, id, request.getContentType())
         }
 
-        return transformedResponse
+        if (location != null) {
+            addProposal25Headers(response, location, getDataURI(location, request.getContentType()))
+        }
+
+        return dataBody
     }
 
     private static Map frameRecord(Document document) {
@@ -498,21 +504,37 @@ class Crud extends HttpServlet {
         return result
     }
 
-    private static HttpServletResponse maybeAddProposal25Headers(HttpServletResponse response,
-                                                                 String location) {
-        if (location) {
-            response.addHeader('Content-Location',
-                               getDataURI(location))
-            response.addHeader('Document', location)
-            response.addHeader('Link', "<${location}>; rel=describedby")
-        }
-        return response
+    /**
+     * See <https://www.w3.org/wiki/HTML/ChangeProposal25>
+     */
+    private static void addProposal25Headers(HttpServletResponse response,
+                                             String location,
+                                             String dataLocation) {
+        response.addHeader('Content-Location', dataLocation)
+        response.addHeader('Document', location)
+        response.addHeader('Link', "<${location}>; rel=describedby")
     }
 
     private static String getDataURI(String location, String contentType) {
         String slash = location.endsWith('/') ? '' : '/'
         String ext = CrudUtils.EXTENSION_BY_MEDIA_TYPE[contentType] ?: 'jsonld'
         return location + slash + 'data.' + ext
+    }
+
+    Map applyDataProfile(String profileId, Map data, HttpServletResponse response) {
+        Tuple2<Document, String> docAndLoc = getDocumentFromStorage(profileId)
+        Document profileDoc = docAndLoc.first
+        String profileLocation = docAndLoc.second
+        if (profileDoc == null) {
+            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Profile <${profileId}> is not available")
+            return
+        }
+        log.debug("Using profile: $profileId")
+        def contextDoc = profileDoc.data
+        data = targetVocabMapper.applyTargetVocabularyMap(profileId, contextDoc, data)
+        data[JsonLd.CONTEXT_KEY] = contextDoc[JsonLd.CONTEXT_KEY]
+
+        return data
     }
 
     /**
