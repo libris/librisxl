@@ -33,7 +33,13 @@ selectByCollection('bib') { data ->
     }
 
     asList(work.subject).each { s ->
-        modified |= tryLinkAndReport(s, id)
+        if (s.'@type' == 'ComplexSubject') {
+            s.termComponentList.each { tc ->
+                modified |= tryLinkAndReport(tc, id)
+            }
+        } else {
+            modified |= tryLinkAndReport(s, id)
+        }
     }
 
     if (modified)
