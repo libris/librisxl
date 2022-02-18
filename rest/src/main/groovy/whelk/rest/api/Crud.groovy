@@ -509,12 +509,10 @@ class Crud extends HttpServlet {
         return response
     }
 
-    private static String getDataURI(String location) {
-        if (location.endsWith('/')) {
-            return location + 'data.jsonld'
-        } else {
-            return location + '/data.jsonld'
-        }
+    private static String getDataURI(String location, String contentType) {
+        String slash = location.endsWith('/') ? '' : '/'
+        String ext = CrudUtils.EXTENSION_BY_MEDIA_TYPE[contentType] ?: 'jsonld'
+        return location + slash + 'data.' + ext
     }
 
     /**
