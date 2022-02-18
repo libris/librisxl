@@ -65,11 +65,6 @@ class Crud extends HttpServlet {
         .help("API request latency in seconds.")
         .labelNames("method").register()
 
-    final static Map contextHeaders = [
-            "bib": "/sys/context/lib.jsonld",
-            "auth": "/sys/context/lib.jsonld",
-            "hold": "/sys/context/lib.jsonld"
-    ]
     Whelk whelk
 
     Map vocabData
@@ -531,28 +526,19 @@ class Crud extends HttpServlet {
     void sendGetResponse(HttpServletResponse response,
                          Object responseBody, ETag eTag, String path,
                          String contentType, String requestId = null) {
-        // FIXME remove?
-        String ctxHeader = contextHeaders.get(path.split("/")[1])
-        if (ctxHeader) {
+        if (path.endsWith('.json')) {
+            contentType = MimeTypes.JSON
             response.setHeader("Link",
-                    "<$ctxHeader>; " +
+                    "<$CONTEXT_PATH>; " +
                             "rel=\"http://www.w3.org/ns/json-ld#context\"; " +
                             "type=\"application/ld+json\"")
-        }
-
-        if (contentType == MimeTypes.JSONLD && responseBody instanceof Map && requestId != whelk.vocabContextUri) {
+        } else if (contentType == MimeTypes.JSONLD && responseBody instanceof Map && requestId != whelk.vocabContextUri) {
             if (!responseBody.containsKey(JsonLd.CONTEXT_KEY)) {
                 responseBody[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
             }
         }
 
         response.setHeader("ETag", eTag.toString())
-
-        if (path in contextHeaders.collect { it.value }) {
-            log.debug("request is for context file. " +
-                    "Must serve original content-type ($contentType).")
-            // FIXME what should happen here?
-        }
 
         setVary(response)
 
