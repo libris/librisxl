@@ -54,7 +54,7 @@ selectByCollection('bib') { bib ->
             selectByIds([uri]) { d ->
                 Map thing = d.doc.data['@graph'][1]
                 prefLabelForSubject = thing.prefLabel
-                if (thing.'@type' in ["Person", "Geographic", "Organisation"]) {
+                if (thing.'@type' in ["Person", "Geographic", "Organization"]) {
                     rule1 = true
                 }
             }
