@@ -27,6 +27,8 @@ SUBDIVISION_TO_SUBJECT = [
         "https://id.kb.se/term/sao/i%20pressen"     : "https://id.kb.se/term/sao/Motiv%20i%20pressen",
 ]
 
+AGENTS = ["Person", "Geographic", "Organization", "Jurisdiction", "Meeting", "Family"]
+
 selectByCollection('bib') { bib ->
     def data = bib.doc.data
     DocumentUtil.traverse(data, { value, path ->
@@ -54,7 +56,7 @@ selectByCollection('bib') { bib ->
             selectByIds([uri]) { d ->
                 Map thing = d.doc.data['@graph'][1]
                 prefLabelForSubject = thing.prefLabel
-                if (thing.'@type' in ["Person", "Geographic", "Organization"]) {
+                if (thing.'@type' in AGENTS) {
                     rule1 = true
                 }
             }
