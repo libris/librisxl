@@ -1,8 +1,10 @@
 /*
 
 Examples of
-rule 1:
+rule 1a:
 [(Alexander den store), (i litteraturen)] => (Alexander den store), (Motiv i litteraturen)
+rule 1b
+[(Wessex (England) (lokal)), (i litteraturen)] => (Wessex (England) (olänkad)), (Motiv i litteraturen)
 rule 2:
 [(Symboler) + (i konsten)] => (Symboler i konsten); the combination exists
 rule 3:
@@ -29,6 +31,7 @@ SUBDIVISION_TO_SUBJECT = [
 
 AGENTS = ["Person", "Geographic", "Organization", "Jurisdiction", "Meeting", "Family"]
 
+//selectByIds(['1jb45wtc5rzvpw4']) { bib ->
 selectByCollection('bib') { bib ->
     def data = bib.doc.data
     DocumentUtil.traverse(data, { value, path ->
@@ -39,12 +42,9 @@ selectByCollection('bib') { bib ->
         def components = value.termComponentList
         def uriSubdivision = components.find { isSubdivision(it)}?.'@id'
         def uri = components.find { !isSubdivision(it) && it.'@id' }?.'@id'
+        def blankGeo = components.find { it.'@type'?.equals("Geographic") }
 
-        if (components.size() == 2 && uriSubdivision && uri) {
-            boolean rule1 = false
-            boolean rule2 = false
-            boolean rule3 = false
-
+        if (components.size() == 2 && uriSubdivision && (uri || blankGeo)) {
             def prefLabelForSubdivision
             def prefLabelForSubject
 
@@ -53,41 +53,28 @@ selectByCollection('bib') { bib ->
                 prefLabelForSubdivision = thing.prefLabel
             }
 
-            selectByIds([uri]) { d ->
-                Map thing = d.doc.data['@graph'][1]
-                prefLabelForSubject = thing.prefLabel
-                if (thing.'@type' in AGENTS) {
-                    rule1 = true
-                }
-            }
-
             def label = prefLabelForSubject + " " + prefLabelForSubdivision
             String combinedId = "https://id.kb.se/term/sao/" + URLEncoder.encode(label, 'UTF-8').replace("+", "%20")
-
-            selectByIds([combinedId]) {
-                rule2 = true
-            }
-
-            if (!rule2 && uri) {
-                rule3 = true
-            }
 
             def pathCopy = path.collect()
             pathCopy.removeLast()
             def subjectRoot = getAtPath(data, pathCopy)
 
-            if (rule1) {
-                incrementStats("Regel 1", bib.doc.id)
+            bib.scheduleSave()
+
+            if (isRule1a(uri, prefLabelForSubject)) {
+                incrementStats("Regel 1a", bib.doc.id)
                 subjectRoot.add(["@id" : SUBDIVISION_TO_SUBJECT[uriSubdivision]])
-                bib.scheduleSave()
                 return new DocumentUtil.Replace(["@id" : uri])
-            } else if (rule2) {
+            } else if (isRule1b(blankGeo)) {
+                incrementStats("Regel 1b", bib.doc.id)
+                subjectRoot.add(["@id" : SUBDIVISION_TO_SUBJECT[uriSubdivision]])
+                return new DocumentUtil.Replace(blankGeo)
+            } else if (isRule2(combinedId)) {
                 incrementStats("Regel 2", bib.doc.id)
-                bib.scheduleSave()
                 return new DocumentUtil.Replace(["@id" : combinedId])
-            } else if (rule3) {
+            } else if (isRule3(isRule2(combinedId), uri)) {
                 incrementStats("Regel 3", bib.doc.id)
-                bib.scheduleSave()
                 return new DocumentUtil.Replace(["@id" : uri])
             }
         }
@@ -95,6 +82,34 @@ selectByCollection('bib') { bib ->
                 incrementStats("Regel 4", bib.doc.id)
         }
     })
+}
+
+private boolean isRule3(boolean rule2, uri) {
+    return !rule2 && uri
+}
+
+private boolean isRule2(String combinedId) {
+    def b = false
+    selectByIds([combinedId]) {
+        b = true
+    }
+    return b
+}
+
+private boolean isRule1b(blankGeo) {
+    return blankGeo
+}
+
+private boolean isRule1a(uri, prefLabelForSubject) {
+    def b = false
+    selectByIds(uri ? [uri] : []) { d ->
+        Map thing = d.doc.data['@graph'][1]
+        prefLabelForSubject = thing.prefLabel
+        if (thing.'@type' in AGENTS) {
+            b = true
+        }
+    }
+    return b
 }
 
 private boolean isSubdivision(it) {
