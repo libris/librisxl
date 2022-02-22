@@ -1,6 +1,6 @@
 /* 
 Clean up newspaper (dagstidningar + tidskrifter) shapes.
-Link digitized newspaper monographs (issues) to their series. That is, replace supplementTo with hasSeries.
+Link digitized newspaper monographs (issues) to their series. That is, replace supplementTo and/or isPartOf with hasSeries.
 
 Don't touch "Projects" and "Channel records" in supplementTo for now.
 
@@ -77,23 +77,26 @@ There were no supplementTo with multiple controlnumbers (refering to newspaper s
 import groovy.transform.Memoized
 
 def where = """
-    data#>>'{@graph,1,supplementTo}' IS NOT NULL
-    AND collection = 'bib'
+    collection = 'bib'
     AND deleted = 'false'
+    AND data#>>'{@graph,1,@type}' = 'Electronic'
+    AND (data#>>'{@graph,1,supplementTo}' IS NOT NULL OR data#>>'{@graph,1,isPartOf}' IS NOT NULL)
 """
 
 selectBySqlWhere(where) { bib ->
     def (record, thing) = bib.graph
     
-    if (!thing.supplementTo) {
+    if (!thing.supplementTo && !thing.isPartOf) {
         return
     }
 
     def hasSeries = asList(thing.hasSeries) as Set
+    
     def i = ((List) thing.supplementTo).iterator()
     while (i.hasNext()) {
         Map supplementTo = (Map) i.next()
         def serials = tidningSerialThings(supplementTo)
+        serials = verifyTitle(serials, supplementTo)
         if (serials) {
             incrementStats('supplementTo', supplementTo)
             incrementStats('supplementTo shape', supplementTo.keySet())
@@ -103,6 +106,21 @@ selectBySqlWhere(where) { bib ->
             bib.scheduleSave()
         }
     }
+
+    i = ((List) thing.isPartOf).iterator()
+    while (i.hasNext()) {
+        Map isPartOf = (Map) i.next()
+        def serials = tidningSerialThings(isPartOf)
+        if (serials) {
+            incrementStats('isPartOf', isPartOf)
+            incrementStats('isPartOf shape', isPartOf.keySet())
+
+            i.remove()
+            hasSeries.addAll(serials.collect{['@id': it.'@id']})
+            bib.scheduleSave()
+        }
+    }
+    
     
     if (hasSeries) {
         thing.hasSeries = hasSeries as List
@@ -132,7 +150,7 @@ List tidningSerialThings(String controlNumber) {
 
 static boolean isTidningSerial(Map thing) {
     thing.issuanceType == 'Serial' && getAtPath(thing, ['instanceOf', 'genreForm', '*', '@id'], [])
-            .any { it == 'https://id.kb.se/term/saogf/Dagstidningar' || it == 'https://id.kb.se/term/saogf/Tidskrifter' }
+            .any { it == 'https://id.kb.se/term/saogf/Dagstidningar' || it == 'https://id-qa.kb.se/marc/Periodical' }
 }
 
 static def controlNumberToId(String controlNumber) {
@@ -140,6 +158,28 @@ static def controlNumberToId(String controlNumber) {
     isXlId
         ? controlNumber
         : 'http://libris.kb.se/resource/bib/' + controlNumber
+}
+
+static List verifyTitle(List<Map> serials, Map reference) {
+    def titles = { Map thing ->
+        getAtPath(thing, ['hasTitle', '*', 'mainTitle'], []).collect { String title -> title.toLowerCase() }
+    }
+    
+    def referenceTitles = titles(reference)
+    
+    if (!referenceTitles) {
+        return serials
+    }
+    
+    return serials.findAll {
+        if (titles(it).intersect(referenceTitles)) {
+            return true
+        }
+        else {
+            incrementStats('bad title', reference)
+            return false
+        }
+    }
 }
 
 // --------------------------------------------------------------------------------------
