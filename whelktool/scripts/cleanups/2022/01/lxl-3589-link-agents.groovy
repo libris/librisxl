@@ -37,6 +37,12 @@ selectByCollection('bib') { data ->
             s.termComponentList.each { tc ->
                 modified |= tryLinkAndReport(tc, id)
             }
+        } else if (s.'@type' == 'Work') {
+            asList(s.contribution).each { c ->
+                asList(c.agent).each { a ->
+                    modified |= tryLinkAndReport(a, id)
+                }
+            }
         } else {
             modified |= tryLinkAndReport(s, id)
         }
@@ -95,6 +101,7 @@ Map loadAgents() {
 }
 
 void normalize(Map agent) {
+    agent.remove('@type')
     DocumentUtil.traverse(agent) { value, path ->
         if (value in String) {
             def normValue = path.last() in Integer ? removeTrailingPeriod(value) : asList(removeTrailingPeriod(value))
