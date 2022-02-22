@@ -153,7 +153,7 @@ List tidningSerialThings(String controlNumber) {
 
 static boolean isTidningSerial(Map thing) {
     thing.issuanceType == 'Serial' && getAtPath(thing, ['instanceOf', 'genreForm', '*', '@id'], [])
-            .any { it == 'https://id.kb.se/term/saogf/Dagstidningar' || it == 'https://id-qa.kb.se/marc/Periodical' }
+            .any { it == 'https://id.kb.se/term/saogf/Dagstidningar' || it == 'https://id.kb.se/term/saogf/Periodika' }
 }
 
 static def controlNumberToId(String controlNumber) {
