@@ -127,6 +127,9 @@ selectBySqlWhere(where) { bib ->
         if (!thing.supplementTo) {
             thing.remove('supplementTo')
         }
+        if (!thing.isPartOf) {
+            thing.remove('isPartOf')
+        }
     }
 }
 
