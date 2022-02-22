@@ -13,11 +13,9 @@ import whelk.Document
 notModified = getReportWriter("not-modified.txt")
 badIds = getReportWriter("bad-ids.txt")
 
-
 INPUT_FILE_NAME = 'libris_physical_electronic.tsv'
 
-// TODO: replace test record id with real
-def TIDNINGAR_BIBLIOGRAPHY = 'https://libris-qa.kb.se/k0p5lq17hztn5mng#it'
+def TIDNINGAR_BIBLIOGRAPHY = 'https://libris.kb.se/library/TID'
 
 electronicToPhysicalId = [:]
 
