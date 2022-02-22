@@ -4,8 +4,7 @@ For tidningar.kb.se serials.
 Using id list from VDD database:
 - Link electronic/reproduction series to physical series with reproductionOf if missing
 - Add tidningar.kb.se bibliography to electronic series
-
-TODO? Set physical thing @type to 'Print' ??
+- Set physical thing @type to 'Print'
 
 See LXL-3819 for more information
  */
@@ -56,6 +55,22 @@ selectByIds(electronicToPhysicalId.keySet().collect()) { bib ->
 
     // Add tidningar.kb.se bibliography to electronic series
     if (addLink(record, ['bibliography'], TIDNINGAR_BIBLIOGRAPHY)) {
+        bib.scheduleSave()
+    }
+}
+
+// Set physical thing @type to 'Print'
+selectByIds(electronicToPhysicalId.values().collect()) { bib ->
+    def (record, thing) = bib.graph
+
+    // Sanity check input
+    if (thing.issuanceType != 'Serial') {
+        notModified.println("${bib.doc.shortId} Wrong issuanceType")
+        return
+    }
+
+    if (thing.'@type' != 'Print') {
+        thing.'@type' = 'Print'
         bib.scheduleSave()
     }
 }
