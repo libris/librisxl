@@ -33,6 +33,8 @@ new File(scriptDir, INPUT_FILE_NAME).readLines().each {
 
 selectByIds(electronicToPhysicalId.keySet().collect()) { bib ->
     def (record, thing) = bib.graph
+
+    def physicalId = electronicToPhysicalId[thing.'@id']
     
     // Sanity check input
     if (thing.issuanceType != 'Serial') {
@@ -45,9 +47,44 @@ selectByIds(electronicToPhysicalId.keySet().collect()) { bib ->
         return
     }
 
+    // Remove any obsolete otherPhysicalFormat
+    def i = asList(thing.otherPhysicalFormat).iterator()
+    while (i.hasNext()) {
+        def otherPhysicalFormat = i.next()
+        
+        List controlNumbers = getAtPath(otherPhysicalFormat, ['describedBy', '*', 'controlNumber'], [])
+        
+        if (controlNumbers.size() > 1) {
+            incrementStats('multiple control numbers', controlNumbers)
+            continue
+        }
+        
+        def linked = controlNumbers
+                .collect(this::controlNumberToId)
+                .collect(this::loadThing)
+                .findAll {
+                    it.'@id' == physicalId
+                }
+
+        def badLinks = linked.findAll { !titles(it).intersect(titles(otherPhysicalFormat)) }
+        if (badLinks) {
+            badLinks.each { incrementStats('bad link', otherPhysicalFormat) }
+            return
+        }
+        
+        if (linked) {
+            i.remove()
+            bib.scheduleSave()
+        }
+    }
+    
+    if (asList(thing.otherPhysicalFormat).isEmpty()) {
+        thing.remove(thing.otherPhysicalFormat)
+    }
+
     // Link electronic/reproduction to physical if missing
     if (!getAtPath(bib.graph, [1, 'reproductionOf'])) {
-        bib.graph[1].reproductionOf = ['@id': electronicToPhysicalId[thing.'@id']]
+        bib.graph[1].reproductionOf = ['@id': physicalId]
         bib.scheduleSave()
     }
 
@@ -73,6 +110,9 @@ selectByIds(electronicToPhysicalId.values().collect()) { bib ->
     }
 }
 
+def titles(Map thing) {
+    getAtPath(thing, ['hasTitle', '*', 'mainTitle'], []).collect { String title -> title.toLowerCase() }
+}
 
 //---------------------------------
 
@@ -119,4 +159,8 @@ boolean addLink(Map data, List path, String uri) {
         Document._set(path, links as List, data)
     }
     return modified
+}
+
+static List asList(o) {
+    return (o instanceof List) ? (List) o : o != null ? [o] : []
 }
