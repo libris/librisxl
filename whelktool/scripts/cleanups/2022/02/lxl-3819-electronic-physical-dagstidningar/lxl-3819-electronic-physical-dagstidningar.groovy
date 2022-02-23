@@ -9,9 +9,11 @@ Using id list from VDD database:
 See LXL-3819 for more information
  */
 import whelk.Document
+import groovy.json.JsonOutput
 
 notModified = getReportWriter("not-modified.txt")
 badIds = getReportWriter("bad-ids.txt")
+badLinks = getReportWriter("maybe-bad-links.txt")
 
 INPUT_FILE_NAME = 'libris_physical_electronic.tsv'
 
@@ -66,10 +68,18 @@ selectByIds(electronicToPhysicalId.keySet().collect()) { bib ->
                     it.'@id' == physicalId
                 }
 
-        def badLinks = linked.findAll { !titles(it).intersect(titles(otherPhysicalFormat)) }
-        if (badLinks) {
-            badLinks.each { incrementStats('bad link', otherPhysicalFormat) }
-            return
+        def maybeBadLinks = linked.findAll { !titles(it).intersect(titles(otherPhysicalFormat)) }
+        if (maybeBadLinks) {
+            maybeBadLinks.each {
+                badLinks.println("""${bib.doc.shortId}
+                    ${JsonOutput.prettyPrint(JsonOutput.toJson(otherPhysicalFormat))}
+                    
+                    -->
+
+                    ${JsonOutput.prettyPrint(JsonOutput.toJson(it))}
+                    ==================================================================================\n\n
+                    """.stripIndent())
+            }
         }
         
         if (linked) {
