@@ -141,7 +141,30 @@ class XL
                 else {
                     m_whelk.storeAtomicUpdate(idToMerge, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), (Document existing) -> {
                         String existingChecksum = existing.getChecksum(m_whelk.getJsonld());
+
+                        List<String> recordIDs = existing.getRecordIdentifiers();
+                        List<String> thingIDs = existing.getThingIdentifiers();
+                        String controlNumber = existing.getControlNumber();
+                        List<Tuple> typedIDs = existing.getTypedRecordIdentifiers();
+                        List<String> systemNumbers = new ArrayList<>();
+                        for (Tuple tuple : typedIDs)
+                            if (tuple.get(0).equals("SystemNumber"))
+                                systemNumbers.add( (String) tuple.get(1) );
+
                         m_merge.merge(existing, incoming, m_parameters.getChangedBy(), m_whelk);
+
+                        // The mainID must remain unaffected.
+                        existing.deepPromoteId(recordIDs.get(0));
+
+                        for (String recordID : recordIDs)
+                            existing.addRecordIdentifier(recordID);
+                        for (String thingID : thingIDs)
+                            existing.addThingIdentifier(thingID);
+                        for (String systemNumber : systemNumbers)
+                            existing.addTypedRecordIdentifier("SystemNumber", systemNumber);
+                        if (controlNumber != null)
+                            existing.setControlNumber(controlNumber);
+
                         String modifiedChecksum = existing.getChecksum(m_whelk.getJsonld());
                         // Avoid writing an identical version
                         if (modifiedChecksum.equals(existingChecksum))
