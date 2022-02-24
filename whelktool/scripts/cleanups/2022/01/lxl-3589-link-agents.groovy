@@ -58,6 +58,8 @@ boolean tryLinkAndReport(Map agent, String id) {
     if (type in agentTypes) {
         def copy = Document.deepCopy(agent)
         normalize(copy)
+        if (type in ['Person', 'Jurisdiction', 'Family'])
+            copy.remove('@type')
         def linkable = agents[copy]
 
         if (linkable?.size() == 1) {
@@ -94,6 +96,13 @@ Map loadAgents() {
                 agents[chip] << id
             else
                 agents[chip] = [id] as Set
+
+            chip = chip.findAll { it.key != '@type' }
+            if (agents.containsKey(chip))
+                agents[chip] << id
+            else
+                agents[chip] = [id] as Set
+
         }
     }
 
@@ -101,7 +110,6 @@ Map loadAgents() {
 }
 
 void normalize(Map agent) {
-    agent.remove('@type')
     DocumentUtil.traverse(agent) { value, path ->
         if (value in String) {
             def normValue = path.last() in Integer ? removeTrailingPeriod(value) : asList(removeTrailingPeriod(value))
