@@ -37,6 +37,12 @@ selectByCollection('bib') { data ->
             s.termComponentList.each { tc ->
                 modified |= tryLinkAndReport(tc, id)
             }
+        } else if (s.'@type' == 'Work') {
+            asList(s.contribution).each { c ->
+                asList(c.agent).each { a ->
+                    modified |= tryLinkAndReport(a, id)
+                }
+            }
         } else {
             modified |= tryLinkAndReport(s, id)
         }
@@ -52,6 +58,8 @@ boolean tryLinkAndReport(Map agent, String id) {
     if (type in agentTypes) {
         def copy = Document.deepCopy(agent)
         normalize(copy)
+        if (type in ['Person', 'Jurisdiction', 'Family'])
+            copy.remove('@type')
         def linkable = agents[copy]
 
         if (linkable?.size() == 1) {
@@ -88,6 +96,13 @@ Map loadAgents() {
                 agents[chip] << id
             else
                 agents[chip] = [id] as Set
+
+            chip = chip.findAll { it.key != '@type' }
+            if (agents.containsKey(chip))
+                agents[chip] << id
+            else
+                agents[chip] = [id] as Set
+
         }
     }
 
