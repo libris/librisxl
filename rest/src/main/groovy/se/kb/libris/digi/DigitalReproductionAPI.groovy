@@ -131,7 +131,7 @@ class DigitalReproductionAPI extends HttpServlet {
         check(electronic, ['production'], ARRAY)
         if (!isLink(getAtPath(electronic, ['production', 0]))) { // minimal valid shape, so just check the first one 
             check(electronic, ['production', 0, '@type'], 'Reproduction')
-            check(electronic, ['production', 0, 'year'], STRING)
+            check(electronic, ['production', 0, 'date'], STRING)
             if (!isLink(getAtPath(electronic, ['production', 0, 'agent']))) {
                 check(electronic, ['production', 0, 'place', '@type'], STRING)
             }
