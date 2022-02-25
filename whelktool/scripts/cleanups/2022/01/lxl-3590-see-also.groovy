@@ -22,7 +22,7 @@ import whelk.component.ElasticSearch.TooManyResultsException
 linked = getReportWriter("linked.tsv")
 notFound = getReportWriter("not-found.tsv")
 multiple = getReportWriter("multiple-matches.tsv")
-variant = getReportWriter("variant.txt")
+variant = getReportWriter("variant.tsv")
 
 selectByCollection('auth') { auth ->
     def (record, thing) = auth.graph
@@ -73,8 +73,8 @@ def find(Map seeAlso) {
                 if (seeAlso.every { key, value -> it[key] == value} && it.every { key, value -> seeAlso[key] == value}) {
                     def allCaps = it.name && it.name.toUpperCase() == it.name
                     if (!allCaps) {
-                        variant.println("$it")
-                        ids.add(candidateThing.'@id')
+                        variant.println("$seeAlso\t$it\t${candidateThing.'@id'}")
+                        //ids.add(candidateThing.'@id') // Skip these for now
                     }
                 }
             }
