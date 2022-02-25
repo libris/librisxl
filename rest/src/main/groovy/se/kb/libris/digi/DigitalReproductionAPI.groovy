@@ -59,7 +59,7 @@ curl -v -XPOST 'http://localhost:8180/_reproduction' -H 'Content-Type: applicati
       "@type": "Reproduction",
       "agent": { "@id": "http://kblocalhost.kb.se:5000/jgvxv7m23l9rxd3#it" },
       "place": { "@type": "Place", "label": "Stockholm" },
-      "year": "2021"
+      "date": "2021"
     }
   ],
   "meta" : {
