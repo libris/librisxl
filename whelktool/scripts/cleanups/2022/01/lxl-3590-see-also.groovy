@@ -60,9 +60,9 @@ def find(Map seeAlso) {
     def query = [
             'q' : [seeAlso.values().join(" ")]
     ]
-
+    
     LinkedBlockingQueue<String> ids = new LinkedBlockingQueue<>() 
-    selectByIds(queryIds(query).collect()) { candidate -> 
+    selectByIds(queryIds(query).grep().collect()) { candidate -> 
         def (record, candidateThing) = candidate.graph
         
         if (seeAlso.every { key, value -> candidateThing[key] == value}) {
