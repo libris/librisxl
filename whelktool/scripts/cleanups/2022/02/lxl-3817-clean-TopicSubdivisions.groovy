@@ -54,6 +54,15 @@ selectByCollection('bib') { bib ->
                 prefLabelForSubdivision = thing.prefLabel
             }
 
+            def isRule1a = false
+            selectByIds(uri ? [uri] : []) { d ->
+                Map thing = d.doc.data['@graph'][1]
+                prefLabelForSubject = thing.prefLabel
+                if (thing.'@type' in AGENTS) {
+                    isRule1a = true
+                }
+            }
+
             def label = prefLabelForSubject + " " + prefLabelForSubdivision
             String combinedId = "https://id.kb.se/term/sao/" + URLEncoder.encode(label, 'UTF-8').replace("+", "%20")
 
@@ -63,7 +72,7 @@ selectByCollection('bib') { bib ->
 
             bib.scheduleSave()
 
-            if (isRule1a(uri, prefLabelForSubject)) {
+            if (isRule1a) {
                 incrementStats("Regel 1a", bib.doc.id)
                 subjectRoot.add(["@id" : SUBDIVISION_TO_SUBJECT[uriSubdivision]])
                 return new DocumentUtil.Replace(["@id" : uri])
@@ -102,17 +111,6 @@ private boolean isRule1b(blankGeo) {
     return blankGeo
 }
 
-private boolean isRule1a(uri, prefLabelForSubject) {
-    def b = false
-    selectByIds(uri ? [uri] : []) { d ->
-        Map thing = d.doc.data['@graph'][1]
-        prefLabelForSubject = thing.prefLabel
-        if (thing.'@type' in AGENTS) {
-            b = true
-        }
-    }
-    return b
-}
 
 private boolean isSubdivision(it) {
     it.'@id' in SUBDIVISION_TO_SUBJECT.keySet()
