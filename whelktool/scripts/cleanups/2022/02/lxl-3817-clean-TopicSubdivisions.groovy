@@ -34,6 +34,7 @@ AGENTS = ["Person", "Geographic", "Organization", "Jurisdiction", "Meeting", "Fa
 //selectByIds(['1jb45wtc5rzvpw4']) { bib ->
 selectByCollection('bib') { bib ->
     def data = bib.doc.data
+    def subjectRoot = []
     DocumentUtil.traverse(data, { value, path ->
         if (!(value instanceof Map && value.'@type'.equals("ComplexSubject") && value.termComponentList)) {
             return
@@ -58,7 +59,7 @@ selectByCollection('bib') { bib ->
 
             def pathCopy = path.collect()
             pathCopy.removeLast()
-            def subjectRoot = getAtPath(data, pathCopy)
+            subjectRoot = getAtPath(data, pathCopy)
 
             bib.scheduleSave()
 
@@ -82,6 +83,7 @@ selectByCollection('bib') { bib ->
                 incrementStats("Regel 4", bib.doc.id)
         }
     })
+    subjectRoot.unique()
 }
 
 private boolean isRule3(boolean rule2, uri) {
