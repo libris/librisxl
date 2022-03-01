@@ -1,6 +1,6 @@
 /* 
 Clean up newspaper (dagstidningar + tidskrifter) shapes.
-Link digitized newspaper monographs (issues) to their series. That is, replace supplementTo and/or isPartOf with hasSeries.
+Link digitized newspaper monographs (issues) to their series. That is, replace supplementTo and/or isPartOf with isIssueOf.
 
 Don't touch "Projects" and "Channel records" in supplementTo for now.
 
@@ -45,7 +45,7 @@ bf2:title [
     bf2:mainTitle "DAGENS NYHETER  1900-05-28"
     ] ;
 ...
-bf2:hasSeries <https://libris.kb.se/m5z2w4lz3m2zxpk#it> ;
+kbv:isIssueOf <https://libris.kb.se/m5z2w4lz3m2zxpk#it> ;
 ...
 
 
@@ -90,7 +90,7 @@ selectBySqlWhere(where) { bib ->
         return
     }
 
-    def hasSeries = asList(thing.hasSeries) as Set
+    def isIssueOf = asList(thing.isIssueOf) as Set
     
     def i = ((List) thing.supplementTo).iterator()
     while (i.hasNext()) {
@@ -102,7 +102,7 @@ selectBySqlWhere(where) { bib ->
             incrementStats('supplementTo shape', supplementTo.keySet())
             
             i.remove()
-            hasSeries.addAll(serials.collect{['@id': it.'@id']})
+            isIssueOf.addAll(serials.collect{['@id': it.'@id']})
             bib.scheduleSave()
         }
     }
@@ -116,14 +116,14 @@ selectBySqlWhere(where) { bib ->
             incrementStats('isPartOf shape', isPartOf.keySet())
 
             i.remove()
-            hasSeries.addAll(serials.collect{['@id': it.'@id']})
+            isIssueOf.addAll(serials.collect{['@id': it.'@id']})
             bib.scheduleSave()
         }
     }
     
     
-    if (hasSeries) {
-        thing.hasSeries = hasSeries as List
+    if (isIssueOf) {
+        thing.isIssueOf = isIssueOf as List
         if (!thing.supplementTo) {
             thing.remove('supplementTo')
         }
