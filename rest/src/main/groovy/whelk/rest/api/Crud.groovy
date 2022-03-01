@@ -374,7 +374,13 @@ class Crud extends HttpServlet {
             contextData = data[JsonLd.CONTEXT_KEY]
             data[JsonLd.CONTEXT_KEY] = profileId
         }
-        response.setHeader("Profile", "<$profileId>")
+
+        // TODO: Spec in flux; see status at:
+        // <https://www.w3.org/TR/dx-prof-conneg/>
+        // and:
+        // <https://profilenegotiation.github.io/I-D-Profile-Negotiation/I-D-Profile-Negotiation.html>
+        response.setHeader("Content-Profile", "<$profileId>")
+        response.setHeader("Link", "<$profileId>; rel=\"profile\"")
 
         def dataBody = data
         if (!(request.getContentType() in [MimeTypes.JSON, MimeTypes.JSONLD])) {
