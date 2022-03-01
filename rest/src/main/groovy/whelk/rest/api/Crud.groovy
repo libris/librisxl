@@ -48,6 +48,7 @@ class Crud extends HttpServlet {
     final static String CONTEXT_PATH = '/context.jsonld'
     final static String KBV_CONTEXT = "https://id.kb.se/sys/context/kbv"
     final static String DEFAULT_PROFILE = KBV_CONTEXT
+    final static String DATA_CONTENT_TYPE = "application/ld+json"
 
     static final Counter requests = Counter.build()
         .name("api_requests_total").help("Total requests to API.")
@@ -291,6 +292,9 @@ class Crud extends HttpServlet {
         if (!doc && !loc) {
             sendNotFound(response, request.getPath())
         } else if (!doc && loc) {
+            if (request.contentType) {
+                loc = getDataURI(loc, request.contentType)
+            }
             sendRedirect(request.getHttpServletRequest(), response, loc)
         } else if (doc.deleted) {
             failedRequests.labels("GET", request.getPath(),
@@ -620,7 +624,7 @@ class Crud extends HttpServlet {
             return
         }
 
-        if (!isSupportedContentType(request)) {
+        if (!isSupportedContentType(request.getContentType())) {
             log.debug("Unsupported Content-Type for POST.")
             failedRequests.labels("POST", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
@@ -773,7 +777,7 @@ class Crud extends HttpServlet {
             return
         }
 
-        if (!isSupportedContentType(request)) {
+        if (!isSupportedContentType(request.getContentType())) {
             log.debug("Unsupported Content-Type for PUT.")
             failedRequests.labels("PUT", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
@@ -816,7 +820,10 @@ class Crud extends HttpServlet {
                     "Document not found.")
             return
         } else if (!existingDoc && location) {
-            sendRedirect(request, response, location)
+            String loc = request.contentType != null
+                         ? getDataURI(location, request.contentType)
+                         : location
+            sendRedirect(request, response, loc)
             return
         } else  {
             String fullPutId = JsonLd.findFullIdentifier(requestBody)
@@ -882,11 +889,9 @@ class Crud extends HttpServlet {
         return !inputData || inputData.size() == 0
     }
 
-    static boolean isSupportedContentType(HttpServletRequest request) {
-        ContentType contentType = ContentType.parse(request.getContentType())
-        String mimeType = contentType.getMimeType()
-        // FIXME add additional content types?
-        return mimeType == "application/ld+json"
+    static boolean isSupportedContentType(String contentType) {
+        String mimeType = ContentType.parse(contentType).getMimeType()
+        return mimeType == DATA_CONTENT_TYPE
     }
 
     static Map getRequestBody(HttpServletRequest request) {
