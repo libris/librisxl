@@ -1,11 +1,20 @@
 package whelk.rest.api
 
+import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
+
+import java.lang.management.ManagementFactory
+import javax.servlet.http.HttpServlet
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import io.prometheus.client.Summary
+
 import org.apache.http.entity.ContentType
+
 import whelk.Document
 import whelk.IdGenerator
 import whelk.IdType
@@ -28,11 +37,6 @@ import whelk.rest.security.AccessControl
 import whelk.util.LegacyIntegrationTools
 import whelk.util.WhelkFactory
 
-import javax.servlet.http.HttpServlet
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import java.lang.management.ManagementFactory
-
 import static whelk.rest.api.CrudUtils.ETag
 import static whelk.rest.api.HttpTools.getBaseUri
 import static whelk.rest.api.HttpTools.sendError
@@ -43,6 +47,7 @@ import static whelk.util.Jackson.mapper
  * Handles all GET/PUT/POST/DELETE requests against the backend.
  */
 @Log
+@CompileStatic
 class Crud extends HttpServlet {
     final static String XL_ACTIVE_SIGEL_HEADER = 'XL-Active-Sigel'
     final static String CONTEXT_PATH = '/context.jsonld'
@@ -125,15 +130,15 @@ class Crud extends HttpServlet {
         String activeSite = request.getAttribute('activeSite')
 
         if (activeSite != siteConfig['default_site']) {
-            queryParameters.put('_site_base_uri', (String[])[siteConfig['sites'][activeSite]['@id']])
+            queryParameters.put('_site_base_uri', [siteConfig['sites'][activeSite]['@id']] as String[])
         }
 
         if (!queryParameters['_statsrepr'] && siteConfig['sites'][activeSite]['statsfind']) {
-            queryParameters.put('_statsrepr', (String[])[mapper.writeValueAsString(siteConfig['sites'][activeSite]['statsfind'])])
+            queryParameters.put('_statsrepr', [mapper.writeValueAsString(siteConfig['sites'][activeSite]['statsfind'])] as String[])
         }
 
         if (!queryParameters['_boost'] && siteConfig['sites'][activeSite]['boost']) {
-            queryParameters.put('_boost', (String[])[siteConfig['sites'][activeSite]['boost']])
+            queryParameters.put('_boost', [siteConfig['sites'][activeSite]['boost']] as String[])
         }
 
         try {
@@ -171,16 +176,16 @@ class Crud extends HttpServlet {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
         String activeSite = request.getAttribute('activeSite')
         Map results = [:]
-        results.putAll(siteConfig['sites'][activeSite])
+        results.putAll((Map) siteConfig['sites'][activeSite])
 
         if (!queryParameters['_statsrepr']) {
-            queryParameters.put('_statsrepr', (String[])[mapper.writeValueAsString(siteConfig['sites'][activeSite]['statsindex'])])
+            queryParameters.put('_statsrepr', [mapper.writeValueAsString(siteConfig['sites'][activeSite]['statsindex'])] as String[])
         }
         if (!queryParameters['_limit']) {
-            queryParameters.put('_limit', (String[])["0"])
+            queryParameters.put('_limit', ["0"] as String[])
         }
         if (!queryParameters['q']) {
-            queryParameters.put('q', (String[])["*"])
+            queryParameters.put('q', ["*"] as String[])
         }
         Map searchResults = search.doSearch(queryParameters)
         results['statistics'] = searchResults['stats']
@@ -250,7 +255,8 @@ class Crud extends HttpServlet {
         
         try {
             String activeSite = request.getAttribute('activeSite')
-            if (siteConfig['sites'][activeSite]?.get('applyInverseOf', false)) {
+            Map activeSiteMap = (Map) siteConfig['sites'][activeSite]
+            if (activeSiteMap?.get('applyInverseOf', false)) {
                 request.setAttribute('_applyInverseOf', "true")
             }
 
@@ -416,14 +422,14 @@ class Crud extends HttpServlet {
      }
 
 
-    private Object applyLens(Object framedThing, Lens lens) {
+    private Map applyLens(Map framedThing, Lens lens) {
         switch (lens) {
             case Lens.NONE:
                 return framedThing
             case Lens.CARD:
                 return whelk.jsonld.toCard(framedThing)
             case Lens.CHIP:
-                return whelk.jsonld.toChip(framedThing)
+                return (Map) whelk.jsonld.toChip(framedThing)
         }
     }
 
@@ -542,7 +548,7 @@ class Crud extends HttpServlet {
         }
         log.debug("Using profile: $profileId")
         def contextDoc = profileDoc.data
-        data = targetVocabMapper.applyTargetVocabularyMap(profileId, contextDoc, data)
+        data = (Map) targetVocabMapper.applyTargetVocabularyMap(profileId, contextDoc, data)
         data[JsonLd.CONTEXT_KEY] = contextDoc[JsonLd.CONTEXT_KEY]
 
         return data
@@ -573,7 +579,11 @@ class Crud extends HttpServlet {
 
         setVary(response)
 
-        sendResponse(response, responseBody, contentType)
+        if (responseBody instanceof Map) {
+            sendResponse(response, (Map) responseBody, contentType)
+        } else {
+            sendResponse(response, (String) responseBody, contentType)
+        }
     }
 
     /**
@@ -671,7 +681,8 @@ class Crud extends HttpServlet {
             return
         }
 
-        if (!newDoc.data['@graph'][1] || !newDoc.data['@graph'][1]['@id']) {
+        List graph = (List) newDoc.data['@graph']
+        if (!graph[1] || !graph[1]['@id']) {
             log.debug("Temporary @id missing in Thing")
             failedRequests.labels("POST", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
@@ -679,7 +690,7 @@ class Crud extends HttpServlet {
             return
         }
 
-        if (newDoc.getThingIdentifiers().first() != newDoc.data['@graph'][1]['@id']) {
+        if (newDoc.getThingIdentifiers().first() != graph[1]['@id']) {
             log.debug("mainEntity.@id not same as Thing @id")
             failedRequests.labels("POST", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
@@ -713,7 +724,7 @@ class Crud extends HttpServlet {
         // verify user permissions
         log.debug("Checking permissions for ${newDoc}")
         try {
-            boolean allowed = hasPostPermission(newDoc, request.getAttribute("user"))
+            boolean allowed = hasPostPermission(newDoc, (Map) request.getAttribute("user"))
             if (!allowed) {
                 failedRequests.labels("POST", request.getRequestURI(),
                         HttpServletResponse.SC_FORBIDDEN.toString()).inc()
@@ -1092,7 +1103,7 @@ class Crud extends HttpServlet {
                 failedRequests.labels("DELETE", request.getRequestURI(),
                         HttpServletResponse.SC_NOT_FOUND.toString()).inc()
                 sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
-            } else if (doc && !hasDeletePermission(doc, request.getAttribute("user"))) {
+            } else if (doc && !hasDeletePermission(doc, (Map) request.getAttribute("user"))) {
                 failedRequests.labels("DELETE", request.getRequestURI(),
                         HttpServletResponse.SC_FORBIDDEN.toString()).inc()
                 sendError(response, HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
