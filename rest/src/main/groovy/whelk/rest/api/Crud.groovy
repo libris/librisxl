@@ -434,7 +434,7 @@ class Crud extends HttpServlet {
     }
 
     private static void setVary(HttpServletResponse response) {
-        response.setHeader("Vary", "Accept, Profile")
+        response.setHeader("Vary", "Accept, Accept-Profile")
     }
 
     /**
