@@ -93,7 +93,7 @@ selectByCollection('bib') { data ->
     }
 
     if (modified) {
-        data.scheduleSave()
+        data.scheduleSave(loud: true)
     }
 }
 
