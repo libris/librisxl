@@ -76,7 +76,7 @@ There were no supplementTo with multiple controlnumbers (refering to newspaper s
 */
 import groovy.transform.Memoized
 
-badTitles = getReportWriter("maybe-bad-links.txt")
+noMarcGf = getReportWriter("no-marc-gf.txt")
 
 def where = """
     collection = 'bib'
@@ -109,6 +109,9 @@ selectBySqlWhere(where) { bib ->
                 incrementStats('supplementTo linked', "${serialTitle(it.'@id')} - ${issueTitlesNoDate(thing).join(' · ')}")
             }
             incrementStats('isMarcGfIssue', isMarcGfIssue(thing))
+            if (!isMarcGfIssue(thing)) {
+                noMarcGf.println("${bib.doc.shortId}\t${issueTitlesNoDate(thing)}")
+            }
             bib.scheduleSave()
         }
     }
@@ -128,6 +131,9 @@ selectBySqlWhere(where) { bib ->
                 incrementStats('isPartOf linked', "${serialTitle(it.'@id')} - ${getIssueTitle(thing)}")
             }
             incrementStats('isMarcGfIssue', isMarcGfIssue(thing))
+            if (!isMarcGfIssue(thing)) {
+                noMarcGf.println("${bib.doc.shortId}\t${issueTitlesNoDate(thing)}")
+            }
             bib.scheduleSave()
         }
     }
