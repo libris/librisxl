@@ -230,7 +230,7 @@ List<String> issueTitlesNoDate(Map thing) {
 }
 
 def stripDate(String title) {
-    def PATTERN = /^(.*)\s+\d\d\d\d-\d\d\-\d\d$/
+    def PATTERN = /^(.*)\s+(\d\d\d\d-\d\d\-\d\d|\(\d\d\d\d\):\d+)$/
 
     def stripped = (title =~ PATTERN).with { matches() ? it[0][1] : title }
     return stripped
