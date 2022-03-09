@@ -128,7 +128,7 @@ selectBySqlWhere(where) { bib ->
             i.remove()
             isIssueOf.addAll(serials.collect{['@id': it.'@id']})
             serials.each {
-                incrementStats('isPartOf linked', "${serialTitle(it.'@id')} - ${getIssueTitle(thing)}")
+                incrementStats('isPartOf linked', "${serialTitle(it.'@id')} - ${issueTitlesNoDate(thing).join(' · ')}")
             }
             incrementStats('isMarcGfIssue', isMarcGfIssue(thing))
             if (!isMarcGfIssue(thing)) {
