@@ -76,6 +76,8 @@ There were no supplementTo with multiple controlnumbers (refering to newspaper s
 */
 import groovy.transform.Memoized
 
+badTitles = getReportWriter("maybe-bad-links.txt")
+
 def where = """
     collection = 'bib'
     AND deleted = 'false'
@@ -96,7 +98,7 @@ selectBySqlWhere(where) { bib ->
     while (i.hasNext()) {
         Map supplementTo = (Map) i.next()
         def serials = tidningSerialThings(supplementTo)
-        serials = verifyTitle(serials, supplementTo)
+        serials = verifyTitle(bib.doc.shortId, serials, supplementTo)
         if (serials) {
             incrementStats('supplementTo', supplementTo)
             incrementStats('supplementTo shape', supplementTo.keySet())
@@ -117,6 +119,9 @@ selectBySqlWhere(where) { bib ->
 
             i.remove()
             isIssueOf.addAll(serials.collect{['@id': it.'@id']})
+            serials.each {
+                incrementStats('Linked', "${getSerialTitle(it.'@id')} - ${getIssueTitle(thing)}")
+            }
             bib.scheduleSave()
         }
     }
@@ -170,7 +175,7 @@ static def controlNumberToId(String controlNumber) {
         : 'http://libris.kb.se/resource/bib/' + controlNumber
 }
 
-static List verifyTitle(List<Map> serials, Map reference) {
+static List verifyTitle(String bibId, List<Map> serials, Map reference) {
     def titles = { Map thing ->
         getAtPath(thing, ['hasTitle', '*', 'mainTitle'], []).collect { String title -> title.toLowerCase() }
     }
@@ -186,10 +191,29 @@ static List verifyTitle(List<Map> serials, Map reference) {
             return true
         }
         else {
-            incrementStats('bad title', reference.toString())
+            badTitles.println("$bibId, $reference")
             return false
         }
     }
+}
+
+@Memoized
+String getSerialTitle(String id) {
+    def thing = loadThing(id)
+    def title = getAtPath(thing, ['hasTitle', '*', 'mainTitle'], []).join(' · ')
+    def shortId = id.split('/').last()
+    return "$title ($shortId)"
+}
+
+String getIssueTitle(Map thing) {
+    getAtPath(thing, ['hasTitle', '*', 'mainTitle']).collect(this::stripDate).join(' · ')
+}
+
+def stripDate(String title) {
+    def PATTERN = /^(.*)\s+\d\d\d\d-\d\d\-\d\d$/
+
+    def stripped = (title =~ PATTERN).with { matches() ? it[0][1] : title }
+    return stripped
 }
 
 // --------------------------------------------------------------------------------------
