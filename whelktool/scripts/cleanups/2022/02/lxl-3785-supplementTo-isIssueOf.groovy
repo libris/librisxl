@@ -192,7 +192,7 @@ List verifyTitle(Map thing, List<Map> serials, Map reference) {
 
     // A lot of records have the "issue title" here 
     // e.g. MARIESTADSTIDNINGEN 2022-01-21 supplementTo.hasTitle.mainTitle MARIESTADSTIDNINGEN
-    def issueTitles = issueTitlesNoDate(thing) 
+    def issueTitles = issueTitlesNoDate(thing).collect { String title -> title.toLowerCase() }
     return serials.findAll {
         def serialTitles = titles(it) + issueTitles
         if (serialTitles.intersect(referenceTitles)) {
