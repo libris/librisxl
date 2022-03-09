@@ -180,8 +180,8 @@ static def controlNumberToId(String controlNumber) {
 }
 
 List verifyTitle(Map thing, List<Map> serials, Map reference) {
-    def titles = { Map thing ->
-        getAtPath(thing, ['hasTitle', '*', 'mainTitle'], []).collect { String title -> title.toLowerCase() }
+    def titles = { Map t ->
+        getAtPath(t, ['hasTitle', '*', 'mainTitle'], []).collect { String title -> title.toLowerCase() }
     }
     
     def referenceTitles = titles(reference)
