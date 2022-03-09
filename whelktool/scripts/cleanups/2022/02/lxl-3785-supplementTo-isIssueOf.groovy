@@ -98,13 +98,16 @@ selectBySqlWhere(where) { bib ->
     while (i.hasNext()) {
         Map supplementTo = (Map) i.next()
         def serials = tidningSerialThings(supplementTo)
-        serials = verifyTitle(bib.doc.shortId, serials, supplementTo)
+        serials = verifyTitle(thing, serials, supplementTo)
         if (serials) {
             incrementStats('supplementTo', supplementTo)
             incrementStats('supplementTo shape', supplementTo.keySet())
             
             i.remove()
             isIssueOf.addAll(serials.collect{['@id': it.'@id']})
+            serials.each {
+                incrementStats('supplementTo linked', "${serialTitle(it.'@id')} - ${issueTitlesNoDate(thing).join(' · ')}")
+            }
             bib.scheduleSave()
         }
     }
@@ -113,6 +116,7 @@ selectBySqlWhere(where) { bib ->
     while (i.hasNext()) {
         Map isPartOf = (Map) i.next()
         def serials = tidningSerialThings(isPartOf)
+        serials = verifyTitle(thing, serials, isPartOf)
         if (serials) {
             incrementStats('isPartOf', isPartOf)
             incrementStats('isPartOf shape', isPartOf.keySet())
@@ -120,7 +124,7 @@ selectBySqlWhere(where) { bib ->
             i.remove()
             isIssueOf.addAll(serials.collect{['@id': it.'@id']})
             serials.each {
-                incrementStats('Linked', "${getSerialTitle(it.'@id')} - ${getIssueTitle(thing)}")
+                incrementStats('isPartOf linked', "${serialTitle(it.'@id')} - ${getIssueTitle(thing)}")
             }
             bib.scheduleSave()
         }
@@ -175,7 +179,7 @@ static def controlNumberToId(String controlNumber) {
         : 'http://libris.kb.se/resource/bib/' + controlNumber
 }
 
-List verifyTitle(String bibId, List<Map> serials, Map reference) {
+List verifyTitle(Map thing, List<Map> serials, Map reference) {
     def titles = { Map thing ->
         getAtPath(thing, ['hasTitle', '*', 'mainTitle'], []).collect { String title -> title.toLowerCase() }
     }
@@ -185,9 +189,12 @@ List verifyTitle(String bibId, List<Map> serials, Map reference) {
     if (!referenceTitles) {
         return serials
     }
-    
+
+    // A lot of records have the "issue title" here 
+    // e.g. MARIESTADSTIDNINGEN 2022-01-21 supplementTo.hasTitle.mainTitle MARIESTADSTIDNINGEN
+    def issueTitles = issueTitlesNoDate(thing) 
     return serials.findAll {
-        if (titles(it).intersect(referenceTitles)) {
+        if ((titles(it) + issueTitles).intersect(referenceTitles)) {
             return true
         }
         else {
@@ -198,15 +205,15 @@ List verifyTitle(String bibId, List<Map> serials, Map reference) {
 }
 
 @Memoized
-String getSerialTitle(String id) {
+String serialTitle(String id) {
     def thing = loadThing(id)
     def title = getAtPath(thing, ['hasTitle', '*', 'mainTitle'], []).join(' · ')
     def shortId = id.split('/').last()
     return "$title ($shortId)"
 }
 
-String getIssueTitle(Map thing) {
-    getAtPath(thing, ['hasTitle', '*', 'mainTitle']).collect(this::stripDate).join(' · ')
+List<String> issueTitlesNoDate(Map thing) {
+    getAtPath(thing, ['hasTitle', '*', 'mainTitle']).collect(this::stripDate)
 }
 
 def stripDate(String title) {
