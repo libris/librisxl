@@ -152,8 +152,15 @@ List tidningSerialThings(String controlNumber) {
 }
 
 static boolean isTidningSerial(Map thing) {
+    def tidningGf = [
+            'https://id.kb.se/term/saogf/Dagstidningar',
+            'https://id.kb.se/term/saogf/Periodika',
+            'https://id.kb.se/marc/Newspaper',
+            'https://id.kb.se/marc/Periodical'
+    ]
+    
     thing.issuanceType == 'Serial' && getAtPath(thing, ['instanceOf', 'genreForm', '*', '@id'], [])
-            .any { it == 'https://id.kb.se/term/saogf/Dagstidningar' || it == 'https://id.kb.se/term/saogf/Periodika' }
+            .any { String gf -> gf in tidningGf }
 }
 
 static def controlNumberToId(String controlNumber) {
