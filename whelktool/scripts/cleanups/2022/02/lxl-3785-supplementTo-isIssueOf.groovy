@@ -108,6 +108,7 @@ selectBySqlWhere(where) { bib ->
             serials.each {
                 incrementStats('supplementTo linked', "${serialTitle(it.'@id')} - ${issueTitlesNoDate(thing).join(' · ')}")
             }
+            incrementStats('isMarcGfIssue', isMarcGfIssue(thing))
             bib.scheduleSave()
         }
     }
@@ -126,6 +127,7 @@ selectBySqlWhere(where) { bib ->
             serials.each {
                 incrementStats('isPartOf linked', "${serialTitle(it.'@id')} - ${getIssueTitle(thing)}")
             }
+            incrementStats('isMarcGfIssue', isMarcGfIssue(thing))
             bib.scheduleSave()
         }
     }
@@ -179,6 +181,10 @@ static def controlNumberToId(String controlNumber) {
         : 'http://libris.kb.se/resource/bib/' + controlNumber
 }
 
+boolean isMarcGfIssue(Map thing) {
+    getAtPath(thing, ['instanceOf', 'genreForm', '*', 'prefLabel'], []).any{ it == 'issue'}
+}
+
 List verifyTitle(Map thing, List<Map> serials, Map reference) {
     def titles = { Map t ->
         getAtPath(t, ['hasTitle', '*', 'mainTitle'], []).collect { String title -> title.toLowerCase() }
@@ -209,7 +215,7 @@ List verifyTitle(Map thing, List<Map> serials, Map reference) {
 String serialTitle(String id) {
     def thing = loadThing(id)
     def title = getAtPath(thing, ['hasTitle', '*', 'mainTitle'], []).join(' · ')
-    def shortId = id.split('/').last()
+    def shortId = id.split('/').last().split('#').first()
     return "$title ($shortId)"
 }
 
