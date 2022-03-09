@@ -194,11 +194,12 @@ List verifyTitle(Map thing, List<Map> serials, Map reference) {
     // e.g. MARIESTADSTIDNINGEN 2022-01-21 supplementTo.hasTitle.mainTitle MARIESTADSTIDNINGEN
     def issueTitles = issueTitlesNoDate(thing) 
     return serials.findAll {
-        if ((titles(it) + issueTitles).intersect(referenceTitles)) {
+        def serialTitles = titles(it) + issueTitles
+        if (serialTitles.intersect(referenceTitles)) {
             return true
         }
         else {
-            incrementStats('bad title', reference.toString())
+            incrementStats('bad title', "$referenceTitles -> $serialTitles")
             return false
         }
     }
