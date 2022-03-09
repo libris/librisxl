@@ -186,7 +186,7 @@ static List verifyTitle(List<Map> serials, Map reference) {
             return true
         }
         else {
-            incrementStats('bad title', reference)
+            incrementStats('bad title', reference.toString())
             return false
         }
     }
