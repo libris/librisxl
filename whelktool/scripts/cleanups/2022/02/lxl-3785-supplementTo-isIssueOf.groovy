@@ -175,7 +175,7 @@ static def controlNumberToId(String controlNumber) {
         : 'http://libris.kb.se/resource/bib/' + controlNumber
 }
 
-static List verifyTitle(String bibId, List<Map> serials, Map reference) {
+List verifyTitle(String bibId, List<Map> serials, Map reference) {
     def titles = { Map thing ->
         getAtPath(thing, ['hasTitle', '*', 'mainTitle'], []).collect { String title -> title.toLowerCase() }
     }
@@ -191,7 +191,7 @@ static List verifyTitle(String bibId, List<Map> serials, Map reference) {
             return true
         }
         else {
-            badTitles.println("$bibId, $reference")
+            incrementStats('bad title', reference.toString())
             return false
         }
     }
