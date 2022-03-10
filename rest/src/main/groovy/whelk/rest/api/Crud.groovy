@@ -649,8 +649,9 @@ class Crud extends HttpServlet {
         newDoc.normalizeUnicode()
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
         newDoc.setControlNumber(newDoc.getShortId())
-        
-        List<JsonLdValidator.Error> errors = validator.validateAll(newDoc.data)
+
+        String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
+        List<JsonLdValidator.Error> errors = validator.validate(newDoc.data, collection)
         if (errors) {
             failedRequests.labels("POST", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
