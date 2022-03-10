@@ -22408,7 +22408,7 @@
       },
       "_spec": [
         {
-          "name": "Fixed defaults with ignored (x in originalLeader)",
+          "name": "Fixed defaults with ignored (x in source)",
           "originalLeader": "01341cz  a2200397n  4500",
           "source": {
             "leader": "     cz  x       xx xxxx",
