@@ -18,7 +18,12 @@ void process(String id) {
         process3161(m.before)
         def getThing = { getAtPath(it, ['@graph', 1]) }
         def ok = getThing(m.before) == getThing(m.after)
-        (ok ? okReport : notOkReport).println("$id\t${diffLink(id, m.beforeVersion, m.afterVersion)}")
+        
+        def msg = "$id\t${diffLink(id, m.beforeVersion, m.afterVersion)}"
+        (ok ? okReport : notOkReport).println()
+        if (!ok) {
+            println(msg)
+        }
 
         int count = ScriptGlobal.count.incrementAndGet()
         if (count % 100 == 0) {
