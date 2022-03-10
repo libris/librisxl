@@ -298,9 +298,7 @@ class Crud extends HttpServlet {
         if (!doc && !loc) {
             sendNotFound(response, request.getPath())
         } else if (!doc && loc) {
-            if (request.contentType) {
-                loc = getDataURI(loc, request.contentType)
-            }
+            loc = getDataURI(loc, request.contentType)
             sendRedirect(request.getHttpServletRequest(), response, loc)
         } else if (doc.deleted) {
             failedRequests.labels("GET", request.getPath(),
@@ -333,7 +331,7 @@ class Crud extends HttpServlet {
                     }
                 }
 
-                requestBody = getFormattedResponseBody(request, response, doc, loc)
+                requestBody = getFormattedResponseBody(request, response, doc, loc ?: doc.id)
             }
 
             sendGetResponse(
@@ -400,7 +398,7 @@ class Crud extends HttpServlet {
         }
 
         if (location != null) {
-            addProposal25Headers(response, location, getDataURI(location, request.getContentType()))
+            addProposal25Headers(response, location, getDataURI(location, request))
         }
 
         return dataBody
@@ -532,10 +530,38 @@ class Crud extends HttpServlet {
         response.addHeader('Link', "<${location}>; rel=describedby")
     }
 
-    private static String getDataURI(String location, String contentType) {
+    private static String getDataURI(String location, CrudGetRequest request) {
+        String lens = request.lens == Lens.NONE ? null : request.lens.toString().toLowerCase()
+        return getDataURI(location, request.contentType, lens, request.profile)
+    }
+
+    private static String getDataURI(String location,
+                                     String contentType,
+                                     String lens=null,
+                                     String profile=null) {
+        if (contentType == null) {
+            return location
+        }
+
+        def loc = new StringBuilder(location)
+
         String slash = location.endsWith('/') ? '' : '/'
         String ext = CrudUtils.EXTENSION_BY_MEDIA_TYPE[contentType] ?: 'jsonld'
-        return location + slash + 'data.' + ext
+
+        loc << slash << 'data.' << ext
+
+        def params = new StringJoiner("&")
+        if (lens != null) {
+            params.add("lens=${lens}")
+        }
+        if (profile != null) {
+            params.add("profile=${profile}")
+        }
+        if (params.length() > 0) {
+            loc << '?' << params.toString()
+        }
+
+        return loc.toString()
     }
 
     Map applyDataProfile(String profileId, Map data, HttpServletResponse response) {
@@ -831,10 +857,7 @@ class Crud extends HttpServlet {
                     "Document not found.")
             return
         } else if (!existingDoc && location) {
-            String loc = request.contentType != null
-                         ? getDataURI(location, request.contentType)
-                         : location
-            sendRedirect(request, response, loc)
+            sendRedirect(request, response, getDataURI(location, request.contentType))
             return
         } else  {
             String fullPutId = JsonLd.findFullIdentifier(requestBody)
