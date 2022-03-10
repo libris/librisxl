@@ -1,3 +1,26 @@
+/*
+Fix records mangled by the script for LXL-3161.
+
+Problem:
+The variable on this line [1] becomes a script global variable because it is missing a type or def.
+It is shared by all selectBy... worker threads and some percentage of records are mangled. 
+(TODO: remove this footgun caused by horrible scoping rules of Groovy scripts)
+
+[1] https://github.com/libris/librisxl/blob/a05cc9d35a38c1180fd92ef67e0da9c3a5c123a4/whelktool/scripts/2020/05/lxl-3161-move-linkfield-to-instance/script.groovy#L64
+
+Finding bad records:
+- For all modified ids from whelktool report (2689270 records) 
+ - Find the versions before and after LXL-3161 was run
+ - Run LXL-3161 (with the bug fixed) on the 'before version'
+ - If we get the a different result than the 'after version' something is wrong
+ 
+Fixing bad records:
+- If the 'after version' and 'current version' are the same (for all properties that might be affected) no one 
+  has touched the record since and we can fix it easily. 
+- Since the bug only affects the data _within_ a property we can just overwrite all properties with the result from 
+  our corrected version of LXL-3161
+*/
+
 import java.util.concurrent.atomic.AtomicInteger
 
 notOkReport = getReportWriter("not-ok.tsv")
@@ -12,6 +35,7 @@ ids.parallelStream().forEach(this::process)
 class ScriptGlobal {
     static AtomicInteger badCount = new AtomicInteger()
     static AtomicInteger count = new AtomicInteger()
+    
     static Set LINK_FIELDS_WORK = ['translationOf', 'translation', 'supplement', 'supplementTo', 'hasPart',
     'continues', 'continuesInPart', 'precededBy', 'precededInPartBy',
     'mergerOf', 'absorbed', 'absorbedInPart', 'separatedFrom', 'continuedBy',
@@ -22,7 +46,7 @@ class ScriptGlobal {
 void process(String id) {
     try {
         Map m = getBeforeAfter3161(id)
-        process3161(m.before)
+        process3161(m.before) // modified in place
         Map correct = m.before
         def ok = getThing(correct) == getThing(m.after)
 
@@ -43,7 +67,7 @@ void process(String id) {
             
             def fixable = brokenThing.subMap(affectedProps) == currentThing.subMap(affectedProps)
             if (fixable) {
-                overWriteThing(id, getThing(correct).subMap(affectedProps))
+                overWriteThingProps(id, getThing(correct).subMap(affectedProps))
             }
             else {
                 notFixableReport.println("$id\t${diffLink(id, m.afterVersion, -1)}")
@@ -62,7 +86,6 @@ String diffLink(id, v1, v2) {
 Map getThing(Map doc) { 
     getAtPath(doc, ['@graph', 1]) 
 }
-
 
 Map getBeforeAfter3161(String id) {
     def SCRIPT_3161 = "https://libris.kb.se/sys/globalchanges/2020/05/lxl-3161-move-linkfield-to-instance/script.groovy"
@@ -86,7 +109,7 @@ static Map getDoc(String id, int version = -1) {
     new groovy.json.JsonSlurper().parseText(json)
 }
 
-private void overWriteThing(String id, Map properties) {
+private void overWriteThingProps(String id, Map properties) {
     selectByIds([id]) { bib -> 
         def(record, thing) = bib.graph
         thing.putAll(properties)
@@ -117,6 +140,8 @@ static Object getAtPath(item, Iterable path, defaultTo = null) {
 
 // ---------------------------------------------------------------------------------------------------
 // Slightly edited version of LXL-3161 script
+// - So that we can pass the doc we want to process instead of the script fetching it from the DB
+// - Fixed the bug so that it always makes the correct changes  
 
 /*
  * Move properties from Work to Instance and make object an Instance
