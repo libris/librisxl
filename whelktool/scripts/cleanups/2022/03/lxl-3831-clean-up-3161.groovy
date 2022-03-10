@@ -89,7 +89,7 @@ static Map getDoc(String id, int version = -1) {
 private void overWriteThing(String id, Map properties) {
     selectByIds([id]) { bib -> 
         def(record, thing) = bib.graph
-        thing += properties
+        thing.putAll(properties)
         bib.scheduleSave()
     }
 }
